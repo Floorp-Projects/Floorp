@@ -1089,19 +1089,6 @@ struct GCChunkHasher {
 
 typedef HashSet<js::gc::Chunk*, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 
-struct GrayRoot {
-    void* thing;
-    JSGCTraceKind kind;
-#ifdef DEBUG
-    JSTraceNamePrinter debugPrinter;
-    const void* debugPrintArg;
-    size_t debugPrintIndex;
-#endif
-
-    GrayRoot(void* thing, JSGCTraceKind kind)
-        : thing(thing), kind(kind) {}
-};
-
 typedef void (*IterateChunkCallback)(JSRuntime* rt, void* data, gc::Chunk* chunk);
 typedef void (*IterateZoneCallback)(JSRuntime* rt, void* data, JS::Zone* zone);
 typedef void (*IterateArenaCallback)(JSRuntime* rt, void* data, gc::Arena* arena,

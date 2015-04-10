@@ -221,8 +221,8 @@ AutoGCRooter::trace(JSTracer* trc)
         AutoObjectObjectHashMap::HashMapImpl& map = static_cast<AutoObjectObjectHashMap*>(this)->map;
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
             TraceRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
-            trc->setTracingLocation((void*)&e.front().key());
             JSObject* key = e.front().key();
+            JS::AutoOriginalTraceLocation reloc(trc, &e.front().key());
             TraceRoot(trc, &key, "AutoObjectObjectHashMap key");
             if (key != e.front().key())
                 e.rekeyFront(key);
@@ -583,21 +583,14 @@ struct SetMaybeAliveFunctor {
 };
 
 void
-BufferGrayRootsTracer::appendGrayRoot(Cell* thing, JSGCTraceKind kind)
+BufferGrayRootsTracer::appendGrayRoot(TenuredCell* thing, JSGCTraceKind kind)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
 
     if (bufferingGrayRootsFailed)
         return;
 
-    GrayRoot root(thing, kind);
-#ifdef DEBUG
-    root.debugPrinter = debugPrinter();
-    root.debugPrintArg = debugPrintArg();
-    root.debugPrintIndex = debugPrintIndex();
-#endif
-
-    Zone* zone = TenuredCell::fromPointer(thing)->zone();
+    Zone* zone = thing->zone();
     if (zone->isCollecting()) {
         // See the comment on SetMaybeAliveFlag to see why we only do this for
         // objects and scripts. We rely on gray root buffering for this to work,
@@ -605,7 +598,7 @@ BufferGrayRootsTracer::appendGrayRoot(Cell* thing, JSGCTraceKind kind)
         // incremental GCs (when we do gray root buffering).
         CallTyped(SetMaybeAliveFunctor(), kind, thing);
 
-        if (!zone->gcGrayRoots.append(root))
+        if (!zone->gcGrayRoots.append(thing))
             bufferingGrayRootsFailed = true;
     }
 }
@@ -616,13 +609,8 @@ GCRuntime::markBufferedGrayRoots(JS::Zone* zone)
     MOZ_ASSERT(grayBufferState == GrayBufferState::Okay);
     MOZ_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
 
-    for (GrayRoot* elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
-#ifdef DEBUG
-        marker.setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
-#endif
-        TraceManuallyBarrieredGenericPointerEdge(&marker, reinterpret_cast<Cell**>(&elem->thing),
-                                                 "buffered gray root");
-    }
+    for (auto cell : zone->gcGrayRoots)
+        TraceManuallyBarrieredGenericPointerEdge(&marker, &cell, "buffered gray root");
 }
 
 void

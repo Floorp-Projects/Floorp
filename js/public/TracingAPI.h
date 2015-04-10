@@ -80,11 +80,6 @@ GCTraceKindToAscii(JSGCTraceKind kind);
 typedef void
 (* JSTraceCallback)(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind);
 
-// Callback that JSTraceOp implementation can provide to return a string
-// describing the reference traced with JS_CallTracer.
-typedef void
-(* JSTraceNamePrinter)(JSTracer* trc, char* buf, size_t bufsize);
-
 enum WeakMapTraceKind {
     DoNotTraceWeakMaps = 0,
     TraceWeakMapValues = 1,
@@ -94,79 +89,11 @@ enum WeakMapTraceKind {
 class JS_PUBLIC_API(JSTracer)
 {
   public:
-    // Set debugging information about a reference to a traceable thing to prepare
-    // for the following call to JS_CallTracer.
-    //
-    // When printer is null, arg must be const char * or char * C string naming
-    // the reference and index must be either (size_t)-1 indicating that the name
-    // alone describes the reference or it must be an index into some array vector
-    // that stores the reference.
-    //
-    // When printer callback is not null, the arg and index arguments are
-    // available to the callback as debugPrintArg_ and debugPrintIndex_ fields
-    // of JSTracer.
-    //
-    // The storage for name or callback's arguments needs to live only until
-    // the following call to JS_CallTracer returns.
-    void setTracingDetails(JSTraceNamePrinter printer, const void* arg, size_t index) {
-        debugPrinter_ = printer;
-        debugPrintArg_ = arg;
-        debugPrintIndex_ = index;
-    }
-
-    void setTracingIndex(const char* name, size_t index) {
-        setTracingDetails(nullptr, (void*)name, index);
-    }
-
-    void setTracingName(const char* name) {
-        setTracingDetails(nullptr, (void*)name, InvalidIndex);
-    }
-
-    // Remove the currently set tracing details.
-    void clearTracingDetails() {
-        debugPrinter_ = nullptr;
-        debugPrintArg_ = nullptr;
-    }
-
-    const static size_t InvalidIndex = size_t(-1);
-
-    // Return true if tracing details are currently set.
-    bool hasTracingDetails() const;
-
-    // Get the string set with the most recent call to setTracingName or return
-    // fallback if a name printer function has been installed.
-    const char* tracingName(const char* fallback) const;
-
-    // Build a description of this edge in the heap graph. This call may invoke
-    // the debug printer, which may inspect arbitrary areas of the heap.
-    const char* getTracingEdgeName(char* buffer, size_t bufferSize);
-
-    // Access the currently active tracing details.
-    JSTraceNamePrinter debugPrinter() const;
-    const void* debugPrintArg() const;
-    size_t debugPrintIndex() const;
-
     // Return the runtime set on the tracer.
     JSRuntime* runtime() const { return runtime_; }
 
     // Return the weak map tracing behavior set on this tracer.
     WeakMapTraceKind eagerlyTraceWeakMaps() const { return eagerlyTraceWeakMaps_; }
-
-#ifdef JS_GC_ZEAL
-    // Sets the "real" location for a marked reference, when passing the address
-    // directly is not feasable. This address is used for matching against the
-    // store buffer when verifying the correctness of the entrees there.
-    //
-    // This is currently complicated by our need to nest calls for Values
-    // stored as keys in hash tables.
-    void setTracingLocation(void* location);
-    void unsetTracingLocation();
-    void** tracingLocation(void** thingp);
-#else
-    void setTracingLocation(void* location) {}
-    void unsetTracingLocation() {}
-    void** tracingLocation(void** thingp) { return nullptr; }
-#endif
 
     // An intermediate state on the road from C to C++ style dispatch.
     enum TracerKindTag {
@@ -184,23 +111,24 @@ class JS_PUBLIC_API(JSTracer)
   private:
     JSRuntime*          runtime_;
     TracerKindTag       tag;
-    JSTraceNamePrinter  debugPrinter_;
-    const void*         debugPrintArg_;
-    size_t              debugPrintIndex_;
     WeakMapTraceKind    eagerlyTraceWeakMaps_;
-#ifdef JS_GC_ZEAL
-    void*               realLocation_;
-#endif
 };
 
 namespace JS {
+
+class AutoTracingName;
+class AutoTracingIndex;
+class AutoTracingCallback;
+class AutoOriginalTraceLocation;
 
 class JS_PUBLIC_API(CallbackTracer) : public JSTracer
 {
   public:
     CallbackTracer(JSRuntime* rt, JSTraceCallback traceCallback,
                    WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
-      : JSTracer(rt, JSTracer::CallbackTracer, weakTraceKind), callback(traceCallback)
+      : JSTracer(rt, JSTracer::CallbackTracer, weakTraceKind), callback(traceCallback),
+        contextName_(nullptr), contextIndex_(InvalidIndex), contextFunctor_(nullptr),
+        contextRealLocation_(nullptr)
     {}
 
     // Update the trace callback.
@@ -216,10 +144,173 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
         callback(this, thing, kind);
     }
 
+    // Access to the tracing context:
+    // When tracing with a JS::CallbackTracer, we invoke the callback with the
+    // edge location and the type of target. This is useful for operating on
+    // the edge in the abstract or on the target thing, satisfying most common
+    // use cases.  However, some tracers need additional detail about the
+    // specific edge that is being traced in order to be useful. Unfortunately,
+    // the raw pointer to the edge that we provide is not enough information to
+    // infer much of anything useful about that edge.
+    //
+    // In order to better support use cases that care in particular about edges
+    // -- as opposed to the target thing -- tracing implementations are
+    // responsible for providing extra context information about each edge they
+    // trace, as it is traced. This contains, at a minimum, an edge name and,
+    // when tracing an array, the index. Further specialization can be achived
+    // (with some complexity), by associating a functor with the tracer so
+    // that, when requested, the user can generate totally custom edge
+    // descriptions.
+
+    // Returns the current edge's name. It is only valid to call this when
+    // inside the trace callback, however, the edge name will always be set.
+    const char* contextName() const { MOZ_ASSERT(contextName_); return contextName_; }
+
+    // Returns the current edge's index, if marked as part of an array of edges.
+    // This must be called only inside the trace callback. When not tracing an
+    // array, the value will be InvalidIndex.
+    const static size_t InvalidIndex = size_t(-1);
+    size_t contextIndex() const { return contextIndex_; }
+
+    // Build a description of this edge in the heap graph. This call may invoke
+    // the context functor, if set, which may inspect arbitrary areas of the
+    // heap. On the other hand, the description provided by this method may be
+    // substantially more accurate and useful than those provided by only the
+    // contextName and contextIndex.
+    const char* getTracingEdgeName(char* buffer, size_t bufferSize);
+
+    // The trace implementation may associate a callback with one or more edges
+    // using AutoTracingDetails. This functor is called by getTracingEdgeName
+    // and is responsible for providing a textual representation of the
+    // currently being traced edge. The callback has access to the full heap,
+    // including the currently set tracing context.
+    class ContextFunctor {
+      public:
+        virtual void operator()(CallbackTracer* trc, char* buf, size_t bufsize) = 0;
+    };
+
+    // Return the original heap tracing location if the raw thingp reference
+    // has been moved. This is generally only useful for heap analyses that
+    // need to build an accurate model of the heap, and thus is only accurate
+    // when built with JS_GC_ZEAL.
+    void*const* tracingLocation(void** thingp) {
+        return contextRealLocation_ ? contextRealLocation_ : thingp;
+    }
+
   private:
     // Exposed publicly for several callers that need to check if the tracer
     // calling them is of the right type.
     JSTraceCallback callback;
+
+    friend class AutoTracingName;
+    const char* contextName_;
+
+    friend class AutoTracingIndex;
+    size_t contextIndex_;
+
+    friend class AutoTracingDetails;
+    ContextFunctor* contextFunctor_;
+
+    friend class AutoOriginalTraceLocation;
+    void*const* contextRealLocation_;
+};
+
+// Set the name portion of the tracer's context for the current edge.
+class AutoTracingName
+{
+    CallbackTracer* trc_;
+    const char *prior_;
+
+  public:
+    AutoTracingName(CallbackTracer* trc, const char* name) : trc_(trc), prior_(trc->contextName_) {
+        MOZ_ASSERT(name);
+        trc->contextName_ = name;
+    }
+    ~AutoTracingName() {
+        MOZ_ASSERT(trc_->contextName_);
+        trc_->contextName_ = prior_;
+    }
+};
+
+// Set the index portion of the tracer's context for the current range.
+class AutoTracingIndex
+{
+    CallbackTracer* trc_;
+
+  public:
+    explicit AutoTracingIndex(JSTracer* trc, size_t initial = 0) : trc_(nullptr) {
+        if (trc->isCallbackTracer()) {
+            trc_ = trc->asCallbackTracer();
+            MOZ_ASSERT(trc_->contextIndex_ == CallbackTracer::InvalidIndex);
+            trc_->contextIndex_ = initial;
+        }
+    }
+    ~AutoTracingIndex() {
+        if (trc_) {
+            MOZ_ASSERT(trc_->contextIndex_ != CallbackTracer::InvalidIndex);
+            trc_->contextIndex_ = CallbackTracer::InvalidIndex;
+        }
+    }
+
+    void operator++() {
+        if (trc_) {
+            MOZ_ASSERT(trc_->contextIndex_ != CallbackTracer::InvalidIndex);
+            ++trc_->contextIndex_;
+        }
+    }
+};
+
+// Set a context callback for the trace callback to use, if it needs a detailed
+// edge description.
+class AutoTracingDetails
+{
+    CallbackTracer* trc_;
+
+  public:
+    AutoTracingDetails(JSTracer* trc, CallbackTracer::ContextFunctor& func) : trc_(nullptr) {
+        if (trc->isCallbackTracer()) {
+            trc_ = trc->asCallbackTracer();
+            MOZ_ASSERT(trc_->contextFunctor_ == nullptr);
+            trc_->contextFunctor_ = &func;
+        }
+    }
+    ~AutoTracingDetails() {
+        if (trc_) {
+            MOZ_ASSERT(trc_->contextFunctor_);
+            trc_->contextFunctor_ = nullptr;
+        }
+    }
+};
+
+// Some dynamic analyses depend on knowing the edge source location as it
+// exists in the object graph. When marking some types of things, e.g. Value
+// edges, it is necessary to copy into a temporary on the stack. This class
+// records the original location if we need to copy the tracee, so that the
+// relevant analyses can continue to operate correctly.
+class AutoOriginalTraceLocation
+{
+#ifdef JS_GC_ZEAL
+    CallbackTracer *trc_;
+
+  public:
+    template <typename T>
+    AutoOriginalTraceLocation(JSTracer* trc, T*const* realLocation) : trc_(nullptr) {
+        if (trc->isCallbackTracer() && trc->asCallbackTracer()->contextRealLocation_ == nullptr) {
+            trc_ = trc->asCallbackTracer();
+            trc_->contextRealLocation_ = reinterpret_cast<void*const*>(realLocation);
+        }
+    }
+    ~AutoOriginalTraceLocation() {
+        if (trc_) {
+            MOZ_ASSERT(trc_->contextRealLocation_);
+            trc_->contextRealLocation_ = nullptr;
+        }
+    }
+#else
+  public:
+    template <typename T>
+    AutoOriginalTraceLocation(JSTracer* trc, T*const* realLocation) {}
+#endif
 };
 
 } // namespace JS
@@ -284,7 +375,7 @@ inline void
 JS_CallHashSetObjectTracer(JSTracer* trc, HashSetEnum& e, JSObject* const& key, const char* name)
 {
     JSObject* updated = key;
-    trc->setTracingLocation(reinterpret_cast<void*>(&const_cast<JSObject*&>(key)));
+    JS::AutoOriginalTraceLocation reloc(trc, &key);
     JS_CallUnbarrieredObjectTracer(trc, &updated, name);
     if (updated != key)
         e.rekeyFront(updated);

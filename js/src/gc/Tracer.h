@@ -304,8 +304,6 @@ class GCMarker : public JSTracer
     void markAndScanString(JSObject* source, JSString* str);
     void markAndScanSymbol(JSObject* source, JS::Symbol* sym);
 
-    void appendGrayRoot(void* thing, JSGCTraceKind kind);
-
     /* The color is only applied to objects and functions. */
     uint32_t color;
 
@@ -332,7 +330,7 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     // Set to false if we OOM while buffering gray roots.
     bool bufferingGrayRootsFailed;
 
-    void appendGrayRoot(gc::Cell* thing, JSGCTraceKind kind);
+    void appendGrayRoot(gc::TenuredCell* thing, JSGCTraceKind kind);
 
   public:
     explicit BufferGrayRootsTracer(JSRuntime* rt)
@@ -340,8 +338,8 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     {}
 
     static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
-        static_cast<BufferGrayRootsTracer*>(trc)->appendGrayRoot(static_cast<gc::Cell*>(*thingp),
-                                                                kind);
+        auto tracer = static_cast<BufferGrayRootsTracer*>(trc);
+        tracer->appendGrayRoot(gc::TenuredCell::fromPointer(*thingp), kind);
     }
 
     bool failed() const { return bufferingGrayRootsFailed; }
