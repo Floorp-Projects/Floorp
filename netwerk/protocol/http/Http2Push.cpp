@@ -77,7 +77,7 @@ Http2PushedStream::Http2PushedStream(Http2PushTransactionBuffer *aTransaction,
   mStreamID = aID;
   MOZ_ASSERT(!(aID & 1)); // must be even to be a pushed stream
   mBufferedPush->SetPushStream(this);
-  mSchedulingContext = aAssociatedStream->SchedulingContext();
+  mLoadGroupCI = aAssociatedStream->LoadGroupConnectionInfo();
   mLastRead = TimeStamp::Now();
   SetPriority(aAssociatedStream->Priority() + 1);
 }

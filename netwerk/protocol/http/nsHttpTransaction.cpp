@@ -33,7 +33,6 @@
 #include "nsIInputStream.h"
 #include "nsITransport.h"
 #include "nsIOService.h"
-#include "nsISchedulingContext.h"
 #include <algorithm>
 
 #ifdef MOZ_WIDGET_GONK
@@ -1785,10 +1784,10 @@ nsHttpTransaction::CancelPipeline(uint32_t reason)
 
 
 void
-nsHttpTransaction::SetSchedulingContext(nsISchedulingContext *aSchedulingContext)
+nsHttpTransaction::SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI)
 {
-    LOG(("nsHttpTransaction %p SetSchedulingContext %p\n", this, aSchedulingContext));
-    mSchedulingContext = aSchedulingContext;
+    LOG(("nsHttpTransaction %p SetLoadGroupConnectionInfo %p\n", this, aLoadGroupCI));
+    mLoadGroupCI = aLoadGroupCI;
 }
 
 // Called when the transaction marked for blocking is associated with a connection
@@ -1803,32 +1802,32 @@ nsHttpTransaction::DispatchedAsBlocking()
 
     LOG(("nsHttpTransaction %p dispatched as blocking\n", this));
 
-    if (!mSchedulingContext)
+    if (!mLoadGroupCI)
         return;
 
     LOG(("nsHttpTransaction adding blocking transaction %p from "
-         "scheduling context %p\n", this, mSchedulingContext.get()));
+         "loadgroup %p\n", this, mLoadGroupCI.get()));
 
-    mSchedulingContext->AddBlockingTransaction();
+    mLoadGroupCI->AddBlockingTransaction();
     mDispatchedAsBlocking = true;
 }
 
 void
 nsHttpTransaction::RemoveDispatchedAsBlocking()
 {
-    if (!mSchedulingContext || !mDispatchedAsBlocking)
+    if (!mLoadGroupCI || !mDispatchedAsBlocking)
         return;
 
     uint32_t blockers = 0;
-    nsresult rv = mSchedulingContext->RemoveBlockingTransaction(&blockers);
+    nsresult rv = mLoadGroupCI->RemoveBlockingTransaction(&blockers);
 
     LOG(("nsHttpTransaction removing blocking transaction %p from "
-         "scheduling context %p. %d blockers remain.\n", this,
-         mSchedulingContext.get(), blockers));
+         "loadgroup %p. %d blockers remain.\n", this,
+         mLoadGroupCI.get(), blockers));
 
     if (NS_SUCCEEDED(rv) && !blockers) {
         LOG(("nsHttpTransaction %p triggering release of blocked channels "
-             " with scheduling context=%p\n", this, mSchedulingContext.get()));
+             " with loadgroupci=%p\n", this, mLoadGroupCI.get()));
         gHttpHandler->ConnMgr()->ProcessPendingQ();
     }
 
@@ -1839,9 +1838,9 @@ void
 nsHttpTransaction::ReleaseBlockingTransaction()
 {
     RemoveDispatchedAsBlocking();
-    LOG(("nsHttpTransaction %p scheduling context set to null "
-         "in ReleaseBlockingTransaction() - was %p\n", this, mSchedulingContext.get()));
-    mSchedulingContext = nullptr;
+    LOG(("nsHttpTransaction %p loadgroupci set to null "
+         "in ReleaseBlockingTransaction() - was %p\n", this, mLoadGroupCI.get()));
+    mLoadGroupCI = nullptr;
 }
 
 void

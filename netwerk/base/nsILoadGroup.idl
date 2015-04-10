@@ -8,14 +8,14 @@
 interface nsISimpleEnumerator;
 interface nsIRequestObserver;
 interface nsIInterfaceRequestor;
-interface nsISchedulingContext;
+interface nsILoadGroupConnectionInfo;
 
 typedef unsigned long nsLoadFlags;
 
 /**
  * A load group maintains a collection of nsIRequest objects. 
  */
-[scriptable, uuid(ff6a41f9-0bbf-44ca-9c71-f76c1da2b114)]
+[scriptable, uuid(afb57ac2-bce5-4ee3-bb34-385089a9ba5c)]
 interface nsILoadGroup : nsIRequest
 {
     /**
@@ -76,10 +76,10 @@ interface nsILoadGroup : nsIRequest
     attribute nsIInterfaceRequestor notificationCallbacks;
 
     /**
-     * Context for managing things like js/css connection blocking,
-     * and per-tab connection grouping.
+     * Connection information for managing things like js/css
+     * connection blocking, and per-tab connection grouping
      */
-    readonly attribute nsID schedulingContextID;
+    readonly attribute nsILoadGroupConnectionInfo connectionInfo;
 
     /**
      * The set of load flags that will be added to all new requests added to
@@ -93,4 +93,49 @@ interface nsILoadGroup : nsIRequest
      * the docShell has created the default request.)
      */
     attribute nsLoadFlags defaultLoadFlags;
+};
+
+%{C++
+// Forward-declare mozilla::net::SpdyPushCache
+namespace mozilla {
+namespace net {
+class SpdyPushCache;
+}
+}
+%}
+
+[ptr] native SpdyPushCachePtr(mozilla::net::SpdyPushCache);
+
+/**
+ * Used to maintain state about the connections of a load group and
+ * how they interact with blocking items like HEAD css/js loads.
+ */
+
+[uuid(fdc9659c-b597-4ac0-9c9e-14b04dbb682f)]
+interface nsILoadGroupConnectionInfo : nsISupports
+{
+    /**
+     * Number of active blocking transactions associated with this load group
+     */
+    readonly attribute unsigned long blockingTransactionCount;
+
+    /**
+     * Increase the number of active blocking transactions associated
+     * with this load group by one.
+     */
+    void addBlockingTransaction();
+
+    /**
+     * Decrease the number of active blocking transactions associated
+     * with this load group by one. The return value is the number of remaining
+     * blockers.
+     */
+    unsigned long removeBlockingTransaction();
+
+    /* reading this attribute gives out weak pointers to the push
+     * cache. The nsILoadGroupConnectionInfo implemenation owns the cache
+     * and will destroy it when overwritten or when the load group
+    *  ends.
+    */
+    [noscript]  attribute SpdyPushCachePtr spdyPushCache;
 };

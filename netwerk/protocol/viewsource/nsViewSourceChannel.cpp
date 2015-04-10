@@ -798,16 +798,3 @@ nsViewSourceChannel::RedirectTo(nsIURI *uri)
         mHttpChannel->RedirectTo(uri);
 }
 
-NS_IMETHODIMP
-nsViewSourceChannel::GetSchedulingContextID(nsID *_retval)
-{
-    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
-        mHttpChannel->GetSchedulingContextID(_retval);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::SetSchedulingContextID(const nsID scid)
-{
-    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
-        mHttpChannel->SetSchedulingContextID(scid);
-}
