@@ -79,6 +79,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class RefCountedInsideLambdaChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
@@ -86,6 +91,7 @@ private:
   TrivialCtorDtorChecker trivialCtorDtorChecker;
   NaNExprChecker nanExprChecker;
   NoAddRefReleaseOnReturnChecker noAddRefReleaseOnReturnChecker;
+  RefCountedInsideLambdaChecker refCountedInsideLambdaChecker;
   MatchFinder astMatcher;
 };
 
@@ -577,6 +583,11 @@ DiagnosticsMatcher::DiagnosticsMatcher()
                                                       hasParent(callExpr())).bind("member")
       )).bind("node"),
     &noAddRefReleaseOnReturnChecker);
+
+  astMatcher.addMatcher(lambdaExpr(
+            hasDescendant(declRefExpr(hasType(pointerType(pointee(isRefCounted())))).bind("node"))
+        ),
+    &refCountedInsideLambdaChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -773,6 +784,20 @@ void DiagnosticsMatcher::NoAddRefReleaseOnReturnChecker::run(
   const CXXMethodDecl *method = dyn_cast<CXXMethodDecl>(member->getMemberDecl());
 
   Diag.Report(node->getLocStart(), errorID) << func << method;
+}
+
+void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Refcounted variable %0 of type %1 cannot be used inside a lambda");
+  unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Please consider using a smart pointer");
+  const DeclRefExpr *node = Result.Nodes.getNodeAs<DeclRefExpr>("node");
+
+  Diag.Report(node->getLocStart(), errorID) << node->getFoundDecl() <<
+    node->getType()->getPointeeType();
+  Diag.Report(node->getLocStart(), noteID);
 }
 
 class MozCheckAction : public PluginASTAction {
