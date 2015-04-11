@@ -79,7 +79,7 @@ class AliasSetIterator
         } while (flags && (flags & 1) == 0);
         return *this;
     }
-    operator bool() const {
+    explicit operator bool() const {
         return !!flags;
     }
     unsigned operator*() const {
