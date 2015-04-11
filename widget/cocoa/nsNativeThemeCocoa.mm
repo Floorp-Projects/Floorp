@@ -486,7 +486,6 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl)
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
-
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -836,6 +835,8 @@ static void DrawCellWithSnapping(NSCell *cell,
     // Snap to the smaller control size.
     controlSize = smallerControlSize;
     sizeIndex = smallerControlSizeIndex;
+    MOZ_ASSERT(sizeIndex < ArrayLength(settings.naturalSizes));
+
     // Resize and center the drawRect.
     if (sizes[sizeIndex].width) {
       drawRect.origin.x += ceil((destRect.size.width - sizes[sizeIndex].width) / 2);
@@ -854,7 +855,8 @@ static void DrawCellWithSnapping(NSCell *cell,
 
   [cell setControlSize:controlSize];
 
-  NSSize minimumSize = settings.minimumSizes ? settings.minimumSizes[sizeIndex] : NSZeroSize;
+  MOZ_ASSERT(sizeIndex < ArrayLength(settings.minimumSizes));
+  const NSSize minimumSize = settings.minimumSizes[sizeIndex];
   DrawCellWithScaling(cell, cgContext, drawRect, controlSize, sizes[sizeIndex],
                       minimumSize, settings.margins, view, mirrorHorizontal);
 
