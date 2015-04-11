@@ -81,6 +81,7 @@ xul|*.text-link:-moz-focusring,
 xul|*.inline-link:-moz-focusring {
   color: #ff9500;
   text-decoration: underline;
+  box-shadow: none;
 }
 
 xul|button:-moz-focusring,
