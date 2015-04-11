@@ -154,20 +154,6 @@ add_test(function fetchAndCacheProfile_ok() {
     });
 });
 
-
-add_test(function profile_channel() {
-  let profile = new FxAccountsProfile(mockAccountData(), PROFILE_CLIENT_OPTIONS);
-
-  let channel = profile._listenForProfileChanges();
-  do_check_true(!!channel);
-
-  let channel2 = profile._listenForProfileChanges();
-
-  do_check_eq(channel, channel2);
-
-  run_next_test();
-});
-
 add_test(function tearDown_ok() {
   let profile = new FxAccountsProfile(mockAccountData(), PROFILE_CLIENT_OPTIONS);
 
@@ -185,7 +171,6 @@ add_test(function getProfile_ok() {
   let cachedUrl = "myurl";
   let accountData = mockAccountData();
   let didFetch = false;
-  let didListen = false;
 
   let profile = new FxAccountsProfile(accountData, PROFILE_CLIENT_OPTIONS);
   profile._getCachedProfile = function () {
@@ -195,15 +180,11 @@ add_test(function getProfile_ok() {
   profile._fetchAndCacheProfile = function () {
     didFetch = true;
   };
-  profile._listenForProfileChanges = function () {
-    didListen = true;
-  };
 
   return profile.getProfile()
     .then(result => {
       do_check_eq(result.avatar, cachedUrl);
       do_check_true(didFetch);
-      do_check_true(didListen);
       run_next_test();
     });
 });
@@ -211,7 +192,6 @@ add_test(function getProfile_ok() {
 add_test(function getProfile_no_cache() {
   let fetchedUrl = "newUrl";
   let accountData = mockAccountData();
-  let didListen = false;
 
   let profile = new FxAccountsProfile(accountData, PROFILE_CLIENT_OPTIONS);
   profile._getCachedProfile = function () {
@@ -221,22 +201,16 @@ add_test(function getProfile_no_cache() {
   profile._fetchAndCacheProfile = function () {
     return Promise.resolve({ avatar: fetchedUrl });
   };
-  profile._listenForProfileChanges = function () {
-    didListen = true;
-  };
 
   return profile.getProfile()
     .then(result => {
       do_check_eq(result.avatar, fetchedUrl);
-      do_check_true(didListen);
       run_next_test();
     });
 });
 
 add_test(function getProfile_has_cached_fetch_deleted() {
   let cachedUrl = "myurl";
-  let didFetch = false;
-  let didListen = false;
 
   let client = mockClient();
   client.fetchProfile = function () {
