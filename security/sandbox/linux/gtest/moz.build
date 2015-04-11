@@ -15,6 +15,10 @@ SOURCES = [
 
 LOCAL_INCLUDES += [
     '/security/sandbox/linux',
+    '/security/sandbox/linux/common',
+]
+LOCAL_INCLUDES += [
+    '/security/sandbox/chromium',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
