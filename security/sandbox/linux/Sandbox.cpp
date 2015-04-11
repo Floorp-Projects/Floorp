@@ -9,20 +9,20 @@
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
 
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/ptrace.h>
-#include <sys/prctl.h>
-#include <sys/syscall.h>
-#include <signal.h>
-#include <string.h>
-#include <linux/futex.h>
-#include <sys/time.h>
 #include <dirent.h>
-#include <stdlib.h>
-#include <pthread.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <linux/futex.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/prctl.h>
+#include <sys/ptrace.h>
+#include <sys/syscall.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include "mozilla/Atomics.h"
 #include "mozilla/SandboxInfo.h"
