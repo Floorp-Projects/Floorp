@@ -277,7 +277,7 @@ public:
     return mActor;
   }
 
-  operator bool()
+  explicit operator bool()
   {
     return !!mActor;
   }
