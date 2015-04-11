@@ -496,12 +496,20 @@ wasapi_stream_render_loop(LPVOID stream)
   }
 
 
+  /* WaitForMultipleObjects timeout can trigger in cases where we don't want to
+     treat it as a timeout, such as across a system sleep/wake cycle.  Trigger
+     the timeout error handling only when the timeout_limit is reached, which is
+     reset on each successful loop. */
+  unsigned timeout_count = 0;
+  const unsigned timeout_limit = 5;
   while (is_playing) {
     DWORD waitResult = WaitForMultipleObjects(ARRAY_LENGTH(wait_array),
                                               wait_array,
                                               FALSE,
                                               1000);
-
+    if (waitResult != WAIT_TIMEOUT) {
+      timeout_count = 0;
+    }
     switch (waitResult) {
     case WAIT_OBJECT_0: { /* shutdown */
       is_playing = false;
@@ -575,8 +583,10 @@ wasapi_stream_render_loop(LPVOID stream)
       break;
     case WAIT_TIMEOUT:
       XASSERT(stm->shutdown_event == wait_array[0]);
-      is_playing = false;
-      hr = -1;
+      if (++timeout_count >= timeout_limit) {
+        is_playing = false;
+        hr = -1;
+      }
       break;
     default:
       LOG("case %d not handled in render loop.", waitResult);
