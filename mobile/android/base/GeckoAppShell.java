@@ -294,6 +294,9 @@ public class GeckoAppShell
 
     public static native SurfaceBits getSurfaceBits(Surface surface);
 
+    public static native void addPresentationSurface(Surface surface);
+    public static native void removePresentationSurface(Surface surface);
+
     public static native void onFullScreenPluginHidden(View view);
 
     public static class CreateShortcutFaviconLoadedListener implements OnFaviconLoadedListener {
