@@ -8,7 +8,7 @@
  JSImplementation="@mozilla.org/push/PushManager;1",
  CheckPermissions="push",
  Pref="services.push.enabled"]
-interface PushManager {
+interface SimplePushManager {
     DOMRequest register();
     DOMRequest unregister(DOMString pushEndpoint);
     DOMRequest registrations();

@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(861b55e9-d6ac-47cf-a528-8590e9b44de6)]
+[scriptable, builtinclass, uuid(679732e6-b655-42a2-a787-f43fa322d79d)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -121,6 +121,8 @@ interface nsIServiceWorkerManager : nsISupports
   // This is meant to be used only by about:serviceworkers. It returns an array
   // of nsIServiceWorkerInfo.
   nsIArray getAllRegistrations();
+
+  void sendPushEvent(in ACString scope, in DOMString data);
 };
 
 %{ C++

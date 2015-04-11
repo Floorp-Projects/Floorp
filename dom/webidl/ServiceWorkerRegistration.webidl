@@ -23,3 +23,10 @@ interface ServiceWorkerRegistration : EventTarget {
   // event
   attribute EventHandler onupdatefound;
 };
+
+partial interface ServiceWorkerRegistration {
+#ifndef MOZ_SIMPLEPUSH
+  [Throws, Pref="dom.push.enabled"]
+  readonly attribute PushManager pushManager;
+#endif
+};
