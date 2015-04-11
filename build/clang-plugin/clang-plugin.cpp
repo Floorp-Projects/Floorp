@@ -373,7 +373,8 @@ bool classHasAddRefRelease(const CXXRecordDecl *D) {
 
   bool seenAddRef = false;
   bool seenRelease = false;
-  for (const auto& method : D->methods()) {
+  for (CXXRecordDecl::method_iterator method = D->method_begin();
+       method != D->method_end(); ++method) {
     std::string name = method->getNameAsString();
     if (name == "AddRef") {
       seenAddRef = true;
@@ -397,8 +398,9 @@ bool isClassRefCounted(const CXXRecordDecl *D) {
     return true;
 
   // Look through all base cases to figure out if the parent is a refcounted class.
-  for (const auto& base : D->bases()) {
-    bool super = isClassRefCounted(base.getType());
+  for (CXXRecordDecl::base_class_const_iterator base = D->bases_begin();
+       base != D->bases_end(); ++base) {
+    bool super = isClassRefCounted(base->getType());
     if (super) {
       return true;
     }
