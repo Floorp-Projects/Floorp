@@ -52,7 +52,11 @@
        "Gecko:MozillaRntimeMain", __VA_ARGS__)) \
      : (void)0 )
 
-#endif
+# ifdef MOZ_CONTENT_SANDBOX
+# include "mozilla/Sandbox.h"
+# endif
+
+#endif // MOZ_WIDGET_GONK
 
 #ifdef MOZ_NUWA_PROCESS
 #include <binder/ProcessState.h>
@@ -164,6 +168,16 @@ content_process_main(int argc, char* argv[])
     if (isNuwa) {
         PrepareNuwaProcess();
     }
+#endif
+
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+    // This has to happen while we're still single-threaded, and on
+    // B2G that means before the Android Binder library is
+    // initialized.  Additional special handling is needed for Nuwa:
+    // the Nuwa process itself needs to be unsandboxed, and the same
+    // single-threadedness condition applies to its children; see also
+    // AfterNuwaFork().
+    mozilla::SandboxEarlyInit(XRE_GetProcessType(), isNuwa);
 #endif
 
 #ifdef MOZ_WIDGET_GONK

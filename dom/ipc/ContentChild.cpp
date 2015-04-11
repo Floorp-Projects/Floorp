@@ -2913,6 +2913,9 @@ NS_EXPORT void
 AfterNuwaFork()
 {
     SetCurrentProcessPrivileges(base::PRIVILEGES_DEFAULT);
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+    mozilla::SandboxEarlyInit(XRE_GetProcessType(), /* isNuwa: */ false);
+#endif
 }
 
 #endif // MOZ_NUWA_PROCESS

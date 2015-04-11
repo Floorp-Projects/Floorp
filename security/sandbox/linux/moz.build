@@ -57,6 +57,7 @@ SOURCES += [
     'Sandbox.cpp',
     'SandboxAssembler.cpp',
     'SandboxFilter.cpp',
+    'SandboxUtil.cpp',
 ]
 
 # gcc lto likes to put the top level asm in syscall.cc in a different partition
@@ -82,4 +83,5 @@ if CONFIG['OS_TARGET'] != 'Android':
 DIRS += [
     'common',
     'glue',
+    'gtest',
 ]
