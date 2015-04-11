@@ -24,11 +24,6 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfileClient",
   "resource://gre/modules/FxAccountsProfileClient.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfileChannel",
-  "resource://gre/modules/FxAccountsProfileChannel.jsm");
-
-let fxAccountProfileChannel = null;
-
 // Based off of deepEqual from Assert.jsm
 function deepEqual(actual, expected) {
   if (actual === expected) {
@@ -131,25 +126,10 @@ this.FxAccountsProfile.prototype = {
       });
   },
 
-  // Initialize a profile channel to listen for account changes.
-  _listenForProfileChanges: function () {
-    if (! fxAccountProfileChannel) {
-      let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.uri");
-
-      fxAccountProfileChannel = new FxAccountsProfileChannel({
-        content_uri: contentUri
-      });
-    }
-
-    return fxAccountProfileChannel;
-  },
-
   // Returns cached data right away if available, then fetches the latest profile
   // data in the background. After data is fetched a notification will be sent
   // out if the profile has changed.
   getProfile: function () {
-    this._listenForProfileChanges();
-
     return this._getCachedProfile()
       .then(cachedProfile => {
         if (cachedProfile) {
