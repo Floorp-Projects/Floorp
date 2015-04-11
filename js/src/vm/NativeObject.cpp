@@ -1565,7 +1565,8 @@ js::NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id, bool* 
 /*** [[Get]] *************************************************************************************/
 
 static inline bool
-CallGetter(JSContext* cx, HandleObject receiver, HandleShape shape, MutableHandleValue vp)
+CallGetter(JSContext* cx, HandleObject obj, HandleObject receiver, HandleShape shape,
+           MutableHandleValue vp)
 {
     MOZ_ASSERT(!shape->hasDefaultGetter());
 
@@ -1574,8 +1575,9 @@ CallGetter(JSContext* cx, HandleObject receiver, HandleShape shape, MutableHandl
         return InvokeGetter(cx, receiver, fval, vp);
     }
 
+    // In contrast to normal getters JSGetterOps always want the holder.
     RootedId id(cx, shape->propid());
-    return CallJSGetterOp(cx, shape->getterOp(), receiver, id, vp);
+    return CallJSGetterOp(cx, shape->getterOp(), obj, id, vp);
 }
 
 template <AllowGC allowGC>
@@ -1619,6 +1621,7 @@ GetExistingProperty(JSContext* cx,
         return false;
 
     if (!CallGetter(cx,
+                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
                     MaybeRooted<JSObject*, allowGC>::toHandle(receiver),
                     MaybeRooted<Shape*, allowGC>::toHandle(shape),
                     MaybeRooted<Value, allowGC>::toMutableHandle(vp)))
