@@ -780,6 +780,7 @@
                 <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="push-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
