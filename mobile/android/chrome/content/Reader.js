@@ -52,8 +52,11 @@ let Reader = {
         break;
       }
       case "Reader:ArticleGet":
-        this._getArticle(message.data.url, message.target).then((article) => {
-          message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { article: article });
+        this._getArticle(message.data.url).then((article) => {
+          // Make sure the target browser is still alive before trying to send data back.
+          if (message.target.messageManager) {
+            message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { article: article });
+          }
         });
         break;
 
@@ -128,11 +131,18 @@ let Reader = {
   },
 
   pageAction: {
-    readerModeCallback: function(tabID) {
-      Messaging.sendRequest({
-        type: "Reader:Toggle",
-        tabID: tabID
-      });
+    readerModeCallback: function(browser) {
+      let url = browser.currentURI.spec;
+      if (url.startsWith("about:reader")) {
+        let originalURL = ReaderMode.getOriginalUrl(url);
+        if (!originalURL) {
+          Cu.reportError("Error finding original URL for about:reader URL: " + url);
+        } else {
+          browser.loadURI(originalURL);
+        }
+      } else {
+        browser.messageManager.sendAsyncMessage("Reader:ParseDocument", { url: url });
+      }
     },
 
     readerModeActiveCallback: function(tabID) {
@@ -151,15 +161,19 @@ let Reader = {
       delete this.pageAction.id;
     }
 
-    let browser = tab.browser;
-    if (browser.currentURI.spec.startsWith("about:reader")) {
+    let showPageAction = (icon, title) => {
       this.pageAction.id = PageActions.add({
-        title: Strings.reader.GetStringFromName("readerView.close"),
-        icon: "drawable://reader_active",
-        clickCallback: () => this.pageAction.readerModeCallback(tab.id),
+        icon: icon,
+        title: title,
+        clickCallback: () => this.pageAction.readerModeCallback(browser),
+        longClickCallback: () => this.pageAction.readerModeActiveCallback(tab.id),
         important: true
       });
+    };
 
+    let browser = tab.browser;
+    if (browser.currentURI.spec.startsWith("about:reader")) {
+      showPageAction("drawable://reader_active", Strings.reader.GetStringFromName("readerView.close"));
       // Only start a reader session if the viewer is in the foreground. We do
       // not track background reader viewers.
       UITelemetry.startSession("reader.1", null);
@@ -170,13 +184,7 @@ let Reader = {
     UITelemetry.stopSession("reader.1", "", null);
 
     if (browser.isArticle) {
-      this.pageAction.id = PageActions.add({
-        title: Strings.reader.GetStringFromName("readerView.enter"),
-        icon: "drawable://reader",
-        clickCallback: () => this.pageAction.readerModeCallback(tab.id),
-        longClickCallback: () => this.pageAction.readerModeActiveCallback(tab.id),
-        important: true
-      });
+      showPageAction("drawable://reader", Strings.reader.GetStringFromName("readerView.enter"));
     }
   },
 
@@ -227,7 +235,7 @@ let Reader = {
     }
 
     let url = tab.browser.currentURI.spec;
-    let article = yield this._getArticle(url, tab.browser).catch(e => {
+    let article = yield this._getArticle(url).catch(e => {
       Cu.reportError("Error getting article for tab: " + e);
       return null;
     });
@@ -263,22 +271,15 @@ let Reader = {
 
   /**
    * Gets an article for a given URL. This method will download and parse a document
-   * if it does not find the article in the tab data or the cache.
+   * if it does not find the article in the cache.
    *
    * @param url The article URL.
-   * @param browser The browser where the article is currently loaded.
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  _getArticle: Task.async(function* (url, browser) {
-    // First, look for a saved article.
-    let article = yield this._getSavedArticle(browser);
-    if (article && article.url == url) {
-      return article;
-    }
-
-    // Next, try to find a parsed article in the cache.
-    article = yield ReaderMode.getArticleFromCache(url);
+  _getArticle: Task.async(function* (url) {
+    // First try to find a parsed article in the cache.
+    let article = yield ReaderMode.getArticleFromCache(url);
     if (article) {
       return article;
     }
@@ -290,18 +291,6 @@ let Reader = {
       return null;
     });
   }),
-
-  _getSavedArticle: function(browser) {
-    return new Promise((resolve, reject) => {
-      let mm = browser.messageManager;
-      let listener = (message) => {
-        mm.removeMessageListener("Reader:SavedArticleData", listener);
-        resolve(message.data.article);
-      };
-      mm.addMessageListener("Reader:SavedArticleData", listener);
-      mm.sendAsyncMessage("Reader:SavedArticleGet");
-    });
-  },
 
   /**
    * Migrates old indexedDB reader mode cache to new JSON cache.
