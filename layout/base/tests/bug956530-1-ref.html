@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <script>
+    function test() {
+      focus();
+      var i = document.querySelector("input");
+      i.focus();
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <body onload="setTimeout(test, 0)">
+    <input value="text text text text text"
+           onfocus="this.select()">
+  </body>
+</html>
