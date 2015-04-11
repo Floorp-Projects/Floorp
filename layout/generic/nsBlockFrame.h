@@ -541,10 +541,16 @@ protected:
     return GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS;
   }
 
-  /** grab pushed floats from this block's prevInFlow, and splice
-    * them into this block's mFloats list.
-    */
-  void DrainPushedFloats(nsBlockReflowState& aState);
+  /**
+   * Moves frames from our PushedFloats list back into our mFloats list.
+   */
+  void DrainSelfPushedFloats();
+
+  /**
+   * First calls DrainSelfPushedFloats() then grabs pushed floats from this
+   * block's prev-in-flow, and splice them into this block's mFloats list too.
+   */
+  void DrainPushedFloats();
 
   /** Load all our floats into the float manager (without reflowing them).
    *  Assumes float manager is in our own coordinate system.
