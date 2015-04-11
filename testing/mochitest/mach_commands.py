@@ -718,11 +718,6 @@ def add_mochitest_general_args(parser):
         help='The maximum number of timeouts permitted before halting testing')
 
     parser.add_argument(
-        "--subsuite",
-        default=None,
-        help="Subsuite of tests to run.")
-
-    parser.add_argument(
         "--tag",
         dest='test_tags', action='append',
         help="Filter out tests that don't have the given tag. Can be used "
