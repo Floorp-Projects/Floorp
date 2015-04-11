@@ -305,7 +305,7 @@ public:
   }
 
   // Boolean conversion operator so people can use this in boolean tests
-  operator bool() const
+  explicit operator bool() const
   {
     return GetISupports();
   }
