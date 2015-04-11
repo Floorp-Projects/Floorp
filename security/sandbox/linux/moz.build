@@ -54,8 +54,10 @@ SOURCES += [
     '../chromium/sandbox/linux/seccomp-bpf/errorcode.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall.cc',
     '../chromium/sandbox/linux/seccomp-bpf/syscall_iterator.cc',
+    'LinuxCapabilities.cpp',
     'Sandbox.cpp',
     'SandboxAssembler.cpp',
+    'SandboxChroot.cpp',
     'SandboxFilter.cpp',
     'SandboxUtil.cpp',
 ]
@@ -69,6 +71,7 @@ if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
 DEFINES['NS_NO_XPCOM'] = True
 DISABLE_STL_WRAPPING = True
 
+LOCAL_INCLUDES += ['/security/sandbox/linux/common']
 LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
 LOCAL_INCLUDES += ['/security/sandbox/chromium']
 LOCAL_INCLUDES += ['/nsprpub']
