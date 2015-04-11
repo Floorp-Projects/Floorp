@@ -12,6 +12,7 @@
 #include "nsObserverList.h"
 #include "nsThreadUtils.h"
 #include "nsEnumeratorUtils.h"
+#include "xpcpublic.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
 
