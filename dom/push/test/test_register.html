@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1038811: Push tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1038811</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1038811">Mozilla Bug 1038811</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  function debug(str) {
+  //  console.log(str + "\n");
+  }
+
+  var controlledFrame;
+  function createControlledIFrame(swr) {
+    var p = new Promise(function(res, rej) {
+      var iframe = document.createElement('iframe');
+      iframe.id = "controlledFrame";
+      iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
+
+      iframe.onload = function() {
+        res(swr)
+      }
+      controlledFrame = iframe;
+      document.body.appendChild(iframe);
+    });
+    return p;
+  }
+
+  function sendPushToPushServer(pushEndpoint) {
+    // Work around CORS for now.
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "http://mochi.test:8888/tests/dom/push/test/push-server.sjs", true);
+    xhr.setRequestHeader("X-Push-Server", pushEndpoint);
+    xhr.onload = function(e) {
+      debug("xhr : " + this.status);
+    }
+    xhr.onerror = function(e) {
+      debug("xhr error: " + e);
+    }
+    xhr.send("version=24601");
+  }
+
+  var registration;
+
+  function start() {
+    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
+    .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function setupPushNotification(swr) {
+    var p = new Promise(function(res, rej) {
+      swr.pushManager.subscribe().then(
+        function(pushSubscription) {
+          ok(true, "successful registered for push notification");
+          res(pushSubscription);
+        }, function(error) {
+          ok(false, "could not register for push notification");
+          res(null);
+        }
+        );
+    });
+    return p;
+  }
+
+  function unregisterPushNotification(pushSubscription) {
+    controlledFrame.parentNode.removeChild(controlledFrame);
+    controlledFrame = null;
+    return pushSubscription.unsubscribe();
+  }
+
+  function waitForPushNotification(pushSubscription) {
+    var p = controlledFrame.contentWindow.waitOnPushMessage();
+    sendPushToPushServer(pushSubscription.endpoint);
+    return p.then(function() {
+      return pushSubscription;
+    });
+  }
+
+  function runTest() {
+    start()
+    .then(createControlledIFrame)
+    .then(setupPushNotification)
+    .then(waitForPushNotification)
+    .then(unregisterPushNotification)
+    .then(unregister)
+    .catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+    }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  SpecialPowers.addPermission('push', true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

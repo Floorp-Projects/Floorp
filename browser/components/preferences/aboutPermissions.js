@@ -417,6 +417,7 @@ let AboutPermissions = {
     Services.prefs.addObserver("signon.rememberSignons", this, false);
     Services.prefs.addObserver("network.cookie.", this, false);
     Services.prefs.addObserver("geo.enabled", this, false);
+    Services.prefs.addObserver("dom.push.enabled", this, false);
     Services.prefs.addObserver("dom.indexedDB.enabled", this, false);
     Services.prefs.addObserver("dom.disable_open_during_load", this, false);
     Services.prefs.addObserver("full-screen-api.enabled", this, false);
@@ -439,6 +440,7 @@ let AboutPermissions = {
       Services.prefs.removeObserver("signon.rememberSignons", this, false);
       Services.prefs.removeObserver("network.cookie.", this, false);
       Services.prefs.removeObserver("geo.enabled", this, false);
+      Services.prefs.removeObserver("dom.push.enabled", this, false);
       Services.prefs.removeObserver("dom.indexedDB.enabled", this, false);
       Services.prefs.removeObserver("dom.disable_open_during_load", this, false);
       Services.prefs.removeObserver("full-screen-api.enabled", this, false);
