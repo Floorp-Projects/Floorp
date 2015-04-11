@@ -1032,7 +1032,6 @@ var gBrowserInit = {
     CombinedStopReload.init();
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
-    ReadingListUI.init();
 
 #ifdef XP_WIN
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
@@ -1232,6 +1231,7 @@ var gBrowserInit = {
 #ifdef E10S_TESTING_ONLY
     gRemoteTabsUI.init();
 #endif
+    ReadingListUI.init();
 
     // Initialize the full zoom setting.
     // We do this before the session restore service gets initialized so we can
