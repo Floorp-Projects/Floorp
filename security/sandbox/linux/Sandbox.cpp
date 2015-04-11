@@ -8,6 +8,7 @@
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
+#include "SandboxUtil.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -419,6 +420,12 @@ SetCurrentProcessSandbox(SandboxType aType)
 #endif
 
   BroadcastSetThreadSandbox(aType);
+}
+
+void
+SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
+{
+  MOZ_RELEASE_ASSERT(IsSingleThreaded());
 }
 
 #ifdef MOZ_CONTENT_SANDBOX
