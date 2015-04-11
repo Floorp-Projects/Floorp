@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>fxa_web_channel_test</title>
+</head>
+<body>
+<script>
+  var webChannelId = "account_updates_test";
+
+  window.onload = function(){
+    var testName = window.location.search.replace(/^\?/, "");
+
+    switch(testName) {
+      case "profile_change":
+        test_profile_change();
+        break;
+      case "login":
+        test_login();
+        break;
+      case "can_link_account":
+        test_can_link_account();
+        break;
+    }
+  };
+
+  function test_profile_change() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: webChannelId,
+        message: {
+          command: "profile:change",
+          data: {
+            uid: "abc123",
+          },
+        },
+      },
+    });
+
+    window.dispatchEvent(event);
+  }
+
+  function test_login() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: webChannelId,
+        message: {
+          command: "fxaccounts:login",
+          data: {
+            authAt: Date.now(),
+            email: "testuser@testuser.com",
+            keyFetchToken: 'key_fetch_token',
+            sessionToken: 'session_token',
+            uid: 'uid',
+            unwrapBKey: 'unwrap_b_key',
+            verified: true,
+          },
+          messageId: 1,
+        },
+      },
+    });
+
+    window.dispatchEvent(event);
+  }
+
+  function test_can_link_account() {
+    window.addEventListener("WebChannelMessageToContent", function (e) {
+      // echo any responses from the browser back to the tests on the
+      // fxaccounts_webchannel_response_echo WebChannel. The tests are
+      // listening for events and do the appropriate checks.
+      var event = new window.CustomEvent("WebChannelMessageToChrome", {
+        detail: {
+          id: 'fxaccounts_webchannel_response_echo',
+          message: e.detail.message,
+        }
+      });
+
+      window.dispatchEvent(event);
+    }, true);
+
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: webChannelId,
+        message: {
+          command: "fxaccounts:can_link_account",
+          data: {
+            email: "testuser@testuser.com",
+          },
+          messageId: 2,
+        },
+      },
+    });
+
+    window.dispatchEvent(event);
+  }
+</script>
+</body>
+</html>
