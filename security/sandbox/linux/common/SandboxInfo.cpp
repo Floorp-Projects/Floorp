@@ -80,9 +80,20 @@ HasUserNamespaceSupport()
   // false negative.  However, for user namespaces, any kernel new
   // enough for the feature to be usable for us has setns support
   // (v3.8), so this is okay.
-  if (access("/proc/self/ns/user", F_OK) == -1) {
-    MOZ_ASSERT(errno == ENOENT);
-    return false;
+  //
+  // The non-user namespaces all default to "y" in init/Kconfig, but
+  // check them explicitly in case someone has a weird custom config.
+  static const char* const paths[] = {
+    "/proc/self/ns/user",
+    "/proc/self/ns/pid",
+    "/proc/self/ns/net",
+    "/proc/self/ns/ipc",
+  };
+  for (size_t i = 0; i < ArrayLength(paths); ++i) {
+    if (access(paths[i], F_OK) == -1) {
+      MOZ_ASSERT(errno == ENOENT);
+      return false;
+    }
   }
   return true;
 }
@@ -106,6 +117,21 @@ CanCreateUserNamespace()
   const char* cached = getenv(kCacheEnvName);
   if (cached) {
     return cached[0] > '0';
+  }
+
+  // Valgrind might allow the clone, but doesn't know what to do with
+  // unshare.  Check for that by unsharing nothing.  (Valgrind will
+  // probably need sandboxing disabled entirely, but no need to break
+  // things worse than strictly necessary.)
+  if (syscall(__NR_unshare, 0) != 0) {
+#ifdef MOZ_VALGRIND
+    MOZ_ASSERT(errno == ENOSYS);
+#else
+    // If something else can cause that call to fail, we's like to know
+    // about it; the right way to handle it might not be the same.
+    MOZ_ASSERT(false);
+#endif
+    return false;
   }
 
   pid_t pid = syscall(__NR_clone, SIGCHLD | CLONE_NEWUSER,
