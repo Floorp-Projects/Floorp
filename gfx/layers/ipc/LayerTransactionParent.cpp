@@ -327,7 +327,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetEventRegions(common.eventRegions());
       layer->SetContentFlags(common.contentFlags());
       layer->SetOpacity(common.opacity());
-      layer->SetClipRect(common.useClipRect() ? &common.clipRect() : nullptr);
+      layer->SetClipRect(common.useClipRect() ? Some(common.clipRect()) : Nothing());
       layer->SetBaseTransform(common.transform().value());
       layer->SetPostScale(common.postXScale(), common.postYScale());
       layer->SetIsFixedPosition(common.isFixedPosition());

@@ -341,15 +341,17 @@ public:
     return region;
   }
 
-  const nsIntRect* GetClipRect() const
+  const Maybe<ParentLayerIntRect>& GetClipRect() const
   {
     MOZ_ASSERT(IsValid());
+
+    static const Maybe<ParentLayerIntRect> sNoClipRect = Nothing();
 
     if (AtBottomLayer()) {
       return mLayer->GetClipRect();
     }
 
-    return nullptr;
+    return sNoClipRect;
   }
 
   EventRegionsOverride GetEventRegionsOverride() const
