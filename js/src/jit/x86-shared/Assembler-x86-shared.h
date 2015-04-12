@@ -36,23 +36,15 @@ class Operand
   public:
     explicit Operand(Register reg)
       : kind_(REG),
-        base_(reg.code()),
-        scale_(TimesOne),
-        index_(0),
-        disp_(0)
+        base_(reg.code())
     { }
     explicit Operand(FloatRegister reg)
       : kind_(FPREG),
-        base_(reg.encoding()),
-        scale_(TimesOne),
-        index_(0),
-        disp_(0)
+        base_(reg.encoding())
     { }
     explicit Operand(const Address& address)
       : kind_(MEM_REG_DISP),
         base_(address.base.code()),
-        scale_(TimesOne),
-        index_(0),
         disp_(address.offset)
     { }
     explicit Operand(const BaseIndex& address)
@@ -72,22 +64,14 @@ class Operand
     Operand(Register reg, int32_t disp)
       : kind_(MEM_REG_DISP),
         base_(reg.code()),
-        scale_(TimesOne),
-        index_(0),
         disp_(disp)
     { }
     explicit Operand(AbsoluteAddress address)
       : kind_(MEM_ADDRESS32),
-        base_(Registers::Invalid),
-        scale_(TimesOne),
-        index_(0),
         disp_(X86Encoding::AddressImmediate(address.addr))
     { }
     explicit Operand(PatchedAbsoluteAddress address)
       : kind_(MEM_ADDRESS32),
-        base_(Registers::Invalid),
-        scale_(TimesOne),
-        index_(0),
         disp_(X86Encoding::AddressImmediate(address.addr))
     { }
 
