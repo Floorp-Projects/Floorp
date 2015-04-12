@@ -16,7 +16,11 @@ MacIOSurfaceTextureClientOGL::MacIOSurfaceTextureClientOGL(ISurfaceAllocator* aA
 {}
 
 MacIOSurfaceTextureClientOGL::~MacIOSurfaceTextureClientOGL()
-{}
+{
+  if (mActor && mSurface) {
+    KeepUntilFullDeallocation(MakeUnique<TKeepAlive<MacIOSurface>>(mSurface));
+  }
+}
 
 void
 MacIOSurfaceTextureClientOGL::InitWith(MacIOSurface* aSurface)
