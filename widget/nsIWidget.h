@@ -114,8 +114,8 @@ typedef void* nsNativeWidget;
 #define NS_NATIVE_PLUGIN_ID            105
 
 #define NS_IWIDGET_IID \
-{ 0x316E4600, 0x15DB, 0x47AE, \
-  { 0xBF, 0xE4, 0x5B, 0xCD, 0xFF, 0x80, 0x80, 0x83 } };
+{ 0x7a4ece50, 0x5c52, 0x47c2, \
+  { 0x8c, 0x9e, 0x32, 0xd2, 0x5a, 0x27, 0x53, 0x34 } }
 
 /*
  * Window shadow styles
@@ -1502,6 +1502,11 @@ class nsIWidget : public nsISupports {
      * later.
      */
     NS_IMETHOD Invalidate(const nsIntRect & aRect) = 0;
+
+    /**
+     * Widget implementation may support synchronous painting.
+     */
+   virtual void Update() { }
 
     enum LayerManagerPersistence
     {
