@@ -1181,7 +1181,7 @@ nsContextMenu.prototype = {
   // Helper function to wait for appropriate MIME-type headers and
   // then prompt the user with a file picker
   saveHelper: function(linkURL, linkText, dialogTitle, bypassCache, doc, docURI,
-                       linkDownload) {
+                       windowID, linkDownload) {
     // canonical def in nsURILoader.h
     const NS_ERROR_SAVE_LINK_AS_TIMEOUT = 0x805d0020;
 
@@ -1216,7 +1216,10 @@ nsContextMenu.prototype = {
 
             const promptSvc = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                               getService(Ci.nsIPromptService);
-            promptSvc.alert(doc.defaultView, title, msg);
+            const wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+                       getService(Ci.nsIWindowMediator);
+            let window = wm.getOuterWindowWithId(windowID);
+            promptSvc.alert(window, title, msg);
           } catch (ex) {}
           return;
         }
@@ -1327,6 +1330,7 @@ nsContextMenu.prototype = {
     urlSecurityCheck(this.linkURL, this.principal);
     this.saveHelper(this.linkURL, this.linkText, null, true, this.ownerDoc,
                     gContextMenuContentData.documentURIObject,
+                    gContextMenuContentData.frameOuterWindowID,
                     this.linkDownload);
   },
 
@@ -1354,7 +1358,8 @@ nsContextMenu.prototype = {
     else if (this.onVideo || this.onAudio) {
       urlSecurityCheck(this.mediaURL, this.principal);
       var dialogTitle = this.onVideo ? "SaveVideoTitle" : "SaveAudioTitle";
-      this.saveHelper(this.mediaURL, null, dialogTitle, false, doc, referrerURI, "");
+      this.saveHelper(this.mediaURL, null, dialogTitle, false, doc, referrerURI,
+                      gContextMenuContentData.frameOuterWindowID, "");
     }
   },
 
