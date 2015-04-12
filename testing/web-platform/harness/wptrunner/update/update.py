@@ -14,7 +14,7 @@ from base import Step, StepRunner, exit_clean, exit_unclean
 from state import State
 
 def setup_paths(sync_path):
-    sys.path.insert(0, os.path.abspath(sync_path))
+    sys.path.insert(0, sync_path)
     from tools import localpaths
 
 class LoadConfig(Step):
@@ -117,9 +117,7 @@ class WPTUpdate(object):
         if not kwargs["sync"]:
             setup_paths(self.serve_root)
         else:
-            if os.path.exists(kwargs["sync_path"]):
-                # If the sync path doesn't exist we defer this until it does
-                setup_paths(kwargs["sync_path"])
+            setup_paths(kwargs["sync_path"])
 
         self.state = State(logger)
         self.kwargs = kwargs
