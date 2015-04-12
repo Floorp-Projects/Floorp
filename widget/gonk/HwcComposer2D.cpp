@@ -19,9 +19,10 @@
 
 #include "ImageLayers.h"
 #include "libdisplay/GonkDisplay.h"
-#include "HwcUtils.h"
 #include "HwcComposer2D.h"
+#include "HwcUtils.h"
 #include "LayerScope.h"
+#include "Units.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
@@ -345,8 +346,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     nsIntRect clip;
+    nsIntRect layerClip = aLayer->GetEffectiveClipRect() ?
+                          ParentLayerIntRect::ToUntyped(*aLayer->GetEffectiveClipRect()) : nsIntRect();
+    nsIntRect* layerClipPtr = aLayer->GetEffectiveClipRect() ? &layerClip : nullptr;
     if (!HwcUtils::CalculateClipRect(aParentTransform,
-                                     aLayer->GetEffectiveClipRect(),
+                                     layerClipPtr,
                                      aClip,
                                      &clip))
     {
