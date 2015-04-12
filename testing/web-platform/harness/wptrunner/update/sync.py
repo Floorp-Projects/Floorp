@@ -4,7 +4,6 @@
 
 import os
 import shutil
-import sys
 import uuid
 
 from .. import testloader
@@ -94,14 +93,6 @@ class UpdateCheckout(Step):
         sync_tree.update(state.sync["remote_url"],
                          state.sync["branch"],
                          state.local_branch)
-        sync_path = os.path.abspath(sync_tree.root)
-        if not sync_path in sys.path:
-            from update import setup_paths
-            setup_paths(sync_path)
-
-    def restore(self, state):
-        assert os.path.abspath(state.sync_tree.root) in sys.path
-        Step.restore(self, state)
 
 
 class GetSyncTargetCommit(Step):
