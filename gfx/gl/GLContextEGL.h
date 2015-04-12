@@ -96,6 +96,14 @@ public:
         return mContext;
     }
 
+    EGLSurface GetEGLSurface() {
+        return mSurface;
+    }
+
+    EGLDisplay GetEGLDisplay() {
+        return EGL_DISPLAY();
+    }
+
     bool BindTex2DOffscreen(GLContext *aOffscreen);
     void UnbindTex2DOffscreen(GLContext *aOffscreen);
     void BindOffscreenFramebuffer();
