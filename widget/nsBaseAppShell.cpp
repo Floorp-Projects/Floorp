@@ -25,11 +25,7 @@ nsBaseAppShell::nsBaseAppShell()
   : mSuspendNativeCount(0)
   , mEventloopNestingLevel(0)
   , mBlockedWait(nullptr)
-  , mFavorPerf(0)
   , mNativeEventPending(false)
-  , mStarvationDelay(0)
-  , mSwitchTime(0)
-  , mLastNativeEventTime(0)
   , mEventloopNestingState(eEventloopNone)
   , mRunning(false)
   , mExiting(false)
@@ -180,20 +176,6 @@ nsBaseAppShell::Exit(void)
 }
 
 NS_IMETHODIMP
-nsBaseAppShell::FavorPerformanceHint(bool favorPerfOverStarvation,
-                                     uint32_t starvationDelay)
-{
-  mStarvationDelay = PR_MillisecondsToInterval(starvationDelay);
-  if (favorPerfOverStarvation) {
-    ++mFavorPerf;
-  } else {
-    --mFavorPerf;
-    mSwitchTime = PR_IntervalNow();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBaseAppShell::SuspendNative()
 {
   ++mSuspendNativeCount;
@@ -253,9 +235,6 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
       OnDispatchedEvent(thr); // in case we blocked it earlier
   }
 
-  PRIntervalTime start = PR_IntervalNow();
-  PRIntervalTime limit = THREAD_EVENT_STARVATION_LIMIT;
-
   // Unblock outer nested wait loop (below).
   if (mBlockedWait)
     *mBlockedWait = false;
@@ -271,21 +250,7 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
   // NativeEventCallback to process gecko events.
   mProcessedGeckoEvents = false;
 
-  if (mFavorPerf <= 0 && start > mSwitchTime + mStarvationDelay) {
-    // Favor pending native events
-    PRIntervalTime now = start;
-    bool keepGoing;
-    do {
-      mLastNativeEventTime = now;
-      keepGoing = DoProcessNextNativeEvent(false, recursionDepth);
-    } while (keepGoing && ((now = PR_IntervalNow()) - start) < limit);
-  } else {
-    // Avoid starving native events completely when in performance mode
-    if (start - mLastNativeEventTime > limit) {
-      mLastNativeEventTime = start;
-      DoProcessNextNativeEvent(false, recursionDepth);
-    }
-  }
+  DoProcessNextNativeEvent(false, recursionDepth);
 
   while (!NS_HasPendingEvents(thr) && !mProcessedGeckoEvents) {
     // If we have been asked to exit from Run, then we should not wait for
@@ -294,7 +259,6 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
     if (mExiting)
       mayWait = false;
 
-    mLastNativeEventTime = PR_IntervalNow();
     if (!DoProcessNextNativeEvent(mayWait, recursionDepth) || !mayWait)
       break;
   }

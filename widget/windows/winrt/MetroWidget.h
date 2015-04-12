@@ -110,6 +110,7 @@ public:
                 bool aUpdateNCArea = false,
                 bool aIncludeChildren = false);
   NS_IMETHOD    Invalidate(const nsIntRect & aRect);
+  virtual void  Update() override;
   NS_IMETHOD    DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                               nsEventStatus& aStatus);
   NS_IMETHOD    ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY);
