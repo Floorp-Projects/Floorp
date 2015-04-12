@@ -6587,6 +6587,9 @@ private:
 
   virtual void
   SendResults() override;
+
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 class OpenDatabaseOp::VersionChangeOp final
@@ -17658,6 +17661,18 @@ OpenDatabaseOp::SendResults()
   mDatabase.swap(database);
 
   FinishSendResults();
+}
+
+void
+OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy)
+{
+  AssertIsOnBackgroundThread();
+
+  NoteActorDestroyed();
+
+  if (mDatabase && aWhy != Deletion) {
+    mDatabase->Invalidate();
+  }
 }
 
 void
