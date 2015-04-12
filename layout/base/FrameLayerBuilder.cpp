@@ -7,35 +7,38 @@
 
 #include "FrameLayerBuilder.h"
 
-#include "mozilla/gfx/Matrix.h"
-#include "nsDisplayList.h"
-#include "nsPresContext.h"
-#include "nsLayoutUtils.h"
-#include "Layers.h"
-#include "BasicLayers.h"
-#include "gfxUtils.h"
-#include "nsRenderingContext.h"
-#include "MaskLayerImageCache.h"
-#include "nsIScrollableFrame.h"
-#include "nsPrintfCString.h"
-#include "LayerTreeInvalidation.h"
-#include "nsSVGIntegrationUtils.h"
-#include "ImageContainer.h"
-#include "ActiveLayerTracker.h"
-#include "gfx2DGlue.h"
 #include "mozilla/LookAndFeel.h"
-#include "nsDocShell.h"
-#include "nsImageFrame.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "mozilla/gfx/Matrix.h"
+#include "ActiveLayerTracker.h"
+#include "BasicLayers.h"
+#include "ImageContainer.h"
+#include "LayerTreeInvalidation.h"
+#include "Layers.h"
+#include "MaskLayerImageCache.h"
+#include "UnitTransforms.h"
+#include "Units.h"
+#include "gfx2DGlue.h"
+#include "gfxUtils.h"
+#include "nsDisplayList.h"
+#include "nsDocShell.h"
+#include "nsIScrollableFrame.h"
+#include "nsImageFrame.h"
+#include "nsLayoutUtils.h"
+#include "nsPresContext.h"
+#include "nsPrintfCString.h"
+#include "nsRenderingContext.h"
+#include "nsSVGIntegrationUtils.h"
 
-#include "GeckoProfiler.h"
-#include "mozilla/gfx/Tools.h"
-#include "mozilla/gfx/2D.h"
-#include "gfxPrefs.h"
-#include "LayersLogging.h"
-#include "mozilla/unused.h"
-#include "mozilla/ReverseIterator.h"
 #include "mozilla/Move.h"
+#include "mozilla/ReverseIterator.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Tools.h"
+#include "mozilla/unused.h"
+#include "GeckoProfiler.h"
+#include "LayersLogging.h"
+#include "gfxPrefs.h"
 
 #include <algorithm>
 
@@ -2828,11 +2831,11 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       imageLayer->SetPostScale(mParameters.mXScale,
                                mParameters.mYScale);
       if (data->mItemClip.HasClip()) {
-        nsIntRect clip = ScaleToNearestPixels(data->mItemClip.GetClipRect());
-        clip.MoveBy(mParameters.mOffset);
-        imageLayer->SetClipRect(&clip);
+        ParentLayerIntRect clip = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(data->mItemClip.GetClipRect()));
+        clip.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));
+        imageLayer->SetClipRect(Some(clip));
       } else {
-        imageLayer->SetClipRect(nullptr);
+        imageLayer->SetClipRect(Nothing());
       }
       layer = imageLayer;
       mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage,
@@ -2849,7 +2852,7 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
       nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
       visibleRect.MoveBy(-GetTranslationForPaintedLayer(data->mLayer));
       colorLayer->SetBounds(visibleRect);
-      colorLayer->SetClipRect(nullptr);
+      colorLayer->SetClipRect(Nothing());
 
       layer = colorLayer;
       FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected color layer=%p\n", layer.get());
@@ -2868,15 +2871,15 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
 
     // Hide the PaintedLayer. We leave it in the layer tree so that we
     // can find and recycle it later.
-    nsIntRect emptyRect;
-    data->mLayer->SetClipRect(&emptyRect);
+    ParentLayerIntRect emptyRect;
+    data->mLayer->SetClipRect(Some(emptyRect));
     data->mLayer->SetVisibleRegion(nsIntRegion());
     data->mLayer->InvalidateRegion(data->mLayer->GetValidRegion().GetBounds());
     data->mLayer->SetEventRegions(EventRegions());
   } else {
     layer = data->mLayer;
     imageContainer = nullptr;
-    layer->SetClipRect(nullptr);
+    layer->SetClipRect(Nothing());
     FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected painted layer=%p\n", layer.get());
   }
 
@@ -3508,15 +3511,15 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
         static_cast<nsDisplayTransform*>(item)->ShouldPrerender(mBuilder);
-    nsIntRect clipRect;
+    ParentLayerIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
     if (itemClip.HasClip()) {
       itemContent.IntersectRect(itemContent, itemClip.GetClipRect());
-      clipRect = ScaleToNearestPixels(itemClip.GetClipRect());
+      clipRect = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(itemClip.GetClipRect()));
       if (!prerenderedTransform) {
-        itemDrawRect.IntersectRect(itemDrawRect, clipRect);
+        itemDrawRect.IntersectRect(itemDrawRect, ParentLayerIntRect::ToUntyped(clipRect));
       }
-      clipRect.MoveBy(mParameters.mOffset);
+      clipRect.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));
     }
 #ifdef DEBUG
     nsRect bounds = itemContent;
@@ -3614,7 +3617,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       // visible rect for the two important cases.
       nscolor uniformColor = NS_RGBA(0,0,0,0);
       nscolor* uniformColorPtr = !mayDrawOutOfOrder ? &uniformColor : nullptr;
-      nsIntRect* clipPtr = itemClip.HasClip() ? &clipRect : nullptr;
+      nsIntRect clipRectUntyped;
+      nsIntRect* clipPtr = itemClip.HasClip() ? &clipRectUntyped : nullptr;
+      if (clipPtr) {
+	      clipRectUntyped = ParentLayerIntRect::ToUntyped(clipRect);
+      }
       if (animatedGeometryRoot == item->Frame() &&
           animatedGeometryRoot != mBuilder->RootReferenceFrame()) {
         // This is the case for scrollbar thumbs, for example. In that case the
@@ -3622,10 +3629,12 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         const nsIFrame* clipAnimatedGeometryRoot =
           mPaintedLayerDataTree.GetParentAnimatedGeometryRoot(animatedGeometryRoot);
         mPaintedLayerDataTree.AddingOwnLayer(clipAnimatedGeometryRoot,
-                                             clipPtr, uniformColorPtr);
+					     clipPtr,
+					     uniformColorPtr);
       } else if (prerenderedTransform) {
         mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot,
-                                             clipPtr, uniformColorPtr);
+					     clipPtr,
+					     uniformColorPtr);
       } else {
         // Using itemVisibleRect here isn't perfect. itemVisibleRect can be
         // larger or smaller than the potential bounds of item's contents in
@@ -3680,9 +3689,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                    "If we have rounded rects, we must have a clip rect");
       // It has its own layer. Update that layer's clip and visible rects.
       if (itemClip.HasClip()) {
-        ownLayer->SetClipRect(&clipRect);
+        ownLayer->SetClipRect(Some(clipRect));
       } else {
-        ownLayer->SetClipRect(nullptr);
+        ownLayer->SetClipRect(Nothing());
       }
 
       // rounded rectangle clipping using mask layers
@@ -4225,8 +4234,8 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   }
   uint32_t baseLength = metricsArray.Length();
 
-  nsIntRect tmpClipRect;
-  const nsIntRect* layerClip = aEntry->mLayer->GetClipRect();
+  ParentLayerIntRect tmpClipRect;
+  const ParentLayerIntRect* layerClip = aEntry->mLayer->GetClipRect().ptrOr(nullptr);
   nsIFrame* fParent;
   for (const nsIFrame* f = aEntry->mAnimatedGeometryRoot;
        f != mContainerAnimatedGeometryRoot;
@@ -4255,7 +4264,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
     scrollFrame->ComputeFrameMetrics(aEntry->mLayer, mContainerReferenceFrame,
                                      mParameters, &clipRect, &metricsArray);
     if (clipRect.width >= 0) {
-      nsIntRect pixClip = ScaleToNearestPixels(clipRect);
+      ParentLayerIntRect pixClip = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(clipRect));
       if (layerClip) {
         tmpClipRect.IntersectRect(pixClip, *layerClip);
       } else {
@@ -4267,7 +4276,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       // both CSS and scroll clipping.
     }
   }
-  aEntry->mLayer->SetClipRect(layerClip);
+  aEntry->mLayer->SetClipRect(ToMaybe(layerClip));
   // Watch out for FrameMetrics copies in profiles
   aEntry->mLayer->SetFrameMetrics(metricsArray);
 }
@@ -4298,9 +4307,9 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     if (hideAll) {
       e->mVisibleRegion.SetEmpty();
     } else if (!e->mLayer->IsScrollbarContainer()) {
-      const nsIntRect* clipRect = e->mLayer->GetClipRect();
+      const Maybe<ParentLayerIntRect>& clipRect = e->mLayer->GetClipRect();
       if (clipRect && opaqueRegionForContainer >= 0 &&
-          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(*clipRect)) {
+          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(ParentLayerIntRect::ToUntyped(*clipRect))) {
         e->mVisibleRegion.SetEmpty();
       } else if (data) {
         e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
@@ -4333,9 +4342,9 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
       }
 
       nsIntRegion clippedOpaque = e->mOpaqueRegion;
-      const nsIntRect* clipRect = e->mLayer->GetClipRect();
+      const Maybe<ParentLayerIntRect>& clipRect = e->mLayer->GetClipRect();
       if (clipRect) {
-        clippedOpaque.AndWith(*clipRect);
+        clippedOpaque.AndWith(ParentLayerIntRect::ToUntyped(*clipRect));
       }
       data->mOpaqueRegion.Or(data->mOpaqueRegion, clippedOpaque);
       if (e->mHideAllLayersBelow) {
