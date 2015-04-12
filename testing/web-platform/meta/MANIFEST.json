@@ -19646,52 +19646,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "service-workers/cache-storage/serviceworker/cache-match.https.html": [
-          {
-            "path": "service-workers/cache-storage/serviceworker/cache-match.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/serviceworker/cache-match.https.html"
-          }
-        ],
-        "service-workers/cache-storage/serviceworker/cache-put.https.html": [
-          {
-            "path": "service-workers/cache-storage/serviceworker/cache-put.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/serviceworker/cache-put.https.html"
-          }
-        ],
-        "service-workers/cache-storage/window/cache-match.https.html": [
-          {
-            "path": "service-workers/cache-storage/window/cache-match.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/window/cache-match.https.html"
-          }
-        ],
-        "service-workers/cache-storage/window/cache-put.https.html": [
-          {
-            "path": "service-workers/cache-storage/window/cache-put.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/window/cache-put.https.html"
-          }
-        ],
-        "service-workers/cache-storage/worker/cache-match.https.html": [
-          {
-            "path": "service-workers/cache-storage/worker/cache-match.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/worker/cache-match.https.html"
-          }
-        ],
-        "service-workers/cache-storage/worker/cache-put.https.html": [
-          {
-            "path": "service-workers/cache-storage/worker/cache-put.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/worker/cache-put.https.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
