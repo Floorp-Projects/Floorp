@@ -298,13 +298,13 @@ CallJSNativeConstructor(JSContext* cx, Native native, const CallArgs& args)
 }
 
 MOZ_ALWAYS_INLINE bool
-CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject receiver, HandleId id,
+CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj, HandleId id,
                MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    assertSameCompartment(cx, receiver, id, vp);
-    bool ok = op(cx, receiver, id, vp);
+    assertSameCompartment(cx, obj, id, vp);
+    bool ok = op(cx, obj, id, vp);
     if (ok)
         assertSameCompartment(cx, vp);
     return ok;

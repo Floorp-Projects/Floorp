@@ -869,7 +869,7 @@ class MUseDefIterator
         current_(search(def->usesBegin()))
     { }
 
-    operator bool() const {
+    explicit operator bool() const {
         return current_ != def_->usesEnd();
     }
     MUseDefIterator operator ++() {

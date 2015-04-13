@@ -456,6 +456,12 @@ child:
 
     async SpeakerManagerNotify();
 
+    /**
+     * Communication between the PuppetBidiKeyboard and the actual
+     * BidiKeyboard hosted by the parent
+     */
+    async BidiKeyboardNotify(bool isLangRTL);
+
     async DataStoreNotify(uint32_t aAppId, nsString aName,
                           nsString aManifestURL);
 
@@ -616,7 +622,7 @@ parent:
     sync GetProcessAttributes()
         returns (ContentParentId cpId, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
-        returns (bool isOffline, nsString[] dictionaries,
+        returns (bool isOffline, bool isLangRTL, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy);
 

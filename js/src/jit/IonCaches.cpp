@@ -1039,10 +1039,9 @@ EmitGetterCall(JSContext* cx, MacroAssembler& masm,
         masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
     } else if (IsCacheableGetPropCallPropertyOp(obj, holder, shape)) {
         Register argJSContextReg = regSet.takeAnyGeneral();
-        Register argUintNReg     = regSet.takeAnyGeneral();
-        Register argVpReg        = regSet.takeAnyGeneral();
-        Register argObjReg       = argUintNReg;
+        Register argObjReg       = regSet.takeAnyGeneral();
         Register argIdReg        = regSet.takeAnyGeneral();
+        Register argVpReg        = regSet.takeAnyGeneral();
 
         GetterOp target = shape->getterOp();
         MOZ_ASSERT(target);
@@ -1056,11 +1055,22 @@ EmitGetterCall(JSContext* cx, MacroAssembler& masm,
         masm.Push(UndefinedValue());
         masm.moveStackPtrTo(argVpReg);
 
-        // push canonical jsid from shape instead of propertyname.
+        // Push canonical jsid from shape instead of propertyname.
         masm.Push(shape->propid(), scratchReg);
         masm.moveStackPtrTo(argIdReg);
 
-        masm.Push(object);
+        // Push the holder.
+        if (obj == holder) {
+            // When the holder is also the current receiver, we just have a shape guard,
+            // so we might end up with a random object which is also guaranteed to have
+            // this JSGetterOp.
+            masm.Push(object);
+        } else {
+            // If the holder is on the prototype chain, the prototype-guarding
+            // only allows objects with the same holder.
+            masm.movePtr(ImmMaybeNurseryPtr(holder), scratchReg);
+            masm.Push(scratchReg);
+        }
         masm.moveStackPtrTo(argObjReg);
 
         masm.loadJSContext(argJSContextReg);

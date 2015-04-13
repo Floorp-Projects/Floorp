@@ -9,8 +9,8 @@
  * scaling implementation.
  */
 
-#ifndef MOZILLA_IMAGELIB_DOWNSCALER_H_
-#define MOZILLA_IMAGELIB_DOWNSCALER_H_
+#ifndef mozilla_image_src_Downscaler_h
+#define mozilla_image_src_Downscaler_h
 
 #include "mozilla/UniquePtr.h"
 #include "nsRect.h"
@@ -149,6 +149,6 @@ public:
 } // namespace image
 } // namespace mozilla
 
-#endif
+#endif // MOZ_ENABLE_SKIA
 
-#endif // MOZILLA_IMAGELIB_DOWNSCALER_H_
+#endif // mozilla_image_src_Downscaler_h

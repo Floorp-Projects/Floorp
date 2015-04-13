@@ -427,6 +427,9 @@ private:
                            WhichServiceWorker aWhichWorker,
                            nsISupports** aServiceWorker);
 
+  already_AddRefed<ServiceWorker>
+  CreateServiceWorkerForScope(const nsACString& aScope);
+
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
                                             WhichServiceWorker aWhichOnes);

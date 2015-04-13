@@ -884,8 +884,9 @@ GeckoDriver.prototype.executeScriptInSandbox = function(
     directInject,
     async,
     timeout) {
-  if (directInject && async && (timeout == null || timeout == 0))
+  if (directInject && async && (timeout == null || timeout == 0)) {
     throw new TimeoutError("Please set a timeout");
+  }
 
   if (this.importedScripts.exists()) {
     let stream = Cc["@mozilla.org/network/file-input-stream;1"]
@@ -1924,7 +1925,7 @@ GeckoDriver.prototype.multiAction = function(cmd, resp) {
     case Context.CONTENT:
       this.addFrameCloseListener("multi action chain");
       yield this.listener.multiAction(
-          {value: value, max_len: maxlen} = cmd.parameters);
+          {value: cmd.parameters.value, maxlen: cmd.parameters.max_len});
       break;
   }
 };
@@ -2307,6 +2308,10 @@ GeckoDriver.prototype.getElementRect = function(cmd, resp) {
 GeckoDriver.prototype.sendKeysToElement = function(cmd, resp) {
   let {id, value} = cmd.parameters;
 
+  if (!value) {
+    throw new IllegalArgumentError(`Expected character sequence: ${value}`);
+  }
+
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
@@ -2322,7 +2327,36 @@ GeckoDriver.prototype.sendKeysToElement = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
+      let err;
+      let listener = function(msg) {
+        this.mm.removeMessageListener("Marionette:setElementValue", listener);
+
+        let val = msg.data.value;
+        let el = msg.objects.element;
+        let win = this.getCurrentWindow();
+
+        if (el.type == "file") {
+          Cu.importGlobalProperties(["File"]);
+          let fs = Array.prototype.slice.call(el.files);
+          let file;
+          try {
+            file = new File(val);
+          } catch (e) {
+            err = new IllegalArgumentError(`File not found: ${val}`);
+          }
+          fs.push(file);
+          el.mozSetFileArray(fs);
+        } else {
+          el.value = val;
+        }
+      }.bind(this);
+
+      this.mm.addMessageListener("Marionette:setElementValue", listener);
       yield this.listener.sendKeysToElement({id: id, value: value});
+      this.mm.removeMessageListener("Marionette:setElementValue", listener);
+      if (err) {
+        throw err;
+      }
       break;
   }
 };

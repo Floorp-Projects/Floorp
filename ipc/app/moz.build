@@ -62,7 +62,7 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         'sha256.c',
     ]
 
-if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Linux':
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] in ('Linux', 'Android'):
     USE_LIBS += [
         'mozsandbox',
     ]

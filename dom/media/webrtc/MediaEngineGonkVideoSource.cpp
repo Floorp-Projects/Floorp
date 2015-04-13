@@ -221,8 +221,11 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
 
+  MOZ_ASSERT(mCameraControl, "mCameraControl is nullptr");
   if (mState == kStarted) {
     return NS_OK;
+  } else if (!mCameraControl) {
+    return NS_ERROR_FAILURE;
   }
   mTrackID = aID;
   mImageContainer = layers::LayerManager::CreateImageContainer();

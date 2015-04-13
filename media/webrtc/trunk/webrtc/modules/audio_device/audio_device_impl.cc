@@ -37,6 +37,9 @@
 #endif
     #include "webrtc/modules/audio_device/android/opensles_input.h"
     #include "webrtc/modules/audio_device/android/opensles_output.h"
+#elif defined(WEBRTC_AUDIO_SNDIO)
+    #include "audio_device_utility_sndio.h"
+    #include "audio_device_sndio.h"
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     #include "audio_device_utility_linux.h"
  #if defined(LINUX_ALSA)
@@ -172,6 +175,9 @@ int32_t AudioDeviceModuleImpl::CheckPlatform()
 #elif defined(WEBRTC_ANDROID)
     platform = kPlatformAndroid;
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "current platform is ANDROID");
+#elif defined(WEBRTC_AUDIO_SNDIO)
+    platform = kPlatformSndio;
+    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "current platform is POSIX using SNDIO");
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     platform = kPlatformLinux;
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "current platform is LINUX");
@@ -319,6 +325,15 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
         ptrAudioDeviceUtility = new AudioDeviceUtilityAndroid(Id());
     }
     // END #if defined(WEBRTC_ANDROID_OPENSLES)
+
+#elif defined(WEBRTC_AUDIO_SNDIO)
+    ptrAudioDevice = new AudioDeviceSndio(Id());
+    if (ptrAudioDevice != NULL)
+    {
+        WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "attempting to use the Sndio audio API...");
+        // Create the sndio implementation of the Device Utility.
+        ptrAudioDeviceUtility = new AudioDeviceUtilitySndio(Id());
+    }
 
     // Create the *Linux* implementation of the Audio Device
     //

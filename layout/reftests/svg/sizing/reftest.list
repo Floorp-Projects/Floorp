@@ -11,7 +11,7 @@
 #   http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
 #   http://www.w3.org/TR/CSS21/visudet.html
 
-skip-if(B2G||Mulet) fails-if(smallScreen&&Android&&AndroidVersion!=18) != scrollbars-01.svg scrollbars-01-anti-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) != scrollbars-01.svg scrollbars-01-anti-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android&&AndroidVersion==18) != scrollbars-02.svg scrollbars-01-anti-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 
 # Standalone tests
