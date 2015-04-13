@@ -52,6 +52,7 @@ struct HttpChannelOpenArgs
   bool                        chooseApplicationCache;
   nsCString                   appCacheClientID;
   bool                        allowSpdy;
+  bool                        allowAltSvc;
   OptionalFileDescriptorSet   fds;
   PrincipalInfo               requestingPrincipalInfo;
   PrincipalInfo               triggeringPrincipalInfo;
