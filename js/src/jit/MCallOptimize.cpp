@@ -3227,9 +3227,6 @@ IonBuilder::inlineSimdCheck(CallInfo& callInfo, JSNative native, SimdTypeDescr::
 
     MIRType mirType = SimdTypeDescrToMIRType(type);
     MSimdUnbox* unbox = MSimdUnbox::New(alloc(), callInfo.getArg(0), mirType);
-    // Make sure not to remove this unbox!
-    unbox->setGuard();
-
     current->add(unbox);
     current->push(callInfo.getArg(0));
 
