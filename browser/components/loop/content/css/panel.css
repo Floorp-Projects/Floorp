@@ -179,23 +179,23 @@ body {
   padding: .5rem 0;
 }
 
-.rooms > div > .context {
+.new-room-view > .context {
   margin: .5rem 0 0;
   background-color: #DEEFF7;
   border-radius: 3px 3px 0 0;
   padding: .5rem;
 }
 
-.rooms > div > .context > .context-enabled {
+.new-room-view > .context > .context-enabled {
   margin-bottom: .5rem;
   display: block;
 }
 
-.rooms > div > .context > .context-enabled > input {
+.new-room-view > .context > .context-enabled > input {
   -moz-margin-start: 0;
 }
 
-.rooms > div > .context > .context-preview {
+.new-room-view > .context > .context-preview {
   float: right;
   width: 100px;
   max-height: 200px;
@@ -203,26 +203,26 @@ body {
   margin-bottom: 10px;
 }
 
-body[dir=rtl] .rooms > div > .context > .context-preview {
+body[dir=rtl] .new-room-view > .context > .context-preview {
   float: left;
 }
 
-.rooms > div > .context > .context-preview[src=""] {
+.new-room-view > .context > .context-preview[src=""] {
   display: none;
 }
 
-.rooms > div > .context > .context-description {
+.new-room-view > .context > .context-description {
   display: block;
   color: #707070;
 }
 
-.rooms > div > .context > .context-url {
+.new-room-view > .context > .context-url {
   display: block;
   color: #59A1D7;
   clear: both;
 }
 
-.rooms > div > .btn {
+.new-room-view > .btn {
   display: block;
   font-size: 1rem;
   margin: 0 auto .5rem;
@@ -232,7 +232,7 @@ body[dir=rtl] .rooms > div > .context > .context-preview {
 }
 
 /* Remove when bug 1142671 is backed out. */
-.rooms > div > :not(.context) + .btn {
+.new-room-view > .context.hide + .new-room-button {
   border-radius: 3px;
   margin-top: 0.5rem;
 }
