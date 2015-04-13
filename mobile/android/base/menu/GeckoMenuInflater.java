@@ -7,8 +7,6 @@ package org.mozilla.gecko.menu;
 import java.io.IOException;
 
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

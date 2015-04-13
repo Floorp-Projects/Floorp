@@ -5,11 +5,6 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.Element;
-import org.mozilla.gecko.NewTabletUI;
-import org.mozilla.gecko.R;
-
-import android.app.Activity;
 
 /* Tests related to the about: page:
  *  - check that about: loads from the URL bar

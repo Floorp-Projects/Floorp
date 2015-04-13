@@ -197,7 +197,8 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   font-size: 13px; /* height of the icons */
 }
 
-.panel-item:hover {
+.panel-item:hover,
+.panel-item-complex:hover {
   background: #CBF0FE;
 }
 
@@ -263,7 +264,8 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 .runtime-panel-item-usb,
 .runtime-panel-item-wifi,
 .runtime-panel-item-other,
-.runtime-panel-item-simulator {
+.runtime-panel-item-simulator,
+.configure-button {
   list-style-image: url("icons.png");
 }
 
@@ -280,11 +282,20 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 .runtime-panel-item-wifi        { -moz-image-region: rect(208px,438px,234px,412px) }
 .runtime-panel-item-other       { -moz-image-region: rect(26px,438px,52px,412px) }
 .runtime-panel-item-simulator   { -moz-image-region: rect(0px,438px,26px,412px) }
+.configure-button               { -moz-image-region: rect(104px,462px,129px,438px) }
+
+.configure-button > .toolbarbutton-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.configure-button > .toolbarbutton-text {
+  display: none;
+}
 
 #runtime-actions {
   border-top: 1px solid rgba(221,221,221,1);
 }
-
 
 #runtime-actions > toolbarbutton {
   border-top: 1px solid rgba(221,221,221,1);

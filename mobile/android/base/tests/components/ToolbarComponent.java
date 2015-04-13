@@ -9,7 +9,6 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertFalse;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.tests.StringHelper;
 import org.mozilla.gecko.tests.UITestContext;

@@ -1166,3 +1166,7 @@ addMessageListener("ContextMenu:Canvas:ToDataURL", (message) => {
   let dataURL = message.objects.target.toDataURL();
   sendAsyncMessage("ContextMenu:Canvas:ToDataURL:Result", { dataURL });
 });
+
+addMessageListener("ContextMenu:ReloadFrame", (message) => {
+  message.objects.target.ownerDocument.location.reload();
+});

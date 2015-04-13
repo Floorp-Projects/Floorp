@@ -10,9 +10,9 @@
                 android:layout_height="match_parent">
 
         <LinearLayout android:id="@+id/private_tabs_empty"
-                      style="@style/TabsPanelFrame.PrivateTabs"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent">
+                      style="@style/PrivateTabsPanelFrame"
+                      android:layout_width="@dimen/private_tabs_panel_empty_width"
+                      android:layout_height="@dimen/private_tabs_panel_empty_height">
 
             <LinearLayout style="@style/TabsPanelSection.PrivateTabs.Header"
                           android:layout_width="match_parent"

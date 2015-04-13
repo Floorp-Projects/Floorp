@@ -360,6 +360,29 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Share a room url via the Social API.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    ShareRoomUrl: Action.define("shareRoomUrl", {
+      provider: Object,
+      roomUrl: String
+    }),
+
+    /**
+     * Add the Social Share button to the browser toolbar.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    AddSocialShareButton: Action.define("addSocialShareButton", {
+    }),
+
+    /**
+     * Open the share panel to add a Social share provider.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    AddSocialShareProvider: Action.define("addSocialShareProvider", {
+    }),
+
+    /**
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     RoomFailure: Action.define("roomFailure", {
@@ -378,7 +401,9 @@ loop.shared.actions = (function() {
       // roomName: String - Optional.
       roomOwner: String,
       roomToken: String,
-      roomUrl: String
+      roomUrl: String,
+      socialShareButtonAvailable: Boolean,
+      socialShareProviders: Array
     }),
 
     /**
@@ -392,6 +417,15 @@ loop.shared.actions = (function() {
       // roomName: String - Optional.
       roomOwner: String,
       roomUrl: String
+    }),
+
+    /**
+     * Updates the Social API information when it is received.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    UpdateSocialShareInfo: Action.define("updateSocialShareInfo", {
+      socialShareButtonAvailable: Boolean,
+      socialShareProviders: Array
     }),
 
     /**
