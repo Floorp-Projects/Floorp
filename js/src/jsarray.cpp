@@ -436,25 +436,10 @@ js::SetLengthProperty(JSContext* cx, HandleObject obj, double length)
     return SetProperty(cx, obj, cx->names().length, v);
 }
 
-/*
- * Since SpiderMonkey supports cross-class prototype-based delegation, we have
- * to be careful about the length getter and setter being called on an object
- * not of Array class. For the getter, we search obj's prototype chain for the
- * array that caused this getter to be invoked. In the setter case to overcome
- * the JSPROP_SHARED attribute, we must define a shadowing length property.
- */
 static bool
-array_length_getter(JSContext* cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
+array_length_getter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    RootedObject obj(cx, obj_);
-    do {
-        if (obj->is<ArrayObject>()) {
-            vp.setNumber(obj->as<ArrayObject>().length());
-            return true;
-        }
-        if (!GetPrototype(cx, obj, &obj))
-            return false;
-    } while (obj);
+    vp.setNumber(obj->as<ArrayObject>().length());
     return true;
 }
 

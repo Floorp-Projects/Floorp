@@ -89,6 +89,9 @@
 .pref-icon[type="geo"] {
   list-style-image: url(chrome://browser/skin/Geolocation-64.png);
 }
+.pref-icon[type="push"] {
+  list-style-image: url(chrome://browser/skin/Push-64.png);
+}
 .pref-icon[type="indexedDB"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }

@@ -66,13 +66,6 @@ WMFMediaDataDecoder::ProcessShutdown()
   mDecoder = nullptr;
 }
 
-void
-WMFMediaDataDecoder::ProcessReleaseDecoder()
-{
-  mMFTManager->Shutdown();
-  mDecoder = nullptr;
-}
-
 // Inserts data into the decoder's pipeline.
 nsresult
 WMFMediaDataDecoder::Input(MediaRawData* aSample)
@@ -155,24 +148,6 @@ WMFMediaDataDecoder::Drain()
 {
   mTaskQueue->Dispatch(NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessDrain));
   return NS_OK;
-}
-
-void
-WMFMediaDataDecoder::AllocateMediaResources()
-{
-  mDecoder = mMFTManager->Init();
-}
-
-void
-WMFMediaDataDecoder::ReleaseMediaResources()
-{
-  DebugOnly<nsresult> rv = mTaskQueue->FlushAndDispatch(
-    NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessReleaseDecoder));
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("WMFMediaDataDecoder::ReleaseMediaResources() dispatch of task failed!");
-  }
-#endif
 }
 
 bool

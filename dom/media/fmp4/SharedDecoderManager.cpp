@@ -142,11 +142,6 @@ SharedDecoderManager::Select(SharedDecoderProxy* aProxy)
 
   mActiveProxy = aProxy;
   mActiveCallback = aProxy->mCallback;
-
-  if (mDecoderReleasedResources) {
-    mDecoder->AllocateMediaResources();
-    mDecoderReleasedResources = false;
-  }
 }
 
 void
@@ -174,14 +169,6 @@ SharedDecoderManager::DrainComplete()
   } else {
     mActiveCallback->DrainComplete();
   }
-}
-
-void
-SharedDecoderManager::ReleaseMediaResources()
-{
-  mDecoderReleasedResources = true;
-  mDecoder->ReleaseMediaResources();
-  mActiveProxy = nullptr;
 }
 
 void
@@ -260,20 +247,6 @@ SharedDecoderProxy::IsWaitingMediaResources()
     return mManager->mDecoder->IsWaitingMediaResources();
   }
   return mManager->mActiveProxy != nullptr;
-}
-
-bool
-SharedDecoderProxy::IsDormantNeeded()
-{
-  return mManager->mDecoder->IsDormantNeeded();
-}
-
-void
-SharedDecoderProxy::ReleaseMediaResources()
-{
-  if (mManager->mActiveProxy == this) {
-    mManager->ReleaseMediaResources();
-  }
 }
 
 bool

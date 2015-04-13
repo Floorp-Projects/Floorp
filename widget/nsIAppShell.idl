@@ -12,7 +12,7 @@ interface nsIRunnable;
  * Interface for the native event system layer.  This interface is designed
  * to be used on the main application thread only.
  */
-[uuid(2d10ca53-f143-439a-bb2e-c1fbc71f6a05)]
+[uuid(78dc2b13-5de6-42f3-af57-2535f7fdb93e)]
 interface nsIAppShell : nsISupports
 {
   /**
@@ -24,24 +24,6 @@ interface nsIAppShell : nsISupports
    * Exit the handle event loop
    */
   void exit();
-
-  /**
-   * Give hint to native event queue notification mechanism. If the native
-   * platform needs to tradeoff performance vs. native event starvation this
-   * hint tells the native dispatch code which to favor.  The default is to
-   * prevent native event starvation.
-   *
-   * Calls to this function may be nested. When the number of calls that pass
-   * PR_TRUE is subtracted from the number of calls that pass PR_FALSE is
-   * greater than 0, performance is given precedence over preventing event
-   * starvation.
-   *
-   * The starvationDelay arg is only used when favorPerfOverStarvation is
-   * PR_FALSE. It is the amount of time in milliseconds to wait before the
-   * PR_FALSE actually takes effect.
-   */
-  void favorPerformanceHint(in boolean favorPerfOverStarvation,
-                            in unsigned long starvationDelay);
 
   /**
    * Suspends the use of additional platform-specific methods (besides the

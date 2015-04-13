@@ -12,6 +12,7 @@
 #include "nsObserverList.h"
 #include "nsThreadUtils.h"
 #include "nsEnumeratorUtils.h"
+#include "xpcpublic.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
 
@@ -187,7 +188,6 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserverService Implementation
 
-
 NS_IMPL_ISUPPORTS(nsObserverService,
                   nsIObserverService,
                   nsObserverService,
@@ -344,6 +344,7 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
   return NS_OK;
 }
 
+#if !defined(MOZILLA_XPCOMRT_API)
 static PLDHashOperator
 AppendStrongObservers(nsObserverList* aObserverList, void* aClosure)
 {
@@ -354,6 +355,7 @@ AppendStrongObservers(nsObserverList* aObserverList, void* aClosure)
   }
   return PL_DHASH_NEXT;
 }
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
 NS_IMETHODIMP
 nsObserverService::UnmarkGrayStrongObservers()
@@ -371,4 +373,3 @@ nsObserverService::UnmarkGrayStrongObservers()
 
   return NS_OK;
 }
-

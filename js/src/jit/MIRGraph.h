@@ -859,7 +859,7 @@ class MDefinitionIterator
         return old;
     }
 
-    operator bool() const {
+    explicit operator bool() const {
         return more();
     }
 
@@ -947,7 +947,7 @@ class MNodeIterator
         return old;
     }
 
-    operator bool() const {
+    explicit operator bool() const {
         return more();
     }
 

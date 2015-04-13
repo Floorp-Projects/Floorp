@@ -724,6 +724,13 @@ def add_mochitest_general_args(parser):
              "multiple times in which case the test must contain at least one "
              "of the given tags.")
 
+    parser.add_argument(
+        "--subsuite",
+        default=None,
+        help="Subsuite of tests to run. Unlike tags, subsuites also remove "
+             "tests from the default set. Only one can be specified at once.")
+
+
     return parser
 
 def add_mochitest_b2g_args(parser):

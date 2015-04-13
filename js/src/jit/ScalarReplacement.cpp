@@ -204,6 +204,11 @@ IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
             break;
           }
 
+          // This instruction is a no-op used to verify that scalar replacement
+          // is working as expected in jit-test.
+          case MDefinition::Op_AssertRecoveredOnBailout:
+            break;
+
           default:
             JitSpewDef(JitSpew_Escape, "Object ", ins);
             JitSpewDef(JitSpew_Escape, "  is escaped by\n", def);
@@ -647,7 +652,7 @@ IsArrayEscaped(MInstruction* ins)
                     if (access->toLoadElement()->needsHoleCheck()) {
                         JitSpewDef(JitSpew_Escape, "Array ", ins);
                         JitSpewDef(JitSpew_Escape,
-                                   "  has a load element which needs hole check\n", access);
+                                   "  has a load element with a hole check\n", access);
                         return true;
                     }
 
@@ -677,8 +682,12 @@ IsArrayEscaped(MInstruction* ins)
                     // for properties, thus it might do additional side-effects
                     // which are not reflected by the alias set, is we are
                     // bailing on holes.
-                    if (access->toStoreElement()->needsHoleCheck())
+                    if (access->toStoreElement()->needsHoleCheck()) {
+                        JitSpewDef(JitSpew_Escape, "Array ", ins);
+                        JitSpewDef(JitSpew_Escape,
+                                   "  has a store element with a hole check\n", access);
                         return true;
+                    }
 
                     // If the index is not a constant then this index can alias
                     // all others. We do not handle this case.
@@ -724,6 +733,11 @@ IsArrayEscaped(MInstruction* ins)
 
             break;
           }
+
+          // This instruction is a no-op used to verify that scalar replacement
+          // is working as expected in jit-test.
+          case MDefinition::Op_AssertRecoveredOnBailout:
+            break;
 
           default:
             JitSpewDef(JitSpew_Escape, "Array ", ins);
