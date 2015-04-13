@@ -1896,9 +1896,11 @@ nsChildView::ConfigureAPZCTreeManager()
 void
 nsChildView::ConfigureAPZControllerThread()
 {
-  // On OS X the EventThreadRunner is the controller thread, but it doesn't
-  // have a MessageLoop.
-  APZThreadUtils::SetControllerThread(nullptr);
+  if (gfxPrefs::AsyncPanZoomSeparateEventThread()) {
+    // The EventThreadRunner is the controller thread, but it doesn't
+    // have a MessageLoop.
+    APZThreadUtils::SetControllerThread(nullptr);
+  }
 }
 
 nsIntRect
