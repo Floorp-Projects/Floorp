@@ -39,9 +39,9 @@ function checkXrayProperty(obj, name, values)
       var pd = Object.getOwnPropertyDescriptor(obj, name);
       ok(pd, "getOwnPropertyDescriptor should see \"" + name + "\" through Xrays");
       if (pd && pd.get) {
-        is(pd.get.call(instance), value, "Should get the right value for \"" + name + "\" through Xrays");
+        ise(pd.get.call(instance), value, "Should get the right value for \"" + name + "\" through Xrays");
       } else {
-        is(obj[name], value, "Should get the right value for \"" + name + "\" through Xrays");
+        ise(obj[name], value, "Should get the right value for \"" + name + "\" through Xrays");
       }
       if (pd && pd.enumerable) {
         ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + name + "\"");
@@ -104,7 +104,9 @@ function test()
 
   // HTMLDocument
   // Unforgeable properties live on the instance.
-  checkXrayProperty(doc, "location", [ document.getElementById("t").src ]);
+  checkXrayProperty(doc, "location", [ win.location ]);
+  ise(String(win.location), document.getElementById("t").src,
+      "Should have the right stringification");
 
   // HTMLHtmlElement
   var elem = doc.documentElement;
