@@ -13,6 +13,13 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var global = this;
 
+
+// Lazily load the finder code
+addMessageListener("Finder:Initialize", function () {
+  let {RemoteFinderListener} = Cu.import("resource://gre/modules/RemoteFinder.jsm", {});
+  new RemoteFinderListener(global);
+});
+
 let ClickEventHandler = {
   init: function init() {
     this._scrollable = null;
