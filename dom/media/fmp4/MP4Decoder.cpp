@@ -209,11 +209,7 @@ IsAndroidAvailable()
 static bool
 IsGonkMP4DecoderAvailable()
 {
-#ifndef MOZ_GONK_MEDIACODEC
-  return false;
-#else
   return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
-#endif
 }
 
 static bool
