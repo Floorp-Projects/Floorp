@@ -98,7 +98,6 @@
 
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
-#include "pkix/ScopedPtr.h"
 #include "CertVerifier.h"
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
@@ -114,6 +113,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsIThreadPool.h"
 #include "nsNetUtil.h"
@@ -876,8 +876,8 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
     return;
   }
   CERTCertificate* cert = endEntityNode->cert;
-  mozilla::pkix::ScopedPtr<char, PORT_Free_string> commonName(
-    CERT_GetCommonName(&cert->subject));
+  UniquePtr<char, void(&)(void*)>
+    commonName(CERT_GetCommonName(&cert->subject), PORT_Free);
   // This only applies to certificates issued by authorities in our root
   // program.
   bool isBuiltIn = false;
