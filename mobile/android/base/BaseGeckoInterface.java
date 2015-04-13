@@ -143,11 +143,6 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
     }
 
-    @Override
-    public boolean hasTabsSideBar() {
-        return false;
-    }
-
     // Bug 908792: Implement this
     @Override
     public void invalidateOptionsMenu() {}

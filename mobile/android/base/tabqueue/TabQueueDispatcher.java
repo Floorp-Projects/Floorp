@@ -10,6 +10,7 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.sync.setup.activities.WebURLFinder;
 
@@ -33,12 +34,12 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
 
         GeckoAppShell.ensureCrashHandling();
 
-        Intent intent = getIntent();
+        ContextUtils.SafeIntent intent = new ContextUtils.SafeIntent(getIntent());
 
         // For the moment lets exit early and start fennec as normal if we're not in nightly with
         // the tab queue build flag.
         if (!AppConstants.MOZ_ANDROID_TAB_QUEUE) {
-            loadNormally(intent);
+            loadNormally(intent.getUnsafe());
             finish();
         }
 
@@ -59,9 +60,9 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
         boolean shouldShowOpenInBackgroundToast = GeckoSharedPrefs.forApp(this).getBoolean(GeckoPreferences.PREFS_TAB_QUEUE, false);
 
         if (shouldShowOpenInBackgroundToast) {
-            showToast(intent);
+            showToast(intent.getUnsafe());
         } else {
-            loadNormally(intent);
+            loadNormally(intent.getUnsafe());
         }
     }
 

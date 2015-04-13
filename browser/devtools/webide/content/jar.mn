@@ -31,3 +31,5 @@ webide.jar:
     content/project-listing.xhtml     (project-listing.xhtml)
     content/project-listing.js        (project-listing.js)
     content/project-panel.js          (project-panel.js)
+    content/simulator.js              (simulator.js)
+    content/simulator.xhtml           (simulator.xhtml)

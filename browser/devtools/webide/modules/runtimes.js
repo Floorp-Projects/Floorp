@@ -78,6 +78,8 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
  *           A |Connection| object from the DevTools |ConnectionManager|.
  *   @return Promise
  *           Resolved once you've called the |connection|'s connect() method.
+ * configure() OPTIONAL
+ *   Show a configuration screen if the runtime is configurable.
  */
 
 /* SCANNER REGISTRY */
@@ -210,7 +212,7 @@ let SimulatorScanner = {
   },
 
   _updateRuntimes() {
-    Simulators.getAll().then(simulators => {
+    Simulators.findSimulators().then(simulators => {
       this._runtimes = [];
       for (let simulator of simulators) {
         this._runtimes.push(new SimulatorRuntime(simulator));
@@ -569,6 +571,9 @@ SimulatorRuntime.prototype = {
       connection.once(Connection.Events.DISCONNECTED, e => this.simulator.kill());
       connection.connect();
     });
+  },
+  configure() {
+    Simulators.emit("configure", this.simulator);
   },
   get id() {
     return this.simulator.id;

@@ -630,7 +630,8 @@
                             command="cmd_showItemPreferences"/>
                     <spacer flex="1"/>
                     <button id="detail-debug-btn" class="addon-control debug"
-                            label="Debug"
+                            label="&cmd.debugAddon.label;"
+                            accesskey="&cmd.debugAddon.accesskey;"
                             command="cmd_debugItem" />
                     <button id="detail-enable-btn" class="addon-control enable"
                             label="&cmd.enableAddon.label;"

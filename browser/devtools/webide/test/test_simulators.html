@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        const EventEmitter = require("devtools/toolkit/event-emitter");
+        const { GetAvailableAddons } = require("devtools/webide/addons");
+        const { GetDevices } = require("devtools/shared/devices");
+        const { Simulator } = require("devtools/webide/simulators");
+        const { AddonSimulatorProcess,
+                OldAddonSimulatorProcess,
+                CustomSimulatorProcess } = require("devtools/webide/simulator-process");
+
+        function addonStatus(addon, status) {
+          if (addon.status == status) {
+            return promise.resolve();
+          }
+          let deferred = promise.defer();
+          addon.on("update", function onUpdate() {
+            if (addon.status == status) {
+              addon.off("update", onUpdate);
+              deferred.resolve();
+            }
+          });
+          return deferred.promise;
+        }
+
+        Task.spawn(function* () {
+
+          let win = yield openWebIDE(false);
+
+          let find = win.document.querySelector.bind(win.document);
+          let findAll = win.document.querySelectorAll.bind(win.document);
+
+          let simulatorList = find("#runtime-panel-simulator");
+          let simulatorPanel = find("#deck-panel-simulator");
+
+          // Hack SimulatorProcesses to spy on simulation parameters.
+
+          let runPromise;
+          function fakeRun() {
+            runPromise.resolve({
+              path: this.b2gBinary.path,
+              args: this.args
+            });
+            // Don't actually try to connect to the fake simulator.
+            throw new Error("Aborting on purpose before connection.");
+          }
+
+          AddonSimulatorProcess.prototype.run = fakeRun;
+          OldAddonSimulatorProcess.prototype.run = fakeRun;
+          CustomSimulatorProcess.prototype.run = fakeRun;
+
+          function runSimulator(i) {
+            runPromise = promise.defer();
+            findAll(".runtime-panel-item-simulator")[i].click();
+            return runPromise.promise;
+          }
+
+          // Install fake "Firefox OS 1.0" simulator addon.
+
+          let addons = yield GetAvailableAddons();
+
+          let sim10 = addons.simulators.filter(a => a.version == "1.0")[0];
+
+          sim10.install();
+
+          yield addonStatus(sim10, "installed");
+
+          is(findAll(".runtime-panel-item-simulator").length, 1, "One simulator in runtime panel");
+
+          // Install fake "Firefox OS 2.0" simulator addon.
+
+          let sim20 = addons.simulators.filter(a => a.version == "2.0")[0];
+
+          sim20.install();
+
+          yield addonStatus(sim20, "installed");
+
+          is(findAll(".runtime-panel-item-simulator").length, 2, "Two simulators in runtime panel");
+
+          // Dry run a simulator to verify that its parameters look right.
+
+          let params = yield runSimulator(0);
+
+          ok(params.path.contains(sim10.addonID) && params.path.contains("b2g-bin"), "Simulator binary path looks right");
+
+          let pid = params.args.indexOf("-profile");
+          ok(pid > -1, "Simulator process arguments have --profile");
+
+          let profilePath = params.args[pid + 1];
+          ok(profilePath.contains(sim10.addonID) && profilePath.contains("profile"), "Simulator profile path looks right");
+
+          ok(params.args.indexOf("-dbgport") > -1 || params.args.indexOf("-start-debugger-server") > -1, "Simulator process arguments have a debugger port");
+
+          ok(params.args.indexOf("-no-remote") > -1, "Simulator process arguments have --no-remote");
+
+          yield nextTick();
+
+          // Configure the fake 1.0 simulator.
+
+          simulatorList.querySelectorAll(".configure-button")[0].click();
+
+          is(find("#deck").selectedPanel, simulatorPanel, "Simulator deck panel is selected");
+
+          yield lazyIframeIsLoaded(simulatorPanel);
+
+          let doc = simulatorPanel.contentWindow.document;
+          let form = doc.querySelector("#simulator-editor");
+          let change = doc.createEvent("HTMLEvents");
+          change.initEvent("change", true, true);
+
+          function set(input, value) {
+            input.value = value;
+            input.dispatchEvent(change);
+            return nextTick();
+          }
+
+          let MockFilePicker = SpecialPowers.MockFilePicker;
+          MockFilePicker.init(simulatorPanel.contentWindow);
+
+          // Test `name`.
+
+          is(form.name.value, find(".runtime-panel-item-simulator").label, "Original simulator name");
+
+          let customName = "CustomFox ";
+          yield set(form.name, customName + "1.0");
+
+          is(find(".runtime-panel-item-simulator").label, form.name.value, "Updated simulator name");
+
+          // Test `version`.
+
+          is(form.version.value, sim10.addonID, "Original simulator version");
+          ok(!form.version.classList.contains("custom"), "Version selector is not customized");
+
+          yield set(form.version, sim20.addonID);
+
+          ok(!form.version.classList.contains("custom"), "Version selector is not customized after addon change");
+          is(form.name.value, customName + "2.0", "Simulator name was updated to new version");
+
+          // Pick custom binary, but act like the user aborted the file picker.
+
+          MockFilePicker.returnFiles = [];
+          yield set(form.version, "pick");
+
+          is(form.version.value, sim20.addonID, "Version selector reverted to last valid choice after customization abort");
+          ok(!form.version.classList.contains("custom"), "Version selector is not customized after customization abort");
+
+          // Pick custom binary, and actually follow through. (success, verify value = "custom" and textContent = custom path)
+
+          MockFilePicker.useAnyFile();
+          yield set(form.version, "pick");
+
+          let fakeBinary = MockFilePicker.returnFiles[0];
+
+          ok(form.version.value == "custom", "Version selector was set to a new custom binary");
+          ok(form.version.classList.contains("custom"), "Version selector is now customized");
+          is(form.version.selectedOptions[0].textContent, fakeBinary.path, "Custom option textContent is correct");
+
+          yield set(form.version, sim10.addonID);
+
+          ok(form.version.classList.contains("custom"), "Version selector remains customized after change back to addon");
+          is(form.name.value, customName + "1.0", "Simulator name was updated to new version");
+
+          yield set(form.version, "custom");
+
+          ok(form.version.value == "custom", "Version selector is back to custom");
+
+          // Test `profile`.
+
+          is(form.profile.value, "default", "Default simulator profile");
+          ok(!form.profile.classList.contains("custom"), "Profile selector is not customized");
+
+          MockFilePicker.returnFiles = [];
+          yield set(form.profile, "pick");
+
+          is(form.profile.value, "default", "Profile selector reverted to last valid choice after customization abort");
+          ok(!form.profile.classList.contains("custom"), "Profile selector is not customized after customization abort");
+
+          let fakeProfile = FileUtils.getDir("TmpD", []);
+
+          MockFilePicker.returnFiles = [ fakeProfile ];
+          yield set(form.profile, "pick");
+
+          ok(form.profile.value == "custom", "Profile selector was set to a new custom directory");
+          ok(form.profile.classList.contains("custom"), "Profile selector is now customized");
+          is(form.profile.selectedOptions[0].textContent, fakeProfile.path, "Custom option textContent is correct");
+
+          yield set(form.profile, "default");
+
+          is(form.profile.value, "default", "Profile selector back to default");
+          ok(form.profile.classList.contains("custom"), "Profile selector remains customized after change back to default");
+
+          yield set(form.profile, "custom");
+
+          is(form.profile.value, "custom", "Profile selector back to custom");
+
+          params = yield runSimulator(0);
+
+          is(params.path, fakeBinary.path, "Simulator process uses custom binary path");
+
+          pid = params.args.indexOf("-profile");
+          is(params.args[pid + 1], fakeProfile.path, "Simulator process uses custom profile directory");
+
+          yield set(form.version, sim10.addonID);
+
+          is(form.name.value, customName + "1.0", "Simulator restored to 1.0");
+
+          params = yield runSimulator(0);
+
+          pid = params.args.indexOf("-profile");
+          is(params.args[pid + 1], fakeProfile.path, "Simulator process still uses custom profile directory");
+
+          yield set(form.version, "custom");
+
+          // Test `device`.
+
+          let defaults = Simulator.prototype._defaults;
+
+          for (let param in defaults) {
+            is(form[param].value, defaults[param], "Default value for device " + param);
+          }
+
+          let width = 5000, height = 4000;
+          yield set(form.width, width);
+          yield set(form.height, height);
+
+          is(form.device.value, "custom", "Device selector is custom");
+
+          params = yield runSimulator(0);
+
+          let sid = params.args.indexOf("-screen");
+          ok(sid > -1, "Simulator process arguments have --screen");
+          ok(params.args[sid + 1].contains(width + "x" + height), "Simulator screen resolution looks right");
+
+          yield set(form.version, sim10.addonID);
+
+          // Configure the fake 2.0 simulator.
+
+          simulatorList.querySelectorAll(".configure-button")[1].click();
+          yield nextTick();
+
+          // Test `name`.
+
+          is(form.name.value, findAll(".runtime-panel-item-simulator")[1].label, "Original simulator name");
+
+          yield set(form.name, customName + "2.0");
+
+          is(findAll(".runtime-panel-item-simulator")[1].label, form.name.value, "Updated simulator name");
+
+          yield set(form.version, sim10.addonID);
+
+          ok(form.name.value !== customName + "1.0", "Conflicting simulator name was deduplicated");
+
+          is(form.name.value, findAll(".runtime-panel-item-simulator")[1].label, "Deduplicated simulator name stayed consistent");
+
+          yield set(form.version, sim20.addonID);
+
+          is(form.name.value, customName + "2.0", "Name deduplication was undone when possible");
+
+          // Test `device`.
+
+          for (let param in defaults) {
+            is(form[param].value, defaults[param], "Default value for device " + param);
+          }
+
+          let devices = yield GetDevices();
+          devices = devices[devices.TYPES[0]];
+          let device = devices[devices.length - 1];
+
+          yield set(form.device, device.name);
+
+          is(form.device.value, device.name, "Device selector was changed");
+          is(form.width.value, device.width, "New device width is correct");
+          is(form.height.value, device.height, "New device height is correct");
+
+          params = yield runSimulator(1);
+
+          sid = params.args.indexOf("-screen");
+          ok(params.args[sid + 1].contains(device.width + "x" + device.height), "Simulator screen resolution looks right");
+
+          // Restore default simulator options.
+
+          doc.querySelector("#reset").click();
+          yield nextTick();
+
+          for (let param in defaults) {
+            is(form[param].value, defaults[param], "Default value for device " + param);
+          }
+
+          // Uninstall the 2.0 addon and watch its Simulator object disappear.
+
+          sim20.uninstall();
+
+          yield addonStatus(sim20, "uninstalled");
+
+          is(findAll(".runtime-panel-item-simulator").length, 1, "One simulator left in runtime panel");
+
+          // Remove 1.0 simulator.
+
+          simulatorList.querySelectorAll(".configure-button")[0].click();
+          yield nextTick();
+
+          doc.querySelector("#remove").click();
+          yield nextTick();
+
+          is(findAll(".runtime-panel-item-simulator").length, 0, "Last simulator was removed");
+
+          sim10.uninstall();
+
+          MockFilePicker.cleanup();
+
+          doc.querySelector("#close").click();
+
+          ok(!find("#deck").selectedPanel, "No panel selected");
+
+          yield closeWebIDE(win);
+
+          SimpleTest.finish();
+
+        });
+      }
+
+    </script>
+  </body>
+</html>
