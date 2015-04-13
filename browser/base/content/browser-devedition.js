@@ -10,6 +10,11 @@ let DevEdition = {
   _devtoolsThemePrefName: "devtools.theme",
   styleSheetLocation: "chrome://browser/skin/devedition.css",
   styleSheet: null,
+  initialized: false,
+
+  get isStyleSheetEnabled() {
+    return this.styleSheet && !this.styleSheet.sheet.disabled;
+  },
 
   get isThemeCurrentlyApplied() {
     let theme = LightweightThemeManager.currentTheme;
@@ -17,6 +22,7 @@ let DevEdition = {
   },
 
   init: function () {
+    this.initialized = true;
     Services.prefs.addObserver(this._devtoolsThemePrefName, this, false);
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
     this._updateDevtoolsThemeAttribute();
@@ -24,6 +30,15 @@ let DevEdition = {
     if (this.isThemeCurrentlyApplied) {
       this._toggleStyleSheet(true);
     }
+  },
+
+  createStyleSheet: function() {
+    let styleSheetAttr = `href="${this.styleSheetLocation}" type="text/css"`;
+    this.styleSheet = document.createProcessingInstruction(
+      "xml-stylesheet", styleSheetAttr);
+    this.styleSheet.addEventListener("load", this);
+    document.insertBefore(this.styleSheet, document.documentElement);
+    this.styleSheet.sheet.disabled = true;
   },
 
   observe: function (subject, topic, data) {
@@ -44,7 +59,7 @@ let DevEdition = {
   _inferBrightness: function() {
     ToolbarIconColor.inferFromText();
     // Get an inverted full screen button if the dark theme is applied.
-    if (this.styleSheet &&
+    if (this.isStyleSheetEnabled &&
         document.documentElement.getAttribute("devtoolstheme") == "dark") {
       document.documentElement.setAttribute("brighttitlebarforeground", "true");
     } else {
@@ -66,26 +81,32 @@ let DevEdition = {
   handleEvent: function(e) {
     if (e.type === "load") {
       this.styleSheet.removeEventListener("load", this);
+      this.refreshBrowserDisplay();
+    }
+  },
+
+  refreshBrowserDisplay: function() {
+    // Don't touch things on the browser if gBrowserInit.onLoad hasn't
+    // yet fired.
+    if (this.initialized) {
       gBrowser.tabContainer._positionPinnedTabs();
       this._inferBrightness();
     }
   },
 
   _toggleStyleSheet: function(deveditionThemeEnabled) {
-    if (deveditionThemeEnabled && !this.styleSheet) {
-      let styleSheetAttr = `href="${this.styleSheetLocation}" type="text/css"`;
-      this.styleSheet = document.createProcessingInstruction(
-        'xml-stylesheet', styleSheetAttr);
-      this.styleSheet.addEventListener("load", this);
-      document.insertBefore(this.styleSheet, document.documentElement);
-      // NB: we'll notify observers once the stylesheet has fully loaded, see
-      // handleEvent above.
-    } else if (!deveditionThemeEnabled && this.styleSheet) {
-      this.styleSheet.removeEventListener("load", this);
-      this.styleSheet.remove();
-      this.styleSheet = null;
-      gBrowser.tabContainer._positionPinnedTabs();
-      this._inferBrightness();
+    let wasEnabled = this.isStyleSheetEnabled;
+    if (deveditionThemeEnabled && !wasEnabled) {
+      // The stylesheet may not have been created yet if it wasn't
+      // needed on initial load.  Make it now.
+      if (!this.styleSheet) {
+        this.createStyleSheet();
+      }
+      this.styleSheet.sheet.disabled = false;
+      this.refreshBrowserDisplay();
+    } else if (!deveditionThemeEnabled && wasEnabled) {
+      this.styleSheet.sheet.disabled = true;
+      this.refreshBrowserDisplay();
     }
   },
 
@@ -98,3 +119,12 @@ let DevEdition = {
     this.styleSheet = null;
   }
 };
+
+#ifndef RELEASE_BUILD
+// If the DevEdition theme is going to be applied in gBrowserInit.onLoad,
+// then preload it now.  This prevents a flash of unstyled content where the
+// normal theme is applied while the DevEdition stylesheet is loading.
+if (this != Services.appShell.hiddenDOMWindow && DevEdition.isThemeCurrentlyApplied) {
+  DevEdition.createStyleSheet();
+}
+#endif

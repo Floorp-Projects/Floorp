@@ -141,6 +141,8 @@ browser.jar:
     content/browser/devtools/spectrum.css                              (shared/widgets/spectrum.css)
     content/browser/devtools/cubic-bezier-frame.xhtml                  (shared/widgets/cubic-bezier-frame.xhtml)
     content/browser/devtools/cubic-bezier.css                          (shared/widgets/cubic-bezier.css)
+    content/browser/devtools/filter-frame.xhtml                        (shared/widgets/filter-frame.xhtml)
+    content/browser/devtools/filter-widget.css                         (shared/widgets/filter-widget.css)
     content/browser/devtools/eyedropper.xul                            (eyedropper/eyedropper.xul)
     content/browser/devtools/eyedropper/crosshairs.css                 (eyedropper/crosshairs.css)
     content/browser/devtools/eyedropper/nocursor.css                   (eyedropper/nocursor.css)

@@ -9,8 +9,19 @@
     <dimen name="doorhanger_offsetY">2dp</dimen>
 
     <dimen name="browser_toolbar_height">56dp</dimen>
+    <dimen name="browser_toolbar_height_flipper">60dp</dimen>
     <dimen name="browser_toolbar_button_padding">16dp</dimen>
     <dimen name="browser_toolbar_favicon_size">16dp</dimen>
+
+    <dimen name="browser_toolbar_site_security_height">60dp</dimen>
+    <dimen name="browser_toolbar_site_security_width">34dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_right">1dp</dimen>
+    <!-- We primarily use padding (instead of margins) to increase the hit area. -->
+    <dimen name="browser_toolbar_site_security_padding_vertical">21dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_horizontal">8dp</dimen>
+
+    <dimen name="private_tabs_panel_empty_width">300dp</dimen>
+    <dimen name="private_tabs_panel_empty_height">@dimen/wrap_content</dimen>
 
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="panel_grid_view_column_width">200dp</dimen>
@@ -19,5 +30,8 @@
     <dimen name="reading_list_row_padding_right">15dp</dimen>
 
     <dimen name="tab_queue_container_width">360dp</dimen>
+
+    <!-- Should be closer to 0.83 (140/168) but various roundings mean that 0.9 works better -->
+    <item name="thumbnail_aspect_ratio" format="float" type="dimen">0.9</item>
 
 </resources>

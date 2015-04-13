@@ -10,6 +10,7 @@ const IOService = Cc["@mozilla.org/network/io-service;1"]
   .getService(Ci.nsIIOService);
 const {Spectrum} = require("devtools/shared/widgets/Spectrum");
 const {CubicBezierWidget} = require("devtools/shared/widgets/CubicBezierWidget");
+const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
@@ -39,6 +40,7 @@ const BORDER_RE = /^border(-(top|bottom|left|right))?$/ig;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const CUBIC_BEZIER_FRAME = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
+const FILTER_FRAME = "chrome://browser/content/devtools/filter-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
@@ -831,6 +833,56 @@ Tooltip.prototype = {
   },
 
   /**
+   * Fill the tooltip with a new instance of the CSSFilterEditorWidget
+   * widget initialized with the given filter value, and return a promise
+   * that resolves to the instance of the widget when ready.
+   */
+  setFilterContent: function(filter) {
+    let def = promise.defer();
+
+    // Create an iframe to host the filter widget
+    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
+    iframe.setAttribute("transparent", true);
+    iframe.setAttribute("width", "350");
+    iframe.setAttribute("flex", "1");
+    iframe.setAttribute("class", "devtools-tooltip-iframe");
+
+    let panel = this.panel;
+
+    function onLoad() {
+      iframe.removeEventListener("load", onLoad, true);
+      let win = iframe.contentWindow.wrappedJSObject,
+          doc = win.document.documentElement;
+
+      let container = win.document.getElementById("container");
+      let widget = new CSSFilterEditorWidget(container, filter);
+
+      iframe.height = doc.offsetHeight
+
+      widget.on("render", e => {
+        iframe.height = doc.offsetHeight
+      });
+
+      // Resolve to the widget instance whenever the popup becomes visible
+      if (panel.state == "open") {
+        def.resolve(widget);
+      } else {
+        panel.addEventListener("popupshown", function shown() {
+          panel.removeEventListener("popupshown", shown, true);
+          def.resolve(widget);
+        }, true);
+      }
+    }
+    iframe.addEventListener("load", onLoad, true);
+    iframe.setAttribute("src", FILTER_FRAME);
+
+    // Put the iframe in the tooltip
+    this.content = iframe;
+
+    return def.promise;
+  },
+
+  /**
    * Set the content of the tooltip to display a font family preview.
    * This is based on Lea Verou's Dablet. See https://github.com/LeaVerou/dabblet
    * for more info.
@@ -1446,7 +1498,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
    * bezier curve in the widget
    */
   show: function() {
-    // Call then parent class' show function
+    // Call the parent class' show function
     SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set the curve and listen to changes to preview them
     if (this.activeSwatch) {
@@ -1472,6 +1524,61 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
   destroy: function() {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.currentBezierValue = null;
+    this.widget.then(widget => {
+      widget.off("updated", this._onUpdate);
+      widget.destroy();
+    });
+  }
+});
+
+/**
+ * The swatch-based css filter tooltip class is a specific class meant to be used
+ * along with rule-view's generated css filter swatches.
+ * It extends the parent SwatchBasedEditorTooltip class.
+ * It just wraps a standard Tooltip and sets its content with an instance of a
+ * CSSFilterEditorWidget.
+ *
+ * @param {XULDocument} doc
+ */
+function SwatchFilterTooltip(doc) {
+  SwatchBasedEditorTooltip.call(this, doc);
+
+  // Creating a filter editor instance.
+  // this.widget will always be a promise that resolves to the widget instance
+  this.widget = this.tooltip.setFilterContent("none");
+  this._onUpdate = this._onUpdate.bind(this);
+}
+
+exports.SwatchFilterTooltip = SwatchFilterTooltip;
+
+SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+  show: function() {
+    // Call the parent class' show function
+    SwatchBasedEditorTooltip.prototype.show.call(this);
+    // Then set the filter value and listen to changes to preview them
+    if (this.activeSwatch) {
+      this.currentFilterValue = this.activeSwatch.nextSibling;
+      this.widget.then(widget => {
+        widget.off("updated", this._onUpdate);
+        widget.on("updated", this._onUpdate);
+        widget.setCssValue(this.currentFilterValue.textContent);
+        widget.render();
+      });
+    }
+  },
+
+  _onUpdate: function(event, filters) {
+    if (!this.activeSwatch) {
+      return;
+    }
+
+    this.currentFilterValue.textContent = filters;
+    this.preview();
+  },
+
+  destroy: function() {
+    SwatchBasedEditorTooltip.prototype.destroy.call(this);
+    this.currentFilterValue = null;
     this.widget.then(widget => {
       widget.off("updated", this._onUpdate);
       widget.destroy();

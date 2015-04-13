@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://browser/locale/devtools/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/deck.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://webide/skin/simulator.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://webide/content/simulator.js"></script>
+  </head>
+  <body>
+
+    <div id="controls">
+      <a id="remove" class="hidden">&simulator_remove;</a>
+      <a id="reset">&simulator_reset;</a>
+      <a id="close">&deck_close;</a>
+    </div>
+
+    <form id="simulator-editor">
+
+      <h1>&simulator_title;</h1>
+
+      <h2>&simulator_software;</h2>
+
+      <ul>
+        <li>
+          <label>
+            <span class="label">&simulator_name;</span>
+            <input type="text" name="name"/>
+          </label>
+        </li>
+        <li>
+          <label>
+            <span class="label">&simulator_version;</span>
+            <select name="version"/>
+          </label>
+        </li>
+        <li>
+          <label>
+            <span class="label">&simulator_profile;</span>
+            <select name="profile"/>
+          </label>
+        </li>
+      </ul>
+
+      <h2>&simulator_hardware;</h2>
+
+      <ul>
+        <li>
+          <label>
+            <span class="label">&simulator_device;</span>
+            <select name="device"/>
+          </label>
+        </li>
+        <li>
+          <label>
+            <span class="label">&simulator_screenSize;</span>
+            <input name="width" data-device="" type="number"/>
+            <span>×</span>
+            <input name="height" data-device="" type="number"/>
+          </label>
+        </li>
+        <li class="hidden">
+          <label>
+            <span class="label">&simulator_pixelRatio;</span>
+            <input name="pixelRatio" data-device="" type="number" step="0.05"/>
+          </label>
+        </li>
+      </ul>
+
+    </form>
+
+  </body>
+</html>

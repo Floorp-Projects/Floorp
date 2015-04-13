@@ -16,7 +16,6 @@ loader.lazyImporter(this, "AbstractTreeItem",
 const MILLISECOND_UNITS = L10N.getStr("table.ms");
 const PERCENTAGE_UNITS = L10N.getStr("table.percentage");
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
-const ZOOM_BUTTON_TOOLTIP = L10N.getStr("table.zoom.tooltiptext");
 const CALL_TREE_INDENTATION = 16; // px
 
 const DEFAULT_SORTING_PREDICATE = (a, b) => a.frame.samples < b.frame.samples ? 1 : -1;
@@ -107,7 +106,6 @@ function CallView({
   this.inverted = inverted;
 
   this._onUrlClick = this._onUrlClick.bind(this);
-  this._onZoomClick = this._onZoomClick.bind(this);
 };
 
 CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
@@ -195,7 +193,6 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
 
     let isRoot = frameInfo.nodeType == "Thread";
     if (isRoot) {
-      functionCell.querySelector(".call-tree-zoom").hidden = true;
       functionCell.querySelector(".call-tree-category").hidden = true;
     }
 
@@ -341,12 +338,6 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
       hostNode.setAttribute("value", frameInfo.hostName || "");
       cell.appendChild(hostNode);
 
-      let zoomNode = this.document.createElement("button");
-      zoomNode.className = "plain call-tree-zoom";
-      zoomNode.setAttribute("tooltiptext", ZOOM_BUTTON_TOOLTIP);
-      zoomNode.addEventListener("mousedown", this._onZoomClick);
-      cell.appendChild(zoomNode);
-
       let spacerNode = this.document.createElement("spacer");
       spacerNode.setAttribute("flex", "10000");
       cell.appendChild(spacerNode);
@@ -385,14 +376,5 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     e.preventDefault();
     e.stopPropagation();
     this.root.emit("link", this);
-  },
-
-  /**
-   * Handler for the "click" event on the zoom node of this call view.
-   */
-  _onZoomClick: function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    this.root.emit("zoom", this);
   }
 });

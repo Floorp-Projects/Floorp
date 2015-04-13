@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+select:not(.custom) > option[value="custom"] {
+  display: none;
+}
+
+select, input[type="text"] {
+  width: 13rem;
+}
+
+input[name="name"] {
+  height: 1.8rem;
+}
+
+input[type="number"] {
+  width: 6rem;
+}
+
+input[type="text"], input[type="number"] {
+  padding-left: 0.2rem;
+}
+
+li > label:hover {
+  background-color: transparent;
+}
+
+ul {
+  padding-left: 0;
+}
+
+.label {
+  width: 6rem;
+  padding: 0.2rem;
+  text-align: right;
+}
+
+.hidden {
+  display: none;
+}
