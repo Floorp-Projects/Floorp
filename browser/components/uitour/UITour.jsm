@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
   "resource://gre/modules/Metrics.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
+  "resource:///modules/ReaderParent.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
@@ -37,6 +39,7 @@ const PREF_READERVIEW_TRIGGER = "browser.uitour.readerViewTrigger";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
   "endUrlbarCapture",
+  "forceShowReaderIcon",
   "getConfiguration",
   "getTreatmentTag",
   "hideHighlight",
@@ -708,6 +711,11 @@ this.UITour = {
         targetPromise.then(target => {
           ReaderParent.toggleReaderMode({target: target.node});
         });
+      }
+
+      case "forceShowReaderIcon": {
+        ReaderParent.forceShowReaderIcon(browser);
+        break;
       }
     }
 
