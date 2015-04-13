@@ -82,8 +82,8 @@ fuzzy-if(gtk2Widget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 == 68061-2.xml 68061-2-ref.xml
 == 76331-1.html 76331-1-ref.html
 == 81947-1.html 81947-ref.html
-skip-if(Mulet) == 82711-1.html 82711-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 82711-2.html 82711-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 82711-1.html 82711-1-ref.html
+== 82711-2.html 82711-2-ref.html
 == 82711-3.html 82711-3-ref.html
 != 82711-1-ref.html 82711-2-ref.html
 != 82711-1-ref.html 82711-3-ref.html
@@ -251,24 +251,24 @@ skip-if(B2G||Mulet) == 243519-1.html 243519-1-ref.html # Initial mulet triage: p
 == 243519-2.html 243519-2-ref.html
 == 243519-3.html 243519-3-ref.html
 == 243519-4a.html 243519-4-ref.html
-skip-if(Mulet) == 243519-4b.html 243519-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 243519-4b.html 243519-4-ref.html
 == 243519-4c.html 243519-4-ref.html
-skip-if(Mulet) == 243519-4d.html 243519-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 243519-4d.html 243519-4-ref.html
 == 243519-4e.html 243519-4-ref.html
-skip-if(Mulet) == 243519-4f.html 243519-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 243519-4f.html 243519-4-ref.html
 == 243519-5a.html 243519-5-ref.html
 == 243519-5b.html 243519-5-ref.html
-skip-if(Mulet) == 243519-5c.html 243519-5-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-5d.html 243519-5-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 243519-5c.html 243519-5-ref.html
+== 243519-5d.html 243519-5-ref.html
 == 243519-6.html 243519-6-ref.html
 skip-if(B2G||Mulet) == 243519-7.html 243519-7-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) == 243519-8.svg 243519-8-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-9a.html 243519-9-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-9b.html 243519-9-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-9c.html 243519-9-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-9d.html 243519-9-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-9e.html 243519-9-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 243519-9f.html 243519-9-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 243519-8.svg 243519-8-ref.svg
+== 243519-9a.html 243519-9-ref.html
+== 243519-9b.html 243519-9-ref.html
+== 243519-9c.html 243519-9-ref.html
+== 243519-9d.html 243519-9-ref.html
+== 243519-9e.html 243519-9-ref.html
+== 243519-9f.html 243519-9-ref.html
 == 244135-1.html 244135-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
@@ -472,7 +472,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 348049-1.xhtml 348049-1-ref.xhtml # In
 == 348516-2.html 348516-2-ref.html
 != 348516-2.html 348516-2-notref.html
 != 348516-3.html 348516-3-notref.html
-skip-if(Mulet) == 348597-1.html 348597-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 348597-1.html 348597-ref.html
 == 348809-1a.html 348809-1-ref.html
 == 348809-1b.html 348809-1-ref.html
 == 348809-1c.html 348809-1-ref.html
@@ -908,12 +908,12 @@ fuzzy-if(Android&&AndroidVersion>=15,8,50) == 404553-1.html 404553-1-ref.html  #
 == 405380-1.html 405380-1-ref.html
 == 405517-1.xhtml 405517-1-ref.xhtml
 == 405577-1.html 405577-1-ref.html
-skip-if(Mulet) == 405584-1.html 405584-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 405584-1.html 405584-1-ref.html
 # == 405952-1.html 405952-1-ref.html
 == 406484-1.html 406484-1-ref.html
 == 406568-1.html 406568-1-ref.html
 == 407016-1-a.html 407016-1-ref.html
-skip-if(Mulet) == 407016-1-b.html 407016-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 407016-1-b.html 407016-1-ref.html
 == 407078-1.html 407078-1-ref.html
 == 407095-1.html 407095-1-ref.html
 fuzzy-if(Android,13,9) == 407111-1.html 407111-1-ref.html  # Bug 1128229
@@ -1135,7 +1135,7 @@ skip-if(B2G||Mulet) == 430412-1.html 430412-1-ref.html # Initial mulet triage: p
 == 431520-1.html 431520-1-ref.html
 == 431948-1.html 431948-1-ref.html
 == 433640-1.html 433640-1-ref.html
-skip-if(Mulet) == 433700.html 433700-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
 == 438537-1.html 438537-1-ref.html
@@ -1219,11 +1219,11 @@ skip-if(B2G||Mulet) == 458296-1d.html 458296-1-ref.html # Initial mulet triage: 
 == 458487-1h.html 458487-1-ref.html
 == 458487-2.html 458487-2-ref.html
 == 458487-3.html 458487-3-ref.html
-skip-if(Mulet) == 458487-4a.html 458487-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 458487-4b.html 458487-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 458487-4c.html 458487-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 458487-5a.html 458487-5-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 458487-5b.html 458487-5-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 458487-4a.html 458487-4-ref.html
+== 458487-4b.html 458487-4-ref.html
+== 458487-4c.html 458487-4-ref.html
+== 458487-5a.html 458487-5-ref.html
+== 458487-5b.html 458487-5-ref.html
 == 459443-1.html 459443-1-ref.html
 == 459613-1.html 459613-1-ref.html
 == 460012-1.html 460012-1-ref.html
@@ -1597,11 +1597,11 @@ skip-if(!asyncPanZoom) == 593243-1.html 593243-1-ref.html # bug 593168
 skip-if(!asyncPanZoom) == 593243-2.html 593243-2-ref.html # bug 593168
 == 593544-1.html 593544-1-ref.html
 random-if(Android) == 594333-1.html 594333-1-ref.html
-skip-if(Mulet) fuzzy-if(B2G,1,40000) == 594624-1.html 594624-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(B2G,1,40000) == 594624-1.html 594624-1-ref.html
 == 594737-1.html 594737-1-ref.html
 == 597721-1.html 597721-1-ref.html
 random-if(winWidget) fuzzy-if(B2G,3,40) fuzzy-if(Android,38,539) needs-focus == 598726-1.html 598726-1-ref.html # Fails on Windows, bug 782196
-skip-if(Mulet) == 599113-1.html 599113-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 599113-1.html 599113-1-ref.html
 fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 599882-1a.html 599882-1-ref.html
 == 599882-1b.html 599882-1-ref.html
@@ -1624,7 +1624,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,20) == 602200-3.html 602200-3-ref.html
 == 608756-1a.html 608756-1-ref.html
 == 608756-1b.html 608756-1-ref.html
 == 608756-2.html 608756-2-ref.html
-skip-if(Mulet) == 609272-1.html 609272-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 609272-1.html 609272-1-ref.html
 needs-focus == 613433-1.html 613433-1-ref.html
 needs-focus == 613433-1.html 613433-2-ref.html
 needs-focus == 613433-1.html 613433-3-ref.html
@@ -1637,7 +1637,7 @@ needs-focus == 613433-3.html 613433-3-ref.html
 == 614272-1.svg  614272-1-ref.svg
 HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
-skip-if(Mulet) fails-if(Android&&AndroidVersion==15) == 617242-1.html 617242-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(Android&&AndroidVersion==15) == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
@@ -1657,7 +1657,7 @@ skip-if(Android||B2G||Mulet) random-if(winWidget) == 632781-verybig.html 632781-
 == 632781-normalsize.html 632781-ref.html
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,559) == 633344-1.html 633344-1-ref.html # bug 1103623
 == 634232-1.html 634232-1-ref.html
-skip-if(Mulet) fails-if(Android&&AndroidVersion<17&&AndroidVersion!=10) == 635302-1.html 635302-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(Android&&AndroidVersion<17&&AndroidVersion!=10) == 635302-1.html 635302-1-ref.html
 fuzzy(1,68) skip-if(B2G||Mulet) fails-if(Android) == 635373-1.html 635373-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,61) == 635373-2.html 635373-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,60) == 635373-3.html 635373-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
@@ -1665,19 +1665,19 @@ HTTP(..) == 635639-1.html 635639-1-ref.html
 HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-1.html 637852-1-ref.html
-skip-if(Mulet) fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-2.html 637852-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-2.html 637852-2-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-3.html 637852-3-ref.html
 skip-if(B2G||Mulet) == 641770-1.html 641770-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
 == 645768-1.html 645768-1-ref.html
-skip-if(Mulet) fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 needs-focus == 652301-1a.html 652301-1-ref.html
 needs-focus == 652301-1b.html 652301-1-ref.html
 == 652775-1.html 652775-1-ref.html
 == 653930-1.html 653930-1-ref.html
 HTTP(..) == 654057-1.html 654057-1-ref.html
-skip-if(Mulet) fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion==15) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion==15) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 655549-1.html 655549-1-ref.html
 == 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
@@ -1708,7 +1708,7 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android&&browserIsRemote,7,157) fails-if(Android&&!browserIsRemote&&AndroidVersion==15) skip-if(B2G||Mulet) == 718521.html 718521-ref.html # bug 760270 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(B2G||Mulet) fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android&&browserIsRemote,7,157) fails-if(Android&&!browserIsRemote&&AndroidVersion==15) == 718521.html 718521-ref.html # bug 760270 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
 == 722923-1.html 722923-1-ref.html
@@ -1746,7 +1746,7 @@ fuzzy(40,850) fuzzy-if(azureQuartz,73,542) == 797797-1.html 797797-1-ref.html # 
 fuzzy(40,850) fuzzy-if(azureQuartz,68,586) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 == 801994-1.html 801994-1-ref.html
 == 804323-1.html 804323-1-ref.html
-skip-if(Mulet) fuzzy-if(Android,8,608) == 811301-1.html 811301-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android,8,608) == 811301-1.html 811301-1-ref.html
 == 812824-1.html 812824-1-ref.html
 == 814677.html 814677-ref.html
 skip-if(B2G||Mulet) == 814952-1.html 814952-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
@@ -1761,9 +1761,9 @@ skip-if(B2G||Mulet) == 818276-1.html 818276-1-ref.html # Initial mulet triage: p
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
 == 829958.html 829958-ref.html
-skip-if(Mulet) == 836844-1.html 836844-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
-skip-if(Mulet) == 844178.html 844178-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 844178.html 844178-ref.html
 fuzzy-if(OSX,1,364) == 846144-1.html 846144-1-ref.html
 == 847850-1.html 847850-1-ref.html
 == 848421-1.html 848421-1-ref.html
@@ -1785,7 +1785,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 858803-1.html 858803-1-ref.html # bug 
 == 897491-1.html 897491-1-ref.html
 == 897491-2.html 897491-2-ref.html
 fuzzy(2,10000) fuzzy-if(Android&&AndroidVersion>=15,5,10000) == 902330-1.html 902330-1-ref.html
-skip-if(Mulet) fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html
 test-pref(layout.css.sticky.enabled,true) == 926155-1.html 926155-1-ref.html
 fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
@@ -1803,10 +1803,10 @@ fuzzy-if(B2G,1,7) == 942672-1.html 942672-1-ref.html
 == 950436-1.html 950436-1-ref.html
 == 957770-1.svg 957770-1-ref.svg
 == 960277-1.html 960277-1-ref.html
-skip-if(Mulet) == 961887-1.html 961887-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 961887-2.html 961887-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 961887-1.html 961887-1-ref.html
+== 961887-2.html 961887-2-ref.html
 == 961887-3.html 961887-3-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) skip-if(Mulet) == 966992-1.html 966992-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) == 966992-1.html 966992-1-ref.html
 skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other than the root probably won't work well on android until bug 776030 is fixed
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 == 978911-1.svg 978911-1-ref.svg
@@ -1834,8 +1834,8 @@ pref(layout.css.will-change.enabled,true) == 1018522-1.html 1018522-1-ref.html
 pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
 == 1022612-1.html 1022612-1-ref.html
 == 1024473-1.html 1024473-1-ref.html
-skip-if(Mulet) == 1025914-1.html 1025914-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 1042104-1.html 1042104-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 1025914-1.html 1025914-1-ref.html
+== 1042104-1.html 1042104-1-ref.html
 == 1044198-1.html 1044198-1-ref.html
 == 1049499-1.html 1049499-1-ref.html
 == 1050493-1.html 1050493-1-ref.html
@@ -1847,7 +1847,7 @@ test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-ref.htm
 == 1059498-2.html 1059498-1-ref.html
 == 1059498-3.html 1059498-1-ref.html
 skip-if(Mulet) == 1062108-1.html 1062108-1-ref.html # Bug 1139893: font rounding failure, tracked in bug 1141535
-fails-if(Android) fuzzy-if(Mulet,1,5) skip-if(Mulet) == 1062792-1.html 1062792-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(Android) fuzzy-if(Mulet,1,5) == 1062792-1.html 1062792-1-ref.html
 == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow-ref.html
 test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1069716-1.html 1069716-1-ref.html
@@ -1861,8 +1861,8 @@ fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fa
 == 1111753-1.html about:blank
 == 1119117-1a.html 1119117-1-ref.html
 == 1119117-1b.html 1119117-1-ref.html
-skip-if(Mulet) == 1120431-1.html 1120431-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == 1120431-2.html 1120431-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 1120431-1.html 1120431-1-ref.html
+== 1120431-2.html 1120431-2-ref.html
 == 1121748-1.html 1121748-1-ref.html
 == 1121748-2.html 1121748-2-ref.html
 == 1127107-1a-nowrap.html 1127107-1-ref.html

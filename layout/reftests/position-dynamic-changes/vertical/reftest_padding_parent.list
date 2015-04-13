@@ -1,20 +1,20 @@
 # Please see the comment at the beginning of reftest.list
 
-skip-if(Mulet) == topN-heightA-bottomA.html?padding_parent topN-heightA-bottomA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == topN-heightA-bottomN.html?padding_parent topN-heightA-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== topN-heightA-bottomA.html?padding_parent topN-heightA-bottomA-ref.html?padding_parent
+== topN-heightA-bottomN.html?padding_parent topN-heightA-bottomN-ref.html?padding_parent
 == topA-heightN-bottomA.html?padding_parent topA-heightN-bottomA-ref.html?padding_parent
-skip-if(Mulet) == topN-heightN-bottomA.html?padding_parent topN-heightN-bottomA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == topA-heightN-bottomN.html?padding_parent topA-heightN-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == topA-heightA-bottomN.html?padding_parent topA-heightA-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topN-heightA-bottomA.html?padding_parent toauto-topN-heightA-bottomA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topN-heightA-bottomN.html?padding_parent toauto-topN-heightA-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== topN-heightN-bottomA.html?padding_parent topN-heightN-bottomA-ref.html?padding_parent
+== topA-heightN-bottomN.html?padding_parent topA-heightN-bottomN-ref.html?padding_parent
+== topA-heightA-bottomN.html?padding_parent topA-heightA-bottomN-ref.html?padding_parent
+== toauto-topN-heightA-bottomA.html?padding_parent toauto-topN-heightA-bottomA-ref.html?padding_parent
+== toauto-topN-heightA-bottomN.html?padding_parent toauto-topN-heightA-bottomN-ref.html?padding_parent
 == toauto-topA-heightN-bottomA.html?padding_parent toauto-topA-heightN-bottomA-ref.html?padding_parent
-skip-if(Mulet) == toauto-topN-heightN-bottomA.html?padding_parent toauto-topN-heightN-bottomA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topA-heightN-bottomN.html?padding_parent toauto-topA-heightN-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topA-heightA-bottomN.html?padding_parent toauto-topA-heightA-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topN-heightA-bottomA.html?padding_parent topN-heightA-bottomA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topN-heightA-bottomN.html?padding_parent topN-heightA-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== toauto-topN-heightN-bottomA.html?padding_parent toauto-topN-heightN-bottomA-ref.html?padding_parent
+== toauto-topA-heightN-bottomN.html?padding_parent toauto-topA-heightN-bottomN-ref.html?padding_parent
+== toauto-topA-heightA-bottomN.html?padding_parent toauto-topA-heightA-bottomN-ref.html?padding_parent
+== fromauto-topN-heightA-bottomA.html?padding_parent topN-heightA-bottomA-ref.html?padding_parent
+== fromauto-topN-heightA-bottomN.html?padding_parent topN-heightA-bottomN-ref.html?padding_parent
 == fromauto-topA-heightN-bottomA.html?padding_parent topA-heightN-bottomA-ref.html?padding_parent
-skip-if(Mulet) == fromauto-topN-heightN-bottomA.html?padding_parent topN-heightN-bottomA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topA-heightN-bottomN.html?padding_parent topA-heightN-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topA-heightA-bottomN.html?padding_parent topA-heightA-bottomN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== fromauto-topN-heightN-bottomA.html?padding_parent topN-heightN-bottomA-ref.html?padding_parent
+== fromauto-topA-heightN-bottomN.html?padding_parent topA-heightN-bottomN-ref.html?padding_parent
+== fromauto-topA-heightA-bottomN.html?padding_parent topA-heightA-bottomN-ref.html?padding_parent

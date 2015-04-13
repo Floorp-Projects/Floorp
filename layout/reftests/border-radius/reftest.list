@@ -39,26 +39,26 @@ fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) =
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-skip-if(Mulet) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
-fuzzy-if(true,1,20) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android&&browserIsRemote,7,169) fuzzy-if(Android&&!browserIsRemote,140,237) skip-if(Mulet) == clipping-4-canvas.html clipping-4-ref.html # bug 732535 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(true,1,20) fuzzy-if(cocoaWidget,1,180) fuzzy-if(Android&&browserIsRemote,7,169) fuzzy-if(Android&&!browserIsRemote,140,237) == clipping-4-canvas.html clipping-4-ref.html # bug 732535
 fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-image.html clipping-4-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
-fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,115) skip-if(Mulet) == clipping-5-refc.html clipping-5-ref.html # bug 732535 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,464) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-fuzzy-if(true,2,29) fuzzy-if(Android&&AndroidVersion<15,12,81) fuzzy-if(Android&&AndroidVersion>=15,255,586) skip-if(Mulet) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures). # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,115) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,464) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
+fuzzy-if(true,2,29) fuzzy-if(Android&&AndroidVersion<15,12,81) fuzzy-if(Android&&AndroidVersion>=15,255,586) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
-skip-if(Mulet) fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables. # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
 == intersecting-clipping-1-overflow-hidden.html intersecting-clipping-1-ref.html
 fuzzy-if(Android,5,105) fuzzy-if(d2d,1,20) == intersecting-clipping-1-refi.html intersecting-clipping-1-ref.html
-fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,440) skip-if(Mulet) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(true,1,33) fuzzy-if(cocoaWidget,1,332) fuzzy-if(Android&&browserIsRemote,7,310) fuzzy-if(Android&&!browserIsRemote,124,440) == intersecting-clipping-1-refc.html intersecting-clipping-1-ref.html # bug 732535
 
 # Inheritance
 == inherit-1.html inherit-1-ref.html # border-radius shouldn't inherit
