@@ -19,6 +19,22 @@
 namespace mozilla {
 namespace net {
 
+// function places true in outIsHTTPS if scheme is https, false if
+// http, and returns an error if neither. originScheme passed into
+// alternate service should already be normalized to those lower case
+// strings by the URI parser (and so there is an assert)- this is an extra check.
+static nsresult
+SchemeIsHTTPS(const nsACString &originScheme, bool &outIsHTTPS)
+{
+  outIsHTTPS = originScheme.Equals(NS_LITERAL_CSTRING("https"));
+
+  if (!outIsHTTPS && !originScheme.Equals(NS_LITERAL_CSTRING("http"))) {
+      MOZ_ASSERT(false, "unexpected scheme");
+      return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
+
 void
 AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme,
                              const nsCString &originHost, int32_t originPort,
@@ -32,8 +48,11 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
     return;
   }
 
-  bool isHttp = originScheme.Equals(NS_LITERAL_CSTRING("http"));
-  if (isHttp && !gHttpHandler->AllowAltSvcOE()) {
+  bool isHTTPS;
+  if (NS_FAILED(SchemeIsHTTPS(originScheme, isHTTPS))) {
+    return;
+  }
+  if (!isHTTPS && !gHttpHandler->AllowAltSvcOE()) {
     LOG(("Alt-Svc Response Header for http:// origin but OE disabled\n"));
     return;
   }
@@ -114,7 +133,10 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
   , mRunning(false)
   , mNPNToken(npnToken)
 {
-  mHttps = originScheme.Equals("https");
+  if (NS_FAILED(SchemeIsHTTPS(originScheme, mHttps))) {
+    LOG(("AltSvcMapping ctor %p invalid scheme\n", this));
+    mExpiresAt = 0; // invalid
+  }
 
   if (mAlternatePort == -1) {
     mAlternatePort = mHttps ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
@@ -130,7 +152,10 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
   if (mAlternateHost.IsEmpty()) {
     mAlternateHost = mOriginHost;
   }
-  MakeHashKey(mHashKey, originScheme, mOriginHost, mOriginPort, mPrivate);
+
+  if (mExpiresAt) {
+    MakeHashKey(mHashKey, originScheme, mOriginHost, mOriginPort, mPrivate);
+  }
 }
 
 void
@@ -140,6 +165,8 @@ AltSvcMapping::MakeHashKey(nsCString &outKey,
                            int32_t originPort,
                            bool privateBrowsing)
 {
+  outKey.Truncate();
+
   if (originPort == -1) {
     bool isHttps = originScheme.Equals("https");
     originPort = isHttps ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
@@ -384,11 +411,15 @@ AltSvcMapping *
 AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &host,
                                   int32_t port, bool privateBrowsing)
 {
+  bool isHTTPS;
   MOZ_ASSERT(NS_IsMainThread());
+  if (NS_FAILED(SchemeIsHTTPS(scheme, isHTTPS))) {
+    return nullptr;
+  }
   if (!gHttpHandler->AllowAltSvc()) {
     return nullptr;
   }
-  if (!gHttpHandler->AllowAltSvcOE() && scheme.Equals(NS_LITERAL_CSTRING("http"))) {
+  if (!gHttpHandler->AllowAltSvcOE() && !isHTTPS) {
     return nullptr;
   }
 
