@@ -23,7 +23,7 @@ public abstract class ReadingListRecord {
      * From server record.
      */
     public ServerMetadata(ExtendedJSONObject obj) {
-      this(obj.getString("id"), obj.getLong("last_modified"));
+      this(obj.getString("id"), obj.containsKey("last_modified") ? obj.getLong("last_modified") : -1L);
     }
   }
 

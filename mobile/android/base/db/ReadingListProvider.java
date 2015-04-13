@@ -8,15 +8,19 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 
 import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.*;
 
 public class ReadingListProvider extends SharedBrowserDatabaseProvider {
+    private static final String LOGTAG = "GeckoRLProvider";
+
     static final String TABLE_READING_LIST = TABLE_NAME;
 
     static final int ITEMS = 101;
@@ -162,7 +166,12 @@ public class ReadingListProvider extends SharedBrowserDatabaseProvider {
 
         final String url = values.getAsString(URL);
         debug("Inserting item in database with URL: " + url);
-        return getWritableDatabase(uri).insertOrThrow(TABLE_READING_LIST, null, values);
+        try {
+            return getWritableDatabase(uri).insertOrThrow(TABLE_READING_LIST, null, values);
+        } catch (SQLException e) {
+            Log.e(LOGTAG, "Insert failed.", e);
+            throw e;
+        }
     }
 
     private static final ContentValues DELETED_VALUES;
@@ -323,6 +332,8 @@ public class ReadingListProvider extends SharedBrowserDatabaseProvider {
                 break;
 
             default:
+                // Log here because we typically insert in a batch, and that will muffle.
+                Log.e(LOGTAG, "Unknown insert URI " + uri);
                 throw new UnsupportedOperationException("Unknown insert URI " + uri);
         }
 
@@ -332,6 +343,7 @@ public class ReadingListProvider extends SharedBrowserDatabaseProvider {
             return ContentUris.withAppendedId(uri, id);
         }
 
+        Log.e(LOGTAG, "Got to end of insertInTransaction without returning an id!");
         return null;
     }
 
