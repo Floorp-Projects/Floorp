@@ -15,7 +15,6 @@ if (this.hasOwnProperty("TypedObject")) {
   FakeSIMDType = new TO.StructType({ x: TO.int32, y: TO.int32, z: TO.int32, w: TO.int32 });
 }
 
-
 function simdunbox_bail_undef(i, lhs, rhs) {
   return i32x4Add(lhs, rhs);
 }
@@ -106,3 +105,40 @@ for (i = 0; i < max; i++) {
   assertEqX4(arr_typeobj[i], ref);
   assertEqX4(arr_badsimd[i], ref);
 }
+
+// Check that unbox operations aren't removed
+(function() {
+
+    function add(i, v, w) {
+        if (i % 2 == 0) {
+            SIMD.int32x4.add(v, w);
+        } else {
+            SIMD.float32x4.add(v, w);
+        }
+    }
+
+    var i = 0;
+    var caught = false;
+    var f4 = SIMD.float32x4(1,2,3,4);
+    var i4 = SIMD.int32x4(1,2,3,4);
+    try {
+        for (; i < 200; i++) {
+            if (i % 2 == 0) {
+                add(i, i4, i4);
+            } else if (i == 199) {
+                add(i, i4, f4);
+            } else {
+                add(i, f4, f4);
+            }
+        }
+    } catch(e) {
+        print(e);
+        assertEq(e instanceof TypeError, true);
+        assertEq(i, 199);
+        caught = true;
+    }
+
+    assertEq(i < 199 || caught, true);
+
+})();
+
