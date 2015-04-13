@@ -23,8 +23,10 @@ add_task(function*() {
 });
 
 function* testCreateNewMulti(inspector, ruleEditor) {
+  let onMutation = inspector.once("markupmutation");
   yield createNewRuleViewProperty(ruleEditor,
     "color:blue;background : orange   ; text-align:center; border-color: green;");
+  yield onMutation;
 
   is(ruleEditor.rule.textProps.length, 4, "Should have created a new text property.");
   is(ruleEditor.propertyList.children.length, 5, "Should have created a new property editor.");
@@ -40,6 +42,4 @@ function* testCreateNewMulti(inspector, ruleEditor) {
 
   is(ruleEditor.rule.textProps[3].name, "border-color", "Should have correct property name");
   is(ruleEditor.rule.textProps[3].value, "green", "Should have correct property value");
-
-  yield inspector.once("inspector-updated");
 }

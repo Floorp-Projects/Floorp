@@ -32,6 +32,7 @@ loop.store = loop.store || {};
     roomToken:    String,
     roomUrl:      String,
     // roomName:     String - Optional.
+    // roomKey:      String - Optional.
     maxSize:      Number,
     participants: Array,
     ctime:        Number
@@ -227,7 +228,7 @@ loop.store = loop.store || {};
       var searchRegExp = new RegExp("^" + searchTemplate + "(\\d+)$");
 
       var roomNumbers = this._storeState.rooms.map(function(room) {
-        var match = searchRegExp.exec(room.roomName);
+        var match = searchRegExp.exec(room.decryptedContext.roomName);
         return match && match[1] ? parseInt(match[1], 10) : 0;
       });
 
@@ -261,10 +262,16 @@ loop.store = loop.store || {};
       });
 
       var roomCreationData = {
-        roomName:  this._generateNewRoomName(actionData.nameTemplate),
+        decryptedContext: {
+          roomName:  this._generateNewRoomName(actionData.nameTemplate)
+        },
         roomOwner: actionData.roomOwner,
         maxSize:   this.maxRoomCreationSize
       };
+
+      if ("urls" in actionData) {
+        roomCreationData.decryptedContext.urls = actionData.urls;
+      }
 
       this._notifications.remove("create-room-error");
 
