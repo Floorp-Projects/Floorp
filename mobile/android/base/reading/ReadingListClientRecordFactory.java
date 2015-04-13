@@ -198,6 +198,10 @@ public class ReadingListClientRecordFactory {
     object.remove("client_last_modified");
     object.remove("is_deleted");
 
+    // We never want to upload stored_on; for new items it'll be null (and cause Bug 1153358),
+    // and for existing items it should never change.
+    object.remove("stored_on");
+
     object.remove(ReadingListItems.CONTENT_STATUS);
     object.remove(ReadingListItems.SYNC_STATUS);
     object.remove(ReadingListItems.SYNC_CHANGE_FLAGS);
