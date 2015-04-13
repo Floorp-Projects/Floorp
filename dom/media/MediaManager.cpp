@@ -46,6 +46,7 @@
 #include "MediaTrackConstraints.h"
 #include "VideoUtils.h"
 #include "Latency.h"
+#include "nsNullPrincipal.h"
 
 // For PR_snprintf
 #include "prprf.h"
@@ -994,7 +995,7 @@ public:
 
     nsCOMPtr<nsIPrincipal> principal;
     if (mPeerIdentity) {
-      principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
+      principal = nsNullPrincipal::Create();
       trackunion->SetPeerIdentity(mPeerIdentity.forget());
     } else {
       principal = window->GetExtantDoc()->NodePrincipal();
