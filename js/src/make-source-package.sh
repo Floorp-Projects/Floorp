@@ -99,7 +99,9 @@ case $cmd in
         cp -t ${tgtpath}/memory -dRp \
                 ${TOPSRCDIR}/memory/moz.build \
                 ${TOPSRCDIR}/memory/build \
+                ${TOPSRCDIR}/memory/fallible \
                 ${TOPSRCDIR}/memory/jemalloc \
+                ${TOPSRCDIR}/memory/mozalloc \
                 ${TOPSRCDIR}/memory/mozjemalloc
 
 	# remove *.pyc and *.pyo files if any
