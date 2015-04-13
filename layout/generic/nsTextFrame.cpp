@@ -7593,8 +7593,9 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
       // XXXldb Shouldn't we be including the newline as part of the
       // segment that it ends rather than part of the segment that it
       // starts?
-      NS_ASSERTION(preformatNewlines,
-                   "We can't be here unless newlines are hard breaks");
+      NS_ASSERTION(preformatNewlines || preformatTabs,
+                   "We can't be here unless newlines are "
+                   "hard breaks or there are tabs");
       preformattedNewline = preformatNewlines && textRun->CharIsNewline(i);
       preformattedTab = preformatTabs && textRun->CharIsTab(i);
       if (!preformattedNewline && !preformattedTab) {
