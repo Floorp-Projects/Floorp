@@ -48,6 +48,11 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
     return;
   }
 
+  if (proxyInfo && !proxyInfo->IsDirect()) {
+    LOG(("AltSvcMapping::ProcessHeader ignoring due to proxy\n"));
+    return;
+  }
+
   bool isHTTPS;
   if (NS_FAILED(SchemeIsHTTPS(originScheme, isHTTPS))) {
     return;
