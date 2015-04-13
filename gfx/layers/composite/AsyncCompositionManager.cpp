@@ -736,13 +736,8 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const CSSCoord compositedHeight = (metrics.mCompositionBounds / effectiveZoom).height;
     const CSSCoord scrollableHeight = metrics.GetScrollableRect().height;
 
-    // The scroll thumb needs to be translated in opposite direction of the
-    // async scroll. This is because scrolling down, which translates the layer
-    // content up, should result in moving the scroll thumb down.
-    // The amount of the translation should be such that the ratio of the
-    // translation to the size of the scroll port is the same as the ratio of
-    // the scroll amount of the size of the scrollable rect.
-    const float ratio = compositedHeight / scrollableHeight;
+    // The scrollbar thumb ratio is in AppUnits.
+    const float ratio = aScrollbar->GetScrollbarThumbRatio();
     ParentLayerCoord yTranslation = -asyncScrollY * ratio;
 
     // The scroll thumb additionally needs to be translated to compensate for
@@ -788,7 +783,8 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const CSSCoord compositedWidth = (metrics.mCompositionBounds / effectiveZoom).width;
     const CSSCoord scrollableWidth = metrics.GetScrollableRect().width;
 
-    const float ratio = compositedWidth / scrollableWidth;
+    // The scrollbar thumb ratio is in AppUnits.
+    const float ratio = aScrollbar->GetScrollbarThumbRatio();
     ParentLayerCoord xTranslation = -asyncScrollX * ratio;
 
     const CSSCoord thumbOrigin = (metrics.GetScrollOffset().x / scrollableWidth) * compositedWidth;

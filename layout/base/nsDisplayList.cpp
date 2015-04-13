@@ -4168,10 +4168,13 @@ bool nsDisplayBlendContainer::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplay
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
-                                     uint32_t aFlags, ViewID aScrollTarget)
+                                     uint32_t aFlags, ViewID aScrollTarget,
+                                     float aScrollbarThumbRatio)
     : nsDisplayWrapList(aBuilder, aFrame, aList)
     , mFlags(aFlags)
-    , mScrollTarget(aScrollTarget) {
+    , mScrollTarget(aScrollTarget)
+    , mScrollbarThumbRatio(aScrollbarThumbRatio)
+{
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 }
 
@@ -4185,16 +4188,17 @@ nsDisplayOwnLayer::~nsDisplayOwnLayer() {
 already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
-                              const ContainerLayerParameters& aContainerParameters) {
+                              const ContainerLayerParameters& aContainerParameters)
+{
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
   if (mFlags & VERTICAL_SCROLLBAR) {
-    layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::VERTICAL);
+    layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::VERTICAL, mScrollbarThumbRatio);
   }
   if (mFlags & HORIZONTAL_SCROLLBAR) {
-    layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::HORIZONTAL);
+    layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::HORIZONTAL, mScrollbarThumbRatio);
   }
   if (mFlags & SCROLLBAR_CONTAINER) {
     layer->SetIsScrollbarContainer();
