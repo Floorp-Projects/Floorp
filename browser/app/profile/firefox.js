@@ -1017,6 +1017,7 @@ pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
 #endif
 
 pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
+pref("browser.push.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/push/");
 
 pref("browser.EULA.version", 3);
 pref("browser.rights.version", 3);
@@ -1156,13 +1157,6 @@ pref("browser.privatebrowsing.autostart", false);
 // Don't try to alter this pref, it'll be reset the next time you use the
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
-
-// Whether to use a panel that looks like an OS X sheet for customization
-#ifdef XP_MACOSX
-pref("toolbar.customization.usesheet", true);
-#else
-pref("toolbar.customization.usesheet", false);
-#endif
 
 pref("dom.ipc.plugins.flash.disable-protected-mode", false);
 
@@ -1723,9 +1717,6 @@ pref("loop.contacts.gravatars.promo", true);
 pref("loop.browserSharing.showInfoBar", true);
 pref("loop.contextInConverations.enabled", false);
 
-// serverURL to be assigned by services team
-pref("services.push.serverURL", "wss://push.services.mozilla.com/");
-
 pref("social.sidebar.unload_timeout_ms", 10000);
 
 // activation from inside of share panel is possible if activationPanelEnabled
@@ -1890,6 +1881,7 @@ pref("dom.ipc.reportProcessHangs", true);
 // Enable ReadingList browser UI by default.
 pref("browser.readinglist.enabled", true);
 pref("browser.readinglist.sidebarEverOpened", false);
+
 // Enable the readinglist engine by default.
 pref("readinglist.scheduler.enabled", true);
 pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");

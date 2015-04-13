@@ -25,8 +25,6 @@
 
 namespace js {
 
-class AutoLockGC;
-
 unsigned GetCPUCount();
 
 enum HeapState {
@@ -41,10 +39,6 @@ enum ThreadType
     MainThread,
     BackgroundThread
 };
-
-namespace jit {
-    class JitCode;
-}
 
 namespace gcstats {
 struct Statistics;
@@ -161,6 +155,51 @@ CanBeFinalizedInBackground(AllocKind kind, const Class* clasp)
 
 inline JSGCTraceKind
 GetGCThingTraceKind(const void* thing);
+
+// Fortunately, few places in the system need to deal with fully abstract
+// cells. In those places that do, we generally want to move to a layout
+// templated function as soon as possible. This template wraps the upcast
+// for that dispatch.
+//
+// Call the functor |F f| with template parameter of the layout type.
+
+// GCC and Clang require an explicit template declaration in front of the
+// specialization of operator() because it is a dependent template. MSVC, on
+// the other hand, gets very confused if we have a |template| token there.
+#ifdef XP_WIN
+# define DEPENDENT_TEMPLATE_HINT
+#else
+# define DEPENDENT_TEMPLATE_HINT template
+#endif
+template <typename F, typename... Args>
+auto
+CallTyped(F f, JSGCTraceKind traceKind, Args&&... args)
+  -> decltype(f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...))
+{
+    switch (traceKind) {
+      case JSTRACE_OBJECT:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<JSObject>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_SCRIPT:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<JSScript>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_STRING:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<JSString>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_SYMBOL:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<JS::Symbol>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_BASE_SHAPE:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<BaseShape>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_JITCODE:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<jit::JitCode>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_LAZY_SCRIPT:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<LazyScript>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_SHAPE:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<Shape>(mozilla::Forward<Args>(args)...);
+      case JSTRACE_OBJECT_GROUP:
+          return f. DEPENDENT_TEMPLATE_HINT operator()<ObjectGroup>(mozilla::Forward<Args>(args)...);
+      default:
+          MOZ_CRASH("Invalid trace kind in CallTyped.");
+    }
+}
+#undef DEPENDENT_TEMPLATE_HINT
 
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;

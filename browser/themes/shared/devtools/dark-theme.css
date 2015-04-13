@@ -204,9 +204,8 @@
   color: black;
 }
 
-.ruleview-colorswatch,
-.computedview-colorswatch,
-.ruleview-bezierswatch {
+.ruleview-swatch,
+.computedview-colorswatch {
   box-shadow: 0 0 0 1px #818181;
 }
 

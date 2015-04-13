@@ -1085,7 +1085,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         int32_t     port       = (int32_t) mPort;
         const char *proxyHost  = mProxyHost.IsEmpty() ? nullptr : mProxyHost.get();
         int32_t     proxyPort  = (int32_t) mProxyPort;
-        uint32_t    proxyFlags = 0;
+        uint32_t    controlFlags = 0;
 
         uint32_t i;
         for (i=0; i<mTypeCount; ++i) {
@@ -1098,13 +1098,13 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 break;
 
             if (mProxyTransparentResolvesHost)
-                proxyFlags |= nsISocketProvider::PROXY_RESOLVES_HOST;
+                controlFlags |= nsISocketProvider::PROXY_RESOLVES_HOST;
             
             if (mConnectionFlags & nsISocketTransport::ANONYMOUS_CONNECT)
-                proxyFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
+                controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT;
 
             if (mConnectionFlags & nsISocketTransport::NO_PERMANENT_STORAGE)
-                proxyFlags |= nsISocketProvider::NO_PERMANENT_STORAGE;
+                controlFlags |= nsISocketProvider::NO_PERMANENT_STORAGE;
 
             nsCOMPtr<nsISupports> secinfo;
             if (i == 0) {
@@ -1118,7 +1118,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                                          mHttpsProxy ? proxyHost : host,
                                          mHttpsProxy ? proxyPort : port,
                                          proxyHost, proxyPort,
-                                         proxyFlags, &fd,
+                                         controlFlags, &fd,
                                          getter_AddRefs(secinfo));
 
                 if (NS_SUCCEEDED(rv) && !fd) {
@@ -1132,10 +1132,10 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 // to the stack (such as pushing an io layer)
                 rv = provider->AddToSocket(mNetAddr.raw.family,
                                            host, port, proxyHost, proxyPort,
-                                           proxyFlags, fd,
+                                           controlFlags, fd,
                                            getter_AddRefs(secinfo));
             }
-            // proxyFlags = 0; not used below this point...
+            // controlFlags = 0; not used below this point...
             if (NS_FAILED(rv))
                 break;
 

@@ -8,7 +8,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(b0541ea1-58c8-4c16-b3ea-94b3e14236d2)]
+[scriptable, uuid(74fdaac3-e5ce-4944-becc-c08c168f673c)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -89,6 +89,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_DIRECT3D_11_LAYERS = 11;
   /* Whether hardware accelerated video decoding is supported. */
   const long FEATURE_HARDWARE_VIDEO_DECODING = 12;
+  /* Whether Direct3D 11 is supported for ANGLE. */
+  const long FEATURE_DIRECT3D_11_ANGLE = 13;
 
   /*
    * A set of return values from GetFeatureStatus

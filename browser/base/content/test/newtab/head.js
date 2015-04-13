@@ -495,33 +495,81 @@ function simulateExternalDrop(aDestIndex) {
  * @param aCallback The function that is called when we're done.
  */
 function startAndCompleteDragOperation(aSource, aDest, aCallback) {
-  // Start by pressing the left mouse button.
-  synthesizeNativeMouseLDown(aSource);
+  // The implementation of this function varies by platform because each
+  // platform has particular quirks that we need to deal with
 
-  // Move the mouse in 5px steps until the drag operation starts.
-  let offset = 0;
-  let interval = setInterval(() => {
-    synthesizeNativeMouseDrag(aSource, offset += 5);
-  }, 10);
-
-  // When the drag operation has started we'll move
-  // the dragged element to its target position.
-  aSource.addEventListener("dragstart", function onDragStart() {
-    aSource.removeEventListener("dragstart", onDragStart);
-    clearInterval(interval);
-
-    // Place the cursor above the drag target.
-    synthesizeNativeMouseMove(aDest);
-  });
-
-  // As soon as the dragged element hovers the target, we'll drop it.
-  aDest.addEventListener("dragenter", function onDragEnter() {
-    aDest.removeEventListener("dragenter", onDragEnter);
-
-    // Finish the drop operation.
+  if (isMac) {
+    // On OS X once the drag starts, Cocoa manages the drag session and
+    // gives us a limited amount of time to complete the drag operation. In
+    // some cases as soon as the first mouse-move event is received (the one
+    // that starts the drag session), Cocoa becomes blind to subsequent mouse
+    // events and completes the drag session all by itself. Therefore it is
+    // important that the first mouse-move we send is already positioned at
+    // the destination.
+    synthesizeNativeMouseLDown(aSource);
+    synthesizeNativeMouseDrag(aDest);
+    // In some tests, aSource and aDest are at the same position, so to ensure
+    // a drag session is created (instead of it just turning into a click) we
+    // move the mouse 10 pixels away and then back.
+    synthesizeNativeMouseDrag(aDest, 10);
+    synthesizeNativeMouseDrag(aDest);
+    // Finally, release the drag and have it run the callback when done.
     synthesizeNativeMouseLUp(aDest);
     aCallback();
-  });
+  } else if (isWindows) {
+    // on Windows once the drag is initiated, Windows doesn't spin our
+    // message loop at all, so with async event synthesization the async
+    // messages never get processed while a drag is in progress. So if
+    // we did a mousedown followed by a mousemove, we would never be able
+    // to successfully dispatch the mouseup. Instead, we just skip the move
+    // entirely, so and just generate the up at the destination. This way
+    // Windows does the drag and also terminates it right away. Note that
+    // this only works for tests where aSource and aDest are sufficiently
+    // far to trigger a drag, otherwise it may just end up doing a click.
+    synthesizeNativeMouseLDown(aSource);
+    synthesizeNativeMouseLUp(aDest);
+    aCallback();
+  } else if (isLinux) {
+    // Start by pressing the left mouse button.
+    synthesizeNativeMouseLDown(aSource);
+
+    // Move the mouse in 5px steps until the drag operation starts.
+    // Note that we need to do this with pauses in between otherwise the
+    // synthesized events get coalesced somewhere in the guts of GTK. In order
+    // to successfully initiate a drag session in the case where aSource and
+    // aDest are at the same position, we synthesize a bunch of drags until
+    // we know the drag session has started, and then move to the destination.
+    let offset = 0;
+    let interval = setInterval(() => {
+      synthesizeNativeMouseDrag(aSource, offset += 5);
+    }, 10);
+
+    // When the drag operation has started we'll move
+    // the dragged element to its target position.
+    aSource.addEventListener("dragstart", function onDragStart() {
+      aSource.removeEventListener("dragstart", onDragStart);
+      clearInterval(interval);
+
+      // Place the cursor above the drag target.
+      synthesizeNativeMouseMove(aDest);
+    });
+
+    // As soon as the dragged element hovers the target, we'll drop it.
+    // Note that we need to actually wait for the dragenter event here, because
+    // the mousemove synthesization is "more async" than the mouseup
+    // synthesization - they use different gdk APIs. If we don't wait, the
+    // up could get processed before the moves, dropping the item in the
+    // wrong position.
+    aDest.addEventListener("dragenter", function onDragEnter() {
+      aDest.removeEventListener("dragenter", onDragEnter);
+
+      // Finish the drop operation.
+      synthesizeNativeMouseLUp(aDest, null);
+      aCallback();
+    });
+  } else {
+    throw "Unsupported platform";
+  }
 }
 
 /**

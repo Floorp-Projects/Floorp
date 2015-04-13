@@ -160,11 +160,33 @@ public:
                      const WritingMode& aWM);
 
   // Accessors:
+  // XXXdholbert [BEGIN DEPRECATED]
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
 
-  bool IsMainAxisHorizontal() const { return IsAxisHorizontal(mMainAxis); }
-  bool IsCrossAxisHorizontal() const { return IsAxisHorizontal(mCrossAxis); }
+  bool IsMainAxisHorizontal() const {
+    // If we're row-oriented, and our writing mode is NOT vertical,
+    // or we're column-oriented and our writing mode IS vertical,
+    // then our main axis is horizontal. This handles all cases:
+    return mIsRowOriented != mWM.IsVertical();
+  }
+  bool IsCrossAxisHorizontal() const {
+    return !IsMainAxisHorizontal();
+  }
+  // XXXdholbert [END DEPRECATED]
+
+  // Returns true if our main axis is in the reverse direction of our
+  // writing mode's corresponding axis. (From 'flex-direction: *-reverse')
+  bool IsMainAxisReversed() const {
+    return mIsMainAxisReversed;
+  }
+  // Returns true if our cross axis is in the reverse direction of our
+  // writing mode's corresponding axis. (From 'flex-wrap: *-reverse')
+  bool IsCrossAxisReversed() const {
+    return mIsCrossAxisReversed;
+  }
+
+  bool IsRowOriented() const { return mIsRowOriented; }
 
   nscoord GetMainComponent(const nsSize& aSize) const {
     return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
@@ -250,16 +272,29 @@ public:
   }
 
 private:
-  // Indicates whether the given AxisOrientationType is horizontal.
-  // XXXdholbert This is private so that callers outside of FlexboxAxisTracker
-  // don't depend on it. This lets us move away from AxisOrientationType to a
-  // logical-axis-relative representation more seamlessly.
-  static inline bool IsAxisHorizontal(AxisOrientationType aAxis) {
-    return eAxis_LR == aAxis || eAxis_RL == aAxis;
-  }
+  // Delete copy-constructor & reassignment operator, to prevent accidental
+  // (unnecessary) copying.
+  FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
+  FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
 
+  // XXXdholbert [BEGIN DEPRECATED]
   AxisOrientationType mMainAxis;
   AxisOrientationType mCrossAxis;
+  // XXXdholbert [END DEPRECATED]
+
+  const WritingMode mWM; // The flex container's writing mode.
+
+  bool mIsRowOriented; // Is our main axis the inline axis?
+                       // (Are we 'flex-direction:row[-reverse]'?)
+
+  bool mIsMainAxisReversed; // Is our main axis in the opposite direction
+                            // as mWM's corresponding axis? (e.g. RTL vs LTR)
+  bool mIsCrossAxisReversed; // Is our cross axis in the opposite direction
+                             // as mWM's corresponding axis? (e.g. BTT vs TTB)
+
+  // Implementation detail -- this indicates whether we've decided to
+  // transparently reverse our axes & our child ordering, to avoid having
+  // frames flow from bottom to top in either axis (& to make pagination saner).
   bool mAreAxesInternallyReversed;
 };
 
@@ -1722,15 +1757,11 @@ protected:
       mAxis(aAxis)
   {}
 
-private:
-  // Private copy-constructor, since we don't want any instances of our
-  // subclasses to be accidentally copied.
-  PositionTracker(const PositionTracker& aOther)
-    : mPosition(aOther.mPosition),
-      mAxis(aOther.mAxis)
-  {}
+  // Delete copy-constructor & reassignment operator, to prevent accidental
+  // (unnecessary) copying.
+  PositionTracker(const PositionTracker&) = delete;
+  PositionTracker& operator=(const PositionTracker&) = delete;
 
-protected:
   // Member data:
   nscoord mPosition;               // The position we're tracking
   const AxisOrientationType mAxis; // The axis along which we're moving
@@ -2926,7 +2957,8 @@ BlockDirToAxisOrientation(WritingMode::BlockDir aBlockDir)
 
 FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
                                        const WritingMode& aWM)
-  : mAreAxesInternallyReversed(false)
+  : mWM(aWM),
+    mAreAxesInternallyReversed(false)
 {
   uint32_t flexDirection = aStylePosition->mFlexDirection;
 
@@ -2935,23 +2967,31 @@ FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
   // those terms have explicit definition in the writing-modes spec, which are
   // the opposite of how I'd be using them here.)
   AxisOrientationType inlineDimension =
-    InlineDirToAxisOrientation(aWM.GetInlineDir());
+    InlineDirToAxisOrientation(mWM.GetInlineDir());
   AxisOrientationType blockDimension =
-    BlockDirToAxisOrientation(aWM.GetBlockDir());
+    BlockDirToAxisOrientation(mWM.GetBlockDir());
 
   // Determine main axis:
   switch (flexDirection) {
     case NS_STYLE_FLEX_DIRECTION_ROW:
       mMainAxis = inlineDimension;
+      mIsRowOriented = true;
+      mIsMainAxisReversed = false;
       break;
     case NS_STYLE_FLEX_DIRECTION_ROW_REVERSE:
       mMainAxis = GetReverseAxis(inlineDimension);
+      mIsRowOriented = true;
+      mIsMainAxisReversed = true;
       break;
     case NS_STYLE_FLEX_DIRECTION_COLUMN:
       mMainAxis = blockDimension;
+      mIsRowOriented = false;
+      mIsMainAxisReversed = false;
       break;
     case NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE:
       mMainAxis = GetReverseAxis(blockDimension);
+      mIsRowOriented = false;
+      mIsMainAxisReversed = true;
       break;
     default:
       MOZ_CRASH("Unexpected computed value for 'flex-flow' property");
@@ -2970,6 +3010,9 @@ FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
   // "flex-wrap: wrap-reverse" reverses our cross axis.
   if (aStylePosition->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
     mCrossAxis = GetReverseAxis(mCrossAxis);
+    mIsCrossAxisReversed = true;
+  } else {
+    mIsCrossAxisReversed = false;
   }
 
   // Master switch to enable/disable bug 983427's code for reversing our axes
@@ -2985,11 +3028,10 @@ FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
       mMainAxis = GetReverseAxis(mMainAxis);
       mCrossAxis = GetReverseAxis(mCrossAxis);
       mAreAxesInternallyReversed = true;
+      mIsMainAxisReversed = !mIsMainAxisReversed;
+      mIsCrossAxisReversed = !mIsCrossAxisReversed;
     }
   }
-
-  MOZ_ASSERT(IsMainAxisHorizontal() != IsCrossAxisHorizontal(),
-             "main & cross axes should be in different dimensions");
 }
 
 // Allocates a new FlexLine, adds it to the given LinkedList (at the front or

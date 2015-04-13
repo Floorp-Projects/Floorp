@@ -137,15 +137,23 @@ GonkMediaDataDecoder::~GonkMediaDataDecoder()
 nsresult
 GonkMediaDataDecoder::Init()
 {
-  mDecoder = mManager->Init(mCallback);
+  sp<MediaCodecProxy> decoder;
+  decoder = mManager->Init(mCallback);
+  mDecoder = decoder;
   mDrainComplete = false;
-  return mDecoder.get() ? NS_OK : NS_ERROR_UNEXPECTED;
+
+  return NS_OK;
 }
 
 nsresult
 GonkMediaDataDecoder::Shutdown()
 {
+  if (!mDecoder.get()) {
+    return NS_OK;
+  }
+
   mDecoder->stop();
+  mDecoder->ReleaseMediaResources();
   mDecoder = nullptr;
   return NS_OK;
 }
@@ -256,19 +264,10 @@ GonkMediaDataDecoder::Drain()
 
 bool
 GonkMediaDataDecoder::IsWaitingMediaResources() {
-  return mDecoder->IsWaitingResources();
-}
-
-void
-GonkMediaDataDecoder::AllocateMediaResources()
-{
-  mManager->AllocateMediaResources();
-}
-
-void
-GonkMediaDataDecoder::ReleaseMediaResources()
-{
-  mManager->ReleaseMediaResources();
+  if (!mDecoder.get()) {
+    return true;
+  }
+  return false;
 }
 
 } // namespace mozilla

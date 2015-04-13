@@ -19,6 +19,7 @@ let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 let {CssLogic} = require("devtools/styleinspector/css-logic");
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 /**
  * Get a value for a given property name in a css rule in a stylesheet, given
@@ -88,4 +89,53 @@ addMessageListener("Test:GetComputedStylePropertyValue", function(msg) {
   sendAsyncMessage("Test:GetComputedStylePropertyValue", value);
 });
 
+/**
+ * Wait the property value from the computed style for an element and
+ * compare it with the expected value
+ * @param {Object} data Expects a data object with the following properties
+ * - {String} selector: The selector used to obtain the element.
+ * - {String} pseudo: pseudo id to query, or null.
+ * - {String} name: name of the property
+ * - {String} expected: the expected value for property
+ */
+addMessageListener("Test:WaitForComputedStylePropertyValue", function(msg) {
+  let {selector, pseudo, name, expected} = msg.data;
+  let element = content.document.querySelector(selector);
+  waitForSuccess(() => {
+    let value = content.document.defaultView.getComputedStyle(element, pseudo)
+                                            .getPropertyValue(name);
+
+    return value === expected;
+  }).then(() => {
+    sendAsyncMessage("Test:WaitForComputedStylePropertyValue");
+  })
+});
+
+
 let dumpn = msg => dump(msg + "\n");
+
+/**
+ * Polls a given function waiting for it to return true.
+ *
+ * @param {Function} validatorFn A validator function that returns a boolean.
+ * This is called every few milliseconds to check if the result is true. When
+ * it is true, the promise resolves.
+ * @param {String} name Optional name of the test. This is used to generate
+ * the success and failure messages.
+ * @return a promise that resolves when the function returned true or rejects
+ * if the timeout is reached
+ */
+function waitForSuccess(validatorFn, name="untitled") {
+  let def = promise.defer();
+
+  function wait(validatorFn) {
+    if (validatorFn()) {
+      def.resolve();
+    } else {
+      setTimeout(() => wait(validatorFn), 200);
+    }
+  }
+  wait(validatorFn);
+
+  return def.promise;
+}

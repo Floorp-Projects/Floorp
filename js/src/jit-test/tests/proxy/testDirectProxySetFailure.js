@@ -26,14 +26,6 @@ assertEq("z" in obj, false);
 // [].sort() mutates its operand only by doing strict [[Set]] calls.
 var arr = ["not", "already", "in", "order"];
 var p2 = new Proxy(arr, {
-    get(target, key, receiver) {
-        if (key === "length" && new Proxy([1], {}).length === 1) {
-            throw new Error("Congratulations! You have fixed bug 895223 at last! " +
-                            "Please delete this whole get() method which is a " +
-                            "workaround for that bug.");
-        }
-        return target[key];
-    },
     set(target, key, value, receiver) { return false; }
 });
 assertThrowsInstanceOf(() => p2.sort(), TypeError);

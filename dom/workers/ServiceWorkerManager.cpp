@@ -1467,6 +1467,139 @@ public:
   }
 };
 
+#ifndef MOZ_SIMPLEPUSH
+
+class SendPushEventRunnable final : public WorkerRunnable
+{
+  nsString mData;
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+
+public:
+  SendPushEventRunnable(
+    WorkerPrivate* aWorkerPrivate,
+    const nsAString& aData,
+    nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
+      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+      , mData(aData)
+      , mServiceWorker(aServiceWorker)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aWorkerPrivate);
+    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
+
+    PushEventInit pei;
+    pei.mData.Construct(mData);
+    pei.mBubbles = false;
+    pei.mCancelable = true;
+
+    ErrorResult result;
+    nsRefPtr<PushEvent> event =
+      PushEvent::Constructor(globalObj, NS_LITERAL_STRING("push"), pei, result);
+    if (NS_WARN_IF(result.Failed())) {
+      return false;
+    }
+
+    event->SetTrusted(true);
+    event->PostInit(mServiceWorker);
+
+    nsRefPtr<EventTarget> target = do_QueryObject(aWorkerPrivate->GlobalScope());
+    target->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    return true;
+  }
+};
+
+class SendPushSubscriptionChangeEventRunnable final : public WorkerRunnable
+{
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+
+public:
+  SendPushSubscriptionChangeEventRunnable(
+    WorkerPrivate* aWorkerPrivate,
+    nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
+      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+      , mServiceWorker(aServiceWorker)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aWorkerPrivate);
+    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+
+    nsRefPtr<EventTarget> target = do_QueryObject(aWorkerPrivate->GlobalScope());
+
+    nsContentUtils::DispatchTrustedEvent(nullptr, target,
+                                         NS_LITERAL_STRING("pushsubscriptionchange"),
+                                         true, true);
+    return true;
+  }
+};
+
+#endif /* ! MOZ_SIMPLEPUSH */
+
+NS_IMETHODIMP
+ServiceWorkerManager::SendPushEvent(const nsACString& aScope, const nsAString& aData)
+{
+#ifdef MOZ_SIMPLEPUSH
+  return NS_ERROR_NOT_AVAILABLE;
+#else
+  nsRefPtr<ServiceWorker> serviceWorker = CreateServiceWorkerForScope(aScope);
+  if (!serviceWorker) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
+    new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
+
+  nsRefPtr<SendPushEventRunnable> r =
+    new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(), aData, serviceWorkerHandle);
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+#endif
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::SendPushSubscriptionChangedEvent(const nsACString& aScope)
+{
+#ifdef MOZ_SIMPLEPUSH
+  return NS_ERROR_NOT_AVAILABLE;
+#else
+  nsRefPtr<ServiceWorker> serviceWorker = CreateServiceWorkerForScope(aScope);
+  if (!serviceWorker) {
+    return NS_ERROR_FAILURE;
+  }
+  nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
+    new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
+
+  nsRefPtr<SendPushSubscriptionChangeEventRunnable> r =
+    new SendPushSubscriptionChangeEventRunnable(serviceWorker->GetWorkerPrivate(), serviceWorkerHandle);
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+#endif
+}
+
 NS_IMETHODIMP
 ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
                                       nsISupports** aPromise)
@@ -1566,6 +1699,37 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindow* aWindow,
   }
 
   return false;
+}
+
+already_AddRefed<ServiceWorker>
+ServiceWorkerManager::CreateServiceWorkerForScope(const nsACString& aScope)
+{
+  AssertIsOnMainThread();
+
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  nsRefPtr<ServiceWorkerRegistrationInfo> registration = GetServiceWorkerRegistrationInfo(scopeURI);
+  if (!registration) {
+    return nullptr;
+  }
+
+  if (!registration->mActiveWorker) {
+    return nullptr;
+  }
+
+  nsRefPtr<ServiceWorker> sw;
+  rv = CreateServiceWorker(registration->mPrincipal,
+                           registration->mActiveWorker,
+                           getter_AddRefs(sw));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return sw.forget();
 }
 
 class ServiceWorkerUnregisterJob final : public ServiceWorkerJob
@@ -2318,9 +2482,9 @@ private:
     nsRefPtr<InternalHeaders> internalHeaders = new InternalHeaders(HeadersGuardEnum::Request);
     MOZ_ASSERT(mHeaderNames.Length() == mHeaderValues.Length());
     for (uint32_t i = 0; i < mHeaderNames.Length(); i++) {
-      ErrorResult rv;
-      internalHeaders->Set(mHeaderNames[i], mHeaderValues[i], rv);
-      if (NS_WARN_IF(rv.Failed())) {
+      ErrorResult result;
+      internalHeaders->Set(mHeaderNames[i], mHeaderValues[i], result);
+      if (NS_WARN_IF(result.Failed())) {
         return false;
       }
     }
@@ -2334,9 +2498,9 @@ private:
     reqInit.mMode.Construct(mRequestMode);
     reqInit.mCredentials.Construct(mRequestCredentials);
 
-    ErrorResult rv;
-    nsRefPtr<Request> request = Request::Constructor(globalObj, requestInfo, reqInit, rv);
-    if (NS_WARN_IF(rv.Failed())) {
+    ErrorResult result;
+    nsRefPtr<Request> request = Request::Constructor(globalObj, requestInfo, reqInit, result);
+    if (NS_WARN_IF(result.Failed())) {
       return false;
     }
     // For Telemetry, note that this Request object was created by a Fetch event.
@@ -2353,8 +2517,8 @@ private:
     init.mCancelable = true;
     init.mIsReload.Construct(mIsReload);
     nsRefPtr<FetchEvent> event =
-      FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init, rv);
-    if (NS_WARN_IF(rv.Failed())) {
+      FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init, result);
+    if (NS_WARN_IF(result.Failed())) {
       return false;
     }
 

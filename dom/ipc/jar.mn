@@ -9,5 +9,6 @@ toolkit.jar:
         content/global/BrowserElementChildPreload.js (../browser-element/BrowserElementChildPreload.js)
         content/global/BrowserElementPanning.js (../browser-element/BrowserElementPanning.js)
 *       content/global/BrowserElementPanningAPZDisabled.js (../browser-element/BrowserElementPanningAPZDisabled.js)
+        content/global/PushServiceChildPreload.js (../push/PushServiceChildPreload.js)
         content/global/preload.js (preload.js)
         content/global/post-fork-preload.js (post-fork-preload.js)

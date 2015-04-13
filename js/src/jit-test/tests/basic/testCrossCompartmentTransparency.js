@@ -76,7 +76,6 @@ test("new RegExp('1')", r => assertEq("a1".search(r), 1));
 test("new RegExp('1')", r => assertEq("a1".match(r)[0], '1'));
 test("new RegExp('1')", r => assertEq("a1".replace(r, 'A'), 'aA'));
 test("new RegExp('1')", r => assertEq(String("a1b".split(r)), "a,b"));
-test("new RegExp('1')", r => assertEq(r, RegExp(r)));
 test("new RegExp('1')", r => assertEq(String(new RegExp(r)), String(r)));
 test("new RegExp('1')", r => assertEq(String(/x/.compile(r)), String(r)));
 test("new WeakMap()", w => WeakMap.prototype.has.call(w, {}));

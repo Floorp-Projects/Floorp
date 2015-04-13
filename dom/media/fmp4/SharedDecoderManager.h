@@ -74,8 +74,6 @@ public:
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
   virtual bool IsWaitingMediaResources() override;
-  virtual bool IsDormantNeeded() override;
-  virtual void ReleaseMediaResources() override;
   virtual bool IsHardwareAccelerated() const override;
 
   friend class SharedDecoderManager;

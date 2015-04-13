@@ -1,0 +1,136 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+.grid {
+  display: grid;
+  border: 2px solid green;
+  grid-template-columns: 20px 20px 20px 20px;
+  grid-template-rows: 20px 20px 20px;
+  grid-auto-flow: row;
+  grid-auto-columns: 20px;
+  grid-auto-rows: 20px;
+}
+
+span {
+  background: lime;
+  border: 1px solid;
+}
+
+.test1 .a {
+  grid-row: 1;
+  grid-column: 2 / span 1;
+}
+.test1 .b {
+  grid-row: 2;
+  grid-column: 2 / span 3;
+}
+.test1 .c, .test2 .c {
+  grid-row: 1 / span 2;
+  grid-column: auto / span 3;
+}
+
+.test2 .a {
+  grid-row: 1;
+  grid-column: 2 / span 3;
+}
+.test2 .b {
+  grid-row: 2;
+  grid-column: 2 / span 1;
+}
+
+.test3 {
+  grid-template-areas:
+    'a a a . '
+    'a a a . '
+    '. b b . '
+  ;
+}
+.test3 .a {
+  grid-area: a;
+}
+.test3 .b {
+  grid-column: 2 / span 3;
+  grid-row: b;
+}
+.test3 .c {
+  grid-row: auto / span 2;
+  grid-column: auto / span 3;
+}
+
+.test4 .c {
+  grid-row: auto / span 2;
+  grid-column: auto / span 3;
+}
+
+.test5 .c {
+  grid-row-start: 2;
+  grid-column: auto / span 3;
+}
+
+.test6 {
+  grid-row-start: 2;
+  grid-column: auto / span X;
+}
+
+.e {
+  grid-row-start: 2;
+  grid-column: auto / span 1;
+}
+    </style>
+</head>
+<body dir=rtl>
+
+<div class="grid test1">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test2">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test3">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test4">
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test5">
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test1">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="test6">d</span>
+<span class="test6">D</span>
+<span class="e">e</span>
+</div>
+
+</body>
+</html>

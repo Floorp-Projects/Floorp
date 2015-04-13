@@ -73,8 +73,13 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   mLooper->setName("GonkAudioDecoderManager");
   mLooper->start();
 
-  mDecoder = MediaCodecProxy::CreateByType(mLooper, "audio/mp4a-latm", false, false, nullptr);
+  mDecoder = MediaCodecProxy::CreateByType(mLooper, "audio/mp4a-latm", false, nullptr);
   if (!mDecoder.get()) {
+    return nullptr;
+  }
+  if (!mDecoder->AskMediaCodecAndWait())
+  {
+    mDecoder = nullptr;
     return nullptr;
   }
   sp<AMessage> format = new AMessage;

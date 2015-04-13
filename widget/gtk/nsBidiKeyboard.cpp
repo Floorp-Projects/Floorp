@@ -20,7 +20,10 @@ nsBidiKeyboard::nsBidiKeyboard()
 NS_IMETHODIMP
 nsBidiKeyboard::Reset()
 {
-    mHaveBidiKeyboards = gdk_keymap_have_bidi_layouts(gdk_keymap_get_default());
+    // NB: The default keymap can be null (e.g. in xpcshell). In that case,
+    // simply assume that we don't have bidi keyboards.
+    GdkKeymap *keymap = gdk_keymap_get_default();
+    mHaveBidiKeyboards = keymap && gdk_keymap_have_bidi_layouts(keymap);
     return NS_OK;
 }
 

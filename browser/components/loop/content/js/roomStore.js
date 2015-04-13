@@ -25,12 +25,6 @@ loop.store = loop.store || {};
   var MAX_ROOM_CREATION_SIZE = loop.store.MAX_ROOM_CREATION_SIZE = 2;
 
   /**
-   * The number of hours for which the room will exist - default 8 weeks
-   * @type {Number}
-   */
-  var DEFAULT_EXPIRES_IN = loop.store.DEFAULT_EXPIRES_IN = 24 * 7 * 8;
-
-  /**
    * Room validation schema. See validate.js.
    * @type {Object}
    */
@@ -80,16 +74,12 @@ loop.store = loop.store || {};
     maxRoomCreationSize: MAX_ROOM_CREATION_SIZE,
 
     /**
-     * The number of hours for which the room will exist - default 8 weeks
-     * @type {Number}
-     */
-    defaultExpiresIn: DEFAULT_EXPIRES_IN,
-
-    /**
      * Registered actions.
      * @type {Array}
      */
     actions: [
+      "addSocialShareButton",
+      "addSocialShareProvider",
       "createRoom",
       "createdRoom",
       "createRoomError",
@@ -102,6 +92,7 @@ loop.store = loop.store || {};
       "openRoom",
       "renameRoom",
       "renameRoomError",
+      "shareRoomUrl",
       "updateRoomList"
     ],
 
@@ -272,8 +263,7 @@ loop.store = loop.store || {};
       var roomCreationData = {
         roomName:  this._generateNewRoomName(actionData.nameTemplate),
         roomOwner: actionData.roomOwner,
-        maxSize:   this.maxRoomCreationSize,
-        expiresIn: this.defaultExpiresIn
+        maxSize:   this.maxRoomCreationSize
       };
 
       this._notifications.remove("create-room-error");
@@ -339,6 +329,60 @@ loop.store = loop.store || {};
     emailRoomUrl: function(actionData) {
       loop.shared.utils.composeCallUrlEmail(actionData.roomUrl);
       this._mozLoop.notifyUITour("Loop:RoomURLEmailed");
+    },
+
+    /**
+     * Share a room url.
+     *
+     * @param  {sharedActions.ShareRoomUrl} actionData The action data.
+     */
+    shareRoomUrl: function(actionData) {
+      var providerOrigin = new URL(actionData.provider.origin).hostname;
+      var shareTitle = "";
+      var shareBody = null;
+
+      switch (providerOrigin) {
+        case "mail.google.com":
+          shareTitle = mozL10n.get("share_email_subject5", {
+            clientShortname2: mozL10n.get("clientShortname2")
+          });
+          shareBody = mozL10n.get("share_email_body5", {
+            callUrl: actionData.roomUrl,
+            brandShortname: mozL10n.get("brandShortname"),
+            clientShortname2: mozL10n.get("clientShortname2"),
+            clientSuperShortname: mozL10n.get("clientSuperShortname"),
+            learnMoreUrl: this._mozLoop.getLoopPref("learnMoreUrl")
+          });
+          break;
+        case "twitter.com":
+        default:
+          shareTitle = mozL10n.get("share_tweet", {
+            clientShortname2: mozL10n.get("clientShortname2")
+          });
+          break;
+      }
+
+      this._mozLoop.socialShareRoom(actionData.provider.origin, actionData.roomUrl,
+        shareTitle, shareBody);
+      this._mozLoop.notifyUITour("Loop:RoomURLShared");
+    },
+
+    /**
+     * Add the Social Share button to the browser toolbar.
+     *
+     * @param {sharedActions.AddSocialShareButton} actionData The action data.
+     */
+    addSocialShareButton: function(actionData) {
+      this._mozLoop.addSocialShareButton();
+    },
+
+    /**
+     * Open the share panel to add a Social share provider.
+     *
+     * @param {sharedActions.AddSocialShareProvider} actionData The action data.
+     */
+    addSocialShareProvider: function(actionData) {
+      this._mozLoop.addSocialShareProvider();
     },
 
     /**
