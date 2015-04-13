@@ -181,7 +181,7 @@ loop.store.ActiveRoomStore = (function() {
 
           this.dispatchAction(new sharedActions.SetupRoomInfo({
             roomToken: actionData.roomToken,
-            roomName: roomData.roomName,
+            roomName: roomData.decryptedContext.roomName,
             roomOwner: roomData.roomOwner,
             roomUrl: roomData.roomUrl,
             socialShareButtonAvailable: this._mozLoop.isSocialShareButtonAvailable(),
@@ -348,7 +348,7 @@ loop.store.ActiveRoomStore = (function() {
      */
     _handleRoomUpdate: function(eventName, roomData) {
       this.dispatchAction(new sharedActions.UpdateRoomInfo({
-        roomName: roomData.roomName,
+        roomName: roomData.decryptedContext.roomName,
         roomOwner: roomData.roomOwner,
         roomUrl: roomData.roomUrl
       }));

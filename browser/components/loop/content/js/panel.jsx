@@ -558,7 +558,6 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var room = this.props.room;
       var roomClasses = React.addons.classSet({
         "room-entry": true,
         "room-active": this._isActive()
@@ -573,7 +572,8 @@ loop.panel = (function(_, mozL10n) {
              onClick={this.handleClickEntry}>
           <h2>
             <span className="room-notification" />
-            <EditInPlace text={room.roomName} onChange={this.renameRoom} />
+            <EditInPlace text={this.props.room.decryptedContext.roomName}
+                         onChange={this.renameRoom} />
             <button className={copyButtonClasses}
               title={mozL10n.get("rooms_list_copy_url_tooltip")}
               onClick={this.handleCopyButtonClick} />
@@ -581,7 +581,6 @@ loop.panel = (function(_, mozL10n) {
               title={mozL10n.get("rooms_list_delete_tooltip")}
               onClick={this.handleDeleteButtonClick} />
           </h2>
-          <p><a className="room-url-link" href="#">{room.roomUrl}</a></p>
         </div>
       );
     }
