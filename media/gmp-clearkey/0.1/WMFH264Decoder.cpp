@@ -158,7 +158,10 @@ WMFH264Decoder::SetDecoderOutputType()
     if (FAILED(hr)) {
       continue;
     }
-    if (subtype == MFVideoFormat_I420) {
+    if (subtype == MFVideoFormat_I420 || subtype == MFVideoFormat_IYUV) {
+      // On Windows 7 Enterprise N the MFT reports it reports IYUV instead
+      // of I420. Other Windows' report I420. The formats are the same, so
+      // support both.
       hr = mDecoder->SetOutputType(0, type, 0);
       ENSURE(SUCCEEDED(hr), hr);
 
