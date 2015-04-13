@@ -15,7 +15,6 @@ const kRooms = new Map([
     roomName: "First Room Name",
     roomUrl: "http://localhost:3000/rooms/_nxD4V4FflQ",
     maxSize: 2,
-    currSize: 0,
     ctime: 1405517546
   }],
   ["QzBbvGmIZWU", {
@@ -23,7 +22,6 @@ const kRooms = new Map([
     roomName: "Second Room Name",
     roomUrl: "http://localhost:3000/rooms/QzBbvGmIZWU",
     maxSize: 2,
-    currSize: 0,
     ctime: 140551741
   }],
   ["3jKS_Els9IU", {
@@ -32,7 +30,6 @@ const kRooms = new Map([
     roomUrl: "http://localhost:3000/rooms/3jKS_Els9IU",
     maxSize: 3,
     clientMaxSize: 2,
-    currSize: 1,
     ctime: 1405518241
   }]
 ]);
@@ -106,7 +103,6 @@ const kChannelGuest = MozLoopService.channelIDs.roomsGuest;
 const kChannelFxA = MozLoopService.channelIDs.roomsFxA;
 
 const normalizeRoom = function(room) {
-  delete room.currSize;
   if (!("participants" in room)) {
     let name = room.roomName;
     for (let key of Object.getOwnPropertyNames(roomDetail)) {
