@@ -1068,7 +1068,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
     return NS_ERROR_FAILURE;
   }
 
-  NS_localDir.forget(aResult);
+  localDir.forget(aResult);
   return NS_OK;
 
 #elif XP_WIN
