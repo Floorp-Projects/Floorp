@@ -14,6 +14,8 @@ BROWSER_CHROME_MANIFESTS += [
 
 EXTRA_JS_MODULES.loop += [
     'CardDavImporter.jsm',
+    'content/shared/js/crypto.js',
+    'content/shared/js/utils.js',
     'GoogleImporter.jsm',
     'LoopCalls.jsm',
     'LoopContacts.jsm',
