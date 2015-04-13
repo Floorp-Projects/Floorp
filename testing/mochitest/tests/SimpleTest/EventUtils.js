@@ -5,6 +5,7 @@
  *  sendChar
  *  sendString
  *  sendKey
+ *  sendWheelAndPaint
  *  synthesizeMouse
  *  synthesizeMouseAtCenter
  *  synthesizePointer
@@ -428,6 +429,50 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
                        aEvent.deltaX, aEvent.deltaY, aEvent.deltaZ,
                        aEvent.deltaMode, modifiers,
                        lineOrPageDeltaX, lineOrPageDeltaY, options);
+}
+
+/**
+ * This is a wrapper around synthesizeWheel that waits for the wheel event
+ * to be dispatched and for the subsequent layout/paints to be flushed.
+ *
+ * This requires including paint_listener.js. Tests must call
+ * DOMWindowUtils.restoreNormalRefresh() before finishing, if they use this
+ * function.
+ */
+function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWindow) {
+  aWindow = aWindow || window;
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils)
+    return;
+
+  if (utils.isMozAfterPaintPending) {
+    // If a paint is pending, then APZ may be waiting for a scroll acknowledgement
+    // from the content thread. If we send a wheel event now, it could be ignored
+    // by APZ (or its scroll offset could be overridden). To avoid problems we
+    // just wait for the paint to complete.
+    aWindow.waitForAllPaintsFlushed(function() {
+      sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWindow);
+    });
+    return;
+  }
+
+  var onwheel = function() {
+    window.removeEventListener("wheel", onwheel);
+
+    // Wait one frame since the wheel event has not caused a refresh observer
+    // to be added yet.
+    setTimeout(function() {
+      utils.advanceTimeAndRefresh(1000);
+      aWindow.waitForAllPaintsFlushed(function() {
+        utils.restoreNormalRefresh();
+        aCallback();
+      });
+    }, 0);
+  };
+
+  aWindow.addEventListener("wheel", onwheel);
+  synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
 }
 
 function _computeKeyCodeFromChar(aChar)
