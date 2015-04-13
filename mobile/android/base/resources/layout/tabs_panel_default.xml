@@ -81,9 +81,4 @@
 
     </view>
 
-    <!-- To preserve the ID, even when building for pre-11. -->
-    <RelativeLayout android:id="@+id/tabs_panel_footer"
-                    android:layout_height="0dp"
-                    android:layout_width="0dp"
-                    android:visibility="gone"/>
 </merge>

@@ -70,3 +70,12 @@ li > label:hover {
 li > label > span {
   display: inline-block;
 }
+
+input, select {
+  box-sizing: border-box;
+}
+
+select {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}

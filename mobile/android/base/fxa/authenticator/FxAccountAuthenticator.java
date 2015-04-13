@@ -182,15 +182,7 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     Logger.info(LOG_TAG, "Fetching oauth token with scope: " + scope);
 
     final Responder responder = new Responder(response, fxAccount);
-
-    // Allow testing against stage.
-    final boolean usingStageAuthServer = FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(fxAccount.getAccountServerURI());
-    final String oauthServerUri;
-    if (usingStageAuthServer) {
-      oauthServerUri = FxAccountConstants.STAGE_OAUTH_SERVER_ENDPOINT;
-    } else {
-      oauthServerUri = FxAccountConstants.DEFAULT_OAUTH_SERVER_ENDPOINT;
-    }
+    final String oauthServerUri = fxAccount.getOAuthServerURI();
 
     final String audience;
     try {
@@ -360,7 +352,8 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     //
     // Broadcast intents protected with permissions are secure, so it's okay
     // to include private information such as a password.
-    final Intent intent = AndroidFxAccount.makeDeletedAccountIntent(context, account);
+    final AndroidFxAccount androidFxAccount = new AndroidFxAccount(context, account);
+    final Intent intent = androidFxAccount.makeDeletedAccountIntent();
     Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
         "broadcasting secure intent " + intent.getAction() + ".");
     context.sendBroadcast(intent, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION);

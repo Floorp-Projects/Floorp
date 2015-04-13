@@ -98,10 +98,10 @@
                       android:layout_height="@dimen/new_tablet_tab_strip_height"
                       android:visibility="gone"/>
 
-            <org.mozilla.gecko.toolbar.ActionBarViewFlipper
+            <org.mozilla.gecko.widget.GeckoViewFlipper
                 android:id="@+id/browser_actionbar"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/browser_toolbar_height"
+                android:layout_height="@dimen/browser_toolbar_height_flipper"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -119,7 +119,7 @@
                                                         android:layout_width="match_parent"
                                                         style="@style/GeckoActionBar"/>
 
-            </org.mozilla.gecko.toolbar.ActionBarViewFlipper>
+            </org.mozilla.gecko.widget.GeckoViewFlipper>
 
         </LinearLayout>
 
