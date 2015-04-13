@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+
+function boom()
+{
+    var outer = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    var inner = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    inner.setAttributeNS(null, "style", "display: table-row-group;");
+    outer.appendChild(inner);
+
+    document.removeChild(document.documentElement);
+    document.appendChild(outer);
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</svg>
