@@ -285,6 +285,10 @@ if (typeof Mozilla == 'undefined') {
 		_sendEvent('toggleReaderMode');
 	};
 
+	Mozilla.UITour.forceShowReaderIcon = function() {
+		_sendEvent('forceShowReaderIcon');
+	};
+
 })();
 
 // Make this library Require-able.
