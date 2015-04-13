@@ -49,6 +49,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
   /** Test for Bug 987230 **/
   SimpleTest.waitForExplicitFinish();
 
+  SimpleTest.requestCompleteLog();
+
   const Ci = Components.interfaces;
   const Cc = Components.classes;
 
