@@ -1,5 +1,5 @@
 marionette-transport >= 0.4
-marionette-driver >= 0.2
+marionette-driver >= 0.4
 manifestparser >= 1.1
 mozhttpd >= 0.5
 mozinfo >= 0.7
