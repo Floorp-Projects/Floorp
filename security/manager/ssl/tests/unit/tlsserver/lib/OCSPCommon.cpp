@@ -188,7 +188,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   if (!signerCert) {
     signerCert = CERT_DupCertificate(issuerCert.get());
   }
-  context.signerKeyPair = CreateTestKeyPairFromCert(*signerCert);
+  context.signerKeyPair.reset(CreateTestKeyPairFromCert(*signerCert));
   if (!context.signerKeyPair) {
     PrintPRError("PK11_FindKeyByAnyCert failed");
     return nullptr;
