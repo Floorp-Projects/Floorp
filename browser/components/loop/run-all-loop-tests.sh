@@ -33,7 +33,7 @@ fi
 
 TESTS="
   ${LOOPDIR}/test/mochitest
-  browser/modules/test/browser_UITour_loop.js
+  browser/components/uitour/test/browser_UITour_loop.js
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
 "
 
