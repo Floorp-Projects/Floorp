@@ -490,6 +490,15 @@ class FloatRegister
         *ret = singleOverlay(aliasIdx - 1);
     }
     typedef FloatRegisters::SetType SetType;
+
+    SetType alignedOrDominatedAliasedSet() const {
+        if (isSingle())
+            return SetType(1) << code_;
+
+        MOZ_ASSERT(isDouble());
+        return SetType(0b11) << code_;
+    }
+
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
         return mozilla::CountPopulation32(x);

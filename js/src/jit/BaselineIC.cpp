@@ -736,7 +736,7 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
 
 inline bool
 ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, ValueOperand val,
-                                         Register scratch, GeneralRegisterSet saveRegs)
+                                         Register scratch, LiveGeneralRegisterSet saveRegs)
 {
     Label skipBarrier;
     masm.branchPtrInNurseryRange(Assembler::Equal, obj, scratch, &skipBarrier);
@@ -746,7 +746,7 @@ ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, Val
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     saveRegs.add(BaselineTailCallReg);
 #endif
-    saveRegs = GeneralRegisterSet::Intersect(saveRegs, GeneralRegisterSet::Volatile());
+    saveRegs.set() = GeneralRegisterSet::Intersect(saveRegs.set(), GeneralRegisterSet::Volatile());
     masm.PushRegsInMask(saveRegs);
     masm.setupUnalignedABICall(2, scratch);
     masm.movePtr(ImmPtr(cx->runtime()), scratch);
@@ -1000,7 +1000,7 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     }
 
     // Get a scratch register.
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     Register osrDataReg = R0.scratchReg();
     regs.take(osrDataReg);
     regs.takeUnchecked(OsrFrameReg);
@@ -1993,7 +1993,7 @@ ICCompare_String::Compiler::generateStubCode(MacroAssembler& masm)
     Register left = masm.extractString(R0, ExtractTemp0);
     Register right = masm.extractString(R1, ExtractTemp1);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     masm.compareStrings(op, left, right, scratchReg, &failure);
@@ -3191,7 +3191,7 @@ CheckDOMProxyExpandoDoesNotShadow(JSContext* cx, MacroAssembler& masm, Register 
                                   Address* expandoAndGenerationAddr,
                                   Address* generationAddr,
                                   Register scratch,
-                                  GeneralRegisterSet& domProxyRegSet,
+                                  AllocatableGeneralRegisterSet& domProxyRegSet,
                                   Label* checkFailed)
 {
     // Guard that the object does not have expando properties, or has an expando
@@ -4126,7 +4126,7 @@ static const VMFunction DoAtomizeStringInfo = FunctionInfo<DoAtomizeStringFn>(Do
 bool
 ICGetElemNativeCompiler::emitCallNative(MacroAssembler& masm, Register objReg)
 {
-    GeneralRegisterSet regs = availableGeneralRegs(0);
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     regs.takeUnchecked(objReg);
     regs.takeUnchecked(BaselineTailCallReg);
 
@@ -4153,7 +4153,7 @@ ICGetElemNativeCompiler::emitCallNative(MacroAssembler& masm, Register objReg)
 bool
 ICGetElemNativeCompiler::emitCallScripted(MacroAssembler& masm, Register objReg)
 {
-    GeneralRegisterSet regs = availableGeneralRegs(0);
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     regs.takeUnchecked(objReg);
     regs.takeUnchecked(BaselineTailCallReg);
 
@@ -4227,7 +4227,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestString(Assembler::NotEqual, R1, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox object.
@@ -4344,7 +4344,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler& masm)
 
             masm.branchTestUndefined(Assembler::NotEqual, valAddr, &skipNoSuchMethod);
 
-            GeneralRegisterSet regs = availableGeneralRegs(0);
+            AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
             regs.take(R1);
             regs.take(R0);
             regs.takeUnchecked(objReg);
@@ -4447,7 +4447,7 @@ ICGetElem_String::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestString(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox string in R0.
@@ -4495,7 +4495,7 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox R0 and shape guard.
@@ -4529,7 +4529,7 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler& masm)
         regs.takeUnchecked(obj);
         regs.takeUnchecked(key);
         regs.takeUnchecked(BaselineTailCallReg);
-        ValueOperand val = regs.takeValueOperand();
+        ValueOperand val = regs.takeAnyValue();
 
         masm.loadValue(element, val);
         masm.branchTestUndefined(Assembler::NotEqual, val, &skipNoSuchMethod);
@@ -4643,7 +4643,7 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox R0 and shape guard.
@@ -4723,7 +4723,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler& masm)
         masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
         Register idx = masm.extractInt32(R1, ExtractTemp1);
 
-        GeneralRegisterSet regs(availableGeneralRegs(2));
+        AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
         Register scratch = regs.takeAny();
 
         // Load num actual arguments
@@ -4753,7 +4753,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler& masm)
     bool isStrict = which_ == ICGetElem_Arguments::Strict;
     const Class* clasp = isStrict ? &StrictArgumentsObject::class_ : &NormalArgumentsObject::class_;
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Guard on input being an arguments object.
@@ -4827,7 +4827,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler& masm)
         regs.takeUnchecked(objReg);
         regs.takeUnchecked(idxReg);
         regs.takeUnchecked(BaselineTailCallReg);
-        ValueOperand val = regs.takeValueOperand();
+        ValueOperand val = regs.takeAnyValue();
 
         // Box and push obj and key onto baseline frame stack for decompiler.
         EmitRestoreTailCallReg(masm);
@@ -5261,7 +5261,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox R0 and guard on its shape.
@@ -5356,7 +5356,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler& masm)
     regs.add(key);
     if (cx->runtime()->gc.nursery.exists()) {
         Register r = regs.takeAny();
-        GeneralRegisterSet saveRegs;
+        LiveGeneralRegisterSet saveRegs;
         emitPostWriteBarrierSlot(masm, obj, tmpVal, r, saveRegs);
         regs.add(r);
     }
@@ -5427,7 +5427,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
     masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox R0 and guard on its shape.
@@ -5541,7 +5541,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler& masm)
     regs.add(key);
     if (cx->runtime()->gc.nursery.exists()) {
         Register r = regs.takeAny();
-        GeneralRegisterSet saveRegs;
+        LiveGeneralRegisterSet saveRegs;
         emitPostWriteBarrierSlot(masm, obj, tmpVal, r, saveRegs);
         regs.add(r);
     }
@@ -5637,7 +5637,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler& masm)
 
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
     // Unbox R0 and shape guard.
@@ -6156,7 +6156,7 @@ bool
 ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register obj = R0.scratchReg();
     Register walker = regs.takeAny();
     Register scratch = regs.takeAny();
@@ -7165,7 +7165,7 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler& masm)
         MOZ_CRASH("unexpected type");
     }
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register holderReg = regs.takeAny();
     Register scratchReg = regs.takeAny();
 
@@ -7256,7 +7256,7 @@ bool
 ICGetPropNativeCompiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     Register objReg = InvalidReg;
 
     if (inputDefinitelyObject_) {
@@ -7324,7 +7324,7 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler& masm)
         regs = availableGeneralRegs(0);
         regs.takeUnchecked(objReg);
         regs.takeUnchecked(BaselineTailCallReg);
-        ValueOperand val = regs.takeValueOperand();
+        ValueOperand val = regs.takeAnyValue();
 
         // Box and push obj onto baseline frame stack for decompiler.
         EmitRestoreTailCallReg(masm);
@@ -7401,7 +7401,7 @@ ICGetPropNativeDoesNotExistCompiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register scratch = regs.takeAny();
 
 #ifdef DEBUG
@@ -7451,7 +7451,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
     Label failureLeaveStubFrame;
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
     // Guard input is an object.
@@ -7540,7 +7540,7 @@ ICGetProp_CallNative::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
 
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     Register objReg = InvalidReg;
 
     MOZ_ASSERT(!(inputDefinitelyObject_ && outerClass_));
@@ -7613,7 +7613,7 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler& masm,
                                                       Address* generationAddr)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
     // Guard input is an object.
@@ -7631,7 +7631,7 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler& masm,
 
     // Guard that our expando object hasn't started shadowing this property.
     {
-        GeneralRegisterSet domProxyRegSet(GeneralRegisterSet::All());
+        AllocatableGeneralRegisterSet domProxyRegSet(GeneralRegisterSet::All());
         domProxyRegSet.take(BaselineStubReg);
         domProxyRegSet.take(objReg);
         domProxyRegSet.take(scratch);
@@ -7754,7 +7754,7 @@ ICGetProp_DOMProxyShadowed::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     // Need to reserve a scratch register, but the scratch register should not be
     // BaselineTailCallReg, because it's used for |enterStubFrame| which needs a
     // non-BaselineTailCallReg scratch reg.
@@ -7906,7 +7906,7 @@ static const VMFunction DoGetPropGenericInfo = FunctionInfo<DoGetPropGenericFn>(
 bool
 ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
 
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
@@ -7935,7 +7935,7 @@ ICGetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
 
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
@@ -7970,7 +7970,7 @@ ICGetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
 
     CheckForNeuteredTypedObject(cx, masm, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
 
     Register scratch1 = regs.takeAnyExcluding(BaselineTailCallReg);
     Register scratch2 = regs.takeAnyExcluding(BaselineTailCallReg);
@@ -8480,7 +8480,7 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler& masm)
     // Guard input is an object.
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratch = regs.takeAny();
 
     // Unbox and shape guard.
@@ -8525,7 +8525,7 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler& masm)
         regs.add(holderReg);
     if (cx->runtime()->gc.nursery.exists()) {
         Register scr = regs.takeAny();
-        GeneralRegisterSet saveRegs;
+        LiveGeneralRegisterSet saveRegs;
         saveRegs.add(R1);
         emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
         regs.add(scr);
@@ -8576,7 +8576,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler& masm)
     // Guard input is an object.
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratch = regs.takeAny();
 
     // Unbox and guard against old shape.
@@ -8669,7 +8669,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler& masm)
 
     if (cx->runtime()->gc.nursery.exists()) {
         Register scr = regs.takeAny();
-        GeneralRegisterSet saveRegs;
+        LiveGeneralRegisterSet saveRegs;
         saveRegs.add(R1);
         emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
     }
@@ -8695,7 +8695,7 @@ ICSetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
     // Guard input is an object.
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratch = regs.takeAny();
 
     // Unbox and group guard.
@@ -8724,7 +8724,7 @@ ICSetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
 
         // Trigger post barriers here on the values being written. Fields which
         // objects can be written to also need update stubs.
-        GeneralRegisterSet saveRegs;
+        LiveGeneralRegisterSet saveRegs;
         saveRegs.add(R0);
         saveRegs.add(R1);
         saveRegs.addUnchecked(object);
@@ -8766,7 +8766,7 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
     // Guard input is an object.
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    GeneralRegisterSet regs(availableGeneralRegs(2));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratch = regs.takeAny();
 
     // Unbox and shape guard.
@@ -8799,7 +8799,7 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
 
         // Trigger post barriers here on the values being written. Descriptors
         // which can write objects also need update stubs.
-        GeneralRegisterSet saveRegs;
+        LiveGeneralRegisterSet saveRegs;
         saveRegs.add(R0);
         saveRegs.add(R1);
         saveRegs.addUnchecked(object);
@@ -8891,7 +8891,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
     // Stow R0 and R1 to free up registers.
     EmitStowICValues(masm, 2);
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
     // Unbox and shape guard.
@@ -9010,7 +9010,7 @@ ICSetProp_CallNative::Compiler::generateStubCode(MacroAssembler& masm)
     // Stow R0 and R1 to free up registers.
     EmitStowICValues(masm, 2);
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
     // Unbox and shape guard.
@@ -9718,7 +9718,7 @@ DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_
 }
 
 void
-ICCallStubCompiler::pushCallArguments(MacroAssembler& masm, GeneralRegisterSet regs,
+ICCallStubCompiler::pushCallArguments(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
                                       Register argcReg, bool isJitCall)
 {
     MOZ_ASSERT(!regs.has(argcReg));
@@ -9771,7 +9771,8 @@ ICCallStubCompiler::guardSpreadCall(MacroAssembler& masm, Register argcReg, Labe
 }
 
 void
-ICCallStubCompiler::pushSpreadCallArguments(MacroAssembler& masm, GeneralRegisterSet regs,
+ICCallStubCompiler::pushSpreadCallArguments(MacroAssembler& masm,
+                                            AllocatableGeneralRegisterSet regs,
                                             Register argcReg, bool isJitCall)
 {
     // Push arguments
@@ -9808,8 +9809,9 @@ ICCallStubCompiler::pushSpreadCallArguments(MacroAssembler& masm, GeneralRegiste
 }
 
 Register
-ICCallStubCompiler::guardFunApply(MacroAssembler& masm, GeneralRegisterSet regs, Register argcReg,
-                                  bool checkNative, FunApplyThing applyThing, Label* failure)
+ICCallStubCompiler::guardFunApply(MacroAssembler& masm, AllocatableGeneralRegisterSet regs,
+                                  Register argcReg, bool checkNative, FunApplyThing applyThing,
+                                  Label* failure)
 {
     // Ensure argc == 2
     masm.branch32(Assembler::NotEqual, argcReg, Imm32(2), failure);
@@ -9830,7 +9832,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, GeneralRegisterSet regs,
     } else {
         MOZ_ASSERT(applyThing == FunApply_Array);
 
-        GeneralRegisterSet regsx = regs;
+        AllocatableGeneralRegisterSet regsx = regs;
 
         // Ensure that the second arg is an array.
         ValueOperand secondArgVal = regsx.takeAnyValue();
@@ -9922,7 +9924,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler& masm, GeneralRegisterSet regs,
 }
 
 void
-ICCallStubCompiler::pushCallerArguments(MacroAssembler& masm, GeneralRegisterSet regs)
+ICCallStubCompiler::pushCallerArguments(MacroAssembler& masm, AllocatableGeneralRegisterSet regs)
 {
     // Initialize copyReg to point to start caller arguments vector.
     // Initialize argcReg to poitn to the end of it.
@@ -9948,7 +9950,7 @@ ICCallStubCompiler::pushCallerArguments(MacroAssembler& masm, GeneralRegisterSet
 
 void
 ICCallStubCompiler::pushArrayArguments(MacroAssembler& masm, Address arrayVal,
-                                       GeneralRegisterSet regs)
+                                       AllocatableGeneralRegisterSet regs)
 {
     // Load start and end address of values to copy.
     // guardFunApply has already gauranteed that the array is packed and contains
@@ -9994,7 +9996,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // right-to-left so duplicate them on the stack in reverse order.
     // |this| and callee are pushed last.
 
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     if (MOZ_UNLIKELY(isSpread_)) {
         // Use BaselineFrameReg instead of BaselineStackReg, because
@@ -10100,7 +10102,7 @@ bool
 ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     bool canUseTailCallReg = regs.has(BaselineTailCallReg);
 
     Register argcReg = R0.scratchReg();
@@ -10365,7 +10367,7 @@ bool
 ICCall_StringSplit::Compiler::generateStubCode(MacroAssembler& masm)
 {
     // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, +ICStackValueOffset+ ]
-    GeneralRegisterSet regs = availableGeneralRegs(0);
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     Label failureRestoreArgc;
 #ifdef DEBUG
     Label oneArg;
@@ -10459,7 +10461,7 @@ ICCall_IsSuspendedStarGenerator::Compiler::generateStubCode(MacroAssembler& masm
     // code, so it's safe to assume we have a single argument and the callee
     // is our intrinsic.
 
-    GeneralRegisterSet regs = availableGeneralRegs(0);
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     // Load the argument.
     Address argAddr(BaselineStackReg, ICStackValueOffset);
@@ -10498,7 +10500,7 @@ bool
 ICCall_Native::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     Register argcReg = R0.scratchReg();
     regs.take(argcReg);
@@ -10602,7 +10604,7 @@ bool
 ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     Register argcReg = R0.scratchReg();
     regs.take(argcReg);
@@ -10689,7 +10691,7 @@ bool
 ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     Register argcReg = R0.scratchReg();
     regs.take(argcReg);
@@ -10791,7 +10793,7 @@ bool
 ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
 
     Register argcReg = R0.scratchReg();
     regs.take(argcReg);
@@ -10887,7 +10889,7 @@ bool
 ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
-    GeneralRegisterSet regs(availableGeneralRegs(0));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
     bool canUseTailCallReg = regs.has(BaselineTailCallReg);
 
     Register argcReg = R0.scratchReg();
@@ -11221,7 +11223,7 @@ ICIteratorMore_Native::Compiler::generateStubCode(MacroAssembler& masm)
 
     Register obj = masm.extractObject(R0, ExtractTemp0);
 
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     Register nativeIterator = regs.takeAny();
     Register scratch = regs.takeAny();
 
@@ -11395,7 +11397,7 @@ ICInstanceOf_Function::Compiler::generateStubCode(MacroAssembler& masm)
     // Allow using R1's type register as scratch. We have to restore it when
     // we want to jump to the next stub.
     Label failureRestoreR1;
-    GeneralRegisterSet regs(availableGeneralRegs(1));
+    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
     regs.takeUnchecked(rhsObj);
 
     Register scratch1 = regs.takeAny();
@@ -11589,7 +11591,7 @@ ICRetSub_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     masm.branchTestBooleanTruthy(true, R0, &rethrow);
     {
         // Call a stub to get the native code address for the pc offset in R1.
-        GeneralRegisterSet regs(availableGeneralRegs(0));
+        AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
         regs.take(R1);
         regs.takeUnchecked(BaselineTailCallReg);
 
