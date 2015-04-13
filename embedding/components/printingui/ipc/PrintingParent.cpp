@@ -214,12 +214,12 @@ PrintingParent::DOMWindowFromBrowserParent(PBrowserParent* parent)
   return parentWin;
 }
 
-MOZ_IMPLICIT PrintingParent::PrintingParent()
+PrintingParent::PrintingParent()
 {
     MOZ_COUNT_CTOR(PrintingParent);
 }
 
-MOZ_IMPLICIT PrintingParent::~PrintingParent()
+PrintingParent::~PrintingParent()
 {
     MOZ_COUNT_DTOR(PrintingParent);
 }
