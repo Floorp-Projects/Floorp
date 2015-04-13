@@ -54,16 +54,12 @@ partial interface MouseEvent
 };
 
 // Suggested initMouseEvent replacement initializer:
-dictionary MouseEventInit : UIEventInit {
+dictionary MouseEventInit : EventModifierInit {
   // Attributes for MouseEvent:
   long           screenX       = 0;
   long           screenY       = 0;
   long           clientX       = 0;
   long           clientY       = 0;
-  boolean        ctrlKey       = false;
-  boolean        shiftKey      = false;
-  boolean        altKey        = false;
-  boolean        metaKey       = false;
   short          button        = 0;
   // Note: "buttons" was not previously initializable through initMouseEvent!
   unsigned short buttons       = 0;
