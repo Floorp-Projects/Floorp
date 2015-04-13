@@ -8,6 +8,7 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.Services = {};
@@ -36,14 +37,14 @@ XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {
            .QueryInterface(Ci.nsIProperties);
 });
 
-#ifdef MOZ_CRASHREPORTER
-XPCOMUtils.defineLazyGetter(Services, "crashmanager", () => {
-  let ns = {};
-  Components.utils.import("resource://gre/modules/CrashManager.jsm", ns);
+if (AppConstants.MOZ_CRASHREPORTER) {
+  XPCOMUtils.defineLazyGetter(Services, "crashmanager", () => {
+    let ns = {};
+    Components.utils.import("resource://gre/modules/CrashManager.jsm", ns);
 
-  return ns.CrashManager.Singleton;
-});
-#endif
+    return ns.CrashManager.Singleton;
+  });
+}
 
 XPCOMUtils.defineLazyGetter(Services, "mm", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"]
@@ -58,9 +59,8 @@ XPCOMUtils.defineLazyGetter(Services, "ppmm", () => {
 });
 
 let initTable = [
-#ifdef MOZ_WIDGET_ANDROID
-  ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge"],
-#endif
+  ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge",
+   AppConstants.platform == "android"],
   ["appShell", "@mozilla.org/appshell/appShellService;1", "nsIAppShellService"],
   ["cache", "@mozilla.org/network/cache-service;1", "nsICacheService"],
   ["cache2", "@mozilla.org/netwerk/cache-storage-service;1", "nsICacheStorageService"],
@@ -78,14 +78,12 @@ let initTable = [
   ["obs", "@mozilla.org/observer-service;1", "nsIObserverService"],
   ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
   ["prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  ["profiler", "@mozilla.org/tools/profiler;1", "nsIProfiler"],
-#endif
+  ["profiler", "@mozilla.org/tools/profiler;1", "nsIProfiler",
+   AppConstants.MOZ_ENABLE_PROFILER_SPS],
   ["scriptloader", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
   ["scriptSecurityManager", "@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager"],
-#ifdef MOZ_TOOLKIT_SEARCH
-  ["search", "@mozilla.org/browser/search-service;1", "nsIBrowserSearchService"],
-#endif
+  ["search", "@mozilla.org/browser/search-service;1", "nsIBrowserSearchService",
+   AppConstants.MOZ_TOOLKIT_SEARCH],
   ["storage", "@mozilla.org/storage/service;1", "mozIStorageService"],
   ["domStorageManager", "@mozilla.org/dom/localStorage-manager;1", "nsIDOMStorageManager"],
   ["strings", "@mozilla.org/intl/stringbundle;1", "nsIStringBundleService"],
@@ -102,14 +100,13 @@ let initTable = [
   ["focus", "@mozilla.org/focus-manager;1", "nsIFocusManager"],
   ["uriFixup", "@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
   ["blocklist", "@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-  ["metro", "@mozilla.org/windows-metroutils;1", "nsIWinMetroUtils"],
-#endif
-#endif
 ];
 
-initTable.forEach(function ([name, contract, intf])
-  XPCOMUtils.defineLazyServiceGetter(Services, name, contract, intf));
+initTable.forEach(([name, contract, intf, enabled = true]) => {
+  if (enabled) {
+    XPCOMUtils.defineLazyServiceGetter(Services, name, contract, intf);
+  }
+});
+
 
 initTable = undefined;
