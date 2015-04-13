@@ -1016,20 +1016,22 @@ Debugger::unwrapPropertyDescriptor(JSContext* cx, HandleObject obj,
 
     if (desc.hasGetterObject()) {
         RootedObject get(cx, desc.getterObject());
-        if (!unwrapDebuggeeObject(cx, &get) ||
-            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
-        {
-            return false;
+        if (get) {
+            if (!unwrapDebuggeeObject(cx, &get))
+                return false;
+            if (!CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
+                return false;
         }
         desc.setGetterObject(get);
     }
 
     if (desc.hasSetterObject()) {
         RootedObject set(cx, desc.setterObject());
-        if (!unwrapDebuggeeObject(cx, &set) ||
-            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
-        {
-            return false;
+        if (set) {
+            if (!unwrapDebuggeeObject(cx, &set))
+                return false;
+            if (!CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
+                return false;
         }
         desc.setSetterObject(set);
     }
