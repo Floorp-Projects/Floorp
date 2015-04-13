@@ -179,10 +179,9 @@ add_task(function*() {
     info("Starting test: " + desc);
 
     info("Executing the test markup mutation");
-    let onUpdated = inspector.once("inspector-updated");
     let onMutation = inspector.once("markupmutation");
     test();
-    yield onUpdated.then(onMutation);
+    yield onMutation;
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
     yield inspector.markup.expandAll();
