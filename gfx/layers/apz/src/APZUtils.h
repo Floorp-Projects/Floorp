@@ -8,6 +8,8 @@
 #define mozilla_layers_APZUtils_h
 
 #include <stdint.h>                     // for uint32_t
+#include "mozilla/gfx/Point.h"
+#include "mozilla/FloatingPoint.h"
 
 namespace mozilla {
 namespace layers {
@@ -35,6 +37,13 @@ enum class ScrollSource {
 };
 
 typedef uint32_t TouchBehaviorFlags;
+
+template <typename Units>
+static bool IsZero(const gfx::PointTyped<Units>& aPoint)
+{
+  return FuzzyEqualsAdditive(aPoint.x, 0.0f)
+      && FuzzyEqualsAdditive(aPoint.y, 0.0f);
+}
 
 }
 }

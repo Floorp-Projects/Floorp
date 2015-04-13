@@ -168,6 +168,12 @@ public:
    */
   bool CanScrollNow() const;
 
+  /**
+   * Clamp a point to the page's scrollable bounds. That is, a scroll
+   * destination to the returned point will not contain any overscroll.
+   */
+  CSSCoord ClampOriginToScrollableRect(CSSCoord aOrigin) const;
+
   void SetAxisLocked(bool aAxisLocked) { mAxisLocked = aAxisLocked; }
 
   /**
@@ -226,6 +232,7 @@ public:
   virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const = 0;
   virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const = 0;
   virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const = 0;
+  virtual CSSToParentLayerScale GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const = 0;
 
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const = 0;
 
@@ -285,6 +292,7 @@ public:
   virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const override;
   virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
   virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
+  virtual CSSToParentLayerScale GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const override;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
   virtual const char* Name() const override;
 };
@@ -295,6 +303,7 @@ public:
   virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const override;
   virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
   virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
+  virtual CSSToParentLayerScale GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const override;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
   virtual const char* Name() const override;
 };
