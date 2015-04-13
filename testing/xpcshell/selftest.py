@@ -219,6 +219,10 @@ let error = {
 function run_test() {do_report_unexpected_exception(error)};
 '''
 
+ADD_TEST_VERBOSE = '''
+function run_test() {do_print("a message from do_print")};
+'''
+
 # A test for genuine JS-generated Error objects
 ADD_TEST_REPORT_REF_ERROR = '''
 function run_test() {
@@ -937,6 +941,39 @@ tail =
         self.assertInLog("TypeError: generator function run_test returns a value at")
         self.assertInLog("test_error.js:4")
         self.assertNotInLog(TEST_PASS_STRING)
+
+    def testDoPrintWhenVerboseNotExplicit(self):
+        """
+        Check that do_print() and similar calls that generate output do
+        not have the output when not run verbosely.
+        """
+        self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
+        self.writeManifest(["test_verbose.js"])
+
+        self.assertTestResult(True)
+        self.assertNotInLog("a message from do_print")
+
+    def testDoPrintWhenVerboseExplicit(self):
+        """
+        Check that do_print() and similar calls that generate output have the
+        output shown when run verbosely.
+        """
+        self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
+        self.writeManifest(["test_verbose.js"])
+        self.assertTestResult(True, verbose=True)
+        self.assertInLog("a message from do_print")
+
+    def testDoPrintWhenVerboseInManifest(self):
+        """
+        Check that do_print() and similar calls that generate output have the
+        output shown when 'verbose = true' is in the manifest, even when
+        not run verbosely.
+        """
+        self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
+        self.writeManifest([("test_verbose.js", "verbose = true")])
+
+        self.assertTestResult(True)
+        self.assertInLog("a message from do_print")
 
     def testAsyncCleanup(self):
         """

@@ -26,11 +26,9 @@ add_task(function*() {
   info("wait and see if the highlighter stays visible even after the node was selected");
   yield waitForTheBrieflyShowBoxModelTimeout();
 
-  let updated = inspector.once("inspector-updated");
   p.textContent = "dary!!!!";
   isVisible = yield isHighlighting(toolbox);
   ok(isVisible, "the highlighter is still visible");
-  yield updated;
 });
 
 function waitForTheBrieflyShowBoxModelTimeout() {
