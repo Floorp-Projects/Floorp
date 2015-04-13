@@ -251,6 +251,31 @@ describe("loop.store.RoomStore", function () {
         });
       });
 
+      it("should request creation of a new room with context", function() {
+        sandbox.stub(fakeMozLoop.rooms, "create");
+
+        fakeRoomCreationData.urls = [{
+          location: "http://invalid.com",
+          description: "fakeSite",
+          thumbnail: "fakeimage.png"
+        }];
+
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        sinon.assert.calledWith(fakeMozLoop.rooms.create, {
+          decryptedContext: {
+            roomName: "Conversation 1",
+            urls: [{
+              location: "http://invalid.com",
+              description: "fakeSite",
+              thumbnail: "fakeimage.png"
+            }],
+          },
+          roomOwner: fakeOwner,
+          maxSize: store.maxRoomCreationSize
+        });
+      });
+
       it("should switch the pendingCreation state flag to true", function() {
         sandbox.stub(fakeMozLoop.rooms, "create");
 

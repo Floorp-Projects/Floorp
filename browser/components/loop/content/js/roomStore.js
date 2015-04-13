@@ -269,6 +269,10 @@ loop.store = loop.store || {};
         maxSize:   this.maxRoomCreationSize
       };
 
+      if ("urls" in actionData) {
+        roomCreationData.decryptedContext.urls = actionData.urls;
+      }
+
       this._notifications.remove("create-room-error");
 
       this._mozLoop.rooms.create(roomCreationData, function(err, createdRoom) {
