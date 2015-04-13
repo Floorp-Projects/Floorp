@@ -83,7 +83,10 @@ loop.store.ActiveRoomStore = (function() {
         // The roomCryptoKey to decode the context data if necessary.
         roomCryptoKey: null,
         // Room information failed to be obtained for a reason. See ROOM_INFO_FAILURES.
-        roomInfoFailure: null
+        roomInfoFailure: null,
+        // Social API state.
+        socialShareButtonAvailable: false,
+        socialShareProviders: null
       };
     },
 
@@ -139,7 +142,8 @@ loop.store.ActiveRoomStore = (function() {
         "feedbackComplete",
         "videoDimensionsChanged",
         "startScreenShare",
-        "endScreenShare"
+        "endScreenShare",
+        "updateSocialShareInfo"
       ]);
     },
 
@@ -179,7 +183,9 @@ loop.store.ActiveRoomStore = (function() {
             roomToken: actionData.roomToken,
             roomName: roomData.roomName,
             roomOwner: roomData.roomOwner,
-            roomUrl: roomData.roomUrl
+            roomUrl: roomData.roomUrl,
+            socialShareButtonAvailable: this._mozLoop.isSocialShareButtonAvailable(),
+            socialShareProviders: this._mozLoop.getSocialShareProviders()
           }));
 
           // For the conversation window, we need to automatically
@@ -292,14 +298,19 @@ loop.store.ActiveRoomStore = (function() {
         roomOwner: actionData.roomOwner,
         roomState: ROOM_STATES.READY,
         roomToken: actionData.roomToken,
-        roomUrl: actionData.roomUrl
+        roomUrl: actionData.roomUrl,
+        socialShareButtonAvailable: actionData.socialShareButtonAvailable,
+        socialShareProviders: actionData.socialShareProviders
       });
 
       this._onUpdateListener = this._handleRoomUpdate.bind(this);
       this._onDeleteListener = this._handleRoomDelete.bind(this);
+      this._onSocialShareUpdate = this._handleSocialShareUpdate.bind(this);
 
       this._mozLoop.rooms.on("update:" + actionData.roomToken, this._onUpdateListener);
       this._mozLoop.rooms.on("delete:" + actionData.roomToken, this._onDeleteListener);
+      window.addEventListener("LoopShareWidgetChanged", this._onSocialShareUpdate);
+      window.addEventListener("LoopSocialProvidersChanged", this._onSocialShareUpdate);
     },
 
     /**
@@ -313,6 +324,19 @@ loop.store.ActiveRoomStore = (function() {
         roomName: actionData.roomName,
         roomOwner: actionData.roomOwner,
         roomUrl: actionData.roomUrl
+      });
+    },
+
+    /**
+     * Handles the updateSocialShareInfo action. Updates the room data with new
+     * Social API info.
+     *
+     * @param  {sharedActions.UpdateSocialShareInfo} actionData
+     */
+    updateSocialShareInfo: function(actionData) {
+      this.setStoreState({
+        socialShareButtonAvailable: actionData.socialShareButtonAvailable,
+        socialShareProviders: actionData.socialShareProviders
       });
     },
 
@@ -340,6 +364,17 @@ loop.store.ActiveRoomStore = (function() {
       this._sdkDriver.forceDisconnectAll(function() {
         window.close();
       });
+    },
+
+    /**
+     * Handles an update of the position of the Share widget and changes to list
+     * of Social API providers, notified by the mozLoop API.
+     */
+    _handleSocialShareUpdate: function() {
+      this.dispatchAction(new sharedActions.UpdateSocialShareInfo({
+        socialShareButtonAvailable: this._mozLoop.isSocialShareButtonAvailable(),
+        socialShareProviders: this._mozLoop.getSocialShareProviders()
+      }));
     },
 
     /**
@@ -593,8 +628,12 @@ loop.store.ActiveRoomStore = (function() {
       var roomToken = this.getStoreState().roomToken;
       this._mozLoop.rooms.off("update:" + roomToken, this._onUpdateListener);
       this._mozLoop.rooms.off("delete:" + roomToken, this._onDeleteListener);
+      window.removeEventListener("LoopShareWidgetChanged", this._onShareWidgetUpdate);
+      window.removeEventListener("LoopSocialProvidersChanged", this._onSocialProvidersUpdate);
       delete this._onUpdateListener;
       delete this._onDeleteListener;
+      delete this._onShareWidgetUpdate;
+      delete this._onSocialProvidersUpdate;
     },
 
     /**

@@ -620,3 +620,18 @@ add_test(function() {
   Services.prefs.setBoolPref(PREF_XPI_ENABLED, true);
   bug_601442_test_elements(true);
 });
+
+// Test for Bug 1132971 - if extensions.getAddons.showPane is false,
+// the extensions pane should show by default
+add_test(function() {
+  Services.prefs.clearUserPref(PREF_UI_LASTCATEGORY);
+  Services.prefs.setBoolPref(PREF_DISCOVER_ENABLED, false);
+
+  open_manager(null, function(aWindow) {
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+    is(gCategoryUtilities.selectedCategory, "extension", "Should be showing the extension view");
+    close_manager(gManagerWindow, run_next_test);
+    Services.prefs.clearUserPref(PREF_DISCOVER_ENABLED);
+  });
+});

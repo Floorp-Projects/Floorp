@@ -68,7 +68,9 @@ BaseProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObject receiver,
     else
         vp.setUndefined();
 
-    return CallJSGetterOp(cx, desc.getter(), receiver, id, vp);
+    // A proxy object should never have own JSGetterOps.
+    MOZ_ASSERT(desc.object() != proxy);
+    return CallJSGetterOp(cx, desc.getter(), desc.object(), id, vp);
 }
 
 bool

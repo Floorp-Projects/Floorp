@@ -51,9 +51,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         var firstCall = !unLockedCoords;
         if (!firstCall) {
           todo(false, "mousemove is fired twice.");
+        } else {
+          isUnlocked = !document.mozPointerLockElement;
         }
-
-        isUnlocked = !document.mozPointerLockElement;
         unLockedCoords = {
           screenX: e.screenX,
           screenY: e.screenY,

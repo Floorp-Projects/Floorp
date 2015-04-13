@@ -183,6 +183,20 @@ SelectorSearch.prototype = {
     });
   },
 
+  _queryNodes: Task.async(function*(query) {
+    if (typeof this.hasMultiFrameSearch === "undefined") {
+      let target = this.inspector.toolbox.target;
+      this.hasMultiFrameSearch = yield target.actorHasMethod("domwalker",
+        "multiFrameQuerySelectorAll");
+    }
+
+    if (this.hasMultiFrameSearch) {
+      return yield this.walker.multiFrameQuerySelectorAll(query);
+    } else {
+      return yield this.walker.querySelectorAll(this.walker.rootNode, query);
+    }
+  }),
+
   /**
    * The command callback for the input box. This function is automatically
    * invoked as the user is typing if the input box type is search.
@@ -211,7 +225,7 @@ SelectorSearch.prototype = {
     this.searchBox.setAttribute("filled", true);
     let queryList = null;
 
-    this._lastQuery = this.walker.querySelectorAll(this.walker.rootNode, query).then(list => {
+    this._lastQuery = this._queryNodes(query).then(list => {
       return list;
     }, (err) => {
       // Failures are ok here, just use a null item list;

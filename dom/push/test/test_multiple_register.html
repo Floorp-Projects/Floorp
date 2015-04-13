@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1038811: Push tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1038811</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1038811">Mozilla Bug 1038811</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  function debug(str) {
+  //  console.log(str + "\n");
+  }
+
+  function start() {
+    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
+    .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function setupPushNotification(swr) {
+    var p = new Promise(function(res, rej) {
+      swr.pushManager.subscribe().then(
+        function(pushSubscription) {
+          ok(true, "successful registered for push notification");
+          res({swr: swr, pushSubscription: pushSubscription});
+        }, function(error) {
+          ok(false, "could not register for push notification");
+          res(null);
+        }
+        );
+    });
+    return p;
+  }
+
+  function setupSecondEndpoint(result) {
+    var p = new Promise(function(res, rej) {
+      result.swr.pushManager.subscribe().then(
+        function(pushSubscription) {
+          ok(result.pushSubscription.endpoint == pushSubscription.endpoint, "setupSecondEndpoint - Got the same endpoint back.");
+          res(result);
+        }, function(error) {
+          ok(false, "could not register for push notification");
+          res(null);
+        }
+        );
+    });
+    return p;
+  }
+
+  function getEndpointExpectNull(swr) {
+    var p = new Promise(function(res, rej) {
+      swr.pushManager.getSubscription().then(
+        function(pushSubscription) {
+          ok(pushSubscription == null, "getEndpoint should return null when app not subscribed.");
+          res(swr);
+        }, function(error) {
+          ok(false, "could not register for push notification");
+          res(null);
+        }
+        );
+    });
+    return p;
+  }
+
+  function getEndpoint(result) {
+    var p = new Promise(function(res, rej) {
+      result.swr.pushManager.getSubscription().then(
+        function(pushSubscription) {
+          ok(result.pushSubscription.endpoint == pushSubscription.endpoint, "getEndpoint - Got the same endpoint back.");
+
+          res(pushSubscription);
+        }, function(error) {
+          ok(false, "could not register for push notification");
+          res(null);
+        }
+        );
+    });
+    return p;
+  }
+
+  function unregisterPushNotification(pushSubscription) {
+    return pushSubscription.unsubscribe();
+  }
+
+  function runTest() {
+    start()
+    .then(getEndpointExpectNull)
+    .then(setupPushNotification)
+    .then(setupSecondEndpoint)
+    .then(getEndpoint)
+    .then(unregisterPushNotification)
+    .then(unregister)
+    .catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+    }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  SpecialPowers.addPermission('push', true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

@@ -24,8 +24,6 @@ function test() {
     "The root node's 'category' attribute is correct.");
   is(treeRoot.target.getAttribute("tooltiptext"), "",
     "The root node's 'tooltiptext' attribute is correct.");
-  ok(treeRoot.target.querySelector(".call-tree-zoom").hidden,
-    "The root node's zoom button cell should be hidden.");
   ok(treeRoot.target.querySelector(".call-tree-category").hidden,
     "The root node's category label cell should be hidden.");
 
@@ -39,8 +37,6 @@ function test() {
     "The .A.B.D node's 'category' attribute is correct.");
   is(D.target.getAttribute("tooltiptext"), "D (http://foo/bar/baz:78)",
     "The .A.B.D node's 'tooltiptext' attribute is correct.");
-  ok(!A.target.querySelector(".call-tree-zoom").hidden,
-    "The .A.B.D node's zoom button cell should not be hidden.");
   ok(!A.target.querySelector(".call-tree-category").hidden,
     "The .A.B.D node's category label cell should not be hidden.");
 
@@ -61,7 +57,7 @@ function test() {
 
   let functionCell = D.target.childNodes[5];
 
-  is(functionCell.childNodes.length, 9,
+  is(functionCell.childNodes.length, 8,
     "The number of columns displayed for function cells is correct.");
   is(functionCell.childNodes[0].className, "arrow theme-twisty",
     "The first node displayed for function cells is correct.");
@@ -75,11 +71,9 @@ function test() {
     "The fifth node displayed for function cells is correct.");
   is(functionCell.childNodes[5].className, "plain call-tree-host",
     "The fifth node displayed for function cells is correct.");
-  is(functionCell.childNodes[6].className, "plain call-tree-zoom",
-    "The sixth node displayed for function cells is correct.");
-  is(functionCell.childNodes[7].tagName, "spacer",
+  is(functionCell.childNodes[6].tagName, "spacer",
     "The seventh node displayed for function cells is correct.");
-  is(functionCell.childNodes[8].className, "plain call-tree-category",
+  is(functionCell.childNodes[7].className, "plain call-tree-category",
     "The eight node displayed for function cells is correct.");
 
   finish();

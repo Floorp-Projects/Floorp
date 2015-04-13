@@ -9,33 +9,7 @@
 
 #include "gc/Barrier.h"
 
-class JSAtom;
-class JSLinearString;
-
 namespace js {
-
-class ArgumentsObject;
-class ArrayBufferObject;
-class ArrayBufferViewObject;
-class SharedArrayBufferObject;
-class BaseShape;
-class DebugScopeObject;
-class GCMarker;
-class GlobalObject;
-class LazyScript;
-class NestedScopeObject;
-class SavedFrame;
-class ScopeObject;
-class Shape;
-class UnownedBaseShape;
-
-template<class> class HeapPtr;
-
-namespace jit {
-class JitCode;
-struct IonScript;
-struct VMFunction;
-}
 
 /*** Tracing ***/
 
@@ -112,10 +86,10 @@ void
 MarkKind(JSTracer* trc, void** thingp, JSGCTraceKind kind);
 
 void
-MarkGCThingRoot(JSTracer* trc, void** thingp, const char* name);
+TraceGenericPointerRoot(JSTracer* trc, Cell** thingp, const char* name);
 
 void
-MarkGCThingUnbarriered(JSTracer* trc, void** thingp, const char* name);
+TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp, const char* name);
 
 /*** Slot Marking ***/
 

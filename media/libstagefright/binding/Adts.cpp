@@ -14,14 +14,14 @@ namespace mp4_demuxer
 {
 
 int8_t
-Adts::GetFrequencyIndex(uint16_t aSamplesPerSecond)
+Adts::GetFrequencyIndex(uint32_t aSamplesPerSecond)
 {
-  static const int freq_lookup[] = { 96000, 88200, 64000, 48000, 44100,
-                                     32000, 24000, 22050, 16000, 12000,
-                                     11025, 8000,  7350,  0 };
+  static const uint32_t freq_lookup[] = { 96000, 88200, 64000, 48000, 44100,
+                                          32000, 24000, 22050, 16000, 12000,
+                                          11025, 8000,  7350,  0};
 
   int8_t i = 0;
-  while (aSamplesPerSecond < freq_lookup[i]) {
+  while (freq_lookup[i] && aSamplesPerSecond < freq_lookup[i]) {
     i++;
   }
 

@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                         "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                         "resource:///modules/UITour.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Social",
+                                        "resource:///modules/Social.jsm");
 XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
   return Cc["@mozilla.org/xre/app-info;1"]
            .getService(Ci.nsIXULAppInfo)
@@ -207,6 +209,10 @@ function injectLoopAPI(targetWindow) {
   let roomsAPI;
   let callsAPI;
   let savedWindowListeners = new Map();
+  let socialProviders;
+  const kShareWidgetId = "social-share-button";
+  let socialShareButtonListenersAdded = false;
+
 
   let api = {
     /**
@@ -918,20 +924,212 @@ function injectLoopAPI(targetWindow) {
       value: function(windowId, active) {
         MozLoopService.setScreenShareState(windowId, active);
       }
+    },
+
+    /**
+     * Checks if the Social Share widget is available in any of the registered
+     * widget areas (navbar, MenuPanel, etc).
+     *
+     * @return {Boolean} `true` if the widget is available and `false` when it's
+     *                   still in the Customization palette.
+     */
+    isSocialShareButtonAvailable: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        if (!win || !win.CustomizableUI) {
+          return false;
+        }
+
+        let widget = win.CustomizableUI.getWidget(kShareWidgetId);
+        if (widget) {
+          if (!socialShareButtonListenersAdded) {
+            let eventName = "social:" + kShareWidgetId;
+            Services.obs.addObserver(onShareWidgetChanged, eventName + "-added", false);
+            Services.obs.addObserver(onShareWidgetChanged, eventName + "-removed", false);
+            socialShareButtonListenersAdded = true;
+          }
+          return !!widget.areaType;
+        }
+
+        return false;
+      }
+    },
+
+    /**
+     * Add the Social Share widget to the navbar area, but only when it's not
+     * located anywhere else than the Customization palette.
+     */
+    addSocialShareButton: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        // Don't do anything if the button is already available.
+        if (api.isSocialShareButtonAvailable.value()) {
+          return;
+        }
+
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        if (!win || !win.CustomizableUI) {
+          return;
+        }
+        win.CustomizableUI.addWidgetToArea(kShareWidgetId, win.CustomizableUI.AREA_NAVBAR);
+      }
+    },
+
+    /**
+     * Activates the Social Share panel with the Social Provider panel opened
+     * when the popup open.
+     */
+    addSocialShareProvider: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        // Don't do anything if the button is _not_ available.
+        if (!api.isSocialShareButtonAvailable.value()) {
+          return;
+        }
+
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        if (!win || !win.SocialShare) {
+          return;
+        }
+        win.SocialShare.showDirectory();
+      }
+    },
+
+    /**
+     * Returns a sorted list of Social Providers that can share URLs. See
+     * `updateSocialProvidersCache()` for more information.
+     * 
+     * @return {Array} Sorted list of share-capable Social Providers.
+     */
+    getSocialShareProviders: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        if (socialProviders) {
+          return socialProviders;
+        }
+        return updateSocialProvidersCache();
+      }
+    },
+
+    /**
+     * Share a room URL through a Social Provider with the provided title message.
+     * This action will open the share panel, which is anchored to the Social
+     * Share widget.
+     *
+     * @param {String} providerOrigin Identifier of the targeted Social Provider
+     * @param {String} roomURL        URL that points to the standalone client
+     * @param {String} title          Message that augments the URL inside the
+     *                                share message
+     * @param {String} [body]         Optional longer message to be displayed
+     *                                similar to the body of an email 
+     */
+    socialShareRoom: {
+      enumerable: true,
+      writable: true,
+      value: function(providerOrigin, roomURL, title, body = null) {
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        if (!win || !win.SocialShare) {
+          return;
+        }
+
+        let graphData = {
+          url: roomURL,
+          title: title
+        };
+        if (body) {
+          graphData.body = body;
+        }
+        win.SocialShare.sharePage(providerOrigin, graphData);
+      }
     }
   };
 
-  function onStatusChanged(aSubject, aTopic, aData) {
-    let event = new targetWindow.CustomEvent("LoopStatusChanged");
+  /**
+   * Send an event to the content window to indicate that the state on the chrome
+   * side was updated.
+   *
+   * @param  {name} name Name of the event, defaults to 'LoopStatusChanged'
+   */
+  function sendEvent(name = "LoopStatusChanged") {
+    if (typeof targetWindow.CustomEvent != "function") {
+      MozLoopService.log.debug("Could not send event to content document, " +
+        "because it's being destroyed or we're in a unit test where " +
+        "`targetWindow` is mocked.");
+      return;
+    }
+
+    let event = new targetWindow.CustomEvent(name);
     targetWindow.dispatchEvent(event);
-  };
+  }
+
+  function onStatusChanged(aSubject, aTopic, aData) {
+    sendEvent();
+  }
 
   function onDOMWindowDestroyed(aSubject, aTopic, aData) {
     if (targetWindow && aSubject != targetWindow)
       return;
     Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed");
     Services.obs.removeObserver(onStatusChanged, "loop-status-changed");
-  };
+    // Stop listening for changes in the social provider list, if necessary.
+    if (socialProviders)
+      Services.obs.removeObserver(updateSocialProvidersCache, "social:providers-changed");
+    if (socialShareButtonListenersAdded) {
+      let eventName = "social:" + kShareWidgetId;
+      Services.obs.removeObserver(onShareWidgetChanged, eventName + "-added");
+      Services.obs.removeObserver(onShareWidgetChanged, eventName + "-removed");
+    }
+  }
+
+  function onShareWidgetChanged(aSubject, aTopic, aData) {
+    sendEvent("LoopShareWidgetChanged");
+  }
+
+  /**
+   * Retrieves a list of Social Providers from the Social API that are explicitly
+   * capable of sharing URLs.
+   * It also adds a listener that is fired whenever a new Provider is added or
+   * removed.
+   *
+   * @return {Array} Sorted list of share-capable Social Providers.
+   */
+  function updateSocialProvidersCache() {
+    let providers = [];
+
+    for (let provider of Social.providers) {
+      if (!provider.shareURL) {
+        continue;
+      }
+
+      // Only pass the relevant data on to content.
+      providers.push({
+        iconURL: provider.iconURL,
+        name: provider.name,
+        origin: provider.origin
+      });
+    }
+
+    let providersWasSet = !!socialProviders;
+    // Replace old with new.
+    socialProviders = cloneValueInto(providers.sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())), targetWindow);
+
+    // Start listening for changes in the social provider list, if we're not
+    // doing that yet.
+    if (!providersWasSet) {
+      Services.obs.addObserver(updateSocialProvidersCache, "social:providers-changed", false);
+    } else {
+      // Dispatch an event to content to let stores freshen-up.
+      sendEvent("LoopSocialProvidersChanged");
+    }
+
+    return socialProviders;
+  }
 
   let contentObj = Cu.createObjectIn(targetWindow);
   Object.defineProperties(contentObj, api);

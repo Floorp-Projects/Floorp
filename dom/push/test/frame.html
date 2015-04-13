@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <script>
+
+
+    function waitOnPushMessage(pushSubscription)
+    {
+      var p = new Promise(function(res, rej) {
+        navigator.serviceWorker.onmessage = function(e) {
+          if (e.data.type == "finished") {
+            parent.ok(e.data.okay == "yes", "Got a push message.");
+            res(pushSubscription);
+          }
+        };
+      });
+      return p;
+    }
+
+
+  </script>
+</head>
+<body>
+
+</body>
+</html>

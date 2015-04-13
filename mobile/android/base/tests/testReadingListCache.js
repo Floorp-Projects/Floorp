@@ -20,7 +20,6 @@ let TEST_PAGES = [
       title: "Article title",
       byline: "by Jane Doe",
       excerpt: "This is the article description.",
-      length: 1931
     }
   },
   {
@@ -33,7 +32,6 @@ let TEST_PAGES = [
       title: "Building XULRunner | MDN",
       byline: null,
       excerpt: "XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites.",
-      length: 2300
     }
   },
 ];
@@ -51,7 +49,6 @@ add_task(function* test_store_article() {
     title: TEST_PAGES[0].expected.title,
     byline: TEST_PAGES[0].expected.byline,
     excerpt: TEST_PAGES[0].expected.excerpt,
-    length: TEST_PAGES[0].expected.length
   });
 
   let article = yield ReaderMode.getArticleFromCache(TEST_PAGES[0].url);
@@ -97,7 +94,6 @@ add_task(function* test_migrate_cache() {
       title: TEST_PAGES[0].expected.title,
       byline: TEST_PAGES[0].expected.byline,
       excerpt: TEST_PAGES[0].expected.excerpt,
-      length: TEST_PAGES[0].expected.length
     });
     request.onerror = event => reject(request.error);
     request.onsuccess = event => resolve();
@@ -123,7 +119,6 @@ function checkArticle(article, testcase) {
   do_check_eq(article.title, testcase.expected.title);
   do_check_eq(article.byline, testcase.expected.byline);
   do_check_eq(article.excerpt, testcase.expected.excerpt);
-  do_check_eq(article.length, testcase.expected.length);
 }
 
 run_next_test();
