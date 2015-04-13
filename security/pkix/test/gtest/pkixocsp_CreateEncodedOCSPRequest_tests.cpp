@@ -57,7 +57,7 @@ protected:
     ASSERT_FALSE(ENCODING_FAILED(issuerDER));
 
     ScopedTestKeyPair keyPair(GenerateKeyPair());
-    ASSERT_TRUE(keyPair);
+    ASSERT_TRUE(keyPair.get());
     issuerSPKI = keyPair->subjectPublicKeyInfo;
   }
 

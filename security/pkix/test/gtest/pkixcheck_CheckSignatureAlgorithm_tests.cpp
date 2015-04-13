@@ -312,7 +312,7 @@ public:
 TEST_F(pkixcheck_CheckSignatureAlgorithm, BuildCertChain)
 {
   ScopedTestKeyPair keyPair(CloneReusedKeyPair());
-  ASSERT_TRUE(keyPair);
+  ASSERT_TRUE(keyPair.get());
 
   ByteString issuerExtensions[2];
   issuerExtensions[0] = CreateEncodedBasicConstraints(true, nullptr,
