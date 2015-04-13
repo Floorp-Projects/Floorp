@@ -305,6 +305,15 @@ nsScriptSecurityManager::AppStatusForPrincipal(nsIPrincipal *aPrin)
 
 }
 
+/*
+ * GetChannelResultPrincipal will return the principal that the resource
+ * returned by this channel will use.  For example, if the resource is in
+ * a sandbox, it will return the nullprincipal.  If the resource is forced
+ * to inherit principal, it will return the principal of its parent.  If
+ * the load doesn't require sandboxing or inheriting, it will return the same
+ * principal as GetChannelURIPrincipal. Namely the principal of the URI
+ * that is being loaded.
+ */
 NS_IMETHODIMP
 nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
                                                    nsIPrincipal** aPrincipal)
@@ -339,6 +348,17 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     return GetChannelURIPrincipal(aChannel, aPrincipal);
 }
 
+/* The principal of the URI that this channel is loading. This is never
+ * affected by things like sandboxed loads, or loads where we forcefully
+ * inherit the principal.  Think of this as the principal of the server
+ * which this channel is loading from.  Most callers should use
+ * GetChannelResultPrincipal instead of GetChannelURIPrincipal.  Only
+ * call GetChannelURIPrincipal if you are sure that you want the
+ * principal that matches the uri, even in cases when the load is
+ * sandboxed or when the load could be a blob or data uri (i.e even when
+ * you encounter loads that may or may not be sandboxed and loads
+ * that may or may not inherit)."
+ */
 NS_IMETHODIMP
 nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
                                                 nsIPrincipal** aPrincipal)

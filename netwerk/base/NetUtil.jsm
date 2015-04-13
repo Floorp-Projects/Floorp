@@ -320,11 +320,12 @@ this.NetUtil = {
      *            The loadingPrincipal of the channel.
      *            The principal of the document where the result of this request
      *            will be used.
-     *            This is generally the principal of the loadingNode.  However
-     *            for loads where loadingNode is omitted this argument still
-     *            needs to be passed.  For example for loads from a WebWorker,
-     *            pass the principal of that worker.  For loads from an addon or
-     *            from internal browser features, pass the system principal.
+     *            This defaults to the principal of aLoadingNode, so when
+     *            aLoadingNode is passed this can be left as null. However for
+     *            loads where aLoadingNode is null this argument must be passed.
+     *            For example for loads from a WebWorker, pass the principal of
+     *            that worker.  For loads from an addon or from internal browser
+     *            features, pass the system principal.
      *            This principal should almost always be the system principal if
      *            loadingNode is omitted, in which case you can use the
      *            useSystemPrincipal property.  The only exception to this is
