@@ -31,15 +31,11 @@ interface KeyboardEvent : UIEvent
   readonly attribute DOMString code;
 };
 
-dictionary KeyboardEventInit : UIEventInit
+dictionary KeyboardEventInit : EventModifierInit
 {
   DOMString      key           = "";
   DOMString      code          = "";
   unsigned long  location      = 0;
-  boolean        ctrlKey       = false;
-  boolean        shiftKey      = false;
-  boolean        altKey        = false;
-  boolean        metaKey       = false;
   boolean        repeat        = false;
   boolean        isComposing   = false;
 
