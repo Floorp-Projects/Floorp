@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 
 import static org.mozilla.gecko.db.BrowserContract.ReadingListItems.*;
 
@@ -68,7 +69,7 @@ public class ReadingListProvider extends SharedBrowserDatabaseProvider {
      * This method does two things:
      * * Based on the values provided, it computes and returns an incremental status change
      *   that can be applied to the database to track changes for syncing. This should be
-     *   applied with {@link org.mozilla.gecko.db.DBUtils.UpdateOperation#BITWISE_OR}.
+     *   applied with {@link UpdateOperation#BITWISE_OR}.
      * * It mutates the provided values to mark absolute field changes.
      *
      * @return null if no values were provided, or no change needs to be recorded.
@@ -77,9 +78,6 @@ public class ReadingListProvider extends SharedBrowserDatabaseProvider {
         if (values == null || values.size() == 0) {
             return null;
         }
-
-        // Otherwise, it must have been modified.
-        values.put(SYNC_STATUS, SYNC_STATUS_MODIFIED);
 
         final ContentValues out = new ContentValues();
         int flag = 0;
@@ -120,13 +118,20 @@ public class ReadingListProvider extends SharedBrowserDatabaseProvider {
         }
 
         if (flags == null) {
-            // Dunno what we're doing with the DB that isn't changing anything we care about, but hey.
+            // This code path is used by Sync. Bypass metadata changes.
             return db.update(TABLE_READING_LIST, values, selection, selectionArgs);
         }
 
-        // Otherwise, we need to do smart updating to change flags.
-        final ContentValues[] valuesAndFlags = {values, flags};
-        final DBUtils.UpdateOperation[] ops = {DBUtils.UpdateOperation.ASSIGN, DBUtils.UpdateOperation.BITWISE_OR};
+        // Set synced items to MODIFIED; otherwise, leave the sync status untouched.
+        final ContentValues setModified = new ContentValues();
+        setModified.put(SYNC_STATUS, "CASE " + SYNC_STATUS +
+                                     " WHEN " + SYNC_STATUS_SYNCED +
+                                     " THEN " + SYNC_STATUS_MODIFIED +
+                                     " ELSE " + SYNC_STATUS +
+                                     " END");
+
+        final ContentValues[] valuesAndFlags = {values, flags, setModified};
+        final UpdateOperation[] ops = {UpdateOperation.ASSIGN, UpdateOperation.BITWISE_OR, UpdateOperation.EXPRESSION};
 
         return DBUtils.updateArrays(db, TABLE_READING_LIST, valuesAndFlags, ops, selection, selectionArgs);
     }
