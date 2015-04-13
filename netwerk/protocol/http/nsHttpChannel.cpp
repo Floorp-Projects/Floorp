@@ -4826,6 +4826,7 @@ nsHttpChannel::BeginConnect()
     nsRefPtr<AltSvcMapping> mapping;
     if ((scheme.Equals(NS_LITERAL_CSTRING("http")) ||
          scheme.Equals(NS_LITERAL_CSTRING("https"))) &&
+        (!proxyInfo || proxyInfo->IsDirect()) &&
         (mapping = gHttpHandler->GetAltServiceMapping(scheme,
                                                       host, port,
                                                       mPrivateBrowsing))) {
