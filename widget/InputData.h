@@ -6,6 +6,7 @@
 #ifndef InputData_h__
 #define InputData_h__
 
+#include "nsIDOMWheelEvent.h"
 #include "nsDebug.h"
 #include "nsPoint.h"
 #include "nsTArray.h"
@@ -464,9 +465,24 @@ public:
   enum ScrollDeltaType
   {
     // There are three kinds of scroll delta modes in Gecko: "page", "line" and
-    // "pixel". For apz, we currently only support "line" mode.
-    SCROLLDELTA_LINE
+    // "pixel". For apz, we currently only support the "line" and "pixel" modes.
+    SCROLLDELTA_LINE,
+    SCROLLDELTA_PIXEL
   };
+
+  static ScrollDeltaType
+  DeltaTypeForDeltaMode(uint32_t aDeltaMode)
+  {
+    switch (aDeltaMode) {
+      case nsIDOMWheelEvent::DOM_DELTA_LINE:
+        return SCROLLDELTA_LINE;
+      case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
+        return SCROLLDELTA_PIXEL;
+      default:
+        MOZ_CRASH();
+    }
+    return SCROLLDELTA_LINE;
+  }
 
   enum ScrollMode
   {
