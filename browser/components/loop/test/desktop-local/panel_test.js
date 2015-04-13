@@ -440,7 +440,9 @@ describe("loop.panel", function() {
       roomData = {
         roomToken: "QzBbvGmIZWU",
         roomUrl: "http://sample/QzBbvGmIZWU",
-        roomName: "Second Room Name",
+        decryptedContext: {
+          roomName: "Second Room Name"
+        },
         maxSize: 2,
         participants: [
           { displayName: "Alexis", account: "alexis@example.com",
@@ -473,7 +475,8 @@ describe("loop.panel", function() {
 
       it("should render an edit form on room name click", function() {
         expect(domNode.querySelector("form")).not.eql(null);
-        expect(domNode.querySelector("input").value).eql(roomData.roomName);
+        expect(domNode.querySelector("input").value)
+          .eql(roomData.decryptedContext.roomName);
       });
 
       it("should dispatch a RenameRoom action when submitting the form",
@@ -581,9 +584,8 @@ describe("loop.panel", function() {
       });
     });
 
-    describe("Room URL click", function() {
-
-      var roomEntry, urlLink;
+    describe("Room Entry click", function() {
+      var roomEntry, roomEntryNode;
 
       beforeEach(function() {
         sandbox.stub(dispatcher, "dispatch");
@@ -592,11 +594,11 @@ describe("loop.panel", function() {
           dispatcher: dispatcher,
           room: new loop.store.Room(roomData)
         });
-        urlLink = roomEntry.getDOMNode().querySelector("p > a");
+        roomEntryNode = roomEntry.getDOMNode();
       });
 
       it("should dispatch an OpenRoom action", function() {
-        TestUtils.Simulate.click(urlLink);
+        TestUtils.Simulate.click(roomEntryNode);
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -604,7 +606,7 @@ describe("loop.panel", function() {
       });
 
       it("should call window.close", function() {
-        TestUtils.Simulate.click(urlLink);
+        TestUtils.Simulate.click(roomEntryNode);
 
         sinon.assert.calledOnce(fakeWindow.close);
       });
@@ -617,7 +619,9 @@ describe("loop.panel", function() {
           room: new loop.store.Room(roomData)
         });
         var updatedRoom = new loop.store.Room(_.extend({}, roomData, {
-          roomName: "New room name",
+          decryptedContext: {
+            roomName: "New room name"
+          },
           ctime: new Date().getTime()
         }));
 
