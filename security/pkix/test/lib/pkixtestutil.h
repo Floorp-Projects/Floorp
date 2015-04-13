@@ -30,7 +30,7 @@
 #include <string>
 
 #include "pkix/pkixtypes.h"
-#include "pkix/ScopedPtr.h"
+#include "../../lib/ScopedPtr.h"
 
 namespace mozilla { namespace pkix { namespace test {
 
