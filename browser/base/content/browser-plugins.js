@@ -504,7 +504,7 @@ var gPluginHandler = {
     if (AppConstants.MOZ_CRASHREPORTER &&
         PluginCrashReporter.hasCrashReport(runID)) {
       crashReportCallback = () => {
-        PluginCrashReporter.submitGMPCrashReport(pluginDumpID, browserDumpID);
+        PluginCrashReporter.submitCrashReport(runID);
       };
     }
 
