@@ -9,36 +9,42 @@
 #include <limits>
 
 #include "mozilla/Base64.h"
+#include "mozilla/Scoped.h"
 #include "nsIURLParser.h"
 #include "nsNSSCallbacks.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
-#include "pkix/ScopedPtr.h"
 #include "secerr.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gCertVerifierLog;
 #endif
 
-namespace mozilla { namespace psm {
-
-using mozilla::pkix::ScopedPtr;
+namespace mozilla {
 
 void
 ReleaseHttpServerSession(nsNSSHttpServerSession* httpServerSession)
 {
   delete httpServerSession;
 }
-typedef ScopedPtr<nsNSSHttpServerSession, ReleaseHttpServerSession>
-  ScopedHTTPServerSession;
 
 void
 ReleaseHttpRequestSession(nsNSSHttpRequestSession* httpRequestSession)
 {
   httpRequestSession->Release();
 }
-typedef ScopedPtr<nsNSSHttpRequestSession, ReleaseHttpRequestSession>
-  ScopedHTTPRequestSession;
+
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedHTTPServerSession,
+                                          nsNSSHttpServerSession,
+                                          ReleaseHttpServerSession)
+
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedHTTPRequestSession,
+                                          nsNSSHttpRequestSession,
+                                          ReleaseHttpRequestSession)
+
+} // namespace mozilla
+
+namespace mozilla { namespace psm {
 
 static nsresult
 AppendEscapedBase64Item(const SECItem* encodedRequest, nsACString& path)

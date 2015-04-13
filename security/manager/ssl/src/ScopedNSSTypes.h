@@ -28,6 +28,7 @@
 #include "secpkcs7.h"
 #include "secport.h"
 #include "prerror.h"
+#include "secmod.h"
 
 namespace mozilla {
 
@@ -334,6 +335,8 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECAlgorithmID,
                                           SECAlgorithmID,
                                           internal::SECOID_DestroyAlgorithmID_true)
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECMODModule, SECMODModule,
+                                          SECMOD_DestroyModule)
 
 
 } // namespace mozilla
