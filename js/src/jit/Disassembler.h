@@ -98,10 +98,12 @@ class ComplexAddress {
     }
 
     Register::Encoding base() const {
+        MOZ_ASSERT(base_ != Registers::Invalid);
         return base_;
     }
 
     Register::Encoding index() const {
+        MOZ_ASSERT(index_ != Registers::Invalid);
         return index_;
     }
 
