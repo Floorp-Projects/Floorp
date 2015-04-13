@@ -1066,8 +1066,6 @@ nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
     return *this;
   }
 
-  ReleaseRef();
-
   if (aOther.mType == NS_STYLE_CLIP_PATH_URL) {
     SetURL(aOther.mURL);
   } else if (aOther.mType == NS_STYLE_CLIP_PATH_SHAPE) {
@@ -1075,6 +1073,7 @@ nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
   } else if (aOther.mType == NS_STYLE_CLIP_PATH_BOX) {
     SetSizingBox(aOther.mSizingBox);
   } else {
+    ReleaseRef();
     mSizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
     mType = NS_STYLE_CLIP_PATH_NONE;
   }
@@ -1185,7 +1184,11 @@ nsStyleFilter::operator=(const nsStyleFilter& aOther)
     SetDropShadow(aOther.mDropShadow);
   } else if (aOther.mType != NS_STYLE_FILTER_NONE) {
     SetFilterParameter(aOther.mFilterParameter, aOther.mType);
+  } else {
+    ReleaseRef();
+    mType = NS_STYLE_FILTER_NONE;
   }
+
   return *this;
 }
 
@@ -1218,6 +1221,7 @@ nsStyleFilter::ReleaseRef()
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
   }
+  mURL = nullptr;
 }
 
 void
