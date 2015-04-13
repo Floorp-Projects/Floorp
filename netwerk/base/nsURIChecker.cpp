@@ -137,9 +137,8 @@ NS_IMETHODIMP
 nsURIChecker::Init(nsIURI *aURI)
 {
     nsresult rv;
-    nsCOMPtr<nsIPrincipal> nullPrincipal =
-      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
+    NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
     rv = NS_NewChannel(getter_AddRefs(mChannel),
                        aURI,
                        nullPrincipal,
