@@ -23,6 +23,7 @@ const TEST_PERMS = {
   "password": PERM_ALLOW,
   "cookie": PERM_ALLOW,
   "geo": PERM_UNKNOWN,
+  "push": PERM_DENY,
   "indexedDB": PERM_UNKNOWN,
   "popup": PERM_DENY,
   "fullscreen" : PERM_UNKNOWN,
@@ -37,7 +38,7 @@ const NO_GLOBAL_ALLOW = [
 ];
 
 // number of managed permissions in the interface
-const TEST_PERMS_COUNT = 8;
+const TEST_PERMS_COUNT = 9;
 
 function test() {
   waitForExplicitFinish();

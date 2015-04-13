@@ -64,7 +64,7 @@ struct ArenaHeader;
 struct Chunk;
 
 extern void
-MarkKind(JSTracer* trc, void** thingp, JSGCTraceKind kind);
+TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp, const char* name);
 
 /*
  * This flag allows an allocation site to request a specific heap based upon the
@@ -228,6 +228,8 @@ struct Cell
     inline JS::shadow::Runtime* shadowRuntimeFromAnyThread() const;
 
     inline StoreBuffer* storeBuffer() const;
+
+    inline JSGCTraceKind getTraceKind() const;
 
     static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone* zone);
 
@@ -1301,6 +1303,12 @@ Cell::storeBuffer() const
     return chunk()->info.trailer.storeBuffer;
 }
 
+inline JSGCTraceKind
+Cell::getTraceKind() const
+{
+    return isTenured() ? asTenured().getTraceKind() : JSTRACE_OBJECT;
+}
+
 inline bool
 InFreeList(ArenaHeader* aheader, void* thing)
 {
@@ -1414,13 +1422,11 @@ TenuredCell::readBarrier(TenuredCell* thing)
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
     if (shadowZone->needsIncrementalBarrier()) {
         MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
-        void* tmp = thing;
-        shadowZone->barrierTracer()->setTracingName("read barrier");
-        MarkKind(shadowZone->barrierTracer(), &tmp,
-                         MapAllocToTraceKind(thing->getAllocKind()));
+        Cell* tmp = thing;
+        TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "read barrier");
         MOZ_ASSERT(tmp == thing);
     }
-    if (thing->isMarked(js::gc::GRAY))
+    if (thing->isMarked(GRAY))
         UnmarkGrayCellRecursively(thing, thing->getTraceKind());
 }
 
@@ -1434,10 +1440,8 @@ TenuredCell::writeBarrierPre(TenuredCell* thing)
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
     if (shadowZone->needsIncrementalBarrier()) {
         MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
-        void* tmp = thing;
-        shadowZone->barrierTracer()->setTracingName("pre barrier");
-        MarkKind(shadowZone->barrierTracer(), &tmp,
-                         MapAllocToTraceKind(thing->getAllocKind()));
+        Cell* tmp = thing;
+        TraceManuallyBarrieredGenericPointerEdge(shadowZone->barrierTracer(), &tmp, "pre barrier");
         MOZ_ASSERT(tmp == thing);
     }
 }

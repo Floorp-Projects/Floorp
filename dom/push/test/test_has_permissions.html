@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1038811: Push tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1038811</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1038811">Mozilla Bug 1038811</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  function debug(str) {
+  // console.log(str + "\n");
+  }
+
+  function start() {
+    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
+    .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function hasPermission(swr) {
+    var p = new Promise(function(res, rej) {
+      swr.pushManager.hasPermission().then(
+        function(status) {
+          debug("status: " + status);
+          ok(true, "hasPermission() returned a status");
+          res(swr);
+        }, function(error) {
+          ok(false, "hasPermission failed.");
+          res(swr);
+        }
+        );
+    });
+    return p;
+  }
+
+  function runTest() {
+    start()
+    .then(hasPermission)
+    .then(unregister)
+    .catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+    }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.addPermission('push', false, document);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

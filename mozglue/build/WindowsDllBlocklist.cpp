@@ -578,6 +578,16 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       return STATUS_DLL_NOT_FOUND;
     }
   }
+  // Block binaries where the filename is at least 16 hex digits
+  if (dot && ((dot - dllName) >= 16)) {
+    char * current = dllName;
+    while (current < dot && isxdigit(*current)) {
+      current++;
+    }
+    if (current == dot) {
+      return STATUS_DLL_NOT_FOUND;
+    }
+  }
 
   // then compare to everything on the blocklist
   info = &sWindowsDllBlocklist[0];

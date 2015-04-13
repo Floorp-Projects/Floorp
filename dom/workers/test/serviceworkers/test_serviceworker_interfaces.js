@@ -44,6 +44,8 @@ var ecmaGlobals =
     "Number",
     "Object",
     "Proxy",
+    "PushEvent",
+    "PushMessageData",
     "RangeError",
     "ReferenceError",
     "RegExp",

@@ -1216,6 +1216,11 @@ class XPCShellTests(object):
             if self.debuggerInfo.interactive:
                 signal.signal(signal.SIGINT, lambda signum, frame: None)
 
+            if "lldb" in self.debuggerInfo.path:
+                # Ask people to start debugging using 'process launch', see bug 952211.
+                self.log.info("It appears that you're using LLDB to debug this test.  " +
+                              "Please use the 'process launch' command instead of the 'run' command to start xpcshell.")
+
         if self.jsDebuggerInfo:
             # The js debugger magic needs more work to do the right thing
             # if debugging multiple files.

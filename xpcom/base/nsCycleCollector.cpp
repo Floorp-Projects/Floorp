@@ -830,9 +830,10 @@ struct CCGraph
 
 private:
   PLDHashTable mPtrToNodeMap;
+  bool mOutOfMemory;
 
 public:
-  CCGraph() : mRootCount(0) {}
+  CCGraph() : mRootCount(0), mOutOfMemory(false) {}
 
   ~CCGraph()
   {
@@ -855,6 +856,7 @@ public:
     mWeakMaps.Clear();
     mRootCount = 0;
     PL_DHashTableFinish(&mPtrToNodeMap);
+    mOutOfMemory = false;
   }
 
 #ifdef DEBUG
@@ -900,8 +902,18 @@ PtrToNodeEntry*
 CCGraph::AddNodeToMap(void* aPtr)
 {
   JS::AutoSuppressGCAnalysis suppress;
-  return static_cast<PtrToNodeEntry*>
-    (PL_DHashTableAdd(&mPtrToNodeMap, aPtr)); // infallible add
+  if (mOutOfMemory) {
+    return nullptr;
+  }
+
+  PtrToNodeEntry* e = static_cast<PtrToNodeEntry*>
+    (PL_DHashTableAdd(&mPtrToNodeMap, aPtr, fallible));
+  if (!e) {
+    mOutOfMemory = true;
+    MOZ_ASSERT(false, "Ran out of memory while building cycle collector graph");
+    return nullptr;
+  }
+  return e;
 }
 
 void
@@ -2108,7 +2120,7 @@ private:
   }
 
   NS_IMETHOD_(void) NoteChild(void* aChild, nsCycleCollectionParticipant* aCp,
-                              nsCString aEdgeName)
+                              nsCString& aEdgeName)
   {
     PtrInfo* childPi = AddNode(aChild, aCp);
     if (!childPi) {
@@ -2180,6 +2192,10 @@ PtrInfo*
 CCGraphBuilder::AddNode(void* aPtr, nsCycleCollectionParticipant* aParticipant)
 {
   PtrToNodeEntry* e = mGraph.AddNodeToMap(aPtr);
+  if (!e) {
+    return nullptr;
+  }
+
   PtrInfo* result;
   if (!e->mNode) {
     // New entry.
