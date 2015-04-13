@@ -64,4 +64,12 @@ class GeckoRuntimeRunner(BaseRunner):
             self.profile.reset()
             assert self.profile.exists(), "%s : failure to reset profile" % self.__class__.__name__
 
+        has_debugger = "debug_args" in kwargs and kwargs["debug_args"]
+        if has_debugger:
+            self.env["MOZ_CRASHREPORTER_DISABLE"] = "1"
+        else:
+            self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
+            self.env["MOZ_CRASHREPORTER"] = "1"
+
+
         BaseRunner.start(self, *args, **kwargs)
