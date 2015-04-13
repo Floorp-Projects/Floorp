@@ -32,6 +32,8 @@
 #include "nsIPrincipal.h"
 #include "nsJSUtils.h"
 
+#include "base/histogram.h"
+
 #ifdef ANDROID
 #include <android/log.h>
 #endif
@@ -1244,6 +1246,11 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
 
     NS_LogInit();
 
+    // A initializer to initialize histogram collection
+    // used by telemetry.
+    UniquePtr<base::StatisticsRecorder> telStats =
+       MakeUnique<base::StatisticsRecorder>();
+
     nsCOMPtr<nsIFile> appFile;
     rv = XRE_GetBinaryPath(argv[0], getter_AddRefs(appFile));
     if (NS_FAILED(rv)) {
@@ -1534,6 +1541,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
     bogus = nullptr;
 #endif
 
+    telStats = nullptr;
     appDir = nullptr;
     appFile = nullptr;
     dirprovider.ClearGREDirs();

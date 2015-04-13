@@ -332,7 +332,7 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     // Set to false if we OOM while buffering gray roots.
     bool bufferingGrayRootsFailed;
 
-    void appendGrayRoot(void* thing, JSGCTraceKind kind);
+    void appendGrayRoot(gc::Cell* thing, JSGCTraceKind kind);
 
   public:
     explicit BufferGrayRootsTracer(JSRuntime* rt)
@@ -340,7 +340,8 @@ class BufferGrayRootsTracer : public JS::CallbackTracer
     {}
 
     static void grayTraceCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
-        static_cast<BufferGrayRootsTracer*>(trc)->appendGrayRoot(*thingp, kind);
+        static_cast<BufferGrayRootsTracer*>(trc)->appendGrayRoot(static_cast<gc::Cell*>(*thingp),
+                                                                kind);
     }
 
     bool failed() const { return bufferingGrayRootsFailed; }

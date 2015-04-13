@@ -190,6 +190,14 @@ class B2GMochitest(MochitestUtilsMixin):
                 del self.browserEnv['MOZ_DISABLE_NONLOCAL_CONNECTIONS']
             self.runner.env.update(self.browserEnv)
 
+            # Despite our efforts to clean up servers started by this script, in practice
+            # we still see infrequent cases where a process is orphaned and interferes
+            # with future tests, typically because the old server is keeping the port in use.
+            # Try to avoid those failures by checking for and killing orphan servers before
+            # trying to start new ones.
+            self.killNamedOrphans('ssltunnel')
+            self.killNamedOrphans('xpcshell')
+
             self.startServers(options, None)
             self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
             self.test_script_args.append(not options.emulator)

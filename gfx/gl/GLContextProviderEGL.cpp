@@ -230,17 +230,6 @@ GLContextEGL::GLContextEGL(
 #ifdef DEBUG
     printf_stderr("Initializing context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
-#if defined(MOZ_WIDGET_GONK)
-    if (!mIsOffscreen) {
-        mHwc = HwcComposer2D::GetInstance();
-        MOZ_ASSERT(!mHwc->Initialized());
-
-        if (mHwc->Init(EGL_DISPLAY(), mSurface, this)) {
-            NS_WARNING("HWComposer initialization failed!");
-            mHwc = nullptr;
-        }
-    }
-#endif
 }
 
 GLContextEGL::~GLContextEGL()
@@ -463,16 +452,7 @@ GLContextEGL::SwapBuffers()
                           ? mSurfaceOverride
                           : mSurface;
     if (surface) {
-#ifdef MOZ_WIDGET_GONK
-        if (!mIsOffscreen) {
-            if (mHwc) {
-                return mHwc->Render(EGL_DISPLAY(), surface);
-            } else {
-                return GetGonkDisplay()->SwapBuffers(EGL_DISPLAY(), surface);
-            }
-        } else
-#endif
-            return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), surface);
+        return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), surface);
     } else {
         return false;
     }

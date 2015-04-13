@@ -299,7 +299,6 @@ struct InternalGCMethods<T*>
     static bool isMarkable(T* v) { return v != nullptr; }
 
     static void preBarrier(T* v) { T::writeBarrierPre(v); }
-    static void preBarrier(Zone* zone, T* v) { T::writeBarrierPre(zone, v); }
 
     static void postBarrier(T** vp) { T::writeBarrierPost(*vp, vp); }
     static void postBarrierRelocate(T** vp) { T::writeBarrierPostRelocate(*vp, vp); }
@@ -391,18 +390,31 @@ struct InternalGCMethods<jsid>
     static bool isMarkable(jsid id) { return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id); }
 
     static void preBarrier(jsid id) {
-        if (JSID_IS_GCTHING(id)) {
-            JS::Zone* zone = ZoneOfIdFromAnyThread(id);
-            JS::shadow::Zone* shadowZone = JS::shadow::Zone::asShadowZone(zone);
-            if (shadowZone->needsIncrementalBarrier()) {
-                jsid tmp(id);
-                js::gc::MarkIdForBarrier(shadowZone->barrierTracer(), &tmp, "id write barrier");
-                MOZ_ASSERT(tmp == id);
-            }
+        MOZ_ASSERT(!CurrentThreadIsIonCompiling());
+        if (JSID_IS_STRING(id) && StringIsPermanentAtom(JSID_TO_STRING(id)))
+            return;
+        if (JSID_IS_GCTHING(id) && shadowRuntimeFromAnyThread(id)->needsIncrementalBarrier())
+            preBarrierImpl(ZoneOfIdFromAnyThread(id), id);
+    }
+
+  private:
+    static JSRuntime* runtimeFromAnyThread(jsid id) {
+        MOZ_ASSERT(JSID_IS_GCTHING(id));
+        return JSID_TO_GCTHING(id).asCell()->runtimeFromAnyThread();
+    }
+    static JS::shadow::Runtime* shadowRuntimeFromAnyThread(jsid id) {
+        return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromAnyThread(id));
+    }
+    static void preBarrierImpl(Zone *zone, jsid id) {
+        JS::shadow::Zone* shadowZone = JS::shadow::Zone::asShadowZone(zone);
+        if (shadowZone->needsIncrementalBarrier()) {
+            jsid tmp(id);
+            js::gc::MarkIdForBarrier(shadowZone->barrierTracer(), &tmp, "id write barrier");
+            MOZ_ASSERT(tmp == id);
         }
     }
-    static void preBarrier(Zone* zone, jsid id) { preBarrier(id); }
 
+  public:
     static void postBarrier(jsid* idp) {}
     static void postBarrierRelocate(jsid* idp) {}
     static void postBarrierRemove(jsid* idp) {}

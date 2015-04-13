@@ -256,11 +256,6 @@ public:
   virtual bool IsWaitingMediaResources() {
     return false;
   };
-  virtual bool IsDormantNeeded() {
-    return false;
-  };
-  virtual void AllocateMediaResources() {}
-  virtual void ReleaseMediaResources() {}
   virtual bool IsHardwareAccelerated() const { return false; }
 
   // ConfigurationChanged will be called to inform the video or audio decoder

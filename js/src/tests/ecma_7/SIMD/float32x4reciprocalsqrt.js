@@ -6,7 +6,7 @@ var int32x4 = SIMD.int32x4;
 var summary = 'float32x4 reciprocalSqrt';
 
 function reciprocalsqrtf(a) {
-    return Math.fround(Math.sqrt(1 / Math.fround(a)));
+    return Math.fround(1 / Math.sqrt(a));
 }
 
 function test() {

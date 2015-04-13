@@ -1,5 +1,9 @@
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
-  response.setHeader("Vary", request.getHeader("WhatToVary"));
-  response.write(request.getHeader("WhatToVary"));
+  var header = "no WhatToVary header";
+  if (request.hasHeader("WhatToVary")) {
+    header = request.getHeader("WhatToVary");
+    response.setHeader("Vary", header);
+  }
+  response.write(header);
 }

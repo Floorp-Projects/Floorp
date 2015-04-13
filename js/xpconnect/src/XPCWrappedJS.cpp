@@ -291,18 +291,7 @@ void
 nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     MOZ_ASSERT(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
-    trc->setTracingDetails(GetTraceName, this, 0);
     JS_CallObjectTracer(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
-}
-
-// static
-void
-nsXPCWrappedJS::GetTraceName(JSTracer* trc, char* buf, size_t bufsize)
-{
-    const nsXPCWrappedJS* self = static_cast<const nsXPCWrappedJS*>
-                                            (trc->debugPrintArg());
-    JS_snprintf(buf, bufsize, "nsXPCWrappedJS[%s,0x%p:0x%p].mJSObj",
-                self->GetClass()->GetInterfaceName(), self, self->mXPTCStub);
 }
 
 NS_IMETHODIMP

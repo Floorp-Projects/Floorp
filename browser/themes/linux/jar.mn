@@ -33,6 +33,8 @@ browser.jar:
   skin/classic/browser/fullscreen-darknoise.png
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
+  skin/classic/browser/Push-16.png
+  skin/classic/browser/Push-64.png
   skin/classic/browser/heartbeat-icon.svg                   (../shared/heartbeat-icon.svg)
   skin/classic/browser/heartbeat-star-lit.svg               (../shared/heartbeat-star-lit.svg)
   skin/classic/browser/heartbeat-star-off.svg               (../shared/heartbeat-star-off.svg)

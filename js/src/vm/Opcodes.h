@@ -63,6 +63,7 @@
  *     Intrinsics
  *     Block-local Scope
  *     This
+ *     Super
  *     Arguments
  *   [Operators]
  *     Comparison Operators
@@ -867,8 +868,12 @@
      *
      * This opcode takes the function and the object to be the home object, does
      * the set, and leaves both on the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint8_t n
+     *   Stack: homeObject, [...n], fun => homeObject, [...n], fun
      */\
-    macro(JSOP_INITHOMEOBJECT,  92, "inithomeobject",   NULL,         1,  2,  2, JOF_BYTE|JOF_SET|JOF_DETECTING) \
+    macro(JSOP_INITHOMEOBJECT,  92, "inithomeobject",   NULL,         2,  2,  2, JOF_UINT8) \
     \
     /*
      * Initialize a named property in an object literal, like '{a: x}'.
@@ -988,6 +993,14 @@
      */ \
     macro(JSOP_NEWARRAY_COPYONWRITE, 102, "newarray_copyonwrite", NULL, 5, 0, 1, JOF_OBJECT) \
     \
+    /*
+     * Pushes the prototype of the home object for current callee onto the
+     * stack.
+     *   Category: Variables and Scopes
+     *   Type: Super
+     *   Operands:
+     *   Stack: => homeObjectProto
+     */\
     macro(JSOP_SUPERBASE,  103, "superbase",   NULL,         1,  0,  1,  JOF_BYTE) \
     /*
      * Pops the top two values, and pushes the property of one, using the other

@@ -295,7 +295,8 @@ TraceOneDataRelocation(JSTracer* trc, Instruction* inst)
     MOZ_ASSERT(!(uintptr_t(ptr) & 0x1));
 
     // No barrier needed since these are constants.
-    gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void**>(&ptr), "ion-masm-ptr");
+    gc::TraceManuallyBarrieredGenericPointerEdge(trc, reinterpret_cast<gc::Cell**>(&ptr),
+                                                 "ion-masm-ptr");
     if (ptr != prior) {
         Assembler::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
         AutoFlushICache::flush(uintptr_t(inst), 8);

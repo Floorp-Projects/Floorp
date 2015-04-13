@@ -252,8 +252,28 @@
             </menulist>
           </hbox>
         </vbox>
-      </hbox>      
-      
+      </hbox>
+
+      <!-- Push Notifications -->
+      <hbox id="push-pref-item"
+            class="pref-item" align="top">
+        <image class="pref-icon" type="push"/>
+        <vbox>
+          <label class="pref-title" value="&push.label;"/>
+          <hbox align="center">
+            <menulist id="push-menulist"
+                      class="pref-menulist"
+                      type="push"
+                      oncommand="AboutPermissions.onPermissionCommand(event);">
+              <menupopup>
+                <menuitem id="push-0" value="0" label="&permission.alwaysAsk;"/>
+                <menuitem id="push-1" value="1" label="&permission.allow;"/>
+                <menuitem id="push-2" value="2" label="&permission.block;"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </vbox>
+      </hbox>
     </vbox>
   </hbox>
 
