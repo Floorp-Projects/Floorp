@@ -658,6 +658,12 @@ function assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
   let expectedState = expected ? "visible" : "hidden";
   let msg = "WebRTC indicator " + expectedState;
+  if (!expected && ui.showGlobalIndicator) {
+    // It seems the global indicator is not always removed synchronously
+    // in some cases.
+    info("waiting for the global indicator to be hidden");
+    yield promiseWaitForCondition(() => !ui.showGlobalIndicator);
+  }
   is(ui.showGlobalIndicator, !!expected, msg);
 
   let expectVideo = false, expectAudio = false, expectScreen = false;
