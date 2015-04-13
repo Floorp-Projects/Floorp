@@ -51,10 +51,38 @@ CDMCaps::AutoLock::~AutoLock()
   mData.Unlock();
 }
 
+#ifdef PR_LOGGING
+static void
+TestCap(uint64_t aFlag,
+        uint64_t aCaps,
+        const nsACString& aCapName,
+        nsACString& aCapStr)
+{
+  if (!(aFlag & aCaps)) {
+    return;
+  }
+  if (!aCapStr.IsEmpty()) {
+    aCapStr.AppendLiteral(",");
+  }
+  aCapStr.Append(aCapName);
+}
+
+nsCString
+CapsToString(uint64_t aCaps)
+{
+  nsCString capsStr;
+  TestCap(GMP_EME_CAP_DECRYPT_AUDIO, aCaps, NS_LITERAL_CSTRING("DecryptAudio"), capsStr);
+  TestCap(GMP_EME_CAP_DECRYPT_VIDEO, aCaps, NS_LITERAL_CSTRING("DecryptVideo"), capsStr);
+  TestCap(GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO, aCaps, NS_LITERAL_CSTRING("DecryptAndDecodeAudio"), capsStr);
+  TestCap(GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO, aCaps, NS_LITERAL_CSTRING("DecryptAndDecodeVideo"), capsStr);
+  return capsStr;
+}
+#endif // PR_LOGGING
+
 void
 CDMCaps::AutoLock::SetCaps(uint64_t aCaps)
 {
-  EME_LOG("SetCaps()");
+  EME_LOG("SetCaps() %s", CapsToString(aCaps).get());
   mData.mMonitor.AssertCurrentThreadOwns();
   mData.mCaps = aCaps;
   for (size_t i = 0; i < mData.mWaitForCaps.Length(); i++) {

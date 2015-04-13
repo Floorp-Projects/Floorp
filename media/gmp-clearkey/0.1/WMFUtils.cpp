@@ -73,9 +73,11 @@ EnsureLibs()
   static bool sInitDone = false;
   static bool sInitOk = false;
   if (!sInitDone) {
+    // Note: For AAC decoding, we need to use msauddecmft.dll on Win8,
+    // and msmpeg2adec.dll on earlier Windows. So if we have at least
+    // one of these, assume we can decode.
     sInitOk = LinkMfplat() &&
-      !!GetModuleHandleA("msauddecmft.dll") &&
-      !!GetModuleHandleA("msmpeg2adec.dll") &&
+      (!!GetModuleHandleA("msauddecmft.dll") || !!GetModuleHandleA("msmpeg2adec.dll")) &&
       !!GetModuleHandleA("msmpeg2vdec.dll");
     sInitDone = true;
   }
