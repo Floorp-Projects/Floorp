@@ -1628,7 +1628,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_OWNER) {
     inheritOwner = false;
-    owner = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    owner = nsNullPrincipal::Create();
   }
 
   uint32_t flags = 0;
@@ -12015,7 +12015,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
       // Ensure that we have an owner.  Otherwise javascript: URIs will
       // pick it up from the about:blank page we just loaded, and we
       // don't really want even that in this case.
-      owner = do_CreateInstance("@mozilla.org/nullprincipal;1");
+      owner = nsNullPrincipal::Create();
       NS_ENSURE_TRUE(owner, NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -13690,8 +13690,7 @@ nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview)
   nsCOMPtr<nsIDocumentViewerPrint> print = do_QueryInterface(mContentViewer);
   if (!print || !print->IsInitializedForPrintPreview()) {
     Stop(nsIWebNavigation::STOP_ALL);
-    nsCOMPtr<nsIPrincipal> principal =
-      do_CreateInstance("@mozilla.org/nullprincipal;1");
+    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
     NS_ENSURE_STATE(principal);
     nsresult rv = CreateAboutBlankContentViewer(principal, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
