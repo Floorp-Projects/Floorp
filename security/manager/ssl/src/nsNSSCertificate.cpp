@@ -10,9 +10,9 @@
 #include "prprf.h"
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
+#include "mozilla/UniquePtr.h"
 #include "pkix/pkixnss.h"
 #include "pkix/pkixtypes.h"
-#include "pkix/ScopedPtr.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
@@ -534,8 +534,8 @@ nsNSSCertificate::GetWindowTitle(nsAString& aWindowTitle)
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::pkix::ScopedPtr<char, mozilla::psm::PORT_Free_string>
-    commonName(CERT_GetCommonName(&mCert->subject));
+  UniquePtr<char, void(&)(void*)>
+    commonName(CERT_GetCommonName(&mCert->subject), PORT_Free);
 
   const char* titleOptions[] = {
     mCert->nickname,
