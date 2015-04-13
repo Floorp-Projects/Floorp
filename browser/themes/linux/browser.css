@@ -594,13 +594,9 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   padding: 3px 7px;
 }
 
-toolbarbutton.badged-button > .toolbarbutton-badge-container > .toolbarbutton-icon,
-toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
-  max-width: 32px !important;
-}
-
 /* Help SDK icons fit: */
-toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon,
+toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
   width: 16px;
 }
 
