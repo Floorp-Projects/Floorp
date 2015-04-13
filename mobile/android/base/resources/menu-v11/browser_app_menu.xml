@@ -39,6 +39,8 @@
 
          The visibility is changed dynamically for v14+ - hide for previous versions. -->
     <item android:id="@+id/quickshare"
+          android:visible="false"
+          android:enabled="false"
           android:visibility="gone"
           android:showAsAction="collapseActionView"/>
 

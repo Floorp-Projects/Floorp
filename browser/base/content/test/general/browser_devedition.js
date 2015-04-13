@@ -27,28 +27,28 @@ add_task(function* startTests() {
 
   info ("Setting the current theme to null");
   LightweightThemeManager.currentTheme = null;
-  ok (!DevEdition.styleSheet, "There is no devedition style sheet when no lw theme is applied.");
+  ok (!DevEdition.isStyleSheetEnabled, "There is no devedition style sheet when no lw theme is applied.");
 
   info ("Adding a lightweight theme.");
   LightweightThemeManager.currentTheme = dummyLightweightTheme("preview0");
-  ok (!DevEdition.styleSheet, "The devedition stylesheet has been removed when a lightweight theme is applied.");
+  ok (!DevEdition.isStyleSheetEnabled, "The devedition stylesheet has been removed when a lightweight theme is applied.");
 
   info ("Applying the devedition lightweight theme.");
   let onAttributeAdded = waitForBrightTitlebarAttribute();
   LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-devedition@mozilla.org");
-  ok (DevEdition.styleSheet, "The devedition stylesheet has been added when the devedition lightweight theme is applied");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet has been added when the devedition lightweight theme is applied");
   yield onAttributeAdded;
   is (document.documentElement.getAttribute("brighttitlebarforeground"), "true",
      "The brighttitlebarforeground attribute is set on the window.");
 
   info ("Unapplying all themes.");
   LightweightThemeManager.currentTheme = null;
-  ok (!DevEdition.styleSheet, "There is no devedition style sheet when no lw theme is applied.");
+  ok (!DevEdition.isStyleSheetEnabled, "There is no devedition style sheet when no lw theme is applied.");
 
   info ("Applying the devedition lightweight theme.");
   onAttributeAdded = waitForBrightTitlebarAttribute();
   LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-devedition@mozilla.org");
-  ok (DevEdition.styleSheet, "The devedition stylesheet has been added when the devedition lightweight theme is applied");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet has been added when the devedition lightweight theme is applied");
   yield onAttributeAdded;
   ok (document.documentElement.hasAttribute("brighttitlebarforeground"),
      "The brighttitlebarforeground attribute is set on the window with dark devtools theme.");
@@ -59,21 +59,21 @@ add_task(function* testDevtoolsTheme() {
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has an attribute based on devtools theme.");
-  ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the light devtools theme.");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet is still there with the light devtools theme.");
   ok (!document.documentElement.hasAttribute("brighttitlebarforeground"),
      "The brighttitlebarforeground attribute is not set on the window with light devtools theme.");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
   is (document.documentElement.getAttribute("devtoolstheme"), "dark",
     "The documentElement has an attribute based on devtools theme.");
-  ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the dark devtools theme.");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet is still there with the dark devtools theme.");
   is (document.documentElement.getAttribute("brighttitlebarforeground"), "true",
      "The brighttitlebarforeground attribute is set on the window with dark devtools theme.");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "foobar");
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has 'light' as a default for the devtoolstheme attribute");
-  ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the foobar devtools theme.");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet is still there with the foobar devtools theme.");
   ok (!document.documentElement.hasAttribute("brighttitlebarforeground"),
      "The brighttitlebarforeground attribute is not set on the window with light devtools theme.");
 });
@@ -92,23 +92,23 @@ function dummyLightweightTheme(id) {
 add_task(function* testLightweightThemePreview() {
   info ("Setting devedition to current and the previewing others");
   LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-devedition@mozilla.org");
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled.");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet is enabled.");
   LightweightThemeManager.previewTheme(dummyLightweightTheme("preview0"));
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is not enabled after a lightweight theme preview.");
+  ok (!DevEdition.isStyleSheetEnabled, "The devedition stylesheet is not enabled after a lightweight theme preview.");
   LightweightThemeManager.resetPreview();
   LightweightThemeManager.previewTheme(dummyLightweightTheme("preview1"));
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is not enabled after a second lightweight theme preview.");
+  ok (!DevEdition.isStyleSheetEnabled, "The devedition stylesheet is not enabled after a second lightweight theme preview.");
   LightweightThemeManager.resetPreview();
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled again after resetting the preview.");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet is enabled again after resetting the preview.");
   LightweightThemeManager.currentTheme = null;
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is gone after removing the current theme.");
+  ok (!DevEdition.isStyleSheetEnabled, "The devedition stylesheet is gone after removing the current theme.");
 
   info ("Previewing the devedition theme");
   LightweightThemeManager.previewTheme(LightweightThemeManager.getUsedTheme("firefox-devedition@mozilla.org"));
-  ok (DevEdition.styleSheet, "The devedition stylesheet is enabled.");
+  ok (DevEdition.isStyleSheetEnabled, "The devedition stylesheet is enabled.");
   LightweightThemeManager.previewTheme(dummyLightweightTheme("preview2"));
   LightweightThemeManager.resetPreview();
-  ok (!DevEdition.styleSheet, "The devedition stylesheet is now disabled after resetting the preview.");
+  ok (!DevEdition.isStyleSheetEnabled, "The devedition stylesheet is now disabled after resetting the preview.");
 });
 
 // Use a mutation observer to wait for the brighttitlebarforeground

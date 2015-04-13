@@ -13,19 +13,31 @@ function doesFileExist (location) {
 }
 exports.doesFileExist = doesFileExist;
 
-function getPackagedDirectory (window, location) {
-  let directory;
-  if (!location) {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    fp.init(window, Strings.GetStringFromName("importPackagedApp_title"), Ci.nsIFilePicker.modeGetFolder);
-    let res = fp.show();
-    if (res == Ci.nsIFilePicker.returnCancel) {
-      return null;
-    }
-    return fp.file;
-  } else {
+function _getFile (location, ...pickerParams) {
+  if (location) {
     return new FileUtils.File(location);
   }
+  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  fp.init(...pickerParams);
+  let res = fp.show();
+  if (res == Ci.nsIFilePicker.returnCancel) {
+    return null;
+  }
+  return fp.file;
+}
+
+function getCustomBinary (window, location) {
+  return _getFile(location, window, Strings.GetStringFromName("selectCustomBinary_title"), Ci.nsIFilePicker.modeOpen);
+}
+exports.getCustomBinary = getCustomBinary;
+
+function getCustomProfile (window, location) {
+  return _getFile(location, window, Strings.GetStringFromName("selectCustomProfile_title"), Ci.nsIFilePicker.modeGetFolder);
+}
+exports.getCustomProfile = getCustomProfile;
+
+function getPackagedDirectory (window, location) {
+  return _getFile(location, window, Strings.GetStringFromName("importPackagedApp_title"), Ci.nsIFilePicker.modeGetFolder);
 }
 exports.getPackagedDirectory = getPackagedDirectory;
 
