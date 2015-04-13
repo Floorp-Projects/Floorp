@@ -109,7 +109,8 @@ VRHMDManager::ManagerInit()
   nsRefPtr<VRHMDManager> mgr;
 
   // we'll only load the 0.5.0 oculus runtime if
-  // the >= 0.6.0 one failed to load
+  // the >= 0.6.0 one failed to load; otherwise
+  // we might initialize oculus twice
   bool useOculus050 = true;
   unused << useOculus050;
 

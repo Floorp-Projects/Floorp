@@ -581,8 +581,11 @@ VRHMDManagerOculus::PlatformInit()
   if (mOculusPlatformInitialized)
     return true;
 
-  if (!gfxPrefs::VREnabled())
+  if (!gfxPrefs::VREnabled() ||
+      !gfxPrefs::VROculusEnabled())
+  {
     return false;
+  }
 
   if (!InitializeOculusCAPI())
     return false;
