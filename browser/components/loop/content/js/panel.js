@@ -558,7 +558,6 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var room = this.props.room;
       var roomClasses = React.addons.classSet({
         "room-entry": true,
         "room-active": this._isActive()
@@ -573,15 +572,15 @@ loop.panel = (function(_, mozL10n) {
              onClick: this.handleClickEntry}, 
           React.createElement("h2", null, 
             React.createElement("span", {className: "room-notification"}), 
-            React.createElement(EditInPlace, {text: room.roomName, onChange: this.renameRoom}), 
+            React.createElement(EditInPlace, {text: this.props.room.decryptedContext.roomName, 
+                         onChange: this.renameRoom}), 
             React.createElement("button", {className: copyButtonClasses, 
               title: mozL10n.get("rooms_list_copy_url_tooltip"), 
               onClick: this.handleCopyButtonClick}), 
             React.createElement("button", {className: "delete-link", 
               title: mozL10n.get("rooms_list_delete_tooltip"), 
               onClick: this.handleDeleteButtonClick})
-          ), 
-          React.createElement("p", null, React.createElement("a", {className: "room-url-link", href: "#"}, room.roomUrl))
+          )
         )
       );
     }
