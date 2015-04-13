@@ -22,6 +22,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=675884
 var receivedEvent;
 document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
 
+function isMethodResultInitializer(aPropName)
+{
+  return aPropName.startsWith("modifier");
+}
+
+function getPropValue(aEvent, aPropName)
+{
+  if (aPropName.startsWith("modifier")) {
+    return aEvent.getModifierState(aPropName.substr("modifier".length));
+  }
+  return aEvent[aPropName];
+}
+
 // Event
 var e;
 var ex = false;
@@ -371,6 +384,15 @@ var keyboardEventProps =
   { shiftKey: false },
   { altKey: false },
   { metaKey: false },
+  { modifierAltGraph: false },
+  { modifierCapsLock: false },
+  { modifierFn: false },
+  { modifierFnLock: false },
+  { modifierNumLock: false },
+  { modifierOS: false },
+  { modifierScrollLock: false },
+  { modifierSymbol: false },
+  { modifierSymbolLock: false },
   { repeat: false },
   { isComposing: false },
   { charCode: 0 },
@@ -391,6 +413,15 @@ var testKeyboardProps =
   { shiftKey: true },
   { altKey: true },
   { metaKey: true },
+  { modifierAltGraph: true },
+  { modifierCapsLock: true },
+  { modifierFn: true },
+  { modifierFnLock: true },
+  { modifierNumLock: true },
+  { modifierOS: true },
+  { modifierScrollLock: true },
+  { modifierSymbol: true },
+  { modifierSymbolLock: true },
   { repeat: true },
   { isComposing: true },
   { charCode: 2 },
@@ -409,7 +440,9 @@ for (var i = 0; i < keyboardEventProps.length; ++i) {
     if (!codeEnabled && prop == "code") {
       continue;
     }
-    ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
+    if (!isMethodResultInitializer(prop)) {
+      ok(prop in e, "keyboardEvent: KeyboardEvent doesn't have property " + prop + "!");
+    }
     defaultKeyboardEventValues[prop] = keyboardEventProps[i][prop]; 
   }
 }
@@ -422,10 +455,10 @@ while (testKeyboardProps.length) {
       continue;
     }
     if (!(def in p)) {
-      is(e[def], defaultKeyboardEventValues[def],
+      is(getPropValue(e, def), defaultKeyboardEventValues[def],
          "KeyboardEvent: Wrong default value for " + def + "!");
     } else {
-      is(e[def], p[def],
+      is(getPropValue(e, def), p[def],
          "KeyboardEvent: Wrong event init value for " + def + "!");
     }
   }
@@ -680,6 +713,15 @@ var mouseEventProps =
   { shiftKey: false },
   { altKey: false },
   { metaKey: false },
+  { modifierAltGraph: false },
+  { modifierCapsLock: false },
+  { modifierFn: false },
+  { modifierFnLock: false },
+  { modifierNumLock: false },
+  { modifierOS: false },
+  { modifierScrollLock: false },
+  { modifierSymbol: false },
+  { modifierSymbolLock: false },
   { button: 0 },
   { buttons: 0 },
   { relatedTarget: null }
@@ -695,6 +737,15 @@ var testProps =
   { shiftKey: true },
   { altKey: true },
   { metaKey: true },
+  { modifierAltGraph: true },
+  { modifierCapsLock: true },
+  { modifierFn: true },
+  { modifierFnLock: true },
+  { modifierNumLock: true },
+  { modifierOS: true },
+  { modifierScrollLock: true },
+  { modifierSymbol: true },
+  { modifierSymbolLock: true },
   { button: 5 },
   { buttons: 6 },
   { relatedTarget: window }
@@ -703,7 +754,9 @@ var testProps =
 var defaultMouseEventValues = {};
 for (var i = 0; i < mouseEventProps.length; ++i) {
   for (prop in mouseEventProps[i]) {
-    ok(prop in e, "MouseEvent: MouseEvent doesn't have property " + prop + "!");
+    if (!isMethodResultInitializer(prop)) {
+      ok(prop in e, "MouseEvent: MouseEvent doesn't have property " + prop + "!");
+    }
     defaultMouseEventValues[prop] = mouseEventProps[i][prop]; 
   }
 }
@@ -713,10 +766,10 @@ while (testProps.length) {
   e = new MouseEvent("foo", p);
   for (var def in defaultMouseEventValues) {
     if (!(def in p)) {
-      is(e[def], defaultMouseEventValues[def],
+      is(getPropValue(e, def), defaultMouseEventValues[def],
          "MouseEvent: Wrong default value for " + def + "!");
     } else {
-      is(e[def], p[def], "MouseEvent: Wrong event init value for " + def + "!");
+      is(getPropValue(e, def), p[def], "MouseEvent: Wrong event init value for " + def + "!");
     }
   }
 }
@@ -775,6 +828,15 @@ var wheelEventProps =
   { shiftKey: false },
   { altKey: false },
   { metaKey: false },
+  { modifierAltGraph: false },
+  { modifierCapsLock: false },
+  { modifierFn: false },
+  { modifierFnLock: false },
+  { modifierNumLock: false },
+  { modifierOS: false },
+  { modifierScrollLock: false },
+  { modifierSymbol: false },
+  { modifierSymbolLock: false },
   { button: 0 },
   { buttons: 0 },
   { relatedTarget: null },
@@ -794,6 +856,15 @@ var testWheelProps =
   { shiftKey: true },
   { altKey: true },
   { metaKey: true },
+  { modifierAltGraph: true },
+  { modifierCapsLock: true },
+  { modifierFn: true },
+  { modifierFnLock: true },
+  { modifierNumLock: true },
+  { modifierOS: true },
+  { modifierScrollLock: true },
+  { modifierSymbol: true },
+  { modifierSymbolLock: true },
   { button: 5 },
   { buttons: 6 },
   { relatedTarget: window },
@@ -806,7 +877,9 @@ var testWheelProps =
 var defaultWheelEventValues = {};
 for (var i = 0; i < wheelEventProps.length; ++i) {
   for (prop in wheelEventProps[i]) {
-    ok(prop in e, "WheelEvent: WheelEvent doesn't have property " + prop + "!");
+    if (!isMethodResultInitializer(prop)) {
+      ok(prop in e, "WheelEvent: WheelEvent doesn't have property " + prop + "!");
+    }
     defaultWheelEventValues[prop] = wheelEventProps[i][prop]; 
   }
 }
@@ -816,10 +889,10 @@ while (testWheelProps.length) {
   e = new WheelEvent("foo", p);
   for (var def in defaultWheelEventValues) {
     if (!(def in p)) {
-      is(e[def], defaultWheelEventValues[def],
+      is(getPropValue(e, def), defaultWheelEventValues[def],
          "WheelEvent: Wrong default value for " + def + "!");
     } else {
-      is(e[def], p[def], "WheelEvent: Wrong event init value for " + def + "!");
+      is(getPropValue(e, def), p[def], "WheelEvent: Wrong event init value for " + def + "!");
     }
   }
 }
