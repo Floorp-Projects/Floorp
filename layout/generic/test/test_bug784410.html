@@ -4,6 +4,7 @@
   <title>Test bug 784410</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -38,13 +39,16 @@ function doneScroll() {
     outer.scrollTop = 0;
     break;
   case 2:
-    synthesizeWheel(inner, 4, 4,
-      { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaY: 1 });
+    // Wait for paints to flush, so APZ is notified of the new scroll offset.
+    sendWheelAndPaint(inner, 4, 4,
+      { deltaMode: WheelEvent.DOM_DELTA_LINE, deltaY: 1 },
+      function() {});
     break;
   case 3:
     is(innerScrollOffset(), innerStartScrollOffset, "Inner element should not have scrolled down");
     ok(outer.scrollTop > 0, "Outer element should have scrolled down");
     
+    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
     SimpleTest.finish();
     break;
   }

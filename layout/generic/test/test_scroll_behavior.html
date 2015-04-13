@@ -29,19 +29,28 @@
   }
 
   window.addEventListener("load", function(event) {
-    if (event.target == document) {
-      SpecialPowers.pushPrefEnv(
-        { 'set': [['layout.css.scroll-behavior.enabled', true]] },
-        function () {
-          testScrollBehaviorInterruption(function() {
-            testScrollBehaviorFramerate(function() {
-              window.scrollTo(0,0);
-              SimpleTest.finish(); 
-            });
-          });
-        }
-      );
+    if (event.target != document)
+      return;
+
+    // See bug 1062609 - these tests do not work with APZ yet. If APZ is
+    // enabled, end the tests early.
+    if (SpecialPowers.getBoolPref("layers.async-pan-zoom.enabled")) {
+      todo(false, "This test does not yet work with APZ.");
+      SimpleTest.finish();
+      return;
     }
+
+    SpecialPowers.pushPrefEnv(
+      { 'set': [['layout.css.scroll-behavior.enabled', true]] },
+      function () {
+        testScrollBehaviorInterruption(function() {
+          testScrollBehaviorFramerate(function() {
+            window.scrollTo(0,0);
+            SimpleTest.finish();
+          });
+        });
+      }
+    );
   }, false);
 
 
