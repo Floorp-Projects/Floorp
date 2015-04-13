@@ -141,6 +141,13 @@ function getArchivedPingPath(aPingId, aDate, aType) {
   return OS.Path.join(archivedPingDir, fileName);
 };
 
+/**
+ * This is a policy object used to override behavior for testing.
+ */
+let Policy = {
+  now: () => new Date(),
+}
+
 this.EXPORTED_SYMBOLS = ["TelemetryPing"];
 
 this.TelemetryPing = Object.freeze({
@@ -425,7 +432,7 @@ let Impl = {
     let pingData = {
       type: aType,
       id: generateUUID(),
-      creationDate: (new Date()).toISOString(),
+      creationDate: (Policy.now()).toISOString(),
       version: PING_FORMAT_VERSION,
       application: this._getApplicationSection(),
       payload: aPayload,
