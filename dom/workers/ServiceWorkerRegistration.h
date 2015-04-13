@@ -17,6 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
+class PushManager;
 
 namespace workers {
 class ServiceWorker;
@@ -62,6 +63,16 @@ public:
   // DOMEventTargethelper
   virtual void DisconnectFromOwner() override;
 
+  already_AddRefed<PushManager>
+  GetPushManager(ErrorResult& aRv);
+
+  // Something that we can feed into the Func webidl property to ensure that
+  // SetScope is never exposed to the user.
+  static bool
+  WebPushMethodHider(JSContext* unusedContext, JSObject* unusedObject) {
+    return false;
+  }
+
 private:
   ~ServiceWorkerRegistration();
 
@@ -81,6 +92,10 @@ private:
   nsRefPtr<workers::ServiceWorker> mInstallingWorker;
   nsRefPtr<workers::ServiceWorker> mWaitingWorker;
   nsRefPtr<workers::ServiceWorker> mActiveWorker;
+
+#ifndef MOZ_SIMPLEPUSH
+  nsRefPtr<PushManager> mPushManager;
+#endif
 
   const nsString mScope;
   bool mListeningForEvents;

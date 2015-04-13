@@ -965,68 +965,40 @@ UpdateIfRelocated(JSRuntime* rt, T** thingp)
 
 /*** Externally Typed Marking ***/
 
-void
-gc::MarkKind(JSTracer* trc, void** thingp, JSGCTraceKind kind)
-{
-    MOZ_ASSERT(thingp);
-    MOZ_ASSERT(*thingp);
-    DebugOnly<Cell*> cell = static_cast<Cell*>(*thingp);
-    MOZ_ASSERT_IF(cell->isTenured(),
-                  kind == MapAllocToTraceKind(cell->asTenured().getAllocKind()));
-    switch (kind) {
-      case JSTRACE_OBJECT:
-        MarkInternal(trc, reinterpret_cast<JSObject**>(thingp));
-        break;
-      case JSTRACE_SCRIPT:
-        MarkInternal(trc, reinterpret_cast<JSScript**>(thingp));
-        break;
-      case JSTRACE_STRING:
-        MarkInternal(trc, reinterpret_cast<JSString**>(thingp));
-        break;
-      case JSTRACE_SYMBOL:
-        MarkInternal(trc, reinterpret_cast<JS::Symbol**>(thingp));
-        break;
-      case JSTRACE_BASE_SHAPE:
-        MarkInternal(trc, reinterpret_cast<BaseShape**>(thingp));
-        break;
-      case JSTRACE_JITCODE:
-        MarkInternal(trc, reinterpret_cast<jit::JitCode**>(thingp));
-        break;
-      case JSTRACE_LAZY_SCRIPT:
-        MarkInternal(trc, reinterpret_cast<LazyScript**>(thingp));
-        break;
-      case JSTRACE_SHAPE:
-        MarkInternal(trc, reinterpret_cast<Shape**>(thingp));
-        break;
-      case JSTRACE_OBJECT_GROUP:
-        MarkInternal(trc, reinterpret_cast<ObjectGroup**>(thingp));
-        break;
-      default:
-        MOZ_CRASH("Invalid trace kind in MarkKind.");
+// A typed functor adaptor for TraceRoot.
+struct TraceRootFunctor {
+    template <typename T>
+    void operator()(JSTracer* trc, Cell** thingp, const char* name) {
+        TraceRoot(trc, reinterpret_cast<T**>(thingp), name);
     }
-}
+};
 
-static void
-MarkGCThingInternal(JSTracer* trc, void** thingp, const char* name)
+// A typed functor adaptor for TraceManuallyBarrieredEdge.
+struct TraceManuallyBarrieredEdgeFunctor {
+    template <typename T>
+    void operator()(JSTracer* trc, Cell** thingp, const char* name) {
+        TraceManuallyBarrieredEdge(trc, reinterpret_cast<T**>(thingp), name);
+    }
+};
+
+void
+js::gc::TraceGenericPointerRoot(JSTracer* trc, Cell** thingp, const char* name)
 {
-    trc->setTracingName(name);
     MOZ_ASSERT(thingp);
     if (!*thingp)
         return;
-    MarkKind(trc, thingp, GetGCThingTraceKind(*thingp));
+    TraceRootFunctor f;
+    CallTyped(f, (*thingp)->getTraceKind(), trc, thingp, name);
 }
 
 void
-gc::MarkGCThingRoot(JSTracer* trc, void** thingp, const char* name)
+js::gc::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp, const char* name)
 {
-    JS_ROOT_MARKING_ASSERT(trc);
-    MarkGCThingInternal(trc, thingp, name);
-}
-
-void
-gc::MarkGCThingUnbarriered(JSTracer* trc, void** thingp, const char* name)
-{
-    MarkGCThingInternal(trc, thingp, name);
+    MOZ_ASSERT(thingp);
+    if (!*thingp)
+        return;
+    TraceManuallyBarrieredEdgeFunctor f;
+    CallTyped(f, (*thingp)->getTraceKind(), trc, thingp, name);
 }
 
 /*** Value Marking ***/

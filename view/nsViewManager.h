@@ -303,11 +303,16 @@ public:
    */
   static nsView* GetDisplayRootFor(nsView* aView);
 
+  enum UpdatingMode {
+    eNoSyncUpdate,
+    eTrySyncUpdate
+  };
+
   /**
    * Flush the accumulated dirty region to the widget and update widget
    * geometry.
    */
-  void ProcessPendingUpdates();
+  void ProcessPendingUpdates(UpdatingMode aMode);
 
   /**
    * Just update widget geometry without flushing the dirty region

@@ -3,9 +3,14 @@
     <meta charset="utf-8">
     <title></title>
     <style type="text/css">
+html {
+  writing-mode: vertical-rl;
+  text-orientation: sideways-right;
+}
+
 .grid {
   display: grid;
-  border: 1px solid green;
+  border: 2px solid green;
   grid-template-columns: 20px 20px 20px 20px;
   grid-template-rows: 20px 20px 20px;
   grid-auto-flow: row;
@@ -42,16 +47,16 @@ span {
 
 .test3 {
   grid-template-areas:
-    'a a a . . .'
-    'a a a . . .'
-    '. b b . . .'
+    'a a a . '
+    'a a a . '
+    '. b b . '
   ;
 }
 .test3 .a {
   grid-area: a;
 }
 .test3 .b {
-  grid-column: 2 / span 3; 
+  grid-column: 2 / span 3;
   grid-row: b;
 }
 .test3 .c {
@@ -73,6 +78,11 @@ span {
   grid-row-start: 2;
   grid-column: auto / span X;
 }
+
+.e {
+  grid-row-start: 2;
+  grid-column: auto / span 1;
+}
     </style>
 </head>
 <body>
@@ -81,7 +91,9 @@ span {
 <span class="a">a</span>
 <span class="b">b</span>
 <span class="c">c</span>
-<span class="d">d</span><!-- placed at 1,1 b/c it's auto in both directions, compare test6 below -->
+<span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
 </div>
 
 <div class="grid test2">
@@ -89,6 +101,8 @@ span {
 <span class="b">b</span>
 <span class="c">c</span>
 <span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
 </div>
 
 <div class="grid test3">
@@ -96,23 +110,31 @@ span {
 <span class="b">b</span>
 <span class="c">c</span>
 <span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
 </div>
 
 <div class="grid test4">
 <span class="c">c</span>
 <span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
 </div>
 
 <div class="grid test5">
 <span class="c">c</span>
 <span class="d">d</span>
+<span class="d">D</span>
+<span class="e">e</span>
 </div>
 
 <div class="grid test1">
 <span class="a">a</span>
 <span class="b">b</span>
 <span class="c">c</span>
-<span class="test6">d</span><!-- after c because it's only auto in one direction, unlike test1.d above -->
+<span class="test6">d</span>
+<span class="test6">D</span>
+<span class="e">e</span>
 </div>
 
 </body>

@@ -15,7 +15,7 @@ function mul(a, b) { return a * b; }
 function div(a, b) { return a / b; }
 function neg(a) { return -a; }
 function reciprocalApproximation(a) { return 1 / a; }
-function reciprocalSqrtApproximation(a) { return Math.sqrt(1 / a); }
+function reciprocalSqrtApproximation(a) { return 1 / Math.sqrt(a); }
 
 function testAdd(v, w) {
     return testBinaryFunc(v, w, float64x2.add, add);

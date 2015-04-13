@@ -30,11 +30,18 @@ PushServiceLauncher.prototype = {
         break;
       case "final-ui-startup":
         Services.obs.removeObserver(this, "final-ui-startup");
-        if (!Services.prefs.getBoolPref("services.push.enabled")) {
+        if (!Services.prefs.getBoolPref("dom.push.enabled")) {
           return;
         }
-        Cu.import("resource://gre/modules/PushService.jsm");
-        PushService.init();
+
+        let isParent = Cc["@mozilla.org/xre/runtime;1"]
+                       .getService(Ci.nsIXULRuntime)
+                       .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+
+        if (isParent) {
+          Cu.import("resource://gre/modules/PushService.jsm");
+          PushService.init();
+        }
         break;
     }
   }
