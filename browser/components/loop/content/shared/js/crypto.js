@@ -5,9 +5,23 @@
 /* global loop:true */
 
 var loop = loop || {};
+var inChrome = typeof Components != "undefined" && "utils" in Components;
 
-loop.crypto = (function() {
+(function(rootObject) {
   "use strict";
+
+  var sharedUtils;
+  if (inChrome) {
+    this.EXPORTED_SYMBOLS = ["LoopCrypto"];
+    var Cu = Components.utils;
+    Cu.importGlobalProperties(["crypto"]);
+    rootObject = {
+      crypto: crypto
+    };
+    sharedUtils = Cu.import("resource:///modules/loop/utils.js", {}).utils;
+  } else {
+    sharedUtils = this.shared.utils;
+  }
 
   var ALGORITHM = "AES-GCM";
   var KEY_LENGTH = 128;
@@ -18,14 +32,6 @@ loop.crypto = (function() {
   var KEY_TYPE = "oct";
   var ENCRYPT_TAG_LENGTH = 128;
   var INITIALIZATION_VECTOR_LENGTH = 12;
-
-  var sharedUtils = loop.shared.utils;
-
-  /**
-   * Root object, by default set to window.
-   * @type {DOMWindow|Object}
-   */
-  var rootObject = window;
 
   /**
    * Sets a new root object.  This is useful for testing crypto not supported as
@@ -127,7 +133,7 @@ loop.crypto = (function() {
         var joinedData = _mergeIVandCipherText(iv, new DataView(cipherText));
 
         // Now convert to a string and base-64 encode.
-        var encryptedData = loop.shared.utils.btoa(joinedData);
+        var encryptedData = sharedUtils.btoa(joinedData);
 
         resolve(encryptedData);
       }).catch(function(error) {
@@ -215,7 +221,7 @@ loop.crypto = (function() {
    */
   function _splitIVandCipherText(encryptedData) {
     // Convert into byte arrays.
-    var encryptedDataArray = loop.shared.utils.atob(encryptedData);
+    var encryptedDataArray = sharedUtils.atob(encryptedData);
 
     // Now split out the initialization vector and the cipherText.
     var iv = encryptedDataArray.slice(0, INITIALIZATION_VECTOR_LENGTH);
@@ -228,11 +234,11 @@ loop.crypto = (function() {
     };
   }
 
-  return {
+  this[inChrome ? "LoopCrypto" : "crypto"] = {
     decryptBytes: decryptBytes,
     encryptBytes: encryptBytes,
     generateKey: generateKey,
     isSupported: isSupported,
     setRootObject: setRootObject
   };
-})();
+}).call(inChrome ? this : loop, this);
