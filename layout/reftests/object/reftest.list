@@ -29,7 +29,7 @@ HTTP == type-overridden-by-server.html type-overridden-by-server-ref.html
 #
 == unknown-type.html unknown-type-ref.html
 == malformed-xml.html malformed-xml-ref.html
-skip-if(Mulet) == malformed-xml-with-type.html malformed-xml-with-type-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== malformed-xml-with-type.html malformed-xml-with-type-ref.html
 #
 # XXX missing tests 025-28 from http://biesi.damowmow.com/object/ here; would
 #     need to require Flash on the test machine to run them

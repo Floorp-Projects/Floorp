@@ -138,8 +138,8 @@ random-if(B2G||Mulet) == really-big-background.html really-big-background-ref.ht
 
 HTTP == background-referrer.html background-referrer-ref.html
 
-skip-if(Mulet) == attachment-scroll-positioning-1.html attachment-scroll-positioning-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == attachment-local-positioning-1.html attachment-local-positioning-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== attachment-scroll-positioning-1.html attachment-scroll-positioning-1-ref.html
+== attachment-local-positioning-1.html attachment-local-positioning-1-ref.html
 == attachment-local-positioning-2.html attachment-local-positioning-2-ref.html
 == attachment-local-positioning-3.html attachment-local-positioning-3-ref.html
 == attachment-local-positioning-4.html attachment-local-positioning-4-ref.html
@@ -161,6 +161,6 @@ fails-if(Android&&AndroidVersion==15) fuzzy-if(winWidget||(Android&&AndroidVersi
 fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html #Bug 959165
 
 == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
-skip-if(Mulet) == background-repeat-large-area.html background-repeat-large-area-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== background-repeat-large-area.html background-repeat-large-area-ref.html
 
 fuzzy(30,474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html

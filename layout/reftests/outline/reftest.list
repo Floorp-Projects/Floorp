@@ -1,7 +1,7 @@
 == outline-and-box-shadow.html outline-and-box-shadow-ref.html
 == outline-and-3d-transform-1a.html outline-and-3d-transform-1-ref.html
 == outline-and-3d-transform-1b.html outline-and-3d-transform-1-ref.html
-skip-if(Mulet) fuzzy-if(d2d,16,96) == outline-and-3d-transform-2.html outline-and-3d-transform-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(d2d,16,96) == outline-and-3d-transform-2.html outline-and-3d-transform-2-ref.html
 == outline-overflow-block-abspos.html outline-overflow-block-ref.html
 == outline-overflow-block-float.html outline-overflow-block-ref.html
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-ref.html
