@@ -24,7 +24,6 @@ add_task(function*() {
                                     "<div id='testid2'>Styled Node</div>";
 
   yield testCreateNew(inspector, view);
-  yield inspector.once("inspector-updated");
 });
 
 function* testCreateNew(inspector, ruleView) {
@@ -60,11 +59,12 @@ function* testCreateNew(inspector, ruleView) {
   let textProp = elementRuleEditor.rule.textProps[0];
   is(editor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
 
+  let onMutated = inspector.once("markupmutation");
   editor.input.value = "purple";
   let onBlur = once(editor.input, "blur");
   EventUtils.sendKey("return", ruleView.doc.defaultView);
   yield onBlur;
-  yield elementRuleEditor.rule._applyingModifications;
+  yield onMutated;
 
   is(textProp.value, "purple", "Text prop should have been changed.");
 }
