@@ -212,7 +212,8 @@ function Tooltip(doc, options) {
     }
 
     this.emit("keypress", event.keyCode);
-    if (this.options.get("closeOnKeys").indexOf(event.keyCode) !== -1) {
+    if (this.options.get("closeOnKeys").indexOf(event.keyCode) !== -1 &&
+        this.isShown()) {
       event.stopPropagation();
       this.hide();
     }
