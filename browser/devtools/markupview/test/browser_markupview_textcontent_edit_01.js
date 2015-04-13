@@ -28,6 +28,4 @@ add_task(function*() {
   yield onMutated;
 
   is(node.nodeValue, "New text", "Test test node's text content has changed");
-
-  yield inspector.once("inspector-updated");
 });

@@ -26,8 +26,6 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector) {
     for (let test of tests) {
       yield runAddAttributesTest(test, "div", inspector);
     }
-
-    yield inspector.once("inspector-updated");
   });
 }
 
