@@ -12,7 +12,7 @@
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/cache/CachePushStreamChild.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
@@ -32,9 +32,7 @@ namespace {
 using mozilla::ErrorResult;
 using mozilla::unused;
 using mozilla::void_t;
-using mozilla::dom::InternalHeaders;
-using mozilla::dom::cache::CacheReadStream;
-using mozilla::dom::cache::HeadersEntry;
+using mozilla::dom::cache::PCacheReadStream;
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::PBackgroundChild;
@@ -107,7 +105,7 @@ ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
 }
 
 void
-SerializeNormalStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut)
+SerializeNormalStream(nsIInputStream* aStream, PCacheReadStream& aReadStreamOut)
 {
   nsAutoTArray<FileDescriptor, 4> fds;
   SerializeInputStream(aStream, aReadStreamOut.params(), fds);
@@ -128,20 +126,6 @@ SerializeNormalStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut)
     aReadStreamOut.fds() = fdSet;
   } else {
     aReadStreamOut.fds() = void_t();
-  }
-}
-
-void
-ToHeadersEntryList(nsTArray<HeadersEntry>& aOut, InternalHeaders* aHeaders)
-{
-  MOZ_ASSERT(aHeaders);
-
-  nsAutoTArray<InternalHeaders::Entry, 16> entryList;
-  aHeaders->GetEntries(entryList);
-
-  for (uint32_t i = 0; i < entryList.Length(); ++i) {
-    InternalHeaders::Entry& entry = entryList[i];
-    aOut.AppendElement(HeadersEntry(entry.mName, entry.mValue));
   }
 }
 
@@ -197,10 +181,10 @@ TypeUtils::ToInternalRequest(const OwningRequestOrUSVString& aIn,
 }
 
 void
-TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
-                          BodyAction aBodyAction,
-                          ReferrerAction aReferrerAction,
-                          SchemeAction aSchemeAction, ErrorResult& aRv)
+TypeUtils::ToPCacheRequest(PCacheRequest& aOut, InternalRequest* aIn,
+                           BodyAction aBodyAction,
+                           ReferrerAction aReferrerAction,
+                           SchemeAction aSchemeAction, ErrorResult& aRv)
 {
   MOZ_ASSERT(aIn);
 
@@ -236,7 +220,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
 
   nsRefPtr<InternalHeaders> headers = aIn->Headers();
   MOZ_ASSERT(headers);
-  ToHeadersEntryList(aOut.headers(), headers);
+  headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
   aOut.mode() = aIn->Mode();
   aOut.credentials() = aIn->GetCredentialsMode();
@@ -260,8 +244,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
 }
 
 void
-TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
-                                      InternalResponse& aIn, ErrorResult& aRv)
+TypeUtils::ToPCacheResponseWithoutBody(PCacheResponse& aOut,
+                                       InternalResponse& aIn, ErrorResult& aRv)
 {
   aOut.type() = aIn.Type();
 
@@ -282,13 +266,13 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   aOut.statusText() = aIn.GetStatusText();
   nsRefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_ASSERT(headers);
-  ToHeadersEntryList(aOut.headers(), headers);
+  headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
   aOut.securityInfo() = aIn.GetSecurityInfo();
 }
 
 void
-TypeUtils::ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv)
+TypeUtils::ToPCacheResponse(PCacheResponse& aOut, Response& aIn, ErrorResult& aRv)
 {
   if (aIn.BodyUsed()) {
     aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
@@ -296,7 +280,7 @@ TypeUtils::ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv)
   }
 
   nsRefPtr<InternalResponse> ir = aIn.GetInternalResponse();
-  ToCacheResponseWithoutBody(aOut, *ir, aRv);
+  ToPCacheResponseWithoutBody(aOut, *ir, aRv);
 
   nsCOMPtr<nsIInputStream> stream;
   aIn.GetBody(getter_AddRefs(stream));
@@ -312,8 +296,8 @@ TypeUtils::ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv)
 
 // static
 void
-TypeUtils::ToCacheQueryParams(CacheQueryParams& aOut,
-                              const CacheQueryOptions& aIn)
+TypeUtils::ToPCacheQueryParams(PCacheQueryParams& aOut,
+                               const CacheQueryOptions& aIn)
 {
   aOut.ignoreSearch() = aIn.mIgnoreSearch;
   aOut.ignoreMethod() = aIn.mIgnoreMethod;
@@ -327,7 +311,7 @@ TypeUtils::ToCacheQueryParams(CacheQueryParams& aOut,
 }
 
 already_AddRefed<Response>
-TypeUtils::ToResponse(const CacheResponse& aIn)
+TypeUtils::ToResponse(const PCacheResponse& aIn)
 {
   if (aIn.type() == ResponseType::Error) {
     nsRefPtr<InternalResponse> error = InternalResponse::NetworkError();
@@ -340,7 +324,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   ir->SetUrl(NS_ConvertUTF16toUTF8(aIn.url()));
 
   nsRefPtr<InternalHeaders> internalHeaders =
-    ToInternalHeaders(aIn.headers(), aIn.headersGuard());
+    new InternalHeaders(aIn.headers(), aIn.headersGuard());
   ErrorResult result;
   ir->Headers()->SetGuard(aIn.headersGuard(), result);
   MOZ_ASSERT(!result.Failed());
@@ -375,7 +359,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
 }
 
 already_AddRefed<InternalRequest>
-TypeUtils::ToInternalRequest(const CacheRequest& aIn)
+TypeUtils::ToInternalRequest(const PCacheRequest& aIn)
 {
   nsRefPtr<InternalRequest> internalRequest = new InternalRequest();
 
@@ -392,7 +376,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   internalRequest->SetCacheMode(aIn.requestCache());
 
   nsRefPtr<InternalHeaders> internalHeaders =
-    ToInternalHeaders(aIn.headers(), aIn.headersGuard());
+    new InternalHeaders(aIn.headers(), aIn.headersGuard());
   ErrorResult result;
   internalRequest->Headers()->SetGuard(aIn.headersGuard(), result);
   MOZ_ASSERT(!result.Failed());
@@ -407,28 +391,11 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
 }
 
 already_AddRefed<Request>
-TypeUtils::ToRequest(const CacheRequest& aIn)
+TypeUtils::ToRequest(const PCacheRequest& aIn)
 {
   nsRefPtr<InternalRequest> internalRequest = ToInternalRequest(aIn);
   nsRefPtr<Request> request = new Request(GetGlobalObject(), internalRequest);
   return request.forget();
-}
-
-// static
-already_AddRefed<InternalHeaders>
-TypeUtils::ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
-                             HeadersGuardEnum aGuard)
-{
-  nsTArray<InternalHeaders::Entry> entryList(aHeadersEntryList.Length());
-
-  for (uint32_t i = 0; i < aHeadersEntryList.Length(); ++i) {
-    const HeadersEntry& headersEntry = aHeadersEntryList[i];
-    entryList.AppendElement(InternalHeaders::Entry(headersEntry.name(),
-                                                   headersEntry.value()));
-  }
-
-  nsRefPtr<InternalHeaders> ref = new InternalHeaders(Move(entryList), aGuard);
-  return ref.forget();
 }
 
 void
@@ -478,7 +445,7 @@ TypeUtils::ToInternalRequest(const nsAString& aIn, ErrorResult& aRv)
 
 void
 TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
-                                CacheReadStreamOrVoid* aStreamOut,
+                                PCacheReadStreamOrVoid* aStreamOut,
                                 ErrorResult& aRv)
 {
   *aStreamOut = void_t();
@@ -493,7 +460,7 @@ TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
     return;
   }
 
-  CacheReadStream readStream;
+  PCacheReadStream readStream;
   readStream.controlChild() = nullptr;
   readStream.controlParent() = nullptr;
   readStream.pushStreamChild() = nullptr;
@@ -517,7 +484,7 @@ TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
 
 void
 TypeUtils::SerializePushStream(nsIInputStream* aStream,
-                               CacheReadStream& aReadStreamOut,
+                               PCacheReadStream& aReadStreamOut,
                                ErrorResult& aRv)
 {
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);

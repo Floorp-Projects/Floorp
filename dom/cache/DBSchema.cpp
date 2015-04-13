@@ -8,10 +8,8 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/InternalHeaders.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/SavedTypes.h"
-#include "mozilla/dom/cache/Types.h"
-#include "mozilla/dom/cache/TypeUtils.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsCOMPtr.h"
@@ -21,6 +19,7 @@
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
+#include "Types.h"
 #include "nsIContentPolicy.h"
 
 namespace mozilla {
@@ -418,8 +417,8 @@ DBSchema::IsCacheOrphaned(mozIStorageConnection* aConn,
 // static
 nsresult
 DBSchema::CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
-                     const CacheRequest& aRequest,
-                     const CacheQueryParams& aParams,
+                     const PCacheRequest& aRequest,
+                     const PCacheQueryParams& aParams,
                      bool* aFoundResponseOut,
                      SavedResponse* aSavedResponseOut)
 {
@@ -450,8 +449,8 @@ DBSchema::CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
 // static
 nsresult
 DBSchema::CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
-                        const CacheRequestOrVoid& aRequestOrVoid,
-                        const CacheQueryParams& aParams,
+                        const PCacheRequestOrVoid& aRequestOrVoid,
+                        const PCacheQueryParams& aParams,
                         nsTArray<SavedResponse>& aSavedResponsesOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -459,7 +458,7 @@ DBSchema::CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
   nsresult rv;
 
   nsAutoTArray<EntryId, 256> matches;
-  if (aRequestOrVoid.type() == CacheRequestOrVoid::Tvoid_t) {
+  if (aRequestOrVoid.type() == PCacheRequestOrVoid::Tvoid_t) {
     rv = QueryAll(aConn, aCacheId, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   } else {
@@ -482,16 +481,16 @@ DBSchema::CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
 // static
 nsresult
 DBSchema::CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
-                   const CacheRequest& aRequest,
+                   const PCacheRequest& aRequest,
                    const nsID* aRequestBodyId,
-                   const CacheResponse& aResponse,
+                   const PCacheResponse& aResponse,
                    const nsID* aResponseBodyId,
                    nsTArray<nsID>& aDeletedBodyIdListOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
 
-  CacheQueryParams params(false, false, false, false,
+  PCacheQueryParams params(false, false, false, false,
                            NS_LITERAL_STRING(""));
   nsAutoTArray<EntryId, 256> matches;
   nsresult rv = QueryCache(aConn, aCacheId, aRequest, params, matches);
@@ -510,8 +509,8 @@ DBSchema::CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
 // static
 nsresult
 DBSchema::CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
-                      const CacheRequest& aRequest,
-                      const CacheQueryParams& aParams,
+                      const PCacheRequest& aRequest,
+                      const PCacheQueryParams& aParams,
                       nsTArray<nsID>& aDeletedBodyIdListOut, bool* aSuccessOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -539,8 +538,8 @@ DBSchema::CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
 // static
 nsresult
 DBSchema::CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
-                    const CacheRequestOrVoid& aRequestOrVoid,
-                    const CacheQueryParams& aParams,
+                    const PCacheRequestOrVoid& aRequestOrVoid,
+                    const PCacheQueryParams& aParams,
                     nsTArray<SavedRequest>& aSavedRequestsOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -548,7 +547,7 @@ DBSchema::CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
   nsresult rv;
 
   nsAutoTArray<EntryId, 256> matches;
-  if (aRequestOrVoid.type() == CacheRequestOrVoid::Tvoid_t) {
+  if (aRequestOrVoid.type() == PCacheRequestOrVoid::Tvoid_t) {
     rv = QueryAll(aConn, aCacheId, matches);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   } else {
@@ -572,8 +571,8 @@ DBSchema::CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
 nsresult
 DBSchema::StorageMatch(mozIStorageConnection* aConn,
                        Namespace aNamespace,
-                       const CacheRequest& aRequest,
-                       const CacheQueryParams& aParams,
+                       const PCacheRequest& aRequest,
+                       const PCacheQueryParams& aParams,
                        bool* aFoundResponseOut,
                        SavedResponse* aSavedResponseOut)
 {
@@ -794,8 +793,8 @@ DBSchema::QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
 // static
 nsresult
 DBSchema::QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
-                     const CacheRequest& aRequest,
-                     const CacheQueryParams& aParams,
+                     const PCacheRequest& aRequest,
+                     const PCacheQueryParams& aParams,
                      nsTArray<EntryId>& aEntryIdListOut,
                      uint32_t aMaxResults)
 {
@@ -872,7 +871,7 @@ DBSchema::QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
 // static
 nsresult
 DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
-                            const CacheRequest& aRequest,
+                            const PCacheRequest& aRequest,
                             EntryId entryId, bool* aSuccessOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -914,8 +913,7 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
   rv = state->BindInt32Parameter(0, entryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsRefPtr<InternalHeaders> cachedHeaders =
-    new InternalHeaders(HeadersGuardEnum::None);
+  nsRefPtr<InternalHeaders> cachedHeaders = new InternalHeaders(HeadersGuardEnum::None);
 
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
     nsAutoCString name;
@@ -932,8 +930,7 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
   }
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsRefPtr<InternalHeaders> queryHeaders =
-    TypeUtils::ToInternalHeaders(aRequest.headers());
+  nsRefPtr<InternalHeaders> queryHeaders = new InternalHeaders(aRequest.headers());
 
   // Assume the vary headers match until we find a conflict
   bool varyHeadersMatch = true;
@@ -1074,9 +1071,9 @@ DBSchema::DeleteEntries(mozIStorageConnection* aConn,
 // static
 nsresult
 DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
-                      const CacheRequest& aRequest,
+                      const PCacheRequest& aRequest,
                       const nsID* aRequestBodyId,
-                      const CacheResponse& aResponse,
+                      const PCacheResponse& aResponse,
                       const nsID* aResponseBodyId)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -1198,7 +1195,7 @@ DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  const nsTArray<HeadersEntry>& requestHeaders = aRequest.headers();
+  const nsTArray<PHeadersEntry>& requestHeaders = aRequest.headers();
   for (uint32_t i = 0; i < requestHeaders.Length(); ++i) {
     rv = state->BindUTF8StringParameter(0, requestHeaders[i].name());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -1222,7 +1219,7 @@ DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  const nsTArray<HeadersEntry>& responseHeaders = aResponse.headers();
+  const nsTArray<PHeadersEntry>& responseHeaders = aResponse.headers();
   for (uint32_t i = 0; i < responseHeaders.Length(); ++i) {
     rv = state->BindUTF8StringParameter(0, responseHeaders[i].name());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -1323,7 +1320,7 @@ DBSchema::ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    HeadersEntry header;
+    PHeadersEntry header;
 
     rv = state->GetUTF8String(0, header.name());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -1442,7 +1439,7 @@ DBSchema::ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    HeadersEntry header;
+    PHeadersEntry header;
 
     rv = state->GetUTF8String(0, header.name());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
