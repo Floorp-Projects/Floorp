@@ -36,7 +36,9 @@ AudioDecoder::AudioDecoder(GMPAudioHost *aHostAPI)
 
 AudioDecoder::~AudioDecoder()
 {
-  mMutex->Destroy();
+  if (mMutex) {
+    mMutex->Destroy();
+  }
 }
 
 void
@@ -223,8 +225,12 @@ AudioDecoder::MFToGMPSample(IMFSample* aInput,
 void
 AudioDecoder::Reset()
 {
-  mDecoder->Reset();
-  mCallback->ResetComplete();
+  if (mDecoder) {
+    mDecoder->Reset();
+  }
+  if (mCallback) {
+    mCallback->ResetComplete();
+  }
 }
 
 void
@@ -248,6 +254,9 @@ AudioDecoder::DrainTask()
 void
 AudioDecoder::Drain()
 {
+  if (!mDecoder) {
+    return;
+  }
   EnsureWorker();
   mWorkerThread->Post(WrapTask(this,
                                &AudioDecoder::DrainTask));
