@@ -87,7 +87,6 @@ public class PluginLayer extends Layer {
         });
     }
 
-    @Override
     public void destroy() {
         mDestroyed = true;
 
