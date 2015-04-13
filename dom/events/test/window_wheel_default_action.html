@@ -4,6 +4,7 @@
   <title>Test for default action of WheelEvent</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -66,6 +67,11 @@ function is()
 function ok()
 {
   window.opener.ok.apply(window.opener, arguments);
+}
+
+function sendWheelAndWait(aX, aY, aEvent, aCallback)
+{
+  sendWheelAndPaint(gScrollableElement, aX, aY, aEvent, aCallback);
 }
 
 function hitEventLoop(aFunc, aTimes)
@@ -864,9 +870,7 @@ function doTestScroll(aSettings, aCallback)
       currentTest.prepare();
     }
 
-    synthesizeWheel(gScrollableElement, 10, 10, currentTest.event);
-
-    hitEventLoop(function () {
+    sendWheelAndWait(10, 10, currentTest.event, function () {
       if (currentTest.expected == kNoScroll) {
         is(gScrollableElement.scrollTop, 1000, description + "scrolled vertical");
         is(gScrollableElement.scrollLeft, 1000, description + "scrolled horizontal");
@@ -1111,7 +1115,6 @@ function doTestZoom(aSettings, aCallback)
 
     var event = currentTest.event;
     event.ctrlKey  = true;
-    synthesizeWheel(gScrollableElement, 10, 10, event);
 
     // NOTE: Zooming might change scrollTop and scrollLeft by rounding fraction.
     //       This test assume that zoom happens synchronously and scrolling
@@ -1119,7 +1122,7 @@ function doTestZoom(aSettings, aCallback)
     var scrollTop = gScrollableElement.scrollTop;
     var scrollLeft = gScrollableElement.scrollLeft;
 
-    hitEventLoop(function () {
+    sendWheelAndWait(10, 10, event, function () {
       is(gScrollableElement.scrollTop, scrollTop, description + "scrolled vertical");
       is(gScrollableElement.scrollLeft, scrollLeft, description + "scrolled horizontal");
       if (!(currentTest.expected & (kNegative | kPositive))) {
@@ -1190,11 +1193,15 @@ function doTestZoomedScroll(aCallback)
       }
       window.addEventListener("MozMousePixelScroll", mousePixelScrollHandler, true);
       window.addEventListener("wheel", wheelHandler, true);
-      synthesizeWheel(gScrollableElement, 10, 10,
-        { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-          deltaX: 16.0, deltaY: 16.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
+      var event = {
+        deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+        deltaX: 16.0,
+        deltaY: 16.0,
+        lineOrPageDeltaX: 0,
+        lineOrPageDeltaY: 0
+      };
       // wait scrolled actually.
-      hitEventLoop(function () {
+      sendWheelAndWait(10, 10, event, function () {
         var scrolledX = gScrollableElement.scrollLeft;
         var scrolledY = gScrollableElement.scrollTop;
         ok(scrolledX > 1000,
@@ -1208,11 +1215,15 @@ function doTestZoomedScroll(aCallback)
         hitEventLoop(function () {
           gScrollableElement.scrollTop = 1000;
           gScrollableElement.scrollLeft = 1000;
-          synthesizeWheel(gScrollableElement, 10, 10,
-            { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-              deltaX: 16.0, deltaY: 16.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
+          var event = {
+            deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+            deltaX: 16.0,
+            deltaY: 16.0,
+            lineOrPageDeltaX: 0,
+            lineOrPageDeltaY: 0
+          };
           // wait scrolled actually.
-          hitEventLoop(function () {
+          sendWheelAndWait(10, 10, event, function () {
             ok(Math.abs(gScrollableElement.scrollLeft - (1000 + (scrolledX - 1000) / 2)) <= 1,
                "doTestZoomedScroll: zoomed horizontal scroll amount by pixel wheel event is different from normal, scrollLeft=" +
                  gScrollableElement.scrollLeft + ", scrolledX=" + scrolledX);
@@ -1267,11 +1278,15 @@ function doTestZoomedScroll(aCallback)
         }
       }
       window.addEventListener("MozMousePixelScroll", handler, true);
-      synthesizeWheel(gScrollableElement, 10, 10,
-        { deltaMode: WheelEvent.DOM_DELTA_LINE,
-          deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 });
+      var event = {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 1.0,
+        deltaY: 1.0,
+        lineOrPageDeltaX: 1,
+        lineOrPageDeltaY: 1
+      };
       // wait scrolled actually.
-      hitEventLoop(function () {
+      sendWheelAndWait(10, 10, event, function () {
         var scrolledX = gScrollableElement.scrollLeft;
         var scrolledY = gScrollableElement.scrollTop;
         ok(scrolledX > 1000,
@@ -1285,11 +1300,15 @@ function doTestZoomedScroll(aCallback)
         hitEventLoop(function () {
           gScrollableElement.scrollTop = 1000;
           gScrollableElement.scrollLeft = 1000;
-          synthesizeWheel(gScrollableElement, 10, 10,
-            { deltaMode: WheelEvent.DOM_DELTA_LINE,
-              deltaX: 1.0, deltaY: 1.0, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 });
+          var event = {
+            deltaMode: WheelEvent.DOM_DELTA_LINE,
+            deltaX: 1.0,
+            deltaY: 1.0,
+            lineOrPageDeltaX: 1,
+            lineOrPageDeltaY: 1
+          };
           // wait scrolled actually.
-          hitEventLoop(function () {
+          sendWheelAndWait(10, 10, event, function () {
             ok(Math.abs(gScrollableElement.scrollLeft - scrolledX) <= 1,
                "doTestZoomedScroll: zoomed horizontal scroll amount by line wheel event is different from normal, scrollLeft=" +
                  gScrollableElement.scrollLeft + ", scrolledX=" + scrolledX);
@@ -1549,8 +1568,7 @@ function doTestWholeScroll(aCallback)
     if (kTest.prepare) {
       kTest.prepare();
     }
-    synthesizeWheel(gScrollableElement, 10, 10, kTest.event);
-    hitEventLoop(function () {
+    sendWheelAndWait(10, 10, kTest.event, function () {
       is(gScrollableElement.scrollTop, kTest.expectedScrollTop,
          "doTestWholeScroll, " + kTest.description + ": unexpected scrollTop");
       is(gScrollableElement.scrollLeft, kTest.expectedScrollLeft,
@@ -1700,8 +1718,7 @@ function doTestActionOverride(aCallback)
     SpecialPowers.setIntPref("mousewheel.default.action.override_x", kTest.override_x);
     gScrollableElement.scrollTop = 1000;
     gScrollableElement.scrollLeft = 1000;
-    synthesizeWheel(gScrollableElement, 10, 10, kTest.event);
-    hitEventLoop(function () {
+    sendWheelAndWait(10, 10, kTest.event, function () {
       if (kTest.expected & kScrollUp) {
         ok(gScrollableElement.scrollTop < 1000, description + "not scrolled up, got " + gScrollableElement.scrollTop);
       } else if (kTest.expected & kScrollDown) {
