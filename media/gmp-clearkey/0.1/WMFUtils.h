@@ -42,6 +42,8 @@ void LOG(const char* format, ...);
 extern "C" const CLSID CLSID_CMSAACDecMFT;
 #endif
 
+extern "C" const CLSID CLSID_CMSH264DecMFT;
+
 namespace wmf {
 
 // Reimplementation of CComPtr to reduce dependence on system
