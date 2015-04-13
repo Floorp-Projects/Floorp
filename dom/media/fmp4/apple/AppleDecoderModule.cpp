@@ -27,9 +27,6 @@ PRLogModuleInfo* GetAppleMediaLog() {
 
 namespace mozilla {
 
-// This defines the resolution height over which VDA will be prefered.
-#define VDA_RESOLUTION_THRESHOLD 720
-
 bool AppleDecoderModule::sInitialized = false;
 bool AppleDecoderModule::sIsVTAvailable = false;
 bool AppleDecoderModule::sIsVTHWAvailable = false;
@@ -160,9 +157,7 @@ AppleDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aC
 {
   nsRefPtr<MediaDataDecoder> decoder;
 
-  if (sIsVDAAvailable &&
-      (!sIsVTHWAvailable || sForceVDA ||
-       aConfig.image_height >= VDA_RESOLUTION_THRESHOLD)) {
+  if (sIsVDAAvailable && (!sIsVTHWAvailable || sForceVDA)) {
     decoder =
       AppleVDADecoder::CreateVDADecoder(aConfig,
                                         aVideoTaskQueue,

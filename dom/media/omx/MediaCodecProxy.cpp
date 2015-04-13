@@ -78,42 +78,38 @@ sp<MediaCodecProxy>
 MediaCodecProxy::CreateByType(sp<ALooper> aLooper,
                               const char *aMime,
                               bool aEncoder,
-                              bool aAsync,
                               wp<CodecResourceListener> aListener)
 {
-  sp<MediaCodecProxy> codec = new MediaCodecProxy(aLooper, aMime, aEncoder, aAsync, aListener);
-  if ((!aAsync && codec->allocated()) || codec->requestResource()) {
-    return codec;
-  }
-  return nullptr;
+  sp<MediaCodecProxy> codec = new MediaCodecProxy(aLooper,
+                                                  aMime,
+                                                  aEncoder,
+                                                  aListener);
+  return codec;
 }
 
 MediaCodecProxy::MediaCodecProxy(sp<ALooper> aLooper,
                                  const char *aMime,
                                  bool aEncoder,
-                                 bool aAsync,
                                  wp<CodecResourceListener> aListener)
   : mCodecLooper(aLooper)
   , mCodecMime(aMime)
   , mCodecEncoder(aEncoder)
   , mListener(aListener)
+  , mMediaCodecLock("MediaCodecProxy::mMediaCodecLock")
+  , mPendingRequestMediaResource(false)
 {
   MOZ_ASSERT(mCodecLooper != nullptr, "ALooper should not be nullptr.");
-  if (aAsync) {
-    mResourceHandler = new MediaResourceHandler(this);
-  } else {
-    allocateCodec();
-  }
+  mResourceHandler = new MediaResourceHandler(this);
 }
 
 MediaCodecProxy::~MediaCodecProxy()
 {
   releaseCodec();
-  cancelResource();
+  SetMediaCodecFree();
 }
 
 bool
-MediaCodecProxy::requestResource()
+MediaCodecProxy::AskMediaCodecAndWait()
 {
   if (mResourceHandler == nullptr) {
     return false;
@@ -124,30 +120,39 @@ MediaCodecProxy::requestResource()
         ? IMediaResourceManagerService::HW_VIDEO_ENCODER
         : IMediaResourceManagerService::HW_VIDEO_DECODER);
   } else if (strncasecmp(mCodecMime.get(), "audio/", 6) == 0) {
-    mResourceHandler->requestResource(mCodecEncoder
-        ? IMediaResourceManagerService::HW_AUDIO_ENCODER
-        : IMediaResourceManagerService::HW_AUDIO_DECODER);
+    if (allocateCodec()) {
+      return true;
+    }
   } else {
     return false;
   }
+
+  mozilla::MonitorAutoLock mon(mMediaCodecLock);
+  mPendingRequestMediaResource = true;
+
+  while (mPendingRequestMediaResource) {
+    mMediaCodecLock.Wait();
+  }
+  MCP_LOG("AskMediaCodecAndWait complete");
 
   return true;
 }
 
 void
-MediaCodecProxy::RequestMediaResources()
-{
-  requestResource();
-}
-
-void
-MediaCodecProxy::cancelResource()
+MediaCodecProxy::SetMediaCodecFree()
 {
   if (mResourceHandler == nullptr) {
     return;
   }
 
+  mozilla::MonitorAutoLock mon(mMediaCodecLock);
+  if (mPendingRequestMediaResource) {
+    mPendingRequestMediaResource = false;
+    mon.NotifyAll();
+  }
+
   mResourceHandler->cancelResource();
+  mResourceHandler = nullptr;
 }
 
 bool
@@ -462,31 +467,23 @@ MediaCodecProxy::getCapability(uint32_t *aCapability)
 void
 MediaCodecProxy::resourceReserved()
 {
+  MCP_LOG("resourceReserved");
   // Create MediaCodec
   releaseCodec();
   if (!allocateCodec()) {
-    cancelResource();
+    SetMediaCodecFree();
     return;
   }
+
+  // Notify initialization waiting.
+  mozilla::MonitorAutoLock mon(mMediaCodecLock);
+  mPendingRequestMediaResource = false;
+  mon.NotifyAll();
 
   // Notification
   sp<CodecResourceListener> listener = mListener.promote();
   if (listener != nullptr) {
     listener->codecReserved();
-  }
-}
-
-// Called on a Binder thread
-void
-MediaCodecProxy::resourceCanceled()
-{
-  // Release MediaCodec
-  releaseCodec();
-
-  // Notification
-  sp<CodecResourceListener> listener = mListener.promote();
-  if (listener != nullptr) {
-    listener->codecCanceled();
   }
 }
 
@@ -611,23 +608,10 @@ status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
   return err;
 }
 
-bool MediaCodecProxy::IsWaitingResources()
-{
-  if (mResourceHandler.get()) {
-    return mResourceHandler->IsWaitingResource();
-  }
-  return false;
-}
-
-bool MediaCodecProxy::IsDormantNeeded()
-{
-  return mCodecLooper.get() ? true : false;
-}
-
 void MediaCodecProxy::ReleaseMediaResources()
 {
   releaseCodec();
-  cancelResource();
+  SetMediaCodecFree();
 }
 
 void MediaCodecProxy::ReleaseMediaBuffer(MediaBuffer* aBuffer) {

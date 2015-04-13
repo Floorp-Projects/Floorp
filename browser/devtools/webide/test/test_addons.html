@@ -20,7 +20,7 @@
 
         const {GetAvailableAddons} = require("devtools/webide/addons");
         const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
-        const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
+        const {Simulators} = require("devtools/webide/simulators");
 
         let adbAddonsInstalled = promise.defer();
         Devices.on("addon-status-updated", function onUpdate1() {
@@ -34,11 +34,16 @@
 
         function onSimulatorInstalled(name) {
           let deferred = promise.defer();
-          Simulator.on("register", function onUpdate() {
-            if (Simulator.getByName(name)) {
-              Simulator.off("register", onUpdate);
-              nextTick().then(deferred.resolve);
-            }
+          Simulators.on("updated", function onUpdate() {
+            Simulators.findSimulatorAddons().then(addons => {
+              for (let addon of addons) {
+                if (name == addon.name.replace(" Simulator", "")) {
+                  Simulators.off("updated", onUpdate);
+                  nextTick().then(deferred.resolve);
+                  return;
+                }
+              }
+            });
           });
           return deferred.promise;
         }
@@ -51,16 +56,16 @@
 
         function uninstallSimulatorFromUI(doc, name) {
           let deferred = promise.defer();
-          Simulator.on("unregister", function onUpdate() {
+          Simulators.on("updated", function onUpdate() {
             nextTick().then(() => {
               let li = doc.querySelector('[status="uninstalled"][addon="simulator-' + getVersion(name) + '"]');
               if (li) {
-                Simulator.off("unregister", onUpdate);
+                Simulators.off("updated", onUpdate);
                 deferred.resolve();
               } else {
                 deferred.reject("Can't find item");
               }
-            })
+            });
           });
           let li = doc.querySelector('[status="installed"][addon="simulator-' + getVersion(name) + '"]');
           li.querySelector(".uninstall-button").click();

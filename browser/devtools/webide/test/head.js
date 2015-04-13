@@ -23,13 +23,14 @@ if (window.location === "chrome://browser/content/browser.xul") {
 
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
 Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
+Services.prefs.setBoolPref("devtools.webide.enableRuntimeConfiguration", true);
 
 Services.prefs.setCharPref("devtools.webide.addonsURL", TEST_BASE + "addons/simulators.json");
 Services.prefs.setCharPref("devtools.webide.simulatorAddonsURL", TEST_BASE + "addons/fxos_#SLASHED_VERSION#_simulator-#OS#.xpi");
 Services.prefs.setCharPref("devtools.webide.adbAddonURL", TEST_BASE + "addons/adbhelper-#OS#.xpi");
 Services.prefs.setCharPref("devtools.webide.adaptersAddonURL", TEST_BASE + "addons/fxdt-adapters-#OS#.xpi");
 Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
-
+Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.json");
 
 SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.enabled");

@@ -5,11 +5,6 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.Element;
-import org.mozilla.gecko.NewTabletUI;
-import org.mozilla.gecko.R;
-
-import android.app.Activity;
 
 /* Tests related to the about: page:
  *  - check that about: loads from the URL bar
@@ -28,7 +23,7 @@ public class testAboutPage extends PixelTest {
 
         // Open a new page to remove the about: page from the current tab.
         url = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        loadUrl(url);
+        loadUrlAndWait(url);
 
         // At this point the page title should have been set.
         verifyUrlBarTitle(url);

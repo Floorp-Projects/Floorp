@@ -127,14 +127,13 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="TabsPanelFrame.RemoteTabs" parent="TabsPanelFrameBase">
-        <item name="android:paddingLeft">112dp</item>
-        <item name="android:paddingRight">112dp</item>
-    </style>
+    <style name="PrivateTabsPanelFrame">
+        <item name="android:orientation">vertical</item>
 
-    <style name="TabsPanelFrame.PrivateTabs">
-        <item name="android:orientation">horizontal</item>
-        <item name="android:paddingTop">0dp</item>
+        <!-- We want to center the content on the screen, not in
+             the View, so add padding to compensate for the header. -->
+        <item name="android:layout_gravity">center</item>
+        <item name="android:paddingBottom">@dimen/browser_toolbar_height</item>
     </style>
 
     <style name="TabsPanelSection.PrivateTabs">
@@ -148,7 +147,7 @@
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
-        <item name="android:visibility">gone</item>
+        <item name="android:visibility">visible</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">

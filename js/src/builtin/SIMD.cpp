@@ -508,7 +508,7 @@ struct RecApprox {
 };
 template<typename T>
 struct RecSqrtApprox {
-    static inline T apply(T x) { return sqrt(1 / x); }
+    static inline T apply(T x) { return 1 / sqrt(x); }
 };
 template<typename T>
 struct Sqrt {

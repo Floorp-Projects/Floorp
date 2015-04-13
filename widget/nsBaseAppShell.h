@@ -122,11 +122,7 @@ private:
    * have been consumed by the inner event loop(s).
    */
   bool *mBlockedWait;
-  int32_t mFavorPerf;
   mozilla::Atomic<bool> mNativeEventPending;
-  PRIntervalTime mStarvationDelay;
-  PRIntervalTime mSwitchTime;
-  PRIntervalTime mLastNativeEventTime;
   enum EventloopNestingState {
     eEventloopNone,  // top level thread execution
     eEventloopXPCOM, // innermost native event loop is ProcessNextNativeEvent
