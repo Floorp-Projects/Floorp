@@ -77,6 +77,7 @@ browser.jar:
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/chatWindow.xul                (content/chatWindow.xul)
+        content/browser/tab-content.js                (content/tab-content.js)
         content/browser/content.js                    (content/content.js)
         content/browser/defaultthemes/1.footer.jpg    (content/defaultthemes/1.footer.jpg)
         content/browser/defaultthemes/1.header.jpg    (content/defaultthemes/1.header.jpg)
