@@ -136,19 +136,19 @@ canvas#curve {
 /* Preset Widget */
 
 .preset-pane {
-  width:50%;
+  width: 50%;
   height: 100%;
   border-right: 1px solid var(--theme-splitter-color);
+  padding-right: 4px; /* Visual balance for the panel-arrowcontent border on the left */
 }
 
 #preset-categories {
   display: flex;
-  width: 94%;
+  width: 95%;
   border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
   background-color: var(--theme-toolbar-background);
-  margin-left: 4px;
-  margin-top: 3px;
+  margin: 3px auto 0 auto;
 }
 
 #preset-categories .category:last-child {
@@ -156,8 +156,7 @@ canvas#curve {
 }
 
 .category {
-  flex: 1 1 auto;
-  padding: 5px;
+  padding: 5px 0px;
   width: 33.33%;
   text-align: center;
   text-transform: capitalize;
@@ -183,26 +182,24 @@ canvas#curve {
   padding: 0px;
   width: 100%;
   height: 331px;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .preset-list {
   display: none;
+  padding-top: 6px;
 }
 
 .active-preset-list {
   display: flex;
   flex-wrap: wrap;
-  justify-content: left;
-  padding-left: 4px;
-  padding-top: 3px;
+  justify-content: flex-start;
 }
 
 .preset {
   cursor: pointer;
-  width: 55px;
-  margin: 5px 11px 0px 0px;
-  text-transform: capitalize;
+  width: 33.33%;
+  margin: 5px 0px;
   text-align: center;
 }
 
@@ -211,6 +208,7 @@ canvas#curve {
   border: 1px solid #ccc;
   border-radius: 3px;
   background-color: var(--theme-body-background);
+  margin: 0 auto;
 }
 
 .theme-dark .preset canvas {
@@ -218,11 +216,10 @@ canvas#curve {
 }
 
 .preset p {
-  text-align: center;
   font-size: 0.9em;
-  line-height: 0px;
-  margin: 2px 0px 0px 0p;
+  margin: 2px auto 0px auto;
   color: var(--theme-body-color-alt);
+  text-transform: capitalize;
 }
 
 .active-preset p, .active-preset:hover p {
