@@ -859,6 +859,13 @@ public:
                                           const nsRect& aRect);
 
   /**
+   * Clamp aRect relative to aFrame to the scroll frames boundary searching from
+   * aFrame.
+   */
+  static nsRect ClampRectToScrollFrames(nsIFrame* aFrame,
+                                        const nsRect& aRect);
+
+  /**
    * Return true if a "layer transform" could be computed for aFrame,
    * and optionally return the computed transform.  The returned
    * transform is what would be set on the layer currently if a layers
