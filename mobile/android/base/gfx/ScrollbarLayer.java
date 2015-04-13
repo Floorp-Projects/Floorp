@@ -405,7 +405,6 @@ public class ScrollbarLayer extends Layer {
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, repeatMode);
     }
 
-    @Override
     public void destroy() {
         try {
             if (mImage != null) {
