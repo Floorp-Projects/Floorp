@@ -290,6 +290,7 @@ body {
   list-style: none;
   background-color: #EBEBF0;
   border-top: 1px solid #D7D9DB;
+  display: none;
 }
 
 .toolbar[visible] {
