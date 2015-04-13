@@ -516,7 +516,37 @@ class VFPRegister
         *ret = doubleOverlay(aliasIdx - 1);
         return;
     }
+
     typedef FloatRegisters::SetType SetType;
+
+    // This function is used to ensure that Register set can take all Single
+    // registers, even if we are taking a mix of either double or single
+    // registers.
+    //
+    //   s0.alignedOrDominatedAliasedSet() == s0 | d0.
+    //   s1.alignedOrDominatedAliasedSet() == s1.
+    //   d0.alignedOrDominatedAliasedSet() == s0 | s1 | d0.
+    //
+    // This way the Allocator register set does not have to do any arithmetics
+    // to know if a register is available or not, as we have the following
+    // relations:
+    //
+    //   d0.alignedOrDominatedAliasedSet() ==
+    //       s0.alignedOrDominatedAliasedSet() | s1.alignedOrDominatedAliasedSet()
+    //
+    //   s0.alignedOrDominatedAliasedSet() & s1.alignedOrDominatedAliasedSet() == 0
+    //
+    SetType alignedOrDominatedAliasedSet() const {
+        if (isSingle()) {
+            if (code_ % 2 != 0)
+                return SetType(1) << code_;
+            return (SetType(1) << code_) | (SetType(1) << (32 + code_ / 2));
+        }
+
+        MOZ_ASSERT(isDouble());
+        return (SetType(0b11) << (code_ * 2)) | (SetType(1) << (32 + code_));
+    }
+
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
         return mozilla::CountPopulation32(x);

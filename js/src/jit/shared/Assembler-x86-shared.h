@@ -1053,8 +1053,8 @@ class AssemblerX86Shared : public AssemblerShared
         masm.setCC_r(static_cast<X86Encoding::Condition>(cond), r.code());
     }
     void testb(Register rhs, Register lhs) {
-        MOZ_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(rhs));
-        MOZ_ASSERT(GeneralRegisterSet(Registers::SingleByteRegs).has(lhs));
+        MOZ_ASSERT(AllocatableGeneralRegisterSet(Registers::SingleByteRegs).has(rhs));
+        MOZ_ASSERT(AllocatableGeneralRegisterSet(Registers::SingleByteRegs).has(lhs));
         masm.testb_rr(rhs.code(), lhs.code());
     }
     void testw(Register rhs, Register lhs) {

@@ -15,13 +15,13 @@ using mozilla::DebugOnly;
 bool
 BacktrackingAllocator::init()
 {
-    RegisterSet remainingRegisters(allRegisters_);
-    while (!remainingRegisters.empty(/* float = */ false)) {
-        AnyRegister reg = AnyRegister(remainingRegisters.takeUnaliasedGeneral());
+    LiveRegisterSet remainingRegisters(allRegisters_.asLiveSet());
+    while (!remainingRegisters.emptyGeneral()) {
+        AnyRegister reg = AnyRegister(remainingRegisters.takeAnyGeneral());
         registers[reg.code()].allocatable = true;
     }
-    while (!remainingRegisters.empty(/* float = */ true)) {
-        AnyRegister reg = AnyRegister(remainingRegisters.takeUnaliasedFloat());
+    while (!remainingRegisters.emptyFloat()) {
+        AnyRegister reg = AnyRegister(remainingRegisters.takeAnyFloat());
         registers[reg.code()].allocatable = true;
     }
 
