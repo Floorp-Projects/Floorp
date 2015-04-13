@@ -27,6 +27,7 @@ CacheIOThread::CacheIOThread()
 , mHasXPCOMEvents(false)
 , mRerunCurrentEvent(false)
 , mShutdown(false)
+, mInsideLoop(true)
 {
   sSelf = this;
 }
@@ -237,6 +238,9 @@ loopStart:
     } while (true);
 
     MOZ_ASSERT(!EventsPending());
+
+    // This is for correct assertion on XPCOM events dispatch.
+    mInsideLoop = false;
   } // lock
 
   if (threadInternal)
@@ -313,7 +317,7 @@ NS_IMETHODIMP CacheIOThread::OnDispatchedEvent(nsIThreadInternal *thread)
 {
   MonitorAutoLock lock(mMonitor);
   mHasXPCOMEvents = true;
-  MOZ_ASSERT(!mShutdown || (PR_GetCurrentThread() == mThread));
+  MOZ_ASSERT(mInsideLoop);
   lock.Notify();
   return NS_OK;
 }
