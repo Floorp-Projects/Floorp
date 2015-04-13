@@ -21,7 +21,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-struct PCacheQueryParams
+struct CacheQueryParams
 {
   bool ignoreSearch;
   bool ignoreMethod;
@@ -30,7 +30,7 @@ struct PCacheQueryParams
   nsString cacheName;
 };
 
-struct PCacheReadStream
+struct CacheReadStream
 {
   nsID id;
   OptionalInputStreamParams params;
@@ -39,13 +39,13 @@ struct PCacheReadStream
   nullable PCachePushStream pushStream;
 };
 
-union PCacheReadStreamOrVoid
+union CacheReadStreamOrVoid
 {
   void_t;
-  PCacheReadStream;
+  CacheReadStream;
 };
 
-struct PCacheRequest
+struct CacheRequest
 {
   nsCString method;
   nsString url;
@@ -55,19 +55,19 @@ struct PCacheRequest
   nsString referrer;
   RequestMode mode;
   RequestCredentials credentials;
-  PCacheReadStreamOrVoid body;
+  CacheReadStreamOrVoid body;
   uint32_t contentPolicyType;
   RequestContext context;
   RequestCache requestCache;
 };
 
-union PCacheRequestOrVoid
+union CacheRequestOrVoid
 {
   void_t;
-  PCacheRequest;
+  CacheRequest;
 };
 
-struct PCacheResponse
+struct CacheResponse
 {
   ResponseType type;
   nsString url;
@@ -75,37 +75,37 @@ struct PCacheResponse
   nsCString statusText;
   PHeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
-  PCacheReadStreamOrVoid body;
+  CacheReadStreamOrVoid body;
   nsCString securityInfo;
 };
 
-union PCacheResponseOrVoid
+union CacheResponseOrVoid
 {
   void_t;
-  PCacheResponse;
+  CacheResponse;
 };
 
 struct CacheRequestResponse
 {
-  PCacheRequest request;
-  PCacheResponse response;
+  CacheRequest request;
+  CacheResponse response;
 };
 
 struct CacheMatchArgs
 {
-  PCacheRequest request;
-  PCacheQueryParams params;
+  CacheRequest request;
+  CacheQueryParams params;
 };
 
 struct CacheMatchAllArgs
 {
-  PCacheRequestOrVoid requestOrVoid;
-  PCacheQueryParams params;
+  CacheRequestOrVoid requestOrVoid;
+  CacheQueryParams params;
 };
 
 struct CacheAddAllArgs
 {
-  PCacheRequest[] requestList;
+  CacheRequest[] requestList;
 };
 
 struct CachePutAllArgs
@@ -115,20 +115,20 @@ struct CachePutAllArgs
 
 struct CacheDeleteArgs
 {
-  PCacheRequest request;
-  PCacheQueryParams params;
+  CacheRequest request;
+  CacheQueryParams params;
 };
 
 struct CacheKeysArgs
 {
-  PCacheRequestOrVoid requestOrVoid;
-  PCacheQueryParams params;
+  CacheRequestOrVoid requestOrVoid;
+  CacheQueryParams params;
 };
 
 struct StorageMatchArgs
 {
-  PCacheRequest request;
-  PCacheQueryParams params;
+  CacheRequest request;
+  CacheQueryParams params;
 };
 
 struct StorageHasArgs
@@ -167,12 +167,12 @@ union CacheOpArgs
 
 struct CacheMatchResult
 {
-  PCacheResponseOrVoid responseOrVoid;
+  CacheResponseOrVoid responseOrVoid;
 };
 
 struct CacheMatchAllResult
 {
-  PCacheResponse[] responseList;
+  CacheResponse[] responseList;
 };
 
 struct CacheAddAllResult
@@ -190,12 +190,12 @@ struct CacheDeleteResult
 
 struct CacheKeysResult
 {
-  PCacheRequest[] requestList;
+  CacheRequest[] requestList;
 };
 
 struct StorageMatchResult
 {
-  PCacheResponseOrVoid responseOrVoid;
+  CacheResponseOrVoid responseOrVoid;
 };
 
 struct StorageHasResult
