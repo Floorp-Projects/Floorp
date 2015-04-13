@@ -339,7 +339,7 @@ FetchPut::MatchInPutList(const CacheRequest& aRequest,
   }
 
   nsRefPtr<InternalHeaders> requestHeaders =
-    new InternalHeaders(aRequest.headers());
+    ToInternalHeaders(aRequest.headers());
 
   for (uint32_t i = 0; i < aPutList.Length(); ++i) {
     const CacheRequest& cachedRequest = aPutList[i].request();
@@ -351,10 +351,10 @@ FetchPut::MatchInPutList(const CacheRequest& aRequest,
     }
 
     nsRefPtr<InternalHeaders> cachedRequestHeaders =
-      new InternalHeaders(cachedRequest.headers());
+      ToInternalHeaders(cachedRequest.headers());
 
     nsRefPtr<InternalHeaders> cachedResponseHeaders =
-      new InternalHeaders(cachedResponse.headers());
+      ToInternalHeaders(cachedResponse.headers());
 
     nsAutoTArray<nsCString, 16> varyHeaders;
     ErrorResult rv;
