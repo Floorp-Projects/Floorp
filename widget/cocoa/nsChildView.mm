@@ -1900,6 +1900,8 @@ nsChildView::ConfigureAPZControllerThread()
     // The EventThreadRunner is the controller thread, but it doesn't
     // have a MessageLoop.
     APZThreadUtils::SetControllerThread(nullptr);
+  } else {
+    nsBaseWidget::ConfigureAPZControllerThread();
   }
 }
 
