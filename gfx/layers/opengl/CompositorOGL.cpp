@@ -131,18 +131,12 @@ CompositorOGL::CreateContext()
                                                  caps, requireCompatProfile);
   }
 
-  if (!context) {
+  if (!context)
     context = gl::GLContextProvider::CreateForWindow(mWidget);
-  }
 
   if (!context) {
     NS_WARNING("Failed to create CompositorOGL context");
   }
-
-#ifdef MOZ_WIDGET_GONK
-  mWidget->SetNativeData(NS_NATIVE_OPENGL_CONTEXT,
-                         reinterpret_cast<uintptr_t>(context.get()));
-#endif
 
   return context.forget();
 }
