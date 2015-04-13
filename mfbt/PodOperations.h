@@ -89,6 +89,18 @@ PodAssign(T* aDst, const T* aSrc)
 }
 
 /**
+ * Set the first |aNElem| T elements in |aDst| to |aSrc|.
+ */
+template<typename T>
+static MOZ_ALWAYS_INLINE void
+PodSet(T* aDst, T aSrc, size_t aNElem)
+{
+  for (const T* dstend = aDst + aNElem; aDst < dstend; aDst++) {
+    *aDst = aSrc;
+  }
+}
+
+/**
  * Copy |aNElem| T elements from |aSrc| to |aDst|.  The two memory ranges must
  * not overlap!
  */
