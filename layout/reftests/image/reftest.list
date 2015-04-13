@@ -1,4 +1,4 @@
-skip-if(Mulet) fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1-ref.html
 == background-image-zoom-2.html about:blank
 == image-seam-1a.html image-seam-1-ref.html
 == image-seam-1b.html image-seam-1-ref.html

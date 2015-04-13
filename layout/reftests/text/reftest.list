@@ -11,7 +11,7 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 # in the "obvious" way, but it is unclear what the behavior should really be;
 # see bug #366138 for some (inconclusive) discussion
 # == font-size-adjust-03.html font-size-adjust-03-ref.html
-skip-if(Mulet) == justification-1.html justification-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== justification-1.html justification-1-ref.html
 == justification-2a.html justification-2-ref.html
 == justification-2b.html justification-2-ref.html
 == justification-2c.html justification-2-ref.html
@@ -45,7 +45,7 @@ fuzzy-if(Android,255,42) == pre-line-1.html pre-line-1-ref.html
 # Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually)
 # and D2D have subpixel positioning.  The tests for pixel-snapping assume that
 # 1 CSS pixel == 1 device pixel
-skip-if(Mulet) fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
 # Platforms with subpixel positioning already have inconsistent glyphs by
 # design, but that is considered more tolerable because they are subpixel
 # inconsistencies.  On those platforms we just test that glyph positions are
@@ -54,8 +54,8 @@ skip-if(Mulet) fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-
 skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
 skip-if(B2G||Mulet) HTTP(..) == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html # Initial mulet triage: parity with B2G/B2G Desktop
 # No platforms do subpixel positioning vertically
-skip-if(Mulet) fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if((Android||B2G),231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android,19,2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html
+fuzzy-if((Android||B2G),231,653) == subpixel-lineheight-1a.html subpixel-lineheight-1b.html
 == swash-1.html swash-1-ref.html
 HTTP(..) != synthetic-bold-metrics-01.html synthetic-bold-metrics-01-notref.html
 HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html

@@ -54,8 +54,8 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 == currentColor-01.svg pass.svg
 == currentColor-02.svg pass.svg
 == currentColor-03.svg pass.svg
-skip-if(Mulet) == data-uri-with-filter-01.xhtml data-uri-with-filter-01-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == data-uri-with-gradient-01.xhtml data-uri-with-gradient-01-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== data-uri-with-filter-01.xhtml data-uri-with-filter-01-ref.svg
+== data-uri-with-gradient-01.xhtml data-uri-with-gradient-01-ref.svg
 == data-uri-with-pattern-01.xhtml pass.svg
 == dynamic-attr-removal-1.svg pass.svg
 == dynamic-attr-removal-2.svg pass.svg
@@ -182,10 +182,10 @@ fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic
 == foreignObject-vertical-01.svg foreignObject-vertical-01-ref.svg
 == g-transform-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) == gradient-live-01a.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) == gradient-live-01b.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) == gradient-live-01c.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) == gradient-live-01d.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) skip-if(Mulet) == gradient-live-01a.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) skip-if(Mulet) == gradient-live-01b.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) skip-if(Mulet) == gradient-live-01c.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+fuzzy-if(Android||B2G,9,980||Mulet,9,980) skip-if(Mulet) == gradient-live-01d.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 == gradient-transform-01.svg pass.svg
 == import-svg-01.html pass.svg
 == invalid-text-01.svg pass.svg
@@ -400,25 +400,25 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspa
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
 == mask-img.html mask-img-ref.html
 
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color-ref.svg
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-darken.svg blend-darken-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hue.svg blend-hue-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-blend.svg blend-layer-blend-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-filter.svg blend-layer-filter-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mask.svg blend-layer-mask-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity-ref.svg
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
 #skip-if(B2G||Mulet||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg
 #skip-if(Android)  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light-ref.svg
-skip-if(Mulet) skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
