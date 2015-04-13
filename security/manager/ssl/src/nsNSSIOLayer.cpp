@@ -2532,11 +2532,6 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     }
   }
 
-  // Let's see if we're trying to connect to a site we know is
-  // TLS intolerant.
-  nsAutoCString key;
-  key = nsDependentCString(host) + NS_LITERAL_CSTRING(":") + nsPrintfCString("%d", port);
-
   SSLVersionRange range;
   if (SSL_VersionRangeGet(fd, &range) != SECSuccess) {
     return NS_ERROR_FAILURE;

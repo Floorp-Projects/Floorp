@@ -176,7 +176,7 @@ class AbstractFramePtr
     bool operator ==(const AbstractFramePtr& other) const { return ptr_ == other.ptr_; }
     bool operator !=(const AbstractFramePtr& other) const { return ptr_ != other.ptr_; }
 
-    operator bool() const { return !!ptr_; }
+    explicit operator bool() const { return !!ptr_; }
 
     inline JSObject* scopeChain() const;
     inline CallObject& callObj() const;

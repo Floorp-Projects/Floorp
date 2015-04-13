@@ -44,10 +44,6 @@ public:
   // in the overrided function.
   virtual nsresult Flush();
 
-  virtual void AllocateMediaResources() {}
-
-  virtual void ReleaseMediaResources() {}
-
   // It should be called in MediaTash thread.
   bool HasQueuedSample() {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
@@ -99,12 +95,6 @@ public:
   virtual nsresult Shutdown() override;
 
   virtual bool IsWaitingMediaResources() override;
-
-  virtual bool IsDormantNeeded() { return true;}
-
-  virtual void AllocateMediaResources() override;
-
-  virtual void ReleaseMediaResources() override;
 
 private:
 

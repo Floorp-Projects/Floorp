@@ -200,8 +200,6 @@
 #include "nsIBrowserSearchService.h"
 #endif
 
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-
 #if defined(DEBUG_bryner) || defined(DEBUG_chb)
 //#define DEBUG_DOCSHELL_FOCUS
 #define DEBUG_PAGE_CACHE
@@ -221,9 +219,6 @@ using namespace mozilla::dom;
 static bool gAddedPreferencesVarCache = false;
 
 bool nsDocShell::sUseErrorPages = false;
-
-// Number of documents currently loading
-static int32_t gNumberOfDocumentsLoading = 0;
 
 // Global count of existing docshells.
 static int32_t gDocShellCount = 0;
@@ -254,18 +249,6 @@ static PRLogModuleInfo* gDocShellLeakLog;
 
 const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 const char kAppstringsBundleURL[] = "chrome://global/locale/appstrings.properties";
-
-static void
-FavorPerformanceHint(bool aPerfOverStarvation)
-{
-  nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
-  if (appShell) {
-    appShell->FavorPerformanceHint(
-      aPerfOverStarvation,
-      Preferences::GetUint("docshell.event_starvation_delay_hint",
-                           NS_EVENT_STARVATION_DELAY_HINT));
-  }
-}
 
 //*****************************************************************************
 // <a ping> support
@@ -7541,14 +7524,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     mIsExecutingOnLoadHandler = false;
 
     mEODForCurrentDocument = true;
-
-    // If all documents have completed their loading
-    // favor native event dispatch priorities
-    // over performance
-    if (--gNumberOfDocumentsLoading == 0) {
-      // Hint to use normal native event dispatch priorities
-      FavorPerformanceHint(false);
-    }
   }
   /* Check if the httpChannel has any cache-control related response headers,
    * like no-store, no-cache. If so, update SHEntry so that
@@ -8678,12 +8653,6 @@ nsDocShell::RestoreFromHistory()
   mSavingOldViewer = false;
   mEODForCurrentDocument = false;
 
-  // Tell the event loop to favor plevents over user events, see comments
-  // in CreateContentViewer.
-  if (++gNumberOfDocumentsLoading == 1) {
-    FavorPerformanceHint(true);
-  }
-
   if (oldCv && newCv) {
     newCv->SetMinFontSize(minFontSize);
     newCv->SetTextZoom(textZoom);
@@ -9094,16 +9063,6 @@ nsDocShell::CreateContentViewer(const nsACString& aContentType,
         doc->SetPartID(partID);
       }
     }
-  }
-
-  // Give hint to native plevent dispatch mechanism. If a document
-  // is loading the native plevent dispatch mechanism should favor
-  // performance over normal native event dispatch priorities.
-  if (++gNumberOfDocumentsLoading == 1) {
-    // Hint to favor performance for the plevent notification mechanism.
-    // We want the pages to load as fast as possible even if its means
-    // native messages might be starved.
-    FavorPerformanceHint(true);
   }
 
   if (onLocationChangeNeeded) {

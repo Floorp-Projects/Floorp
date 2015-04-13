@@ -1187,7 +1187,7 @@ class LRecoverInfo : public TempObject
             return *this;
         }
 
-        operator bool() const {
+        explicit operator bool() const {
             return it_ == end_;
         }
 

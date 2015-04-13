@@ -2350,14 +2350,5 @@ XPCJSObjectHolder::~XPCJSObjectHolder()
 void
 XPCJSObjectHolder::TraceJS(JSTracer* trc)
 {
-    trc->setTracingDetails(GetTraceName, this, 0);
     JS_CallObjectTracer(trc, &mJSObj, "XPCJSObjectHolder::mJSObj");
-}
-
-// static
-void
-XPCJSObjectHolder::GetTraceName(JSTracer* trc, char* buf, size_t bufsize)
-{
-    JS_snprintf(buf, bufsize, "XPCJSObjectHolder[0x%p].mJSObj",
-                trc->debugPrintArg());
 }

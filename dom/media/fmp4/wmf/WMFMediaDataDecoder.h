@@ -70,9 +70,6 @@ public:
   virtual nsresult Shutdown() override;
 
   virtual bool IsWaitingMediaResources() { return false; };
-  virtual bool IsDormantNeeded() { return true; };
-  virtual void AllocateMediaResources() override;
-  virtual void ReleaseMediaResources() override;
   virtual bool IsHardwareAccelerated() const override;
 
 private:
@@ -90,7 +87,6 @@ private:
   void ProcessDrain();
 
   void ProcessShutdown();
-  void ProcessReleaseDecoder();
 
   RefPtr<FlushableMediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;

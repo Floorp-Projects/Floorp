@@ -36,7 +36,7 @@ public class testClearPrivateData extends PixelTest {
         String blank2 = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         String title = mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
 
-        loadUrl(blank1);
+        loadUrlAndWait(blank1);
         verifyUrlBarTitle(blank1);
         mDatabaseHelper.addOrUpdateMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
 

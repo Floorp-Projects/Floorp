@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title></title>
+    <style type="text/css">
+.grid {
+  block-size: 60px;
+  border: 2px solid green;
+  position: relative;
+}
+
+span {
+  position: absolute;
+  background: lime;
+  border: 1px solid black;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.test1 .a {
+  offset-block-start: 0;
+  offset-inline-start: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+}
+.test1 .b {
+  offset-block-start: 20px;
+  offset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test1 .c {
+  offset-block-start: 0;
+  offset-inline-start: 80px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test1 .e {
+  offset-block-start: 20px;
+  offset-inline-start: 0px;
+}
+.test1 .d2 {
+  offset-block-start: 0px;
+  offset-inline-start: 40px;
+}
+
+.test2 .a {
+  offset-block-start: 0;
+  offset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test2 .b {
+  offset-block-start: 20px;
+  offset-inline-start: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+}
+.test2 .c {
+  offset-block-start: 0;
+  offset-inline-start: 80px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test2 .e {
+  offset-block-start: 20px;
+  offset-inline-start: 0px;
+}
+.test2 .d2 {
+  offset-block-start: 20px;
+  offset-inline-start: 40px;
+}
+
+.test3 .a {
+  offset-block-start: 0;
+  offset-inline-start: 0;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test3 .b {
+  offset-block-start: 40px;
+  offset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test3 .c {
+  offset-block-start: 60px;
+  offset-inline-start: 0px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test3 .d { offset-block-start: 60px; offset-inline-start:60px; }
+.test3 .e {
+  offset-block-start: 20px;
+  offset-inline-start: 60px;
+}
+.test3 .d2 {
+  offset-block-start: 80px;
+  offset-inline-start: 60px;
+}
+
+.test4 .c {
+  offset-block-start: 0;
+  offset-inline-start: 20px;
+  inline-size: 60px;
+  block-size: 40px;
+}
+.test4 .d { offset-block-start: 40px; }
+.test4 .e {
+  offset-block-start: 20px;
+  offset-inline-start: 0px;
+}
+.test4 .d2 {
+  offset-block-start: 40px;
+  offset-inline-start: 20px;
+}
+
+.test5 .c {
+  offset-block-start: 20px;
+  offset-inline-start: 0;
+  inline-size: 60px;
+  block-size: 20px;
+}
+.test5 .e {
+  offset-block-start: 20px;
+  offset-inline-start: 60px;
+}
+.test5 .d2 {
+  offset-block-start: 0px;
+  offset-inline-start: 20px;
+}
+
+.test6 { offset-inline-start: 0px; offset-block-start: 20px;}
+.test6d2 {
+  offset-block-start: 20px;
+  offset-inline-start: 140px;
+}
+.test6e {
+  offset-block-start: 20px;
+  offset-inline-start: 160px;
+}
+    </style>
+</head>
+<body dir=rtl>
+
+<div class="grid test1">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test2">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test3" style="block-size:100px">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test4">
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test5">
+<span class="c">c</span>
+<span class="d">d</span>
+<span class="d2">D</span>
+<span class="e">e</span>
+</div>
+
+<div class="grid test1">
+<span class="a">a</span>
+<span class="b">b</span>
+<span class="c">c</span>
+<span class="test6">d</span>
+<span class="test6d2">D</span>
+<span class="test6e">e</span>
+</div>
+
+</body>
+</html>

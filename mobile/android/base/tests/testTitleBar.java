@@ -24,17 +24,17 @@ public class testTitleBar extends PixelTest {
         String title = mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
 
         // Loading a page
-        loadUrl(blank1);
+        loadUrlAndWait(blank1);
         verifyUrlBarTitle(blank1);
 
         // Ensure the title is displayed in the URL Bar
         selectOption(mStringHelper.SHOW_PAGE_TITLE_LABEL);
-        loadUrl(blank1);
+        loadUrlAndWait(blank1);
         verifyUrlBarTitle(title);
 
         // Ensure the full URL is displayed in the URL Bar
         selectOption(mStringHelper.SHOW_PAGE_ADDRESS_LABEL);
-        loadUrl(blank1);
+        loadUrlAndWait(blank1);
         verifyUrlBarTitle(blank1);
     }
 
