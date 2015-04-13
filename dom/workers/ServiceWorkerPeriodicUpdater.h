@@ -15,6 +15,14 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
+/**
+ * This XPCOM component is main-process only, which means that it will never
+ * get instantiated in child processes.  When we receive the idle-daily
+ * notification in this component, we iterate over all PContent children, and
+ * send each one a message that will trigger a call to
+ * nsIServiceWorkerManager::UpdateAllRegistrations() in all child processes.
+ */
+
 class ServiceWorkerPeriodicUpdater final : public nsIObserver
 {
 public:

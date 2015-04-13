@@ -34,6 +34,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/unused.h"
 
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
@@ -3107,6 +3108,28 @@ ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
   }
 
   array.forget(aResult);
+  return NS_OK;
+}
+
+static PLDHashOperator
+UpdateEachRegistration(const nsACString& aKey,
+                       ServiceWorkerRegistrationInfo* aInfo,
+                       void* aUserArg) {
+  auto This = static_cast<ServiceWorkerManager*>(aUserArg);
+  MOZ_ASSERT(!aInfo->mScope.IsEmpty());
+  nsresult res = This->Update(NS_ConvertUTF8toUTF16(aInfo->mScope));
+  unused << NS_WARN_IF(NS_FAILED(res));
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::UpdateAllRegistrations()
+{
+  AssertIsOnMainThread();
+
+  mServiceWorkerRegistrationInfos.EnumerateRead(UpdateEachRegistration, this);
+
   return NS_OK;
 }
 
