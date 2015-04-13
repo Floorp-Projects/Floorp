@@ -21,7 +21,7 @@
           android:visible="false"/>
 
     <item android:id="@+id/bookmark"
-          android:icon="@drawable/new_tablet_ic_menu_bookmark_add"
+          android:icon="@drawable/ic_menu_bookmark_add"
           android:title="@string/bookmark"
           android:showAsAction="always"/>
 
@@ -39,6 +39,8 @@
 
          The visibility is changed dynamically for v14+ - hide for previous versions. -->
     <item android:id="@+id/quickshare"
+          android:visible="false"
+          android:enabled="false"
           android:visibility="gone"
           android:showAsAction="collapseActionView"/>
 

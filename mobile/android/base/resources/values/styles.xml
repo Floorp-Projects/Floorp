@@ -508,23 +508,11 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="TabsPanelFrameBase">
+    <style name="PrivateTabsPanelFrame">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
         <item name="android:paddingTop">32dp</item>
         <item name="android:orientation">vertical</item>
-    </style>
-
-    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
-        <!-- We set values in landscape. -->
-    </style>
-
-    <style name="TabsPanelFrame.PrivateTabs">
-        <!-- We set values on tablet. -->
-    </style>
-
-    <style name="TabsPanelFrame.RemoteTabs">
-        <!-- We set values on tablet. -->
     </style>
 
     <style name="TabsPanelSectionBase">
@@ -555,20 +543,6 @@
         <!-- We set values in landscape. -->
     </style>
 
-    <style name="TabsPanelItem.ButtonBase">
-        <item name="android:background">@drawable/remote_tabs_setup_button_background</item>
-        <item name="android:textColor">#FFFEFF</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:gravity">center</item>
-    </style>
-
-    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
-        <item name="android:paddingTop">18dp</item>
-        <item name="android:paddingBottom">18dp</item>
-        <item name="android:paddingLeft">9dp</item>
-        <item name="android:paddingRight">9dp</item>
-    </style>
-
     <style name="TabsPanelItem.TextAppearance">
         <item name="android:textColor">#C0C9D0</item>
         <item name="android:textSize">14sp</item>
@@ -578,10 +552,6 @@
     <style name="TabsPanelItem.TextAppearance.Header">
         <item name="android:textSize">18sp</item>
         <item name="android:layout_marginBottom">16dp</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
-        <!-- We change these values on landscape. -->
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
@@ -595,10 +565,6 @@
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
-        <item name="android:layout_height">wrap_content</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Linkified.Resend">
         <item name="android:layout_height">wrap_content</item>
     </style>
 

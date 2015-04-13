@@ -6,7 +6,7 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
         skin/classic/browser/sanitizeDialog.css
 *       skin/classic/browser/aboutSessionRestore.css                 (../shared/aboutSessionRestore.css)
-        skin/classic/browser/aboutSessionRestore-window-icon-aero.png
+        skin/classic/browser/aboutSessionRestore-window-icon.png
         skin/classic/browser/aboutWelcomeBack.css                    (../shared/aboutWelcomeBack.css)
         skin/classic/browser/aboutCertError.css
         skin/classic/browser/aboutCertError_sectionCollapsed.png
@@ -36,9 +36,9 @@ browser.jar:
         skin/classic/browser/heartbeat-star-lit.svg                  (../shared/heartbeat-star-lit.svg)
         skin/classic/browser/heartbeat-star-off.svg                  (../shared/heartbeat-star-off.svg)
         skin/classic/browser/Info.png
-        skin/classic/browser/Info-aero.png
+        skin/classic/browser/Info-XP.png
         skin/classic/browser/identity.png
-        skin/classic/browser/identity-aero.png
+        skin/classic/browser/identity-XP.png
         skin/classic/browser/identity-icons-generic.png
         skin/classic/browser/identity-icons-https.png
         skin/classic/browser/identity-icons-https-ev.png
@@ -47,15 +47,15 @@ browser.jar:
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
-        skin/classic/browser/livemark-folder-aero.png
+        skin/classic/browser/livemark-folder-XP.png
         skin/classic/browser/magnifier.png                          (../shared/magnifier.png)
         skin/classic/browser/magnifier@2x.png                       (../shared/magnifier@2x.png)
         skin/classic/browser/mask.png                               (../shared/mask.png)
         skin/classic/browser/mask@2x.png                            (../shared/mask@2x.png)
         skin/classic/browser/menu-back.png
-        skin/classic/browser/menu-back-aero.png
+        skin/classic/browser/menu-back-XP.png
         skin/classic/browser/menu-forward.png
-        skin/classic/browser/menu-forward-aero.png
+        skin/classic/browser/menu-forward-XP.png
         skin/classic/browser/menuPanel.png
         skin/classic/browser/menuPanel-aero.png
         skin/classic/browser/menuPanel-customize.png
@@ -77,13 +77,13 @@ browser.jar:
         skin/classic/browser/notification-64.png
         skin/classic/browser/pageInfo.css
         skin/classic/browser/pageInfo.png
-        skin/classic/browser/pageInfo-aero.png
+        skin/classic/browser/pageInfo-XP.png
         skin/classic/browser/pointerLock-16.png
         skin/classic/browser/pointerLock-64.png
         skin/classic/browser/Privacy-16.png
-        skin/classic/browser/Privacy-16-aero.png
+        skin/classic/browser/Privacy-16-XP.png
         skin/classic/browser/Privacy-32.png
-        skin/classic/browser/Privacy-32-aero.png
+        skin/classic/browser/Privacy-32-XP.png
         skin/classic/browser/Privacy-48.png
         skin/classic/browser/privatebrowsing-mask-tabstrip.png
         skin/classic/browser/privatebrowsing-mask-tabstrip-XPVista7.png
@@ -93,7 +93,7 @@ browser.jar:
         skin/classic/browser/reload-stop-go.png
         skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
-        skin/classic/browser/searchbar-dropdown-arrow-aero.png
+        skin/classic/browser/searchbar-dropdown-arrow-XP.png
         skin/classic/browser/search-pref.png                         (../shared/search/search-pref.png)
         skin/classic/browser/search-indicator.png                    (../shared/search/search-indicator.png)
         skin/classic/browser/search-indicator-add-engine.png         (../shared/search/search-indicator-add-engine.png)
@@ -102,7 +102,7 @@ browser.jar:
         skin/classic/browser/search-indicator-badge-add.png          (../shared/search/search-indicator-badge-add.png)
         skin/classic/browser/search-history-icon.svg                 (../shared/search/history-icon.svg)
         skin/classic/browser/Secure24.png
-        skin/classic/browser/Secure24-aero.png
+        skin/classic/browser/Secure24-XP.png
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/slowStartup-16.png
         skin/classic/browser/theme-switcher-icon.png                 (../shared/theme-switcher-icon.png)
@@ -174,7 +174,7 @@ browser.jar:
         skin/classic/browser/customizableui/whimsy-bw@2x.png  (../shared/customizableui/whimsy-bw@2x.png)
         skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
         skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
-        skin/classic/browser/downloads/buttons-aero.png              (downloads/buttons-aero.png)
+        skin/classic/browser/downloads/buttons-XP.png                (downloads/buttons-XP.png)
         skin/classic/browser/downloads/contentAreaDownloadsView.css  (downloads/contentAreaDownloadsView.css)
         skin/classic/browser/downloads/download-glow-menuPanel-XPVista7.png   (downloads/download-glow-menuPanel-XPVista7.png)
         skin/classic/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
@@ -183,8 +183,8 @@ browser.jar:
         skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
-        skin/classic/browser/feeds/feedIcon-aero.png                 (feeds/feedIcon-aero.png)
-        skin/classic/browser/feeds/feedIcon16-aero.png               (feeds/feedIcon16-aero.png)
+        skin/classic/browser/feeds/feedIcon-XP.png                   (feeds/feedIcon-XP.png)
+        skin/classic/browser/feeds/feedIcon16-XP.png                 (feeds/feedIcon16-XP.png)
         skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
         skin/classic/browser/feeds/subscribe-ui.css                  (feeds/subscribe-ui.css)
 *       skin/classic/browser/newtab/newTab.css                       (newtab/newTab.css)
@@ -195,49 +195,49 @@ browser.jar:
         skin/classic/browser/places/places.css                       (places/places.css)
 *       skin/classic/browser/places/organizer.css                    (places/organizer.css)
         skin/classic/browser/places/bookmark.png                     (places/bookmark.png)
-        skin/classic/browser/places/bookmark-aero.png                (places/bookmark-aero.png)
+        skin/classic/browser/places/bookmark-XP.png                  (places/bookmark-XP.png)
         skin/classic/browser/places/query.png                        (places/query.png)
-        skin/classic/browser/places/query-aero.png                   (places/query-aero.png)
+        skin/classic/browser/places/query-XP.png                     (places/query-XP.png)
         skin/classic/browser/places/bookmarksMenu.png                (places/bookmarksMenu.png)
-        skin/classic/browser/places/bookmarksMenu-aero.png           (places/bookmarksMenu-aero.png)
+        skin/classic/browser/places/bookmarksMenu-XP.png             (places/bookmarksMenu-XP.png)
         skin/classic/browser/places/bookmarksToolbar.png             (places/bookmarksToolbar.png)
-        skin/classic/browser/places/bookmarksToolbar-aero.png        (places/bookmarksToolbar-aero.png)
+        skin/classic/browser/places/bookmarksToolbar-XP.png          (places/bookmarksToolbar-XP.png)
         skin/classic/browser/places/bookmarksToolbar-menuPanel.png   (places/bookmarksToolbar-menuPanel.png)
-        skin/classic/browser/places/bookmarksToolbar-menuPanel-aero.png (places/bookmarksToolbar-menuPanel-aero.png)
+        skin/classic/browser/places/bookmarksToolbar-menuPanel-XP.png (places/bookmarksToolbar-menuPanel-XP.png)
         skin/classic/browser/places/bookmarks-notification-finish.png (places/bookmarks-notification-finish.png)
         skin/classic/browser/places/calendar.png                     (places/calendar.png)
-        skin/classic/browser/places/calendar-aero.png                (places/calendar-aero.png)
+        skin/classic/browser/places/calendar-XP.png                  (places/calendar-XP.png)
         skin/classic/browser/places/toolbarDropMarker.png            (places/toolbarDropMarker.png)
-        skin/classic/browser/places/toolbarDropMarker-aero.png       (places/toolbarDropMarker-aero.png)
+        skin/classic/browser/places/toolbarDropMarker-XP.png         (places/toolbarDropMarker-XP.png)
         skin/classic/browser/places/editBookmarkOverlay.css          (places/editBookmarkOverlay.css)
         skin/classic/browser/places/libraryToolbar.png               (places/libraryToolbar.png)
-        skin/classic/browser/places/libraryToolbar-aero.png          (places/libraryToolbar-aero.png)
+        skin/classic/browser/places/libraryToolbar-XP.png            (places/libraryToolbar-XP.png)
         skin/classic/browser/places/starred48.png                    (places/starred48.png)
-        skin/classic/browser/places/starred48-aero.png               (places/starred48-aero.png)
+        skin/classic/browser/places/starred48-XP.png                 (places/starred48-XP.png)
         skin/classic/browser/places/unstarred48.png                  (places/unstarred48.png)
         skin/classic/browser/places/tag.png                          (places/tag.png)
-        skin/classic/browser/places/tag-aero.png                     (places/tag-aero.png)
+        skin/classic/browser/places/tag-XP.png                       (places/tag-XP.png)
         skin/classic/browser/places/history.png                      (places/history.png)
-        skin/classic/browser/places/history-aero.png                 (places/history-aero.png)
+        skin/classic/browser/places/history-XP.png                   (places/history-XP.png)
         skin/classic/browser/places/allBookmarks.png                 (places/allBookmarks.png)
-        skin/classic/browser/places/allBookmarks-aero.png            (places/allBookmarks-aero.png)
+        skin/classic/browser/places/allBookmarks-XP.png              (places/allBookmarks-XP.png)
         skin/classic/browser/places/unsortedBookmarks.png            (places/unsortedBookmarks.png)
-        skin/classic/browser/places/unsortedBookmarks-aero.png       (places/unsortedBookmarks-aero.png)
+        skin/classic/browser/places/unsortedBookmarks-XP.png         (places/unsortedBookmarks-XP.png)
         skin/classic/browser/places/downloads.png                    (places/downloads.png)
         skin/classic/browser/places/livemark-item.png                (places/livemark-item.png)
         skin/classic/browser/preferences/alwaysAsk.png               (preferences/alwaysAsk.png)
-        skin/classic/browser/preferences/alwaysAsk-aero.png          (preferences/alwaysAsk-aero.png)
+        skin/classic/browser/preferences/alwaysAsk-XP.png            (preferences/alwaysAsk-XP.png)
         skin/classic/browser/preferences/application.png             (preferences/application.png)
-        skin/classic/browser/preferences/application-aero.png        (preferences/application-aero.png)
+        skin/classic/browser/preferences/application-XP.png          (preferences/application-XP.png)
         skin/classic/browser/preferences/mail.png                    (preferences/mail.png)
-        skin/classic/browser/preferences/mail-aero.png               (preferences/mail-aero.png)
+        skin/classic/browser/preferences/mail-XP.png                 (preferences/mail-XP.png)
         skin/classic/browser/preferences/Options.png                 (preferences/Options.png)
-        skin/classic/browser/preferences/Options-aero.png            (preferences/Options-aero.png)
+        skin/classic/browser/preferences/Options-XP.png              (preferences/Options-XP.png)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/preferences/Options-sync.png            (preferences/Options-sync.png)
 #endif
         skin/classic/browser/preferences/saveFile.png                (preferences/saveFile.png)
-        skin/classic/browser/preferences/saveFile-aero.png           (preferences/saveFile-aero.png)
+        skin/classic/browser/preferences/saveFile-XP.png             (preferences/saveFile-XP.png)
 *       skin/classic/browser/preferences/preferences.css             (preferences/preferences.css)
 *       skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
 *       skin/classic/browser/preferences/in-content/dialog.css       (preferences/in-content/dialog.css)
@@ -288,7 +288,7 @@ browser.jar:
         skin/classic/browser/tabbrowser/tab-stroke-start@2x.png      (tabbrowser/tab-stroke-start@2x.png)
         skin/classic/browser/tabbrowser/tabDragIndicator.png         (tabbrowser/tabDragIndicator.png)
         skin/classic/browser/tabbrowser/tab-separator.png            (tabbrowser/tab-separator.png)
-        skin/classic/browser/tabbrowser/tab-separator-aero.png       (tabbrowser/tab-separator-aero.png)
+        skin/classic/browser/tabbrowser/tab-separator-XP.png         (tabbrowser/tab-separator-XP.png)
         skin/classic/browser/tabbrowser/tab-separator-luna-blue.png  (tabbrowser/tab-separator-luna-blue.png)
         skin/classic/browser/tabview/close.png                      (tabview/close.png)
         skin/classic/browser/tabview/edit-light.png                 (tabview/edit-light.png)
@@ -307,7 +307,9 @@ browser.jar:
 *       skin/classic/browser/devtools/common.css                    (../shared/devtools/common.css)
 *       skin/classic/browser/devtools/dark-theme.css                (../shared/devtools/dark-theme.css)
 *       skin/classic/browser/devtools/light-theme.css               (../shared/devtools/light-theme.css)
+        skin/classic/browser/devtools/add.svg                       (../shared/devtools/images/add.svg)
         skin/classic/browser/devtools/filters.svg                   (../shared/devtools/filters.svg)
+        skin/classic/browser/devtools/filter-swatch.svg             (../shared/devtools/images/filter-swatch.svg)
         skin/classic/browser/devtools/controls.png                  (../shared/devtools/images/controls.png)
         skin/classic/browser/devtools/controls@2x.png               (../shared/devtools/images/controls@2x.png)
         skin/classic/browser/devtools/performance-icons.svg         (../shared/devtools/images/performance-icons.svg)
@@ -526,40 +528,39 @@ browser.jar:
 
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/preferences/application.png                 os!=WINNT
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/preferences/application.png                 os=WINNT osversion<6
-% override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/aboutSessionRestore-window-icon-aero.png    os=WINNT osversion>=6
 
-% override chrome://browser/skin/Info.png                             chrome://browser/skin/Info-aero.png                               os=WINNT osversion>=6
-% override chrome://browser/skin/identity.png                         chrome://browser/skin/identity-aero.png                           os=WINNT osversion>=6
-% override chrome://browser/skin/livemark-folder.png                  chrome://browser/skin/livemark-folder-aero.png                    os=WINNT osversion>=6
-% override chrome://browser/skin/menu-back.png                        chrome://browser/skin/menu-back-aero.png                          os=WINNT osversion>=6
-% override chrome://browser/skin/menu-forward.png                     chrome://browser/skin/menu-forward-aero.png                       os=WINNT osversion>=6
-% override chrome://browser/skin/pageInfo.png                         chrome://browser/skin/pageInfo-aero.png                           os=WINNT osversion>=6
-% override chrome://browser/skin/Privacy-16.png                       chrome://browser/skin/Privacy-16-aero.png                         os=WINNT osversion>=6
-% override chrome://browser/skin/Privacy-32.png                       chrome://browser/skin/Privacy-32-aero.png                         os=WINNT osversion>=6
-% override chrome://browser/skin/searchbar-dropdown-arrow.png         chrome://browser/skin/searchbar-dropdown-arrow-aero.png           os=WINNT osversion>=6
-% override chrome://browser/skin/Secure24.png                         chrome://browser/skin/Secure24-aero.png                           os=WINNT osversion>=6
-% override chrome://browser/skin/downloads/buttons.png                chrome://browser/skin/downloads/buttons-aero.png                  os=WINNT osversion>=6
-% override chrome://browser/skin/feeds/feedIcon.png                   chrome://browser/skin/feeds/feedIcon-aero.png                     os=WINNT osversion>=6
-% override chrome://browser/skin/feeds/feedIcon16.png                 chrome://browser/skin/feeds/feedIcon16-aero.png                   os=WINNT osversion>=6
-% override chrome://browser/skin/places/bookmark.png                  chrome://browser/skin/places/bookmark-aero.png                    os=WINNT osversion>=6
-% override chrome://browser/skin/places/query.png                     chrome://browser/skin/places/query-aero.png                       os=WINNT osversion>=6
-% override chrome://browser/skin/places/bookmarksMenu.png             chrome://browser/skin/places/bookmarksMenu-aero.png               os=WINNT osversion>=6
-% override chrome://browser/skin/places/bookmarksToolbar.png          chrome://browser/skin/places/bookmarksToolbar-aero.png            os=WINNT osversion>=6
-% override chrome://browser/skin/places/bookmarksToolbar-menuPanel.png  chrome://browser/skin/places/bookmarksToolbar-menuPanel-aero.png  os=WINNT osversion>=6
-% override chrome://browser/skin/places/calendar.png                  chrome://browser/skin/places/calendar-aero.png                    os=WINNT osversion>=6
-% override chrome://browser/skin/places/toolbarDropMarker.png         chrome://browser/skin/places/toolbarDropMarker-aero.png           os=WINNT osversion>=6
-% override chrome://browser/skin/places/libraryToolbar.png            chrome://browser/skin/places/libraryToolbar-aero.png              os=WINNT osversion>=6
-% override chrome://browser/skin/places/starred48.png                 chrome://browser/skin/places/starred48-aero.png                   os=WINNT osversion>=6
-% override chrome://browser/skin/places/tag.png                       chrome://browser/skin/places/tag-aero.png                         os=WINNT osversion>=6
-% override chrome://browser/skin/places/history.png                   chrome://browser/skin/places/history-aero.png                     os=WINNT osversion>=6
-% override chrome://browser/skin/places/allBookmarks.png              chrome://browser/skin/places/allBookmarks-aero.png                os=WINNT osversion>=6
-% override chrome://browser/skin/places/unsortedBookmarks.png         chrome://browser/skin/places/unsortedBookmarks-aero.png           os=WINNT osversion>=6
-% override chrome://browser/skin/preferences/alwaysAsk.png            chrome://browser/skin/preferences/alwaysAsk-aero.png              os=WINNT osversion>=6
-% override chrome://browser/skin/preferences/application.png          chrome://browser/skin/preferences/application-aero.png            os=WINNT osversion>=6
-% override chrome://browser/skin/preferences/mail.png                 chrome://browser/skin/preferences/mail-aero.png                   os=WINNT osversion>=6
-% override chrome://browser/skin/preferences/Options.png              chrome://browser/skin/preferences/Options-aero.png                os=WINNT osversion>=6
-% override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-aero.png               os=WINNT osversion>=6
-% override chrome://browser/skin/tabbrowser/tab-separator.png         chrome://browser/skin/tabbrowser/tab-separator-aero.png           os=WINNT osversion>=6
+% override chrome://browser/skin/Info.png                             chrome://browser/skin/Info-XP.png                                 os=WINNT osversion<6
+% override chrome://browser/skin/identity.png                         chrome://browser/skin/identity-XP.png                             os=WINNT osversion<6
+% override chrome://browser/skin/livemark-folder.png                  chrome://browser/skin/livemark-folder-XP.png                      os=WINNT osversion<6
+% override chrome://browser/skin/menu-back.png                        chrome://browser/skin/menu-back-XP.png                            os=WINNT osversion<6
+% override chrome://browser/skin/menu-forward.png                     chrome://browser/skin/menu-forward-XP.png                         os=WINNT osversion<6
+% override chrome://browser/skin/pageInfo.png                         chrome://browser/skin/pageInfo-XP.png                             os=WINNT osversion<6
+% override chrome://browser/skin/Privacy-16.png                       chrome://browser/skin/Privacy-16-XP.png                           os=WINNT osversion<6
+% override chrome://browser/skin/Privacy-32.png                       chrome://browser/skin/Privacy-32-XP.png                           os=WINNT osversion<6
+% override chrome://browser/skin/searchbar-dropdown-arrow.png         chrome://browser/skin/searchbar-dropdown-arrow-XP.png             os=WINNT osversion<6
+% override chrome://browser/skin/Secure24.png                         chrome://browser/skin/Secure24-XP.png                             os=WINNT osversion<6
+% override chrome://browser/skin/downloads/buttons.png                chrome://browser/skin/downloads/buttons-XP.png                    os=WINNT osversion<6
+% override chrome://browser/skin/feeds/feedIcon.png                   chrome://browser/skin/feeds/feedIcon-XP.png                       os=WINNT osversion<6
+% override chrome://browser/skin/feeds/feedIcon16.png                 chrome://browser/skin/feeds/feedIcon16-XP.png                     os=WINNT osversion<6
+% override chrome://browser/skin/places/bookmark.png                  chrome://browser/skin/places/bookmark-XP.png                      os=WINNT osversion<6
+% override chrome://browser/skin/places/query.png                     chrome://browser/skin/places/query-XP.png                         os=WINNT osversion<6
+% override chrome://browser/skin/places/bookmarksMenu.png             chrome://browser/skin/places/bookmarksMenu-XP.png                 os=WINNT osversion<6
+% override chrome://browser/skin/places/bookmarksToolbar.png          chrome://browser/skin/places/bookmarksToolbar-XP.png              os=WINNT osversion<6
+% override chrome://browser/skin/places/bookmarksToolbar-menuPanel.png  chrome://browser/skin/places/bookmarksToolbar-menuPanel-XP.png  os=WINNT osversion<6
+% override chrome://browser/skin/places/calendar.png                  chrome://browser/skin/places/calendar-XP.png                      os=WINNT osversion<6
+% override chrome://browser/skin/places/toolbarDropMarker.png         chrome://browser/skin/places/toolbarDropMarker-XP.png             os=WINNT osversion<6
+% override chrome://browser/skin/places/libraryToolbar.png            chrome://browser/skin/places/libraryToolbar-XP.png                os=WINNT osversion<6
+% override chrome://browser/skin/places/starred48.png                 chrome://browser/skin/places/starred48-XP.png                     os=WINNT osversion<6
+% override chrome://browser/skin/places/tag.png                       chrome://browser/skin/places/tag-XP.png                           os=WINNT osversion<6
+% override chrome://browser/skin/places/history.png                   chrome://browser/skin/places/history-XP.png                       os=WINNT osversion<6
+% override chrome://browser/skin/places/allBookmarks.png              chrome://browser/skin/places/allBookmarks-XP.png                  os=WINNT osversion<6
+% override chrome://browser/skin/places/unsortedBookmarks.png         chrome://browser/skin/places/unsortedBookmarks-XP.png             os=WINNT osversion<6
+% override chrome://browser/skin/preferences/alwaysAsk.png            chrome://browser/skin/preferences/alwaysAsk-XP.png                os=WINNT osversion<6
+% override chrome://browser/skin/preferences/application.png          chrome://browser/skin/preferences/application-XP.png              os=WINNT osversion<6
+% override chrome://browser/skin/preferences/mail.png                 chrome://browser/skin/preferences/mail-XP.png                     os=WINNT osversion<6
+% override chrome://browser/skin/preferences/Options.png              chrome://browser/skin/preferences/Options-XP.png                  os=WINNT osversion<6
+% override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-XP.png                 os=WINNT osversion<6
+% override chrome://browser/skin/tabbrowser/tab-separator.png         chrome://browser/skin/tabbrowser/tab-separator-XP.png             os=WINNT osversion<6
 
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png     os=WINNT osversion<=6.1
@@ -580,11 +581,11 @@ browser.jar:
 
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-aero.png                            os=WINNT osversion=6
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-aero.png                            os=WINNT osversion=6.1
-% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-XP.png                              os=WINNT osversion=5.2
+% override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-XP.png                              os=WINNT osversion<6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6.1
-% override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-XP.png                         os=WINNT osversion=5.2
+% override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6.1
-% override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-xp.png                 os=WINNT osversion=5.2
+% override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-xp.png                 os=WINNT osversion<6
 

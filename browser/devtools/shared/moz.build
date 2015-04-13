@@ -64,6 +64,7 @@ EXTRA_JS_MODULES.devtools.shared.widgets += [
     'widgets/CubicBezierPresets.js',
     'widgets/CubicBezierWidget.js',
     'widgets/FastListWidget.js',
+    'widgets/FilterWidget.js',
     'widgets/FlameGraph.js',
     'widgets/Spectrum.js',
     'widgets/TableWidget.js',

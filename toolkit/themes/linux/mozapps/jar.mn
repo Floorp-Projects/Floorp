@@ -20,7 +20,7 @@ toolkit.jar:
 + skin/classic/mozapps/extensions/themeGeneric.png         (extensions/themeGeneric.png)
 + skin/classic/mozapps/extensions/themeGeneric-16.png      (extensions/themeGeneric-16.png)
 + skin/classic/mozapps/extensions/localeGeneric.png        (extensions/localeGeneric.png)
-+ skin/classic/mozapps/extensions/newaddon.css             (extensions/newaddon.css)
+* skin/classic/mozapps/extensions/newaddon.css             (extensions/newaddon.css)
 + skin/classic/mozapps/extensions/selectAddons.css         (extensions/selectAddons.css)
 + skin/classic/mozapps/passwordmgr/key-16.png              (passwordmgr/key-16.png)
 + skin/classic/mozapps/passwordmgr/key-64.png              (passwordmgr/key-64.png)

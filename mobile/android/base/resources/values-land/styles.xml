@@ -19,13 +19,10 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
+    <style name="PrivateTabsPanelFrame">
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:paddingTop">24dp</item>
-    </style>
-
-    <style name="TabsPanelFrame.PrivateTabs">
-        <item name="android:paddingTop">0dp</item>
     </style>
 
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
@@ -42,30 +39,11 @@
         <item name="android:gravity">left</item>
     </style>
 
-    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
-        <item name="android:paddingLeft">6dp</item>
-        <item name="android:paddingRight">6dp</item>
-        <item name="android:layout_marginLeft">24dp</item>
-        <item name="android:layout_marginRight">24dp</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
-        <item name="android:visibility">gone</item>
-    </style>
-
     <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
         <item name="android:visibility">gone</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:gravity">center</item>
-        <item name="android:layout_gravity">center</item>
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Linkified.Resend">
         <item name="android:layout_height">match_parent</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_gravity">center</item>
