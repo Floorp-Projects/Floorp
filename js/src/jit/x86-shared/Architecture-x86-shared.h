@@ -49,7 +49,7 @@ static const uint32_t ShadowStackSpace = 0;
 
 class Registers {
   public:
-    typedef X86Encoding::RegisterID Code;
+    typedef uint8_t Code;
     typedef X86Encoding::RegisterID Encoding;
 
     // Content spilled during bailouts.
@@ -61,7 +61,7 @@ class Registers {
     typedef uint8_t SetType;
 
     static const char* GetName(Code code) {
-        return X86Encoding::GPRegName(code);
+        return X86Encoding::GPRegName(Encoding(code));
     }
 
     static const uint32_t Total = 8;
@@ -103,8 +103,8 @@ class Registers {
         return Invalid;
     }
 
-    static const Code StackPointer = X86Encoding::rsp;
-    static const Code Invalid = X86Encoding::invalid_reg;
+    static const Encoding StackPointer = X86Encoding::rsp;
+    static const Encoding Invalid = X86Encoding::invalid_reg;
 
     static const SetType AllMask = (1 << Total) - 1;
 

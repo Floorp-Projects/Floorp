@@ -30,35 +30,40 @@ struct Register {
     typedef Codes::Encoding Encoding;
     typedef Codes::Code Code;
     typedef Codes::SetType SetType;
-    Code code_;
-    static Register FromCode(uint32_t i) {
+
+    Codes::Encoding reg_;
+    static Register FromCode(Code i) {
         MOZ_ASSERT(i < Registers::Total);
-        Register r = { Code(i) };
+        Register r = { Encoding(i) };
         return r;
     }
     static Register FromName(const char* name) {
         Code code = Registers::FromName(name);
-        Register r = { code };
+        Register r = { Encoding(code) };
         return r;
     }
     Code code() const {
-        MOZ_ASSERT((uint32_t)code_ < Registers::Total);
-        return code_;
+        MOZ_ASSERT(Code(reg_) < Registers::Total);
+        return Code(reg_);
+    }
+    Encoding encoding() const {
+        MOZ_ASSERT(Code(reg_) < Registers::Total);
+        return reg_;
     }
     const char* name() const {
         return Registers::GetName(code());
     }
     bool operator ==(Register other) const {
-        return code_ == other.code_;
+        return reg_ == other.reg_;
     }
     bool operator !=(Register other) const {
-        return code_ != other.code_;
+        return reg_ != other.reg_;
     }
     bool volatile_() const {
-        return !!((1 << code()) & Registers::VolatileMask);
+        return !!((SetType(1) << code()) & Registers::VolatileMask);
     }
     bool aliases(const Register& other) const {
-        return code_ == other.code_;
+        return reg_ == other.reg_;
     }
     uint32_t numAliased() const {
         return 1;
@@ -73,7 +78,7 @@ struct Register {
     }
 
     SetType alignedOrDominatedAliasedSet() const {
-        return SetType(1) << code_;
+        return SetType(1) << code();
     }
 
     static uint32_t SetSize(SetType x) {
