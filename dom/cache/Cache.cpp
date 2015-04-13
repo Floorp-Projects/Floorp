@@ -106,10 +106,10 @@ Cache::Match(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  PCacheQueryParams params;
-  ToPCacheQueryParams(params, aOptions);
+  CacheQueryParams params;
+  ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheMatchArgs(PCacheRequest(), params));
+  AutoChildOpArgs args(this, CacheMatchArgs(CacheRequest(), params));
 
   args.Add(ir, IgnoreBody, PassThroughReferrer, IgnoreInvalidScheme, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -125,8 +125,8 @@ Cache::MatchAll(const Optional<RequestOrUSVString>& aRequest,
 {
   MOZ_ASSERT(mActor);
 
-  PCacheQueryParams params;
-  ToPCacheQueryParams(params, aOptions);
+  CacheQueryParams params;
+  ToCacheQueryParams(params, aOptions);
 
   AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params));
 
@@ -246,10 +246,10 @@ Cache::Delete(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  PCacheQueryParams params;
-  ToPCacheQueryParams(params, aOptions);
+  CacheQueryParams params;
+  ToCacheQueryParams(params, aOptions);
 
-  AutoChildOpArgs args(this, CacheDeleteArgs(PCacheRequest(), params));
+  AutoChildOpArgs args(this, CacheDeleteArgs(CacheRequest(), params));
 
   args.Add(ir, IgnoreBody, PassThroughReferrer, IgnoreInvalidScheme, aRv);
   if (aRv.Failed()) {
@@ -265,8 +265,8 @@ Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
 {
   MOZ_ASSERT(mActor);
 
-  PCacheQueryParams params;
-  ToPCacheQueryParams(params, aOptions);
+  CacheQueryParams params;
+  ToCacheQueryParams(params, aOptions);
 
   AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params));
 
