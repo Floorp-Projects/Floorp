@@ -1182,14 +1182,6 @@ MetroWidget::Invalidate(bool aEraseBackground,
   return NS_OK;
 }
 
-void
-MetroWidget::Update()
-{
-  if (!ShouldUseOffMainThreadCompositing() && mWnd) {
-    ::UpdateWindow(mWnd);
-  }
-}
-
 NS_IMETHODIMP
 MetroWidget::Invalidate(const nsIntRect & aRect)
 {

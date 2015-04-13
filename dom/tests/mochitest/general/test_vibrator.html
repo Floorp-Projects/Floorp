@@ -65,7 +65,7 @@ function tests(aEnabled) {
   expectSuccess([1000, 1000.1]);
 
   // The following loop shouldn't cause us to crash.  See bug 701716.
-  for (var i = 0; i < 1000; i++) {
+  for (var i = 0; i < 10000; i++) {
     navigator.vibrate([100, 100]);
   }
   ok(true, "Didn't crash after issuing a lot of vibrate() calls.");
