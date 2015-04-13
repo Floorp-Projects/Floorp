@@ -27,7 +27,7 @@ public:
   ~CacheStorageChild();
 
   // Must be called by the associated CacheStorage listener in its
-  // ActorDestroy() method.  Also, CacheStorage must call SendDestroy() on the
+  // ActorDestroy() method.  Also, CacheStorage must Send__delete__() the
   // actor in its destructor to trigger ActorDestroy() if it has not been
   // called yet.
   void ClearListener();
@@ -42,11 +42,21 @@ private:
   // PCacheStorageChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual PCacheOpChild*
-  AllocPCacheOpChild(const CacheOpArgs& aOpArgs) override;
-
-  virtual bool
-  DeallocPCacheOpChild(PCacheOpChild* aActor) override;
+  virtual bool RecvMatchResponse(const RequestId& aRequestId,
+                                 const nsresult& aRv,
+                                 const PCacheResponseOrVoid& response) override;
+  virtual bool RecvHasResponse(const cache::RequestId& aRequestId,
+                               const nsresult& aRv,
+                               const bool& aSuccess) override;
+  virtual bool RecvOpenResponse(const cache::RequestId& aRequestId,
+                                const nsresult& aRv,
+                                PCacheChild* aActor) override;
+  virtual bool RecvDeleteResponse(const cache::RequestId& aRequestId,
+                                  const nsresult& aRv,
+                                  const bool& aResult) override;
+  virtual bool RecvKeysResponse(const cache::RequestId& aRequestId,
+                                const nsresult& aRv,
+                                nsTArray<nsString>&& aKeys) override;
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The CacheStorage object must call ClearListener() to null this before its

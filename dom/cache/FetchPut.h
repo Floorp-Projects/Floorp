@@ -10,7 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/cache/Manager.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "nsRefPtr.h"
@@ -39,12 +39,13 @@ public:
   {
   public:
     virtual void
-    OnFetchPut(FetchPut* aFetchPut, nsresult aRv) = 0;
+    OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId, nsresult aRv) = 0;
   };
 
   static nsresult
-  Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
-         const nsTArray<CacheRequest>& aRequests,
+  Create(Listener* aListener, Manager* aManager,
+         RequestId aRequestId, CacheId aCacheId,
+         const nsTArray<PCacheRequest>& aRequests,
          const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams,
          FetchPut** aFetchPutOut);
 
@@ -55,18 +56,19 @@ private:
   class FetchObserver;
   struct State
   {
-    CacheRequest mCacheRequest;
+    PCacheRequest mPCacheRequest;
     nsCOMPtr<nsIInputStream> mRequestStream;
     nsRefPtr<FetchObserver> mFetchObserver;
-    CacheResponse mCacheResponse;
+    PCacheResponse mPCacheResponse;
     nsCOMPtr<nsIInputStream> mResponseStream;
 
     nsRefPtr<Request> mRequest;
     nsRefPtr<Response> mResponse;
   };
 
-  FetchPut(Listener* aListener, Manager* aManager, CacheId aCacheId,
-           const nsTArray<CacheRequest>& aRequests,
+  FetchPut(Listener* aListener, Manager* aManager,
+           RequestId aRequestId, CacheId aCacheId,
+           const nsTArray<PCacheRequest>& aRequests,
            const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams);
   ~FetchPut();
 
@@ -79,15 +81,9 @@ private:
   void MaybeCompleteOnMainThread();
 
   void DoPutOnWorkerThread();
-  static bool MatchInPutList(const CacheRequest& aRequest,
+  static bool MatchInPutList(const PCacheRequest& aRequest,
                              const nsTArray<CacheRequestResponse>& aPutList);
-
-  virtual void
-  OnOpComplete(nsresult aRv, const CacheOpResult& aResult,
-               CacheId aOpenedCacheId,
-               const nsTArray<SavedResponse>& aSavedResponseList,
-               const nsTArray<SavedRequest>& aSavedRequestList,
-               StreamList* aStreamList) override;
+  virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) override;
 
   void MaybeSetError(nsresult aRv);
   void MaybeNotifyListener();
@@ -103,6 +99,7 @@ private:
 
   Listener* mListener;
   nsRefPtr<Manager> mManager;
+  const RequestId mRequestId;
   const CacheId mCacheId;
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsTArray<State> mStateList;
