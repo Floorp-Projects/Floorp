@@ -171,6 +171,7 @@ class CommandAction(argparse.Action):
 
         if handler.parser:
             subparser = handler.parser
+            subparser.context = self._context
         else:
             subparser = argparse.ArgumentParser(**parser_args)
 
@@ -325,6 +326,7 @@ class CommandAction(argparse.Action):
 
         if handler.parser:
             c_parser = handler.parser
+            c_parser.context = self._context
             c_parser.formatter_class = NoUsageFormatter
             # Accessing _action_groups is a bit shady. We are highly dependent
             # on the argparse implementation not changing. We fail fast to

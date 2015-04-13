@@ -147,8 +147,9 @@ class Command(object):
 
          description -- A brief description of what the command does.
 
-         parser -- an optional argparse.ArgumentParser instance to use as
-             the basis for the command arguments.
+         parser -- an optional argparse.ArgumentParser instance or callable
+             that returns an argparse.ArgumentParser instance to use as the
+             basis for the command arguments.
 
     For example:
 
