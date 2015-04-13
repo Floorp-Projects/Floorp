@@ -350,10 +350,16 @@ static bool
 IsMP4SupportedType(const nsACString& aType,
                    const nsAString& aCodecs = EmptyString())
 {
-  // MP4Decoder/Reader is currently used for MSE and mp4 files local playback.
+// Currently on B2G, FMP4 is only working for MSE playback.
+// For other normal MP4, it still uses current omx decoder.
+// Bug 1061034 is a follow-up bug to enable all MP4s with MOZ_FMP4
+#ifdef MOZ_OMX_DECODER
+  return false;
+#else
   bool haveAAC, haveMP3, haveH264;
   return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
          MP4Decoder::CanHandleMediaType(aType, aCodecs, haveAAC, haveH264, haveMP3);
+#endif
 }
 #endif
 
