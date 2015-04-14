@@ -83,7 +83,7 @@ CollectLaterSiblings(nsISupports* aElement,
 
 struct RestyleEnumerateData : RestyleTracker::Hints {
   nsRefPtr<dom::Element> mElement;
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
   UniquePtr<ProfilerBacktrace> mBacktrace;
 #endif
 };
@@ -143,7 +143,7 @@ CollectRestyles(nsISupports* aElement,
   currentRestyle->mElement = element;
   currentRestyle->mRestyleHint = aData->mRestyleHint;
   currentRestyle->mChangeHint = aData->mChangeHint;
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
   currentRestyle->mBacktrace = Move(aData->mBacktrace);
 #endif
 
@@ -311,8 +311,8 @@ RestyleTracker::DoProcessRestyles()
           continue;
         }
 
+#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
         Maybe<GeckoProfilerTracingRAII> profilerRAII;
-#ifdef MOZ_ENABLE_PROFILER_SPS
         if (profiler_feature_active("restyle")) {
           profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
         }
@@ -353,8 +353,8 @@ RestyleTracker::DoProcessRestyles()
                       index++, collector.count);
           LOG_RESTYLE_INDENT();
 
+#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
           Maybe<GeckoProfilerTracingRAII> profilerRAII;
-#ifdef MOZ_ENABLE_PROFILER_SPS
           if (profiler_feature_active("restyle")) {
             profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
           }
