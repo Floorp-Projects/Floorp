@@ -52,7 +52,7 @@ public:
  * AutoTaskDispatcher is a stack-scoped TaskDispatcher implementation that fires
  * its queued tasks when it is popped off the stack.
  */
-class MOZ_STACK_CLASS AutoTaskDispatcher : public TaskDispatcher
+class AutoTaskDispatcher : public TaskDispatcher
 {
 public:
   explicit AutoTaskDispatcher(bool aIsTailDispatcher = false) : mIsTailDispatcher(aIsTailDispatcher) {}
