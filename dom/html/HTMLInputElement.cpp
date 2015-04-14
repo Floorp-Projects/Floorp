@@ -109,6 +109,7 @@
 #include "HTMLSplitOnSpacesTokenizer.h"
 #include "nsIController.h"
 #include "nsIMIMEInfo.h"
+#include "nsFrameSelection.h"
 
 // input type=date
 #include "js/Date.h"
@@ -3283,6 +3284,19 @@ HTMLInputElement::Select()
   FocusTristate state = FocusState();
   if (state == eUnfocusable) {
     return NS_OK;
+  }
+
+  nsTextEditorState* tes = GetEditorState();
+  if (tes) {
+    nsFrameSelection* fs = tes->GetConstFrameSelection();
+    if (fs && fs->MouseDownRecorded()) {
+      // This means that we're being called while the frame selection has a mouse
+      // down event recorded to adjust the caret during the mouse up event.
+      // We are probably called from the focus event handler.  We should override
+      // the delayed caret data in this case to ensure that this select() call
+      // takes effect.
+      fs->SetDelayedCaretData(nullptr);
+    }
   }
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();

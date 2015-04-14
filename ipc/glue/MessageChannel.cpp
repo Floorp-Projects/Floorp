@@ -313,6 +313,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mDispatchingAsyncMessagePriority(0),
     mCurrentTransaction(0),
     mTimedOutMessageSeqno(0),
+    mTimedOutMessagePriority(0),
     mRecvdErrors(0),
     mRemoteStackDepthGuess(false),
     mSawInterruptOutMsg(false),
@@ -784,10 +785,11 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     msg->set_seqno(NextSeqno());
 
     int32_t seqno = msg->seqno();
+    int prio = msg->priority();
     DebugOnly<msgid_t> replyType = msg->type() + 1;
 
     AutoSetValue<bool> replies(mAwaitingSyncReply, true);
-    AutoSetValue<int> prio(mAwaitingSyncReplyPriority, msg->priority());
+    AutoSetValue<int> prioSet(mAwaitingSyncReplyPriority, prio);
     AutoEnterTransaction transact(this, seqno);
 
     int32_t transaction = mCurrentTransaction;
@@ -836,6 +838,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
             }
 
             mTimedOutMessageSeqno = seqno;
+            mTimedOutMessagePriority = prio;
             return false;
         }
     }
@@ -1189,12 +1192,20 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg)
     bool& blockingVar = ShouldBlockScripts() ? gParentIsBlocked : dummy;
 
     Result rv;
-    if (mTimedOutMessageSeqno) {
+    if (mTimedOutMessageSeqno && mTimedOutMessagePriority >= prio) {
         // If the other side sends a message in response to one of our messages
         // that we've timed out, then we reply with an error.
         //
-        // We even reject messages that were sent before the other side even got
-        // to our timed out message.
+        // We do this because want to avoid a situation where we process an
+        // incoming message from the child here while it simultaneously starts
+        // processing our timed-out CPOW. It's very bad for both sides to
+        // be processing sync messages concurrently.
+        //
+        // The only exception is if the incoming message has urgent priority and
+        // our timed-out message had only high priority. In that case it's safe
+        // to process the incoming message because we know that the child won't
+        // process anything (the child will defer incoming messages when waiting
+        // for a response to its urgent message).
         rv = MsgNotAllowed;
     } else {
         AutoSetValue<bool> blocked(blockingVar, true);

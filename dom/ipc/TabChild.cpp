@@ -71,7 +71,6 @@
 #include "nsWeakReference.h"
 #include "nsWindowWatcher.h"
 #include "PermissionMessageUtils.h"
-#include "nsContentPermissionHelper.h"
 #include "PuppetWidget.h"
 #include "StructuredCloneUtils.h"
 #include "nsViewportInfo.h"
@@ -519,7 +518,10 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
 
     FrameMetrics newMetrics = aFrameMetrics;
-    APZCCallbackHelper::UpdateRootFrame(utils, newMetrics);
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    if (doc && doc->GetShell()) {
+      APZCCallbackHelper::UpdateRootFrame(utils, doc->GetShell(), newMetrics);
+    }
 
     CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
     // The BrowserElementScrolling helper must know about these updated metrics
@@ -797,22 +799,6 @@ TabChild::Create(nsIContentChild* aManager,
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
 }
 
-class TabChildSetTargetAPZCCallback : public SetTargetAPZCCallback {
-public:
-  explicit TabChildSetTargetAPZCCallback(TabChild* aTabChild)
-    : mTabChild(do_GetWeakReference(static_cast<nsITabChild*>(aTabChild)))
-  {}
-
-  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const override {
-    if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(mTabChild)) {
-      static_cast<TabChild*>(tabChild.get())->SendSetTargetAPZC(aInputBlockId, aTargets);
-    }
-  }
-
-private:
-  nsWeakPtr mTabChild;
-};
-
 class TabChildSetAllowedTouchBehaviorCallback : public SetAllowedTouchBehaviorCallback {
 public:
   explicit TabChildSetAllowedTouchBehaviorCallback(TabChild* aTabChild)
@@ -863,7 +849,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
   , mIgnoreKeyPressEvent(false)
-  , mSetTargetAPZCCallback(new TabChildSetTargetAPZCCallback(this))
   , mSetAllowedTouchBehaviorCallback(new TabChildSetAllowedTouchBehaviorCallback(this))
   , mHasValidInnerSize(false)
   , mDestroyed(false)
@@ -2190,7 +2175,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   if (gfxPrefs::AsyncPanZoomEnabled()) {
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document, aEvent, aGuid,
-        aInputBlockId, mSetTargetAPZCCallback);
+        aInputBlockId);
   }
 
   WidgetWheelEvent event(aEvent);
@@ -2385,7 +2370,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     }
     nsCOMPtr<nsIDocument> document = GetDocument();
     APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document,
-        localEvent, aGuid, aInputBlockId, mSetTargetAPZCCallback);
+        localEvent, aGuid, aInputBlockId);
   }
 
   // Dispatch event to content (potentially a long-running operation)
@@ -2464,6 +2449,14 @@ TabChild::RequestNativeKeyBindings(AutoCacheNativeKeyCommands* aAutoCache,
   } else {
     aAutoCache->CacheNoCommands();
   }
+}
+
+bool
+TabChild::RecvNativeSynthesisResponse(const uint64_t& aObserverId,
+                                      const nsCString& aResponse)
+{
+  mozilla::widget::AutoObserverNotifier::NotifySavedObserver(aObserverId, aResponse.get());
+  return true;
 }
 
 bool
@@ -2604,22 +2597,6 @@ TabChild::DeallocPColorPickerChild(PColorPickerChild* aColorPicker)
 {
   nsColorPickerProxy* picker = static_cast<nsColorPickerProxy*>(aColorPicker);
   NS_RELEASE(picker);
-  return true;
-}
-
-PContentPermissionRequestChild*
-TabChild::AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
-                                              const IPC::Principal& aPrincipal)
-{
-  NS_RUNTIMEABORT("unused");
-  return nullptr;
-}
-
-bool
-TabChild::DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor)
-{
-  RemotePermissionRequest* child = static_cast<RemotePermissionRequest*>(actor);
-  child->IPDLRelease();
   return true;
 }
 

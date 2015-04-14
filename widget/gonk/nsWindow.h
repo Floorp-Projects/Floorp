@@ -82,7 +82,6 @@ public:
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&);
     NS_IMETHOD Invalidate(const nsIntRect &aRect);
     virtual void* GetNativeData(uint32_t aDataType);
-    virtual void SetNativeData(uint32_t aDataType, uintptr_t aVal);
     NS_IMETHOD SetTitle(const nsAString& aTitle)
     {
         return NS_OK;
@@ -99,7 +98,8 @@ public:
                                                 TouchPointerState aPointerState,
                                                 nsIntPoint aPointerScreenPoint,
                                                 double aPointerPressure,
-                                                uint32_t aPointerOrientation) override;
+                                                uint32_t aPointerOrientation,
+                                                nsIObserver* aObserver) override;
 
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
                                    bool aDoCapture)

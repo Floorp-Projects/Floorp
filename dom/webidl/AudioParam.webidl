@@ -37,3 +37,13 @@ interface AudioParam {
     void cancelScheduledValues(double startTime);
 
 };
+
+// Mozilla extension
+partial interface AudioParam {
+  // The ID of the AudioNode this AudioParam belongs to.
+  [ChromeOnly]
+  readonly attribute unsigned long parentNodeId;
+  // The name of the AudioParam
+  [ChromeOnly]
+  readonly attribute DOMString name;
+};

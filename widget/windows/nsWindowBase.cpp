@@ -110,8 +110,11 @@ nsWindowBase::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                          nsIWidget::TouchPointerState aPointerState,
                                          nsIntPoint aPointerScreenPoint,
                                          double aPointerPressure,
-                                         uint32_t aPointerOrientation)
+                                         uint32_t aPointerOrientation,
+                                         nsIObserver* aObserver)
 {
+  AutoObserverNotifier notifier(aObserver, "touchpoint");
+
   if (!InitTouchInjection()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -180,8 +183,9 @@ nsWindowBase::CancelTouchPoints(const unsigned int& aPointerId, nsAutoPtr<Pointe
 }
 
 nsresult
-nsWindowBase::ClearNativeTouchSequence()
+nsWindowBase::ClearNativeTouchSequence(nsIObserver* aObserver)
 {
+  AutoObserverNotifier notifier(aObserver, "cleartouch");
   if (!sTouchInjectInitialized) {
     return NS_OK;
   }
@@ -189,7 +193,7 @@ nsWindowBase::ClearNativeTouchSequence()
   // cancel all input points
   mActivePointers.Enumerate(CancelTouchPoints, (void*)this);
 
-  nsBaseWidget::ClearNativeTouchSequence();
+  nsBaseWidget::ClearNativeTouchSequence(nullptr);
 
   return NS_OK;
 }

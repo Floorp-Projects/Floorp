@@ -14,6 +14,7 @@
 #include "LayerSorter.h"                // for SortLayersBy3DZOrder
 #include "LayersLogging.h"              // for AppendToString
 #include "ReadbackLayer.h"              // for ReadbackLayer
+#include "UnitTransforms.h"             // for ViewAs
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"
 #include "gfxUtils.h"                   // for gfxUtils, etc
@@ -201,7 +202,6 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mMixBlendMode(CompositionOp::OP_OVER),
   mForceIsolatedGroup(false),
   mContentFlags(0),
-  mUseClipRect(false),
   mUseTileSourceRect(false),
   mIsFixedPosition(false),
   mMargins(0, 0, 0, 0),
@@ -547,7 +547,7 @@ Layer::CanUseOpaqueSurface()
 
 // NB: eventually these methods will be defined unconditionally, and
 // can be moved into Layers.h
-const nsIntRect*
+const Maybe<ParentLayerIntRect>&
 Layer::GetEffectiveClipRect()
 {
   if (LayerComposite* shadow = AsLayerComposite()) {
@@ -673,7 +673,9 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     return currentClip;
   }
 
-  const RenderTargetIntRect clipRect = RenderTargetPixel::FromUntyped(*GetEffectiveClipRect());
+  const RenderTargetIntRect clipRect =
+    ViewAs<RenderTargetPixel>(*GetEffectiveClipRect(),
+                              PixelCastJustification::RenderTargetIsParentLayerForRoot);
   if (clipRect.IsEmpty()) {
     // We might have a non-translation transform in the container so we can't
     // use the code path below.
@@ -694,7 +696,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     if (!gfxUtils::GfxRectToIntRect(trScissor, &tmp)) {
       return RenderTargetIntRect(currentClip.TopLeft(), RenderTargetIntSize(0, 0));
     }
-    scissor = RenderTargetPixel::FromUntyped(tmp);
+    scissor = ViewAs<RenderTargetPixel>(tmp);
 
     // Find the nearest ancestor with an intermediate surface
     do {
@@ -884,7 +886,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
     // If the parent layer clips its lower layers, clip the visible region
     // we're accumulating.
     if (layer->GetEffectiveClipRect()) {
-      aResult.AndWith(*layer->GetEffectiveClipRect());
+      aResult.AndWith(ParentLayerIntRect::ToUntyped(*layer->GetEffectiveClipRect()));
     }
 
     // Now we need to walk across the list of siblings for this parent layer,
@@ -1099,7 +1101,7 @@ ContainerLayer::HasMultipleChildren()
 {
   uint32_t count = 0;
   for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    const nsIntRect *clipRect = child->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& clipRect = child->GetEffectiveClipRect();
     if (clipRect && clipRect->IsEmpty())
       continue;
     if (child->GetVisibleRegion().IsEmpty())
@@ -1166,7 +1168,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
         gfx::ThebesMatrix(contTransform).HasNonIntegerTranslation()) {
 #endif
         for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-          const nsIntRect *clipRect = child->GetEffectiveClipRect();
+          const Maybe<ParentLayerIntRect>& clipRect = child->GetEffectiveClipRect();
           /* We can't (easily) forward our transform to children with a non-empty clip
            * rect since it would need to be adjusted for the transform. See
            * the calculations performed by CalculateScissorRect above.
@@ -1565,8 +1567,8 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 
   layers::PrintInfo(aStream, AsLayerComposite());
 
-  if (mUseClipRect) {
-    AppendToString(aStream, mClipRect, " [clip=", "]");
+  if (mClipRect) {
+    AppendToString(aStream, *mClipRect, " [clip=", "]");
   }
   if (1.0 != mPostXScale || 1.0 != mPostYScale) {
     aStream << nsPrintfCString(" [postScale=%g, %g]", mPostXScale, mPostYScale).get();
@@ -1650,8 +1652,10 @@ DumpTransform(layerscope::LayersPacket::Layer::Matrix* aLayerMatrix, const Matri
 }
 
 // The static helper function sets the nsIntRect into the packet
+template <typename T, typename Sub, typename Point, typename SizeT, typename MarginT>
 static void
-DumpRect(layerscope::LayersPacket::Layer::Rect* aLayerRect, const nsIntRect& aRect)
+DumpRect(layerscope::LayersPacket::Layer::Rect* aLayerRect,
+         const BaseRect<T, Sub, Point, SizeT, MarginT>& aRect)
 {
   aLayerRect->set_x(aRect.x);
   aLayerRect->set_y(aRect.y);
@@ -1682,7 +1686,7 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   // Shadow
   if (LayerComposite* lc = AsLayerComposite()) {
     LayersPacket::Layer::Shadow* s = layer->mutable_shadow();
-    if (const nsIntRect* clipRect = lc->GetShadowClipRect()) {
+    if (const Maybe<ParentLayerIntRect>& clipRect = lc->GetShadowClipRect()) {
       DumpRect(s->mutable_clip(), *clipRect);
     }
     if (!lc->GetShadowTransform().IsIdentity()) {
@@ -1693,8 +1697,8 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
     }
   }
   // Clip
-  if (mUseClipRect) {
-    DumpRect(layer->mutable_clip(), mClipRect);
+  if (mClipRect) {
+    DumpRect(layer->mutable_clip(), *mClipRect);
   }
   // Transform
   if (!mTransform.IsIdentity()) {
@@ -2047,7 +2051,7 @@ PrintInfo(std::stringstream& aStream, LayerComposite* aLayerComposite)
   if (!aLayerComposite) {
     return;
   }
-  if (const nsIntRect* clipRect = aLayerComposite->GetShadowClipRect()) {
+  if (const Maybe<ParentLayerIntRect>& clipRect = aLayerComposite->GetShadowClipRect()) {
     AppendToString(aStream, *clipRect, " [shadow-clip=", "]");
   }
   if (!aLayerComposite->GetShadowTransform().IsIdentity()) {

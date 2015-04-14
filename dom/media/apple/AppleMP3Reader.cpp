@@ -414,9 +414,10 @@ AppleMP3Reader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  aInfo->mAudio.mRate = mAudioSampleRate;
-  aInfo->mAudio.mChannels = mAudioChannels;
-  aInfo->mAudio.mHasAudio = mStreamReady;
+  if (mStreamReady) {
+    aInfo->mAudio.mRate = mAudioSampleRate;
+    aInfo->mAudio.mChannels = mAudioChannels;
+  }
 
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());

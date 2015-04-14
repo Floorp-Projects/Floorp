@@ -63,8 +63,8 @@ public:
   already_AddRefed<mozilla::MediaRawData> DemuxVideoSample();
 
   const CryptoFile& Crypto() { return mCrypto; }
-  const AudioDecoderConfig& AudioConfig() { return mAudioConfig; }
-  const VideoDecoderConfig& VideoConfig() { return mVideoConfig; }
+  const mozilla::AudioInfo& AudioConfig() { return mAudioConfig; }
+  const mozilla::VideoInfo& VideoConfig() { return mVideoConfig; }
 
   void UpdateIndex(const nsTArray<mozilla::MediaByteRange>& aByteRanges);
 
@@ -83,8 +83,8 @@ protected:
 
 private:
   void UpdateCrypto(const stagefright::MetaData* aMetaData);
-  AudioDecoderConfig mAudioConfig;
-  VideoDecoderConfig mVideoConfig;
+  MP4AudioInfo mAudioConfig;
+  MP4VideoInfo mVideoConfig;
   CryptoFile mCrypto;
 
   nsAutoPtr<StageFrightPrivate> mPrivate;

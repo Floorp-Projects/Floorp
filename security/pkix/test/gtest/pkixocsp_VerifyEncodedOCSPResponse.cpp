@@ -55,7 +55,7 @@ class pkixocsp_VerifyEncodedResponse : public ::testing::Test
 public:
   static void SetUpTestCase()
   {
-    rootKeyPair = GenerateKeyPair();
+    rootKeyPair.reset(GenerateKeyPair());
     if (!rootKeyPair) {
       abort();
     }
@@ -90,8 +90,8 @@ public:
           != Success) {
       abort();
     }
-    endEntityCertID = new (std::nothrow) CertID(rootNameDERInput, rootSPKIDER,
-                                                serialNumberDERInput);
+    endEntityCertID.reset(new (std::nothrow) CertID(rootNameDERInput, rootSPKIDER,
+                                                    serialNumberDERInput));
     if (!endEntityCertID) {
       abort();
     }
@@ -206,8 +206,8 @@ public:
       context.signerNameDER = CNToDERName(signerName);
       EXPECT_FALSE(ENCODING_FAILED(context.signerNameDER));
     }
-    context.signerKeyPair = signerKeyPair.Clone();
-    EXPECT_TRUE(context.signerKeyPair);
+    context.signerKeyPair.reset(signerKeyPair.Clone());
+    EXPECT_TRUE(context.signerKeyPair.get());
     context.responseStatus = OCSPResponseContext::successful;
     context.producedAt = producedAt;
     context.signatureAlgorithm = signatureAlgorithm;
@@ -538,7 +538,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
        good_byKey_missing_signer)
 {
   ScopedTestKeyPair missingSignerKeyPair(GenerateKeyPair());
-  ASSERT_TRUE(missingSignerKeyPair);
+  ASSERT_TRUE(missingSignerKeyPair.get());
 
   ByteString responseString(
                CreateEncodedOCSPSuccessfulResponse(
@@ -561,7 +561,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
        good_byName_missing_signer)
 {
   ScopedTestKeyPair missingSignerKeyPair(GenerateKeyPair());
-  ASSERT_TRUE(missingSignerKeyPair);
+  ASSERT_TRUE(missingSignerKeyPair.get());
   ByteString responseString(
                CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
@@ -723,7 +723,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
 
   // unknown issuer
   ScopedTestKeyPair unknownKeyPair(GenerateKeyPair());
-  ASSERT_TRUE(unknownKeyPair);
+  ASSERT_TRUE(unknownKeyPair.get());
 
   // Delegated responder cert signed by unknown issuer
   const ByteString extensions[] = {

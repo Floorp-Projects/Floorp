@@ -46,6 +46,7 @@ void PlatformThread::Sleep(int duration_ms) {
 
 // static
 void PlatformThread::SetName(const char* name) {
+#ifdef HAVE_SEH_EXCEPTIONS
   // The debugger needs to be around to catch the name in the exception.  If
   // there isn't a debugger, we are just needlessly throwing an exception.
   if (!::IsDebuggerPresent())
@@ -62,6 +63,7 @@ void PlatformThread::SetName(const char* name) {
                    reinterpret_cast<DWORD_PTR*>(&info));
   } MOZ_SEH_EXCEPT(EXCEPTION_CONTINUE_EXECUTION) {
   }
+#endif
 }
 
 // static

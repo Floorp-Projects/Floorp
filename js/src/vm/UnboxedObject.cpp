@@ -955,8 +955,16 @@ bool
 js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
                               ObjectGroup* group, PreliminaryObjectArray* objects)
 {
-    if (!templateShape->runtimeFromAnyThread()->options().unboxedObjects())
-        return true;
+    // Unboxed objects are nightly only for now. The getenv() call will be
+    // removed when they are on by default. See bug 1153266.
+#ifdef NIGHTLY_BUILD
+    if (!getenv("JS_OPTION_USE_UNBOXED_OBJECTS")) {
+        if (!templateShape->runtimeFromAnyThread()->options().unboxedObjects())
+            return true;
+    }
+#else
+    return true;
+#endif
 
     if (templateShape->runtimeFromAnyThread()->isSelfHostingGlobal(cx->global()))
         return true;

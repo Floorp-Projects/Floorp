@@ -446,8 +446,8 @@ public:
   private:
     DisplayItemData(LayerManagerData* aParent,
                     uint32_t aKey,
+                    Layer* aLayer,
                     nsIFrame* aFrame = nullptr);
-    DisplayItemData(DisplayItemData &toCopy);
 
     /**
      * Removes any references to this object from frames

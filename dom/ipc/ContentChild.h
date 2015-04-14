@@ -457,6 +457,13 @@ public:
     virtual bool
     DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate) override;
 
+    virtual PContentPermissionRequestChild*
+    AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
+                                        const IPC::Principal& aPrincipal,
+                                        const TabId& aTabId) override;
+    virtual bool
+    DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor) override;
+
 private:
     virtual void ActorDestroy(ActorDestroyReason why) override;
 

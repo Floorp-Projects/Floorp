@@ -52,7 +52,7 @@ HTMLVideoElement::~HTMLVideoElement()
 
 nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
 {
-  if (mMediaSize.width == -1 && mMediaSize.height == -1) {
+  if (!mMediaInfo.HasVideo()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -60,8 +60,8 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
     return NS_ERROR_FAILURE;
   }
 
-  size->height = mMediaSize.height;
-  size->width = mMediaSize.width;
+  size->height = mMediaInfo.mVideo.mDisplay.height;
+  size->width = mMediaInfo.mVideo.mDisplay.width;
   return NS_OK;
 }
 

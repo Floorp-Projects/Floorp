@@ -38,7 +38,8 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(ad8192a1-668e-4a47-bd77-081eb23e50fa)]
+[scriptable, uuid(26833ec7-4555-4f23-9281-3a12d4b76db1)]
+
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -205,6 +206,12 @@ interface nsIHttpChannelInternal : nsISupports
      * May return null when redirectTo() has not been called.
      */
     readonly attribute nsIURI apiRedirectToURI;
+
+    /**
+     * Enable/Disable use of Alternate Services with this channel.
+     * The network.http.altsvc.enabled preference is still a pre-requisite.
+     */
+    attribute boolean allowAltSvc;
 
     /**
      * Add a new nsIPrincipal to the redirect chain. This is the only way to

@@ -93,11 +93,11 @@ function checkLoads(aWindow, aBlocked) {
   for (var i = 0; i < blockedTrackingNodes.length; i++) {
     var nodeMatch = false;
     for (var j = 0; j < badids.length && !nodeMatch; j++) {
-      nodeMatch |=
+      nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
     }
 
-    allNodeMatch &= nodeMatch;
+    allNodeMatch = allNodeMatch && nodeMatch;
   }
   is(allNodeMatch, true, "All annotated nodes are expected in the tree");
 
@@ -108,11 +108,11 @@ function checkLoads(aWindow, aBlocked) {
   for (var j = 0; j < badids.length; j++) {
     var nodeMatch = false;
     for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
-      nodeMatch |=
+      nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == win.document.getElementById(badids[j]));
     }
 
-    allNodeMatch &= nodeMatch;
+    allNodeMatch = allNodeMatch && nodeMatch;
   }
   is(allNodeMatch, aBlocked, "All tracking nodes are expected to be annotated as such");
 }

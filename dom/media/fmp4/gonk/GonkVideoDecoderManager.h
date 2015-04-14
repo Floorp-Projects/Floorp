@@ -40,7 +40,7 @@ typedef mozilla::layers::TextureClient TextureClient;
 public:
   GonkVideoDecoderManager(MediaTaskQueue* aTaskQueue,
                           mozilla::layers::ImageContainer* aImageContainer,
-		                      const mp4_demuxer::VideoDecoderConfig& aConfig);
+                          const VideoInfo& aConfig);
 
   ~GonkVideoDecoderManager();
 

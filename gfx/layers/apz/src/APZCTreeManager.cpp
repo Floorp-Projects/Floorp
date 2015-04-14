@@ -29,6 +29,7 @@
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
 #include "LayersLogging.h"              // for Stringify
+#include "Units.h"                      // for ParentlayerPixel
 
 #define ENABLE_APZCTM_LOGGING 0
 // #define ENABLE_APZCTM_LOGGING 1
@@ -202,7 +203,7 @@ ComputeClipRegion(GeckoContentController* aController,
 {
   ParentLayerIntRegion clipRegion;
   if (aLayer.GetClipRect()) {
-    clipRegion = ViewAs<ParentLayerPixel>(*aLayer.GetClipRect());
+    clipRegion = *aLayer.GetClipRect();
   } else {
     // if there is no clip on this layer (which should only happen for the
     // root scrollable layer in a process, or for some of the LayerMetrics
@@ -334,7 +335,7 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     node = RecycleOrCreateNode(aState, nullptr);
     AttachNodeToTree(node, aParent, aNextSibling);
     node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetTransform(),
-        aLayer.GetClipRect() ? Some(ParentLayerIntRegion(ViewAs<ParentLayerPixel>(*aLayer.GetClipRect()))) : Nothing(),
+        aLayer.GetClipRect() ? Some(ParentLayerIntRegion(*aLayer.GetClipRect())) : Nothing(),
         GetEventRegionsOverride(aParent, aLayer));
     return node;
   }
@@ -880,14 +881,15 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                                    uint64_t* aOutInputBlockId)
 {
   ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
-  if (gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
+  if (aEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+      gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
   }
 
   ScreenPoint origin(aEvent.refPoint.x, aEvent.refPoint.y);
   ScrollWheelInput input(aEvent.time, aEvent.timeStamp, 0,
                          scrollMode,
-                         ScrollWheelInput::SCROLLDELTA_LINE,
+                         ScrollWheelInput::DeltaTypeForDeltaMode(aEvent.deltaMode),
                          origin,
                          aEvent.deltaX,
                          aEvent.deltaY);
@@ -901,8 +903,15 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
 bool
 APZCTreeManager::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
+  // Only support pixel units on OS X for now because it causes more test
+  // failures when APZ is turned on, and we want to do that on Windows very
+  // soon.
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+         (aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE
+#ifdef XP_MACOSX
+            || aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL
+#endif
+           ) &&
          !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
 }
 

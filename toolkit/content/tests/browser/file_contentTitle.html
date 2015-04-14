@@ -1,0 +1,14 @@
+<html>
+<head><title>Test Page</title></head>
+<body>
+<script type="text/javascript">
+dump("Script!\n");
+addEventListener("load", () => {
+  // Trigger an onLocationChange event. We want to make sure the title is still correct afterwards.
+  location.hash = "#x2";
+  var event = new Event("TestLocationChange");
+  document.dispatchEvent(event);
+}, false);
+</script>
+</body>
+</html>

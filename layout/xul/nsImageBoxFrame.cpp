@@ -147,8 +147,8 @@ nsImageBoxFrame::AttributeChanged(int32_t aNameSpaceID,
 nsImageBoxFrame::nsImageBoxFrame(nsStyleContext* aContext):
   nsLeafBoxFrame(aContext),
   mIntrinsicSize(0,0),
-  mRequestRegistered(false),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
+  mRequestRegistered(false),
   mUseSrcAttr(false),
   mSuppressStyleCheck(false),
   mFireEventOnDecode(false)

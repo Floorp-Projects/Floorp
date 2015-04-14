@@ -38,13 +38,13 @@ function onFailure() {
 function observer1(setting) {
   dump("observer 1 called!\n");
   is(setting.settingName, "screen.brightness", "Same settingName");
-  is(setting.settingValue, "0.7", "Same settingvalue");
+  is(setting.settingValue, 0.7, "Same settingvalue");
 };
 
 function observer2(setting) {
   dump("observer 2 called!\n");
   is(setting.settingName, "screen.brightness", "Same settingName");
-  is(setting.settingValue, "0.7", "Same settingvalue");
+  is(setting.settingValue, 0.7, "Same settingvalue");
 };
 
 var calls = 0;
@@ -56,14 +56,14 @@ function observerOnlyCalledOnce(setting) {
 function observerWithNext(setting) {
   dump("observer with next called!\n");
   is(setting.settingName, "screen.brightness", "Same settingName");
-  is(setting.settingValue, "0.7", "Same settingvalue");
+  is(setting.settingValue, 0.7, "Same settingvalue");
   next();
 };
 
 function onsettingschangeWithNext(event) {
   dump("onsettingschangewithnext called!\n");
   is(event.settingName, "screen.brightness", "Same settingName");
-  is(event.settingValue, "0.7", "Same settingvalue");
+  is(event.settingValue, 0.7, "Same settingvalue");
   next();
 };
 

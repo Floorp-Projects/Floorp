@@ -12,7 +12,7 @@
 #include "MediaDataDecoderProxy.h"
 #include "PlatformDecoderModule.h"
 #include "mozIGeckoMediaPluginService.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaInfo.h"
 
 namespace mozilla {
 
@@ -51,7 +51,7 @@ private:
 
 class GMPVideoDecoder : public MediaDataDecoder {
 protected:
-  GMPVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+  GMPVideoDecoder(const VideoInfo& aConfig,
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
                   MediaTaskQueue* aTaskQueue,
@@ -67,7 +67,7 @@ protected:
   }
 
 public:
-  GMPVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+  GMPVideoDecoder(const VideoInfo& aConfig,
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
                   MediaTaskQueue* aTaskQueue,
@@ -77,8 +77,8 @@ public:
    , mGMP(nullptr)
    , mHost(nullptr)
    , mAdapter(new VideoCallbackAdapter(aCallback,
-                                       VideoInfo(aConfig.display_width,
-                                                 aConfig.display_height),
+                                       VideoInfo(aConfig.mDisplay.width,
+                                                 aConfig.mDisplay.height),
                                        aImageContainer))
    , mConvertNALUnitLengths(false)
   {
@@ -153,7 +153,7 @@ private:
   };
   void GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost);
 
-  const mp4_demuxer::VideoDecoderConfig& mConfig;
+  const VideoInfo& mConfig;
   MediaDataDecoderCallbackProxy* mCallback;
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   GMPVideoDecoderProxy* mGMP;

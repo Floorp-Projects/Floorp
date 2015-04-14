@@ -108,7 +108,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
                        a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
                        a.entityID(), a.chooseApplicationCache(),
-                       a.appCacheClientID(), a.allowSpdy(), a.fds(),
+                       a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.fds(),
                        a.requestingPrincipalInfo(), a.triggeringPrincipalInfo(),
                        a.securityFlags(), a.contentPolicyType(), a.innerWindowID());
   }
@@ -196,6 +196,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                chooseApplicationCache,
                                  const nsCString&           appCacheClientID,
                                  const bool&                allowSpdy,
+                                 const bool&                allowAltSvc,
                                  const OptionalFileDescriptorSet& aFds,
                                  const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
                                  const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
@@ -329,6 +330,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   mChannel->SetAllowSTS(allowSTS);
   mChannel->SetThirdPartyFlags(thirdPartyFlags);
   mChannel->SetAllowSpdy(allowSpdy);
+  mChannel->SetAllowAltSvc(allowAltSvc);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
     do_QueryObject(mChannel);

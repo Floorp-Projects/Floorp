@@ -61,10 +61,10 @@ OpenFile(const string& dir, const string& filename, const string& mode)
       // TODO: map error to NSPR error code
       rawFile = nullptr;
     }
-    file = rawFile;
+    file.reset(rawFile);
   }
 #else
-  file = fopen(path.c_str(), mode.c_str());
+  file.reset(fopen(path.c_str(), mode.c_str()));
 #endif
   return file.release();
 }

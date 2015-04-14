@@ -13,12 +13,9 @@
  *     -> previousBuildID in telemetry, new value set in prefs.
  */
 
-"use strict"
-
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+"use strict";
 
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -28,7 +25,7 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .wrappedJSObject);
 
 // Force the Telemetry enabled preference so that TelemetrySession.reset() doesn't exit early.
-Services.prefs.setBoolPref(TelemetryPing.Constants.PREF_ENABLED, true);
+Services.prefs.setBoolPref(TelemetrySession.Constants.PREF_ENABLED, true);
 
 // Set up our dummy AppInfo object so we can control the appBuildID.
 Cu.import("resource://testing-common/AppInfo.jsm", this);

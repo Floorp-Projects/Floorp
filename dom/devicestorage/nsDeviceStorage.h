@@ -220,6 +220,7 @@ private:
 
   nsRefPtr<DeviceStorageFile> mFile;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };
 
 //helpers

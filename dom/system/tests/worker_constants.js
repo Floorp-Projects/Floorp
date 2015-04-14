@@ -19,6 +19,7 @@ self.onmessage = function(msg) {
     test_xul();
     test_debugBuildWorkerThread(isDebugBuild);
     test_umaskWorkerThread(umask);
+    test_bits();
   } catch (x) {
     log("Catching error: " + x);
     log("Stack: " + x.stack);
@@ -73,4 +74,9 @@ function test_xul() {
     lib.close();
   }
   ok(true, "test_xul: opened libxul successfully");
+}
+
+// Check if the value of OS.Constants.Sys.bits is 32 or 64
+function test_bits(){
+  is(OS.Constants.Sys.bits, ctypes.int.ptr.size * 8, "OS.Constants.Sys.bits is either 32 or 64");
 }

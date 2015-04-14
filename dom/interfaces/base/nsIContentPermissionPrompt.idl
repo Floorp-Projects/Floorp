@@ -33,11 +33,39 @@ interface nsIContentPermissionType : nsISupports {
 };
 
 /**
+ *  Interface provides the callback type.
+ */
+[scriptable, uuid(5fb5bb60-7069-11e4-9803-0800200c9a66)]
+interface nsIContentPermissionRequestCallback : nsISupports {
+  /**
+   * The callback of the visibility result.
+   */
+  void notifyVisibility(in boolean isVisible);
+};
+
+/**
+ *  Interface provides the way to get the visibility and
+ *  the notification.
+ */
+[scriptable, uuid(f8577124-6a5f-486f-ae04-c5bcae911eb5)]
+interface nsIContentPermissionRequester : nsISupports {
+  /**
+   * The function to get the visibility.
+   */
+  void getVisibility(in nsIContentPermissionRequestCallback callback);
+
+  /**
+   * The callback to get the notification of visibility change.
+   */
+  attribute nsIContentPermissionRequestCallback onVisibilityChange;
+};
+
+/**
  * Interface allows access to a content to request
  * permission to perform a privileged operation such as
  * geolocation.
  */
-[scriptable, uuid(69a39d88-d1c4-4ba9-9b19-bafc7a1bb783)]
+[scriptable, uuid(408c8fcd-1420-4aff-94d8-39bf74d79219)]
 interface nsIContentPermissionRequest : nsISupports {
   /**
    *  The array will include the request types. Elements of this array are
@@ -58,6 +86,12 @@ interface nsIContentPermissionRequest : nsISupports {
    */
   readonly attribute nsIDOMWindow window;
   readonly attribute nsIDOMElement element;
+
+  /**
+   *  The requester to get the required information of
+   *  the window.
+   */
+  readonly attribute nsIContentPermissionRequester requester;
 
   /**
    * allow or cancel the request

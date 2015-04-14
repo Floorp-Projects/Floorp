@@ -592,7 +592,7 @@ FileHandleBase::Finish()
   FileService* service = FileService::Get();
   MOZ_ASSERT(service, "This should never be null");
 
-  nsIEventTarget* target = service->StreamTransportTarget();
+  nsIEventTarget* target = service->ThreadPoolTarget();
 
   nsresult rv = target->Dispatch(helper, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -739,7 +739,7 @@ ReadHelper::DoAsyncRun(nsISupports* aStream)
   FileService* service = FileService::Get();
   MOZ_ASSERT(service, "This should never be null");
 
-  nsIEventTarget* target = service->StreamTransportTarget();
+  nsIEventTarget* target = service->ThreadPoolTarget();
 
   nsCOMPtr<nsIAsyncStreamCopier> copier;
   nsresult rv =
@@ -814,7 +814,7 @@ WriteHelper::DoAsyncRun(nsISupports* aStream)
   FileService* service = FileService::Get();
   MOZ_ASSERT(service, "This should never be null");
 
-  nsIEventTarget* target = service->StreamTransportTarget();
+  nsIEventTarget* target = service->ThreadPoolTarget();
 
   nsCOMPtr<nsIAsyncStreamCopier> copier;
   nsresult rv =

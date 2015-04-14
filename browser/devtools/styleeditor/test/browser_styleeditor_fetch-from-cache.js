@@ -21,8 +21,8 @@ add_task(function() {
   info("Opening Style Editor");
   let styleeditor = yield toolbox.selectTool("styleeditor");
 
-  info("Waiting for an editor to be selected.");
-  yield styleeditor.UI.once("editor-selected");
+  info("Waiting for the source to be loaded.");
+  yield styleeditor.UI.editors[0].getSourceEditor();
 
   info("Checking Netmonitor contents.");
   let requestsForCss = 0;

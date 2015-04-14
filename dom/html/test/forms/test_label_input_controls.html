@@ -47,16 +47,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=597650
           testControl(label,     inputH, type, true);
           testControl(labelForH, inputH, type, true);
         } else {
-          testControl(label,     inputI,    type, false);
-          testControl(labelForH, undefined, type, false);
+          testControl(label,     inputI, type, false);
+          testControl(labelForH, null,   type, false);
 
           inputH.type = "text";
           testControl(label,     inputH, "text", true);
           testControl(labelForH, inputH, "text", true);
 
           inputH.type = type;
-          testControl(label,     inputI,    type, false);
-          testControl(labelForH, undefined, type, false);
+          testControl(label,     inputI, type, false);
+          testControl(labelForH, null,   type, false);
 
           label.removeChild(inputH);
           testControl(label, inputI, "text", true);

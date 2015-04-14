@@ -104,7 +104,7 @@ public:
   bool IsEmpty();
 
   // Returns true if the current thread is currently running a Runnable in
-  // the task queue. This is for debugging/validation purposes only.
+  // the task queue.
   bool IsCurrentThreadIn() override;
 
 protected:
@@ -141,7 +141,12 @@ protected:
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
   // is the thread currently running in the task queue.
-  RefPtr<nsIThread> mRunningThread;
+  //
+  // This may be read on any thread, but may only be written on mRunningThread.
+  // The thread can't die while we're running in it, and we only use it for
+  // pointer-comparison with the current thread anyway - so we make it atomic
+  // and don't refcount it.
+  Atomic<nsIThread*> mRunningThread;
 
   // RAII class that gets instantiated for each dispatched task.
   class AutoTaskGuard : public AutoTaskDispatcher
@@ -157,10 +162,15 @@ protected:
       MOZ_ASSERT(sCurrentQueueTLS.get() == nullptr);
       sCurrentQueueTLS.set(aQueue);
 
+      MOZ_ASSERT(mQueue->mRunningThread == nullptr);
+      mQueue->mRunningThread = NS_GetCurrentThread();
     }
 
     ~AutoTaskGuard()
     {
+      MOZ_ASSERT(mQueue->mRunningThread == NS_GetCurrentThread());
+      mQueue->mRunningThread = nullptr;
+
       sCurrentQueueTLS.set(nullptr);
       mQueue->mTailDispatcher = nullptr;
     }
@@ -169,7 +179,6 @@ protected:
   MediaTaskQueue* mQueue;
   };
 
-  friend class TaskDispatcher;
   TaskDispatcher* mTailDispatcher;
 
   // True if we've dispatched an event to the pool to execute events from
