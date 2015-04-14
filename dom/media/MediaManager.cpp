@@ -46,7 +46,6 @@
 #include "MediaTrackConstraints.h"
 #include "VideoUtils.h"
 #include "Latency.h"
-#include "nsProxyRelease.h"
 
 // For PR_snprintf
 #include "prprf.h"
@@ -331,18 +330,6 @@ public:
   {
     mOnSuccess.swap(aOnSuccess);
     mOnFailure.swap(aOnFailure);
-  }
-
-  ~DeviceSuccessCallbackRunnable()
-  {
-    if (!NS_IsMainThread()) {
-      // This can happen if the main thread processes the runnable before
-      // GetUserMediaDevicesTask::Run returns.
-      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-
-      NS_ProxyRelease(mainThread, mOnSuccess);
-      NS_ProxyRelease(mainThread, mOnFailure);
-    }
   }
 
   nsresult
@@ -1511,7 +1498,10 @@ public:
         result->AppendElement(source);
       }
     }
-    nsRefPtr<DeviceSuccessCallbackRunnable> runnable =
+    // In the case of failure with this newly allocated runnable, we
+    // intentionally leak the runnable, because we've pawned mOnSuccess and
+    // mOnFailure onto it which are main thread objects unsafe to release here.
+    DeviceSuccessCallbackRunnable* runnable =
         new DeviceSuccessCallbackRunnable(mWindowId, mOnSuccess, mOnFailure,
                                           result.forget());
     if (mPrivileged) {
