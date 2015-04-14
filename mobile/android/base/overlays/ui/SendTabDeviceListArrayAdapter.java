@@ -153,7 +153,7 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
             return R.drawable.device_mobile;
         }
 
-        return R.drawable.device_pc;
+        return R.drawable.device_desktop;
     }
 
     public void switchState(State newState) {

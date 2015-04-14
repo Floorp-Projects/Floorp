@@ -391,8 +391,9 @@ function checkLoopPanelIsHidden() {
 
 function setupFakeRoom() {
   let room = {};
-  for (let prop of ["roomToken", "roomName", "roomOwner", "roomUrl", "participants"])
+  for (let prop of ["roomToken", "roomOwner", "roomUrl", "participants"])
     room[prop] = "fakeTourRoom";
+  room.decryptedContext = {roomName: "fakeTourRoom"};
   let roomsMap = new Map([
     [room.roomToken, room]
   ]);

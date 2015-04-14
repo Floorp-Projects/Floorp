@@ -630,10 +630,40 @@ function waitForNewTabEvent(aTabBrowser) {
   return promiseWaitForEvent(aTabBrowser.tabContainer, "TabOpen");
 }
 
+/**
+ * Waits for a window with the given URL to exist.
+ *
+ * @param url
+ *        The url of the window.
+ * @return {Promise} resolved when the window exists.
+ * @resolves to the window
+ */
+function promiseWindow(url) {
+  info("waiting for a " + url + " window");
+  return new Promise(resolve => {
+    Services.obs.addObserver(function obs(win) {
+      win.QueryInterface(Ci.nsIDOMWindow);
+      if (win.location.href !== url) {
+        info("ignoring a window with this url: " + win.location.href);
+        return;
+      }
+
+      Services.obs.removeObserver(obs, "domwindowopened");
+      resolve(win);
+    }, "domwindowopened", false);
+  });
+}
+
 function assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
   let expectedState = expected ? "visible" : "hidden";
   let msg = "WebRTC indicator " + expectedState;
+  if (!expected && ui.showGlobalIndicator) {
+    // It seems the global indicator is not always removed synchronously
+    // in some cases.
+    info("waiting for the global indicator to be hidden");
+    yield promiseWaitForCondition(() => !ui.showGlobalIndicator);
+  }
   is(ui.showGlobalIndicator, !!expected, msg);
 
   let expectVideo = false, expectAudio = false, expectScreen = false;
@@ -670,6 +700,9 @@ function assertWebRTCIndicatorStatus(expected) {
         });
       }
     }
+    if (expected &&
+        !Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator"))
+      yield promiseWindow("chrome://browser/content/webrtcIndicator.xul");
     let indicator = Services.wm.getEnumerator("Browser:WebRTCGlobalIndicator");
     let hasWindow = indicator.hasMoreElements();
     is(hasWindow, !!expected, "popup " + msg);
@@ -825,4 +858,3 @@ function promiseTopicObserved(aTopic)
       }, aTopic, false);
   });
 }
-

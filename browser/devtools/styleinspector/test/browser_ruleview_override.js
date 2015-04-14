@@ -25,6 +25,12 @@ function* createTestContent(inspector, style) {
   return styleNode;
 }
 
+function* removeTestContent(inspector, node) {
+  let onMutated = inspector.once("markupmutation");
+  node.remove();
+  yield onMutated;
+}
+
 function* simpleOverride(inspector, view) {
   let styleNode = yield createTestContent(inspector, '' +
     '#testid {' +
@@ -57,7 +63,7 @@ function* simpleOverride(inspector, view) {
   ok(idProp.overridden, "ID property should be overridden");
   ok(classProp.overridden, "Class property should be overridden");
 
-  styleNode.remove();
+  yield removeTestContent(inspector, styleNode);
 }
 
 function* partialOverride(inspector, view) {
@@ -86,7 +92,7 @@ function* partialOverride(inspector, view) {
     }
   }
 
-  styleNode.remove();
+  yield removeTestContent(inspector, styleNode);
 }
 
 function* importantOverride(inspector, view) {
@@ -110,7 +116,7 @@ function* importantOverride(inspector, view) {
   let classProp = classRule.textProps[0];
   ok(!classProp.overridden, "Important rule should not be overridden.");
 
-  styleNode.remove();
+  yield removeTestContent(inspector, styleNode);
 
   let elementRule = elementStyle.rules[0];
   let elementProp = elementRule.createProperty("background-color", "purple", "important");
@@ -141,6 +147,5 @@ function* disableOverride(inspector, view) {
   let classProp = classRule.textProps[0];
   ok(!classProp.overridden, "Class prop should not be overridden after id prop was disabled.");
 
-  styleNode.remove();
-  yield inspector.once("inspector-updated");
+  yield removeTestContent(inspector, styleNode);
 }

@@ -824,6 +824,7 @@ Finder.prototype = {
     }
 
     const XLink_NS = "http://www.w3.org/1999/xlink";
+    const HTMLAnchorElement = (node.ownerDocument || node).defaultView.HTMLAnchorElement;
     do {
       if (node instanceof HTMLAnchorElement) {
         isInsideLink = node.hasAttribute("href");

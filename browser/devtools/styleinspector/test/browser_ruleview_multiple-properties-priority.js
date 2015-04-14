@@ -23,8 +23,10 @@ add_task(function*() {
 });
 
 function* testCreateNewMultiPriority(inspector, ruleEditor) {
+  let onMutation = inspector.once("markupmutation");
   yield createNewRuleViewProperty(ruleEditor,
     "color:red;width:100px;height: 100px;");
+  yield onMutation;
 
   is(ruleEditor.rule.textProps.length, 3, "Should have created new text properties.");
   is(ruleEditor.propertyList.children.length, 4, "Should have created new property editors.");
@@ -37,6 +39,4 @@ function* testCreateNewMultiPriority(inspector, ruleEditor) {
 
   is(ruleEditor.rule.textProps[2].name, "height", "Should have correct property name");
   is(ruleEditor.rule.textProps[2].value, "100px", "Should have correct property value");
-
-  yield inspector.once("inspector-updated");
 }

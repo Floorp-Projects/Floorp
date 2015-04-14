@@ -32,6 +32,17 @@ addEventListener('unload', function() {
                                               isInBrowserElement: true });
 });
 
+// ProcessPriorityManager requires at least one process in foreground
+// so that other processes can transit freely between foreground and
+// background.
+function setupTest() {
+  var foreground = document.createElement('iframe');
+  foreground.setAttribute('mozbrowser', true);
+  foreground.src = browserElementTestHelpers.emptyPage;
+  expectMozbrowserEvent(foreground, 'loadend').then(runTest);
+  document.body.appendChild(foreground);
+}
+
 function runTest() {
   // Set up the following hierarchy of frames:
   //
@@ -69,7 +80,7 @@ function runTest() {
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', runTest);
+addEventListener('testready', setupTest);
 
 </script>
 </body>

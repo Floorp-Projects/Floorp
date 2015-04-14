@@ -6,12 +6,14 @@
 #include <binder/Parcel.h>
 #include "mozilla/dom/MozNDEFRecordBinding.h"
 #include "nsDebug.h"
-#include "NfcGonkMessage.h"
 #include "NfcOptions.h"
 #include "mozilla/unused.h"
 
 #include <android/log.h>
 #define NMH_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "NfcMessageHandler", args)
+
+#define NFCD_MAJOR_VERSION 1
+#define NFCD_MINOR_VERSION 22
 
 using namespace android;
 using namespace mozilla;
@@ -168,7 +170,7 @@ NfcMessageHandler::ReadNDEFResponse(const Parcel& aParcel, EventOptions& aOption
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
 
-  if (aOptions.mErrorCode == NfcErrorCode::Success) {
+  if (aOptions.mErrorCode == 0) {
     ReadNDEFMessage(aParcel, aOptions);
   }
 
@@ -202,7 +204,7 @@ NfcMessageHandler::TransceiveResponse(const Parcel& aParcel, EventOptions& aOpti
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
 
-  if (aOptions.mErrorCode == NfcErrorCode::Success) {
+  if (aOptions.mErrorCode == 0) {
     ReadTransceiveResponse(aParcel, aOptions);
   }
 
