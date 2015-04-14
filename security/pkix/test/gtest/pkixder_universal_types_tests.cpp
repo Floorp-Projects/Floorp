@@ -34,8 +34,6 @@ using namespace mozilla::pkix::der;
 using namespace mozilla::pkix::test;
 using namespace std;
 
-namespace {
-
 class pkixder_universal_types_tests : public ::testing::Test { };
 
 TEST_F(pkixder_universal_types_tests, BooleanTrue01)
@@ -1161,5 +1159,3 @@ TEST_F(pkixder_universal_types_tests, OID)
 
   ASSERT_EQ(Success, OID(reader, expectedOID));
 }
-
-} // unnamed namespace

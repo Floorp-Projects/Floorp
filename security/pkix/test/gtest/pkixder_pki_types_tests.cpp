@@ -32,8 +32,6 @@
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::der;
 
-namespace {
-
 class pkixder_pki_types_tests : public ::testing::Test { };
 
 TEST_F(pkixder_pki_types_tests, CertificateSerialNumber)
@@ -478,5 +476,3 @@ INSTANTIATE_TEST_CASE_P(
   pkixder_SignatureAlgorithmIdentifier_Invalid,
   pkixder_SignatureAlgorithmIdentifier_Invalid,
   testing::ValuesIn(INVALID_SIGNATURE_ALGORITHM_VALUE_TEST_INFO));
-
-} // unnamed namespace
