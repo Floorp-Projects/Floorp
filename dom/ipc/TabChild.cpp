@@ -799,22 +799,6 @@ TabChild::Create(nsIContentChild* aManager,
     return NS_SUCCEEDED(iframe->Init()) ? iframe.forget() : nullptr;
 }
 
-class TabChildSetTargetAPZCCallback : public SetTargetAPZCCallback {
-public:
-  explicit TabChildSetTargetAPZCCallback(TabChild* aTabChild)
-    : mTabChild(do_GetWeakReference(static_cast<nsITabChild*>(aTabChild)))
-  {}
-
-  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const override {
-    if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(mTabChild)) {
-      static_cast<TabChild*>(tabChild.get())->SendSetTargetAPZC(aInputBlockId, aTargets);
-    }
-  }
-
-private:
-  nsWeakPtr mTabChild;
-};
-
 class TabChildSetAllowedTouchBehaviorCallback : public SetAllowedTouchBehaviorCallback {
 public:
   explicit TabChildSetAllowedTouchBehaviorCallback(TabChild* aTabChild)
@@ -865,7 +849,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
   , mIgnoreKeyPressEvent(false)
-  , mSetTargetAPZCCallback(new TabChildSetTargetAPZCCallback(this))
   , mSetAllowedTouchBehaviorCallback(new TabChildSetAllowedTouchBehaviorCallback(this))
   , mHasValidInnerSize(false)
   , mDestroyed(false)
@@ -2192,7 +2175,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
   if (gfxPrefs::AsyncPanZoomEnabled()) {
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document, aEvent, aGuid,
-        aInputBlockId, mSetTargetAPZCCallback);
+        aInputBlockId);
   }
 
   WidgetWheelEvent event(aEvent);
@@ -2387,7 +2370,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     }
     nsCOMPtr<nsIDocument> document = GetDocument();
     APZCCallbackHelper::SendSetTargetAPZCNotification(WebWidget(), document,
-        localEvent, aGuid, aInputBlockId, mSetTargetAPZCCallback);
+        localEvent, aGuid, aInputBlockId);
   }
 
   // Dispatch event to content (potentially a long-running operation)
