@@ -6,8 +6,6 @@
 
 "use strict";
 
-const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
-
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);

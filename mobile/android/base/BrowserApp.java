@@ -3394,13 +3394,23 @@ public class BrowserApp extends GeckoApp
 
         // If the user has clicked the tab queue notification then load the tabs.
         if(AppConstants.NIGHTLY_BUILD  && AppConstants.MOZ_ANDROID_TAB_QUEUE && mInitialized && isTabQueueAction) {
-            int queuedTabCount = TabQueueHelper.getTabQueueLength(this);
-            TabQueueHelper.openQueuedUrls(this, mProfile, TabQueueHelper.FILE_NAME, false);
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    int queuedTabCount = TabQueueHelper.getTabQueueLength(BrowserApp.this);
+                    TabQueueHelper.openQueuedUrls(BrowserApp.this, mProfile, TabQueueHelper.FILE_NAME, false);
 
-            // If there's more than one tab then also show the tabs panel.
-            if (queuedTabCount > 1) {
-                showNormalTabs();
-            }
+                    // If there's more than one tab then also show the tabs panel.
+                    if (queuedTabCount > 1) {
+                        ThreadUtils.postToUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showNormalTabs();
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {

@@ -24,9 +24,13 @@ public:
                   bool aAuth,
                   bool aEncrypt);
 
-  bool ConnectSocket(const nsAString& aDeviceAddress, int aChannel);
+  bool ConnectSocket(const nsAString& aDeviceAddress,
+                     const BluetoothUuid& aServiceUuid,
+                     int aChannel);
 
-  bool ListenSocket(int aChannel);
+  bool ListenSocket(const nsAString& aServiceName,
+                    const BluetoothUuid& aServiceUuid,
+                    int aChannel);
 
   void CloseSocket();
 
