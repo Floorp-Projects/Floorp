@@ -895,7 +895,6 @@ ContentParent::SendAsyncUpdate(nsIWidget* aWidget)
   if (!aWidget || aWidget->Destroyed()) {
     return;
   }
-  printf_stderr("TabParent::SendAsyncUpdate()\n");
   // Fire off an async request to the plugin to paint its window
   HWND hwnd = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
   NS_ASSERTION(hwnd, "Expected valid hwnd value.");
