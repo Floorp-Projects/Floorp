@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484181
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="spellcheck.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484181">Mozilla Bug 484181</a>
@@ -35,14 +36,7 @@ function getEditor() {
   return editingSession.getEditorForWindow(win);
 }
 
-function getSpellCheckSelection() {
-  var editor = getEditor();
-  var selcon = editor.selectionController;
-  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);
-}
-
 function append(str) {
-
   var edit = document.getElementById("edit");
   var editor = getEditor();
   var sel = editor.selection;
@@ -61,38 +55,20 @@ function runTest() {
 
   SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
   onSpellCheck(edit, function () {
-    is(isSpellingCheckOk(), true, "All misspellings before editing are accounted for.");
+    ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+       "All misspellings before editing are accounted for.");
 
     append(" becaz I'm a lulcat!");
     onSpellCheck(edit, function () {
       gMisspeltWords.push("becaz");
       gMisspeltWords.push("lulcat");
-      is(isSpellingCheckOk(), true, "All misspellings after typing are accounted for.");
+      ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+         "All misspellings after typing are accounted for.");
 
       SimpleTest.finish();
     });
   });
 }
-
-function isSpellingCheckOk() {
-
-  var sel = getSpellCheckSelection();
-  var numWords = sel.rangeCount;
-
-  is(numWords, gMisspeltWords.length, "Correct number of misspellings and words.");
-
-  if (numWords != gMisspeltWords.length)
-    return false;
-
-  for (var i=0; i<numWords; i++) {
-    var word = sel.getRangeAt(i);
-    is (word, gMisspeltWords[i], "Misspelling is what we think it is.");
-    if (word != gMisspeltWords[i])
-      return false;
-  }
-  return true;
-}
-
 </script>
 </pre>
 
