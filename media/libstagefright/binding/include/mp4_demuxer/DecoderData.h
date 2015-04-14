@@ -6,6 +6,7 @@
 #define DECODER_DATA_H_
 
 #include "MediaData.h"
+#include "MediaInfo.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
 #include "nsRefPtr.h"
@@ -52,98 +53,26 @@ private:
   bool DoUpdate(const uint8_t* aData, size_t aLength);
 };
 
-class TrackConfig
+class MP4AudioInfo : public mozilla::AudioInfo
 {
 public:
-  enum TrackType {
-    kUndefinedTrack,
-    kAudioTrack,
-    kVideoTrack,
-  };
-  explicit TrackConfig(TrackType aType)
-    : mTrackId(0)
-    , duration(0)
-    , media_time(0)
-    , mType(aType)
-  {
-  }
+  MP4AudioInfo() = default;
 
-  nsAutoCString mime_type;
-  uint32_t mTrackId;
-  int64_t duration;
-  int64_t media_time;
-  mozilla::CryptoTrack crypto;
-  TrackType mType;
-
-  bool IsAudioConfig() const
-  {
-    return mType == kAudioTrack;
-  }
-  bool IsVideoConfig() const
-  {
-    return mType == kVideoTrack;
-  }
   void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
+
+  virtual bool IsValid() const override;
 };
 
-class AudioDecoderConfig : public TrackConfig
+class MP4VideoInfo : public mozilla::VideoInfo
 {
 public:
-  AudioDecoderConfig()
-    : TrackConfig(kAudioTrack)
-    , channel_count(0)
-    , bits_per_sample(0)
-    , samples_per_second(0)
-    , frequency_index(0)
-    , aac_profile(0)
-    , extended_profile(0)
-    , extra_data(new mozilla::DataBuffer)
-    , audio_specific_config(new mozilla::DataBuffer)
-  {
-  }
-
-  uint32_t channel_count;
-  uint32_t bits_per_sample;
-  uint32_t samples_per_second;
-  int8_t frequency_index;
-  int8_t aac_profile;
-  int8_t extended_profile;
-  nsRefPtr<mozilla::DataBuffer> extra_data;
-  nsRefPtr<mozilla::DataBuffer> audio_specific_config;
+  MP4VideoInfo() = default;
 
   void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
-  bool IsValid();
 
-private:
-  friend class MP4Demuxer;
-};
-
-class VideoDecoderConfig : public TrackConfig
-{
-public:
-  VideoDecoderConfig()
-    : TrackConfig(kVideoTrack)
-    , display_width(0)
-    , display_height(0)
-    , image_width(0)
-    , image_height(0)
-    , extra_data(new mozilla::DataBuffer)
-  {
-  }
-
-  int32_t display_width;
-  int32_t display_height;
-
-  int32_t image_width;
-  int32_t image_height;
-
-  nsRefPtr<mozilla::DataBuffer> extra_data;   // Unparsed AVCDecoderConfig payload.
-
-  void Update(const stagefright::MetaData* aMetaData,
-              const char* aMimeType);
-  bool IsValid();
+  virtual bool IsValid() const override;
 };
 
 typedef int64_t Microseconds;

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WMFAudioMFTManager.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaInfo.h"
 #include "VideoUtils.h"
 #include "WMFUtils.h"
 #include "nsTArray.h"
@@ -68,22 +68,22 @@ AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
 }
 
 WMFAudioMFTManager::WMFAudioMFTManager(
-  const mp4_demuxer::AudioDecoderConfig& aConfig)
-  : mAudioChannels(aConfig.channel_count)
-  , mAudioRate(aConfig.samples_per_second)
+  const AudioInfo& aConfig)
+  : mAudioChannels(aConfig.mChannels)
+  , mAudioRate(aConfig.mRate)
   , mAudioFrameOffset(0)
   , mAudioFrameSum(0)
   , mMustRecaptureAudioPosition(true)
 {
   MOZ_COUNT_CTOR(WMFAudioMFTManager);
 
-  if (aConfig.mime_type.EqualsLiteral("audio/mpeg")) {
+  if (aConfig.mMimeType.EqualsLiteral("audio/mpeg")) {
     mStreamType = MP3;
-  } else if (aConfig.mime_type.EqualsLiteral("audio/mp4a-latm")) {
+  } else if (aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     mStreamType = AAC;
-    AACAudioSpecificConfigToUserData(aConfig.aac_profile,
-                                     aConfig.audio_specific_config->Elements(),
-                                     aConfig.audio_specific_config->Length(),
+    AACAudioSpecificConfigToUserData(aConfig.mProfile,
+                                     aConfig.mCodecSpecificConfig->Elements(),
+                                     aConfig.mCodecSpecificConfig->Length(),
                                      mUserData);
   } else {
     mStreamType = Unknown;

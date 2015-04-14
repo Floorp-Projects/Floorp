@@ -27,13 +27,19 @@
 
 namespace mozilla { namespace pkix {
 
-// Similar to boost::scoped_ptr and std::unique_ptr. Does not support copying
-// or assignment.
+// A subset polyfill of std::unique_ptr that does not support move construction
+// or move assignment. This is used instead of std::unique_ptr because some
+// important toolchains still don't provide std::unique_ptr, including in
+// particular Android NDK projects with APP_STL=stlport_static or
+// ALL_STL=stlport_shared.
 template <typename T, void (&Destroyer)(T*)>
 class ScopedPtr final
 {
 public:
   explicit ScopedPtr(T* value = nullptr) : mValue(value) { }
+
+  ScopedPtr(const ScopedPtr&) = delete;
+
   ~ScopedPtr()
   {
     if (mValue) {
@@ -41,17 +47,12 @@ public:
     }
   }
 
-  void operator=(T* newValue)
-  {
-    if (mValue) {
-      Destroyer(mValue);
-    }
-    mValue = newValue;
-  }
+  void operator=(const ScopedPtr&) = delete;
 
   T& operator*() const { return *mValue; }
   T* operator->() const { return mValue; }
-  operator bool() const { return mValue; }
+
+  explicit operator bool() const { return mValue; }
 
   T* get() const { return mValue; }
 
@@ -62,42 +63,20 @@ public:
     return result;
   }
 
-  void reset() { *this = nullptr; }
+  void reset(T* newValue = nullptr)
+  {
+    // The C++ standard requires std::unique_ptr to destroy the old value
+    // pointed to by mValue, if any, *after* assigning the new value to mValue.
+    T* oldValue = mValue;
+    mValue = newValue;
+    if (oldValue) {
+      Destroyer(oldValue);
+    }
+  }
 
-protected:
+private:
   T* mValue;
-
-  ScopedPtr(const ScopedPtr&) = delete;
-  void operator=(const ScopedPtr&) = delete;
 };
-
-template <typename T, void(&Destroyer)(T*)>
-inline bool
-operator==(T* a, const ScopedPtr<T, Destroyer>& b)
-{
-  return a == b.get();
-}
-
-template <typename T, void(&Destroyer)(T*)>
-inline bool
-operator==(const ScopedPtr<T, Destroyer>& a, T* b)
-{
-  return a.get() == b;
-}
-
-template <typename T, void(&Destroyer)(T*)>
-inline bool
-operator!=(T* a, const ScopedPtr<T, Destroyer>& b)
-{
-  return a != b.get();
-}
-
-template <typename T, void(&Destroyer)(T*)>
-inline bool
-operator!=(const ScopedPtr<T, Destroyer>& a, T* b)
-{
-  return a.get() != b;
-}
 
 } } // namespace mozilla::pkix
 

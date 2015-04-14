@@ -4048,7 +4048,7 @@ nsGlobalWindow::GetPrompter(nsIPrompt** aPrompt)
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_NO_INTERFACE);
 
-  NS_ADDREF(*aPrompt = prompter);
+  prompter.forget(aPrompt);
   return NS_OK;
 }
 

@@ -76,7 +76,7 @@ void TransposeUVWx8_MIPS_DSPR2(const uint8* src, int src_stride,
 #if !defined(LIBYUV_DISABLE_X86) && \
     defined(_M_IX86) && defined(_MSC_VER)
 #define HAS_TRANSPOSE_WX8_SSSE3
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 static void TransposeWx8_SSSE3(const uint8* src, int src_stride,
                                uint8* dst, int dst_stride, int width) {
   __asm {
@@ -168,7 +168,7 @@ static void TransposeWx8_SSSE3(const uint8* src, int src_stride,
 }
 
 #define HAS_TRANSPOSE_UVWX8_SSE2
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 static void TransposeUVWx8_SSE2(const uint8* src, int src_stride,
                                 uint8* dst_a, int dst_stride_a,
                                 uint8* dst_b, int dst_stride_b,

@@ -348,12 +348,12 @@ TEST_F(pkixbuild_DSS, DSSEndEntityKeyNotAccepted)
   ByteString subjectDER(CNToDERName("DSS"));
   ASSERT_FALSE(ENCODING_FAILED(subjectDER));
   ScopedTestKeyPair subjectKey(GenerateDSSKeyPair());
-  ASSERT_TRUE(subjectKey);
+  ASSERT_TRUE(subjectKey.get());
 
   ByteString issuerDER(CNToDERName("RSA"));
   ASSERT_FALSE(ENCODING_FAILED(issuerDER));
   ScopedTestKeyPair issuerKey(CloneReusedKeyPair());
-  ASSERT_TRUE(issuerKey);
+  ASSERT_TRUE(issuerKey.get());
 
   ByteString cert(CreateEncodedCertificate(v3, sha256WithRSAEncryption(),
                                            serialNumber, issuerDER,

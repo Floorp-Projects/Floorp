@@ -21,7 +21,6 @@
 #include <stagefright/foundation/AMessage.h>
 #include <stagefright/foundation/AString.h>
 #include <stagefright/foundation/ALooper.h>
-#include "mp4_demuxer/AnnexB.h"
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "mozilla/layers/GrallocTextureClient.h"
@@ -47,7 +46,7 @@ namespace mozilla {
 GonkVideoDecoderManager::GonkVideoDecoderManager(
   MediaTaskQueue* aTaskQueue,
   mozilla::layers::ImageContainer* aImageContainer,
-  const mp4_demuxer::VideoDecoderConfig& aConfig)
+  const VideoInfo& aConfig)
   : GonkDecoderManager(aTaskQueue)
   , mImageContainer(aImageContainer)
   , mReaderCallback(nullptr)
@@ -58,13 +57,11 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
   MOZ_ASSERT(mImageContainer);
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
-  mVideoWidth  = aConfig.display_width;
-  mVideoHeight = aConfig.display_height;
-  mDisplayWidth = aConfig.display_width;
-  mDisplayHeight = aConfig.display_height;
-  mInfo.mVideo.mHasVideo = true;
-  nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
-  mInfo.mVideo.mDisplay = displaySize;
+  mVideoWidth  = aConfig.mDisplay.width;
+  mVideoHeight = aConfig.mDisplay.height;
+  mDisplayWidth = aConfig.mDisplay.width;
+  mDisplayHeight = aConfig.mDisplay.height;
+  mInfo.mVideo = aConfig;
 
   nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
   nsIntSize frameSize(mVideoWidth, mVideoHeight);

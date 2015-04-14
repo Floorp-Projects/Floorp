@@ -111,7 +111,10 @@ static const nsString GetKind(const nsCString& aRole)
   return EmptyString();
 }
 
-static void InitTrack(MessageField* aMsgInfo, TrackInfo* aInfo, bool aEnable)
+static void InitTrack(TrackInfo::TrackType aTrackType,
+                      MessageField* aMsgInfo,
+                      TrackInfo* aInfo,
+                      bool aEnable)
 {
   MOZ_ASSERT(aMsgInfo);
   MOZ_ASSERT(aInfo);
@@ -120,7 +123,8 @@ static void InitTrack(MessageField* aMsgInfo, TrackInfo* aInfo, bool aEnable)
   nsCString* sRole = aMsgInfo->mValuesStore.Get(eRole);
   nsCString* sTitle = aMsgInfo->mValuesStore.Get(eTitle);
   nsCString* sLanguage = aMsgInfo->mValuesStore.Get(eLanguage);
-  aInfo->Init(sName? NS_ConvertUTF8toUTF16(*sName):EmptyString(),
+  aInfo->Init(aTrackType,
+              sName? NS_ConvertUTF8toUTF16(*sName):EmptyString(),
               sRole? GetKind(*sRole):EmptyString(),
               sTitle? NS_ConvertUTF8toUTF16(*sTitle):EmptyString(),
               sLanguage? NS_ConvertUTF8toUTF16(*sLanguage):EmptyString(),
@@ -322,7 +326,10 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       }
 
       if (msgInfo) {
-        InitTrack(msgInfo, &mInfo.mVideo.mTrackInfo, mTheoraState == theoraState);
+        InitTrack(TrackInfo::kVideoTrack,
+                  msgInfo,
+                  &mInfo.mVideo,
+                  mTheoraState == theoraState);
       }
 
       nsIntRect picture = nsIntRect(theoraState->mInfo.pic_x,
@@ -334,8 +341,9 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       nsIntSize frameSize(theoraState->mInfo.frame_width,
                           theoraState->mInfo.frame_height);
       ScaleDisplayByAspectRatio(displaySize, theoraState->mPixelAspectRatio);
-      mInfo.mVideo.mDisplay = displaySize;
-      mInfo.mVideo.mHasVideo = IsValidVideoRegion(frameSize, picture, displaySize)? true:false;
+      if (IsValidVideoRegion(frameSize, picture, displaySize)) {
+        mInfo.mVideo.mDisplay = displaySize;
+      }
     } else if (codecState->GetType() == OggCodecState::TYPE_VORBIS) {
       VorbisState* vorbisState = static_cast<VorbisState*>(codecState);
       if (!(mVorbisState && mVorbisState->mSerial == vorbisState->mSerial)) {
@@ -343,10 +351,12 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       }
 
       if (msgInfo) {
-        InitTrack(msgInfo, &mInfo.mAudio.mTrackInfo, mVorbisState == vorbisState);
+        InitTrack(TrackInfo::kAudioTrack,
+                  msgInfo,
+                  &mInfo.mAudio,
+                  mVorbisState == vorbisState);
       }
 
-      mInfo.mAudio.mHasAudio = true;
       mInfo.mAudio.mRate = vorbisState->mInfo.rate;
       mInfo.mAudio.mChannels = vorbisState->mInfo.channels;
     } else if (codecState->GetType() == OggCodecState::TYPE_OPUS) {
@@ -356,10 +366,12 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       }
 
       if (msgInfo) {
-        InitTrack(msgInfo, &mInfo.mAudio.mTrackInfo, mOpusState == opusState);
+        InitTrack(TrackInfo::kAudioTrack,
+                  msgInfo,
+                  &mInfo.mAudio,
+                  mOpusState == opusState);
       }
 
-      mInfo.mAudio.mHasAudio = true;
       mInfo.mAudio.mRate = opusState->mRate;
       mInfo.mAudio.mChannels = opusState->mChannels;
     }
@@ -784,7 +796,7 @@ bool OggReader::ReadOggChain()
     LOG(PR_LOG_DEBUG, ("New vorbis ogg link, serial=%d\n", mVorbisSerial));
 
     if (msgInfo) {
-      InitTrack(msgInfo, &mInfo.mAudio.mTrackInfo, true);
+      InitTrack(TrackInfo::kAudioTrack, msgInfo, &mInfo.mAudio, true);
     }
     mInfo.mAudio.mRate = newVorbisState->mInfo.rate;
     mInfo.mAudio.mChannels = newVorbisState->mInfo.channels;
@@ -800,7 +812,7 @@ bool OggReader::ReadOggChain()
     SetupTargetOpus(newOpusState);
 
     if (msgInfo) {
-      InitTrack(msgInfo, &mInfo.mAudio.mTrackInfo, true);
+      InitTrack(TrackInfo::kAudioTrack, msgInfo, &mInfo.mAudio, true);
     }
     mInfo.mAudio.mRate = newOpusState->mRate;
     mInfo.mAudio.mChannels = newOpusState->mChannels;
@@ -812,8 +824,6 @@ bool OggReader::ReadOggChain()
   if (chained) {
     SetChained(true);
     {
-      mInfo.mAudio.mHasAudio = HasAudio();
-      mInfo.mVideo.mHasVideo = HasVideo();
       nsAutoPtr<MediaInfo> info(new MediaInfo());
       *info = mInfo;
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());

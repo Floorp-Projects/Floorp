@@ -8,12 +8,12 @@
 namespace mozilla {
 namespace embedding {
 
-MOZ_IMPLICIT PrintSettingsDialogParent::PrintSettingsDialogParent()
+PrintSettingsDialogParent::PrintSettingsDialogParent()
 {
   MOZ_COUNT_CTOR(PrintSettingsDialogParent);
 }
 
-MOZ_IMPLICIT PrintSettingsDialogParent::~PrintSettingsDialogParent()
+PrintSettingsDialogParent::~PrintSettingsDialogParent()
 {
   MOZ_COUNT_DTOR(PrintSettingsDialogParent);
 }

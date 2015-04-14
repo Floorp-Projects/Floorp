@@ -432,7 +432,7 @@ nsChildView::~nsChildView()
 
   DestroyCompositor();
 
-  if (mAPZC) {
+  if (mAPZC && gfxPrefs::AsyncPanZoomSeparateEventThread()) {
     gNumberOfWidgetsNeedingEventThread--;
     if (gNumberOfWidgetsNeedingEventThread == 0) {
       [EventThreadRunner stop];
@@ -1885,18 +1885,24 @@ nsChildView::ConfigureAPZCTreeManager()
 {
   nsBaseWidget::ConfigureAPZCTreeManager();
 
-  if (gNumberOfWidgetsNeedingEventThread == 0) {
-    [EventThreadRunner start];
+  if (gfxPrefs::AsyncPanZoomSeparateEventThread()) {
+    if (gNumberOfWidgetsNeedingEventThread == 0) {
+      [EventThreadRunner start];
+    }
+    gNumberOfWidgetsNeedingEventThread++;
   }
-  gNumberOfWidgetsNeedingEventThread++;
 }
 
 void
 nsChildView::ConfigureAPZControllerThread()
 {
-  // On OS X the EventThreadRunner is the controller thread, but it doesn't
-  // have a MessageLoop.
-  APZThreadUtils::SetControllerThread(nullptr);
+  if (gfxPrefs::AsyncPanZoomSeparateEventThread()) {
+    // The EventThreadRunner is the controller thread, but it doesn't
+    // have a MessageLoop.
+    APZThreadUtils::SetControllerThread(nullptr);
+  } else {
+    nsBaseWidget::ConfigureAPZControllerThread();
+  }
 }
 
 nsIntRect
@@ -4793,8 +4799,9 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if ([self apzctm]) {
-    // Disable main-thread scrolling completely when using APZC.
+  if (gfxPrefs::AsyncPanZoomSeparateEventThread() && [self apzctm]) {
+    // Disable main-thread scrolling completely when using APZ with the
+    // separate event thread. This is bug 1013412.
     return;
   }
 
@@ -4850,7 +4857,7 @@ static int32_t RoundUp(double aDouble)
     return;
   }
 
-  mGeckoChild->DispatchWindowEvent(wheelEvent);
+  mGeckoChild->DispatchAPZAwareEvent(wheelEvent.AsInputEvent());
   if (!mGeckoChild) {
     return;
   }

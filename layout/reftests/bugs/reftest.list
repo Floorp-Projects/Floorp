@@ -294,7 +294,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 272646-1.xul 272646-1-ref.xul # bug 97
 skip-if((B2G&&browserIsRemote)||Mulet) == 272646-2a.xul 272646-2-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == 272646-2b.xul 272646-2-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) == 272646-2c.xul 272646-2-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 273681-1.html 273681-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,3,50) == 273681-1.html 273681-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 278266-1a.html 278266-1-ref.html
 == 278266-1b.html 278266-1-ref.html
 == 280708-1a.html 280708-1-ref.html
@@ -425,7 +425,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 321402-6.xul 321402-6-ref.xul # bug 97
 == 323656-4.html 323656-4-ref.html
 == 323656-5.svg 323656-5-ref.svg
 == 323656-6.html 323656-6-ref.html
-== 325292-1.html 325292-1-ref.html
+fuzzy-if(Android,2,140) == 325292-1.html 325292-1-ref.html
 == 325486-1.html 325486-1-ref.html
 == 328111-1.html 328111-1-ref.html
 random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
@@ -695,8 +695,8 @@ skip-if(B2G||Mulet) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows
 == 379349-1c.xhtml 379349-1-ref.xhtml
 == 379349-2a.xhtml 379349-2-ref.xhtml
 == 379349-2b.xhtml 379349-2-ref.xhtml
-skip-if(B2G||Mulet) == 379349-3a.xhtml 379349-3-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 379349-3b.xhtml 379349-3-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,140) == 379349-3a.xhtml 379349-3-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,140) == 379349-3b.xhtml 379349-3-ref.xhtml # Initial mulet triage: parity with B2G/B2G Desktop
 == 379361-1.html 379361-1-ref.html
 == 379361-2.html 379361-2-ref.html
 == 379361-3.html 379361-3-ref.html
@@ -1404,7 +1404,7 @@ skip-if(B2G||Mulet) == 502447-1.html 502447-1-ref.html # Initial mulet triage: p
 needs-focus fails == 503531-1.html 503531-1-ref.html
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
-skip-if(B2G||Mulet) == 506481-1.html 506481-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 507187-1.html 507187-1-ref.html
 == 507487-1.html 507487-1-ref.html
 == 507487-2.xhtml 507487-2-ref.xhtml
@@ -1417,7 +1417,7 @@ skip-if(B2G||Mulet) == 508816-2.html 508816-2-ref.html # Initial mulet triage: p
 skip-if((B2G&&browserIsRemote)||Mulet) == 508908-1.xul 508908-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
-skip-if(B2G||Mulet) == 512410.html 512410-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,5,1656) == 512410.html 512410-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 512631-1.html 512631-1-ref.html
 == 513153-1a.html 513153-1-ref.html
 == 513153-1b.html 513153-1-ref.html
@@ -1454,7 +1454,7 @@ random-if(d2d) == 523468-1.html 523468-1-ref.html
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
-== 531200-1.html 531200-1-ref.html
+fuzzy-if(Android,2,48) == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
 == 534526-1a.html 534526-1-ref.html
 == 534526-1b.html 534526-1-ref.html
@@ -1519,29 +1519,29 @@ skip-if(B2G||Mulet) fails-if(Android) == 560455-1.xul 560455-1-ref.xul # Initial
 == 561981-8.html 561981-8-ref.html
 == 562835-1.html 562835-ref.html
 == 562835-2.html 562835-ref.html
-skip-if(B2G||Mulet) == 563584-1.html 563584-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-2.html 563584-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-3.html 563584-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-4.html 563584-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-== 563584-5.html 563584-5-ref.html
+skip-if(B2G||Mulet) fuzzy-if(Android,2,48) == 563584-1.html 563584-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,48) == 563584-2.html 563584-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,4,180) == 563584-3.html 563584-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,4,180) == 563584-4.html 563584-4-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,2,48) == 563584-5.html 563584-5-ref.html
 test-pref(layout.float-fragments-inside-column.enabled,false) == 563584-6-columns.html 563584-6-columns-ref.html
 test-pref(layout.float-fragments-inside-column.enabled,true) == 563584-6-columns.html 563584-6-columns-ref-enabled.html
-skip-if(B2G||Mulet) == 563584-6-printing.html 563584-6-printing-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-7.html 563584-7-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,48) == 563584-6-printing.html 563584-6-printing-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,48) == 563584-7.html 563584-7-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 # FIXME: It would be nice to have variants of these -8 tests for the
 # table narrowing quirk causing a change to mIsTopOfPage (though I'm not
 # entirely sure our behavior is the right one, either).
-skip-if(B2G||Mulet) == 563584-8a.html 563584-8a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-8b.html 563584-8b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-8c.html 563584-8c-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 563584-8d.html 563584-8d-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,48) == 563584-8a.html 563584-8a-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,2,48) == 563584-8b.html 563584-8b-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,4,180) == 563584-8c.html 563584-8c-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,4,180) == 563584-8d.html 563584-8d-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 563584-9a.html 563584-9a-ref.html
 == 563584-9b.html 563584-9b-ref.html
 == 563584-9c.html 563584-9cd-ref.html
 == 563584-9d.html 563584-9cd-ref.html
-== 563584-10a.html 563584-10-ref.html
-== 563584-10b.html 563584-10-ref.html
-== 563584-11.html 563584-11-ref.html
+fuzzy-if(Android,2,48) == 563584-10a.html 563584-10-ref.html
+fuzzy-if(Android,2,48) == 563584-10b.html 563584-10-ref.html
+fuzzy-if(Android,2,48) == 563584-11.html 563584-11-ref.html
 == 563884-1.html 563884-1-ref.html
 == 564002-1.html 564002-1-ref.html
 == 564054-1.html 564054-1-ref.html
@@ -1580,13 +1580,13 @@ skip-if(B2G||Mulet) fails-if(Android) random-if(layersGPUAccelerated) == 581317-
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
 == 582037-1b.html 582037-1-ref.html
-skip-if(B2G||Mulet) == 582037-2a.html 582037-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == 582037-2b.html 582037-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,3,256) == 582037-2a.html 582037-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,3,256) == 582037-2b.html 582037-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 asserts(1-2) == 582146-1.html about:blank
 skip-if(B2G||Mulet) == 582476-1.svg 582476-1-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
-== 585598-2.xhtml 585598-2-ref.xhtml
+fuzzy-if(Android,2,48) == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
 skip-if(B2G||Mulet) fuzzy-if(d2d,52,1051) fuzzy-if(OSX==1008,129,1068) == 586683-1.html 586683-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 589615-1a.xhtml 589615-1-ref.html
@@ -1624,7 +1624,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,20) == 602200-3.html 602200-3-ref.html
 == 608756-1a.html 608756-1-ref.html
 == 608756-1b.html 608756-1-ref.html
 == 608756-2.html 608756-2-ref.html
-== 609272-1.html 609272-1-ref.html
+fuzzy-if(Android,4,196) == 609272-1.html 609272-1-ref.html
 needs-focus == 613433-1.html 613433-1-ref.html
 needs-focus == 613433-1.html 613433-2-ref.html
 needs-focus == 613433-1.html 613433-3-ref.html

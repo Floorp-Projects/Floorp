@@ -219,7 +219,6 @@ MediaTaskQueue::IsEmpty()
 bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
-  MonitorAutoLock mon(mQueueMonitor);
   bool in = NS_GetCurrentThread() == mRunningThread;
   MOZ_ASSERT_IF(in, GetCurrentQueue() == this);
   return in;
@@ -232,7 +231,6 @@ MediaTaskQueue::Runner::Run()
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);
-    mQueue->mRunningThread = NS_GetCurrentThread();
     if (mQueue->mTasks.size() == 0) {
       mQueue->mIsRunning = false;
       mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
@@ -268,7 +266,6 @@ MediaTaskQueue::Runner::Run()
       mQueue->mIsRunning = false;
       mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
       mon.NotifyAll();
-      mQueue->mRunningThread = nullptr;
       return NS_OK;
     }
   }
@@ -278,20 +275,13 @@ MediaTaskQueue::Runner::Run()
   // run in a loop here so that we don't hog the thread pool. This means we may
   // run on another thread next time, but we rely on the memory fences from
   // mQueueMonitor for thread safety of non-threadsafe tasks.
-  {
+  nsresult rv = mQueue->mPool->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    // Failed to dispatch, shutdown!
     MonitorAutoLock mon(mQueue->mQueueMonitor);
-    // Note: Hold the monitor *before* we dispatch, in case we context switch
-    // to another thread pool in the queue immediately and take the lock in the
-    // other thread; mRunningThread could be set to the new thread's value and
-    // then incorrectly anulled below in that case.
-    nsresult rv = mQueue->mPool->Dispatch(this, NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      // Failed to dispatch, shutdown!
-      mQueue->mIsRunning = false;
-      mQueue->mIsShutdown = true;
-      mon.NotifyAll();
-    }
-    mQueue->mRunningThread = nullptr;
+    mQueue->mIsRunning = false;
+    mQueue->mIsShutdown = true;
+    mon.NotifyAll();
   }
 
   return NS_OK;
@@ -302,13 +292,8 @@ void
 TaskDispatcher::AssertIsTailDispatcherIfRequired()
 {
   MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
-
-  // NB: Make sure not to use the TailDispatcher() accessor, since that
-  // asserts IsCurrentThreadIn(), which acquires the queue monitor, which
-  // triggers a deadlock during shutdown between the queue monitor and the
-  // MediaPromise monitor.
   MOZ_ASSERT_IF(currentQueue && currentQueue->RequiresTailDispatch(),
-                this == currentQueue->mTailDispatcher);
+                this == &currentQueue->TailDispatcher());
 }
 #endif
 

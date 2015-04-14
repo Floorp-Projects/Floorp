@@ -149,7 +149,7 @@ AppleDecoderModule::Startup()
 }
 
 already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                        layers::LayersBackend aLayersBackend,
                                        layers::ImageContainer* aImageContainer,
                                        FlushableMediaTaskQueue* aVideoTaskQueue,
@@ -177,7 +177,7 @@ AppleDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aC
 }
 
 already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                        FlushableMediaTaskQueue* aAudioTaskQueue,
                                        MediaDataDecoderCallback* aCallback)
 {
@@ -194,9 +194,9 @@ AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 }
 
 PlatformDecoderModule::ConversionRequired
-AppleDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
+AppleDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
-  if (aConfig.IsVideoConfig()) {
+  if (aConfig.IsVideo()) {
     return kNeedAVCC;
   } else {
     return kNeedNone;
