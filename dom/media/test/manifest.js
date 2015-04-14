@@ -834,6 +834,26 @@ function once(target, name, cb) {
   return p;
 }
 
+function TimeStamp(token) {
+  function pad(x) {
+    return (x < 10) ? "0" + x : x;
+  }
+  var now = new Date();
+  var ms = now.getMilliseconds();
+  var time = "[" +
+             pad(now.getHours()) + ":" +
+             pad(now.getMinutes()) + ":" +
+             pad(now.getSeconds()) + "." +
+             ms +
+             "]" +
+             (ms < 10 ? "  " : (ms < 100 ? " " : ""));
+  return token ? (time + " " + token) : time;
+}
+
+function Log(token, msg) {
+  info(TimeStamp(token) + " " + msg);
+}
+
 // Number of tests to run in parallel.
 var PARALLEL_TESTS = 2;
 
