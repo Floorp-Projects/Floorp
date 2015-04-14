@@ -52,10 +52,16 @@ function test() {
       // A drop type of "link" onto an existing tab would normally trigger a
       // load in that same tab, but tabbrowser code in _getDragTargetTab treats
       // drops on the outer edges of a tab differently (loading a new tab
-      // instead). The events created by synthesizeDrop have all of their
+      // instead). Make events created by synthesizeDrop have all of their
       // coordinates set to 0 (screenX/screenY), so they're treated as drops
       // on the outer edge of the tab, thus they open new tabs.
-      ChromeUtils.synthesizeDrop(newTab, newTab, [[{type: "text/plain", data: text}]], "link", window);
+      var event = {
+        clientX: 0,
+        clientY: 0,
+        screenX: 0,
+        screenY: 0,
+      };
+      ChromeUtils.synthesizeDrop(newTab, newTab, [[{type: "text/plain", data: text}]], "link", window, undefined, event);
     });
   }
 

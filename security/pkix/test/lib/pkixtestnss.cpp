@@ -71,7 +71,7 @@ PRStatus
 InitReusedKeyPair()
 {
   InitNSSIfNeeded();
-  reusedKeyPair = GenerateKeyPairInner();
+  reusedKeyPair.reset(GenerateKeyPairInner());
   return reusedKeyPair ? PR_SUCCESS : PR_FAILURE;
 }
 

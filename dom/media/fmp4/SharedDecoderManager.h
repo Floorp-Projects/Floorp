@@ -26,7 +26,7 @@ public:
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
     PlatformDecoderModule* aPDM,
-    const mp4_demuxer::VideoDecoderConfig& aConfig,
+    const VideoInfo& aConfig,
     layers::LayersBackend aLayersBackend,
     layers::ImageContainer* aImageContainer,
     FlushableMediaTaskQueue* aVideoTaskQueue,
@@ -42,7 +42,7 @@ public:
   friend class SharedDecoderCallback;
 
   void DisableHardwareAcceleration();
-  bool Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig);
+  bool Recreate(const VideoInfo& aConfig);
 
 private:
   virtual ~SharedDecoderManager();

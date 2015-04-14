@@ -68,16 +68,17 @@ SVGDocument::GetRootElement(ErrorResult& aRv)
 nsresult
 SVGDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex, bool aNotify)
 {
-  nsresult rv = XMLDocument::InsertChildAt(aKid, aIndex, aNotify);
-
-  if (NS_SUCCEEDED(rv) && aKid->IsElement() && !aKid->IsSVGElement()) {
+  if (aKid->IsElement() && !aKid->IsSVGElement()) {
     // We can get here when well formed XML with a non-SVG root element is
     // served with the SVG MIME type, for example. In that case we need to load
-    // the non-SVG UA sheets or else we can get bugs like bug 1016145.
+    // the non-SVG UA sheets or else we can get bugs like bug 1016145.  Note
+    // that we have to do this _before_ the XMLDocument::InsertChildAt call,
+    // since that can try to construct frames, and we need to have the sheets
+    // loaded by then.
     EnsureNonSVGUserAgentStyleSheetsLoaded();
   }
 
-  return rv;
+  return XMLDocument::InsertChildAt(aKid, aIndex, aNotify);
 }
 
 nsresult

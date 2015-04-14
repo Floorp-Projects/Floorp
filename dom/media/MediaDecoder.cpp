@@ -1923,7 +1923,7 @@ MediaDecoder::ConstructMediaTracks()
 
   AudioTrackList* audioList = element->AudioTracks();
   if (audioList && mInfo->HasAudio()) {
-    TrackInfo info = mInfo->mAudio.mTrackInfo;
+    const TrackInfo& info = mInfo->mAudio;
     nsRefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
     info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
 
@@ -1932,7 +1932,7 @@ MediaDecoder::ConstructMediaTracks()
 
   VideoTrackList* videoList = element->VideoTracks();
   if (videoList && mInfo->HasVideo()) {
-    TrackInfo info = mInfo->mVideo.mTrackInfo;
+    const TrackInfo& info = mInfo->mVideo;
     nsRefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
     info.mId, info.mKind, info.mLabel, info.mLanguage);
 

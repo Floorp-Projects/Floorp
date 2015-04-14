@@ -2247,7 +2247,7 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
 
   if (IsTreatedAsPersistent(aPersistenceType, aIsApp)) {
     if (mInitializedOrigins.Contains(OriginKey(aPersistenceType, aOrigin))) {
-      NS_ADDREF(*aDirectory = directory);
+      directory.forget(aDirectory);
       return NS_OK;
     }
   } else if (!mTemporaryStorageInitialized) {

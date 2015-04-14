@@ -426,7 +426,7 @@ ClientTiledPaintedLayer::RenderLayer()
     // we always have valid content or transparent pixels to sample from.
     nsIntRect bounds = neededRegion.GetBounds();
     nsIntRect wholeTiles = bounds;
-    wholeTiles.Inflate(nsIntSize(
+    wholeTiles.InflateToMultiple(nsIntSize(
       gfxPlatform::GetPlatform()->GetTileWidth(),
       gfxPlatform::GetPlatform()->GetTileHeight()));
     nsIntRect padded = bounds;

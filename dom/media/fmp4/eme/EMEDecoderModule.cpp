@@ -12,7 +12,7 @@
 #include "mozilla/CDMProxy.h"
 #include "mozilla/unused.h"
 #include "nsServiceManagerUtils.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaInfo.h"
 
 namespace mozilla {
 
@@ -91,8 +91,9 @@ public:
       return NS_OK;
     }
 
+    nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
     mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                  aSample->mCrypto.mSessionIds);
+                                  writer->mCrypto.mSessionIds);
 
     mProxy->Decrypt(aSample, new DeliverDecrypted(this, mTaskQueue));
     return NS_OK;
@@ -186,8 +187,9 @@ EMEMediaDataDecoderProxy::Input(MediaRawData* aSample)
     return NS_OK;
   }
 
+  nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
   mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                aSample->mCrypto.mSessionIds);
+                                writer->mCrypto.mSessionIds);
 
   return MediaDataDecoderProxy::Input(aSample);
 }
@@ -238,13 +240,13 @@ CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, Flus
 }
 
 already_AddRefed<MediaDataDecoder>
-EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
+EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer,
                                      FlushableMediaTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (mCDMDecodesVideo && aConfig.crypto.mValid) {
+  if (mCDMDecodesVideo && aConfig.mCrypto.mValid) {
     nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aVideoTaskQueue);
     wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy,
                                                 aConfig,
@@ -265,7 +267,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
     return nullptr;
   }
 
-  if (!aConfig.crypto.mValid) {
+  if (!aConfig.mCrypto.mValid) {
     return decoder.forget();
   }
 
@@ -276,11 +278,11 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
 }
 
 already_AddRefed<MediaDataDecoder>
-EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
+EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                      FlushableMediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (mCDMDecodesAudio && aConfig.crypto.mValid) {
+  if (mCDMDecodesAudio && aConfig.mCrypto.mValid) {
     nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aAudioTaskQueue);
     wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy,
                                                 aConfig,
@@ -295,7 +297,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
     return nullptr;
   }
 
-  if (!aConfig.crypto.mValid) {
+  if (!aConfig.mCrypto.mValid) {
     return decoder.forget();
   }
 
@@ -306,9 +308,9 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
 }
 
 PlatformDecoderModule::ConversionRequired
-EMEDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
+EMEDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 {
-  if (aConfig.IsVideoConfig()) {
+  if (aConfig.IsVideo()) {
     return kNeedAVCC;
   } else {
     return kNeedNone;

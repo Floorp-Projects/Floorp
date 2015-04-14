@@ -588,9 +588,20 @@ nsIOService::NewChannelFromURIWithLoadInfo(nsIURI* aURI,
                                                  result);
 }
 
+/*  ***** DEPRECATED *****
+ * please use NewChannelFromURI2 providing the right arguments for:
+ *        * aLoadingNode
+ *        * aLoadingPrincipal
+ *        * aTriggeringPrincipal
+ *        * aSecurityFlags
+ *        * aContentPolicyType
+ *
+ * See nsIIoService.idl for a detailed description of those arguments
+ */
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 {
+  NS_WARNING("Deprecated, use NewChannelFromURI2 providing loadInfo arguments!");
   return NewChannelFromURI2(aURI,
                             nullptr, // aLoadingNode
                             nullptr, // aLoadingPrincipal
@@ -765,12 +776,23 @@ nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
                                                    result);
 }
 
+/*  ***** DEPRECATED *****
+ * please use NewChannelFromURIWithProxyFlags2 providing the right arguments for:
+ *        * aLoadingNode
+ *        * aLoadingPrincipal
+ *        * aTriggeringPrincipal
+ *        * aSecurityFlags
+ *        * aContentPolicyType
+ *
+ * See nsIIoService.idl for a detailed description of those arguments
+ */
 NS_IMETHODIMP
 nsIOService::NewChannelFromURIWithProxyFlags(nsIURI *aURI,
                                              nsIURI *aProxyURI,
                                              uint32_t aProxyFlags,
                                              nsIChannel **result)
 {
+  NS_WARNING("Deprecated, use NewChannelFromURIWithProxyFlags2 providing loadInfo arguments!");
   return NewChannelFromURIWithProxyFlags2(aURI,
                                           aProxyURI,
                                           aProxyFlags,
@@ -807,9 +829,20 @@ nsIOService::NewChannel2(const nsACString& aSpec,
                               result);
 }
 
+/*  ***** DEPRECATED *****
+ * please use NewChannel2 providing the right arguments for:
+ *        * aLoadingNode
+ *        * aLoadingPrincipal
+ *        * aTriggeringPrincipal
+ *        * aSecurityFlags
+ *        * aContentPolicyType
+ *
+ * See nsIIoService.idl for a detailed description of those arguments
+ */
 NS_IMETHODIMP
 nsIOService::NewChannel(const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI, nsIChannel **result)
 {
+  NS_WARNING("Deprecated, use NewChannel2 providing loadInfo arguments!");
   return NewChannel2(aSpec,
                      aCharset,
                      aBaseURI,
