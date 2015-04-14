@@ -303,10 +303,7 @@ nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
     return NS_ERROR_FAILURE;
   }
 
-  nscoord width = nsPresContext::CSSPixelsToAppUnits(aWidthPx);
-  nscoord height = nsPresContext::CSSPixelsToAppUnits(aHeightPx);
-
-  presShell->ResizeReflowOverride(width, height);
+  nsLayoutUtils::SetCSSViewport(presShell, CSSSize(aWidthPx, aHeightPx));
 
   return NS_OK;
 }
@@ -522,11 +519,7 @@ nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution)
     return NS_ERROR_FAILURE;
   }
 
-  nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
-  if (sf) {
-    sf->SetResolutionAndScaleTo(aResolution);
-    presShell->SetResolutionAndScaleTo(aResolution);
-  }
+  nsLayoutUtils::SetResolutionAndScaleTo(presShell, aResolution);
 
   return NS_OK;
 }
@@ -3270,48 +3263,6 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugin
   return NS_OK;
 }
 
-static void
-MaybeReflowForInflationScreenSizeChange(nsPresContext *aPresContext)
-{
-  if (aPresContext) {
-    nsIPresShell* presShell = aPresContext->GetPresShell();
-    bool fontInflationWasEnabled = presShell->FontSizeInflationEnabled();
-    presShell->NotifyFontSizeInflationEnabledIsDirty();
-    bool changed = false;
-    if (presShell && presShell->FontSizeInflationEnabled() &&
-        presShell->FontSizeInflationMinTwips() != 0) {
-      aPresContext->ScreenSizeInchesForFontInflation(&changed);
-    }
-
-    changed = changed ||
-      (fontInflationWasEnabled != presShell->FontSizeInflationEnabled());
-    if (changed) {
-      nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
-      if (docShell) {
-        nsCOMPtr<nsIContentViewer> cv;
-        docShell->GetContentViewer(getter_AddRefs(cv));
-        if (cv) {
-          nsTArray<nsCOMPtr<nsIContentViewer> > array;
-          cv->AppendSubtree(array);
-          for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
-            nsCOMPtr<nsIPresShell> shell;
-            nsCOMPtr<nsIContentViewer> cv = array[i];
-            cv->GetPresShell(getter_AddRefs(shell));
-            if (shell) {
-              nsIFrame *rootFrame = shell->GetRootFrame();
-              if (rootFrame) {
-                shell->FrameNeedsReflow(rootFrame,
-                                        nsIPresShell::eStyleChange,
-                                        NS_FRAME_IS_DIRTY);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 NS_IMETHODIMP
 nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aHeight)
 {
@@ -3328,17 +3279,7 @@ nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aH
     return NS_ERROR_FAILURE;
   }
 
-  presShell->SetScrollPositionClampingScrollPortSize(
-    nsPresContext::CSSPixelsToAppUnits(aWidth),
-    nsPresContext::CSSPixelsToAppUnits(aHeight));
-
-  // When the "font.size.inflation.minTwips" preference is set, the
-  // layout depends on the size of the screen.  Since when the size
-  // of the screen changes, the scroll position clamping scroll port
-  // size also changes, we hook in the needed updates here rather
-  // than adding a separate notification just for this change.
-  nsPresContext* presContext = GetPresContext();
-  MaybeReflowForInflationScreenSizeChange(presContext);
+  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(presShell, CSSSize(aWidth, aHeight));
 
   return NS_OK;
 }
