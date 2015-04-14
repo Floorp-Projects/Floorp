@@ -32,7 +32,7 @@ AsyncHelper::AsyncWork(nsIRequestObserver* aObserver, nsISupports* aCtxt)
   FileService* service = FileService::GetOrCreate();
   NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
 
-  nsIEventTarget* target = service->StreamTransportTarget();
+  nsIEventTarget* target = service->ThreadPoolTarget();
 
   rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);

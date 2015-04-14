@@ -200,6 +200,12 @@ public:
   void
   NoteFinishedMutableFile(IDBMutableFile* aMutableFile);
 
+  void
+  OnNewFileHandle();
+
+  void
+  OnFileHandleFinished();
+
   nsPIDOMWindow*
   GetParentObject() const;
 
