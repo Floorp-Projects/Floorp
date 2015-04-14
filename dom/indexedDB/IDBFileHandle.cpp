@@ -73,6 +73,8 @@ IDBFileHandle::Create(FileMode aMode,
     return nullptr;
   }
 
+  aMutableFile->Database()->OnNewFileHandle();
+
   return fileHandle.forget();
 }
 
@@ -172,6 +174,8 @@ IDBFileHandle::OnCompleteOrAbort(bool aAborted)
   if (NS_FAILED(DispatchEvent(event, &dummy))) {
     NS_WARNING("Dispatch failed!");
   }
+
+  mMutableFile->Database()->OnFileHandleFinished();
 
   return NS_OK;
 }
