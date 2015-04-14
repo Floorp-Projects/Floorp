@@ -2827,11 +2827,11 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       //   (b) some descendants of the old parent are not getting restyled
       //       (which is the reason for the existence of
       //       ClearCachedInheritedStyleDataOnDescendants),
-      //   (d) something under ProcessPendingRestyles (which notably is called
+      //   (c) something under ProcessPendingRestyles (which notably is called
       //       *before* ClearCachedInheritedStyleDataOnDescendants is called
       //       on the old context) causes the new parent to be destroyed, thus
       //       destroying its owned structs, and
-      //   (c) something under ProcessPendingRestyles then wants to use of those
+      //   (d) something under ProcessPendingRestyles then wants to use of those
       //       now destroyed structs (through the old parent's descendants).
       mSwappedStructOwners.AppendElement(newParent);
       oldContext->MoveTo(newParent);
@@ -3391,6 +3391,15 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       }
     } else {
       LOG_RESTYLE("not setting new style context, since we'll reframe");
+      // We need to keep the new parent alive, in case it had structs
+      // swapped into it that our frame's style context still has cached.
+      // This is a similar scenario to the one described in the
+      // ElementRestyler::Restyle comment where we append to
+      // mSwappedStructOwners.
+      //
+      // We really only need to do this if we did swap structs on the
+      // parent, but we don't have that information here.
+      mSwappedStructOwners.AppendElement(newContext->GetParent());
     }
   }
   oldContext = nullptr;
@@ -4052,17 +4061,15 @@ RestyleManager::ComputeAndProcessStyleChange(nsIFrame*          aFrame,
   MOZ_ASSERT(mReframingStyleContexts, "should have rsc");
   nsStyleChangeList changeList;
   nsTArray<ElementRestyler::ContextToClear> contextsToClear;
-  {
-    // swappedStructOwners needs to be kept alive until after
-    // ProcessRestyledFrames; see comment in ElementRestyler::Restyle.
-    // (Destroying it before the ClearCachedInheritedStyleDataOnDescendants call
-    // helps minimize the work done by that function.)
-    nsTArray<nsRefPtr<nsStyleContext>> swappedStructOwners;
-    ElementRestyler::ComputeStyleChangeFor(aFrame, &changeList, aMinChange,
-                                           aRestyleTracker, aRestyleHint,
-                                           contextsToClear, swappedStructOwners);
-    ProcessRestyledFrames(changeList);
-  }
+
+  // swappedStructOwners needs to be kept alive until after
+  // ProcessRestyledFrames and ClearCachedInheritedStyleDataOnDescendants
+  // calls; see comment in ElementRestyler::Restyle.
+  nsTArray<nsRefPtr<nsStyleContext>> swappedStructOwners;
+  ElementRestyler::ComputeStyleChangeFor(aFrame, &changeList, aMinChange,
+                                         aRestyleTracker, aRestyleHint,
+                                         contextsToClear, swappedStructOwners);
+  ProcessRestyledFrames(changeList);
   ClearCachedInheritedStyleDataOnDescendants(contextsToClear);
 }
 
@@ -4087,21 +4094,19 @@ RestyleManager::ComputeAndProcessStyleChange(nsStyleContext*    aNewContext,
   treeMatchContext.InitAncestors(parentElement);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   nsTArray<ElementRestyler::ContextToClear> contextsToClear;
-  {
-    // swappedStructOwners needs to be kept alive until after
-    // ProcessRestyledFrames; see comment in ElementRestyler::Restyle.
-    // (Destroying it before the ClearCachedInheritedStyleDataOnDescendants call
-    // helps minimize the work done by that function.)
-    nsTArray<nsRefPtr<nsStyleContext>> swappedStructOwners;
-    nsStyleChangeList changeList;
-    ElementRestyler r(frame->PresContext(), aElement, &changeList, aMinChange,
-                      aRestyleTracker, treeMatchContext,
-                      visibleKidsOfHiddenElement, contextsToClear,
-                      swappedStructOwners);
-    r.RestyleChildrenOfDisplayContentsElement(frame, aNewContext, aMinChange,
-                                              aRestyleTracker, aRestyleHint);
-    ProcessRestyledFrames(changeList);
-  }
+
+  // swappedStructOwners needs to be kept alive until after
+  // ProcessRestyledFrames and ClearCachedInheritedStyleDataOnDescendants
+  // calls; see comment in ElementRestyler::Restyle.
+  nsTArray<nsRefPtr<nsStyleContext>> swappedStructOwners;
+  nsStyleChangeList changeList;
+  ElementRestyler r(frame->PresContext(), aElement, &changeList, aMinChange,
+                    aRestyleTracker, treeMatchContext,
+                    visibleKidsOfHiddenElement, contextsToClear,
+                    swappedStructOwners);
+  r.RestyleChildrenOfDisplayContentsElement(frame, aNewContext, aMinChange,
+                                            aRestyleTracker, aRestyleHint);
+  ProcessRestyledFrames(changeList);
   ClearCachedInheritedStyleDataOnDescendants(contextsToClear);
 }
 
