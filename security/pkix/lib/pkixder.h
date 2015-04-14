@@ -275,29 +275,7 @@ Result IntegralBytes(Reader& input, uint8_t tag,
 
 // This parser will only parse values between 0..127. If this range is
 // increased then callers will need to be changed.
-template <typename T> inline Result
-IntegralValue(Reader& input, uint8_t tag, T& value)
-{
-  // Conveniently, all the Integers that we actually have to be able to parse
-  // are positive and very small. Consequently, this parser is *much* simpler
-  // than a general Integer parser would need to be.
-  Input valueBytes;
-  Result rv = IntegralBytes(input, tag, IntegralValueRestriction::MustBe0To127,
-                            valueBytes, nullptr);
-  if (rv != Success) {
-    return rv;
-  }
-  Reader valueReader(valueBytes);
-  uint8_t valueByte;
-  rv = valueReader.Read(valueByte);
-  if (rv != Success) {
-    return NotReached("IntegralBytes already validated the value.", rv);
-  }
-  value = valueByte;
-  rv = End(valueReader);
-  assert(rv == Success); // guaranteed by IntegralBytes's range checks.
-  return rv;
-}
+Result IntegralValue(Reader& input, uint8_t tag, /*out*/ uint8_t& value);
 
 } // namespace internal
 
