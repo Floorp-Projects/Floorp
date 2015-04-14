@@ -257,7 +257,7 @@ function toLocalTimeISOString(date) {
     + "-" + padNumber(date.getDate(), 2)
     + "T" + padNumber(date.getHours(), 2)
     + ":" + padNumber(date.getMinutes(), 2)
-    + ":" + padNumber(date.getSeconds(), 2);
+    + ":" + padNumber(date.getSeconds(), 2)
     + "." + date.getMilliseconds()
     + sign(tzOffset) + Math.abs(Math.floor(tzOffset / 60))
     + ":" + Math.abs(tzOffset % 60);
