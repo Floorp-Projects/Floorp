@@ -91,7 +91,6 @@
 #include "nsIImageLoadingContent.h"
 #include "mozilla/Preferences.h"
 #include "nsVersionComparator.h"
-#include "nsNullPrincipal.h"
 
 #if defined(XP_WIN)
 #include "nsIWindowMediator.h"
@@ -3118,8 +3117,8 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
     // in this else branch we really don't know where the load is coming
     // from and in fact should use something better than just using
     // a nullPrincipal as the loadingPrincipal.
-    principal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+    principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = NS_NewChannel(getter_AddRefs(channel),
                        url,
                        principal,
