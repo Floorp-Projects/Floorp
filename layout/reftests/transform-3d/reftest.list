@@ -20,10 +20,10 @@ fuzzy-if(cocoaWidget,17,3) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-2d.html preserve3d-2-ref.html
 == preserve3d-3a.html preserve3d-3-ref.html
 skip-if(B2G||Mulet) == preserve3d-4a.html green-rect.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
-skip-if(Mulet) fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all.html scale3d-1-ref.html # subpixel AA # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
 == scale3d-xz.html scale3d-1-ref.html
 == translatez-1a.html translatez-1-ref.html
 != translatez-1b.html translatez-1-ref.html
@@ -52,8 +52,8 @@ fuzzy-if(winWidget&&!layersGPUAccelerated,1,61) == perspective-origin-3a.html pe
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 fuzzy-if((gtk2Widget&&layersOMTC)||(winWidget&&!layersGPUAccelerated),1,86) == overflow-hidden-1a.html overflow-hidden-1-ref.html
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
-skip-if(Mulet) pref(layout.css.will-change.enabled,true) == willchange-containing-block.html?willchange willchange-containing-block.html?ref # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+pref(layout.css.will-change.enabled,true) == willchange-containing-block.html?willchange willchange-containing-block.html?ref
+pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
 fails-if(!layersGPUAccelerated) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures

@@ -3,7 +3,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion>=15,8,1000) == size-1.html 
 
 == empty-transaction-1.html empty-transaction-1-ref.html
 
-skip-if(Mulet) == image-rendering-test.html image-rendering-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== image-rendering-test.html image-rendering-ref.html
 == image-shadow.html image-shadow-ref.html
 
 skip-if(B2G||Mulet) asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
@@ -80,7 +80,7 @@ random-if(azureSkiaGL) == evenodd-fill-2.html evenodd-fill-ref.html
 == evenodd-fill-3.html nonzero-fill-2.html
 
 == dash-sanity.html data:text/html,<body>Pass
-skip-if(Mulet) fuzzy-if(azureSkia,9,470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific) # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(azureSkia,9,470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
 
 == ctm-sanity.html data:text/html,<body>Pass
 == ctm-singular-sanity.html data:text/html,<body>Pass
@@ -91,7 +91,7 @@ fails-if(azureQuartz&&OSX==1006) == 672646-alpha-radial-gradient.html 672646-alp
 
 != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted
 
-skip-if(Mulet) == 726951-shadow-clips.html 726951-shadow-clips-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 726951-shadow-clips.html 726951-shadow-clips-ref.html
 
 == transformed-clip.html transformed-clip-ref.html
 == transformed-gradient.html transformed-gradient-ref.html

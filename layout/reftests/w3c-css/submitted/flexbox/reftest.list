@@ -149,7 +149,7 @@ fails == flexbox-min-width-auto-002b.html flexbox-min-width-auto-002-ref.html # 
 == flexbox-overflow-horiz-003.html flexbox-overflow-horiz-003-ref.html
 == flexbox-overflow-horiz-004.html flexbox-overflow-horiz-004-ref.html
 == flexbox-overflow-horiz-005.html flexbox-overflow-horiz-005-ref.html
-skip-if(Mulet) == flexbox-overflow-vert-001.html flexbox-overflow-vert-001-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== flexbox-overflow-vert-001.html flexbox-overflow-vert-001-ref.html
 == flexbox-overflow-vert-002.html flexbox-overflow-vert-002-ref.html
 == flexbox-overflow-vert-003.html flexbox-overflow-vert-003-ref.html
 == flexbox-overflow-vert-004.html flexbox-overflow-vert-004-ref.html

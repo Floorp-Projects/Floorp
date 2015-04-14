@@ -59,12 +59,12 @@ HTTP(..) == annotations.html annotations-ref.html
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
 # (debug problems with font-variant-debug.html which displays all props)
-skip-if(Mulet) HTTP(..) == font-variant-alternates.html font-variant-alternates-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) HTTP(..) == font-variant-caps.html font-variant-caps-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) HTTP(..) == font-variant-position.html font-variant-position-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) HTTP(..) == font-variant-alternates.html font-variant-alternates-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) HTTP(..) == font-variant-caps.html font-variant-caps-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) HTTP(..) == font-variant-east-asian.html font-variant-east-asian-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) HTTP(..) == font-variant-ligatures.html font-variant-ligatures-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) HTTP(..) == font-variant-numeric.html font-variant-numeric-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) HTTP(..) == font-variant-position.html font-variant-position-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 
 # font-kerning
 HTTP(..) != font-kerning-normal.html font-kerning-none.html

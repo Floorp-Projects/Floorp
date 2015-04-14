@@ -1,9 +1,9 @@
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,4,88500) fuzzy-if(azureSkiaGL,3,89700) fuzzy-if(azureQuartz,1,34792) == linear-1a.html linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,4,88500) fuzzy-if(azureSkiaGL,3,89700) fuzzy-if(azureQuartz,1,34792) == linear-1b.html linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,88500) fuzzy-if(azureSkiaGL,3,89700) fuzzy-if(azureQuartz,1,34792) == linear-1a.html linear-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,88500) fuzzy-if(azureSkiaGL,3,89700) fuzzy-if(azureQuartz,1,34792) == linear-1b.html linear-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(azureQuartz,1,11469) == linear-keywords-1a.html linear-keywords-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(azureQuartz,1,11985) == linear-keywords-1b.html linear-keywords-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureQuartz,1,10230) == linear-percent.html linear-percent-ref.html
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,4,92400) fuzzy-if(azureSkiaGL,2,143400) fuzzy-if(azureQuartz,1,27827) fuzzy-if(Android&&AndroidVersion>=15,4,93000) == linear-mix.html linear-mix-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,92400) fuzzy-if(azureSkiaGL,2,143400) fuzzy-if(azureQuartz,1,27827) fuzzy-if(Android&&AndroidVersion>=15,4,93000) == linear-mix.html linear-mix-ref.html
 == linear-diagonal-1a.html linear-diagonal-1-ref.html
 == linear-diagonal-1b.html linear-diagonal-1-ref.html
 == linear-diagonal-1c.html linear-diagonal-1-ref.html
@@ -36,7 +36,7 @@ fails-if(d2d) == linear-repeat-1b.html linear-repeat-1-ref.html # bug 582236
 fails-if(d2d) == linear-repeat-1d.html linear-repeat-1-ref.html # bug 582236
 == linear-repeat-1e.html linear-repeat-1-ref.html
 fails-if(d2d) == linear-repeat-1f.html linear-repeat-1-ref.html # bug 582236
-skip-if(Mulet) fails-if(d2d) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fails-if(d2d) == linear-repeat-1g.html linear-repeat-1-ref.html # bug 582236
 == linear-rotated-1.html linear-rotated-1-ref.html
 == linear-size-1a.html linear-size-1-ref.html
 == linear-stops-1a.html linear-stops-1-ref.html
@@ -51,15 +51,15 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL,2,89700) f
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL,2,89700) fuzzy-if(azureQuartz,2,26777) == linear-vertical-1d.html linear-vertical-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,88500) fuzzy-if(azureSkiaGL,2,89700) fuzzy-if(azureQuartz,1,22367) == linear-vertical-1e.html linear-vertical-1-ref.html
 == linear-vertical-subpixel-1.html linear-vertical-subpixel-1-ref.html
-skip-if(Mulet) == linear-viewport.html linear-viewport-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== linear-viewport.html linear-viewport-ref.html
 fails-if(OSX==1010) == linear-zero-length-1a.html linear-zero-length-1-ref.html
 fails-if(OSX==1010) == linear-zero-length-1b.html linear-zero-length-1-ref.html
 fails-if(OSX==1010) == linear-zero-length-1c.html linear-zero-length-1-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1a.html radial-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1b.html radial-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1c.html radial-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1a.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1b.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1c.html radial-1-ref.html
 fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,2,90000) == radial-2a.html radial-2-ref.html
 fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,2,90000) == radial-2b.html radial-2-ref.html
 fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,2,90000) == radial-2c.html radial-2-ref.html
@@ -114,23 +114,23 @@ fuzzy-if(d2d,127,2612) == repeating-radial-1e.html repeating-radial-1-ref.html
 == twostops-1g.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1a.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1a.html aja-linear-1-ref.html 
 fails-if(!d2d&&!(OSX==1010&&azureQuartz&&isDebugBuild)) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694, passing on 10.10 debug is bug 1128517
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1c.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1d.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1e.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1f.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1g.html aja-linear-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4667) == aja-linear-2a.html aja-linear-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4667) == aja-linear-2b.html aja-linear-2-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1c.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1d.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1e.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1f.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1g.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4667) == aja-linear-2a.html aja-linear-2-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4667) == aja-linear-2b.html aja-linear-2-ref.html 
 fails == aja-linear-2c.html aja-linear-2-ref.html # bug 522607
 fails-if(!d2d) == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3a.html aja-linear-3-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3b.html aja-linear-3-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,8655) == aja-linear-4a.html aja-linear-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,8655) == aja-linear-4b.html aja-linear-4-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,2,7878) == aja-linear-5a.html aja-linear-5-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) fuzzy-if(!contentSameGfxBackendAsCanvas,2,16477) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,2,10163) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3a.html aja-linear-3-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3b.html aja-linear-3-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,8655) == aja-linear-4a.html aja-linear-4-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,8655) == aja-linear-4b.html aja-linear-4-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,2,7878) == aja-linear-5a.html aja-linear-5-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,2,16477) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz,2,10163) == aja-linear-6a.html aja-linear-6-ref.html # bug 526708 
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
 skip-if(B2G||Mulet) == height-dependence-1.html height-dependence-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,1,40000) == height-dependence-2.html height-dependence-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
