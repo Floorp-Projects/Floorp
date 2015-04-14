@@ -154,6 +154,6 @@ function go() {
   State.update();
 
   window.setTimeout(() => {
-    window.setInterval(update, 2000);
+    window.setInterval(update, 10000);
   }, 1000);
 }
