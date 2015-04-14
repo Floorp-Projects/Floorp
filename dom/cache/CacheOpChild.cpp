@@ -17,13 +17,11 @@ namespace dom {
 namespace cache {
 
 CacheOpChild::CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
-                           nsISupports* aParent, Promise* aPromise)
+                           Promise* aPromise)
   : mGlobal(aGlobal)
-  , mParent(aParent)
   , mPromise(aPromise)
 {
   MOZ_ASSERT(mGlobal);
-  MOZ_ASSERT(mParent);
   MOZ_ASSERT(mPromise);
 
   MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
