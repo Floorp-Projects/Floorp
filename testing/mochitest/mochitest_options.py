@@ -692,12 +692,7 @@ class MochitestOptions(optparse.OptionParser):
 
         # Bug 1065098 - The geckomediaplugin process fails to produce a leak
         # log for some reason.
-        options.ignoreMissingLeaks = ["geckomediaplugin"]
-
-        # Bug 1091917 - We exit early in tab processes on Windows, so we don't
-        # get leak logs yet.
-        if mozinfo.isWin:
-            options.ignoreMissingLeaks.append("tab")
+        options.ignoreMissingLeaks = ["geckomediaplugin", "tab"]
 
         # Bug 1121539 - OSX-only intermittent tab process leak in test_ipc.html
         if mozinfo.isMac:
@@ -913,7 +908,7 @@ class B2GOptions(MochitestOptions):
         options.ignoreMissingLeaks.append("default")
 
         # Bug 1070068 - Leak logging does not work for tab processes on B2G.
-        options.ignoreMissingLeaks.append("tab")
+        assert "tab" in options.ignoreMissingLeaks, "Ignore failures for tab processes on B2G"
 
         return options
 
