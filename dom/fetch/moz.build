@@ -7,7 +7,6 @@
 EXPORTS.mozilla.dom += [
     'Fetch.h',
     'FetchDriver.h',
-    'FetchIPCUtils.h',
     'Headers.h',
     'InternalHeaders.h',
     'InternalRequest.h',
@@ -26,12 +25,6 @@ UNIFIED_SOURCES += [
     'Request.cpp',
     'Response.cpp',
 ]
-
-IPDL_SOURCES += [
-    'PHeaders.ipdlh',
-]
-
-include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '../workers',
