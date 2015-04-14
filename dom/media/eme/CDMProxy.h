@@ -179,6 +179,7 @@ private:
     uint32_t mPromiseId;
     nsAutoString mOrigin;
     nsAutoString mTopLevelOrigin;
+    nsAutoCString mPluginVersion;
     bool mInPrivateBrowsing;
   };
 

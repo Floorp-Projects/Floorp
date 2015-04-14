@@ -2923,12 +2923,16 @@ DataCall.prototype = {
     return isIdentical;
   },
 
-  reset: function() {
+  resetLinkInfo: function() {
     this.linkInfo.cid = null;
     this.linkInfo.ifname = null;
     this.linkInfo.addresses = [];
     this.linkInfo.dnses = [];
     this.linkInfo.gateways = [];
+  },
+
+  reset: function() {
+    this.resetLinkInfo();
 
     this.state = RIL.GECKO_NETWORK_STATE_UNKNOWN;
 
@@ -3099,7 +3103,7 @@ DataCall.prototype = {
   deactivate: function() {
     let reason = RIL.DATACALL_DEACTIVATE_NO_REASON;
     if (DEBUG) {
-      this.debug("Going to disconnet data connection cid " + this.linkInfo.cid);
+      this.debug("Going to disconnect data connection cid " + this.linkInfo.cid);
     }
     let radioInterface = this.gRIL.getRadioInterface(this.clientId);
     radioInterface.sendWorkerMessage("deactivateDataCall", {
@@ -3108,6 +3112,7 @@ DataCall.prototype = {
     }, this.onDeactivateDataCallResult.bind(this));
 
     this.state = RIL.GECKO_NETWORK_STATE_DISCONNECTING;
+    this.resetLinkInfo();
   },
 
   // Entry method for timer events. Used to reconnect to a failed APN
@@ -3184,13 +3189,13 @@ RILNetworkInterface.prototype = {
     for (let i = 0; i < addresses.length; i++) {
       let [ip, prefixLength] = addresses[i].split("/");
       ips.push(ip);
-      prefixLengths.push();
+      prefixLengths.push(prefixLength);
     }
 
     aIps.value = ips.slice();
     aPrefixLengths.value = prefixLengths.slice();
 
-    return aIps.length;
+    return ips.length;
   },
 
   getGateways: function(aCount) {

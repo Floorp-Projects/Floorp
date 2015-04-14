@@ -12,9 +12,11 @@ EXPORTS.mozilla.dom += [
     'AnimationEffect.h',
     'AnimationPlayer.h',
     'AnimationTimeline.h',
+    'DocumentTimeline.h',
 ]
 
 EXPORTS.mozilla += [
+    'AnimationUtils.h',
     'PendingPlayerTracker.h',
 ]
 
@@ -23,6 +25,7 @@ UNIFIED_SOURCES += [
     'AnimationEffect.cpp',
     'AnimationPlayer.cpp',
     'AnimationTimeline.cpp',
+    'DocumentTimeline.cpp',
     'PendingPlayerTracker.cpp',
 ]
 
