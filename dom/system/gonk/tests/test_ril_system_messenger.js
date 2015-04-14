@@ -60,9 +60,6 @@ function run_test() {
   let smsMessenger = Cc["@mozilla.org/ril/system-messenger-helper;1"]
                      .getService(Ci.nsISmsMessenger);
 
-  let smsMessenger_new = Cc["@mozilla.org/ril/system-messenger-helper;1"]
-                         .getService(Ci.nsISmsMessenger_new);
-
   let cellbroadcastMessenger = Cc["@mozilla.org/ril/system-messenger-helper;1"]
                                .getService(Ci.nsICellbroadcastMessenger);
 
@@ -74,7 +71,6 @@ function run_test() {
 
   ok(telephonyMessenger !== null, "Get TelephonyMessenger.");
   ok(smsMessenger != null, "Get SmsMessenger.");
-  ok(smsMessenger_new != null, "Get SmsMessenger_new.");
   ok(cellbroadcastMessenger != null, "Get CellbroadcastMessenger.");
   ok(mobileConnectionMessenger != null, "Get MobileConnectionMessenger.");
   ok(iccMessenger != null, "Get IccMessenger.");
@@ -248,7 +244,7 @@ add_test(function test_sms_messenger_notify_sms() {
     });
 
   // Verify 'sms-failed' system message.
-  messenger.notifySms(Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED,
+  messenger.notifySms(Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT_FAILED,
                       7,
                       8,
                       "99887766554433221100",
@@ -281,7 +277,7 @@ add_test(function test_sms_messenger_notify_sms() {
     });
 
   // Verify 'sms-delivery-error' system message.
-  messenger.notifySms(Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_DELIVERY_ERROR,
+  messenger.notifySms(Ci.nsISmsMessenger.NOTIFICATION_TYPE_DELIVERY_ERROR,
                       9,
                       10,
                       "99887766554433221100",
