@@ -172,6 +172,7 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
  *  dragData - the data to supply for the data transfer
  *                     This data is in the format:
  *                       [ [ {type: value, data: value}, ...], ... ]
+ *               pass null to avoid modifying dataTransfer
  *  dropEffect - the drop effect to set during the dragstart event, or 'move' if null
  *  aWindow - optional; defaults to the current window object.
  *  aDestWindow - optional; defaults to aWindow.
@@ -194,15 +195,19 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
   var dataTransfer;
   var trapDrag = function(event) {
     dataTransfer = event.dataTransfer;
-    for (var i = 0; i < dragData.length; i++) {
-      var item = dragData[i];
-      for (var j = 0; j < item.length; j++) {
-        dataTransfer.mozSetDataAt(item[j].type, item[j].data, i);
+    if (dragData) {
+      for (var i = 0; i < dragData.length; i++) {
+        var item = dragData[i];
+        for (var j = 0; j < item.length; j++) {
+          dataTransfer.mozSetDataAt(item[j].type, item[j].data, i);
+        }
       }
     }
     dataTransfer.dropEffect = dropEffect || "move";
     event.preventDefault();
-    event.stopPropagation();
+    if (dragData) {
+      event.stopPropagation();
+    }
   }
 
   ds.startDragSession();
