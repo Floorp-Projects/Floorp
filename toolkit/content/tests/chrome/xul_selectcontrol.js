@@ -133,7 +133,7 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
         selectionRequired ? seconditem : null, selectionRequired ? 0 : -1,
         selectionRequired ? secondvalue : "");
 
-  is(removeditem.control, null, testid + "control not set");
+  is(removeditem.control, undefined, testid + "control not set");
 
   var thirditem = element.appendItem("Third Item", "third");
   var fourthitem = element.appendItem("Fourth Item", fourthvalue);

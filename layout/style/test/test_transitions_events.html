@@ -317,7 +317,7 @@ var e = new TransitionEvent("transitionend",
 is(e.bubbles, true);
 is(e.cancelable, true);
 is(e.propertyName, "some-unknown-prop");
-is(e.elapsedTime, "0.5");
+is(e.elapsedTime, 0.5);
 is(e.pseudoElement, "pseudo");
 is(e.isTrusted, false)
 

@@ -28,7 +28,6 @@ const APP_NAME = "XPCShell";
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
-const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 
@@ -38,11 +37,6 @@ let gHttpServer = new HttpServer();
 let gServerStarted = false;
 let gRequestIterator = null;
 let gClientID = null;
-
-function getArchiveFilename(uuid, date, type) {
-  let ping = Cu.import("resource://gre/modules/TelemetryPing.jsm");
-  return ping.getArchivedPingPath(uuid, date, type);
-}
 
 function sendPing(aSendClientId, aSendEnvironment) {
   if (gServerStarted) {
@@ -223,51 +217,6 @@ add_task(function* test_pingHasEnvironmentAndClientId() {
     Assert.equal(ping.clientId, gClientID,
                  "The correct clientId must be reported.");
   }
-});
-
-add_task(function* test_archivePings() {
-  const ARCHIVE_PATH =
-    OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
-
-  let now = new Date(2009, 10, 18, 12, 0, 0);
-  fakeNow(now);
-
-  // Disable FHR upload so that pings don't get sent.
-  Preferences.set(PREF_FHR_UPLOAD_ENABLED, false);
-
-  // Register a new Ping Handler that asserts if a ping is received, then send a ping.
-  registerPingHandler(() => Assert.ok(false, "Telemetry must not send pings if not allowed to."));
-  let pingId = yield sendPing(true, true);
-
-  // Check that the ping was persisted to the pings archive, even with upload disabled.
-  let pingPath = getArchiveFilename(pingId, now, TEST_PING_TYPE);
-  Assert.ok((yield OS.File.exists(pingPath)),
-            "TelemetryPing must archive pings if FHR is enabled.");
-
-  // Check that pings don't get archived if not allowed to.
-  now = new Date(2010, 10, 18, 12, 0, 0);
-  fakeNow(now);
-  Preferences.set(PREF_ARCHIVE_ENABLED, false);
-  pingId = yield sendPing(true, true);
-  pingPath = getArchiveFilename(pingId, now, TEST_PING_TYPE);
-  Assert.ok(!(yield OS.File.exists(pingPath)),
-            "TelemetryPing must not archive pings if the archive pref is disabled.");
-
-  // Enable archiving and the upload so that pings get sent and archived again.
-  Preferences.set(PREF_FHR_UPLOAD_ENABLED, true);
-  Preferences.set(PREF_ARCHIVE_ENABLED, true);
-
-  now = new Date(2014, 06, 18, 22, 0, 0);
-  fakeNow(now);
-  // Restore the non asserting ping handler. This is done by the Request() constructor.
-  gRequestIterator = Iterator(new Request());
-  pingId = yield sendPing(true, true);
-
-  // Check that we archive pings when successfully sending them.
-  yield gRequestIterator.next();
-  pingPath = getArchiveFilename(pingId, now, TEST_PING_TYPE);
-  Assert.ok((yield OS.File.exists(pingPath)),
-            "TelemetryPing must archive pings if FHR is enabled.");
 });
 
 add_task(function* stopServer(){

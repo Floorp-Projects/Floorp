@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=951997
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Permission Prompt Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020179">Permission prompt visibilitychange test</a>
+<script type="application/javascript;version=1.8">
+
+"use strict";
+
+var gUrl = SimpleTest.getTestFileURL("permission_handler_chrome.js");
+var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+function testDone() {
+  gScript.sendAsyncMessage("teardown", "");
+  gScript.destroy();
+  SimpleTest.finish();
+  alert("setVisible::true");
+}
+
+function runTest() {
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      ok(false, "unexpected success, permission request should be canceled");
+      testDone();
+    }, function (err) {
+      ok(true, "success, permission request is canceled");
+      testDone();
+  });
+}
+
+gScript.addMessageListener("permission-request", function (detail) {
+  info("got permission-request!!!!\n");
+  alert("setVisible::false");
+});
+
+// Add permissions to this app. We use ALLOW_ACTION here. The ContentPermissionPrompt
+// should prompt for permission, not allow it without prompt.
+SpecialPowers.pushPrefEnv({"set": [["media.navigator.permission.disabled", false]]},
+  function() {
+    SpecialPowers.addPermission("geolocation",
+      SpecialPowers.Ci.nsIPermissionManager.PROMPT_ACTION, document);
+    runTest();
+  });
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

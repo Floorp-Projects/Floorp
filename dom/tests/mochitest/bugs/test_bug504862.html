@@ -30,7 +30,7 @@ function runTest() {
 
   result = window.showModalDialog("http://test1.example.com/tests/dom/tests/mochitest/bugs/file_bug504862.html", "my args");
 
-  is(result, null, "Able to see return value from cross origin dialog.");
+  is(result, undefined, "Able to see return value from cross origin dialog.");
 
   SimpleTest.finish();
 }

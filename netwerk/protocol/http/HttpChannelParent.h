@@ -110,6 +110,7 @@ protected:
                    const bool&                chooseApplicationCache,
                    const nsCString&           appCacheClientID,
                    const bool&                allowSpdy,
+                   const bool&                allowAltSvc,
                    const OptionalFileDescriptorSet& aFds,
                    const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
                    const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,

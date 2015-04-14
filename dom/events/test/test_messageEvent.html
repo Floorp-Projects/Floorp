@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=848294
       is(e.data, 'data' in test ? test.data : undefined, 'MessageEvent.data is ok');
       is(e.origin, 'origin' in test ? test.origin : '', 'MessageEvent.origin is ok');
       is(e.lastEventId, 'lastEventId' in test ? test.lastEventId : '', 'MessageEvent.lastEventId is ok');
-      is(e.source, 'source' in test ? test.source : undefined, 'MessageEvent.source is ok');
+      is(e.source, 'source' in test ? test.source : null, 'MessageEvent.source is ok');
 
       if (test.ports != undefined) {
         is(e.ports.length, test.ports.length, 'MessageEvent.ports is ok');

@@ -311,7 +311,10 @@ def cli(args=sys.argv[1:]):
     fxos.add_argument(
         '--adb-port',
         help='port running adb')
-    structured.commandline.add_logging_group(parser)
+    structured.commandline.add_logging_group(
+        parser,
+        include_formatters=structured.commandline.TEXT_FORMATTERS
+    )
 
     args = parser.parse_args()
     dm_type = os.environ.get('DM_TRANS', 'adb')

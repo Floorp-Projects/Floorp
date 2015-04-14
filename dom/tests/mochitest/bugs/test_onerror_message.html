@@ -22,16 +22,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=743049
 /** Test for Bug 743049 **/
 
 var expected = [
-{ name: "Error", message: "foo", filename: location, lineNumber: 45 },
+{ name: "Error", message: "foo", filename: String(location), lineNumber: 45 },
 { name: "Error", message: "foo", filename: "bar", lineNumber: 123 },
 { name: "", message: "uncaught exception: [object Object]" },
 { name: "DuckError", message: "foo", filename: "bar", lineNumber: 123 },
 { name: "", message: "uncaught exception: [object Object]" },
 { name: "", message: "foo", filename: "baz", lineNumber: 123 },
 { name: "", message: "uncaught exception: [object Object]" },
-{ name: "InvalidStateError", message: "An attempt was made to use an object that is not, or is no longer, usable", filename: location, lineNumber: 62 },
-{ name: "ReferenceError", message: "xxx is not defined", filename: location, lineNumber: 64 },
-{ name: "ReferenceError", message: "xxx is not defined", filename: location, lineNumber: 66 }
+{ name: "InvalidStateError", message: "An attempt was made to use an object that is not, or is no longer, usable", filename: String(location), lineNumber: 62 },
+{ name: "ReferenceError", message: "xxx is not defined", filename: String(location), lineNumber: 64 },
+{ name: "ReferenceError", message: "xxx is not defined", filename: String(location), lineNumber: 66 }
 ];
 
 var counter = 0;

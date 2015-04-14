@@ -23,6 +23,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/Point.h"
+#include "nsDataHashtable.h"
+#include "nsIObserver.h"
 #include "Units.h"
 
 // forward declarations
@@ -51,6 +53,7 @@ class CompositorChild;
 class LayerManager;
 class LayerManagerComposite;
 class PLayerTransactionChild;
+struct ScrollableLayerGuid;
 }
 namespace gfx {
 class DrawTarget;
@@ -713,6 +716,59 @@ struct IMENotification
   }
 };
 
+struct AutoObserverNotifier {
+  AutoObserverNotifier(nsIObserver* aObserver,
+                       const char* aTopic)
+    : mObserver(aObserver)
+    , mTopic(aTopic)
+  {
+  }
+
+  void SkipNotification()
+  {
+    mObserver = nullptr;
+  }
+
+  uint64_t SaveObserver()
+  {
+    if (!mObserver) {
+      return 0;
+    }
+    uint64_t observerId = ++sObserverId;
+    sSavedObservers.Put(observerId, mObserver);
+    SkipNotification();
+    return observerId;
+  }
+
+  ~AutoObserverNotifier()
+  {
+    if (mObserver) {
+      mObserver->Observe(nullptr, mTopic, nullptr);
+    }
+  }
+
+  static void NotifySavedObserver(const uint64_t& aObserverId,
+                                  const char* aTopic)
+  {
+    nsCOMPtr<nsIObserver> observer = sSavedObservers.Get(aObserverId);
+    if (!observer) {
+      MOZ_ASSERT(aObserverId == 0, "We should always find a saved observer for nonzero IDs");
+      return;
+    }
+
+    sSavedObservers.Remove(aObserverId);
+    observer->Observe(nullptr, aTopic, nullptr);
+  }
+
+private:
+  nsCOMPtr<nsIObserver> mObserver;
+  const char* mTopic;
+
+private:
+  static uint64_t sObserverId;
+  static nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIObserver>> sSavedObservers;
+};
+
 } // namespace widget
 } // namespace mozilla
 
@@ -764,7 +820,7 @@ class nsIWidget : public nsISupports {
       , mZIndex(0)
 
     {
-      ClearNativeTouchSequence();
+      ClearNativeTouchSequence(nullptr);
     }
 
         
@@ -1713,6 +1769,13 @@ class nsIWidget : public nsISupports {
     virtual nsEventStatus DispatchInputEvent(mozilla::WidgetInputEvent* aEvent) = 0;
 
     /**
+     * Confirm an APZ-aware event target. This should be used when APZ will
+     * not need a layers update to process the event.
+     */
+    virtual void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                                        const nsTArray<mozilla::layers::ScrollableLayerGuid>& aTargets) const = 0;
+
+    /**
      * Enables the dropping of files to a widget (XXX this is temporary)
      *
      */
@@ -1852,6 +1915,8 @@ class nsIWidget : public nsISupports {
      * @param aUnmodifiedCharacters characters that the OS would decide
      * to generate from the event if modifier keys (other than shift)
      * were assumed inactive. Needed on Mac, ignored on Windows.
+     * @param aObserver the observer that will get notified once the events
+     * have been dispatched.
      * @return NS_ERROR_NOT_AVAILABLE to indicate that the keyboard
      * layout is not supported and the event was not fired
      */
@@ -1859,7 +1924,8 @@ class nsIWidget : public nsISupports {
                                               int32_t aNativeKeyCode,
                                               uint32_t aModifierFlags,
                                               const nsAString& aCharacters,
-                                              const nsAString& aUnmodifiedCharacters) = 0;
+                                              const nsAString& aUnmodifiedCharacters,
+                                              nsIObserver* aObserver) = 0;
 
     /**
      * Utility method intended for testing. Dispatches native mouse events
@@ -1874,16 +1940,22 @@ class nsIWidget : public nsISupports {
      * NSMouseMoved; on Windows, MOUSEEVENTF_MOVE, MOUSEEVENTF_LEFTDOWN etc)
      * @param aModifierFlags *platform-specific* modifier flags (ignored
      * on Windows)
+     * @param aObserver the observer that will get notified once the events
+     * have been dispatched.
      */
     virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                 uint32_t aNativeMessage,
-                                                uint32_t aModifierFlags) = 0;
+                                                uint32_t aModifierFlags,
+                                                nsIObserver* aObserver) = 0;
 
     /**
      * A shortcut to SynthesizeNativeMouseEvent, abstracting away the native message.
      * aPoint is location in device pixels to which the mouse pointer moves to.
+     * @param aObserver the observer that will get notified once the events
+     * have been dispatched.
      */
-    virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) = 0;
+    virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                               nsIObserver* aObserver) = 0;
 
     /**
      * Utility method intended for testing. Dispatching native mouse scroll
@@ -1905,6 +1977,8 @@ class nsIWidget : public nsISupports {
      * @param aModifierFlags    Must be values of Modifiers, or zero.
      * @param aAdditionalFlags  See nsIDOMWidnowUtils' consts and their
      *                          document.
+     * @param aObserver         The observer that will get notified once the
+     *                          events have been dispatched.
      */
     virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                       uint32_t aNativeMessage,
@@ -1912,7 +1986,8 @@ class nsIWidget : public nsISupports {
                                                       double aDeltaY,
                                                       double aDeltaZ,
                                                       uint32_t aModifierFlags,
-                                                      uint32_t aAdditionalFlags) = 0;
+                                                      uint32_t aAdditionalFlags,
+                                                      nsIObserver* aObserver) = 0;
 
     /*
      * TouchPointerState states for SynthesizeNativeTouchPoint. Match
@@ -1920,16 +1995,19 @@ class nsIWidget : public nsISupports {
      */
     enum TouchPointerState {
       // The pointer is in a hover state above the digitizer
-      TOUCH_HOVER    = 0x01,
+      TOUCH_HOVER    = (1 << 0),
       // The pointer is in contact with the digitizer
-      TOUCH_CONTACT  = 0x02,
+      TOUCH_CONTACT  = (1 << 1),
       // The pointer has been removed from the digitizer detection area
-      TOUCH_REMOVE   = 0x04,
+      TOUCH_REMOVE   = (1 << 2),
       // The pointer has been canceled. Will cancel any pending os level
       // gestures that would triggered as a result of completion of the
       // input sequence. This may not cancel moz platform related events
       // that might get tirggered by input already delivered.
-      TOUCH_CANCEL   = 0x08
+      TOUCH_CANCEL   = (1 << 3),
+
+      // ALL_BITS used for validity checking during IPC serialization
+      ALL_BITS       = (1 << 4) - 1
     };
 
     /*
@@ -1944,38 +2022,48 @@ class nsIWidget : public nsISupports {
      * @param aPressure 0.0 -> 1.0 float val indicating pressure
      * @param aOrientation 0 -> 359 degree value indicating the
      * orientation of the pointer. Use 90 for normal taps.
+     * @param aObserver The observer that will get notified once the events
+     * have been dispatched.
      */
     virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                                 TouchPointerState aPointerState,
                                                 nsIntPoint aPointerScreenPoint,
                                                 double aPointerPressure,
-                                                uint32_t aPointerOrientation) = 0;
-
-    /*
-     * Cancels all active simulated touch input points and pending long taps.
-     * Native widgets should track existing points such that they can clear the
-     * digitizer state when this call is made.
-     */
-    virtual nsresult ClearNativeTouchSequence();
+                                                uint32_t aPointerOrientation,
+                                                nsIObserver* aObserver) = 0;
 
     /*
      * Helper for simulating a simple tap event with one touch point. When
      * aLongTap is true, simulates a native long tap with a duration equal to
      * ui.click_hold_context_menus.delay. This pref is compatible with the
      * apzc long tap duration. Defaults to 1.5 seconds.
+     * @param aObserver The observer that will get notified once the events
+     * have been dispatched.
      */
-    nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
-                                      bool aLongTap);
+    virtual nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
+                                              bool aLongTap,
+                                              nsIObserver* aObserver);
+
+    /*
+     * Cancels all active simulated touch input points and pending long taps.
+     * Native widgets should track existing points such that they can clear the
+     * digitizer state when this call is made.
+     * @param aObserver The observer that will get notified once the touch
+     * sequence has been cleared.
+     */
+    virtual nsresult ClearNativeTouchSequence(nsIObserver* aObserver);
 
 private:
   class LongTapInfo
   {
   public:
     LongTapInfo(int32_t aPointerId, nsIntPoint& aPoint,
-                mozilla::TimeDuration aDuration) :
+                mozilla::TimeDuration aDuration,
+                nsIObserver* aObserver) :
       mPointerId(aPointerId),
       mPosition(aPoint),
       mDuration(aDuration),
+      mObserver(aObserver),
       mStamp(mozilla::TimeStamp::Now())
     {
     }
@@ -1983,6 +2071,7 @@ private:
     int32_t mPointerId;
     nsIntPoint mPosition;
     mozilla::TimeDuration mDuration;
+    nsCOMPtr<nsIObserver> mObserver;
     mozilla::TimeStamp mStamp;
   };
 

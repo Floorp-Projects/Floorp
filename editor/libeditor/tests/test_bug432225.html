@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=432225
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+  <script src="spellcheck.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=432225">Mozilla Bug 432225</a>
@@ -33,7 +34,7 @@ function editDoc() {
   return getEdit().contentDocument;
 }
 
-function getSpellCheckSelection() {
+function getEditor() {
   var Ci = SpecialPowers.Ci;
   var win = editDoc().defaultView;
   var editingSession = SpecialPowers.wrap(win)
@@ -41,9 +42,7 @@ function getSpellCheckSelection() {
                                     .getInterface(Ci.nsIWebNavigation)
                                     .QueryInterface(Ci.nsIInterfaceRequestor)
                                     .getInterface(Ci.nsIEditingSession);
-  var editor = editingSession.getEditorForWindow(win);
-  var selcon = editor.selectionController;
-  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);  
+  return editingSession.getEditorForWindow(win);
 }
 
 function runTest() {
@@ -53,7 +52,8 @@ function runTest() {
  
 function addWords(aLimit) {
   if (aLimit == 0) {
-    is(isSpellingCheckOk(), true, "All misspellings accounted for.");
+    ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+       "All misspellings accounted for.");
     SimpleTest.finish();
     return;
   }
@@ -62,25 +62,6 @@ function addWords(aLimit) {
   gMisspeltWords.push("aa");
   setTimeout(function() { addWords(aLimit-1); }, 0);
 }
-
-function isSpellingCheckOk() {
-  var sel = getSpellCheckSelection();
-  var numWords = sel.rangeCount;
-  
-  is(numWords, gMisspeltWords.length, "Correct number of misspellings and words.");
-  
-  if (numWords != gMisspeltWords.length) 
-    return false;
-  
-  for (var i=0; i<numWords; i++) {
-    var word = sel.getRangeAt(i);
-    is (word, gMisspeltWords[i], "Misspelling is what we think it is.");
-    if (word != gMisspeltWords[i])
-      return false;
-  }
-  return true;
-}
-
 </script>
 </pre>
 

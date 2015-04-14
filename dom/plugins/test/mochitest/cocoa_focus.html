@@ -14,7 +14,19 @@
       window.opener.SimpleTest.ok(aValue, aMessage);
     }
 
-    function runTests() {
+    function synthesizeNativeMouseEvent(aX, aY, aNativeMsg, aModifiers, aElement, aCallback) {
+      var observer = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aCallback && aTopic == "mouseevent") {
+            aCallback(aData);
+          }
+        }
+      };
+      SpecialPowers.DOMWindowUtils.sendNativeMouseEvent(aX, aY, aNativeMsg, aModifiers, aElement, observer);
+      return true;
+    }
+
+    function* runTests() {
       var utils = SpecialPowers.DOMWindowUtils;
       var scale = utils.screenPixelsPerCSSPixel;
 
@@ -34,7 +46,6 @@
 
       if (plugin1.getEventModel() != 1) {
         window.opener.todo(false, "Skipping this test when not testing the Cocoa event model");
-        window.opener.testsFinished();
         return;
       }
 
@@ -55,8 +66,8 @@
       is(initialStateUnknown, true, "Initial state should be unknown, assumed false.");
 
       // Give the plugin focus (the window is already focused).
-      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseDown, 0, plugin1);
-      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseUp, 0, plugin1);
+      yield synthesizeNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseDown, 0, plugin1, continueTest);
+      yield synthesizeNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseUp, 0, plugin1, continueTest);
       expectedEventCount++;
 
       is(plugin1.getFocusState(), true, "(1) Plugin should have focus.");
@@ -78,8 +89,8 @@
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Take focus from the plugin.
-      utils.sendNativeMouseEvent(plugin2X * scale, plugin2Y * scale, NSLeftMouseDown, 0, plugin2);
-      utils.sendNativeMouseEvent(plugin2X * scale, plugin2Y * scale, NSLeftMouseUp, 0, plugin2);
+      yield synthesizeNativeMouseEvent(plugin2X * scale, plugin2Y * scale, NSLeftMouseDown, 0, plugin2, continueTest);
+      yield synthesizeNativeMouseEvent(plugin2X * scale, plugin2Y * scale, NSLeftMouseUp, 0, plugin2, continueTest);
       expectedEventCount++;
 
       is(plugin1.getFocusState(), false, "(4) Plugin should not have focus.");
@@ -89,8 +100,8 @@
       // changes that took place while the window was inactive.
 
       // Give the plugin focus (the window is already focused).
-      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseDown, 0, plugin1);
-      utils.sendNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseUp, 0, plugin1);
+      yield synthesizeNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseDown, 0, plugin1, continueTest);
+      yield synthesizeNativeMouseEvent(plugin1X * scale, plugin1Y * scale, NSLeftMouseUp, 0, plugin1, continueTest);
       expectedEventCount++;
 
       // Blur the window.
@@ -108,12 +119,23 @@
 
       is(plugin1.getFocusState(), false, "(6) Plugin should not have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
+    }
 
-      window.opener.testsFinished();
+    var gTestContinuation = null;
+    function continueTest() {
+      if (!gTestContinuation) {
+        gTestContinuation = runTests();
+      }
+      var ret = gTestContinuation.next();
+      if (ret.done) {
+        window.opener.testsFinished();
+      } else {
+        is(ret.value, true, "Mouse event successfully synthesized");
+      }
     }
 
     // Onload hander doesn't work for these tests -- no events arrive at the plugin.
-    window.opener.SimpleTest.waitForFocus(runTests, window);
+    window.opener.SimpleTest.waitForFocus(continueTest, window);
 
   </script>
 </body>

@@ -30,13 +30,13 @@ function innerLoaded(inner) {
   // Here, we're being called through inner's onload handler, so our referrer
   // should be inner's URL.
   var referrer = inner.doXHR();
-  is (referrer, inner.document.location, 'Expected inner frame location');
+  is (referrer, String(inner.document.location), 'Expected inner frame location');
 
   // Now change the location of the inner frame.  This should be reflected in
   // the XHR's referrer.
   inner.history.pushState('', '', Math.random());
   referrer = inner.doXHR();
-  is (referrer, inner.document.location, 'Expected inner frame location after pushstate');
+  is (referrer, String(inner.document.location), 'Expected inner frame location after pushstate');
 
   innerFinishedLoading = true;
 }
@@ -50,11 +50,11 @@ function callXHR() {
   if (innerFinishedLoading && dataWindowFinishedLoading) {
     var inner = document.getElementById('iframe').contentWindow;
     var referrer = inner.doXHR();
-    is (referrer, inner.document.location,
+    is (referrer, String(inner.document.location),
         'Expected inner frame location when called from outer frame.');
 
     var referrer = inner.doXHR(new XMLHttpRequest());
-    is (referrer, document.location,
+    is (referrer, String(document.location),
         "Expected outer frame location when called with outer's XHR object.");
 
     // Now do a request within the inner window using an XMLHttpRequest
@@ -62,7 +62,7 @@ function callXHR() {
     // data: URI.
     var dataWindow = document.getElementById('dataWindow').contentWindow;
     var referrer = inner.doXHR(dataWindow.getXHRObject());
-    is (referrer, document.location,
+    is (referrer, String(document.location),
         "Expected outer frame location when called with data's XHR object.");
 
     // Now do that test again, but after having changed the outer window's URI.
@@ -71,7 +71,7 @@ function callXHR() {
     history.replaceState('', '', Math.random());
 
     var referrer = inner.doXHR(dataWindow.getXHRObject());
-    todo_is (referrer, document.location,
+    todo_is (referrer, String(document.location),
              "Expected outer frame location when called with data's XHR object " +
              "after replaceState.");
 

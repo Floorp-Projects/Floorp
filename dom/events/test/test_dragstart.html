@@ -168,7 +168,7 @@ function test_DataTransfer(dt)
   is(dt.getData(""), "", "invalid type getData"),
   dt.mozSetDataAt("", "Invalid Type", 0);
   is(dt.types.length, 0, "invalid type setDataAt");
-  is(dt.mozGetDataAt("", 0), null, "invalid type getDataAt"),
+  is(dt.mozGetDataAt("", 0), undefined, "invalid type getDataAt"),
 
   // similar with clearDataAt and getDataAt
   expectError(function() dt.mozGetDataAt("text/plain", 1),
@@ -501,8 +501,8 @@ function checkOneDataItem(dt, expectedtypes, expecteddata, index, testid)
   checkTypes(dt, expectedtypes, index, testid);
   for (var f = 0; f < expectedtypes.length; f++) {
     if (index == 0)
-      is(dt.getData(expectedtypes[f]), expecteddata[f], testid + " getData " + expectedtypes[f]);
-    is(dt.mozGetDataAt(expectedtypes[f], index), expecteddata[f] ? expecteddata[f] : null,
+      is_loosely(dt.getData(expectedtypes[f]), expecteddata[f], testid + " getData " + expectedtypes[f]);
+    is_loosely(dt.mozGetDataAt(expectedtypes[f], index), expecteddata[f] ? expecteddata[f] : null,
        testid + " getDataAt " + expectedtypes[f]);
   }
 }

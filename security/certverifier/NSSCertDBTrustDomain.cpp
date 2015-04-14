@@ -11,6 +11,7 @@
 #include "ExtendedValidation.h"
 #include "OCSPRequestor.h"
 #include "certdb.h"
+#include "mozilla/UniquePtr.h"
 #include "nsNSSCertificate.h"
 #include "nss.h"
 #include "NSSErrorsService.h"

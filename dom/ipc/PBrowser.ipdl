@@ -10,7 +10,6 @@ include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentBridge;
 include protocol PDocumentRenderer;
-include protocol PContentPermissionRequest;
 include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
@@ -18,7 +17,6 @@ include protocol PPluginWidget;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
-include PContentPermission;
 include ServiceWorkerRegistrarTypes;
 
 
@@ -59,6 +57,7 @@ using mozilla::Modifiers from "mozilla/EventForwards.h";
 using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
 using mozilla::WritingMode from "mozilla/WritingModes.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
+using nsIWidget::TouchPointerState from "nsIWidget.h";
 
 namespace mozilla {
 namespace dom {
@@ -102,7 +101,6 @@ prio(normal upto urgent) sync protocol PBrowser
 
     manages PColorPicker;
     manages PDocumentRenderer;
-    manages PContentPermissionRequest;
     manages PFilePicker;
     manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
@@ -335,14 +333,6 @@ parent:
     sync IsParentWindowMainWidgetVisible() returns (bool visible);
 
     /**
-     * Content process forward from PuppetWidget for synth mouse move
-     * events.
-     *
-     * aPoint a synth point relative to the window
-     */
-    sync SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint);
-
-    /**
      * Returns the offset of this tab from the top level window
      * origin in device pixels.
      *
@@ -390,21 +380,6 @@ parent:
      * but don't open it yet.
      */
     PColorPicker(nsString title, nsString initialColor);
-
-    /**
-     * Initiates an asynchronous request for permission for the
-     * provided principal.
-     *
-     * @param aRequests
-     *   The array of permissions to request.
-     * @param aPrincipal
-     *   The principal of the request.
-     *
-     * NOTE: The principal is untrusted in the parent process. Only
-     *       principals that can live in the content process should
-     *       provided.
-     */
-    PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal);
 
     PFilePicker(nsString aTitle, int16_t aMode);
 
@@ -490,6 +465,41 @@ parent:
 
     sync RequestNativeKeyBindings(WidgetKeyboardEvent event)
         returns (MaybeNativeKeyBinding bindings);
+
+    SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                             int32_t aNativeKeyCode,
+                             uint32_t aModifierFlags,
+                             nsString aCharacters,
+                             nsString aUnmodifiedCharacters,
+                             uint64_t aObserverId);
+    SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
+                               uint32_t aNativeMessage,
+                               uint32_t aModifierFlags,
+                               uint64_t aObserverId);
+    SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
+                              uint64_t aObserverId);
+    SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
+                                     uint32_t aNativeMessage,
+                                     double aDeltaX,
+                                     double aDeltaY,
+                                     double aDeltaZ,
+                                     uint32_t aModifierFlags,
+                                     uint32_t aAdditionalFlags,
+                                     uint64_t aObserverId);
+    SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                               TouchPointerState aPointerState,
+                               nsIntPoint aPointerScreenPoint,
+                               double aPointerPressure,
+                               uint32_t aPointerOrientation,
+                               uint64_t aObserverId);
+    SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
+                             bool aLongTap,
+                             uint64_t aObserverId);
+    ClearNativeTouchSequence(uint64_t aObserverId);
+child:
+    NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
+
+parent:
 
     /**
      * Child informs the parent that the graphics objects are ready for

@@ -55,7 +55,7 @@ function testFile(file, contents, test) {
        file.type ? file.type : null,
        "request content-type in XMLHttpRequest send of " + test);
     is(event.target.getResponseHeader("Result-Content-Length"),
-       file.size,
+       String(file.size),
        "request content-length in XMLHttpRequest send of " + test);
   };
   xhr.addEventListener("load",

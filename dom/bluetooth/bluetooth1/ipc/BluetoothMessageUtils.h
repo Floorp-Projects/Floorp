@@ -17,7 +17,7 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothObjectType>
   : public ContiguousEnumSerializer<
              mozilla::dom::bluetooth::BluetoothObjectType,
              mozilla::dom::bluetooth::TYPE_MANAGER,
-             mozilla::dom::bluetooth::TYPE_INVALID>
+             mozilla::dom::bluetooth::NUM_TYPE>
 { };
 
 } // namespace IPC

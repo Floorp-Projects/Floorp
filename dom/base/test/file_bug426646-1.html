@@ -25,8 +25,8 @@ function doe3() {
 }
 
 function doe4() {
-  opener.is(window.frames[0].location, url1, "History.go(-1) didn't work?");
-  opener.is(window.frames[1].location, "about:blank",
+  opener.is(String(window.frames[0].location), url1, "History.go(-1) didn't work?");
+  opener.is(String(window.frames[1].location), "about:blank",
             "History.go(-1) didn't work?");
   close();
 }

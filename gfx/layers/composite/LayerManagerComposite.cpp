@@ -21,6 +21,7 @@
 #include "PaintedLayerComposite.h"      // for PaintedLayerComposite
 #include "TiledLayerBuffer.h"           // for TiledLayerComposer
 #include "Units.h"                      // for ScreenIntRect
+#include "UnitTransforms.h"             // for ViewAs
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
 #include "gfxPrefs.h"                   // for gfxPrefs
 #ifdef XP_MACOSX
@@ -239,9 +240,9 @@ LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaque
       localOpaque.Or(localOpaque, composite->GetFullyRenderedRegion());
     }
     localOpaque.MoveBy(transform2d._31, transform2d._32);
-    const nsIntRect* clip = aLayer->GetEffectiveClipRect();
+    const Maybe<ParentLayerIntRect>& clip = aLayer->GetEffectiveClipRect();
     if (clip) {
-      localOpaque.And(localOpaque, *clip);
+      localOpaque.And(localOpaque, ParentLayerIntRect::ToUntyped(*clip));
     }
     aOpaqueRegion.Or(aOpaqueRegion, localOpaque);
   }
@@ -702,7 +703,7 @@ LayerManagerComposite::Render()
     mInvalidRegion.SetEmpty();
   }
 
-  nsIntRect clipRect;
+  ParentLayerIntRect clipRect;
   Rect bounds(mRenderBounds.x, mRenderBounds.y, mRenderBounds.width, mRenderBounds.height);
   Rect actualBounds;
 
@@ -715,7 +716,7 @@ LayerManagerComposite::Render()
   } else {
     gfx::Rect rect;
     mCompositor->BeginFrame(invalid, nullptr, bounds, &rect, &actualBounds);
-    clipRect = nsIntRect(rect.x, rect.y, rect.width, rect.height);
+    clipRect = ParentLayerIntRect(rect.x, rect.y, rect.width, rect.height);
   }
 
   if (actualBounds.IsEmpty()) {
@@ -737,8 +738,8 @@ LayerManagerComposite::Render()
   }
 
   // Render our layers.
-  RootLayer()->Prepare(RenderTargetPixel::FromUntyped(clipRect));
-  RootLayer()->RenderLayer(clipRect);
+  RootLayer()->Prepare(ViewAs<RenderTargetPixel>(clipRect, PixelCastJustification::RenderTargetIsParentLayerForRoot));
+  RootLayer()->RenderLayer(ParentLayerIntRect::ToUntyped(clipRect));
 
   if (!mRegionToClear.IsEmpty()) {
     nsIntRegionRectIterator iter(mRegionToClear);
@@ -750,7 +751,7 @@ LayerManagerComposite::Render()
 
   if (mTwoPassTmpTarget) {
     MOZ_ASSERT(haveLayerEffects);
-    PopGroupForLayerEffects(previousTarget, clipRect,
+    PopGroupForLayerEffects(previousTarget, ParentLayerIntRect::ToUntyped(clipRect),
                             grayscaleVal, invertVal, contrastVal);
   }
 
@@ -1273,7 +1274,6 @@ LayerComposite::LayerComposite(LayerManagerComposite *aManager)
   : mCompositeManager(aManager)
   , mCompositor(aManager->GetCompositor())
   , mShadowOpacity(1.0)
-  , mUseShadowClipRect(false)
   , mShadowTransformSetByAnimation(false)
   , mDestroyed(false)
   , mLayerComposited(false)

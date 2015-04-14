@@ -468,7 +468,7 @@
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
 
                     // ensure that the page content is not displayed on failed proxy auth
-                    is(iframe1Doc.getElementById("ok"), undefined, "frame did not load");
+                    is(iframe1Doc.getElementById("ok"), null, "frame did not load");
                     break;
 
                 case 4:
@@ -486,7 +486,7 @@
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
 
                     // ensure that the page content is not displayed on failed proxy auth
-                    is(iframe1Doc.getElementById("footnote"), undefined, "frame did not load");
+                    is(iframe1Doc.getElementById("footnote"), null, "frame did not load");
                     break;
 
                 case 6:

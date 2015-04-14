@@ -7,6 +7,8 @@
 #include <sys/types.h>                  // for int32_t
 #include "Layers.h"                     // for Layer, PaintedLayer, etc
 #include "ReadbackLayer.h"              // for ReadbackLayer, ReadbackSink
+#include "UnitTransforms.h"             // for ViewAs
+#include "Units.h"                      // for ParentLayerIntRect
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxContext.h"                 // for gfxContext
 #include "gfxUtils.h"
@@ -76,8 +78,8 @@ FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
       return nullptr;
 
     // cliprects are post-transform
-    const nsIntRect* clipRect = l->GetEffectiveClipRect();
-    if (clipRect && !clipRect->Contains(nsIntRect(transformOffset, aLayer->GetSize())))
+    const Maybe<ParentLayerIntRect>& clipRect = l->GetEffectiveClipRect();
+    if (clipRect && !clipRect->Contains(ViewAs<ParentLayerPixel>(nsIntRect(transformOffset, aLayer->GetSize()))))
       return nullptr;
 
     Layer::LayerType type = l->GetType();
