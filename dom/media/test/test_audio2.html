@@ -21,7 +21,7 @@ function startTest(test, token) {
   manager.started(token);
   var a1 = new Audio(test.name);
   is(a1.getAttribute("preload"), "auto", "Preload automatically set to auto");
-  is(a1.src.match("/[^/]+$"), "/" + test.name, "src OK");
+  ok(a1.src.endsWith("/" + test.name), "src OK");
   manager.finished(token);
 }
 

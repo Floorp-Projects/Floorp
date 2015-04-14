@@ -261,7 +261,7 @@ try {
     callList[2].callback(4); 
      
     defList.addCallback(function (lst) { 
-        is( arrayEqual(lst, [[true, 4], [true, 6], [true, 5]]), 1, 
+        is( arrayEqual(lst, [[true, 4], [true, 6], [true, 5]]), true,
            "deferredlist result ok" ); 
     }); 
     
@@ -279,7 +279,7 @@ try {
     callList2[2].callback(4); 
      
     defList2.addCallback(function (lst) { 
-        is( arrayEqual(lst, [1, 6]), 1, "deferredlist fireOnOneCallback ok" ); 
+        is( arrayEqual(lst, [1, 6]), true, "deferredlist fireOnOneCallback ok" ); 
     }); 
    
     /* 
@@ -331,7 +331,7 @@ try {
     callList5[2].callback(4); 
      
     gatherRet.addCallback(function (lst) { 
-        is( arrayEqual(lst, [4, 6, 5]), 1, 
+        is( arrayEqual(lst, [4, 6, 5]), true,
            "gatherResults result ok" ); 
     }); 
     

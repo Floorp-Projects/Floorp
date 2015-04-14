@@ -52,7 +52,7 @@ const EXT_STATE_SUPPORTS_AUTOCOMPLETION =
   nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
 const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
 
-const kOrdinalState = 0;
+const kOrdinalState = false;
 const kExtraState = 1;
 
 ////////////////////////////////////////////////////////////////////////////////

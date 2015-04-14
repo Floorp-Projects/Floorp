@@ -106,12 +106,12 @@ function checkFormIDLAttribute(element)
 
 function checkHtmlForIDLAttribute(element)
 {
-  is(element.htmlFor, 'a b',
+  is(String(element.htmlFor), 'a b',
     "htmlFor IDL attribute should reflect the for content attribute");
 
   // DOMSettableTokenList is tested in another bug so we just test assignation
   element.htmlFor.value = 'a b c';
-  is(element.htmlFor, 'a b c', "htmlFor should have changed");
+  is(String(element.htmlFor), 'a b c', "htmlFor should have changed");
 }
 
 function submitForm()

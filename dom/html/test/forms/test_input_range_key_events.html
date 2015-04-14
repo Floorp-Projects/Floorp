@@ -158,46 +158,46 @@ function test() {
     elem.value = oldVal = defaultValue(elem);
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test " + key + " for " + dir + " range with value set to the midpoint (" + oldVal + ")");
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the midpoint (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test repeat of " + key + " for " + dir + " range");
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // Start at maximum:
     elem.value = oldVal = maximum(elem);
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test " + key + " for " + dir + " range with value set to the maximum (" + oldVal + ")");
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the maximum (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test repeat of " + key + " for " + dir + " range");
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // Start at minimum:
     elem.value = oldVal = minimum(elem);
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test " + key + " for " + dir + " range with value set to the minimum (" + oldVal + ")");
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with value set to the minimum (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test repeat of " + key + " for " + dir + " range");
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // Test for a step value that is greater than 10% of the range:
     elem.step = 20;
     elem.value = 60;
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test " + key + " for " + dir + " range with a step that is greater than 10% of the range (step=" + elem.step + ")");
+    is(elem.value, String(expectedVal), "Test " + key + " for " + dir + " range with a step that is greater than 10% of the range (step=" + elem.step + ")");
 
     // Same again:
     expectedVal = expectedFunc(elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test repeat of " + key + " for " + dir + " range");
+    is(elem.value, String(expectedVal), "Test repeat of " + key + " for " + dir + " range");
 
     // reset step:
     elem.step = 2;
