@@ -1201,13 +1201,16 @@ public:
    * If a layer is a scrollbar layer, |aScrollId| holds the scroll identifier
    * of the scrollable content that the scrollbar is for.
    */
-  void SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir)
+  void SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir, float aThumbRatio)
   {
     if (mScrollbarTargetId != aScrollId ||
-        mScrollbarDirection != aDir) {
+        mScrollbarDirection != aDir ||
+        mScrollbarThumbRatio != aThumbRatio)
+    {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
       mScrollbarTargetId = aScrollId;
       mScrollbarDirection = aDir;
+      mScrollbarThumbRatio = aThumbRatio;
       Mutated();
     }
   }
@@ -1255,6 +1258,7 @@ public:
   const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
   ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
+  float GetScrollbarThumbRatio() { return mScrollbarThumbRatio; }
   bool IsScrollbarContainer() { return mIsScrollbarContainer; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
 
@@ -1714,6 +1718,8 @@ protected:
   nsAutoPtr<StickyPositionData> mStickyPositionData;
   FrameMetrics::ViewID mScrollbarTargetId;
   ScrollDirection mScrollbarDirection;
+  float mScrollbarThumbRatio; // Ratio of the thumb position to the scroll
+                              // position, in app units.
   bool mIsScrollbarContainer;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we

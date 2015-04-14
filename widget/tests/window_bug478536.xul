@@ -7,7 +7,11 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js" />
 
 <body xmlns="http://www.w3.org/1999/xhtml" id="body">
 <style type="text/css">
@@ -121,6 +125,7 @@ function onunload()
   resetTimeoutPrefs();
   disableNonTestMouseEvents(false);
   gPrefSvc.clearUserPref(kPrefSmoothScroll);
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
   window.opener.wrappedJSObject.SimpleTest.finish();
 }
 
@@ -171,7 +176,9 @@ function fireWheelScrollEvent(aForward)
   gIgnoreScrollEvent = false;
   var event = { deltaY: aForward ? 4.0 : -4.0,
                 deltaMode: WheelEvent.DOM_DELTA_LINE };
-  synthesizeWheel(gView, 5, 5, event, window);
+  sendWheelAndPaint(gView, 5, 5, event, function() {
+    // No callback - we're just forcing the refresh driver to tick.
+  }, window);
 }
 
 function onScrollView(aEvent)

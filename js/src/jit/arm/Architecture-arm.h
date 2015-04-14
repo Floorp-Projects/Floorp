@@ -74,7 +74,7 @@ class Registers
         pc = r15,
         invalid_reg
     };
-    typedef RegisterID Code;
+    typedef uint8_t Code;
     typedef RegisterID Encoding;
 
     // Content spilled during bailouts.
@@ -94,8 +94,8 @@ class Registers
 
     static Code FromName(const char* name);
 
-    static const Code StackPointer = sp;
-    static const Code Invalid = invalid_reg;
+    static const Encoding StackPointer = sp;
+    static const Encoding Invalid = invalid_reg;
 
     static const uint32_t Total = 16;
     static const uint32_t Allocatable = 13;

@@ -15,7 +15,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.AbsoluteLayout;
 
-public class PluginLayer extends TileLayer {
+public class PluginLayer extends Layer {
     private static final String LOGTAG = "PluginLayer";
 
     private final View mView;
@@ -87,7 +87,6 @@ public class PluginLayer extends TileLayer {
         });
     }
 
-    @Override
     public void destroy() {
         mDestroyed = true;
 

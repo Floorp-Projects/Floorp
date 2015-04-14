@@ -1,29 +1,13 @@
 <!doctype html>
 <meta charset=utf-8>
-<title>Web Animations API: AnimationTimeline tests</title>
+<title>Web Animations API: DocumentTimeline tests</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="/resources/WebIDLParser.js"></script>
-<script src="/resources/idlharness.js"></script>
 <div id="log"></div>
 <iframe src="data:text/html;charset=utf-8," width="10" height="10" id="iframe"></iframe>
 <iframe src="data:text/html;charset=utf-8,%3Chtml%20style%3D%22display%3Anone%22%3E%3C%2Fhtml%3E" width="10" height="10" id="hidden-iframe"></iframe>
-<script type="text/plain" id="AnimationTimeline-IDL">
-interface AnimationTimeline {
-  readonly attribute double? currentTime;
-};
-</script>
 <script>
 'use strict';
-
-var idlArray;
-test(function() {
-  idlArray = new IdlArray();
-  idlArray.add_idls(
-    document.getElementById('AnimationTimeline-IDL').textContent);
-  idlArray.add_objects( { AnimationTimeline: ['document.timeline'] } );
-});
-idlArray.test();
 
 test(function() {
   assert_equals(document.timeline, document.timeline,
