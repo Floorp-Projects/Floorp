@@ -577,4 +577,32 @@ IntegralValue(Reader& input, uint8_t tag, /*out*/ uint8_t& value)
 
 } // namespace internal
 
+Result
+OptionalVersion(Reader& input, /*out*/ Version& version)
+{
+  static const uint8_t TAG = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
+  if (!input.Peek(TAG)) {
+    version = Version::v1;
+    return Success;
+  }
+  return Nested(input, TAG, [&version](Reader& value) -> Result {
+    uint8_t integerValue;
+    Result rv = Integer(value, integerValue);
+    if (rv != Success) {
+      return rv;
+    }
+    // XXX(bug 1031093): We shouldn't accept an explicit encoding of v1,
+    // but we do here for compatibility reasons.
+    switch (integerValue) {
+      case static_cast<uint8_t>(Version::v3): version = Version::v3; break;
+      case static_cast<uint8_t>(Version::v2): version = Version::v2; break;
+      case static_cast<uint8_t>(Version::v1): version = Version::v1; break;
+      case static_cast<uint8_t>(Version::v4): version = Version::v4; break;
+      default:
+        return Result::ERROR_BAD_DER;
+    }
+    return Success;
+  });
+}
+
 } } } // namespace mozilla::pkix::der
