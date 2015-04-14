@@ -153,7 +153,6 @@ function truncateToDays(aMsec) {
 
 // Set logging preferences for all the tests.
 Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
-Services.prefs.setBoolPref("toolkit.telemetry.log.dump", true);
 TelemetryPing.initLogging();
 
 // Avoid timers interrupting test behavior.
