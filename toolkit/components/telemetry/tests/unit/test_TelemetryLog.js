@@ -1,6 +1,5 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/TelemetryLog.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
