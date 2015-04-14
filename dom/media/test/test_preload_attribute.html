@@ -24,10 +24,10 @@ var v1 = document.getElementById('v1');
 var a1 = document.getElementById('a1');
 var v2 = document.getElementById('v2');
 var a2 = document.getElementById('a2');
-is(v1.getAttribute("preload"), undefined, "video preload via getAttribute should be undefined by default");
-is(a1.getAttribute("preload"), undefined, "video preload via getAttribute should be undefined by default");
-is(v1.preload, "", "v1.preload should be undefined by default");
-is(a1.preload, "", "a1.preload should be undefined by default");
+is(v1.getAttribute("preload"), null, "video preload via getAttribute should be null by default");
+is(a1.getAttribute("preload"), null, "video preload via getAttribute should be null by default");
+is(v1.preload, "", "v1.preload should be empty by default");
+is(a1.preload, "", "a1.preload should be empty by default");
 is(v2.preload, "auto", "v2.preload should be auto");
 is(a2.preload, "auto", "a2.preload should be auto");
 

@@ -119,24 +119,24 @@ IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
     return NS_ERROR_FAILURE;
   }
 
-  mDecoderConfig = new VideoDecoderConfig();
-  mDecoderConfig->duration = 0;
-  mDecoderConfig->display_width = aWidth;
-  mDecoderConfig->display_height = aHeight;
+  mDecoderConfig = new VideoInfo();
+  mDecoderConfig->mDuration = 0;
+  mDecoderConfig->mDisplay.width = aWidth;
+  mDecoderConfig->mDisplay.height = aHeight;
 
   switch (mReader->GetVideoCodec()) {
   case NESTEGG_CODEC_VP8:
-    mDecoderConfig->mime_type = "video/webm; codecs=vp8";
+    mDecoderConfig->mMimeType = "video/webm; codecs=vp8";
     break;
   case NESTEGG_CODEC_VP9:
-    mDecoderConfig->mime_type = "video/webm; codecs=vp9";
+    mDecoderConfig->mMimeType = "video/webm; codecs=vp9";
     break;
   default:
     return NS_ERROR_FAILURE;
   }
 
-  const VideoDecoderConfig& video = *mDecoderConfig;
-  if (!IsSupportedVideoMimeType(video.mime_type)) {
+  const VideoInfo& video = *mDecoderConfig;
+  if (!IsSupportedVideoMimeType(video.mMimeType)) {
     return NS_ERROR_FAILURE;
   }
   mMediaDataDecoder =

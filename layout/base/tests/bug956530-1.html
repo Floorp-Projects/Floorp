@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <style>
+  /* eliminate the blue glow when focusing the element. */
+  input {
+    background: none;
+    border: none;
+    outline: none;
+  }
+  </style>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+    function test() {
+      focus();
+      var i = document.querySelector("input");
+      synthesizeMouseAtCenter(i, {});
+      setTimeout(function() {
+        synthesizeMouseAtCenter(document.body, {});
+        setTimeout(function() {
+          synthesizeMouseAtCenter(i, {});
+          setTimeout(function() {
+            document.documentElement.removeAttribute("class");
+          }, 0);
+        }, 0);
+      }, 0);
+    }
+  </script>
+  <body onload="setTimeout(test, 0)">
+    <input value="text text text text text"
+           onfocus="this.select()">
+  </body>
+</html>

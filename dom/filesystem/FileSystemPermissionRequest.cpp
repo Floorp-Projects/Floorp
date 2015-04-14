@@ -55,6 +55,7 @@ FileSystemPermissionRequest::FileSystemPermissionRequest(
   }
 
   mPrincipal = doc->NodePrincipal();
+  mRequester = new nsContentPermissionRequester(mWindow);
 }
 
 FileSystemPermissionRequest::~FileSystemPermissionRequest()
@@ -132,6 +133,16 @@ FileSystemPermissionRequest::Run()
   }
 
   nsContentPermissionUtils::AskPermission(this, mWindow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FileSystemPermissionRequest::GetRequester(nsIContentPermissionRequester** aRequester)
+{
+  NS_ENSURE_ARG_POINTER(aRequester);
+
+  nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
+  requester.forget(aRequester);
   return NS_OK;
 }
 

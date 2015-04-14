@@ -76,8 +76,7 @@ nsXULTemplateResultSetRDF::GetNext(nsISupports **aResult)
 
     mCheckedNext = false;
 
-    *aResult = nextresult;
-    NS_ADDREF(*aResult);
+    nextresult.forget(aResult);
 
     return NS_OK;
 }

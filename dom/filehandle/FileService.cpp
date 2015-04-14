@@ -12,10 +12,9 @@
 #include "MutableFile.h"
 #include "nsError.h"
 #include "nsIEventTarget.h"
-#include "nsIObserverService.h"
-#include "nsIOfflineStorage.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadPool.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -23,49 +22,70 @@ namespace dom {
 
 namespace {
 
-FileService* gInstance = nullptr;
+const uint32_t kThreadLimit = 5;
+const uint32_t kIdleThreadLimit = 1;
+const uint32_t kIdleThreadTimeoutMs = 30000;
+
+StaticAutoPtr<FileService> gInstance;
 bool gShutdown = false;
 
 } // anonymous namespace
 
 FileService::FileService()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!gInstance, "More than one instance!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!gInstance);
 }
 
 FileService::~FileService()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!gInstance, "More than one instance!");
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 nsresult
 FileService::Init()
 {
-  nsresult rv;
-  mStreamTransportTarget =
-    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+  mThreadPool = new nsThreadPool();
 
-  return rv;
+  nsresult rv = mThreadPool->SetName(NS_LITERAL_CSTRING("FileHandleTrans"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mThreadPool->SetThreadLimit(kThreadLimit);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mThreadPool->SetIdleThreadLimit(kIdleThreadLimit);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mThreadPool->SetIdleThreadTimeout(kIdleThreadTimeoutMs);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 nsresult
 FileService::Cleanup()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsIThread* thread = NS_GetCurrentThread();
-  while (mStorageInfos.Count()) {
-    if (!NS_ProcessNextEvent(thread)) {
-      NS_ERROR("Failed to process next event!");
-      break;
-    }
+  MOZ_ASSERT(thread);
+
+  nsresult rv = mThreadPool->Shutdown();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   // Make sure the service is still accessible while any generated callbacks
   // are processed.
-  nsresult rv = NS_ProcessPendingEvents(thread);
+  rv = NS_ProcessPendingEvents(thread);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mCompleteCallbacks.IsEmpty()) {
@@ -95,20 +115,12 @@ FileService::GetOrCreate()
   }
 
   if (!gInstance) {
-    nsRefPtr<FileService> service(new FileService);
+    nsAutoPtr<FileService> service(new FileService());
 
     nsresult rv = service->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    rv = obs->AddObserver(service, "profile-before-change", false);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    // The observer service now owns us.
-    gInstance = service;
+    gInstance = service.forget();
   }
 
   return gInstance;
@@ -254,55 +266,29 @@ FileService::NotifyFileHandleCompleted(FileHandleBase* aFileHandle)
 }
 
 void
-FileService::WaitForStoragesToComplete(
-                                 nsTArray<nsCOMPtr<nsIOfflineStorage> >& aStorages,
-                                 nsIRunnable* aCallback)
+FileService::WaitForStoragesToComplete(nsTArray<nsCString>& aStorageIds,
+                                       nsIRunnable* aCallback)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!aStorages.IsEmpty(), "No databases to wait on!");
-  NS_ASSERTION(aCallback, "Null pointer!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aStorageIds.IsEmpty());
+  MOZ_ASSERT(aCallback);
 
   StoragesCompleteCallback* callback = mCompleteCallbacks.AppendElement();
   callback->mCallback = aCallback;
-  callback->mStorages.SwapElements(aStorages);
+  callback->mStorageIds.SwapElements(aStorageIds);
 
   if (MaybeFireCallback(*callback)) {
     mCompleteCallbacks.RemoveElementAt(mCompleteCallbacks.Length() - 1);
   }
 }
 
-void
-FileService::AbortFileHandlesForStorage(nsIOfflineStorage* aStorage)
+nsIEventTarget*
+FileService::ThreadPoolTarget() const
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-  MOZ_ASSERT(aStorage, "Null pointer!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mThreadPool);
 
-  StorageInfo* storageInfo;
-  if (!mStorageInfos.Get(aStorage->Id(), &storageInfo)) {
-    return;
-  }
-
-  nsAutoTArray<nsRefPtr<FileHandleBase>, 10> fileHandles;
-  storageInfo->CollectRunningAndDelayedFileHandles(aStorage, fileHandles);
-
-  for (uint32_t index = 0; index < fileHandles.Length(); index++) {
-    ErrorResult ignored;
-    fileHandles[index]->Abort(ignored);
-  }
-}
-
-NS_IMPL_ISUPPORTS(FileService, nsIObserver)
-
-NS_IMETHODIMP
-FileService::Observe(nsISupports* aSubject, const char*  aTopic,
-                     const char16_t* aData)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!strcmp(aTopic, "profile-before-change"), "Wrong topic!");
-
-  Shutdown();
-
-  return NS_OK;
+  return mThreadPool;
 }
 
 bool
@@ -310,8 +296,8 @@ FileService::MaybeFireCallback(StoragesCompleteCallback& aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  for (uint32_t index = 0; index < aCallback.mStorages.Length(); index++) {
-    if (mStorageInfos.Get(aCallback.mStorages[index]->Id(), nullptr)) {
+  for (uint32_t index = 0; index < aCallback.mStorageIds.Length(); index++) {
+    if (mStorageInfos.Get(aCallback.mStorageIds[index], nullptr)) {
       return false;
     }
   }
@@ -487,26 +473,6 @@ FileService::StorageInfo::CreateDelayedEnqueueInfo(FileHandleBase* aFileHandle,
   info->mFileHandle = aFileHandle;
   info->mFileHelper = aFileHelper;
   return info;
-}
-
-void
-FileService::StorageInfo::CollectRunningAndDelayedFileHandles(
-                               nsIOfflineStorage* aStorage,
-                               nsTArray<nsRefPtr<FileHandleBase>>& aFileHandles)
-{
-  for (uint32_t index = 0; index < mFileHandleQueues.Length(); index++) {
-    FileHandleBase* fileHandle = mFileHandleQueues[index]->mFileHandle;
-    if (fileHandle->MutableFile()->Storage() == aStorage) {
-      aFileHandles.AppendElement(fileHandle);
-    }
-  }
-
-  for (uint32_t index = 0; index < mDelayedEnqueueInfos.Length(); index++) {
-    FileHandleBase* fileHandle = mDelayedEnqueueInfos[index].mFileHandle;
-    if (fileHandle->MutableFile()->Storage() == aStorage) {
-      aFileHandles.AppendElement(fileHandle);
-    }
-  }
 }
 
 } // namespace dom

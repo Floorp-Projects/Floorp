@@ -1424,6 +1424,10 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
       delta.y *= scrollAmount.height;
       break;
     }
+    case ScrollWheelInput::SCROLLDELTA_PIXEL: {
+      // aOutDeltaX is already in CSS pixels.
+      break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
   }
@@ -1464,14 +1468,20 @@ AsyncPanZoomController::CanScroll(const ScrollWheelInput& aEvent) const
     return false;
   }
 
-  return CanScroll(delta.x, delta.y);
+  return CanScrollWithWheel(delta);
 }
 
 bool
-AsyncPanZoomController::CanScroll(double aDeltaX, double aDeltaY) const
+AsyncPanZoomController::CanScrollWithWheel(const LayoutDevicePoint& aDelta) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  return mX.CanScroll(aDeltaX) || mY.CanScroll(aDeltaY);
+  if (mX.CanScroll(aDelta.x)) {
+    return true;
+  }
+  if (mY.CanScroll(aDelta.y) && mFrameMetrics.AllowVerticalScrollWithWheel()) {
+    return true;
+  }
+  return false;
 }
 
 bool
@@ -1486,7 +1496,7 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
   LayoutDevicePoint delta = GetScrollWheelDelta(aEvent);
 
   if ((delta.x || delta.y) &&
-      !CanScroll(delta.x, delta.y) &&
+      !CanScrollWithWheel(delta) &&
       mInputQueue->GetCurrentWheelTransaction())
   {
     // We can't scroll this apz anymore, so we simply drop the event.

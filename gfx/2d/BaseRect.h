@@ -226,20 +226,6 @@ struct BaseRect {
   }
   void Inflate(const SizeT& aSize) { Inflate(aSize.width, aSize.height); }
 
-  void InflateToMultiple(const SizeT& aMultiple)
-  {
-    T xMost = XMost();
-    T yMost = YMost();
-
-    x = static_cast<T>(floor(x / aMultiple.width)) * aMultiple.width;
-    y = static_cast<T>(floor(y / aMultiple.height)) * aMultiple.height;
-    xMost = static_cast<T>(ceil(x / aMultiple.width)) * aMultiple.width;
-    yMost = static_cast<T>(ceil(y / aMultiple.height)) * aMultiple.height;
-
-    width = xMost - x;
-    height = yMost - y;
-  }
-
   void Deflate(T aD) { Deflate(aD, aD); }
   void Deflate(T aDx, T aDy)
   {

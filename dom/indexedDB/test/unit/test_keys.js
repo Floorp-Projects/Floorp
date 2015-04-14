@@ -202,7 +202,7 @@ function testSteps()
     cursor.continue();
   }
   event = yield undefined;
-  is(event.target.result, undefined, "no more results expected");
+  is(event.target.result, null, "no more results expected");
 
   var nan = 0/0;
   var invalidKeys = [

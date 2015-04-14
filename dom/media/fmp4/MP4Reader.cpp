@@ -368,13 +368,12 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     mIndexReady = true;
 
     // To decode, we need valid video and a place to put it.
-    mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo() &&
-                                              mDecoder->GetImageContainer();
+    mVideo.mActive = mDemuxer->HasValidVideo() && mDecoder->GetImageContainer();
     if (mVideo.mActive) {
       mVideo.mTrackDemuxer = new MP4VideoDemuxer(mDemuxer);
     }
 
-    mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
+    mAudio.mActive = mDemuxer->HasValidAudio();
     if (mAudio.mActive) {
       mAudio.mTrackDemuxer = new MP4AudioDemuxer(mDemuxer);
     }
@@ -396,21 +395,17 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   }
 
   if (HasAudio()) {
-    const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
-    mInfo.mAudio.mRate = audio.samples_per_second;
-    mInfo.mAudio.mChannels = audio.channel_count;
+    mInfo.mAudio = mDemuxer->AudioConfig();
     mAudio.mCallback = new DecoderCallback(this, kAudio);
   }
 
   if (HasVideo()) {
-    const VideoDecoderConfig& video = mDemuxer->VideoConfig();
-    mInfo.mVideo.mDisplay =
-      nsIntSize(video.display_width, video.display_height);
+    mInfo.mVideo = mDemuxer->VideoConfig();
     mVideo.mCallback = new DecoderCallback(this, kVideo);
 
     // Collect telemetry from h264 AVCC SPS.
     if (!mFoundSPSForTelemetry) {
-      mFoundSPSForTelemetry = AccumulateSPSTelemetry(video.extra_data);
+      mFoundSPSForTelemetry = AccumulateSPSTelemetry(mInfo.mVideo.mExtraData);
     }
   }
 
@@ -516,7 +511,7 @@ MP4Reader::EnsureDecodersSetup()
   }
 
   if (HasAudio()) {
-    NS_ENSURE_TRUE(IsSupportedAudioMimeType(mDemuxer->AudioConfig().mime_type),
+    NS_ENSURE_TRUE(IsSupportedAudioMimeType(mDemuxer->AudioConfig().mMimeType),
                    false);
 
     mAudio.mDecoder =
@@ -529,7 +524,7 @@ MP4Reader::EnsureDecodersSetup()
   }
 
   if (HasVideo()) {
-    NS_ENSURE_TRUE(IsSupportedVideoMimeType(mDemuxer->VideoConfig().mime_type),
+    NS_ENSURE_TRUE(IsSupportedVideoMimeType(mDemuxer->VideoConfig().mMimeType),
                    false);
 
     if (mSharedDecoderManager && mPlatform->SupportsSharedDecoders(mDemuxer->VideoConfig())) {
@@ -606,7 +601,7 @@ MP4Reader::DisableHardwareAcceleration()
   if (HasVideo() && mSharedDecoderManager) {
     mSharedDecoderManager->DisableHardwareAcceleration();
 
-    const VideoDecoderConfig& video = mDemuxer->VideoConfig();
+    const VideoInfo& video = mDemuxer->VideoConfig();
     if (!mSharedDecoderManager->Recreate(video)) {
       MonitorAutoLock mon(mVideo.mMonitor);
       mVideo.mError = true;

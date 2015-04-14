@@ -63,10 +63,10 @@ Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
 
   if (aSample->mCrypto.mValid) {
     if (aSample->mCrypto.mPlainSizes.Length() == 0) {
-      aSample->mCrypto.mPlainSizes.AppendElement(kADTSHeaderSize);
-      aSample->mCrypto.mEncryptedSizes.AppendElement(aSample->mSize - kADTSHeaderSize);
+      writer->mCrypto.mPlainSizes.AppendElement(kADTSHeaderSize);
+      writer->mCrypto.mEncryptedSizes.AppendElement(aSample->mSize - kADTSHeaderSize);
     } else {
-      aSample->mCrypto.mPlainSizes[0] += kADTSHeaderSize;
+      writer->mCrypto.mPlainSizes[0] += kADTSHeaderSize;
     }
   }
 

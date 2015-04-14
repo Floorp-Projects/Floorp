@@ -70,23 +70,23 @@ function equals(o1, o2) {
 
 function observer1(setting) {
   is(setting.settingName, "screen.brightness", "Same settingName");
-  is(setting.settingValue, "0.7", "Same settingvalue");
+  is(setting.settingValue, 0.7, "Same settingvalue");
 };
 
 function observer2(setting) {
   is(setting.settingName, "screen.brightness", "Same settingName");
-  is(setting.settingValue, "0.7", "Same settingvalue");
+  is(setting.settingValue, 0.7, "Same settingvalue");
 };
 
 function observerWithNext(setting) {
   is(setting.settingName, "screen.brightness", "Same settingName");
-  is(setting.settingValue, "0.7", "Same settingvalue");
+  is(setting.settingValue, 0.7, "Same settingvalue");
   next();
 };
 
 function onsettingschangeWithNext(event) {
   is(event.settingName, "screen.brightness", "Same settingName");
-  is(event.settingValue, "0.7", "Same settingvalue");
+  is(event.settingValue, 0.7, "Same settingvalue");
   next();
 };
 

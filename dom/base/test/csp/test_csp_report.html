@@ -60,7 +60,7 @@ window.checkResults = function(reportObj) {
   is(cspReport["script-sample"], "\n    var foo = \"propEscFoo\";\n    var bar...",
      "Incorrect script-sample");
 
-  is(cspReport["line-number"], "7", "Incorrect line-number");
+  is(cspReport["line-number"], 7, "Incorrect line-number");
 }
 
 // This is used to watch requests go out so we can see if the report is

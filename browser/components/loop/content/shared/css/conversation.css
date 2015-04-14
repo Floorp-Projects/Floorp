@@ -719,11 +719,14 @@ html, .fx-embedded, #main,
     height: 100%;
   }
 
+  .standalone .media.nested {
+    margin-left: 10px;
+  }
+
   .standalone .remote_wrapper {
     position: relative;
-    width: calc(100% - 10px);
+    width: 100%;
     height: 100%;
-    margin-left: 10px;
   }
 
   .standalone {
@@ -976,7 +979,7 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   /* `top` is chosen to vertically position the area near the center
      of the media element. */
   top: calc(50% - 140px);
-  left: calc(25% + 62.5px + 10px);
+  left: 25%;
   z-index: 1000;
   /* `width` here is specified by the design spec. */
   width: 250px;
@@ -1049,7 +1052,7 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 
 .standalone .room-conversation .video_wrapper.remote_wrapper {
   background-color: #4e4e4e;
-  width: calc(75% - 10px); /* Take the left margin into account. */
+  width: 75%;
 }
 
 .standalone .room-conversation .conversation-toolbar {
@@ -1079,6 +1082,7 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
     right: 0;
     margin: auto;
     width: 100%;
+    left: 0;
   }
   .standalone .room-conversation-wrapper .video-layout-wrapper {
     /* 50px: header's height; 25px: footer's height */

@@ -114,7 +114,7 @@ void nsHttpConnectionInfo::BuildHashKey()
     // byte 1 is S/. S is for end to end ssl such as https:// uris
     // byte 2 is A/. A is for an anonymous channel (no cookies, etc..)
     // byte 3 is P/. P is for a private browising channel
-    // byte 4 is R/. R is for 'relaxed' unauthed TLS for http:// uris
+    // byte 4 is I/. I is for insecure scheme on TLS for http:// uris
     // byte 5 is X/. X is for disallow_spdy flag
 
     mHashKey.AssignLiteral("......");
@@ -202,10 +202,10 @@ nsHttpConnectionInfo::Clone() const
         clone->SetNetworkInterfaceId(mNetworkInterfaceId);
     }
 
-    // Make sure the anonymous, relaxed, and private flags are transferred
+    // Make sure the anonymous, insecure-scheme, and private flags are transferred
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
-    clone->SetRelaxed(GetRelaxed());
+    clone->SetInsecureScheme(GetInsecureScheme());
     clone->SetNoSpdy(GetNoSpdy());
     MOZ_ASSERT(clone->Equals(this));
 
@@ -223,10 +223,10 @@ nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI)
     nsRefPtr<nsHttpConnectionInfo> clone =
         new nsHttpConnectionInfo(mAuthenticationHost, mAuthenticationPort,
                                  EmptyCString(), mUsername, mProxyInfo, mEndToEndSSL);
-    // Make sure the anonymous, relaxed, and private flags are transferred
+    // Make sure the anonymous, insecure-scheme, and private flags are transferred
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
-    clone->SetRelaxed(GetRelaxed());
+    clone->SetInsecureScheme(GetInsecureScheme());
     clone->SetNoSpdy(GetNoSpdy());
     if (!mNetworkInterfaceId.IsEmpty()) {
         clone->SetNetworkInterfaceId(mNetworkInterfaceId);

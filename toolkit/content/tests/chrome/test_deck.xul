@@ -95,20 +95,20 @@ function test_deck_child_removal()
   // each time.
   deck = $("deck4");
   let expectedIndex = 5;
-  is(deck.selectedIndex, expectedIndex,
+  is(deck.selectedIndex, String(expectedIndex),
      "Should have the deck element at index " + expectedIndex + " selected");
 
   for (let i = 0; i < 3; ++i) {
     deck.firstChild.remove();
     expectedIndex--;
-    is(deck.selectedIndex, expectedIndex,
+    is(deck.selectedIndex, String(expectedIndex),
        "Should have the deck element at index " + expectedIndex + " selected");
   }
 
   // Check that removing the currently selected node doesn't change
   // behaviour.
   deck.childNodes[expectedIndex].remove();
-  is(deck.selectedIndex, expectedIndex,
+  is(deck.selectedIndex, String(expectedIndex),
      "The selectedIndex should not change when removing the node " +
      "at the selected index.");
 
@@ -116,14 +116,14 @@ function test_deck_child_removal()
   // nodes at indexes greater than the selected node.
   deck = $("deck5");
   expectedIndex = 2;
-  is(deck.selectedIndex, expectedIndex,
+  is(deck.selectedIndex, String(expectedIndex),
      "Should have the deck element at index " + expectedIndex + " selected");
 
   // And then remove all of the nodes, starting from last to first, making
   // sure that the selectedIndex does not change.
   while (deck.lastChild) {
     deck.lastChild.remove();
-    is(deck.selectedIndex, expectedIndex,
+    is(deck.selectedIndex, String(expectedIndex),
        "Should have the deck element at index " + expectedIndex + " selected");
   }
 }

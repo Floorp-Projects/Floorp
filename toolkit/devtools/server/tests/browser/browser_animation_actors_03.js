@@ -56,7 +56,7 @@ function* playerStateIsCorrect(walker, front) {
   info("Checking the state of the transition");
 
   state = yield getAnimationStateForNode(walker, front, ".transition", 0);
-  is(state.name, "", "Transition has no name");
+  is(state.name, "width", "Transition name matches transition property");
   is(state.duration, 5000, "Transition duration is correct");
   // transitions run only once
   is(state.iterationCount, 1, "Transition iteration count is correct");

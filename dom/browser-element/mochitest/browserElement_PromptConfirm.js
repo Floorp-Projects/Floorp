@@ -18,15 +18,15 @@ function runTest() {
   document.body.appendChild(iframe);
 
   var prompts = [
-    {msg: 1, type: 'alert', rv: 42, expected: 'undefined'},
-    {msg: 2, type: 'confirm', rv: true, expected: 'true'},
-    {msg: 3, type: 'confirm', rv: false, expected: 'false'},
+    {msg: '1', type: 'alert', rv: 42, expected: 'undefined'},
+    {msg: '2', type: 'confirm', rv: true, expected: 'true'},
+    {msg: '3', type: 'confirm', rv: false, expected: 'false'},
 
     // rv == 42 should be coerced to 'true' for confirm.
-    {msg: 4, type: 'confirm', rv: 42, expected: 'true'},
-    {msg: 5, type: 'prompt', rv: 'worked', expected: 'worked'},
-    {msg: 6, type: 'prompt', rv: null, expected: 'null'},
-    {msg: 7, type: 'prompt', rv: '', expected: ''}
+    {msg: '4', type: 'confirm', rv: 42, expected: 'true'},
+    {msg: '5', type: 'prompt', rv: 'worked', expected: 'worked'},
+    {msg: '6', type: 'prompt', rv: null, expected: 'null'},
+    {msg: '7', type: 'prompt', rv: '', expected: ''}
   ];
 
   iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {

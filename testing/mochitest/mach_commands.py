@@ -338,7 +338,6 @@ class MochitestRunner(MozbuildObject):
             flavor = 'browser-chrome'
         elif suite == 'devtools':
             options.browserChrome = True
-            options.subsuite = 'devtools'
         elif suite == 'jetpack-package':
             options.jetpackPackage = True
         elif suite == 'jetpack-addon':
@@ -410,6 +409,9 @@ class MochitestRunner(MozbuildObject):
 
         for k, v in kwargs.iteritems():
             setattr(options, k, v)
+
+        if suite == 'devtools':
+            options.subsuite = 'devtools'
 
         if test_paths:
             resolver = self._spawn(TestResolver)

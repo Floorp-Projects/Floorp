@@ -232,7 +232,9 @@ try {
     }
 
     if (test.resContentLength) {
-      is(xhr.getResponseHeader("Result-Content-Length"), test.resContentLength, "Wrong Content-Length sent");
+      is(xhr.getResponseHeader("Result-Content-Length"),
+         String(test.resContentLength),
+         "Wrong Content-Length sent");
     }
 
     if (test.resType == "arraybuffer") {

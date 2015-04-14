@@ -119,14 +119,19 @@
     function switchToFirstTab() {
       // 11) Switch back to first tab.
       document.getElementById("tabbox").selectedIndex = 0;
-      finishTest();
+      doCmdY();
+    }
+
+    function doCmdY() {
+      // 12) Back in first tab, try cmd-y.
+      gCmdOptYReceived = false;
+      if (!synthesizeNativeCmdOptY(finishTest)) {
+        ok(false, "Failed to synthesize native key");
+        finishTest();
+      }
     }
 
     function finishTest() {
-      // 12) Back in first tab, try cmd-y.
-      gCmdOptYReceived = false;
-      synthesizeNativeCmdOptY();
-
       // 13) Check result.
       is(gCmdOptYReceived, true);
 
@@ -146,8 +151,8 @@
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Return, {}, "\u000a", "\u000a");
     }
 
-    function synthesizeNativeCmdOptY() {
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Y, {metaKey:1, altKey:1}, "y", "y");
+    function synthesizeNativeCmdOptY(aCallback) {
+      return synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Y, {metaKey:1, altKey:1}, "y", "y", aCallback);
     }
 
   ]]></script>

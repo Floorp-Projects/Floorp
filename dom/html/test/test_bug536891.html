@@ -28,7 +28,7 @@ function checkNegativeMaxLength(element)
 
   element.setAttribute('maxLength', -15);
   is(element.maxLength, -1, "negative maxLength is not processed correctly when set dynamically");
-  is(element.getAttribute('maxLength'), -15, "maxLength attribute doesn't return the correct value");
+  is(element.getAttribute('maxLength'), "-15", "maxLength attribute doesn't return the correct value");
 
   element.setAttribute('maxLength', 0);
   is(element.maxLength, 0, "negative maxLength is not processed correctly");

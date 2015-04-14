@@ -48,7 +48,7 @@ function run()
         var sheeturi = "data:text/css," + encodedRule;
         set_user_sheet(sheeturi);
         if (shouldapply) {
-            is(cs.zIndex, zIndex,
+            is(cs.zIndex, String(zIndex),
                "@-moz-document " + urltests +
                " should apply to this document");
         } else {

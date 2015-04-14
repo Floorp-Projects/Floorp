@@ -19,6 +19,22 @@
 namespace mozilla {
 namespace net {
 
+// function places true in outIsHTTPS if scheme is https, false if
+// http, and returns an error if neither. originScheme passed into
+// alternate service should already be normalized to those lower case
+// strings by the URI parser (and so there is an assert)- this is an extra check.
+static nsresult
+SchemeIsHTTPS(const nsACString &originScheme, bool &outIsHTTPS)
+{
+  outIsHTTPS = originScheme.Equals(NS_LITERAL_CSTRING("https"));
+
+  if (!outIsHTTPS && !originScheme.Equals(NS_LITERAL_CSTRING("http"))) {
+      MOZ_ASSERT(false, "unexpected scheme");
+      return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
+
 void
 AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme,
                              const nsCString &originHost, int32_t originPort,
@@ -32,8 +48,16 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
     return;
   }
 
-  bool isHttp = originScheme.Equals(NS_LITERAL_CSTRING("http"));
-  if (isHttp && !gHttpHandler->AllowAltSvcOE()) {
+  if (proxyInfo && !proxyInfo->IsDirect()) {
+    LOG(("AltSvcMapping::ProcessHeader ignoring due to proxy\n"));
+    return;
+  }
+
+  bool isHTTPS;
+  if (NS_FAILED(SchemeIsHTTPS(originScheme, isHTTPS))) {
+    return;
+  }
+  if (!isHTTPS && !gHttpHandler->AllowAltSvcOE()) {
     LOG(("Alt-Svc Response Header for http:// origin but OE disabled\n"));
     return;
   }
@@ -90,7 +114,15 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
                                                         username, privateBrowsing,
                                                         NowInSeconds() + maxage,
                                                         hostname, portno, npnToken);
-    gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps);
+    if (mapping->TTL() <= 0) {
+      LOG(("Alt Svc invalid map"));
+      mapping = nullptr;
+      // since this isn't a parse error, let's clear any existing mapping
+      // as that would have happened if we had accepted the parameters.
+      gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort);
+    } else {
+      gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps);
+    }
   }
 }
 
@@ -114,7 +146,10 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
   , mRunning(false)
   , mNPNToken(npnToken)
 {
-  mHttps = originScheme.Equals("https");
+  if (NS_FAILED(SchemeIsHTTPS(originScheme, mHttps))) {
+    LOG(("AltSvcMapping ctor %p invalid scheme\n", this));
+    mExpiresAt = 0; // invalid
+  }
 
   if (mAlternatePort == -1) {
     mAlternatePort = mHttps ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
@@ -130,7 +165,16 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
   if (mAlternateHost.IsEmpty()) {
     mAlternateHost = mOriginHost;
   }
-  MakeHashKey(mHashKey, originScheme, mOriginHost, mOriginPort, mPrivate);
+
+  if ((mAlternatePort == mOriginPort) &&
+      mAlternateHost.EqualsIgnoreCase(mOriginHost.get())) {
+    LOG(("Alt Svc is also origin Svc - ignoring\n"));
+    mExpiresAt = 0; // invalid
+  }
+
+  if (mExpiresAt) {
+    MakeHashKey(mHashKey, originScheme, mOriginHost, mOriginPort, mPrivate);
+  }
 }
 
 void
@@ -140,6 +184,8 @@ AltSvcMapping::MakeHashKey(nsCString &outKey,
                            int32_t originPort,
                            bool privateBrowsing)
 {
+  outKey.Truncate();
+
   if (originPort == -1) {
     bool isHttps = originScheme.Equals("https");
     originPort = isHttps ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
@@ -184,9 +230,7 @@ AltSvcMapping::GetConnectionInfo(nsHttpConnectionInfo **outCI,
   nsRefPtr<nsHttpConnectionInfo> ci =
     new nsHttpConnectionInfo(mAlternateHost, mAlternatePort, mNPNToken,
                              mUsername, pi, mOriginHost, mOriginPort);
-  if (!mHttps) {
-    ci->SetRelaxed(true);
-  }
+  ci->SetInsecureScheme(!mHttps);
   ci->SetPrivate(mPrivate);
   ci.forget(outCI);
 }
@@ -284,6 +328,13 @@ public:
          this, socketControl.get(), bypassAuth));
 
     if (bypassAuth) {
+      if (mMapping->HTTPS()) {
+        MOZ_ASSERT(false); // cannot happen but worth the runtime sanity check
+        LOG(("AltSvcTransaction::MaybeValidate %p"
+             "somehow indicates bypassAuth on https:// origin\n", this));
+        return;
+      }
+
       LOG(("AltSvcTransaction::MaybeValidate() %p "
            "validating alternate service because relaxed", this));
       mMapping->SetValidated(true);
@@ -384,11 +435,15 @@ AltSvcMapping *
 AltSvcCache::GetAltServiceMapping(const nsACString &scheme, const nsACString &host,
                                   int32_t port, bool privateBrowsing)
 {
+  bool isHTTPS;
   MOZ_ASSERT(NS_IsMainThread());
+  if (NS_FAILED(SchemeIsHTTPS(scheme, isHTTPS))) {
+    return nullptr;
+  }
   if (!gHttpHandler->AllowAltSvc()) {
     return nullptr;
   }
-  if (!gHttpHandler->AllowAltSvcOE() && scheme.Equals(NS_LITERAL_CSTRING("http"))) {
+  if (!gHttpHandler->AllowAltSvcOE() && !isHTTPS) {
     return nullptr;
   }
 
@@ -463,6 +518,14 @@ AltSvcCache::ClearHostMapping(const nsACString &host, int32_t port)
   existing = mHash.GetWeak(key);
   if (existing) {
     existing->SetExpired();
+  }
+}
+
+void
+AltSvcCache::ClearHostMapping(nsHttpConnectionInfo *ci)
+{
+  if (!ci->GetAuthenticationHost().IsEmpty()) {
+    ClearHostMapping(ci->GetAuthenticationHost(), ci->GetAuthenticationPort());
   }
 }
 

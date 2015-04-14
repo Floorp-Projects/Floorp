@@ -30,8 +30,8 @@
 #include "keyhi.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
-#include "pkix/ScopedPtr.h"
 #include "pkixutil.h"
+#include "ScopedPtr.h"
 #include "secerr.h"
 #include "sslerr.h"
 

@@ -230,7 +230,7 @@ function test_hCard() {
   is(hcalendar.dtstart, "2006-01-15T00:00:00", "06-component-vevent-uri-relative - dtstart");
 
   hcalendar = new hCalendar(document.getElementById("07-component-vevent-description-simple"));
-  is(hcalendar.description, "Project xyz Review Meeting Minutes", "07-component-vevent-description-simple - description");
+  is(String(hcalendar.description), "Project xyz Review Meeting Minutes", "07-component-vevent-description-simple - description");
 
   hcalendar = new hCalendar(document.getElementById("08-component-vevent-multiple-classes"));
   is(hcalendar.dtstart, "2005-10-05", "08-component-vevent-multiple-classes - dtstart");
@@ -248,7 +248,7 @@ function test_hCard() {
 
   hcalendar = new hCalendar(document.getElementById("10-component-vevent-entity"));
   is(hcalendar.summary, "Cricket & Tennis Centre", "10-component-vevent-entity - summary");
-  is(hcalendar.description, "Melbourne's Cricket & Tennis Centres are in the heart of the city", "10-component-vevent-entity - description");
+  is(String(hcalendar.description), "Melbourne's Cricket & Tennis Centres are in the heart of the city", "10-component-vevent-entity - description");
 
   hcalendar = new hCalendar(document.getElementById("11-component-vevent-summary-in-subelements"));
   is(hcalendar.dtstart, "2005-10-05T16:30:00-0700", "11-component-vevent-summary-in-subelements - dtstart");
@@ -278,7 +278,7 @@ function test_hCard() {
   is(hcalendar.url, "http://www.web2con.com/", "16-calendar-force-outlook - url");
 
   hcalendar = new hCalendar(document.getElementById("17-component-vevent-description-value-in-subelements"));
-  is(hcalendar.description, "RESOLUTION: to have a 3rd PAW ftf meeting 18-19 Jan in Maryland; location contingent on confirmation from timbl", "17-component-vevent-description-value-in-subelements - description");
+  is(String(hcalendar.description), "RESOLUTION: to have a 3rd PAW ftf meeting 18-19 Jan in Maryland; location contingent on confirmation from timbl", "17-component-vevent-description-value-in-subelements - description");
   is(hcalendar.dtstart, "2006-01-18", "17-component-vevent-description-value-in-subelements - dtstart");
   is(hcalendar.dtend, "2006-01-20", "17-component-vevent-description-value-in-subelements - dtend");
   is(hcalendar.location, "Maryland", "17-component-vevent-description-value-in-subelements - location");
@@ -297,7 +297,7 @@ function test_hCard() {
   hcalendar = new hCalendar(document.getElementById("19-calendar-attachments"));
 
   hcalendar = new hCalendar(document.getElementById("empty-description"));
-  is (hcalendar.description, "", "Empty description");
+  is(String(hcalendar.description), "", "Empty description");
 }
 
 </script>

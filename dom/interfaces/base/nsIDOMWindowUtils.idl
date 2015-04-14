@@ -49,8 +49,9 @@ interface nsIRunnable;
 interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
+interface nsIObserver;
 
-[scriptable, uuid(7f2f44ab-2857-4cc2-8c9d-3d9816f5a4d6)]
+[scriptable, uuid(7ecfd6e7-120a-4567-85f7-14277f4c6d9f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -571,12 +572,17 @@ interface nsIDOMWindowUtils : nsISupports {
    * Will throw a DOM security error if called without chrome privileges.
    *
    * When you use this for tests, use the constants defined in NativeKeyCodes.js
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "keyevent"
+   * topic.
    */
   void sendNativeKeyEvent(in long aNativeKeyboardLayout,
                           in long aNativeKeyCode,
                           in long aModifierFlags,
                           in AString aCharacters,
-                          in AString aUnmodifiedCharacters);
+                          in AString aUnmodifiedCharacters,
+                          [optional] in nsIObserver aObserver);
 
   /**
    * See nsIWidget::SynthesizeNativeMouseEvent
@@ -584,12 +590,17 @@ interface nsIDOMWindowUtils : nsISupports {
    * Will be called on the widget that contains aElement.
    * Cannot be accessed from unprivileged context (not content-accessible)
    * Will throw a DOM security error if called without chrome privileges.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "mouseevent"
+   * topic.
    */
   void sendNativeMouseEvent(in long aScreenX,
                             in long aScreenY,
                             in long aNativeMessage,
                             in long aModifierFlags,
-                            in nsIDOMElement aElement);
+                            in nsIDOMElement aElement,
+                            [optional] in nsIObserver aObserver);
 
   /**
    * The values for sendNativeMouseScrollEvent's aAdditionalFlags.
@@ -620,7 +631,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * Cannot be accessed from unprivileged context (not content-accessible)
    * Will throw a DOM security error if called without chrome privileges.
    *
-   * NOTE: The synthesized native event may be fired asynchronously.
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a
+   * "mousescrollevent" topic.
    *
    * @param aNativeMessage
    *   On Windows:  WM_MOUSEWHEEL (0x020A), WM_MOUSEHWHEEL(0x020E),
@@ -634,7 +647,8 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in double aDeltaZ,
                                   in unsigned long aModifierFlags,
                                   in unsigned long aAdditionalFlags,
-                                  in nsIDOMElement aElement);
+                                  in nsIDOMElement aElement,
+                                  [optional] in nsIObserver aObserver);
 
   /**
    * Touch states for sendNativeTouchPoint. These values match
@@ -665,6 +679,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * Widget support: Windows 8.0+, Winrt/Win32. Gonk supports CONTACT, REMOVE,
    * and CANCEL but no HOVER. Other widgets will throw.
    *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "touchpoint"
+   * topic.
+   *
    * @param aPointerId The touch point id to create or update.
    * @param aTouchState one or more of the touch states listed above
    * @param aScreenX, aScreenY screen coords of this event
@@ -677,7 +695,8 @@ interface nsIDOMWindowUtils : nsISupports {
                             in long aScreenX,
                             in long aScreenY,
                             in double aPressure,
-                            in unsigned long aOrientation);
+                            in unsigned long aOrientation,
+                            [optional] in nsIObserver aObserver);
 
   /**
    * Simulates native touch based taps on the input digitizer. Events
@@ -694,13 +713,18 @@ interface nsIDOMWindowUtils : nsISupports {
    * Widget support: Windows 8.0+, Winrt/Win32. Other widgets will
    * throw.
    *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified, with a "touchtap"
+   * topic.
+   *
    * @param aScreenX, aScreenY screen coords of this event
    * @param aLongTap true if the tap should be long, false for a short
    * tap.
    */
   void sendNativeTouchTap(in long aScreenX,
                           in long aScreenY,
-                          in boolean aLongTap);
+                          in boolean aLongTap,
+                          [optional] in nsIObserver aObserver);
 
   /**
    * Cancel any existing touch points or long tap delays. Calling this is safe
@@ -708,8 +732,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * this when tests shut down to reset the digitizer driver. Not doing so can
    * leave the digitizer in an undetermined state which can screw up subsequent
    * tests and native input.
+   *
+   * NOTE: The synthesized native event will be fired asynchronously, and upon
+   * completion the observer, if provided, will be notified with a "cleartouch"
+   * topic.
    */
-  void clearNativeTouchSequence();
+  void clearNativeTouchSequence([optional] in nsIObserver aObserver);
 
   /**
    * See nsIWidget::ActivateNativeMenuItemAt

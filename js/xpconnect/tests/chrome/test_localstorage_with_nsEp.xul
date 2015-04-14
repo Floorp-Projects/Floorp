@@ -26,8 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=980023
     var iwin = document.getElementById('ifr').contentWindow;
     var sb = new Cu.Sandbox([iwin], {sandboxPrototype: iwin});
     Cu.evalInSandbox("window.localStorage.test_localstorage_with_nsEp = 3",sb);
-    is(Cu.evalInSandbox("window.localStorage.test_localstorage_with_nsEp",sb), 3);
-    is(iwin.localStorage.test_localstorage_with_nsEp, 3);
+    is(Cu.evalInSandbox("window.localStorage.test_localstorage_with_nsEp",sb), "3");
+    is(iwin.localStorage.test_localstorage_with_nsEp, "3");
     iwin.localStorage.removeItem("test_localstorage_with_nsEp");
     SimpleTest.finish();
   }

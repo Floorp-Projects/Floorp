@@ -150,7 +150,7 @@ var steps = [
       // Some manual testing. Testint the testfunctions
       // tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}],
       is(findResult1.tel[0].carrier, "testCarrier", "Same Carrier");
-      is(findResult1.tel[0].type, "work", "Same type");
+      is(String(findResult1.tel[0].type), "work", "Same type");
       is(findResult1.tel[0].value, "123456", "Same Value");
       is(findResult1.tel[1].type[1], "fax", "Same type");
       is(findResult1.tel[1].value, "+55 (31) 9876-3456", "Same Value");
@@ -158,7 +158,7 @@ var steps = [
       is(findResult1.adr[0].countryName, "country 1", "Same country");
 
       // email: [{type: ["work"], value: "x@y.com"}]
-      is(findResult1.email[0].type, "work", "Same Type");
+      is(String(findResult1.email[0].type), "work", "Same Type");
       is(findResult1.email[0].value, "x@y.com", "Same Value");
       next();
     };

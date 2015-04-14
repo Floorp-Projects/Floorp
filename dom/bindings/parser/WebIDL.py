@@ -3504,6 +3504,7 @@ class IDLAttribute(IDLInterfaceMember):
                                   [attr.location, self.location])
             self._setDependsOn(attr.value())
         elif (identifier == "Pref" or
+              identifier == "Deprecated" or
               identifier == "SetterThrows" or
               identifier == "Throws" or
               identifier == "GetterThrows" or
@@ -4139,6 +4140,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "ChromeOnly" or
               identifier == "UnsafeInPrerendering" or
               identifier == "Pref" or
+              identifier == "Deprecated" or
               identifier == "Func" or
               identifier == "AvailableIn" or
               identifier == "CheckPermissions" or

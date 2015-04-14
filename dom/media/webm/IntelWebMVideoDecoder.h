@@ -14,7 +14,7 @@
 #include "mozilla/Monitor.h"
 
 #include "mp4_demuxer/mp4_demuxer.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaInfo.h"
 #include "MediaData.h"
 
 class MediaTaskQueue;
@@ -70,7 +70,7 @@ private:
   // Monitor that protects all non-threadsafe state; the primitives
   // that follow.
   Monitor mMonitor;
-  nsAutoPtr<mp4_demuxer::VideoDecoderConfig> mDecoderConfig;
+  nsAutoPtr<VideoInfo> mDecoderConfig;
 
   VP8SampleQueue mSampleQueue;
   nsRefPtr<VP8Sample> mQueuedVideoSample;

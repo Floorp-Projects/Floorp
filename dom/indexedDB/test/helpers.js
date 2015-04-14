@@ -332,7 +332,7 @@ function workerScript() {
       return "undefined";
     }
 
-    if (o === null) {
+    if (_thing_ === null) {
       return "null";
     }
 

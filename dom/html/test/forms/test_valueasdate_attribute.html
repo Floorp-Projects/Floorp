@@ -185,9 +185,15 @@ function checkDateGet()
 
   for (data of invalidData) {
     element.value = data[0];
-    is(element.valueAsDate, data[1] ? "Invalid Date" : null,
-       "valueAsDate should return null "  +
-       "when the element value is not a valid date");
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid date");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid date");
+    }
   }
 
 }

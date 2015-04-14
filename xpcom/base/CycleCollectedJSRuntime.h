@@ -292,6 +292,15 @@ public:
   // isn't one.
   static CycleCollectedJSRuntime* Get();
 
+  // Storage for watching rejected promises waiting for some client to
+  // consume their rejection.
+  // We store values as `nsISupports` to avoid adding compile-time dependencies
+  // from xpcom to dom/promise, but they can really only have a single concrete
+  // type.
+  nsTArray<nsCOMPtr<nsISupports /* Promise */>> mUncaughtRejections;
+  nsTArray<nsCOMPtr<nsISupports /* Promise */ >> mConsumedRejections;
+  nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
+
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 

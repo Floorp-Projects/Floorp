@@ -12,11 +12,6 @@
 
 "use strict"
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
-
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/httpd.js", this);
@@ -73,7 +68,7 @@ let createSavedPings = Task.async(function* (aPingInfos) {
     let num = aPingInfos[type].num;
     let age = now - aPingInfos[type].age;
     for (let i = 0; i < num; ++i) {
-      let pingId = yield TelemetryPing.addPendingPing("test-ping", {}, { overwrite: true });
+      let pingId = yield TelemetryPing.savePing("test-ping", {}, { overwrite: true });
       if (aPingInfos[type].age) {
         // savePing writes to the file synchronously, so we're good to
         // modify the lastModifedTime now.

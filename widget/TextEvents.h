@@ -550,27 +550,42 @@ public:
     uint32_t mOffset;
     uint32_t mLength;
   } mInput;
-  struct
+
+  struct Reply
   {
     void* mContentsRoot;
     uint32_t mOffset;
+    // mTentativeCaretOffset is used by only NS_QUERY_CHARACTER_AT_POINT.
+    // This is the offset where caret would be if user clicked at the refPoint.
+    uint32_t mTentativeCaretOffset;
     nsString mString;
     // Finally, the coordinates is system coordinates.
     mozilla::LayoutDeviceIntRect mRect;
     // The return widget has the caret. This is set at all query events.
     nsIWidget* mFocusedWidget;
-    // true if selection is reversed (end < start)
-    bool mReversed;
-    // true if the selection exists
-    bool mHasSelection;
-    // true if DOM element under mouse belongs to widget
-    bool mWidgetIsHit;
     // mozilla::WritingMode value at the end (focus) of the selection
     mozilla::WritingMode mWritingMode;
     // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
     nsCOMPtr<nsITransferable> mTransferable;
     // used by NS_QUERY_TEXT_CONTENT with font ranges requested
     nsAutoTArray<mozilla::FontRange, 1> mFontRanges;
+    // true if selection is reversed (end < start)
+    bool mReversed;
+    // true if the selection exists
+    bool mHasSelection;
+    // true if DOM element under mouse belongs to widget
+    bool mWidgetIsHit;
+
+    Reply()
+      : mContentsRoot(nullptr)
+      , mOffset(NOT_FOUND)
+      , mTentativeCaretOffset(NOT_FOUND)
+      , mFocusedWidget(nullptr)
+      , mReversed(false)
+      , mHasSelection(false)
+      , mWidgetIsHit(false)
+    {
+    }
   } mReply;
 
   enum

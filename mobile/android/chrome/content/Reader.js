@@ -287,7 +287,10 @@ let Reader = {
 
     // Article hasn't been found in the cache, we need to
     // download the page and parse the article out of it.
-    return yield ReaderMode.downloadAndParseDocument(url);
+    return yield ReaderMode.downloadAndParseDocument(url).catch(e => {
+      Cu.reportError("Error downloading and parsing document: " + e);
+      return null;
+    });;
   }),
 
   _getSavedArticle: function(browser) {
