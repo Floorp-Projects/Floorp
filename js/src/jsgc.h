@@ -166,7 +166,7 @@ GetGCThingTraceKind(const void* thing);
 // GCC and Clang require an explicit template declaration in front of the
 // specialization of operator() because it is a dependent template. MSVC, on
 // the other hand, gets very confused if we have a |template| token there.
-#ifdef XP_WIN
+#ifdef _MSC_VER
 # define DEPENDENT_TEMPLATE_HINT
 #else
 # define DEPENDENT_TEMPLATE_HINT template
