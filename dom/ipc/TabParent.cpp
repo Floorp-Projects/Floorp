@@ -2983,7 +2983,8 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
     }
   }
 
-  if (aVisualDnDData.IsEmpty()) {
+  if (aVisualDnDData.IsEmpty() ||
+      (aVisualDnDData.Length() < aHeight * aStride)) {
     mDnDVisualization = nullptr;
   } else {
     mDnDVisualization =
