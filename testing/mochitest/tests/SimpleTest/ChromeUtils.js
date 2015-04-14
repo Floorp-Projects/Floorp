@@ -176,18 +176,18 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
  *  aWindow - optional; defaults to the current window object.
  *  aDestWindow - optional; defaults to aWindow.
  *                Used when destElement is in a different window than srcElement.
+ *  aDragEvent - optional; defaults to empty object.
+ *                overwrite a event object passed to EventUtils.sendDragEvent
  *
  * Returns the drop effect that was desired.
  */
-function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, aDestWindow)
+function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, aDestWindow, aDragEvent={})
 {
   if (!aWindow)
     aWindow = window;
   if (!aDestWindow)
     aDestWindow = aWindow;
 
-  var gWindowUtils = aDestWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                                 getInterface(Components.interfaces.nsIDOMWindowUtils);
   var ds = Components.classes["@mozilla.org/widget/dragservice;1"].
            getService(Components.interfaces.nsIDragService);
 
@@ -219,20 +219,39 @@ function synthesizeDrop(srcElement, destElement, dragData, dropEffect, aWindow, 
     EventUtils.synthesizeMouse(srcElement, x+10, y+10, { type: "mousemove" }, aWindow);
     aWindow.removeEventListener("dragstart", trapDrag, true);
 
-    event = aDestWindow.document.createEvent("DragEvents");
-    event.initDragEvent("dragenter", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-    gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
-    var event = aDestWindow.document.createEvent("DragEvents");
-    event.initDragEvent("dragover", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-    if (gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true)) {
+    var destRect = destElement.getBoundingClientRect();
+    var destClientX = destRect.left + destRect.width / 2;
+    var destClientY = destRect.top + destRect.height / 2;
+    var destScreenX = aDestWindow.mozInnerScreenX + destClientX;
+    var destScreenY = aDestWindow.mozInnerScreenY + destClientY;
+    if ("clientX" in aDragEvent && !("screenX" in aDragEvent)) {
+      aDragEvent.screenX = aDestWindow.mozInnerScreenX + aDragEvent.clientX;
+    }
+    if ("clientY" in aDragEvent && !("screenY" in aDragEvent)) {
+      aDragEvent.screenY = aDestWindow.mozInnerScreenY + aDragEvent.clientY;
+    }
+
+    var event = Object.assign({ type: "dragenter",
+                                screenX: destScreenX, screenY: destScreenY,
+                                clientX: destClientX, clientY: destClientY,
+                                dataTransfer: dataTransfer }, aDragEvent);
+    EventUtils.sendDragEvent(event, destElement, aDestWindow);
+
+    event = Object.assign({ type: "dragover",
+                            screenX: destScreenX, screenY: destScreenY,
+                            clientX: destClientX, clientY: destClientY,
+                            dataTransfer: dataTransfer }, aDragEvent);
+    if (EventUtils.sendDragEvent(event, destElement, aDestWindow)) {
       EventUtils.synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
       return "none";
     }
 
     if (dataTransfer.dropEffect != "none") {
-      event = aDestWindow.document.createEvent("DragEvents");
-      event.initDragEvent("drop", true, true, aDestWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-      gWindowUtils.dispatchDOMEventViaPresShell(destElement, event, true);
+      event = Object.assign({ type: "drop",
+                              screenX: destScreenX, screenY: destScreenY,
+                              clientX: destClientX, clientY: destClientY,
+                              dataTransfer: dataTransfer }, aDragEvent);
+      EventUtils.sendDragEvent(event, destElement, aDestWindow);
     }
 
     EventUtils.synthesizeMouseAtCenter(destElement, { type: "mouseup" }, aDestWindow);
