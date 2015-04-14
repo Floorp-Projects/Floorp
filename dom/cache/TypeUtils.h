@@ -29,11 +29,11 @@ class Response;
 namespace cache {
 
 class CachePushStreamChild;
-class CacheQueryParams;
-class CacheReadStream;
-class CacheReadStreamOrVoid;
-class CacheRequest;
-class CacheResponse;
+class PCacheQueryParams;
+class PCacheReadStream;
+class PCacheReadStreamOrVoid;
+class PCacheRequest;
+class PCacheResponse;
 
 class TypeUtils
 {
@@ -77,28 +77,28 @@ public:
                     ErrorResult& aRv);
 
   void
-  ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
-                 BodyAction aBodyAction, ReferrerAction aReferrerAction,
-                 SchemeAction aSchemeAction, ErrorResult& aRv);
+  ToPCacheRequest(PCacheRequest& aOut, InternalRequest* aIn,
+                  BodyAction aBodyAction, ReferrerAction aReferrerAction,
+                  SchemeAction aSchemeAction, ErrorResult& aRv);
 
   void
-  ToCacheResponseWithoutBody(CacheResponse& aOut, InternalResponse& aIn,
-                             ErrorResult& aRv);
+  ToPCacheResponseWithoutBody(PCacheResponse& aOut, InternalResponse& aIn,
+                              ErrorResult& aRv);
 
   void
-  ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv);
+  ToPCacheResponse(PCacheResponse& aOut, Response& aIn, ErrorResult& aRv);
 
   void
-  ToCacheQueryParams(CacheQueryParams& aOut, const CacheQueryOptions& aIn);
+  ToPCacheQueryParams(PCacheQueryParams& aOut, const CacheQueryOptions& aIn);
 
   already_AddRefed<Response>
-  ToResponse(const CacheResponse& aIn);
+  ToResponse(const PCacheResponse& aIn);
 
   already_AddRefed<InternalRequest>
-  ToInternalRequest(const CacheRequest& aIn);
+  ToInternalRequest(const PCacheRequest& aIn);
 
   already_AddRefed<Request>
-  ToRequest(const CacheRequest& aIn);
+  ToRequest(const PCacheRequest& aIn);
 
 private:
   void
@@ -109,11 +109,11 @@ private:
   ToInternalRequest(const nsAString& aIn, ErrorResult& aRv);
 
   void
-  SerializeCacheStream(nsIInputStream* aStream, CacheReadStreamOrVoid* aStreamOut,
+  SerializeCacheStream(nsIInputStream* aStream, PCacheReadStreamOrVoid* aStreamOut,
                        ErrorResult& aRv);
 
   void
-  SerializePushStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut,
+  SerializePushStream(nsIInputStream* aStream, PCacheReadStream& aReadStreamOut,
                       ErrorResult& aRv);
 };
 

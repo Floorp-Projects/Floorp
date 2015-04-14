@@ -155,10 +155,10 @@ CacheOpChild::CreatePushStream(nsIAsyncInputStream* aStream)
 }
 
 void
-CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
+CacheOpChild::HandleResponse(const PCacheResponseOrVoid& aResponseOrVoid)
 {
   nsRefPtr<Response> response;
-  if (aResponseOrVoid.type() == CacheResponseOrVoid::TCacheResponse) {
+  if (aResponseOrVoid.type() == PCacheResponseOrVoid::TPCacheResponse) {
     response = ToResponse(aResponseOrVoid);
   }
 
@@ -171,7 +171,7 @@ CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
 }
 
 void
-CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
+CacheOpChild::HandleResponseList(const nsTArray<PCacheResponse>& aResponseList)
 {
   nsAutoTArray<nsRefPtr<Response>, 256> responses;
   responses.SetCapacity(aResponseList.Length());
@@ -184,7 +184,7 @@ CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
 }
 
 void
-CacheOpChild::HandleRequestList(const nsTArray<CacheRequest>& aRequestList)
+CacheOpChild::HandleRequestList(const nsTArray<PCacheRequest>& aRequestList)
 {
   nsAutoTArray<nsRefPtr<Request>, 256> requests;
   requests.SetCapacity(aRequestList.Length());
