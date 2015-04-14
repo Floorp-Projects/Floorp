@@ -9,7 +9,7 @@
 #include "nsAutoPtr.h"
 #include "ImageContainer.h"
 
-#include "mp4_demuxer/mp4_demuxer.h"
+#include "MediaInfo.h"
 
 #include "FFmpegH264Decoder.h"
 
@@ -23,18 +23,18 @@ namespace mozilla
 
 FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   FlushableMediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
-  const mp4_demuxer::VideoDecoderConfig& aConfig,
+  const VideoInfo& aConfig,
   ImageContainer* aImageContainer)
-  : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))
+  : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mMimeType))
   , mCallback(aCallback)
   , mImageContainer(aImageContainer)
-  , mDisplayWidth(aConfig.display_width)
-  , mDisplayHeight(aConfig.display_height)
+  , mDisplayWidth(aConfig.mDisplay.width)
+  , mDisplayHeight(aConfig.mDisplay.height)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
   // Use a new DataBuffer as the object will be modified during initialization.
   mExtraData = new DataBuffer;
-  mExtraData->AppendElements(*aConfig.extra_data);
+  mExtraData->AppendElements(*aConfig.mExtraData);
 }
 
 nsresult

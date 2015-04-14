@@ -9,7 +9,7 @@
 #include "AppleUtils.h"
 #include "AppleVDADecoder.h"
 #include "AppleVDALinker.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaInfo.h"
 #include "mp4_demuxer/H264.h"
 #include "MP4Decoder.h"
 #include "MediaData.h"
@@ -33,27 +33,26 @@ PRLogModuleInfo* GetAppleMediaLog();
 
 namespace mozilla {
 
-AppleVDADecoder::AppleVDADecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
                                FlushableMediaTaskQueue* aVideoTaskQueue,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
   : mTaskQueue(aVideoTaskQueue)
   , mCallback(aCallback)
   , mImageContainer(aImageContainer)
-  , mPictureWidth(aConfig.image_width)
-  , mPictureHeight(aConfig.image_height)
-  , mDisplayWidth(aConfig.display_width)
-  , mDisplayHeight(aConfig.display_height)
+  , mPictureWidth(aConfig.mImage.width)
+  , mPictureHeight(aConfig.mImage.height)
+  , mDisplayWidth(aConfig.mDisplay.width)
+  , mDisplayHeight(aConfig.mDisplay.height)
   , mDecoder(nullptr)
   , mIs106(!nsCocoaFeatures::OnLionOrLater())
 {
   MOZ_COUNT_CTOR(AppleVDADecoder);
   // TODO: Verify aConfig.mime_type.
 
-  // Retrieve video dimensions from H264 SPS NAL.
-  mPictureWidth = aConfig.image_width;
-  mExtraData = aConfig.extra_data;
+  mExtraData = aConfig.mExtraData;
   mMaxRefFrames = 4;
+  // Retrieve video dimensions from H264 SPS NAL.
   mp4_demuxer::SPSData spsdata;
   if (mp4_demuxer::H264::DecodeSPSFromExtraData(mExtraData, spsdata)) {
     // max_num_ref_frames determines the size of the sliding window
@@ -502,7 +501,7 @@ AppleVDADecoder::CreateOutputConfiguration()
 /* static */
 already_AddRefed<AppleVDADecoder>
 AppleVDADecoder::CreateVDADecoder(
-  const mp4_demuxer::VideoDecoderConfig& aConfig,
+  const VideoInfo& aConfig,
   FlushableMediaTaskQueue* aVideoTaskQueue,
   MediaDataDecoderCallback* aCallback,
   layers::ImageContainer* aImageContainer)
