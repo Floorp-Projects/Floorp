@@ -133,14 +133,24 @@ function fakeSchedulerTimer(set, clear) {
   session.Policy.clearSchedulerTickTimeout = clear;
 }
 
-// Fake the current date.
-function fakeNow(date) {
+/**
+ * Fake the current date.
+ * This passes all received arguments to a new Date constructor and
+ * uses the resulting date to fake the time in Telemetry modules.
+ *
+ * @return Date The new faked date.
+ */
+function fakeNow(...arguments) {
+  const date = new Date(...arguments);
+
   let ping = Cu.import("resource://gre/modules/TelemetryPing.jsm");
   ping.Policy.now = () => date;
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.now = () => date;
   let environment = Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
   environment.Policy.now = () => date;
+
+  return new Date(date);
 }
 
 // Return a date that is |offset| ms in the future from |date|.
