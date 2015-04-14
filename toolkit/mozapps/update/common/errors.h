@@ -42,7 +42,7 @@
 #define MAR_CHANNEL_MISMATCH_ERROR 22
 #define VERSION_DOWNGRADE_ERROR 23
 
-// Error codes 24-33 and 49 are for the Windows maintenance service.
+// Error codes 24-33 and 49-51 are for the Windows maintenance service.
 #define SERVICE_UPDATER_COULD_NOT_BE_STARTED 24
 #define SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS 25
 #define SERVICE_UPDATER_SIGN_ERROR 26
@@ -67,8 +67,10 @@
 #define DELETE_ERROR_EXPECTED_FILE 47
 #define RENAME_ERROR_EXPECTED_FILE 48
 
-// Error codes 24-33 and 49 are for the Windows maintenance service.
+// Error codes 24-33 and 49-51 are for the Windows maintenance service.
 #define SERVICE_COULD_NOT_COPY_UPDATER 49
+#define SERVICE_STILL_APPLYING_TERMINATED 50
+#define SERVICE_STILL_APPLYING_NO_EXIT_CODE 51
 
 #define WRITE_ERROR_FILE_COPY 61
 #define WRITE_ERROR_DELETE_FILE 62
