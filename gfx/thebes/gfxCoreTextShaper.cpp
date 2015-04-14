@@ -170,7 +170,7 @@ gfxCoreTextShaper::ShapeText(gfxContext      *aContext,
             (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
         // If the range is purely within bidi-wrapping text, ignore it.
         CFRange range = ::CTRunGetStringRange(aCTRun);
-        if (range.location + range.length <= startOffset ||
+        if (uint32_t(range.location + range.length) <= startOffset ||
             range.location - startOffset >= aLength) {
             continue;
         }
