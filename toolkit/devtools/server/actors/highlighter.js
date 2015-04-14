@@ -182,6 +182,9 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   },
 
   destroy: function() {
+    if (!this._inspector) {
+      return;
+    }
     protocol.Actor.prototype.destroy.call(this);
 
     this._destroyHighlighter();
@@ -191,6 +194,10 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._walker = null;
     this._tabActor = null;
     this._layoutHelpers = null;
+  },
+
+  disconnect: function () {
+    this.destroy();
   },
 
   /**
