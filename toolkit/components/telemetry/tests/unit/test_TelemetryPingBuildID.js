@@ -13,9 +13,7 @@
  *     -> previousBuildID in telemetry, new value set in prefs.
  */
 
-"use strict"
-
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+"use strict";
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
