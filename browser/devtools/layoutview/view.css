@@ -60,6 +60,16 @@ body {
   padding: 25px;
 }
 
+.legend {
+  position: absolute;
+  margin: 5px 6px;
+  z-index: 1;
+}
+
+.legend[data-box="margin"] {
+  color: var(--theme-highlight-blue);
+}
+
 #main > p {
   position: absolute;
   pointer-events: none;
