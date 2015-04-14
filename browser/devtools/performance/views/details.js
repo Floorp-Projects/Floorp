@@ -59,7 +59,6 @@ let DetailsView = {
     yield this.selectDefaultView();
     yield this.setAvailableViews();
 
-    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this.setAvailableViews);
@@ -77,7 +76,6 @@ let DetailsView = {
       component.initialized && (yield component.view.destroy());
     }
 
-    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this.setAvailableViews);
