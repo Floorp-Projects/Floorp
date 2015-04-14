@@ -13,7 +13,11 @@
 #include "nsIThread.h"
 #include "nsRefPtr.h"
 
+#include "mozilla/ThreadLocal.h"
+
 namespace mozilla {
+
+class TaskDispatcher;
 
 /*
  * We often want to run tasks on a target that guarantees that events will never
@@ -31,6 +35,12 @@ namespace mozilla {
 class AbstractThread
 {
 public:
+  // Returns the AbstractThread that the caller is currently running in, or null
+  // if the caller is not running in an AbstractThread.
+  static AbstractThread* GetCurrent() { return sCurrentThreadTLS.get(); }
+
+  AbstractThread(bool aRequireTailDispatch) : mRequireTailDispatch(aRequireTailDispatch) {}
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractThread);
 
   enum DispatchFailureHandling { AssertDispatchSuccess, DontAssertDispatchSuccess };
@@ -47,14 +57,51 @@ public:
   // against FlushableMediaTaskQueues, which should go away.
   virtual bool IsDispatchReliable() { return true; }
 
+  // Returns a TaskDispatcher that will dispatch its tasks when the currently-
+  // running tasks pops off the stack.
+  //
+  // May only be called when running within the it is invoked up, and only on
+  // threads which support it.
+  virtual TaskDispatcher& TailDispatcher() = 0;
+
+  // Returns whether we're currently performing tail dispatch.
+  virtual bool InTailDispatch() = 0;
+
+  // Returns true if this task queue requires all dispatches performed by its
+  // tasks to go through the tail dispatcher.
+  bool RequiresTailDispatch() const { return mRequireTailDispatch; }
+
   // Convenience method for getting an AbstractThread for the main thread.
   static AbstractThread* MainThread();
 
   // Must be called exactly once during startup.
   static void InitStatics();
 
+#ifdef DEBUG
+  static void AssertInTailDispatchIfNeeded()
+  {
+    // See if we're currently running in a thread that requires tail
+    // dispatch.
+    AbstractThread* currentThread = GetCurrent();
+    if (!currentThread || !currentThread->RequiresTailDispatch()) {
+      return;
+    }
+
+    MOZ_ASSERT(currentThread->InTailDispatch(),
+               "Not allowed to dispatch tasks directly from this task queue - use TailDispatcher()");
+  }
+#else
+  static void AssertInTailDispatchIfNeeded() {}
+#endif
+
+
 protected:
   virtual ~AbstractThread() {}
+  static ThreadLocal<AbstractThread*> sCurrentThreadTLS;
+
+  // True if we want to require that every task dispatched from tasks running in
+  // this queue go through our queue's tail dispatcher.
+  const bool mRequireTailDispatch;
 };
 
 } // namespace mozilla
