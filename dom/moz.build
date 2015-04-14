@@ -26,6 +26,7 @@ interfaces = [
     'storage',
     'json',
     'offline',
+    'push',
     'geolocation',
     'notification',
     'permission',
