@@ -34,10 +34,10 @@ namespace {
 
 using mozilla::unused;
 using mozilla::dom::cache::Action;
-using mozilla::dom::cache::DBSchema;
 using mozilla::dom::cache::FileUtils;
 using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::cache::SyncDBAction;
+using mozilla::dom::cache::db::CreateSchema;
 
 // An Action that is executed when a Context is first created.  It ensures that
 // the directory and database are setup properly.  This lets other actions
@@ -65,7 +65,7 @@ public:
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    rv = DBSchema::CreateSchema(aConn);
+    rv = CreateSchema(aConn);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -456,7 +456,7 @@ public:
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    nsresult rv = DBSchema::DeleteCache(aConn, mCacheId, mDeletedBodyIdList);
+    nsresult rv = db::DeleteCache(aConn, mCacheId, mDeletedBodyIdList);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -499,9 +499,8 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
-    nsresult rv = DBSchema::CacheMatch(aConn, mCacheId, mArgs.request(),
-                                       mArgs.params(), &mFoundResponse,
-                                       &mResponse);
+    nsresult rv = db::CacheMatch(aConn, mCacheId, mArgs.request(),
+                                 mArgs.params(), &mFoundResponse, &mResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     if (!mFoundResponse || !mResponse.mHasBodyId) {
@@ -563,8 +562,8 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
-    nsresult rv = DBSchema::CacheMatchAll(aConn, mCacheId, mArgs.requestOrVoid(),
-                                          mArgs.params(), mSavedResponses);
+    nsresult rv = db::CacheMatchAll(aConn, mCacheId, mArgs.requestOrVoid(),
+                                    mArgs.params(), mSavedResponses);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     for (uint32_t i = 0; i < mSavedResponses.Length(); ++i) {
@@ -774,11 +773,11 @@ private:
         }
       }
 
-      rv = DBSchema::CachePut(mConn, mCacheId, e.mRequest,
-                              e.mRequestStream ? &e.mRequestBodyId : nullptr,
-                              e.mResponse,
-                              e.mResponseStream ? &e.mResponseBodyId : nullptr,
-                              mDeletedBodyIdList);
+      rv = db::CachePut(mConn, mCacheId, e.mRequest,
+                        e.mRequestStream ? &e.mRequestBodyId : nullptr,
+                        e.mResponse,
+                        e.mResponseStream ? &e.mResponseBodyId : nullptr,
+                        mDeletedBodyIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         DoResolve(rv);
         return;
@@ -1003,9 +1002,9 @@ public:
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    nsresult rv = DBSchema::CacheDelete(aConn, mCacheId, mArgs.request(),
-                                        mArgs.params(), mDeletedBodyIdList,
-                                        &mSuccess);
+    nsresult rv = db::CacheDelete(aConn, mCacheId, mArgs.request(),
+                                  mArgs.params(), mDeletedBodyIdList,
+                                  &mSuccess);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -1054,8 +1053,8 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
-    nsresult rv = DBSchema::CacheKeys(aConn, mCacheId, mArgs.requestOrVoid(),
-                                      mArgs.params(), mSavedRequests);
+    nsresult rv = db::CacheKeys(aConn, mCacheId, mArgs.requestOrVoid(),
+                                mArgs.params(), mSavedRequests);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     for (uint32_t i = 0; i < mSavedRequests.Length(); ++i) {
@@ -1117,9 +1116,9 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
-    nsresult rv = DBSchema::StorageMatch(aConn, mNamespace, mArgs.request(),
-                                         mArgs.params(), &mFoundResponse,
-                                         &mSavedResponse);
+    nsresult rv = db::StorageMatch(aConn, mNamespace, mArgs.request(),
+                                   mArgs.params(), &mFoundResponse,
+                                   &mSavedResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     if (!mFoundResponse || !mSavedResponse.mHasBodyId) {
@@ -1176,8 +1175,8 @@ public:
                         mozIStorageConnection* aConn) override
   {
     CacheId cacheId;
-    return DBSchema::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
-                                       &mCacheFound, &cacheId);
+    return db::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
+                                 &mCacheFound, &cacheId);
   }
 
   virtual void
@@ -1215,17 +1214,17 @@ public:
 
     // Look for existing cache
     bool cacheFound;
-    nsresult rv = DBSchema::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
-                                              &cacheFound, &mCacheId);
+    nsresult rv = db::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
+                                        &cacheFound, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     if (cacheFound) {
       return rv;
     }
 
-    rv = DBSchema::CreateCache(aConn, &mCacheId);
+    rv = db::CreateCache(aConn, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = DBSchema::StoragePutCache(aConn, mNamespace, mArgs.key(), mCacheId);
+    rv = db::StoragePutCache(aConn, mNamespace, mArgs.key(), mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -1268,8 +1267,8 @@ public:
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
     bool exists;
-    nsresult rv = DBSchema::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
-                                              &exists, &mCacheId);
+    nsresult rv = db::StorageGetCacheId(aConn, mNamespace, mArgs.key(),
+                                        &exists, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     if (!exists) {
@@ -1277,7 +1276,7 @@ public:
       return NS_OK;
     }
 
-    rv = DBSchema::StorageForgetCache(aConn, mNamespace, mArgs.key());
+    rv = db::StorageForgetCache(aConn, mNamespace, mArgs.key());
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -1329,7 +1328,7 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
-    return DBSchema::StorageGetKeys(aConn, mNamespace, mKeys);
+    return db::StorageGetKeys(aConn, mNamespace, mKeys);
   }
 
   virtual void
