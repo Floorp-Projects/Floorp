@@ -558,7 +558,7 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
 void
 AnimationPlayer::DoPause()
 {
-  if (mPendingState == PendingState::PausePending) {
+  if (IsPausedOrPausing()) {
     return;
   }
 
