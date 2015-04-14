@@ -7,7 +7,6 @@
 #include "mozilla/dom/cache/AutoUtils.h"
 
 #include "mozilla/unused.h"
-#include "mozilla/dom/cache/CacheParent.h"
 #include "mozilla/dom/cache/CachePushStreamChild.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
 #include "mozilla/dom/cache/ReadStream.h"
@@ -137,381 +136,171 @@ namespace cache {
 
 using mozilla::ipc::PBackgroundParent;
 
-// --------------------------------------------
-
-AutoChildOpArgs::AutoChildOpArgs(TypeUtils* aTypeUtils,
-                                 const CacheOpArgs& aOpArgs)
+AutoChildBase::AutoChildBase(TypeUtils* aTypeUtils)
   : mTypeUtils(aTypeUtils)
-  , mOpArgs(aOpArgs)
   , mSent(false)
 {
   MOZ_ASSERT(mTypeUtils);
 }
 
-AutoChildOpArgs::~AutoChildOpArgs()
+AutoChildBase::~AutoChildBase()
 {
-  CleanupAction action = mSent ? Forget : Delete;
-
-  switch(mOpArgs.type()) {
-    case CacheOpArgs::TCacheMatchArgs:
-    {
-      CacheMatchArgs& args = mOpArgs.get_CacheMatchArgs();
-      CleanupChild(args.request().body(), action);
-      break;
-    }
-    case CacheOpArgs::TCacheMatchAllArgs:
-    {
-      CacheMatchAllArgs& args = mOpArgs.get_CacheMatchAllArgs();
-      if (args.requestOrVoid().type() == PCacheRequestOrVoid::Tvoid_t) {
-        break;
-      }
-      CleanupChild(args.requestOrVoid().get_PCacheRequest().body(), action);
-      break;
-    }
-    case CacheOpArgs::TCacheAddAllArgs:
-    {
-      CacheAddAllArgs& args = mOpArgs.get_CacheAddAllArgs();
-      auto& list = args.requestList();
-      for (uint32_t i = 0; i < list.Length(); ++i) {
-        CleanupChild(list[i].body(), action);
-      }
-      break;
-    }
-    case CacheOpArgs::TCachePutAllArgs:
-    {
-      CachePutAllArgs& args = mOpArgs.get_CachePutAllArgs();
-      auto& list = args.requestResponseList();
-      for (uint32_t i = 0; i < list.Length(); ++i) {
-        CleanupChild(list[i].request().body(), action);
-        CleanupChild(list[i].response().body(), action);
-      }
-      break;
-    }
-    case CacheOpArgs::TCacheDeleteArgs:
-    {
-      CacheDeleteArgs& args = mOpArgs.get_CacheDeleteArgs();
-      CleanupChild(args.request().body(), action);
-      break;
-    }
-    case CacheOpArgs::TCacheKeysArgs:
-    {
-      CacheKeysArgs& args = mOpArgs.get_CacheKeysArgs();
-      if (args.requestOrVoid().type() == PCacheRequestOrVoid::Tvoid_t) {
-        break;
-      }
-      CleanupChild(args.requestOrVoid().get_PCacheRequest().body(), action);
-      break;
-    }
-    case CacheOpArgs::TStorageMatchArgs:
-    {
-      StorageMatchArgs& args = mOpArgs.get_StorageMatchArgs();
-      CleanupChild(args.request().body(), action);
-      break;
-    }
-    default:
-      // Other types do not need cleanup
-      break;
-  }
-}
-
-void
-AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
-                     ReferrerAction aReferrerAction, SchemeAction aSchemeAction,
-                     ErrorResult& aRv)
-{
-  MOZ_ASSERT(!mSent);
-
-  switch(mOpArgs.type()) {
-    case CacheOpArgs::TCacheMatchArgs:
-    {
-      CacheMatchArgs& args = mOpArgs.get_CacheMatchArgs();
-      mTypeUtils->ToPCacheRequest(args.request(), aRequest, aBodyAction,
-                                  aReferrerAction, aSchemeAction, aRv);
-      break;
-    }
-    case CacheOpArgs::TCacheMatchAllArgs:
-    {
-      CacheMatchAllArgs& args = mOpArgs.get_CacheMatchAllArgs();
-      MOZ_ASSERT(args.requestOrVoid().type() == PCacheRequestOrVoid::Tvoid_t);
-      args.requestOrVoid() = PCacheRequest();
-      mTypeUtils->ToPCacheRequest(args.requestOrVoid().get_PCacheRequest(),
-                                  aRequest, aBodyAction, aReferrerAction,
-                                  aSchemeAction, aRv);
-      break;
-    }
-    case CacheOpArgs::TCacheAddAllArgs:
-    {
-      CacheAddAllArgs& args = mOpArgs.get_CacheAddAllArgs();
-
-      // The FileDescriptorSetChild asserts in its destructor that all fds have
-      // been removed.  The copy constructor, however, simply duplicates the
-      // fds without removing any.  This means each temporary and copy must be
-      // explicitly cleaned up.
-      //
-      // Avoid a lot of this hassle by making sure we only create one here.  On
-      // error we remove it.
-      PCacheRequest& request = *args.requestList().AppendElement();
-
-      mTypeUtils->ToPCacheRequest(request, aRequest, aBodyAction,
-                                  aReferrerAction, aSchemeAction, aRv);
-      if (aRv.Failed()) {
-        args.requestList().RemoveElementAt(args.requestList().Length() - 1);
-      }
-      break;
-    }
-    case CacheOpArgs::TCacheDeleteArgs:
-    {
-      CacheDeleteArgs& args = mOpArgs.get_CacheDeleteArgs();
-      mTypeUtils->ToPCacheRequest(args.request(), aRequest, aBodyAction,
-                                  aReferrerAction, aSchemeAction, aRv);
-      break;
-    }
-    case CacheOpArgs::TCacheKeysArgs:
-    {
-      CacheKeysArgs& args = mOpArgs.get_CacheKeysArgs();
-      MOZ_ASSERT(args.requestOrVoid().type() == PCacheRequestOrVoid::Tvoid_t);
-      args.requestOrVoid() = PCacheRequest();
-      mTypeUtils->ToPCacheRequest(args.requestOrVoid().get_PCacheRequest(),
-                                  aRequest, aBodyAction, aReferrerAction,
-                                  aSchemeAction, aRv);
-      break;
-    }
-    case CacheOpArgs::TStorageMatchArgs:
-    {
-      StorageMatchArgs& args = mOpArgs.get_StorageMatchArgs();
-      mTypeUtils->ToPCacheRequest(args.request(), aRequest, aBodyAction,
-                                  aReferrerAction, aSchemeAction, aRv);
-      break;
-    }
-    default:
-      MOZ_CRASH("Cache args type cannot send a Request!");
-  }
-}
-
-void
-AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
-                     ReferrerAction aReferrerAction, SchemeAction aSchemeAction,
-                     Response& aResponse, ErrorResult& aRv)
-{
-  MOZ_ASSERT(!mSent);
-
-  switch(mOpArgs.type()) {
-    case CacheOpArgs::TCachePutAllArgs:
-    {
-      CachePutAllArgs& args = mOpArgs.get_CachePutAllArgs();
-
-      // The FileDescriptorSetChild asserts in its destructor that all fds have
-      // been removed.  The copy constructor, however, simply duplicates the
-      // fds without removing any.  This means each temporary and copy must be
-      // explicitly cleaned up.
-      //
-      // Avoid a lot of this hassle by making sure we only create one here.  On
-      // error we remove it.
-      CacheRequestResponse& pair = *args.requestResponseList().AppendElement();
-      pair.request().body() = void_t();
-      pair.response().body() = void_t();
-
-      mTypeUtils->ToPCacheRequest(pair.request(), aRequest, aBodyAction,
-                                  aReferrerAction, aSchemeAction, aRv);
-      if (!aRv.Failed()) {
-        mTypeUtils->ToPCacheResponse(pair.response(), aResponse, aRv);
-      }
-
-      if (aRv.Failed()) {
-        CleanupChild(pair.request().body(), Delete);
-        args.requestResponseList().RemoveElementAt(
-          args.requestResponseList().Length() - 1);
-      }
-
-      break;
-    }
-    default:
-      MOZ_CRASH("Cache args type cannot send a Request/Response pair!");
-  }
-}
-
-const CacheOpArgs&
-AutoChildOpArgs::SendAsOpArgs()
-{
-  MOZ_ASSERT(!mSent);
-  mSent = true;
-  return mOpArgs;
 }
 
 // --------------------------------------------
 
-AutoParentOpResult::AutoParentOpResult(mozilla::ipc::PBackgroundParent* aManager,
-                                       const CacheOpResult& aOpResult)
+AutoChildRequest::AutoChildRequest(TypeUtils* aTypeUtils)
+  : AutoChildBase(aTypeUtils)
+{
+  mRequestOrVoid = void_t();
+}
+
+AutoChildRequest::~AutoChildRequest()
+{
+  if (mRequestOrVoid.type() != PCacheRequestOrVoid::TPCacheRequest) {
+    return;
+  }
+
+  CleanupAction action = mSent ? Forget : Delete;
+  CleanupChild(mRequestOrVoid.get_PCacheRequest().body(), action);
+}
+
+void
+AutoChildRequest::Add(InternalRequest* aRequest, BodyAction aBodyAction,
+                      ReferrerAction aReferrerAction, SchemeAction aSchemeAction,
+                      ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mSent);
+  MOZ_ASSERT(mRequestOrVoid.type() == PCacheRequestOrVoid::Tvoid_t);
+  mRequestOrVoid = PCacheRequest();
+  mTypeUtils->ToPCacheRequest(mRequestOrVoid.get_PCacheRequest(), aRequest,
+                              aBodyAction, aReferrerAction, aSchemeAction, aRv);
+}
+
+const PCacheRequest&
+AutoChildRequest::SendAsRequest()
+{
+  MOZ_ASSERT(mRequestOrVoid.type() == PCacheRequestOrVoid::TPCacheRequest);
+  return mRequestOrVoid.get_PCacheRequest();
+}
+
+const PCacheRequestOrVoid&
+AutoChildRequest::SendAsRequestOrVoid()
+{
+  return mRequestOrVoid;
+}
+
+// --------------------------------------------
+
+AutoChildRequestList::AutoChildRequestList(TypeUtils* aTypeUtils,
+                                           uint32_t aCapacity)
+  : AutoChildBase(aTypeUtils)
+{
+  mRequestList.SetCapacity(aCapacity);
+}
+
+AutoChildRequestList::~AutoChildRequestList()
+{
+  CleanupAction action = mSent ? Forget : Delete;
+  for (uint32_t i = 0; i < mRequestList.Length(); ++i) {
+    CleanupChild(mRequestList[i].body(), action);
+  }
+}
+
+void
+AutoChildRequestList::Add(InternalRequest* aRequest, BodyAction aBodyAction,
+                          ReferrerAction aReferrerAction,
+                          SchemeAction aSchemeAction, ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mSent);
+
+  // The FileDescriptorSetChild asserts in its destructor that all fds have
+  // been removed.  The copy constructor, however, simply duplicates the
+  // fds without removing any.  This means each temporary and copy must be
+  // explicitly cleaned up.
+  //
+  // Avoid a lot of this hassle by making sure we only create one here.  On
+  // error we remove it.
+
+  PCacheRequest* request = mRequestList.AppendElement();
+  mTypeUtils->ToPCacheRequest(*request, aRequest, aBodyAction, aReferrerAction,
+                              aSchemeAction, aRv);
+  if (aRv.Failed()) {
+    mRequestList.RemoveElementAt(mRequestList.Length() - 1);
+  }
+}
+
+const nsTArray<PCacheRequest>&
+AutoChildRequestList::SendAsRequestList()
+{
+  MOZ_ASSERT(!mSent);
+  mSent = true;
+  return mRequestList;
+}
+
+// --------------------------------------------
+
+AutoChildRequestResponse::AutoChildRequestResponse(TypeUtils* aTypeUtils)
+  : AutoChildBase(aTypeUtils)
+{
+  // Default IPC-generated constructor does not initialize these correctly
+  // and we check them later when cleaning up.
+  mRequestResponse.request().body() = void_t();
+  mRequestResponse.response().body() = void_t();
+}
+
+AutoChildRequestResponse::~AutoChildRequestResponse()
+{
+  CleanupAction action = mSent ? Forget : Delete;
+  CleanupChild(mRequestResponse.request().body(), action);
+  CleanupChild(mRequestResponse.response().body(), action);
+}
+
+void
+AutoChildRequestResponse::Add(InternalRequest* aRequest, BodyAction aBodyAction,
+                              ReferrerAction aReferrerAction,
+                              SchemeAction aSchemeAction, ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mSent);
+  mTypeUtils->ToPCacheRequest(mRequestResponse.request(), aRequest, aBodyAction,
+                              aReferrerAction, aSchemeAction, aRv);
+}
+
+void
+AutoChildRequestResponse::Add(Response& aResponse, ErrorResult& aRv)
+{
+  MOZ_ASSERT(!mSent);
+  mTypeUtils->ToPCacheResponse(mRequestResponse.response(), aResponse, aRv);
+}
+
+const CacheRequestResponse&
+AutoChildRequestResponse::SendAsRequestResponse()
+{
+  MOZ_ASSERT(!mSent);
+  mSent = true;
+  return mRequestResponse;
+}
+
+// --------------------------------------------
+
+AutoParentBase::AutoParentBase(PBackgroundParent* aManager)
   : mManager(aManager)
-  , mOpResult(aOpResult)
   , mStreamControl(nullptr)
   , mSent(false)
 {
   MOZ_ASSERT(mManager);
 }
 
-AutoParentOpResult::~AutoParentOpResult()
+AutoParentBase::~AutoParentBase()
 {
-  CleanupAction action = mSent ? Forget : Delete;
-
-  switch (mOpResult.type()) {
-    case CacheOpResult::TCacheMatchResult:
-    {
-      CacheMatchResult& result = mOpResult.get_CacheMatchResult();
-      if (result.responseOrVoid().type() == PCacheResponseOrVoid::Tvoid_t) {
-        break;
-      }
-      CleanupParentFds(result.responseOrVoid().get_PCacheResponse().body(),
-                       action);
-      break;
-    }
-    case CacheOpResult::TCacheMatchAllResult:
-    {
-      CacheMatchAllResult& result = mOpResult.get_CacheMatchAllResult();
-      for (uint32_t i = 0; i < result.responseList().Length(); ++i) {
-        CleanupParentFds(result.responseList()[i].body(), action);
-      }
-      break;
-    }
-    case CacheOpResult::TCacheKeysResult:
-    {
-      CacheKeysResult& result = mOpResult.get_CacheKeysResult();
-      for (uint32_t i = 0; i < result.requestList().Length(); ++i) {
-        CleanupParentFds(result.requestList()[i].body(), action);
-      }
-      break;
-    }
-    case CacheOpResult::TStorageMatchResult:
-    {
-      StorageMatchResult& result = mOpResult.get_StorageMatchResult();
-      if (result.responseOrVoid().type() == PCacheResponseOrVoid::Tvoid_t) {
-        break;
-      }
-      CleanupParentFds(result.responseOrVoid().get_PCacheResponse().body(),
-                       action);
-      break;
-    }
-    case CacheOpResult::TStorageOpenResult:
-    {
-      StorageOpenResult& result = mOpResult.get_StorageOpenResult();
-      if (action == Forget || result.actorParent() == nullptr) {
-        break;
-      }
-      unused << PCacheParent::Send__delete__(result.actorParent());
-    }
-    default:
-      // other types do not need clean up
-      break;
-  }
-
-  if (action == Delete && mStreamControl) {
+  if (!mSent && mStreamControl) {
     unused << PCacheStreamControlParent::Send__delete__(mStreamControl);
   }
 }
 
 void
-AutoParentOpResult::Add(CacheId aOpenedCacheId, Manager* aManager)
-{
-  MOZ_ASSERT(mOpResult.type() == CacheOpResult::TStorageOpenResult);
-  MOZ_ASSERT(mOpResult.get_StorageOpenResult().actorParent() == nullptr);
-  mOpResult.get_StorageOpenResult().actorParent() =
-    mManager->SendPCacheConstructor(new CacheParent(aManager, aOpenedCacheId));
-}
-
-void
-AutoParentOpResult::Add(const SavedResponse& aSavedResponse,
-                        StreamList* aStreamList)
-{
-  MOZ_ASSERT(!mSent);
-
-  switch (mOpResult.type()) {
-    case CacheOpResult::TCacheMatchResult:
-    {
-      CacheMatchResult& result = mOpResult.get_CacheMatchResult();
-      MOZ_ASSERT(result.responseOrVoid().type() == PCacheResponseOrVoid::Tvoid_t);
-      result.responseOrVoid() = aSavedResponse.mValue;
-      SerializeResponseBody(aSavedResponse, aStreamList,
-                            &result.responseOrVoid().get_PCacheResponse());
-      break;
-    }
-    case CacheOpResult::TCacheMatchAllResult:
-    {
-      CacheMatchAllResult& result = mOpResult.get_CacheMatchAllResult();
-      result.responseList().AppendElement(aSavedResponse.mValue);
-      SerializeResponseBody(aSavedResponse, aStreamList,
-                            &result.responseList().LastElement());
-      break;
-    }
-    case CacheOpResult::TStorageMatchResult:
-    {
-      StorageMatchResult& result = mOpResult.get_StorageMatchResult();
-      MOZ_ASSERT(result.responseOrVoid().type() == PCacheResponseOrVoid::Tvoid_t);
-      result.responseOrVoid() = aSavedResponse.mValue;
-      SerializeResponseBody(aSavedResponse, aStreamList,
-                            &result.responseOrVoid().get_PCacheResponse());
-      break;
-    }
-    default:
-      MOZ_CRASH("Cache result type cannot handle returning a Response!");
-  }
-}
-
-void
-AutoParentOpResult::Add(const SavedRequest& aSavedRequest,
-                        StreamList* aStreamList)
-{
-  MOZ_ASSERT(!mSent);
-
-  switch (mOpResult.type()) {
-    case CacheOpResult::TCacheKeysResult:
-    {
-      CacheKeysResult& result = mOpResult.get_CacheKeysResult();
-      result.requestList().AppendElement(aSavedRequest.mValue);
-      PCacheRequest& request = result.requestList().LastElement();
-
-      if (!aSavedRequest.mHasBodyId) {
-        request.body() = void_t();
-        break;
-      }
-
-      request.body() = PCacheReadStream();
-      SerializeReadStream(aSavedRequest.mBodyId, aStreamList,
-                          &request.body().get_PCacheReadStream());
-      break;
-    }
-    default:
-      MOZ_CRASH("Cache result type cannot handle returning a Request!");
-  }
-}
-
-const CacheOpResult&
-AutoParentOpResult::SendAsOpResult()
-{
-  MOZ_ASSERT(!mSent);
-  mSent = true;
-  return mOpResult;
-}
-
-void
-AutoParentOpResult::SerializeResponseBody(const SavedResponse& aSavedResponse,
-                                          StreamList* aStreamList,
-                                          PCacheResponse* aResponseOut)
-{
-  MOZ_ASSERT(aResponseOut);
-
-  if (!aSavedResponse.mHasBodyId) {
-    aResponseOut->body() = void_t();
-    return;
-  }
-
-  aResponseOut->body() = PCacheReadStream();
-  SerializeReadStream(aSavedResponse.mBodyId, aStreamList,
-                      &aResponseOut->body().get_PCacheReadStream());
-}
-
-void
-AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList,
-                                        PCacheReadStream* aReadStreamOut)
+AutoParentBase::SerializeReadStream(const nsID& aId, StreamList* aStreamList,
+                                    PCacheReadStream* aReadStreamOut)
 {
   MOZ_ASSERT(aStreamList);
   MOZ_ASSERT(aReadStreamOut);
@@ -537,6 +326,139 @@ AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList
   nsRefPtr<ReadStream> readStream = ReadStream::Create(mStreamControl,
                                                        aId, stream);
   readStream->Serialize(aReadStreamOut);
+}
+
+// --------------------------------------------
+
+AutoParentRequestList::AutoParentRequestList(PBackgroundParent* aManager,
+                                             uint32_t aCapacity)
+  : AutoParentBase(aManager)
+{
+  mRequestList.SetCapacity(aCapacity);
+}
+
+AutoParentRequestList::~AutoParentRequestList()
+{
+  CleanupAction action = mSent ? Forget : Delete;
+  for (uint32_t i = 0; i < mRequestList.Length(); ++i) {
+    CleanupParentFds(mRequestList[i].body(), action);
+  }
+}
+
+void
+AutoParentRequestList::Add(const SavedRequest& aSavedRequest,
+                           StreamList* aStreamList)
+{
+  MOZ_ASSERT(!mSent);
+
+  mRequestList.AppendElement(aSavedRequest.mValue);
+  PCacheRequest& request = mRequestList.LastElement();
+
+  if (!aSavedRequest.mHasBodyId) {
+    request.body() = void_t();
+    return;
+  }
+
+  request.body() = PCacheReadStream();
+  SerializeReadStream(aSavedRequest.mBodyId, aStreamList,
+                      &request.body().get_PCacheReadStream());
+}
+
+const nsTArray<PCacheRequest>&
+AutoParentRequestList::SendAsRequestList()
+{
+  MOZ_ASSERT(!mSent);
+  mSent = true;
+  return mRequestList;
+}
+
+// --------------------------------------------
+
+AutoParentResponseList::AutoParentResponseList(PBackgroundParent* aManager,
+                                               uint32_t aCapacity)
+  : AutoParentBase(aManager)
+{
+  mResponseList.SetCapacity(aCapacity);
+}
+
+AutoParentResponseList::~AutoParentResponseList()
+{
+  CleanupAction action = mSent ? Forget : Delete;
+  for (uint32_t i = 0; i < mResponseList.Length(); ++i) {
+    CleanupParentFds(mResponseList[i].body(), action);
+  }
+}
+
+void
+AutoParentResponseList::Add(const SavedResponse& aSavedResponse,
+                            StreamList* aStreamList)
+{
+  MOZ_ASSERT(!mSent);
+
+  mResponseList.AppendElement(aSavedResponse.mValue);
+  PCacheResponse& response = mResponseList.LastElement();
+
+  if (!aSavedResponse.mHasBodyId) {
+    response.body() = void_t();
+    return;
+  }
+
+  response.body() = PCacheReadStream();
+  SerializeReadStream(aSavedResponse.mBodyId, aStreamList,
+                      &response.body().get_PCacheReadStream());
+}
+
+const nsTArray<PCacheResponse>&
+AutoParentResponseList::SendAsResponseList()
+{
+  MOZ_ASSERT(!mSent);
+  mSent = true;
+  return mResponseList;
+}
+
+// --------------------------------------------
+
+AutoParentResponseOrVoid::AutoParentResponseOrVoid(ipc::PBackgroundParent* aManager)
+  : AutoParentBase(aManager)
+{
+  mResponseOrVoid = void_t();
+}
+
+AutoParentResponseOrVoid::~AutoParentResponseOrVoid()
+{
+  if (mResponseOrVoid.type() != PCacheResponseOrVoid::TPCacheResponse) {
+    return;
+  }
+
+  CleanupAction action = mSent ? Forget : Delete;
+  CleanupParentFds(mResponseOrVoid.get_PCacheResponse().body(), action);
+}
+
+void
+AutoParentResponseOrVoid::Add(const SavedResponse& aSavedResponse,
+                              StreamList* aStreamList)
+{
+  MOZ_ASSERT(!mSent);
+
+  mResponseOrVoid = aSavedResponse.mValue;
+  PCacheResponse& response = mResponseOrVoid.get_PCacheResponse();
+
+  if (!aSavedResponse.mHasBodyId) {
+    response.body() = void_t();
+    return;
+  }
+
+  response.body() = PCacheReadStream();
+  SerializeReadStream(aSavedResponse.mBodyId, aStreamList,
+                      &response.body().get_PCacheReadStream());
+}
+
+const PCacheResponseOrVoid&
+AutoParentResponseOrVoid::SendAsResponseOrVoid()
+{
+  MOZ_ASSERT(!mSent);
+  mSent = true;
+  return mResponseOrVoid;
 }
 
 } // namespace cache
