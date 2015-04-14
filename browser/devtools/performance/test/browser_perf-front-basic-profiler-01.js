@@ -10,22 +10,45 @@ let WAIT_TIME = 1000;
 function spawnTest () {
   let { target, front } = yield initBackend(SIMPLE_URL);
 
-  let startModel = yield front.startRecording();
-  let { profilerStartTime, timelineStartTime, memoryStartTime } = startModel;
+  let startData = yield front.startRecording();
+  let { profilerStartTime, timelineStartTime, memoryStartTime } = startData;
 
-  ok(startModel._profilerStartTime !== undefined,
-    "A `_profilerStartTime` property exists in the recording model.");
-  ok(startModel._timelineStartTime !== undefined,
-    "A `_timelineStartTime` property exists in the recording model.");
-  ise(startModel._memoryStartTime, 0,
-    "A `_memoryStartTime` property exists in the recording model, but it's 0.");
+  ok("profilerStartTime" in startData,
+    "A `profilerStartTime` property is properly set in the recording data.");
+  ok("timelineStartTime" in startData,
+    "A `timelineStartTime` property is properly set in the recording data.");
+  ok("memoryStartTime" in startData,
+    "A `memoryStartTime` property is properly set in the recording data.");
+
+  ok(profilerStartTime !== undefined,
+    "A `profilerStartTime` property exists in the recording data.");
+  ok(timelineStartTime !== undefined,
+    "A `timelineStartTime` property exists in the recording data.");
+  is(memoryStartTime, 0,
+    "A `memoryStartTime` property exists in the recording data, but it's 0.");
 
   yield busyWait(WAIT_TIME);
 
-  let stopModel = yield front.stopRecording(startModel);
+  let stopData = yield front.stopRecording();
+  let { profile, profilerEndTime, timelineEndTime, memoryEndTime } = stopData;
 
-  ok(stopModel.getProfile(), "recording model has a profile after stopping.");
-  ok(stopModel.getDuration(), "recording model has a duration after stopping.");
+  ok("profile" in stopData,
+    "A `profile` property is properly set in the recording data.");
+  ok("profilerEndTime" in stopData,
+    "A `profilerEndTime` property is properly set in the recording data.");
+  ok("timelineEndTime" in stopData,
+    "A `timelineEndTime` property is properly set in the recording data.");
+  ok("memoryEndTime" in stopData,
+    "A `memoryEndTime` property is properly set in the recording data.");
+
+  ok(profile,
+    "A `profile` property exists in the recording data.");
+  ok(profilerEndTime !== undefined,
+    "A `profilerEndTime` property exists in the recording data.");
+  ok(timelineEndTime !== undefined,
+    "A `timelineEndTime` property exists in the recording data.");
+  is(memoryEndTime, 0,
+    "A `memoryEndTime` property exists in the recording data, but it's 0.");
 
   yield removeTab(target.tab);
   finish();

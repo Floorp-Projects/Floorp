@@ -9,17 +9,15 @@ const TEST_URL = EXAMPLE_URL + "doc_innerHTML.html"
 
 function* getMarkers(front) {
   const { promise, resolve } = Promise.defer();
-  const handler = (_, name, markers) => {
-    if (name === "markers") {
-      resolve(markers);
-    }
+  const handler = (_, markers) => {
+    resolve(markers);
   };
-  front.on("timeline-data", handler);
+  front.on("markers", handler);
 
   yield front.startRecording({ withTicks: true });
 
   const markers = yield promise;
-  front.off("timeline-data", handler);
+  front.off("markers", handler);
   yield front.stopRecording();
 
   return markers;

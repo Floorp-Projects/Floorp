@@ -4,7 +4,6 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "PerformanceIO",
   "devtools/performance/io", true);
@@ -18,8 +17,9 @@ loader.lazyRequireGetter(this, "RecordingUtils",
  */
 
 const RecordingModel = function (options={}) {
+  this._front = options.front;
+  this._performance = options.performance;
   this._label = options.label || "";
-  this._console = options.console || false;
 
   this._configuration = {
     withTicks: options.withTicks || false,
@@ -32,7 +32,6 @@ const RecordingModel = function (options={}) {
 
 RecordingModel.prototype = {
   // Private fields, only needed when a recording is started or stopped.
-  _console: false,
   _imported: false,
   _recording: false,
   _profilerStartTime: 0,
@@ -82,16 +81,16 @@ RecordingModel.prototype = {
   }),
 
   /**
-   * Sets up the instance with data from the SharedPerformanceConnection when
-   * starting a recording. Should only be called by SharedPerformanceConnection.
+   * Starts recording with the PerformanceFront.
    */
-  populate: function (info) {
+  startRecording: Task.async(function *() {
     // Times must come from the actor in order to be self-consistent.
     // However, we also want to update the view with the elapsed time
     // even when the actor is not generating data. To do this we get
     // the local time and use it to compute a reasonable elapsed time.
-    this._localStartTime = Date.now()
+    this._localStartTime = this._performance.now();
 
+    let info = yield this._front.startRecording(this.getConfiguration());
     this._profilerStartTime = info.profilerStartTime;
     this._timelineStartTime = info.timelineStartTime;
     this._memoryStartTime = info.memoryStartTime;
@@ -102,13 +101,13 @@ RecordingModel.prototype = {
     this._memory = [];
     this._ticks = [];
     this._allocations = { sites: [], timestamps: [], frames: [], counts: [] };
-  },
+  }),
 
   /**
-   * Sets results available from stopping a recording from SharedPerformanceConnection.
-   * Should only be called by SharedPerformanceConnection.
+   * Stops recording with the PerformanceFront.
    */
-  _onStopRecording: Task.async(function *(info) {
+  stopRecording: Task.async(function *() {
+    let info = yield this._front.stopRecording(this.getConfiguration());
     this._profile = info.profile;
     this._duration = info.profilerEndTime - this._profilerStartTime;
     this._recording = false;
@@ -141,7 +140,7 @@ RecordingModel.prototype = {
     // still in progress. This is needed to ensure that the view updates even
     // when new data is not being generated.
     if (this._recording) {
-      return Date.now() - this._localStartTime;
+      return this._performance.now() - this._localStartTime;
     } else {
       return this._duration;
     }
@@ -217,22 +216,6 @@ RecordingModel.prototype = {
     let allocations = this.getAllocations();
     let profile = this.getProfile();
     return { label, duration, markers, frames, memory, ticks, allocations, profile };
-  },
-
-  /**
-   * Returns a boolean indicating whether or not this recording model
-   * was imported via file.
-   */
-  isImported: function () {
-    return this._imported;
-  },
-
-  /**
-   * Returns a boolean indicating whether or not this recording model
-   * was started via a `console.profile` call.
-   */
-  isConsole: function () {
-    return this._console;
   },
 
   /**

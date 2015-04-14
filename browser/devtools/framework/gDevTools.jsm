@@ -14,12 +14,15 @@ Cu.import("resource://gre/modules/devtools/Loader.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "promise",
                                   "resource://gre/modules/Promise.jsm", "Promise");
+
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
                                   "resource://gre/modules/devtools/dbg-server.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
                                   "resource://gre/modules/devtools/dbg-client.jsm");
 
@@ -1210,6 +1213,16 @@ let gDevToolsBrowser = {
   },
 
   /**
+   * Connects to the SPS profiler when the developer tools are open. This is
+   * necessary because of the WebConsole's `profile` and `profileEnd` methods.
+   */
+  _connectToProfiler: function DT_connectToProfiler(event, toolbox) {
+    let SharedPerformanceUtils = devtools.require("devtools/performance/front");
+    let connection = SharedPerformanceUtils.getPerformanceActorsConnection(toolbox.target);
+    connection.open();
+  },
+
+  /**
    * Remove the menuitem for a tool to all open browser windows.
    *
    * @param {string} toolId
@@ -1317,6 +1330,7 @@ let gDevToolsBrowser = {
    * All browser windows have been closed, tidy up remaining objects.
    */
   destroy: function() {
+    gDevTools.off("toolbox-ready", gDevToolsBrowser._connectToProfiler);
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
   },
@@ -1337,6 +1351,7 @@ gDevTools.on("tool-unregistered", function(ev, toolId) {
 });
 
 gDevTools.on("toolbox-ready", gDevToolsBrowser._updateMenuCheckbox);
+gDevTools.on("toolbox-ready", gDevToolsBrowser._connectToProfiler);
 gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
