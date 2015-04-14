@@ -168,6 +168,7 @@ protected:
 
   static Modifiers ComputeModifierState(const nsAString& aModifiersList);
   bool GetModifierStateInternal(const nsAString& aKey);
+  void InitModifiers(const EventModifierInit& aParam);
 };
 
 } // namespace dom

@@ -622,6 +622,7 @@ class GCRuntime
     void startGC(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void gcSlice(JS::gcreason::Reason reason, int64_t millis = 0);
     void finishGC(JS::gcreason::Reason reason);
+    void abortGC();
     void startDebugGC(JSGCInvocationKind gckind, SliceBudget& budget);
     void debugGCSlice(SliceBudget& budget);
 

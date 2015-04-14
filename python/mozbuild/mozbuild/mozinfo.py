@@ -129,7 +129,9 @@ def build_dict(config, env=os.environ):
             return 'asan'
         return 'opt'
 
-    if 'buildapp' in d:
+    # if buildapp or bits are unknown, we don't have a configuration similar to
+    # any in automation and the guesses are useless.
+    if 'buildapp' in d and 'bits' in d:
         d['platform_guess'] = guess_platform()
         d['buildtype_guess'] = guess_buildtype()
 

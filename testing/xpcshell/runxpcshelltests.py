@@ -421,7 +421,6 @@ class XPCShellTestThread(Thread):
             '-r', self.httpdManifest,
             '-m',
             '-s',
-            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
             '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath
         ]
 
@@ -1250,8 +1249,10 @@ class XPCShellTests(object):
 
             test = testClass(test_object, self.event, self.cleanup_dir_list,
                     tests_root_dir=testsRootDir, app_dir_key=appDirKey,
-                    interactive=interactive, verbose=verbose, pStdout=pStdout,
-                    pStderr=pStderr, keep_going=keepGoing, log=self.log,
+                    interactive=interactive,
+                    verbose=verbose or test_object.get("verbose") == "true",
+                    pStdout=pStdout, pStderr=pStderr,
+                    keep_going=keepGoing, log=self.log,
                     mobileArgs=mobileArgs, **kwargs)
             if 'run-sequentially' in test_object or self.sequential:
                 sequential_tests.append(test)

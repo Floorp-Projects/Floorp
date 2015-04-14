@@ -292,10 +292,10 @@ partial interface Document {
   //(Not implemented)NodeList  findAll(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
 };
 
-// http://dev.w3.org/fxtf/web-animations/#extensions-to-the-document-interface
+// http://w3c.github.io/web-animations/#extensions-to-the-document-interface
 partial interface Document {
   [Func="nsDocument::IsWebAnimationsEnabled"]
-  readonly attribute AnimationTimeline timeline;
+  readonly attribute DocumentTimeline timeline;
 };
 
 //  Mozilla extensions of various sorts
