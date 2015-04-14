@@ -10,7 +10,6 @@ include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentBridge;
 include protocol PDocumentRenderer;
-include protocol PContentPermissionRequest;
 include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
@@ -18,7 +17,6 @@ include protocol PPluginWidget;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
-include PContentPermission;
 include ServiceWorkerRegistrarTypes;
 
 
@@ -103,7 +101,6 @@ prio(normal upto urgent) sync protocol PBrowser
 
     manages PColorPicker;
     manages PDocumentRenderer;
-    manages PContentPermissionRequest;
     manages PFilePicker;
     manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
@@ -383,21 +380,6 @@ parent:
      * but don't open it yet.
      */
     PColorPicker(nsString title, nsString initialColor);
-
-    /**
-     * Initiates an asynchronous request for permission for the
-     * provided principal.
-     *
-     * @param aRequests
-     *   The array of permissions to request.
-     * @param aPrincipal
-     *   The principal of the request.
-     *
-     * NOTE: The principal is untrusted in the parent process. Only
-     *       principals that can live in the content process should
-     *       provided.
-     */
-    PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal);
 
     PFilePicker(nsString aTitle, int16_t aMode);
 

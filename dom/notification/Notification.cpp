@@ -172,7 +172,10 @@ public:
                                 NotificationPermissionCallback* aCallback)
     : mPrincipal(aPrincipal), mWindow(aWindow),
       mPermission(NotificationPermission::Default),
-      mCallback(aCallback) {}
+      mCallback(aCallback)
+  {
+    mRequester = new nsContentPermissionRequester(mWindow);
+  }
 
 protected:
   virtual ~NotificationPermissionRequest() {}
@@ -183,6 +186,7 @@ protected:
   nsCOMPtr<nsPIDOMWindow> mWindow;
   NotificationPermission mPermission;
   nsRefPtr<NotificationPermissionCallback> mCallback;
+  nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };
 
 class NotificationObserver : public nsIObserver
@@ -305,6 +309,16 @@ NotificationPermissionRequest::Allow(JS::HandleValue aChoices)
 
   mPermission = NotificationPermission::Granted;
   return DispatchCallback();
+}
+
+NS_IMETHODIMP
+NotificationPermissionRequest::GetRequester(nsIContentPermissionRequester** aRequester)
+{
+  NS_ENSURE_ARG_POINTER(aRequester);
+
+  nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
+  requester.forget(aRequester);
+  return NS_OK;
 }
 
 inline nsresult

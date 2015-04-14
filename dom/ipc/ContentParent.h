@@ -372,6 +372,14 @@ public:
     virtual bool RecvFinishShutdown() override;
 
     void MaybeInvokeDragSession(TabParent* aParent);
+
+    virtual PContentPermissionRequestParent*
+    AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
+                                         const IPC::Principal& aPrincipal,
+                                         const TabId& aTabId) override;
+    virtual bool
+    DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor) override;
+
 protected:
     void OnChannelConnected(int32_t pid) override;
     virtual void ActorDestroy(ActorDestroyReason why) override;

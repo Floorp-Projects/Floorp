@@ -2,13 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <map>
 #ifdef MOZ_WIDGET_GONK
 #include "GonkPermission.h"
-#include "mozilla/dom/ContentParent.h"
 #endif // MOZ_WIDGET_GONK
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIPrincipal.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PContentPermission.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
@@ -24,10 +26,81 @@
 #include "nsJSUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIDocument.h"
+#include "nsIDOMEvent.h"
+#include "nsWeakPtr.h"
 
 using mozilla::unused;          // <snicker>
 using namespace mozilla::dom;
 using namespace mozilla;
+
+#define kVisibilityChange "visibilitychange"
+
+NS_IMPL_ISUPPORTS(VisibilityChangeListener, nsIDOMEventListener)
+
+VisibilityChangeListener::VisibilityChangeListener(nsPIDOMWindow* aWindow)
+{
+  MOZ_ASSERT(aWindow);
+
+  mWindow = do_GetWeakReference(aWindow);
+  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  if (doc) {
+    doc->AddSystemEventListener(NS_LITERAL_STRING(kVisibilityChange),
+                                /* listener */ this,
+                                /* use capture */ true,
+                                /* wants untrusted */ false);
+  }
+
+}
+
+NS_IMETHODIMP
+VisibilityChangeListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsAutoString type;
+  aEvent->GetType(type);
+  if (!type.EqualsLiteral(kVisibilityChange)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocument> doc =
+    do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
+  MOZ_ASSERT(doc);
+
+  if (mCallback) {
+    mCallback->NotifyVisibility(!doc->Hidden());
+  }
+
+  return NS_OK;
+}
+
+void
+VisibilityChangeListener::RemoveListener()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  if (!window) {
+    return;
+  }
+
+  nsCOMPtr<EventTarget> target = do_QueryInterface(window->GetExtantDoc());
+  if (target) {
+    target->RemoveSystemEventListener(NS_LITERAL_STRING(kVisibilityChange),
+                                      /* listener */ this,
+                                      /* use capture */ true);
+  }
+}
+
+void
+VisibilityChangeListener::SetCallback(nsIContentPermissionRequestCallback *aCallback)
+{
+  mCallback = aCallback;
+}
+
+already_AddRefed<nsIContentPermissionRequestCallback>
+VisibilityChangeListener::GetCallback()
+{
+  nsCOMPtr<nsIContentPermissionRequestCallback> callback = mCallback;
+  return callback.forget();
+}
 
 namespace mozilla {
 namespace dom {
@@ -49,6 +122,7 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
 
  private:
   virtual bool Recvprompt();
+  virtual bool RecvNotifyVisibility(const bool& aIsVisible);
   virtual void ActorDestroy(ActorDestroyReason why);
 };
 
@@ -79,6 +153,16 @@ ContentPermissionRequestParent::Recvprompt()
   return true;
 }
 
+bool
+ContentPermissionRequestParent::RecvNotifyVisibility(const bool& aIsVisible)
+{
+  if (!mProxy) {
+    return false;
+  }
+  mProxy->NotifyVisibility(aIsVisible);
+  return true;
+}
+
 void
 ContentPermissionRequestParent::ActorDestroy(ActorDestroyReason why)
 {
@@ -90,10 +174,10 @@ ContentPermissionRequestParent::ActorDestroy(ActorDestroyReason why)
 bool
 ContentPermissionRequestParent::IsBeingDestroyed()
 {
-  // When TabParent::Destroy() is called, we are being destroyed. It's unsafe
-  // to send out any message now.
-  TabParent* tabParent = TabParent::GetFrom(Manager());
-  return tabParent->IsDestroyed();
+  // When ContentParent::MarkAsDead() is called, we are being destroyed.
+  // It's unsafe to send out any message now.
+  ContentParent* contentParent = static_cast<ContentParent*>(Manager());
+  return !contentParent->IsAlive();
 }
 
 NS_IMPL_ISUPPORTS(ContentPermissionType, nsIContentPermissionType)
@@ -205,6 +289,13 @@ nsContentPermissionUtils::ConvertArrayToPermissionRequest(nsIArray* aSrcArray,
   return len;
 }
 
+static std::map<PContentPermissionRequestParent*, TabId>&
+ContentPermissionRequestParentMap()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static std::map<PContentPermissionRequestParent*, TabId> sPermissionRequestParentMap;
+  return sPermissionRequestParentMap;
+}
 
 /* static */ nsresult
 nsContentPermissionUtils::CreatePermissionArray(const nsACString& aType,
@@ -225,9 +316,14 @@ nsContentPermissionUtils::CreatePermissionArray(const nsACString& aType,
 /* static */ PContentPermissionRequestParent*
 nsContentPermissionUtils::CreateContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
                                                                Element* element,
-                                                               const IPC::Principal& principal)
+                                                               const IPC::Principal& principal,
+                                                               const TabId& aTabId)
 {
-  return new ContentPermissionRequestParent(aRequests, element, principal);
+  PContentPermissionRequestParent* parent =
+    new ContentPermissionRequestParent(aRequests, element, principal);
+  ContentPermissionRequestParentMap()[parent] = aTabId;
+
+  return parent;
 }
 
 /* static */ nsresult
@@ -259,9 +355,11 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest, n
     NS_ENSURE_SUCCESS(rv, rv);
 
     req->IPDLAddRef();
-    child->SendPContentPermissionRequestConstructor(req,
-                                                    permArray,
-                                                    IPC::Principal(principal));
+    ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
+      req,
+      permArray,
+      IPC::Principal(principal),
+      child->GetTabId());
 
     req->Sendprompt();
     return NS_OK;
@@ -276,8 +374,138 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest, n
   return NS_OK;
 }
 
+/* static */ nsTArray<PContentPermissionRequestParent*>
+nsContentPermissionUtils::GetContentPermissionRequestParentById(const TabId& aTabId)
+{
+  nsTArray<PContentPermissionRequestParent*> parentArray;
+  for (auto& it : ContentPermissionRequestParentMap()) {
+    if (it.second == aTabId) {
+      parentArray.AppendElement(it.first);
+    }
+  }
+
+  return Move(parentArray);
+}
+
+/* static */ void
+nsContentPermissionUtils::NotifyRemoveContentPermissionRequestParent(
+  PContentPermissionRequestParent* aParent)
+{
+  auto it = ContentPermissionRequestParentMap().find(aParent);
+  MOZ_ASSERT(it != ContentPermissionRequestParentMap().end());
+
+  ContentPermissionRequestParentMap().erase(it);
+}
+
+NS_IMPL_ISUPPORTS(nsContentPermissionRequester, nsIContentPermissionRequester)
+
+nsContentPermissionRequester::nsContentPermissionRequester(nsPIDOMWindow* aWindow)
+  : mWindow(aWindow)
+{
+  mListener = new VisibilityChangeListener(mWindow);
+}
+
+nsContentPermissionRequester::~nsContentPermissionRequester()
+{
+  mListener->RemoveListener();
+  mListener = nullptr;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequester::GetVisibility(nsIContentPermissionRequestCallback* aCallback)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  if (!mWindow) {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docshell = mWindow->GetDocShell();
+  if (!docshell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool isActive = false;
+  docshell->GetIsActive(&isActive);
+  aCallback->NotifyVisibility(isActive);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequester::SetOnVisibilityChange(nsIContentPermissionRequestCallback* aCallback)
+{
+  mListener->SetCallback(aCallback);
+
+  if (!aCallback) {
+    mListener->RemoveListener();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequester::GetOnVisibilityChange(nsIContentPermissionRequestCallback** aCallback)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  nsCOMPtr<nsIContentPermissionRequestCallback> callback = mListener->GetCallback();
+  callback.forget(aCallback);
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla
+
+NS_IMPL_ISUPPORTS(nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy,
+                  nsIContentPermissionRequester)
+
+NS_IMETHODIMP
+nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
+  ::GetVisibility(nsIContentPermissionRequestCallback* aCallback)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  mGetCallback = aCallback;
+  mWaitGettingResult = true;
+  unused << mParent->SendGetVisibility();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
+  ::SetOnVisibilityChange(nsIContentPermissionRequestCallback* aCallback)
+{
+  mOnChangeCallback = aCallback;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
+  ::GetOnVisibilityChange(nsIContentPermissionRequestCallback** aCallback)
+{
+  NS_ENSURE_ARG_POINTER(aCallback);
+
+  nsCOMPtr<nsIContentPermissionRequestCallback> callback = mOnChangeCallback;
+  callback.forget(aCallback);
+  return NS_OK;
+}
+
+void
+nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
+  ::NotifyVisibilityResult(const bool& aIsVisible)
+{
+  if (mWaitGettingResult) {
+    MOZ_ASSERT(mGetCallback);
+    mWaitGettingResult = false;
+    mGetCallback->NotifyVisibility(aIsVisible);
+    return;
+  }
+
+  if (mOnChangeCallback) {
+    mOnChangeCallback->NotifyVisibility(aIsVisible);
+  }
+}
 
 nsContentPermissionRequestProxy::nsContentPermissionRequestProxy()
 {
@@ -296,6 +524,7 @@ nsContentPermissionRequestProxy::Init(const nsTArray<PermissionRequest>& request
   NS_ASSERTION(parent, "null parent");
   mParent = parent;
   mPermissionRequests = requests;
+  mRequester = new nsContentPermissionRequesterProxy(mParent);
 
   nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
   if (!prompt) {
@@ -309,6 +538,7 @@ nsContentPermissionRequestProxy::Init(const nsTArray<PermissionRequest>& request
 void
 nsContentPermissionRequestProxy::OnParentDestroyed()
 {
+  mRequester = nullptr;
   mParent = nullptr;
 }
 
@@ -397,12 +627,12 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     if (mPermissionRequests[i].type().EqualsLiteral("audio-capture")) {
       GonkPermissionService::GetInstance()->addGrantInfo(
         "android.permission.RECORD_AUDIO",
-        TabParent::GetFrom(mParent->Manager())->Manager()->AsContentParent()->Pid());
+        static_cast<ContentParent*>(mParent->Manager())->Pid());
     }
     if (mPermissionRequests[i].type().EqualsLiteral("video-capture")) {
       GonkPermissionService::GetInstance()->addGrantInfo(
         "android.permission.CAMERA",
-        TabParent::GetFrom(mParent->Manager())->Manager()->AsContentParent()->Pid());
+        static_cast<ContentParent*>(mParent->Manager())->Pid());
     }
   }
 #endif
@@ -442,9 +672,27 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
   return NS_OK;
 }
 
+void
+nsContentPermissionRequestProxy::NotifyVisibility(const bool& aIsVisible)
+{
+  MOZ_ASSERT(mRequester);
+
+  mRequester->NotifyVisibilityResult(aIsVisible);
+}
+
+NS_IMETHODIMP
+nsContentPermissionRequestProxy::GetRequester(nsIContentPermissionRequester** aRequester)
+{
+  NS_ENSURE_ARG_POINTER(aRequester);
+
+  nsRefPtr<nsContentPermissionRequesterProxy> requester = mRequester;
+  requester.forget(aRequester);
+  return NS_OK;
+}
+
 // RemotePermissionRequest
 
-NS_IMPL_ISUPPORTS0(RemotePermissionRequest)
+NS_IMPL_ISUPPORTS(RemotePermissionRequest, nsIContentPermissionRequestCallback);
 
 RemotePermissionRequest::RemotePermissionRequest(
   nsIContentPermissionRequest* aRequest,
@@ -453,6 +701,8 @@ RemotePermissionRequest::RemotePermissionRequest(
   , mWindow(aWindow)
   , mIPCOpen(false)
 {
+  mListener = new VisibilityChangeListener(mWindow);
+  mListener->SetCallback(this);
 }
 
 void
@@ -474,6 +724,9 @@ bool
 RemotePermissionRequest::Recv__delete__(const bool& aAllow,
                                         InfallibleTArray<PermissionChoice>&& aChoices)
 {
+  mListener->RemoveListener();
+  mListener = nullptr;
+
   if (aAllow && mWindow->IsCurrentInnerWindow()) {
     // Use 'undefined' if no choice is provided.
     if (aChoices.IsEmpty()) {
@@ -506,4 +759,29 @@ RemotePermissionRequest::Recv__delete__(const bool& aAllow,
     DoCancel();
   }
   return true;
+}
+
+bool
+RemotePermissionRequest::RecvGetVisibility()
+{
+  nsCOMPtr<nsIDocShell> docshell = mWindow->GetDocShell();
+  if (!docshell) {
+    return false;
+  }
+
+  bool isActive = false;
+  docshell->GetIsActive(&isActive);
+  unused << SendNotifyVisibility(isActive);
+  return true;
+}
+
+NS_IMETHODIMP
+RemotePermissionRequest::NotifyVisibility(bool isVisible)
+{
+  if (!mIPCOpen) {
+    return NS_OK;
+  }
+
+  unused << SendNotifyVisibility(isVisible);
+  return NS_OK;
 }
