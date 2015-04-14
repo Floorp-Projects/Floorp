@@ -977,7 +977,6 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate,
 
 nsTextEditorState::nsTextEditorState(nsITextControlElement* aOwningElement)
   : mTextCtrlElement(aOwningElement),
-    mRestoringSelection(nullptr),
     mBoundFrame(nullptr),
     mEverInited(false),
     mEditorInitialized(false),
@@ -1450,6 +1449,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   }
 
   return rv;
+}
+
+void
+nsTextEditorState::FinishedRestoringSelection()
+{
+  mRestoringSelection = nullptr;
 }
 
 bool
