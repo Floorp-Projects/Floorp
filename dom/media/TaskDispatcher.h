@@ -69,6 +69,7 @@ public:
       nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(Move(group));
       nsresult rv = thread->Dispatch(r.forget());
       MOZ_DIAGNOSTIC_ASSERT(!assertDispatchSuccess || NS_SUCCEEDED(rv));
+      unused << assertDispatchSuccess;
       unused << rv;
     }
   }

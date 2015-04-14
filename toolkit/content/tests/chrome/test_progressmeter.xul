@@ -46,10 +46,10 @@ function doTests() {
   SimpleTest.ise(n1.value, "17", "determined value set invalid");
 
   n1.max = 200;
-  is(n1.max, 200, "max changed");
+  is(n1.max, "200", "max changed");
   n1.value = 150;
   n1.max = 120;
-  is(n1.value, 120, "max lowered below value");
+  is(n1.value, "120", "max lowered below value");
 
   n2.value = 2;
   SimpleTest.ise(n2.value, "0", "undetermined value set 2");

@@ -256,7 +256,7 @@ for (var i = 0; i < semirules.length; ++i) {
   textNode.data = sheet;
   is(cs.color, "rgb(0, 128, 0)",
      "color for rule '" + semirules[i] + "'");
-  is(cs.zIndex, i+1,
+  is(cs.zIndex, String(i + 1),
      "z-index for rule '" + semirules[i] + "'");
 }
 
@@ -267,7 +267,7 @@ for (var i = 0; i < declarations.length; ++i) {
   textNode.data = sheet;
   is(cs.color, "rgb(0, 128, 0)",
      "color for declaration '" + declarations[i] + "'");
-  is(cs.zIndex, i+1,
+  is(cs.zIndex, String(i + 1),
      "z-index for declaration '" + declarations[i] + "'");
 }
 
@@ -279,7 +279,7 @@ for (var i = 0; i < selectors.length; ++i) {
   textNode.data = sheet;
   is(cs.color, "rgb(0, 128, 0)",
      "color for selector '" + selectors[i] + "'");
-  is(cs.zIndex, i+1,
+  is(cs.zIndex, String(i + 1),
      "z-index for selector '" + selectors[i] + "'");
 }
 

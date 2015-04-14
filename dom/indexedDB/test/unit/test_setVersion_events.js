@@ -35,7 +35,7 @@ function testSteps()
   db1.addEventListener("versionchange", function(event) {
     ok(true, "Got version change event");
     ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
-    is(event.target.source, null, "Correct source");
+    is("source" in event.target, false, "Correct source");
     is(event.target, db1, "Correct target");
     is(event.target.version, 1, "Correct db version");
     is(event.oldVersion, 1, "Correct event oldVersion");
@@ -70,7 +70,7 @@ function testSteps()
   db2.addEventListener("versionchange", function(event) {
     ok(true, "Got version change event");
     ok(event instanceof IDBVersionChangeEvent, "Event is of the right type");
-    is(event.target.source, null, "Correct source");
+    is("source" in event.target, false, "Correct source");
     is(event.target, db2, "Correct target");
     is(event.target.version, 2, "Correct db version");
     is(event.oldVersion, 2, "Correct event oldVersion");

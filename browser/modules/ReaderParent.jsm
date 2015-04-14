@@ -214,6 +214,9 @@ let ReaderParent = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   _getArticle: Task.async(function* (url, browser) {
-    return yield ReaderMode.downloadAndParseDocument(url);
+    return yield ReaderMode.downloadAndParseDocument(url).catch(e => {
+      Cu.reportError("Error downloading and parsing document: " + e);
+      return null;
+    });
   })
 };

@@ -272,7 +272,7 @@ nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
   const gchar ** gs_strings = g_variant_get_strv(value, nullptr);
   if (!gs_strings) {
     // empty array
-    NS_ADDREF(*aResult = items);
+    items.forget(aResult);
     g_variant_unref(value);
     return NS_OK;
   }
@@ -288,7 +288,7 @@ nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
     p_gs_strings++;
   }
   g_free(gs_strings);
-  NS_ADDREF(*aResult = items);
+  items.forget(aResult);
   g_variant_unref(value);
   return NS_OK;
 }

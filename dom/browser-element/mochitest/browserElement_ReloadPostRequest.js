@@ -100,7 +100,7 @@ function runTest() {
       is(e.detail.message, expectedMessage.message);
       is(e.detail.buttons.length, 2);
       is(e.detail.showCheckbox, false);
-      is(e.detail.checkMessage, null);
+      is(e.detail.checkboxMessage, null);
       e.detail.unblock();
 
       if (!doRepost) {

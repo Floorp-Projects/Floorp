@@ -43,9 +43,9 @@
      * Init & destroy.
      */
     function initDOMRequestHelperTest(aMessages) {
-      is(dummy._requests, undefined, "Request is undefined");
+      is_loosely(dummy._requests, undefined, "Request is undefined");
       is(dummy._messages, undefined, "Messages is undefined");
-      is(dummy._window, undefined, "Window is undefined");
+      is_loosely(dummy._window, undefined, "Window is undefined");
 
       dummy.initDOMRequestHelper(window, aMessages);
 
@@ -59,9 +59,9 @@
     function destroyDOMRequestHelperTest() {
       dummy.destroyDOMRequestHelper();
 
-      is(dummy._requests, undefined, "Request is undefined");
+      is_loosely(dummy._requests, undefined, "Request is undefined");
       is(dummy._messages, undefined, "Messages is undefined");
-      is(dummy._window, undefined, "Window is undefined");
+      is_loosely(dummy._window, undefined, "Window is undefined");
     }
 
     /**
@@ -388,7 +388,7 @@
         is(req, req_, "Got correct request");
         dummy.removeRequest(id);
         req = dummy.getRequest(id);
-        is(req, null, "No request");
+        is(req, undefined, "No request");
         next();
       },
       function() {

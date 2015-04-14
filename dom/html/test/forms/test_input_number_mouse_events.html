@@ -53,28 +53,28 @@ function test() {
 
   // Test click on spin-up button:
   synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousedown" });
-  is(input.value, 1, "Test step-up on mousedown on spin-up button");
+  is(input.value, "1", "Test step-up on mousedown on spin-up button");
   synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
-  is(input.value, 1, "Test mouseup on spin-up button");
+  is(input.value, "1", "Test mouseup on spin-up button");
 
   // Test click on spin-down button:
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousedown" });
-  is(input.value, 0, "Test step-down on mousedown on spin-down button");
+  is(input.value, "0", "Test step-down on mousedown on spin-down button");
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
-  is(input.value, 0, "Test mouseup on spin-down button");
+  is(input.value, "0", "Test mouseup on spin-down button");
 
   // Test step="any" behavior:
   input.value = 0;
   var oldStep = input.step;
   input.step = "any";
   synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousedown" });
-  is(input.value, 1, "Test step-up on mousedown on spin-up button with step='any'");
+  is(input.value, "1", "Test step-up on mousedown on spin-up button with step='any'");
   synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
-  is(input.value, 1, "Test mouseup on spin-up button with step='any'");
+  is(input.value, "1", "Test mouseup on spin-up button with step='any'");
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousedown" });
-  is(input.value, 0, "Test step-down on mousedown on spin-down button with step='any'");
+  is(input.value, "0", "Test step-down on mousedown on spin-down button with step='any'");
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
-  is(input.value, 0, "Test mouseup on spin-down button with step='any'");
+  is(input.value, "0", "Test mouseup on spin-down button with step='any'");
   input.step = oldStep; // restore
 
   // Test that preventDefault() works:
@@ -84,9 +84,9 @@ function test() {
   input.value = 1;
   input.addEventListener("mousedown", preventDefault, false);
   synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, {});
-  is(input.value, 1, "Test that preventDefault() works for click on spin-up button");
+  is(input.value, "1", "Test that preventDefault() works for click on spin-up button");
   synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, {});
-  is(input.value, 1, "Test that preventDefault() works for click on spin-down button");
+  is(input.value, "1", "Test that preventDefault() works for click on spin-down button");
   input.removeEventListener("mousedown", preventDefault, false);
 
   // Run the spin tests:
@@ -113,10 +113,10 @@ var spinTests = [
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
       if (inputEventCount == 3) {
-        ok(input.value, 3, "Testing spin-up button");
+        is(input.value, "3", "Testing spin-up button");
         synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousemove" });
       } else if (inputEventCount == 6) {
-        ok(input.value, 0, "Testing spin direction is reversed after mouse moves from spin-up button to spin-down button");
+        is(input.value, "0", "Testing spin direction is reversed after mouse moves from spin-up button to spin-down button");
         input.removeEventListener("input", arguments.callee, false);
         synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
         runNextSpinTest();
@@ -133,10 +133,10 @@ var spinTests = [
     input.addEventListener("input", function(evt) {
       ++inputEventCount;
       if (inputEventCount == 3) {
-        ok(input.value, -3, "Testing spin-down button");
+        is(input.value, "-3", "Testing spin-down button");
         synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousemove" });
       } else if (inputEventCount == 6) {
-        ok(input.value, 0, "Testing spin direction is reversed after mouse moves from spin-down button to spin-up button");
+        is(input.value, "0", "Testing spin direction is reversed after mouse moves from spin-down button to spin-up button");
         input.removeEventListener("input", arguments.callee, false);
         synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
         runNextSpinTest();
@@ -156,8 +156,8 @@ var spinTests = [
         synthesizeMouse(input, -1, -1, { type: "mousemove" });
         var eventHandler = arguments.callee;
         setTimeout(function() {
-          ok(input.value, 3, "Testing moving the mouse outside the spin buttons stops the spin");
-          ok(inputEventCount, 3, "Testing moving the mouse outside the spin buttons stops the spin input events");
+          is(input.value, "3", "Testing moving the mouse outside the spin buttons stops the spin");
+          is(inputEventCount, 3, "Testing moving the mouse outside the spin buttons stops the spin input events");
           input.removeEventListener("input", eventHandler, false);
           synthesizeMouse(input, -1, -1, { type: "mouseup" });
           runNextSpinTest();
@@ -177,8 +177,8 @@ var spinTests = [
         input.type = "text"
         var eventHandler = arguments.callee;
         setTimeout(function() {
-          ok(input.value, 3, "Testing changing input type during a spin stops the spin");
-          ok(inputEventCount, 3, "Testing changing input type during a spin stops the spin input events");
+          is(input.value, "-3", "Testing changing input type during a spin stops the spin");
+          is(inputEventCount, 3, "Testing changing input type during a spin stops the spin input events");
           input.removeEventListener("input", eventHandler, false);
           synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
           input.type = "number"; // restore

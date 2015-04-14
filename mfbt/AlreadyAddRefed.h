@@ -66,10 +66,17 @@ struct already_AddRefed
 
   explicit already_AddRefed(T* aRawPtr) : mRawPtr(aRawPtr) {}
 
-  // Disallowed. Use move semantics instead.
+  // Disallow copy constructor and copy assignment operator: move semantics used instead.
   already_AddRefed(const already_AddRefed<T>& aOther) = delete;
+  already_AddRefed<T>& operator=(const already_AddRefed<T>& aOther) = delete;
 
   already_AddRefed(already_AddRefed<T>&& aOther) : mRawPtr(aOther.take()) {}
+
+  already_AddRefed<T>& operator=(already_AddRefed<T>&& aOther)
+  {
+    mRawPtr = aOther.take();
+    return *this;
+  }
 
   /**
    * This helper is useful in cases like

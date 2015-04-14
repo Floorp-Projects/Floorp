@@ -33,6 +33,7 @@ using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h
 using mozilla::LayerMargin from "Units.h";
 using mozilla::LayerPoint from "Units.h";
 using mozilla::LayerRect from "Units.h";
+using mozilla::ParentLayerIntRect from "Units.h";
 using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegionsOverride from "mozilla/layers/LayersTypes.h";
@@ -204,7 +205,7 @@ struct CommonLayerAttributes {
   uint32_t contentFlags;
   float opacity;
   bool useClipRect;
-  nsIntRect clipRect;
+  ParentLayerIntRect clipRect;
   bool isFixedPosition;
   LayerPoint fixedPositionAnchor;
   LayerMargin fixedPositionMargin;

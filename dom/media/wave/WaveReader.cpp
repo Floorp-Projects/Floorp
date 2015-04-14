@@ -142,7 +142,6 @@ nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  mInfo.mAudio.mHasAudio = true;
   mInfo.mAudio.mRate = mSampleRate;
   mInfo.mAudio.mChannels = mChannels;
 

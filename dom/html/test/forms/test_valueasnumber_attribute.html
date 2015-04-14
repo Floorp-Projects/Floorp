@@ -150,11 +150,11 @@ function checkNumberSet()
     // Setting a string will set NaN.
     ["foo", ""],
     // "" is converted to 0.
-    ["", 0],
+    ["", "0"],
     [42, "42"], // Keep this here, it is used by the next test.
     // Setting Infinity should throw and not change the current value.
-    [Infinity, 42, true],
-    [-Infinity, 42, true],
+    [Infinity, "42", true],
+    [-Infinity, "42", true],
     // Setting NaN should change the value to the empty string.
     [NaN, ""],
   ];
@@ -225,7 +225,7 @@ function checkRangeSet()
 {
   var min = -200;
   var max = 200;
-  var defaultValue = min + (max - min)/2;
+  var defaultValue = String(min + (max - min)/2);
 
   var testData =
   [

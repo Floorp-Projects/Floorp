@@ -248,6 +248,9 @@ public:
     ID3D11Device *GetD3D11ContentDevice();
     ID3D11Device *GetD3D11MediaDevice();
 
+    // Create a D3D11 device to be used for DXVA decoding.
+    mozilla::TemporaryRef<ID3D11Device> CreateD3D11DecoderDevice();
+
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
     static bool IsOptimus();

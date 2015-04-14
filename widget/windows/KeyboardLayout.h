@@ -62,24 +62,27 @@ public:
   ModifierKeyState(bool aIsShiftDown, bool aIsControlDown, bool aIsAltDown);
   ModifierKeyState(Modifiers aModifiers);
 
-  MOZ_ALWAYS_INLINE void Update();
+  void Update();
 
-  MOZ_ALWAYS_INLINE void Unset(Modifiers aRemovingModifiers);
+  void Unset(Modifiers aRemovingModifiers);
   void Set(Modifiers aAddingModifiers);
 
   void InitInputEvent(WidgetInputEvent& aInputEvent) const;
 
   bool IsShift() const;
   bool IsControl() const;
-  MOZ_ALWAYS_INLINE bool IsAlt() const;
-  MOZ_ALWAYS_INLINE bool IsAltGr() const;
-  MOZ_ALWAYS_INLINE bool IsWin() const;
+  bool IsAlt() const;
+  bool IsAltGr() const;
+  bool IsWin() const;
 
-  MOZ_ALWAYS_INLINE bool IsCapsLocked() const;
-  MOZ_ALWAYS_INLINE bool IsNumLocked() const;
-  MOZ_ALWAYS_INLINE bool IsScrollLocked() const;
+  bool IsCapsLocked() const;
+  bool IsNumLocked() const;
+  bool IsScrollLocked() const;
 
-  MOZ_ALWAYS_INLINE Modifiers GetModifiers() const;
+  MOZ_ALWAYS_INLINE Modifiers GetModifiers() const
+  {
+    return mModifiers;
+  }
 
 private:
   Modifiers mModifiers;

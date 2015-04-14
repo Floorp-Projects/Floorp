@@ -40,7 +40,7 @@ function checkNegativeMaxLengthException(element)
   }
   ok(caught, "Setting negative maxLength from the DOM should throw an exception");
 
-  is(element.getAttribute('maxLength'), -10, "When the exception is raised, the maxLength attribute shouldn't change");
+  is(element.getAttribute('maxLength'), "-10", "When the exception is raised, the maxLength attribute shouldn't change");
 }
 
 /* TODO: correct behavior may be checked for email, telephone, url and search input types */

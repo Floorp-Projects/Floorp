@@ -667,8 +667,9 @@ nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
     }
   }
 
-  if (NS_SUCCEEDED(rv))
-    NS_ADDREF(*_retval = value);
+  if (NS_SUCCEEDED(rv)) {
+    value.forget(_retval);
+  }
 
   return rv;
 }
@@ -711,8 +712,9 @@ nsAnnotationService::GetItemAnnotation(int64_t aItemId,
     }
   }
 
-  if (NS_SUCCEEDED(rv))
-    NS_ADDREF(*_retval = value);
+  if (NS_SUCCEEDED(rv)) {
+    value.forget(_retval);
+  }
 
   return rv;
 }

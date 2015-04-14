@@ -433,7 +433,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
       mVideoTrack = track;
       mHasVideo = true;
-      mInfo.mVideo.mHasVideo = true;
 
       mInfo.mVideo.mDisplay = displaySize;
       mPicture = pictureRect;
@@ -466,7 +465,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
       mAudioTrack = track;
       mHasAudio = true;
-      mInfo.mAudio.mHasAudio = true;
       mAudioCodec = nestegg_track_codec_id(mContext, track);
       mCodecDelay = params.codec_delay / NS_PER_USEC;
 

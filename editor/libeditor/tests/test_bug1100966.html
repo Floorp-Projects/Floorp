@@ -38,8 +38,8 @@ SimpleTest.waitForFocus(function() {
 
       var sel = getSpellCheckSelection();
       is(sel.rangeCount, 2, "We should have two misspelled words");
-      is(sel.getRangeAt(0), "fivee", "Correct misspelled word");
-      is(sel.getRangeAt(1), "sixx", "Correct misspelled word");
+      is(String(sel.getRangeAt(0)), "fivee", "Correct misspelled word");
+      is(String(sel.getRangeAt(1)), "sixx", "Correct misspelled word");
 
       SimpleTest.finish();
     },0);
