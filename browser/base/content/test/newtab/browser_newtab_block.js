@@ -6,7 +6,21 @@
  * as expected. Pinned tabs should not be moved. Gaps will be re-filled
  * if more sites are available.
  */
+
+gDirectorySource = "data:application/json," + JSON.stringify({
+  "suggested": [{
+    url: "http://suggested.com/",
+    imageURI: "data:image/png;base64,helloWORLD3",
+    title: "title",
+    type: "affiliate",
+    frecent_sites: ["example0.com"]
+  }]
+});
+
 function runTests() {
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = (site) => false;
+
   // we remove sites and expect the gaps to be filled as long as there still
   // are some sites available
   yield setLinks("0,1,2,3,4,5,6,7,8,9");
@@ -58,4 +72,16 @@ function runTests() {
 
   yield blockCell(0);
   checkGrid("1,2,3,4,5,6,7,9,8p");
+
+  // Test that blocking the targeted site also removes its associated suggested tile
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  yield restore();
+  yield setLinks("0,1,2,3,4,5,6,7,8,9");
+  yield addNewTabPageTab();
+  yield customizeNewTabPage("enhanced");
+  checkGrid("http://suggested.com/,0,1,2,3,4,5,6,7,8,9");
+
+  yield blockCell(1);
+  yield addNewTabPageTab();
+  checkGrid("1,2,3,4,5,6,7,8,9");
 }

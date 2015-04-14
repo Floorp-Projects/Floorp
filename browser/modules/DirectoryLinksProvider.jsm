@@ -509,6 +509,7 @@ let DirectoryLinksProvider = {
     this._lastDownloadMS = 0;
 
     NewTabUtils.placesProvider.addObserver(this);
+    NewTabUtils.links.addObserver(this);
 
     return Task.spawn(function() {
       // get the last modified time of the links file if it exists
