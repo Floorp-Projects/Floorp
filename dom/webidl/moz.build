@@ -108,6 +108,7 @@ WEBIDL_FILES = [
     'DisplayPortInputPort.webidl',
     'Document.webidl',
     'DocumentFragment.webidl',
+    'DocumentTimeline.webidl',
     'DocumentType.webidl',
     'DOMCursor.webidl',
     'DOMError.webidl',

@@ -9,21 +9,38 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 let openChatOrig = Chat.open;
 
-const kRooms = new Map([
+const kContextEnabledPref = "loop.contextInConverations.enabled";
+
+const kGuestKey = "uGIs-kGbYt1hBBwjyW7MLQ";
+
+// Rooms details as responded by the server.
+const kRoomsResponses = new Map([
   ["_nxD4V4FflQ", {
     roomToken: "_nxD4V4FflQ",
-    roomName: "First Room Name",
+    // Encrypted with roomKey "FliIGLUolW-xkKZVWstqKw".
+    // roomKey is wrapped with kGuestKey.
+    context: {
+      wrappedKey: "F3V27oPB+FgjFbVPML2PupONYqoIZ53XRU4BqG46Lr3eyIGumgCEqgjSe/MXAXiQ//8=",
+      value: "df7B4SNxhOI44eJjQavCevADyCCxz6/DEZbkOkRUMVUxzS42FbzN6C2PqmCKDYUGyCJTwJ0jln8TLw==",
+      alg: "AES-GCM"
+    },
     roomUrl: "http://localhost:3000/rooms/_nxD4V4FflQ",
     maxSize: 2,
-    currSize: 0,
-    ctime: 1405517546
+    ctime: 1405517546,
+    participants: [{
+      displayName: "Alexis",
+      account: "alexis@example.com",
+      roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+    }, {
+      displayName: "Adam",
+      roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+    }]
   }],
   ["QzBbvGmIZWU", {
     roomToken: "QzBbvGmIZWU",
     roomName: "Second Room Name",
     roomUrl: "http://localhost:3000/rooms/QzBbvGmIZWU",
     maxSize: 2,
-    currSize: 0,
     ctime: 140551741
   }],
   ["3jKS_Els9IU", {
@@ -32,13 +49,65 @@ const kRooms = new Map([
     roomUrl: "http://localhost:3000/rooms/3jKS_Els9IU",
     maxSize: 3,
     clientMaxSize: 2,
-    currSize: 1,
+    ctime: 1405518241
+  }]
+]);
+
+const kExpectedRooms = new Map([
+  ["_nxD4V4FflQ", {
+    roomToken: "_nxD4V4FflQ",
+    context: {
+      wrappedKey: "F3V27oPB+FgjFbVPML2PupONYqoIZ53XRU4BqG46Lr3eyIGumgCEqgjSe/MXAXiQ//8=",
+      value: "df7B4SNxhOI44eJjQavCevADyCCxz6/DEZbkOkRUMVUxzS42FbzN6C2PqmCKDYUGyCJTwJ0jln8TLw==",
+      alg: "AES-GCM"
+    },
+    decryptedContext: {
+      roomName: "First Room Name"
+    },
+    roomUrl: "http://localhost:3000/rooms/_nxD4V4FflQ#FliIGLUolW-xkKZVWstqKw",
+    roomKey: "FliIGLUolW-xkKZVWstqKw",
+    maxSize: 2,
+    ctime: 1405517546,
+    participants: [{
+      displayName: "Alexis",
+      account: "alexis@example.com",
+      roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+    }, {
+      displayName: "Adam",
+      roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+    }]
+  }],
+  ["QzBbvGmIZWU", {
+    roomToken: "QzBbvGmIZWU",
+    decryptedContext: {
+      roomName: "Second Room Name"
+    },
+    roomUrl: "http://localhost:3000/rooms/QzBbvGmIZWU",
+    maxSize: 2,
+    ctime: 140551741
+  }],
+  ["3jKS_Els9IU", {
+    roomToken: "3jKS_Els9IU",
+    decryptedContext: {
+      roomName: "Third Room Name"
+    },
+    roomUrl: "http://localhost:3000/rooms/3jKS_Els9IU",
+    maxSize: 3,
+    clientMaxSize: 2,
     ctime: 1405518241
   }]
 ]);
 
 let roomDetail = {
-  roomName: "First Room Name",
+  decryptedContext: {
+    roomName: "First Room Name"
+  },
+  context: {
+    wrappedKey: "wrappedKey",
+    value: "encryptedValue",
+    alg: "AES-GCM"
+  },
+  roomKey: "fakeKey",
   roomUrl: "http://localhost:3000/rooms/_nxD4V4FflQ",
   roomOwner: "Alexis",
   maxSize: 2,
@@ -91,6 +160,14 @@ const kRoomUpdates = {
 };
 
 const kCreateRoomProps = {
+  decryptedContext: {
+    roomName: "UX Discussion",
+  },
+  roomOwner: "Alexis",
+  maxSize: 2
+};
+
+const kCreateRoomUnencryptedProps = {
   roomName: "UX Discussion",
   roomOwner: "Alexis",
   maxSize: 2
@@ -105,18 +182,35 @@ const kCreateRoomData = {
 const kChannelGuest = MozLoopService.channelIDs.roomsGuest;
 const kChannelFxA = MozLoopService.channelIDs.roomsFxA;
 
-const normalizeRoom = function(room) {
-  delete room.currSize;
-  if (!("participants" in room)) {
-    let name = room.roomName;
-    for (let key of Object.getOwnPropertyNames(roomDetail)) {
-      room[key] = roomDetail[key];
-    }
-    room.roomName = name;
+const extend = function(target, source) {
+  for (let key of Object.getOwnPropertyNames(source)) {
+    target[key] = source[key];
   }
-  return room;
+  return target;
 };
 
+const normalizeRoom = function(room) {
+  let newRoom = extend({}, room);
+  let name = newRoom.decryptedContext.roomName;
+
+  for (let key of Object.getOwnPropertyNames(roomDetail)) {
+    // Handle sub-objects if necessary (e.g. context, decryptedContext).
+    if (typeof roomDetail[key] == "object") {
+      newRoom[key] = extend({}, roomDetail[key]);
+    } else {
+      newRoom[key] = roomDetail[key];
+    }
+  }
+
+  newRoom.decryptedContext.roomName = name;
+  return newRoom;
+};
+
+// This compares rooms by normalizing the room fields so that the contents
+// are the same between the two rooms - except for the room name
+// (see normalizeRoom). This means we can detect if fields are missing, but
+// we don't need to worry about the values being different, for example, in the
+// case of expiry times.
 const compareRooms = function(room1, room2) {
   Assert.deepEqual(normalizeRoom(room1), normalizeRoom(room2));
 };
@@ -130,7 +224,7 @@ let gExpectedLeaves = {};
 let gExpectedRefresh = false;
 
 const onRoomAdded = function(e, room) {
-  let expectedIds = gExpectedAdds.map(room => room.roomToken);
+  let expectedIds = gExpectedAdds.map(expectedRoom => expectedRoom.roomToken);
   let idx = expectedIds.indexOf(room.roomToken);
   Assert.ok(idx > -1, "Added room should be expected");
   let expected = gExpectedAdds[idx];
@@ -202,18 +296,31 @@ add_task(function* setup_server() {
       Assert.ok(req.bodyInputStream, "POST request should have a payload");
       let body = CommonUtils.readBytesFromInputStream(req.bodyInputStream);
       let data = JSON.parse(body);
-      Assert.deepEqual(data, kCreateRoomProps);
+
+      if (Services.prefs.getBoolPref(kContextEnabledPref)) {
+        Assert.equal(data.roomOwner, kCreateRoomProps.roomOwner);
+        Assert.equal(data.maxSize, kCreateRoomProps.maxSize);
+        Assert.ok(!("decryptedContext" in data), "should not have any decrypted data");
+        Assert.ok("context" in data, "should have context");
+      } else {
+        Assert.deepEqual(data, kCreateRoomUnencryptedProps);
+      }
 
       res.write(JSON.stringify(kCreateRoomData));
     } else {
       if (req.queryString) {
         let qs = parseQueryString(req.queryString);
-        let room = kRooms.get("_nxD4V4FflQ");
+        let room = kRoomsResponses.get("_nxD4V4FflQ");
         room.participants = kRoomUpdates[qs.version].participants;
         room.deleted = kRoomUpdates[qs.version].deleted;
         res.write(JSON.stringify([room]));
       } else {
-        res.write(JSON.stringify([...kRooms.values()]));
+        // XXX Only return last 2 elements until FxA keys are implemented.
+        if (MozLoopServiceInternal.fxAOAuthTokenData) {
+          res.write(JSON.stringify([...kRoomsResponses.values()].slice(1, 3)));
+        } else {
+          res.write(JSON.stringify([...kRoomsResponses.values()]));
+        }
       }
     }
 
@@ -234,7 +341,7 @@ add_task(function* setup_server() {
   }
 
   // Add a request handler for each room in the list.
-  [...kRooms.values()].forEach(function(room) {
+  [...kRoomsResponses.values()].forEach(function(room) {
     loopServer.registerPathHandler("/rooms/" + encodeURIComponent(room.roomToken), (req, res) => {
       if (req.method == "POST") {
         let data = getJSONData(req.bodyInputStream);
@@ -244,9 +351,21 @@ add_task(function* setup_server() {
         res.finish();
       } else if (req.method == "PATCH") {
         let data = getJSONData(req.bodyInputStream);
-        returnRoomDetails(res, data.roomName);
+        if (Services.prefs.getBoolPref(kContextEnabledPref)) {
+          Assert.ok("context" in data, "should have encrypted context");
+          // We return a fake encrypted name here as the context is
+          // encrypted.
+          returnRoomDetails(res, "fakeEncrypted");
+        } else {
+          Assert.ok(!("context" in data), "should not have encrypted context");
+          returnRoomDetails(res, data.roomName);
+        }
       } else {
-        returnRoomDetails(res, room.roomName);
+        roomDetail.context = room.context;
+        res.setStatusLine(null, 200, "OK");
+        res.write(JSON.stringify(roomDetail));
+        res.processAsync();
+        res.finish();
       }
     });
   });
@@ -271,11 +390,11 @@ add_task(function* setup_server() {
 
 // Test if fetching a list of all available rooms works correctly.
 add_task(function* test_getAllRooms() {
-  gExpectedAdds.push(...kRooms.values());
+  gExpectedAdds.push(...kExpectedRooms.values());
   let rooms = yield LoopRooms.promise("getAll");
   Assert.equal(rooms.length, 3);
   for (let room of rooms) {
-    compareRooms(kRooms.get(room.roomToken), room);
+    compareRooms(kExpectedRooms.get(room.roomToken), room);
   }
 });
 
@@ -283,7 +402,7 @@ add_task(function* test_getAllRooms() {
 add_task(function* test_getRoom() {
   let roomToken = "_nxD4V4FflQ";
   let room = yield LoopRooms.promise("get", roomToken);
-  Assert.deepEqual(room, kRooms.get(roomToken));
+  Assert.deepEqual(room, kExpectedRooms.get(roomToken));
 });
 
 // Test if fetching a room with incorrect token or return values yields an error.
@@ -294,9 +413,26 @@ add_task(function* test_errorStates() {
 
 // Test if creating a new room works as expected.
 add_task(function* test_createRoom() {
-  gExpectedAdds.push(kCreateRoomProps);
+  Services.prefs.setBoolPref(kContextEnabledPref, true);
+
+  var expectedRoom = extend({}, kCreateRoomProps);
+  expectedRoom.roomToken = kCreateRoomData.roomToken;
+
+  gExpectedAdds.push(expectedRoom);
   let room = yield LoopRooms.promise("create", kCreateRoomProps);
-  compareRooms(room, kCreateRoomProps);
+  compareRooms(room, expectedRoom);
+});
+
+// XXX Test unencrypted rooms. This will go away once we switch encryption on.
+add_task(function* test_createRoom_unencrypted() {
+  Services.prefs.setBoolPref(kContextEnabledPref, false);
+
+  var expectedRoom = extend({}, kCreateRoomProps);
+  expectedRoom.roomToken = kCreateRoomData.roomToken;
+
+  gExpectedAdds.push(expectedRoom);
+  let room = yield LoopRooms.promise("create", kCreateRoomProps);
+  compareRooms(room, expectedRoom);
 });
 
 // Test if opening a new room window works correctly.
@@ -320,8 +456,10 @@ add_task(function* test_openRoom() {
 
 // Test if the rooms cache is refreshed after FxA signin or signout.
 add_task(function* test_refresh() {
-  gExpectedAdds.push(...kRooms.values());
+  // XXX Temporarily whilst FxA encryption isn't handled (bug 1153788).
+  Array.prototype.push.apply(gExpectedAdds, [...kExpectedRooms.values()].slice(1,3));
   gExpectedRefresh = true;
+
   // Make the switch.
   MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
   MozLoopServiceInternal.fxAOAuthProfile = {
@@ -332,7 +470,7 @@ add_task(function* test_refresh() {
   yield waitForCondition(() => !gExpectedRefresh);
   yield waitForCondition(() => gExpectedAdds.length === 0);
 
-  gExpectedAdds.push(...kRooms.values());
+  gExpectedAdds.push(...kExpectedRooms.values());
   gExpectedRefresh = true;
   // Simulate a logout.
   MozLoopServiceInternal.fxAOAuthTokenData = null;
@@ -441,9 +579,17 @@ add_task(function* test_leaveRoom() {
 
 // Test if renaming a room works as expected.
 add_task(function* test_renameRoom() {
+  Services.prefs.setBoolPref(kContextEnabledPref, true);
   let roomToken = "_nxD4V4FflQ";
   let renameData = yield LoopRooms.promise("rename", roomToken, "fakeName");
-  Assert.equal(renameData.roomName, "fakeName");
+  Assert.equal(renameData.roomName, "fakeEncrypted", "should have set the new name");
+});
+
+add_task(function* test_renameRoom_unencrpyted() {
+  Services.prefs.setBoolPref(kContextEnabledPref, false);
+  let roomToken = "_nxD4V4FflQ";
+  let renameData = yield LoopRooms.promise("rename", roomToken, "fakeName");
+  Assert.equal(renameData.roomName, "fakeName", "should have set the new name");
 });
 
 add_task(function* test_roomDeleteNotifications() {
@@ -477,6 +623,8 @@ add_task(function* () {
 function run_test() {
   setupFakeLoopServer();
 
+  Services.prefs.setCharPref("loop.key", kGuestKey);
+
   LoopRooms.on("add", onRoomAdded);
   LoopRooms.on("update", onRoomUpdated);
   LoopRooms.on("delete", onRoomDeleted);
@@ -487,6 +635,8 @@ function run_test() {
   do_register_cleanup(function () {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
+    Services.prefs.clearUserPref(kContextEnabledPref);
+    Services.prefs.clearUserPref("loop.key");
 
     MozLoopServiceInternal.fxAOAuthTokenData = null;
     MozLoopServiceInternal.fxAOAuthProfile = null;

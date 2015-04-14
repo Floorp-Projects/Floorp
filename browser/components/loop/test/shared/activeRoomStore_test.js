@@ -239,7 +239,9 @@ describe("loop.store.ActiveRoomStore", function () {
     beforeEach(function() {
       fakeToken = "337-ff-54";
       fakeRoomData = {
-        roomName: "Monkeys",
+        decryptedContext: {
+          roomName: "Monkeys"
+        },
         roomOwner: "Alfred",
         roomUrl: "http://invalid"
       };
@@ -279,11 +281,14 @@ describe("loop.store.ActiveRoomStore", function () {
 
         sinon.assert.calledTwice(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.SetupRoomInfo(_.extend({
+          new sharedActions.SetupRoomInfo({
             roomToken: fakeToken,
+            roomName: fakeRoomData.decryptedContext.roomName,
+            roomOwner: fakeRoomData.roomOwner,
+            roomUrl: fakeRoomData.roomUrl,
             socialShareButtonAvailable: false,
             socialShareProviders: []
-          }, fakeRoomData)));
+          }));
       });
 
     it("should dispatch a JoinRoom action if the get is successful",
@@ -1272,7 +1277,9 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledTwice(fakeMozLoop.rooms.on);
 
         var fakeRoomData = {
-          roomName: "fakeName",
+          decryptedContext: {
+            roomName: "fakeName"
+          },
           roomOwner: "you",
           roomUrl: "original"
         };
@@ -1281,13 +1288,19 @@ describe("loop.store.ActiveRoomStore", function () {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.UpdateRoomInfo(fakeRoomData));
+          new sharedActions.UpdateRoomInfo({
+            roomName: fakeRoomData.decryptedContext.roomName,
+            roomOwner: fakeRoomData.roomOwner,
+            roomUrl: fakeRoomData.roomUrl
+          }));
       });
     });
 
     describe("delete:{roomToken}", function() {
       var fakeRoomData = {
-        roomName: "Its a room",
+        decryptedContext: {
+          roomName: "Its a room"
+        },
         roomOwner: "Me",
         roomToken: "fakeToken",
         roomUrl: "http://invalid"

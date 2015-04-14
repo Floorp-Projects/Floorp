@@ -39,7 +39,9 @@ VideoDecoder::VideoDecoder(GMPVideoHost *aHostAPI)
 
 VideoDecoder::~VideoDecoder()
 {
-  mMutex->Destroy();
+  if (mMutex) {
+    mMutex->Destroy();
+  }
 }
 
 void
@@ -330,8 +332,12 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample,
 void
 VideoDecoder::Reset()
 {
-  mDecoder->Reset();
-  mCallback->ResetComplete();
+  if (mDecoder) {
+    mDecoder->Reset();
+  }
+  if (mCallback) {
+    mCallback->ResetComplete();
+  }
 }
 
 void
@@ -361,6 +367,12 @@ VideoDecoder::DrainTask()
 void
 VideoDecoder::Drain()
 {
+  if (!mDecoder) {
+    if (mCallback) {
+      mCallback->DrainComplete();
+    }
+    return;
+  }
   EnsureWorker();
   mWorkerThread->Post(WrapTask(this,
                                &VideoDecoder::DrainTask));

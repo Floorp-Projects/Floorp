@@ -224,16 +224,11 @@ let openLayoutView = Task.async(function*() {
 });
 
 /**
- * Wait for the layoutview-updated event and for all of the inspector's panels
- * to update too.
- * Use this to make sure the inspector is updated and ready after a change was
- * made in one of the layout-view editable fields.
+ * Wait for the layoutview-updated event.
  * @return a promise
  */
 function waitForUpdate(inspector) {
-  let onLayoutView = inspector.once("layoutview-updated");
-  let onInspector = inspector.once("inspector-updated");
-  return promise.all([onLayoutView, onInspector]);
+  return inspector.once("layoutview-updated");
 }
 
 /**
