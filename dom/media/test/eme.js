@@ -53,26 +53,6 @@ function HexToBase64(hex)
   return window.btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
-function TimeStamp(token) {
-  function pad(x) {
-    return (x < 10) ? "0" + x : x;
-  }
-  var now = new Date();
-  var ms = now.getMilliseconds();
-  var time = "[" +
-             pad(now.getHours()) + ":" +
-             pad(now.getMinutes()) + ":" +
-             pad(now.getSeconds()) + "." +
-             ms +
-             "]" +
-             (ms < 10 ? "  " : (ms < 100 ? " " : ""));
-  return token ? (time + " " + token) : time;
-}
-
-function Log(token, msg) {
-  info(TimeStamp(token) + " " + msg);
-}
-
 function TimeRangesToString(trs)
 {
   var l = trs.length;
