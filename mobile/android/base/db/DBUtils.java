@@ -211,8 +211,29 @@ public class DBUtils {
 
     @RobocopTarget
     public enum UpdateOperation {
+        /**
+         * ASSIGN is the usual update: replaces the value in the named column with the provided value.
+         *
+         * foo = ?
+         */
         ASSIGN,
+
+        /**
+         * BITWISE_OR applies the provided value to the existing value with a bitwise OR. This is useful for adding to flags.
+         *
+         * foo |= ?
+         */
         BITWISE_OR,
+
+        /**
+         * EXPRESSION is an end-run around the API: it allows callers to specify a fragment of SQL to splice into the
+         * SET part of the query.
+         *
+         * foo = $value
+         *
+         * Be very careful not to use user input in this.
+         */
+        EXPRESSION,
     }
 
     /**
@@ -245,7 +266,10 @@ public class DBUtils {
         // move all bind args to one array
         int setValuesSize = 0;
         for (int i = 0; i < values.length; i++) {
-            setValuesSize += values[i].size();
+            // EXPRESSION types don't contribute any placeholders.
+            if (ops[i] != UpdateOperation.EXPRESSION) {
+                setValuesSize += values[i].size();
+            }
         }
 
         int bindArgsSize = (whereArgs == null) ? setValuesSize : (setValuesSize + whereArgs.length);
@@ -275,6 +299,16 @@ public class DBUtils {
                         bindArgs[arg++] = entry.getValue();
                         sql.append("= ? | ");
                         sql.append(colName);
+                    }
+                    break;
+                case EXPRESSION:
+                    // Treat each value as a literal SQL string.
+                    for (Map.Entry<String, Object> entry : v.valueSet()) {
+                        final String colName = entry.getKey();
+                        sql.append((arg > 0) ? "," : "");
+                        sql.append(colName);
+                        sql.append(" = ");
+                        sql.append(entry.getValue());
                     }
                     break;
             }
