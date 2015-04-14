@@ -18,6 +18,12 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_flame_kk_eng.yml
+  aries-nightly:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_lightsaber_nightly.yml
 
 tests:
   gaia-build:
