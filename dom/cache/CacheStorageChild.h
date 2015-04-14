@@ -11,16 +11,10 @@
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/PCacheStorageChild.h"
 
-class nsIGlobalObject;
-
 namespace mozilla {
 namespace dom {
-
-class Promise;
-
 namespace cache {
 
-class CacheOpArgs;
 class CacheStorage;
 class PCacheChild;
 class Feature;
@@ -38,10 +32,6 @@ public:
   // called yet.
   void ClearListener();
 
-  void
-  ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-            const CacheOpArgs& aArgs);
-
   // ActorChild methods
 
   // Synchronously call ActorDestroy on our CacheStorage listener and then start
@@ -58,15 +48,10 @@ private:
   virtual bool
   DeallocPCacheOpChild(PCacheOpChild* aActor) override;
 
-  // utility methods
-  void
-  NoteDeletedActor();
-
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The CacheStorage object must call ClearListener() to null this before its
   // destroyed.
   CacheStorage* MOZ_NON_OWNING_REF mListener;
-  uint32_t mNumChildActors;
 
   NS_DECL_OWNINGTHREAD
 };

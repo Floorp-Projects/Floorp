@@ -10,19 +10,11 @@
 #include "mozilla/dom/cache/ActorChild.h"
 #include "mozilla/dom/cache/PCacheChild.h"
 
-class nsIAsyncInputStream;
-class nsIGlobalObject;
-
 namespace mozilla {
 namespace dom {
-
-class Promise;
-
 namespace cache {
 
 class Cache;
-class CacheOpArgs;
-class CachePushStreamChild;
 
 class CacheChild final : public PCacheChild
                        , public ActorChild
@@ -37,13 +29,6 @@ public:
   // method.  Also, Cache must Send__delete__() the actor in its destructor to
   // trigger ActorDestroy() if it has not been called yet.
   void ClearListener();
-
-  void
-  ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-            const CacheOpArgs& aArgs);
-
-  CachePushStreamChild*
-  CreatePushStream(nsIAsyncInputStream* aStream);
 
   // ActorChild methods
 
@@ -68,15 +53,10 @@ private:
   virtual bool
   DeallocPCachePushStreamChild(PCachePushStreamChild* aActor) override;
 
-  // utility methods
-  void
-  NoteDeletedActor();
-
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The Cache object must call ClearListener() to null this before its
   // destroyed.
   Cache* MOZ_NON_OWNING_REF mListener;
-  uint32_t mNumChildActors;
 
   NS_DECL_OWNINGTHREAD
 };
