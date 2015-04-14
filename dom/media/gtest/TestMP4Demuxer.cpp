@@ -64,7 +64,7 @@ TEST(MP4Demuxer, Seek)
 }
 
 static nsCString
-ToCryptoString(CryptoSample& aCrypto)
+ToCryptoString(const CryptoSample& aCrypto)
 {
   nsCString res;
   if (aCrypto.mValid) {
