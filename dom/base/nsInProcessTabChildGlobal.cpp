@@ -19,7 +19,6 @@
 #include "nsIMozBrowserFrame.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "js/StructuredClone.h"
 
@@ -36,9 +35,13 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
                                                  InfallibleTArray<nsString>* aJSONRetVal,
                                                  bool aIsSync)
 {
-  SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-  queue->Flush();
-
+  nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
+  asyncMessages.SwapElements(mASyncMessages);
+  uint32_t len = asyncMessages.Length();
+  for (uint32_t i = 0; i < len; ++i) {
+    nsCOMPtr<nsIRunnable> async = asyncMessages[i];
+    async->Run();
+  }
   if (mChromeMessageManager) {
     SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
     nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
@@ -49,7 +52,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
 }
 
 class nsAsyncMessageToParent : public nsSameProcessAsyncMessageBase,
-                               public SameProcessMessageQueue::Runnable
+                               public nsRunnable
 {
 public:
   nsAsyncMessageToParent(JSContext* aCx,
@@ -59,16 +62,25 @@ public:
                          JS::Handle<JSObject *> aCpows,
                          nsIPrincipal* aPrincipal)
     : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal),
-      mTabChild(aTabChild)
+      mTabChild(aTabChild), mRun(false)
   {
   }
 
-  NS_IMETHOD HandleMessage()
+  NS_IMETHOD Run()
   {
+    if (mRun) {
+      return NS_OK;
+    }
+
+    mRun = true;
+    mTabChild->mASyncMessages.RemoveElement(this);
     ReceiveMessage(mTabChild->mOwner, mTabChild->mChromeMessageManager);
     return NS_OK;
   }
   nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
+  // True if this runnable has already been called. This can happen if DoSendSyncMessage
+  // is called while waiting for an asynchronous message send.
+  bool mRun;
 };
 
 bool
@@ -78,10 +90,10 @@ nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
                                               JS::Handle<JSObject *> aCpows,
                                               nsIPrincipal* aPrincipal)
 {
-  SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-  nsRefPtr<nsAsyncMessageToParent> ev =
+  nsCOMPtr<nsIRunnable> ev =
     new nsAsyncMessageToParent(aCx, this, aMessage, aData, aCpows, aPrincipal);
-  queue->Push(ev);
+  mASyncMessages.AppendElement(ev);
+  NS_DispatchToCurrentThread(ev);
   return true;
 }
 
