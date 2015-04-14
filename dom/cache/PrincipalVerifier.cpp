@@ -46,35 +46,25 @@ PrincipalVerifier::CreateAndDispatch(Listener* aListener,
 }
 
 void
-PrincipalVerifier::AddListener(Listener* aListener)
+PrincipalVerifier::ClearListener()
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aListener);
-  MOZ_ASSERT(!mListenerList.Contains(aListener));
-  mListenerList.AppendElement(aListener);
-}
-
-void
-PrincipalVerifier::RemoveListener(Listener* aListener)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aListener);
-  MOZ_ALWAYS_TRUE(mListenerList.RemoveElement(aListener));
+  MOZ_ASSERT(mListener);
+  mListener = nullptr;
 }
 
 PrincipalVerifier::PrincipalVerifier(Listener* aListener,
                                      PBackgroundParent* aActor,
                                      const PrincipalInfo& aPrincipalInfo)
-  : mActor(BackgroundParent::GetContentParent(aActor))
+  : mListener(aListener)
+  , mActor(BackgroundParent::GetContentParent(aActor))
   , mPrincipalInfo(aPrincipalInfo)
   , mInitiatingThread(NS_GetCurrentThread())
   , mResult(NS_OK)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mListener);
   MOZ_ASSERT(mInitiatingThread);
-  MOZ_ASSERT(aListener);
-
-  mListenerList.AppendElement(aListener);
 }
 
 PrincipalVerifier::~PrincipalVerifier()
@@ -83,7 +73,7 @@ PrincipalVerifier::~PrincipalVerifier()
   // threads, its a race to see which thread de-refs us last.  Therefore
   // we cannot guarantee which thread we destruct on.
 
-  MOZ_ASSERT(mListenerList.IsEmpty());
+  MOZ_ASSERT(!mListener);
 
   // We should always be able to explicitly release the actor on the main
   // thread.
@@ -182,13 +172,17 @@ void
 PrincipalVerifier::CompleteOnInitiatingThread()
 {
   AssertIsOnBackgroundThread();
-  ListenerList::ForwardIterator iter(mListenerList);
-  while (iter.HasMore()) {
-    iter.GetNext()->OnPrincipalVerified(mResult, mManagerId);
+
+  // This can happen if the listener is destroyed before we finish.  For
+  // example, if the child process OOMs and the actor is destroyed.
+  if (!mListener) {
+    return;
   }
 
-  // The listener must clear its reference in OnPrincipalVerified()
-  MOZ_ASSERT(mListenerList.IsEmpty());
+  mListener->OnPrincipalVerified(mResult, mManagerId);
+
+  // The listener must clear their reference in OnPrincipalVerified()
+  MOZ_ASSERT(!mListener);
 }
 
 void
