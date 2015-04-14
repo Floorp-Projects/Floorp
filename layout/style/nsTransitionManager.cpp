@@ -24,6 +24,7 @@
 #include "nsIFrame.h"
 #include "Layers.h"
 #include "FrameLayerBuilder.h"
+#include "nsCSSProps.h"
 #include "nsDisplayList.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
@@ -38,6 +39,16 @@ using mozilla::dom::Animation;
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::css;
+
+const nsString&
+ElementPropertyTransition::Name() const
+{
+   if (!mName.Length()) {
+     const_cast<ElementPropertyTransition*>(this)->mName =
+       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(TransitionProperty()));
+   }
+   return dom::Animation::Name();
+}
 
 double
 ElementPropertyTransition::CurrentValuePortion() const
