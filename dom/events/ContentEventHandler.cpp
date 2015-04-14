@@ -1135,6 +1135,9 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     return rv;
   }
 
+  aEvent->mReply.mOffset = aEvent->mReply.mTentativeCaretOffset =
+    WidgetQueryContentEvent::NOT_FOUND;
+
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, NS_ERROR_FAILURE);
   nsIWidget* rootWidget = rootFrame->GetNearestWidget();
@@ -1164,12 +1167,10 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
     nsLayoutUtils::GetEventCoordinatesRelativeTo(&eventOnRoot, rootFrame);
 
   nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
-  if (!targetFrame || targetFrame->GetType() != nsGkAtoms::textFrame ||
-      !targetFrame->GetContent() ||
+  if (!targetFrame || !targetFrame->GetContent() ||
       !nsContentUtils::ContentIsDescendantOf(targetFrame->GetContent(),
                                              mRootContent)) {
-    // there is no character at the point.
-    aEvent->mReply.mOffset = WidgetQueryContentEvent::NOT_FOUND;
+    // There is no character at the point.
     aEvent->mSucceeded = true;
     return NS_OK;
   }
@@ -1177,6 +1178,35 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   int32_t rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
   int32_t targetAPD = targetFrame->PresContext()->AppUnitsPerDevPixel();
   ptInTarget = ptInTarget.ScaleToOtherAppUnits(rootAPD, targetAPD);
+
+  nsIFrame::ContentOffsets tentativeCaretOffsets =
+    targetFrame->GetContentOffsetsFromPoint(ptInTarget);
+  if (!tentativeCaretOffsets.content ||
+      !nsContentUtils::ContentIsDescendantOf(tentativeCaretOffsets.content,
+                                             mRootContent)) {
+    // There is no character nor tentative caret point at the point.
+    aEvent->mSucceeded = true;
+    return NS_OK;
+  }
+
+  rv = GetFlatTextOffsetOfRange(mRootContent, tentativeCaretOffsets.content,
+                                tentativeCaretOffsets.offset,
+                                &aEvent->mReply.mTentativeCaretOffset,
+                                GetLineBreakType(aEvent));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (targetFrame->GetType() != nsGkAtoms::textFrame) {
+    // There is no character at the point but there is tentative caret point.
+    aEvent->mSucceeded = true;
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(
+    aEvent->mReply.mTentativeCaretOffset != WidgetQueryContentEvent::NOT_FOUND,
+    "The point is inside a character bounding box.  Why tentative caret point "
+    "hasn't been found?");
 
   nsTextFrame* textframe = static_cast<nsTextFrame*>(targetFrame);
   nsIFrame::ContentOffsets contentOffsets =
