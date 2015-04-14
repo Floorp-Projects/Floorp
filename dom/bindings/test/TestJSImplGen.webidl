@@ -602,12 +602,28 @@ interface TestJSImplInterface {
   AnotherNameForTestJSImplInterface exerciseTypedefInterfaces2(NullableTestJSImplInterface arg);
   void exerciseTypedefInterfaces3(YetAnotherNameForTestJSImplInterface arg);
 
+  // Deprecated methods and attributes
+  [Deprecated="GetAttributeNode"]
+  attribute byte deprecatedAttribute;
+  [Deprecated="GetAttributeNode"]
+  byte deprecatedMethod();
+  [Deprecated="GetAttributeNode"]
+  void deprecatedMethodWithContext(any arg);
+
   // Static methods and attributes
   // FIXME: Bug 863952 Static things are not supported yet
   /*
   static attribute boolean staticAttribute;
   static void staticMethod(boolean arg);
   static void staticMethodWithContext(any arg);
+
+  // Deprecated static methods and attributes
+  [Deprecated="GetAttributeNode"]
+  static attribute byte staticDeprecatedAttribute;
+  [Deprecated="GetAttributeNode"]
+  static byte staticDeprecatedMethod();
+  [Deprecated="GetAttributeNode"]
+  static byte staticDeprecatedMethodWithContext();
   */
 
   // Overload resolution tests

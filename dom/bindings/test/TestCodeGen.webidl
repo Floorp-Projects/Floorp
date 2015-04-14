@@ -725,10 +725,26 @@ interface TestInterface {
   AnotherNameForTestInterface exerciseTypedefInterfaces2(NullableTestInterface arg);
   void exerciseTypedefInterfaces3(YetAnotherNameForTestInterface arg);
 
+  // Deprecated methods and attributes
+  [Deprecated="GetAttributeNode"]
+  attribute byte deprecatedAttribute;
+  [Deprecated="GetAttributeNode"]
+  byte deprecatedMethod();
+  [Deprecated="GetAttributeNode"]
+  byte deprecatedMethodWithContext(any arg);
+
   // Static methods and attributes
   static attribute boolean staticAttribute;
   static void staticMethod(boolean arg);
   static void staticMethodWithContext(any arg);
+
+  // Deprecated static methods and attributes
+  [Deprecated="GetAttributeNode"]
+  static attribute byte staticDeprecatedAttribute;
+  [Deprecated="GetAttributeNode"]
+  static void staticDeprecatedMethod();
+  [Deprecated="GetAttributeNode"]
+  static void staticDeprecatedMethodWithContext(any arg);
 
   // Overload resolution tests
   //void overload1(DOMString... strs);
