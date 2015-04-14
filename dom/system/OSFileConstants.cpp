@@ -919,6 +919,15 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   }
 #endif
 
+#if defined(HAVE_64BIT_BUILD)
+  JS::Rooted<JS::Value> valBits(cx, INT_TO_JSVAL(64));
+#else
+  JS::Rooted<JS::Value> valBits(cx, INT_TO_JSVAL(32));
+#endif //defined (HAVE_64BIT_BUILD)
+  if (!JS_SetProperty(cx, objSys, "bits", valBits)) {
+    return false;
+  }
+
   dom::ConstantSpec umask_cs[] = {
     { "umask", UINT_TO_JSVAL(gUserUmask) },
     PROP_END
