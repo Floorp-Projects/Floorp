@@ -422,7 +422,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       continue;
     }
     dom::KeyframeEffectReadonly* effect = player->GetEffect();
-    MOZ_ASSERT(effect, "A playing player should have a target effect");
+    MOZ_ASSERT(effect, "A playing player should have an effect");
     const AnimationProperty* property =
       effect->GetAnimationOfProperty(aProperty);
     if (!property) {
