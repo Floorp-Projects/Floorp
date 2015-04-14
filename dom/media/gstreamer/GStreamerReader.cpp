@@ -497,10 +497,10 @@ nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
   g_object_get(mPlayBin, "n-video", &n_video, "n-audio", &n_audio, nullptr);
 
   if (!n_video) {
-    mInfo->mVideo = VideoInfo();
+    mInfo.mVideo = VideoInfo();
   }
   if (!n_audio) {
-    mInfo->mAudio = AudioInfo();
+    mInfo.mAudio = AudioInfo();
   }
   *aInfo = mInfo;
 
