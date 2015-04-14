@@ -84,10 +84,11 @@ CertBlocklistItem::Hash() const
 {
   uint32_t hash;
   uint32_t serialLength = mSerial.GetLength();
-  // there's no requirement for a serial to be as large as 32 bits; if it's
-  // smaller, fall back to the first octet (otherwise, the last four)
-  if (serialLength >= 4) {
-    hash = *(uint32_t *)(mSerialData + serialLength - 4);
+  // there's no requirement for a serial to be as large as the size of the hash
+  // key; if it's smaller, fall back to the first octet (otherwise, the last
+  // four)
+   if (serialLength >= sizeof(hash)) {
+     memcpy(&hash, mSerialData + serialLength - sizeof(hash), sizeof(hash));
   } else {
     hash = *mSerialData;
   }
