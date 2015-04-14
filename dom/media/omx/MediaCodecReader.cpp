@@ -500,13 +500,13 @@ MediaCodecReader::DecodeVideoFrameTask(int64_t aTimeThreshold)
 bool
 MediaCodecReader::HasAudio()
 {
-  return mInfo.mAudio.mHasAudio;
+  return mInfo.HasAudio();
 }
 
 bool
 MediaCodecReader::HasVideo()
 {
-  return mInfo.mVideo.mHasVideo;
+  return mInfo.HasVideo();
 }
 
 void
@@ -1556,7 +1556,6 @@ MediaCodecReader::UpdateAudioInfo()
   }
 
   // Update AudioInfo
-  mInfo.mAudio.mHasAudio = true;
   mInfo.mAudio.mChannels = codec_channel_count;
   mInfo.mAudio.mRate = codec_sample_rate;
 
@@ -1663,7 +1662,6 @@ MediaCodecReader::UpdateVideoInfo()
   }
 
   // Update VideoInfo
-  mInfo.mVideo.mHasVideo = true;
   mVideoTrack.mPictureRect = picture_rect;
   mInfo.mVideo.mDisplay = display_size;
   mVideoTrack.mRelativePictureRect = relative_picture_rect;
