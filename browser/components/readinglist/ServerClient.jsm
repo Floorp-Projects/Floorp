@@ -128,11 +128,22 @@ ServerClient.prototype = {
       }
 
       request.onComplete = error => {
+        // Although the server API docs say the "Backoff" header is on
+        // successful responses while "Retry-After" is on error responses, we
+        // just look for them both in both cases (as the scheduler makes no
+        // distinction)
+        let response = request.response;
+        if (response && response.headers) {
+          let backoff = response.headers["backoff"] || response.headers["retry-after"];
+          if (backoff) {
+            log.info("Server requested backoff", backoff);
+            Services.obs.notifyObservers(null, "readinglist:backoff-requested", backoff);
+          }
+        }
         if (error) {
           return reject(this._convertRestError(error));
         }
 
-        let response = request.response;
         log.debug("received response status: ${status} ${statusText}", response);
         // Handle response status codes we know about
         let result = {
