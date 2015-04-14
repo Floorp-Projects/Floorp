@@ -133,7 +133,8 @@ public:
   // Synthesized mouse events we need to forwarded to chrome. Event
   // state manager uses this api to position the mouse in the center
   // of the window for pointer lock.
-  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) override;
+  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                             nsIObserver* aObserver) override;
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
