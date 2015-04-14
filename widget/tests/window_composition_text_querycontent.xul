@@ -19,13 +19,13 @@
          onpopuphidden="onPanelHidden(event);">
     <vbox id="vbox">
       <textbox id="textbox" onfocus="onFocusPanelTextbox(event);"
-               multiline="true" cols="20" rows="4"/>
+               multiline="true" cols="20" rows="4" style="font-size: 36px;"/>
     </vbox>
   </panel>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
-<div id="div" style="margin: 0; padding: 0; font-size: 24px;">Here is a text frame.</div>
+<div id="div" style="margin: 0; padding: 0; font-size: 36px;">Here is a text frame.</div>
 <textarea style="margin: 0;" id="textarea" cols="20" rows="4"></textarea><br/>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
@@ -2169,9 +2169,11 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
   aFocusedEditor.focus();
 
   const kNone = -1;
-  const kTestingOffset   = [     0, 10,    20, 21 + kLFLen, 34 + kLFLen];
-  const kLeftSideOffset  = [ kNone,  9,    19,       kNone, 33 + kLFLen];
-  const kRightSideOffset = [     1, 11, kNone, 22 + kLFLen,       kNone];
+  const kTestingOffset             = [     0, 10,    20, 21 + kLFLen, 34 + kLFLen];
+  const kLeftSideOffset            = [ kNone,  9,    19,       kNone, 33 + kLFLen];
+  const kRightSideOffset           = [     1, 11, kNone, 22 + kLFLen,       kNone];
+  const kLeftTentativeCaretOffset  = [     0, 10,    20, 21 + kLFLen, 34 + kLFLen];
+  const kRightTentativeCaretOffset = [     1, 11,    21, 22 + kLFLen, 35 + kLFLen];
 
   var editorRect = synthesizeQueryEditorRect();
   if (!checkQueryContentResult(editorRect,
@@ -2203,6 +2205,12 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
         checkRect(charAtPt1, textRect, "runCharAtPointTest (" + aTargetName +
                   "): charAtPt1 left is wrong: i=" + i);
       }
+      ok(!charAtPt1.tentativeCaretOffsetNotFound,
+         "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt1 isn't found: i=" + i);
+      if (!charAtPt1.tentativeCaretOffsetNotFound) {
+        is(charAtPt1.tentativeCaretOffset, kLeftTentativeCaretOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt1 is wrong: i=" + i);
+      }
     }
 
     // Test #2, getting same character rect by the point near the bottom-right.
@@ -2217,6 +2225,12 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
            "runCharAtPointTest (" + aTargetName + "): charAtPt2 offset is wrong: i=" + i);
         checkRect(charAtPt2, textRect, "runCharAtPointTest (" + aTargetName +
                   "): charAtPt1 left is wrong: i=" + i);
+      }
+      ok(!charAtPt2.tentativeCaretOffsetNotFound,
+         "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt2 isn't found: i=" + i);
+      if (!charAtPt2.tentativeCaretOffsetNotFound) {
+        is(charAtPt2.tentativeCaretOffset, kRightTentativeCaretOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt2 is wrong: i=" + i);
       }
     }
 
@@ -2233,6 +2247,18 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
         is(charAtPt3.offset, kLeftSideOffset[i],
            "runCharAtPointTest (" + aTargetName + "): charAtPt3 offset is wrong: i=" + i);
       }
+      if (kLeftSideOffset[i] == kNone) {
+        // There may be no enough padding-left (depends on platform)
+        todo(false,
+             "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt3 isn't tested: i=" + i);
+      } else {
+        ok(!charAtPt3.tentativeCaretOffsetNotFound,
+           "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt3 isn't found: i=" + i);
+        if (!charAtPt3.tentativeCaretOffsetNotFound) {
+          is(charAtPt3.tentativeCaretOffset, kLeftTentativeCaretOffset[i],
+             "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt3 is wrong: i=" + i);
+        }
+      }
     }
 
     // Test #4, getting right character offset.
@@ -2247,6 +2273,12 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
       if (!charAtPt4.notFound) {
         is(charAtPt4.offset, kRightSideOffset[i],
            "runCharAtPointTest (" + aTargetName + "): charAtPt4 offset is wrong: i=" + i);
+      }
+      ok(!charAtPt4.tentativeCaretOffsetNotFound,
+         "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt4 isn't found: i=" + i);
+      if (!charAtPt4.tentativeCaretOffsetNotFound) {
+        is(charAtPt4.tentativeCaretOffset, kRightTentativeCaretOffset[i],
+           "runCharAtPointTest (" + aTargetName + "): tentative caret offset for charAtPt4 is wrong: i=" + i);
       }
     }
   }
@@ -2268,6 +2300,8 @@ function runCharAtPointAtOutsideTest()
         "runCharAtPointAtOutsideTest: charAtPt")) {
     ok(charAtPt.notFound,
        "runCharAtPointAtOutsideTest: charAtPt is found on outside of editor");
+    ok(charAtPt.tentativeCaretOffsetNotFound,
+       "runCharAtPointAtOutsideTest: tentative caret offset for charAtPt is found on outside of editor");
   }
 }
 

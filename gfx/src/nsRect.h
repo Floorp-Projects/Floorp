@@ -14,6 +14,7 @@
 #include "gfxCore.h"                    // for NS_GFX
 #include "mozilla/Likely.h"             // for MOZ_UNLIKELY
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "mozilla/gfx/NumericTools.h"   // for RoundUpToMultiple, RoundDownToMultiple
 #include "nsCoord.h"                    // for nscoord, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
@@ -205,6 +206,20 @@ struct NS_GFX nsIntRect :
   static const nsIntRect& GetMaxSizedIntRect() {
     static const nsIntRect r(0, 0, INT32_MAX, INT32_MAX);
     return r;
+  }
+
+  void InflateToMultiple(const nsIntSize& aTileSize)
+  {
+    int32_t xMost = XMost();
+    int32_t yMost = YMost();
+
+    x = RoundDownToMultiple(x, aTileSize.width);
+    y = RoundDownToMultiple(y, aTileSize.height);
+    xMost = RoundUpToMultiple(xMost, aTileSize.width);
+    yMost = RoundUpToMultiple(yMost, aTileSize.height);
+
+    width = xMost - x;
+    height = yMost - y;
   }
 
   // This is here only to keep IPDL-generated code happy. DO NOT USE.

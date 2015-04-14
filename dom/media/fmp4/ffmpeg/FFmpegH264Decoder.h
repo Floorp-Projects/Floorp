@@ -32,7 +32,7 @@ class FFmpegH264Decoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 public:
   FFmpegH264Decoder(FlushableMediaTaskQueue* aTaskQueue,
                     MediaDataDecoderCallback* aCallback,
-                    const mp4_demuxer::VideoDecoderConfig& aConfig,
+                    const VideoInfo& aConfig,
                     ImageContainer* aImageContainer);
   virtual ~FFmpegH264Decoder();
 

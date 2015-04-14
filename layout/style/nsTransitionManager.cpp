@@ -24,6 +24,7 @@
 #include "nsIFrame.h"
 #include "Layers.h"
 #include "FrameLayerBuilder.h"
+#include "nsCSSProps.h"
 #include "nsDisplayList.h"
 #include "nsStyleChangeList.h"
 #include "nsStyleSet.h"
@@ -38,6 +39,16 @@ using mozilla::dom::Animation;
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::css;
+
+const nsString&
+ElementPropertyTransition::Name() const
+{
+   if (!mName.Length()) {
+     const_cast<ElementPropertyTransition*>(this)->mName =
+       NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(TransitionProperty()));
+   }
+   return dom::Animation::Name();
+}
 
 double
 ElementPropertyTransition::CurrentValuePortion() const
@@ -424,13 +435,12 @@ nsTransitionManager::ConsiderStartingTransition(
   if (aElementTransitions) {
     AnimationPlayerPtrArray& players = aElementTransitions->mPlayers;
     for (size_t i = 0, i_end = players.Length(); i < i_end; ++i) {
-      MOZ_ASSERT(players[i]->GetSource() &&
-                 players[i]->GetSource()->Properties().Length() == 1,
-                 "Should have one animation property for a transition");
-      if (players[i]->GetSource()->Properties()[0].mProperty == aProperty) {
+      const ElementPropertyTransition *iPt =
+        players[i]->GetSource()->AsTransition();
+      if (iPt->TransitionProperty() == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
-        oldPT = players[currentIndex]->GetSource()->AsTransition();
+        oldPT = iPt;
         break;
       }
     }
@@ -576,13 +586,11 @@ nsTransitionManager::ConsiderStartingTransition(
   AnimationPlayerPtrArray& players = aElementTransitions->mPlayers;
 #ifdef DEBUG
   for (size_t i = 0, i_end = players.Length(); i < i_end; ++i) {
-    MOZ_ASSERT(players[i]->GetSource() &&
-               players[i]->GetSource()->Properties().Length() == 1,
-               "Should have one animation property for a transition");
     MOZ_ASSERT(
       i == currentIndex ||
       (players[i]->GetSource() &&
-       players[i]->GetSource()->Properties()[0].mProperty != aProperty),
+       players[i]->GetSource()->AsTransition()->TransitionProperty()
+         != aProperty),
       "duplicate transitions for property");
   }
 #endif
@@ -807,9 +815,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           ComputedTiming computedTiming =
             player->GetSource()->GetComputedTiming();
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
-            MOZ_ASSERT(player->GetSource()->Properties().Length() == 1,
-                       "Should have one animation property for a transition");
-            nsCSSProperty prop = player->GetSource()->Properties()[0].mProperty;
+            nsCSSProperty prop =
+              player->GetSource()->AsTransition()->TransitionProperty();
             TimeDuration duration =
               player->GetSource()->Timing().mIterationDuration;
             events.AppendElement(

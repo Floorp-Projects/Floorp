@@ -46,6 +46,9 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [
+	    'D3D11ShareHandleImage.cpp',
+    ]
     UNIFIED_SOURCES += [
         'D3D9SurfaceImage.cpp',
         'IMFYCbCrImage.cpp',
@@ -128,6 +131,7 @@ EXPORTS.mozilla.layers += [
     'composite/TextureHost.h',
     'Compositor.h',
     'CompositorTypes.h',
+    'D3D11ShareHandleImage.h',
     'D3D9SurfaceImage.h',
     'Effects.h',
     'ImageDataSerializer.h',

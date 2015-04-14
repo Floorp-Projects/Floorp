@@ -716,7 +716,7 @@ namespace places {
     else {
       result->SetAsAString(EmptyString());
     }
-    NS_ADDREF(*_result = result);
+    result.forget(_result);
     return NS_OK;
   }
 
@@ -771,7 +771,7 @@ namespace places {
     }
 
     result->SetAsAString(src);
-    NS_ADDREF(*_result = result);
+    result.forget(_result);
     return NS_OK;
   }
 
@@ -833,7 +833,7 @@ namespace places {
     NS_ENSURE_STATE(result);
     rv = result->SetAsInt32(newFrecency);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ADDREF(*_result = result);
+    result.forget(_result);
     return NS_OK;
   }
 

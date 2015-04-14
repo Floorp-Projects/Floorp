@@ -1808,7 +1808,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
     // There's nothing for us to delete.
     rv = CollapseRangeAfterDelete(this);
     if (NS_SUCCEEDED(rv) && aFragment) {
-      NS_ADDREF(*aFragment = retval);
+      retval.forget(aFragment);
     }
     return rv;
   }
@@ -2015,7 +2015,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
 
   rv = CollapseRangeAfterDelete(this);
   if (NS_SUCCEEDED(rv) && aFragment) {
-    NS_ADDREF(*aFragment = retval);
+    retval.forget(aFragment);
   }
   return rv;
 }

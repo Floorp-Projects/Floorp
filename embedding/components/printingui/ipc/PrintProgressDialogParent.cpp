@@ -14,13 +14,13 @@ namespace embedding {
 
 NS_IMPL_ISUPPORTS(PrintProgressDialogParent, nsIObserver)
 
-MOZ_IMPLICIT PrintProgressDialogParent::PrintProgressDialogParent() :
+PrintProgressDialogParent::PrintProgressDialogParent() :
   mActive(true)
 {
   MOZ_COUNT_CTOR(PrintProgressDialogParent);
 }
 
-MOZ_IMPLICIT PrintProgressDialogParent::~PrintProgressDialogParent()
+PrintProgressDialogParent::~PrintProgressDialogParent()
 {
   MOZ_COUNT_DTOR(PrintProgressDialogParent);
 }

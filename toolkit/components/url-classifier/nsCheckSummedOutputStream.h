@@ -46,8 +46,9 @@ NS_NewCheckSummedOutputStream(nsIOutputStream **result,
 {
     nsCOMPtr<nsIFileOutputStream> out = new nsCheckSummedOutputStream();
     nsresult rv = out->Init(file, ioFlags, perm, behaviorFlags);
-    if (NS_SUCCEEDED(rv))
-      NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
+    if (NS_SUCCEEDED(rv)) {
+      out.forget(result);
+    }
     return rv;
 }
 

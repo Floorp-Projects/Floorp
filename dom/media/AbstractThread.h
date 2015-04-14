@@ -23,10 +23,10 @@ namespace mozilla {
  * nsIEventTarget for this purpose. This class encapsulates the specifics of
  * the structures we might use here and provides a consistent interface.
  *
- * Use AbstractThread::Create() to instantiate an AbstractThread. Note that
- * if you use different types than the ones currently supported (MediaTaskQueue
- * and nsIThread), you'll need to implement the relevant guts in
- * AbstractThread.cpp to avoid linkage errors.
+ * At present, the supported AbstractThread implementations are MediaTaskQueue
+ * and AbstractThread::MainThread. If you add support for another thread that is
+ * not the MainThread, you'll need to figure out how to make it unique such that
+ * comparing AbstractThread pointers is equivalent to comparing nsIThread pointers.
  */
 class AbstractThread
 {
@@ -39,8 +39,6 @@ public:
   // a thread that requires runnables to be dispatched with tail dispatch.
   void MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
                          bool aAssertDispatchSuccess = true);
-
-  template<typename TargetType> static AbstractThread* Create(TargetType* aTarget);
 
   // Convenience method for getting an AbstractThread for the main thread.
   static AbstractThread* MainThread();
@@ -61,13 +59,6 @@ public:
   virtual bool IsCurrentThreadIn();
 private:
   nsRefPtr<TargetType> mTarget;
-};
-
-template<typename TargetType>
-AbstractThread*
-AbstractThread::Create(TargetType* aTarget)
-{
-  return new AbstractThreadImpl<TargetType>(aTarget);
 };
 
 } // namespace mozilla

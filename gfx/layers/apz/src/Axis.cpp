@@ -263,7 +263,9 @@ void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
   // overscroll, to ensure that GetOverscroll always returns a value of the
   // same sign, and that this value is correctly adjusted as the spring is
   // dampened.
-  bool velocitySignChange = (oldVelocity * mVelocity) < 0;
+  // To handle the case where one of the velocity samples is exaclty zero,
+  // consider a sign change to have occurred when the outgoing velocity is zero.
+  bool velocitySignChange = (oldVelocity * mVelocity) < 0 || mVelocity == 0;
   if (mFirstOverscrollAnimationSample == 0.0f) {
     mFirstOverscrollAnimationSample = mOverscroll;
 

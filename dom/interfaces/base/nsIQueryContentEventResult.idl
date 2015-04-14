@@ -11,10 +11,11 @@
  * See nsIDOMWindowUtils.idl, which properites can be used was documented.
  */
 
-[scriptable, uuid(4b4ba266-b51e-4f0f-8d0e-9f13cb2a0056)]
+[scriptable, uuid(e2c39e0e-345f-451a-a7b2-e0230d555847)]
 interface nsIQueryContentEventResult : nsISupports
 {
   readonly attribute unsigned long offset;
+  readonly attribute unsigned long tentativeCaretOffset;
   readonly attribute boolean reversed;
 
   readonly attribute long left;
@@ -25,4 +26,5 @@ interface nsIQueryContentEventResult : nsISupports
 
   readonly attribute boolean succeeded;
   readonly attribute boolean notFound;
+  readonly attribute boolean tentativeCaretOffsetNotFound;
 };

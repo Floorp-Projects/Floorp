@@ -53,7 +53,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android,9,185) == scrollframe-2.html scrollframe-2-
 fuzzy-if(gtk2Widget,1,8) == select-1.html select-1-ref.html
 fuzzy-if(gtk2Widget,1,8) == select-1-dynamic.html select-1-ref.html
 == select-2.html select-2-ref.html
-fuzzy-if(gtk2Widget,1,19) fuzzy-if(Android||B2G,17,726) skip-if(Mulet) == select-3.html select-3-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+fuzzy-if(gtk2Widget,1,19) fuzzy-if(Android||B2G,17,726) == select-3.html select-3-ref.html
 == multi-column-1.html multi-column-1-ref.html
 == button-1.html button-1-ref.html
 == button-2.html button-2-ref.html

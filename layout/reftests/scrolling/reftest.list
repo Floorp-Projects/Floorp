@@ -1,7 +1,7 @@
 skip-if((B2G&&browserIsRemote)||Mulet) HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) == deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== deferred-anchor2.xhtml deferred-anchor-ref.xhtml#d
 HTTP == fixed-1.html fixed-1.html?ref
-skip-if(Mulet) HTTP == fixed-table-1.html fixed-table-1.html?ref # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+HTTP == fixed-table-1.html fixed-table-1.html?ref
 HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 skip-if(B2G||Mulet) HTTP == fixed-opacity-2.html fixed-opacity-2.html?ref # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) random-if(gtk2Widget) fuzzy-if(Android,3,60) HTTP == fixed-text-1.html fixed-text-1.html?ref # Initial mulet triage: parity with B2G/B2G Desktop
@@ -11,11 +11,11 @@ random-if(Android) HTTP == image-1.html image-1.html?ref
 random-if(Android&&!browserIsRemote) HTTP == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html?ref # bug 760269
 skip-if(B2G||Mulet) random-if(cocoaWidget) HTTP == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html?ref # see bug 625357 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html?ref # see bug 1041833
-skip-if(Android||Mulet) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref # see bug 1041833 # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Android||Mulet) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref # see bug 1041833 # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Android||Mulet) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref # see bug 1041833 # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Android||Mulet) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref # see bug 1041833 # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html?ref # see bug 1041833
+skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref # see bug 1041833 # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref # see bug 1041833 # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref # see bug 1041833 # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref # see bug 1041833

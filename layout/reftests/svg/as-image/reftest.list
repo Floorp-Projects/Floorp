@@ -4,7 +4,7 @@
 include zoom/reftest.list
 
 # Background-image tests
-skip-if(Mulet) == background-display-none-1.html  about:blank # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) == background-display-none-1.html  about:blank # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(B2G||Mulet) == background-simple-1.html  lime100x100-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == background-simple-2.html  lime100x100-ref.html
 
@@ -73,7 +73,7 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 == img-blobURI-1.html lime100x100-ref.html
 random == img-blobURI-2.html lime100x100-ref.html
 fuzzy-if(d2d,16,10) == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html # d2d is bug 1074161
-skip-if(Mulet) == img-display-none-1.html about:blank # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) == img-display-none-1.html about:blank # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 == img-dyn-1.html img-dyn-1-ref.html
 == img-foreignObject-1.html lime100x100-ref.html
 
