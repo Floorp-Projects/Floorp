@@ -52,8 +52,7 @@ HTMLVideoElement::~HTMLVideoElement()
 
 nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size)
 {
-  if (mMediaInfo.mVideo.mDisplay.width == 0 &&
-      mMediaInfo.mVideo.mDisplay.height == 0) {
+  if (!mMediaInfo.HasVideo()) {
     return NS_ERROR_FAILURE;
   }
 
