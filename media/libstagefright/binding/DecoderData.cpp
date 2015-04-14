@@ -127,7 +127,6 @@ MP4AudioInfo::Update(const MetaData* aMetaData,
   mBitDepth = FindInt32(aMetaData, kKeySampleSize);
   mRate = FindInt32(aMetaData, kKeySampleRate);
   mProfile = FindInt32(aMetaData, kKeyAACProfile);
-  mHasAudio = true;
 
   if (FindData(aMetaData, kKeyESDS, mExtraData)) {
     ESDS esds(mExtraData->Elements(), mExtraData->Length());
@@ -165,7 +164,6 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
   mDisplay.height = FindInt32(aMetaData, kKeyDisplayHeight);
   mImage.width = FindInt32(aMetaData, kKeyWidth);
   mImage.height = FindInt32(aMetaData, kKeyHeight);
-  mHasVideo = true;
 
   FindData(aMetaData, kKeyAVCC, mExtraData);
 }

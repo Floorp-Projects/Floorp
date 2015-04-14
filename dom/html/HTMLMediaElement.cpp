@@ -3509,15 +3509,13 @@ void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatu
     bool hasVideo = !VideoTracks()->IsEmpty();
 
     if ((!hasAudio && !hasVideo) ||
-        (IsVideo() && hasVideo && mMediaInfo.mVideo.mDisplay == nsIntSize(0, 0))) {
+        (IsVideo() && hasVideo && !HasVideo())) {
       return;
     }
 
     // We are playing a stream that has video and a video frame is now set.
     // This means we have all metadata needed to change ready state.
     MediaInfo mediaInfo = mMediaInfo;
-    mediaInfo.mAudio.mHasAudio = hasAudio;
-    mediaInfo.mVideo.mHasVideo = hasVideo;
     MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
   }
 

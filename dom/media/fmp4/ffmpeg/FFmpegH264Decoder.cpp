@@ -82,8 +82,6 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
   if (decoded) {
     VideoInfo info;
     info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
-    info.mStereoMode = StereoMode::MONO;
-    info.mHasVideo = true;
 
     VideoData::YCbCrBuffer b;
     b.mPlanes[0].mData = mFrame->data[0];
