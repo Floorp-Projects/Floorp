@@ -59,12 +59,19 @@ const double ComputedTiming::kNullTimeFraction = PositiveInfinity<double>();
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(KeyframeEffectReadonly,
-                                      mDocument,
-                                      mTarget)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadonly,
+                                   AnimationEffectReadonly,
+                                   mTarget)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(KeyframeEffectReadonly, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(KeyframeEffectReadonly, Release)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadonly,
+                                               AnimationEffectReadonly)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadonly)
+NS_INTERFACE_MAP_END_INHERITING(AnimationEffectReadonly)
+
+NS_IMPL_ADDREF_INHERITED(KeyframeEffectReadonly, AnimationEffectReadonly)
+NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadonly, AnimationEffectReadonly)
 
 JSObject*
 KeyframeEffectReadonly::WrapObject(JSContext* aCx,
