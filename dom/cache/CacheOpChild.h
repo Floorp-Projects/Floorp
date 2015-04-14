@@ -25,12 +25,15 @@ class CacheOpChild final : public PCacheOpChild
                          , public ActorChild
                          , public TypeUtils
 {
-public:
-  CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
-               nsISupports* aParent, Promise* aPromise);
-  ~CacheOpChild();
+  friend class CacheChild;
+  friend class CacheStorageChild;
 
 private:
+  // This class must be constructed by CacheChild or CacheStorageChild using
+  // their ExecuteOp() factory method.
+  CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal, Promise* aPromise);
+  ~CacheOpChild();
+
   // PCacheOpChild methods
   virtual void
   ActorDestroy(ActorDestroyReason aReason) override;
@@ -65,7 +68,6 @@ private:
   HandleRequestList(const nsTArray<CacheRequest>& aRequestList);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsCOMPtr<nsISupports> mParent;
   nsRefPtr<Promise> mPromise;
 
   NS_DECL_OWNINGTHREAD
