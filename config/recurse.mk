@@ -163,5 +163,8 @@ endif
 ifdef MOZ_CRT
 mozglue/crt/target: mozglue/build/target
 endif
-
+# js/src/target can end up invoking js/src/host rules (through object files
+# depending on jsautokw.h, which depends on host_jskwgen, and that can't
+# happen at the same time (bug #1146738)
+js/src/target: js/src/host
 endif
