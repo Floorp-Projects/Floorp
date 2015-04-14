@@ -81,6 +81,16 @@ function OAuthTokenServer() {
   return server;
 }
 
+function promiseObserver(topic) {
+  return new Promise(resolve => {
+    function observe(subject, topic, data) {
+      Services.obs.removeObserver(observe, topic);
+      resolve(data);
+    }
+    Services.obs.addObserver(observe, topic, false);
+  });
+}
+
 // The tests.
 function run_test() {
   run_next_test();
@@ -160,6 +170,72 @@ add_task(function testHeaders() {
       body: {foo: "bar"}});
     equal(response.status, 200, "got the 200 we expected");
     equal(response.headers["server-sent-header"], "hello", "got the server header");
+  } finally {
+    yield rlserver.stop();
+  }
+});
+
+// Check that a "backoff" header causes the correct notification.
+add_task(function testBackoffHeader() {
+  let handlers = {
+    "/v1/batch": (request, response) => {
+      response.setHeader("Backoff", "123");
+      response.setStatusLine("1.1", 200, "OK");
+      response.write("{}");
+    }
+  };
+  let rlserver = new Server(handlers);
+  rlserver.start();
+
+  let observerPromise = promiseObserver("readinglist:backoff-requested");
+  try {
+    Services.prefs.setCharPref("readinglist.server", rlserver.host + "/v1");
+
+    let fxa = yield createMockFxA();
+    let sc = new ServerClient(fxa);
+    sc._getToken = () => Promise.resolve();
+
+    let response = yield sc.request({
+      path: "/batch",
+      method: "post",
+      headers: {"X-Foo": "bar"},
+      body: {foo: "bar"}});
+    equal(response.status, 200, "got the 200 we expected");
+    let data = yield observerPromise;
+    equal(data, "123", "got the expected header value.")
+  } finally {
+    yield rlserver.stop();
+  }
+});
+
+// Check that a "backoff" header causes the correct notification.
+add_task(function testRetryAfterHeader() {
+  let handlers = {
+    "/v1/batch": (request, response) => {
+      response.setHeader("Retry-After", "456");
+      response.setStatusLine("1.1", 500, "Not OK");
+      response.write("{}");
+    }
+  };
+  let rlserver = new Server(handlers);
+  rlserver.start();
+
+  let observerPromise = promiseObserver("readinglist:backoff-requested");
+  try {
+    Services.prefs.setCharPref("readinglist.server", rlserver.host + "/v1");
+
+    let fxa = yield createMockFxA();
+    let sc = new ServerClient(fxa);
+    sc._getToken = () => Promise.resolve();
+
+    let response = yield sc.request({
+      path: "/batch",
+      method: "post",
+      headers: {"X-Foo": "bar"},
+      body: {foo: "bar"}});
+    equal(response.status, 500, "got the 500 we expected");
+    let data = yield observerPromise;
+    equal(data, "456", "got the expected header value.")
   } finally {
     yield rlserver.stop();
   }
