@@ -213,6 +213,21 @@ struct EventRegions {
     mDispatchToContentHitRegion.Sub(aMinuend.mDispatchToContentHitRegion, aSubtrahend);
   }
 
+  void ApplyTranslationAndScale(float aXTrans, float aYTrans, float aXScale, float aYScale)
+  {
+    mHitRegion.ScaleRoundOut(aXScale, aYScale);
+    mDispatchToContentHitRegion.ScaleRoundOut(aXScale, aYScale);
+    mNoActionRegion.ScaleRoundOut(aXScale, aYScale);
+    mHorizontalPanRegion.ScaleRoundOut(aXScale, aYScale);
+    mVerticalPanRegion.ScaleRoundOut(aXScale, aYScale);
+
+    mHitRegion.MoveBy(aXTrans, aYTrans);
+    mDispatchToContentHitRegion.MoveBy(aXTrans, aYTrans);
+    mNoActionRegion.MoveBy(aXTrans, aYTrans);
+    mHorizontalPanRegion.MoveBy(aXTrans, aYTrans);
+    mVerticalPanRegion.MoveBy(aXTrans, aYTrans);
+  }
+
   void Transform(const gfx3DMatrix& aTransform)
   {
     mHitRegion.Transform(aTransform);
