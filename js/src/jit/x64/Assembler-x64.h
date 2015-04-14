@@ -317,7 +317,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     CodeOffsetLabel movWithPatch(ImmWord word, Register dest) {
-        masm.movq_i64r(word.value, dest.code());
+        masm.movq_i64r(word.value, dest.encoding());
         return CodeOffsetLabel(masm.currentOffset());
     }
     CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
@@ -333,35 +333,35 @@ class Assembler : public AssemblerX86Shared
         // smaller encodings.
         if (word.value <= UINT32_MAX) {
             // movl has a 32-bit unsigned (effectively) immediate field.
-            masm.movl_i32r((uint32_t)word.value, dest.code());
+            masm.movl_i32r((uint32_t)word.value, dest.encoding());
         } else if ((intptr_t)word.value >= INT32_MIN && (intptr_t)word.value <= INT32_MAX) {
             // movq has a 32-bit signed immediate field.
-            masm.movq_i32r((int32_t)(intptr_t)word.value, dest.code());
+            masm.movq_i32r((int32_t)(intptr_t)word.value, dest.encoding());
         } else {
             // Otherwise use movabs.
-            masm.movq_i64r(word.value, dest.code());
+            masm.movq_i64r(word.value, dest.encoding());
         }
     }
     void movq(ImmPtr imm, Register dest) {
         movq(ImmWord(uintptr_t(imm.value)), dest);
     }
     void movq(ImmGCPtr ptr, Register dest) {
-        masm.movq_i64r(uintptr_t(ptr.value), dest.code());
+        masm.movq_i64r(uintptr_t(ptr.value), dest.encoding());
         writeDataRelocation(ptr);
     }
     void movq(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
-            masm.movq_rr(src.reg(), dest.code());
+            masm.movq_rr(src.reg(), dest.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.movq_mr(src.disp(), src.base(), dest.code());
+            masm.movq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_SCALE:
-            masm.movq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            masm.movq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.movq_mr(src.address(), dest.code());
+            masm.movq_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -370,16 +370,16 @@ class Assembler : public AssemblerX86Shared
     void movq(Register src, const Operand& dest) {
         switch (dest.kind()) {
           case Operand::REG:
-            masm.movq_rr(src.code(), dest.reg());
+            masm.movq_rr(src.encoding(), dest.reg());
             break;
           case Operand::MEM_REG_DISP:
-            masm.movq_rm(src.code(), dest.disp(), dest.base());
+            masm.movq_rm(src.encoding(), dest.disp(), dest.base());
             break;
           case Operand::MEM_SCALE:
-            masm.movq_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            masm.movq_rm(src.encoding(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.movq_rm(src.code(), dest.address());
+            masm.movq_rm(src.encoding(), dest.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -404,29 +404,29 @@ class Assembler : public AssemblerX86Shared
         }
     }
     void vmovq(Register src, FloatRegister dest) {
-        masm.vmovq_rr(src.code(), dest.encoding());
+        masm.vmovq_rr(src.encoding(), dest.encoding());
     }
     void vmovq(FloatRegister src, Register dest) {
-        masm.vmovq_rr(src.encoding(), dest.code());
+        masm.vmovq_rr(src.encoding(), dest.encoding());
     }
     void movq(Register src, Register dest) {
-        masm.movq_rr(src.code(), dest.code());
+        masm.movq_rr(src.encoding(), dest.encoding());
     }
 
     void xchgq(Register src, Register dest) {
-        masm.xchgq_rr(src.code(), dest.code());
+        masm.xchgq_rr(src.encoding(), dest.encoding());
     }
 
     void movslq(Register src, Register dest) {
-        masm.movslq_rr(src.code(), dest.code());
+        masm.movslq_rr(src.encoding(), dest.encoding());
     }
     void movslq(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.movslq_mr(src.disp(), src.base(), dest.code());
+            masm.movslq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_SCALE:
-            masm.movslq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            masm.movslq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -434,24 +434,24 @@ class Assembler : public AssemblerX86Shared
     }
 
     void andq(Register src, Register dest) {
-        masm.andq_rr(src.code(), dest.code());
+        masm.andq_rr(src.encoding(), dest.encoding());
     }
     void andq(Imm32 imm, Register dest) {
-        masm.andq_ir(imm.value, dest.code());
+        masm.andq_ir(imm.value, dest.encoding());
     }
     void andq(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
-            masm.andq_rr(src.reg(), dest.code());
+            masm.andq_rr(src.reg(), dest.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.andq_mr(src.disp(), src.base(), dest.code());
+            masm.andq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_SCALE:
-            masm.andq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            masm.andq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.andq_mr(src.address(), dest.code());
+            masm.andq_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -459,7 +459,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void addq(Imm32 imm, Register dest) {
-        masm.addq_ir(imm.value, dest.code());
+        masm.addq_ir(imm.value, dest.encoding());
     }
     void addq(Imm32 imm, const Operand& dest) {
         switch (dest.kind()) {
@@ -477,18 +477,18 @@ class Assembler : public AssemblerX86Shared
         }
     }
     void addq(Register src, Register dest) {
-        masm.addq_rr(src.code(), dest.code());
+        masm.addq_rr(src.encoding(), dest.encoding());
     }
     void addq(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
-            masm.addq_rr(src.reg(), dest.code());
+            masm.addq_rr(src.reg(), dest.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.addq_mr(src.disp(), src.base(), dest.code());
+            masm.addq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.addq_mr(src.address(), dest.code());
+            masm.addq_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -496,21 +496,21 @@ class Assembler : public AssemblerX86Shared
     }
 
     void subq(Imm32 imm, Register dest) {
-        masm.subq_ir(imm.value, dest.code());
+        masm.subq_ir(imm.value, dest.encoding());
     }
     void subq(Register src, Register dest) {
-        masm.subq_rr(src.code(), dest.code());
+        masm.subq_rr(src.encoding(), dest.encoding());
     }
     void subq(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
-            masm.subq_rr(src.reg(), dest.code());
+            masm.subq_rr(src.reg(), dest.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.subq_mr(src.disp(), src.base(), dest.code());
+            masm.subq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.subq_mr(src.address(), dest.code());
+            masm.subq_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -519,50 +519,50 @@ class Assembler : public AssemblerX86Shared
     void subq(Register src, const Operand& dest) {
         switch (dest.kind()) {
           case Operand::REG:
-            masm.subq_rr(src.code(), dest.reg());
+            masm.subq_rr(src.encoding(), dest.reg());
             break;
           case Operand::MEM_REG_DISP:
-            masm.subq_rm(src.code(), dest.disp(), dest.base());
+            masm.subq_rm(src.encoding(), dest.disp(), dest.base());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
     void shlq(Imm32 imm, Register dest) {
-        masm.shlq_ir(imm.value, dest.code());
+        masm.shlq_ir(imm.value, dest.encoding());
     }
     void shrq(Imm32 imm, Register dest) {
-        masm.shrq_ir(imm.value, dest.code());
+        masm.shrq_ir(imm.value, dest.encoding());
     }
     void sarq(Imm32 imm, Register dest) {
-        masm.sarq_ir(imm.value, dest.code());
+        masm.sarq_ir(imm.value, dest.encoding());
     }
     void orq(Imm32 imm, Register dest) {
-        masm.orq_ir(imm.value, dest.code());
+        masm.orq_ir(imm.value, dest.encoding());
     }
     void orq(Register src, Register dest) {
-        masm.orq_rr(src.code(), dest.code());
+        masm.orq_rr(src.encoding(), dest.encoding());
     }
     void orq(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::REG:
-            masm.orq_rr(src.reg(), dest.code());
+            masm.orq_rr(src.reg(), dest.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.orq_mr(src.disp(), src.base(), dest.code());
+            masm.orq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.orq_mr(src.address(), dest.code());
+            masm.orq_mr(src.address(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
     void xorq(Register src, Register dest) {
-        masm.xorq_rr(src.code(), dest.code());
+        masm.xorq_rr(src.encoding(), dest.encoding());
     }
     void xorq(Imm32 imm, Register dest) {
-        masm.xorq_ir(imm.value, dest.code());
+        masm.xorq_ir(imm.value, dest.encoding());
     }
 
     void mov(ImmWord word, Register dest) {
@@ -580,7 +580,7 @@ class Assembler : public AssemblerX86Shared
         movq(imm, dest);
     }
     void mov(AsmJSImmPtr imm, Register dest) {
-        masm.movq_i64r(-1, dest.code());
+        masm.movq_i64r(-1, dest.encoding());
         append(AsmJSAbsoluteLink(CodeOffsetLabel(masm.currentOffset()), imm.kind()));
     }
     void mov(const Operand& src, Register dest) {
@@ -599,7 +599,7 @@ class Assembler : public AssemblerX86Shared
         MOZ_ASSERT(!label->bound());
         // Thread the patch list through the unpatched address word in the
         // instruction stream.
-        masm.movq_i64r(label->prev(), dest.code());
+        masm.movq_i64r(label->prev(), dest.encoding());
         label->setPrev(masm.size());
     }
     void xchg(Register src, Register dest) {
@@ -608,10 +608,10 @@ class Assembler : public AssemblerX86Shared
     void lea(const Operand& src, Register dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            masm.leaq_mr(src.disp(), src.base(), dest.code());
+            masm.leaq_mr(src.disp(), src.base(), dest.encoding());
             break;
           case Operand::MEM_SCALE:
-            masm.leaq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            masm.leaq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.encoding());
             break;
           default:
             MOZ_CRASH("unexepcted operand kind");
@@ -619,10 +619,10 @@ class Assembler : public AssemblerX86Shared
     }
 
     CodeOffsetLabel loadRipRelativeInt32(Register dest) {
-        return CodeOffsetLabel(masm.movl_ripr(dest.code()).offset());
+        return CodeOffsetLabel(masm.movl_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel loadRipRelativeInt64(Register dest) {
-        return CodeOffsetLabel(masm.movq_ripr(dest.code()).offset());
+        return CodeOffsetLabel(masm.movq_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel loadRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.vmovsd_ripr(dest.encoding()).offset());
@@ -637,7 +637,7 @@ class Assembler : public AssemblerX86Shared
         return CodeOffsetLabel(masm.vmovaps_ripr(dest.encoding()).offset());
     }
     CodeOffsetLabel storeRipRelativeInt32(Register dest) {
-        return CodeOffsetLabel(masm.movl_rrip(dest.code()).offset());
+        return CodeOffsetLabel(masm.movl_rrip(dest.encoding()).offset());
     }
     CodeOffsetLabel storeRipRelativeDouble(FloatRegister dest) {
         return CodeOffsetLabel(masm.vmovsd_rrip(dest.encoding()).offset());
@@ -652,7 +652,7 @@ class Assembler : public AssemblerX86Shared
         return CodeOffsetLabel(masm.vmovaps_rrip(dest.encoding()).offset());
     }
     CodeOffsetLabel leaRipRelative(Register dest) {
-        return CodeOffsetLabel(masm.leaq_rip(dest.code()).offset());
+        return CodeOffsetLabel(masm.leaq_rip(dest.encoding()).offset());
     }
 
     void loadAsmJSActivation(Register dest) {
@@ -665,25 +665,25 @@ class Assembler : public AssemblerX86Shared
     }
 
     void cmpq(Register rhs, Register lhs) {
-        masm.cmpq_rr(rhs.code(), lhs.code());
+        masm.cmpq_rr(rhs.encoding(), lhs.encoding());
     }
     void cmpq(Register rhs, const Operand& lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
-            masm.cmpq_rr(rhs.code(), lhs.reg());
+            masm.cmpq_rr(rhs.encoding(), lhs.reg());
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmpq_rm(rhs.code(), lhs.disp(), lhs.base());
+            masm.cmpq_rm(rhs.encoding(), lhs.disp(), lhs.base());
             break;
           case Operand::MEM_ADDRESS32:
-            masm.cmpq_rm(rhs.code(), lhs.address());
+            masm.cmpq_rm(rhs.encoding(), lhs.address());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpq(Imm32 rhs, Register lhs) {
-        masm.cmpq_ir(rhs.value, lhs.code());
+        masm.cmpq_ir(rhs.value, lhs.encoding());
     }
     void cmpq(Imm32 rhs, const Operand& lhs) {
         switch (lhs.kind()) {
@@ -703,10 +703,10 @@ class Assembler : public AssemblerX86Shared
     void cmpq(const Operand& rhs, Register lhs) {
         switch (rhs.kind()) {
           case Operand::REG:
-            masm.cmpq_rr(rhs.reg(), lhs.code());
+            masm.cmpq_rr(rhs.reg(), lhs.encoding());
             break;
           case Operand::MEM_REG_DISP:
-            masm.cmpq_mr(rhs.disp(), rhs.base(), lhs.code());
+            masm.cmpq_mr(rhs.disp(), rhs.base(), lhs.encoding());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -714,10 +714,10 @@ class Assembler : public AssemblerX86Shared
     }
 
     void testq(Imm32 rhs, Register lhs) {
-        masm.testq_ir(rhs.value, lhs.code());
+        masm.testq_ir(rhs.value, lhs.encoding());
     }
     void testq(Register rhs, Register lhs) {
-        masm.testq_rr(rhs.code(), lhs.code());
+        masm.testq_rr(rhs.encoding(), lhs.encoding());
     }
     void testq(Imm32 rhs, const Operand& lhs) {
         switch (lhs.kind()) {
@@ -773,16 +773,16 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::call;
 
     void vcvttsd2sq(FloatRegister src, Register dest) {
-        masm.vcvttsd2sq_rr(src.encoding(), dest.code());
+        masm.vcvttsd2sq_rr(src.encoding(), dest.encoding());
     }
     void vcvttss2sq(FloatRegister src, Register dest) {
-        masm.vcvttss2sq_rr(src.encoding(), dest.code());
+        masm.vcvttss2sq_rr(src.encoding(), dest.encoding());
     }
     void vcvtsq2sd(Register src1, FloatRegister src0, FloatRegister dest) {
-        masm.vcvtsq2sd_rr(src1.code(), src0.encoding(), dest.encoding());
+        masm.vcvtsq2sd_rr(src1.encoding(), src0.encoding(), dest.encoding());
     }
     void vcvtsq2ss(Register src1, FloatRegister src0, FloatRegister dest) {
-        masm.vcvtsq2ss_rr(src1.code(), src0.encoding(), dest.encoding());
+        masm.vcvtsq2ss_rr(src1.encoding(), src0.encoding(), dest.encoding());
     }
 };
 

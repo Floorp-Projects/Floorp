@@ -373,7 +373,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
         return self.convert_result(test, result)
 
     def screenshot(self, test):
-        timeout = test.timeout if self.debug_args is None else None
+        timeout = self.timeout_multiplier * test.timeout if self.debug_args is None else None
 
         test_url = self.test_url(test)
 

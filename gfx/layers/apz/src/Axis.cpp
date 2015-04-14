@@ -410,6 +410,23 @@ bool Axis::CanScroll(double aDelta) const
   return DisplacementWillOverscrollAmount(delta) != delta;
 }
 
+CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const
+{
+  CSSToParentLayerScale zoom = GetScaleForAxis(GetFrameMetrics().GetZoom());
+  ParentLayerCoord origin = aOrigin * zoom;
+
+  ParentLayerCoord result;
+  if (origin < GetPageStart()) {
+    result = GetPageStart();
+  } else if (origin + GetCompositionLength() > GetPageEnd()) {
+    result = GetPageEnd() - GetCompositionLength();
+  } else {
+    result = origin;
+  }
+
+  return result / zoom;
+}
+
 bool Axis::CanScrollNow() const {
   return !mAxisLocked && CanScroll();
 }
@@ -549,6 +566,11 @@ ParentLayerCoord AxisX::GetRectOffset(const ParentLayerRect& aRect) const
   return aRect.x;
 }
 
+CSSToParentLayerScale AxisX::GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const
+{
+  return CSSToParentLayerScale(aScale.xScale);
+}
+
 ScreenPoint AxisX::MakePoint(ScreenCoord aCoord) const
 {
   return ScreenPoint(aCoord, 0);
@@ -578,6 +600,11 @@ ParentLayerCoord AxisY::GetRectLength(const ParentLayerRect& aRect) const
 ParentLayerCoord AxisY::GetRectOffset(const ParentLayerRect& aRect) const
 {
   return aRect.y;
+}
+
+CSSToParentLayerScale AxisY::GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const
+{
+  return CSSToParentLayerScale(aScale.yScale);
 }
 
 ScreenPoint AxisY::MakePoint(ScreenCoord aCoord) const

@@ -455,6 +455,43 @@ UIEvent::GetModifierStateInternal(const nsAString& aKey)
   return ((inputEvent->modifiers & WidgetInputEvent::GetModifier(aKey)) != 0);
 }
 
+void
+UIEvent::InitModifiers(const EventModifierInit& aParam)
+{
+  if (NS_WARN_IF(!mEvent)) {
+    return;
+  }
+  WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
+  MOZ_ASSERT(inputEvent,
+             "This method shouldn't be called if it doesn't have modifiers");
+  if (NS_WARN_IF(!inputEvent)) {
+    return;
+  }
+
+  inputEvent->modifiers = MODIFIER_NONE;
+
+#define SET_MODIFIER(aName, aValue) \
+  if (aParam.m##aName) { \
+    inputEvent->modifiers |= aValue; \
+  } \
+
+  SET_MODIFIER(CtrlKey,                 MODIFIER_CONTROL)
+  SET_MODIFIER(ShiftKey,                MODIFIER_SHIFT)
+  SET_MODIFIER(AltKey,                  MODIFIER_ALT)
+  SET_MODIFIER(MetaKey,                 MODIFIER_META)
+  SET_MODIFIER(ModifierAltGraph,        MODIFIER_ALTGRAPH)
+  SET_MODIFIER(ModifierCapsLock,        MODIFIER_CAPSLOCK)
+  SET_MODIFIER(ModifierFn,              MODIFIER_FN)
+  SET_MODIFIER(ModifierFnLock,          MODIFIER_FNLOCK)
+  SET_MODIFIER(ModifierNumLock,         MODIFIER_NUMLOCK)
+  SET_MODIFIER(ModifierOS,              MODIFIER_OS)
+  SET_MODIFIER(ModifierScrollLock,      MODIFIER_SCROLLLOCK)
+  SET_MODIFIER(ModifierSymbol,          MODIFIER_SYMBOL)
+  SET_MODIFIER(ModifierSymbolLock,      MODIFIER_SYMBOLLOCK)
+
+#undef SET_MODIFIER
+}
+
 } // namespace dom
 } // namespace mozilla
 
