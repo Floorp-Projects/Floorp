@@ -11,7 +11,7 @@
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
-#include "mp4_demuxer/mp4_demuxer.h"
+#include "MediaInfo.h"
 #include "MediaTaskQueue.h"
 
 namespace mozilla {
@@ -208,13 +208,13 @@ public:
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+  CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableMediaTaskQueue* aVideoTaskQueue,
                      MediaDataDecoderCallback* aCallback) override {
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
-      aConfig.display_width, aConfig.display_height, aImageContainer);
+      aConfig.mDisplay.width, aConfig.mDisplay.height, aImageContainer);
     nsRefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankVideoDataCreator>(creator,
                                                        aVideoTaskQueue,
@@ -224,11 +224,11 @@ public:
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+  CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override {
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
-      aConfig.channel_count, aConfig.samples_per_second);
+      aConfig.mChannels, aConfig.mRate);
 
     nsRefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankAudioDataCreator>(creator,
@@ -244,7 +244,7 @@ public:
   }
 
   virtual ConversionRequired
-  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override
+  DecoderNeedsConversion(const TrackInfo& aConfig) const override
   {
     return kNeedNone;
   }

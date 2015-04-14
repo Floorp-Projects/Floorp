@@ -141,10 +141,10 @@ MP4Demuxer::Init()
   UpdateCrypto(metaData.get());
 
   int64_t movieDuration;
-  if (!mVideoConfig.duration && !mAudioConfig.duration &&
+  if (!mVideoConfig.mDuration && !mAudioConfig.mDuration &&
       metaData->findInt64(kKeyMovieDuration, &movieDuration)) {
     // No duration were found in either tracks, use movie extend header box one.
-    mVideoConfig.duration = mAudioConfig.duration = movieDuration;
+    mVideoConfig.mDuration = mAudioConfig.mDuration = movieDuration;
   }
   mPrivate->mCanSeek = e->flags() & MediaExtractor::CAN_SEEK;
 
@@ -184,7 +184,7 @@ Microseconds
 MP4Demuxer::Duration()
 {
   mMonitor->AssertCurrentThreadOwns();
-  return std::max(mVideoConfig.duration, mAudioConfig.duration);
+  return std::max(mVideoConfig.mDuration, mAudioConfig.mDuration);
 }
 
 bool
@@ -223,9 +223,9 @@ MP4Demuxer::DemuxAudioSample()
   if (sample) {
     if (sample->mCrypto.mValid) {
       nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
-      writer->mCrypto.mMode = mAudioConfig.crypto.mMode;
-      writer->mCrypto.mIVSize = mAudioConfig.crypto.mIVSize;
-      writer->mCrypto.mKeyId.AppendElements(mAudioConfig.crypto.mKeyId);
+      writer->mCrypto.mMode = mAudioConfig.mCrypto.mMode;
+      writer->mCrypto.mIVSize = mAudioConfig.mCrypto.mIVSize;
+      writer->mCrypto.mKeyId.AppendElements(mAudioConfig.mCrypto.mKeyId);
     }
   }
   return sample.forget();
@@ -240,11 +240,11 @@ MP4Demuxer::DemuxVideoSample()
   }
   nsRefPtr<mozilla::MediaRawData> sample(mPrivate->mVideoIterator->GetNext());
   if (sample) {
-    sample->mExtraData = mVideoConfig.extra_data;
+    sample->mExtraData = mVideoConfig.mExtraData;
     if (sample->mCrypto.mValid) {
       nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
-      writer->mCrypto.mMode = mVideoConfig.crypto.mMode;
-      writer->mCrypto.mKeyId.AppendElements(mVideoConfig.crypto.mKeyId);
+      writer->mCrypto.mMode = mVideoConfig.mCrypto.mMode;
+      writer->mCrypto.mKeyId.AppendElements(mVideoConfig.mCrypto.mKeyId);
     }
     if (sample->mTime >= mNextKeyframeTime) {
       mNextKeyframeTime = mPrivate->mVideoIterator->GetNextKeyframeTime();

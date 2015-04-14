@@ -29,14 +29,20 @@ public:
 class EMEVideoDecoder : public GMPVideoDecoder {
 public:
   EMEVideoDecoder(CDMProxy* aProxy,
-                  const mp4_demuxer::VideoDecoderConfig& aConfig,
+                  const VideoInfo& aConfig,
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
                   MediaTaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback)
-   : GMPVideoDecoder(aConfig, aLayersBackend, aImageContainer, aTaskQueue, aCallback,
-                     new EMEVideoCallbackAdapter(aCallback, VideoInfo(aConfig.display_width,
-                                                                      aConfig.display_height), aImageContainer))
+   : GMPVideoDecoder(aConfig,
+                     aLayersBackend,
+                     aImageContainer,
+                     aTaskQueue,
+                     aCallback,
+                     new EMEVideoCallbackAdapter(aCallback,
+                                                 VideoInfo(aConfig.mDisplay.width,
+                                                           aConfig.mDisplay.height),
+                                                 aImageContainer))
    , mProxy(aProxy)
   {
   }

@@ -6,7 +6,7 @@
 
 #include "GMPAudioDecoder.h"
 #include "nsServiceManagerUtils.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaInfo.h"
 
 namespace mozilla {
 
@@ -153,13 +153,13 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
 {
   MOZ_ASSERT(aGMP);
   nsTArray<uint8_t> codecSpecific;
-  codecSpecific.AppendElements(mConfig.audio_specific_config->Elements(),
-                               mConfig.audio_specific_config->Length());
+  codecSpecific.AppendElements(mConfig.mCodecSpecificConfig->Elements(),
+                               mConfig.mCodecSpecificConfig->Length());
 
   nsresult rv = aGMP->InitDecode(kGMPAudioCodecAAC,
-                                 mConfig.channel_count,
-                                 mConfig.bits_per_sample,
-                                 mConfig.samples_per_second,
+                                 mConfig.mChannels,
+                                 mConfig.mBitDepth,
+                                 mConfig.mRate,
                                  codecSpecific,
                                  mAdapter);
   if (NS_SUCCEEDED(rv)) {
@@ -204,7 +204,7 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
 
   mAdapter->SetLastStreamOffset(sample->mOffset);
 
-  gmp::GMPAudioSamplesImpl samples(sample, mConfig.channel_count, mConfig.samples_per_second);
+  gmp::GMPAudioSamplesImpl samples(sample, mConfig.mChannels, mConfig.mRate);
   nsresult rv = mGMP->Decode(samples);
   if (NS_FAILED(rv)) {
     mCallback->Error();
