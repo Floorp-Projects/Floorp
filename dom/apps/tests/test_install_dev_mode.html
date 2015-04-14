@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1111961}
+-->
+<head>
+  <title>Test for Bug {1111961}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1111961}">Mozilla Bug {1111961}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://test/tests/dom/apps/tests/file_hosted_certified.webapp";
+var gGenerator = runTest();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+function cbSuccess(aMsg) {
+  return function(aEvent) {
+    ok(true, aMsg);
+    continueTest();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+  * Install 2 apps from the same origin and uninstall them.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  // We are not in dev mode, so this install will fail.
+  var request = navigator.mozApps.install(gManifestURL, { });
+  request.onerror = cbSuccess("Can't install certified app without dev mode");
+  request.onsuccess = cbError;
+  yield undefined;
+
+  // Turn on dev mode.
+  SpecialPowers.pushPrefEnv({"set": [["dom.apps.developer_mode", true]]},
+                            continueTest);
+  yield undefined;
+
+  // Installation should succeed now.
+  request = navigator.mozApps.install(gManifestURL, { });
+  request.onerror = cbError;
+  request.onsuccess = cbSuccess("Install certified app in dev mode");;
+  yield undefined;
+
+  // Uninstall and check we cleaned up.
+  var app = request.result;
+
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, gManifestURL, "App uninstall event ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, gManifestURL, "App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result.length, initialAppsCount, "All apps are uninstalled.");
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>

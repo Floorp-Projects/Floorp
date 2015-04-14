@@ -54,6 +54,7 @@ GMPParent::GMPParent()
   , mProcess(nullptr)
   , mDeleteProcessOnlyOnUnload(false)
   , mAbnormalShutdownInProgress(false)
+  , mIsBlockingDeletion(false)
   , mGMPContentChildCount(0)
   , mAsyncShutdownRequired(false)
   , mAsyncShutdownInProgress(false)
@@ -306,6 +307,19 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
 }
 
 void
+GMPParent::MarkForDeletion()
+{
+  mDeleteProcessOnlyOnUnload = true;
+  mIsBlockingDeletion = true;
+}
+
+bool
+GMPParent::IsMarkedForDeletion()
+{
+  return mIsBlockingDeletion;
+}
+
+void
 GMPParent::Shutdown()
 {
   LOGD("%s", __FUNCTION__);
@@ -322,12 +336,13 @@ GMPParent::Shutdown()
     return;
   }
 
+  nsRefPtr<GMPParent> self(this);
   DeleteProcess();
+
   // XXX Get rid of mDeleteProcessOnlyOnUnload and this code when
   // Bug 1043671 is fixed
   if (!mDeleteProcessOnlyOnUnload) {
     // Destroy ourselves and rise from the fire to save memory
-    nsRefPtr<GMPParent> self(this);
     mService->ReAddOnGMPThread(self);
   } // else we've been asked to die and stay dead
   MOZ_ASSERT(mState == GMPStateNotLoaded);
@@ -352,6 +367,17 @@ public:
 };
 
 void
+GMPParent::ChildTerminated()
+{
+  nsRefPtr<GMPParent> self(this);
+  GMPThread()->Dispatch(NS_NewRunnableMethodWithArg<nsRefPtr<GMPParent>>(
+                          mService,
+                          &GeckoMediaPluginServiceParent::PluginTerminated,
+                          self),
+                        NS_DISPATCH_NORMAL);
+}
+
+void
 GMPParent::DeleteProcess()
 {
   LOGD("%s", __FUNCTION__);
@@ -362,7 +388,7 @@ GMPParent::DeleteProcess()
     mState = GMPStateClosing;
     Close();
   }
-  mProcess->Delete();
+  mProcess->Delete(NS_NewRunnableMethod(this, &GMPParent::ChildTerminated));
   LOGD("%s: Shut down process", __FUNCTION__);
   mProcess = nullptr;
   mState = GMPStateNotLoaded;

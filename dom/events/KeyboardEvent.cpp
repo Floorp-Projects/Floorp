@@ -255,9 +255,9 @@ KeyboardEvent::InitWithKeyboardEventInit(EventTarget* aOwner,
 {
   bool trusted = Init(aOwner);
   aRv = InitKeyEvent(aType, aParam.mBubbles, aParam.mCancelable,
-                     aParam.mView, aParam.mCtrlKey, aParam.mAltKey,
-                     aParam.mShiftKey, aParam.mMetaKey,
+                     aParam.mView, false, false, false, false,
                      aParam.mKeyCode, aParam.mCharCode);
+  InitModifiers(aParam);
   SetTrusted(trusted);
   mDetail = aParam.mDetail;
   mInitializedByCtor = true;

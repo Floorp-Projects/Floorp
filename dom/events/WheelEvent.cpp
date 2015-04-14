@@ -148,33 +148,6 @@ WheelEvent::GetDeltaMode(uint32_t* aDeltaMode)
   return NS_OK;
 }
 
-static void
-GetModifierList(bool aCtrl, bool aShift, bool aAlt, bool aMeta,
-                nsAString& aModifierList)
-{
-  if (aCtrl) {
-    aModifierList.AppendLiteral(NS_DOM_KEYNAME_CONTROL);
-  }
-  if (aShift) {
-    if (!aModifierList.IsEmpty()) {
-      aModifierList.Append(' ');
-    }
-    aModifierList.AppendLiteral(NS_DOM_KEYNAME_SHIFT);
-  }
-  if (aAlt) {
-    if (!aModifierList.IsEmpty()) {
-      aModifierList.Append(' ');
-    }
-    aModifierList.AppendLiteral(NS_DOM_KEYNAME_ALT);
-  }
-  if (aMeta) {
-    if (!aModifierList.IsEmpty()) {
-      aModifierList.Append(' ');
-    }
-    aModifierList.AppendLiteral(NS_DOM_KEYNAME_META);
-  }
-}
-
 already_AddRefed<WheelEvent>
 WheelEvent::Constructor(const GlobalObject& aGlobal,
                         const nsAString& aType,
@@ -184,17 +157,14 @@ WheelEvent::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<WheelEvent> e = new WheelEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
-  nsAutoString modifierList;
-  GetModifierList(aParam.mCtrlKey, aParam.mShiftKey,
-                  aParam.mAltKey, aParam.mMetaKey,
-                  modifierList);
   aRv = e->InitWheelEvent(aType, aParam.mBubbles, aParam.mCancelable,
                           aParam.mView, aParam.mDetail,
                           aParam.mScreenX, aParam.mScreenY,
                           aParam.mClientX, aParam.mClientY,
                           aParam.mButton, aParam.mRelatedTarget,
-                          modifierList, aParam.mDeltaX,
+                          EmptyString(), aParam.mDeltaX,
                           aParam.mDeltaY, aParam.mDeltaZ, aParam.mDeltaMode);
+  e->InitModifiers(aParam);
   e->mEvent->AsWheelEvent()->buttons = aParam.mButtons;
   e->SetTrusted(trusted);
   return e.forget();

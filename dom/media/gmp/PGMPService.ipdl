@@ -19,7 +19,7 @@ parent:
                ProcessId[] alreadyBridgedTo)
     returns (ProcessId id, nsCString displayName, nsCString pluginId);
   sync GetGMPNodeId(nsString origin, nsString topLevelOrigin,
-                    bool inPrivateBrowsing)
+                    bool inPrivateBrowsing, nsCString version)
     returns (nsCString id);
 };
 
