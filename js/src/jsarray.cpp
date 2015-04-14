@@ -817,8 +817,9 @@ AddLengthProperty(ExclusiveContext* cx, HandleArrayObject obj)
     MOZ_ASSERT(!obj->lookup(cx, lengthId));
 
     return NativeObject::addProperty(cx, obj, lengthId, array_length_getter, array_length_setter,
-                                     SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0,
-                                     /* allowDictionary = */ false);
+                                     SHAPE_INVALID_SLOT,
+                                     JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_SHADOWABLE,
+                                     0, /* allowDictionary = */ false);
 }
 
 #if JS_HAS_TOSOURCE
