@@ -1180,7 +1180,9 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_MOVE:
     case NS_CONTEXTMENU:
+    case NS_MOUSE_ENTER:
     case NS_MOUSE_EXIT:
+    case NS_MOUSE_ENTER_SYNTH:
       return true;
     default:
       return false;
@@ -3787,20 +3789,27 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
     // the same object after event dispatch and handling, so refetch it.
     targetFrame = mPresContext->GetPrimaryFrameFor(aTargetContent);
 
-    // If we are leaving remote content, dispatch a mouse exit event to the
-    // remote frame.
-    if (aMessage == NS_MOUSE_EXIT_SYNTH && IsRemoteTarget(aTargetContent)) {
-      // For remote content, send a normal widget mouse exit event.
-      nsAutoPtr<WidgetMouseEvent> remoteEvent;
-      CreateMouseOrPointerWidgetEvent(aMouseEvent, NS_MOUSE_EXIT,
-                                      aRelatedContent, remoteEvent);
+    // If we are entering/leaving remote content, dispatch a mouse enter/exit
+    // event to the remote frame.
+    if (IsRemoteTarget(aTargetContent)) {
+      if (aMessage == NS_MOUSE_EXIT_SYNTH) {
+        // For remote content, send a normal widget mouse exit event.
+        nsAutoPtr<WidgetMouseEvent> remoteEvent;
+        CreateMouseOrPointerWidgetEvent(aMouseEvent, NS_MOUSE_EXIT,
+                                        aRelatedContent, remoteEvent);
 
-      // mCurrentTarget is set to the new target, so we must reset it to the
-      // old target and then dispatch a cross-process event. (mCurrentTarget
-      // will be set back below.) HandleCrossProcessEvent will query for the
-      // proper target via GetEventTarget which will return mCurrentTarget.
-      mCurrentTarget = targetFrame;
-      HandleCrossProcessEvent(remoteEvent, &status);
+        // mCurrentTarget is set to the new target, so we must reset it to the
+        // old target and then dispatch a cross-process event. (mCurrentTarget
+        // will be set back below.) HandleCrossProcessEvent will query for the
+        // proper target via GetEventTarget which will return mCurrentTarget.
+        mCurrentTarget = targetFrame;
+        HandleCrossProcessEvent(remoteEvent, &status);
+      } else if (aMessage == NS_MOUSE_ENTER_SYNTH) {
+        nsAutoPtr<WidgetMouseEvent> remoteEvent;
+        CreateMouseOrPointerWidgetEvent(aMouseEvent, NS_MOUSE_ENTER,
+                                        aRelatedContent, remoteEvent);
+        HandleCrossProcessEvent(remoteEvent, &status);
+      }
     }
   }
 
