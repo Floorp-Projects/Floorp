@@ -169,16 +169,9 @@ body {
   transform: rotate(90deg);
 }
 
-.tooltip {
-  position: absolute;
-  bottom: 0;
-  right: 2px;
-  pointer-events: none;
-}
 
 body.dim > #header > #element-position,
-body.dim > #main > p,
-body.dim > #main > .tooltip {
+body.dim > #main > p {
   visibility: hidden;
 }
 
