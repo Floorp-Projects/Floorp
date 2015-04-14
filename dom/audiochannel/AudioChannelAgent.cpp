@@ -199,12 +199,11 @@ AudioChannelAgent::GetWindowVolume(float* aVolume)
 {
   NS_ENSURE_ARG_POINTER(aVolume);
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mWindow);
-  if (!win) {
+  if (!mWindow) {
     *aVolume = 1.0f;
     return NS_OK;
   }
 
-  *aVolume = win->GetAudioGlobalVolume();
+  *aVolume = mWindow->GetAudioGlobalVolume();
   return NS_OK;
 }
