@@ -5,14 +5,15 @@
 include protocol PCache;
 include protocol PCachePushStream;
 include protocol PCacheStreamControl;
+include PHeaders;
 include InputStreamParams;
 
-using HeadersGuardEnum from "mozilla/dom/cache/IPCUtils.h";
-using RequestCredentials from "mozilla/dom/cache/IPCUtils.h";
-using RequestMode from "mozilla/dom/cache/IPCUtils.h";
-using RequestCache from "mozilla/dom/cache/IPCUtils.h";
-using RequestContext from "mozilla/dom/cache/IPCUtils.h";
-using ResponseType from "mozilla/dom/cache/IPCUtils.h";
+using HeadersGuardEnum from "mozilla/dom/FetchIPCUtils.h";
+using RequestCredentials from "mozilla/dom/FetchIPCUtils.h";
+using RequestMode from "mozilla/dom/FetchIPCUtils.h";
+using RequestCache from "mozilla/dom/FetchIPCUtils.h";
+using RequestContext from "mozilla/dom/FetchIPCUtils.h";
+using mozilla::dom::ResponseType from "mozilla/dom/FetchIPCUtils.h";
 using mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct nsID from "nsID.h";
 
@@ -44,18 +45,12 @@ union CacheReadStreamOrVoid
   CacheReadStream;
 };
 
-struct HeadersEntry
-{
-  nsCString name;
-  nsCString value;
-};
-
 struct CacheRequest
 {
   nsCString method;
   nsString url;
   nsString urlWithoutQuery;
-  HeadersEntry[] headers;
+  PHeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   nsString referrer;
   RequestMode mode;
@@ -78,7 +73,7 @@ struct CacheResponse
   nsString url;
   uint32_t status;
   nsCString statusText;
-  HeadersEntry[] headers;
+  PHeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
   CacheReadStreamOrVoid body;
   nsCString securityInfo;

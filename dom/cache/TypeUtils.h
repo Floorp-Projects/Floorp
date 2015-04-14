@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/InternalHeaders.h"
 #include "nsError.h"
 
 class nsIGlobalObject;
@@ -35,7 +34,6 @@ class CacheReadStream;
 class CacheReadStreamOrVoid;
 class CacheRequest;
 class CacheResponse;
-class HeadersEntry;
 
 class TypeUtils
 {
@@ -101,11 +99,6 @@ public:
 
   already_AddRefed<Request>
   ToRequest(const CacheRequest& aIn);
-
-  // static methods
-  static already_AddRefed<InternalHeaders>
-  ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
-                    HeadersGuardEnum aGuard = HeadersGuardEnum::None);
 
 private:
   void
