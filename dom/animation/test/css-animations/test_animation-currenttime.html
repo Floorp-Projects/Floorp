@@ -83,112 +83,6 @@ const TEN_PCT_POSITION = 110;
 const FIFTY_PCT_POSITION = 150;
 const END_POSITION = 200;
 
-/**
- * CSS animation events fire asynchronously after we set 'startTime'. This
- * helper class allows us to handle such events using Promises.
- *
- * To use this class:
- *
- *   var eventWatcher = new EventWatcher(watchedNode, eventTypes);
- *   eventWatcher.waitForEvent(eventType).then(function() {
- *     // Promise fulfilled
- *     checkStuff();
- *     makeSomeChanges();
- *     return eventWatcher.waitForEvent(nextEventType);
- *   }).then(function() {
- *     // Promise fulfilled
- *     checkMoreStuff();
- *     eventWatcher.stopWatching(); // all done - stop listening for events
- *   });
- *
- * This class will assert_unreached() if an event occurs when there is no
- * Promise created by a waitForEvent() call waiting to be fulfilled, or if the
- * event is of a different type to the type passed to waitForEvent. This helps
- * provide test coverage to ensure that only events that are expected occur, in
- * the correct order and with the correct timing. It also helps vastly simplify
- * the already complex code below by avoiding lots of gnarly error handling
- * code.
- */
-function EventWatcher(watchedNode, eventTypes)
-{
-  if (typeof eventTypes == 'string') {
-    eventTypes = [eventTypes];
-  }
-
-  var waitingFor = null;
-
-  function eventHandler(evt) {
-    if (!waitingFor) {
-      assert_unreached('Not expecting event, but got: ' + evt.type +
-        ' targeting element #' + evt.target.getAttribute('id'));
-      return;
-    }
-    if (evt.type != waitingFor.types[0]) {
-      assert_unreached('Expected ' + waitingFor.types[0] + ' event but got ' +
-                        evt.type + ' event');
-      return;
-    }
-    if (waitingFor.types.length > 1) {
-      // Pop first event from array
-      waitingFor.types.shift();
-      return;
-    }
-    // We need to null out waitingFor before calling the resolve function since
-    // the Promise's resolve handlers may call waitForEvent() which will need
-    // to set waitingFor.
-    var resolveFunc = waitingFor.resolve;
-    waitingFor = null;
-    resolveFunc(evt);
-  }
-
-  for (var i = 0; i < eventTypes.length; i++) {
-    watchedNode.addEventListener(eventTypes[i], eventHandler);
-  }
-
-  this.waitForEvent = function(type) {
-    if (typeof type != 'string') {
-      return Promise.reject('Event type not a string');
-    }
-    return this.waitForEvents([type]);
-  };
-
-  /**
-   * This is useful when two events are expected to fire one immediately after
-   * the other. This happens when we skip over the entire active interval for
-   * instance. In this case an 'animationstart' and an 'animationend' are fired
-   * and due to the asynchronous nature of Promise callbacks this won't work:
-   *
-   *   eventWatcher.waitForEvent('animationstart').then(function() {
-   *     return waitForEvent('animationend');
-   *   }).then(...);
-   *
-   * It doesn't work because the 'animationend' listener is added too late,
-   * because the resolve handler for the first Promise is called asynchronously
-   * some time after the 'animationstart' event is called, rather than at the
-   * time the event reaches the watched element.
-   */
-  this.waitForEvents = function(types) {
-    if (waitingFor) {
-      return Promise.reject('Already waiting for an event');
-    }
-    return new Promise(function(resolve, reject) {
-      waitingFor = {
-        types: types,
-        resolve: resolve,
-        reject: reject
-      };
-    });
-  };
-
-  this.stopWatching = function() {
-    for (var i = 0; i < eventTypes.length; i++) {
-      watchedNode.removeEventListener(eventTypes[i], eventHandler);
-    }
-  };
-
-  return this;
-}
-
 // The terms used for the naming of the following helper functions refer to
 // terms used in the Web Animations specification for specific phases of an
 // animation. The terms can be found here:
@@ -336,7 +230,7 @@ test(function(t)
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
 
   div.style.animation = ANIM_PROPERTY_VAL;
 
@@ -347,7 +241,7 @@ async_test(function(t) {
 
     animation.currentTime =
       currentTimeForStartOfActiveInterval(animation.timeline);
-    return eventWatcher.waitForEvent('animationstart');
+    return eventWatcher.wait_for('animationstart');
   })).then(t.step_func(function() {
     checkStateAtActiveIntervalStartTime(animation);
 
@@ -357,11 +251,9 @@ async_test(function(t) {
 
     animation.currentTime =
       currentTimeForEndOfActiveInterval(animation.timeline);
-    return eventWatcher.waitForEvent('animationend');
+    return eventWatcher.wait_for('animationend');
   })).then(t.step_func(function() {
     checkStateAtActiveIntervalEndTime(animation);
-
-    eventWatcher.stopWatching();
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
   })).then(function() {
@@ -372,7 +264,7 @@ async_test(function(t) {
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
 
   div.style.animation = ANIM_PROPERTY_VAL;
 
@@ -389,8 +281,8 @@ async_test(function(t) {
   // an 'animationend' event. We need to wait for these events before we start
   // testing going backwards since EventWatcher will fail the test if it gets
   // an event that we haven't told it about.
-  eventWatcher.waitForEvents(['animationstart',
-                              'animationend']).then(t.step_func(function() {
+  eventWatcher.wait_for(['animationstart',
+                         'animationend']).then(t.step_func(function() {
     assert_true(document.timeline.currentTime - previousTimelineTime <
                   ANIM_DUR_MS,
                 'Sanity check that seeking worked rather than the events ' +
@@ -410,9 +302,9 @@ async_test(function(t) {
     //
     // Calling checkStateAtFiftyPctOfActiveInterval will check computed style,
     // causing computed style to be updated and the 'animationstart' event to
-    // be dispatched synchronously. We need to call waitForEvent first
+    // be dispatched synchronously. We need to call wait_for first
     // otherwise eventWatcher will assert that the event was unexpected.
-    var promise = eventWatcher.waitForEvent('animationstart');
+    var promise = eventWatcher.wait_for('animationstart');
     checkStateAtFiftyPctOfActiveInterval(animation);
     return promise;
   })).then(t.step_func(function() {
@@ -424,11 +316,9 @@ async_test(function(t) {
     // Despite going backwards from just after the active interval starts to
     // the animation start time, we now expect an animationend event
     // because we went from inside to outside the active interval.
-    return eventWatcher.waitForEvent('animationend');
+    return eventWatcher.wait_for('animationend');
   })).then(t.step_func(function() {
     checkStateOnReadyPromiseResolved(animation);
-
-    eventWatcher.stopWatching();
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
   })).then(function() {
@@ -454,7 +344,7 @@ async_test(function(t) {
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
@@ -462,14 +352,13 @@ async_test(function(t) {
   animation.currentTime = currentTimeForBeforePhase(animation.timeline);
 
   waitForAnimationFrames(2).then(function() {
-    eventWatcher.stopWatching();
     t.done();
   });
 }, 'Redundant change, before -> active, then back');
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
@@ -477,23 +366,21 @@ async_test(function(t) {
   animation.currentTime = currentTimeForBeforePhase(animation.timeline);
 
   waitForAnimationFrames(2).then(function() {
-    eventWatcher.stopWatching();
     t.done();
   });
 }, 'Redundant change, before -> after, then back');
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.waitForEvent('animationstart').then(function() {
+  eventWatcher.wait_for('animationstart').then(function() {
     animation.currentTime = currentTimeForBeforePhase(animation.timeline);
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
 
     waitForAnimationFrames(2).then(function() {
-      eventWatcher.stopWatching();
       t.done();
     });
   });
@@ -503,16 +390,15 @@ async_test(function(t) {
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.waitForEvent('animationstart').then(function() {
+  eventWatcher.wait_for('animationstart').then(function() {
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
 
     waitForAnimationFrames(2).then(function() {
-      eventWatcher.stopWatching();
       t.done();
     });
   });
@@ -522,17 +408,16 @@ async_test(function(t) {
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.waitForEvents(['animationstart',
-                              'animationend']).then(function() {
+  eventWatcher.wait_for(['animationstart',
+                         'animationend']).then(function() {
     animation.currentTime = currentTimeForBeforePhase(animation.timeline);
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
     waitForAnimationFrames(2).then(function() {
-      eventWatcher.stopWatching();
       t.done();
     });
   });
@@ -542,17 +427,16 @@ async_test(function(t) {
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
-  var eventWatcher = new EventWatcher(div, CSS_ANIM_EVENTS);
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
   div.style.animation = ANIM_PROPERTY_VAL;
   var animation = div.getAnimations()[0];
 
-  eventWatcher.waitForEvents(['animationstart',
-                              'animationend']).then(function() {
+  eventWatcher.wait_for(['animationstart',
+                         'animationend']).then(function() {
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
     waitForAnimationFrames(2).then(function() {
-      eventWatcher.stopWatching();
       t.done();
     });
   });
