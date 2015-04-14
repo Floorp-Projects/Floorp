@@ -50,6 +50,8 @@ BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
   , mJsUuids(nullptr)
   , mJsServices(nullptr)
   , mAdapterPath(aAdapterPath)
+  , mConnected(false)
+  , mPaired(false)
   , mIsRooted(false)
 {
   MOZ_ASSERT(aWindow);
