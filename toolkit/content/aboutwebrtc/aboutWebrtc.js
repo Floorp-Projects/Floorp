@@ -514,6 +514,10 @@ function labelize(label) {
 }
 
 function candidateToString(c) {
+  if (!c) {
+    return "*";
+  }
+
   var type = c.candidateType;
 
   if (c.type == "localcandidate" && c.candidateType == "relayed") {
