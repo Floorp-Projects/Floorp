@@ -30,7 +30,8 @@ public:
 
   AudioParam(AudioNode* aNode,
              CallbackType aCallback,
-             float aDefaultValue);
+             float aDefaultValue,
+             const char* aName);
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -121,6 +122,16 @@ public:
     mCallback(mNode);
   }
 
+  uint32_t ParentNodeId()
+  {
+    return mNode->Id();
+  }
+
+  void GetName(nsAString& aName)
+  {
+    aName.AssignASCII(mName);
+  }
+
   float DefaultValue() const
   {
     return mDefaultValue;
@@ -183,6 +194,7 @@ private:
   nsTArray<AudioNode::InputNode> mInputNodes;
   CallbackType mCallback;
   const float mDefaultValue;
+  const char* mName;
   // The input port used to connect the AudioParam's stream to its node's stream
   nsRefPtr<MediaInputPort> mNodeStreamPort;
 };
