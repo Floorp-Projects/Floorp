@@ -24,7 +24,7 @@ class GonkAudioDecoderManager : public GonkDecoderManager {
 typedef android::MediaCodecProxy MediaCodecProxy;
 public:
   GonkAudioDecoderManager(MediaTaskQueue* aTaskQueue,
-                          const mp4_demuxer::AudioDecoderConfig& aConfig);
+                          const AudioInfo& aConfig);
   ~GonkAudioDecoderManager();
 
   virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) override;
