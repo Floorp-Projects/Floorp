@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    browser_compartments.html
+  </title>
+  <script type="text/javascript">
+  // Use some CPU.
+  window.setInterval(() => {
+    // Compute an arbitrary value, print it out to make sure that the JS
+    // engine doesn't discard all our computation.
+    var date = Date.now();
+    var array = [];
+    var i = 0;
+    while (Date.now() - date <= 100) {
+      array[i%2] = i++;
+    }
+    console.log("Arbitrary value", array);
+  }, 300);
+  </script>
+</head>
+<body>
+browser_compartments.html
+</body>
+</html>
