@@ -8,7 +8,7 @@
 random-if((B2G&&browserIsRemote)||Mulet) == 381497-n.html 381497-f.html # reftest-print doesn't work on B2G (scrollbar difference only) # Initial mulet triage: parity with B2G/B2G Desktop
 == test-async-print.html 272830-1-ref.html
 fails-if(B2G||Mulet) == 129941-1a.html 129941-1-ref.html # reftest-print doesn't work on B2G # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) == 129941-1b.html 129941-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== 129941-1b.html 129941-1-ref.html
 == 609227-1.html 609227-1-ref.html
 fails-if(B2G||Mulet) == 609227-2a.html 609227-2-ref.html # reftest-print doesn't work on B2G # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(B2G||Mulet) == 609227-2b.html 609227-2-ref.html # reftest-print doesn't work on B2G # Initial mulet triage: parity with B2G/B2G Desktop

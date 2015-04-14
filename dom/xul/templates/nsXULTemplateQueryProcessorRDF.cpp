@@ -425,8 +425,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
 
     mQueries.AppendElement(query);
 
-    *_retval = query;
-    NS_ADDREF(*_retval);
+    query.forget(_retval);
 
     return NS_OK;
 }
@@ -584,12 +583,11 @@ nsXULTemplateQueryProcessorRDF::TranslateRef(nsISupports* aDatasource,
     nsCOMPtr<nsIRDFResource> uri;
     gRDFService->GetUnicodeResource(aRefString, getter_AddRefs(uri));
 
-    nsXULTemplateResultRDF* refresult = new nsXULTemplateResultRDF(uri);
+    nsRefPtr<nsXULTemplateResultRDF> refresult = new nsXULTemplateResultRDF(uri);
     if (! refresult)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *aRef = refresult;
-    NS_ADDREF(*aRef);
+    refresult.forget(aRef);
 
     return NS_OK;
 }

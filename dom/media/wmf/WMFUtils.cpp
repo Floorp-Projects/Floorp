@@ -492,7 +492,7 @@ UnloadDLLs()
 #define ENSURE_FUNCTION_PTR_HELPER(FunctionType, FunctionName, DLL) \
   static FunctionType FunctionName##Ptr = nullptr; \
   if (!FunctionName##Ptr) { \
-    FunctionName##Ptr = (FunctionType) GetProcAddress(GetModuleHandle(#DLL), #FunctionName); \
+    FunctionName##Ptr = (FunctionType) GetProcAddress(GetModuleHandleW(L#DLL), #FunctionName); \
     if (!FunctionName##Ptr) { \
       NS_WARNING("Failed to get GetProcAddress of " #FunctionName " from " #DLL); \
       return E_FAIL; \
@@ -674,6 +674,25 @@ MFCreateAlignedMemoryBuffer(DWORD cbMaxLength,
 {
   ENSURE_FUNCTION_PTR(MFCreateAlignedMemoryBuffer, mfplat.dll)
   return (MFCreateAlignedMemoryBufferPtr)(cbMaxLength, fAlignmentFlags, ppBuffer);
+}
+
+HRESULT
+MFCreateDXGIDeviceManager(UINT *pResetToken, IMFDXGIDeviceManager **ppDXVAManager)
+{
+  DECL_FUNCTION_PTR(MFCreateDXGIDeviceManager, UINT*, IMFDXGIDeviceManager**);
+  ENSURE_FUNCTION_PTR(MFCreateDXGIDeviceManager, mfplat.dll)
+  return (MFCreateDXGIDeviceManagerPtr)(pResetToken, ppDXVAManager);
+}
+
+HRESULT
+MFCreateDXGISurfaceBuffer(REFIID riid,
+                          IUnknown *punkSurface,
+                          UINT uSubresourceIndex,
+                          BOOL fButtomUpWhenLinear,
+                          IMFMediaBuffer **ppBuffer)
+{
+  ENSURE_FUNCTION_PTR(MFCreateDXGISurfaceBuffer, mfplat.dll)
+  return (MFCreateDXGISurfaceBufferPtr)(riid, punkSurface, uSubresourceIndex, fButtomUpWhenLinear, ppBuffer);
 }
 
 } // end namespace wmf

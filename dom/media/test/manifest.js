@@ -112,6 +112,10 @@ var gMediaRecorderTests = [
 // something crashes we have some idea of which backend is responsible.
 // Used by test_playback, which expects no error event and one ended event.
 var gPlayTests = [
+  // Test playback of a WebM file with vp9 video
+  //{ name:"vp9.webm", type:"video/webm", duration:4 },
+  { name:"vp9cake.webm", type:"video/webm", duration:7.966 },
+
   // 8-bit samples
   { name:"r11025_u8_c1.wav", type:"audio/x-wav", duration:1.0 },
   // 8-bit samples, file is truncated
@@ -226,10 +230,6 @@ var gPlayTests = [
 
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
-
-  // Test playback of a WebM file with vp9 video
-  //{ name:"vp9.webm", type:"video/webm", duration:4 },
-  { name:"vp9cake.webm", type:"video/webm", duration:7.966 }
 ];
 
 // A file for each type we can support.
@@ -832,6 +832,26 @@ function once(target, name, cb) {
     p.then(cb);
   }
   return p;
+}
+
+function TimeStamp(token) {
+  function pad(x) {
+    return (x < 10) ? "0" + x : x;
+  }
+  var now = new Date();
+  var ms = now.getMilliseconds();
+  var time = "[" +
+             pad(now.getHours()) + ":" +
+             pad(now.getMinutes()) + ":" +
+             pad(now.getSeconds()) + "." +
+             ms +
+             "]" +
+             (ms < 10 ? "  " : (ms < 100 ? " " : ""));
+  return token ? (time + " " + token) : time;
+}
+
+function Log(token, msg) {
+  info(TimeStamp(token) + " " + msg);
 }
 
 // Number of tests to run in parallel.

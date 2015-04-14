@@ -20,7 +20,7 @@ class MediaDataDecoderCallback;
 
 class AppleATDecoder : public MediaDataDecoder {
 public:
-  AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+  AppleATDecoder(const AudioInfo& aConfig,
                  FlushableMediaTaskQueue* aVideoTaskQueue,
                  MediaDataDecoderCallback* aCallback);
   virtual ~AppleATDecoder();
@@ -32,7 +32,7 @@ public:
   virtual nsresult Shutdown() override;
 
   // Callbacks also need access to the config.
-  const mp4_demuxer::AudioDecoderConfig& mConfig;
+  const AudioInfo& mConfig;
 
   // Use to extract magic cookie for HE-AAC detection.
   nsTArray<uint8_t> mMagicCookie;

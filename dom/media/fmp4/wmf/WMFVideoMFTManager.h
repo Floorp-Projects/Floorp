@@ -20,7 +20,7 @@ class DXVA2Manager;
 
 class WMFVideoMFTManager : public MFTManager {
 public:
-  WMFVideoMFTManager(const mp4_demuxer::VideoDecoderConfig& aConfig,
+  WMFVideoMFTManager(const VideoInfo& aConfig,
                      mozilla::layers::LayersBackend aLayersBackend,
                      mozilla::layers::ImageContainer* aImageContainer,
                      bool aDXVAEnabled);

@@ -1252,6 +1252,11 @@
           event.preventDefault();
         }
 
+        // No need to handle "dragover" in e10s, since nsDocShellTreeOwner.cpp in the child process
+        // handles that case using "@mozilla.org/content/dropped-link-handler;1" service.
+        if (this.isRemoteBrowser)
+          return;
+
         let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
                             getService(Components.interfaces.nsIDroppedLinkHandler);
         if (linkHandler.canDropLink(event, false))

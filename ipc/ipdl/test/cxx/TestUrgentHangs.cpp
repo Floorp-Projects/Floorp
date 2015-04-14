@@ -25,6 +25,8 @@ namespace _ipdltest {
 // parent
 
 TestUrgentHangsParent::TestUrgentHangsParent()
+  : mInnerCount(0),
+    mInnerUrgentCount(0)
 {
     MOZ_COUNT_CTOR(TestUrgentHangsParent);
 }
@@ -55,12 +57,12 @@ TestUrgentHangsParent::Main()
     // Do a second round of testing once the reply to Test2 comes back.
     MessageLoop::current()->PostDelayedTask(
         FROM_HERE,
-        NewRunnableMethod(this, &TestUrgentHangsParent::FinishTesting),
+        NewRunnableMethod(this, &TestUrgentHangsParent::SecondStage),
         3000);
 }
 
 void
-TestUrgentHangsParent::FinishTesting()
+TestUrgentHangsParent::SecondStage()
 {
     // Send an async message that waits 2 seconds and then sends a sync message
     // (which should be processed).
@@ -72,7 +74,30 @@ TestUrgentHangsParent::FinishTesting()
     if (SendTest4_1())
         fail("sending Test4_1");
 
-    // Close the channel after the child finishes its work in RecvTest4.
+    MessageLoop::current()->PostDelayedTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &TestUrgentHangsParent::ThirdStage),
+        3000);
+}
+
+void
+TestUrgentHangsParent::ThirdStage()
+{
+    // The third stage does the same thing as the second stage except that the
+    // child sends an urgent message to us. In this case, we actually answer
+    // that message unconditionally.
+
+    // Send an async message that waits 2 seconds and then sends a sync message
+    // (which should be processed).
+    if (!SendTest5())
+        fail("sending Test5");
+
+    // Send a sync message that will time out because the child is waiting
+    // inside RecvTest5.
+    if (SendTest5_1())
+        fail("sending Test5_1");
+
+    // Close the channel after the child finishes its work in RecvTest5.
     MessageLoop::current()->PostDelayedTask(
         FROM_HERE,
         NewRunnableMethod(this, &TestUrgentHangsParent::Close),
@@ -90,7 +115,14 @@ TestUrgentHangsParent::RecvTest1_2()
 bool
 TestUrgentHangsParent::RecvTestInner()
 {
-    fail("TestInner should never be dispatched");
+    mInnerCount++;
+    return true;
+}
+
+bool
+TestUrgentHangsParent::RecvTestInnerUrgent()
+{
+    mInnerUrgentCount++;
     return true;
 }
 
@@ -152,6 +184,30 @@ TestUrgentHangsChild::RecvTest4_1()
     // This should fail because Test4_1 timed out and hasn't gotten a response
     // yet.
     if (SendTestInner())
+        fail("sending TestInner");
+
+    return true;
+}
+
+bool
+TestUrgentHangsChild::RecvTest5()
+{
+    PR_Sleep(PR_SecondsToInterval(2));
+
+    // This message will actually be handled by the parent even though it's in
+    // the timeout state.
+    if (!SendTestInnerUrgent())
+        fail("sending TestInner");
+
+    return true;
+}
+
+bool
+TestUrgentHangsChild::RecvTest5_1()
+{
+    // This message will actually be handled by the parent even though it's in
+    // the timeout state.
+    if (!SendTestInnerUrgent())
         fail("sending TestInner");
 
     return true;

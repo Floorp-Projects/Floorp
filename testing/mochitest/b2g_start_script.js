@@ -31,19 +31,19 @@ if (cm) {
 
 function openWindow(aEvent) {
   var popupIframe = aEvent.detail.frameElement;
-  popupIframe.style = 'position: absolute; left: 0; top: 0px; background: white;';
+  popupIframe.id = 'popupiframe';
 
   // This is to size the iframe to what is requested in the window.open call,
   // e.g. window.open("", "", "width=600,height=600");
   if (aEvent.detail.features.indexOf('width') != -1) {
     let width = aEvent.detail.features.substr(aEvent.detail.features.indexOf('width')+6);
     width = width.substr(0,width.indexOf(',') == -1 ? width.length : width.indexOf(','));
-    popupIframe.style.width = width + 'px';
+    popupIframe.setAttribute('width', width);
   }
   if (aEvent.detail.features.indexOf('height') != -1) {
     let height = aEvent.detail.features.substr(aEvent.detail.features.indexOf('height')+7);
     height = height.substr(0, height.indexOf(',') == -1 ? height.length : height.indexOf(','));
-    popupIframe.style.height = height + 'px';
+    popupIframe.setAttribute('height', height);
   }
 
   popupIframe.addEventListener('mozbrowserclose', function(e) {

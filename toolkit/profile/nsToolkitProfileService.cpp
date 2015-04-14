@@ -676,7 +676,7 @@ NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
     nsresult rv = lock->Init(aPath, aTempPath, aUnlocker);
     if (NS_FAILED(rv)) return rv;
 
-    NS_ADDREF(*aResult = lock);
+    lock.forget(aResult);
     return NS_OK;
 }
 
@@ -904,7 +904,7 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
         new nsToolkitProfile(aName, rootDir, localDir, last, aForExternalApp);
     if (!profile) return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(*aResult = profile);
+    profile.forget(aResult);
     return NS_OK;
 }
 
@@ -1108,8 +1108,9 @@ XRE_GetFileFromPath(const char *aPath, nsIFile* *aResult)
         nsCOMPtr<nsILocalFileMac> lfMac = do_QueryInterface(lf, &rv);
         if (NS_SUCCEEDED(rv)) {
             rv = lfMac->InitWithCFURL(fullPath);
-            if (NS_SUCCEEDED(rv))
-                NS_ADDREF(*aResult = lf);
+            if (NS_SUCCEEDED(rv)) {
+                lf.forget(aResult);
+            }
         }
     }
     CFRelease(fullPath);

@@ -1,4 +1,4 @@
 # Please see the comment at the beginning of reftest.list
 
-skip-if(Mulet) == mixed-dimentionN.html?margin_parent mixed-dimentionN-ref.html?margin_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == mixed-dimentionA.html?margin_parent mixed-dimentionA-ref.html?margin_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== mixed-dimentionN.html?margin_parent mixed-dimentionN-ref.html?margin_parent
+== mixed-dimentionA.html?margin_parent mixed-dimentionA-ref.html?margin_parent

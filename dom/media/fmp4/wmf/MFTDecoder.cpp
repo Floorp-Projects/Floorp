@@ -48,7 +48,9 @@ MFTDecoder::Create(const GUID& aMFTClsID)
 
 HRESULT
 MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
-                          IMFMediaType* aOutputType)
+                          IMFMediaType* aOutputType,
+                          ConfigureOutputCallback aCallback,
+                          void* aData)
 {
   mOutputType = aOutputType;
 
@@ -56,7 +58,7 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
   HRESULT hr = mDecoder->SetInputType(0, aInputType, 0);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  hr = SetDecoderOutputType();
+  hr = SetDecoderOutputType(aCallback, aData);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = mDecoder->GetInputStreamInfo(0, &mInputStreamInfo);
@@ -81,7 +83,7 @@ MFTDecoder::GetAttributes()
 }
 
 HRESULT
-MFTDecoder::SetDecoderOutputType()
+MFTDecoder::SetDecoderOutputType(ConfigureOutputCallback aCallback, void* aData)
 {
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
 
@@ -94,6 +96,10 @@ MFTDecoder::SetDecoderOutputType()
     BOOL resultMatch;
     hr = mOutputType->Compare(outputType, MF_ATTRIBUTES_MATCH_OUR_ITEMS, &resultMatch);
     if (SUCCEEDED(hr) && resultMatch == TRUE) {
+      if (aCallback) {
+        hr = aCallback(outputType, aData);
+        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      }
       hr = mDecoder->SetOutputType(0, outputType, 0);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -200,8 +206,12 @@ MFTDecoder::Output(RefPtr<IMFSample>* aOutput)
 
   MFT_OUTPUT_DATA_BUFFER output = {0};
 
+  bool providedSample = false;
   RefPtr<IMFSample> sample;
-  if (!mMFTProvidesOutputSamples) {
+  if (*aOutput) {
+    output.pSample = *aOutput;
+    providedSample = true;
+  } else if (!mMFTProvidesOutputSamples) {
     hr = CreateOutputSample(&sample);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     output.pSample = sample;
@@ -221,7 +231,7 @@ MFTDecoder::Output(RefPtr<IMFSample>* aOutput)
     // Reconfigure decoder output type, so that GetOutputMediaType()
     // returns the new type, and return the error code to caller.
     // This is an expected failure, so don't warn on encountering it.
-    hr = SetDecoderOutputType();
+    hr = SetDecoderOutputType(nullptr, nullptr);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     // Return the error, so that the caller knows to retry.
     return MF_E_TRANSFORM_STREAM_CHANGE;
@@ -243,7 +253,7 @@ MFTDecoder::Output(RefPtr<IMFSample>* aOutput)
   }
 
   *aOutput = output.pSample; // AddRefs
-  if (mMFTProvidesOutputSamples) {
+  if (mMFTProvidesOutputSamples && !providedSample) {
     // If the MFT is providing samples, we must release the sample here.
     // Typically only the H.264 MFT provides samples when using DXVA,
     // and it always re-uses the same sample, so if we don't release it
@@ -264,9 +274,15 @@ MFTDecoder::Input(const uint8_t* aData,
 
   RefPtr<IMFSample> input;
   HRESULT hr = CreateInputSample(aData, aDataSize, aTimestamp, &input);
-  NS_ENSURE_TRUE(SUCCEEDED(hr) && input!=nullptr, hr);
+  NS_ENSURE_TRUE(SUCCEEDED(hr) && input != nullptr, hr);
 
-  hr = mDecoder->ProcessInput(0, input, 0);
+  return Input(input);
+}
+
+HRESULT
+MFTDecoder::Input(IMFSample* aSample)
+{
+  HRESULT hr = mDecoder->ProcessInput(0, aSample, 0);
   if (hr == MF_E_NOTACCEPTING) {
     // MFT *already* has enough data to produce a sample. Retrieve it.
     return MF_E_NOTACCEPTING;

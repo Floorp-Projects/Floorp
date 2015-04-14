@@ -45,7 +45,7 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 
 # localized font family names should always match just as English names do
 == localized-family-names-001.html localized-family-names-001-ref.html
-skip-if(Mulet) == localized-family-names-002.html localized-family-names-002-ref.html # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) == localized-family-names-002.html localized-family-names-002-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 == localized-family-names-003.html localized-family-names-003-ref.html
 == localized-family-names-004.html localized-family-names-004-ref.html
 
@@ -92,7 +92,7 @@ random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic-ref.html
 != syntheticbold-rotated.html syntheticbold-rotated-ref.html
 
 HTTP(..) == font-synthesis-1.html font-synthesis-1-ref.html
-skip-if(Mulet) HTTP(..) == font-synthesis-2.html font-synthesis-2-ref.html # MULET: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) HTTP(..) == font-synthesis-2.html font-synthesis-2-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 
 # Bug 1060791 - support for format 10 cmap in Apple Symbols;
 # relevant fonts not present on other platforms.

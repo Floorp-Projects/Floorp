@@ -819,11 +819,8 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 
   mStartPointRange->Collapse(true); // collapse to start
 
-  *aPresShell = presShell;
-  NS_ADDREF(*aPresShell);
-
-  *aPresContext = presContext;
-  NS_ADDREF(*aPresContext);
+  presShell.forget(aPresShell);
+  presContext.forget(aPresContext);
 
   return NS_OK;
 }

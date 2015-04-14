@@ -115,14 +115,14 @@ private:
   nsSize mIntrinsicSize;
   nsSize mImageSize;
 
-  // Boolean variable to determine if the current image request has been
-  // registered with the refresh driver.
-  bool mRequestRegistered;
-
   nsRefPtr<imgRequestProxy> mImageRequest;
   nsCOMPtr<imgINotificationObserver> mListener;
 
   int32_t mLoadFlags;
+
+  // Boolean variable to determine if the current image request has been
+  // registered with the refresh driver.
+  bool mRequestRegistered;
 
   bool mUseSrcAttr; ///< Whether or not the image src comes from an attribute.
   bool mSuppressStyleCheck;

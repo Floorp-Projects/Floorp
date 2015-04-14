@@ -9,7 +9,6 @@
 #include "mozilla/Endian.h"
 #include "prsystem.h"
 #include "MediaData.h"
-#include "mp4_demuxer/DecoderData.h"
 
 namespace mozilla {
 
@@ -149,8 +148,8 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
 
   frame->SetBufferType(GMP_BufferLength32);
 
-  frame->SetEncodedWidth(mConfig.display_width);
-  frame->SetEncodedHeight(mConfig.display_height);
+  frame->SetEncodedWidth(mConfig.mDisplay.width);
+  frame->SetEncodedHeight(mConfig.mDisplay.height);
   frame->SetTimeStamp(aSample->mTime);
   frame->SetCompleteFrame(true);
   frame->SetDuration(aSample->mDuration);
@@ -184,13 +183,13 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   codec.mGMPApiVersion = kGMPVersion33;
 
   codec.mCodecType = kGMPVideoCodecH264;
-  codec.mWidth = mConfig.display_width;
-  codec.mHeight = mConfig.display_height;
+  codec.mWidth = mConfig.mDisplay.width;
+  codec.mHeight = mConfig.mDisplay.height;
 
   nsTArray<uint8_t> codecSpecific;
   codecSpecific.AppendElement(0); // mPacketizationMode.
-  codecSpecific.AppendElements(mConfig.extra_data->Elements(),
-                               mConfig.extra_data->Length());
+  codecSpecific.AppendElements(mConfig.mExtraData->Elements(),
+                               mConfig.mExtraData->Length());
 
   nsresult rv = aGMP->InitDecode(codec,
                                  codecSpecific,

@@ -35,13 +35,24 @@ function AppsService()
 
 AppsService.prototype = {
 
+  isInvalidId: function(localId) {
+    return (localId == Ci.nsIScriptSecurityManager.NO_APP_ID ||
+            localId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID);
+  },
+
   getManifestCSPByLocalId: function getCSPByLocalId(localId) {
     debug("GetManifestCSPByLocalId( " + localId + " )");
+    if (this.isInvalidId(localId)) {
+      return null;
+    }
     return DOMApplicationRegistry.getManifestCSPByLocalId(localId);
   },
 
   getDefaultCSPByLocalId: function getCSPByLocalId(localId) {
     debug("GetDefaultCSPByLocalId( " + localId + " )");
+    if (this.isInvalidId(localId)) {
+      return null;
+    }
     return DOMApplicationRegistry.getDefaultCSPByLocalId(localId);
   },
 
@@ -72,11 +83,17 @@ AppsService.prototype = {
 
   getAppByLocalId: function getAppByLocalId(aLocalId) {
     debug("getAppByLocalId( " + aLocalId + " )");
+    if (this.isInvalidId(aLocalId)) {
+      return null;
+    }
     return DOMApplicationRegistry.getAppByLocalId(aLocalId);
   },
 
   getManifestURLByLocalId: function getManifestURLByLocalId(aLocalId) {
     debug("getManifestURLByLocalId( " + aLocalId + " )");
+    if (this.isInvalidId(aLocalId)) {
+      return null;
+    }
     return DOMApplicationRegistry.getManifestURLByLocalId(aLocalId);
   },
 
@@ -97,8 +114,7 @@ AppsService.prototype = {
 
   getRedirect: function getRedirect(aLocalId, aURI) {
     debug("getRedirect for " + aLocalId + " " + aURI.spec);
-    if (aLocalId == Ci.nsIScriptSecurityManager.NO_APP_ID ||
-        aLocalId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID) {
+    if (this.isInvalidId(aLocalId)) {
       return null;
     }
 
