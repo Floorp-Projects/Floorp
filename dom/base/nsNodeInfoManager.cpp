@@ -29,7 +29,6 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"
 #include "nsDocument.h"
-#include "nsNullPrincipal.h"
 
 using namespace mozilla;
 using mozilla::dom::NodeInfo;
@@ -190,7 +189,7 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
   NS_PRECONDITION(!mPrincipal,
                   "Being inited when we already have a principal?");
   nsresult rv;
-  mPrincipal = nsNullPrincipal::Create();
+  mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
   NS_ENSURE_TRUE(mPrincipal, rv);
 
   if (aDocument) {
