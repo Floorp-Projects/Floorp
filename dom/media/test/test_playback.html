@@ -10,9 +10,15 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-//longer timeout for sometimes B2G emulator runs very slowly
-if (SpecialPowers.Services.appinfo.name == "B2G") {
+function isSlowPlatform() {
+  return SpecialPowers.Services.appinfo.name == "B2G" ||
+         navigator.userAgent.indexOf("Mobile") != -1 && androidVersion == 10;
+}
+
+// longer timeout for slow platforms
+if (isSlowPlatform()) {
   SimpleTest.requestLongerTimeout(3);
+  SimpleTest.requestCompleteLog();
 }
 
 var manager = new MediaTestManager;
@@ -117,14 +123,14 @@ function startTest(test, token) {
   document.body.appendChild(v);
   v.play();
 
-  if (test.name == "vp9cake.webm") {
-    // Log events for debugging.
+  // Debug timeouts on slow platforms.
+  if (isSlowPlatform()) {
     var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
                   "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
                   "waiting", "pause"];
     function logEvent(e) {
       var v = e.target;
-      info(e.target.token + ": got " + e.type);
+      Log(e.target.token, "got " + e.type);
     }
     events.forEach(function(e) {
       v.addEventListener(e, logEvent, false);
