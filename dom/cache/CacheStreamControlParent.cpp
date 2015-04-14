@@ -8,7 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/unused.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/StreamList.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
@@ -45,7 +45,7 @@ CacheStreamControlParent::~CacheStreamControlParent()
 }
 
 void
-CacheStreamControlParent::SerializeControl(CacheReadStream* aReadStreamOut)
+CacheStreamControlParent::SerializeControl(PCacheReadStream* aReadStreamOut)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   aReadStreamOut->controlChild() = nullptr;
@@ -53,7 +53,7 @@ CacheStreamControlParent::SerializeControl(CacheReadStream* aReadStreamOut)
 }
 
 void
-CacheStreamControlParent::SerializeFds(CacheReadStream* aReadStreamOut,
+CacheStreamControlParent::SerializeFds(PCacheReadStream* aReadStreamOut,
                                        const nsTArray<FileDescriptor>& aFds)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
@@ -73,7 +73,7 @@ CacheStreamControlParent::SerializeFds(CacheReadStream* aReadStreamOut,
 }
 
 void
-CacheStreamControlParent::DeserializeFds(const CacheReadStream& aReadStream,
+CacheStreamControlParent::DeserializeFds(const PCacheReadStream& aReadStream,
                                          nsTArray<FileDescriptor>& aFdsOut)
 {
   if (aReadStream.fds().type() !=
