@@ -29,9 +29,13 @@ function frameScript() {
   // Make sure that the stopwatch is now active.
   performanceStatsService.isStopwatchActive = true;
 
+  let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks"]);
+
   addMessageListener("compartments-test:getStatistics", () => {
     try {
-      sendAsyncMessage("compartments-test:getStatistics", PerformanceStats.getSnapshot());
+      monitor.promiseSnapshot().then(snapshot => {
+        sendAsyncMessage("compartments-test:getStatistics", snapshot);
+      });
     } catch (ex) {
       Cu.reportError("Error in content: " + ex);
       Cu.reportError(ex.stack);
@@ -99,20 +103,25 @@ function monotinicity_tester(source, testName) {
     for (let k of ["name", "addonId", "isSystem"]) {
       SilentAssert.equal(prev[k], next[k], `Sanity check (${testName}): ${k} hasn't changed.`);
     }
-    for (let k of ["totalUserTime", "totalSystemTime", "totalCPOWTime", "ticks"]) {
-      SilentAssert.equal(typeof next[k], "number", `Sanity check (${testName}): ${k} is a number.`);
-      SilentAssert.leq(prev[k], next[k], `Sanity check (${testName}): ${k} is monotonic.`);
-      SilentAssert.leq(0, next[k], `Sanity check (${testName}): ${k} is >= 0.`)
+    for (let [probe, k] of [
+      ["jank", "totalUserTime"],
+      ["jank", "totalSystemTime"],
+      ["cpow", "totalCPOWTime"],
+      ["ticks", "ticks"]
+    ]) {
+      SilentAssert.equal(typeof next[probe][k], "number", `Sanity check (${testName}): ${k} is a number.`);
+      SilentAssert.leq(prev[probe][k], next[probe][k], `Sanity check (${testName}): ${k} is monotonic.`);
+      SilentAssert.leq(0, next[probe][k], `Sanity check (${testName}): ${k} is >= 0.`)
     }
-    SilentAssert.equal(prev.durations.length, next.durations.length);
-    for (let i = 0; i < next.durations.length; ++i) {
-      SilentAssert.ok(typeof next.durations[i] == "number" && next.durations[i] >= 0,
+    SilentAssert.equal(prev.jank.durations.length, next.jank.durations.length);
+    for (let i = 0; i < next.jank.durations.length; ++i) {
+      SilentAssert.ok(typeof next.jank.durations[i] == "number" && next.jank.durations[i] >= 0,
         `Sanity check (${testName}): durations[${i}] is a non-negative number.`);
-      SilentAssert.leq(prev.durations[i], next.durations[i],
-        `Sanity check (${testName}): durations[${i}] is monotonic.`)
+      SilentAssert.leq(prev.jank.durations[i], next.jank.durations[i],
+        `Sanity check (${testName}): durations[${i}] is monotonic.`);
     }
-    for (let i = 0; i < next.durations.length - 1; ++i) {
-      SilentAssert.leq(next.durations[i + 1], next.durations[i],
+    for (let i = 0; i < next.jank.durations.length - 1; ++i) {
+      SilentAssert.leq(next.jank.durations[i + 1], next.jank.durations[i],
         `Sanity check (${testName}): durations[${i}] >= durations[${i + 1}].`)
     }
   };
@@ -138,8 +147,12 @@ function monotinicity_tester(source, testName) {
     let set = new Set();
     let map = new Map();
     for (let item of snapshot.componentsData) {
-      for (let k of ["totalUserTime", "totalSystemTime", "totalCPOWTime"]) {
-        SilentAssert.leq(item[k], snapshot.processData[k],
+	 for (let [probe, k] of [
+        ["jank", "totalUserTime"],
+        ["jank", "totalSystemTime"],
+        ["cpow", "totalCPOWTime"]
+      ]) {
+        SilentAssert.leq(item[probe][k], snapshot.processData[probe][k],
           `Sanity check (${testName}): component has a lower ${k} than process`);
       }
 
@@ -170,8 +183,10 @@ function monotinicity_tester(source, testName) {
 }
 
 add_task(function* test() {
+  let monitor = PerformanceStats.getMonitor(["jank", "cpow", "ticks"]);
+
   info("Extracting initial state");
-  let stats0 = PerformanceStats.getSnapshot();
+  let stats0 = yield monitor.promiseSnapshot();
   Assert.notEqual(stats0.componentsData.length, 0, "There is more than one component");
   Assert.ok(!stats0.componentsData.find(stat => stat.name.indexOf(URL) != -1),
     "The url doesn't appear yet");
@@ -189,7 +204,7 @@ add_task(function* test() {
     info("Deactivating sanity checks under Windows (bug 1151240)");
   } else {
     info("Setting up sanity checks");
-    monotinicity_tester(() => PerformanceStats.getSnapshot(), "parent process");
+    monotinicity_tester(() => monitor.promiseSnapshot(), "parent process");
     monotinicity_tester(() => promiseContentResponseOrNull(browser, "compartments-test:getStatistics", null), "content process" );
   }
 
@@ -230,11 +245,11 @@ add_task(function* test() {
       info("Searching by title, we didn't find the main frame");
       continue;
     }
-    info("Searching by title, we found the main frame");
 
-    info(`Total user time: ${parent.totalUserTime}`);
-    if (skipTotalUserTime || parent.totalUserTime > 1000) {
+    if (skipTotalUserTime || parent.jank.totalUserTime > 1000) {
       break;
+    } else {
+      info(`Not enough CPU time detected: ${parent.jank.totalUserTime}`)
     }
   }
 
