@@ -8,7 +8,7 @@
 #define mozilla_dom_cache_AutoUtils_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "nsTArray.h"
@@ -84,10 +84,10 @@ public:
 private:
   void SerializeResponseBody(const SavedResponse& aSavedResponse,
                              StreamList* aStreamList,
-                             CacheResponse* aResponseOut);
+                             PCacheResponse* aResponseOut);
 
   void SerializeReadStream(const nsID& aId, StreamList* aStreamList,
-                           CacheReadStream* aReadStreamOut);
+                           PCacheReadStream* aReadStreamOut);
 
   mozilla::ipc::PBackgroundParent* mManager;
   CacheOpResult mOpResult;

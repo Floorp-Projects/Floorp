@@ -10,7 +10,7 @@
 // NOTE: This cannot be rolled into Types.h because the IPC dependency.
 //       breaks webidl unified builds.
 
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
@@ -23,7 +23,7 @@ namespace cache {
 struct SavedRequest
 {
   SavedRequest() : mHasBodyId(false) { mValue.body() = void_t(); }
-  CacheRequest mValue;
+  PCacheRequest mValue;
   bool mHasBodyId;
   nsID mBodyId;
   CacheId mCacheId;
@@ -32,7 +32,7 @@ struct SavedRequest
 struct SavedResponse
 {
   SavedResponse() : mHasBodyId(false) { mValue.body() = void_t(); }
-  CacheResponse mValue;
+  PCacheResponse mValue;
   bool mHasBodyId;
   nsID mBodyId;
   CacheId mCacheId;

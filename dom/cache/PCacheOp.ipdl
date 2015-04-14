@@ -3,12 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCache;
-include protocol PCachePushStream;
 include protocol PCacheStorage;
+
+// these are needed indirectly through CacheOpResult
+include protocol PCachePushStream;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
 
-include CacheTypes;
+include PCacheTypes;
 
 namespace mozilla {
 namespace dom {
