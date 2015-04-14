@@ -6591,11 +6591,6 @@ class OpenDatabaseOp final
 
   nsRefPtr<DatabaseOfflineStorage> mOfflineStorage;
 
-  // This is only set while a VersionChangeOp is live. It holds a strong
-  // reference to its OpenDatabaseOp object so this is a weak pointer to avoid
-  // cycles.
-  VersionChangeOp* mVersionChangeOp;
-
 public:
   OpenDatabaseOp(Factory* aFactory,
                  already_AddRefed<ContentParent> aContentParent,
@@ -6612,9 +6607,7 @@ public:
 
 private:
   ~OpenDatabaseOp()
-  {
-    MOZ_ASSERT(!mVersionChangeOp);
-  }
+  { }
 
   nsresult
   LoadDatabaseInformation(mozIStorageConnection* aConnection);
@@ -6641,9 +6634,6 @@ private:
 
   void
   ConnectionClosedCallback();
-
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual nsresult
   QuotaManagerOpen() override;
@@ -6694,9 +6684,7 @@ private:
   }
 
   ~VersionChangeOp()
-  {
-    MOZ_ASSERT(!mOpenDatabaseOp);
-  }
+  { }
 
   virtual nsresult
   DoDatabaseWork(DatabaseConnection* aConnection) override;
@@ -7920,7 +7908,7 @@ class DatabaseOfflineStorage final
   bool mInvalidatedOnMainThread;
   bool mInvalidatedOnOwningThread;
 
-  bool mRegisteredWithQuotaManager;
+  DebugOnly<bool> mRegisteredWithQuotaManager;
 
 public:
   DatabaseOfflineStorage(QuotaClient* aQuotaClient,
@@ -7976,7 +7964,7 @@ private:
   ~DatabaseOfflineStorage()
   {
     MOZ_ASSERT(!mDatabase);
-    MOZ_RELEASE_ASSERT(!mRegisteredWithQuotaManager);
+    MOZ_ASSERT(!mRegisteredWithQuotaManager);
   }
 
   void
@@ -8466,11 +8454,10 @@ DatabaseConnection::FinishWriteTransaction()
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
+  MOZ_ASSERT(mUpdateRefcountFunction);
   MOZ_ASSERT(mDEBUGInWriteTransaction);
 
-  if (mUpdateRefcountFunction) {
-    mUpdateRefcountFunction->Reset();
-  }
+  mUpdateRefcountFunction->Reset();
 
 #ifdef DEBUG
   mDEBUGInWriteTransaction = false;
@@ -17108,7 +17095,6 @@ OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
   : FactoryOp(aFactory, Move(aContentParent), aParams, /* aDeleting */ false)
   , mMetadata(new FullDatabaseMetadata(aParams.metadata()))
   , mRequestedVersion(aParams.metadata().version())
-  , mVersionChangeOp(nullptr)
 {
   auto& optionalContentParentId =
     const_cast<OptionalContentId&>(mOptionalContentParentId);
@@ -17120,18 +17106,6 @@ OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
   } else {
     optionalContentParentId = void_t();
   }
-}
-
-void
-OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy)
-{
-  AssertIsOnOwningThread();
-
-  if (mVersionChangeOp) {
-    mVersionChangeOp->NoteActorDestroyed();
-  }
-
-  FactoryOp::ActorDestroy(aWhy);
 }
 
 nsresult
@@ -17777,10 +17751,6 @@ OpenDatabaseOp::DispatchToWorkThread()
   const nsID& backgroundChildLoggingId =
     mVersionChangeTransaction->GetLoggingInfo()->Id();
 
-  if (NS_WARN_IF(!mDatabase->RegisterTransaction(mVersionChangeTransaction))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsRefPtr<VersionChangeOp> versionChangeOp = new VersionChangeOp(this);
 
   uint64_t transactionId =
@@ -17791,10 +17761,13 @@ OpenDatabaseOp::DispatchToWorkThread()
                            /* aIsWriteTransaction */ true,
                            versionChangeOp);
 
-  mVersionChangeOp = versionChangeOp;
+  mVersionChangeTransaction->SetActive(transactionId);
 
   mVersionChangeTransaction->NoteActiveRequest();
-  mVersionChangeTransaction->SetActive(transactionId);
+
+  if (NS_WARN_IF(!mDatabase->RegisterTransaction(mVersionChangeTransaction))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
@@ -18249,7 +18222,6 @@ VersionChangeOp::DoDatabaseWork(DatabaseConnection* aConnection)
 {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT(mOpenDatabaseOp);
   MOZ_ASSERT(mOpenDatabaseOp->mState == State_DatabaseWorkVersionChange);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
@@ -18304,7 +18276,6 @@ VersionChangeOp::SendSuccessResult()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mOpenDatabaseOp);
   MOZ_ASSERT(mOpenDatabaseOp->mState == State_DatabaseWorkVersionChange);
-  MOZ_ASSERT(mOpenDatabaseOp->mVersionChangeOp == this);
 
   nsresult rv = mOpenDatabaseOp->SendUpgradeNeeded();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18321,7 +18292,6 @@ VersionChangeOp::SendFailureResult(nsresult aResultCode)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mOpenDatabaseOp);
   MOZ_ASSERT(mOpenDatabaseOp->mState == State_DatabaseWorkVersionChange);
-  MOZ_ASSERT(mOpenDatabaseOp->mVersionChangeOp == this);
 
   mOpenDatabaseOp->SetFailureCode(aResultCode);
   mOpenDatabaseOp->mState = State_SendingResults;
@@ -18336,10 +18306,7 @@ OpenDatabaseOp::
 VersionChangeOp::Cleanup()
 {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mOpenDatabaseOp);
-  MOZ_ASSERT(mOpenDatabaseOp->mVersionChangeOp == this);
 
-  mOpenDatabaseOp->mVersionChangeOp = nullptr;
   mOpenDatabaseOp = nullptr;
 
 #ifdef DEBUG
@@ -19376,15 +19343,13 @@ CommitOp::Run()
     MOZ_ASSERT(database);
 
     if (DatabaseConnection* connection = database->GetConnection()) {
-      // May be null if the VersionChangeOp was canceled.
       DatabaseConnection::UpdateRefcountFunction* fileRefcountFunction =
         connection->GetUpdateRefcountFunction();
+      MOZ_ASSERT(fileRefcountFunction);
 
       if (NS_SUCCEEDED(mResultCode)) {
-        if (fileRefcountFunction) {
-          mResultCode = fileRefcountFunction->WillCommit();
-          NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode), "WillCommit() failed!");
-        }
+        mResultCode = fileRefcountFunction->WillCommit();
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode), "WillCommit() failed!");
 
         if (NS_SUCCEEDED(mResultCode)) {
           mResultCode = WriteAutoIncrementCounts();
@@ -19408,7 +19373,7 @@ CommitOp::Run()
                 mResultCode = connection->Checkpoint(/* aIdle */ false);
               }
 
-              if (NS_SUCCEEDED(mResultCode) && fileRefcountFunction) {
+              if (NS_SUCCEEDED(mResultCode)) {
                 fileRefcountFunction->DidCommit();
               }
             }
@@ -19417,9 +19382,7 @@ CommitOp::Run()
       }
 
       if (NS_FAILED(mResultCode)) {
-        if (fileRefcountFunction) {
-          fileRefcountFunction->DidAbort();
-        }
+        fileRefcountFunction->DidAbort();
 
         DatabaseConnection::CachedStatement stmt;
         if (NS_SUCCEEDED(connection->GetCachedStatement("ROLLBACK", &stmt))) {
