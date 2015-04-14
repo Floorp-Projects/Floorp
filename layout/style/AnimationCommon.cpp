@@ -606,7 +606,7 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
       continue;
     }
 
-    const KeyframeEffectReadonly* effect = player->GetSource();
+    const KeyframeEffectReadonly* effect = player->GetEffect();
     MOZ_ASSERT(effect, "A playing player should have an effect");
 
     for (size_t propIdx = 0, propEnd = effect->Properties().Length();
@@ -625,7 +625,7 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
       continue;
     }
 
-    const KeyframeEffectReadonly* effect = player->GetSource();
+    const KeyframeEffectReadonly* effect = player->GetEffect();
     MOZ_ASSERT(effect, "A playing player should have an effect");
 
     existsProperty = existsProperty || effect->Properties().Length() > 0;
@@ -655,7 +655,7 @@ AnimationPlayerCollection::PostUpdateLayerAnimations()
 {
   nsCSSPropertySet propsHandled;
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const auto& properties = mPlayers[playerIdx]->GetSource()->Properties();
+    const auto& properties = mPlayers[playerIdx]->GetEffect()->Properties();
     for (size_t propIdx = properties.Length(); propIdx-- != 0; ) {
       nsCSSProperty prop = properties[propIdx].mProperty;
       if (nsCSSProps::PropHasFlags(prop,
@@ -679,7 +679,7 @@ AnimationPlayerCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const KeyframeEffectReadonly* effect = mPlayers[playerIdx]->GetSource();
+    const KeyframeEffectReadonly* effect = mPlayers[playerIdx]->GetEffect();
     if (effect && effect->HasAnimationOfProperty(aProperty) &&
         !effect->IsFinishedTransition()) {
       return true;
@@ -929,7 +929,7 @@ AnimationPlayerCollection::HasCurrentAnimationsForProperties(
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer& player = *mPlayers[playerIdx];
-    const KeyframeEffectReadonly* effect = player.GetSource();
+    const KeyframeEffectReadonly* effect = player.GetEffect();
     if (effect &&
         effect->IsCurrent(player) &&
         effect->HasAnimationOfProperties(aProperties, aPropertyCount)) {

@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline,
-                                      mSource, mReady, mFinished)
+                                      mEffect, mReady, mFinished)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationPlayer)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationPlayer)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationPlayer)
@@ -266,14 +266,14 @@ AnimationPlayer::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 }
 
 void
-AnimationPlayer::SetSource(KeyframeEffectReadonly* aSource)
+AnimationPlayer::SetEffect(KeyframeEffectReadonly* aEffect)
 {
-  if (mSource) {
-    mSource->SetParentTime(Nullable<TimeDuration>());
+  if (mEffect) {
+    mEffect->SetParentTime(Nullable<TimeDuration>());
   }
-  mSource = aSource;
-  if (mSource) {
-    mSource->SetParentTime(GetCurrentTime());
+  mEffect = aEffect;
+  if (mEffect) {
+    mEffect->SetParentTime(GetCurrentTime());
   }
   UpdateRelevance();
 }
@@ -387,9 +387,9 @@ AnimationPlayer::UpdateRelevance()
 bool
 AnimationPlayer::CanThrottle() const
 {
-  if (!mSource ||
-      mSource->IsFinishedTransition() ||
-      mSource->Properties().IsEmpty()) {
+  if (!mEffect ||
+      mEffect->IsFinishedTransition() ||
+      mEffect->Properties().IsEmpty()) {
     return true;
   }
 
@@ -414,7 +414,7 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
                               nsCSSPropertySet& aSetProperties,
                               bool& aNeedsRefreshes)
 {
-  if (!mSource || mSource->IsFinishedTransition()) {
+  if (!mEffect || mEffect->IsFinishedTransition()) {
     return;
   }
 
@@ -482,7 +482,7 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
       }
     }
 
-    mSource->ComposeStyle(aStyleRule, aSetProperties);
+    mEffect->ComposeStyle(aStyleRule, aSetProperties);
 
     if (updatedHoldTime) {
       UpdateTiming();
@@ -708,8 +708,8 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
 void
 AnimationPlayer::UpdateSourceContent()
 {
-  if (mSource) {
-    mSource->SetParentTime(GetCurrentTime());
+  if (mEffect) {
+    mEffect->SetParentTime(GetCurrentTime());
     UpdateRelevance();
   }
 }
@@ -825,24 +825,24 @@ AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
 StickyTimeDuration
 AnimationPlayer::SourceContentEnd() const
 {
-  if (!mSource) {
+  if (!mEffect) {
     return StickyTimeDuration(0);
   }
 
-  return mSource->Timing().mDelay
-         + mSource->GetComputedTiming().mActiveDuration;
+  return mEffect->Timing().mDelay
+         + mEffect->GetComputedTiming().mActiveDuration;
 }
 
 nsIDocument*
 AnimationPlayer::GetRenderedDocument() const
 {
-  if (!mSource) {
+  if (!mEffect) {
     return nullptr;
   }
 
   Element* targetElement;
   nsCSSPseudoElements::Type pseudoType;
-  mSource->GetTarget(targetElement, pseudoType);
+  mEffect->GetTarget(targetElement, pseudoType);
   if (!targetElement) {
     return nullptr;
   }
@@ -871,11 +871,11 @@ AnimationPlayer::GetCollection() const
   if (!manager) {
     return nullptr;
   }
-  MOZ_ASSERT(mSource, "A player with an animation manager must have a source");
+  MOZ_ASSERT(mEffect, "A player with an animation manager must have an effect");
 
   Element* targetElement;
   nsCSSPseudoElements::Type targetPseudoType;
-  mSource->GetTarget(targetElement, targetPseudoType);
+  mEffect->GetTarget(targetElement, targetPseudoType);
   MOZ_ASSERT(targetElement,
              "A player with an animation manager must have a target");
 

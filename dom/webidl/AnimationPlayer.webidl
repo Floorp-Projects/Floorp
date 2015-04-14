@@ -14,11 +14,11 @@ enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
 interface AnimationPlayer {
-  // Bug 1049975: Make 'source' writeable
+  // Bug 1049975: Make 'effect' writeable
   // FIXME: In a later patch in this series we'll rename KeyframeEffectReadonly
   // with AnimationEffectReadonly
   [Pure]
-  readonly attribute KeyframeEffectReadonly? source;
+  readonly attribute KeyframeEffectReadonly? effect;
   readonly attribute AnimationTimeline timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;
