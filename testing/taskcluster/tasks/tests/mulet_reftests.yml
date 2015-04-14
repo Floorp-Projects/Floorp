@@ -34,10 +34,13 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     chunks:
       total: 6
     treeherder:
-      groupName: Reftest
-      groupSymbol: tc-R
+      groupSymbol: R
+      groupName: Mulet Reftest
       symbol: 'R{{chunk}}'
       productName: b2g
