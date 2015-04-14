@@ -12,7 +12,7 @@
 
 [HeaderFile="mozilla/dom/KeyframeEffect.h",
  Func="nsDocument::IsWebAnimationsEnabled"]
-interface KeyframeEffectReadonly {
+interface KeyframeEffectReadonly : AnimationEffectReadonly {
   readonly attribute Element?  target;
   readonly attribute DOMString name;
   // Not yet implemented:

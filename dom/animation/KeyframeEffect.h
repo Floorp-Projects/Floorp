@@ -15,6 +15,7 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/AnimationEffectReadonly.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
@@ -117,8 +118,8 @@ public:
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mType == aOther.mType &&
            (mType == nsTimingFunction::Function ?
-	    mTimingFunction == aOther.mTimingFunction :
-	    mSteps == aOther.mSteps);
+            mTimingFunction == aOther.mTimingFunction :
+            mSteps == aOther.mSteps);
   }
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
@@ -184,7 +185,7 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
-class KeyframeEffectReadonly : public nsWrapperCache
+class KeyframeEffectReadonly : public AnimationEffectReadonly
 {
 public:
   KeyframeEffectReadonly(nsIDocument* aDocument,
@@ -192,7 +193,7 @@ public:
                          nsCSSPseudoElements::Type aPseudoType,
                          const AnimationTiming &aTiming,
                          const nsSubstring& aName)
-    : mDocument(aDocument)
+    : AnimationEffectReadonly(aDocument)
     , mTarget(aTarget)
     , mTiming(aTiming)
     , mName(aName)
@@ -202,10 +203,10 @@ public:
     MOZ_ASSERT(aTarget, "null animation target is not yet supported");
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(KeyframeEffectReadonly)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(KeyframeEffectReadonly)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadonly,
+                                                        AnimationEffectReadonly)
 
-  nsIDocument* GetParentObject() const { return mDocument; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
@@ -333,9 +334,6 @@ public:
 protected:
   virtual ~KeyframeEffectReadonly() { }
 
-  // We use a document for a parent object since the other likely candidate,
-  // the target element, can be empty.
-  nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<Element> mTarget;
   Nullable<TimeDuration> mParentTime;
 
