@@ -474,73 +474,45 @@ OptionalExtensions(Reader& input, uint8_t tag,
     return Success;
   }
 
-  Result rv;
-
-  Reader extensions;
-  {
-    Reader tagged;
-    rv = ExpectTagAndGetValue(input, tag, tagged);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = ExpectTagAndGetValue(tagged, SEQUENCE, extensions);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = End(tagged);
-    if (rv != Success) {
-      return rv;
-    }
-  }
-
-  // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
-  //
-  // TODO(bug 997994): According to the specification, there should never be
-  // an empty sequence of extensions but we've found OCSP responses that have
-  // that (see bug 991898).
-  while (!extensions.AtEnd()) {
-    Reader extension;
-    rv = ExpectTagAndGetValue(extensions, SEQUENCE, extension);
-    if (rv != Success) {
-      return rv;
-    }
-
-    // Extension  ::=  SEQUENCE  {
-    //      extnID      OBJECT IDENTIFIER,
-    //      critical    BOOLEAN DEFAULT FALSE,
-    //      extnValue   OCTET STRING
-    //      }
-    Reader extnID;
-    rv = ExpectTagAndGetValue(extension, OIDTag, extnID);
-    if (rv != Success) {
-      return rv;
-    }
-    bool critical;
-    rv = OptionalBoolean(extension, critical);
-    if (rv != Success) {
-      return rv;
-    }
-    Input extnValue;
-    rv = ExpectTagAndGetValue(extension, OCTET_STRING, extnValue);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = End(extension);
-    if (rv != Success) {
-      return rv;
-    }
-
-    bool understood = false;
-    rv = extensionHandler(extnID, extnValue, critical, understood);
-    if (rv != Success) {
-      return rv;
-    }
-    if (critical && !understood) {
-      return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
-    }
-  }
-
-  return Success;
+  return Nested(input, tag, [extensionHandler](Reader& tagged) {
+    // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
+    //
+    // TODO(bug 997994): According to the specification, there should never be
+    // an empty sequence of extensions but we've found OCSP responses that have
+    // that (see bug 991898).
+    return NestedOf(tagged, SEQUENCE, SEQUENCE, EmptyAllowed::Yes,
+                    [extensionHandler](Reader& extension) -> Result {
+      // Extension  ::=  SEQUENCE  {
+      //      extnID      OBJECT IDENTIFIER,
+      //      critical    BOOLEAN DEFAULT FALSE,
+      //      extnValue   OCTET STRING
+      //      }
+      Reader extnID;
+      Result rv = ExpectTagAndGetValue(extension, OIDTag, extnID);
+      if (rv != Success) {
+        return rv;
+      }
+      bool critical;
+      rv = OptionalBoolean(extension, critical);
+      if (rv != Success) {
+        return rv;
+      }
+      Input extnValue;
+      rv = ExpectTagAndGetValue(extension, OCTET_STRING, extnValue);
+      if (rv != Success) {
+        return rv;
+      }
+      bool understood = false;
+      rv = extensionHandler(extnID, extnValue, critical, understood);
+      if (rv != Success) {
+        return rv;
+      }
+      if (critical && !understood) {
+        return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
+      }
+      return Success;
+    });
+  });
 }
 
 Result DigestAlgorithmIdentifier(Reader& input,
