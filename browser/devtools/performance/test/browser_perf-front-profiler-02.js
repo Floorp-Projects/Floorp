@@ -15,16 +15,16 @@ let test = Task.async(function*() {
     "The built-in profiler module should not have been automatically started.");
 
   let activated = front.once("profiler-activated");
-  let rec = yield front.startRecording();
+  yield front.startRecording();
   yield activated;
-  yield front.stopRecording(rec);
+  yield front.stopRecording();
   ok(nsIProfilerModule.IsActive(),
     "The built-in profiler module should still be active (1).");
 
   let alreadyActive = front.once("profiler-already-active");
-  rec = yield front.startRecording();
+  yield front.startRecording();
   yield alreadyActive;
-  yield front.stopRecording(rec);
+  yield front.stopRecording();
   ok(nsIProfilerModule.IsActive(),
     "The built-in profiler module should still be active (2).");
 

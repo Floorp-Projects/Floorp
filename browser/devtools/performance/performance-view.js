@@ -20,10 +20,6 @@ let PerformanceView = {
       { deck: "#performance-view", pane: "#performance-view-content" },
       { deck: "#details-pane-container", pane: "#recording-notice" }
     ],
-    "console-recording": [
-      { deck: "#performance-view", pane: "#performance-view-content" },
-      { deck: "#details-pane-container", pane: "#console-recording-notice" }
-    ],
     recorded: [
       { deck: "#performance-view", pane: "#performance-view-content" },
       { deck: "#details-pane-container", pane: "#details-pane" }
@@ -59,7 +55,6 @@ let PerformanceView = {
     PerformanceController.on(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
     this.setState("empty");
@@ -86,7 +81,6 @@ let PerformanceView = {
     PerformanceController.off(EVENTS.RECORDING_WILL_STOP, this._onRecordingWillStop);
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingSelected);
 
     yield ToolbarView.destroy();
@@ -97,7 +91,7 @@ let PerformanceView = {
 
   /**
    * Sets the state of the profiler view. Possible options are "empty",
-   * "recording", "console-recording", "recorded".
+   * "recording", "recorded".
    */
   setState: function (state) {
     let viewConfig = this.states[state];
@@ -109,13 +103,6 @@ let PerformanceView = {
     }
 
     this._state = state;
-
-    if (state === "console-recording") {
-      let recording = PerformanceController.getCurrentRecording();
-      let label = recording.getLabel() || "";
-      $(".console-profile-recording-notice").value = L10N.getFormatStr("consoleProfile.recordingNotice", label);
-      $(".console-profile-stop-notice").value = L10N.getFormatStr("consoleProfile.stopCommand", label);
-    }
     this.emit(EVENTS.UI_STATE_CHANGED, state);
   },
 
@@ -161,14 +148,11 @@ let PerformanceView = {
    * When a recording is complete.
    */
   _onRecordingStopped: function (_, recording) {
-    // A stopped recording can be from `console.profileEnd` -- only unlock
-    // the button if it's the main recording that was started via UI.
-    if (!recording.isConsole()) {
-      this._unlockRecordButton();
-    }
+    this._unlockRecordButton();
 
-    // If the currently selected recording is the one that just stopped,
-    // switch state to "recorded".
+    // If this recording stopped is the current recording, set the
+    // state to "recorded". A stopped recording doesn't necessarily
+    // have to be the current recording (console.profileEnd, for example)
     if (recording === PerformanceController.getCurrentRecording()) {
       this.setState("recorded");
     }
@@ -212,8 +196,6 @@ let PerformanceView = {
   _onRecordingSelected: function (_, recording) {
     if (!recording) {
       this.setState("empty");
-    } else if (recording.isRecording() && recording.isConsole()) {
-      this.setState("console-recording");
     } else if (recording.isRecording()) {
       this.setState("recording");
     } else {

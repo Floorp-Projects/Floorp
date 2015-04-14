@@ -19,17 +19,17 @@ let test = Task.async(function*() {
   let firstFront = firstPanel.panelWin.gFront;
 
   let firstAlreadyActive = firstFront.once("profiler-already-active");
-  let recording = yield firstFront.startRecording();
+  let { profilerStartTime: firstStartTime } = yield firstFront.startRecording();
   yield firstAlreadyActive;
-  ok(recording._profilerStartTime > 0, "The profiler was not restarted.");
+  ok(firstStartTime > 0, "The profiler was not restarted.");
 
   let { panel: secondPanel } = yield initPerformance(SIMPLE_URL);
   let secondFront = secondPanel.panelWin.gFront;
 
   let secondAlreadyActive = secondFront.once("profiler-already-active");
-  let secondRecording = yield secondFront.startRecording();
+  let { profilerStartTime: secondStartTime } = yield secondFront.startRecording();
   yield secondAlreadyActive;
-  ok(secondRecording._profilerStartTime > 0, "The profiler was not restarted.");
+  ok(secondStartTime > 0, "The profiler was not restarted.");
 
   yield teardown(firstPanel);
   ok(nsIProfilerModule.IsActive(),
