@@ -370,13 +370,6 @@ static bool IsCloseToVertical(float aAngle, float aThreshold)
   return (fabs(aAngle - (M_PI / 2)) < aThreshold);
 }
 
-template <typename Units>
-static bool IsZero(const gfx::PointTyped<Units>& aPoint)
-{
-  return FuzzyEqualsAdditive(aPoint.x, 0.0f)
-      && FuzzyEqualsAdditive(aPoint.y, 0.0f);
-}
-
 static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const char* aDesc, const char* aColor, const CSSRect& aRect)
 {
 #ifdef APZC_ENABLE_RENDERTRACE
@@ -1538,6 +1531,11 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
     }
 
     case ScrollWheelInput::SCROLLMODE_SMOOTH: {
+      // The lock must be held across the entire update operation, so the
+      // compositor doesn't end the animation before we get a chance to
+      // update it.
+      ReentrantMonitorAutoEnter lock(mMonitor);
+
       if (mState != WHEEL_SCROLL) {
         CancelAnimation();
         SetState(WHEEL_SCROLL);
