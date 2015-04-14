@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/AnimationBinding.h"
-#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/FloatingPoint.h"
 #include "AnimationCommon.h"
 #include "nsCSSPropertySet.h"
@@ -69,13 +68,6 @@ JSObject*
 Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return AnimationBinding::Wrap(aCx, this, aGivenProto);
-}
-
-already_AddRefed<AnimationEffect>
-Animation::GetEffect()
-{
-  nsRefPtr<AnimationEffect> effect = new AnimationEffect(this);
-  return effect.forget();
 }
 
 void
