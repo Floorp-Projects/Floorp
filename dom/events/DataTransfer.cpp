@@ -982,7 +982,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
     if (fdp) {
       // for flavour data providers, use kFlavorHasDataProvider (which has the
       // value 0) as the length.
-      NS_ADDREF(*aSupports = fdp);
+      fdp.forget(aSupports);
       *aLength = nsITransferable::kFlavorHasDataProvider;
     }
     else {
@@ -993,7 +993,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
         return false;
 
       ptrSupports->SetData(data);
-      NS_ADDREF(*aSupports = ptrSupports);
+      ptrSupports.forget(aSupports);
 
       *aLength = sizeof(nsISupportsInterfacePointer *);
     }
@@ -1017,8 +1017,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
 
   strSupports->SetData(str);
 
-  *aSupports = strSupports;
-  NS_ADDREF(*aSupports);
+  strSupports.forget(aSupports);
 
   // each character is two bytes
   *aLength = str.Length() << 1;

@@ -112,6 +112,6 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 
     if (NS_FAILED(rv)) return rv;
 
-    NS_ADDREF(*result = localFile);
+    localFile.forget(result);
     return NS_OK;
 }

@@ -8,7 +8,6 @@
 #include "FFmpegRuntimeLinker.h"
 
 #include "FFmpegAudioDecoder.h"
-#include "mp4_demuxer/Adts.h"
 
 #define MAX_CHANNELS 16
 
@@ -17,14 +16,14 @@ namespace mozilla
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   FlushableMediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
-  const mp4_demuxer::AudioDecoderConfig& aConfig)
-  : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))
+  const AudioInfo& aConfig)
+  : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mMimeType))
   , mCallback(aCallback)
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
   // Use a new DataBuffer as the object will be modified during initialization.
   mExtraData = new DataBuffer;
-  mExtraData->AppendElements(*aConfig.audio_specific_config);
+  mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
 }
 
 nsresult

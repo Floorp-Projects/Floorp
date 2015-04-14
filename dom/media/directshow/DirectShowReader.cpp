@@ -197,8 +197,8 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
 
   mInfo.mAudio.mChannels = mNumChannels = format.nChannels;
   mInfo.mAudio.mRate = mAudioRate = format.nSamplesPerSec;
+  mInfo.mAudio.mBitDepth = format.wBitsPerSample;
   mBytesPerSample = format.wBitsPerSample / 8;
-  mInfo.mAudio.mHasAudio = true;
 
   *aInfo = mInfo;
   // Note: The SourceFilter strips ID3v2 tags out of the stream.

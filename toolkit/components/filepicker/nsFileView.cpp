@@ -562,7 +562,7 @@ nsFileView::GetSelectedFiles(nsIArray** aFiles)
     }
   }
 
-  NS_ADDREF(*aFiles = fileArray);
+  fileArray.forget(aFiles);
   return NS_OK;
 }
 

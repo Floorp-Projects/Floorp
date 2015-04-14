@@ -76,12 +76,12 @@ public:
 
   uint32_t VideoWidth() const
   {
-    return mMediaSize.width == -1 ? 0 : mMediaSize.width;
+    return mMediaInfo.HasVideo() ? mMediaInfo.mVideo.mDisplay.width : 0;
   }
 
   uint32_t VideoHeight() const
   {
-    return mMediaSize.height == -1 ? 0 : mMediaSize.height;
+    return mMediaInfo.HasVideo() ? mMediaInfo.mVideo.mDisplay.height : 0;
   }
 
   void GetPoster(nsAString& aValue)

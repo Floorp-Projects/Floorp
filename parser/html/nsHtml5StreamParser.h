@@ -363,6 +363,25 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
      */
     void TimerFlush();
 
+    /**
+     * Called when speculation fails.
+     */
+    void MaybeDisableFutureSpeculation()
+    {
+        mSpeculationFailureCount++;
+    }
+
+    /**
+     * Used to check whether we're getting too many speculation failures and
+     * should just stop trying.  The 100 is picked pretty randomly to be not too
+     * small (so most pages are not affected) but small enough that we don't end
+     * up with failed speculations over and over in pathological cases.
+     */
+    bool IsSpeculationEnabled()
+    {
+        return mSpeculationFailureCount < 100;
+    }
+
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;
 
@@ -483,6 +502,11 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
      */
     nsTArray<nsAutoPtr<nsHtml5Speculation> >  mSpeculations;
     mozilla::Mutex                            mSpeculationMutex;
+
+    /**
+     * Number of times speculation has failed for this parser.
+     */
+    uint32_t                      mSpeculationFailureCount;
 
     /**
      * True to terminate early; protected by mTerminatedMutex

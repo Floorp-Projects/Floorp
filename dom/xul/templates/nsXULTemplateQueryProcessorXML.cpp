@@ -285,8 +285,7 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         }
     }
 
-    *_retval = query;
-    NS_ADDREF(*_retval);
+    query.forget(_retval);
 
     return NS_OK;
 }
@@ -327,12 +326,11 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
         return rv.ErrorCode();
     }
 
-    nsXULTemplateResultSetXML* results =
+    nsRefPtr<nsXULTemplateResultSetXML> results =
         new nsXULTemplateResultSetXML(xmlquery, exprresults.forget(),
                                       xmlquery->GetBindingSet());
 
-    *aResults = results;
-    NS_ADDREF(*aResults);
+    results.forget(aResults);
 
     return NS_OK;
 }
@@ -386,8 +384,8 @@ nsXULTemplateQueryProcessorXML::TranslateRef(nsISupports* aDatasource,
     if (!rootElement)
         return NS_OK;
     
-    *aRef = new nsXULTemplateResultXML(nullptr, rootElement, nullptr);
-    NS_ADDREF(*aRef);
+    nsRefPtr<nsXULTemplateResultXML> result = new nsXULTemplateResultXML(nullptr, rootElement, nullptr);
+    result.forget(aRef);
 
     return NS_OK;
 }

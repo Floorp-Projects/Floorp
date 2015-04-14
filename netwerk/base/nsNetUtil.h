@@ -224,9 +224,10 @@ NS_NewFileURI(nsIURI* *result,
 *        The loadingPrincipal of the channel.
 *        The principal of the document where the result of this request will
 *        be used.
-*        This is generally the principal of the aLoadingNode. However for
-*        loads where aLoadingNode is null this argument still needs to be
-*        passed. For example for loads from a WebWorker, pass the principal
+*        This defaults to the principal of aLoadingNode, so when aLoadingNode
+*        is passed this can be left as null. However for loads where
+*        aLoadingNode is null this argument must be passed.
+*        For example for loads from a WebWorker, pass the principal
 *        of that worker. For loads from an addon or from internal browser
 *        features, pass the system principal.
 *        This principal should almost always be the system principal if
@@ -850,8 +851,9 @@ NS_NewDownloader(nsIStreamListener   **result,
         do_CreateInstance(NS_DOWNLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = downloader->Init(observer, downloadLocation);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = downloader);
+        if (NS_SUCCEEDED(rv)) {
+            downloader.forget(result);
+        }
     }
     return rv;
 }
@@ -991,8 +993,9 @@ NS_NewSyncStreamListener(nsIStreamListener **result,
         do_CreateInstance(NS_SYNCSTREAMLISTENER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = listener->GetInputStream(stream);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = listener);  // cannot use nsCOMPtr::swap
+        if (NS_SUCCEEDED(rv)) {
+            listener.forget(result);
+        }
     }
     return rv;
 }
@@ -1037,8 +1040,9 @@ NS_NewRequestObserverProxy(nsIRequestObserver **result,
         do_CreateInstance(NS_REQUESTOBSERVERPROXY_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = proxy->Init(observer, context);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = proxy);  // cannot use nsCOMPtr::swap
+        if (NS_SUCCEEDED(rv)) {
+            proxy.forget(result);
+        }
     }
     return rv;
 }
@@ -1053,8 +1057,9 @@ NS_NewSimpleStreamListener(nsIStreamListener **result,
         do_CreateInstance(NS_SIMPLESTREAMLISTENER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = listener->Init(sink, observer);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = listener);  // cannot use nsCOMPtr::swap
+        if (NS_SUCCEEDED(rv)) {
+            listener.forget(result);
+        }
     }
     return rv;
 }
@@ -1434,8 +1439,9 @@ NS_NewBufferedInputStream(nsIInputStream **result,
         do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = in->Init(str, bufferSize);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = in);  // cannot use nsCOMPtr::swap
+        if (NS_SUCCEEDED(rv)) {
+            in.forget(result);
+        }
     }
     return rv;
 }
@@ -1452,8 +1458,9 @@ NS_NewBufferedOutputStream(nsIOutputStream **result,
         do_CreateInstance(NS_BUFFEREDOUTPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = out->Init(str, bufferSize);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
+        if (NS_SUCCEEDED(rv)) {
+            out.forget(result);
+        }
     }
     return rv;
 }
@@ -1518,7 +1525,7 @@ NS_NewPostDataStream(nsIInputStream  **result,
     if (NS_FAILED(rv))
         return rv;
 
-    NS_ADDREF(*result = stream);
+    stream.forget(result);
     return NS_OK;
 }
 

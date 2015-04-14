@@ -554,6 +554,9 @@ public:
   {
     void* mContentsRoot;
     uint32_t mOffset;
+    // mTentativeCaretOffset is used by only NS_QUERY_CHARACTER_AT_POINT.
+    // This is the offset where caret would be if user clicked at the refPoint.
+    uint32_t mTentativeCaretOffset;
     nsString mString;
     // Finally, the coordinates is system coordinates.
     mozilla::LayoutDeviceIntRect mRect;

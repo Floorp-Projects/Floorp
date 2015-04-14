@@ -17,7 +17,7 @@ namespace mozilla {
 
 class WMFAudioMFTManager : public MFTManager {
 public:
-  WMFAudioMFTManager(const mp4_demuxer::AudioDecoderConfig& aConfig);
+  WMFAudioMFTManager(const AudioInfo& aConfig);
   ~WMFAudioMFTManager();
 
   virtual TemporaryRef<MFTDecoder> Init() override;

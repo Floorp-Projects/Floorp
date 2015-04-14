@@ -38,6 +38,21 @@ nsQueryContentEventResult::GetOffset(uint32_t *aOffset)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsQueryContentEventResult::GetTentativeCaretOffset(uint32_t* aOffset)
+{
+  bool notFound;
+  nsresult rv = GetTentativeCaretOffsetNotFound(&notFound);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (NS_WARN_IF(notFound)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aOffset = mTentativeCaretOffset;
+  return NS_OK;
+}
+
 static bool IsRectEnabled(uint32_t aEventID)
 {
   return aEventID == NS_QUERY_CARET_RECT ||
@@ -126,6 +141,19 @@ nsQueryContentEventResult::GetNotFound(bool *aNotFound)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsQueryContentEventResult::GetTentativeCaretOffsetNotFound(bool* aNotFound)
+{
+  if (NS_WARN_IF(!mSucceeded)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (NS_WARN_IF(mEventID != NS_QUERY_CHARACTER_AT_POINT)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aNotFound = (mTentativeCaretOffset == WidgetQueryContentEvent::NOT_FOUND);
+  return NS_OK;
+}
+
 void
 nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
                                           const WidgetQueryContentEvent &aEvent)
@@ -135,6 +163,7 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   mReversed = aEvent.mReply.mReversed;
   mRect = aEvent.mReply.mRect;
   mOffset = aEvent.mReply.mOffset;
+  mTentativeCaretOffset = aEvent.mReply.mTentativeCaretOffset;
   mString = aEvent.mReply.mString;
 
   if (!IsRectEnabled(mEventID) || !aWidget || !mSucceeded) {
