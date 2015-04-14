@@ -34,11 +34,13 @@ function testEventTarget(obj) {
 function testInterface(obj) {
   try {
     obj.prototype.onmouseenter = f;
-    is(obj.onmouseenter, null,
-       "prototype.onmouseenter should be settable, but the value should stay null");
+    is("onmouseenter" in obj, false,
+       "setting <Interface>.prototype.onmouseenter has no effect on the " +
+       "non-existent <Interface>.onmouseenter");
     obj.prototype.onmouseleave = f;
-    is(obj.onmouseleave, null,
-       "prototype.onmouseleave should be settable, but the value should stay null");
+    is("onmouseleave" in obj, false,
+       "setting <Interface>.prototype.onmouseleave has no effect on the " +
+       "non-existent <Interface>.onmouseleave");
   } catch(ex) {
     ok(false, ex);
   }

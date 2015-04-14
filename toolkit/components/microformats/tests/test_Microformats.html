@@ -240,11 +240,11 @@ function test_Microformats() {
   var nestCard3 = new hCard(document.getElementById("nested_vcard3"));
 
   is(nestCard1.fn, "John Doe", "nesting (fn) 1");
-  is(nestCard1.title, "CEO", "nesting (title) 1");
+  is(String(nestCard1.title), "CEO", "nesting (title) 1");
   is(nestCard2.fn, "Jack Jones", "nesting (fn) 2");
-  is(nestCard2.title, "Executive Assistant", "nesting (title) 2");
+  is(String(nestCard2.title), "Executive Assistant", "nesting (title) 2");
   is(nestCard3.fn, "Bob Smith", "nesting (fn) 3");
-  is(nestCard3.title, "Office Assistant", "nesting (title) 3");
+  is(String(nestCard3.title), "Office Assistant", "nesting (title) 3");
   is(nestCard1.agent[0].agent[0].fn, "Bob Smith", "nesting all");
   
   var dateCal = new hCalendar(document.getElementById("date_vcal"));
@@ -253,7 +253,7 @@ function test_Microformats() {
   is(dateCal.dtstart, origdate, "date round trip");
 
   var dateCal = new hCalendar(document.getElementById("vcal_vcard"));
-  is(dateCal.description, "Mozilla's Birthday", "vcard in vcal");
+  is(String(dateCal.description), "Mozilla's Birthday", "vcard in vcal");
 
   is(Microformats.count("hCard", document.getElementById("float_test")), 2, "Check Microformats.count for floated div");
 
@@ -292,7 +292,7 @@ function test_hCard() {
   var hCards = Microformats.get("hCard", document.getElementById("test_1"),  {showHidden: true}); 
   
   is(hCards[0].fn, "Tantek Çelik", "Check for fn on test vcard");
-  is(hCards[0].url, "http://tantek.com/", "Check for url on test vcard");
+  is(String(hCards[0].url), "http://tantek.com/", "Check for url on test vcard");
 }
 
 </script>

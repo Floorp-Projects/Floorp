@@ -23,11 +23,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
   function go() {
     var ifr = document.getElementById('ifr');
     var docnodes = ifr.contentDocument.body.childNodes;
-    var output;
-    for (let i in Iterator(docnodes))
-        output = i;
-    is(output[0], "0", "enumerated the 0th element");
-    ok(/Text/.test(output[1]), "the 0th element was a text node");
+    var index, value;
+    for (let i in Iterator(docnodes)) {
+      index = i[0], value = i[1];
+    }
+    is(index, 0, "enumerated the 0th element");
+    ok(value instanceof Text, "the 0th element was a text node");
     SimpleTest.finish();
   }
 

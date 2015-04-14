@@ -56,13 +56,13 @@ function checkLoads() {
   for (var i = 0; i < blockedTrackingNodes.length; i++) {
     var nodeMatch = false;
     for (var j = 0; j < badids.length && !nodeMatch; j++) {
-      nodeMatch |=
+      nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == document.getElementById(badids[j]));
     }
 
-    allNodeMatch &= nodeMatch;
+    allNodeMatch = allNodeMatch && nodeMatch;
   }
-  window.parent.is(allNodeMatch, true,
+  window.parent.ok(allNodeMatch,
     "All annotated nodes are expected in the tree");
 
   // Make sure that every node with a badid (see badids) is found in the
@@ -72,13 +72,13 @@ function checkLoads() {
   for (var j = 0; j < badids.length; j++) {
     var nodeMatch = false;
     for (var i = 0; i < blockedTrackingNodes.length && !nodeMatch; i++) {
-      nodeMatch |=
+      nodeMatch = nodeMatch ||
         (blockedTrackingNodes[i] == document.getElementById(badids[j]));
     }
 
-    allNodeMatch &= nodeMatch;
+    allNodeMatch = allNodeMatch && nodeMatch;
   }
-  window.parent.is(allNodeMatch, true,
+  window.parent.ok(allNodeMatch,
     "All tracking nodes are expected to be annotated as such");
 
   // Unset prefs, etc.

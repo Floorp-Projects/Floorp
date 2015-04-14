@@ -28,30 +28,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=302971
 	// ordinary
 
 	rect.setAttribute("stroke-width", "5");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 5, "Ordinary");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "5", "Ordinary");
 
 	// valid exponential notation
 
 	rect.setAttribute("stroke-width", "4E1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 40, "Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "40", "Exponent");
 
 	rect.setAttribute("stroke-width", "6e1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 60, "Lower-case Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "60", "Lower-case Exponent");
 
 	rect.setAttribute("stroke-width", "2E+1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 20, "Positive Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "20", "Positive Exponent");
 
 	rect.setAttribute("stroke-width", "100E-1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 10, "Negative Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "10", "Negative Exponent");
 
 	rect.setAttribute("stroke-width", "0.7E1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 7, "Floating Point with Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "7", "Floating Point with Exponent");
 
 	rect.setAttribute("stroke-width", "50.0E-1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 5, "Floating Point with Negative Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "5", "Floating Point with Negative Exponent");
 
 	rect.setAttribute("stroke-width", "0.8E+1");
-	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), 8, "Floating Point with Positive Exponent");
+	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "8", "Floating Point with Positive Exponent");
 
 	rect.setAttribute("stroke-width", "4E1px");
 	is(doc.defaultView.getComputedStyle(rect, '').getPropertyValue("stroke-width"), "40px", "Units");

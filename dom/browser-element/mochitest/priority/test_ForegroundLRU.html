@@ -52,7 +52,7 @@ function runTest() {
     // increased by one.
     var p = Promise.all([
       expectProcessCreated('FOREGROUND'),
-      expectPriorityWithLRUSet(childID, 'FOREGROUND', 1)
+      expectPriorityWithLRUSet(childID, 'FOREGROUND', '1')
     ]);
 
     document.body.appendChild(iframe2);
@@ -61,7 +61,7 @@ function runTest() {
   }).then(function() {
     // Now hide the second and third processes, this will send them into the
     // background and make the first process LRU value to be decreased.
-    var p = expectPriorityWithLRUSet(childID, 'FOREGROUND', 0)
+    var p = expectPriorityWithLRUSet(childID, 'FOREGROUND', '0')
 
     iframe2.setVisible(false);
 

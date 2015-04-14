@@ -187,7 +187,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
 
       // Check that we can create and add new VTTCues
       var vttCue = new VTTCue(3.999, 4, "foo");
-      is(vttCue.track, undefined, "Cue's track should be undefined.");
+      is(vttCue.track, null, "Cue's track should be null.");
       trackElement.track.addCue(vttCue);
       is(cue.track, trackElement.track, "Cue's track should be defined.");
       is(cueList.length, 7, "Cue list length should now be 7.");

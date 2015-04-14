@@ -42,7 +42,7 @@ function iframeLoaded(identifier) {
   }
   else if (loadCount == 2) {
     // Test 1: Check that this page is the referer.
-    is(iframeCw.document.referrer, document.location, 'outer iframe referrer');
+    is(iframeCw.document.referrer, String(document.location), 'outer iframe referrer');
 
     // Test 2: file_bug593174_2.html itself contains an iframe, whose src is a
     // data: uri.  Call into that inner iframe and have it set its
@@ -53,7 +53,7 @@ function iframeLoaded(identifier) {
     iframeCw.navigateInnerIframe();
   }
   else if (loadCount == 3) {
-    is(iframeCw.getInnerIframeReferrer(), iframeCw.location, 'inner iframe referrer');
+    is(iframeCw.getInnerIframeReferrer(), String(iframeCw.location), 'inner iframe referrer');
 
     // Now do the test again, this time with a popup.
     popup = window.open('file_bug593174_1.html');
@@ -66,11 +66,11 @@ function iframeLoaded(identifier) {
     popup.location = 'file_bug593174_2.html';
   }
   else if (loadCount == 5) {
-    is(popup.document.referrer, document.location, 'popup referrer after replaceState');
+    is(popup.document.referrer, String(document.location), 'popup referrer after replaceState');
     popup.navigateInnerIframe();
   }
   else if (loadCount == 6) {
-    is(popup.getInnerIframeReferrer(), popup.location, 'popup/inner iframe referrer');
+    is(popup.getInnerIframeReferrer(), String(popup.location), 'popup/inner iframe referrer');
     popup.close();
     history.replaceState('', '', kOriginalLocation);
     SimpleTest.finish();

@@ -34,7 +34,7 @@
         ok(isNaN(plugin.propertyAndMethod + 0), "Shouldn't be set yet!");
 
         plugin.propertyAndMethod = 5;
-        is(plugin.propertyAndMethod, 5, "Should be set to 5!");
+        is(+plugin.propertyAndMethod, 5, "Should be set to 5!");
 
         delete pluginProto.propertyAndMethod;
         ok(isNaN(plugin.propertyAndMethod + 0), "Shouldn't be set any more!");

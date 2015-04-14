@@ -58,7 +58,7 @@ Bug 901519 - [app manager] data store for connections
         connection.port = 42;
 
         is(host.textContent, "foobar", "host updated");
-        is(port.textContent, 42, "port updated");
+        is(port.textContent, "42", "port updated");
 
         let been_through_connecting = false;
         let been_through_connected = false;
