@@ -16,23 +16,28 @@ namespace mozilla {
 
 StaticRefPtr<AbstractThread> sMainThread;
 
-template<>
-nsresult
-AbstractThreadImpl<nsIThread>::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
+class XPCOMThreadWrapper : public AbstractThread
 {
-  MediaTaskQueue::AssertInTailDispatchIfNeeded();
-  nsCOMPtr<nsIRunnable> r = aRunnable;
-  return mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
-}
+public:
+  explicit XPCOMThreadWrapper(nsIThread* aTarget) : mTarget(aTarget) {}
 
-template<>
-bool
-AbstractThreadImpl<nsIThread>::IsCurrentThreadIn()
-{
-  bool in = NS_GetCurrentThread() == mTarget;
-  MOZ_ASSERT_IF(in, MediaTaskQueue::GetCurrentQueue() == nullptr);
-  return in;
-}
+  virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) override
+  {
+    MediaTaskQueue::AssertInTailDispatchIfNeeded();
+    nsCOMPtr<nsIRunnable> r = aRunnable;
+    return mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
+  }
+
+  virtual bool IsCurrentThreadIn() override
+  {
+    bool in = NS_GetCurrentThread() == mTarget;
+    MOZ_ASSERT_IF(in, MediaTaskQueue::GetCurrentQueue() == nullptr);
+    return in;
+  }
+
+private:
+  nsRefPtr<nsIThread> mTarget;
+};
 
 void
 AbstractThread::MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
@@ -64,7 +69,7 @@ AbstractThread::InitStatics()
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
-  sMainThread = new AbstractThreadImpl<nsIThread>(mainThread.get());
+  sMainThread = new XPCOMThreadWrapper(mainThread.get());
   ClearOnShutdown(&sMainThread);
 }
 
