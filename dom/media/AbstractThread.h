@@ -44,8 +44,11 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractThread);
 
   enum DispatchFailureHandling { AssertDispatchSuccess, DontAssertDispatchSuccess };
+  enum DispatchReason { NormalDispatch, TailDispatch };
   virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        DispatchFailureHandling aHandling = AssertDispatchSuccess) = 0;
+                        DispatchFailureHandling aHandling = AssertDispatchSuccess,
+                        DispatchReason aReason = NormalDispatch) = 0;
+
   virtual bool IsCurrentThreadIn() = 0;
 
   // Convenience method for dispatching a runnable when we may be running on
@@ -77,23 +80,13 @@ public:
   // Must be called exactly once during startup.
   static void InitStatics();
 
-#ifdef DEBUG
-  static void AssertInTailDispatchIfNeeded()
+  // Returns true if the currently-running thread is an AbstractThread that
+  // requires tail dispatch.
+  static bool CurrentThreadRequiresTailDispatch()
   {
-    // See if we're currently running in a thread that requires tail
-    // dispatch.
-    AbstractThread* currentThread = GetCurrent();
-    if (!currentThread || !currentThread->RequiresTailDispatch()) {
-      return;
-    }
-
-    MOZ_ASSERT(currentThread->InTailDispatch(),
-               "Not allowed to dispatch tasks directly from this task queue - use TailDispatcher()");
+    AbstractThread* current = GetCurrent();
+    return current && current->RequiresTailDispatch();
   }
-#else
-  static void AssertInTailDispatchIfNeeded() {}
-#endif
-
 
 protected:
   virtual ~AbstractThread() {}

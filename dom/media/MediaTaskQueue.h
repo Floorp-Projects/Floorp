@@ -42,12 +42,12 @@ public:
 
   TaskDispatcher& TailDispatcher() override;
 
-  // For AbstractThread.
   void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess) override
+                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
+                DispatchReason aReason = NormalDispatch) override
   {
     MonitorAutoLock mon(mQueueMonitor);
-    nsresult rv = DispatchLocked(Move(aRunnable), AbortIfFlushing);
+    nsresult rv = DispatchLocked(Move(aRunnable), AbortIfFlushing, aReason);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
     unused << rv;
   }
@@ -99,7 +99,8 @@ protected:
 
   enum DispatchMode { AbortIfFlushing, IgnoreFlushing };
 
-  nsresult DispatchLocked(already_AddRefed<nsIRunnable> aRunnable, DispatchMode aMode);
+  nsresult DispatchLocked(already_AddRefed<nsIRunnable> aRunnable, DispatchMode aMode,
+                          DispatchReason aReason = NormalDispatch);
 
   RefPtr<SharedThreadPool> mPool;
 
@@ -123,7 +124,8 @@ protected:
   class AutoTaskGuard : public AutoTaskDispatcher
   {
   public:
-    explicit AutoTaskGuard(MediaTaskQueue* aQueue) : mQueue(aQueue)
+    explicit AutoTaskGuard(MediaTaskQueue* aQueue)
+      : AutoTaskDispatcher(/* aIsTailDispatcher = */ true), mQueue(aQueue)
     {
       // NB: We don't hold the lock to aQueue here. Don't do anything that
       // might require it.
