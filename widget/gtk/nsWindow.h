@@ -300,10 +300,12 @@ public:
 
     virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                 uint32_t aNativeMessage,
-                                                uint32_t aModifierFlags) override;
+                                                uint32_t aModifierFlags,
+                                                nsIObserver* aObserver) override;
 
-    virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) override
-    { return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0); }
+    virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                               nsIObserver* aObserver) override
+    { return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0, aObserver); }
 
 protected:
     virtual ~nsWindow();
