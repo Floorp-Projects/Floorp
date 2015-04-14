@@ -9,6 +9,12 @@ const SETTINGS_KEY_DATA_APN_SETTINGS  = "ril.data.apnSettings";
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const TOPIC_NETWORK_ACTIVE_CHANGED = "network-active-changed";
 
+const NETWORK_STATE_UNKNOWN = Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN;
+const NETWORK_STATE_CONNECTING = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTING;
+const NETWORK_STATE_CONNECTED = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+const NETWORK_STATE_DISCONNECTING = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTING;
+const NETWORK_STATE_DISCONNECTED = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
+
 const NETWORK_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
 const NETWORK_TYPE_MOBILE_MMS = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS;
 const NETWORK_TYPE_MOBILE_SUPL = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL;
@@ -219,8 +225,8 @@ function deactivateDataCallAndWait(aNetworkType) {
 function startTestBase(aTestCaseMain) {
   Promise.resolve()
     .then(aTestCaseMain)
-    .then(finish, function() {
-      ok(false, 'promise rejects during test.');
+    .then(finish, function(aException) {
+      ok(false, "promise rejects during test: " + aException);
       finish();
     });
 }

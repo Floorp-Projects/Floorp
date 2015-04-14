@@ -178,7 +178,8 @@ this.PermissionsInstaller = {
       }
     }
     catch (ex) {
-      dump("Caught webapps install permissions error for " + aApp.origin);
+      dump("Caught webapps install permissions error for " + aApp.origin +
+        " : " + ex + "\n");
       Cu.reportError(ex);
       if (aOnError) {
         aOnError();

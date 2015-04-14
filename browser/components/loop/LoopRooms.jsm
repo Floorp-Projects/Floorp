@@ -19,6 +19,11 @@ XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
 XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/loop/loop.properties');
 });
+XPCOMUtils.defineLazyModuleGetter(this, "loopUtils",
+  "resource:///modules/loop/utils.js", "utils")
+XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
+  "resource:///modules/loop/crypto.js", "LoopCrypto");
+
 
 this.EXPORTED_SYMBOLS = ["LoopRooms", "roomsPushNotification"];
 
@@ -142,6 +147,195 @@ let LoopRoomsInternal = {
   },
 
   /**
+   * Gets or creates a room key for a room.
+   *
+   * It assumes that the room data is decrypted.
+   *
+   * @param {Object} roomData The roomData to get the key for.
+   * @return {Promise} A promise that is resolved whith the room key.
+   */
+  promiseGetOrCreateRoomKey: Task.async(function* (roomData) {
+    if (roomData.roomKey) {
+      return roomData.roomKey;
+    }
+
+    return yield loopCrypto.generateKey();
+  }),
+
+  /**
+   * Encrypts a room key for sending to the server using the profile encryption
+   * key.
+   *
+   * @param {String} key The JSON web key to encrypt.
+   * @return {Promise} A promise that is resolved with the encrypted room key.
+   */
+  promiseEncryptedRoomKey: Task.async(function* (key) {
+    let profileKey = yield MozLoopService.promiseProfileEncryptionKey();
+
+    let encryptedRoomKey = yield loopCrypto.encryptBytes(profileKey, key);
+    return encryptedRoomKey;
+  }),
+
+  /**
+   * Decryptes a room key from the server using the profile encryption key.
+   *
+   * @param  {String} encryptedKey The room key to decrypt.
+   * @return {Promise} A promise that is resolved with the decrypted room key.
+   */
+  promiseDecryptRoomKey: Task.async(function* (encryptedKey) {
+    let profileKey = yield MozLoopService.promiseProfileEncryptionKey();
+
+    let decryptedRoomKey = yield loopCrypto.decryptBytes(profileKey, encryptedKey);
+    return decryptedRoomKey;
+  }),
+
+  /**
+   * Encrypts room data in a format appropriate to sending to the loop
+   * server.
+   *
+   * @param  {Object} roomData The room data to encrypt.
+   * @return {Promise} A promise that is resolved with an object containing
+   *                   two objects:
+   *                   - encrypted: The encrypted data to send. This excludes
+   *                                any decrypted data.
+   *                   - all: The roomData with both encrypted and decrypted
+   *                          information.
+   */
+  promiseEncryptRoomData: Task.async(function* (roomData) {
+    // For now, disable encryption/context if context is disabled, or if
+    // FxA is turned on.
+    if (!MozLoopService.getLoopPref("contextInConverations.enabled") ||
+        this.sessionType == LOOP_SESSION_TYPE.FXA) {
+      var serverRoomData = extend({}, roomData);
+      delete serverRoomData.decryptedContext;
+
+      // We can only save roomName as non-encypted data for now.
+      serverRoomData.roomName = roomData.decryptedContext.roomName;
+
+      return {
+        all: roomData,
+        encrypted: serverRoomData
+      };
+    }
+
+    var newRoomData = extend({}, roomData);
+
+    if (!newRoomData.context) {
+      newRoomData.context = {};
+    }
+
+    // First get the room key.
+    let key = yield this.promiseGetOrCreateRoomKey(newRoomData);
+
+    newRoomData.context.wrappedKey = yield this.promiseEncryptedRoomKey(key);
+
+    // Now encrypt the actual data.
+    newRoomData.context.value = yield loopCrypto.encryptBytes(key,
+      JSON.stringify(newRoomData.decryptedContext));
+
+    // The algorithm is currently hard-coded as AES-GCM, in case of future
+    // changes.
+    newRoomData.context.alg = "AES-GCM";
+    newRoomData.roomKey = key;
+
+    var serverRoomData = extend({}, newRoomData);
+
+    // We must not send these items to the server.
+    delete serverRoomData.decryptedContext;
+    delete serverRoomData.roomKey;
+
+    return {
+      encrypted: serverRoomData,
+      all: newRoomData
+    };
+  }),
+
+  /**
+   * Decrypts room data recevied from the server.
+   *
+   * @param  {Object} roomData The roomData with encrypted context.
+   * @return {Promise} A promise that is resolved with the decrypted room data.
+   */
+  promiseDecryptRoomData: Task.async(function* (roomData) {
+    if (!roomData.context) {
+      return roomData;
+    }
+
+    if (!roomData.context.wrappedKey) {
+      throw new Error("Missing wrappedKey");
+    }
+
+    // Bug 1152761 will cause us to additionally store keys locally. We'll
+    // need to add some code for recovery in case decryption fails.
+    let key = yield this.promiseDecryptRoomKey(roomData.context.wrappedKey);
+
+    let decryptedData = yield loopCrypto.decryptBytes(key, roomData.context.value);
+
+    roomData.roomKey = key;
+    roomData.decryptedContext = JSON.parse(decryptedData);
+
+    // Strip any existing key from the url.
+    roomData.roomUrl = roomData.roomUrl.split("#")[0];
+    // Now add the key to the url.
+    roomData.roomUrl = roomData.roomUrl + "#" + roomData.roomKey;
+
+    return roomData;
+  }),
+
+  /**
+   * Saves room information and notifies updates to any listeners.
+   *
+   * @param {Object}  roomData The new room data to save.
+   * @param {Boolean} isUpdate true if this is an update, false if its an add.
+   */
+  saveAndNotifyUpdate: function(roomData, isUpdate) {
+    this.rooms.set(roomData.roomToken, roomData);
+
+    let eventName = isUpdate ? "update" : "add";
+    eventEmitter.emit(eventName, roomData);
+    eventEmitter.emit(eventName + ":" + roomData.roomToken, roomData);
+  },
+
+  /**
+   * Either adds or updates the room to the room store and notifies to any
+   * listeners.
+   *
+   * This will decrypt information if necessary, and adjust for the legacy
+   * "roomName" field.
+   *
+   * @param {Object}  room     The new room to add.
+   * @param {Boolean} isUpdate true if this is an update to an existing room.
+   */
+  addOrUpdateRoom: Task.async(function* (room, isUpdate) {
+    if (!room.context) {
+      // We don't do anything with roomUrl here as it doesn't need a key
+      // string adding at this stage.
+
+      // No encrypted data, use the old roomName field.
+      // XXX Bug 1152764 will add functions for automatically encrypting the room
+      // name.
+      room.decryptedContext = {
+        roomName: room.roomName
+      };
+      delete room.roomName;
+
+      this.saveAndNotifyUpdate(room, isUpdate);
+    } else {
+      // XXX Don't decrypt if same?
+      try {
+        let roomData = yield this.promiseDecryptRoomData(room);
+
+        this.saveAndNotifyUpdate(roomData, isUpdate);
+      } catch (error) {
+        MozLoopService.log.error("Failed to decrypt room data: " + error);
+        // Do what we can to save the room data.
+        room.decryptedContext = {};
+        this.saveAndNotifyUpdate(room, isUpdate);
+      };
+    }
+  }),
+
+  /**
    * Fetch a list of rooms that the currently registered user is a member of.
    *
    * @param {String}   [version] If set, we will fetch a list of changed rooms since
@@ -188,16 +382,8 @@ let LoopRoomsInternal = {
           if (orig) {
             checkForParticipantsUpdate(orig, room);
           }
-          // Remove the `currSize` for posterity.
-          if ("currSize" in room) {
-            delete room.currSize;
-          }
 
-          this.rooms.set(room.roomToken, room);
-
-          let eventName = orig ? "update" : "add";
-          eventEmitter.emit(eventName, room);
-          eventEmitter.emit(eventName + ":" + room.roomToken, room);
+          yield this.addOrUpdateRoom(room, !!orig);
         }
       }
 
@@ -236,29 +422,28 @@ let LoopRoomsInternal = {
       return;
     }
 
-    MozLoopService.hawkRequest(this.sessionType, "/rooms/" + encodeURIComponent(roomToken), "GET")
-      .then(response => {
-        let data = JSON.parse(response.body);
+    Task.spawn(function* () {
+      let response = yield MozLoopService.hawkRequest(this.sessionType,
+        "/rooms/" + encodeURIComponent(roomToken), "GET");
 
-        room.roomToken = roomToken;
+      let data = JSON.parse(response.body);
 
-        if (data.deleted) {
-          this.rooms.delete(room.roomToken);
+      room.roomToken = roomToken;
 
-          extend(room, data);
-          eventEmitter.emit("delete", room);
-          eventEmitter.emit("delete:" + room.roomToken, room);
-        } else {
-          checkForParticipantsUpdate(room, data);
-          extend(room, data);
-          this.rooms.set(roomToken, room);
+      if (data.deleted) {
+        this.rooms.delete(room.roomToken);
 
-          let eventName = !needsUpdate ? "update" : "add";
-          eventEmitter.emit(eventName, room);
-          eventEmitter.emit(eventName + ":" + roomToken, room);
-        }
-        callback(null, room);
-      }, err => callback(err)).catch(err => callback(err));
+        extend(room, data);
+        eventEmitter.emit("delete", room);
+        eventEmitter.emit("delete:" + room.roomToken, room);
+      } else {
+        checkForParticipantsUpdate(room, data);
+        extend(room, data);
+
+        yield this.addOrUpdateRoom(room, !needsUpdate);
+      }
+      callback(null, room);
+    }.bind(this)).catch(callback);
   },
 
   /**
@@ -271,27 +456,33 @@ let LoopRoomsInternal = {
    *                            be the room, if it was created successfully.
    */
   create: function(room, callback) {
-    if (!("roomName" in room) || !("roomOwner" in room) ||
+    if (!("decryptedContext" in room) || !("roomOwner" in room) ||
         !("maxSize" in room)) {
       callback(new Error("Missing required property to create a room"));
       return;
     }
 
-    MozLoopService.hawkRequest(this.sessionType, "/rooms", "POST", room)
-      .then(response => {
-        let data = JSON.parse(response.body);
-        extend(room, data);
-        // Do not keep this value - it is a request to the server.
-        delete room.expiresIn;
-        this.rooms.set(room.roomToken, room);
+    Task.spawn(function* () {
+      let {all, encrypted} = yield this.promiseEncryptRoomData(room);
 
-        if (this.sessionType == LOOP_SESSION_TYPE.GUEST) {
-          this.setGuestCreatedRoom(true);
-        }
+      // Save both sets of data...
+      room = all;
+      // ...but only send the encrypted data.
+      let response = yield MozLoopService.hawkRequest(this.sessionType, "/rooms",
+        "POST", encrypted);
 
-        eventEmitter.emit("add", room);
-        callback(null, room);
-      }, error => callback(error)).catch(error => callback(error));
+      extend(room, JSON.parse(response.body));
+      // Do not keep this value - it is a request to the server.
+      delete room.expiresIn;
+      this.rooms.set(room.roomToken, room);
+
+      if (this.sessionType == LOOP_SESSION_TYPE.GUEST) {
+        this.setGuestCreatedRoom(true);
+      }
+
+      eventEmitter.emit("add", room);
+      callback(null, room);
+    }.bind(this)).catch(callback);
   },
 
   /**
@@ -445,16 +636,40 @@ let LoopRoomsInternal = {
     let room = this.rooms.get(roomToken);
     let url = "/rooms/" + encodeURIComponent(roomToken);
 
-    let origRoom = this.rooms.get(roomToken);
-    let patchData = {
-      roomName: newRoomName
-    };
-    MozLoopService.hawkRequest(this.sessionType, url, "PATCH", patchData)
-      .then(response => {
-        let data = JSON.parse(response.body);
-        extend(room, data);
-        callback(null, room);
-      }, error => callback(error)).catch(error => callback(error));
+    let roomData = this.rooms.get(roomToken);
+    if (!roomData.decryptedContext) {
+      roomData.decryptedContext = {
+        roomName: newRoomName
+      };
+    } else {
+      roomData.decryptedContext.roomName = newRoomName;
+    }
+
+    Task.spawn(function* () {
+      let {all, encrypted} = yield this.promiseEncryptRoomData(roomData);
+
+      // For patch, we only send the context data.
+      let sendData = {
+        context: encrypted.context
+      };
+
+      // If we're not encrypting currently, then only send the roomName.
+      if (!Services.prefs.getBoolPref("loop.contextInConverations.enabled") ||
+          this.sessionType == LOOP_SESSION_TYPE.FXA) {
+        sendData = {
+          roomName: newRoomName
+        };
+      }
+
+      let response = yield MozLoopService.hawkRequest(this.sessionType,
+          url, "PATCH", sendData);
+
+      let newRoomData = all;
+
+      extend(newRoomData, JSON.parse(response.body));
+      this.rooms.set(roomToken, newRoomData);
+      callback(null, newRoomData);
+    }.bind(this)).catch(callback);
   },
 
   /**

@@ -6,8 +6,20 @@
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
-loop.shared.utils = (function(mozL10n) {
+var inChrome = typeof Components != "undefined" && "utils" in Components;
+
+(function() {
   "use strict";
+
+  var mozL10n;
+  if (inChrome) {
+    this.EXPORTED_SYMBOLS = ["utils"];
+    mozL10n = { get: function() {
+      throw new Error("mozL10n.get not availabled from chrome!");
+    }};
+  } else {
+    mozL10n = document.mozL10n || navigator.mozL10n
+  }
 
   /**
    * Call types used for determining if a call is audio/video or audio-only.
@@ -152,7 +164,7 @@ loop.shared.utils = (function(mozL10n) {
    *                                `false`.
    * @return {String} The platform we're currently running on, in lower-case.
    */
-  var getOS = _.memoize(function(platform, withVersion) {
+  var getOS = function(platform, withVersion) {
     if (!platform) {
       if ("oscpu" in window.navigator) {
         // See https://developer.mozilla.org/en-US/docs/Web/API/Navigator/oscpu
@@ -189,10 +201,7 @@ loop.shared.utils = (function(mozL10n) {
     }
 
     return platform.trim();
-  }, function(platform, withVersion) {
-    // Cache the return values with the following key.
-    return (platform + "") + (withVersion + "");
-  });
+  };
 
   /**
    * Helper to get the Operating System version.
@@ -205,7 +214,7 @@ loop.shared.utils = (function(mozL10n) {
    * @return {String} The current version of the platform we're currently running
    *                  on.
    */
-  var getOSVersion = _.memoize(function(platform) {
+  var getOSVersion = function(platform) {
     var os = getOS(platform, true);
     var digitsRE = /\s([0-9.]+)/;
 
@@ -249,7 +258,7 @@ loop.shared.utils = (function(mozL10n) {
     }
 
     return { major: Infinity, minor: 0 };
-  });
+  };
 
   /**
    * Helper to allow getting some of the location data in a way that's compatible
@@ -517,7 +526,7 @@ loop.shared.utils = (function(mozL10n) {
     return result;
   }
 
-  return {
+  this.utils = {
     CALL_TYPES: CALL_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
     REST_ERRNOS: REST_ERRNOS,
@@ -541,4 +550,4 @@ loop.shared.utils = (function(mozL10n) {
     strToUint8Array: strToUint8Array,
     Uint8ArrayToStr: Uint8ArrayToStr
   };
-})(document.mozL10n || navigator.mozL10n);
+}).call(inChrome ? this : loop.shared);

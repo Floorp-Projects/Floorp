@@ -6,25 +6,20 @@
 
 // Test cancelling the addition of a new property in the rule-view
 
+const TEST_URI = [
+  "<style>",
+  "#testid {background-color: blue;}",
+  ".testclass, .unmatched {background-color: green;}",
+  "</style>",
+  "<div id='testid' class='testclass'>Styled Node</div>",
+  "<div id='testid2'>Styled Node</div>"
+].join("");
+
 add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,browser_ruleview_ui.js");
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {toolbox, inspector, view} = yield openRuleView();
-
-  info("Creating the test document");
-  let style = "" +
-    "#testid {" +
-    "  background-color: blue;" +
-    "}" +
-    ".testclass, .unmatched {" +
-    "  background-color: green;" +
-    "}";
-  let styleNode = addStyle(content.document, style);
-  content.document.body.innerHTML = "<div id='testid' class='testclass'>Styled Node</div>" +
-                                    "<div id='testid2'>Styled Node</div>";
-
   yield testCancelNew(inspector, view);
   yield testCancelNewOnEscape(inspector, view);
-  yield inspector.once("inspector-updated");
 });
 
 function* testCancelNew(inspector, ruleView) {

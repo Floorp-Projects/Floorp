@@ -190,7 +190,7 @@ describe("loop.store.RoomStore", function () {
       it("should find next available room number from a non empty room list",
         function() {
           store.setStoreState({
-            rooms: [{roomName: "RoomWord 1"}]
+            rooms: [{decryptedContext: {roomName: "RoomWord 1"}}]
           });
 
           expect(store.findNextAvailableRoomNumber(fakeNameTemplate)).eql(2);
@@ -198,7 +198,15 @@ describe("loop.store.RoomStore", function () {
 
       it("should not be sensitive to initial list order", function() {
         store.setStoreState({
-          rooms: [{roomName: "RoomWord 99"}, {roomName: "RoomWord 98"}]
+          rooms: [{
+            decryptedContext: {
+              roomName: "RoomWord 99"
+            },
+          }, {
+            decryptedContext: {
+              roomName: "RoomWord 98"
+            }
+          }]
         });
 
         expect(store.findNextAvailableRoomNumber(fakeNameTemplate)).eql(100);
@@ -212,15 +220,6 @@ describe("loop.store.RoomStore", function () {
       var fakeRoomCreationData = {
         nameTemplate: fakeNameTemplate,
         roomOwner: fakeOwner
-      };
-
-      var fakeCreatedRoom = {
-        roomName: "Conversation 1",
-        roomToken: "fake",
-        roomUrl: "http://invalid",
-        maxSize: 42,
-        participants: [],
-        ctime: 1234567890
       };
 
       beforeEach(function() {
@@ -244,7 +243,34 @@ describe("loop.store.RoomStore", function () {
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
         sinon.assert.calledWith(fakeMozLoop.rooms.create, {
-          roomName: "Conversation 1",
+          decryptedContext: {
+            roomName: "Conversation 1"
+          },
+          roomOwner: fakeOwner,
+          maxSize: store.maxRoomCreationSize
+        });
+      });
+
+      it("should request creation of a new room with context", function() {
+        sandbox.stub(fakeMozLoop.rooms, "create");
+
+        fakeRoomCreationData.urls = [{
+          location: "http://invalid.com",
+          description: "fakeSite",
+          thumbnail: "fakeimage.png"
+        }];
+
+        store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
+
+        sinon.assert.calledWith(fakeMozLoop.rooms.create, {
+          decryptedContext: {
+            roomName: "Conversation 1",
+            urls: [{
+              location: "http://invalid.com",
+              description: "fakeSite",
+              thumbnail: "fakeimage.png"
+            }],
+          },
           roomOwner: fakeOwner,
           maxSize: store.maxRoomCreationSize
         });

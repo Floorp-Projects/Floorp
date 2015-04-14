@@ -86,7 +86,6 @@ add_task(function*() {
 
     info("Mutating the DOM and listening for markupmutation event");
     let mutated = inspector.once("markupmutation");
-    let updated = inspector.once("inspector-updated");
     mutate(content.document, rootNode);
     yield mutated;
 
@@ -101,9 +100,6 @@ add_task(function*() {
     } else {
       yield assertNodeFlashing(flashingNodeFront, inspector);
     }
-
-    // Making sure the inspector has finished updating before moving on
-    yield updated;
   }
 });
 
