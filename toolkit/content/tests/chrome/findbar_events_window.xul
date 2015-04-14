@@ -71,7 +71,7 @@
     function checkSelection(done) {
       SimpleTest.executeSoon(function() {
         var selected = gBrowser.contentWindow.getSelection();
-        is(selected, "", "No text is selected");
+        is(String(selected), "", "No text is selected");
 
         var controller = gFindBar.browser.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsISelectionDisplay)

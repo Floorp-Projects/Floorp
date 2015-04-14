@@ -59,7 +59,7 @@ function run() {
         var i;
         for (i in match_indices) {
             var e = elements[match_indices[i]];
-            is(getComputedStyle(e, "").zIndex, zi,
+            is(getComputedStyle(e, "").zIndex, String(zi),
                "element " + match_indices[i] + " matched " + selector);
         }
         for (i in notmatch_indices) {

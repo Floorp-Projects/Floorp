@@ -33,7 +33,13 @@
       is(reflector[prop], prop, "Property " + prop);
     }
 
-    for (i = -10; i < 10; ++i) {
+    for (i = -10; i < 0; ++i) {
+      is(reflector[i], String(i), "Property " + i);
+      prop = "prop" + i;
+      is(reflector[prop], prop, "Property " + prop);
+    }
+
+    for (i = 0; i < 10; ++i) {
       is(reflector[i], i, "Property " + i);
       prop = "prop" + i;
       is(reflector[prop], prop, "Property " + prop);

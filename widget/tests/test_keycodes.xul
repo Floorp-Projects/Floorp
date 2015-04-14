@@ -287,17 +287,17 @@ function runKeyEventTests()
         var e = eventList[i];
         if (e.type == "keypress") {
           var isCtrlExpected =
-            aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey || false;
+            !!(aEvent.modifiers.ctrlKey || aEvent.modifiers.ctrlRightKey);
           var isAltExpected =
-            aEvent.modifiers.altKey || aEvent.modifiers.altRightKey || false;
+            !!(aEvent.modifiers.altKey || aEvent.modifiers.altRightKey);
           if (IS_WIN && aEvent.modifiers.altGrKey) {
             isCtrlExpected = isAltExpected =
               ((aShouldDelivedEvent & SHOULD_NOT_CAUSE_INPUT) != 0);
           }
           is(e.ctrlKey, isCtrlExpected, name + ", Ctrl mismatch");
-          is(e.metaKey, aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey || false, name + ", Command mismatch");
+          is(e.metaKey, !!(aEvent.modifiers.metaKey || aEvent.modifiers.metaRightKey), name + ", Command mismatch");
           is(e.altKey, isAltExpected, name + ", Alt mismatch");
-          is(e.shiftKey, aEvent.modifiers.shiftKey || aEvent.modifiers.shiftRightKey || false, name + ", Shift mismatch");
+          is(e.shiftKey, !!(aEvent.modifiers.shiftKey || aEvent.modifiers.shiftRightKey), name + ", Shift mismatch");
         }
 
         if (aExpectGeckoChar.length > 0 && e.type == "keypress") {

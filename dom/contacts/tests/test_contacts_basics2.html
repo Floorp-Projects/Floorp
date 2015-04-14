@@ -230,7 +230,7 @@ var steps = [
       ok(cloned.id, "The contact now has an ID.");
       is(cloned.email[0].value, "new email!", "Same Email");
       isnot(createResult1.email[0].value, cloned.email[0].value, "Clone has different email");
-      is(cloned.givenName, "Tom", "New Name");
+      is(String(cloned.givenName), "Tom", "New Name");
       next();
     }
     req.onerror = onFailure;

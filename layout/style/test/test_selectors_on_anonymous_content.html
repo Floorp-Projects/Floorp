@@ -50,7 +50,7 @@ function run() {
 
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
-            is(SpecialPowers.wrap(window).getComputedStyle(e, "").zIndex, zi,
+            is(SpecialPowers.wrap(window).getComputedStyle(e, "").zIndex, String(zi),
                "element matched " + selector);
         }
         for (var i = 0; i < should_not_match.length; ++i) {

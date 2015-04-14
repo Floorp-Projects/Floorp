@@ -5,14 +5,14 @@ function isSpellingCheckOk(aEditor, aMisspelledWords) {
 
   is(numWords, aMisspelledWords.length, "Correct number of misspellings and words.");
 
-  if (numWords != aMisspelledWords.length) {
+  if (numWords !== aMisspelledWords.length) {
     return false;
   }
 
   for (var i = 0; i < numWords; ++i) {
-    var word = sel.getRangeAt(i);
+    var word = String(sel.getRangeAt(i));
     is(word, aMisspelledWords[i], "Misspelling is what we think it is.");
-    if (word != aMisspelledWords[i]) {
+    if (word !== aMisspelledWords[i]) {
       return false;
     }
   }

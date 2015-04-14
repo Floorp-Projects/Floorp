@@ -23,10 +23,10 @@ function runTest() {
 
   is(utils.audioVolume, 1.0, "By default utils.audioVolume is 1.0");
   utils.audioVolume = 0.4;
-  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  is(utils.audioVolume.toFixed(2), "0.40", "utils.audioVolume is ok");
   utils.audioMuted = true;
   is(utils.audioMuted, true, "utils.audioMuted is true");
-  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  is(utils.audioVolume.toFixed(2), "0.40", "utils.audioVolume is ok");
   utils.audioMuted = false;
 
   utils.audioVolume = 2.0;
@@ -60,10 +60,10 @@ function runTest() {
 
   is(utils.audioVolume, 1.0, "By default utils.audioVolume is 1.0");
   utils.audioVolume = 0.4;
-  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  is(utils.audioVolume.toFixed(2), "0.40", "utils.audioVolume is ok");
   utils.audioMuted = true;
   is(utils.audioMuted, true, "utils.audioMuted is true");
-  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  is(utils.audioVolume.toFixed(2), "0.40", "utils.audioVolume is ok");
   utils.audioMuted = false;
 
   utils.audioVolume = 2.0;

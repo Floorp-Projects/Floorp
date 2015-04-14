@@ -423,44 +423,44 @@ for (var test of data) {
       // When step=0, the allowed value step is 1.
       input.step = '0';
       input.value = '1.2';
-      is(input.value, 1, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.value = '1';
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '0';
-      is(input.value, 0, "check that the value coincides with a step");
+      is(input.value, '0', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       // When step is NaN, the allowed step value is 1.
       input.step = 'foo';
       input.value = '1';
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '1.5';
-      is(input.value, 2, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '2', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       // When step is negative, the allowed step value is 1.
       input.step = '-0.1';
-      is(input.value, 2, "check that the value still coincides with a step");
+      is(input.value, '2', "check that the value still coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '1';
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       // When step is missing, the allowed step value is 1.
       input.removeAttribute('step');
       input.value = '1.5';
-      is(input.value, 2, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '2', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.value = '1';
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       // When step is 'any', all values are fine wrt to step.
@@ -469,132 +469,132 @@ for (var test of data) {
 
       input.step = 'aNy';
       input.value = '97';
-      is(input.value, 97, "check that the value for step=aNy is unchanged");
+      is(input.value, '97', "check that the value for step=aNy is unchanged");
       checkValidity(input, true, apply);
 
       input.step = 'AnY';
       input.value = '0.1';
-      is(input.value, 0.1, "check that a positive fractional value with step=AnY is unchanged");
+      is(input.value, '0.1', "check that a positive fractional value with step=AnY is unchanged");
       checkValidity(input, true, apply);
 
       input.step = 'ANY';
       input.min = -100;
       input.value = '-13.37';
-      is(input.value, -13.37, "check that a negative fractional value with step=ANY is unchanged");
+      is(input.value, '-13.37', "check that a negative fractional value with step=ANY is unchanged");
       checkValidity(input, true, apply);
 
       // When min is set to a valid float, there is a step base.
       input.min = '1'; // the step base
       input.step = '2';
       input.value = '3';
-      is(input.value, 3, "check that the value coincides with a step");
+      is(input.value, '3', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '2';
-      is(input.value, 3, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '3', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.value = '1.99';
-      is(input.value, 1, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.removeAttribute('step'); // step = 1
       input.min = '0.5'; // step base
       input.value = '5.5';
-      is(input.value, 5.5, "check that the value coincides with a step");
+      is(input.value, '5.5', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '1';
-      is(input.value, 1.5, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '1.5', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.min = '-0.1'; // step base
       input.step = '1';
       input.value = '0.9';
-      is(input.value, 0.9, "the value should be a valid step");
+      is(input.value, '0.9', "the value should be a valid step");
       checkValidity(input, true, apply);
 
       input.value = '0.1';
-      is(input.value, -0.1, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '-0.1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       // When min is set to NaN, the step base is the value.
       input.min = 'foo';
       input.step = '1';
       input.value = '1';
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '0.5';
-      is(input.value, 1, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.min = '';
       input.value = '1';
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = '0.5';
-      is(input.value, 1, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.removeAttribute('min');
 
       // Test when the value isn't a number
       input.value = '';
-      is(input.value, 50, "value be should default to the value midway between the minimum (0) and the maximum (100)");
+      is(input.value, '50', "value be should default to the value midway between the minimum (0) and the maximum (100)");
       checkValidity(input, true, apply);
 
       // Regular situations.
       input.step = '2';
       input.value = '1.5';
-      is(input.value, 2, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '2', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.value = '42.0';
-      is(input.value, 42, "check that the value coincides with a step");
+      is(input.value, '42.0', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.step = '0.1';
       input.value = '-0.1';
-      is(input.value, 0, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '0', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.step = '2';
       input.removeAttribute('min');
       input.max = '10';
       input.value = '-9';
-      is(input.value, 0, "check the value is clamped to the minimum's default of zero");
+      is(input.value, '0', "check the value is clamped to the minimum's default of zero");
       checkValidity(input, true, apply);
 
       // If @value is defined but not @min, the step base is @value.
       input = getFreshElement(test.type);
       input.setAttribute('value', '1');
       input.step = 2;
-      is(input.value, 1, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '1', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       input.value = 3;
-      is(input.value, 3, "check that the value coincides with a step");
+      is(input.value, '3', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = 2;
-      is(input.value, 3, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '3', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       // Should also work with defaultValue.
       input = getFreshElement(test.type);
       input.defaultValue = 1;
       input.step = 2;
-      is(input.value, 1, "check that the value coincides with a step");
+      is(input.value, '1', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = 3;
-      is(input.value, 3, "check that the value coincides with a step");
+      is(input.value, '3', "check that the value coincides with a step");
       checkValidity(input, true, apply);
 
       input.value = 2;
-      is(input.value, 3, "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
+      is(input.value, '3', "check that the value changes to the nearest valid step, choosing the higher step if both are equally close");
       checkValidity(input, true, apply);
 
       // Check contrived error case where there are no valid steps in range:
@@ -604,7 +604,7 @@ for (var test of data) {
       input.step = '3';
       input.max = '1';
       input.defaultValue = '-1';
-      is(input.value, 0, "the value should have been clamped to the default minimum, zero");
+      is(input.value, '0', "the value should have been clamped to the default minimum, zero");
       checkValidity(input, false, apply, {low: -1, high: -1});
 
       // Check that when the closest of the two steps that the value is between
@@ -614,7 +614,7 @@ for (var test of data) {
       input.min = '1';
       input.max = '10.9';
       input.value = '10.8'; // closest step in 11, but 11 > maximum
-      is(input.value, 9, "check that the value coincides with a step");
+      is(input.value, '9', "check that the value coincides with a step");
 
       // The way that step base is defined, the converse (the value not being
       // on a step, and the nearest step being a value that would be underflow)
