@@ -94,6 +94,7 @@ public:
   nsresult PreHandleEvent(nsPresContext* aPresContext,
                           WidgetEvent* aEvent,
                           nsIFrame* aTargetFrame,
+                          nsIContent* aTargetContent,
                           nsEventStatus* aStatus);
 
   /* The PostHandleEvent method should contain all system processing which
