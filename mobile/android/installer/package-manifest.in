@@ -151,7 +151,6 @@
 @BINPATH@/components/dom_json.xpt
 @BINPATH@/components/dom_payment.xpt
 @BINPATH@/components/dom_power.xpt
-@BINPATH@/components/dom_push.xpt
 @BINPATH@/components/dom_quota.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_security.xpt
