@@ -22,6 +22,7 @@
 #include <stdint.h>
 
 #include "nsID.h"
+#include "nsIWidget.h"
 #include "nsMemory.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -741,6 +742,13 @@ struct ParamTraits<mozilla::SerializedStructuredCloneBuffer>
   {
     LogParam(aParam.dataLength, aLog);
   }
+};
+
+template <>
+struct ParamTraits<nsIWidget::TouchPointerState>
+  : public BitFlagsEnumSerializer<nsIWidget::TouchPointerState,
+                                  nsIWidget::TouchPointerState::ALL_BITS>
+{
 };
 
 } /* namespace IPC */

@@ -42,7 +42,7 @@ function do_test(sel1, imp1, sel2, imp2, winning) {
     sel1 + " { z-index: " + ind1 + (imp1 ? "!important" :"") + " } " +
     sel2 + " { z-index: " + ind2 + (imp2 ? "!important" :"") + " } ";
   var result = cs.zIndex;
-  is(result, (winning == 1) ? ind1 : ind2,
+  is(result, String((winning == 1) ? ind1 : ind2),
      "cascading of " + style_contents.data);
 }
 

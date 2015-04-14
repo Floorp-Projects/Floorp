@@ -1756,7 +1756,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android,4,400) == 815593-1.html 815593-1-ref.html #
 == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
 skip-if(B2G||Mulet) == 818276-1.html 818276-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-== 825999.html 825999-ref.html
+fuzzy-if(asyncPanZoom,190,27) == 825999.html 825999-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank

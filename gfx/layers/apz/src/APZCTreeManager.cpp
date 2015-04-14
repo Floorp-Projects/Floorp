@@ -29,6 +29,7 @@
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
 #include "LayersLogging.h"              // for Stringify
+#include "Units.h"                      // for ParentlayerPixel
 
 #define ENABLE_APZCTM_LOGGING 0
 // #define ENABLE_APZCTM_LOGGING 1
@@ -202,7 +203,7 @@ ComputeClipRegion(GeckoContentController* aController,
 {
   ParentLayerIntRegion clipRegion;
   if (aLayer.GetClipRect()) {
-    clipRegion = ViewAs<ParentLayerPixel>(*aLayer.GetClipRect());
+    clipRegion = *aLayer.GetClipRect();
   } else {
     // if there is no clip on this layer (which should only happen for the
     // root scrollable layer in a process, or for some of the LayerMetrics
@@ -334,7 +335,7 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     node = RecycleOrCreateNode(aState, nullptr);
     AttachNodeToTree(node, aParent, aNextSibling);
     node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetTransform(),
-        aLayer.GetClipRect() ? Some(ParentLayerIntRegion(ViewAs<ParentLayerPixel>(*aLayer.GetClipRect()))) : Nothing(),
+        aLayer.GetClipRect() ? Some(ParentLayerIntRegion(*aLayer.GetClipRect())) : Nothing(),
         GetEventRegionsOverride(aParent, aLayer));
     return node;
   }

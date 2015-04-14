@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBrowser;
+include protocol PContent;
 include PContentPermission;
 
 namespace mozilla {
@@ -10,12 +10,14 @@ namespace dom {
 
 protocol PContentPermissionRequest
 {
-  manager PBrowser;
+  manager PContent;
 
 parent:
   prompt();
+  NotifyVisibility(bool visibility);
 
 child:
+  GetVisibility();
   __delete__(bool allow, PermissionChoice[] choices);
 };
 

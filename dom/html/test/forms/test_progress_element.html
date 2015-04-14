@@ -35,7 +35,7 @@ function checkFormIDLAttribute(aElement)
 function checkAttribute(aElement, aAttribute, aNewValue, aExpectedValueForIDL)
 {
   var expectedValueForIDL = aNewValue;
-  var expectedValueForContent = aNewValue;
+  var expectedValueForContent = String(aNewValue);
 
   if (aExpectedValueForIDL !== undefined) {
     expectedValueForIDL = aExpectedValueForIDL;
@@ -57,8 +57,8 @@ function checkAttribute(aElement, aAttribute, aNewValue, aExpectedValueForIDL)
     }
   } else {
     aElement.removeAttribute(aAttribute);
-    is(aElement.getAttribute(aAttribute), expectedValueForContent,
-       aAttribute + " content attribute should be " + expectedValueForContent);
+    is(aElement.getAttribute(aAttribute), null,
+       aAttribute + " content attribute should be null");
     is(aElement[aAttribute], expectedValueForIDL,
        aAttribute + " IDL attribute should be " + expectedValueForIDL);
   }

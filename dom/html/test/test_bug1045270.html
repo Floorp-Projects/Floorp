@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1045270
       SimpleTest.executeSoon(function() {
         synthesizeKey("2", {});
         SimpleTest.executeSoon(function() {
-          is(input.value, 12, "Reframe should restore focus and selection properly");
+          is(input.value, "12", "Reframe should restore focus and selection properly");
           SimpleTest.finish();
         });
       });

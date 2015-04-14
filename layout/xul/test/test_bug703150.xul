@@ -33,7 +33,7 @@ function doTest()
   SimpleTest.executeSoon(function () {
     synthesizeMouseAtCenter(scrollbarThumb, { type: "mousedown" });
 
-    is(scrollbar.getAttribute("curpos"), 0,
+    is(scrollbar.getAttribute("curpos"), "0",
        "scrollbar thumb has been moved already");
 
     synthesizeMouseAtCenter(scrollbar, { type: "mousemove" });

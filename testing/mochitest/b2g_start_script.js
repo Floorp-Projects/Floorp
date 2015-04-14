@@ -66,6 +66,14 @@ function openWindow(aEvent) {
   container.parentNode.appendChild(popupIframe);
 }
 container.addEventListener('mozbrowseropenwindow', openWindow);
+container.addEventListener('mozbrowsershowmodalprompt', function (e) {
+  if (e.detail.message == 'setVisible::false') {
+    container.setVisible(false);
+  }
+  else if (e.detail.message == 'setVisible::true') {
+    container.setVisible(true);
+  }
+});
 
 if (outOfProcess) {
   let specialpowers = {};

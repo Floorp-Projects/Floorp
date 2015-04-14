@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the devtool AudioParam API</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  Components.utils.import('resource://gre/modules/Services.jsm');
+
+  function checkIdAndName(node, name) {
+    is(node.id, node[name].parentNodeId, "The parent id should be correct");
+    is(node[name].name, name, "The name of the AudioParam should be correct.");
+  }
+
+  var ac = new AudioContext(),
+      gain = ac.createGain(),
+      osc = ac.createOscillator(),
+      del = ac.createDelay(),
+      source = ac.createBufferSource(),
+      stereoPanner = ac.createStereoPanner(),
+      comp = ac.createDynamicsCompressor(),
+      biquad = ac.createBiquadFilter();
+
+  checkIdAndName(gain, "gain");
+  checkIdAndName(osc, "frequency");
+  checkIdAndName(osc, "detune");
+  checkIdAndName(del, "delayTime");
+  checkIdAndName(source, "playbackRate");
+  checkIdAndName(source, "detune");
+  checkIdAndName(stereoPanner, "pan");
+  checkIdAndName(comp, "threshold");
+  checkIdAndName(comp, "knee");
+  checkIdAndName(comp, "ratio");
+  checkIdAndName(comp, "attack");
+  checkIdAndName(comp, "release");
+  checkIdAndName(biquad, "frequency");
+  checkIdAndName(biquad, "detune");
+  checkIdAndName(biquad, "Q");
+  checkIdAndName(biquad, "gain");
+
+</script>
+</pre>
+</body>
+</html>

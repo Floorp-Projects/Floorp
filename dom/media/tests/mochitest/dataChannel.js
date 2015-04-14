@@ -53,8 +53,8 @@ var commandsCheckDataChannel = [
   },
 
   function SEND_BLOB(test) {
-    var contents = ["At vero eos et accusam et justo duo dolores et ea rebum."];
-    var blob = new Blob(contents, { "type" : "text/plain" });
+    var contents = "At vero eos et accusam et justo duo dolores et ea rebum.";
+    var blob = new Blob([contents], { "type" : "text/plain" });
 
     return test.send(blob).then(result => {
       ok(result.data instanceof Blob, "Received data is of instance Blob");

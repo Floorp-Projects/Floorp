@@ -127,17 +127,20 @@ public:
                                             int32_t aNativeKeyCode,
                                             uint32_t aModifierFlags,
                                             const nsAString& aCharacters,
-                                            const nsAString& aUnmodifiedCharacters);
+                                            const nsAString& aUnmodifiedCharacters,
+                                            nsIObserver* aObserver);
   virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                               uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags);
+                                              uint32_t aModifierFlags,
+                                              nsIObserver* aObserver);
   virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                     uint32_t aNativeMessage,
                                                     double aDeltaX,
                                                     double aDeltaY,
                                                     double aDeltaZ,
                                                     uint32_t aModifierFlags,
-                                                    uint32_t aAdditionalFlags);
+                                                    uint32_t aAdditionalFlags,
+                                                    nsIObserver* aObserver);
   virtual bool  HasPendingInputEvent();
   virtual double GetDefaultScaleInternal();
   float         GetDPI();

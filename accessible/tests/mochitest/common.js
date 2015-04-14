@@ -425,9 +425,9 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
       for (var offset in accTree[prop]) {
         if (prevOffset !=- 1) {
           var attrs = accTree[prop][prevOffset];
-          testTextAttrs(acc, prevOffset, attrs, { }, prevOffset, offset, true);
+          testTextAttrs(acc, prevOffset, attrs, { }, prevOffset, +offset, true);
         }
-        prevOffset = offset;
+        prevOffset = +offset;
       }
 
       if (prevOffset != -1) {

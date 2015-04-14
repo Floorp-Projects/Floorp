@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
 /** Test for Bug 581072 **/
-var longTimerFired = 0;
+var longTimerFired = false;
 
 // Set up a one-hour timeout
 setTimeout(function() { longTimerFired = true; }, 3600000);

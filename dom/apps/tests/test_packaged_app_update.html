@@ -173,7 +173,7 @@ var steps = [
       };
       PackagedTestHelper.gApp.ondownloadsuccess =
         checkLastAppState.bind(undefined, miniManifestURL, false, false,
-                               2, PackagedTestHelper.next);
+                               "2", PackagedTestHelper.next);
     };
 
     var request = navigator.mozApps.installPackage(miniManifestURL);
@@ -232,7 +232,7 @@ var steps = [
   },
   function() {
     info("== TEST == Update packaged app");
-    updateApp(true, 2, 3);
+    updateApp(true, "2", "3");
   },
   function() {
     info("== TEST == Check that saved permissions were kept");
@@ -251,14 +251,14 @@ var steps = [
   },
   function() {
     info("== TEST == Check that name changes in an update are ignored");
-    updateApp(true, 3, 4);
+    updateApp(true, "3", "4");
   },
   function() {
     PackagedTestHelper.setAppVersion(5, PackagedTestHelper.next, true);
   },
   function() {
     info("== TEST == Update packaged app - same package");
-    updateApp(false, 4, 4, true);
+    updateApp(false, "4", "4", true);
   },
   function() {
     info("== TEST == Check for Update after getting the same package");

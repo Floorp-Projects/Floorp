@@ -19,9 +19,10 @@
 
 #include "ImageLayers.h"
 #include "libdisplay/GonkDisplay.h"
-#include "HwcUtils.h"
 #include "HwcComposer2D.h"
+#include "HwcUtils.h"
 #include "LayerScope.h"
+#include "Units.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
@@ -220,7 +221,14 @@ HwcComposer2D::RegisterHwcEventCallback()
     // Disable Vsync first, and then register callback functions.
     device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
     device->registerProcs(device, &sHWCProcs);
+
+// Only support actual hardware vsync on kitkat due to innaccurate timings
+// with JellyBean, and HwcComposer bugs with L. Reenable for L later
+#if ANDROID_VERSION == 19
     mHasHWVsync = gfxPrefs::HardwareVsyncEnabled();
+#else
+    mHasHWVsync = false;
+#endif
     return mHasHWVsync;
 }
 
@@ -338,8 +346,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     nsIntRect clip;
+    nsIntRect layerClip = aLayer->GetEffectiveClipRect() ?
+                          ParentLayerIntRect::ToUntyped(*aLayer->GetEffectiveClipRect()) : nsIntRect();
+    nsIntRect* layerClipPtr = aLayer->GetEffectiveClipRect() ? &layerClip : nullptr;
     if (!HwcUtils::CalculateClipRect(aParentTransform,
-                                     aLayer->GetEffectiveClipRect(),
+                                     layerClipPtr,
                                      aClip,
                                      &clip))
     {
