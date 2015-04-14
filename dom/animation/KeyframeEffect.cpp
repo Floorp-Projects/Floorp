@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/Animation.h"
-#include "mozilla/dom/AnimationBinding.h"
+#include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/FloatingPoint.h"
 #include "AnimationCommon.h"
 #include "nsCSSPropertySet.h"
@@ -59,26 +59,30 @@ const double ComputedTiming::kNullTimeFraction = PositiveInfinity<double>();
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mDocument, mTarget)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(KeyframeEffectReadonly,
+                                      mDocument,
+                                      mTarget)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Animation, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Animation, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(KeyframeEffectReadonly, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(KeyframeEffectReadonly, Release)
 
 JSObject*
-Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+KeyframeEffectReadonly::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto)
 {
-  return AnimationBinding::Wrap(aCx, this, aGivenProto);
+  return KeyframeEffectReadonlyBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-Animation::SetParentTime(Nullable<TimeDuration> aParentTime)
+KeyframeEffectReadonly::SetParentTime(Nullable<TimeDuration> aParentTime)
 {
   mParentTime = aParentTime;
 }
 
 ComputedTiming
-Animation::GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
-                               const AnimationTiming& aTiming)
+KeyframeEffectReadonly::GetComputedTimingAt(
+                          const Nullable<TimeDuration>& aLocalTime,
+                          const AnimationTiming& aTiming)
 {
   const TimeDuration zeroDuration;
 
@@ -206,7 +210,7 @@ Animation::GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
 }
 
 StickyTimeDuration
-Animation::ActiveDuration(const AnimationTiming& aTiming)
+KeyframeEffectReadonly::ActiveDuration(const AnimationTiming& aTiming)
 {
   if (aTiming.mIterationCount == mozilla::PositiveInfinity<float>()) {
     // An animation that repeats forever has an infinite active duration
@@ -223,7 +227,7 @@ Animation::ActiveDuration(const AnimationTiming& aTiming)
 
 // http://w3c.github.io/web-animations/#in-play
 bool
-Animation::IsInPlay(const AnimationPlayer& aPlayer) const
+KeyframeEffectReadonly::IsInPlay(const AnimationPlayer& aPlayer) const
 {
   if (IsFinishedTransition() ||
       aPlayer.PlayState() == AnimationPlayState::Finished) {
@@ -235,7 +239,7 @@ Animation::IsInPlay(const AnimationPlayer& aPlayer) const
 
 // http://w3c.github.io/web-animations/#current
 bool
-Animation::IsCurrent(const AnimationPlayer& aPlayer) const
+KeyframeEffectReadonly::IsCurrent(const AnimationPlayer& aPlayer) const
 {
   if (IsFinishedTransition() ||
       aPlayer.PlayState() == AnimationPlayState::Finished) {
@@ -248,7 +252,7 @@ Animation::IsCurrent(const AnimationPlayer& aPlayer) const
 }
 
 bool
-Animation::IsInEffect() const
+KeyframeEffectReadonly::IsInEffect() const
 {
   if (IsFinishedTransition()) {
     return false;
@@ -259,7 +263,7 @@ Animation::IsInEffect() const
 }
 
 const AnimationProperty*
-Animation::GetAnimationOfProperty(nsCSSProperty aProperty) const
+KeyframeEffectReadonly::GetAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
@@ -275,8 +279,9 @@ Animation::GetAnimationOfProperty(nsCSSProperty aProperty) const
 }
 
 bool
-Animation::HasAnimationOfProperties(const nsCSSProperty* aProperties,
-                                    size_t aPropertyCount) const
+KeyframeEffectReadonly::HasAnimationOfProperties(
+                          const nsCSSProperty* aProperties,
+                          size_t aPropertyCount) const
 {
   for (size_t i = 0; i < aPropertyCount; i++) {
     if (HasAnimationOfProperty(aProperties[i])) {
@@ -287,8 +292,9 @@ Animation::HasAnimationOfProperties(const nsCSSProperty* aProperties,
 }
 
 void
-Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
-                        nsCSSPropertySet& aSetProperties)
+KeyframeEffectReadonly::ComposeStyle(
+                          nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+                          nsCSSPropertySet& aSetProperties)
 {
   ComputedTiming computedTiming = GetComputedTiming();
 
