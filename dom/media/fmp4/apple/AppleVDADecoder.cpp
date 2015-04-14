@@ -265,7 +265,6 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
   // Bounds.
   VideoInfo info;
   info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
-  info.mHasVideo = true;
   gfx::IntRect visible = gfx::IntRect(0,
                                       0,
                                       mPictureWidth,

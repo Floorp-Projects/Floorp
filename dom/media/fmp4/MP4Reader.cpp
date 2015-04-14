@@ -368,13 +368,12 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     mIndexReady = true;
 
     // To decode, we need valid video and a place to put it.
-    mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo() &&
-                                              mDecoder->GetImageContainer();
+    mVideo.mActive = mDemuxer->HasValidVideo() && mDecoder->GetImageContainer();
     if (mVideo.mActive) {
       mVideo.mTrackDemuxer = new MP4VideoDemuxer(mDemuxer);
     }
 
-    mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
+    mAudio.mActive = mDemuxer->HasValidAudio();
     if (mAudio.mActive) {
       mAudio.mTrackDemuxer = new MP4AudioDemuxer(mDemuxer);
     }

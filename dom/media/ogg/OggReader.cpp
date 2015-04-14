@@ -341,8 +341,9 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       nsIntSize frameSize(theoraState->mInfo.frame_width,
                           theoraState->mInfo.frame_height);
       ScaleDisplayByAspectRatio(displaySize, theoraState->mPixelAspectRatio);
-      mInfo.mVideo.mDisplay = displaySize;
-      mInfo.mVideo.mHasVideo = IsValidVideoRegion(frameSize, picture, displaySize)? true:false;
+      if (IsValidVideoRegion(frameSize, picture, displaySize)) {
+        mInfo.mVideo.mDisplay = displaySize;
+      }
     } else if (codecState->GetType() == OggCodecState::TYPE_VORBIS) {
       VorbisState* vorbisState = static_cast<VorbisState*>(codecState);
       if (!(mVorbisState && mVorbisState->mSerial == vorbisState->mSerial)) {
@@ -356,7 +357,6 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
                   mVorbisState == vorbisState);
       }
 
-      mInfo.mAudio.mHasAudio = true;
       mInfo.mAudio.mRate = vorbisState->mInfo.rate;
       mInfo.mAudio.mChannels = vorbisState->mInfo.channels;
     } else if (codecState->GetType() == OggCodecState::TYPE_OPUS) {
@@ -372,7 +372,6 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
                   mOpusState == opusState);
       }
 
-      mInfo.mAudio.mHasAudio = true;
       mInfo.mAudio.mRate = opusState->mRate;
       mInfo.mAudio.mChannels = opusState->mChannels;
     }
@@ -825,8 +824,6 @@ bool OggReader::ReadOggChain()
   if (chained) {
     SetChained(true);
     {
-      mInfo.mAudio.mHasAudio = HasAudio();
-      mInfo.mVideo.mHasVideo = HasVideo();
       nsAutoPtr<MediaInfo> info(new MediaInfo());
       *info = mInfo;
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
