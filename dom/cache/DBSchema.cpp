@@ -26,16 +26,10 @@
 namespace mozilla {
 namespace dom {
 namespace cache {
-namespace db {
 
-const int32_t kMaxWipeSchemaVersion = 6;
-
-namespace {
-
-const int32_t kLatestSchemaVersion = 6;
-const int32_t kMaxEntriesPerStatement = 255;
-
-} // anonymous namespace
+const int32_t DBSchema::kMaxWipeSchemaVersion = 6;
+const int32_t DBSchema::kLatestSchemaVersion = 6;
+const int32_t DBSchema::kMaxEntriesPerStatement = 255;
 
 // If any of the static_asserts below fail, it means that you have changed
 // the corresponding WebIDL enum in a way that may be incompatible with the
@@ -147,48 +141,11 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
               nsIContentPolicy::TYPE_IMAGESET == 21,
               "nsContentPolicytType values are as expected");
 
-namespace {
+using mozilla::void_t;
 
-typedef int32_t EntryId;
-
-static nsresult QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
-                         nsTArray<EntryId>& aEntryIdListOut);
-static nsresult QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
-                           const CacheRequest& aRequest,
-                           const CacheQueryParams& aParams,
-                           nsTArray<EntryId>& aEntryIdListOut,
-                           uint32_t aMaxResults = UINT32_MAX);
-static nsresult MatchByVaryHeader(mozIStorageConnection* aConn,
-                                  const CacheRequest& aRequest,
-                                  EntryId entryId, bool* aSuccessOut);
-static nsresult DeleteEntries(mozIStorageConnection* aConn,
-                              const nsTArray<EntryId>& aEntryIdList,
-                              nsTArray<nsID>& aDeletedBodyIdListOut,
-                              uint32_t aPos=0, int32_t aLen=-1);
-static nsresult InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
-                            const CacheRequest& aRequest,
-                            const nsID* aRequestBodyId,
-                            const CacheResponse& aResponse,
-                            const nsID* aResponseBodyId);
-static nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
-                             SavedResponse* aSavedResponseOut);
-static nsresult ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
-                            SavedRequest* aSavedRequestOut);
-
-static void AppendListParamsToQuery(nsACString& aQuery,
-                                    const nsTArray<EntryId>& aEntryIdList,
-                                    uint32_t aPos, int32_t aLen);
-static nsresult BindListParamsToQuery(mozIStorageStatement* aState,
-                                      const nsTArray<EntryId>& aEntryIdList,
-                                      uint32_t aPos, int32_t aLen);
-static nsresult BindId(mozIStorageStatement* aState, uint32_t aPos,
-                       const nsID* aId);
-static nsresult ExtractId(mozIStorageStatement* aState, uint32_t aPos,
-                          nsID* aIdOut);
-} // anonymous namespace
-
+// static
 nsresult
-CreateSchema(mozIStorageConnection* aConn)
+DBSchema::CreateSchema(mozIStorageConnection* aConn)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -328,8 +285,9 @@ CreateSchema(mozIStorageConnection* aConn)
   return rv;
 }
 
+// static
 nsresult
-InitializeConnection(mozIStorageConnection* aConn)
+DBSchema::InitializeConnection(mozIStorageConnection* aConn)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -358,8 +316,9 @@ InitializeConnection(mozIStorageConnection* aConn)
   return NS_OK;
 }
 
+// static
 nsresult
-CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
+DBSchema::CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -387,9 +346,10 @@ CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
   return rv;
 }
 
+// static
 nsresult
-DeleteCache(mozIStorageConnection* aConn, CacheId aCacheId,
-            nsTArray<nsID>& aDeletedBodyIdListOut)
+DBSchema::DeleteCache(mozIStorageConnection* aConn, CacheId aCacheId,
+                      nsTArray<nsID>& aDeletedBodyIdListOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -420,9 +380,10 @@ DeleteCache(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
-                bool* aOrphanedOut)
+DBSchema::IsCacheOrphaned(mozIStorageConnection* aConn,
+                          CacheId aCacheId, bool* aOrphanedOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -454,12 +415,13 @@ IsCacheOrphaned(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
-           const CacheRequest& aRequest,
-           const CacheQueryParams& aParams,
-           bool* aFoundResponseOut,
-           SavedResponse* aSavedResponseOut)
+DBSchema::CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
+                     const CacheRequest& aRequest,
+                     const CacheQueryParams& aParams,
+                     bool* aFoundResponseOut,
+                     SavedResponse* aSavedResponseOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -485,11 +447,12 @@ CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
-              const CacheRequestOrVoid& aRequestOrVoid,
-              const CacheQueryParams& aParams,
-              nsTArray<SavedResponse>& aSavedResponsesOut)
+DBSchema::CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
+                        const CacheRequestOrVoid& aRequestOrVoid,
+                        const CacheQueryParams& aParams,
+                        nsTArray<SavedResponse>& aSavedResponsesOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -516,13 +479,14 @@ CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
-         const CacheRequest& aRequest,
-         const nsID* aRequestBodyId,
-         const CacheResponse& aResponse,
-         const nsID* aResponseBodyId,
-         nsTArray<nsID>& aDeletedBodyIdListOut)
+DBSchema::CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
+                   const CacheRequest& aRequest,
+                   const nsID* aRequestBodyId,
+                   const CacheResponse& aResponse,
+                   const nsID* aResponseBodyId,
+                   nsTArray<nsID>& aDeletedBodyIdListOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -543,11 +507,12 @@ CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
-            const CacheRequest& aRequest,
-            const CacheQueryParams& aParams,
-            nsTArray<nsID>& aDeletedBodyIdListOut, bool* aSuccessOut)
+DBSchema::CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
+                      const CacheRequest& aRequest,
+                      const CacheQueryParams& aParams,
+                      nsTArray<nsID>& aDeletedBodyIdListOut, bool* aSuccessOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -571,11 +536,12 @@ CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
-          const CacheRequestOrVoid& aRequestOrVoid,
-          const CacheQueryParams& aParams,
-          nsTArray<SavedRequest>& aSavedRequestsOut)
+DBSchema::CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
+                    const CacheRequestOrVoid& aRequestOrVoid,
+                    const CacheQueryParams& aParams,
+                    nsTArray<SavedRequest>& aSavedRequestsOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -602,13 +568,14 @@ CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-StorageMatch(mozIStorageConnection* aConn,
-             Namespace aNamespace,
-             const CacheRequest& aRequest,
-             const CacheQueryParams& aParams,
-             bool* aFoundResponseOut,
-             SavedResponse* aSavedResponseOut)
+DBSchema::StorageMatch(mozIStorageConnection* aConn,
+                       Namespace aNamespace,
+                       const CacheRequest& aRequest,
+                       const CacheQueryParams& aParams,
+                       bool* aFoundResponseOut,
+                       SavedResponse* aSavedResponseOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -673,10 +640,11 @@ StorageMatch(mozIStorageConnection* aConn,
   return NS_OK;
 }
 
+// static
 nsresult
-StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
-                  const nsAString& aKey, bool* aFoundCacheOut,
-                  CacheId* aCacheIdOut)
+DBSchema::StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
+                            const nsAString& aKey, bool* aFoundCacheOut,
+                            CacheId* aCacheIdOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -712,9 +680,10 @@ StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
   return rv;
 }
 
+// static
 nsresult
-StoragePutCache(mozIStorageConnection* aConn, Namespace aNamespace,
-                const nsAString& aKey, CacheId aCacheId)
+DBSchema::StoragePutCache(mozIStorageConnection* aConn, Namespace aNamespace,
+                          const nsAString& aKey, CacheId aCacheId)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -740,9 +709,10 @@ StoragePutCache(mozIStorageConnection* aConn, Namespace aNamespace,
   return rv;
 }
 
+// static
 nsresult
-StorageForgetCache(mozIStorageConnection* aConn, Namespace aNamespace,
-                   const nsAString& aKey)
+DBSchema::StorageForgetCache(mozIStorageConnection* aConn, Namespace aNamespace,
+                             const nsAString& aKey)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -765,9 +735,10 @@ StorageForgetCache(mozIStorageConnection* aConn, Namespace aNamespace,
   return rv;
 }
 
+// static
 nsresult
-StorageGetKeys(mozIStorageConnection* aConn, Namespace aNamespace,
-               nsTArray<nsString>& aKeysOut)
+DBSchema::StorageGetKeys(mozIStorageConnection* aConn, Namespace aNamespace,
+                         nsTArray<nsString>& aKeysOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -792,11 +763,10 @@ StorageGetKeys(mozIStorageConnection* aConn, Namespace aNamespace,
   return rv;
 }
 
-namespace {
-
+// static
 nsresult
-QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
-         nsTArray<EntryId>& aEntryIdListOut)
+DBSchema::QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
+                   nsTArray<EntryId>& aEntryIdListOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -821,12 +791,13 @@ QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
-           const CacheRequest& aRequest,
-           const CacheQueryParams& aParams,
-           nsTArray<EntryId>& aEntryIdListOut,
-           uint32_t aMaxResults)
+DBSchema::QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
+                     const CacheRequest& aRequest,
+                     const CacheQueryParams& aParams,
+                     nsTArray<EntryId>& aEntryIdListOut,
+                     uint32_t aMaxResults)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -898,10 +869,11 @@ QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-MatchByVaryHeader(mozIStorageConnection* aConn,
-                  const CacheRequest& aRequest,
-                  EntryId entryId, bool* aSuccessOut)
+DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
+                            const CacheRequest& aRequest,
+                            EntryId entryId, bool* aSuccessOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -1010,11 +982,12 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
   return rv;
 }
 
+// static
 nsresult
-DeleteEntries(mozIStorageConnection* aConn,
-              const nsTArray<EntryId>& aEntryIdList,
-              nsTArray<nsID>& aDeletedBodyIdListOut,
-              uint32_t aPos, int32_t aLen)
+DBSchema::DeleteEntries(mozIStorageConnection* aConn,
+                        const nsTArray<EntryId>& aEntryIdList,
+                        nsTArray<nsID>& aDeletedBodyIdListOut,
+                        uint32_t aPos, int32_t aLen)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -1098,12 +1071,13 @@ DeleteEntries(mozIStorageConnection* aConn,
   return rv;
 }
 
+// static
 nsresult
-InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
-            const CacheRequest& aRequest,
-            const nsID* aRequestBodyId,
-            const CacheResponse& aResponse,
-            const nsID* aResponseBodyId)
+DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
+                      const CacheRequest& aRequest,
+                      const nsID* aRequestBodyId,
+                      const CacheResponse& aResponse,
+                      const nsID* aResponseBodyId)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -1266,9 +1240,10 @@ InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
   return rv;
 }
 
+// static
 nsresult
-ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
-             SavedResponse* aSavedResponseOut)
+DBSchema::ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
+                       SavedResponse* aSavedResponseOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -1362,9 +1337,10 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
   return rv;
 }
 
+// static
 nsresult
-ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
-            SavedRequest* aSavedRequestOut)
+DBSchema::ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
+                      SavedRequest* aSavedRequestOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -1480,10 +1456,11 @@ ReadRequest(mozIStorageConnection* aConn, EntryId aEntryId,
   return rv;
 }
 
+// static
 void
-AppendListParamsToQuery(nsACString& aQuery,
-                        const nsTArray<EntryId>& aEntryIdList,
-                        uint32_t aPos, int32_t aLen)
+DBSchema::AppendListParamsToQuery(nsACString& aQuery,
+                                  const nsTArray<EntryId>& aEntryIdList,
+                                  uint32_t aPos, int32_t aLen)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT((aPos + aLen) <= aEntryIdList.Length());
@@ -1496,10 +1473,11 @@ AppendListParamsToQuery(nsACString& aQuery,
   }
 }
 
+// static
 nsresult
-BindListParamsToQuery(mozIStorageStatement* aState,
-                      const nsTArray<EntryId>& aEntryIdList,
-                      uint32_t aPos, int32_t aLen)
+DBSchema::BindListParamsToQuery(mozIStorageStatement* aState,
+                                const nsTArray<EntryId>& aEntryIdList,
+                                uint32_t aPos, int32_t aLen)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT((aPos + aLen) <= aEntryIdList.Length());
@@ -1510,8 +1488,9 @@ BindListParamsToQuery(mozIStorageStatement* aState,
   return NS_OK;
 }
 
+// static
 nsresult
-BindId(mozIStorageStatement* aState, uint32_t aPos, const nsID* aId)
+DBSchema::BindId(mozIStorageStatement* aState, uint32_t aPos, const nsID* aId)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aState);
@@ -1531,8 +1510,9 @@ BindId(mozIStorageStatement* aState, uint32_t aPos, const nsID* aId)
   return rv;
 }
 
+// static
 nsresult
-ExtractId(mozIStorageStatement* aState, uint32_t aPos, nsID* aIdOut)
+DBSchema::ExtractId(mozIStorageStatement* aState, uint32_t aPos, nsID* aIdOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aState);
@@ -1548,9 +1528,6 @@ ExtractId(mozIStorageStatement* aState, uint32_t aPos, nsID* aIdOut)
   return rv;
 }
 
-} // anonymouns namespace
-
-} // namespace db
 } // namespace cache
 } // namespace dom
 } // namespace mozilla
