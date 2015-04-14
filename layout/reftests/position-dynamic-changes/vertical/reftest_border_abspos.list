@@ -1,20 +1,20 @@
 # Please see the comment at the beginning of reftest.list
 
-skip-if(Mulet) == topN-heightA-bottomA.html?border_abspos topN-heightA-bottomA-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== topN-heightA-bottomA.html?border_abspos topN-heightA-bottomA-ref.html?border_abspos
+== topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos
 == topA-heightN-bottomA.html?border_abspos topA-heightN-bottomA-ref.html?border_abspos
-skip-if(Mulet) == topN-heightN-bottomA.html?border_abspos topN-heightN-bottomA-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == topA-heightA-bottomN.html?border_abspos topA-heightA-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topN-heightA-bottomA.html?border_abspos toauto-topN-heightA-bottomA-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topN-heightA-bottomN.html?border_abspos toauto-topN-heightA-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== topN-heightN-bottomA.html?border_abspos topN-heightN-bottomA-ref.html?border_abspos
+== topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos
+== topA-heightA-bottomN.html?border_abspos topA-heightA-bottomN-ref.html?border_abspos
+== toauto-topN-heightA-bottomA.html?border_abspos toauto-topN-heightA-bottomA-ref.html?border_abspos
+== toauto-topN-heightA-bottomN.html?border_abspos toauto-topN-heightA-bottomN-ref.html?border_abspos
 == toauto-topA-heightN-bottomA.html?border_abspos toauto-topA-heightN-bottomA-ref.html?border_abspos
-skip-if(Mulet) == toauto-topN-heightN-bottomA.html?border_abspos toauto-topN-heightN-bottomA-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topA-heightN-bottomN.html?border_abspos toauto-topA-heightN-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-topA-heightA-bottomN.html?border_abspos toauto-topA-heightA-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topN-heightA-bottomA.html?border_abspos topN-heightA-bottomA-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== toauto-topN-heightN-bottomA.html?border_abspos toauto-topN-heightN-bottomA-ref.html?border_abspos
+== toauto-topA-heightN-bottomN.html?border_abspos toauto-topA-heightN-bottomN-ref.html?border_abspos
+== toauto-topA-heightA-bottomN.html?border_abspos toauto-topA-heightA-bottomN-ref.html?border_abspos
+== fromauto-topN-heightA-bottomA.html?border_abspos topN-heightA-bottomA-ref.html?border_abspos
 skip-if(B2G||Mulet) == fromauto-topN-heightA-bottomN.html?border_abspos topN-heightA-bottomN-ref.html?border_abspos # Initial mulet triage: parity with B2G/B2G Desktop
 == fromauto-topA-heightN-bottomA.html?border_abspos topA-heightN-bottomA-ref.html?border_abspos
-skip-if(Mulet) == fromauto-topN-heightN-bottomA.html?border_abspos topN-heightN-bottomA-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-topA-heightA-bottomN.html?border_abspos topA-heightA-bottomN-ref.html?border_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== fromauto-topN-heightN-bottomA.html?border_abspos topN-heightN-bottomA-ref.html?border_abspos
+== fromauto-topA-heightN-bottomN.html?border_abspos topA-heightN-bottomN-ref.html?border_abspos
+== fromauto-topA-heightA-bottomN.html?border_abspos topA-heightA-bottomN-ref.html?border_abspos

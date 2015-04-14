@@ -1,7 +1,7 @@
-skip-if(Mulet) pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha-ref.html
@@ -40,8 +40,8 @@ fuzzy-if(azureQuartz,2,40000) fuzzy-if(azureSkia||d2d||gtk2Widget,1,40000) pref(
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
 fuzzy(64,37) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html
 
-skip-if(Mulet) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
@@ -52,7 +52,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.htm
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-svg-as-data-uri.html background-blending-image-color-ref.html
 # Test 10
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-gif.html background-blending-image-color-gif-ref.html
-skip-if(Mulet) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-transform3d.html background-blending-image-color-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-transform3d.html background-blending-image-color-ref.html
 
 # Test plan 5.3.2 Background layers do not blend with content outside the background (or behind the element) - tests 2 and 3
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-isolation-parent-child-color.html background-blending-isolation-parent-child-ref.html

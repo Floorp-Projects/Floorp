@@ -30,6 +30,7 @@
   <script type="application/javascript;version=1.8"
           src="chrome://browser/content/devtools/theme-switching.js"/>
   <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <xul:script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <xul:script type="application/javascript">
     function goUpdateSourceEditorMenuItems() {
       goUpdateGlobalEditMenuItems();
@@ -60,6 +61,10 @@
           accesskey="&gotoLineCmd.accesskey;"
           key="key_gotoLine"
           command="cmd_gotoLine"/>
+    </xul:menupopup>
+    <xul:menupopup id="sidebar-context">
+      <xul:menuitem id="context-openlinknewtab"
+        label="&openLinkNewTab.label;"/>
     </xul:menupopup>
     <xul:menupopup id="style-editor-options-popup"
                    position="before_start">

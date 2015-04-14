@@ -2,4 +2,4 @@
 == bug785684-y.html bug785684-ref.html
 == table-row-pagination.html table-row-pagination-ref.html
 == 963441.html 963441-ref.html
-skip-if(Mulet) == table-caption-scroll.html table-caption-scroll-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== table-caption-scroll.html table-caption-scroll-ref.html

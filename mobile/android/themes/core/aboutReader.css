@@ -299,6 +299,7 @@ body {
   list-style: none;
   background-color: #EBEBF0;
   border-top: 1px solid #D7D9DB;
+  display: none;
 }
 
 .toolbar[visible] {
@@ -407,8 +408,8 @@ body {
   flex: 0;
   font-size: 24px;
   color: #000000;
-  margin-left: 40px;
-  margin-right: 40px;
+  margin: 0 30px;
+  padding: 0 10px;
 }
 
 .serif-button {
@@ -427,12 +428,14 @@ body {
 
 .minus-button {
   background-size: 24px 6px;
-  margin-left: 60px;
+  margin-left: 50px;
+  padding: 0 5px;
 }
 
 .plus-button {
   background-size: 24px 24px;
-  margin-right: 60px;
+  margin-right: 50px;
+  padding: 0 5px;
 }
 
 #color-scheme-buttons > button {
