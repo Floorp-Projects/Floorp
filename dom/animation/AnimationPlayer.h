@@ -80,7 +80,7 @@ public:
   };
 
   // AnimationPlayer methods
-  KeyframeEffectReadonly* GetSource() const { return mSource; }
+  KeyframeEffectReadonly* GetEffect() const { return mEffect; }
   DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
@@ -113,7 +113,7 @@ public:
   // CSSAnimationPlayer::PauseFromJS so we leave it for now.
   void PauseFromJS() { Pause(); }
 
-  void SetSource(KeyframeEffectReadonly* aSource);
+  void SetEffect(KeyframeEffectReadonly* aEffect);
   void Tick();
 
   /**
@@ -203,7 +203,7 @@ public:
 
   const nsString& Name() const
   {
-    return mSource ? mSource->Name() : EmptyString();
+    return mEffect ? mEffect->Name() : EmptyString();
   }
 
   bool IsPausedOrPausing() const
@@ -214,15 +214,15 @@ public:
 
   bool HasInPlaySource() const
   {
-    return GetSource() && GetSource()->IsInPlay(*this);
+    return GetEffect() && GetEffect()->IsInPlay(*this);
   }
   bool HasCurrentSource() const
   {
-    return GetSource() && GetSource()->IsCurrent(*this);
+    return GetEffect() && GetEffect()->IsCurrent(*this);
   }
   bool HasInEffectSource() const
   {
-    return GetSource() && GetSource()->IsInEffect();
+    return GetEffect() && GetEffect()->IsInEffect();
   }
 
   /**
@@ -303,7 +303,7 @@ protected:
   AnimationPlayerCollection* GetCollection() const;
 
   nsRefPtr<DocumentTimeline> mTimeline;
-  nsRefPtr<KeyframeEffectReadonly> mSource;
+  nsRefPtr<KeyframeEffectReadonly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale

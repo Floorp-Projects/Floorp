@@ -91,11 +91,11 @@ CSSAnimationPlayer::PauseFromStyle()
 void
 CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 {
-  if (!mSource) {
+  if (!mEffect) {
     return;
   }
 
-  ComputedTiming computedTiming = mSource->GetComputedTiming();
+  ComputedTiming computedTiming = mEffect->GetComputedTiming();
 
   if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Null) {
     return; // do nothing
@@ -133,7 +133,7 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 
   dom::Element* target;
   nsCSSPseudoElements::Type targetPseudoType;
-  mSource->GetTarget(target, targetPseudoType);
+  mEffect->GetTarget(target, targetPseudoType);
 
   uint32_t message;
 
@@ -147,7 +147,7 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
     // First notifying for start of 0th iteration by appending an
     // 'animationstart':
     StickyTimeDuration elapsedTime =
-      std::min(StickyTimeDuration(mSource->InitialAdvance()),
+      std::min(StickyTimeDuration(mEffect->InitialAdvance()),
                computedTiming.mActiveDuration);
     AnimationEventInfo ei(target, Name(), NS_ANIMATION_START,
                           elapsedTime,
@@ -163,10 +163,10 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 
   if (message == NS_ANIMATION_START ||
       message == NS_ANIMATION_ITERATION) {
-    TimeDuration iterationStart = mSource->Timing().mIterationDuration *
+    TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
                                     computedTiming.mCurrentIteration;
     elapsedTime = StickyTimeDuration(std::max(iterationStart,
-                                              mSource->InitialAdvance()));
+                                              mEffect->InitialAdvance()));
   } else {
     MOZ_ASSERT(message == NS_ANIMATION_END);
     elapsedTime = computedTiming.mActiveDuration;
@@ -355,9 +355,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
         // Update the old from the new so we can keep the original object
         // identity (and any expando properties attached to it).
-        if (oldPlayer->GetSource() && newPlayer->GetSource()) {
-          KeyframeEffectReadonly* oldEffect = oldPlayer->GetSource();
-          KeyframeEffectReadonly* newEffect = newPlayer->GetSource();
+        if (oldPlayer->GetEffect() && newPlayer->GetEffect()) {
+          KeyframeEffectReadonly* oldEffect = oldPlayer->GetEffect();
+          KeyframeEffectReadonly* newEffect = newPlayer->GetEffect();
           animationChanged =
             oldEffect->Timing() != newEffect->Timing() ||
             oldEffect->Properties() != newEffect->Properties();
@@ -532,7 +532,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       new KeyframeEffectReadonly(mPresContext->Document(), aTarget,
                                  aStyleContext->GetPseudoType(), timing,
                                  src.GetName());
-    dest->SetSource(destEffect);
+    dest->SetEffect(destEffect);
 
     // Even in the case where we call PauseFromStyle below, we still need to
     // call PlayFromStyle first. This is because a newly-created player is idle
@@ -755,7 +755,7 @@ nsAnimationManager::UpdateCascadeResults(
     for (size_t playerIdx = aElementAnimations->mPlayers.Length();
          playerIdx-- != 0; ) {
       const AnimationPlayer* player = aElementAnimations->mPlayers[playerIdx];
-      const KeyframeEffectReadonly* effect = player->GetSource();
+      const KeyframeEffectReadonly* effect = player->GetEffect();
       if (!effect) {
         continue;
       }
@@ -804,7 +804,7 @@ nsAnimationManager::UpdateCascadeResults(
        playerIdx-- != 0; ) {
     CSSAnimationPlayer* player =
       aElementAnimations->mPlayers[playerIdx]->AsCSSAnimationPlayer();
-    KeyframeEffectReadonly* effect = player->GetSource();
+    KeyframeEffectReadonly* effect = player->GetEffect();
 
     player->mInEffectForCascadeResults = player->HasInEffectSource();
 

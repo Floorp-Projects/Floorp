@@ -16,7 +16,7 @@ test(function(t) {
   div.style.left = '100px';
 
   var animation = div.getAnimations()[0];
-  assert_equals(animation.source.target, div,
+  assert_equals(animation.effect.target, div,
     'Animation.target is the animatable div');
 }, 'Returned CSS transitions have the correct Animation.target');
 
