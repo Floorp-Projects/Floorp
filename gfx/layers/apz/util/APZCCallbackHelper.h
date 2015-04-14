@@ -41,21 +41,13 @@ class APZCCallbackHelper
     typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
-    /* Checks to see if the pres shell that the given FrameMetrics object refers
-       to is still the valid pres shell for the DOMWindowUtils. This can help
-       guard against apply stale updates (updates meant for a pres shell that has
-       since been torn down and replaced). */
-    static bool HasValidPresShellId(nsIDOMWindowUtils* aUtils,
-                                    const FrameMetrics& aMetrics);
-
     /* Applies the scroll and zoom parameters from the given FrameMetrics object to
-       the root frame corresponding to the given DOMWindowUtils. If tiled thebes
+       the root frame corresponding to the given pres shell. If tiled thebes
        layers are enabled, this will align the displayport to tile boundaries.
        Setting the scroll position can cause some small adjustments to be made
        to the actual scroll position. aMetrics' display port and scroll position
        will be updated with any modifications made. */
-    static void UpdateRootFrame(nsIDOMWindowUtils* aUtils,
-                                nsIPresShell* aPresShell,
+    static void UpdateRootFrame(nsIPresShell* aPresShell,
                                 FrameMetrics& aMetrics);
 
     /* Applies the scroll parameters from the given FrameMetrics object to the subframe
@@ -66,13 +58,6 @@ public:
        will be updated with any modifications made. */
     static void UpdateSubFrame(nsIContent* aContent,
                                FrameMetrics& aMetrics);
-
-    /* Get the DOMWindowUtils for the window corresponding to the given document. */
-    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(const nsIDocument* aDoc);
-
-    /* Get the DOMWindowUtils for the window corresponding to the givent content
-       element. This might be an iframe inside the tab, for instance. */
-    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(const nsIContent* aContent);
 
     /* Get the presShellId and view ID for the given content element.
      * If the view ID does not exist, one is created.

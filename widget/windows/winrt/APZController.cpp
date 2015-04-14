@@ -167,26 +167,19 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 #endif
 
   // We're dealing with a tab, call UpdateRootFrame.
-  nsCOMPtr<nsIDOMWindowUtils> utils;
-  nsCOMPtr<nsIDOMWindow> window = subDocument->GetDefaultView();
-  if (window) {
-    utils = do_GetInterface(window);
-    if (utils) {
-      FrameMetrics metrics = aFrameMetrics;
-      if (subDocument->GetShell()) {
-        mozilla::layers::APZCCallbackHelper::UpdateRootFrame(utils, subDocument->GetShell(), metrics);
-      }
+  FrameMetrics metrics = aFrameMetrics;
+  if (subDocument->GetShell()) {
+    mozilla::layers::APZCCallbackHelper::UpdateRootFrame(subDocument->GetShell(), metrics);
+  }
 
 #ifdef DEBUG_CONTROLLER
-      WinUtils::Log("APZController: %I64d mDisplayPortMargins: %0.2f %0.2f %0.2f %0.2f",
-        metrics.GetScrollId(),
-        metrics.GetDisplayPortMargins().left,
-        metrics.GetDisplayPortMargins().top,
-        metrics.GetDisplayPortMargins().right,
-        metrics.GetDisplayPortMargins().bottom);
+  WinUtils::Log("APZController: %I64d mDisplayPortMargins: %0.2f %0.2f %0.2f %0.2f",
+    metrics.GetScrollId(),
+    metrics.GetDisplayPortMargins().left,
+    metrics.GetDisplayPortMargins().top,
+    metrics.GetDisplayPortMargins().right,
+    metrics.GetDisplayPortMargins().bottom);
 #endif
-    }
-  }
 }
 
 void
