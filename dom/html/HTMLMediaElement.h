@@ -1133,13 +1133,6 @@ protected:
   // UpdatePreloadAction().
   PreloadAction mPreloadAction;
 
-  // Size of the media. Updated by the decoder on the main thread if
-  // it changes. Defaults to a width and height of -1 if not set.
-  // We keep this separate from the intrinsic size stored in the
-  // VideoFrameContainer so that it doesn't change unexpectedly under us
-  // due to decoder activity.
-  nsIntSize mMediaSize;
-
   // Time that the last timeupdate event was fired. Read/Write from the
   // main thread only.
   TimeStamp mTimeUpdateTime;
