@@ -10,9 +10,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
-#include "mozilla/dom/Animation.h" // for Animation
 #include "mozilla/dom/AnimationPlayerBinding.h" // for AnimationPlayState
 #include "mozilla/dom/DocumentTimeline.h" // for DocumentTimeline
+#include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadonly
 #include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
 
@@ -80,7 +80,7 @@ public:
   };
 
   // AnimationPlayer methods
-  Animation* GetSource() const { return mSource; }
+  KeyframeEffectReadonly* GetSource() const { return mSource; }
   DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
@@ -113,7 +113,7 @@ public:
   // CSSAnimationPlayer::PauseFromJS so we leave it for now.
   void PauseFromJS() { Pause(); }
 
-  void SetSource(Animation* aSource);
+  void SetSource(KeyframeEffectReadonly* aSource);
   void Tick();
 
   /**
@@ -303,7 +303,7 @@ protected:
   AnimationPlayerCollection* GetCollection() const;
 
   nsRefPtr<DocumentTimeline> mTimeline;
-  nsRefPtr<Animation> mSource;
+  nsRefPtr<KeyframeEffectReadonly> mSource;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale

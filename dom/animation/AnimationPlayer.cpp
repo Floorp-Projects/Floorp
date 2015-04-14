@@ -266,7 +266,7 @@ AnimationPlayer::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 }
 
 void
-AnimationPlayer::SetSource(Animation* aSource)
+AnimationPlayer::SetSource(KeyframeEffectReadonly* aSource)
 {
   if (mSource) {
     mSource->SetParentTime(Nullable<TimeDuration>());
