@@ -152,7 +152,7 @@ VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::ShallowCopyUpdateDuration(VideoData* aOther,
+VideoData::ShallowCopyUpdateDuration(const VideoData* aOther,
                                      int64_t aDuration)
 {
   nsRefPtr<VideoData> v = new VideoData(aOther->mOffset,
@@ -168,7 +168,7 @@ VideoData::ShallowCopyUpdateDuration(VideoData* aOther,
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::ShallowCopyUpdateTimestamp(VideoData* aOther,
+VideoData::ShallowCopyUpdateTimestamp(const VideoData* aOther,
                                       int64_t aTimestamp)
 {
   NS_ENSURE_TRUE(aOther, nullptr);
@@ -185,7 +185,7 @@ VideoData::ShallowCopyUpdateTimestamp(VideoData* aOther,
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::ShallowCopyUpdateTimestampAndDuration(VideoData* aOther,
+VideoData::ShallowCopyUpdateTimestampAndDuration(const VideoData* aOther,
                                                  int64_t aTimestamp,
                                                  int64_t aDuration)
 {
@@ -203,7 +203,7 @@ VideoData::ShallowCopyUpdateTimestampAndDuration(VideoData* aOther,
 
 /* static */
 void VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
-                                    VideoInfo& aInfo,
+                                    const VideoInfo& aInfo,
                                     const YCbCrBuffer &aBuffer,
                                     const IntRect& aPicture,
                                     bool aCopyData)
@@ -241,7 +241,7 @@ void VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::Create(VideoInfo& aInfo,
+VideoData::Create(const VideoInfo& aInfo,
                   ImageContainer* aContainer,
                   Image* aImage,
                   int64_t aOffset,
@@ -357,7 +357,7 @@ VideoData::Create(VideoInfo& aInfo,
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::Create(VideoInfo& aInfo,
+VideoData::Create(const VideoInfo& aInfo,
                   ImageContainer* aContainer,
                   int64_t aOffset,
                   int64_t aTime,
@@ -373,7 +373,7 @@ VideoData::Create(VideoInfo& aInfo,
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::Create(VideoInfo& aInfo,
+VideoData::Create(const VideoInfo& aInfo,
                   Image* aImage,
                   int64_t aOffset,
                   int64_t aTime,
@@ -389,7 +389,7 @@ VideoData::Create(VideoInfo& aInfo,
 
 /* static */
 already_AddRefed<VideoData>
-VideoData::CreateFromImage(VideoInfo& aInfo,
+VideoData::CreateFromImage(const VideoInfo& aInfo,
                            ImageContainer* aContainer,
                            int64_t aOffset,
                            int64_t aTime,
@@ -412,7 +412,7 @@ VideoData::CreateFromImage(VideoInfo& aInfo,
 #ifdef MOZ_OMX_DECODER
 /* static */
 already_AddRefed<VideoData>
-VideoData::Create(VideoInfo& aInfo,
+VideoData::Create(const VideoInfo& aInfo,
                   ImageContainer* aContainer,
                   int64_t aOffset,
                   int64_t aTime,
