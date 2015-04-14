@@ -115,7 +115,7 @@ let AnimationPlayerActor = ActorClass({
     // the list.
     names = names.split(",").map(n => n.trim());
     for (let i = 0; i < names.length; i ++) {
-      if (names[i] === this.player.source.effect.name) {
+      if (names[i] === this.player.source.name) {
         return i;
       }
     }
@@ -207,7 +207,7 @@ let AnimationPlayerActor = ActorClass({
       currentTime: this.player.currentTime,
       playState: this.player.playState,
       playbackRate: this.player.playbackRate,
-      name: this.player.source.effect.name,
+      name: this.player.source.name,
       duration: this.getDuration(),
       delay: this.getDelay(),
       iterationCount: this.getIterationCount(),

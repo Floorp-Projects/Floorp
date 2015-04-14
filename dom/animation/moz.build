@@ -9,7 +9,6 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
     'Animation.h',
-    'AnimationEffect.h',
     'AnimationPlayer.h',
     'AnimationTimeline.h',
     'DocumentTimeline.h',
@@ -22,7 +21,6 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'Animation.cpp',
-    'AnimationEffect.cpp',
     'AnimationPlayer.cpp',
     'AnimationTimeline.cpp',
     'DocumentTimeline.cpp',
