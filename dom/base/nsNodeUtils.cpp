@@ -218,7 +218,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 static inline Element*
 GetTarget(AnimationPlayer* aPlayer)
 {
-  KeyframeEffectReadonly* effect = aPlayer->GetSource();
+  KeyframeEffectReadonly* effect = aPlayer->GetEffect();
   if (!effect) {
     return nullptr;
   }

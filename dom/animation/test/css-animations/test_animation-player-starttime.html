@@ -210,11 +210,11 @@ function checkStateOnReadyPromiseResolved(animation)
     'Animation.playState should be "running" on the first paint ' +
     'tick after animation creation');
 
-  assert_equals(animation.source.target.style.animationPlayState, 'running',
-    'Animation.source.target.style.animationPlayState should be ' +
+  assert_equals(animation.effect.target.style.animationPlayState, 'running',
+    'Animation.effect.target.style.animationPlayState should be ' +
     '"running" on the first paint tick after animation creation');
 
-  var div = animation.source.target;
+  var div = animation.effect.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, UNANIMATED_POSITION,
                 'the computed value of margin-left should be unaffected ' +
@@ -230,11 +230,11 @@ function checkStateAtActiveIntervalStartTime(animation)
     'Animation.playState should be "running" at the start of ' +
     'the active interval');
 
-  assert_equals(animation.source.target.style.animationPlayState, 'running',
-    'Animation.source.target.style.animationPlayState should be ' +
+  assert_equals(animation.effect.target.style.animationPlayState, 'running',
+    'Animation.effect.target.style.animationPlayState should be ' +
     '"running" at the start of the active interval');
 
-  var div = animation.source.target;
+  var div = animation.effect.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_between_inclusive(marginLeft, INITIAL_POSITION, TEN_PCT_POSITION,
     'the computed value of margin-left should be close to the value at the ' +
@@ -245,7 +245,7 @@ function checkStateAtFiftyPctOfActiveInterval(animation)
 {
   // We don't test animation.startTime since our caller just set it.
 
-  var div = animation.source.target;
+  var div = animation.effect.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, FIFTY_PCT_POSITION,
     'the computed value of margin-left should be half way through the ' +
@@ -261,11 +261,11 @@ function checkStateAtActiveIntervalEndTime(animation)
     'Animation.playState should be "finished" at the end of ' +
     'the active interval');
 
-  assert_equals(animation.source.target.style.animationPlayState, "running",
-    'Animation.source.target.style.animationPlayState should be ' +
+  assert_equals(animation.effect.target.style.animationPlayState, "running",
+    'Animation.effect.target.style.animationPlayState should be ' +
     '"finished" at the end of the active interval');
 
-  var div = animation.source.target;
+  var div = animation.effect.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, UNANIMATED_POSITION,
     'the computed value of margin-left should be unaffected ' +
