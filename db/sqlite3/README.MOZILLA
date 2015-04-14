@@ -10,5 +10,4 @@ To move to a new version:
 
 Copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
-Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in as
-well as the version number at the top of this file.
+Be sure to update SQLITE_VERSION accordingly in $(topsrcdir)/configure.in.
