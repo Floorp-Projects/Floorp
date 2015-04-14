@@ -349,6 +349,8 @@ public:
   uint8_t* mData;
   // Writeable size of buffer.
   size_t mSize;
+  // Writeable reference to MediaRawData::mCryptoInternal
+  CryptoSample& mCrypto;
 
   // Data manipulation methods. mData and mSize may be updated accordingly.
 
@@ -380,7 +382,7 @@ public:
   // Size of buffer.
   size_t mSize;
 
-  CryptoSample mCrypto;
+  const CryptoSample& mCrypto;
   nsRefPtr<DataBuffer> mExtraData;
 
   // Return a deep copy or nullptr if out of memory.
@@ -402,6 +404,7 @@ private:
   // Returns false if memory couldn't be allocated.
   bool EnsureCapacity(size_t aSize);
   nsRefPtr<LargeDataBuffer> mBuffer;
+  CryptoSample mCryptoInternal;
   uint32_t mPadding;
   MediaRawData(const MediaRawData&); // Not implemented
 };

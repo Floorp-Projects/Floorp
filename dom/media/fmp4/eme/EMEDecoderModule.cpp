@@ -91,8 +91,9 @@ public:
       return NS_OK;
     }
 
+    nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
     mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                  aSample->mCrypto.mSessionIds);
+                                  writer->mCrypto.mSessionIds);
 
     mProxy->Decrypt(aSample, new DeliverDecrypted(this, mTaskQueue));
     return NS_OK;
@@ -186,8 +187,9 @@ EMEMediaDataDecoderProxy::Input(MediaRawData* aSample)
     return NS_OK;
   }
 
+  nsAutoPtr<MediaRawDataWriter> writer(aSample->CreateWriter());
   mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
-                                aSample->mCrypto.mSessionIds);
+                                writer->mCrypto.mSessionIds);
 
   return MediaDataDecoderProxy::Input(aSample);
 }

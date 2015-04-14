@@ -488,6 +488,7 @@ MediaRawData::MediaRawData()
   : MediaData(RAW_DATA)
   , mData(nullptr)
   , mSize(0)
+  , mCrypto(mCryptoInternal)
   , mBuffer(new LargeDataBuffer(RAW_DATA_DEFAULT_SIZE))
   , mPadding(0)
 {
@@ -497,6 +498,7 @@ MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
   : MediaData(RAW_DATA)
   , mData(nullptr)
   , mSize(0)
+  , mCrypto(mCryptoInternal)
   , mBuffer(new LargeDataBuffer(RAW_DATA_DEFAULT_SIZE))
   , mPadding(0)
 {
@@ -518,6 +520,7 @@ MediaRawData::Clone() const
   s->mOffset = mOffset;
   s->mKeyframe = mKeyframe;
   s->mExtraData = mExtraData;
+  s->mCryptoInternal = mCryptoInternal;
   if (mSize) {
     if (!s->EnsureCapacity(mSize)) {
       return nullptr;
@@ -584,6 +587,7 @@ MediaRawData::CreateWriter()
 MediaRawDataWriter::MediaRawDataWriter(MediaRawData* aMediaRawData)
   : mData(nullptr)
   , mSize(0)
+  , mCrypto(aMediaRawData->mCryptoInternal)
   , mTarget(aMediaRawData)
   , mBuffer(aMediaRawData->mBuffer.get())
 {
