@@ -19,17 +19,6 @@ template<class T> struct already_AddRefed;
 namespace mozilla {
 namespace layers {
 
-/* A base class for callbacks to be passed to APZCCallbackHelper::SendSetTargetAPZCNotification.
- * If we had something like std::function, we could just use
- * std::function<void(uint64_t, const nsTArray<ScrollableLayerGuid>&)>. */
-struct SetTargetAPZCCallback {
-public:
-  NS_INLINE_DECL_REFCOUNTING(SetTargetAPZCCallback)
-  virtual void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const = 0;
-protected:
-  virtual ~SetTargetAPZCCallback() {}
-};
-
 /* A base class for callbacks to be passed to
  * APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification. */
 struct SetAllowedTouchBehaviorCallback {
@@ -165,16 +154,18 @@ public:
 
     /* Perform hit-testing on the touch points of |aEvent| to determine
      * which scrollable frames they target. If any of these frames don't have
-     * a displayport, set one. Finally, invoke the provided callback with
-     * the guids of the target frames. If any displayports needed to be set,
-     * the callback is invoked after the next refresh, otherwise it's invoked
-     * right away. */
+     * a displayport, set one.
+     *
+     * If any displayports need to be set, the actual notification to APZ is
+     * sent to the compositor, which will then post a message back to APZ's
+     * controller thread. Otherwise, the provided widget's SetConfirmedTargetAPZC
+     * method is invoked immediately.
+     */
     static void SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                               nsIDocument* aDocument,
                                               const WidgetGUIEvent& aEvent,
                                               const ScrollableLayerGuid& aGuid,
-                                              uint64_t aInputBlockId,
-                                              const nsRefPtr<SetTargetAPZCCallback>& aCallback);
+                                              uint64_t aInputBlockId);
 
     /* Figure out the allowed touch behaviors of each touch point in |aEvent|
      * and send that information to the provided callback. */

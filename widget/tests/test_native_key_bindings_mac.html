@@ -297,7 +297,7 @@
            aElement.id + ": Incorrect selection end");
       }
 
-      function testRun(aElement, aSelectionCheck)
+      function* testRun(aElement, aSelectionCheck, aCallback)
       {
         if (document.activeElement) {
           document.activeElement.blur();
@@ -306,21 +306,38 @@
         aElement.focus();
 
         for (let i = 0; i < synthesizedKeys.length; i++) {
-          synthesizeNativeKey.apply(null, synthesizedKeys[i]);
-          aSelectionCheck.call(null, aElement, expectations[i]);
+          synthesizedKeys[i].push(function() {
+            aSelectionCheck.call(null, aElement, expectations[i]);
+            continueTest();
+          });
+          var synthOk = synthesizeNativeKey.apply(null, synthesizedKeys[i]);
+          synthesizedKeys[i].pop();
+          yield synthOk;
         }
       }
 
-      function doTest()
-      {
-        testRun(document.getElementById("editable"), checkWindowSelection);
-        testRun(document.getElementById("textarea"), checkElementSelection);
-        testRun(document.getElementById("input"), checkElementSelection);
-
-        SimpleTest.finish();
+      function* doTest() {
+        yield* testRun(document.getElementById("editable"), checkWindowSelection);
+        yield* testRun(document.getElementById("textarea"), checkElementSelection);
+        yield* testRun(document.getElementById("input"), checkElementSelection);
       }
 
-      SimpleTest.waitForFocus(doTest);
+      let gTestContinuation = null;
+
+      function continueTest()
+      {
+        if (!gTestContinuation) {
+          gTestContinuation = doTest();
+        }
+        var ret = gTestContinuation.next();
+        if (ret.done) {
+          SimpleTest.finish();
+        } else {
+          is(ret.value, true, "Successfully synthesized key");
+        }
+      }
+
+      SimpleTest.waitForFocus(continueTest);
     </script>
   </body>
 </html>

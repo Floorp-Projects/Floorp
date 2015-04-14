@@ -737,11 +737,23 @@ public:
   already_AddRefed<TestInterface> ExerciseTypedefInterfaces2(TestInterface*);
   void ExerciseTypedefInterfaces3(TestInterface&);
 
+  // Deprecated methods and attributes
+  int8_t DeprecatedAttribute();
+  int8_t SetDeprecatedAttribute(int8_t);
+  int8_t DeprecatedMethod();
+  int8_t DeprecatedMethodWithContext(JSContext*, JS::Value);
+
   // Static methods and attributes
   static void StaticMethod(const GlobalObject&, bool);
   static void StaticMethodWithContext(const GlobalObject&, JS::Value);
   static bool StaticAttribute(const GlobalObject&);
   static void SetStaticAttribute(const GlobalObject&, bool);
+
+  // Deprecated static methods and attributes
+  static int8_t StaticDeprecatedAttribute(const GlobalObject&);
+  static int8_t SetStaticDeprecatedAttribute(const GlobalObject&, int8_t);
+  static int8_t StaticDeprecatedMethod(const GlobalObject&);
+  static int8_t StaticDeprecatedMethodWithContext(const GlobalObject&, JS::Value);
 
   // Overload resolution tests
   bool Overload1(TestInterface&);

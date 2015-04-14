@@ -75,7 +75,7 @@ function testDelay() {
     gUtils.advanceTimeAndRefresh(10100);
     waitForAllPaints(function() {
       var opacity = gUtils.getOMTAStyle(target, "opacity");
-      is(opacity, 0.5,
+      is(opacity, "0.5",
          "opacity is set on compositor thread after delayed start");
       target.removeAttribute("style");
       gUtils.restoreNormalRefresh();

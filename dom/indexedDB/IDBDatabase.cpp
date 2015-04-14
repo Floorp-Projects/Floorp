@@ -1284,6 +1284,26 @@ IDBDatabase::NoteFinishedMutableFile(IDBMutableFile* aMutableFile)
 }
 
 void
+IDBDatabase::OnNewFileHandle()
+{
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBackgroundActor);
+
+  mBackgroundActor->SendNewFileHandle();
+}
+
+void
+IDBDatabase::OnFileHandleFinished()
+{
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBackgroundActor);
+
+  mBackgroundActor->SendFileHandleFinished();
+}
+
+void
 IDBDatabase::InvalidateMutableFiles()
 {
   if (!mLiveMutableFiles.IsEmpty()) {

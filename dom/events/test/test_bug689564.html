@@ -31,7 +31,7 @@ is(div.onscroll.toString(), "function onscroll(event) {\ndiv\n}",
 
 div.setAttribute("onpopstate", "div");
 is(window.onpopstate, null, "div should not forward onpopstate");
-is(div.onpopstate, null, "div should not have onpopstate handler");
+is("onpopstate" in div, false, "div should not have onpopstate handler");
 
 var body = document.createElement("body");
 body.setAttribute("onclick", "body");

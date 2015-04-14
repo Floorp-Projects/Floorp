@@ -71,11 +71,11 @@ advance_clock(0);
 
 // flexGrowTwoToThree: 2.0 at 0%, 2.5 at 50%, 10 after animation is over
 var [ div, cs ] = new_div("animation: flexGrowTwoToThree linear 1s");
-is_approx(cs.flexGrow, 2, 0.01, "flexGrowTwoToThree at 0.0s");
+is_approx(+cs.flexGrow, 2, 0.01, "flexGrowTwoToThree at 0.0s");
 advance_clock(500);
-is_approx(cs.flexGrow, 2.5, 0.01, "flexGrowTwoToThree at 0.5s");
+is_approx(+cs.flexGrow, 2.5, 0.01, "flexGrowTwoToThree at 0.5s");
 advance_clock(1000);
-is(cs.flexGrow, 10, "flexGrowTwoToThree at 1.5s");
+is(cs.flexGrow, "10", "flexGrowTwoToThree at 1.5s");
 done_div();
 
 // flexShrinkTwoToThree: 2.0 at 0%, 2.5 at 50%, 20 after animation is over
@@ -84,25 +84,25 @@ is_approx(cs.flexShrink, 2, 0.01,  "flexShrinkTwoToThree at 0.0s");
 advance_clock(500);
 is_approx(cs.flexShrink, 2.5, 0.01, "flexShrinkTwoToThree at 0.5s");
 advance_clock(1000);
-is(cs.flexShrink, 20, "flexShrinkTwoToThree at 1.5s");
+is(cs.flexShrink, "20", "flexShrinkTwoToThree at 1.5s");
 done_div();
 
 // flexGrowZeroToZero: 0 at 0%, 0 at 50%, 10 after animation is over
 [ div, cs ] = new_div("animation: flexGrowZeroToZero linear 1s");
-is(cs.flexGrow, 0, "flexGrowZeroToZero at 0.0s");
+is(cs.flexGrow, "0", "flexGrowZeroToZero at 0.0s");
 advance_clock(500);
-is(cs.flexGrow, 0, "flexGrowZeroToZero at 0.5s");
+is(cs.flexGrow, "0", "flexGrowZeroToZero at 0.5s");
 advance_clock(1000);
-is(cs.flexGrow, 10, "flexGrowZeroToZero at 1.5s");
+is(cs.flexGrow, "10", "flexGrowZeroToZero at 1.5s");
 done_div();
 
 // flexShrinkZeroToZero: 0 at 0%, 0 at 50%, 20 after animation is over
 [ div, cs ] = new_div("animation: flexShrinkZeroToZero linear 1s");
-is(cs.flexShrink, 0, "flexShrinkZeroToZero at 0.0s");
+is(cs.flexShrink, "0", "flexShrinkZeroToZero at 0.0s");
 advance_clock(500);
-is(cs.flexShrink, 0, "flexShrinkZeroToZero at 0.5s");
+is(cs.flexShrink, "0", "flexShrinkZeroToZero at 0.5s");
 advance_clock(1000);
-is(cs.flexShrink, 20, "flexShrinkZeroToZero at 1.5s");
+is(cs.flexShrink, "20", "flexShrinkZeroToZero at 1.5s");
 done_div();
 
 // ANIMATIONS THAT DIDN'T USED TO AFFECT COMPUTED STYLE, BUT NOW DO
@@ -112,38 +112,38 @@ done_div();
 
 // flexGrowZeroToOne: 0 at 0%, 0.5 at 50%, 10 after animation is over.
 [ div, cs ] = new_div("animation: flexGrowZeroToOne linear 1s");
-is(cs.flexGrow, 0, "flexGrowZeroToOne at 0.0s");
+is(cs.flexGrow, "0", "flexGrowZeroToOne at 0.0s");
 advance_clock(500);
-is(cs.flexGrow, 0.5, "flexGrowZeroToOne at 0.5s");
+is(cs.flexGrow, "0.5", "flexGrowZeroToOne at 0.5s");
 advance_clock(1000);
-is(cs.flexGrow, 10, "flexGrowZeroToOne at 1.5s");
+is(cs.flexGrow, "10", "flexGrowZeroToOne at 1.5s");
 done_div();
 
 // flexShrinkZeroToOne: 0 at 0%, 0.5 at 50%, 20 after animation is over.
 [ div, cs ] = new_div("animation: flexShrinkZeroToOne linear 1s");
-is(cs.flexShrink, 0,  "flexShrinkZeroToOne at 0.0s");
+is(cs.flexShrink, "0",  "flexShrinkZeroToOne at 0.0s");
 advance_clock(500);
-is(cs.flexShrink, 0.5, "flexShrinkZeroToOne at 0.5s");
+is(cs.flexShrink, "0.5", "flexShrinkZeroToOne at 0.5s");
 advance_clock(1000);
-is(cs.flexShrink, 20, "flexShrinkZeroToOne at 1.5s");
+is(cs.flexShrink, "20", "flexShrinkZeroToOne at 1.5s");
 done_div();
 
 // flexGrowOneToZero: 1 at 0%, 0.5 at 50%, 10 after animation is over.
 [ div, cs ] = new_div("animation: flexGrowOneToZero linear 1s");
-is(cs.flexGrow, 1, "flexGrowOneToZero at 0.0s");
+is(cs.flexGrow, "1", "flexGrowOneToZero at 0.0s");
 advance_clock(500);
-is(cs.flexGrow, 0.5, "flexGrowOneToZero at 0.5s");
+is(cs.flexGrow, "0.5", "flexGrowOneToZero at 0.5s");
 advance_clock(1000);
-is(cs.flexGrow, 10, "flexGrowOneToZero at 1.5s");
+is(cs.flexGrow, "10", "flexGrowOneToZero at 1.5s");
 done_div();
 
 // flexShrinkOneToZero: 1 at 0%, 0.5 at 50%, 20 after animation is over.
 [ div, cs ] = new_div("animation: flexShrinkOneToZero linear 1s");
-is(cs.flexShrink, 1,  "flexShrinkOneToZero at 0.0s");
+is(cs.flexShrink, "1",  "flexShrinkOneToZero at 0.0s");
 advance_clock(500);
-is(cs.flexShrink, 0.5, "flexShrinkOneToZero at 0.5s");
+is(cs.flexShrink, "0.5", "flexShrinkOneToZero at 0.5s");
 advance_clock(1000);
-is(cs.flexShrink, 20, "flexShrinkOneToZero at 1.5s");
+is(cs.flexShrink, "20", "flexShrinkOneToZero at 1.5s");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

@@ -9,8 +9,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/FileHelper.h"
+#include "mozilla/StaticPtr.h"
 #include "nsClassHashtable.h"
-#include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -20,20 +20,20 @@
 
 class nsAString;
 class nsIEventTarget;
-class nsIOfflineStorage;
 class nsIRunnable;
+class nsThreadPool;
 
 namespace mozilla {
 namespace dom {
 
 class FileHandleBase;
 
-class FileService final : public nsIObserver
+class FileService final
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  friend class nsAutoPtr<FileService>;
+  friend class StaticAutoPtr<FileService>;
 
+public:
   // Returns a non-owning reference!
   static FileService*
   GetOrCreate();
@@ -56,18 +56,11 @@ public:
   NotifyFileHandleCompleted(FileHandleBase* aFileHandle);
 
   void
-  WaitForStoragesToComplete(nsTArray<nsCOMPtr<nsIOfflineStorage> >& aStorages,
+  WaitForStoragesToComplete(nsTArray<nsCString>& aStorageIds,
                             nsIRunnable* aCallback);
 
-  void
-  AbortFileHandlesForStorage(nsIOfflineStorage* aStorage);
-
   nsIEventTarget*
-  StreamTransportTarget()
-  {
-    NS_ASSERTION(mStreamTransportTarget, "This should never be null!");
-    return mStreamTransportTarget;
-  }
+  ThreadPoolTarget() const;
 
 private:
   class FileHandleQueue final : public FileHelperListener
@@ -136,11 +129,6 @@ private:
     CreateDelayedEnqueueInfo(FileHandleBase* aFileHandle,
                              FileHelper* aFileHelper);
 
-    inline void
-    CollectRunningAndDelayedFileHandles(
-                              nsIOfflineStorage* aStorage,
-                              nsTArray<nsRefPtr<FileHandleBase>>& aFileHandles);
-
     void
     LockFileForReading(const nsAString& aFileName)
     {
@@ -178,7 +166,7 @@ private:
 
   struct StoragesCompleteCallback
   {
-    nsTArray<nsCOMPtr<nsIOfflineStorage> > mStorages;
+    nsTArray<nsCString> mStorageIds;
     nsCOMPtr<nsIRunnable> mCallback;
   };
 
@@ -194,7 +182,7 @@ private:
   bool
   MaybeFireCallback(StoragesCompleteCallback& aCallback);
 
-  nsCOMPtr<nsIEventTarget> mStreamTransportTarget;
+  nsRefPtr<nsThreadPool> mThreadPool;
   nsClassHashtable<nsCStringHashKey, StorageInfo> mStorageInfos;
   nsTArray<StoragesCompleteCallback> mCompleteCallbacks;
 };

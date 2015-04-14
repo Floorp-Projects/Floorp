@@ -44,6 +44,10 @@ parent:
 
   Close();
 
+  NewFileHandle();
+
+  FileHandleFinished();
+
   PBackgroundIDBDatabaseFile(PBlob blob);
 
   PBackgroundIDBTransaction(nsString[] objectStoreNames, Mode mode);

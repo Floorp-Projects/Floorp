@@ -14,17 +14,17 @@
 <![CDATA[
 
 var tests = [
-  [["One", "Two", "Three", "Four"], "", ["Four One Three Two"]],
-  [["One", "Two", "Three", "Four"], "integer", ["Four One Three Two"]],
-  [["One", "Two", "Three", "Four"], "descending", ["Two Three One Four"]],
-  [["One", "Two", "Three", "Four"], "descending integer", ["Two Three One Four"]],
-  [["One", "Two", "Three", "Four"], "integer cat descending", ["Two Three One Four"]],
-  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "", ["1 12 13 170 2 2 222 240 7 98"]],
-  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "integer", ["1 2 2 7 12 13 98 170 222 240"]],
-  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "ascending integer", ["1 2 2 7 12 13 98 170 222 240"]],
-  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "integer descending", ["240 222 170 98 13 12 7 2 2 1"]],
-  [["Cat", "cat", "Candy", "candy"], "comparecase", ["Candy Cat candy cat"]],
-  [["1", "102", "22", "One", "40", "Two"], "integer", ["1 22 40 102 One Two"]],
+  [["One", "Two", "Three", "Four"], "", "Four One Three Two"],
+  [["One", "Two", "Three", "Four"], "integer", "Four One Three Two"],
+  [["One", "Two", "Three", "Four"], "descending", "Two Three One Four"],
+  [["One", "Two", "Three", "Four"], "descending integer", "Two Three One Four"],
+  [["One", "Two", "Three", "Four"], "integer cat descending", "Two Three One Four"],
+  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "", "1 12 13 170 2 2 222 240 7 98"],
+  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "integer", "1 2 2 7 12 13 98 170 222 240"],
+  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "ascending integer", "1 2 2 7 12 13 98 170 222 240"],
+  [["1", "13", "2", "7", "12", "240", "2", "170", "222", "98"], "integer descending", "240 222 170 98 13 12 7 2 2 1"],
+  [["Cat", "cat", "Candy", "candy"], "comparecase", "Candy Cat candy cat"],
+  [["1", "102", "22", "One", "40", "Two"], "integer", "1 22 40 102 One Two"],
 ];
 
 SimpleTest.waitForExplicitFinish();

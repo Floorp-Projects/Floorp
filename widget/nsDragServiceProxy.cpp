@@ -9,6 +9,7 @@
 #include "nsISupportsPrimitives.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsContentUtils.h"
 
@@ -62,12 +63,19 @@ nsDragServiceProxy::InvokeDragSession(nsIDOMNode* aDOMNode,
       mozilla::gfx::IntSize size = dataSurface->GetSize();
       mozilla::CheckedInt32 requiredBytes =
         mozilla::CheckedInt32(map.mStride) * mozilla::CheckedInt32(size.height);
-      size_t bufLen = requiredBytes.isValid() ? requiredBytes.value() : 0;
+      size_t maxBufLen = requiredBytes.isValid() ? requiredBytes.value() : 0;
       mozilla::gfx::SurfaceFormat format = dataSurface->GetFormat();
       // Surface data handling is totally nuts. This is the magic one needs to
       // know to access the data.
-      bufLen = bufLen - map.mStride + (size.width * BytesPerPixel(format));
-      nsDependentCString dragImage(reinterpret_cast<char*>(map.mData), bufLen);
+      size_t bufLen =
+        maxBufLen - map.mStride + (size.width * BytesPerPixel(format));
+
+      // nsDependentCString wants null-terminated string.
+      mozilla::UniquePtr<char[]> dragImageData(new char[maxBufLen + 1]);
+      memcpy(dragImageData.get(), reinterpret_cast<char*>(map.mData), bufLen);
+      memset(dragImageData.get() + bufLen, 0, maxBufLen - bufLen + 1);
+      nsDependentCString dragImage(dragImageData.get(), maxBufLen);
+
       mozilla::unused <<
         child->SendInvokeDragSession(dataTransfers, aActionType, dragImage,
                                      size.width, size.height, map.mStride,

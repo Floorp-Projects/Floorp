@@ -763,7 +763,10 @@ const KEYBOARD_LAYOUT_THAI =
 
 /**
  * synthesizeNativeKey() dispatches native key event on active window.
- * This is implemented only on Windows and Mac.
+ * This is implemented only on Windows and Mac. Note that this function
+ * dispatches the key event asynchronously and returns immediately. If a
+ * callback function is provided, the callback will be called upon
+ * completion of the key dispatch.
  *
  * @param aKeyboardLayout       One of KEYBOARD_LAYOUT_* defined above.
  * @param aNativeKeyCode        A native keycode value defined in
@@ -776,12 +779,16 @@ const KEYBOARD_LAYOUT_THAI =
  *                              by the key event.
  * @param aUnmodifiedChars      Specify characters of unmodified (except Shift)
  *                              aChar value.
+ * @param aCallback             If provided, this callback will be invoked
+ *                              once the native keys have been processed
+ *                              by Gecko. Will never be called if this
+ *                              function returns false.
  * @return                      True if this function succeed dispatching
  *                              native key event.  Otherwise, false.
  */
 
 function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
-                             aChars, aUnmodifiedChars)
+                             aChars, aUnmodifiedChars, aCallback)
 {
   var utils = _getDOMWindowUtils(window);
   if (!utils) {
@@ -796,9 +803,17 @@ function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
   if (nativeKeyboardLayout === null) {
     return false;
   }
+
+  var observer = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aCallback && aTopic == "keyevent") {
+        aCallback(aData);
+      }
+    }
+  };
   utils.sendNativeKeyEvent(nativeKeyboardLayout, aNativeKeyCode,
                            _parseNativeModifiers(aModifiers),
-                           aChars, aUnmodifiedChars);
+                           aChars, aUnmodifiedChars, observer);
   return true;
 }
 

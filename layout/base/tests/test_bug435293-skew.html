@@ -142,7 +142,7 @@ function runtests() {
   tformStyle = style.getPropertyValue("-moz-transform");
   tformValues = tformStyle.substring(tformStyle.indexOf('(') + 1,
                                      tformStyle.indexOf(')')).split(',');
-  is(tformValues[0], 1, "Test8: Test skew with negative degrees-param 0 is 1");
+  is((+tformValues[0]), 1, "Test8: Test skew with negative degrees-param 0 is 1");
   ok(verifyRounded(tformValues[1], 3.73206), "Test8: Rounded param 1 is in bounds");
   is((+tformValues[2]), -1, "Test8: param 2 is -1");
   is((+tformValues[3]), 1, "Test8: param 3 is 1");

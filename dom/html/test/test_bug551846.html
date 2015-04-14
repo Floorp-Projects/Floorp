@@ -32,25 +32,25 @@ function checkSizeReflection(element, defaultValue)
   element.setAttribute('size', -15);
   is(element.size, defaultValue,
     "The reflecting IDL attribute should return the default value when content attribute value is invalid");
-  is(element.getAttribute('size'), -15,
+  is(element.getAttribute('size'), "-15",
     "The content attribute should containt the previously set value");
 
   element.setAttribute('size', 0);
   is(element.size, 0,
     "0 should be considered as a valid value");
-  is(element.getAttribute('size'), 0,
+  is(element.getAttribute('size'), "0",
     "The content attribute should containt the previously set value");
 
   element.setAttribute('size', 2147483647); /* PR_INT32_MAX */
   is(element.size, 2147483647,
     "PR_INT32_MAX should be considered as a valid value");
-  is(element.getAttribute('size'), 2147483647,
+  is(element.getAttribute('size'), "2147483647",
     "The content attribute should containt the previously set value");
 
   element.setAttribute('size', -2147483648); /* PR_INT32_MIN */
   is(element.size, defaultValue,
     "The reflecting IDL attribute should return the default value when content attribute value is invalid");
-  is(element.getAttribute('size'), -2147483648,
+  is(element.getAttribute('size'), "-2147483648",
     "The content attribute should containt the previously set value");
 
   element.setAttribute('size', 'non-numerical-value');
@@ -62,13 +62,13 @@ function checkSizeReflection(element, defaultValue)
   element.setAttribute('size', 4294967294); /* PR_INT32_MAX * 2 */
   is(element.size, defaultValue,
     "Value greater than PR_INT32_MAX should be considered as invalid");
-  is(element.getAttribute('size'), 4294967294,
+  is(element.getAttribute('size'), "4294967294",
     "The content attribute should containt the previously set value");
 
   element.setAttribute('size', -4294967296); /* PR_INT32_MIN * 2 */
   is(element.size, defaultValue,
     "The reflecting IDL attribute should return the default value when content attribute value is invalid");
-  is(element.getAttribute('size'), -4294967296,
+  is(element.getAttribute('size'), "-4294967296",
     "The content attribute should containt the previously set value");
 
   element.size = defaultValue + 1;
@@ -135,7 +135,7 @@ function checkSizeWhenChangeMultiple(element, aDefaultNonMultiple, aDefaultMulti
   s.multiple = true;
   is(s.size, aDefaultMultiple, "Size IDL attribute should be 4");
 
-  is(s.getAttribute('size'), -1, "Size content attribute should be -1");
+  is(s.getAttribute('size'), "-1", "Size content attribute should be -1");
 
   s.setAttribute('size', -2);
   is(s.size, aDefaultMultiple, "Size IDL attribute should be 4");
@@ -143,7 +143,7 @@ function checkSizeWhenChangeMultiple(element, aDefaultNonMultiple, aDefaultMulti
   s.multiple = false;
   is(s.size, aDefaultNonMultiple, "Size IDL attribute should be 1");
 
-  is(s.getAttribute('size'), -2, "Size content attribute should be -2");
+  is(s.getAttribute('size'), "-2", "Size content attribute should be -2");
 }
 
 var s = document.getElementById('s');

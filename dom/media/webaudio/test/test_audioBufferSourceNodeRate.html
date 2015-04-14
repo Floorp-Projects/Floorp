@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioBufferSourceNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var rate = 44100;
+var off = new OfflineAudioContext(1, rate, rate);
+var off2 = new OfflineAudioContext(1, rate, rate);
+
+var source = off.createBufferSource();
+var source2 = off2.createBufferSource();
+
+// a buffer of a 440Hz at half the length. If we detune by -1200 or set the
+// playbackRate to 0.5, we should get 44100 samples back with a sine at 220Hz.
+var buf = off.createBuffer(1, rate / 2, rate);
+var bufarray = buf.getChannelData(0);
+for (var i = 0; i < bufarray.length; i++) {
+  bufarray[i] = Math.sin(i * 440 * 2 * Math.PI / rate);
+}
+
+source.buffer = buf;
+source.playbackRate.value = 0.5; // 50% slowdown
+source.connect(off.destination);
+source.start(0);
+
+source2.buffer = buf;
+source2.detune.value = -1200; // one octave -> 50% slowdown
+source2.connect(off2.destination);
+source2.start(0);
+
+var finished = 0;
+function finish() {
+  finished++;
+  if (finished == 2) {
+    SimpleTest.finish();
+  }
+}
+
+off.startRendering().then((renderedPlaybackRate) => {
+  // we don't care about comparing the value here, we just want to know whether
+  // the second part is noisy.
+  var rmsValue = rms(renderedPlaybackRate, 0, 22050);
+  ok(rmsValue != 0, "Resampling happened (rms of the second part " + rmsValue + ")");
+
+  off2.startRendering().then((renderedDetune) => {
+    var rmsValue = rms(renderedDetune, 0, 22050);
+    ok(rmsValue != 0, "Resampling happened (rms of the second part " + rmsValue + ")");
+    // The two buffers should be the same: detune of -1200 is a 50% slowdown
+    compareBuffers(renderedPlaybackRate, renderedDetune);
+    SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

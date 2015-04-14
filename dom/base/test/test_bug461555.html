@@ -26,7 +26,7 @@ function done() {
   nodes = document.getElementsByTagName('span');
   is(nodes.length, 3, "wrong length");
   for (i = 0; i < nodes.length; ++i) {
-    is(nodes[i].textContent, i+1, "wrong order");
+    is(nodes[i].textContent, String(i + 1), "wrong order");
   }
   SimpleTest.finish();
 }

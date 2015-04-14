@@ -102,18 +102,18 @@ function addNewFieldInteger() {
   if (newField) {
     found = true;
     is(newField.type, "number", "Custom type is a number");
-    is(newField.value, 1, "Custom integer value is correct");
+    is(newField.value, "1", "Custom integer value is correct");
   }
   ok(found, "Found new integer field line");
   is(customName.value, "", "Custom integer name reset");
-  is(customValue.value, 0, "Custom integer value reset");
+  is(customValue.value, "", "Custom integer value reset");
 }
 
 let editFieldInteger = Task.async(function*() {
   // Edit existing custom integer preference
   newField.value = 3;
   newField.click();
-  is(newField.value, 3, "Custom integer existing value is correct");
+  is(newField.value, "3", "Custom integer existing value is correct");
 
   // Reset a custom field
   let resetBtn = doc.querySelector("#btn-new-integer-field");

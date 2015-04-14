@@ -63,7 +63,7 @@ function run() {
 
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
-            is(ifwin.getComputedStyle(e, "").zIndex, zi,
+            is(ifwin.getComputedStyle(e, "").zIndex, String(zi),
                "element in " + body_contents + " matched " + selector);
         }
         for (var i = 0; i < should_not_match.length; ++i) {
@@ -83,7 +83,7 @@ function run() {
           namespaceRules + " " + ser1 + "{ z-index: " + zi + " }";
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
-            is(ifwin.getComputedStyle(e, "").zIndex, zi,
+            is(ifwin.getComputedStyle(e, "").zIndex, String(zi),
                "element in " + body_contents + " matched " + ser1 +
                " which is the reserialization of " + selector);
         }

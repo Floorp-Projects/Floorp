@@ -13,7 +13,7 @@
   <input id="testKeyEvent2" onkeydown="return false;" onkeypress="press2 = true">
   <input id="testKeyEvent3" onkeypress="press3 = true">
   <input id="testKeyEvent4" onkeydown="return false;" onkeypress="press4 = true">
-</p
+</p>
 <div id="content" style="display: none">
   
 </div>
@@ -22,13 +22,18 @@
 
 /** Test for sanity  **/
 ok(true, "true must be ok");
-is(1, true, "1 must be true");
+is_loosely(1, true, "1 must loosely be true");
+isnot(1, true, "1 must not be true");
 isnot(1, false, "1 must not be false");
-is(0, false, "0 must be false");
+is_loosely(0, false, "0 must loosely be false");
+isnot(0, false, "0 must not be false");
 isnot(0, true, "0 must not be true");
-is("", 0, "Empty string must be 0");
-is("1", 1, "Numeric string must be equal the number");
+is_loosely("", 0, "Empty string must loosely be 0");
+isnot("", 0, "Empty string must not be 0");
+is_loosely("1", 1, "Numeric string must loosely equal the number");
+isnot("1", 1, "Numeric string must not equal the number");
 isnot("", null, "Empty string must not be null");
+isnot(undefined, null, "Undefined must not be null");
 
 var press1 = false;
 $("testKeyEvent1").focus();

@@ -35,3 +35,7 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/xpcom/threads',
+]

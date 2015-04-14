@@ -311,7 +311,7 @@
     url = new URL("http://localhost/");
     url.host = "[2001::1]:30";
     is(url.hostname, "[2001::1]", "IPv6 hostname");
-    is(url.port, 30, "Port");
+    is(url.port, "30", "Port");
     is(url.host, "[2001::1]:30", "IPv6 host");
 
     url = new URL("http://localhost/");

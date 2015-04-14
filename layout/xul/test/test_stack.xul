@@ -167,7 +167,7 @@
       else
         expectedval = (vertical ? stackRect.top : stackRect.left) + Number(expectedval);
 
-      is(actual, expectedval, child.id + " " + side + (dyn ? " dynamic" : ""));
+      is(+actual, expectedval, child.id + " " + side + (dyn ? " dynamic" : ""));
     }
 
     function runTest()
@@ -245,8 +245,8 @@
           // stack size will be effected by it
           dynStack.appendChild(child);
           stackRect = dynStack.getBoundingClientRect();
-          is(stackRect.width, child.getAttribute("stackwidth"), child.id + " stack width" + (dyn ? " dynamic" : ""));
-          is(stackRect.height, child.getAttribute("stackheight"), child.id + " stack height" + (dyn ? " dynamic" : ""));
+          is(String(stackRect.width), child.getAttribute("stackwidth"), child.id + " stack width" + (dyn ? " dynamic" : ""));
+          is(String(stackRect.height), child.getAttribute("stackheight"), child.id + " stack height" + (dyn ? " dynamic" : ""));
         }
 
         var childrect = child.getBoundingClientRect();
