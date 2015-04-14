@@ -376,7 +376,8 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
     metrics.SetScrollId(viewId);
   }
 
-  if (nsIPresShell* shell = document->GetShell()) {
+  nsIPresShell* shell = document->GetShell();
+  if (shell) {
     if (nsPresContext* context = shell->GetPresContext()) {
       metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(
         (float)nsPresContext::AppUnitsPerCSSPixel() / context->AppUnitsPerDevPixel()));
@@ -389,7 +390,9 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
   // This is the root layer, so the cumulative resolution is the same
   // as the resolution.
   metrics.SetPresShellResolution(metrics.GetCumulativeResolution().ToScaleFactor().scale);
-  utils->SetResolutionAndScaleTo(metrics.GetPresShellResolution());
+  if (shell) {
+    nsLayoutUtils::SetResolutionAndScaleTo(shell, metrics.GetPresShellResolution());
+  }
 
   CSSSize scrollPort = metrics.CalculateCompositedSizeInCssPixels();
   utils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
@@ -919,7 +922,9 @@ TabChild::Observe(nsISupports *aSubject,
         // until we we get an inner size.
         if (HasValidInnerSize()) {
           InitializeRootMetrics();
-          utils->SetResolutionAndScaleTo(mLastRootMetrics.GetPresShellResolution());
+          if (nsIPresShell* shell = doc->GetShell()) {
+            nsLayoutUtils::SetResolutionAndScaleTo(shell, mLastRootMetrics.GetPresShellResolution());
+          }
           HandlePossibleViewportChange(mInnerSize);
         }
       }

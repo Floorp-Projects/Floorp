@@ -2583,6 +2583,27 @@ public:
    */
   static float GetResolution(nsIPresShell* aPresShell);
 
+  /**
+   * Set the resolution at which rescalable web content is drawn,
+   * and scales the content by the amount of the resolution
+   * (see nsIDOMWindowUtils.setResolutionAndScaleTo).
+   */
+  static void SetResolutionAndScaleTo(nsIPresShell* aPresShell, float aResolution);
+
+  /**
+   * Set the scroll port size for the purpose of clamping the scroll position
+   * for the root scroll frame of this document
+   * (see nsIDOMWindowUtils.setScrollPositionClampingScrollPortSize).
+   */
+  static void SetScrollPositionClampingScrollPortSize(nsIPresShell* aPresShell,
+                                                      CSSSize aSize);
+
+  /**
+   * Set the CSS viewport to the given size
+   * (see nsIDOMWindowUtils.setCSSViewport).
+   */
+  static void SetCSSViewport(nsIPresShell* aPresShell, CSSSize aSize);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
