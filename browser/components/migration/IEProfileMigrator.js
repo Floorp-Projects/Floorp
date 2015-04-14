@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
 XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
                                   "resource://gre/modules/WindowsRegistry.jsm");
 
+Cu.importGlobalProperties(["File"]);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers.
 
@@ -410,7 +412,7 @@ Cookies.prototype = {
         aCallback(success);
       }
     }).bind(this), false);
-    fileReader.readAsText(File(aFile));
+    fileReader.readAsText(new File(aFile));
   },
 
   /**
