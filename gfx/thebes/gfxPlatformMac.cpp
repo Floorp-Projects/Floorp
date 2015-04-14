@@ -78,7 +78,8 @@ gfxPlatformMac::gfxPlatformMac()
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) |
                           BackendTypeBit(BackendType::SKIA) |
                           BackendTypeBit(BackendType::COREGRAPHICS);
-    uint32_t contentMask = BackendTypeBit(BackendType::COREGRAPHICS);
+    uint32_t contentMask = BackendTypeBit(BackendType::COREGRAPHICS) |
+                           BackendTypeBit(BackendType::SKIA);
     InitBackendPrefs(canvasMask, BackendType::COREGRAPHICS,
                      contentMask, BackendType::COREGRAPHICS);
 
