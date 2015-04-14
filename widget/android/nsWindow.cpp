@@ -868,7 +868,11 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             nsWindow *target = win->FindWindowForPoint(pt);
             if (target) {
                 // Send the contextmenu event to Gecko.
-                target->OnContextmenuEvent(ae);
+                if (!target->OnContextmenuEvent(ae)) {
+                    // If not consumed, continue as a LongTap, possibly trigger
+                    // Gecko Text Selection Carets.
+                    target->OnLongTapEvent(ae);
+                }
             }
             break;
         }
@@ -1008,7 +1012,7 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
     DispatchEvent(&event);
 }
 
-void
+bool
 nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
 {
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
@@ -1037,7 +1041,35 @@ nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
         WidgetTouchEvent canceltouchEvent = ae->MakeTouchEvent(this);
         canceltouchEvent.message = NS_TOUCH_CANCEL;
         DispatchEvent(&canceltouchEvent);
+        return true;
     }
+
+    return false;
+}
+
+void
+nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
+{
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
+    CSSPoint pt;
+    const nsTArray<nsIntPoint>& points = ae->Points();
+    if (points.Length() > 0) {
+        pt = CSSPoint(points[0].x, points[0].y);
+    }
+
+    // Send the LongTap event to Gecko.
+    WidgetMouseEvent event(true, NS_MOUSE_MOZLONGTAP, this,
+        WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
+    event.button = WidgetMouseEvent::eLeftButton;
+    event.refPoint =
+        RoundedToInt(pt * GetDefaultScale()) - WidgetToScreenOffset();
+    event.clickCount = 1;
+    event.time = ae->Time();
+    event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    event.ignoreRootScrollFrame = true;
+
+    DispatchEvent(&event);
 }
 
 bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)

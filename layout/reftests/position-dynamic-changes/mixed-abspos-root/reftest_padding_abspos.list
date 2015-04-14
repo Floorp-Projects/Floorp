@@ -1,4 +1,4 @@
 # Please see the comment at the beginning of reftest.list
 
-skip-if(Mulet) == mixed-dimentionN.html?padding_abspos mixed-dimentionN-ref.html?padding_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables. # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == mixed-dimentionA.html?padding_abspos mixed-dimentionA-ref.html?padding_abspos # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables. # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== mixed-dimentionN.html?padding_abspos mixed-dimentionN-ref.html?padding_abspos
+== mixed-dimentionA.html?padding_abspos mixed-dimentionA-ref.html?padding_abspos

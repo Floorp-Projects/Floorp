@@ -32,4 +32,4 @@ skip-if(B2G||Mulet) skip-if(gtk2Widget) == quotationmarks-cjk-1.html quotationma
 == url-2.html url-2-ref.html
 == url-3.html url-3-ref.html
 == winpath-1.html winpath-1-ref.html
-skip-if(Mulet) == zwnbsp-1.html zwnbsp-1-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) == zwnbsp-1.html zwnbsp-1-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables

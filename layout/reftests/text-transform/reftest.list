@@ -5,7 +5,7 @@
 == capitalize-5.html capitalize-5-ref.html
 == capitalize-6.html capitalize-6-ref.html
 == capitalize-7.html capitalize-7-ref.html
-skip-if(Mulet) == capitalize-7a.html capitalize-7-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== capitalize-7a.html capitalize-7-ref.html
 == lowercase-1.html lowercase-ref.html
 == lowercase-sigma-1.html lowercase-sigma-1-ref.html
 fails-if(B2G||Mulet) random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if default font supports 'smcp' # Initial mulet triage: parity with B2G/B2G Desktop

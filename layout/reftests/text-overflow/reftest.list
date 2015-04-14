@@ -3,7 +3,7 @@ skip-if(B2G||Mulet) == ellipsis-font-fallback.html ellipsis-font-fallback-ref.ht
 fuzzy-if(Android,16,244) skip-if(B2G||Mulet) HTTP(..) == marker-basic.html marker-basic-ref.html  # Bug 1128229 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) HTTP(..) == marker-string.html marker-string-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
-skip-if(!gtk2Widget) fuzzy-if(gtk2Widget,1,104) skip-if(Mulet) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(!gtk2Widget) fuzzy-if(gtk2Widget,1,104) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
 skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion<15,9,2545) fuzzy-if(Android&&AndroidVersion>=15,24,4000) fuzzy-if(cocoaWidget,1,40) HTTP(..) == scroll-rounding.html scroll-rounding-ref.html # bug 760264 # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy-if(OSX==1008,1,1) HTTP(..) == anonymous-block.html anonymous-block-ref.html
 skip-if(B2G||Mulet) HTTP(..) == false-marker-overlap.html false-marker-overlap-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
@@ -19,7 +19,7 @@ HTTP(..) == marker-shadow.html marker-shadow-ref.html
 skip-if(Android||B2G) == clipped-elements.html clipped-elements-ref.html
 HTTP(..) == theme-overflow.html theme-overflow-ref.html
 skip-if(B2G||Mulet) HTTP(..) == table-cell.html table-cell-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Mulet) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+skip-if(Mulet) HTTP(..) == two-value-syntax.html two-value-syntax-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(B2G||Mulet) HTTP(..) == single-value.html single-value-ref.html  # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy(1,702) skip-if(Android||B2G||Mulet) HTTP(..) == xulscroll.html xulscroll-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

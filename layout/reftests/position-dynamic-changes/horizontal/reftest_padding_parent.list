@@ -1,26 +1,26 @@
 # Please see the comment at the beginning of reftest.list
 
-skip-if(Mulet) == leftN-widthA-rightA.html?padding_parent leftN-widthA-rightA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == leftN-widthA-rightA-2.html?padding_parent leftN-widthA-rightA-2-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == leftN-widthA-rightN.html?padding_parent leftN-widthA-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == leftN-widthA-rightN-2.html?padding_parent leftN-widthA-rightN-2-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== leftN-widthA-rightA.html?padding_parent leftN-widthA-rightA-ref.html?padding_parent
+== leftN-widthA-rightA-2.html?padding_parent leftN-widthA-rightA-2-ref.html?padding_parent
+== leftN-widthA-rightN.html?padding_parent leftN-widthA-rightN-ref.html?padding_parent
+== leftN-widthA-rightN-2.html?padding_parent leftN-widthA-rightN-2-ref.html?padding_parent
 == leftA-widthN-rightA.html?padding_parent leftA-widthN-rightA-ref.html?padding_parent
-skip-if(Mulet) == leftN-widthN-rightA.html?padding_parent leftN-widthN-rightA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == leftA-widthN-rightN.html?padding_parent leftA-widthN-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == leftA-widthA-rightN.html?padding_parent leftA-widthA-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-leftN-widthA-rightA.html?padding_parent toauto-leftN-widthA-rightA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-leftN-widthA-rightA-2.html?padding_parent toauto-leftN-widthA-rightA-2-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-leftN-widthA-rightN.html?padding_parent toauto-leftN-widthA-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-leftN-widthA-rightN-2.html?padding_parent toauto-leftN-widthA-rightN-2-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== leftN-widthN-rightA.html?padding_parent leftN-widthN-rightA-ref.html?padding_parent
+== leftA-widthN-rightN.html?padding_parent leftA-widthN-rightN-ref.html?padding_parent
+== leftA-widthA-rightN.html?padding_parent leftA-widthA-rightN-ref.html?padding_parent
+== toauto-leftN-widthA-rightA.html?padding_parent toauto-leftN-widthA-rightA-ref.html?padding_parent
+== toauto-leftN-widthA-rightA-2.html?padding_parent toauto-leftN-widthA-rightA-2-ref.html?padding_parent
+== toauto-leftN-widthA-rightN.html?padding_parent toauto-leftN-widthA-rightN-ref.html?padding_parent
+== toauto-leftN-widthA-rightN-2.html?padding_parent toauto-leftN-widthA-rightN-2-ref.html?padding_parent
 == toauto-leftA-widthN-rightA.html?padding_parent toauto-leftA-widthN-rightA-ref.html?padding_parent
-skip-if(Mulet) == toauto-leftN-widthN-rightA.html?padding_parent toauto-leftN-widthN-rightA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-leftA-widthN-rightN.html?padding_parent toauto-leftA-widthN-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == toauto-leftA-widthA-rightN.html?padding_parent toauto-leftA-widthA-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-leftN-widthA-rightA.html?padding_parent leftN-widthA-rightA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?padding_parent leftN-widthA-rightA-2-ref.html?padding_parent # Bug 688545 # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-leftN-widthA-rightN.html?padding_parent leftN-widthA-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-leftN-widthA-rightN-2.html?padding_parent leftN-widthA-rightN-2-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== toauto-leftN-widthN-rightA.html?padding_parent toauto-leftN-widthN-rightA-ref.html?padding_parent
+== toauto-leftA-widthN-rightN.html?padding_parent toauto-leftA-widthN-rightN-ref.html?padding_parent
+== toauto-leftA-widthA-rightN.html?padding_parent toauto-leftA-widthA-rightN-ref.html?padding_parent
+== fromauto-leftN-widthA-rightA.html?padding_parent leftN-widthA-rightA-ref.html?padding_parent
+random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?padding_parent leftN-widthA-rightA-2-ref.html?padding_parent # Bug 688545
+== fromauto-leftN-widthA-rightN.html?padding_parent leftN-widthA-rightN-ref.html?padding_parent
+== fromauto-leftN-widthA-rightN-2.html?padding_parent leftN-widthA-rightN-2-ref.html?padding_parent
 == fromauto-leftA-widthN-rightA.html?padding_parent leftA-widthN-rightA-ref.html?padding_parent
-skip-if(Mulet) == fromauto-leftN-widthN-rightA.html?padding_parent leftN-widthN-rightA-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-leftA-widthN-rightN.html?padding_parent leftA-widthN-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
-skip-if(Mulet) == fromauto-leftA-widthA-rightN.html?padding_parent leftA-widthA-rightN-ref.html?padding_parent # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.
+== fromauto-leftN-widthN-rightA.html?padding_parent leftN-widthN-rightA-ref.html?padding_parent
+== fromauto-leftA-widthN-rightN.html?padding_parent leftA-widthN-rightN-ref.html?padding_parent
+== fromauto-leftA-widthA-rightN.html?padding_parent leftA-widthA-rightN-ref.html?padding_parent
