@@ -1999,8 +1999,7 @@ ContentParent::StartForceKillTimer()
         return;
     }
 
-    int32_t timeoutSecs =
-        Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5);
+    int32_t timeoutSecs = Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5);
     if (timeoutSecs > 0) {
         mForceKillTimer = do_CreateInstance("@mozilla.org/timer;1");
         MOZ_ASSERT(mForceKillTimer);
@@ -2828,7 +2827,7 @@ ContentParent::Observe(nsISupports* aSubject,
         // Wait for shutdown to complete, so that we receive any shutdown
         // data (e.g. telemetry) from the child before we quit.
         // This loop terminate prematurely based on mForceKillTimer.
-        while (mIPCOpen) {
+        while (mIPCOpen && !mCalledKillHard) {
             NS_ProcessNextEvent(nullptr, true);
         }
         NS_ASSERTION(!mSubprocess, "Close should have nulled mSubprocess");
