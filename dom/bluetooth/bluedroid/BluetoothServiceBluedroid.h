@@ -505,6 +505,8 @@ protected:
     const nsAString& aPlayStatus);
 
   uint16_t UuidToServiceClassInt(const BluetoothUuid& mUuid);
+
+  static bool IsConnected(const nsAString& aRemoteBdAddr);
 };
 
 END_BLUETOOTH_NAMESPACE

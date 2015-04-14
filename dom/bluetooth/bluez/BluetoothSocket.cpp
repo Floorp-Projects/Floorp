@@ -26,7 +26,9 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
 }
 
 bool
-BluetoothSocket::Connect(const nsACString& aDeviceAddress, int aChannel)
+BluetoothSocket::Connect(const nsAString& aDeviceAddress,
+                         const BluetoothUuid& aServiceUuid,
+                         int aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
@@ -34,7 +36,8 @@ BluetoothSocket::Connect(const nsACString& aDeviceAddress, int aChannel)
   nsAutoPtr<BluetoothUnixSocketConnector> c(
     new BluetoothUnixSocketConnector(mType, aChannel, mAuth, mEncrypt));
 
-  if (!ConnectSocket(c.forget(), aDeviceAddress.BeginReading())) {
+  if (!ConnectSocket(c.forget(),
+                     NS_ConvertUTF16toUTF8(aDeviceAddress).BeginReading())) {
     nsAutoString addr;
     GetAddress(addr);
     BT_LOGD("%s failed. Current connected device address: %s",
@@ -46,7 +49,9 @@ BluetoothSocket::Connect(const nsACString& aDeviceAddress, int aChannel)
 }
 
 bool
-BluetoothSocket::Listen(int aChannel)
+BluetoothSocket::Listen(const nsAString& aServiceName,
+                        const BluetoothUuid& aServiceUuid,
+                        int aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

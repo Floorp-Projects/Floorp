@@ -41,6 +41,9 @@ function testAddContact(aIcc, aType, aPin2) {
 
   return aIcc.updateContact(aType, contact, aPin2)
     .then((aResult) => {
+      is(aResult.id, aIcc.iccInfo.iccid + "5");
+      is(aResult.name[0], "add");
+      is(aResult.tel[0].value, "0912345678");
       // Get ICC contact for checking new contact
       return aIcc.readContacts(aType)
         .then((aResult) => {
@@ -49,6 +52,7 @@ function testAddContact(aIcc, aType, aPin2) {
 
           is(aResult[4].name[0], "add");
           is(aResult[4].tel[0].value, "0912345678");
+          is(aResult[4].id, aIcc.iccInfo.iccid + "5");
         }, (aError) => {
           ok(false, "Cannot get " + aType + " contacts: " + aError.name);
         })
