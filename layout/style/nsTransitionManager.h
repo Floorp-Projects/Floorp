@@ -10,8 +10,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
 
@@ -30,13 +30,14 @@ struct StyleTransition;
 
 namespace mozilla {
 
-struct ElementPropertyTransition : public dom::Animation
+struct ElementPropertyTransition : public dom::KeyframeEffectReadonly
 {
   ElementPropertyTransition(nsIDocument* aDocument,
                             dom::Element* aTarget,
                             nsCSSPseudoElements::Type aPseudoType,
                             const AnimationTiming &aTiming)
-    : dom::Animation(aDocument, aTarget, aPseudoType, aTiming, EmptyString())
+    : dom::KeyframeEffectReadonly(aDocument, aTarget, aPseudoType,
+                                  aTiming, EmptyString())
   { }
 
   virtual ElementPropertyTransition* AsTransition() { return this; }

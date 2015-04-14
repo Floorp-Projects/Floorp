@@ -34,7 +34,7 @@
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 using mozilla::dom::AnimationPlayer;
-using mozilla::dom::Animation;
+using mozilla::dom::KeyframeEffectReadonly;
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -47,7 +47,7 @@ ElementPropertyTransition::Name() const
      const_cast<ElementPropertyTransition*>(this)->mName =
        NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(TransitionProperty()));
    }
-   return dom::Animation::Name();
+   return dom::KeyframeEffectReadonly::Name();
 }
 
 double
@@ -321,12 +321,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     do {
       --i;
       AnimationPlayer* player = players[i];
-      dom::Animation* anim = player->GetSource();
-      MOZ_ASSERT(anim && anim->Properties().Length() == 1,
+      dom::KeyframeEffectReadonly* effect = player->GetSource();
+      MOZ_ASSERT(effect && effect->Properties().Length() == 1,
                  "Should have one animation property for a transition");
-      MOZ_ASSERT(anim && anim->Properties()[0].mSegments.Length() == 1,
+      MOZ_ASSERT(effect && effect->Properties()[0].mSegments.Length() == 1,
                  "Animation property should have one segment for a transition");
-      const AnimationProperty& prop = anim->Properties()[0];
+      const AnimationProperty& prop = effect->Properties()[0];
       const AnimationPropertySegment& segment = prop.mSegments[0];
           // properties no longer in 'transition-property'
       if ((checkProperties &&
