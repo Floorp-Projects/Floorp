@@ -430,8 +430,9 @@ nsresult nsJSChannel::Init(nsIURI *aURI)
     // and the underlying Input Stream will not be created...
     nsCOMPtr<nsIChannel> channel;
 
-    nsCOMPtr<nsIPrincipal> nullPrincipal = nsNullPrincipal::Create();
-    NS_ENSURE_TRUE(nullPrincipal, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPrincipal> nullPrincipal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.

@@ -35,7 +35,6 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsINetworkInterceptController.h"
-#include "nsNullPrincipal.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -753,7 +752,7 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
         if (NS_SUCCEEDED(rv)) {
           if (!equal) {
             // Spec says to set our source origin to a unique origin.
-            mOriginHeaderPrincipal = nsNullPrincipal::Create();
+            mOriginHeaderPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
             if (!mOriginHeaderPrincipal) {
               rv = NS_ERROR_OUT_OF_MEMORY;
             }
