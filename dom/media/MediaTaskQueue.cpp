@@ -10,25 +10,15 @@
 
 namespace mozilla {
 
-ThreadLocal<MediaTaskQueue*> MediaTaskQueue::sCurrentQueueTLS;
-
-/* static */ void
-MediaTaskQueue::InitStatics()
-{
-  if (!sCurrentQueueTLS.init()) {
-    MOZ_CRASH();
-  }
-}
-
 MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool,
                                bool aRequireTailDispatch)
-  : mPool(aPool)
+  : AbstractThread(aRequireTailDispatch)
+  , mPool(aPool)
   , mQueueMonitor("MediaTaskQueue::Queue")
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
   , mIsFlushing(false)
-  , mRequireTailDispatch(aRequireTailDispatch)
 {
   MOZ_COUNT_CTOR(MediaTaskQueue);
 }
@@ -200,7 +190,7 @@ bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
   bool in = NS_GetCurrentThread() == mRunningThread;
-  MOZ_ASSERT_IF(in, GetCurrentQueue() == this);
+  MOZ_ASSERT_IF(in, GetCurrent() == this);
   return in;
 }
 
@@ -266,15 +256,5 @@ MediaTaskQueue::Runner::Run()
 
   return NS_OK;
 }
-
-#ifdef DEBUG
-void
-TaskDispatcher::AssertIsTailDispatcherIfRequired()
-{
-  MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
-  MOZ_ASSERT_IF(currentQueue && currentQueue->RequiresTailDispatch(),
-                this == &currentQueue->TailDispatcher());
-}
-#endif
 
 } // namespace mozilla

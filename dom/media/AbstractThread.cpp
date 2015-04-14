@@ -16,16 +16,20 @@
 namespace mozilla {
 
 StaticRefPtr<AbstractThread> sMainThread;
+ThreadLocal<AbstractThread*> AbstractThread::sCurrentThreadTLS;
 
 class XPCOMThreadWrapper : public AbstractThread
 {
 public:
-  explicit XPCOMThreadWrapper(nsIThread* aTarget) : mTarget(aTarget) {}
+  explicit XPCOMThreadWrapper(nsIThread* aTarget)
+    : AbstractThread(/* aRequireTailDispatch = */ false)
+    , mTarget(aTarget)
+  {}
 
   virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                         DispatchFailureHandling aFailureHandling = AssertDispatchSuccess) override
   {
-    MediaTaskQueue::AssertInTailDispatchIfNeeded();
+    AssertInTailDispatchIfNeeded();
     nsCOMPtr<nsIRunnable> r = aRunnable;
     nsresult rv = mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
@@ -35,9 +39,13 @@ public:
   virtual bool IsCurrentThreadIn() override
   {
     bool in = NS_GetCurrentThread() == mTarget;
-    MOZ_ASSERT_IF(in, MediaTaskQueue::GetCurrentQueue() == nullptr);
+    MOZ_ASSERT_IF(in, GetCurrent() == this);
     return in;
   }
+
+  virtual TaskDispatcher& TailDispatcher() override { MOZ_CRASH("Not implemented!"); }
+
+  virtual bool InTailDispatch() override { MOZ_CRASH("Not implemented!"); }
 
 private:
   nsRefPtr<nsIThread> mTarget;
@@ -47,9 +55,9 @@ void
 AbstractThread::MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
                                   DispatchFailureHandling aFailureHandling)
 {
-  MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
-  if (currentQueue && currentQueue->RequiresTailDispatch()) {
-    currentQueue->TailDispatcher().AddTask(this, Move(aRunnable), aFailureHandling);
+  AbstractThread* current = GetCurrent();
+  if (current && current->RequiresTailDispatch()) {
+    current->TailDispatcher().AddTask(this, Move(aRunnable), aFailureHandling);
   } else {
     Dispatch(Move(aRunnable), aFailureHandling);
   }
@@ -73,6 +81,21 @@ AbstractThread::InitStatics()
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
   sMainThread = new XPCOMThreadWrapper(mainThread.get());
   ClearOnShutdown(&sMainThread);
+
+  if (!sCurrentThreadTLS.init()) {
+    MOZ_CRASH();
+  }
+  sCurrentThreadTLS.set(sMainThread);
 }
+
+#ifdef DEBUG
+void
+TaskDispatcher::AssertIsTailDispatcherIfRequired()
+{
+  AbstractThread* current = AbstractThread::GetCurrent();
+  MOZ_ASSERT_IF(current && current->RequiresTailDispatch(),
+                this == &current->TailDispatcher());
+}
+#endif
 
 } // namespace mozilla
