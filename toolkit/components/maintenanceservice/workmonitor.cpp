@@ -233,11 +233,11 @@ StartUpdateProcess(int argc,
                                   CREATE_DEFAULT_ERROR_MODE,
                                   nullptr,
                                   nullptr, &si, &pi);
-  // Empty value on putenv is how you remove an env variable in Windows
-  putenv(const_cast<char*>("MOZ_USING_SERVICE="));
 
   BOOL updateWasSuccessful = FALSE;
   if (processStarted) {
+    BOOL processTerminated = FALSE;
+    BOOL noProcessExitCode = FALSE;
     // Wait for the updater process to finish
     LOG(("Process was started... waiting on result."));
     DWORD waitRes = WaitForSingleObject(pi.hProcess, TIME_TO_WAIT_ON_UPDATER);
@@ -245,6 +245,7 @@ StartUpdateProcess(int argc,
       // We waited a long period of time for updater.exe and it never finished
       // so kill it.
       TerminateProcess(pi.hProcess, 1);
+      processTerminated = TRUE;
     } else {
       // Check the return code of updater.exe to make sure we get 0
       DWORD returnCode;
@@ -254,6 +255,7 @@ StartUpdateProcess(int argc,
         updateWasSuccessful = (returnCode == 0);
       } else {
         LOG_WARN(("Process finished but could not obtain return code."));
+        noProcessExitCode = TRUE;
       }
     }
     CloseHandle(pi.hProcess);
@@ -264,22 +266,27 @@ StartUpdateProcess(int argc,
     BOOL isApplying = FALSE;
     if (IsStatusApplying(argv[1], isApplying) && isApplying) {
       if (updateWasSuccessful) {
-        LOG(("update.status is still applying even know update "
-             " was successful."));
+        LOG(("update.status is still applying even though update was "
+             "successful."));
         if (!WriteStatusFailure(argv[1],
                                 SERVICE_STILL_APPLYING_ON_SUCCESS)) {
-          LOG_WARN(("Could not write update.status still applying on"
-                    " success error."));
+          LOG_WARN(("Could not write update.status still applying on "
+                    "success error."));
         }
         // Since we still had applying we know updater.exe didn't do its
         // job correctly.
         updateWasSuccessful = FALSE;
       } else {
         LOG_WARN(("update.status is still applying and update was not successful."));
-        if (!WriteStatusFailure(argv[1],
-                                SERVICE_STILL_APPLYING_ON_FAILURE)) {
-          LOG_WARN(("Could not write update.status still applying on"
-                    " success error."));
+        int failcode = SERVICE_STILL_APPLYING_ON_FAILURE;
+        if (noProcessExitCode) {
+          failcode = SERVICE_STILL_APPLYING_NO_EXIT_CODE;
+        } else if (processTerminated) {
+          failcode = SERVICE_STILL_APPLYING_TERMINATED;
+        }
+        if (!WriteStatusFailure(argv[1], failcode)) {
+          LOG_WARN(("Could not write update.status still applying on "
+                    "failure error."));
         }
       }
     }
@@ -321,6 +328,8 @@ StartUpdateProcess(int argc,
       }
     }
   }
+  // Empty value on putenv is how you remove an env variable in Windows
+  putenv(const_cast<char*>("MOZ_USING_SERVICE="));
 
   free(cmdLine);
   return updateWasSuccessful;
