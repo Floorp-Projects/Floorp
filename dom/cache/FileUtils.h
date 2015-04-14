@@ -19,36 +19,51 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-nsresult
-BodyCreateDir(nsIFile* aBaseDir);
+// TODO: remove static class and use functions in cache namespace (bug 1110485)
+class FileUtils final
+{
+public:
+  enum BodyFileType
+  {
+    BODY_FILE_FINAL,
+    BODY_FILE_TMP
+  };
 
-// Note that this function can only be used during the initialization of the
-// database.  We're unlikely to be able to delete the DB successfully past
-// that point due to the file being in use.
-nsresult
-BodyDeleteDir(nsIFile* aBaseDir);
+  static nsresult BodyCreateDir(nsIFile* aBaseDir);
+  // Note that this function can only be used during the initialization of the
+  // database.  We're unlikely to be able to delete the DB successfully past
+  // that point due to the file being in use.
+  static nsresult BodyDeleteDir(nsIFile* aBaseDir);
+  static nsresult BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
+                                  nsIFile** aCacheDirOut);
 
-nsresult
-BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId, nsIFile** aCacheDirOut);
+  static nsresult
+  BodyStartWriteStream(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                       nsIInputStream* aSource, void* aClosure,
+                       nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
+                       nsISupports** aCopyContextOut);
 
-nsresult
-BodyStartWriteStream(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                     nsIInputStream* aSource, void* aClosure,
-                     nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
-                     nsISupports** aCopyContextOut);
+  static void
+  BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext);
 
-void
-BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext);
+  static nsresult
+  BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId);
 
-nsresult
-BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId);
+  static nsresult
+  BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
+           nsIInputStream** aStreamOut);
 
-nsresult
-BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
-         nsIInputStream** aStreamOut);
+  static nsresult
+  BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList);
 
-nsresult
-BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList);
+private:
+  static nsresult
+  BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
+               nsIFile** aBodyFileOut);
+
+  FileUtils() = delete;
+  ~FileUtils() = delete;
+};
 
 } // namespace cache
 } // namespace dom
