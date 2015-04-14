@@ -27,9 +27,10 @@ public:
   {}
 
   virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        DispatchFailureHandling aFailureHandling = AssertDispatchSuccess) override
+                        DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
+                        DispatchReason aReason = NormalDispatch) override
   {
-    AssertInTailDispatchIfNeeded();
+    MOZ_ASSERT_IF(aReason != TailDispatch, !CurrentThreadRequiresTailDispatch());
     nsCOMPtr<nsIRunnable> r = aRunnable;
     nsresult rv = mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
@@ -44,7 +45,6 @@ public:
   }
 
   virtual TaskDispatcher& TailDispatcher() override { MOZ_CRASH("Not implemented!"); }
-
   virtual bool InTailDispatch() override { MOZ_CRASH("Not implemented!"); }
 
 private:

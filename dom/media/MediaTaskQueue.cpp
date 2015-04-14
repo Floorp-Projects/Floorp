@@ -39,8 +39,10 @@ MediaTaskQueue::TailDispatcher()
 }
 
 nsresult
-MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable, DispatchMode aMode)
+MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
+                               DispatchMode aMode, DispatchReason aReason)
 {
+  MOZ_ASSERT_IF(aReason != TailDispatch, !CurrentThreadRequiresTailDispatch());
   mQueueMonitor.AssertCurrentThreadOwns();
   nsCOMPtr<nsIRunnable> r = aRunnable;
   if (mIsFlushing && aMode == AbortIfFlushing) {
@@ -155,7 +157,6 @@ FlushableMediaTaskQueue::Flush()
 nsresult
 FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
-  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
   FlushLocked();
