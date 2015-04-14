@@ -23,7 +23,14 @@ make $make_flags || exit 1
 make install $make_flags DESTDIR=$root_dir || exit 1
 cd ..
 
+case "$gcc_version" in
+*-*)
+  wget -c -P $TMPDIR ftp://gcc.gnu.org/pub/gcc/snapshots/$gcc_version/gcc-$gcc_version.tar.bz2 || exit 1
+  ;;
+*)
   wget -c -P $TMPDIR ftp://ftp.gnu.org/gnu/gcc/gcc-$gcc_version/gcc-$gcc_version.tar.bz2 || exit 1
+  ;;
+esac
 tar xjf $TMPDIR/gcc-$gcc_version.tar.bz2
 cd gcc-$gcc_version
 
