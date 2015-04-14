@@ -58,7 +58,7 @@
     if (finished) {
       return;
     }
-    is(iframe.location, "about:blank", "Wrong url!");
+    is(String(iframe.location), "about:blank", "Wrong url!");
     is(suspended, true, "Not suspended?");
     is(resumed, false, "Already resumed?!");
     is(lastCount, oldMessageCount, "Received a message while suspended!");
@@ -81,7 +81,7 @@
     if (finished) {
       return;
     }
-    is(iframe.location, "about:blank", "Wrong url!");
+    is(String(iframe.location), "about:blank", "Wrong url!");
     is(suspended, false, "Already suspended?");
     is(resumed, false, "Already resumed?");
     setCachePref(false);

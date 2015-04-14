@@ -270,13 +270,14 @@ SimpleTest.ok = function (condition, name, diag) {
 };
 
 /**
- * Roughly equivalent to ok(a==b, name)
+ * Roughly equivalent to ok(a===b, name)
 **/
 SimpleTest.is = function (a, b, name) {
-    var pass = (a == b);
+    var pass = (a === b);
     var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b)
     SimpleTest.ok(pass, name, diag);
 };
+SimpleTest.ise = SimpleTest.is;
 
 SimpleTest.isfuzzy = function (a, b, epsilon, name) {
   var pass = (a >= b - epsilon) && (a <= b + epsilon);
@@ -285,17 +286,17 @@ SimpleTest.isfuzzy = function (a, b, epsilon, name) {
 };
 
 SimpleTest.isnot = function (a, b, name) {
-    var pass = (a != b);
+    var pass = (a !== b);
     var diag = pass ? "" : "didn't expect " + repr(a) + ", but got it";
     SimpleTest.ok(pass, name, diag);
 };
 
 /**
- * Roughly equivalent to ok(a===b, name)
+ * Roughly equivalent to ok(a==b, name)
 **/
-SimpleTest.ise = function (a, b, name) {
-    var pass = (a === b);
-    var diag = pass ? "" : "got " + repr(a) + ", strictly expected " + repr(b)
+SimpleTest.is_loosely = function (a, b, name) {
+    var pass = (a == b);
+    var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b)
     SimpleTest.ok(pass, name, diag);
 };
 
@@ -412,14 +413,14 @@ SimpleTest.info = function(name, message) {
 **/
 
 SimpleTest.todo_is = function (a, b, name) {
-    var pass = (a == b);
+    var pass = (a === b);
     var diag = pass ? repr(a) + " should equal " + repr(b)
                     : "got " + repr(a) + ", expected " + repr(b);
     SimpleTest.todo(pass, name, diag);
 };
 
 SimpleTest.todo_isnot = function (a, b, name) {
-    var pass = (a != b);
+    var pass = (a !== b);
     var diag = pass ? repr(a) + " should not equal " + repr(b)
                     : "didn't expect " + repr(a) + ", but got it";
     SimpleTest.todo(pass, name, diag);
@@ -1453,6 +1454,7 @@ var is = SimpleTest.is;
 var isfuzzy = SimpleTest.isfuzzy;
 var isnot = SimpleTest.isnot;
 var ise = SimpleTest.ise;
+var is_loosely = SimpleTest.is_loosely;
 var todo = SimpleTest.todo;
 var todo_is = SimpleTest.todo_is;
 var todo_isnot = SimpleTest.todo_isnot;

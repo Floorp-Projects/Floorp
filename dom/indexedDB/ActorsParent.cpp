@@ -29,6 +29,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FileService.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBCursorParent.h"
@@ -5452,6 +5453,66 @@ private:
                                       override;
 };
 
+class WaitForTransactionsHelper final
+  : public nsRunnable
+{
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+  const nsCString mDatabaseId;
+  nsCOMPtr<nsIRunnable> mCallback;
+
+  enum
+  {
+    State_Initial = 0,
+    State_WaitingForTransactions,
+    State_DispatchToMainThread,
+    State_WaitingForFileHandles,
+    State_DispatchToOwningThread,
+    State_Complete
+  } mState;
+
+public:
+  WaitForTransactionsHelper(const nsCString& aDatabaseId,
+                            nsIRunnable* aCallback)
+    : mOwningThread(NS_GetCurrentThread())
+    , mDatabaseId(aDatabaseId)
+    , mCallback(aCallback)
+    , mState(State_Initial)
+  {
+    AssertIsOnBackgroundThread();
+    MOZ_ASSERT(!aDatabaseId.IsEmpty());
+    MOZ_ASSERT(aCallback);
+  }
+
+  void
+  WaitForTransactions();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+private:
+  ~WaitForTransactionsHelper()
+  {
+    MOZ_ASSERT(!mCallback);
+    MOZ_ASSERT(mState = State_Complete);
+  }
+
+  void
+  MaybeWaitForTransactions();
+
+  void
+  DispatchToMainThread();
+
+  void
+  MaybeWaitForFileHandles();
+
+  void
+  DispatchToOwningThread();
+
+  void
+  CallCallback();
+
+  NS_DECL_NSIRUNNABLE
+};
+
 class Database final
   : public PBackgroundIDBDatabaseParent
 {
@@ -5471,6 +5532,7 @@ private:
   const nsCString mOrigin;
   const nsCString mId;
   const nsString mFilePath;
+  uint32_t mFileHandleCount;
   const PersistenceType mPersistenceType;
   const bool mChromeWriteAccessAllowed;
   bool mClosed;
@@ -5651,7 +5713,7 @@ private:
   CloseInternal();
 
   void
-  CloseConnection();
+  MaybeCloseConnection();
 
   void
   ConnectionClosedCallback();
@@ -5711,6 +5773,12 @@ private:
 
   virtual bool
   RecvClose() override;
+
+  virtual bool
+  RecvNewFileHandle() override;
+
+  virtual bool
+  RecvFileHandleFinished() override;
 };
 
 class Database::StartTransactionOp final
@@ -6334,11 +6402,11 @@ protected:
     State_DatabaseWorkVersionChange,
 
     // Waiting to send/sending results on the PBackground thread. Next step is
-    // UnblockingQuotaManager.
+    // State_UnblockingQuotaManager.
     State_SendingResults,
 
     // Notifying the QuotaManager that it can proceed to the next operation on
-    // the main thread. Next step is Completed.
+    // the main thread. Next step is State_Completed.
     State_UnblockingQuotaManager,
 
     // All done.
@@ -7630,8 +7698,8 @@ private:
 class QuotaClient final
   : public mozilla::dom::quota::Client
 {
-  class ShutdownTransactionThreadPoolRunnable;
-  friend class ShutdownTransactionThreadPoolRunnable;
+  class ShutdownWorkThreadsRunnable;
+  friend class ShutdownWorkThreadsRunnable;
 
   class WaitForTransactionsRunnable;
   friend class WaitForTransactionsRunnable;
@@ -7639,7 +7707,7 @@ class QuotaClient final
   static QuotaClient* sInstance;
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
-  nsRefPtr<ShutdownTransactionThreadPoolRunnable> mShutdownRunnable;
+  nsRefPtr<ShutdownWorkThreadsRunnable> mShutdownRunnable;
 
   bool mShutdownRequested;
 
@@ -7710,18 +7778,12 @@ public:
   virtual void
   ReleaseIOThreadObjects() override;
 
-  virtual bool
-  IsFileServiceUtilized() override;
-
-  virtual bool
-  IsTransactionServiceActivated() override;
-
   virtual void
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
                             nsIRunnable* aCallback) override;
 
   virtual void
-  ShutdownTransactionService() override;
+  ShutdownWorkThreads() override;
 
 private:
   ~QuotaClient();
@@ -7737,7 +7799,7 @@ private:
                                bool aDatabaseFiles);
 };
 
-class QuotaClient::ShutdownTransactionThreadPoolRunnable final
+class QuotaClient::ShutdownWorkThreadsRunnable final
   : public nsRunnable
 {
   nsRefPtr<QuotaClient> mQuotaClient;
@@ -7745,7 +7807,7 @@ class QuotaClient::ShutdownTransactionThreadPoolRunnable final
 
 public:
 
-  explicit ShutdownTransactionThreadPoolRunnable(QuotaClient* aQuotaClient)
+  explicit ShutdownWorkThreadsRunnable(QuotaClient* aQuotaClient)
     : mQuotaClient(aQuotaClient)
     , mHasRequestedShutDown(false)
   {
@@ -7758,7 +7820,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
-  ~ShutdownTransactionThreadPoolRunnable()
+  ~ShutdownWorkThreadsRunnable()
   {
     MOZ_ASSERT(!mQuotaClient);
   }
@@ -7777,7 +7839,8 @@ class QuotaClient::WaitForTransactionsRunnable final
   {
     State_Initial = 0,
     State_WaitingForTransactions,
-    State_CallingCallback,
+    State_DispatchToMainThread,
+    State_WaitingForFileHandles,
     State_Complete
   } mState;
 
@@ -7809,10 +7872,13 @@ private:
   }
 
   void
-  MaybeWait();
+  MaybeWaitForTransactions();
 
   void
-  SendToMainThread();
+  DispatchToMainThread();
+
+  void
+  MaybeWaitForFileHandles();
 
   void
   CallCallback();
@@ -11239,6 +11305,135 @@ Factory::DeallocPBackgroundIDBDatabaseParent(
 }
 
 /*******************************************************************************
+ * WaitForTransactionsHelper
+ ******************************************************************************/
+
+void
+WaitForTransactionsHelper::WaitForTransactions()
+{
+  MOZ_ASSERT(mState == State_Initial);
+
+  unused << this->Run();
+}
+
+void
+WaitForTransactionsHelper::MaybeWaitForTransactions()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_Initial);
+
+  nsRefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
+  if (connectionPool) {
+    nsTArray<nsCString> ids(1);
+    ids.AppendElement(mDatabaseId);
+
+    mState = State_WaitingForTransactions;
+
+    connectionPool->WaitForDatabasesToComplete(Move(ids), this);
+    return;
+  }
+
+  DispatchToMainThread();
+}
+
+void
+WaitForTransactionsHelper::DispatchToMainThread()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_Initial || mState == State_WaitingForTransactions);
+
+  mState = State_DispatchToMainThread;
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+}
+
+void
+WaitForTransactionsHelper::MaybeWaitForFileHandles()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State_DispatchToMainThread);
+
+  FileService* service = FileService::Get();
+  if (service) {
+    nsTArray<nsCString> ids(1);
+    ids.AppendElement(mDatabaseId);
+
+    mState = State_WaitingForFileHandles;
+
+    service->WaitForStoragesToComplete(ids, this);
+
+    MOZ_ASSERT(ids.IsEmpty());
+    return;
+  }
+
+  DispatchToOwningThread();
+}
+
+void
+WaitForTransactionsHelper::DispatchToOwningThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State_DispatchToMainThread ||
+             mState == State_WaitingForFileHandles);
+
+  mState = State_DispatchToOwningThread;
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(this,
+                                                       NS_DISPATCH_NORMAL)));
+}
+
+void
+WaitForTransactionsHelper::CallCallback()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_DispatchToOwningThread);
+
+  nsCOMPtr<nsIRunnable> callback;
+  mCallback.swap(callback);
+
+  callback->Run();
+
+  mState = State_Complete;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(WaitForTransactionsHelper,
+                             nsRunnable)
+
+NS_IMETHODIMP
+WaitForTransactionsHelper::Run()
+{
+  MOZ_ASSERT(mState != State_Complete);
+  MOZ_ASSERT(mCallback);
+
+  switch (mState) {
+    case State_Initial:
+      MaybeWaitForTransactions();
+      break;
+
+    case State_WaitingForTransactions:
+      DispatchToMainThread();
+      break;
+
+    case State_DispatchToMainThread:
+      MaybeWaitForFileHandles();
+      break;
+
+    case State_WaitingForFileHandles:
+      DispatchToOwningThread();
+      break;
+
+    case State_DispatchToOwningThread:
+      CallCallback();
+      break;
+
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  return NS_OK;
+}
+
+/*******************************************************************************
  * Database
  ******************************************************************************/
 
@@ -11259,6 +11454,7 @@ Database::Database(Factory* aFactory,
   , mOrigin(aOrigin)
   , mId(aMetadata->mDatabaseId)
   , mFilePath(aMetadata->mFilePath)
+  , mFileHandleCount(0)
   , mPersistenceType(aMetadata->mCommonMetadata.persistenceType())
   , mChromeWriteAccessAllowed(aChromeWriteAccessAllowed)
   , mClosed(false)
@@ -11404,9 +11600,7 @@ Database::UnregisterTransaction(TransactionBase* aTransaction)
 
   mTransactions.RemoveEntry(aTransaction);
 
-  if (!mTransactions.Count() && IsClosed() && mOfflineStorage) {
-    CloseConnection();
-  }
+  MaybeCloseConnection();
 }
 
 void
@@ -11455,31 +11649,28 @@ Database::CloseInternal()
 
   if (mOfflineStorage) {
     mOfflineStorage->CloseOnOwningThread();
-
-    if (!mTransactions.Count()) {
-      CloseConnection();
-    }
   }
+
+  MaybeCloseConnection();
 
   return true;
 }
 
 void
-Database::CloseConnection()
+Database::MaybeCloseConnection()
 {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mClosed);
-  MOZ_ASSERT(!mTransactions.Count());
 
-  if (gConnectionPool) {
-    nsTArray<nsCString> ids(1);
-    ids.AppendElement(Id());
-
+  if (!mTransactions.Count() &&
+      !mFileHandleCount &&
+      IsClosed() &&
+      mOfflineStorage) {
     nsCOMPtr<nsIRunnable> callback =
       NS_NewRunnableMethod(this, &Database::ConnectionClosedCallback);
-    gConnectionPool->WaitForDatabasesToComplete(Move(ids), callback);
-  } else {
-    ConnectionClosedCallback();
+
+    nsRefPtr<WaitForTransactionsHelper> helper =
+      new WaitForTransactionsHelper(Id(), callback);
+    helper->WaitForTransactions();
   }
 }
 
@@ -11489,6 +11680,7 @@ Database::ConnectionClosedCallback()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mTransactions.Count());
+  MOZ_ASSERT(!mFileHandleCount);
 
   if (mOfflineStorage) {
     DatabaseOfflineStorage::UnregisterOnOwningThread(mOfflineStorage.forget());
@@ -11800,6 +11992,43 @@ Database::RecvClose()
     ASSERT_UNLESS_FUZZING();
     return false;
   }
+
+  return true;
+}
+
+bool
+Database::RecvNewFileHandle()
+{
+  AssertIsOnBackgroundThread();
+
+  if (!mOfflineStorage) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  if (mFileHandleCount == UINT32_MAX) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  ++mFileHandleCount;
+
+  return true;
+}
+
+bool
+Database::RecvFileHandleFinished()
+{
+  AssertIsOnBackgroundThread();
+
+  if (mFileHandleCount == 0) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
+  }
+
+  --mFileHandleCount;
+
+  MaybeCloseConnection();
 
   return true;
 }
@@ -14761,22 +14990,6 @@ QuotaClient::ReleaseIOThreadObjects()
   }
 }
 
-bool
-QuotaClient::IsFileServiceUtilized()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return true;
-}
-
-bool
-QuotaClient::IsTransactionServiceActivated()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return true;
-}
-
 void
 QuotaClient::WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
                                        nsIRunnable* aCallback)
@@ -14827,7 +15040,7 @@ QuotaClient::WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
 }
 
 void
-QuotaClient::ShutdownTransactionService()
+QuotaClient::ShutdownWorkThreads()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mShutdownRunnable);
@@ -14836,8 +15049,8 @@ QuotaClient::ShutdownTransactionService()
   mShutdownRequested = true;
 
   if (mBackgroundThread) {
-    nsRefPtr<ShutdownTransactionThreadPoolRunnable> runnable =
-      new ShutdownTransactionThreadPoolRunnable(this);
+    nsRefPtr<ShutdownWorkThreadsRunnable> runnable =
+      new ShutdownWorkThreadsRunnable(this);
 
     if (NS_FAILED(mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
       // This can happen if the thread has shut down already.
@@ -14853,6 +15066,8 @@ QuotaClient::ShutdownTransactionService()
       MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
     }
   }
+
+  FileService::Shutdown();
 }
 
 nsresult
@@ -14977,7 +15192,7 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
 
 void
 QuotaClient::
-WaitForTransactionsRunnable::MaybeWait()
+WaitForTransactionsRunnable::MaybeWaitForTransactions()
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_Initial);
@@ -14985,27 +15200,52 @@ WaitForTransactionsRunnable::MaybeWait()
 
   nsRefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
   if (connectionPool) {
+    // Have to copy here in case the file service needs a list too.
+    nsTArray<nsCString> databaseIds(mDatabaseIds);
+
     mState = State_WaitingForTransactions;
 
-    connectionPool->WaitForDatabasesToComplete(Move(mDatabaseIds), this);
+    connectionPool->WaitForDatabasesToComplete(Move(databaseIds), this);
+    return;
+  }
+
+  DispatchToMainThread();
+}
+
+void
+QuotaClient::
+WaitForTransactionsRunnable::DispatchToMainThread()
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_Initial || mState == State_WaitingForTransactions);
+
+  mState = State_DispatchToMainThread;
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+}
+
+void
+QuotaClient::
+WaitForTransactionsRunnable::MaybeWaitForFileHandles()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mState == State_DispatchToMainThread);
+
+  FileService* service = FileService::Get();
+  if (service) {
+    mState = State_WaitingForFileHandles;
+
+    service->WaitForStoragesToComplete(mDatabaseIds, this);
+
+    MOZ_ASSERT(mDatabaseIds.IsEmpty());
     return;
   }
 
   mDatabaseIds.Clear();
 
-  SendToMainThread();
-}
+  mState = State_WaitingForFileHandles;
 
-void
-QuotaClient::
-WaitForTransactionsRunnable::SendToMainThread()
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mState == State_Initial || mState == State_WaitingForTransactions);
-
-  mState = State_CallingCallback;
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+  CallCallback();
 }
 
 void
@@ -15013,7 +15253,7 @@ QuotaClient::
 WaitForTransactionsRunnable::CallCallback()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == State_CallingCallback);
+  MOZ_ASSERT(mState == State_WaitingForFileHandles);
 
   nsRefPtr<QuotaClient> quotaClient;
   mQuotaClient.swap(quotaClient);
@@ -15038,14 +15278,18 @@ WaitForTransactionsRunnable::Run()
 
   switch (mState) {
     case State_Initial:
-      MaybeWait();
+      MaybeWaitForTransactions();
       break;
 
     case State_WaitingForTransactions:
-      SendToMainThread();
+      DispatchToMainThread();
       break;
 
-    case State_CallingCallback:
+    case State_DispatchToMainThread:
+      MaybeWaitForFileHandles();
+      break;
+
+    case State_WaitingForFileHandles:
       CallCallback();
       break;
 
@@ -15056,12 +15300,12 @@ WaitForTransactionsRunnable::Run()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(QuotaClient::ShutdownTransactionThreadPoolRunnable,
+NS_IMPL_ISUPPORTS_INHERITED0(QuotaClient::ShutdownWorkThreadsRunnable,
                              nsRunnable)
 
 NS_IMETHODIMP
 QuotaClient::
-ShutdownTransactionThreadPoolRunnable::Run()
+ShutdownWorkThreadsRunnable::Run()
 {
   if (NS_IsMainThread()) {
     MOZ_ASSERT(mHasRequestedShutDown);
@@ -16346,16 +16590,11 @@ FactoryOp::WaitForTransactions()
   nsTArray<nsCString> databaseIds;
   databaseIds.AppendElement(mDatabaseId);
 
-  nsRefPtr<ConnectionPool> connectionPool = gConnectionPool.get();
-  MOZ_ASSERT(connectionPool);
-
-  // WaitForDatabasesToComplete() will run this op immediately if there are no
-  // transactions blocking it, so be sure to set the next state here before
-  // calling it.
   mState = State_WaitingForTransactionsToComplete;
 
-  connectionPool->WaitForDatabasesToComplete(Move(databaseIds), this);
-  return;
+  nsRefPtr<WaitForTransactionsHelper> helper =
+    new WaitForTransactionsHelper(mDatabaseId, this);
+  helper->WaitForTransactions();
 }
 
 void
@@ -17643,17 +17882,12 @@ OpenDatabaseOp::SendResults()
   if (NS_FAILED(mResultCode) && mOfflineStorage) {
     mOfflineStorage->CloseOnOwningThread();
 
-    if (gConnectionPool) {
-      nsTArray<nsCString> ids(1);
-      ids.AppendElement(mDatabaseId);
+    nsCOMPtr<nsIRunnable> callback =
+      NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
 
-      nsCOMPtr<nsIRunnable> callback =
-        NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
-
-      gConnectionPool->WaitForDatabasesToComplete(Move(ids), callback);
-    } else {
-      ConnectionClosedCallback();
-    }
+    nsRefPtr<WaitForTransactionsHelper> helper =
+      new WaitForTransactionsHelper(mDatabaseId, callback);
+    helper->WaitForTransactions();
   }
 
   // Make sure to release the database on this thread.

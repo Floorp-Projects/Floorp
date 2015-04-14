@@ -55,8 +55,8 @@ function install(next) {
     ok(app.installTime <= Date.now() + fuzzySpan, "install time is before install success");
     is(app.manifestURL, url, "manifest URL");
     is(app.manifest.name, "Basic App", "manifest.name");
-    is(app.manifest.installs_allowed_from, "*",
-       "manifest.installs_allowed_from");
+    is(app.manifest.installs_allowed_from.length, 1, "allowed-from length must be 1");
+    is(app.manifest.installs_allowed_from[0], "*", "allowed from anywhere");
 
     next();
   }

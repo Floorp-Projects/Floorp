@@ -576,7 +576,7 @@ function test_hCard() {
   hcard = new hCard(document.getElementById("01-tantek-basic"));
 
   is(hcard.fn, "Tantek Çelik", "01-tantek-basic - fn");
-  is(hcard.url, "http://tantek.com/", "01-tantek-basic - url");
+  is(String(hcard.url), "http://tantek.com/", "01-tantek-basic - url");
   is(hcard.n["given-name"][0], "Tantek", "01-tantek-basic - given-name");
   is(hcard.n["family-name"][0], "Çelik", "01-tantek-basic - family-name");
   is(hcard.org[0]["organization-name"], "Technorati", "01-tantek-basic - organization-name");
@@ -683,7 +683,7 @@ function test_hCard() {
   is(hcard.n["given-name"][0], "John", "07-relative-url - given-name");
   is(hcard.n["family-name"][0], "Doe", "07-relative-url - family-name");
 //  is(hcard.url[0], "http://microformats.org/home/blah", "07-relative-url - url");
-  is(hcard.url, "http://mochi.test:8888/home/blah", "07-relative-url - url");
+  is(String(hcard.url), "http://mochi.test:8888/home/blah", "07-relative-url - url");
 
   hcard = new hCard(document.getElementById("11-multiple-urls"));
 
@@ -705,25 +705,25 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "13-photo-logo - fn");
   is(hcard.n["given-name"][0], "John", "13-photo-logo - given-name");
   is(hcard.n["family-name"][0], "Doe", "13-photo-logo - family-name");
-  is(hcard.logo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - logo");
-  is(hcard.photo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - photo");
+  is(String(hcard.logo), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - logo");
+  is(String(hcard.photo), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "13-photo-logo - photo");
 
   hcard = new hCard(document.getElementById("14-img-src-data-url"));
 
   is(hcard.fn, "John Doe", "14-img-src-data-url - fn");
   is(hcard.n["given-name"][0], "John", "14-img-src-data-url - given-name");
   is(hcard.n["family-name"][0], "Doe", "14-img-src-data-url - family-name");
-  is(hcard.logo, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "14-img-src-data-url - logo");
-  is(hcard.photo, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "14-img-src-data-url - photo");
+  is(String(hcard.logo), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "14-img-src-data-url - logo");
+  is(String(hcard.photo), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "14-img-src-data-url - photo");
 
   hcard = new hCard(document.getElementById("15-honorific-additional-single"));
 
   is(hcard.fn, "Mr. John Maurice Doe, Ph.D.", "15-honorific-additional-single - fn");
   is(hcard.n["given-name"][0], "John", "15-honorific-additional-single - given-name");
   is(hcard.n["family-name"][0], "Doe", "15-honorific-additional-single - family-name");
-  is(hcard.n["honorific-prefix"], "Mr.", "15-honorific-additional-single - honorific-prefix");
-  is(hcard.n["additional-name"], "Maurice", "15-honorific-additional-single - additional-name");
-  is(hcard.n["honorific-suffix"], "Ph.D.", "15-honorific-additional-single - honorific-suffix");
+  is(String(hcard.n["honorific-prefix"]), "Mr.", "15-honorific-additional-single - honorific-prefix");
+  is(String(hcard.n["additional-name"]), "Maurice", "15-honorific-additional-single - additional-name");
+  is(String(hcard.n["honorific-suffix"]), "Ph.D.", "15-honorific-additional-single - honorific-suffix");
 
   hcard = new hCard(document.getElementById("16-honorific-additional-multiple"));
 
@@ -749,17 +749,17 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "18-object-data-http-uri - fn");
   is(hcard.n["given-name"][0], "John", "18-object-data-http-uri - given-name");
   is(hcard.n["family-name"][0], "Doe", "18-object-data-http-uri - family-name");
-  is(hcard.logo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - logo");
-  is(hcard.photo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - photo");
-  is(hcard.url, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - url");
+  is(String(hcard.logo), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - logo");
+  is(String(hcard.photo), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - photo");
+  is(String(hcard.url), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "18-object-data-http-uri - url");
 
   hcard = new hCard(document.getElementById("19-object-data-data-uri"));
 
   is(hcard.fn, "John Doe", "19-object-data-data-uri - fn");
   is(hcard.n["given-name"][0], "John", "19-object-data-data-uri - given-name");
   is(hcard.n["family-name"][0], "Doe", "19-object-data-data-uri - family-name");
-  is(hcard.logo, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "19-object-data-data-uri - logo");
-  is(hcard.photo, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "19-object-data-data-uri - photo");
+  is(String(hcard.logo), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "19-object-data-data-uri - logo");
+  is(String(hcard.photo), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURf///8zMzJmZmWZmZjMzMwAAAPOPemkAAAM1SURBVHjaYmBgYGBkYQUBFkYWFiCPCchixQAMCCZAACF0MAMVM4K4TFh0IGsBCCAkOxhYmBnAAKaHhZkZmxaAAGJgYIbpYGBihGgBWsTMzMwE4jIhaWGAYoAAYmCECDExYAcwGxkg5oNIgABigDqLARdgZmGB2wICrKwAAcSA3xKgIxlZ0PwCEEAMBCxhgHoWSQtAADFAAxgfYEJ1GEAAQbQw4tUCsocBYQVAADEgu4uRkREeUCwszEwwLhOKLQABhNDCBA4aSDgwwhIAJKqYUPwCEEAMUK/AUwnc9aywJMCI7DAgAAggBohZ8JTBhGIJzCoWZL8ABBCYidAB8RUjWppkYUG2BSCAGMDqEMZiswUtXgACiAHsFYixTMywGGLGpgUWYgABxAA2mQkWCMyMqFoYmdD8ACQAAogBHJHMrCxg1cyIiICmCkYWDFsAAgiihYmZCewFFpR0BfI3LLch+QUggBiQ0iQjEyMDmh54qCBlUIAAYsCRJsElADQvgWKTlRGeKwECiAF3XgGmMEYQYADZzcoA9z5AAMG9RQCAtEC9DxBADFiyFyMjVi0wABBAWLQwQdIiuhYGWJIACCBg+KKUJ9BoBRdS2LQALQMIIGDQIEmwAO1kYcVWHCDZAhBAqFqYmOAxj2YNtAwDAYAAYmDEiBYWzHKKkRERYiwAAYSphZEZwxZGZiZQVEJTJkAAMTCyokc7M5oORlC5wcoEjxeAAAJqQXU0UB6W5WFmABMtEzMi1wEEEFAbE0YyAUuzMMEsYQalMkQSBQggUDmNPU3C9IA4LCxI+QUggEBiKOU8yExgqccCL3chnkPKlQABhGo6ejHBDKmdUHMlQAAhhQvQaGZGkBIkjcAMywLmI+VKgABCSowsTJhZkhlWXiBpAQggYBqBZl9GVOdBcz0LZqEEEEAMqLULMBLg1THWog9IAwQQA0qiZcRW5aPbAhBADCg1El4tMAAQQAxoiZYZXnTh1AIQQAzo2QlYpDDjcBgrxGEAAcSAJTthswmiBUwDBBC2GpkZJTaRvQ+mAQKIAUuuxdZWQvILQABBmSxMjBj5EpcWgACCMoFOYYSpZyHQHgMIMACt2hmoVEikCQAAAABJRU5ErkJggg==", "19-object-data-data-uri - photo");
 
 
   hcard = new hCard(document.getElementById("20-image-alt"));
@@ -767,8 +767,8 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "20-image-alt - fn");
   is(hcard.n["given-name"][0], "John", "20-image-alt - given-name");
   is(hcard.n["family-name"][0], "Doe", "20-image-alt - family-name");
-  is(hcard.logo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "20-image-alt - logo");
-  is(hcard.photo, "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "20-image-alt - photo");
+  is(String(hcard.logo), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "20-image-alt - logo");
+  is(String(hcard.photo), "http://mochi.test:8888/tests/browser/microformats/test/picture.png", "20-image-alt - photo");
 
   hcard = new hCard(document.getElementById("21-tel"));
 
@@ -854,19 +854,19 @@ function test_hCard() {
   is(hcard.fn, "John Doe", "23-abbr-title-everything - fn");
   is(hcard.n["given-name"][0], "Jonathan", "23-abbr-title-everything - given-name");
   is(hcard.n["family-name"][0], "Doe-Smith", "23-abbr-title-everything - family-name");
-  is(hcard.n["additional-name"], "John", "23-abbr-title-everything - additional-name");
-  is(hcard.n["honorific-prefix"], "Mister", "23-abbr-title-everything - honorific-prefix");
-  is(hcard.n["honorific-suffix"], "Medical Doctor", "23-abbr-title-everything - honorific-suffix");
+  is(String(hcard.n["additional-name"]), "John", "23-abbr-title-everything - additional-name");
+  is(String(hcard.n["honorific-prefix"]), "Mister", "23-abbr-title-everything - honorific-prefix");
+  is(String(hcard.n["honorific-suffix"]), "Medical Doctor", "23-abbr-title-everything - honorific-suffix");
   is(hcard["class"], "public", "23-abbr-title-everything - class");
-  is(hcard.geo.latitude, "37.77", "23-abbr-title-everything - geo.latitude");
-  is(hcard.geo.longitude, "-122.41", "23-abbr-title-everything - geo.longitude");
+  is(hcard.geo.latitude, 37.77, "23-abbr-title-everything - geo.latitude");
+  is(hcard.geo.longitude, -122.41, "23-abbr-title-everything - geo.longitude");
   is(hcard.bday, "2006-04-04", "23-abbr-title-everything - bday");
   is(hcard.nickname[0], "JJ", "23-abbr-title-everything - nickname");
-  is(hcard.note[0], "this is a note", "23-abbr-title-everything - note");
-  isnot(hcard.note[0], "this is not a note", "23-abbr-title-everything - note");
+  is(String(hcard.note[0]), "this is a note", "23-abbr-title-everything - note");
+  isnot(String(hcard.note[0]), "this is not a note", "23-abbr-title-everything - note");
   is(hcard.org[0]["organization-name"], "Intellicorp", "23-abbr-title-everything - organization-name");
   is(hcard.org[0]["organization-unit"][0], "Intelligence", "23-abbr-title-everything - organization-unit");
-  is(hcard.role, "Chief", "23-abbr-title-everything - role");
+  is(String(hcard.role), "Chief", "23-abbr-title-everything - role");
   is(hcard.tel[0].value, "415.555.1234", "23-abbr-title-everything - tel");
   is(hcard.title[0], "President", "23-abbr-title-everything - title");
   is(hcard.tz, "-0700", "23-abbr-title-everything - tz");
@@ -882,29 +882,29 @@ function test_hCard() {
   hcard = new hCard(document.getElementById("25-geo-abbr"));
 
   is(hcard.fn, "Paradise", "25-geo-abbr - fn");
-  is(hcard.geo.latitude, "30.267991", "25-geo-abbr - geo.latitude");
-  is(hcard.geo.longitude, "-97.739568", "25-geo-abbr - geo.longitude");
+  is(hcard.geo.latitude, 30.267991, "25-geo-abbr - geo.latitude");
+  is(hcard.geo.longitude, -97.739568, "25-geo-abbr - geo.longitude");
   
   hcard = new hCard(document.getElementById("26-ancestors"));
 
   is(hcard.fn, "John Doe", "26-ancestors - fn");
   is(hcard.n["given-name"][0], "Jonathan", "26-ancestors - given-name");
   is(hcard.n["family-name"][0], "Doe-Smith", "26-ancestors - family-name");
-  is(hcard.n["additional-name"], "John", "26-ancestors - additional-name");
-  is(hcard.n["honorific-prefix"], "Mister", "26-ancestors - honorific-prefix");
-  is(hcard.n["honorific-suffix"], "Medical Doctor", "26-ancestors - honorific-suffix");
+  is(String(hcard.n["additional-name"]), "John", "26-ancestors - additional-name");
+  is(String(hcard.n["honorific-prefix"]), "Mister", "26-ancestors - honorific-prefix");
+  is(String(hcard.n["honorific-suffix"]), "Medical Doctor", "26-ancestors - honorific-suffix");
   is(hcard["class"], "public", "26-ancestors - class");
-  is(hcard.geo.latitude, "37.77", "26-ancestors - geo.latitude");
-  is(hcard.geo.longitude, "-122.41", "26-ancestors - geo.longitude");
+  is(hcard.geo.latitude, 37.77, "26-ancestors - geo.latitude");
+  is(hcard.geo.longitude, -122.41, "26-ancestors - geo.longitude");
   is(hcard.bday, "2006-04-04", "26-ancestors - bday");
   is(hcard.nickname[0], "JJ", "26-ancestors - nickname");
-  is(hcard.note[0], "this is a note", "26-ancestors - note");
-  isnot(hcard.note[0], "this is not a note", "26-ancestors - note");
+  is(String(hcard.note[0]), "this is a note", "26-ancestors - note");
+  isnot(String(hcard.note[0]), "this is not a note", "26-ancestors - note");
   is(hcard.org[0]["organization-name"], "Intellicorp", "26-ancestors - organization-name");
   is(hcard.org[0]["organization-unit"][0], "Intelligence", "26-ancestors - organization-unit");
-  is(hcard.role, "Chief", "26-ancestors - role");
+  is(String(hcard.role), "Chief", "26-ancestors - role");
   is(hcard.agent[0].fn, "Bob Smith", "26-ancestors - agent.fn");
-  is(hcard.agent[0].title, "Executive Assistant", "26-ancestors - agent.title");
+  is(String(hcard.agent[0].title), "Executive Assistant", "26-ancestors - agent.title");
   is(hcard.tel[0].value, "415.555.1234", "26-ancestors - tel");
   is(hcard.title[0], "President", "26-ancestors - title");
   is(hcard.tz, "-0700", "26-ancestors - tz");
@@ -971,7 +971,7 @@ function test_hCard() {
   is(hcard.fn, "Brian Suda", "31-include.1 - fn");
   is(hcard.n["given-name"][0], "Brian", "31-include.1 - given-name");
   is(hcard.n["family-name"][0], "Suda", "31-include.1 - family-name");
-  is(hcard.url, "http://suda.co.uk/", "31-include.1 - url");
+  is(String(hcard.url), "http://suda.co.uk/", "31-include.1 - url");
   is(hcard.email[0].value, "correct@example.com", "31-include.1 - email");
   isnot(hcard.email[0].value, "incorrect@example.com", "31-include.1 - email");
 
@@ -980,7 +980,7 @@ function test_hCard() {
   is(hcard.fn, "Brian Suda", "31-include.2 - fn");
   is(hcard.n["given-name"][0], "Brian", "31-include.2 - given-name");
   is(hcard.n["family-name"][0], "Suda", "31-include.2 - family-name");
-  is(hcard.url, "http://suda.co.uk/", "31-include.2 - url");
+  is(String(hcard.url), "http://suda.co.uk/", "31-include.2 - url");
   is(hcard.email[0].value, "correct@example.com", "31-include.2 - email");
   isnot(hcard.email[0].value, "incorrect@example.com", "31-include.2 - email");
 
@@ -989,7 +989,7 @@ function test_hCard() {
   is(hcard.fn, "Brian Suda", "31-include.3 - fn");
   is(hcard.n["given-name"][0], "Brian", "31-include.3 - given-name");
   is(hcard.n["family-name"][0], "Suda", "31-include.3 - family-name");
-  is(hcard.url, "http://suda.co.uk/", "31-include.3 - url");
+  is(String(hcard.url), "http://suda.co.uk/", "31-include.3 - url");
   is(hcard.email[0].value, "correct@example.com", "31-include.3 - email");
   isnot(hcard.email[0].value, "incorrect@example.com", "31-include.3 - email");
 
@@ -998,7 +998,7 @@ function test_hCard() {
   is(hcard.fn, "Brian Suda", "31-include.3 - fn");
   is(hcard.n["given-name"][0], "Brian", "31-include.3 - given-name");
   is(hcard.n["family-name"][0], "Suda", "31-include.3 - family-name");
-  is(hcard.url, "http://suda.co.uk/", "31-include.3 - url");
+  is(String(hcard.url), "http://suda.co.uk/", "31-include.3 - url");
 
   hcard = new hCard(document.getElementById("32-header.1"));
 
@@ -1006,7 +1006,7 @@ function test_hCard() {
   is(hcard.n["given-name"][0], "Brian", "32-header.1 - given-name");
   is(hcard.n["family-name"][0], "Suda", "32-header.1 - family-name");
   is(hcard.org[0]["organization-name"], "example.org", "32-header.1 - organization-name");
-  is(hcard.url, "http://example.org/", "32-header.1 - url");
+  is(String(hcard.url), "http://example.org/", "32-header.1 - url");
 
   hcard = new hCard(document.getElementById("32-header.2"));
 
@@ -1014,41 +1014,41 @@ function test_hCard() {
   is(hcard.n["given-name"][0], "John", "32-header.2 - given-name");
   is(hcard.n["family-name"][0], "Doe", "32-header.2 - family-name");
   is(hcard.org[0]["organization-name"], "example.org", "32-header.2 - organization-name");
-  is(hcard.url, "http://example.org/", "32-header.2 - url");
+  is(String(hcard.url), "http://example.org/", "32-header.2 - url");
 
   hcard = new hCard(document.getElementById("33-area.1"));
 
   is(hcard.fn, "Joe Public", "33-area.1 - fn");
   is(hcard.n["given-name"][0], "Joe", "33-area.1 - given-name");
   is(hcard.n["family-name"][0], "Public", "33-area.1 - family-name");
-  is(hcard.url, "http://example.com/", "33-area.1 - url");
+  is(String(hcard.url), "http://example.com/", "33-area.1 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.1 - email");
 
   hcard = new hCard(document.getElementById("33-area.2"));
 
   is(hcard.fn, "Joe Public", "33-area.2 - fn");
-  is(hcard.url, "http://example.com/", "33-area.2 - url");
+  is(String(hcard.url), "http://example.com/", "33-area.2 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.2 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.2 - organization-name");
   
   hcard = new hCard(document.getElementById("33-area.3"));
 
   is(hcard.fn, "Joe Public", "33-area.3 - fn");
-  is(hcard.url, "http://example.com/", "33-area.3 - url");
+  is(String(hcard.url), "http://example.com/", "33-area.3 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.3 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.3 - organization-name");
   
   hcard = new hCard(document.getElementById("33-area.4"));
 
   is(hcard.fn, "Joe Public", "33-area.4 - fn");
-  is(hcard.url, "http://example.com/", "33-area.4 - url");
+  is(String(hcard.url), "http://example.com/", "33-area.4 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.4 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.4 - organization-name");
   
   hcard = new hCard(document.getElementById("33-area.5"));
 
   is(hcard.fn, "Joe Public", "33-area.5 - fn");
-  is(hcard.url, "http://example.com/", "33-area.5 - url");
+  is(String(hcard.url), "http://example.com/", "33-area.5 - url");
   is(hcard.email[0].value, "joe@example.com", "33-area.5 - email");
   is(hcard.org[0]["organization-name"], "Joe Public", "33-area.5 - organization-name");
 
@@ -1057,10 +1057,10 @@ function test_hCard() {
   is(hcard.fn, "Joe Public", "34-notes - fn");
   is(hcard.n["given-name"][0], "Joe", "34-notes - given-name");
   is(hcard.n["family-name"][0], "Public", "34-notes - family-name");
-  is(hcard.note[0], "Note 1", "34-notes - note");
-  isnot(hcard.note[1], "Note 2", "34-notes - note");
-  is(hcard.note[1], "Note 3", "34-notes - note");
-  is(hcard.note[2], "Note 4 with a ; and a , to be escaped", "34-notes - note");
+  is(String(hcard.note[0]), "Note 1", "34-notes - note");
+  isnot(String(hcard.note[1]), "Note 2", "34-notes - note");
+  is(String(hcard.note[1]), "Note 3", "34-notes - note");
+  is(String(hcard.note[2]), "Note 4 with a ; and a , to be escaped", "34-notes - note");
 
   hcard = new hCard(document.getElementById("35-include-pattern.1"));
 
@@ -1121,8 +1121,8 @@ function test_hCard() {
   is(hcard.uid, "unique-id-1", "37-singleton - uid");
   is(hcard.tz, "+0600", "37-singleton - tz");
   is(hcard["sort-string"], "d", "37-singleton - sort-string");
-  is(hcard.geo.latitude, "123.45", "37-singleton - geo.latitude");
-  is(hcard.geo.longitude, "67.89", "37-singleton - geo.longitude");
+  is(hcard.geo.latitude, 123.45, "37-singleton - geo.latitude");
+  is(hcard.geo.longitude, 67.89, "37-singleton - geo.longitude");
   is(hcard["class"], "public", "37-singleton - class");
   is(hcard.bday, "2006-07-07", "37-singleton - bday");
   is(hcard.rev, "2006-07-07", "37-singleton - rev");
@@ -1161,12 +1161,12 @@ function test_hCard() {
 
   hcard = new hCard(document.getElementById("39-noteHTML"));
 
-  is(hcard.note[0], "Note", "39-noteHTML - note");
+  is(String(hcard.note[0]), "Note", "39-noteHTML - note");
   is(hcard.note[0].toHTML(), "<b>Note</b>", "39-noteHTML - note as HTML");
-  is(hcard.note[0].match("Note"), "Note", "39-noteHTML - match in note");
+  is(String(hcard.note[0].match("Note")), "Note", "39-noteHTML - match in note");
 
   hcard = new hCard(document.getElementById("email-type"));
-  is(hcard.email[0].type, "internet", "email - type no value (type)");
+  is(String(hcard.email[0].type), "internet", "email - type no value (type)");
   is(hcard.email[0].value, "john@example.com", "email - type no value (value)");
 }
 

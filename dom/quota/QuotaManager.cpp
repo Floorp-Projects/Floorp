@@ -29,7 +29,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
-#include "mozilla/dom/FileService.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/Mutex.h"
@@ -90,7 +89,6 @@
 USING_QUOTA_NAMESPACE
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::dom::FileService;
 
 static_assert(
   static_cast<uint32_t>(StorageType::Persistent) ==
@@ -544,26 +542,6 @@ private:
   // The QuotaManager holds this alive.
   SynchronizedOp* mOp;
   uint32_t mCountdown;
-};
-
-class WaitForFileHandlesToFinishRunnable final : public nsRunnable
-{
-public:
-  WaitForFileHandlesToFinishRunnable()
-  : mBusy(true)
-  { }
-
-  NS_IMETHOD
-  Run();
-
-  bool
-  IsBusy() const
-  {
-    return mBusy;
-  }
-
-private:
-  bool mBusy;
 };
 
 class SaveOriginAccessTimeRunnable final : public nsRunnable
@@ -1710,15 +1688,13 @@ QuotaManager::AbortCloseStoragesForProcess(ContentParent* aContentParent)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aContentParent);
 
-  FileService* service = FileService::Get();
+  // FileHandle API is not yet supported in child processes, so we don't have
+  // to worry about aborting file handles for given child process.
 
   StorageMatcher<ArrayCluster<nsIOfflineStorage*>> liveStorages;
   liveStorages.Find(mLiveStorages);
 
   for (uint32_t i = 0; i < Client::TYPE_MAX; i++) {
-    nsRefPtr<Client>& client = mClients[i];
-    bool utilized = service && client->IsFileServiceUtilized();
-
     nsTArray<nsIOfflineStorage*>& array = liveStorages[i];
     for (uint32_t j = 0; j < array.Length(); j++) {
       nsCOMPtr<nsIOfflineStorage> storage = array[j];
@@ -1726,10 +1702,6 @@ QuotaManager::AbortCloseStoragesForProcess(ContentParent* aContentParent)
       if (storage->IsOwnedByProcess(aContentParent)) {
         if (NS_FAILED(storage->Close())) {
           NS_WARNING("Failed to close storage for dying process!");
-        }
-
-        if (utilized) {
-          service->AbortFileHandlesForStorage(storage);
         }
       }
     }
@@ -2875,41 +2847,6 @@ QuotaManager::Observe(nsISupports* aSubject,
     }
 
     if (IsMainProcess()) {
-      FileService* service = FileService::Get();
-      if (service) {
-        // This should only wait for storages registered in this manager
-        // to complete. Other storages may still have running file handles.
-        // If the necko service (thread pool) gets the shutdown notification
-        // first then the sync loop won't be processed at all, otherwise it will
-        // lock the main thread until all storages registered in this manager
-        // are finished.
-
-        nsTArray<uint32_t> indexes;
-        for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
-          if (mClients[index]->IsFileServiceUtilized()) {
-            indexes.AppendElement(index);
-          }
-        }
-
-        StorageMatcher<nsTArray<nsCOMPtr<nsIOfflineStorage>>> liveStorages;
-        liveStorages.Find(mLiveStorages, &indexes);
-
-        if (!liveStorages.IsEmpty()) {
-          nsRefPtr<WaitForFileHandlesToFinishRunnable> runnable =
-            new WaitForFileHandlesToFinishRunnable();
-
-          service->WaitForStoragesToComplete(liveStorages, runnable);
-
-          nsIThread* thread = NS_GetCurrentThread();
-          while (runnable->IsBusy()) {
-            if (!NS_ProcessNextEvent(thread)) {
-              NS_ERROR("Failed to process next event!");
-              break;
-            }
-          }
-        }
-      }
-
       // Kick off the shutdown timer.
       if (NS_FAILED(mShutdownTimer->Init(this, DEFAULT_SHUTDOWN_TIMER_MS,
                                          nsITimer::TYPE_ONE_SHOT))) {
@@ -2919,7 +2856,7 @@ QuotaManager::Observe(nsISupports* aSubject,
       // Each client will spin the event loop while we wait on all the threads
       // to close. Our timer may fire during that loop.
       for (uint32_t index = 0; index < Client::TYPE_MAX; index++) {
-        mClients[index]->ShutdownTransactionService();
+        mClients[index]->ShutdownWorkThreads();
       }
 
       // Cancel the timer regardless of whether it actually fired.
@@ -3092,33 +3029,11 @@ QuotaManager::AcquireExclusiveAccess(const nsACString& aPattern,
     new WaitForTransactionsToFinishRunnable(op);
 
   if (!liveStorages.IsEmpty()) {
-    // Ask the file service to call us back when it's done with this storage.
-    FileService* service = FileService::Get();
-
-    if (service) {
-      // Have to copy here in case a transaction service needs a list too.
-      nsTArray<nsCOMPtr<nsIOfflineStorage>> array;
-
-      for (uint32_t index = 0; index < Client::TYPE_MAX; index++)  {
-        if (!liveStorages[index].IsEmpty() &&
-            mClients[index]->IsFileServiceUtilized()) {
-          array.AppendElements(liveStorages[index]);
-        }
-      }
-
-      if (!array.IsEmpty()) {
-        runnable->AddRun();
-
-        service->WaitForStoragesToComplete(array, runnable);
-      }
-    }
-
     // Ask each transaction service to call us back when they're done with this
     // storage.
     for (uint32_t index = 0; index < Client::TYPE_MAX; index++)  {
       nsRefPtr<Client>& client = mClients[index];
-      if (!liveStorages[index].IsEmpty() &&
-          client->IsTransactionServiceActivated()) {
+      if (!liveStorages[index].IsEmpty()) {
         runnable->AddRun();
 
         client->WaitForStoragesToComplete(liveStorages[index], runnable);
@@ -4422,16 +4337,6 @@ WaitForTransactionsToFinishRunnable::Run()
 
   // The listener is responsible for calling
   // QuotaManager::AllowNextSynchronizedOp.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WaitForFileHandlesToFinishRunnable::Run()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  mBusy = false;
-
   return NS_OK;
 }
 

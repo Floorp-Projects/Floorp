@@ -112,18 +112,12 @@ public:
   ReleaseIOThreadObjects() = 0;
 
   // Methods which are called on the main thred.
-  virtual bool
-  IsFileServiceUtilized() = 0;
-
-  virtual bool
-  IsTransactionServiceActivated() = 0;
-
   virtual void
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
                             nsIRunnable* aCallback) = 0;
 
   virtual void
-  ShutdownTransactionService() = 0;
+  ShutdownWorkThreads() = 0;
 
 protected:
   virtual ~Client()

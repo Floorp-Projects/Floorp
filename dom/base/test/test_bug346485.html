@@ -25,9 +25,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346485
  * This test is testing DOMSettableTokenList used by the output element.
  */
 
+function checkHtmlFor(htmlFor, list, msg) {
+  var length = htmlFor.length;
+  is(length, list.length, htmlFor + ": incorrect htmlFor length (" + msg + ")");
+  for (var i = 0; i < length; ++i) {
+    is(htmlFor[i], list[i], htmlFor + ": wrong element at " + i + " (" + msg + ")");
+  }
+}
+
 var o = document.getElementById('o');
 
-is(o.htmlFor, 'a b',
+is(String(o.htmlFor), 'a b',
   "htmlFor IDL attribute should reflect for content attribute");
 
 is(o.htmlFor.value, 'a b',
@@ -42,32 +50,25 @@ is(o.htmlFor.item(0), 'a', "First item is 'a' token'");
 is(o.htmlFor.item(42), null, "Out-of-range should return null");
 
 o.htmlFor.add('c');
-is(o.htmlFor, 'a b c', "'c' token should have been added");
-is(o.htmlFor.length, 3, "Size should be '3'");
+checkHtmlFor(o.htmlFor, ['a', 'b', 'c'], "'c' token should have been added");
 
 o.htmlFor.add('a');
-is(o.htmlFor, 'a b c', "Nothing should have changed");
-is(o.htmlFor.length, 3, "Size should be '3'");
+checkHtmlFor(o.htmlFor, ['a', 'b', 'c'], "Nothing should have changed");
 
 o.htmlFor.remove('a');
-is(o.htmlFor, 'b c', "'a' token should have been removed");
-is(o.htmlFor.length, 2, "Size should be '2'");
+checkHtmlFor(o.htmlFor, ['b', 'c'], "'a' token should have been removed");
 
 o.htmlFor.remove('d');
-is(o.htmlFor, 'b c', "Nothing should have been removed");
-is(o.htmlFor.length, 2, "Size should be '2'");
+checkHtmlFor(o.htmlFor, ['b', 'c'], "Nothing should have been removed");
 
 o.htmlFor.toggle('a');
-is(o.htmlFor, 'b c a', "'a' token should have been added");
-is(o.htmlFor.length, 3, "Size should be '3'");
+checkHtmlFor(o.htmlFor, ['b', 'c', 'a'], "'a' token should have been added");
 
 o.htmlFor.toggle('b');
-is(o.htmlFor, 'c a', "Nothing should have changed");
-is(o.htmlFor.length, 2, "Size should be '2'");
+checkHtmlFor(o.htmlFor, ['c', 'a'], "Nothing should have changed");
 
 o.htmlFor.value = "foo bar";
-is(o.htmlFor, 'foo bar', "The underlying string should have changed");
-is(o.htmlFor.length, 2, "Size should be '2'");
+checkHtmlFor(o.htmlFor, ['foo', 'bar'], "The underlying string should have changed");
 ok(o.htmlFor.contains('foo'), "It should contain 'foo'");
 
 </script>

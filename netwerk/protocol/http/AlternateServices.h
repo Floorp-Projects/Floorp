@@ -38,7 +38,7 @@ class AltSvcMapping
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AltSvcMapping)
   friend class AltSvcCache;
 
-public:
+private: // ctor from ProcessHeader
   AltSvcMapping(const nsACString &originScheme,
                 const nsACString &originHost,
                 int32_t originPort,
@@ -49,6 +49,7 @@ public:
                 int32_t alternatePort,
                 const nsACString &npnToken);
 
+public:
   static void ProcessHeader(const nsCString &buf, const nsCString &originScheme,
                             const nsCString &originHost, int32_t originPort,
                             const nsACString &username, bool privateBrowsing,
@@ -67,6 +68,7 @@ public:
   void SetExpiresAt(int32_t val) { mExpiresAt = val; }
   void SetExpired();
   bool RouteEquals(AltSvcMapping *map);
+  bool HTTPS() { return mHttps; }
 
   void GetConnectionInfo(nsHttpConnectionInfo **outCI, nsProxyInfo *pi);
   int32_t TTL();
@@ -94,7 +96,7 @@ private:
 
   bool mValidated;
   bool mRunning;
-  bool mHttps;
+  bool mHttps; // origin is https://
 
   nsCString mNPNToken;
 };
@@ -125,6 +127,7 @@ public:
                                       int32_t port, bool pb);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString &host, int32_t port);
+  void ClearHostMapping(nsHttpConnectionInfo *ci);
 
 private:
   nsRefPtrHashtable<nsCStringHashKey, AltSvcMapping> mHash;

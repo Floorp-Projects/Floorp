@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=596333
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="spellcheck.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=596333">Mozilla Bug 596333</a>
@@ -28,12 +29,6 @@ var gMisspeltWords;
 
 function getEditor() {
   return SpecialPowers.wrap(document.getElementById("edit")).editor;
-}
-
-function getSpellCheckSelection() {
-  var editor = getEditor();
-  var selcon = editor.selectionController;
-  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);
 }
 
 function append(str) {
@@ -70,12 +65,14 @@ function runOnFocus() {
   var edit = document.getElementById("edit");
 
   gMisspeltWords = ["haz", "cheezburger"];
-  is(isSpellingCheckOk(), true, "All misspellings before editing are accounted for.");
+  ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+     "All misspellings before editing are accounted for.");
   append(" becaz I'm a lulcat!");
   onSpellCheck(edit, function () {
     gMisspeltWords.push("becaz");
     gMisspeltWords.push("lulcat");
-    is(isSpellingCheckOk(), true, "All misspellings after typing are accounted for.");
+    ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+       "All misspellings after typing are accounted for.");
 
     // Now, type an invalid word, and instead of hitting "space" at the end, just blur
     // the textarea and see if the spell check after the blur event catches it.
@@ -83,14 +80,16 @@ function runOnFocus() {
     edit.blur();
     onSpellCheck(edit, function () {
       gMisspeltWords.push("workd");
-      is(isSpellingCheckOk(), true, "All misspellings after blur are accounted for.");
+      ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+         "All misspellings after blur are accounted for.");
 
       // Also, test the case when we're entering the first word in a textarea
       gMisspeltWords = ["workd"];
       edit.value = "";
       append("workd ");
       onSpellCheck(edit, function () {
-        is(isSpellingCheckOk(), true, "Misspelling in the first entered word is accounted for.");
+        ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+           "Misspelling in the first entered word is accounted for.");
 
         // Make sure that pasting would also trigger spell checking for the previous word
         gMisspeltWords = ["workd"];
@@ -98,7 +97,8 @@ function runOnFocus() {
         append("workd");
         paste("           x");
         onSpellCheck(edit, function () {
-          is(isSpellingCheckOk(), true, "Misspelling is accounted for after pasting.");
+          ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
+             "Misspelling is accounted for after pasting.");
 
           SimpleTest.finish();
         });
@@ -115,25 +115,6 @@ function runTest()
   SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
   onSpellCheck(edit, runOnFocus);
 }
-
-function isSpellingCheckOk() {
-  var sel = getSpellCheckSelection();
-  var numWords = sel.rangeCount;
-
-  is(numWords, gMisspeltWords.length, "Correct number of misspellings and words.");
-
-  if (numWords != gMisspeltWords.length)
-    return false;
-
-  for (var i=0; i<numWords; i++) {
-    var word = sel.getRangeAt(i);
-    is (word, gMisspeltWords[i], "Misspelling is what we think it is.");
-    if (word != gMisspeltWords[i])
-      return false;
-  }
-  return true;
-}
-
 </script>
 </pre>
 

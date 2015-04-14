@@ -79,8 +79,8 @@ function doTest() {
       privateWin.content.localStorage.removeItem("empty");
       is(privateWin.content.localStorage.length, 0, "The storage has no keys");
       is(privateWin.content.localStorage.getItem("empty"), null, "empty item is null (getItem())");
-      is(privateWin.content.localStorage["empty"], null, "empty item is undefined (array access)");
-      is(privateWin.content.localStorage.empty, null, "empty item is undefined (property access)");
+      is(privateWin.content.localStorage["empty"], undefined, "empty item is undefined (array access)");
+      is(privateWin.content.localStorage.empty, undefined, "empty item is undefined (property access)");
       is(typeof privateWin.content.localStorage.getItem("empty"), "object", "getItem('empty') is object");
       is(typeof privateWin.content.localStorage["empty"], "undefined", "['empty'] is undefined");
       is(typeof privateWin.content.localStorage.empty, "undefined", "empty is undefined");

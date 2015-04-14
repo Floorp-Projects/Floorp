@@ -40,7 +40,7 @@ function startTest() {
 
   // Removes the stored item.
   localStorage.removeItem("item");
-  is(localStorage.getItem("item"), undefined,
+  is(localStorage.getItem("item"), null,
      "getItem() after removing the item");
 
   // Fails storing a new item.
@@ -50,7 +50,7 @@ function startTest() {
   } catch(e) {
     ok(true, "Got an expected exception " + e);
   } finally {
-    is(localStorage.getItem("newItem"), undefined,
+    is(localStorage.getItem("newItem"), null,
        "setItem while device storage is low");
   }
 

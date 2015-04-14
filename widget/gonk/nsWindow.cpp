@@ -357,8 +357,11 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                      TouchPointerState aPointerState,
                                      nsIntPoint aPointerScreenPoint,
                                      double aPointerPressure,
-                                     uint32_t aPointerOrientation)
+                                     uint32_t aPointerOrientation,
+                                     nsIObserver* aObserver)
 {
+    AutoObserverNotifier notifier(aObserver, "touchpoint");
+
     if (aPointerState == TOUCH_HOVER) {
         return NS_ERROR_UNEXPECTED;
     }

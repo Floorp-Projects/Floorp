@@ -14,6 +14,42 @@ dictionary PromiseDebuggingStateHolder {
 };
 enum PromiseDebuggingState { "pending", "fulfilled", "rejected" };
 
+/**
+ * An observer for Promise that _may_ be leaking uncaught rejections.
+ *
+ * It is generally a programming error to leave a Promise rejected and
+ * not consume its rejection. The information exposed by this
+ * interface is designed to allow clients to track down such Promise,
+ * i.e. Promise that are currently
+ * - in `rejected` state;
+ * - last of their chain.
+ *
+ * Note, however, that a promise in such a state at the end of a tick
+ * may eventually be consumed in some ulterior tick. Implementers of
+ * this interface are responsible for presenting the information
+ * in a meaningful manner.
+ */
+callback interface UncaughtRejectionObserver {
+  /**
+   * A Promise has been left in `rejected` state and is the
+   * last in its chain.
+   *
+   * @param p A currently uncaught Promise. If `p` is is eventually
+   * caught, i.e. if its `then` callback is called, `onConsumed` will
+   * be called.
+   */
+  void onLeftUncaught(Promise<any> p);
+
+  /**
+   * A Promise previously left uncaught is not the last in its
+   * chain anymore.
+   *
+   * @param p A Promise that was previously left in uncaught state is
+   * now caught, i.e. it is not the last in its chain anymore.
+   */
+  void onConsumed(Promise<any> p);
+};
+
 [ChromeOnly, Exposed=(Window,System)]
 interface PromiseDebugging {
   static PromiseDebuggingStateHolder getState(Promise<any> p);
@@ -37,6 +73,12 @@ interface PromiseDebugging {
    * promise has not been fulfilled or was not fulfilled from script.
    */
   static object? getFullfillmentStack(Promise<any> p);
+
+  /**
+   * Return an identifier for a promise. This identifier is guaranteed
+   * to be unique to this instance of Firefox.
+   */
+  static DOMString getPromiseID(Promise<any> p);
 
   /**
    * Get the promises directly depending on a given promise.  These are:
@@ -68,4 +110,13 @@ interface PromiseDebugging {
    */
   [Throws]
   static DOMHighResTimeStamp getTimeToSettle(Promise<any> p);
+
+  /**
+   * Watching uncaught rejections on the current thread.
+   *
+   * Adding an observer twice will cause it to be notified twice
+   * of events.
+   */
+  static void addUncaughtRejectionObserver(UncaughtRejectionObserver o);
+  static boolean removeUncaughtRejectionObserver(UncaughtRejectionObserver o);
 };

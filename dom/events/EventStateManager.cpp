@@ -472,6 +472,7 @@ nsresult
 EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                   WidgetEvent* aEvent,
                                   nsIFrame* aTargetFrame,
+                                  nsIContent* aTargetContent,
                                   nsEventStatus* aStatus)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
@@ -480,6 +481,11 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     NS_ERROR("aEvent is null.  This should never happen.");
     return NS_ERROR_NULL_POINTER;
   }
+
+  NS_WARN_IF_FALSE(!aTargetFrame ||
+                   !aTargetFrame->GetContent() ||
+                   aTargetFrame->GetContent() == aTargetContent,
+                   "aTargetContent should be related with aTargetFrame");
 
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nullptr;
@@ -507,10 +513,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   WheelTransaction::OnEvent(aEvent);
 
   // Focus events don't necessarily need a frame.
-  if (NS_EVENT_NEEDS_FRAME(aEvent)) {
-    if (!mCurrentTarget) {
-      return NS_ERROR_NULL_POINTER;
-    }
+  if (!mCurrentTarget && !aTargetContent) {
+    NS_ERROR("mCurrentTarget and aTargetContent are null");
+    return NS_ERROR_NULL_POINTER;
   }
 #ifdef DEBUG
   if (aEvent->HasDragEventMessage() && sIsPointerLocked) {
@@ -1515,10 +1520,12 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   // synthesized mouse move event.
   mGestureDownPoint = inDownEvent->refPoint + inDownEvent->widget->WidgetToScreenOffset();
 
-  inDownFrame->GetContentForEvent(inDownEvent,
-                                  getter_AddRefs(mGestureDownContent));
+  if (inDownFrame) {
+    inDownFrame->GetContentForEvent(inDownEvent,
+                                    getter_AddRefs(mGestureDownContent));
 
-  mGestureDownFrameOwner = inDownFrame->GetContent();
+    mGestureDownFrameOwner = inDownFrame->GetContent();
+  }
   mGestureModifiers = inDownEvent->modifiers;
   mGestureDownButtons = inDownEvent->buttons;
 
@@ -4088,7 +4095,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
           // in the other branch here.
           sSynthCenteringPoint = center;
           aMouseEvent->widget->SynthesizeNativeMouseMove(
-            center + aMouseEvent->widget->WidgetToScreenOffset());
+            center + aMouseEvent->widget->WidgetToScreenOffset(), nullptr);
         } else if (aMouseEvent->refPoint == sSynthCenteringPoint) {
           // This is the "synthetic native" event we dispatched to re-center the
           // pointer. Cancel it so we don't expose the centering move to content.
@@ -4223,7 +4230,8 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     sLastRefPoint = GetWindowInnerRectCenter(aElement->OwnerDoc()->GetWindow(),
                                              aWidget,
                                              mPresContext);
-    aWidget->SynthesizeNativeMouseMove(sLastRefPoint + aWidget->WidgetToScreenOffset());
+    aWidget->SynthesizeNativeMouseMove(sLastRefPoint + aWidget->WidgetToScreenOffset(),
+                                       nullptr);
 
     // Retarget all events to this element via capture.
     nsIPresShell::SetCapturingContent(aElement, CAPTURE_POINTERLOCK);
@@ -4238,7 +4246,8 @@ EventStateManager::SetPointerLock(nsIWidget* aWidget,
     // pre-pointerlock position, so that the synthetic mouse event reports
     // no movement.
     sLastRefPoint = mPreLockPoint;
-    aWidget->SynthesizeNativeMouseMove(mPreLockPoint + aWidget->WidgetToScreenOffset());
+    aWidget->SynthesizeNativeMouseMove(mPreLockPoint + aWidget->WidgetToScreenOffset(),
+                                       nullptr);
 
     // Don't retarget events to this element any more.
     nsIPresShell::SetCapturingContent(nullptr, CAPTURE_POINTERLOCK);
@@ -4395,7 +4404,9 @@ EventStateManager::SetClickCount(nsPresContext* aPresContext,
 {
   nsCOMPtr<nsIContent> mouseContent;
   nsIContent* mouseContentParent = nullptr;
-  mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(mouseContent));
+  if (mCurrentTarget) {
+    mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(mouseContent));
+  }
   if (mouseContent) {
     if (mouseContent->IsNodeOfType(nsINode::eTEXT)) {
       mouseContent = mouseContent->GetParent();

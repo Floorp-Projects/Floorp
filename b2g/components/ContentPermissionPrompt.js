@@ -292,50 +292,45 @@ ContentPermissionPrompt.prototype = {
       return !type.deny && (type.action == Ci.nsIPermissionManager.PROMPT_ACTION || type.options.length > 0) ;
     });
 
-    let frame = request.element;
-
-    if (!frame) {
+    if (!request.element) {
       this.delegatePrompt(request, typesInfo);
       return;
     }
 
-    frame = frame.wrappedJSObject;
     var cancelRequest = function() {
-      frame.removeEventListener("mozbrowservisibilitychange", onVisibilityChange);
+      request.requester.onVisibilityChange = null;
       request.cancel();
     }
 
     var self = this;
-    var onVisibilityChange = function(evt) {
-      if (evt.detail.visible === true)
-        return;
-
-      self.cancelPrompt(request, typesInfo);
-      cancelRequest();
-    }
 
     // If the request was initiated from a hidden iframe
     // we don't forward it to content and cancel it right away
-    let domRequest = frame.getVisible();
-    domRequest.onsuccess = function gv_success(evt) {
-      if (!evt.target.result) {
-        cancelRequest();
-        return;
+    request.requester.getVisibility( {
+      notifyVisibility: function(isVisible) {
+        if (!isVisible) {
+          cancelRequest();
+          return;
+        }
+
+        // Monitor the frame visibility and cancel the request if the frame goes
+        // away but the request is still here.
+        request.requester.onVisibilityChange = {
+          notifyVisibility: function(isVisible) {
+            if (isVisible)
+              return;
+
+            self.cancelPrompt(request, typesInfo);
+            cancelRequest();
+          }
+        }
+
+        self.delegatePrompt(request, typesInfo, function onCallback() {
+          request.requester.onVisibilityChange = null;
+        });
       }
+    });
 
-      // Monitor the frame visibility and cancel the request if the frame goes
-      // away but the request is still here.
-      frame.addEventListener("mozbrowservisibilitychange", onVisibilityChange);
-
-      self.delegatePrompt(request, typesInfo, function onCallback() {
-        frame.removeEventListener("mozbrowservisibilitychange", onVisibilityChange);
-      });
-    };
-
-    // Something went wrong. Let's cancel the request just in case.
-    domRequest.onerror = function gv_error() {
-      cancelRequest();
-    }
   },
 
   cancelPrompt: function(request, typesInfo) {

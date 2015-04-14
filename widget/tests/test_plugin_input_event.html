@@ -35,7 +35,7 @@ var gUtils = window.
       QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-function doTest() {
+function* doTest() {
   gPlugin.focus();
 
   is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
@@ -43,19 +43,31 @@ function doTest() {
 
   is(gPlugin.getLastKeyText(), "", "Must be empty before first key test");
 
-  synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, WIN_VK_A, {}, "a", "a");
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, WIN_VK_A, {}, "a", "a", continueTest);
   is(gPlugin.getLastKeyText(), "a", "Invalid character was inputted");
 
-  synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {}, "+", "+");
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {}, "+", "+", continueTest);
   is(gPlugin.getLastKeyText(), "+", "Invalid character was inputted");
 
-  synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {altGrKey:1}, "~", "+");
+  yield synthesizeNativeKey(KEYBOARD_LAYOUT_GERMAN, WIN_VK_OEM_PLUS, {altGrKey:1}, "~", "+", continueTest);
   is(gPlugin.getLastKeyText(), "~", "Invalid character was inputted");
-
-  SimpleTest.finish();
 }
 
-SimpleTest.waitForFocus(doTest);
+var gTestContinuation = null;
+
+function continueTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = doTest(continueTest);
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  } else {
+    is(ret.value, true, "Key synthesized successfully");
+  }
+}
+
+SimpleTest.waitForFocus(continueTest);
 
 </script>
 </body>

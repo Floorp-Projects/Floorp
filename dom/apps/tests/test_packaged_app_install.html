@@ -58,24 +58,6 @@ function checkUninstallApp(aApp) {
   };
 }
 
-function checkInstalledApp(aMiniManifestURL,
-                           aVersion,
-                           aExpectedApp,
-                           aLaunchable,
-                           aCb) {
-  var req = navigator.mozApps.checkInstalled(aMiniManifestURL);
-  req.onsuccess = function(evt) {
-    ok(req.result, "The app is installed");
-
-    if (!req.result) {
-      PackagedTestHelper.finish();
-    }
-
-    PackagedTestHelper.checkAppState(evt.application, aVersion, aExpectedApp,
-                                     aLaunchable, false, aCb);
-  };
-}
-
 var gIconData =
 "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52" +
 "\x00\x00\x00\x0F\x00\x00\x00\x0F\x08\x03\x00\x00\x00\x0C\x08\x65" +
@@ -240,7 +222,7 @@ var steps = [
           size: 0,
           readyToApplyDownload: false
         };
-        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 2, expected,
+        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, "2", expected,
                                          true, false, PackagedTestHelper.next);
       };
     };
@@ -327,7 +309,7 @@ var steps = [
           size: 0,
           readyToApplyDownload: alreadyCanceled
         };
-        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 3, expected,
+        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, "3", expected,
                                          true, false, function() {});
       };
 
@@ -345,7 +327,7 @@ var steps = [
           size: 0,
           readyToApplyDownload: false
         };
-        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, 3, expected,
+        PackagedTestHelper.checkAppState(PackagedTestHelper.gApp, "3", expected,
                                          true, false, PackagedTestHelper.next);
       }
 
