@@ -1443,6 +1443,19 @@ CompositorParent::DeallocateLayerTreeId(uint64_t aId)
                              NewRunnableFunction(&EraseLayerState, aId));
 }
 
+/* static */ void
+CompositorParent::SwapLayerTreeObservers(uint64_t aLayerId, uint64_t aOtherLayerId)
+{
+  EnsureLayerTreeMapReady();
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  NS_ASSERTION(sIndirectLayerTrees.find(aLayerId) != sIndirectLayerTrees.end(),
+    "SwapLayerTrees missing layer 1");
+  NS_ASSERTION(sIndirectLayerTrees.find(aOtherLayerId) != sIndirectLayerTrees.end(),
+    "SwapLayerTrees missing layer 2");
+  std::swap(sIndirectLayerTrees[aLayerId].mLayerTreeReadyObserver,
+    sIndirectLayerTrees[aOtherLayerId].mLayerTreeReadyObserver);
+}
+
 static void
 UpdateControllerForLayersId(uint64_t aLayersId,
                             GeckoContentController* aController)
