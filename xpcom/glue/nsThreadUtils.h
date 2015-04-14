@@ -564,8 +564,8 @@ struct ParameterStorage
 // struct used to store arguments and later apply them to a method.
 template <typename... Ts> struct nsRunnableMethodArguments;
 
-// Specializations for 0-4 arguments, add more as required.
-// TODO Use tuple instead; And/or use lambdas.
+// Specializations for 0-8 arguments, add more as required.
+// TODO Use tuple instead; And/or use lambdas (see bug 1152753)
 template <>
 struct nsRunnableMethodArguments<>
 {
@@ -637,6 +637,121 @@ struct nsRunnableMethodArguments<T0, T1, T2, T3>
   {
     ((*o).*m)(m0.PassAsParameter(), m1.PassAsParameter(),
               m2.PassAsParameter(), m3.PassAsParameter());
+  }
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+struct nsRunnableMethodArguments<T0, T1, T2, T3, T4>
+{
+  typename ::detail::ParameterStorage<T0>::Type m0;
+  typename ::detail::ParameterStorage<T1>::Type m1;
+  typename ::detail::ParameterStorage<T2>::Type m2;
+  typename ::detail::ParameterStorage<T3>::Type m3;
+  typename ::detail::ParameterStorage<T4>::Type m4;
+  template<typename A0, typename A1, typename A2, typename A3, typename A4>
+  nsRunnableMethodArguments(A0&& a0, A1&& a1, A2&& a2, A3&& a3, A4&& a4)
+    : m0(mozilla::Forward<A0>(a0))
+    , m1(mozilla::Forward<A1>(a1))
+    , m2(mozilla::Forward<A2>(a2))
+    , m3(mozilla::Forward<A3>(a3))
+    , m4(mozilla::Forward<A4>(a4))
+  {}
+  template<class C, typename M> void apply(C* o, M m)
+  {
+    ((*o).*m)(m0.PassAsParameter(), m1.PassAsParameter(),
+              m2.PassAsParameter(), m3.PassAsParameter(),
+              m4.PassAsParameter());
+  }
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4,
+          typename T5>
+struct nsRunnableMethodArguments<T0, T1, T2, T3, T4, T5>
+{
+  typename ::detail::ParameterStorage<T0>::Type m0;
+  typename ::detail::ParameterStorage<T1>::Type m1;
+  typename ::detail::ParameterStorage<T2>::Type m2;
+  typename ::detail::ParameterStorage<T3>::Type m3;
+  typename ::detail::ParameterStorage<T4>::Type m4;
+  typename ::detail::ParameterStorage<T5>::Type m5;
+  template<typename A0, typename A1, typename A2, typename A3, typename A4,
+           typename A5>
+  nsRunnableMethodArguments(A0&& a0, A1&& a1, A2&& a2, A3&& a3, A4&& a4,
+        A5&& a5)
+    : m0(mozilla::Forward<A0>(a0))
+    , m1(mozilla::Forward<A1>(a1))
+    , m2(mozilla::Forward<A2>(a2))
+    , m3(mozilla::Forward<A3>(a3))
+    , m4(mozilla::Forward<A4>(a4))
+    , m5(mozilla::Forward<A5>(a5))
+  {}
+  template<class C, typename M> void apply(C* o, M m)
+  {
+    ((*o).*m)(m0.PassAsParameter(), m1.PassAsParameter(),
+              m2.PassAsParameter(), m3.PassAsParameter(),
+              m4.PassAsParameter(), m5.PassAsParameter());
+  }
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4,
+          typename T5, typename T6>
+struct nsRunnableMethodArguments<T0, T1, T2, T3, T4, T5, T6>
+{
+  typename ::detail::ParameterStorage<T0>::Type m0;
+  typename ::detail::ParameterStorage<T1>::Type m1;
+  typename ::detail::ParameterStorage<T2>::Type m2;
+  typename ::detail::ParameterStorage<T3>::Type m3;
+  typename ::detail::ParameterStorage<T4>::Type m4;
+  typename ::detail::ParameterStorage<T5>::Type m5;
+  typename ::detail::ParameterStorage<T6>::Type m6;
+  template<typename A0, typename A1, typename A2, typename A3, typename A4,
+           typename A5, typename A6>
+  nsRunnableMethodArguments(A0&& a0, A1&& a1, A2&& a2, A3&& a3, A4&& a4,
+        A5&& a5, A6&& a6)
+    : m0(mozilla::Forward<A0>(a0))
+    , m1(mozilla::Forward<A1>(a1))
+    , m2(mozilla::Forward<A2>(a2))
+    , m3(mozilla::Forward<A3>(a3))
+    , m4(mozilla::Forward<A4>(a4))
+    , m5(mozilla::Forward<A5>(a5))
+    , m6(mozilla::Forward<A6>(a6))
+  {}
+  template<class C, typename M> void apply(C* o, M m)
+  {
+    ((*o).*m)(m0.PassAsParameter(), m1.PassAsParameter(),
+              m2.PassAsParameter(), m3.PassAsParameter(),
+              m4.PassAsParameter(), m5.PassAsParameter(),
+              m6.PassAsParameter());
+  }
+};
+template <typename T0, typename T1, typename T2, typename T3, typename T4,
+          typename T5, typename T6, typename T7>
+struct nsRunnableMethodArguments<T0, T1, T2, T3, T4, T5, T6, T7>
+{
+  typename ::detail::ParameterStorage<T0>::Type m0;
+  typename ::detail::ParameterStorage<T1>::Type m1;
+  typename ::detail::ParameterStorage<T2>::Type m2;
+  typename ::detail::ParameterStorage<T3>::Type m3;
+  typename ::detail::ParameterStorage<T4>::Type m4;
+  typename ::detail::ParameterStorage<T5>::Type m5;
+  typename ::detail::ParameterStorage<T6>::Type m6;
+  typename ::detail::ParameterStorage<T7>::Type m7;
+  template<typename A0, typename A1, typename A2, typename A3, typename A4,
+           typename A5, typename A6, typename A7>
+  nsRunnableMethodArguments(A0&& a0, A1&& a1, A2&& a2, A3&& a3, A4&& a4,
+        A5&& a5, A6&& a6, A7&& a7)
+    : m0(mozilla::Forward<A0>(a0))
+    , m1(mozilla::Forward<A1>(a1))
+    , m2(mozilla::Forward<A2>(a2))
+    , m3(mozilla::Forward<A3>(a3))
+    , m4(mozilla::Forward<A4>(a4))
+    , m5(mozilla::Forward<A5>(a5))
+    , m6(mozilla::Forward<A6>(a6))
+    , m7(mozilla::Forward<A7>(a7))
+  {}
+  template<class C, typename M> void apply(C* o, M m)
+  {
+    ((*o).*m)(m0.PassAsParameter(), m1.PassAsParameter(),
+              m2.PassAsParameter(), m3.PassAsParameter(),
+              m4.PassAsParameter(), m5.PassAsParameter(),
+              m6.PassAsParameter(), m7.PassAsParameter());
   }
 };
 
