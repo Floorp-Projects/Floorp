@@ -1892,11 +1892,11 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
     if (mReadyState >= HAVE_METADATA) {
       // Expose the tracks to JS directly.
       if (HasAudio()) {
-        TrackID audioTrackId = mMediaInfo.mAudio.mTrackInfo.mOutputId;
+        TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
         out->mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO);
       }
       if (HasVideo()) {
-        TrackID videoTrackId = mMediaInfo.mVideo.mTrackInfo.mOutputId;
+        TrackID videoTrackId = mMediaInfo.mVideo.mTrackId;
         out->mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO);
       }
     }
@@ -3196,11 +3196,11 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   // Expose the tracks to JS directly.
   for (OutputMediaStream& out : mOutputStreams) {
     if (aInfo->HasAudio()) {
-      TrackID audioTrackId = aInfo->mAudio.mTrackInfo.mOutputId;
+      TrackID audioTrackId = aInfo->mAudio.mTrackId;
       out.mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO);
     }
     if (aInfo->HasVideo()) {
-      TrackID videoTrackId = aInfo->mVideo.mTrackInfo.mOutputId;
+      TrackID videoTrackId = aInfo->mVideo.mTrackId;
       out.mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO);
     }
   }
