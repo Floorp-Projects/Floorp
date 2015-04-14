@@ -914,7 +914,7 @@ bool
 AnimationPlayerCollection::HasCurrentAnimations() const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    if (mPlayers[playerIdx]->HasCurrentSource()) {
+    if (mPlayers[playerIdx]->HasCurrentEffect()) {
       return true;
     }
   }

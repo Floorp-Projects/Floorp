@@ -127,7 +127,7 @@ AnimationPlayer::SetCurrentTime(const TimeDuration& aSeekTime)
   }
 
   UpdateFinishedState(true);
-  UpdateSourceContent();
+  UpdateEffect();
   PostUpdate();
 }
 
@@ -171,7 +171,7 @@ AnimationPlayer::PlayState() const
     return AnimationPlayState::Paused;
   }
 
-  if ((mPlaybackRate > 0.0 && currentTime.Value() >= SourceContentEnd()) ||
+  if ((mPlaybackRate > 0.0 && currentTime.Value() >= EffectEnd()) ||
       (mPlaybackRate < 0.0 && currentTime.Value().ToMilliseconds() <= 0.0)) {
     return AnimationPlayState::Finished;
   }
@@ -367,14 +367,14 @@ AnimationPlayer::Cancel()
   mHoldTime.SetNull();
   mStartTime.SetNull();
 
-  UpdateSourceContent();
+  UpdateEffect();
 }
 
 void
 AnimationPlayer::UpdateRelevance()
 {
   bool wasRelevant = mIsRelevant;
-  mIsRelevant = HasCurrentSource() || HasInEffectSource();
+  mIsRelevant = HasCurrentEffect() || IsInEffect();
 
   // Notify animation observers.
   if (wasRelevant && !mIsRelevant) {
@@ -476,8 +476,8 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
       if (!timeToUse.IsNull()) {
         mHoldTime.SetValue((timeToUse.Value() - mStartTime.Value())
                             .MultDouble(mPlaybackRate));
-        // Push the change down to the source content
-        UpdateSourceContent();
+        // Push the change down to the effect
+        UpdateEffect();
         updatedHoldTime = true;
       }
     }
@@ -508,14 +508,14 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
       (currentTime.IsNull() ||
        (aLimitBehavior == LimitBehavior::AutoRewind &&
         (currentTime.Value().ToMilliseconds() < 0.0 ||
-         currentTime.Value() >= SourceContentEnd())))) {
+         currentTime.Value() >= EffectEnd())))) {
     mHoldTime.SetValue(TimeDuration(0));
   } else if (mPlaybackRate < 0.0 &&
              (currentTime.IsNull() ||
               (aLimitBehavior == LimitBehavior::AutoRewind &&
                (currentTime.Value().ToMilliseconds() <= 0.0 ||
-                currentTime.Value() > SourceContentEnd())))) {
-    mHoldTime.SetValue(TimeDuration(SourceContentEnd()));
+                currentTime.Value() > EffectEnd())))) {
+    mHoldTime.SetValue(TimeDuration(EffectEnd()));
   } else if (mPlaybackRate == 0.0 && currentTime.IsNull()) {
     mHoldTime.SetValue(TimeDuration(0));
   }
@@ -647,30 +647,29 @@ AnimationPlayer::PauseAt(const TimeDuration& aReadyTime)
 void
 AnimationPlayer::UpdateTiming()
 {
-  // We call UpdateFinishedState before UpdateSourceContent because the former
+  // We call UpdateFinishedState before UpdateEffect because the former
   // can change the current time, which is used by the latter.
   UpdateFinishedState();
-  UpdateSourceContent();
+  UpdateEffect();
 }
 
 void
 AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
 {
   Nullable<TimeDuration> currentTime = GetCurrentTime();
-  TimeDuration targetEffectEnd = TimeDuration(SourceContentEnd());
+  TimeDuration effectEnd = TimeDuration(EffectEnd());
 
   if (!mStartTime.IsNull() &&
       mPendingState == PendingState::NotPending) {
     if (mPlaybackRate > 0.0 &&
         !currentTime.IsNull() &&
-        currentTime.Value() >= targetEffectEnd) {
+        currentTime.Value() >= effectEnd) {
       if (aSeekFlag) {
         mHoldTime = currentTime;
       } else if (!mPreviousCurrentTime.IsNull()) {
-        mHoldTime.SetValue(std::max(mPreviousCurrentTime.Value(),
-                                    targetEffectEnd));
+        mHoldTime.SetValue(std::max(mPreviousCurrentTime.Value(), effectEnd));
       } else {
-        mHoldTime.SetValue(targetEffectEnd);
+        mHoldTime.SetValue(effectEnd);
       }
     } else if (mPlaybackRate < 0.0 &&
                !currentTime.IsNull() &&
@@ -706,7 +705,7 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
 }
 
 void
-AnimationPlayer::UpdateSourceContent()
+AnimationPlayer::UpdateEffect()
 {
   if (mEffect) {
     mEffect->SetParentTime(GetCurrentTime());
@@ -764,7 +763,7 @@ AnimationPlayer::IsFinished() const
   // and we need this much more messy check to see if we're finished.
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   return !currentTime.IsNull() &&
-      ((mPlaybackRate > 0.0 && currentTime.Value() >= SourceContentEnd()) ||
+      ((mPlaybackRate > 0.0 && currentTime.Value() >= EffectEnd()) ||
        (mPlaybackRate < 0.0 && currentTime.Value().ToMilliseconds() <= 0.0));
 }
 
@@ -776,15 +775,15 @@ AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
   //
   // This covers the following cases:
   //
-  // * We started playing but our source content's target element was orphaned
+  // * We started playing but our effect's target element was orphaned
   //   or bound to a different document.
-  //   (note that for the case of our source content changing we should handle
-  //   that in SetSource)
+  //   (note that for the case of our effect changing we should handle
+  //   that in SetEffect)
   // * We started playing but our timeline became inactive.
   //   In this case the pending player tracker will drop us from its hashmap
   //   when we have been painted.
   // * When we started playing we couldn't find a PendingPlayerTracker to
-  //   register with (perhaps the source content had no document) so we simply
+  //   register with (perhaps the effect had no document) so we simply
   //   set mPendingState in DoPlay and relied on this method to catch us on the
   //   next tick.
 
@@ -823,7 +822,7 @@ AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
 }
 
 StickyTimeDuration
-AnimationPlayer::SourceContentEnd() const
+AnimationPlayer::EffectEnd() const
 {
   if (!mEffect) {
     return StickyTimeDuration(0);
