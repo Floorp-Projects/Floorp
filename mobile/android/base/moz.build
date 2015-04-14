@@ -273,7 +273,6 @@ gbjar.sources += [
     'gfx/SubdocumentScrollHelper.java',
     'gfx/TextureGenerator.java',
     'gfx/TextureReaper.java',
-    'gfx/TileLayer.java',
     'gfx/TouchEventHandler.java',
     'gfx/ViewTransform.java',
     'gfx/VirtualLayer.java',

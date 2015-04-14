@@ -51,6 +51,7 @@ CDMProxy::Init(PromiseId aPromiseId,
           NS_ConvertUTF16toUTF8(aTopLevelOrigin).get(),
           (aInPrivateBrowsing ? "PrivateBrowsing" : "NonPrivateBrowsing"));
 
+  nsCString pluginVersion;
   if (!mGMPThread) {
     nsCOMPtr<mozIGeckoMediaPluginService> mps =
       do_GetService("@mozilla.org/gecko-media-plugin-service;1");
@@ -63,11 +64,19 @@ CDMProxy::Init(PromiseId aPromiseId,
       RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }
+    bool hasPlugin;
+    nsTArray<nsCString> tags;
+    tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
+    nsresult rv = mps->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                                              &tags, &hasPlugin, pluginVersion);
+    NS_ENSURE_SUCCESS_VOID(rv);
   }
+
   nsAutoPtr<InitData> data(new InitData());
   data->mPromiseId = aPromiseId;
   data->mOrigin = aOrigin;
   data->mTopLevelOrigin = aTopLevelOrigin;
+  data->mPluginVersion = pluginVersion;
   data->mInPrivateBrowsing = aInPrivateBrowsing;
   nsCOMPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<nsAutoPtr<InitData>>(this,
@@ -166,6 +175,7 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData>&& aData)
   nsresult rv = mps->GetNodeId(data.mOrigin,
                                data.mTopLevelOrigin,
                                data.mInPrivateBrowsing,
+                               data.mPluginVersion,
                                Move(callback));
   if (NS_FAILED(rv)) {
     RejectPromise(data.mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);

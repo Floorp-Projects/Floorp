@@ -339,7 +339,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
                                      common.stickyScrollRangeInner());
       }
       layer->SetScrollbarData(common.scrollbarTargetContainerId(),
-        static_cast<Layer::ScrollDirection>(common.scrollbarDirection()));
+        static_cast<Layer::ScrollDirection>(common.scrollbarDirection()),
+        common.scrollbarThumbRatio());
       layer->SetMixBlendMode((gfx::CompositionOp)common.mixBlendMode());
       layer->SetForceIsolatedGroup(common.forceIsolatedGroup());
       if (PLayerParent* maskLayer = common.maskLayerParent()) {

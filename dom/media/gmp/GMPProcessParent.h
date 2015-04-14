@@ -15,6 +15,8 @@
 #include "chrome/common/child_process_host.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
+class nsIRunnable;
+
 namespace mozilla {
 namespace gmp {
 
@@ -28,7 +30,7 @@ public:
   // after timeoutMs, this method will return false.
   bool Launch(int32_t aTimeoutMs);
 
-  void Delete();
+  void Delete(nsCOMPtr<nsIRunnable> aCallback = nullptr);
 
   virtual bool CanShutdown() override { return true; }
   const std::string& GetPluginFilePath() { return mGMPPath; }
@@ -38,7 +40,10 @@ public:
   using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 
 private:
+  void DoDelete();
+
   std::string mGMPPath;
+  nsCOMPtr<nsIRunnable> mDeletedCallback;
 
   DISALLOW_COPY_AND_ASSIGN(GMPProcessParent);
 };

@@ -68,7 +68,7 @@ struct ElementPropertyTransition : public dom::Animation
 class CSSTransitionPlayer final : public dom::AnimationPlayer
 {
 public:
- explicit CSSTransitionPlayer(dom::AnimationTimeline* aTimeline)
+ explicit CSSTransitionPlayer(dom::DocumentTimeline* aTimeline)
     : dom::AnimationPlayer(aTimeline)
   {
   }

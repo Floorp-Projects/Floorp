@@ -14,7 +14,6 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
-#include "NfcGonkMessage.h"
 #include "NfcOptions.h"
 
 #define NS_NFCSERVICE_CID \

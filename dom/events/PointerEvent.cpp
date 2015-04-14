@@ -79,9 +79,9 @@ PointerEvent::Constructor(EventTarget* aOwner,
   e->InitMouseEvent(aType, aParam.mBubbles, aParam.mCancelable,
                     aParam.mView, aParam.mDetail, aParam.mScreenX,
                     aParam.mScreenY, aParam.mClientX, aParam.mClientY,
-                    aParam.mCtrlKey, aParam.mAltKey, aParam.mShiftKey,
-                    aParam.mMetaKey, aParam.mButton,
+                    false, false, false, false, aParam.mButton,
                     aParam.mRelatedTarget);
+  e->InitModifiers(aParam);
 
   WidgetPointerEvent* widgetEvent = e->mEvent->AsPointerEvent();
   widgetEvent->pointerId = aParam.mPointerId;

@@ -207,7 +207,7 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
       case Scalar::Int32:
       case Scalar::Uint32:
         if (!alloc.isConstant()) {
-            op = OtherOperand(ToRegister(alloc).code());
+            op = OtherOperand(ToRegister(alloc).encoding());
         } else {
             int32_t i = ToInt32(&alloc);
 
