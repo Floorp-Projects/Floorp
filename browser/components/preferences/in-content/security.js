@@ -217,7 +217,7 @@ var gSecurityPane = {
   changeMasterPassword: function ()
   {
     gSubDialog.open("chrome://mozapps/content/preferences/changemp.xul",
-                    null, null, this._initMasterPasswordUI.bind(this));
+                    "resizable=no", null, this._initMasterPasswordUI.bind(this));
   },
 
   /**
