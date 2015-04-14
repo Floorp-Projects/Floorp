@@ -12,6 +12,7 @@ include protocol PBrowser;
 include protocol PCellBroadcast;
 include protocol PCompositor;
 include protocol PContentBridge;
+include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
 include protocol PCrashReporter;
 include protocol PDocAccessible;
@@ -55,6 +56,7 @@ include PTabContext;
 include URIParams;
 include PluginTypes;
 include ProtocolTypes;
+include PContentPermission;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -380,6 +382,7 @@ prio(normal upto urgent) sync protocol PContent
     manages PBluetooth;
     manages PBrowser;
     manages PCellBroadcast;
+    manages PContentPermissionRequest;
     manages PCrashReporter;
     manages PCycleCollectWithLogs;
     manages PDocAccessible;
@@ -951,6 +954,25 @@ parent:
     async FinishShutdown();
 
     UpdateDropEffect(uint32_t aDragAction, uint32_t aDropEffect);
+
+    /**
+     * Initiates an asynchronous request for permission for the
+     * provided principal.
+     *
+     * @param aRequests
+     *   The array of permissions to request.
+     * @param aPrincipal
+     *   The principal of the request.
+     * @param tabId
+     *   To identify which tab issues this request.
+     *
+     * NOTE: The principal is untrusted in the parent process. Only
+     *       principals that can live in the content process should
+     *       provided.
+     */
+    PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
+                              TabId tabId);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);

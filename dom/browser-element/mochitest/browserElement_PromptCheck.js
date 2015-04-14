@@ -22,7 +22,7 @@ function runTest()
 
   var numPrompts = 0;
   iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
-    is(e.detail.message, numPrompts, "prompt message");
+    is(e.detail.message, String(numPrompts), "prompt message");
     if (numPrompts / 10 < 1) {
       is(e.detail.promptType, 'alert');
     }

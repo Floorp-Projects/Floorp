@@ -162,13 +162,16 @@ public:
                                                    int32_t aNativeKeyCode,
                                                    uint32_t aModifierFlags,
                                                    const nsAString& aCharacters,
-                                                   const nsAString& aUnmodifiedCharacters);
+                                                   const nsAString& aUnmodifiedCharacters,
+                                                   nsIObserver* aObserver) override;
   virtual nsresult        SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                      uint32_t aNativeMessage,
-                                                     uint32_t aModifierFlags);
+                                                     uint32_t aModifierFlags,
+                                                     nsIObserver* aObserver) override;
 
-  virtual nsresult        SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint)
-                          { return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE, 0); }
+  virtual nsresult        SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                                    nsIObserver* aObserver) override
+                          { return SynthesizeNativeMouseEvent(aPoint, MOUSEEVENTF_MOVE, 0, aObserver); }
 
   virtual nsresult        SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                            uint32_t aNativeMessage,
@@ -176,7 +179,8 @@ public:
                                                            double aDeltaY,
                                                            double aDeltaZ,
                                                            uint32_t aModifierFlags,
-                                                           uint32_t aAdditionalFlags);
+                                                           uint32_t aAdditionalFlags,
+                                                           nsIObserver* aObserver) override;
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();

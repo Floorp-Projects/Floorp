@@ -125,7 +125,7 @@ GainNode::GainNode(AudioContext* aContext)
               2,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
-  , mGain(new AudioParam(this, SendGainToStream, 1.0f))
+  , mGain(new AudioParam(this, SendGainToStream, 1.0f, "gain"))
 {
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::INTERNAL_STREAM);

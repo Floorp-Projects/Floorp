@@ -182,7 +182,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it loses focus");
     number.blur();
     is(numberChange, 1, "Change event should be dispatched on number input element on blur");
-    is(number.value, 12, "Sanity check that number keys were actually handled");
+    is(number.value, "12", "Sanity check that number keys were actually handled");
     if (isDesktop) { // up/down arrow keys not supported on android/b2g
       number.value = "";
       number.focus();
@@ -190,7 +190,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
       synthesizeKey("VK_UP", {});
       synthesizeKey("VK_DOWN", {});
       is(numberChange, 4, "Change event should be dispatched on number input element for up/down arrow keys (a special case)");
-      is(number.value, 1, "Sanity check that number and arrow keys were actually handled");
+      is(number.value, "1", "Sanity check that number and arrow keys were actually handled");
     }
 
     // Special case type=range

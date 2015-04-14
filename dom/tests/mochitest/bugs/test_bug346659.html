@@ -97,16 +97,16 @@ function messageReceiver(evt) {
 
   switch (testNumber) {
     case 1:
-      is(testResult, 1, "Props on new window should be preserved when loading");
+      is(testResult, "1", "Props on new window should be preserved when loading");
       break;
     case 2:
-      is(testResult, 2, "Props on new window should be preserved when writing");
+      is(testResult, "2", "Props on new window should be preserved when writing");
       break;
     case 3:
-      is(testResult, 3, "Props on window opened from new window should be preserved when loading");
+      is(testResult, "3", "Props on window opened from new window should be preserved when loading");
       break;
     case 4:
-      is(testResult, 4, "Props on window opened from new window should be preserved when writing");
+      is(testResult, "4", "Props on window opened from new window should be preserved when writing");
       break;
     case 5:
       is(testResult, "undefined", "Props on new window's child should go away when loading");
@@ -115,7 +115,7 @@ function messageReceiver(evt) {
       is(testResult, "undefined", "Props on new window's child should go away when writing");
       break;
     case 7:
-      is(testResult, 7, "Props on different-domain window opened from different-domain new window can stay");
+      is(testResult, "7", "Props on different-domain window opened from different-domain new window can stay");
       break;
     case 9:
       is(testResult, "undefined", "Props on different-domain new window's child should go away when loading");

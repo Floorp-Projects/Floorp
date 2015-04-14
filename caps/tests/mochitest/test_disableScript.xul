@@ -77,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
     // We need to append 'name' to avoid running afoul of recursive frame detection.
     let frameURI = uri + "?name=" + name;
     navigateFrame(ifr, frameURI).then(function() {
-      is(ifr.contentWindow.location, frameURI, "Successful load");
+      is(String(ifr.contentWindow.location), frameURI, "Successful load");
       is(!!ifr.contentWindow.wrappedJSObject.gFiredOnload, expectOnload,
          "onload should only fire when scripts are enabled");
       deferred.resolve();

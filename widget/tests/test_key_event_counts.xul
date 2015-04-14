@@ -35,7 +35,7 @@
       e.preventDefault();
     }
 
-    function runTest()
+    function* testBody()
     {
       window.addEventListener("keydown", onKeyDown, false);
       window.addEventListener("keypress", onKeyPress, false);
@@ -43,26 +43,47 @@
       // Test ctrl-tab
       gKeyDownEventCount = 0;
       gKeyPressEventCount = 0;
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Tab, {ctrlKey:1}, "\t", "\t");
+      yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Tab, {ctrlKey:1}, "\t", "\t", continueTest);
       is(gKeyDownEventCount, 1);
       is(gKeyPressEventCount, 0, "ctrl-tab should be consumed by tabbox of tabbrowser at keydown");
 
       // Test cmd+shift+a
       gKeyDownEventCount = 0;
       gKeyPressEventCount = 0;
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {metaKey:1, shiftKey:1}, "a", "A");
+      yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {metaKey:1, shiftKey:1}, "a", "A", continueTest);
       is(gKeyDownEventCount, 1);
       is(gKeyPressEventCount, 1);
 
       // Test cmd-;
       gKeyDownEventCount = 0;
       gKeyPressEventCount = 0;
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Semicolon, {metaKey:1}, ";", ";");
+      yield synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Semicolon, {metaKey:1}, ";", ";", continueTest);
       is(gKeyDownEventCount, 1);
       is(gKeyPressEventCount, 1);
 
       window.removeEventListener("keydown", onKeyDown, false);
       window.removeEventListener("keypress", onKeyPress, false);
+    }
+
+    var gTestContinuation = null;
+
+    function continueTest()
+    {
+      if (!gTestContinuation) {
+        gTestContinuation = testBody();
+      }
+      var ret = gTestContinuation.next();
+      if (ret.done) {
+        SimpleTest.finish();
+      } else {
+        is(ret.value, true, "Key synthesized successfully");
+      }
+    }
+
+    function runTest()
+    {
+      SimpleTest.waitForExplicitFinish();
+      continueTest();
     }
   ]]></script>
 

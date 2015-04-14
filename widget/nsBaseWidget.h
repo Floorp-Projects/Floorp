@@ -39,7 +39,6 @@ class APZCTreeManager;
 class GeckoContentController;
 class APZEventState;
 struct ScrollableLayerGuid;
-struct SetTargetAPZCCallback;
 struct SetAllowedTouchBehaviorCallback;
 }
 
@@ -95,7 +94,6 @@ protected:
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
-  typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
   typedef mozilla::ScreenRotation ScreenRotation;
 
@@ -238,6 +236,9 @@ public:
   // Dispatch an event that must be first be routed through APZ.
   nsEventStatus DispatchAPZAwareEvent(mozilla::WidgetInputEvent* aEvent) override;
 
+  void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                              const nsTArray<ScrollableLayerGuid>& aTargets) const override;
+
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
   void NotifyWindowMoved(int32_t aX, int32_t aY);
@@ -353,16 +354,28 @@ protected:
                                             int32_t aNativeKeyCode,
                                             uint32_t aModifierFlags,
                                             const nsAString& aCharacters,
-                                            const nsAString& aUnmodifiedCharacters) override
-  { return NS_ERROR_UNEXPECTED; }
+                                            const nsAString& aUnmodifiedCharacters,
+                                            nsIObserver* aObserver) override
+  {
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "keyevent");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                               uint32_t aNativeMessage,
-                                              uint32_t aModifierFlags) override
-  { return NS_ERROR_UNEXPECTED; }
+                                              uint32_t aModifierFlags,
+                                              nsIObserver* aObserver) override
+  {
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) override
-  { return NS_ERROR_UNEXPECTED; }
+  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                             nsIObserver* aObserver) override
+  {
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "mouseevent");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
                                                     uint32_t aNativeMessage,
@@ -370,15 +383,23 @@ protected:
                                                     double aDeltaY,
                                                     double aDeltaZ,
                                                     uint32_t aModifierFlags,
-                                                    uint32_t aAdditionalFlags) override
-  { return NS_ERROR_UNEXPECTED; }
+                                                    uint32_t aAdditionalFlags,
+                                                    nsIObserver* aObserver) override
+  {
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
                                               TouchPointerState aPointerState,
                                               nsIntPoint aPointerScreenPoint,
                                               double aPointerPressure,
-                                              uint32_t aPointerOrientation) override
-  { return NS_ERROR_UNEXPECTED; }
+                                              uint32_t aPointerOrientation,
+                                              nsIObserver* aObserver) override
+  {
+    mozilla::widget::AutoObserverNotifier notifier(aObserver, "touchpoint");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   virtual nsresult NotifyIMEInternal(const IMENotification& aIMENotification)
   { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -459,7 +480,6 @@ protected:
   nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   nsRefPtr<APZCTreeManager> mAPZC;
   nsRefPtr<APZEventState> mAPZEventState;
-  nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
   nsRefPtr<SetAllowedTouchBehaviorCallback> mSetAllowedTouchBehaviorCallback;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsRefPtr<TextEventDispatcher> mTextEventDispatcher;

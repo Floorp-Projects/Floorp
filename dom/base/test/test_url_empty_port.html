@@ -24,14 +24,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930450
   <script type="application/javascript">
 
   var url = new URL('http://www.example.com:8080');
-  is(url.port, 8080, 'URL.port is 8080');
+  is(url.port, '8080', 'URL.port is 8080');
   url.port = '';
   ise(url.port, '', 'URL.port is \'\'');
   url.port = 0;
   ise(url.port, '0', 'URL.port is 0');
 
   var link = document.getElementById("link");
-  is(link.port, 8080, 'URL.port is 8080');
+  is(link.port, '8080', 'URL.port is 8080');
   link.port = '';
   is(link.href, 'http://www.example.com/', "link.href matches");
   ise(link.port, '', 'URL.port is \'\'');
@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930450
   ise(link.port, '0', 'URL.port is 0');
 
   var area = document.getElementById("area");
-  is(area.port, 8080, 'URL.port is 8080');
+  is(area.port, '8080', 'URL.port is 8080');
   area.port = '';
   is(area.href, 'http://www.example.com/', "area.href matches");
   ise(area.port, '', 'URL.port is \'\'');

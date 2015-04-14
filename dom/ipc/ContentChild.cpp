@@ -98,6 +98,7 @@
 #include "nsISystemMessageCache.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsContentPermissionHelper.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -2717,6 +2718,23 @@ ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
   NS_NOTREACHED("ContentChild::RecvUpdateWindow calls unexpected on this platform.");
   return false;
 #endif
+}
+
+PContentPermissionRequestChild*
+ContentChild::AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
+                                                  const IPC::Principal& aPrincipal,
+                                                  const TabId& aTabId)
+{
+    NS_RUNTIMEABORT("unused");
+    return nullptr;
+}
+
+bool
+ContentChild::DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor)
+{
+    auto child = static_cast<RemotePermissionRequest*>(actor);
+    child->IPDLRelease();
+    return true;
 }
 
 // This code goes here rather than nsGlobalWindow.cpp because nsGlobalWindow.cpp

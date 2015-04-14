@@ -95,18 +95,18 @@ function test_geo() {
 
   Geo = new geo(document.getElementById("01-geo-basic"));
 
-  is(Geo.latitude, "37.77", "01-geo-basic - latitude");
-  is(Geo.longitude, "-122.411", "01-geo-basic - longitude");
+  is(Geo.latitude, 37.77, "01-geo-basic - latitude");
+  is(Geo.longitude, -122.411, "01-geo-basic - longitude");
 
   Geo = new geo(document.getElementById("01-geo-abbr-latlong"));
 
-  is(Geo.latitude, "37.77", "02-geo-abbr-latlong - latitude");
-  is(Geo.longitude, "-122.41", "02-geo-abbr-latlong - longitude");
+  is(Geo.latitude, 37.77, "02-geo-abbr-latlong - latitude");
+  is(Geo.longitude, -122.41, "02-geo-abbr-latlong - longitude");
 
   Geo = new geo(document.getElementById("01-geo-abbr"));
 
-  is(Geo.latitude, "30.267991", "01-geo-abbr - latitude");
-  is(Geo.longitude, "-97.739568", "01-geo-abbr - longitude");
+  is(Geo.latitude, 30.267991, "01-geo-abbr - latitude");
+  is(Geo.longitude, -97.739568, "01-geo-abbr - longitude");
   
   Geo = new geo(document.getElementById("02-geo-vcard-01"));
 

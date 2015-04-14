@@ -230,28 +230,28 @@ function doTests() {
   n1.value = 12;
   // no events should fire and no changes should occur when the field is read only
   synthesizeKeyExpectEvent("VK_UP", { }, n1, "!change", "key up read only");
-  is(n1.value, 12, "key up read only value");
+  is(n1.value, "12", "key up read only value");
   synthesizeKeyExpectEvent("VK_DOWN", { }, n1, "!change", "key down read only");
-  is(n1.value, 12, "key down read only value");
+  is(n1.value, "12", "key down read only value");
 
   synthesizeMouseExpectEvent(sb, 2, 2, { }, n1, "!change", "mouse up read only");
-  is(n1.value, 12, "mouse up read only value");
+  is(n1.value, "12", "mouse up read only value");
   synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, n1, "!change", "mouse down read only");
-  is(n1.value, 12, "mouse down read only value");
+  is(n1.value, "12", "mouse down read only value");
 
   n1.readOnly = false;
   n1.disabled = true;
   synthesizeMouseExpectEvent(sb, 2, 2, { }, n1, "!change", "mouse up disabled");
-  is(n1.value, 12, "mouse up disabled value");
+  is(n1.value, "12", "mouse up disabled value");
   synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, n1, "!change", "mouse down disabled");
-  is(n1.value, 12, "mouse down disabled value");
+  is(n1.value, "12", "mouse down disabled value");
 
   var nsbrect = $("n8").spinButtons.getBoundingClientRect();
   ok(nsbrect.left == 0 && nsbrect.top == 0 && nsbrect.right == 0, nsbrect.bottom == 0,
      "hidespinbuttons");
 
   var n9 = $("n9");
-  is(n9.value, 0, "initial value");
+  is(n9.value, "0", "initial value");
   n9.select();
   synthesizeKey("4", {});
   is(inputEventCount, 1, "input event count");
@@ -322,26 +322,26 @@ function testIncreaseDecrease(nb, testid, increment, fixedCount, min, max)
 
   // pressing the cursor up and down keys should adjust the value
   synthesizeKeyExpectEvent("VK_UP", { }, nb, "change", testid + "key up");
-  is(nb.value, min + increment, testid + "key up");
+  is(nb.value, String(min + increment), testid + "key up");
   nb.value = max;
   synthesizeKeyExpectEvent("VK_UP", { }, nb, "!change", testid + "key up at max");
-  is(nb.value, max, testid + "key up at max");
+  is(nb.value, String(max), testid + "key up at max");
   synthesizeKeyExpectEvent("VK_DOWN", { }, nb, "change", testid + "key down");
-  is(nb.value, max - increment, testid + "key down");
+  is(nb.value, String(max - increment), testid + "key down");
   nb.value = min;
   synthesizeKeyExpectEvent("VK_DOWN", { }, nb, "!change", testid + "key down at min");
-  is(nb.value, min, testid + "key down at min");
+  is(nb.value, String(min), testid + "key down at min");
 
   // check pressing the spinbutton arrows
   var sb = nb.spinButtons;
   var sbbottom = sb.getBoundingClientRect().bottom - sb.getBoundingClientRect().top - 2;
   nb.value = min;
   synthesizeMouseExpectEvent(sb, 2, 2, { }, nb, "change", testid + "mouse up");
-  is(nb.value, min + increment, testid + "mouse up");
+  is(nb.value, String(min + increment), testid + "mouse up");
   nb.value = max;
   synthesizeMouseExpectEvent(sb, 2, 2, { }, nb, "!change", testid + "mouse up at max");
   synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, nb, "change", testid + "mouse down");
-  is(nb.value, max - increment, testid + "mouse down");
+  is(nb.value, String(max - increment), testid + "mouse down");
   nb.value = min;
   synthesizeMouseExpectEvent(sb, 2, sbbottom, { }, nb, "!change", testid + "mouse down at min");
 }

@@ -1835,18 +1835,6 @@ public:
   ReleaseIOThreadObjects() override
   { }
 
-  virtual bool
-  IsFileServiceUtilized() override
-  {
-    return false;
-  }
-
-  virtual bool
-  IsTransactionServiceActivated() override
-  {
-    return false;
-  }
-
   virtual void
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
                             nsIRunnable* aCallback) override
@@ -1855,7 +1843,7 @@ public:
   }
 
   virtual void
-  ShutdownTransactionService() override
+  ShutdownWorkThreads() override
   { }
 
 private:

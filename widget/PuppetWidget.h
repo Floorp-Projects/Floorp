@@ -130,16 +130,13 @@ public:
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
 
-  // Synthesized mouse events we need to forwarded to chrome. Event
-  // state manager uses this api to position the mouse in the center
-  // of the window for pointer lock.
-  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) override;
-
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
   NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
   nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) override;
   nsEventStatus DispatchInputEvent(WidgetInputEvent* aEvent) override;
+  void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                              const nsTArray<ScrollableLayerGuid>& aTargets) const override;
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
                                  bool aDoCapture) override
@@ -215,6 +212,37 @@ public:
                             nsString& aCommitted) override;
 
   NS_IMETHOD SetPluginFocused(bool& aFocused) override;
+
+  virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                            int32_t aNativeKeyCode,
+                                            uint32_t aModifierFlags,
+                                            const nsAString& aCharacters,
+                                            const nsAString& aUnmodifiedCharacters,
+                                            nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                              uint32_t aNativeMessage,
+                                              uint32_t aModifierFlags,
+                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                             nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                                    uint32_t aNativeMessage,
+                                                    double aDeltaX,
+                                                    double aDeltaY,
+                                                    double aDeltaZ,
+                                                    uint32_t aModifierFlags,
+                                                    uint32_t aAdditionalFlags,
+                                                    nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                              TouchPointerState aPointerState,
+                                              nsIntPoint aPointerScreenPoint,
+                                              double aPointerPressure,
+                                              uint32_t aPointerOrientation,
+                                              nsIObserver* aObserver) override;
+  virtual nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
+                                            bool aLongTap,
+                                            nsIObserver* aObserver) override;
+  virtual nsresult ClearNativeTouchSequence(nsIObserver* aObserver) override;
 
 protected:
   bool mEnabled;

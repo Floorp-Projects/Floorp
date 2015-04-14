@@ -42,6 +42,7 @@ private:
   nsRefPtr<FileSystemTaskBase> mTask;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };
 
 } // namespace dom

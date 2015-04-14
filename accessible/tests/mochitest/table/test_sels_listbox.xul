@@ -77,7 +77,7 @@
          aId + ": wrong number of selected columns");
 
       if (!aSelIndexesArray) {
-        is(selCols.value, null,
+        is(selCols.value, undefined,
            aId + ": no columns should be selected");
       } else {
         for (var i = 0; i < selCols.length; i++) {
@@ -116,7 +116,7 @@
          aId + ": wrong number of selected rows");
 
       if (!aSelIndexesArray) {
-        is(selCols.value, null,
+        is(selCols.value, undefined,
            aId + ": no row should be selected");
       } else {
         for (var i = 0; i < selCols.length; i++) {
@@ -159,7 +159,7 @@
          aId + ": wrong number of selected cells");
 
       if (!aSelIndexesArray) {
-        is(selCols.value, null,
+        is(selCols.value, undefined,
            aId + ": no cells should be selected");
       } else {
         for (var i = 0; i < selCols.length; i++) {

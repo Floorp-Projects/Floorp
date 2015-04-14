@@ -99,6 +99,12 @@ struct IntRectTyped :
       yMost += this->height;
       return !xMost.isValid() || !yMost.isValid();
     }
+
+    // This is here only to keep IPDL-generated code happy. DO NOT USE.
+    bool operator==(const IntRectTyped<units>& aRect) const
+    {
+      return IntRectTyped<units>::IsEqualEdges(aRect);
+    }
 };
 typedef IntRectTyped<UnknownUnits> IntRect;
 

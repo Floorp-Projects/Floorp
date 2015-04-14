@@ -82,7 +82,7 @@
         try {
           var endCol = propBag.getPropertyAsInt32("endcolumn");
         } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
-          startCol = null;
+          endCol = null;
         }
         is(endCol, aEndCol,
            "Wrong 'endcolumn' of 'treeInvalidated' event on " + aMsg);

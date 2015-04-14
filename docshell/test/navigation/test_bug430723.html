@@ -59,7 +59,7 @@ var nextTest =function() {
 }
 
 var step1 =function() {
-  window.is(testWindow.location, gTallRedBoxURI, "Ensure red page loaded.");
+  window.is(String(testWindow.location), gTallRedBoxURI, "Ensure red page loaded.");
   
   // Navigate down and up.
   is(testWindow.document.body.scrollTop, 0,
@@ -87,7 +87,7 @@ var step1 =function() {
 
 
 var step2 =function() {    
-  window.is(testWindow.location, gTallBlueBoxURI, "Ensure blue page loaded.");
+  window.is(String(testWindow.location), gTallBlueBoxURI, "Ensure blue page loaded.");
 
   // Scroll around a bit.
   is(testWindow.document.body.scrollTop, 0,
@@ -111,7 +111,7 @@ var step2 =function() {
 }
 
 var step3 =function() {
-  window.is(testWindow.location, gTallRedBoxURI,
+  window.is(String(testWindow.location), gTallRedBoxURI,
             "Ensure red page restored from history.");
 
   // Check we can still scroll with the keys.
