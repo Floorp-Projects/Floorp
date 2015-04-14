@@ -94,6 +94,10 @@ bool            gDisableNativeTheme               = false;
 #define TOUCH_INJECT_LONG_TAP_DEFAULT_MSEC 1500
 int32_t nsIWidget::sPointerIdCounter = 0;
 
+// Some statics from nsIWidget.h
+/*static*/ uint64_t AutoObserverNotifier::sObserverId = 0;
+/*static*/ nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIObserver>> AutoObserverNotifier::sSavedObservers;
+
 nsAutoRollup::nsAutoRollup()
 {
   // remember if mLastRollup was null, and only clear it upon destruction
