@@ -109,7 +109,7 @@ function runTests() {
   // Test that a suggested tile is not enhanced by a directory tile
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
-  yield setLinks("-1");
+  yield setLinks("-1,2,3,4,5,6,7,8");
 
   // Test with enhanced = false
   yield addNewTabPageTab();
@@ -119,7 +119,8 @@ function runTests() {
   is(enhanced, "", "history link has no enhanced image");
   is(title, "site#-1");
 
-  is(getData(1), null, "there is only one link and it's a history link");
+  isnot(getData(7), null, "there are 8 history links");
+  is(getData(8), null, "there are 8 history links");
 
 
   // Test with enhanced = true
@@ -138,5 +139,5 @@ function runTests() {
   isnot(enhanced, "", "pinned history link has enhanced image");
   is(title, "title");
 
-  is(getData(2), null, "there is only a suggested link followed by an enhanced history link");
+  is(getData(9), null, "there is a suggested link followed by an enhanced history link and the remaining history links");
 }

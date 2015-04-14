@@ -65,6 +65,9 @@ const SUGGESTED_FRECENCY = Infinity;
 // Default number of times to show a link
 const DEFAULT_FREQUENCY_CAP = 5;
 
+// The min number of visible (not blocked) history tiles to have before showing suggested tiles
+const MIN_VISIBLE_HISTORY_TILES = 8;
+
 // Divide frecency by this amount for pings
 const PING_SCORE_DIVISOR = 10000;
 
@@ -564,7 +567,7 @@ let DirectoryLinksProvider = {
   onLinkChanged: function (aProvider, aLink) {
     // Make sure NewTabUtils.links handles the notification first.
     setTimeout(() => {
-      if (this._handleLinkChanged(aLink)) {
+      if (this._handleLinkChanged(aLink) || this._shouldUpdateSuggestedTile()) {
         this._updateSuggestedTile();
       }
     }, 0);
@@ -590,6 +593,38 @@ let DirectoryLinksProvider = {
     if (remainingViews <= 0) {
       this._updateSuggestedTile();
     }
+  },
+
+  _getCurrentTopSiteCount: function() {
+    let visibleTopSiteCount = 0;
+    for (let link of NewTabUtils.links.getLinks().slice(0, MIN_VISIBLE_HISTORY_TILES)) {
+      if (link && (link.type == "history" || link.type == "enhanced")) {
+        visibleTopSiteCount++;
+      }
+    }
+    return visibleTopSiteCount;
+  },
+
+  _shouldUpdateSuggestedTile: function() {
+    let sortedLinks = NewTabUtils.getProviderLinks(this);
+
+    let mostFrecentLink = {};
+    if (sortedLinks && sortedLinks.length) {
+      mostFrecentLink = sortedLinks[0]
+    }
+
+    let currTopSiteCount = this._getCurrentTopSiteCount();
+    if ((!mostFrecentLink.targetedSite && currTopSiteCount >= MIN_VISIBLE_HISTORY_TILES) ||
+        (mostFrecentLink.targetedSite && currTopSiteCount < MIN_VISIBLE_HISTORY_TILES)) {
+      // If mostFrecentLink has a targetedSite then mostFrecentLink is a suggested link.
+      // If we have enough history links (8+) to show a suggested tile and we are not
+      // already showing one, then we should update (to *attempt* to add a suggested tile).
+      // OR if we don't have enough history to show a suggested tile (<8) and we are
+      // currently showing one, we should update (to remove it).
+      return true;
+    }
+
+    return false;
   },
 
   /**
@@ -621,8 +656,9 @@ let DirectoryLinksProvider = {
       }
     }
 
-    if (this._topSitesWithSuggestedLinks.size == 0) {
-      // There are no potential suggested links we can show.
+    if (this._topSitesWithSuggestedLinks.size == 0 || !this._shouldUpdateSuggestedTile()) {
+      // There are no potential suggested links we can show or not
+      // enough history for a suggested tile.
       return;
     }
 

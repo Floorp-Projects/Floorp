@@ -223,6 +223,42 @@ function run_test() {
   });
 }
 
+add_task(function test_shouldUpdateSuggestedTile() {
+  let suggestedLink = {
+    targetedSite: "somesite.com"
+  };
+
+  // DirectoryLinksProvider has no suggested tile and no top sites => no need to update
+  do_check_eq(DirectoryLinksProvider._getCurrentTopSiteCount(), 0);
+  isIdentical(NewTabUtils.getProviderLinks(), []);
+  do_check_eq(DirectoryLinksProvider._shouldUpdateSuggestedTile(), false);
+
+  // DirectoryLinksProvider has a suggested tile and no top sites => need to update
+  let origGetProviderLinks = NewTabUtils.getProviderLinks;
+  NewTabUtils.getProviderLinks = (provider) => [suggestedLink];
+
+  do_check_eq(DirectoryLinksProvider._getCurrentTopSiteCount(), 0);
+  isIdentical(NewTabUtils.getProviderLinks(), [suggestedLink]);
+  do_check_eq(DirectoryLinksProvider._shouldUpdateSuggestedTile(), true);
+
+  // DirectoryLinksProvider has a suggested tile and 8 top sites => no need to update
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
+
+  do_check_eq(DirectoryLinksProvider._getCurrentTopSiteCount(), 8);
+  isIdentical(NewTabUtils.getProviderLinks(), [suggestedLink]);
+  do_check_eq(DirectoryLinksProvider._shouldUpdateSuggestedTile(), false);
+
+  // DirectoryLinksProvider has no suggested tile and 8 top sites => need to update
+  NewTabUtils.getProviderLinks = origGetProviderLinks;
+  do_check_eq(DirectoryLinksProvider._getCurrentTopSiteCount(), 8);
+  isIdentical(NewTabUtils.getProviderLinks(), []);
+  do_check_eq(DirectoryLinksProvider._shouldUpdateSuggestedTile(), true);
+
+  // Cleanup
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
+});
+
 add_task(function test_updateSuggestedTile() {
   let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
 
@@ -245,6 +281,9 @@ add_task(function test_updateSuggestedTile() {
   NewTabUtils.getProviderLinks = function(provider) {
     return links;
   }
+
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
 
   do_check_eq(DirectoryLinksProvider._updateSuggestedTile(), undefined);
 
@@ -346,6 +385,7 @@ add_task(function test_updateSuggestedTile() {
   yield promiseCleanDirectoryLinksProvider();
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   NewTabUtils.getProviderLinks = origGetProviderLinks;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
 });
 
 add_task(function test_suggestedLinksMap() {
@@ -436,6 +476,9 @@ add_task(function test_suggestedAttributes() {
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
 
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
+
   let frecent_sites = ["top.site.com"];
   let imageURI = "https://image/";
   let title = "the title";
@@ -478,6 +521,7 @@ add_task(function test_suggestedAttributes() {
 
   // Cleanup.
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);
   DirectoryLinksProvider.removeObserver(gLinks);
 });
@@ -486,6 +530,9 @@ add_task(function test_frequencyCappedSites_views() {
   Services.prefs.setCharPref(kPingUrlPref, "");
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
+
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
 
   let testUrl = "http://frequency.capped/link";
   let targets = ["top.site.com"];
@@ -548,6 +595,7 @@ add_task(function test_frequencyCappedSites_views() {
 
   // Cleanup.
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);
   DirectoryLinksProvider.removeObserver(gLinks);
   Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
@@ -557,6 +605,9 @@ add_task(function test_frequencyCappedSites_click() {
   Services.prefs.setCharPref(kPingUrlPref, "");
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
+
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
 
   let testUrl = "http://frequency.capped/link";
   let targets = ["top.site.com"];
@@ -613,6 +664,7 @@ add_task(function test_frequencyCappedSites_click() {
 
   // Cleanup.
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);
   DirectoryLinksProvider.removeObserver(gLinks);
   Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
@@ -1089,6 +1141,8 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
 add_task(function test_DirectoryLinksProvider_enhancedURIs() {
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
+  let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
+  DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
 
   let data = {
     "suggested": [
@@ -1129,6 +1183,7 @@ add_task(function test_DirectoryLinksProvider_enhancedURIs() {
 
   // Cleanup.
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);
 });
 
