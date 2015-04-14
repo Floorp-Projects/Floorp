@@ -290,9 +290,7 @@ nsDOMWindowUtils::UpdateLayerTree()
 NS_IMETHODIMP
 nsDOMWindowUtils::SetCSSViewport(float aWidthPx, float aHeightPx)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (!(aWidthPx >= 0.0 && aHeightPx >= 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -416,9 +414,7 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
                                                   nsIDOMElement* aElement,
                                                   uint32_t aPriority)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -510,9 +506,7 @@ nsDOMWindowUtils::SetResolution(float aResolution)
 NS_IMETHODIMP
 nsDOMWindowUtils::SetResolutionAndScaleTo(float aResolution)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -587,9 +581,7 @@ nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPresShellId(uint32_t *aPresShellId)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
@@ -3266,9 +3258,7 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugin
 NS_IMETHODIMP
 nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aHeight)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
   if (!(aWidth >= 0.0 && aHeight >= 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;
