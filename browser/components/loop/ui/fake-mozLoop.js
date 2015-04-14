@@ -6,7 +6,9 @@
 var fakeRooms = [
   {
     "roomToken": "_nxD4V4FflQ",
-    "roomName": "First Room Name",
+    "decryptedContext": {
+      "roomName": "First Room Name"
+    },
     "roomUrl": "http://localhost:3000/rooms/_nxD4V4FflQ",
     "roomOwner": "Alexis",
     "maxSize": 2,
@@ -17,7 +19,9 @@ var fakeRooms = [
   },
   {
     "roomToken": "QzBbvGmIZWU",
-    "roomName": "Second Room Name",
+    "decryptedContext": {
+      "roomName": "Second Room Name"
+    },
     "roomUrl": "http://localhost:3000/rooms/QzBbvGmIZWU",
     "roomOwner": "Alexis",
     "maxSize": 2,
@@ -28,7 +32,9 @@ var fakeRooms = [
   },
   {
     "roomToken": "3jKS_Els9IU",
-    "roomName": "UX Discussion",
+    "decryptedContext": {
+      "roomName": "UX Discussion",
+    },
     "roomUrl": "http://localhost:3000/rooms/3jKS_Els9IU",
     "roomOwner": "Alexis",
     "maxSize": 2,

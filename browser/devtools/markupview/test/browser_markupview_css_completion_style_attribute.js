@@ -84,8 +84,6 @@ add_task(function*() {
   while (inspector.markup.undo.canUndo()) {
     yield undoChange(inspector);
   }
-
-  yield inspector.once("inspector-updated");
 });
 
 function enterData(index, editor, inspector) {

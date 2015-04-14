@@ -181,10 +181,12 @@ exports.getHighlighterUtils = function(toolbox) {
   }
 
   /**
-   * When the picker is canceled
+   * When the picker is canceled, stop the picker, and make sure the toolbox
+   * gets the focus.
    */
   function onPickerNodeCanceled() {
     stopPicker();
+    toolbox.frame.focus();
   }
 
   /**

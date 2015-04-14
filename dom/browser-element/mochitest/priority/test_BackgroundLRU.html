@@ -20,6 +20,17 @@ browserElementTestHelpers.addPermission();
 browserElementTestHelpers.enableProcessPriorityManager();
 SpecialPowers.addPermission("embed-apps", true, document);
 
+// ProcessPriorityManager requires at least one process in foreground
+// so that other processes can transit freely between foreground and
+// background.
+function setupTest() {
+  var foreground = document.createElement('iframe');
+  foreground.setAttribute('mozbrowser', true);
+  foreground.src = browserElementTestHelpers.emptyPage;
+  expectMozbrowserEvent(foreground, 'loadend').then(runTest);
+  document.body.appendChild(foreground);
+}
+
 function runTest() {
   var iframe1 = document.createElement('iframe');
   iframe1.setAttribute('mozbrowser', true);
@@ -68,7 +79,7 @@ function runTest() {
   document.body.appendChild(iframe1);
 }
 
-addEventListener('testready', runTest);
+addEventListener('testready', setupTest);
 
 </script>
 </body>

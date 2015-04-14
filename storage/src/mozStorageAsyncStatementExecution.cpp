@@ -586,7 +586,7 @@ AsyncExecuteStatements::Run()
   if (mState == CANCELED)
     return notifyComplete();
 
-  if (statementsNeedTransaction()) {
+  if (statementsNeedTransaction() && mConnection->getAutocommit()) {
     if (NS_SUCCEEDED(mConnection->beginTransactionInternal(mNativeConnection,
                                                            mozIStorageConnection::TRANSACTION_IMMEDIATE))) {
       mHasTransaction = true;

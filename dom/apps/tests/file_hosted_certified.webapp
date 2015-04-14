@@ -1,0 +1,6 @@
+{
+  "name": "Certified hosted app",
+  "description": "An app that can't only be installed in dev mode.",
+  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=hosted",
+  "type": "certified"
+}
