@@ -459,43 +459,11 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
 // only supports v1.
 enum class Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
 
-// X.509 Certificate and OCSP ResponseData both use this
-// "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with
-// different default versions.
-inline Result
-OptionalVersion(Reader& input, /*out*/ Version& version)
-{
-  static const uint8_t TAG = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
-  if (!input.Peek(TAG)) {
-    version = Version::v1;
-    return Success;
-  }
-  Reader value;
-  Result rv = ExpectTagAndGetValue(input, TAG, value);
-  if (rv != Success) {
-    return rv;
-  }
-  uint8_t integerValue;
-  rv = Integer(value, integerValue);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = End(value);
-  if (rv != Success) {
-    return rv;
-  }
-  switch (integerValue) {
-    case static_cast<uint8_t>(Version::v3): version = Version::v3; break;
-    case static_cast<uint8_t>(Version::v2): version = Version::v2; break;
-    // XXX(bug 1031093): We shouldn't accept an explicit encoding of v1, but we
-    // do here for compatibility reasons.
-    case static_cast<uint8_t>(Version::v1): version = Version::v1; break;
-    case static_cast<uint8_t>(Version::v4): version = Version::v4; break;
-    default:
-      return Result::ERROR_BAD_DER;
-  }
-  return Success;
-}
+// X.509 Certificate and OCSP ResponseData both use
+// "[0] EXPLICIT Version DEFAULT v1". Although an explicit encoding of v1 is
+// illegal, we support it because some real-world OCSP responses explicitly
+// encode it.
+Result OptionalVersion(Reader& input, /*out*/ Version& version);
 
 template <typename ExtensionHandler>
 inline Result
