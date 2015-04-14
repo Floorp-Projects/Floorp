@@ -220,7 +220,14 @@ HwcComposer2D::RegisterHwcEventCallback()
     // Disable Vsync first, and then register callback functions.
     device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
     device->registerProcs(device, &sHWCProcs);
+
+// Only support actual hardware vsync on kitkat due to innaccurate timings
+// with JellyBean, and HwcComposer bugs with L. Reenable for L later
+#if ANDROID_VERSION == 19
     mHasHWVsync = gfxPrefs::HardwareVsyncEnabled();
+#else
+    mHasHWVsync = false;
+#endif
     return mHasHWVsync;
 }
 
