@@ -29,6 +29,63 @@ using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
 
+template <typename T>
+void
+DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
+{
+    JSGCTraceKind kind = MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind;
+    JS::AutoTracingName ctx(trc, name);
+    trc->invoke((void**)thingp, kind);
+}
+#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type) \
+    template void DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
+FOR_EACH_GC_LAYOUT(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
+#undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
+
+template <>
+void
+DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name)
+{
+    if (vp->isObject()) {
+        JSObject* prior = &vp->toObject();
+        JSObject* obj = prior;
+        DoCallback(trc, &obj, name);
+        if (obj != prior)
+            vp->setObjectOrNull(obj);
+    } else if (vp->isString()) {
+        JSString* prior = vp->toString();
+        JSString* str = prior;
+        DoCallback(trc, &str, name);
+        if (str != prior)
+            vp->setString(str);
+    } else if (vp->isSymbol()) {
+        JS::Symbol* prior = vp->toSymbol();
+        JS::Symbol* sym = prior;
+        DoCallback(trc, &sym, name);
+        if (sym != prior)
+            vp->setSymbol(sym);
+    }
+}
+
+template <>
+void
+DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
+{
+    if (JSID_IS_STRING(*idp)) {
+        JSString* prior = JSID_TO_STRING(*idp);
+        JSString* str = prior;
+        DoCallback(trc, &str, name);
+        if (str != prior)
+            *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
+    } else if (JSID_IS_SYMBOL(*idp)) {
+        JS::Symbol* prior = JSID_TO_SYMBOL(*idp);
+        JS::Symbol* sym = prior;
+        DoCallback(trc, &sym, name);
+        if (sym != prior)
+            *idp = SYMBOL_TO_JSID(sym);
+    }
+}
+
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredValueTracer(JSTracer* trc, Value* valuep, const char* name)
 {
