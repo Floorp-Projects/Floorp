@@ -12,7 +12,7 @@
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/Animation.h" // for Animation
 #include "mozilla/dom/AnimationPlayerBinding.h" // for AnimationPlayState
-#include "mozilla/dom/AnimationTimeline.h" // for AnimationTimeline
+#include "mozilla/dom/DocumentTimeline.h" // for DocumentTimeline
 #include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
 
@@ -51,7 +51,7 @@ protected:
   virtual ~AnimationPlayer() {}
 
 public:
-  explicit AnimationPlayer(AnimationTimeline* aTimeline)
+  explicit AnimationPlayer(DocumentTimeline* aTimeline)
     : mTimeline(aTimeline)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
@@ -65,8 +65,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationPlayer)
 
-  AnimationTimeline* GetParentObject() const { return mTimeline; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  DocumentTimeline* GetParentObject() const { return mTimeline; }
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   virtual CSSAnimationPlayer* AsCSSAnimationPlayer() { return nullptr; }
   virtual CSSTransitionPlayer* AsCSSTransitionPlayer() { return nullptr; }
@@ -80,7 +81,7 @@ public:
 
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
-  AnimationTimeline* Timeline() const { return mTimeline; }
+  DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
   Nullable<TimeDuration> GetCurrentTime() const;
@@ -301,7 +302,7 @@ protected:
   virtual css::CommonAnimationManager* GetAnimationManager() const = 0;
   AnimationPlayerCollection* GetCollection() const;
 
-  nsRefPtr<AnimationTimeline> mTimeline;
+  nsRefPtr<DocumentTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale

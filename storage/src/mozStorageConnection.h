@@ -124,8 +124,7 @@ public:
    * Gets autocommit status.
    */
   bool getAutocommit() {
-    MOZ_ASSERT(mDBConn, "A connection must exist at this point");
-    return static_cast<bool>(::sqlite3_get_autocommit(mDBConn));
+    return mDBConn && static_cast<bool>(::sqlite3_get_autocommit(mDBConn));
   };
 
   /**

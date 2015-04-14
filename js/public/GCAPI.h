@@ -60,6 +60,7 @@ namespace JS {
     D(SHARED_MEMORY_LIMIT)                      \
     D(PERIODIC_FULL_GC)                         \
     D(INCREMENTAL_TOO_SLOW)                     \
+    D(ABORT_GC)                                 \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -78,7 +79,6 @@ namespace JS {
     D(RESERVED13)                               \
     D(RESERVED14)                               \
     D(RESERVED15)                               \
-    D(RESERVED16)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \
@@ -244,6 +244,15 @@ IncrementalGCSlice(JSRuntime* rt, gcreason::Reason reason, int64_t millis = 0);
  */
 extern JS_PUBLIC_API(void)
 FinishIncrementalGC(JSRuntime* rt, gcreason::Reason reason);
+
+/*
+ * If IsIncrementalGCInProgress(rt), this call aborts the ongoing collection and
+ * performs whatever work needs to be done to return the collector to its idle
+ * state. This may take an arbitrarily long time. When this function returns,
+ * IsIncrementalGCInProgress(rt) will always be false.
+ */
+extern JS_PUBLIC_API(void)
+AbortIncrementalGC(JSRuntime* rt);
 
 enum GCProgress {
     /*
