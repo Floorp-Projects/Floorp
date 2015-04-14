@@ -233,7 +233,7 @@
           let defaults = Simulator.prototype._defaults;
 
           for (let param in defaults) {
-            is(form[param].value, defaults[param], "Default value for device " + param);
+            is(form[param].value, String(defaults[param]), "Default value for device " + param);
           }
 
           let width = 5000, height = 4000;
@@ -276,7 +276,7 @@
           // Test `device`.
 
           for (let param in defaults) {
-            is(form[param].value, defaults[param], "Default value for device " + param);
+            is(form[param].value, String(defaults[param]), "Default value for device " + param);
           }
 
           let devices = yield GetDevices();
@@ -286,8 +286,8 @@
           yield set(form.device, device.name);
 
           is(form.device.value, device.name, "Device selector was changed");
-          is(form.width.value, device.width, "New device width is correct");
-          is(form.height.value, device.height, "New device height is correct");
+          is(form.width.value, String(device.width), "New device width is correct");
+          is(form.height.value, String(device.height), "New device height is correct");
 
           params = yield runSimulator(1);
 
@@ -300,7 +300,7 @@
           yield nextTick();
 
           for (let param in defaults) {
-            is(form[param].value, defaults[param], "Default value for device " + param);
+            is(form[param].value, String(defaults[param]), "Default value for device " + param);
           }
 
           // Uninstall the 2.0 addon and watch its Simulator object disappear.
