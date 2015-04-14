@@ -855,8 +855,10 @@ PuppetWidget::SetCursor(nsCursor aCursor)
 }
 
 nsresult
-PuppetWidget::SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint)
+PuppetWidget::SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+                                        nsIObserver* aObserver)
 {
+  //XXX Do something wtih aObserver (will happen in a later patch)
   if (mTabChild &&
       !mTabChild->SendSynthesizeNativeMouseMove(aPoint)) {
     return NS_ERROR_FAILURE;

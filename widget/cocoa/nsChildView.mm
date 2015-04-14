@@ -1116,8 +1116,10 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                int32_t aNativeKeyCode,
                                                uint32_t aModifierFlags,
                                                const nsAString& aCharacters,
-                                               const nsAString& aUnmodifiedCharacters)
+                                               const nsAString& aUnmodifiedCharacters,
+                                               nsIObserver* aObserver)
 {
+  AutoObserverNotifier notifier(aObserver, "keyevent");
   return mTextInputHandler->SynthesizeNativeKeyEvent(aNativeKeyboardLayout,
                                                      aNativeKeyCode,
                                                      aModifierFlags,
@@ -1127,9 +1129,12 @@ nsresult nsChildView::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
 
 nsresult nsChildView::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                  uint32_t aNativeMessage,
-                                                 uint32_t aModifierFlags)
+                                                 uint32_t aModifierFlags,
+                                                 nsIObserver* aObserver)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  AutoObserverNotifier notifier(aObserver, "mouseevent");
 
   NSPoint pt =
     nsCocoaUtils::DevPixelsToCocoaPoints(aPoint, BackingScaleFactor());
