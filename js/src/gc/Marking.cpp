@@ -369,6 +369,28 @@ js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, BarrieredBase<T>* ds
 template void js::TraceCrossCompartmentEdge<Value>(JSTracer*, JSObject*, BarrieredBase<Value>*,
                                                    const char*);
 
+template <typename T>
+void
+js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name)
+{
+    JS_ROOT_MARKING_ASSERT(trc);
+    MOZ_ASSERT(ThingIsPermanentAtomOrWellKnownSymbol(thing));
+
+    // We have to mark permanent atoms and well-known symbols through a special
+    // method because the default DoMarking implementation automatically skips
+    // them. Fortunately, atoms (permanent and non) cannot refer to other GC
+    // things so they do not need to go through the mark stack and may simply
+    // be marked directly.  Moreover, well-known symbols can refer only to
+    // permanent atoms, so likewise require no subsquent marking.
+    CheckMarkedThing(trc, thing);
+    if (trc->isMarkingTracer())
+        thing->markIfUnmarked(gc::BLACK);
+    else
+        DoCallback(trc->asCallbackTracer(), ConvertToBase(&thing), name);
+}
+template void js::TraceProcessGlobalRoot<JSAtom>(JSTracer*, JSAtom*, const char*);
+template void js::TraceProcessGlobalRoot<JS::Symbol>(JSTracer*, JS::Symbol*, const char*);
+
 // This method is responsible for dynamic dispatch to the real tracer
 // implementation. Consider replacing this choke point with virtual dispatch:
 // a sufficiently smart C++ compiler may be able to devirtualize some paths.
@@ -535,43 +557,6 @@ js::GCMarker::mark(T* thing)
            : gc::TenuredCell::fromPointer(thing)->markIfUnmarked(gc::BLACK);
 }
 
-namespace js {
-namespace gc {
-
-void
-MarkPermanentAtom(JSTracer* trc, JSAtom* atom, const char* name)
-{
-    MOZ_ASSERT(atom->isPermanent());
-
-    // We have to mark permanent atoms through a special method because the
-    // default DoMarking implementation automatically skips them. Fortunatly,
-    // atoms cannot refer to other GC things, so they do not need to go through
-    // the mark stack and may simply be marked directly.
-    CheckMarkedThing(trc, atom);
-    if (trc->isMarkingTracer())
-        atom->markIfUnmarked();
-    else
-        DoCallback(trc->asCallbackTracer(), reinterpret_cast<JSString**>(&atom), name);
-}
-
-void
-MarkWellKnownSymbol(JSTracer* trc, JS::Symbol* sym)
-{
-    if (!sym)
-        return;
-    MOZ_ASSERT(sym->isWellKnownSymbol());
-
-    // As per permanent atoms, the normal marking path is not adequate.
-    CheckMarkedThing(trc, sym);
-    if (trc->isMarkingTracer()) {
-        // Permanent atoms are marked before well-known symbols.
-        MOZ_ASSERT(sym->description()->isMarked());
-        sym->markIfUnmarked();
-    } else {
-        DoCallback(trc->asCallbackTracer(), &sym, "wellKnownSymbol");
-    }
-}
-
 template <typename T>
 static inline void
 CheckIsMarkedThing(T* thingp)
@@ -721,6 +706,9 @@ IsAboutToBeFinalizedInternal<jsid>(jsid* idp)
     }
     return rv;
 }
+
+namespace js {
+namespace gc {
 
 template <typename T>
 bool
