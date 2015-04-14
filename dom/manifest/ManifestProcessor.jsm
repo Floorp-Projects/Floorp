@@ -101,14 +101,18 @@ ManifestProcessor.prototype = {
   //  * manifestURL: the URL of the manifest, to resolve URLs.
   //  * docURL: the URL of the owner doc, for security checks.
   process({
-    jsonText, manifestURL, docURL
+    jsonText: aJsonText,
+    manifestURL: aManifestURL,
+    docURL: aDocURL
   }) {
+    const manifestURL = new URL(aManifestURL);
+    const docURL = new URL(aDocURL);
     const console = new ConsoleAPI({
       prefix: 'Web Manifest: '
     });
     let rawManifest = {};
     try {
-      rawManifest = JSON.parse(jsonText);
+      rawManifest = JSON.parse(aJsonText);
     } catch (e) {}
     if (typeof rawManifest !== 'object' || rawManifest === null) {
       let msg = 'Manifest needs to be an object.';
@@ -124,7 +128,8 @@ ManifestProcessor.prototype = {
       short_name: processShortNameMember(rawManifest),
     };
     processedManifest.scope = processScopeMember(rawManifest, manifestURL,
-      docURL, processedManifest.start_url);
+      docURL, new URL(processedManifest.start_url));
+
     return processedManifest;
 
     function processNameMember(aManifest) {
@@ -188,8 +193,11 @@ ManifestProcessor.prototype = {
         expectedType: 'string',
         trim: false
       };
-      const value = extractValue(spec, console);
       let scopeURL;
+      const value = extractValue(spec, console);
+      if (value === undefined || value === '') {
+        return undefined;
+      }
       try {
         scopeURL = new URL(value, aManifestURL);
       } catch (e) {
@@ -210,7 +218,7 @@ ManifestProcessor.prototype = {
         console.warn(msg);
         return undefined;
       }
-      return scopeURL;
+      return scopeURL.href;
     }
 
     function processStartURLMember(aManifest, aManifestURL, aDocURL) {
@@ -221,7 +229,7 @@ ManifestProcessor.prototype = {
         expectedType: 'string',
         trim: false
       };
-      let result = new URL(aDocURL);
+      let result = new URL(aDocURL).href;
       const value = extractValue(spec, console);
       if (value === undefined || value === '') {
         return result;
@@ -237,7 +245,7 @@ ManifestProcessor.prototype = {
         let msg = 'start_url must be same origin as document.';
         console.warn(msg);
       } else {
-        result = potentialResult;
+        result = potentialResult.href;
       }
       return result;
     }
@@ -248,7 +256,7 @@ this.ManifestProcessor = ManifestProcessor;
 function IconsProcessor() {}
 
 // Static getters
-Object.defineProperties(IconsProcessor,{
+Object.defineProperties(IconsProcessor, {
   'onlyDecimals': {
     get: function() {
       return /^\d+$/;
@@ -324,7 +332,7 @@ IconsProcessor.process = function(aManifest, aBaseURL, console) {
     let url;
     if (value && value.length) {
       try {
-        url = new URL(value, aBaseURL);
+        url = new URL(value, aBaseURL).href;
       } catch (e) {}
     }
     return url;

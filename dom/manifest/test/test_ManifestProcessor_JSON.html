@@ -20,7 +20,7 @@ invalidJson.forEach((testString) => {
   var expected = `Expect to recover from invalid JSON: ${testString}`;
   data.jsonText = testString;
   var result = processor.process(data);
-  SimpleTest.ok(result.start_url.href === docURL.href, true, expected);
+  SimpleTest.ise(result.start_url, docURL.href, expected);
 });
 
 var validButUnhelpful = ["1", 1, "", "[{}]", "null"];
@@ -28,7 +28,7 @@ validButUnhelpful.forEach((testString) => {
   var expected = `Expect to recover from invalid JSON: ${testString}`;
   data.jsonText = testString;
   var result = processor.process(data);
-  SimpleTest.ok(result.start_url.href === docURL.href, true, expected);
+  SimpleTest.ise(result.start_url, docURL.href, expected);
 });
   </script>
 </head>
