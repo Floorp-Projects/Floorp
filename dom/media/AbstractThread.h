@@ -50,17 +50,6 @@ protected:
   virtual ~AbstractThread() {}
 };
 
-template<typename TargetType>
-class AbstractThreadImpl : public AbstractThread
-{
-public:
-  explicit AbstractThreadImpl(TargetType* aTarget) : mTarget(aTarget) {}
-  virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable);
-  virtual bool IsCurrentThreadIn();
-private:
-  nsRefPtr<TargetType> mTarget;
-};
-
 } // namespace mozilla
 
 #endif
