@@ -206,7 +206,6 @@ public:
     virtual bool RecvSetBackgroundColor(const nscolor& aValue) override;
     virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) override;
     virtual bool RecvIsParentWindowMainWidgetVisible(bool* aIsVisible) override;
-    virtual bool RecvSynthesizeNativeMouseMove(const mozilla::LayoutDeviceIntPoint& aPoint) override;
     virtual bool RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip) override;
     virtual bool RecvHideTooltip() override;
     virtual bool RecvGetTabOffset(LayoutDeviceIntPoint* aPoint) override;
@@ -270,6 +269,37 @@ public:
 
     virtual bool RecvRequestNativeKeyBindings(const mozilla::WidgetKeyboardEvent& aEvent,
                                               MaybeNativeKeyBinding* aBindings) override;
+
+    virtual bool RecvSynthesizeNativeKeyEvent(const int32_t& aNativeKeyboardLayout,
+                                              const int32_t& aNativeKeyCode,
+                                              const uint32_t& aModifierFlags,
+                                              const nsString& aCharacters,
+                                              const nsString& aUnmodifiedCharacters,
+                                              const uint64_t& aObserverId) override;
+    virtual bool RecvSynthesizeNativeMouseEvent(const LayoutDeviceIntPoint& aPoint,
+                                                const uint32_t& aNativeMessage,
+                                                const uint32_t& aModifierFlags,
+                                                const uint64_t& aObserverId) override;
+    virtual bool RecvSynthesizeNativeMouseMove(const LayoutDeviceIntPoint& aPoint,
+                                               const uint64_t& aObserverId) override;
+    virtual bool RecvSynthesizeNativeMouseScrollEvent(const LayoutDeviceIntPoint& aPoint,
+                                                      const uint32_t& aNativeMessage,
+                                                      const double& aDeltaX,
+                                                      const double& aDeltaY,
+                                                      const double& aDeltaZ,
+                                                      const uint32_t& aModifierFlags,
+                                                      const uint32_t& aAdditionalFlags,
+                                                      const uint64_t& aObserverId) override;
+    virtual bool RecvSynthesizeNativeTouchPoint(const uint32_t& aPointerId,
+                                                const TouchPointerState& aPointerState,
+                                                const nsIntPoint& aPointerScreenPoint,
+                                                const double& aPointerPressure,
+                                                const uint32_t& aPointerOrientation,
+                                                const uint64_t& aObserverId) override;
+    virtual bool RecvSynthesizeNativeTouchTap(const nsIntPoint& aPointerScreenPoint,
+                                              const bool& aLongTap,
+                                              const uint64_t& aObserverId) override;
+    virtual bool RecvClearNativeTouchSequence(const uint64_t& aObserverId) override;
 
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,

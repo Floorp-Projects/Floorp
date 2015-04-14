@@ -23,6 +23,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/Point.h"
+#include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "Units.h"
 
@@ -727,6 +728,17 @@ struct AutoObserverNotifier {
     mObserver = nullptr;
   }
 
+  uint64_t SaveObserver()
+  {
+    if (!mObserver) {
+      return 0;
+    }
+    uint64_t observerId = ++sObserverId;
+    sSavedObservers.Put(observerId, mObserver);
+    SkipNotification();
+    return observerId;
+  }
+
   ~AutoObserverNotifier()
   {
     if (mObserver) {
@@ -734,9 +746,26 @@ struct AutoObserverNotifier {
     }
   }
 
+  static void NotifySavedObserver(const uint64_t& aObserverId,
+                                  const char* aTopic)
+  {
+    nsCOMPtr<nsIObserver> observer = sSavedObservers.Get(aObserverId);
+    if (!observer) {
+      MOZ_ASSERT(aObserverId == 0, "We should always find a saved observer for nonzero IDs");
+      return;
+    }
+
+    sSavedObservers.Remove(aObserverId);
+    observer->Observe(nullptr, aTopic, nullptr);
+  }
+
 private:
   nsCOMPtr<nsIObserver> mObserver;
   const char* mTopic;
+
+private:
+  static uint64_t sObserverId;
+  static nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIObserver>> sSavedObservers;
 };
 
 } // namespace widget
@@ -1958,16 +1987,19 @@ class nsIWidget : public nsISupports {
      */
     enum TouchPointerState {
       // The pointer is in a hover state above the digitizer
-      TOUCH_HOVER    = 0x01,
+      TOUCH_HOVER    = (1 << 0),
       // The pointer is in contact with the digitizer
-      TOUCH_CONTACT  = 0x02,
+      TOUCH_CONTACT  = (1 << 1),
       // The pointer has been removed from the digitizer detection area
-      TOUCH_REMOVE   = 0x04,
+      TOUCH_REMOVE   = (1 << 2),
       // The pointer has been canceled. Will cancel any pending os level
       // gestures that would triggered as a result of completion of the
       // input sequence. This may not cancel moz platform related events
       // that might get tirggered by input already delivered.
-      TOUCH_CANCEL   = 0x08
+      TOUCH_CANCEL   = (1 << 3),
+
+      // ALL_BITS used for validity checking during IPC serialization
+      ALL_BITS       = (1 << 4) - 1
     };
 
     /*
@@ -2000,9 +2032,9 @@ class nsIWidget : public nsISupports {
      * @param aObserver The observer that will get notified once the events
      * have been dispatched.
      */
-    nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
-                                      bool aLongTap,
-                                      nsIObserver* aObserver);
+    virtual nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
+                                              bool aLongTap,
+                                              nsIObserver* aObserver);
 
     /*
      * Cancels all active simulated touch input points and pending long taps.

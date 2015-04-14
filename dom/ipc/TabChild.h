@@ -371,6 +371,8 @@ public:
                               const bool&     aPreventDefault) override;
     virtual bool RecvMouseScrollTestEvent(const FrameMetrics::ViewID& aScrollId,
                                           const nsString& aEvent) override;
+    virtual bool RecvNativeSynthesisResponse(const uint64_t& aObserverId,
+                                             const nsCString& aResponse) override;
     virtual bool RecvCompositionEvent(const mozilla::WidgetCompositionEvent& event) override;
     virtual bool RecvSelectionEvent(const mozilla::WidgetSelectionEvent& event) override;
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture) override;
