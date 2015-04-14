@@ -249,7 +249,7 @@ public:
     return mTiming;
   }
 
-  const nsString& Name() const {
+  virtual const nsString& Name() const {
     return mName;
   }
 
