@@ -184,8 +184,6 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
-class AnimationEffect;
-
 class Animation : public nsWrapperCache
 {
 public:
@@ -219,9 +217,6 @@ public:
   }
 
   // Animation interface
-  // This currently returns a new object each time when used from C++ but is
-  // cached when used from JS.
-  already_AddRefed<AnimationEffect> GetEffect();
   Element* GetTarget() const {
     // Currently we only implement Element.getAnimations() which only
     // returns animations targetting Elements so this should never
@@ -231,6 +226,10 @@ public:
                " pseudo-element is not yet supported.");
     return mTarget;
   }
+  void GetName(nsString& aRetVal) const
+  {
+    aRetVal = Name();
+  }
 
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement.
@@ -238,6 +237,12 @@ public:
                  nsCSSPseudoElements::Type& aPseudoType) const {
     aTarget = mTarget;
     aPseudoType = mPseudoType;
+  }
+  // Alternative to GetName that returns a reference to the member for
+  // more efficient internal usage.
+  virtual const nsString& Name() const
+  {
+    return mName;
   }
 
   void SetParentTime(Nullable<TimeDuration> aParentTime);
@@ -247,10 +252,6 @@ public:
   }
   AnimationTiming& Timing() {
     return mTiming;
-  }
-
-  virtual const nsString& Name() const {
-    return mName;
   }
 
   // Return the duration from the start the active interval to the point where

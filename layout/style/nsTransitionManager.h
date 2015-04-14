@@ -42,7 +42,7 @@ struct ElementPropertyTransition : public dom::Animation
   virtual ElementPropertyTransition* AsTransition() { return this; }
   virtual const ElementPropertyTransition* AsTransition() const { return this; }
 
-  virtual const nsString& Name() const;
+  virtual const nsString& Name() const override;
 
   nsCSSProperty TransitionProperty() const {
     MOZ_ASSERT(Properties().Length() == 1,
