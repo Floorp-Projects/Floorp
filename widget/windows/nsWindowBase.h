@@ -92,8 +92,9 @@ public:
                                               TouchPointerState aPointerState,
                                               nsIntPoint aPointerScreenPoint,
                                               double aPointerPressure,
-                                              uint32_t aPointerOrientation);
-  virtual nsresult ClearNativeTouchSequence();
+                                              uint32_t aPointerOrientation,
+                                              nsIObserver* aObserver) override;
+  virtual nsresult ClearNativeTouchSequence(nsIObserver* aObserver) override;
 
   /*
    * WM_APPCOMMAND common handler.

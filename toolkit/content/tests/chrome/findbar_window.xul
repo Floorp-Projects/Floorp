@@ -446,9 +446,9 @@
       let timeout = gFindBar._matchesCountTimeoutLength + 20;
 
       function assertMatches(aTest, aMatches) {
-        is(aMatches[1], aTest.current,
+        is(aMatches[1], String(aTest.current),
           "Currently highlighted match should be at " + aTest.current);
-        is(aMatches[2], aTest.total,
+        is(aMatches[2], String(aTest.total),
           "Total amount of matches should be " + aTest.total);
       }
 
@@ -502,11 +502,11 @@
       prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
 
       enterStringIntoFindField("t");
-      is(gBrowser.contentWindow.getSelection(), "T", "First T should be selected.");
+      is(String(gBrowser.contentWindow.getSelection()), "T", "First T should be selected.");
 
       prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
       setTimeout(function() {
-        is(gBrowser.contentWindow.getSelection(), "t", "First t should be selected.");
+        is(String(gBrowser.contentWindow.getSelection()), "t", "First t should be selected.");
         deferred.resolve();
       }, 0);
       return deferred.promise;
@@ -523,11 +523,11 @@
       prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
 
       enterStringIntoFindField(SEARCH_TEXT.toUpperCase());
-      is(gBrowser.contentWindow.getSelection(), "", "Not found.");
+      is(String(gBrowser.contentWindow.getSelection()), "", "Not found.");
 
       prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
       setTimeout(function() {
-        is(gBrowser.contentWindow.getSelection(), SEARCH_TEXT, "Search text should be selected.");
+        is(String(gBrowser.contentWindow.getSelection()), SEARCH_TEXT, "Search text should be selected.");
         deferred.resolve();
       }, 0);
       return deferred.resolve();

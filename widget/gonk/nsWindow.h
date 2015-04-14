@@ -98,7 +98,8 @@ public:
                                                 TouchPointerState aPointerState,
                                                 nsIntPoint aPointerScreenPoint,
                                                 double aPointerPressure,
-                                                uint32_t aPointerOrientation) override;
+                                                uint32_t aPointerOrientation,
+                                                nsIObserver* aObserver) override;
 
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
                                    bool aDoCapture)

@@ -22,8 +22,12 @@ public:
                   bool aAuth,
                   bool aEncrypt);
 
-  bool Connect(const nsACString& aDeviceAddress, int aChannel);
-  bool Listen(int aChannel);
+  bool Connect(const nsAString& aDeviceAddress,
+               const BluetoothUuid& aServiceUuid,
+               int aChannel);
+  bool Listen(const nsAString& aServiceName,
+              const BluetoothUuid& aServiceUuid,
+              int aChannel);
   inline void Disconnect()
   {
     CloseSocket();

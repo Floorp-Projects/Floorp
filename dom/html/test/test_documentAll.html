@@ -31,7 +31,8 @@ p = document.getElementById("content");
 
 // Test that several elements with the same id or name behave correctly
 function testNumSame() {
-  is(document.all.id0, null, "no ids");
+  is(document.all.id0, undefined, "no ids");
+  is(document.all.namedItem("id0"), null, "no ids");
   is(document.all.id1, p.children[0], "one id");
   is(document.all.id2[0], p.children[1], "two ids");
   is(document.all.id2[1], p.children[2], "two ids");
@@ -79,7 +80,8 @@ id3list = document.all.id3;
 rC(child[3]);
 is(id3list.length, 1, "now one length");
 rC(child[5]);
-is(document.all.id3, null, "now none");
+is(document.all.id3, undefined, "now none");
+is(document.all.namedItem("id3"), null, "now none (namedItem)");
 is(id3list.length, 0, "now none length");
 
 // Give an element both a name and id and check that it appears in two lists
@@ -135,7 +137,8 @@ elementNames.forEach(function (name) {
     hasName.shift();
   }
   else {
-    is(document.all[nameval], null, "shouldn't have name");
+    is(document.all[nameval], undefined, "shouldn't have name");
+    is(document.all.namedItem(nameval), null, "shouldn't have name (namedItem)");
   }
 });
 is(hasName.length, 0, "found all names");

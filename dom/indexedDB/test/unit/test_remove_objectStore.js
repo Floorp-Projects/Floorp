@@ -73,7 +73,7 @@ function testSteps()
   request = objectStore.openCursor();
   request.onerror = errorHandler;
   request.onsuccess = function(event) {
-    is(event.target.result, undefined, "ObjectStore shouldn't have any items");
+    is(event.target.result, null, "ObjectStore shouldn't have any items");
     testGenerator.send(event);
   }
   event = yield undefined;

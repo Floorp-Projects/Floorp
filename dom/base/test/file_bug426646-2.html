@@ -55,7 +55,7 @@ function doe4() {
 }
 
 function doe5() {
-  opener.is(win0.location, url1, "History.go(-1) didn't work?");
+  opener.is(String(win0.location), url1, "History.go(-1) didn't work?");
   close();
 }
 </script>

@@ -8,6 +8,8 @@
 #include "ContentHelper.h"
 #include "gfxPlatform.h" // For gfxPlatform::UseTiling
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/layers/LayerTransactionChild.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
@@ -565,14 +567,29 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
       scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
 }
 
+static void
+SendLayersDependentApzcTargetConfirmation(nsIPresShell* aShell, uint64_t aInputBlockId,
+                                          const nsTArray<ScrollableLayerGuid>& aTargets)
+{
+  LayerManager* lm = aShell->GetLayerManager();
+  if (!lm) {
+    return;
+  }
+
+  LayerTransactionChild* shadow = lm->AsShadowForwarder()->GetShadowManager();
+  if (!shadow) {
+    return;
+  }
+
+  shadow->SendSetConfirmedTargetAPZC(aInputBlockId, aTargets);
+}
+
 class DisplayportSetListener : public nsAPostRefreshObserver {
 public:
-  DisplayportSetListener(const nsRefPtr<SetTargetAPZCCallback>& aCallback,
-                         nsIPresShell* aPresShell,
+  DisplayportSetListener(nsIPresShell* aPresShell,
                          const uint64_t& aInputBlockId,
                          const nsTArray<ScrollableLayerGuid>& aTargets)
-    : mCallback(aCallback)
-    , mPresShell(aPresShell)
+    : mPresShell(aPresShell)
     , mInputBlockId(aInputBlockId)
     , mTargets(aTargets)
   {
@@ -583,18 +600,17 @@ public:
   }
 
   void DidRefresh() override {
-    if (!mCallback) {
+    if (!mPresShell) {
       MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
       return;
     }
 
     APZCCH_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
-    mCallback->Run(mInputBlockId, mTargets);
+    SendLayersDependentApzcTargetConfirmation(mPresShell, mInputBlockId, mTargets);
 
     if (!mPresShell->RemovePostRefreshObserver(this)) {
       MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
       // Graceful handling, just in case...
-      mCallback = nullptr;
       mPresShell = nullptr;
       return;
     }
@@ -603,7 +619,6 @@ public:
   }
 
 private:
-  nsRefPtr<SetTargetAPZCCallback> mCallback;
   nsRefPtr<nsIPresShell> mPresShell;
   uint64_t mInputBlockId;
   nsTArray<ScrollableLayerGuid> mTargets;
@@ -612,21 +627,21 @@ private:
 // Sends a SetTarget notification for APZC, given one or more previous
 // calls to PrepareForAPZCSetTargetNotification().
 static void
-SendSetTargetAPZCNotificationHelper(nsIPresShell* aShell,
+SendSetTargetAPZCNotificationHelper(nsIWidget* aWidget,
+                                    nsIPresShell* aShell,
                                     const uint64_t& aInputBlockId,
                                     const nsTArray<ScrollableLayerGuid>& aTargets,
-                                    bool aWaitForRefresh,
-                                    const nsRefPtr<SetTargetAPZCCallback>& aCallback)
+                                    bool aWaitForRefresh)
 {
   bool waitForRefresh = aWaitForRefresh;
   if (waitForRefresh) {
     APZCCH_LOG("At least one target got a new displayport, need to wait for refresh\n");
     waitForRefresh = aShell->AddPostRefreshObserver(
-      new DisplayportSetListener(aCallback, aShell, aInputBlockId, aTargets));
+      new DisplayportSetListener(aShell, aInputBlockId, aTargets));
   }
   if (!waitForRefresh) {
     APZCCH_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
-    aCallback->Run(aInputBlockId, aTargets);
+    aWidget->SetConfirmedTargetAPZC(aInputBlockId, aTargets);
   } else {
     APZCCH_LOG("Successfully registered post-refresh observer\n");
   }
@@ -637,8 +652,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                                   nsIDocument* aDocument,
                                                   const WidgetGUIEvent& aEvent,
                                                   const ScrollableLayerGuid& aGuid,
-                                                  uint64_t aInputBlockId,
-                                                  const nsRefPtr<SetTargetAPZCCallback>& aCallback)
+                                                  uint64_t aInputBlockId)
 {
   if (!aWidget || !aDocument) {
     return;
@@ -660,8 +674,12 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
       // TODO: Do other types of events need to be handled?
 
       if (!targets.IsEmpty()) {
-        SendSetTargetAPZCNotificationHelper(shell, aInputBlockId, targets,
-            waitForRefresh, aCallback);
+        SendSetTargetAPZCNotificationHelper(
+          aWidget,
+          shell,
+          aInputBlockId,
+          targets,
+          waitForRefresh);
       }
     }
   }

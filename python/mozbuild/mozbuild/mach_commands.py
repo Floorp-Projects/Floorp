@@ -420,55 +420,9 @@ class Build(MachCommandBase):
                 self.log(logging.INFO, 'ccache',
                          {'msg': ccache_diff.hit_rate_message()}, "{msg}")
 
-        moz_nospam = os.environ.get('MOZ_NOSPAM')
-        if monitor.elapsed > 300 and not moz_nospam:
+        if monitor.elapsed > 300:
             # Display a notification when the build completes.
-            # This could probably be uplifted into the mach core or at least
-            # into a helper API. It is here as an experimentation to see how it
-            # is received.
-            try:
-                if sys.platform.startswith('darwin'):
-                    try:
-                        notifier = which.which('terminal-notifier')
-                    except which.WhichError:
-                        raise Exception('Install terminal-notifier to get '
-                            'a notification when the build finishes.')
-                    self.run_process([notifier, '-title',
-                        'Mozilla Build System', '-group', 'mozbuild',
-                        '-message', 'Build complete'], ensure_exit_code=False)
-                elif sys.platform.startswith('linux'):
-                    try:
-                        import dbus
-                    except ImportError:
-                        raise Exception('Install the python dbus module to '
-                            'get a notification when the build finishes.')
-                    bus = dbus.SessionBus()
-                    notify = bus.get_object('org.freedesktop.Notifications',
-                                            '/org/freedesktop/Notifications')
-                    method = notify.get_dbus_method('Notify',
-                                                    'org.freedesktop.Notifications')
-                    method('Mozilla Build System', 0, '', 'Build complete', '', [], [], -1)
-                elif sys.platform.startswith('win'):
-                    from ctypes import Structure, windll, POINTER, sizeof
-                    from ctypes.wintypes import DWORD, HANDLE, WINFUNCTYPE, BOOL, UINT
-                    class FLASHWINDOW(Structure):
-                        _fields_ = [("cbSize", UINT),
-                                    ("hwnd", HANDLE),
-                                    ("dwFlags", DWORD),
-                                    ("uCount", UINT),
-                                    ("dwTimeout", DWORD)]
-                    FlashWindowExProto = WINFUNCTYPE(BOOL, POINTER(FLASHWINDOW))
-                    FlashWindowEx = FlashWindowExProto(("FlashWindowEx", windll.user32))
-                    FLASHW_CAPTION = 0x01
-                    FLASHW_TRAY = 0x02
-                    FLASHW_TIMERNOFG = 0x0C
-                    params = FLASHWINDOW(sizeof(FLASHWINDOW),
-                                        windll.kernel32.GetConsoleWindow(),
-                                        FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
-                    FlashWindowEx(params)
-            except Exception as e:
-                self.log(logging.WARNING, 'notifier-failed', {'error':
-                    e.message}, 'Notification center failed: {error}')
+            self.notify('Build complete')
 
         if status:
             return status
@@ -868,7 +822,10 @@ class Package(MachCommandBase):
     @Command('package', category='post-build',
         description='Package the built product for distribution as an APK, DMG, etc.')
     def package(self):
-        return self._run_make(directory=".", target='package', ensure_exit_code=False)
+        ret = self._run_make(directory=".", target='package', ensure_exit_code=False)
+        if ret == 0:
+            self.notify('Packaging complete')
+        return ret
 
 @CommandProvider
 class Install(MachCommandBase):
@@ -877,7 +834,10 @@ class Install(MachCommandBase):
     @Command('install', category='post-build',
         description='Install the package on the machine, or on a device.')
     def install(self):
-        return self._run_make(directory=".", target='install', ensure_exit_code=False)
+        ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
+        if ret == 0:
+            self.notify('Install complete')
+        return ret
 
 @CommandProvider
 class RunProgram(MachCommandBase):

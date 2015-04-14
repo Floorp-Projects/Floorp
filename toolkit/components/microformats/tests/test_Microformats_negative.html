@@ -87,7 +87,7 @@
                            document.getElementById("testhere"),
                            {recurseExternalFrames: true});
 
-    is(mfs, null, "No microformat called notAMicroformat");
+    is(mfs, undefined, "No microformat called notAMicroformat");
 
     // What if we try another way?
     is(Microformats.isMicroformat(document.getElementById("notme")), false,

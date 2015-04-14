@@ -34,7 +34,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
 
       try {
         var css = Components.utils.evalInSandbox("CSSStyleDeclaration", sandbox);
-        is(css.prototype, "[object CSSStyleDeclarationPrototype]", "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
+        is(String(css.prototype), "[object CSSStyleDeclarationPrototype]",
+           "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
       } catch (e) {
         ok(false, "'CSSStyleDeclaration' shouldn't throw in a sandbox");
       }
@@ -84,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
-        is(xhr, XMLHttpRequest + "", "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
+        is(String(xhr), String(XMLHttpRequest), "'XMLHttpRequest' in a sandbox should return the XMLHttpRequest interface object");
         ok(isXrayWrapper(xhr.prototype), "Getting the prototype property on an Xray wrapper of an interface object should return an Xray wrapper");
         isnot(Object.getOwnPropertyDescriptor(xhr, "UNSENT"), undefined,
               "We should claim to have an UNSENT constant");

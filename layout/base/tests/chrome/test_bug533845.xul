@@ -36,7 +36,7 @@ function continueTest() {
   var y = rect.top + (rect.height/2);
   utils.sendMouseEvent("mousedown", x, y, 0, 1, 0);
   utils.sendMouseEvent("mouseup", x, y, 0, 1, 0);
-  is(ifrwindow.document.body.textContent, 1, "Should have got a click event!");
+  is(ifrwindow.document.body.textContent, "1", "Should have got a click event!");
   SimpleTest.finish();
 }
 

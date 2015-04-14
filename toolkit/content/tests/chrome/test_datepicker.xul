@@ -48,7 +48,7 @@ function testtag_datepickers()
   testtag_datepicker(dppopup, "popup", "datepicker popup");
 
   var gridpicker = document.getElementById("datepicker-grid");
-  is(gridpicker.monthField.selectedIndex, 3, "datepicker grid correct month is initially selected");
+  is(gridpicker.monthField.selectedIndex, "3", "datepicker grid correct month is initially selected");
   testtag_datepicker(gridpicker, "grid", "datepicker grid");
   dppopup.open = true;
 }

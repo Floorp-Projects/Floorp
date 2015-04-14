@@ -6662,6 +6662,22 @@ class CGPerSignatureCall(CGThing):
                         return false;
                     }
                     """)))
+
+        if idlNode.getExtendedAttribute("Deprecated"):
+            cgThings.append(CGGeneric(dedent(
+                """
+                {
+                  GlobalObject global(cx, obj);
+                  if (global.Failed()) {
+                    return false;
+                  }
+                  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(global.GetAsSupports());
+                  if (pWindow && pWindow->GetExtantDoc()) {
+                    pWindow->GetExtantDoc()->WarnOnceAbout(nsIDocument::e%s);
+                  }
+                }
+                """ % idlNode.getExtendedAttribute("Deprecated")[0])))
+
         lenientFloatCode = None
         if idlNode.getExtendedAttribute('LenientFloat') is not None:
             if setter:
@@ -12405,6 +12421,12 @@ class CGBindingRoot(CGThing):
             iface = desc.interface
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface])
 
+        def descriptorDeprecated(desc):
+            iface = desc.interface
+            return any(m.getExtendedAttribute("Deprecated") for m in iface.members + [iface])
+
+        bindingHeaders["nsIDocument.h"] = any(
+            descriptorDeprecated(d) for d in descriptors)
         bindingHeaders["mozilla/Preferences.h"] = any(
             descriptorRequiresPreferences(d) for d in descriptors)
         bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(

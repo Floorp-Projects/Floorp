@@ -381,8 +381,8 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
   , mType(OscillatorType::Sine)
-  , mFrequency(new AudioParam(this, SendFrequencyToStream, 440.0f))
-  , mDetune(new AudioParam(this, SendDetuneToStream, 0.0f))
+  , mFrequency(new AudioParam(this, SendFrequencyToStream, 440.0f, "frequency"))
+  , mDetune(new AudioParam(this, SendDetuneToStream, 0.0f, "detune"))
   , mStartCalled(false)
   , mStopped(false)
 {

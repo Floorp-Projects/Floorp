@@ -15,6 +15,7 @@ interface AudioBufferSourceNode : AudioNode {
     attribute AudioBuffer? buffer;
 
     readonly attribute AudioParam playbackRate;
+    readonly attribute AudioParam detune;
 
     attribute boolean loop;
     attribute double loopStart;

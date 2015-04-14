@@ -39,24 +39,32 @@ using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 namespace {
-// Sending system message "bluetooth-opp-update-progress" every 50kb
-static const uint32_t kUpdateProgressBase = 50 * 1024;
+  // Sending system message "bluetooth-opp-update-progress" every 50kb
+  static const uint32_t kUpdateProgressBase = 50 * 1024;
 
-/*
- * The format of the header of an PUT request is
- * [opcode:1][packet length:2][headerId:1][header length:2]
- */
-static const uint32_t kPutRequestHeaderSize = 6;
+  /*
+   * The format of the header of an PUT request is
+   * [opcode:1][packet length:2][headerId:1][header length:2]
+   */
+  static const uint32_t kPutRequestHeaderSize = 6;
 
-/*
- * The format of the appended header of an PUT request is
- * [headerId:1][header length:4]
- * P.S. Length of name header is 4 since unicode is 2 bytes per char.
- */
-static const uint32_t kPutRequestAppendHeaderSize = 5;
+  /*
+   * The format of the appended header of an PUT request is
+   * [headerId:1][header length:4]
+   * P.S. Length of name header is 4 since unicode is 2 bytes per char.
+   */
+  static const uint32_t kPutRequestAppendHeaderSize = 5;
 
-StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
-static bool sInShutdown = false;
+  // UUID of OBEX Object Push
+  static const BluetoothUuid kObexObjectPush = {
+    {
+      0x00, 0x00, 0x11, 0x05, 0x00, 0x00, 0x10, 0x00,
+      0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
+    }
+  };
+
+  StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
+  static bool sInShutdown = false;
 }
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -301,7 +309,7 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
 
   mSocket =
     new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
-  mSocket->ConnectSocket(aDeviceAddress, -1);
+  mSocket->ConnectSocket(aDeviceAddress, kObexObjectPush, -1);
 }
 
 void
@@ -374,7 +382,9 @@ BluetoothOppManager::Listen()
   mServerSocket =
     new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
 
-  if (!mServerSocket->ListenSocket(BluetoothReservedChannels::CHANNEL_OPUSH)) {
+  if (!mServerSocket->ListenSocket(NS_LITERAL_STRING("OBEX Object Push"),
+                                   kObexObjectPush,
+                                   BluetoothReservedChannels::CHANNEL_OPUSH)) {
     BT_WARNING("[OPP] Can't listen on RFCOMM socket!");
     mServerSocket = nullptr;
     return false;

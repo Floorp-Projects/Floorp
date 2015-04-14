@@ -57,7 +57,10 @@ const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetrySession::";
 
 const PREF_BRANCH = "toolkit.telemetry.";
+const PREF_SERVER = PREF_BRANCH + "server";
+const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
+const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID"
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_ASYNC_PLUGIN_INIT = "dom.ipc.plugins.asyncInit";
 
@@ -257,7 +260,7 @@ function toLocalTimeISOString(date) {
     + "-" + padNumber(date.getDate(), 2)
     + "T" + padNumber(date.getHours(), 2)
     + ":" + padNumber(date.getMinutes(), 2)
-    + ":" + padNumber(date.getSeconds(), 2);
+    + ":" + padNumber(date.getSeconds(), 2)
     + "." + date.getMilliseconds()
     + sign(tzOffset) + Math.abs(Math.floor(tzOffset / 60))
     + ":" + Math.abs(tzOffset % 60);
@@ -719,6 +722,8 @@ this.EXPORTED_SYMBOLS = ["TelemetrySession"];
 
 this.TelemetrySession = Object.freeze({
   Constants: Object.freeze({
+    PREF_ENABLED: PREF_ENABLED,
+    PREF_SERVER: PREF_SERVER,
     PREF_PREVIOUS_BUILDID: PREF_PREVIOUS_BUILDID,
   }),
   /**
@@ -1460,7 +1465,28 @@ let Impl = {
   },
 
   /**
-   * Initializes telemetry within a timer.
+   * Perform telemetry initialization for either chrome or content process.
+   */
+  enableTelemetryRecording: function enableTelemetryRecording(testing) {
+
+#ifdef MOZILLA_OFFICIAL
+    if (!Telemetry.isOfficialTelemetry && !testing) {
+      this._log.config("enableTelemetryRecording - Can't send data, disabling Telemetry recording.");
+      return false;
+    }
+#endif
+
+    let enabled = Preferences.get(PREF_ENABLED, false);
+    if (!enabled) {
+      this._log.config("enableTelemetryRecording - Telemetry is disabled, turning off Telemetry recording.");
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
   setupChromeProcess: function setupChromeProcess(testing) {
     this._initStarted = true;
@@ -1502,7 +1528,7 @@ let Impl = {
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
     }
 
-    if (!Telemetry.canRecordBase && !testing) {
+    if (!this.enableTelemetryRecording(testing)) {
       this._log.config("setupChromeProcess - Telemetry recording is disabled, skipping Chrome process setup.");
       return Promise.resolve();
     }
@@ -1576,7 +1602,7 @@ let Impl = {
   setupContentProcess: function setupContentProcess() {
     this._log.trace("setupContentProcess");
 
-    if (!Telemetry.canRecordBase) {
+    if (!this.enableTelemetryRecording()) {
       return;
     }
 
@@ -1673,7 +1699,7 @@ let Impl = {
     let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
     // Make sure we try to save the pending pings, even though we failed saving the shutdown
     // ping.
-    return TelemetryPing.addPendingPing(getPingType(shutdownPayload), shutdownPayload, options)
+    return TelemetryPing.savePing(getPingType(shutdownPayload), shutdownPayload, options)
                         .then(() => this.savePendingPingsClassic(),
                               () => this.savePendingPingsClassic());
 #else
@@ -1705,7 +1731,7 @@ let Impl = {
       overwrite: true,
       filePath: file.path,
     };
-    return TelemetryPing.addPendingPing(getPingType(payload), payload, options);
+    return TelemetryPing.savePing(getPingType(payload), payload, options);
   },
 
   /**
@@ -1853,7 +1879,7 @@ let Impl = {
           addEnvironment: true,
           overwrite: true,
         };
-        TelemetryPing.addPendingPing(getPingType(payload), payload, options);
+        TelemetryPing.savePing(getPingType(payload), payload, options);
       }
       break;
 #endif
@@ -2100,8 +2126,9 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
       overwrite: true,
+      filePath: FILE_PATH,
     };
     return this._abortedSessionSerializer.enqueueTask(() =>
-      TelemetryPing.savePing(getPingType(payload), payload, FILE_PATH, options));
+      TelemetryPing.savePing(getPingType(payload), payload, options));
   },
 };
