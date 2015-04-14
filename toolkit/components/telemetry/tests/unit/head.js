@@ -1,19 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Components.utils.import("resource://gre/modules/TelemetryPing.jsm", this);
-Components.utils.import("resource://gre/modules/Services.jsm", this);
+const { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
-const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Components.classes);
-const gIsAndroid =  ("@mozilla.org/android/bridge;1" in Components.classes);
-const gIsGonk = ("@mozilla.org/cellbroadcast/gonkservice;1" in Components.classes);
+Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+
+const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Cc);
+const gIsAndroid =  ("@mozilla.org/android/bridge;1" in Cc);
+const gIsGonk = ("@mozilla.org/cellbroadcast/gonkservice;1" in Cc);
 
 const MILLISECONDS_PER_MINUTE = 60 * 1000;
 const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
 const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR;
 
-const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Components.classes;
+const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
 
 let gOldAppInfo = null;
 let gGlobalScope = this;
@@ -75,8 +77,7 @@ function createAppInfo(id, name, version, platformVersion) {
   const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
   let gAppInfo;
   if (!gOldAppInfo) {
-    gOldAppInfo = Components.classes[XULAPPINFO_CONTRACTID]
-                            .getService(Components.interfaces.nsIXULRuntime);
+    gOldAppInfo = Cc[XULAPPINFO_CONTRACTID].getService(Ci.nsIXULRuntime);
   }
 
   gAppInfo = {
@@ -116,7 +117,7 @@ function createAppInfo(id, name, version, platformVersion) {
   var XULAppInfoFactory = {
     createInstance: function (outer, iid) {
       if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Cr.NS_ERROR_NO_AGGREGATION;
       return gAppInfo.QueryInterface(iid);
     }
   };
@@ -127,7 +128,7 @@ function createAppInfo(id, name, version, platformVersion) {
 
 // Fake the timeout functions for the TelemetryScheduler.
 function fakeSchedulerTimer(set, clear) {
-  let session = Components.utils.import("resource://gre/modules/TelemetrySession.jsm");
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.setSchedulerTickTimeout = set;
   session.Policy.clearSchedulerTickTimeout = clear;
 }
