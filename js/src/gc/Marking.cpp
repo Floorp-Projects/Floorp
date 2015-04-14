@@ -106,14 +106,6 @@ PushMarkStack(GCMarker* gcmarker, JSString* thing);
 static inline void
 PushMarkStack(GCMarker* gcmarker, JS::Symbol* thing);
 
-namespace js {
-namespace gc {
-
-static void MarkChildren(JSTracer* trc, ObjectGroup* group);
-
-} /* namespace gc */
-} /* namespace js */
-
 /*** Object Marking ***/
 
 #if defined(DEBUG)
@@ -1050,7 +1042,7 @@ static inline void
 ScanBaseShape(GCMarker* gcmarker, BaseShape* base);
 
 void
-BaseShape::markChildren(JSTracer* trc)
+BaseShape::traceChildren(JSTracer* trc)
 {
     if (isOwned())
         TraceEdge(trc, &unowned_, "base");
@@ -1320,40 +1312,40 @@ ScanObjectGroup(GCMarker* gcmarker, ObjectGroup* group)
         gcmarker->traverse(fun);
 }
 
-static void
-gc::MarkChildren(JSTracer* trc, ObjectGroup* group)
+void
+js::ObjectGroup::traceChildren(JSTracer* trc)
 {
-    unsigned count = group->getPropertyCount();
+    unsigned count = getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
-        if (ObjectGroup::Property* prop = group->getProperty(i))
+        if (ObjectGroup::Property* prop = getProperty(i))
             TraceEdge(trc, &prop->id, "group_property");
     }
 
-    if (group->proto().isObject())
-        TraceEdge(trc, &group->protoRaw(), "group_proto");
+    if (proto().isObject())
+        TraceEdge(trc, &protoRaw(), "group_proto");
 
-    if (group->newScript())
-        group->newScript()->trace(trc);
+    if (newScript())
+        newScript()->trace(trc);
 
-    if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->trace(trc);
+    if (maybePreliminaryObjects())
+        maybePreliminaryObjects()->trace(trc);
 
-    if (group->maybeUnboxedLayout())
-        group->unboxedLayout().trace(trc);
+    if (maybeUnboxedLayout())
+        unboxedLayout().trace(trc);
 
-    if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup()) {
+    if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup()) {
         TraceManuallyBarrieredEdge(trc, &unboxedGroup, "group_original_unboxed_group");
-        group->setOriginalUnboxedGroup(unboxedGroup);
+        setOriginalUnboxedGroup(unboxedGroup);
     }
 
-    if (JSObject* descr = group->maybeTypeDescr()) {
+    if (JSObject* descr = maybeTypeDescr()) {
         TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
-        group->setTypeDescr(&descr->as<TypeDescr>());
+        setTypeDescr(&descr->as<TypeDescr>());
     }
 
-    if (JSObject* fun = group->maybeInterpretedFunction()) {
+    if (JSObject* fun = maybeInterpretedFunction()) {
         TraceManuallyBarrieredEdge(trc, &fun, "group_function");
-        group->setInterpretedFunction(&fun->as<JSFunction>());
+        setInterpretedFunction(&fun->as<JSFunction>());
     }
 }
 
@@ -1532,7 +1524,7 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
         else
             repush(obj);
     } else if (tag == JitCodeTag) {
-        reinterpret_cast<jit::JitCode*>(addr)->trace(this);
+        reinterpret_cast<jit::JitCode*>(addr)->traceChildren(this);
     }
 }
 
@@ -1795,54 +1787,24 @@ GCMarker::drainMarkStack(SliceBudget& budget)
 
 template <typename T>
 void
-GCMarker::markChildren(T* thing)
+GCMarker::dispatchToTraceChildren(T* thing)
 {
-    thing->markChildren(this);
+    thing->traceChildren(this);
 }
+
+struct TraceChildrenFunctor {
+    template <typename T>
+    void operator()(JSTracer* trc, void* thing) {
+        static_cast<T*>(thing)->traceChildren(trc);
+    }
+};
 
 void
 js::TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind)
 {
-    switch (kind) {
-      case JSTRACE_OBJECT:
-        static_cast<JSObject*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_SCRIPT:
-        static_cast<JSScript*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_STRING:
-        static_cast<JSString*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_SYMBOL:
-        static_cast<JS::Symbol*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_BASE_SHAPE:
-        static_cast<BaseShape*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_JITCODE:
-        static_cast<jit::JitCode*>(thing)->trace(trc);
-        break;
-
-      case JSTRACE_LAZY_SCRIPT:
-        static_cast<LazyScript*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_SHAPE:
-        static_cast<Shape*>(thing)->markChildren(trc);
-        break;
-
-      case JSTRACE_OBJECT_GROUP:
-        MarkChildren(trc, (ObjectGroup*)thing);
-        break;
-
-      default:
-        MOZ_CRASH("Invalid trace kind in TraceChildren.");
-    }
+    MOZ_ASSERT(thing);
+    TraceChildrenFunctor f;
+    CallTyped(f, kind, trc, thing);
 }
 
 #ifdef DEBUG

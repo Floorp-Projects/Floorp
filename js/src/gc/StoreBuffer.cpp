@@ -55,11 +55,11 @@ StoreBuffer::WholeCellEdges::mark(JSTracer* trc) const
         JSObject* object = static_cast<JSObject*>(edge);
         if (object->is<ArgumentsObject>())
             ArgumentsObject::trace(trc, object);
-        object->markChildren(trc);
+        object->traceChildren(trc);
         return;
     }
     MOZ_ASSERT(kind == JSTRACE_JITCODE);
-    static_cast<jit::JitCode*>(edge)->trace(trc);
+    static_cast<jit::JitCode*>(edge)->traceChildren(trc);
 }
 
 void
