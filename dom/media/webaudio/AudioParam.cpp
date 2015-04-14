@@ -45,11 +45,13 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioParam, Release)
 
 AudioParam::AudioParam(AudioNode* aNode,
                        AudioParam::CallbackType aCallback,
-                       float aDefaultValue)
+                       float aDefaultValue,
+                       const char* aName)
   : AudioParamTimeline(aDefaultValue)
   , mNode(aNode)
   , mCallback(aCallback)
   , mDefaultValue(aDefaultValue)
+  , mName(aName)
 {
 }
 
