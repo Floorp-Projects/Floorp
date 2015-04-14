@@ -30,12 +30,16 @@ class DesktopNotificationRequest : public nsIContentPermissionRequest
   {
   }
 
+  nsCOMPtr<nsIContentPermissionRequester> mRequester;
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
   explicit DesktopNotificationRequest(DesktopNotification* aNotification)
-    : mDesktopNotification(aNotification) {}
+    : mDesktopNotification(aNotification)
+  {
+    mRequester = new nsContentPermissionRequester(mDesktopNotification->GetOwner());
+  }
 
   NS_IMETHOD Run() override
   {
@@ -311,6 +315,16 @@ DesktopNotificationRequest::Allow(JS::HandleValue aChoices)
   nsresult rv = mDesktopNotification->SetAllow(true);
   mDesktopNotification = nullptr;
   return rv;
+}
+
+NS_IMETHODIMP
+DesktopNotificationRequest::GetRequester(nsIContentPermissionRequester** aRequester)
+{
+  NS_ENSURE_ARG_POINTER(aRequester);
+
+  nsCOMPtr<nsIContentPermissionRequester> requester = mRequester;
+  requester.forget(aRequester);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

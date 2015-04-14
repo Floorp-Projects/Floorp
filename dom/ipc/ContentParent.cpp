@@ -46,6 +46,7 @@
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/PContentBridgeParent.h"
+#include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/PFMRadioParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
@@ -100,6 +101,7 @@
 #include "nsIAlertsService.h"
 #include "nsIAppsService.h"
 #include "nsIClipboard.h"
+#include "nsContentPermissionHelper.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDocument.h"
 #include "nsIDOMGeoGeolocation.h"
@@ -2065,6 +2067,18 @@ ContentParent::NotifyTabDestroyed(PBrowserParent* aTab,
 {
     if (aNotifiedDestroying) {
         --mNumDestroyingTabs;
+    }
+
+    TabId id = static_cast<TabParent*>(aTab)->GetTabId();
+    nsTArray<PContentPermissionRequestParent*> parentArray =
+        nsContentPermissionUtils::GetContentPermissionRequestParentById(id);
+
+    // Need to close undeleted ContentPermissionRequestParents before tab is closed.
+    for (auto& permissionRequestParent : parentArray) {
+        nsTArray<PermissionChoice> emptyChoices;
+        unused << PContentPermissionRequestParent::Send__delete__(permissionRequestParent,
+                                                                  false,
+                                                                  emptyChoices);
     }
 
     // There can be more than one PBrowser for a given app process
@@ -4881,6 +4895,32 @@ ContentParent::RecvUpdateDropEffect(const uint32_t& aDragAction,
     dragSession->UpdateDragEffect();
   }
   return true;
+}
+
+PContentPermissionRequestParent*
+ContentParent::AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
+                                                    const IPC::Principal& aPrincipal,
+                                                    const TabId& aTabId)
+{
+    ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+    nsRefPtr<TabParent> tp = cpm->GetTopLevelTabParentByProcessAndTabId(this->ChildID(),
+                                                                        aTabId);
+    if (!tp) {
+        return nullptr;
+    }
+
+    return nsContentPermissionUtils::CreateContentPermissionRequestParent(aRequests,
+                                                                          tp->GetOwnerElement(),
+                                                                          aPrincipal,
+                                                                          aTabId);
+}
+
+bool
+ContentParent::DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor)
+{
+    nsContentPermissionUtils::NotifyRemoveContentPermissionRequestParent(actor);
+    delete actor;
+    return true;
 }
 
 } // namespace dom
