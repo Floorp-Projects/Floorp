@@ -805,6 +805,13 @@ LayerTransactionParent::RecvRequestProperty(const nsString& aProperty, float* aV
   return true;
 }
 
+bool
+LayerTransactionParent::RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
+                                                   nsTArray<ScrollableLayerGuid>&& aTargets)
+{
+  mShadowLayersManager->SetConfirmedTargetAPZC(this, aBlockId, aTargets);
+  return true;
+}
 
 bool
 LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,

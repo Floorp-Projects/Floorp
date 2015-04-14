@@ -902,25 +902,6 @@ nsBaseWidget::CreateRootContentController()
   return controller.forget();
 }
 
-class ChromeProcessSetTargetAPZCCallback : public SetTargetAPZCCallback {
-public:
-  explicit ChromeProcessSetTargetAPZCCallback(APZCTreeManager* aTreeManager)
-    : mTreeManager(aTreeManager)
-  {}
-
-  void Run(uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) const override {
-    MOZ_ASSERT(NS_IsMainThread());
-    // need a local var to disambiguate between the SetTargetAPZC overloads.
-    void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
-        = &APZCTreeManager::SetTargetAPZC;
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
-        mTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets));
-  }
-
-private:
-  nsRefPtr<APZCTreeManager> mTreeManager;
-};
-
 class ChromeProcessSetAllowedTouchBehaviorCallback : public SetAllowedTouchBehaviorCallback {
 public:
   explicit ChromeProcessSetAllowedTouchBehaviorCallback(APZCTreeManager* aTreeManager)
@@ -967,7 +948,6 @@ void nsBaseWidget::ConfigureAPZCTreeManager()
   mAPZC->SetDPI(GetDPI());
   mAPZEventState = new APZEventState(this,
       new ChromeProcessContentReceivedInputBlockCallback(mAPZC));
-  mSetTargetAPZCCallback = new ChromeProcessSetTargetAPZCCallback(mAPZC);
   mSetAllowedTouchBehaviorCallback = new ChromeProcessSetAllowedTouchBehaviorCallback(mAPZC);
 
   nsRefPtr<GeckoContentController> controller = CreateRootContentController();
@@ -980,6 +960,17 @@ void nsBaseWidget::ConfigureAPZControllerThread()
 {
   // By default the controller thread is the main thread.
   APZThreadUtils::SetControllerThread(MessageLoop::current());
+}
+
+void
+nsBaseWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                                     const nsTArray<ScrollableLayerGuid>& aTargets) const
+{
+  // Need to specifically bind this since it's overloaded.
+  void (APZCTreeManager::*setTargetApzcFunc)(uint64_t, const nsTArray<ScrollableLayerGuid>&)
+          = &APZCTreeManager::SetTargetAPZC;
+  APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
+    mAPZC.get(), setTargetApzcFunc, aInputBlockId, mozilla::Move(aTargets)));
 }
 
 nsEventStatus
@@ -1017,12 +1008,12 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
               aInputBlockId, mSetAllowedTouchBehaviorCallback);
         }
         APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
-            aGuid, aInputBlockId, mSetTargetAPZCCallback);
+            aGuid, aInputBlockId);
       }
       mAPZEventState->ProcessTouchEvent(*touchEvent, aGuid, aInputBlockId, aApzResponse);
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
-                aGuid, aInputBlockId, mSetTargetAPZCCallback);
+                aGuid, aInputBlockId);
       mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
     }
   }

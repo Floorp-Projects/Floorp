@@ -39,7 +39,6 @@ class APZCTreeManager;
 class GeckoContentController;
 class APZEventState;
 struct ScrollableLayerGuid;
-struct SetTargetAPZCCallback;
 struct SetAllowedTouchBehaviorCallback;
 }
 
@@ -95,7 +94,6 @@ protected:
   typedef mozilla::layers::GeckoContentController GeckoContentController;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
-  typedef mozilla::layers::SetTargetAPZCCallback SetTargetAPZCCallback;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
   typedef mozilla::ScreenRotation ScreenRotation;
 
@@ -237,6 +235,9 @@ public:
 
   // Dispatch an event that must be first be routed through APZ.
   nsEventStatus DispatchAPZAwareEvent(mozilla::WidgetInputEvent* aEvent) override;
+
+  void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                              const nsTArray<ScrollableLayerGuid>& aTargets) const override;
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
@@ -479,7 +480,6 @@ protected:
   nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   nsRefPtr<APZCTreeManager> mAPZC;
   nsRefPtr<APZEventState> mAPZEventState;
-  nsRefPtr<SetTargetAPZCCallback> mSetTargetAPZCCallback;
   nsRefPtr<SetAllowedTouchBehaviorCallback> mSetAllowedTouchBehaviorCallback;
   nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
   nsRefPtr<TextEventDispatcher> mTextEventDispatcher;
