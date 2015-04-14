@@ -500,19 +500,15 @@ LayoutView.prototype = {
 };
 
 let elts;
-let tooltip;
 
 let onmouseover = function(e) {
   let region = e.target.getAttribute("data-box");
-
-  tooltip.textContent = e.target.getAttribute("tooltip");
   this.layoutview.showBoxModel({region});
 
   return false;
 }.bind(window);
 
 let onmouseout = function(e) {
-  tooltip.textContent = "";
   this.layoutview.hideBoxModel();
 
   return false;
@@ -521,9 +517,8 @@ let onmouseout = function(e) {
 window.setPanel = function(panel) {
   this.layoutview = new LayoutView(panel, window);
 
-  // Tooltip mechanism
-  elts = document.querySelectorAll("*[tooltip]");
-  tooltip = document.querySelector(".tooltip");
+  // Box model highlighter mechanism
+  elts = document.querySelectorAll("*[title]");
   for (let i = 0; i < elts.length; i++) {
     let elt = elts[i];
     elt.addEventListener("mouseover", onmouseover, true);
