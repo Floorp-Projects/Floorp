@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
+  <style>
+  /* eliminate the blue glow when focusing the element. */
+  input {
+    background: none;
+    border: none;
+    outline: none;
+  }
+  </style>
   <script>
     function test() {
       focus();
