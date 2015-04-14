@@ -565,6 +565,11 @@ uint64_t nsRegion::Area () const
 
 nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
 {
+  if (mozilla::gfx::FuzzyEqual(aXScale, 1.0f) &&
+      mozilla::gfx::FuzzyEqual(aYScale, 1.0f)) {
+    return *this;
+  }
+
   int n;
   pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);
   for (int i=0; i<n; i++) {
