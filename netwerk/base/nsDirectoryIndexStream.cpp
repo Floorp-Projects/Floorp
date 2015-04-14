@@ -170,19 +170,16 @@ nsDirectoryIndexStream::~nsDirectoryIndexStream()
 nsresult
 nsDirectoryIndexStream::Create(nsIFile* aDir, nsIInputStream** aResult)
 {
-    nsDirectoryIndexStream* result = new nsDirectoryIndexStream();
+    nsRefPtr<nsDirectoryIndexStream> result = new nsDirectoryIndexStream();
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv;
-    rv = result->Init(aDir);
+    nsresult rv = result->Init(aDir);
     if (NS_FAILED(rv)) {
-        delete result;
         return rv;
     }
 
-    *aResult = result;
-    NS_ADDREF(*aResult);
+    result.forget(aResult);
     return NS_OK;
 }
 

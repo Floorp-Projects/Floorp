@@ -272,33 +272,6 @@ CheckMarkedThing<jsid>(JSTracer* trc, jsid id)
                   trc->runtime()->gc.state() == NO_INCREMENTAL || \
                   trc->runtime()->gc.state() == MARK_ROOTS);
 
-/*
- * We only set the maybeAlive flag for objects and scripts. It's assumed that,
- * if a compartment is alive, then it will have at least some live object or
- * script it in. Even if we get this wrong, the worst that will happen is that
- * scheduledForDestruction will be set on the compartment, which will cause some
- * extra GC activity to try to free the compartment.
- */
-template<typename T>
-static inline void
-SetMaybeAliveFlag(T* thing)
-{
-}
-
-template<>
-void
-SetMaybeAliveFlag(JSObject* thing)
-{
-    thing->compartment()->maybeAlive = true;
-}
-
-template<>
-void
-SetMaybeAliveFlag(JSScript* thing)
-{
-    thing->compartment()->maybeAlive = true;
-}
-
 #define FOR_EACH_GC_LAYOUT(D) \
     D(Object, JSObject) \
     D(String, JSString) \

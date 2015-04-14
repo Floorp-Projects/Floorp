@@ -9,13 +9,13 @@ using mozilla::unused;
 namespace mozilla {
 namespace embedding {
 
-MOZ_IMPLICIT PrintSettingsDialogChild::PrintSettingsDialogChild()
+PrintSettingsDialogChild::PrintSettingsDialogChild()
 : mReturned(false)
 {
   MOZ_COUNT_CTOR(PrintSettingsDialogChild);
 }
 
-MOZ_IMPLICIT PrintSettingsDialogChild::~PrintSettingsDialogChild()
+PrintSettingsDialogChild::~PrintSettingsDialogChild()
 {
   MOZ_COUNT_DTOR(PrintSettingsDialogChild);
 }

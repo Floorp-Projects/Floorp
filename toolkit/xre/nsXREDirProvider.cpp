@@ -393,7 +393,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
 
   if (NS_SUCCEEDED(rv) && file) {
-    NS_ADDREF(*aFile = file);
+    file.forget(aFile);
     return NS_OK;
   }
 
@@ -459,7 +459,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     }
   }
 
-  NS_ADDREF(*aFile = file);
+  file.forget(aFile);
   return NS_OK;
 }
 
@@ -525,7 +525,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
       appEnum = nullptr;
     }
     else if (rv != NS_SUCCESS_AGGREGATE_RESULT) {
-      NS_ADDREF(*aResult = appEnum);
+      appEnum.forget(aResult);
       return NS_OK;
     }
   }
@@ -534,7 +534,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
   rv = GetFilesInternal(aProperty, getter_AddRefs(xreEnum));
   if (NS_FAILED(rv)) {
     if (appEnum) {
-      NS_ADDREF(*aResult = appEnum);
+      appEnum.forget(aResult);
       return NS_SUCCESS_AGGREGATE_RESULT;
     }
 
@@ -1068,7 +1068,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(*aResult = localDir);
+  localDir.forget(aResult);
   return NS_OK;
 
 #elif XP_WIN
@@ -1109,7 +1109,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
                                           gAppData->vendor : gAppData->name))) &&
       NS_SUCCEEDED(localDir->Append(NS_LITERAL_STRING("updates"))) &&
       NS_SUCCEEDED(localDir->Append(pathHash))) {
-    NS_ADDREF(*aResult = localDir);
+    localDir.forget(aResult);
     return NS_OK;
   }
 
@@ -1162,7 +1162,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
 
 #endif // XP_WIN
 #endif
-  NS_ADDREF(*aResult = updRoot);
+  updRoot.forget(aResult);
   return NS_OK;
 }
 
@@ -1306,7 +1306,7 @@ nsXREDirProvider::GetSysUserExtensionsDirectory(nsIFile** aFile)
   rv = EnsureDirectoryExists(localDir);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*aFile = localDir);
+  localDir.forget(aFile);
   return NS_OK;
 }
 
@@ -1354,7 +1354,7 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  NS_ADDREF(*aFile = localDir);
+  localDir.forget(aFile);
   return NS_OK;
 }
 #endif
@@ -1380,7 +1380,7 @@ nsXREDirProvider::GetUserDataDirectory(nsIFile** aFile, bool aLocal,
   rv = EnsureDirectoryExists(localDir);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*aFile = localDir);
+  localDir.forget(aFile);
   return NS_OK;
 }
 
@@ -1448,7 +1448,7 @@ nsXREDirProvider::GetProfileDefaultsDir(nsIFile* *aResult)
   rv = defaultsDir->AppendNative(NS_LITERAL_CSTRING("profile"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*aResult = defaultsDir);
+  defaultsDir.forget(aResult);
   return NS_OK;
 }
 

@@ -52,19 +52,7 @@ public:
    * Currently, when TryRender() returns true, the entire framebuffer
    * must have been rendered.
    */
-  virtual bool TryRenderWithHwc(Layer* aRoot, bool aGeometryChanged) = 0;
-
-  /**
-   * Return true if Composer2D does composition. Return false if Composer2D
-   * failed the composition.
-   */
-  virtual bool Render() = 0;
-
-  /**
-   * Return true if Composer2D has a fast composition hardware.
-   * Return false if Composer2D does not have a fast composition hardware.
-   */
-  virtual bool HasHwc() = 0;
+  virtual bool TryRender(Layer* aRoot, bool aGeometryChanged) = 0;
 };
 
 } // namespace layers

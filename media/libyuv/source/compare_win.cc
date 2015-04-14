@@ -18,7 +18,7 @@ extern "C" {
 
 #if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && defined(_MSC_VER)
 
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 uint32 SumSquareError_SSE2(const uint8* src_a, const uint8* src_b, int count) {
   __asm {
     mov        eax, [esp + 4]    // src_a
@@ -60,7 +60,7 @@ uint32 SumSquareError_SSE2(const uint8* src_a, const uint8* src_b, int count) {
 #if _MSC_VER >= 1700
 // C4752: found Intel(R) Advanced Vector Extensions; consider using /arch:AVX.
 #pragma warning(disable: 4752)
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 uint32 SumSquareError_AVX2(const uint8* src_a, const uint8* src_b, int count) {
   __asm {
     mov        eax, [esp + 4]    // src_a
@@ -135,7 +135,7 @@ static uvec32 kHashMul3 = {
 #define pmulld(reg) _asm _emit 0x66 _asm _emit 0x0F _asm _emit 0x38 \
     _asm _emit 0x40 _asm _emit reg
 
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 uint32 HashDjb2_SSE41(const uint8* src, int count, uint32 seed) {
   __asm {
     mov        eax, [esp + 4]    // src
@@ -187,7 +187,7 @@ uint32 HashDjb2_SSE41(const uint8* src, int count, uint32 seed) {
 
 // Visual C 2012 required for AVX2.
 #if _MSC_VER >= 1700
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 uint32 HashDjb2_AVX2(const uint8* src, int count, uint32 seed) {
   __asm {
     mov        eax, [esp + 4]    // src

@@ -20,14 +20,14 @@ public:
   virtual nsresult Startup() override;
 
   virtual already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+  CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableMediaTaskQueue* aVideoTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
   virtual already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+  CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
@@ -38,10 +38,10 @@ public:
     sDXVAEnabled = false;
   }
 
-  virtual bool SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& aConfig) const override;
+  virtual bool SupportsSharedDecoders(const VideoInfo& aConfig) const override;
 
   virtual ConversionRequired
-  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override;
+  DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   // Accessors that report whether we have the required MFTs available
   // on the system to play various codecs. Windows Vista doesn't have the
@@ -53,7 +53,7 @@ public:
   // Called on main thread.
   static void Init();
 private:
-  bool ShouldUseDXVA(const mp4_demuxer::VideoDecoderConfig& aConfig) const;
+  bool ShouldUseDXVA(const VideoInfo& aConfig) const;
 
   static bool sIsWMFEnabled;
   static bool sDXVAEnabled;
