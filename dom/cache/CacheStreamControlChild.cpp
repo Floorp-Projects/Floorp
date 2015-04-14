@@ -9,7 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
-#include "mozilla/dom/cache/PCacheTypes.h"
+#include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -69,7 +69,7 @@ CacheStreamControlChild::StartDestroy()
 }
 
 void
-CacheStreamControlChild::SerializeControl(PCacheReadStream* aReadStreamOut)
+CacheStreamControlChild::SerializeControl(CacheReadStream* aReadStreamOut)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   aReadStreamOut->controlParent() = nullptr;
@@ -77,7 +77,7 @@ CacheStreamControlChild::SerializeControl(PCacheReadStream* aReadStreamOut)
 }
 
 void
-CacheStreamControlChild::SerializeFds(PCacheReadStream* aReadStreamOut,
+CacheStreamControlChild::SerializeFds(CacheReadStream* aReadStreamOut,
                                       const nsTArray<FileDescriptor>& aFds)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
@@ -97,7 +97,7 @@ CacheStreamControlChild::SerializeFds(PCacheReadStream* aReadStreamOut,
 }
 
 void
-CacheStreamControlChild::DeserializeFds(const PCacheReadStream& aReadStream,
+CacheStreamControlChild::DeserializeFds(const CacheReadStream& aReadStream,
                                         nsTArray<FileDescriptor>& aFdsOut)
 {
   if (aReadStream.fds().type() !=
