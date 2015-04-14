@@ -110,3 +110,31 @@ richlistitem[type="download"] .dateTime {
   min-width: 0;
   margin-top: 3px;
 }
+
+@media (-moz-windows-compositor) {
+  #downloadManager {
+    -moz-appearance: -moz-win-glass;
+    background: transparent;
+  }
+
+  #downloadView {
+    /* Clamp glass bounds to the rich list so our glass haze stays constant. */
+    -moz-appearance: -moz-win-exclude-glass;
+    border: none;
+  }
+
+  windowdragbox {
+    -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+  }
+
+  #clearListButton {
+    -moz-margin-start: 0;
+    margin-bottom: 0;
+  }
+
+  #searchbox {
+    -moz-margin-end: 0;
+    margin-bottom: 0;
+  }
+}
+
