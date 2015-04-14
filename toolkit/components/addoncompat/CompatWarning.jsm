@@ -22,15 +22,12 @@ function section(number, url)
 }
 
 let CompatWarning = {
-  warn: function(msg, addon, warning) {
-    if (addon) {
-      let histogram = Services.telemetry.getKeyedHistogramById("ADDON_SHIM_USAGE");
-      histogram.add(addon, warning ? warning.number : 0);
-    }
-
-    if (!Preferences.get("dom.ipc.shims.enabledWarnings", false))
-      return;
-
+  // Sometimes we want to generate a warning, but put off issuing it
+  // until later. For example, if someone registers a listener, we
+  // might only want to warn about it if the listener actually
+  // fires. However, we want the warning to show a stack for the
+  // registration site.
+  delayedWarning: function(msg, addon, warning) {
     function isShimLayer(filename) {
       return filename.indexOf("CompatWarning.jsm") != -1 ||
         filename.indexOf("RemoteAddonsParent.jsm") != -1 ||
@@ -42,25 +39,47 @@ let CompatWarning = {
     while (stack && isShimLayer(stack.filename))
       stack = stack.caller;
 
-    let error = Cc['@mozilla.org/scripterror;1'].createInstance(Ci.nsIScriptError);
-    if (!error || !Services.console) {
-      // Too late during shutdown to use the nsIConsole
-      return;
-    }
+    let alreadyWarned = false;
 
-    let message = `Warning: ${msg}`;
-    if (warning)
-      message += `\nMore info at: ${url}`;
+    return function() {
+      if (alreadyWarned) {
+        return;
+      }
+      alreadyWarned = true;
 
-    error.init(
-               /*message*/ message,
-               /*sourceName*/ stack ? stack.filename : "",
-               /*sourceLine*/ stack ? stack.sourceLine : "",
-               /*lineNumber*/ stack ? stack.lineNumber : 0,
-               /*columnNumber*/ 0,
-               /*flags*/ Ci.nsIScriptError.warningFlag,
-               /*category*/ "chrome javascript");
-    Services.console.logMessage(error);
+      if (addon) {
+        let histogram = Services.telemetry.getKeyedHistogramById("ADDON_SHIM_USAGE");
+        histogram.add(addon, warning ? warning.number : 0);
+      }
+
+      if (!Preferences.get("dom.ipc.shims.enabledWarnings", false))
+        return;
+
+      let error = Cc['@mozilla.org/scripterror;1'].createInstance(Ci.nsIScriptError);
+      if (!error || !Services.console) {
+        // Too late during shutdown to use the nsIConsole
+        return;
+      }
+
+      let message = `Warning: ${msg}`;
+      if (warning)
+        message += `\nMore info at: ${warning.url}`;
+
+      error.init(
+                 /*message*/ message,
+                 /*sourceName*/ stack ? stack.filename : "",
+                 /*sourceLine*/ stack ? stack.sourceLine : "",
+                 /*lineNumber*/ stack ? stack.lineNumber : 0,
+                 /*columnNumber*/ 0,
+                 /*flags*/ Ci.nsIScriptError.warningFlag,
+                 /*category*/ "chrome javascript");
+      Services.console.logMessage(error);
+    };
+  },
+
+  warn: function(msg, addon, warning) {
+    let delayed = this.delayedWarning(msg, addon, warning);
+    delayed();
   },
 
   warnings: {
