@@ -71,7 +71,6 @@
 #include "nsWeakReference.h"
 #include "nsWindowWatcher.h"
 #include "PermissionMessageUtils.h"
-#include "nsContentPermissionHelper.h"
 #include "PuppetWidget.h"
 #include "StructuredCloneUtils.h"
 #include "nsViewportInfo.h"
@@ -2615,22 +2614,6 @@ TabChild::DeallocPColorPickerChild(PColorPickerChild* aColorPicker)
 {
   nsColorPickerProxy* picker = static_cast<nsColorPickerProxy*>(aColorPicker);
   NS_RELEASE(picker);
-  return true;
-}
-
-PContentPermissionRequestChild*
-TabChild::AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
-                                              const IPC::Principal& aPrincipal)
-{
-  NS_RUNTIMEABORT("unused");
-  return nullptr;
-}
-
-bool
-TabChild::DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor)
-{
-  RemotePermissionRequest* child = static_cast<RemotePermissionRequest*>(actor);
-  child->IPDLRelease();
   return true;
 }
 
