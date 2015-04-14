@@ -230,7 +230,7 @@ nsAnimationManager::MaybeUpdateCascadeResults(AnimationPlayerCollection* aCollec
     CSSAnimationPlayer* player =
       aCollection->mPlayers[playerIdx]->AsCSSAnimationPlayer();
 
-    if (player->HasInEffectSource() != player->mInEffectForCascadeResults) {
+    if (player->IsInEffect() != player->mInEffectForCascadeResults) {
       // Update our own cascade results.
       mozilla::dom::Element* element = aCollection->GetElementToRestyle();
       if (element) {
@@ -806,7 +806,7 @@ nsAnimationManager::UpdateCascadeResults(
       aElementAnimations->mPlayers[playerIdx]->AsCSSAnimationPlayer();
     KeyframeEffectReadonly* effect = player->GetEffect();
 
-    player->mInEffectForCascadeResults = player->HasInEffectSource();
+    player->mInEffectForCascadeResults = player->IsInEffect();
 
     if (!effect) {
       continue;
