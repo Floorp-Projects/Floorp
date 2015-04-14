@@ -483,6 +483,15 @@ PuppetWidget::ClearNativeTouchSequence(nsIObserver* aObserver)
   mTabChild->SendClearNativeTouchSequence(notifier.SaveObserver());
   return NS_OK;
 }
+ 
+void
+PuppetWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                                     const nsTArray<ScrollableLayerGuid>& aTargets) const
+{
+  if (mTabChild) {
+    mTabChild->SendSetTargetAPZC(aInputBlockId, aTargets);
+  }
+}
 
 NS_IMETHODIMP_(bool)
 PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,

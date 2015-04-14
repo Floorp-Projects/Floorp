@@ -53,6 +53,7 @@ class CompositorChild;
 class LayerManager;
 class LayerManagerComposite;
 class PLayerTransactionChild;
+struct ScrollableLayerGuid;
 }
 namespace gfx {
 class DrawTarget;
@@ -1766,6 +1767,13 @@ class nsIWidget : public nsISupports {
      * forwarded to the parent process synchronously.
      */
     virtual nsEventStatus DispatchInputEvent(mozilla::WidgetInputEvent* aEvent) = 0;
+
+    /**
+     * Confirm an APZ-aware event target. This should be used when APZ will
+     * not need a layers update to process the event.
+     */
+    virtual void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
+                                        const nsTArray<mozilla::layers::ScrollableLayerGuid>& aTargets) const = 0;
 
     /**
      * Enables the dropping of files to a widget (XXX this is temporary)

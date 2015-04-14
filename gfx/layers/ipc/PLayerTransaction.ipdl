@@ -20,6 +20,7 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 using class mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -101,6 +102,10 @@ parent:
 
   // Query a named property from the last frame
   sync RequestProperty(nsString property) returns (float value);
+
+  // Tell the compositor to notify APZ that a layer has been confirmed for an
+  // input event.
+  async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
 
   async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 
