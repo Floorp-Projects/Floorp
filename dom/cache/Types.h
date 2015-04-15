@@ -22,9 +22,7 @@ enum Namespace
   CHROME_ONLY_NAMESPACE,
   NUMBER_OF_NAMESPACES
 };
-
-typedef uintptr_t RequestId;
-static const RequestId INVALID_REQUEST_ID = 0;
+static const Namespace INVALID_NAMESPACE = NUMBER_OF_NAMESPACES;
 
 typedef int64_t CacheId;
 static const CacheId INVALID_CACHE_ID = -1;
