@@ -909,9 +909,9 @@ function testScope(aTester, aTest, expected) {
 
   var self = this;
   this.ok = function test_ok(condition, name, diag, stack) {
-    if (self.__expected == 'fail') {
+    if (this.__expected == 'fail') {
         if (!condition) {
-          self.__num_failed++;
+          this.__num_failed++;
           condition = true;
         }
     }
