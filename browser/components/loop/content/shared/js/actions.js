@@ -419,6 +419,8 @@ loop.shared.actions = (function() {
       // roomName: String - Optional.
       roomOwner: String,
       roomUrl: String
+      // urls: Array - Optional.
+      // See https://wiki.mozilla.org/Loop/Architecture/Context#Format_of_context.value
     }),
 
     /**

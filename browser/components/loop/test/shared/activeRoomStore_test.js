@@ -457,15 +457,24 @@ describe("loop.store.ActiveRoomStore", function () {
           }, expectedDetails)));
       });
 
-      it("should dispatch UpdateRoomInfo message with the room name if decryption was successful", function() {
+      it("should dispatch UpdateRoomInfo message with the context if decryption was successful", function() {
         fetchServerAction.cryptoKey = "fakeKey";
+
+        var roomContext = {
+          roomName: "The wonderful Loopy room",
+          urls: [{
+            description: "An invalid page",
+            location: "http://invalid.com",
+            thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+          }]
+        };
 
         // This is a work around to turn promise into a sync action to make handling test failures
         // easier.
         sandbox.stub(loop.crypto, "decryptBytes", function() {
           return {
             then: function(resolve, reject) {
-              resolve(JSON.stringify({roomName: "The wonderful Loopy room"}));
+              resolve(JSON.stringify(roomContext));
             }
           };
         });
@@ -474,9 +483,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.UpdateRoomInfo(_.extend({
-            roomName: "The wonderful Loopy room"
-          }, expectedDetails)));
+          new sharedActions.UpdateRoomInfo(_.extend(roomContext, expectedDetails)));
       });
     });
   });
@@ -562,7 +569,12 @@ describe("loop.store.ActiveRoomStore", function () {
       fakeRoomInfo = {
         roomName: "Its a room",
         roomOwner: "Me",
-        roomUrl: "http://invalid"
+        roomUrl: "http://invalid",
+        urls: [{
+          description: "fake site",
+          location: "http://invalid.com",
+          thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        }]
       };
     });
 
@@ -573,6 +585,7 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(state.roomName).eql(fakeRoomInfo.roomName);
       expect(state.roomOwner).eql(fakeRoomInfo.roomOwner);
       expect(state.roomUrl).eql(fakeRoomInfo.roomUrl);
+      expect(state.roomContextUrls).eql(fakeRoomInfo.urls);
     });
   });
 

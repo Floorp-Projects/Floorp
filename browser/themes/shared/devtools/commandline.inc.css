@@ -6,13 +6,35 @@
 
 /* Developer toolbar */
 
+/* NOTE: THESE NEED TO STAY IN SYNC WITH LIGHT-THEME.CSS AND DARK-THEME.CSS.
+   We are copy/pasting variables from light-theme and dark-theme,
+   since they aren't loaded in this context (within browser.css). */
+:root[devtoolstheme="light"] #developer-toolbar {
+  --gcli-background-color: #ebeced; /* --theme-tab-toolbar-background */
+  --gcli-input-background: #f0f1f2; /* --theme-toolbar-background */
+  --gcli-input-focused-background: #f7f7f7; /* --theme-sidebar-background */
+  --gcli-input-color: #18191a; /* --theme-body-color */
+  --gcli-border-color: #aaaaaa; /* --theme-splitter-color */
+  --selection-background: #4c9ed9; /* --theme-selection-background */
+  --selection-color: #f5f7fa; /* --theme-selection-color */
+}
+
+:root[devtoolstheme="dark"] #developer-toolbar {
+  --gcli-background-color: #343c45; /* --theme-toolbar-background */
+  --gcli-input-background: rgba(37, 44, 51, .6); /* --theme-tab-toolbar-background */
+  --gcli-input-focused-background: #252c33; /* --theme-tab-toolbar-background */
+  --gcli-input-color: #b6babf; /* --theme-body-color-alt */
+  --gcli-border-color: black; /* --theme-splitter-color */
+  --selection-background: #1d4f73; /* --theme-selection-background */
+  --selection-color: #f5f7fa; /* --theme-selection-color */
+}
+
 #developer-toolbar {
   -moz-appearance: none;
   padding: 0;
   min-height: 32px;
-  background-color: #343C45; /* Toolbars */
-  border-top: 1px solid #060a0d;
-  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(206,37%,4%,.1) inset;
+  background-color: var(--gcli-background-color);
+  border-top: 1px solid var(--gcli-border-color);
 }
 
 #developer-toolbar > toolbarbutton {
@@ -26,6 +48,11 @@
 
 .developer-toolbar-button > image {
   margin: auto 10px;
+}
+
+:root[devtoolstheme="light"] #developer-toolbar > toolbarbutton:not([checked=true]) > image,
+:root[devtoolstheme="light"] .gclitoolbar-input-node:not([focused=true])::before  {
+  filter: url("chrome://browser/skin/devtools/filters.svg#invert");
 }
 
 .developer-toolbar-button > .toolbarbutton-icon,
@@ -135,24 +162,25 @@ html|*#gcli-output-frame {
   box-shadow: none;
   border-width: 0;
   background-color: transparent;
+  border-radius: 0;
 }
 
 .gclitoolbar-input-node {
   -moz-appearance: none;
-  color: hsl(210,30%,85%);
-  background-color: #242b33;
+  color: var(--gcli-input-color);
+  background-color: var(--gcli-input-background);
   background-repeat: no-repeat;
   background-position: 4px center;
-  box-shadow: 0 1px 1px hsla(206,37%,4%,.2) inset,
-              1px 0 0 hsla(206,37%,4%,.2) inset,
-              -1px 0 0 hsla(206,37%,4%,.2) inset;
+  box-shadow: 1px 0 0 var(--gcli-border-color) inset,
+              -1px 0 0 var(--gcli-border-color) inset;
+
   line-height: 32px;
   outline-style: none;
   padding: 0;
 }
 
 .gclitoolbar-input-node[focused="true"] {
-  background-color: #232e38;
+  background-color: var(--gcli-input-focused-background);
 }
 
 .gclitoolbar-input-node::before {
@@ -178,8 +206,8 @@ html|*#gcli-output-frame {
 }
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
-  background-color: hsl(210,30%,85%);
-  color: hsl(210,24%,16%);
+  background-color: var(--selection-background);
+  color: var(--selection-color);
   text-shadow: none;
 }
 

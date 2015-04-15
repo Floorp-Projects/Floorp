@@ -159,6 +159,11 @@ let ReaderParent = {
     }
   },
 
+  forceShowReaderIcon: function(browser) {
+    browser.isArticle = true;
+    this.updateReaderButton(browser);
+  },
+
   buttonClick: function(event) {
     if (event.button != 0) {
       return;

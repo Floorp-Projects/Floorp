@@ -199,8 +199,43 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
+  var StandaloneRoomContextItem = React.createClass({
+    propTypes: {
+      receivingScreenShare: React.PropTypes.bool,
+      roomContextUrl: React.PropTypes.object
+    },
+
+    render: function() {
+      if (!this.props.roomContextUrl ||
+          !this.props.roomContextUrl.location) {
+        return null;
+      }
+
+      var location = this.props.roomContextUrl.location;
+
+      var cx = React.addons.classSet;
+
+      var classes = cx({
+        "standalone-context-url": true,
+        "screen-share-active": this.props.receivingScreenShare
+      });
+
+      return (
+        <div className={classes}>
+            <img src={this.props.roomContextUrl.thumbnail} />
+          <div className="standalone-context-url-description-wrapper">
+            {this.props.roomContextUrl.description}
+            <br /><a href={location}>{location}</a>
+          </div>
+        </div>
+      );
+    }
+  });
+
   var StandaloneRoomContextView = React.createClass({
     propTypes: {
+      receivingScreenShare: React.PropTypes.bool.isRequired,
+      roomContextUrls: React.PropTypes.array,
       roomName: React.PropTypes.string,
       roomInfoFailure: React.PropTypes.string
     },
@@ -216,8 +251,17 @@ loop.standaloneRoomViews = (function(mozL10n) {
         </h2>);
       }
 
+      // We only support one item in the context Urls array for now.
+      var roomContextUrl = (this.props.roomContextUrls &&
+                            this.props.roomContextUrls.length > 0) ?
+                            this.props.roomContextUrls[0] : null;
       return (
-        <h2 className="room-name">{this.props.roomName}</h2>
+        <div className="standalone-room-info">
+          <h2 className="room-name">{this.props.roomName}</h2>
+          <StandaloneRoomContextItem
+            receivingScreenShare={this.props.receivingScreenShare}
+            roomContextUrl={roomContextUrl} />
+        </div>
       );
     }
   });
@@ -482,8 +526,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                   roomUsed={this.state.used} />
           <div className="video-layout-wrapper">
             <div className="conversation room-conversation">
-              <StandaloneRoomContextView roomName={this.state.roomName}
-                                         roomInfoFailure={this.state.roomInfoFailure} />
+              <StandaloneRoomContextView
+                receivingScreenShare={this.state.receivingScreenShare}
+                roomContextUrls={this.state.roomContextUrls}
+                roomName={this.state.roomName}
+                roomInfoFailure={this.state.roomInfoFailure} />
               <div className="media nested">
                 <span className="self-view-hidden-message">
                   {mozL10n.get("self_view_hidden_message")}
