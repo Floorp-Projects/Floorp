@@ -11,25 +11,25 @@ import java.util.List;
 public class FirstrunPagerConfig {
     public static List<FirstrunPanel> getDefault() {
         final List<FirstrunPanel> panels = new LinkedList<>();
-        panels.add(new FirstrunPanel(WelcomePanel.class.getName(), "Welcome"));
+        panels.add(new FirstrunPanel(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
         return panels;
     }
 
     public static class FirstrunPanel {
-        private String resource;
-        private String title;
+        private String classname;
+        private int titleRes;
 
-        public FirstrunPanel(String resource, String title) {
-            this.resource = resource;
-            this.title = title;
+        public FirstrunPanel(String resource, int titleRes) {
+            this.classname= resource;
+            this.titleRes = titleRes;
         }
 
-        public String getResource() {
-            return this.resource;
+        public String getClassname() {
+            return this.classname;
         }
 
-        public String getTitle() {
-            return this.title;
+        public int getTitleRes() {
+            return this.titleRes;
         }
 
     }
