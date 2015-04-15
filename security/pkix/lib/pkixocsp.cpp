@@ -407,39 +407,25 @@ BasicResponse(Reader& input, Context& context)
   }
 
   // Parse certificates, if any
-
   NonOwningDERArray certs;
   if (!input.AtEnd()) {
-    // We ignore the lengths of the wrappers because we'll detect bad lengths
-    // during parsing--too short and we'll run out of input for parsing a cert,
-    // and too long and we'll have leftover data that won't parse as a cert.
-
-    // [0] wrapper
-    Reader wrapped;
-    rv = der::ExpectTagAndGetValueAtEnd(
-          input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0, wrapped);
+    rv = der::Nested(input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
+                     der::SEQUENCE, [&certs](Reader& certsDER) -> Result {
+      while (!certsDER.AtEnd()) {
+        Input cert;
+        Result rv = der::ExpectTagAndGetTLV(certsDER, der::SEQUENCE, cert);
+        if (rv != Success) {
+          return rv;
+        }
+        rv = certs.Append(cert);
+        if (rv != Success) {
+          return Result::ERROR_BAD_DER; // Too many certs
+        }
+      }
+      return Success;
+    });
     if (rv != Success) {
       return rv;
-    }
-
-    // SEQUENCE wrapper
-    Reader certsSequence;
-    rv = der::ExpectTagAndGetValueAtEnd(wrapped, der::SEQUENCE, certsSequence);
-    if (rv != Success) {
-      return rv;
-    }
-
-    // sequence of certificates
-    while (!certsSequence.AtEnd()) {
-      Input cert;
-      rv = der::ExpectTagAndGetTLV(certsSequence, der::SEQUENCE, cert);
-      if (rv != Success) {
-        return rv;
-      }
-      rv = certs.Append(cert);
-      if (rv != Success) {
-        return rv;
-      }
     }
   }
 

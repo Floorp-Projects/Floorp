@@ -21,8 +21,8 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   , mCallback(aCallback)
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
-  // Use a new DataBuffer as the object will be modified during initialization.
-  mExtraData = new DataBuffer;
+  // Use a new MediaByteBuffer as the object will be modified during initialization.
+  mExtraData = new MediaByteBuffer;
   mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
 }
 

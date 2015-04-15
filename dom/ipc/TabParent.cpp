@@ -2906,6 +2906,23 @@ TabParent::LayerTreeUpdate(bool aActive)
   return true;
 }
 
+void
+TabParent::SwapLayerTreeObservers(TabParent* aOther)
+{
+  if (IsDestroyed() || aOther->IsDestroyed()) {
+    return;
+  }
+
+  RenderFrameParent* rfp = GetRenderFrame();
+  RenderFrameParent* otherRfp = aOther->GetRenderFrame();
+  if(!rfp || !otherRfp) {
+    return;
+  }
+
+  CompositorParent::SwapLayerTreeObservers(rfp->GetLayersId(),
+                                           otherRfp->GetLayersId());
+}
+
 bool
 TabParent::RecvRemotePaintIsReady()
 {

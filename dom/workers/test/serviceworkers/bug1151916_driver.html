@@ -1,0 +1,53 @@
+<html>
+  <body>
+    <script language="javascript">
+      function fail(msg) {
+        window.parent.postMessage({ status: "failed", message: msg }, "*");
+      }
+
+      function success(msg) {
+        window.parent.postMessage({ status: "success", message: msg }, "*");
+      }
+
+      if (!window.parent) {
+        dump("This file must be embedded in an iframe!");
+      }
+
+      navigator.serviceWorker.getRegistration()
+      .then(function(reg) {
+        if (!reg) {
+          navigator.serviceWorker.ready.then(function(reg) {
+            if (reg.active.state == "activating") {
+              reg.active.onstatechange = function(e) {
+                reg.active.onstatechange = null;
+                if (reg.active.state == "activated") {
+                  success("Registered and activated");
+                }
+              }
+            } else {
+              success("Registered and activated");
+            }
+          });
+          navigator.serviceWorker.register("bug1151916_worker.js",
+                                           { scope: "." });
+        } else {
+          // Simply force the sw to load a resource and touch self.caches.
+          if (!reg.active) {
+            fail("no-active-worker");
+            return;
+          }
+
+          fetch("madeup.txt").then(function(res) {
+            res.text().then(function(v) {
+              if (v == "Hi there") {
+                success("Loaded from cache");
+              } else {
+                fail("Response text did not match");
+              }
+            }, fail);
+          }, fail);
+        }
+      }, fail);
+    </script>
+  </body>
+</html>

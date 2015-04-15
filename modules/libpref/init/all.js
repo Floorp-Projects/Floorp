@@ -4573,6 +4573,7 @@ pref("dom.beforeAfterKeyboardEvent.enabled", false);
 
 // Presentation API
 pref("dom.presentation.enabled", false);
+pref("dom.presentation.tcp_server.debug", false);
 
 // Use raw ICU instead of CoreServices API in Unicode collation
 #ifdef XP_MACOSX

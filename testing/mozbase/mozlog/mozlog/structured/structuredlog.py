@@ -37,7 +37,7 @@ Allowed actions, and subfields:
   test_status
       test - ID for the test
       subtest - Name of the subtest
-      status [PASS | FAIL | TIMEOUT | NOTRUN] - test status
+      status [PASS | FAIL | TIMEOUT | NOTRUN | SKIP] - test status
       expected [As for status] - Status that the subtest was expected to get,
                                  or absent if the subtest got the expected status
 
