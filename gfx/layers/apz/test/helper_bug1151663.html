@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1151663, helper page</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript">
+
+    // -------------------------------------------------------------------
+    // Infrastructure to get the test assertions to run at the right time.
+    // -------------------------------------------------------------------
+    var SimpleTest = window.opener.SimpleTest;
+
+    window.onload = function() {
+        window.addEventListener("MozAfterPaint", afterPaint, false);
+    };
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    function afterPaint(e) {
+      // If there is another paint pending, wait for it.
+      if (utils.isMozAfterPaintPending) {
+          return;
+      }
+
+      // Once there are no more paints pending, remove the
+      // MozAfterPaint listener and run the test logic.
+      window.removeEventListener("MozAfterPaint", afterPaint, false);
+      testBug1151663();
+    }
+
+    // --------------------------------------------------------------------
+    // The actual logic for testing bug 1151663.
+    //
+    // In this test we have a simple page which is scrollable, with a 
+    // scrollable <div> which is also scrollable. We test that the
+    // <div> does not get an initial APZC, since primary scrollable
+    // frame is the page's root scroll frame.
+    // --------------------------------------------------------------------
+
+    function testBug1151663() {
+      // Get the content- and compositor-side test data from nsIDOMWindowUtils.
+      var contentTestData = utils.getContentAPZTestData();
+      var compositorTestData = utils.getCompositorAPZTestData();
+
+      // Get the sequence number of the last paint on the compositor side.
+      // We do this before converting the APZ test data because the conversion
+      // loses the order of the paints.
+      SimpleTest.ok(compositorTestData.paints.length > 0,
+                    "expected at least one paint in compositor test data");
+      var lastCompositorPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
+      var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;
+
+      // Convert the test data into a representation that's easier to navigate.
+      contentTestData = convertTestData(contentTestData);
+      compositorTestData = convertTestData(compositorTestData);
+
+      // Reconstruct the APZC tree structure in the last paint.
+      var apzcTree = buildApzcTree(compositorTestData.paints[lastCompositorPaintSeqNo]);
+
+      // The apzc tree for this page should consist of a single root APZC,
+      // and no child APZCs.
+      SimpleTest.is(apzcTree.children.length, 1, "expected a single root APZC");
+      var rootApzc = apzcTree.children[0];
+      SimpleTest.is(rootApzc.children.length, 0, "expected no child APZCs");
+
+      window.opener.finishTest();
+    }
+  </script>
+</head>
+<body style="height: 500px; overflow: scroll">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151663">Mozilla Bug 1151663</a>
+  <div style="height: 50px; width: 50px; overflow: scroll">
+    <!-- Put enough content into the subframe to make it have a nonzero scroll range -->
+    <div style="height: 100px; width: 50px"></div>
+  </div>
+  <!-- Put enough content into the page to make it have a nonzero scroll range -->
+  <div style="height: 1000px"></div>
+</body>
+</html>
