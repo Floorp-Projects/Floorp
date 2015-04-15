@@ -7,12 +7,7 @@
 #ifndef LulMain_h
 #define LulMain_h
 
-#include <pthread.h>   // pthread_t
-
-#include <map>
-
 #include "LulPlatformMacros.h"
-#include "LulRWLock.h"
 
 // LUL: A Lightweight Unwind Library.
 // This file provides the end-user (external) interface for LUL.
@@ -57,20 +52,23 @@
 namespace lul {
 
 // A machine word plus validity tag.
-class TaggedUWord {
+class MOZ_STACK_CLASS TaggedUWord {
 public:
+  // RUNS IN NO-MALLOC CONTEXT
   // Construct a valid one.
   explicit TaggedUWord(uintptr_t w)
     : mValue(w)
     , mValid(true)
   {}
 
+  // RUNS IN NO-MALLOC CONTEXT
   // Construct an invalid one.
   TaggedUWord()
     : mValue(0)
     , mValid(false)
   {}
 
+  // RUNS IN NO-MALLOC CONTEXT
   // Add in a second one.
   void Add(TaggedUWord other) {
     if (mValid && other.Valid()) {
@@ -81,12 +79,16 @@ public:
     }
   }
 
+  // RUNS IN NO-MALLOC CONTEXT
   // Is it word-aligned?
   bool IsAligned() const {
     return mValid && (mValue & (sizeof(uintptr_t)-1)) == 0;
   }
 
+  // RUNS IN NO-MALLOC CONTEXT
   uintptr_t Value() const { return mValue; }
+
+  // RUNS IN NO-MALLOC CONTEXT
   bool      Valid() const { return mValid; }
 
 private:
@@ -132,46 +134,90 @@ struct StackImage {
 };
 
 
+// Statistics collection for the unwinder.
+template<typename T>
+class LULStats {
+public:
+  LULStats()
+    : mContext(0)
+    , mCFI(0)
+    , mScanned(0)
+  {}
+
+  template <typename S>
+  LULStats(const LULStats<S>& aOther)
+    : mContext(aOther.mContext)
+    , mCFI(aOther.mCFI)
+    , mScanned(aOther.mScanned)
+  {}
+
+  template <typename S>
+  LULStats<T>& operator=(const LULStats<S>& aOther)
+  {
+    mContext = aOther.mContext;
+    mCFI     = aOther.mCFI;
+    mScanned = aOther.mScanned;
+    return *this;
+  }
+
+  template <typename S>
+  uint32_t operator-(const LULStats<S>& aOther) {
+    return (mContext - aOther.mContext) +
+           (mCFI - aOther.mCFI) + (mScanned - aOther.mScanned);
+  }
+
+  T mContext; // Number of context frames
+  T mCFI;     // Number of CFI/EXIDX frames
+  T mScanned; // Number of scanned frames
+};
+
+
 // The core unwinder library class.  Just one of these is needed, and
 // it can be shared by multiple unwinder threads.
 //
-// Access to the library is mediated by a single reader-writer lock.
-// All attempts to change the library's internal shared state -- that
-// is, loading or unloading unwind info -- are forced single-threaded
-// by causing the called routine to acquire a write-lock.  Unwind
-// requests do not change the library's internal shared state and
-// therefore require only a read-lock.  Hence multiple threads can
-// unwind in parallel.
+// The library operates in one of two modes.
 //
-// The library needs to maintain state which is private to each
-// unwinder thread -- the CFI (Dwarf Call Frame Information) fast
-// cache.  Hence unwinder threads first need to register with the
-// library, so their identities are known.  Also, for maximum
-// effectiveness of the CFI caching, it is preferable to have a small
-// number of very-busy unwinder threads rather than a large number of
-// mostly-idle unwinder threads.
+// * Admin mode.  The library is this state after creation.  In Admin
+//   mode, no unwinding may be performed.  It is however allowable to
+//   perform administrative tasks -- primarily, loading of unwind info
+//   -- in this mode.  In particular, it is safe for the library to
+//   perform dynamic memory allocation in this mode.  Safe in the
+//   sense that there is no risk of deadlock against unwinding threads
+//   that might -- because of where they have been sampled -- hold the
+//   system's malloc lock.
 //
-// None of the methods may be safely called from within a signal
-// handler, since this risks deadlock.  In particular this means
-// a thread may not unwind itself from within a signal handler
-// frame.  It might be safe to call Unwind() on its own stack
-// from not-inside a signal frame, although even that cannot be
-// guaranteed deadlock free.
+// * Unwind mode.  In this mode, calls to ::Unwind may be made, but
+//   nothing else.  ::Unwind guarantees not to make any dynamic memory
+//   requests, so as to guarantee that the calling thread won't
+//   deadlock in the case where it already holds the system's malloc lock.
+//
+// The library is created in Admin mode.  After debuginfo is loaded,
+// the caller must switch it into Unwind mode by calling
+// ::EnableUnwinding.  There is no way to switch it back to Admin mode
+// after that.  To safely switch back to Admin mode would require the
+// caller (or other external agent) to guarantee that there are no
+// pending ::Unwind calls.
 
 class PriMap;
 class SegArray;
-class CFICache;
+class UniqueStringUniverse;
 
 class LUL {
 public:
-  // Create; supply a logging sink.  Initialises the rw-lock.
+  // Create; supply a logging sink.  Sets the object in Admin mode.
   explicit LUL(void (*aLog)(const char*));
 
-  // Destroy.  This acquires mRWlock for writing.  By doing that, waits
-  // for all unwinder threads to finish any Unwind() calls they may be
-  // in.  All resources are freed and all registered unwinder threads
-  // are deregistered.
+  // Destroy.  Caller is responsible for ensuring that no other
+  // threads are in Unwind calls.  All resources are freed and all
+  // registered unwinder threads are deregistered.  Can be called
+  // either in Admin or Unwind mode.
   ~LUL();
+
+  // Notify the library that unwinding is now allowed and so
+  // admin-mode calls are no longer allowed.  The object is initially
+  // created in admin mode.  The only possible transition is
+  // admin->unwinding, therefore.
+  void EnableUnwinding();
 
   // Notify of a new r-x mapping, and load the associated unwind info.
   // The filename is strdup'd and used for debug printing.  If
@@ -179,9 +225,7 @@ public:
   // itself, so as to be able to read the unwind info.  If
   // aMappedImage is non-NULL then it is assumed to point to a
   // called-supplied and caller-managed mapped image of the file.
-  //
-  // Acquires mRWlock for writing.  This must be called only after the
-  // code area in question really has been mapped.
+  // May only be called in Admin mode.
   void NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
                       const char* aFileName, const void* aMappedImage);
 
@@ -189,9 +233,10 @@ public:
   // what the associated file is.  This call notifies LUL of such
   // areas.  This is important for correct functioning of stack
   // scanning and of the x86-{linux,android} special-case
-  // __kernel_syscall function handling.  Acquires mRWlock for
-  // writing.  This must be called only after the code area in
+  // __kernel_syscall function handling.
+  // This must be called only after the code area in
   // question really has been mapped.
+  // May only be called in Admin mode.
   void NotifyExecutableArea(uintptr_t aRXavma, size_t aSize);
 
   // Notify that a mapped area has been unmapped; discard any
@@ -203,22 +248,20 @@ public:
   // unmapped, rather than a start and a length parameter.  This is so
   // as to make it possible to notify an unmap for the entire address
   // space using a single call.
+  // May only be called in Admin mode.
   void NotifyBeforeUnmap(uintptr_t aAvmaMin, uintptr_t aAvmaMax);
 
   // Apply NotifyBeforeUnmap to the entire address space.  This causes
   // LUL to discard all unwind and executable-area information for the
   // entire address space.
+  // May only be called in Admin mode.
   void NotifyBeforeUnmapAll() {
     NotifyBeforeUnmap(0, UINTPTR_MAX);
   }
 
-  // Returns the number of mappings currently registered.  Acquires
-  // mRWlock for writing.
+  // Returns the number of mappings currently registered.
+  // May only be called in Admin mode.
   size_t CountMappings();
-
-  // Register the calling thread for unwinding.  Acquires mRWlock for
-  // writing.
-  void RegisterUnwinderThread();
 
   // Unwind |aStackImg| starting with the context in |aStartRegs|.
   // Write the number of frames recovered in *aFramesUsed.  Put
@@ -241,15 +284,15 @@ public:
   // down.  It monitors SP values as it unwinds to check they
   // decrease, so as to avoid looping on corrupted stacks.
   //
-  // Acquires mRWlock for reading.  Hence multiple threads may unwind
-  // at once, but no thread may be unwinding whilst the library loads
-  // or discards unwind information.  Returns false if the calling
-  // thread is not registered for unwinding.
+  // May only be called in Unwind mode.  Multiple threads may unwind
+  // at once.  LUL user is responsible for ensuring that no thread makes
+  // any Admin calls whilst in Unwind mode.
+  // MOZ_CRASHes if the calling thread is not registered for unwinding.
   //
   // Up to aScannedFramesAllowed stack-scanned frames may be recovered.
   //
-  // The calling thread must previously have registered itself via
-  // RegisterUnwinderThread.
+  // The calling thread must previously have been registered via a call to
+  // RegisterSampledThread.
   void Unwind(/*OUT*/uintptr_t* aFramePCs,
               /*OUT*/uintptr_t* aFrameSPs,
               /*OUT*/size_t* aFramesUsed,
@@ -259,43 +302,46 @@ public:
               UnwindRegs* aStartRegs, StackImage* aStackImg);
 
   // The logging sink.  Call to send debug strings to the caller-
-  // specified destination.
+  // specified destination.  Can only be called by the Admin thread.
   void (*mLog)(const char*);
 
-private:
-  // Invalidate the caches.  Requires mRWlock to be held for writing;
-  // does not acquire it itself.
-  void InvalidateCFICaches();
+  // Statistics relating to unwinding.  These have to be atomic since
+  // unwinding can occur on different threads simultaneously.
+  LULStats<mozilla::Atomic<uint32_t>> mStats;
 
-  // The one-and-only lock, a reader-writer lock, for the library.
-  LulRWLock* mRWlock;
+  // Possibly show the statistics.  This may not be called from any
+  // registered sampling thread, since it involves I/O.
+  void MaybeShowStats();
+
+private:
+  // The statistics counters at the point where they were last printed.
+  LULStats<uint32_t> mStatsPrevious;
+
+  // Are we in admin mode?  Initially |true| but changes to |false|
+  // once unwinding begins.
+  bool mAdminMode;
+
+  // The thread ID associated with admin mode.  This is the only thread
+  // that is allowed do perform non-Unwind calls on this object.  Conversely,
+  // no registered Unwinding thread may be the admin thread.  This is so
+  // as to clearly partition the one thread that may do dynamic memory
+  // allocation from the threads that are being sampled, since the latter
+  // absolutely may not do dynamic memory allocation.
+  int mAdminThreadId;
 
   // The top level mapping from code address ranges to postprocessed
   // unwind info.  Basically a sorted array of (addr, len, info)
-  // records.  Threads wishing to query this field must hold mRWlock
-  // for reading.  Threads wishing to modify this field must hold
-  // mRWlock for writing.  This field is updated by NotifyAfterMap and
-  // NotifyBeforeUnmap.
+  // records.  This field is updated by NotifyAfterMap and NotifyBeforeUnmap.
   PriMap* mPriMap;
 
   // An auxiliary structure that records which address ranges are
-  // mapped r-x, for the benefit of the stack scanner.  Threads
-  // wishing to query this field must hold mRWlock for reading.
-  // Threads wishing to modify this field must hold mRWlock for
-  // writing.
+  // mapped r-x, for the benefit of the stack scanner.
   SegArray* mSegArray;
 
-  // The thread-local data: a mapping from threads to CFI-fast-caches.
-  // Threads wishing to query this field must hold mRWlock for
-  // reading.  Threads wishing to modify this field must hold mRWlock
-  // for writing.
-  //
-  // The CFICaches themselves are thread-local and can be both read
-  // and written when mRWlock is held for reading.  It would probably
-  // be faster to use the pthread_{set,get}specific functions, but
-  // also more difficult.  This map is queried once per unwind, in
-  // order to get hold of the CFI cache for a given thread.
-  std::map<pthread_t, CFICache*> mCaches;
+  // A UniqueStringUniverse that holds all the strdup'd strings created
+  // whilst reading unwind information.  This is included so as to make
+  // it possible to free them in ~LUL.
+  UniqueStringUniverse* mUSU;
 };
 
 

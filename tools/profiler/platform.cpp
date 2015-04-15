@@ -16,7 +16,6 @@
 #include "mozilla/ThreadLocal.h"
 #include "PseudoStack.h"
 #include "TableTicker.h"
-#include "UnwinderThread2.h"
 #include "nsIObserverService.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -28,6 +27,12 @@
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "AndroidBridge.h"
+#endif
+
+#if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
+# define USE_LUL_STACKWALK
+# include "LulMain.h"
+# include "platform-linux-lul.h"
 #endif
 
 mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
@@ -50,8 +55,8 @@ static bool sIsLayersDump = false; // is raced on
 static bool sIsDisplayListDump = false; // is raced on
 static bool sIsRestyleProfiling = false; // is raced on
 
-// env variables to control the profiler
-const char* PROFILER_MODE = "MOZ_PROFILER_MODE";
+// Environment variables to control the profiler
+const char* PROFILER_HELP = "MOZ_PROFILER_HELP";
 const char* PROFILER_INTERVAL = "MOZ_PROFILER_INTERVAL";
 const char* PROFILER_ENTRIES = "MOZ_PROFILER_ENTRIES";
 const char* PROFILER_STACK = "MOZ_PROFILER_STACK_SCAN";
@@ -61,6 +66,11 @@ const char* PROFILER_FEATURES = "MOZ_PROFILING_FEATURES";
  * case of them being the same as special. i.e. we only run into
  * a problem if 2^32 events happen between samples that we need
  * to know are associated with different events */
+
+// Values harvested from env vars, that control the profiler.
+static int sUnwindInterval;   /* in milliseconds */
+static int sUnwindStackScan;  /* max # of dubious frames allowed */
+static int sProfileEntries;   /* how many entries do we store? */
 
 std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
 mozilla::Mutex* Sampler::sRegisteredThreadsMutex = nullptr;
@@ -80,6 +90,13 @@ static const char * gGeckoThreadName = "GeckoMain";
 void Sampler::Startup() {
   sRegisteredThreads = new std::vector<ThreadInfo*>();
   sRegisteredThreadsMutex = new mozilla::Mutex("sRegisteredThreads mutex");
+
+  // We could create the sLUL object and read unwind info into it at
+  // this point.  That would match the lifetime implied by destruction
+  // of it in Sampler::Shutdown just below.  However, that gives a big
+  // delay on startup, even if no profiling is actually to be done.
+  // So, instead, sLUL is created on demand at the first call to
+  // Sampler::Start.
 }
 
 void Sampler::Shutdown() {
@@ -95,6 +112,14 @@ void Sampler::Shutdown() {
   // we need to point to null to ignore such a call after shutdown.
   sRegisteredThreadsMutex = nullptr;
   sRegisteredThreads = nullptr;
+
+#if defined(USE_LUL_STACKWALK)
+  // Delete the sLUL object, if it actually got created.
+  if (sLUL) {
+    delete sLUL;
+    sLUL = nullptr;
+  }
+#endif
 }
 
 ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
@@ -197,87 +222,37 @@ void ProfilerMarker::StreamJSObject(JSStreamWriter& b) const {
   b.EndObject();
 }
 
-bool sps_version2()
-{
-  static int version = 0; // Raced on, potentially
-
-  if (version == 0) {
-    bool allow2 = false; // Is v2 allowable on this platform?
-#   if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_arm_android) \
-       || defined(SPS_PLAT_x86_linux)
-    allow2 = true;
-#   elif defined(SPS_PLAT_amd64_darwin) || defined(SPS_PLAT_x86_darwin) \
-         || defined(SPS_PLAT_x86_windows) || defined(SPS_PLAT_x86_android) \
-         || defined(SPS_PLAT_amd64_windows)
-    allow2 = false;
-#   else
-#     error "Unknown platform"
-#   endif
-
-    bool req2 = PR_GetEnv("MOZ_PROFILER_NEW") != nullptr; // Has v2 been requested?
-
-    if (req2 && allow2) {
-      version = 2;
-      LOG("------------------- MOZ_PROFILER_NEW set -------------------");
-    } else if (req2 && !allow2) {
-      version = 1;
-      LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
-      LOG("---------- but is not available on this platform -----------");
-    } else {
-      version = 1;
-      LOG("----------------- MOZ_PROFILER_NEW not set -----------------");
-    }
-  }
-  return version == 2;
-}
-
 /* Has MOZ_PROFILER_VERBOSE been set? */
+
+// Verbosity control for the profiler.  The aim is to check env var
+// MOZ_PROFILER_VERBOSE only once.  However, we may need to temporarily
+// override that so as to print the profiler's help message.  That's
+// what moz_profiler_set_verbosity is for.
+
+enum class ProfilerVerbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
+
+// Raced on, potentially
+static ProfilerVerbosity profiler_verbosity = ProfilerVerbosity::UNCHECKED;
+
 bool moz_profiler_verbose()
 {
-  /* 0 = not checked, 1 = unset, 2 = set */
-  static int status = 0; // Raced on, potentially
-
-  if (status == 0) {
+  if (profiler_verbosity == ProfilerVerbosity::UNCHECKED) {
     if (PR_GetEnv("MOZ_PROFILER_VERBOSE") != nullptr)
-      status = 2;
+      profiler_verbosity = ProfilerVerbosity::VERBOSE;
     else
-      status = 1;
+      profiler_verbosity = ProfilerVerbosity::NOTVERBOSE;
   }
 
-  return status == 2;
+  return profiler_verbosity == ProfilerVerbosity::VERBOSE;
 }
 
-static inline const char* name_UnwMode(UnwMode m)
+void moz_profiler_set_verbosity(ProfilerVerbosity pv)
 {
-  switch (m) {
-    case UnwINVALID:  return "invalid";
-    case UnwNATIVE:   return "native";
-    case UnwPSEUDO:   return "pseudo";
-    case UnwCOMBINED: return "combined";
-    default:          return "??name_UnwMode??";
-  }
+   MOZ_ASSERT(pv == ProfilerVerbosity::UNCHECKED ||
+              pv == ProfilerVerbosity::VERBOSE);
+   profiler_verbosity = pv;
 }
 
-bool set_profiler_mode(const char* mode) {
-  if (mode) {
-    if (0 == strcmp(mode, "pseudo")) {
-      sUnwindMode = UnwPSEUDO;
-      return true;
-    }
-    else if (0 == strcmp(mode, "native") && is_native_unwinding_avail()) {
-      sUnwindMode = UnwNATIVE;
-      return true;
-    }
-    else if (0 == strcmp(mode, "combined") && is_native_unwinding_avail()) {
-      sUnwindMode = UnwCOMBINED;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 bool set_profiler_interval(const char* interval) {
   if (interval) {
@@ -329,37 +304,39 @@ bool is_native_unwinding_avail() {
 #endif
 }
 
-// Read env vars at startup, so as to set sUnwindMode and sInterval.
+// Read env vars at startup, so as to set:
+//   sUnwindInterval, sProfileEntries, sUnwindStackScan.
 void read_profiler_env_vars()
 {
-  bool nativeAvail = is_native_unwinding_avail();
-
   /* Set defaults */
-  sUnwindMode     = nativeAvail ? UnwCOMBINED : UnwPSEUDO;
   sUnwindInterval = 0;  /* We'll have to look elsewhere */
   sProfileEntries = 0;
 
-  const char* stackMode = PR_GetEnv(PROFILER_MODE);
   const char* interval = PR_GetEnv(PROFILER_INTERVAL);
   const char* entries = PR_GetEnv(PROFILER_ENTRIES);
   const char* scanCount = PR_GetEnv(PROFILER_STACK);
 
-  if (!set_profiler_mode(stackMode) ||
-      !set_profiler_interval(interval) ||
+  if (PR_GetEnv(PROFILER_HELP)) {
+     // Enable verbose output
+     moz_profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
+     profiler_usage();
+     // Now force the next enquiry of moz_profiler_verbose to re-query
+     // env var MOZ_PROFILER_VERBOSE.
+     moz_profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
+  }
+
+  if (!set_profiler_interval(interval) ||
       !set_profiler_entries(entries) ||
       !set_profiler_scan(scanCount)) {
       profiler_usage();
   } else {
     LOG( "SPS:");
-    LOGF("SPS: Unwind mode       = %s", name_UnwMode(sUnwindMode));
     LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
         (int)sUnwindInterval);
     LOGF("SPS: Entry store size  = %d (zero means \"platform default\")",
         (int)sProfileEntries);
     LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
         (int)sUnwindStackScan);
-    LOG( "SPS: Use env var MOZ_PROFILER_MODE=help for further information.");
-    LOG( "SPS: Note that MOZ_PROFILER_MODE=help sets all values to defaults.");
     LOG( "SPS:");
   }
 }
@@ -368,11 +345,8 @@ void profiler_usage() {
   LOG( "SPS: ");
   LOG( "SPS: Environment variable usage:");
   LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_MODE=native    for native unwind only");
-  LOG( "SPS:   MOZ_PROFILER_MODE=pseudo    for pseudo unwind only");
-  LOG( "SPS:   MOZ_PROFILER_MODE=combined  for combined native & pseudo unwind");
-  LOG( "SPS:   If unset, default is 'combined' on native-capable");
-  LOG( "SPS:     platforms, 'pseudo' on others.");
+  LOG( "SPS:   MOZ_PROFILER_HELP");
+  LOG( "SPS:   If set to any value, prints this message.");
   LOG( "SPS: ");
   LOG( "SPS:   MOZ_PROFILER_INTERVAL=<number>   (milliseconds, 1 to 1000)");
   LOG( "SPS:   If unset, platform default is used.");
@@ -386,9 +360,6 @@ void profiler_usage() {
   LOG( "SPS:   MOZ_PROFILER_STACK_SCAN=<number>   (default is zero)");
   LOG( "SPS:   The number of dubious (stack-scanned) frames allowed");
   LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_NEW");
-  LOG( "SPS:   Needs to be set to use LUL-based unwinding.");
-  LOG( "SPS: ");
   LOG( "SPS:   MOZ_PROFILER_LUL_TEST");
   LOG( "SPS:   If set to any value, runs LUL unit tests at startup of");
   LOG( "SPS:   the unwinder thread, and prints a short summary of results.");
@@ -398,21 +369,17 @@ void profiler_usage() {
   LOG( "SPS: ");
 
   /* Re-set defaults */
-  sUnwindMode       = is_native_unwinding_avail() ? UnwCOMBINED : UnwPSEUDO;
   sUnwindInterval   = 0;  /* We'll have to look elsewhere */
   sProfileEntries   = 0;
   sUnwindStackScan  = 0;
 
   LOG( "SPS:");
-  LOGF("SPS: Unwind mode       = %s", name_UnwMode(sUnwindMode));
   LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
        (int)sUnwindInterval);
   LOGF("SPS: Entry store size  = %d (zero means \"platform default\")",
        (int)sProfileEntries);
   LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
        (int)sUnwindStackScan);
-  LOG( "SPS: Use env var MOZ_PROFILER_MODE=help for further information.");
-  LOG( "SPS: Note that MOZ_PROFILER_MODE=help sets all values to defaults.");
   LOG( "SPS:");
 
   return;
@@ -508,9 +475,8 @@ void mozilla_sampler_init(void* stackTop)
                                    gGeckoThreadName : "Application Thread",
                                  stack, isMainThread, stackTop);
 
-  // Read mode settings from MOZ_PROFILER_MODE and interval
-  // settings from MOZ_PROFILER_INTERVAL and stack-scan threshhold
-  // from MOZ_PROFILER_STACK_SCAN.
+  // Read interval settings from MOZ_PROFILER_INTERVAL and stack-scan
+  // threshhold from MOZ_PROFILER_STACK_SCAN.
   read_profiler_env_vars();
 
   // platform specific initialization
@@ -529,7 +495,9 @@ void mozilla_sampler_init(void* stackTop)
   const char* features[] = {"js"
                          , "leaf"
                          , "threads"
-#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(SPS_ARCH_arm) && defined(linux))
+#if defined(XP_WIN) || defined(XP_MACOSX) \
+    || (defined(SPS_ARCH_arm) && defined(linux)) \
+    || defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
                          , "stackwalk"
 #endif
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
@@ -710,10 +678,6 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
                       aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
                       aFeatures, aFeatureCount,
                       aThreadNameFilters, aFilterCount);
-  if (t->HasUnwinderThread()) {
-    // Create the unwinder thread.  ATM there is only one.
-    uwt__init();
-  }
 
   tlsTicker.set(t);
   t->Start();
@@ -805,15 +769,6 @@ void mozilla_sampler_stop()
   }
 
   bool disableJS = t->ProfileJS();
-  bool unwinderThreader = t->HasUnwinderThread();
-
-  // Shut down and reap the unwinder thread.  We have to do this
-  // before stopping the sampler, so as to guarantee that the unwinder
-  // thread doesn't try to access memory that the subsequent call to
-  // mozilla_sampler_stop causes to be freed.
-  if (unwinderThreader) {
-    uwt__stop();
-  }
 
   t->Stop();
   delete t;
@@ -823,10 +778,6 @@ void mozilla_sampler_stop()
     PseudoStack *stack = tlsPseudoStack.get();
     ASSERT(stack != nullptr);
     stack->disableJSSampling();
-  }
-
-  if (unwinderThreader) {
-    uwt__deinit();
   }
 
   mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
