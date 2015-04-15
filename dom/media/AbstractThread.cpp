@@ -30,8 +30,13 @@ public:
                         DispatchFailureHandling aFailureHandling = AssertDispatchSuccess,
                         DispatchReason aReason = NormalDispatch) override
   {
-    MOZ_ASSERT_IF(aReason != TailDispatch, !CurrentThreadRequiresTailDispatch());
     nsCOMPtr<nsIRunnable> r = aRunnable;
+    AbstractThread* currentThread;
+    if (aReason != TailDispatch && (currentThread = GetCurrent()) && currentThread->RequiresTailDispatch()) {
+      currentThread->TailDispatcher().AddTask(this, r.forget(), aFailureHandling);
+      return;
+    }
+
     nsresult rv = mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
     unused << rv;
