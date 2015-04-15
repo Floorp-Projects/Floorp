@@ -213,9 +213,9 @@ function WebappsActor(aConnection) {
   Cu.import("resource://gre/modules/AppsUtils.jsm");
   Cu.import("resource://gre/modules/FileUtils.jsm");
 
-  // Keep reference of already connected app processes.
-  // values: app frame message manager
-  this._connectedApps = new Set();
+  // Keep reference of already created app actors.
+  // key: app frame message manager, value: ContentActor's grip() value
+  this._appActorsMap = new Map();
 
   this.conn = aConnection;
   this._uploads = [];
@@ -960,33 +960,24 @@ WebappsActor.prototype = {
 
     // Only create a new actor, if we haven't already
     // instanciated one for this connection.
-    let set = this._connectedApps;
+    let map = this._appActorsMap;
     let mm = appFrame.QueryInterface(Ci.nsIFrameLoaderOwner)
                      .frameLoader
                      .messageManager;
-    if (!set.has(mm)) {
+    let actor = map.get(mm);
+    if (!actor) {
       let onConnect = actor => {
-        set.add(mm);
+        map.set(mm, actor);
         return { actor: actor };
       };
       let onDisconnect = mm => {
-        set.delete(mm);
+        map.delete(mm);
       };
       return DebuggerServer.connectToChild(this.conn, appFrame, onDisconnect)
                            .then(onConnect);
     }
 
-    // We have to update the form as it may have changed
-    // if we detached the TabActor
-    let deferred = promise.defer();
-    let onFormUpdate = msg => {
-      mm.removeMessageListener("debug:form", onFormUpdate);
-      deferred.resolve({ actor: msg.json });
-    };
-    mm.addMessageListener("debug:form", onFormUpdate);
-    mm.sendAsyncMessage("debug:form");
-
-    return deferred.promise;
+    return { actor: actor };
   },
 
   watchApps: function () {
