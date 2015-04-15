@@ -77,6 +77,7 @@ function populateChildren(element, options, selectedIndex, startIndex = 0, isGro
   for (let option of options) {
     let item = element.ownerDocument.createElement("menuitem");
     item.setAttribute("label", option.textContent);
+    item.style.direction = option.textDirection;
 
     element.appendChild(item);
 
