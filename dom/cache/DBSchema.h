@@ -36,11 +36,12 @@ nsresult
 InitializeConnection(mozIStorageConnection* aConn);
 
 nsresult
-CreateCacheId(mozIStorageConnection* aConn, CacheId* aCacheIdOut);
+CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut);
 
+// TODO: improve naming (confusing with CacheDelete) (bug 1110485)
 nsresult
-DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
-              nsTArray<nsID>& aDeletedBodyIdListOut);
+DeleteCache(mozIStorageConnection* aConn, CacheId aCacheId,
+            nsTArray<nsID>& aDeletedBodyIdListOut);
 
 // TODO: Consider removing unused IsCacheOrphaned after writing cleanup code. (bug 1110446)
 nsresult
