@@ -8,37 +8,35 @@ HAS_MISC_RULE = True
 
 XPCSHELL_TESTS_MANIFESTS += ['unit_aus_update/xpcshell.ini']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-    MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
-    XPCSHELL_TESTS_MANIFESTS += ['unit_base_updater/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['unit_base_updater/xpcshell.ini']
 
-    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
-        XPCSHELL_TESTS_MANIFESTS += ['unit_service_updater/xpcshell.ini']
+if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+    XPCSHELL_TESTS_MANIFESTS += ['unit_service_updater/xpcshell.ini']
 
-    SimplePrograms([
-        'TestAUSHelper',
-        'TestAUSReadStrings',
-    ])
+SimplePrograms([
+    'TestAUSHelper',
+    'TestAUSReadStrings',
+])
 
-    LOCAL_INCLUDES += [
-        '/toolkit/mozapps/update',
-        '/toolkit/mozapps/update/common',
+LOCAL_INCLUDES += [
+    '/toolkit/mozapps/update',
+    '/toolkit/mozapps/update/common',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_LIBS += [
+        'updatecommon-standalone',
     ]
 
-    if CONFIG['OS_ARCH'] == 'WINNT':
-        USE_LIBS += [
-            'updatecommon-standalone',
-        ]
-    else:
-        USE_LIBS += [
-            'updatecommon',
-        ]
-
-    if CONFIG['OS_ARCH'] == 'WINNT':
-        OS_LIBS += [
-            'wintrust',
-            'shlwapi',
-        ]
+    OS_LIBS += [
+        'wintrust',
+        'shlwapi',
+      ]
+else:
+    USE_LIBS += [
+        'updatecommon',
+    ]
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_BASENAME', 'MOZ_APP_DISPLAYNAME',
             'MOZ_APP_VENDOR', 'BIN_SUFFIX', 'MOZ_DEBUG'):

@@ -300,10 +300,10 @@ toolbarpaletteitem[place="panel"]:not([haswideitem=true]) > .toolbarbutton-1 {
 }
 
 /* Help SDK buttons fit in. */
-toolbarpaletteitem[place="palette"] > toolbarbutton[sdk-button="true"] > .toolbarbutton-icon,
-toolbarpaletteitem[place="palette"] > toolbarbutton[sdk-button="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
-toolbarbutton[sdk-button="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
-toolbarbutton[sdk-button="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
+toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > toolbarbutton[constrain-size="true"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon,
+toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
   height: 32px;
   width: 32px;
 }
