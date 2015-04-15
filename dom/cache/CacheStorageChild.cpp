@@ -8,8 +8,8 @@
 
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/CacheChild.h"
-#include "mozilla/dom/cache/CacheOpChild.h"
 #include "mozilla/dom/cache/CacheStorage.h"
+#include "mozilla/dom/cache/PCacheOpChild.h"
 #include "mozilla/dom/cache/StreamUtils.h"
 
 namespace mozilla {
@@ -25,7 +25,6 @@ DeallocPCacheStorageChild(PCacheStorageChild* aActor)
 
 CacheStorageChild::CacheStorageChild(CacheStorage* aListener, Feature* aFeature)
   : mListener(aListener)
-  , mNumChildActors(0)
 {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_ASSERT(mListener);
@@ -49,15 +48,6 @@ CacheStorageChild::ClearListener()
 }
 
 void
-CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-                             const CacheOpArgs& aArgs)
-{
-  mNumChildActors += 1;
-  unused << SendPCacheOpConstructor(
-    new CacheOpChild(GetFeature(), aGlobal, aPromise), aArgs);
-}
-
-void
 CacheStorageChild::StartDestroy()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
@@ -71,18 +61,12 @@ CacheStorageChild::StartDestroy()
     return;
   }
 
+  // TODO: don't destroy if we have outstanding ops
+
   listener->DestroyInternal(this);
 
   // CacheStorage listener should call ClearListener() in DestroyInternal()
   MOZ_ASSERT(!mListener);
-
-  // If we have outstanding child actors, then don't destroy ourself yet.
-  // The child actors should be short lived and we should allow them to complete
-  // if possible.  SendTeardown() will be called when the count drops to zero
-  // in NoteDeletedActor().
-  if (mNumChildActors) {
-    return;
-  }
 
   // Start actor destruction from parent process
   unused << SendTeardown();
@@ -113,18 +97,7 @@ bool
 CacheStorageChild::DeallocPCacheOpChild(PCacheOpChild* aActor)
 {
   delete aActor;
-  NoteDeletedActor();
   return true;
-}
-
-void
-CacheStorageChild::NoteDeletedActor()
-{
-  MOZ_ASSERT(mNumChildActors);
-  mNumChildActors -= 1;
-  if (!mNumChildActors && !mListener) {
-    unused << SendTeardown();
-  }
 }
 
 } // namespace cache
