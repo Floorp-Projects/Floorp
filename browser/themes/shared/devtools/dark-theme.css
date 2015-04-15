@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Colors are taken from:
- * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
+ * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
+ * Changes should be kept in sync with commandline.css and commandline.inc.css.
  */
 :root {
-
   --theme-body-background: #14171a;
   --theme-sidebar-background: #181d20;
   --theme-contrast-background: #b28025;
