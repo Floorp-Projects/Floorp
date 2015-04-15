@@ -20,22 +20,24 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe src=\"" + OUTER_FRAME_SRC + "\" />";
 
 add_task(function*() {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
-  let outerFrame = "iframe";
-  let outerFrameDiv = ["iframe", "div"];
-  let innerFrame = ["iframe", "iframe"];
-  let innerFrameDiv = ["iframe", "iframe", "div"];
+  let {toolbox, inspector} = yield openInspectorForURL(TEST_URI);
+  let outerFrame = getNode("iframe");
+  let outerFrameDiv = getNode("div", { document: outerFrame.contentDocument});
+  let innerFrame = getNode("iframe", { document: outerFrame.contentDocument});
+  let innerFrameDiv = getNode("div", { document: innerFrame.contentDocument});
 
   info("Waiting for element picker to activate.");
   yield inspector.toolbox.highlighterUtils.startPicker();
 
   info("Moving mouse over outerFrameDiv");
-  yield moveMouseOver(testActor, outerFrameDiv);
-  ok((yield testActor.assertHighlightedNode(outerFrameDiv)), "outerFrameDiv is highlighted.");
+  yield moveMouseOver(outerFrameDiv);
+  let highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode, outerFrameDiv, "outerFrameDiv is highlighted.");
 
   info("Moving mouse over innerFrameDiv");
-  yield moveMouseOver(testActor,innerFrameDiv);
-  ok((yield testActor.assertHighlightedNode(innerFrameDiv)), "innerFrameDiv is highlighted.");
+  yield moveMouseOver(innerFrameDiv);
+  highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode, innerFrameDiv, "innerFrameDiv is highlighted.");
 
   info("Selecting root node");
   yield selectNode(inspector.walker.rootNode, inspector);
@@ -50,12 +52,12 @@ add_task(function*() {
   info("Waiting for element picker to deactivate.");
   yield inspector.toolbox.highlighterUtils.stopPicker();
 
-  function moveMouseOver(testActor, selector) {
-    info("Waiting for element " + selector + " to be highlighted");
-    testActor.synthesizeMouse({
-      selector: selector,
+  function moveMouseOver(node) {
+    info("Waiting for element " + node + " to be highlighted");
+    executeInContent("Test:SynthesizeMouse", {
       options: {type: "mousemove"},
       center: true
-    }).then(() => inspector.toolbox.once("picker-node-hovered"));
+    }, {node}, false);
+    return inspector.toolbox.once("picker-node-hovered");
   }
 });
