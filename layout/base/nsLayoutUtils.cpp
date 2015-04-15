@@ -60,6 +60,7 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "imgIRequest.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
@@ -501,12 +502,12 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
 {
   for (size_t playerIdx = aPlayers->mPlayers.Length(); playerIdx-- != 0; ) {
     AnimationPlayer* player = aPlayers->mPlayers[playerIdx];
-    if (!player->GetSource() || player->GetSource()->IsFinishedTransition()) {
+    if (!player->GetEffect() || player->GetEffect()->IsFinishedTransition()) {
       continue;
     }
-    dom::Animation* anim = player->GetSource();
-    for (size_t propIdx = anim->Properties().Length(); propIdx-- != 0; ) {
-      AnimationProperty& prop = anim->Properties()[propIdx];
+    dom::KeyframeEffectReadonly* effect = player->GetEffect();
+    for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
+      AnimationProperty& prop = effect->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
         for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
           AnimationPropertySegment& segment = prop.mSegments[segIdx];

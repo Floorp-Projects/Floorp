@@ -4,20 +4,18 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="../testcommon.js"></script>
 <div id="log"></div>
+<style>
+@keyframes anim { }
+</style>
 <script>
 'use strict';
 
 test(function(t) {
   var div = addDiv(t);
-
-  div.style.left = '0px';
-  window.getComputedStyle(div).transitionProperty;
-  div.style.transition = 'left 100s';
-  div.style.left = '100px';
-
+  div.style.animation = 'anim 100s';
   var animation = div.getAnimations()[0];
-  assert_equals(animation.source.target, div,
+  assert_equals(animation.effect.target, div,
     'Animation.target is the animatable div');
-}, 'Returned CSS transitions have the correct Animation.target');
+}, 'Returned CSS animations have the correct Animation.target');
 
 </script>

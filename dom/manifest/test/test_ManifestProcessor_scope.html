@@ -47,8 +47,7 @@ URLs.forEach((url) => {
   });
   var absURL = new URL(url, manifestURL).toString();
   var result = processor.process(data);
-  console.log(result);
-  ise(String(result.scope), absURL, expected);
+  ise(result.scope, absURL, expected);
 });
 
 var expected = 'If start URL is not in scope, return undefined.';
