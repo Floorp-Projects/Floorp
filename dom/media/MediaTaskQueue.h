@@ -84,6 +84,8 @@ public:
   // flushed. Normal operations should use Dispatch.
   nsresult ForceDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
+  // DEPRECATED! Do not us, if a flush happens at the same time, this function
+  // can hang and block forever!
   nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   // Puts the queue in a shutdown state and returns immediately. The queue will

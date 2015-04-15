@@ -124,6 +124,7 @@ private:
 
 nsresult
 MediaTaskQueue::SyncDispatch(TemporaryRef<nsIRunnable> aRunnable) {
+  NS_WARNING("MediaTaskQueue::SyncDispatch is dangerous and deprecated. Stop using this!");
   RefPtr<MediaTaskQueueSyncRunnable> task(new MediaTaskQueueSyncRunnable(aRunnable));
   nsresult rv = Dispatch(task);
   NS_ENSURE_SUCCESS(rv, rv);
