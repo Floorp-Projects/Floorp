@@ -31,26 +31,6 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
     }
 };
 
-// Simplifies register allocation since the first instruction of a block is
-// guaranteed to have no uses.
-class LLabel : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(Label)
-};
-
-class LNop : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(Nop)
-};
-
-class LMop : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(Mop)
-};
-
 // An LOsiPoint captures a snapshot after a call and ensures enough space to
 // patch in a call to the invalidation mechanism.
 //

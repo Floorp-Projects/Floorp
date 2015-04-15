@@ -491,15 +491,12 @@ RegisterAllocator::init()
 LMoveGroup*
 RegisterAllocator::getInputMoveGroup(LInstruction* ins)
 {
-    MOZ_ASSERT(!ins->isLabel());
-
     if (ins->inputMoves())
         return ins->inputMoves();
 
     LMoveGroup* moves = LMoveGroup::New(alloc());
     ins->setInputMoves(moves);
     ins->block()->insertBefore(ins, moves);
-
     return moves;
 }
 
@@ -512,10 +509,7 @@ RegisterAllocator::getMoveGroupAfter(LInstruction* ins)
     LMoveGroup* moves = LMoveGroup::New(alloc());
     ins->setMovesAfter(moves);
 
-    if (ins->isLabel())
-        ins->block()->insertAfter(ins->block()->getEntryMoveGroup(alloc()), moves);
-    else
-        ins->block()->insertAfter(ins, moves);
+    ins->block()->insertAfter(ins, moves);
     return moves;
 }
 
