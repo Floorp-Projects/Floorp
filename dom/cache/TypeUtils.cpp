@@ -32,9 +32,7 @@ namespace {
 using mozilla::ErrorResult;
 using mozilla::unused;
 using mozilla::void_t;
-using mozilla::dom::InternalHeaders;
 using mozilla::dom::cache::CacheReadStream;
-using mozilla::dom::cache::HeadersEntry;
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::PBackgroundChild;
@@ -131,20 +129,6 @@ SerializeNormalStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut)
   }
 }
 
-void
-ToHeadersEntryList(nsTArray<HeadersEntry>& aOut, InternalHeaders* aHeaders)
-{
-  MOZ_ASSERT(aHeaders);
-
-  nsAutoTArray<InternalHeaders::Entry, 16> entryList;
-  aHeaders->GetEntries(entryList);
-
-  for (uint32_t i = 0; i < entryList.Length(); ++i) {
-    InternalHeaders::Entry& entry = entryList[i];
-    aOut.AppendElement(HeadersEntry(entry.mName, entry.mValue));
-  }
-}
-
 } // anonymous namespace
 
 namespace mozilla {
@@ -236,7 +220,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
 
   nsRefPtr<InternalHeaders> headers = aIn->Headers();
   MOZ_ASSERT(headers);
-  ToHeadersEntryList(aOut.headers(), headers);
+  headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
   aOut.mode() = aIn->Mode();
   aOut.credentials() = aIn->GetCredentialsMode();
@@ -282,7 +266,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   aOut.statusText() = aIn.GetStatusText();
   nsRefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_ASSERT(headers);
-  ToHeadersEntryList(aOut.headers(), headers);
+  headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
   aOut.securityInfo() = aIn.GetSecurityInfo();
 }
@@ -340,7 +324,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   ir->SetUrl(NS_ConvertUTF16toUTF8(aIn.url()));
 
   nsRefPtr<InternalHeaders> internalHeaders =
-    ToInternalHeaders(aIn.headers(), aIn.headersGuard());
+    new InternalHeaders(aIn.headers(), aIn.headersGuard());
   ErrorResult result;
   ir->Headers()->SetGuard(aIn.headersGuard(), result);
   MOZ_ASSERT(!result.Failed());
@@ -392,7 +376,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   internalRequest->SetCacheMode(aIn.requestCache());
 
   nsRefPtr<InternalHeaders> internalHeaders =
-    ToInternalHeaders(aIn.headers(), aIn.headersGuard());
+    new InternalHeaders(aIn.headers(), aIn.headersGuard());
   ErrorResult result;
   internalRequest->Headers()->SetGuard(aIn.headersGuard(), result);
   MOZ_ASSERT(!result.Failed());
@@ -412,23 +396,6 @@ TypeUtils::ToRequest(const CacheRequest& aIn)
   nsRefPtr<InternalRequest> internalRequest = ToInternalRequest(aIn);
   nsRefPtr<Request> request = new Request(GetGlobalObject(), internalRequest);
   return request.forget();
-}
-
-// static
-already_AddRefed<InternalHeaders>
-TypeUtils::ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
-                             HeadersGuardEnum aGuard)
-{
-  nsTArray<InternalHeaders::Entry> entryList(aHeadersEntryList.Length());
-
-  for (uint32_t i = 0; i < aHeadersEntryList.Length(); ++i) {
-    const HeadersEntry& headersEntry = aHeadersEntryList[i];
-    entryList.AppendElement(InternalHeaders::Entry(headersEntry.name(),
-                                                   headersEntry.value()));
-  }
-
-  nsRefPtr<InternalHeaders> ref = new InternalHeaders(Move(entryList), aGuard);
-  return ref.forget();
 }
 
 void
