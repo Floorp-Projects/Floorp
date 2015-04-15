@@ -997,6 +997,23 @@ Convert(const ConvertArray<Tin>& aIn, Tout& aOut)
   return NS_OK;
 }
 
+#ifdef MOZ_B2G_BT_API_V2
+nsresult
+Convert(nsresult aIn, BluetoothStatus& aOut)
+{
+  if (NS_SUCCEEDED(aIn)) {
+    aOut = STATUS_SUCCESS;
+  } else if (aIn == NS_ERROR_OUT_OF_MEMORY) {
+    aOut = STATUS_NOMEM;
+  } else {
+    aOut = STATUS_FAIL;
+  }
+  return NS_OK;
+}
+#else
+// Missing in bluetooth1
+#endif
+
 //
 // Packing
 //
