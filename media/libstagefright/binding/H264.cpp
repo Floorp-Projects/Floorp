@@ -19,7 +19,7 @@ namespace mp4_demuxer
 class BitReader
 {
 public:
-  explicit BitReader(const mozilla::DataBuffer* aBuffer)
+  explicit BitReader(const mozilla::MediaByteBuffer* aBuffer)
     : mBitReader(aBuffer->Elements(), aBuffer->Length())
   {
   }
@@ -82,8 +82,8 @@ SPSData::SPSData()
   sample_ratio = 1.0;
 }
 
-/* static */ already_AddRefed<mozilla::DataBuffer>
-H264::DecodeNALUnit(const mozilla::DataBuffer* aNAL)
+/* static */ already_AddRefed<mozilla::MediaByteBuffer>
+H264::DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL)
 {
   MOZ_ASSERT(aNAL);
 
@@ -91,7 +91,7 @@ H264::DecodeNALUnit(const mozilla::DataBuffer* aNAL)
     return nullptr;
   }
 
-  nsRefPtr<mozilla::DataBuffer> rbsp = new mozilla::DataBuffer;
+  nsRefPtr<mozilla::MediaByteBuffer> rbsp = new mozilla::MediaByteBuffer;
   ByteReader reader(aNAL);
   uint8_t nal_unit_type = reader.ReadU8() & 0x1f;
   uint32_t nalUnitHeaderBytes = 1;
@@ -138,7 +138,7 @@ ConditionDimension(float aValue)
 }
 
 /* static */ bool
-H264::DecodeSPS(const mozilla::DataBuffer* aSPS, SPSData& aDest)
+H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest)
 {
   MOZ_ASSERT(aSPS);
   BitReader br(aSPS);
@@ -461,7 +461,7 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 }
 
 /* static */ bool
-H264::DecodeSPSFromExtraData(const mozilla::DataBuffer* aExtraData, SPSData& aDest)
+H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData, SPSData& aDest)
 {
   if (!AnnexB::HasSPS(aExtraData)) {
     return false;
@@ -490,10 +490,10 @@ H264::DecodeSPSFromExtraData(const mozilla::DataBuffer* aExtraData, SPSData& aDe
     return false;
   }
 
-  nsRefPtr<mozilla::DataBuffer> rawNAL = new mozilla::DataBuffer;
+  nsRefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
   rawNAL->AppendElements(ptr, length);
 
-  nsRefPtr<mozilla::DataBuffer> sps = DecodeNALUnit(rawNAL);
+  nsRefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
 
   reader.DiscardRemaining();
 

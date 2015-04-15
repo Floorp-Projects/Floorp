@@ -16,7 +16,7 @@ var manager = new MediaTestManager;
 function KeysChangeFunc(session, keys, token) {
   session.keyIdsReceived = [];
   for (var keyid in keys) {
-    Log(token, "Set " + keyid + " to false in session.keyIdsReceived");
+    Log(token, "Set " + keyid + " to false in session[" + session.sessionId + "].keyIdsReceived");
     session.keyIdsReceived[keyid] = false;
   }
   return function(ev) {
@@ -27,7 +27,7 @@ function KeysChangeFunc(session, keys, token) {
     for (var [key, val] of map.entries()) {
       is(val, "usable", token + ": key status should be usable");
       var kid = Base64ToHex(window.btoa(ArrayBufferToString(key)));
-      ok(kid in session.keyIdsReceived, TimeStamp(token) + " session.keyIdsReceived contained " + kid + " as expected.");
+      ok(kid in session.keyIdsReceived, TimeStamp(token) + " session[" + session.sessionId + "].keyIdsReceived contained " + kid + " as expected.");
       session.keyIdsReceived[kid] = true;
     }
   }
@@ -76,15 +76,25 @@ function startTest(test, token)
     ok(Math.abs(test.duration - v.currentTime) < 0.1,
        TimeStamp(token) + " Current time should be same as duration");
 
-    // Verify all sessions had all keys went sent the to the CDM usable, and thus
+    // Verify all sessions had all keys went sent to the CDM usable, and thus
     // that we received keystatuseschange event(s).
-    is(sessions.length, 1, TimeStamp(token) + " should have 1 session");
+    is(sessions.length, test.sessionCount, TimeStamp(token) + " should have "
+                        + test.sessionCount
+                        + " session" + (test.sessionCount === 1 ? "" : "s"));
+    var keyIdsReceived = [];
+    for (var keyid in test.keys) { keyIdsReceived[keyid] = false; }
     for (var i = 0; i < sessions.length; i++) {
       var session = sessions[i];
-      ok(session.gotKeysChanged, TimeStamp(token) + " should have received at least one keychange event");
+      ok(session.gotKeysChanged,
+         TimeStamp(token) + " session[" + session.sessionId
+         + "] should have received at least one keychange event");
       for (var kid in session.keyIdsReceived) {
-        ok(session.keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
+        Log(token, "session[" + session.sessionId + "] key " + kid + " = " + (session.keyIdsReceived[kid] ? "true" : "false"));
+        if (session.keyIdsReceived[kid]) { keyIdsReceived[kid] = true; }
       }
+    }
+    for (var kid in keyIdsReceived) {
+      ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
     }
 
     manager.finished(token);

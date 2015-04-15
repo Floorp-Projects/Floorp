@@ -40,7 +40,7 @@ ContainerParser::ContainerParser(const nsACString& aType)
 }
 
 bool
-ContainerParser::IsInitSegmentPresent(LargeDataBuffer* aData)
+ContainerParser::IsInitSegmentPresent(MediaLargeByteBuffer* aData)
 {
 MSE_DEBUG(ContainerParser, "aLength=%u [%x%x%x%x]",
             aData->Length(),
@@ -52,7 +52,7 @@ return false;
 }
 
 bool
-ContainerParser::IsMediaSegmentPresent(LargeDataBuffer* aData)
+ContainerParser::IsMediaSegmentPresent(MediaLargeByteBuffer* aData)
 {
   MSE_DEBUG(ContainerParser, "aLength=%u [%x%x%x%x]",
             aData->Length(),
@@ -64,7 +64,7 @@ ContainerParser::IsMediaSegmentPresent(LargeDataBuffer* aData)
 }
 
 bool
-ContainerParser::ParseStartAndEndTimestamps(LargeDataBuffer* aData,
+ContainerParser::ParseStartAndEndTimestamps(MediaLargeByteBuffer* aData,
                                             int64_t& aStart, int64_t& aEnd)
 {
   return false;
@@ -89,7 +89,7 @@ ContainerParser::HasCompleteInitData()
   return mHasInitData && !!mInitData->Length();
 }
 
-LargeDataBuffer*
+MediaLargeByteBuffer*
 ContainerParser::InitData()
 {
   return mInitData;
@@ -106,7 +106,7 @@ public:
   static const unsigned NS_PER_USEC = 1000;
   static const unsigned USEC_PER_SEC = 1000000;
 
-  bool IsInitSegmentPresent(LargeDataBuffer* aData)
+  bool IsInitSegmentPresent(MediaLargeByteBuffer* aData)
   {
     ContainerParser::IsInitSegmentPresent(aData);
     // XXX: This is overly primitive, needs to collect data as it's appended
@@ -129,7 +129,7 @@ public:
     return false;
   }
 
-  bool IsMediaSegmentPresent(LargeDataBuffer* aData)
+  bool IsMediaSegmentPresent(MediaLargeByteBuffer* aData)
   {
     ContainerParser::IsMediaSegmentPresent(aData);
     // XXX: This is overly primitive, needs to collect data as it's appended
@@ -150,7 +150,7 @@ public:
     return false;
   }
 
-  bool ParseStartAndEndTimestamps(LargeDataBuffer* aData,
+  bool ParseStartAndEndTimestamps(MediaLargeByteBuffer* aData,
                                   int64_t& aStart, int64_t& aEnd)
   {
     bool initSegment = IsInitSegmentPresent(aData);
@@ -158,7 +158,7 @@ public:
       mOffset = 0;
       mParser = WebMBufferedParser(0);
       mOverlappedMapping.Clear();
-      mInitData = new LargeDataBuffer();
+      mInitData = new MediaLargeByteBuffer();
       mResource = new SourceBufferResource(NS_LITERAL_CSTRING("video/webm"));
     }
 
@@ -242,7 +242,7 @@ public:
     , mMonitor("MP4ContainerParser Index Monitor")
   {}
 
-  bool IsInitSegmentPresent(LargeDataBuffer* aData)
+  bool IsInitSegmentPresent(MediaLargeByteBuffer* aData)
   {
     ContainerParser::IsInitSegmentPresent(aData);
     // Each MP4 atom has a chunk size and chunk type. The root chunk in an MP4
@@ -262,7 +262,7 @@ public:
            (*aData)[7] == 'p';
   }
 
-  bool IsMediaSegmentPresent(LargeDataBuffer* aData)
+  bool IsMediaSegmentPresent(MediaLargeByteBuffer* aData)
   {
     ContainerParser::IsMediaSegmentPresent(aData);
     if (aData->Length() < 8) {
@@ -280,7 +280,7 @@ public:
             (*aData)[7] == 'p');
   }
 
-  bool ParseStartAndEndTimestamps(LargeDataBuffer* aData,
+  bool ParseStartAndEndTimestamps(MediaLargeByteBuffer* aData,
                                   int64_t& aStart, int64_t& aEnd)
   {
     MonitorAutoLock mon(mMonitor); // We're not actually racing against anything,
@@ -294,7 +294,7 @@ public:
       // manually. This allows the ContainerParser to be shared across different
       // timestampOffsets.
       mParser = new mp4_demuxer::MoofParser(mStream, 0, /* aIsAudio = */ false, &mMonitor);
-      mInitData = new LargeDataBuffer();
+      mInitData = new MediaLargeByteBuffer();
     } else if (!mStream || !mParser) {
       return false;
     }

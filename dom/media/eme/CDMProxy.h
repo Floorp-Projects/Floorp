@@ -141,7 +141,9 @@ public:
                        const nsAString& aMsg);
 
   // Threadsafe.
-  void Decrypt(MediaRawData* aSample, DecryptionClient* aSink);
+  void Decrypt(MediaRawData* aSample,
+               DecryptionClient* aSink,
+               MediaTaskQueue* aTaskQueue);
 
   // Reject promise with DOMException corresponding to aExceptionCode.
   // Can be called from any thread.
@@ -234,18 +236,35 @@ private:
   // GMP thread only.
   void gmp_RemoveSession(nsAutoPtr<SessionOpData> aData);
 
-  struct DecryptJob {
-    DecryptJob(MediaRawData* aSample, DecryptionClient* aClient)
+  class DecryptJob : public nsRunnable {
+  public:
+    explicit DecryptJob(MediaRawData* aSample,
+                        DecryptionClient* aClient,
+                        MediaTaskQueue* aTaskQueue)
       : mId(0)
       , mSample(aSample)
       , mClient(aClient)
-    {}
+      , mResult(GMPGenericErr)
+      , mTaskQueue(aTaskQueue)
+    {
+      MOZ_ASSERT(mClient);
+      MOZ_ASSERT(mSample);
+    }
+
+    NS_METHOD Run() override;
+    void PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecryptedData);
+    void PostResult(GMPErr aResult);
+
     uint32_t mId;
     nsRefPtr<MediaRawData> mSample;
+  private:
+    ~DecryptJob() {}
     nsAutoPtr<DecryptionClient> mClient;
+    GMPErr mResult;
+    nsRefPtr<MediaTaskQueue> mTaskQueue;
   };
   // GMP thread only.
-  void gmp_Decrypt(nsAutoPtr<DecryptJob> aJob);
+  void gmp_Decrypt(nsRefPtr<DecryptJob> aJob);
 
   class RejectPromiseTask : public nsRunnable {
   public:
@@ -316,7 +335,7 @@ private:
 
   // Decryption jobs sent to CDM, awaiting result.
   // GMP thread only.
-  nsTArray<nsAutoPtr<DecryptJob>> mDecryptionJobs;
+  nsTArray<nsRefPtr<DecryptJob>> mDecryptionJobs;
 
   // Number of buffers we've decrypted. Used to uniquely identify
   // decryption jobs sent to CDM. Note we can't just use the length of

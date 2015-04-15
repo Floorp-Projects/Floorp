@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
-const DEBUG = false;
+const DEBUG = Services.prefs.getBoolPref("dom.presentation.tcp_server.debug");
 function log(aMsg) {
   dump("-*- TCPPresentationServer.js: " + aMsg + "\n");
 }
@@ -58,6 +58,12 @@ TCPPresentationServer.prototype = {
 
     this._serverSocket = Cc["@mozilla.org/network/server-socket;1"]
                          .createInstance(Ci.nsIServerSocket);
+
+    if (!this._serverSocket) {
+      DEBUG && log("TCPPresentationServer - create server socket fail.");
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
     try {
       this._serverSocket.init(serverSocketPort, false, -1);
     } catch (e) {

@@ -489,7 +489,7 @@ MediaRawData::MediaRawData()
   , mData(nullptr)
   , mSize(0)
   , mCrypto(mCryptoInternal)
-  , mBuffer(new LargeDataBuffer(RAW_DATA_DEFAULT_SIZE))
+  , mBuffer(new MediaLargeByteBuffer(RAW_DATA_DEFAULT_SIZE))
   , mPadding(0)
 {
 }
@@ -499,7 +499,7 @@ MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
   , mData(nullptr)
   , mSize(0)
   , mCrypto(mCryptoInternal)
-  , mBuffer(new LargeDataBuffer(RAW_DATA_DEFAULT_SIZE))
+  , mBuffer(new MediaLargeByteBuffer(RAW_DATA_DEFAULT_SIZE))
   , mPadding(0)
 {
   if (!EnsureCapacity(aSize)) {
