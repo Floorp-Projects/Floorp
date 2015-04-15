@@ -266,6 +266,7 @@ private:
 };
 
 class ConsoleRunnable : public nsRunnable
+                      , public WorkerFeature
 {
 public:
   explicit ConsoleRunnable(Console* aConsole)
@@ -291,12 +292,18 @@ public:
       return false;
     }
 
-    if (NS_FAILED(NS_DispatchToMainThread(this))) {
-      JS_ReportError(cx,
-                     "Failed to dispatch to main thread for the Console API!");
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(cx, this))) {
       return false;
     }
 
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
+    return true;
+  }
+
+  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
+  {
+    // We don't care about the notification. We just want to keep the
+    // mWorkerPrivate alive.
     return true;
   }
 
@@ -318,7 +325,45 @@ private:
       RunWithWindow(window);
     }
 
+    PostDispatch();
     return NS_OK;
+  }
+
+  void
+  PostDispatch()
+  {
+    class ConsoleReleaseRunnable final : public MainThreadWorkerControlRunnable
+    {
+      nsRefPtr<ConsoleRunnable> mRunnable;
+
+    public:
+      ConsoleReleaseRunnable(WorkerPrivate* aWorkerPrivate,
+                             ConsoleRunnable* aRunnable)
+        : MainThreadWorkerControlRunnable(aWorkerPrivate)
+        , mRunnable(aRunnable)
+      {
+        MOZ_ASSERT(aRunnable);
+      }
+
+      virtual bool
+      WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override
+      {
+        MOZ_ASSERT(aWorkerPrivate);
+        aWorkerPrivate->AssertIsOnWorkerThread();
+
+        aWorkerPrivate->RemoveFeature(aCx, mRunnable);
+        mRunnable->mConsole = nullptr;
+        return true;
+      }
+
+    private:
+      ~ConsoleReleaseRunnable()
+      {}
+    };
+
+    nsRefPtr<WorkerControlRunnable> runnable =
+      new ConsoleReleaseRunnable(mWorkerPrivate, this);
+    runnable->Dispatch(nullptr);
   }
 
   void
@@ -381,9 +426,8 @@ protected:
 
   WorkerPrivate* mWorkerPrivate;
 
-  // Raw pointer because this method is async and this object is kept alive by
-  // the caller.
-  Console* mConsole;
+  // This must be released on the worker thread.
+  nsRefPtr<Console> mConsole;
 };
 
 // This runnable appends a CallData object into the Console queue running on
