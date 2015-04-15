@@ -79,18 +79,18 @@ const SIZED_ELEMENT_TESTS = [{
 }];
 
 add_task(function*() {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
   let highlighter = yield front.getHighlighterByType("GeometryEditorHighlighter");
 
-  yield positionLabelsAreCorrect(highlighter, inspector, testActor);
-  yield sizeLabelIsCorrect(highlighter, inspector, testActor);
+  yield positionLabelsAreCorrect(highlighter, inspector);
+  yield sizeLabelIsCorrect(highlighter, inspector);
 
   yield highlighter.finalize();
 });
 
-function* positionLabelsAreCorrect(highlighterFront, inspector, testActor) {
+function* positionLabelsAreCorrect(highlighterFront, inspector) {
   info("Highlight nodes and check position labels");
 
   for (let {selector, expectedLabels} of POSITIONED_ELEMENT_TESTS) {
@@ -101,11 +101,11 @@ function* positionLabelsAreCorrect(highlighterFront, inspector, testActor) {
     for (let {side, visible, label} of expectedLabels) {
       let id = ID + "label-" + side;
 
-      let hidden = yield testActor.getHighlighterNodeAttribute(id, "hidden", highlighterFront);
+      let hidden = yield getHighlighterNodeAttribute(highlighterFront, id, "hidden");
       if (visible) {
         ok(!hidden, "The " + side + " label is visible");
 
-        let value = yield testActor.getHighlighterNodeTextContent(id, highlighterFront);
+        let value = yield getHighlighterNodeTextContent(highlighterFront, id);
         is(value, label, "The " + side + " label textcontent is correct");
       } else {
         is(hidden, "true", "The " + side + " label is hidden");
@@ -117,7 +117,7 @@ function* positionLabelsAreCorrect(highlighterFront, inspector, testActor) {
   }
 }
 
-function* sizeLabelIsCorrect(highlighterFront, inspector, testActor) {
+function* sizeLabelIsCorrect(highlighterFront, inspector) {
   info("Highlight nodes and check size labels");
 
   let id = ID + "label-size";
@@ -126,13 +126,13 @@ function* sizeLabelIsCorrect(highlighterFront, inspector, testActor) {
     let node = yield getNodeFront(selector, inspector);
     yield highlighterFront.show(node);
 
-    let hidden = yield testActor.getHighlighterNodeAttribute(id, "hidden", highlighterFront);
+    let hidden = yield getHighlighterNodeAttribute(highlighterFront, id, "hidden");
     if (!visible) {
       is(hidden, "true", "The size label is hidden");
     } else {
       ok(!hidden, "The size label is visible");
 
-      let label = yield testActor.getHighlighterNodeTextContent(id, highlighterFront);
+      let label = yield getHighlighterNodeTextContent(highlighterFront, id);
       is(label, expected, "The size label textcontent is correct");
     }
 

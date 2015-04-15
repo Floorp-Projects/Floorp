@@ -9,7 +9,7 @@
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(function*() {
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
 
   info("Starting element picker");
   yield toolbox.highlighterUtils.startPicker();
@@ -20,38 +20,44 @@ add_task(function*() {
   info("Selecting the ahoy paragraph DIV");
   yield moveMouseOver("#ahoy");
 
+  let highlightedNode = yield getHighlitNode(toolbox);
+
   yield doKeyHover({key: "VK_LEFT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#simple-div2")), "The highlighter shows #simple-div2. OK.");
+  highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode.id, "simple-div2", "The highlighter shows #simple-div2. OK.");
 
   yield doKeyHover({key: "VK_RIGHT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#ahoy")), "The highlighter shows #ahoy. OK.");
+  highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode.id, "ahoy", "The highlighter shows #ahoy. OK.");
 
   info("Going back up to the complex-div DIV");
   yield doKeyHover({key: "VK_LEFT", options: {}});
   yield doKeyHover({key: "VK_LEFT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#complex-div")), "The highlighter shows #complex-div. OK.");
+  highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode.id, "complex-div", "The highlighter shows #complex-div. OK.");
 
   yield doKeyHover({key: "VK_RIGHT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#simple-div2")), "The highlighter shows #simple-div2. OK.");
+  highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode.id, "simple-div2", "The highlighter shows #simple-div2. OK.");
 
   info("Previously chosen child is remembered. Passed.");
 
   info("Stopping the picker");
   yield toolbox.highlighterUtils.stopPicker();
 
-  function doKeyHover(args) {
+  function doKeyHover(msg) {
     info("Key pressed. Waiting for element to be highlighted/hovered");
-    testActor.synthesizeKey(args);
+    executeInContent("Test:SynthesizeKey", msg);
     return inspector.toolbox.once("picker-node-hovered");
   }
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
-    testActor.synthesizeMouse({
+    executeInContent("Test:SynthesizeMouse", {
       options: {type: "mousemove"},
       center: true,
       selector: selector
-    });
+    }, null, false);
     return inspector.toolbox.once("picker-node-hovered");
   }
 
