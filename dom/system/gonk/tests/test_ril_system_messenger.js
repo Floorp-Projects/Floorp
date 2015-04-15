@@ -8,11 +8,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-XPCOMUtils.defineLazyGetter(this, "gStkCmdFactory", function() {
-  let stk = {};
-  Cu.import("resource://gre/modules/StkProactiveCmdFactory.jsm", stk);
-  return stk.StkProactiveCmdFactory;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
+                                   "@mozilla.org/icc/stkcmdfactory;1",
+                                   "nsIStkCmdFactory");
 
 /**
  * Name space for RILSystemMessenger.jsm. Only initialized after first call to
@@ -38,6 +36,10 @@ function newRILSystemMessenger() {
   rsm.broadcastMessage = (aType, aMessage) => {
     gReceivedMsgType = aType;
     gReceivedMessage = aMessage;
+  };
+
+  rsm.createCommandMessage = (aStkProactiveCmd) => {
+    return gStkCmdFactory.createCommandMessage(aStkProactiveCmd);
   };
 
   return rsm;
@@ -607,7 +609,8 @@ add_test(function test_icc_stk_cmd_factory_create_command_error() {
 
     ok(false, "Failed to verify the protection of createCommand()!");
   } catch (e) {
-    equal(e.message, "Unknown Command Type: " + RIL.STK_CMD_MORE_TIME);
+    ok(e.message.indexOf("Unknown Command Type") !== -1,
+       "Invalid typeOfCommand!");
   }
 
   run_next_test();
@@ -633,7 +636,8 @@ add_test(function test_icc_stk_cmd_factory_create_system_msg_invalid_cmd_type() 
 
     ok(false, "Failed to identify invalid typeOfCommand!");
   } catch (e) {
-    equal(e.message, "Unknown Command Type: " + RIL.STK_CMD_MORE_TIME);
+    ok(e.message.indexOf("Unknown Command Type") !== -1,
+       "Invalid typeOfCommand!");
   }
 
   run_next_test();
