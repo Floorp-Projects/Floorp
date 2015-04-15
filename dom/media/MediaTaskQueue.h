@@ -77,17 +77,6 @@ public:
   // the task queue.
   bool IsCurrentThreadIn() override;
 
-  bool InTailDispatch() override
-  {
-    MOZ_ASSERT(IsCurrentThreadIn());
-
-    // This is a bit tricky. The only moment when we're running in a task queue
-    // but don't have mTailDispatcher set is precisely the moment that we're
-    // doing tail dispatch (i.e. when AutoTaskGuard's destructor has already
-    // run and AutoTaskDispatcher's destructor is currently running).
-    return !mTailDispatcher;
-  }
-
 protected:
   virtual ~MediaTaskQueue();
 

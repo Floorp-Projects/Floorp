@@ -62,9 +62,6 @@ public:
   // threads which support it.
   virtual TaskDispatcher& TailDispatcher() = 0;
 
-  // Returns whether we're currently performing tail dispatch.
-  virtual bool InTailDispatch() = 0;
-
   // Returns true if this task queue requires all dispatches performed by its
   // tasks to go through the tail dispatcher.
   bool RequiresTailDispatch() const { return mRequireTailDispatch; }
