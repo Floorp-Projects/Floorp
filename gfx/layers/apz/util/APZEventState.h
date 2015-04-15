@@ -18,7 +18,7 @@
 #include "nsRefPtr.h"
 
 template <class> class nsCOMPtr;
-class nsIDOMWindowUtils;
+class nsIPresShell;
 class nsIWidget;
 
 namespace mozilla {
@@ -53,7 +53,7 @@ public:
                         Modifiers aModifiers,
                         const ScrollableLayerGuid& aGuid,
                         float aPresShellResolution);
-  void ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
+  void ProcessLongTap(const nsCOMPtr<nsIPresShell>& aUtils,
                       const CSSPoint& aPoint,
                       Modifiers aModifiers,
                       const ScrollableLayerGuid& aGuid,
