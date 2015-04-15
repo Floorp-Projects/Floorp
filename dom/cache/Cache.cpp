@@ -14,6 +14,7 @@
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/CacheChild.h"
+#include "mozilla/dom/cache/CacheOpChild.h"
 #include "mozilla/dom/cache/CachePushStreamChild.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ErrorResult.h"
@@ -349,7 +350,10 @@ Cache::CreatePushStream(nsIAsyncInputStream* aStream)
   NS_ASSERT_OWNINGTHREAD(Cache);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(aStream);
-  return mActor->CreatePushStream(aStream);
+  auto actor = mActor->SendPCachePushStreamConstructor(
+    new CachePushStreamChild(mActor->GetFeature(), aStream));
+  MOZ_ASSERT(actor);
+  return static_cast<CachePushStreamChild*>(actor);
 }
 
 Cache::~Cache()
@@ -371,7 +375,10 @@ Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
     return nullptr;
   }
 
-  mActor->ExecuteOp(mGlobal, promise, aOpArgs.SendAsOpArgs());
+  unused << mActor->SendPCacheOpConstructor(
+    new CacheOpChild(mActor->GetFeature(), mGlobal, this, promise),
+    aOpArgs.SendAsOpArgs());
+
   return promise.forget();
 }
 
