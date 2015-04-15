@@ -44,12 +44,6 @@ public:
   virtual void AddTask(AbstractThread* aThread,
                        already_AddRefed<nsIRunnable> aRunnable,
                        AbstractThread::DispatchFailureHandling aFailureHandling = AbstractThread::AssertDispatchSuccess) = 0;
-
-#ifdef DEBUG
-  void AssertIsTailDispatcherIfRequired();
-#else
-  void AssertIsTailDispatcherIfRequired() {}
-#endif
 };
 
 /*
