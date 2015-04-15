@@ -212,7 +212,6 @@ UNIFIED_SOURCES += [
     'jit/JitSpewer.cpp',
     'jit/JSONSpewer.cpp',
     'jit/LICM.cpp',
-    'jit/LinearScan.cpp',
     'jit/LIR.cpp',
     'jit/LiveRangeAllocator.cpp',
     'jit/LoopUnroller.cpp',
