@@ -11,8 +11,8 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 
 add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URI);
-  let objectNode = getNode("object");
-  ok(objectNode, "We have the object node");
 
   yield selectNode("object", inspector);
+
+  ok(true, "Selected <object> without throwing");
 });
