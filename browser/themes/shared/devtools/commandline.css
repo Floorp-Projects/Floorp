@@ -2,18 +2,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
+/* NOTE: THESE NEED TO STAY IN SYNC WITH LIGHT-THEME.CSS AND DARK-THEME.CSS.
+   We are copy/pasting variables from light-theme and dark-theme,
+   since they aren't loaded in this context (within commandlineoutput.xhtml
+   and commandlinetooltip.xhtml). */
+:root[devtoolstheme="light"] {
+  --gcli-background-color: #ebeced; /* --theme-tab-toolbar-background */
+  --gcli-input-focused-background: #f7f7f7; /* --theme-sidebar-background */
+  --gcli-input-color: #18191a; /* --theme-body-color */
+  --gcli-border-color: #aaaaaa; /* --theme-splitter-color */
+}
+
+:root[devtoolstheme="dark"] {
+  --gcli-background-color: #343c45; /* --theme-toolbar-background */
+  --gcli-input-focused-background: #252c33; /* --theme-tab-toolbar-background */
+  --gcli-input-color: #b6babf; /* --theme-body-color-alt */
+  --gcli-border-color: black; /* --theme-splitter-color */
+}
+
 .gcli-body {
   margin: 0;
   font: message-box;
-  color: hsl(210,30%,85%);
+  color: var(--gcli-input-color);
 }
 
 #gcli-output-root,
 #gcli-tooltip-root {
-  border: 1px solid hsl(206,37%,4%);
-  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-image: linear-gradient(hsla(209,18%,18%,0.9), hsl(209,23%,18%));
+  border: 1px solid var(--gcli-border-color);
   border-radius: 3px;
+  background-color: var(--gcli-background-color);
 }
 
 #gcli-output-root {
@@ -32,9 +50,9 @@
   margin-left: 8px;
   width: 20px;
   height: 10px;
-  border-left: 1px solid hsl(206,37%,4%);
-  border-right: 1px solid hsl(206,37%,4%);
-  background-color: hsl(209,23%,18%);
+  border-left: 1px solid var(--gcli-border-color);
+  border-right: 1px solid var(--gcli-border-color);
+  background-color: var(--gcli-background-color);
 }
 
 .gcli-tt-description,
@@ -47,7 +65,7 @@
   line-height: 1.2em;
   border-top: none;
   border-bottom: none;
-  color: hsl(210,30%,85%);
+  color: var(--gcli-input-color);
 }
 
 .gcli-row-out p,
@@ -65,7 +83,7 @@
 .gcli-row-out th,
 .gcli-row-out strong,
 .gcli-row-out pre {
-  color: hsl(210,30%,95%);
+  color: var(--gcli-input-color);
 }
 
 .gcli-row-out pre {
@@ -83,13 +101,13 @@
   font-weight: normal;
   font-size: 90%;
   border-radius: 3px;
-  background-color: hsl(209,23%,18%);
-  border: 1px solid hsl(206,37%,4%);
+  background-color: var(--gcli-background-color);
+  border: 1px solid var(--gcli-border-color);
 }
 
 .gcli-out-shortcut:before,
 .gcli-help-synopsis:before {
-  color: hsl(210,30%,85%);
+  color: var(--gcli-input-color);
   -moz-padding-end: 2px;
 }
 
@@ -117,12 +135,12 @@
 
 .gcli-menu-desc {
   -moz-padding-end: 8px;
-  color: hsl(210,30%,75%);
+  color: var(--gcli-input-color);
 }
 
 .gcli-menu-name:hover,
 .gcli-menu-desc:hover {
-  background-color: hsla(0,0%,0%,.3);
+  background-color: var(--gcli-input-focused-background);
 }
 
 .gcli-menu-highlight,

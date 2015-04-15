@@ -11,17 +11,16 @@
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Protocol error (unknownError): Error: Got an invalid root window in DocumentWalker");
 
 const TEST_URI = "data:text/html;charset=utf-8,<p>Tooltip Tests</p>";
+const PREF_DEVTOOLS_THEME = "devtools.theme";
 
-function test() {
-  addTab(TEST_URI, function() {
-    Task.spawn(runTest).catch(err => {
-      ok(false, ex);
-      console.error(ex);
-    }).then(finish);
-  });
-}
+registerCleanupFunction(() => {
+  // Set preferences back to their original values
+  Services.prefs.clearUserPref(PREF_DEVTOOLS_THEME);
+});
 
-function* runTest() {
+add_task(function* showToolbar() {
+  yield promiseTab(TEST_URI);
+
   info("Starting browser_toolbar_tooltip.js");
 
   ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in runTest");
@@ -29,7 +28,9 @@ function* runTest() {
   let showPromise = observeOnce(DeveloperToolbar.NOTIFICATIONS.SHOW);
   document.getElementById("Tools:DevToolbar").doCommand();
   yield showPromise;
+});
 
+add_task(function* testDimensions() {
   let tooltipPanel = DeveloperToolbar.tooltipPanel;
 
   DeveloperToolbar.display.focusManager.helpRequest();
@@ -54,7 +55,26 @@ function* runTest() {
   is(tooltipPanel._dimensions.start, 0,
           'search param start, when cursor at start');
   ok(getLeftMargin() > 9, 'tooltip offset, when cursor at start')
-}
+});
+
+add_task(function* testThemes() {
+  let tooltipPanel = DeveloperToolbar.tooltipPanel;
+  ok(tooltipPanel.document, "Tooltip panel is initialized");
+
+  Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
+
+  yield DeveloperToolbar.display.inputter.setInput("");
+  yield DeveloperToolbar.display.inputter.setInput("help help");
+  is(tooltipPanel.document.documentElement.getAttribute("devtoolstheme"),
+     "dark", "Tooltip panel has correct theme");
+
+  Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
+
+  yield DeveloperToolbar.display.inputter.setInput("");
+  yield DeveloperToolbar.display.inputter.setInput("help help");
+  is(tooltipPanel.document.documentElement.getAttribute("devtoolstheme"),
+     "light", "Tooltip panel has correct theme");
+});
 
 function getLeftMargin() {
   let style = DeveloperToolbar.tooltipPanel._panel.style.marginLeft;
