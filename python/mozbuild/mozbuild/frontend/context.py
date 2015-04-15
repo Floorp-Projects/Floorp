@@ -730,6 +730,12 @@ VARIABLES = {
         disabled.
         """, None),
 
+    'DIST_FILES': (StrictOrderingOnAppendList, list,
+        """Additional files to place in ``FINAL_TARGET`` (typically ``dist/bin``).
+
+        Unlike ``FINAL_TARGET_FILES``, these files are preprocessed.
+        """, 'libs'),
+
     'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list,
         """Additional component files to distribute.
 

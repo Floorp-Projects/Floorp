@@ -16,3 +16,8 @@ EXTRA_COMPONENTS += [
 ]
 
 XPI_NAME = 'worker'
+
+DIST_FILES += [
+    'install.rdf',
+    'worker.js',
+]
