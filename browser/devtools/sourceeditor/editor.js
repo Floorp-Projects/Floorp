@@ -463,8 +463,8 @@ Editor.prototype = {
 
   /**
    * Replaces contents of a text area within the from/to {line, ch}
-   * range. If neither from nor to arguments are provided works
-   * exactly like setText. If only from object is provided, inserts
+   * range. If neither `from` nor `to` arguments are provided works
+   * exactly like setText. If only `from` object is provided, inserts
    * text at that point, *overwriting* as many characters as needed.
    */
   replaceText: function (value, from, to) {
