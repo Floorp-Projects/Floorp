@@ -25,27 +25,26 @@ const TEST_LEVELS = [{
 }];
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Highlighting the test node");
 
   yield hoverElement("div", inspector);
-  let isVisible = yield isHighlighting(toolbox);
+  let isVisible = yield testActor.isHighlighting();
   ok(isVisible, "The highlighter is visible");
 
   for (let {level, expected} of TEST_LEVELS) {
     info("Zoom to level " + level + " and check that the highlighter is correct");
 
-    let {actorID, connPrefix} = getHighlighterActorID(toolbox.highlighter);
-    yield zoomPageTo(level, actorID, connPrefix);
-    isVisible = yield isHighlighting(toolbox);
+    yield testActor.zoomPageTo(level);
+    isVisible = yield testActor.isHighlighting();
     ok(isVisible, "The highlighter is still visible at zoom level " + level);
 
-    yield isNodeCorrectlyHighlighted("div", toolbox);
+    yield testActor.isNodeCorrectlyHighlighted("div", is);
 
     info("Check that the highlighter root wrapper node was scaled down");
 
-    let style = yield getRootNodeStyle(toolbox);
+    let style = yield getRootNodeStyle(testActor);
     is(style, expected, "The style attribute of the root element is correct");
   }
 });
@@ -63,8 +62,7 @@ function* hoverContainer(container, inspector) {
   yield onHighlight;
 }
 
-function* getRootNodeStyle(toolbox) {
-  let value = yield getHighlighterNodeAttribute(toolbox.highlighter,
-                                                "box-model-root", "style");
+function* getRootNodeStyle(testActor) {
+  let value = yield testActor.getHighlighterNodeAttribute("box-model-root", "style");
   return value;
 }

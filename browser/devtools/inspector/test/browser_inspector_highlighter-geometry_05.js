@@ -79,13 +79,13 @@ const TEST_DATA = [{
 }];
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
   let highlighter = yield front.getHighlighterByType("GeometryEditorHighlighter");
 
   for (let data of TEST_DATA) {
-    yield testNode(inspector, highlighter, data);
+    yield testNode(inspector, highlighter, testActor, data);
   }
 
   info("Hiding the highlighter");
@@ -93,37 +93,34 @@ add_task(function*() {
   yield highlighter.finalize();
 });
 
-function* testNode(inspector, highlighter, data) {
+function* testNode(inspector, highlighter, testActor, data) {
   info("Highlighting the test node " + data.selector);
   let node = yield getNodeFront(data.selector, inspector);
   yield highlighter.show(node);
 
-  is((yield isOffsetParentVisible(highlighter)), data.isOffsetParentVisible,
+  is((yield isOffsetParentVisible(highlighter, testActor)), data.isOffsetParentVisible,
     "The offset-parent highlighter visibility is correct for node " + data.selector);
-  is((yield isCurrentNodeVisible(highlighter)), data.isCurrentNodeVisible,
+  is((yield isCurrentNodeVisible(highlighter, testActor)), data.isCurrentNodeVisible,
     "The current-node highlighter visibility is correct for node " + data.selector);
-  is((yield hasVisibleArrows(highlighter)), data.hasVisibleArrows,
+  is((yield hasVisibleArrows(highlighter, testActor)), data.hasVisibleArrows,
     "The arrows visibility is correct for node " + data.selector);
-  is((yield isSizeVisible(highlighter)), data.isSizeVisible,
+  is((yield isSizeVisible(highlighter, testActor)), data.isSizeVisible,
     "The size label visibility is correct for node " + data.selector);
 }
 
-function* isOffsetParentVisible(highlighter) {
-  let hidden = yield getHighlighterNodeAttribute(highlighter,
-    ID + "offset-parent", "hidden");
+function* isOffsetParentVisible(highlighter, testActor) {
+  let hidden = yield testActor.getHighlighterNodeAttribute(ID + "offset-parent", "hidden", highlighter);
   return !hidden;
 }
 
-function* isCurrentNodeVisible(highlighter) {
-  let hidden = yield getHighlighterNodeAttribute(highlighter,
-    ID + "current-node", "hidden");
+function* isCurrentNodeVisible(highlighter, testActor) {
+  let hidden = yield testActor.getHighlighterNodeAttribute(ID + "current-node", "hidden", highlighter);
   return !hidden;
 }
 
-function* hasVisibleArrows(highlighter) {
+function* hasVisibleArrows(highlighter, testActor) {
   for (let side of ["top", "left", "bottom", "right"]) {
-    let hidden = yield getHighlighterNodeAttribute(highlighter,
-      ID + "arrow-" + side, "hidden");
+    let hidden = yield testActor.getHighlighterNodeAttribute(ID + "arrow-" + side, "hidden", highlighter);
     if (!hidden) {
       return true;
     }
@@ -131,8 +128,7 @@ function* hasVisibleArrows(highlighter) {
   return false;
 }
 
-function* isSizeVisible(highlighter) {
-  let hidden = yield getHighlighterNodeAttribute(highlighter,
-    ID + "label-size", "hidden");
+function* isSizeVisible(highlighter, testActor) {
+  let hidden = yield testActor.getHighlighterNodeAttribute(ID + "label-size", "hidden", highlighter);
   return !hidden;
 }

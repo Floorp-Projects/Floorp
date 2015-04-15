@@ -13,88 +13,80 @@ const TEST_URL = "data:text/html;charset=utf-8," +
                  "<span id='inline' style='transform:rotate(90deg);'>this is an inline transformed element</span>";
 
 add_task(function*() {
-  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
   let highlighter = yield front.getHighlighterByType("CssTransformHighlighter");
 
-  yield isHiddenByDefault(highlighter, inspector);
-  yield has2PolygonsAnd4Lines(highlighter, inspector);
-  yield isNotShownForUntransformed(highlighter, inspector);
-  yield isNotShownForInline(highlighter, inspector);
-  yield isVisibleWhenShown(highlighter, inspector);
-  yield linesLinkThePolygons(highlighter, inspector);
+  yield isHiddenByDefault(testActor, highlighter);
+  yield has2PolygonsAnd4Lines(testActor, highlighter);
+  yield isNotShownForUntransformed(testActor, inspector, highlighter);
+  yield isNotShownForInline(testActor, inspector, highlighter);
+  yield isVisibleWhenShown(testActor, inspector, highlighter);
+  yield linesLinkThePolygons(testActor, inspector, highlighter);
 
   yield highlighter.finalize();
 });
 
-function* isHiddenByDefault(highlighterFront, inspector) {
+function* isHiddenByDefault(testActor, highlighterFront) {
   info("Checking that the highlighter is hidden by default");
 
-  let hidden = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-elements", "hidden");
+  let hidden = yield testActor.getHighlighterNodeAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is hidden by default");
 }
 
-function* has2PolygonsAnd4Lines(highlighterFront, inspector) {
+function* has2PolygonsAnd4Lines(testActor, highlighterFront) {
   info("Checking that the highlighter is made up of 4 lines and 2 polygons");
 
-  let value = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-untransformed", "class");
+  let value = yield testActor.getHighlighterNodeAttribute("css-transform-untransformed", "class", highlighterFront);
   is(value, "css-transform-untransformed", "The untransformed polygon exists");
 
-  value = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-transformed", "class");
+  value = yield testActor.getHighlighterNodeAttribute("css-transform-transformed", "class", highlighterFront);
   is(value, "css-transform-transformed", "The transformed polygon exists");
 
   for (let nb of ["1", "2", "3", "4"]) {
-    value = yield getHighlighterNodeAttribute(highlighterFront,
-      "css-transform-line" + nb, "class");
+    value = yield testActor.getHighlighterNodeAttribute("css-transform-line" + nb, "class", highlighterFront);
     is(value, "css-transform-line", "The line " + nb + " exists");
   }
 }
 
-function* isNotShownForUntransformed(highlighterFront, inspector) {
+function* isNotShownForUntransformed(testActor, inspector, highlighterFront) {
   info("Asking to show the highlighter on the untransformed test node");
 
   let node = yield getNodeFront("#untransformed", inspector);
   yield highlighterFront.show(node);
 
-  let hidden = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-elements", "hidden");
+  let hidden = yield testActor.getHighlighterNodeAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is still hidden");
 }
 
-function* isNotShownForInline(highlighterFront, inspector) {
+function* isNotShownForInline(testActor, inspector, highlighterFront) {
   info("Asking to show the highlighter on the inline test node");
 
   let node = yield getNodeFront("#inline", inspector);
   yield highlighterFront.show(node);
 
-  let hidden = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-elements", "hidden");
+  let hidden = yield testActor.getHighlighterNodeAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is still hidden");
 }
 
-function* isVisibleWhenShown(highlighterFront, inspector) {
+function* isVisibleWhenShown(testActor, inspector, highlighterFront) {
   info("Asking to show the highlighter on the test node");
 
   let node = yield getNodeFront("#transformed", inspector);
   yield highlighterFront.show(node);
 
-  let hidden = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-elements", "hidden");
+  let hidden = yield testActor.getHighlighterNodeAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(!hidden, "The highlighter is visible");
 
   info("Hiding the highlighter");
   yield highlighterFront.hide();
 
-  hidden = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-elements", "hidden");
+  hidden = yield testActor.getHighlighterNodeAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is hidden");
 }
 
-function* linesLinkThePolygons(highlighterFront, inspector) {
+function* linesLinkThePolygons(testActor, inspector, highlighterFront) {
   info("Showing the highlighter on the transformed node");
 
   let node = yield getNodeFront("#transformed", inspector);
@@ -104,23 +96,17 @@ function* linesLinkThePolygons(highlighterFront, inspector) {
 
   let lines = [];
   for (let nb of ["1", "2", "3", "4"]) {
-    let x1 = yield getHighlighterNodeAttribute(highlighterFront,
-      "css-transform-line" + nb, "x1");
-    let y1 = yield getHighlighterNodeAttribute(highlighterFront,
-      "css-transform-line" + nb, "y1");
-    let x2 = yield getHighlighterNodeAttribute(highlighterFront,
-      "css-transform-line" + nb, "x2");
-    let y2 = yield getHighlighterNodeAttribute(highlighterFront,
-      "css-transform-line" + nb, "y2");
+    let x1 = yield testActor.getHighlighterNodeAttribute("css-transform-line" + nb, "x1", highlighterFront);
+    let y1 = yield testActor.getHighlighterNodeAttribute("css-transform-line" + nb, "y1", highlighterFront);
+    let x2 = yield testActor.getHighlighterNodeAttribute("css-transform-line" + nb, "x2", highlighterFront);
+    let y2 = yield testActor.getHighlighterNodeAttribute("css-transform-line" + nb, "y2", highlighterFront);
     lines.push({x1, y1, x2, y2});
   }
 
-  let points1 = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-untransformed", "points");
+  let points1 = yield testActor.getHighlighterNodeAttribute("css-transform-untransformed", "points", highlighterFront);
   points1 = points1.split(" ");
 
-  let points2 = yield getHighlighterNodeAttribute(highlighterFront,
-    "css-transform-transformed", "points");
+  let points2 = yield testActor.getHighlighterNodeAttribute("css-transform-transformed", "points", highlighterFront);
   points2 = points2.split(" ");
 
   for (let i = 0; i < lines.length; i++) {

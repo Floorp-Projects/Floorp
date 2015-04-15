@@ -8,7 +8,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu.html";
 
 add_task(function* () {
-  let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
+  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URL);
 
   yield testShowDOMProperties();
   yield testDeleteNode();
@@ -48,7 +48,7 @@ add_task(function* () {
     dispatchCommandEvent(deleteNode);
     yield updated;
 
-    ok(!getNode("#delete", { expectNoMatch: true }), "Node deleted");
+    ok(!(yield testActor.hasNode("#delete")), "Node deleted");
   }
 
   function* testDeleteRootNode() {
@@ -58,9 +58,12 @@ add_task(function* () {
     let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
     dispatchCommandEvent(deleteNode);
 
-    executeSoon(() => {
-      ok(content.document.documentElement, "Document element still alive.");
-    });
+    let deferred = promise.defer();
+    executeSoon(deferred.resolve);
+    yield deferred.promise;
+
+    ok((yield testActor.eval("!!content.document.documentElement")),
+       "Document element still alive.");
   }
 
   function dispatchCommandEvent(node) {

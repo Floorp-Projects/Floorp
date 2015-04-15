@@ -21,18 +21,18 @@ const TEST_DATA = [
 
 add_task(function*() {
   info("Loading the test document and opening the inspector");
-  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
+  let {toolbox, inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   for (let selector of TEST_DATA) {
     info("Selecting and highlighting node " + selector);
     yield selectAndHighlightNode(selector, inspector);
 
     info("Get all quads for this node");
-    let {data} = yield executeInContent("Test:GetAllAdjustedQuads", {selector});
+    let data = yield testActor.getAllAdjustedQuads(selector);
 
     info("Iterate over the box-model regions and verify that the highlighter is correct");
     for (let region of ["margin", "border", "padding", "content"]) {
-      let {points} = yield getHighlighterRegionPath(region, toolbox.highlighter);
+      let {points} = yield testActor.getHighlighterRegionPath(region);
       is(points.length, data[region].length,
         "The highlighter's " + region + " path defines the correct number of boxes");
     }
@@ -56,7 +56,7 @@ add_task(function*() {
       expectedContentRect.p4.y = Math.max(expectedContentRect.p4.y, p4.y);
     }
 
-    let contentRect = yield getGuidesRectangle(toolbox);
+    let contentRect = yield testActor.getGuidesRectangle();
 
     for (let point of ["p1", "p2", "p3", "p4"]) {
       is((contentRect[point].x),
