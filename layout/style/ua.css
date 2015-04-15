@@ -318,11 +318,16 @@ div:-moz-native-anonymous.moz-touchcaret,
 div:-moz-native-anonymous.moz-selectioncaret-left,
 div:-moz-native-anonymous.moz-selectioncaret-right {
   position: fixed;
+  width: 44px;
+  height: 47px;
 }
 
 div:-moz-native-anonymous.moz-selectioncaret-left > div,
 div:-moz-native-anonymous.moz-selectioncaret-right > div {
   position: absolute;
+  width: 100%;
+  height: 100%;
+  bottom: 0;
 }
 
 div:-moz-native-anonymous.moz-touchcaret,
@@ -330,10 +335,9 @@ div:-moz-native-anonymous.moz-selectioncaret-left,
 div:-moz-native-anonymous.moz-selectioncaret-right,
 div:-moz-native-anonymous.moz-selectioncaret-left > div,
 div:-moz-native-anonymous.moz-selectioncaret-right > div {
-  width: 44px;
-  height: 47px;
-  background-position: center center;
-  background-size: 100% 100%;
+  background-position: center bottom;
+  background-size: 100%;
+  background-repeat: no-repeat;
   z-index: 2147483647;
 }
 
