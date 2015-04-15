@@ -334,12 +334,12 @@ class RegisterAllocator
 
     CodePosition minimalDefEnd(LNode* ins) {
         // Compute the shortest interval that captures vregs defined by ins.
-        // Watch for instructions that are followed by an OSI point and/or Nop.
+        // Watch for instructions that are followed by an OSI point.
         // If moves are introduced between the instruction and the OSI point then
         // safepoint information for the instruction may be incorrect.
         while (true) {
             LNode* next = insData[ins->id() + 1];
-            if (!next->isNop() && !next->isOsiPoint())
+            if (!next->isOsiPoint())
                 break;
             ins = next;
         }

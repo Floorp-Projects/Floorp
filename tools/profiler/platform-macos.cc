@@ -34,7 +34,6 @@
 
 #include "platform.h"
 #include "TableTicker.h"
-#include "UnwinderThread2.h"  /* uwt__register_thread_for_profiling */
 #include "mozilla/TimeStamp.h"
 
 // Memory profile
@@ -447,7 +446,6 @@ bool Sampler::RegisterCurrentThread(const char* aName,
 
   sRegisteredThreads->push_back(info);
 
-  uwt__register_thread_for_profiling(stackTop);
   return true;
 }
 

@@ -123,7 +123,7 @@ class IonSpewer
     void beginFunction(MIRGraph* graph, JS::HandleScript);
     bool isSpewingFunction() const;
     void spewPass(const char* pass);
-    void spewPass(const char* pass, LinearScanAllocator* ra);
+    void spewPass(const char* pass, BacktrackingAllocator* ra);
     void endFunction();
 };
 
@@ -136,7 +136,7 @@ class IonSpewFunction
 
 void IonSpewNewFunction(MIRGraph* graph, JS::HandleScript function);
 void IonSpewPass(const char* pass);
-void IonSpewPass(const char* pass, LinearScanAllocator* ra);
+void IonSpewPass(const char* pass, BacktrackingAllocator* ra);
 void IonSpewEndFunction();
 
 void CheckLogging();
@@ -162,7 +162,7 @@ static inline void IonSpewNewFunction(MIRGraph* graph, JS::HandleScript function
 { }
 static inline void IonSpewPass(const char* pass)
 { }
-static inline void IonSpewPass(const char* pass, LinearScanAllocator* ra)
+static inline void IonSpewPass(const char* pass, BacktrackingAllocator* ra)
 { }
 static inline void IonSpewEndFunction()
 { }

@@ -1488,7 +1488,7 @@ CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock* mir)
     // backedges, so just look for any edge going to an earlier block in RPO.
     if (!gen->compilingAsmJS() && mir->isLoopHeader() && mir->id() <= current->mir()->id()) {
         for (LInstructionIterator iter = mir->lir()->begin(); iter != mir->lir()->end(); iter++) {
-            if (iter->isLabel() || iter->isMoveGroup()) {
+            if (iter->isMoveGroup()) {
                 // Continue searching for an interrupt check.
             } else if (iter->isInterruptCheckImplicit()) {
                 return iter->toInterruptCheckImplicit()->oolEntry();
