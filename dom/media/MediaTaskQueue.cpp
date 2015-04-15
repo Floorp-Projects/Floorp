@@ -40,14 +40,6 @@ MediaTaskQueue::~MediaTaskQueue()
   MOZ_COUNT_DTOR(MediaTaskQueue);
 }
 
-nsresult
-MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
-{
-  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
-  MonitorAutoLock mon(mQueueMonitor);
-  return DispatchLocked(aRunnable, AbortIfFlushing);
-}
-
 TaskDispatcher&
 MediaTaskQueue::TailDispatcher()
 {
@@ -57,17 +49,17 @@ MediaTaskQueue::TailDispatcher()
 }
 
 nsresult
-MediaTaskQueue::DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
-                               DispatchMode aMode)
+MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable, DispatchMode aMode)
 {
   mQueueMonitor.AssertCurrentThreadOwns();
+  nsCOMPtr<nsIRunnable> r = aRunnable;
   if (mIsFlushing && aMode == AbortIfFlushing) {
     return NS_ERROR_ABORT;
   }
   if (mIsShutdown) {
     return NS_ERROR_FAILURE;
   }
-  mTasks.push(aRunnable);
+  mTasks.push(r.forget());
   if (mIsRunning) {
     return NS_OK;
   }
@@ -179,7 +171,8 @@ FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
   FlushLocked();
-  nsresult rv = DispatchLocked(aRunnable, IgnoreFlushing);
+  nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
+  nsresult rv = DispatchLocked(r.forget(), IgnoreFlushing);
   NS_ENSURE_SUCCESS(rv, rv);
   AwaitIdleLocked();
   return NS_OK;
