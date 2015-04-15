@@ -99,7 +99,7 @@ AsmJSModule::AsmJSModule(ScriptSource* scriptSource, uint32_t srcStart, uint32_t
 
     // AsmJSCheckedImmediateRange should be defined to be at most the minimum
     // heap length so that offsets can be folded into bounds checks.
-    MOZ_ASSERT(AsmJSCheckedImmediateRange - pod.minHeapLength_ <= AsmJSCheckedImmediateRange);
+    MOZ_ASSERT(pod.minHeapLength_ - AsmJSCheckedImmediateRange <= pod.minHeapLength_);
 
     scriptSource_->incref();
 }
