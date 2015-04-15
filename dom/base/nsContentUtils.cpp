@@ -115,6 +115,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDragService.h"
 #include "nsIEditor.h"
@@ -7391,3 +7392,300 @@ nsContentUtils::GetSurfaceData(mozilla::gfx::DataSourceSurface* aSurface,
   aSurface->Unmap();
   return surfaceData;
 }
+
+mozilla::Modifiers
+nsContentUtils::GetWidgetModifiers(int32_t aModifiers)
+{
+  Modifiers result = 0;
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SHIFT) {
+    result |= mozilla::MODIFIER_SHIFT;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_CONTROL) {
+    result |= mozilla::MODIFIER_CONTROL;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_ALT) {
+    result |= mozilla::MODIFIER_ALT;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_META) {
+    result |= mozilla::MODIFIER_META;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_ALTGRAPH) {
+    result |= mozilla::MODIFIER_ALTGRAPH;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_CAPSLOCK) {
+    result |= mozilla::MODIFIER_CAPSLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_FN) {
+    result |= mozilla::MODIFIER_FN;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_FNLOCK) {
+    result |= mozilla::MODIFIER_FNLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_NUMLOCK) {
+    result |= mozilla::MODIFIER_NUMLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SCROLLLOCK) {
+    result |= mozilla::MODIFIER_SCROLLLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SYMBOL) {
+    result |= mozilla::MODIFIER_SYMBOL;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_SYMBOLLOCK) {
+    result |= mozilla::MODIFIER_SYMBOLLOCK;
+  }
+  if (aModifiers & nsIDOMWindowUtils::MODIFIER_OS) {
+    result |= mozilla::MODIFIER_OS;
+  }
+  return result;
+}
+
+nsIWidget*
+nsContentUtils::GetWidget(nsIPresShell* aPresShell, nsPoint* aOffset) {
+  if (aPresShell) {
+    nsIFrame* frame = aPresShell->GetRootFrame();
+    if (frame)
+      return frame->GetView()->GetNearestWidget(aOffset);
+  }
+  return nullptr;
+}
+
+int16_t
+nsContentUtils::GetButtonsFlagForButton(int32_t aButton)
+{
+  switch (aButton) {
+    case WidgetMouseEvent::eLeftButton:
+      return WidgetMouseEvent::eLeftButtonFlag;
+    case WidgetMouseEvent::eMiddleButton:
+      return WidgetMouseEvent::eMiddleButtonFlag;
+    case WidgetMouseEvent::eRightButton:
+      return WidgetMouseEvent::eRightButtonFlag;
+    case 4:
+      return WidgetMouseEvent::e4thButtonFlag;
+    case 5:
+      return WidgetMouseEvent::e5thButtonFlag;
+    default:
+      NS_ERROR("Button not known.");
+      return 0;
+  }
+}
+
+LayoutDeviceIntPoint
+nsContentUtils::ToWidgetPoint(const CSSPoint& aPoint,
+                              const nsPoint& aOffset,
+                              nsPresContext* aPresContext)
+{
+  return LayoutDeviceIntPoint::FromAppUnitsRounded(
+    CSSPoint::ToAppUnits(aPoint) + aOffset,
+    aPresContext->AppUnitsPerDevPixel());
+}
+
+nsView*
+nsContentUtils::GetViewToDispatchEvent(nsPresContext* presContext,
+                                       nsIPresShell** presShell)
+{
+  if (presContext && presShell) {
+    *presShell = presContext->PresShell();
+    if (*presShell) {
+      NS_ADDREF(*presShell);
+      if (nsViewManager* viewManager = (*presShell)->GetViewManager()) {
+        if (nsView* view = viewManager->GetRootView()) {
+          return view;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
+
+nsresult
+nsContentUtils::SendKeyEvent(nsCOMPtr<nsIWidget> aWidget,
+                             const nsAString& aType,
+                             int32_t aKeyCode,
+                             int32_t aCharCode,
+                             int32_t aModifiers,
+                             uint32_t aAdditionalFlags,
+                             bool* aDefaultActionTaken)
+{
+  // get the widget to send the event to
+  if (!aWidget)
+    return NS_ERROR_FAILURE;
+
+  int32_t msg;
+  if (aType.EqualsLiteral("keydown"))
+    msg = NS_KEY_DOWN;
+  else if (aType.EqualsLiteral("keyup"))
+    msg = NS_KEY_UP;
+  else if (aType.EqualsLiteral("keypress"))
+    msg = NS_KEY_PRESS;
+  else
+    return NS_ERROR_FAILURE;
+
+  WidgetKeyboardEvent event(true, msg, aWidget);
+  event.modifiers = GetWidgetModifiers(aModifiers);
+
+  if (msg == NS_KEY_PRESS) {
+    event.keyCode = aCharCode ? 0 : aKeyCode;
+    event.charCode = aCharCode;
+  } else {
+    event.keyCode = aKeyCode;
+    event.charCode = 0;
+  }
+
+  uint32_t locationFlag = (aAdditionalFlags &
+    (nsIDOMWindowUtils::KEY_FLAG_LOCATION_STANDARD | nsIDOMWindowUtils::KEY_FLAG_LOCATION_LEFT |
+     nsIDOMWindowUtils::KEY_FLAG_LOCATION_RIGHT | nsIDOMWindowUtils::KEY_FLAG_LOCATION_NUMPAD));
+  switch (locationFlag) {
+    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_STANDARD:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+      break;
+    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_LEFT:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+      break;
+    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_RIGHT:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
+      break;
+    case nsIDOMWindowUtils::KEY_FLAG_LOCATION_NUMPAD:
+      event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+      break;
+    default:
+      if (locationFlag != 0) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      // If location flag isn't set, choose the location from keycode.
+      switch (aKeyCode) {
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD0:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD1:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD2:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD3:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD4:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD5:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD6:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD7:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD8:
+        case nsIDOMKeyEvent::DOM_VK_NUMPAD9:
+        case nsIDOMKeyEvent::DOM_VK_MULTIPLY:
+        case nsIDOMKeyEvent::DOM_VK_ADD:
+        case nsIDOMKeyEvent::DOM_VK_SEPARATOR:
+        case nsIDOMKeyEvent::DOM_VK_SUBTRACT:
+        case nsIDOMKeyEvent::DOM_VK_DECIMAL:
+        case nsIDOMKeyEvent::DOM_VK_DIVIDE:
+          event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
+          break;
+        case nsIDOMKeyEvent::DOM_VK_SHIFT:
+        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        case nsIDOMKeyEvent::DOM_VK_ALT:
+        case nsIDOMKeyEvent::DOM_VK_META:
+          event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
+          break;
+        default:
+          event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD;
+          break;
+      }
+      break;
+  }
+
+  event.refPoint.x = event.refPoint.y = 0;
+  event.time = PR_IntervalNow();
+  if (!(aAdditionalFlags & nsIDOMWindowUtils::KEY_FLAG_NOT_SYNTHESIZED_FOR_TESTS)) {
+    event.mFlags.mIsSynthesizedForTests = true;
+  }
+
+  if (aAdditionalFlags & nsIDOMWindowUtils::KEY_FLAG_PREVENT_DEFAULT) {
+    event.mFlags.mDefaultPrevented = true;
+  }
+
+  nsEventStatus status;
+  nsresult rv = aWidget->DispatchEvent(&event, status);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aDefaultActionTaken = (status != nsEventStatus_eConsumeNoDefault);
+
+  return NS_OK;
+}
+
+nsresult
+nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
+                               const nsAString& aType,
+                               float aX,
+                               float aY,
+                               int32_t aButton,
+                               int32_t aClickCount,
+                               int32_t aModifiers,
+                               bool aIgnoreRootScrollFrame,
+                               float aPressure,
+                               unsigned short aInputSourceArg,
+                               bool aToWindow,
+                               bool *aPreventDefault,
+                               bool aIsSynthesized)
+{
+  nsPoint offset;
+  nsCOMPtr<nsIWidget> widget = GetWidget(aPresShell, &offset);
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  int32_t msg;
+  bool contextMenuKey = false;
+  if (aType.EqualsLiteral("mousedown"))
+    msg = NS_MOUSE_BUTTON_DOWN;
+  else if (aType.EqualsLiteral("mouseup"))
+    msg = NS_MOUSE_BUTTON_UP;
+  else if (aType.EqualsLiteral("mousemove"))
+    msg = NS_MOUSE_MOVE;
+  else if (aType.EqualsLiteral("mouseover"))
+    msg = NS_MOUSE_ENTER;
+  else if (aType.EqualsLiteral("mouseout"))
+    msg = NS_MOUSE_EXIT;
+  else if (aType.EqualsLiteral("contextmenu")) {
+    msg = NS_CONTEXTMENU;
+    contextMenuKey = (aButton == 0);
+  } else if (aType.EqualsLiteral("MozMouseHittest"))
+    msg = NS_MOUSE_MOZHITTEST;
+  else
+    return NS_ERROR_FAILURE;
+
+  if (aInputSourceArg == nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN) {
+    aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  }
+
+  WidgetMouseEvent event(true, msg, widget, WidgetMouseEvent::eReal,
+                         contextMenuKey ? WidgetMouseEvent::eContextMenuKey :
+                                          WidgetMouseEvent::eNormal);
+  event.modifiers = GetWidgetModifiers(aModifiers);
+  event.button = aButton;
+  event.buttons = GetButtonsFlagForButton(aButton);
+  event.widget = widget;
+  event.pressure = aPressure;
+  event.inputSource = aInputSourceArg;
+  event.clickCount = aClickCount;
+  event.time = PR_IntervalNow();
+  event.mFlags.mIsSynthesizedForTests = aIsSynthesized;
+
+  nsPresContext* presContext = aPresShell->GetPresContext();
+  if (!presContext)
+    return NS_ERROR_FAILURE;
+
+  event.refPoint = ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
+  event.ignoreRootScrollFrame = aIgnoreRootScrollFrame;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  if (aToWindow) {
+    nsCOMPtr<nsIPresShell> presShell;
+    nsView* view = GetViewToDispatchEvent(presContext, getter_AddRefs(presShell));
+    if (!presShell || !view) {
+      return NS_ERROR_FAILURE;
+    }
+    return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
+  }
+  if (gfxPrefs::TestEventsAsyncEnabled()) {
+    status = widget->DispatchInputEvent(&event);
+  } else {
+    nsresult rv = widget->DispatchEvent(&event, status);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  if (aPreventDefault) {
+    *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
+  }
+
+  return NS_OK;
+}
+
