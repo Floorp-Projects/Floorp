@@ -1881,8 +1881,10 @@ struct DelayedDeleteContentParentTask : public nsRunnable
 void
 ContentParent::ActorDestroy(ActorDestroyReason why)
 {
+#ifdef MOZ_CRASHREPORTER
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ChildShutdownState"),
                                        NS_LITERAL_CSTRING("ActorDestroy"));
+#endif
 
     if (mForceKillTimer) {
         mForceKillTimer->Cancel();
@@ -2890,8 +2892,10 @@ ContentParent::Observe(nsISupports* aSubject,
 {
     if (mSubprocess && (!strcmp(aTopic, "profile-before-change") ||
                         !strcmp(aTopic, "xpcom-shutdown"))) {
+#ifdef MOZ_CRASHREPORTER
         CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ChildShutdownState"),
                                            NS_LITERAL_CSTRING("Begin"));
+#endif
 
         // Okay to call ShutDownProcess multiple times.
         ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
@@ -3355,8 +3359,10 @@ ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 void
 ContentParent::KillHard(const char* aReason)
 {
+#ifdef MOZ_CRASHREPORTER
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ChildShutdownState"),
                                        NS_LITERAL_CSTRING("KillHard"));
+#endif
 
     // On Windows, calling KillHard multiple times causes problems - the
     // process handle becomes invalid on the first call, causing a second call
