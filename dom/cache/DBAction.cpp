@@ -147,7 +147,7 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   int32_t schemaVersion = 0;
   rv = conn->GetSchemaVersion(&schemaVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-  if (schemaVersion > 0 && schemaVersion < db::kMaxWipeSchemaVersion) {
+  if (schemaVersion > 0 && schemaVersion < DBSchema::kMaxWipeSchemaVersion) {
     conn = nullptr;
     rv = WipeDatabase(dbFile, aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -155,7 +155,7 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
     rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(conn));
   }
 
-  rv = db::InitializeConnection(conn);
+  rv = DBSchema::InitializeConnection(conn);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   conn.forget(aConnOut);
