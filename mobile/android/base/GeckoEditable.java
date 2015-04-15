@@ -957,6 +957,7 @@ final class GeckoEditable
             throw new IllegalArgumentException("newEnd does not match text");
         }
         final int newEnd = start + text.length();
+        final Action action = mActionQueue.peek();
 
         /* Text changes affect the selection as well, and we may not receive another selection
            update as a result of selection notification masking on the Gecko side; therefore,
@@ -964,55 +965,60 @@ final class GeckoEditable
            to increment the seqno here as well */
         ++mGeckoUpdateSeqno;
 
-        mChangedText.clearSpans();
-        mChangedText.replace(0, mChangedText.length(), text);
-        // Preserve as many spans as possible
-        TextUtils.copySpansFrom(mText, start, Math.min(oldEnd, newEnd),
-                                Object.class, mChangedText, 0);
-
-        final Action action = mActionQueue.peek();
-        if (action != null &&
-                (action.mType == Action.TYPE_REPLACE_TEXT ||
-                action.mType == Action.TYPE_COMPOSE_TEXT) &&
-                start <= action.mStart &&
-                action.mStart + action.mSequence.length() <= newEnd) {
-
-            // actionNewEnd is the new end of the original replacement action
-            final int actionNewEnd = action.mStart + action.mSequence.length();
-            int selStart = Selection.getSelectionStart(mText);
-            int selEnd = Selection.getSelectionEnd(mText);
-
-            // Replace old spans with new spans
-            mChangedText.replace(action.mStart - start, actionNewEnd - start,
-                                 action.mSequence);
-            geckoReplaceText(start, oldEnd, mChangedText);
-
-            // delete/insert above might have moved our selection to somewhere else
-            // this happens when the Gecko text change covers a larger range than
-            // the original replacement action. Fix selection here
-            if (selStart >= start && selStart <= oldEnd) {
-                selStart = selStart < action.mStart ? selStart :
-                           selStart < action.mEnd   ? actionNewEnd :
-                                                      selStart + actionNewEnd - action.mEnd;
-                mText.setSpan(Selection.SELECTION_START, selStart, selStart,
-                              Spanned.SPAN_POINT_POINT);
-            }
-            if (selEnd >= start && selEnd <= oldEnd) {
-                selEnd = selEnd < action.mStart ? selEnd :
-                         selEnd < action.mEnd   ? actionNewEnd :
-                                                  selEnd + actionNewEnd - action.mEnd;
-                mText.setSpan(Selection.SELECTION_END, selEnd, selEnd,
-                              Spanned.SPAN_POINT_POINT);
-            }
+        if (action != null && action.mType == Action.TYPE_ACKNOWLEDGE_FOCUS) {
+            // Simply replace the text for newly-focused editors.
+            mText.replace(0, mText.length(), text);
 
         } else {
-            // Gecko side initiated the text change.
-            if (isSameText(start, oldEnd, mChangedText)) {
-                // Nothing to do because the text is the same.
-                // This could happen when the composition is updated for example.
-                return;
+            mChangedText.clearSpans();
+            mChangedText.replace(0, mChangedText.length(), text);
+            // Preserve as many spans as possible
+            TextUtils.copySpansFrom(mText, start, Math.min(oldEnd, newEnd),
+                                    Object.class, mChangedText, 0);
+
+            if (action != null &&
+                    (action.mType == Action.TYPE_REPLACE_TEXT ||
+                    action.mType == Action.TYPE_COMPOSE_TEXT) &&
+                    start <= action.mStart &&
+                    action.mStart + action.mSequence.length() <= newEnd) {
+
+                // actionNewEnd is the new end of the original replacement action
+                final int actionNewEnd = action.mStart + action.mSequence.length();
+                int selStart = Selection.getSelectionStart(mText);
+                int selEnd = Selection.getSelectionEnd(mText);
+
+                // Replace old spans with new spans
+                mChangedText.replace(action.mStart - start, actionNewEnd - start,
+                                     action.mSequence);
+                geckoReplaceText(start, oldEnd, mChangedText);
+
+                // delete/insert above might have moved our selection to somewhere else
+                // this happens when the Gecko text change covers a larger range than
+                // the original replacement action. Fix selection here
+                if (selStart >= start && selStart <= oldEnd) {
+                    selStart = selStart < action.mStart ? selStart :
+                               selStart < action.mEnd   ? actionNewEnd :
+                                                          selStart + actionNewEnd - action.mEnd;
+                    mText.setSpan(Selection.SELECTION_START, selStart, selStart,
+                                  Spanned.SPAN_POINT_POINT);
+                }
+                if (selEnd >= start && selEnd <= oldEnd) {
+                    selEnd = selEnd < action.mStart ? selEnd :
+                             selEnd < action.mEnd   ? actionNewEnd :
+                                                      selEnd + actionNewEnd - action.mEnd;
+                    mText.setSpan(Selection.SELECTION_END, selEnd, selEnd,
+                                  Spanned.SPAN_POINT_POINT);
+                }
+
+            } else {
+                // Gecko side initiated the text change.
+                if (isSameText(start, oldEnd, mChangedText)) {
+                    // Nothing to do because the text is the same.
+                    // This could happen when the composition is updated for example.
+                    return;
+                }
+                geckoReplaceText(start, oldEnd, mChangedText);
             }
-            geckoReplaceText(start, oldEnd, mChangedText);
         }
 
         geckoPostToIc(new Runnable() {
