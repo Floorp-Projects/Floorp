@@ -10,8 +10,9 @@
 #include <vector>
 #include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
-#include "Units.h"            // for ScreenPoint
 #include "APZUtils.h"         // for CancelAnimationFlags
+#include "Layers.h"           // for Layer::ScrollDirection
+#include "Units.h"            // for ScreenPoint
 
 namespace mozilla {
 namespace layers {
@@ -106,6 +107,11 @@ public:
   // Determine whether the given APZC, or any APZC further in the chain,
   // has room to be panned.
   bool CanBePanned(const AsyncPanZoomController* aApzc) const;
+
+  // Determine whether the given APZC, or any APZC further in the chain,
+  // can scroll in the given direction.
+  bool CanScrollInDirection(const AsyncPanZoomController* aApzc,
+                            Layer::ScrollDirection aDirection) const;
 
   // Determine whether any APZC along this handoff chain is overscrolled.
   bool HasOverscrolledApzc() const;
