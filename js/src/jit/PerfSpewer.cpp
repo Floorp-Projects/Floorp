@@ -14,7 +14,6 @@
 
 #ifdef JS_ION_PERF
 # include "jit/JitSpewer.h"
-# include "jit/LinearScan.h"
 # include "jit/LIR.h"
 # include "jit/MIR.h"
 # include "jit/MIRGraph.h"

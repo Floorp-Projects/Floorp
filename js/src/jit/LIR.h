@@ -109,14 +109,6 @@ class LAllocation : public TempObject
         MOZ_ASSERT(isBogus());
     }
 
-    static LAllocation* New(TempAllocator& alloc) {
-        return new(alloc) LAllocation();
-    }
-    template <typename T>
-    static LAllocation* New(TempAllocator& alloc, const T& other) {
-        return new(alloc) LAllocation(other);
-    }
-
     // The value pointer must be rooted in MIR and have its low bits cleared.
     explicit LAllocation(const Value* vp) {
         MOZ_ASSERT(vp);
@@ -958,7 +950,6 @@ class LBlock
         instructions_.insertAfter(at, ins);
     }
     void insertBefore(LInstruction* at, LInstruction* ins) {
-        MOZ_ASSERT(!at->isLabel());
         instructions_.insertBefore(at, ins);
     }
     const LNode* firstElementWithId() const {
@@ -994,10 +985,7 @@ class LBlock
     // Test whether this basic block is empty except for a simple goto, and
     // which is not forming a loop. No code will be emitted for such blocks.
     bool isTrivial() {
-        LInstructionIterator ins(begin());
-        while (ins->isLabel())
-            ++ins;
-        return ins->isGoto() && !mir()->isLoopHeader();
+        return begin()->isGoto() && !mir()->isLoopHeader();
     }
 
     void dump(FILE* fp);

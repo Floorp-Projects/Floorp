@@ -12,7 +12,7 @@
 
 #include <time.h>
 
-#include "jit/LinearScan.h"
+#include "jit/BacktrackingAllocator.h"
 #include "jit/LIR.h"
 #include "jit/MIRGraph.h"
 
@@ -63,7 +63,7 @@ C1Spewer::spewPass(const char* pass)
 }
 
 void
-C1Spewer::spewIntervals(const char* pass, LinearScanAllocator* regalloc)
+C1Spewer::spewIntervals(const char* pass, BacktrackingAllocator* regalloc)
 {
     if (!spewout_)
         return;
@@ -112,7 +112,7 @@ DumpLIR(FILE* fp, LNode* ins)
 }
 
 void
-C1Spewer::spewIntervals(FILE* fp, LinearScanAllocator* regalloc, LNode* ins, size_t& nextId)
+C1Spewer::spewIntervals(FILE* fp, BacktrackingAllocator* regalloc, LNode* ins, size_t& nextId)
 {
     for (size_t k = 0; k < ins->numDefs(); k++) {
         uint32_t id = ins->getDef(k)->virtualRegister();
@@ -137,7 +137,7 @@ C1Spewer::spewIntervals(FILE* fp, LinearScanAllocator* regalloc, LNode* ins, siz
 }
 
 void
-C1Spewer::spewIntervals(FILE* fp, MBasicBlock* block, LinearScanAllocator* regalloc, size_t& nextId)
+C1Spewer::spewIntervals(FILE* fp, MBasicBlock* block, BacktrackingAllocator* regalloc, size_t& nextId)
 {
     LBlock* lir = block->lir();
     if (!lir)
