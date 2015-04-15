@@ -49,18 +49,21 @@ class MarionetteException(Exception):
         return "".join(traceback.format_exception(self.__class__, msg, tb))
 
 
-class InstallGeckoError(MarionetteException):
-    pass
+class ElementNotSelectableException(MarionetteException):
+    status = "element not selectable"
+
+
+class InvalidArgumentException(MarionetteException):
+    status = "invalid argument"
+
+
+class InvalidSessionIdException(MarionetteException):
+    status = "invalid session id"
 
 
 class TimeoutException(MarionetteException):
     code = (21,)
     status = "timeout"
-
-
-class InvalidResponseException(MarionetteException):
-    code = (53,)
-    status = "invalid response"
 
 
 class JavascriptException(MarionetteException):
@@ -71,11 +74,6 @@ class JavascriptException(MarionetteException):
 class NoSuchElementException(MarionetteException):
     code = (7,)
     status = "no such element"
-
-
-class XPathLookupException(MarionetteException):
-    code = (19,)
-    status = "invalid xpath selector"
 
 
 class NoSuchWindowException(MarionetteException):
@@ -159,11 +157,6 @@ class FrameSendFailureError(MarionetteException):
     status = "frame send failure"
 
 
-class UnsupportedOperationException(MarionetteException):
-    code = (405,)
-    status = "unsupported operation"
-
-
 class SessionNotCreatedException(MarionetteException):
     code = (33, 71)
     status = "session not created"
@@ -173,31 +166,50 @@ class UnexpectedAlertOpen(MarionetteException):
     code = (26,)
     status = "unexpected alert open"
 
+
+class UnknownCommandException(MarionetteException):
+    code = (9,)
+    status = "unknown command"
+
+
+class UnknownException(MarionetteException):
+    code = (13,)
+    status = "unknown error"
+
+
+class UnsupportedOperationException(MarionetteException):
+    code = (405,)
+    status = "unsupported operation"
+
+
 excs = [
-  MarionetteException,
-  TimeoutException,
-  InvalidResponseException,
-  JavascriptException,
-  NoSuchElementException,
-  XPathLookupException,
-  NoSuchWindowException,
-  StaleElementException,
-  ScriptTimeoutException,
-  ElementNotVisibleException,
   ElementNotAccessibleException,
-  NoSuchFrameException,
-  InvalidElementStateException,
-  NoAlertPresentException,
-  InvalidCookieDomainException,
-  UnableToSetCookieException,
-  InvalidElementCoordinates,
-  InvalidSelectorException,
-  MoveTargetOutOfBoundsException,
-  FrameSendNotInitializedError,
+  ElementNotSelectableException,
+  ElementNotVisibleException,
   FrameSendFailureError,
-  UnsupportedOperationException,
+  FrameSendNotInitializedError,
+  InvalidArgumentException,
+  InvalidCookieDomainException,
+  InvalidElementCoordinates,
+  InvalidElementStateException,
+  InvalidSelectorException,
+  InvalidSessionIdException,
+  JavascriptException,
+  MarionetteException,
+  MoveTargetOutOfBoundsException,
+  NoAlertPresentException,
+  NoSuchElementException,
+  NoSuchFrameException,
+  NoSuchWindowException,
+  ScriptTimeoutException,
   SessionNotCreatedException,
+  StaleElementException,
+  TimeoutException,
+  UnableToSetCookieException,
   UnexpectedAlertOpen,
+  UnknownCommandException,
+  UnknownException,
+  UnsupportedOperationException,
 ]
 
 
