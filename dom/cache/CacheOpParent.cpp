@@ -77,7 +77,7 @@ CacheOpParent::Execute(Manager* aManager)
     MOZ_ASSERT(mCacheId != INVALID_CACHE_ID);
 
     const CacheAddAllArgs& args = mOpArgs.get_CacheAddAllArgs();
-    const nsTArray<CacheRequest>& list = args.requestList();
+    const nsTArray<PCacheRequest>& list = args.requestList();
 
     nsAutoTArray<nsCOMPtr<nsIInputStream>, 256> requestStreamList;
     for (uint32_t i = 0; i < list.Length(); ++i) {
@@ -232,14 +232,14 @@ CacheOpParent::OnFetchPut(FetchPut* aFetchPut, nsresult aRv)
 }
 
 already_AddRefed<nsIInputStream>
-CacheOpParent::DeserializeCacheStream(const CacheReadStreamOrVoid& aStreamOrVoid)
+CacheOpParent::DeserializeCacheStream(const PCacheReadStreamOrVoid& aStreamOrVoid)
 {
-  if (aStreamOrVoid.type() == CacheReadStreamOrVoid::Tvoid_t) {
+  if (aStreamOrVoid.type() == PCacheReadStreamOrVoid::Tvoid_t) {
     return nullptr;
   }
 
   nsCOMPtr<nsIInputStream> stream;
-  const CacheReadStream& readStream = aStreamOrVoid.get_CacheReadStream();
+  const PCacheReadStream& readStream = aStreamOrVoid.get_PCacheReadStream();
 
   // Option 1: A push stream actor was sent for nsPipe data
   if (readStream.pushStreamParent()) {

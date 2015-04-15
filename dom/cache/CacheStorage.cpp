@@ -194,12 +194,12 @@ CacheStorage::Match(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  CacheQueryParams params;
-  ToCacheQueryParams(params, aOptions);
+  PCacheQueryParams params;
+  ToPCacheQueryParams(params, aOptions);
 
   nsAutoPtr<Entry> entry(new Entry());
   entry->mPromise = promise;
-  entry->mArgs = StorageMatchArgs(CacheRequest(), params);
+  entry->mArgs = StorageMatchArgs(PCacheRequest(), params);
   entry->mRequest = request;
 
   mPendingRequests.AppendElement(entry.forget());

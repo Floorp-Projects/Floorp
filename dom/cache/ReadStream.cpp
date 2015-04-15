@@ -9,7 +9,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/SnappyUncompressInputStream.h"
@@ -35,10 +35,10 @@ public:
         nsIInputStream* aStream);
 
   void
-  Serialize(CacheReadStreamOrVoid* aReadStreamOut);
+  Serialize(PCacheReadStreamOrVoid* aReadStreamOut);
 
   void
-  Serialize(CacheReadStream* aReadStreamOut);
+  Serialize(PCacheReadStream* aReadStreamOut);
 
   // ReadStream::Controllable methods
   virtual void
@@ -193,17 +193,17 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
 }
 
 void
-ReadStream::Inner::Serialize(CacheReadStreamOrVoid* aReadStreamOut)
+ReadStream::Inner::Serialize(PCacheReadStreamOrVoid* aReadStreamOut)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
   MOZ_ASSERT(aReadStreamOut);
-  CacheReadStream stream;
+  PCacheReadStream stream;
   Serialize(&stream);
   *aReadStreamOut = stream;
 }
 
 void
-ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut)
+ReadStream::Inner::Serialize(PCacheReadStream* aReadStreamOut)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
   MOZ_ASSERT(aReadStreamOut);
@@ -391,18 +391,18 @@ NS_IMPL_ISUPPORTS(cache::ReadStream, nsIInputStream, ReadStream);
 
 // static
 already_AddRefed<ReadStream>
-ReadStream::Create(const CacheReadStreamOrVoid& aReadStreamOrVoid)
+ReadStream::Create(const PCacheReadStreamOrVoid& aReadStreamOrVoid)
 {
-  if (aReadStreamOrVoid.type() == CacheReadStreamOrVoid::Tvoid_t) {
+  if (aReadStreamOrVoid.type() == PCacheReadStreamOrVoid::Tvoid_t) {
     return nullptr;
   }
 
-  return Create(aReadStreamOrVoid.get_CacheReadStream());
+  return Create(aReadStreamOrVoid.get_PCacheReadStream());
 }
 
 // static
 already_AddRefed<ReadStream>
-ReadStream::Create(const CacheReadStream& aReadStream)
+ReadStream::Create(const PCacheReadStream& aReadStream)
 {
   // The parameter may or may not be for a Cache created stream.  The way we
   // tell is by looking at the stream control actor.  If the actor exists,
@@ -457,13 +457,13 @@ ReadStream::Create(PCacheStreamControlParent* aControl, const nsID& aId,
 }
 
 void
-ReadStream::Serialize(CacheReadStreamOrVoid* aReadStreamOut)
+ReadStream::Serialize(PCacheReadStreamOrVoid* aReadStreamOut)
 {
   mInner->Serialize(aReadStreamOut);
 }
 
 void
-ReadStream::Serialize(CacheReadStream* aReadStreamOut)
+ReadStream::Serialize(PCacheReadStream* aReadStreamOut)
 {
   mInner->Serialize(aReadStreamOut);
 }

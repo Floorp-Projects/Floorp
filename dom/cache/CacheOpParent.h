@@ -67,7 +67,7 @@ private:
 
   // utility methods
   already_AddRefed<nsIInputStream>
-  DeserializeCacheStream(const CacheReadStreamOrVoid& aStreamOrVoid);
+  DeserializeCacheStream(const PCacheReadStreamOrVoid& aStreamOrVoid);
 
   mozilla::ipc::PBackgroundParent* mIpcManager;
   const CacheId mCacheId;

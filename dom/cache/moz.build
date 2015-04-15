@@ -77,12 +77,12 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    'CacheTypes.ipdlh',
     'PCache.ipdl',
     'PCacheOp.ipdl',
     'PCachePushStream.ipdl',
     'PCacheStorage.ipdl',
     'PCacheStreamControl.ipdl',
+    'PCacheTypes.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

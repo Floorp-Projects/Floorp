@@ -3,13 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PBlob; // FIXME: bug 792908
 include protocol PCache;
 include protocol PCacheOp;
-include protocol PCacheStreamControl;
+include PCacheTypes;
 include protocol PFileDescriptorSet;
 
-include CacheTypes;
+include protocol PBlob; // FIXME: bug 792908
+include protocol PCacheStreamControl;
 
 namespace mozilla {
 namespace dom {

@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_cache_Manager_h
 #define mozilla_dom_cache_Manager_h
 
+#include "mozilla/dom/cache/PCacheStreamControlParent.h"
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "nsRefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -26,6 +26,9 @@ class CacheOpResult;
 class CacheRequestResponse;
 class Context;
 class ManagerId;
+class PCacheQueryParams;
+class PCacheRequest;
+class PCacheRequestOrVoid;
 struct SavedRequest;
 struct SavedResponse;
 class StreamList;

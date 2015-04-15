@@ -56,13 +56,13 @@ private:
 
   // Utility methods
   void
-  HandleResponse(const CacheResponseOrVoid& aResponseOrVoid);
+  HandleResponse(const PCacheResponseOrVoid& aResponseOrVoid);
 
   void
-  HandleResponseList(const nsTArray<CacheResponse>& aResponseList);
+  HandleResponseList(const nsTArray<PCacheResponse>& aResponseList);
 
   void
-  HandleRequestList(const nsTArray<CacheRequest>& aRequestList);
+  HandleRequestList(const nsTArray<PCacheRequest>& aRequestList);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   nsCOMPtr<nsISupports> mParent;
