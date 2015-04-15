@@ -28,6 +28,14 @@ static bool IsSafeForUntrustedContent(nsIAboutModule *aModule, nsIURI *aURI) {
 
   return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0;
 }
+
+static bool IsSafeToLinkForUntrustedContent(nsIAboutModule *aModule, nsIURI *aURI) {
+  uint32_t flags;
+  nsresult rv = aModule->GetURIFlags(aURI, &flags);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) && !(flags & nsIAboutModule::MAKE_UNLINKABLE);
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, nsIProtocolHandler)
@@ -82,7 +90,7 @@ nsAboutProtocolHandler::NewURI(const nsACString &aSpec,
     nsCOMPtr<nsIAboutModule> aboutMod;
     rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
     if (NS_SUCCEEDED(rv)) {
-        isSafe = IsSafeForUntrustedContent(aboutMod, url);
+        isSafe = IsSafeToLinkForUntrustedContent(aboutMod, url);
     }
 
     if (isSafe) {
