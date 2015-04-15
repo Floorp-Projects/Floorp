@@ -13,6 +13,7 @@
 #include "cairo.h"
 #include "gfxXlibSurface.h"
 #endif
+#include "mozilla/gfx/Logging.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -24,6 +25,9 @@ gfxSurfaceDrawable::gfxSurfaceDrawable(SourceSurface* aSurface,
  , mSourceSurface(aSurface)
  , mTransform(aTransform)
 {
+  if (!mSourceSurface) {
+    gfxWarning() << "Creating gfxSurfaceDrawable with null SourceSurface";
+  }
 }
 
 bool
@@ -61,6 +65,10 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
                          gfxFloat aOpacity,
                          const gfxMatrix& aTransform)
 {
+  if (!mSourceSurface) {
+    return true;
+  }
+
   DrawInternal(aContext, aFillRect, IntRect(), aRepeat, aFilter, aOpacity, aTransform);
   return true;
 }
@@ -124,8 +132,11 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const GraphicsFilter aFilter)
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), false, aFilter);
 
     RefPtr<SourceSurface> surface = dt->Snapshot();
-    nsRefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
-    return drawable.forget();
+    if (surface) {
+        nsRefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
+        return drawable.forget();
+    }
+    return nullptr;
 }
 
 bool
