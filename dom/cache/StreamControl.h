@@ -20,7 +20,7 @@ namespace ipc {
 namespace dom {
 namespace cache {
 
-class CacheReadStream;
+class PCacheReadStream;
 
 // Abstract class to help implement the stream control Child and Parent actors.
 // This provides an interface to partly help with serialization of IPC types,
@@ -30,14 +30,14 @@ class StreamControl
 public:
   // abstract interface that must be implemented by child class
   virtual void
-  SerializeControl(CacheReadStream* aReadStreamOut) = 0;
+  SerializeControl(PCacheReadStream* aReadStreamOut) = 0;
 
   virtual void
-  SerializeFds(CacheReadStream* aReadStreamOut,
+  SerializeFds(PCacheReadStream* aReadStreamOut,
                const nsTArray<mozilla::ipc::FileDescriptor>& aFds) = 0;
 
   virtual void
-  DeserializeFds(const CacheReadStream& aReadStream,
+  DeserializeFds(const PCacheReadStream& aReadStream,
                  nsTArray<mozilla::ipc::FileDescriptor>& aFdsOut) = 0;
 
   // inherited implementation of the ReadStream::Controllable list

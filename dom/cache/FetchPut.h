@@ -10,7 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/cache/Manager.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "nsRefPtr.h"
@@ -44,7 +44,7 @@ public:
 
   static nsresult
   Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
-         const nsTArray<CacheRequest>& aRequests,
+         const nsTArray<PCacheRequest>& aRequests,
          const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams,
          FetchPut** aFetchPutOut);
 
@@ -55,10 +55,10 @@ private:
   class FetchObserver;
   struct State
   {
-    CacheRequest mCacheRequest;
+    PCacheRequest mPCacheRequest;
     nsCOMPtr<nsIInputStream> mRequestStream;
     nsRefPtr<FetchObserver> mFetchObserver;
-    CacheResponse mCacheResponse;
+    PCacheResponse mPCacheResponse;
     nsCOMPtr<nsIInputStream> mResponseStream;
 
     nsRefPtr<Request> mRequest;
@@ -66,7 +66,7 @@ private:
   };
 
   FetchPut(Listener* aListener, Manager* aManager, CacheId aCacheId,
-           const nsTArray<CacheRequest>& aRequests,
+           const nsTArray<PCacheRequest>& aRequests,
            const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams);
   ~FetchPut();
 
@@ -79,7 +79,7 @@ private:
   void MaybeCompleteOnMainThread();
 
   void DoPutOnWorkerThread();
-  static bool MatchInPutList(const CacheRequest& aRequest,
+  static bool MatchInPutList(const PCacheRequest& aRequest,
                              const nsTArray<CacheRequestResponse>& aPutList);
 
   virtual void
