@@ -100,7 +100,12 @@ public:
   BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface();
   BluetoothA2dpInterface* GetBluetoothA2dpInterface();
   BluetoothAvrcpInterface* GetBluetoothAvrcpInterface();
+
+#ifdef MOZ_B2G_BT_API_V2
   BluetoothGattInterface* GetBluetoothGattInterface();
+#else
+// TODO: Support GATT
+#endif
 
 protected:
   BluetoothHALInterface(const bt_interface_t* aInterface);
