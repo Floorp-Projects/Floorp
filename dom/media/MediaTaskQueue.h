@@ -41,11 +41,11 @@ public:
 
   explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool, bool aRequireTailDispatch = false);
 
-  nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable)
+  void Dispatch(TemporaryRef<nsIRunnable> aRunnable,
+                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess)
   {
-    MonitorAutoLock mon(mQueueMonitor);
     nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
-    return DispatchLocked(r.forget(), AbortIfFlushing);
+    return Dispatch(r.forget(), aFailureHandling);
   }
 
   // Returns a TaskDispatcher that will dispatch its tasks when the currently-
@@ -91,7 +91,7 @@ public:
 
   // DEPRECATED! Do not us, if a flush happens at the same time, this function
   // can hang and block forever!
-  nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
+  void SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
