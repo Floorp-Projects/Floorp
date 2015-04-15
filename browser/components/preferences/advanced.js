@@ -246,7 +246,7 @@ var gAdvancedPane = {
     document.getElementById("submitTelemetryBox").disabled = disabled;
     if (disabled) {
       // If we disable FHR, untick the telemetry checkbox.
-      document.getElementById("submitTelemetryBox").checked = false;
+      Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
     }
     document.getElementById("telemetryDataDesc").disabled = disabled;
 #endif
