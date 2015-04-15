@@ -43,7 +43,7 @@ public:
                                   already_AddRefed<nsIRunnable> aRunnable) = 0;
   virtual void AddTask(AbstractThread* aThread,
                        already_AddRefed<nsIRunnable> aRunnable,
-                       bool aAssertDispatchSuccess = true) = 0;
+                       AbstractThread::DispatchFailureHandling aFailureHandling = AbstractThread::AssertDispatchSuccess) = 0;
 
 #ifdef DEBUG
   void AssertIsTailDispatcherIfRequired();
@@ -65,12 +65,10 @@ public:
     for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
       UniquePtr<PerThreadTaskGroup> group(Move(mTaskGroups[i]));
       nsRefPtr<AbstractThread> thread = group->mThread;
-      bool assertDispatchSuccess = group->mAssertDispatchSuccess;
+
+      AbstractThread::DispatchFailureHandling failureHandling = group->mFailureHandling;
       nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(Move(group));
-      nsresult rv = thread->Dispatch(r.forget());
-      MOZ_DIAGNOSTIC_ASSERT(!assertDispatchSuccess || NS_SUCCEEDED(rv));
-      unused << assertDispatchSuccess;
-      unused << rv;
+      thread->Dispatch(r.forget(), failureHandling);
     }
   }
 
@@ -82,14 +80,16 @@ public:
 
   void AddTask(AbstractThread* aThread,
                already_AddRefed<nsIRunnable> aRunnable,
-               bool aAssertDispatchSuccess) override
+               AbstractThread::DispatchFailureHandling aFailureHandling) override
   {
     PerThreadTaskGroup& group = EnsureTaskGroup(aThread);
     group.mRegularTasks.AppendElement(aRunnable);
 
     // The task group needs to assert dispatch success if any of the runnables
     // it's dispatching want to assert it.
-    group.mAssertDispatchSuccess = group.mAssertDispatchSuccess || aAssertDispatchSuccess;
+    if (aFailureHandling == AbstractThread::AssertDispatchSuccess) {
+      group.mFailureHandling = AbstractThread::AssertDispatchSuccess;
+    }
   }
 
 private:
@@ -98,7 +98,7 @@ private:
   {
   public:
     explicit PerThreadTaskGroup(AbstractThread* aThread)
-      : mThread(aThread), mAssertDispatchSuccess(false)
+      : mThread(aThread), mFailureHandling(AbstractThread::DontAssertDispatchSuccess)
     {
       MOZ_COUNT_CTOR(PerThreadTaskGroup);
     }
@@ -108,7 +108,7 @@ private:
     nsRefPtr<AbstractThread> mThread;
     nsTArray<nsCOMPtr<nsIRunnable>> mStateChangeTasks;
     nsTArray<nsCOMPtr<nsIRunnable>> mRegularTasks;
-    bool mAssertDispatchSuccess;
+    AbstractThread::DispatchFailureHandling mFailureHandling;
   };
 
   class TaskGroupRunnable : public nsRunnable
