@@ -16,7 +16,7 @@
 #include "mozilla/dom/cache/DBSchema.h"
 #include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/ManagerId.h"
-#include "mozilla/dom/cache/CacheTypes.h"
+#include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/StreamList.h"
 #include "mozilla/dom/cache/Types.h"
@@ -826,12 +826,12 @@ private:
 
   struct Entry
   {
-    CacheRequest mRequest;
+    PCacheRequest mRequest;
     nsCOMPtr<nsIInputStream> mRequestStream;
     nsID mRequestBodyId;
     nsCOMPtr<nsISupports> mRequestCopyContext;
 
-    CacheResponse mResponse;
+    PCacheResponse mResponse;
     nsCOMPtr<nsIInputStream> mResponseStream;
     nsID mResponseBodyId;
     nsCOMPtr<nsISupports> mResponseCopyContext;
