@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=422132
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -25,21 +26,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=422132
 /** Test for Bug 422132 **/
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 SimpleTest.waitForFocus(function() {
   SpecialPowers.pushPrefEnv({
     "set":[["general.smoothScroll", false],
            ["mousewheel.min_line_scroll_amount", 1],
+           ["mousewheel.system_scroll_override_on_root_content.enabled", false],
            ["mousewheel.transaction.timeout", 100000]]}, runTests)}, window);
-
-function hitEventLoop(aFunc, aTimes)
-{
-  if (--aTimes) {
-    setTimeout(hitEventLoop, 0, aFunc, aTimes);
-  } else {
-    setTimeout(aFunc, 20);
-  }
-}
 
 function runTests()
 {
@@ -50,6 +42,10 @@ function runTests()
 
   var tests = [
     {
+      prepare: function() {
+        scrollLeft = target.scrollLeft;
+        scrollTop = target.scrollTop;
+      },
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PIXEL,
         deltaX: 0.5,
@@ -57,10 +53,6 @@ function runTests()
         lineOrPageDeltaX: 0,
         lineOrPageDeltaY: 0
       },
-      check: function() {
-        is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5px delta value");
-        is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5px delta value");
-      }
     }, {
       event: {
         deltaMode: WheelEvent.DOM_DELTA_PIXEL,
@@ -70,12 +62,16 @@ function runTests()
         lineOrPageDeltaY: 0
       },
       check: function() {
-        ok(target.scrollLeft > scrollLeft,
+        is(target.scrollLeft - scrollLeft, 1,
            "not scrolled to right by 0.5px delta value with pending 0.5px delta");
-        ok(target.scrollTop > scrollTop,
+        is(target.scrollTop - scrollTop, 1,
            "not scrolled to bottom by 0.5px delta value with pending 0.5px delta");
       },
     }, {
+      prepare: function() {
+        scrollLeft = target.scrollLeft;
+        scrollTop = target.scrollTop;
+      },
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
         deltaX: 0.5,
@@ -83,10 +79,6 @@ function runTests()
         lineOrPageDeltaX: 0,
         lineOrPageDeltaY: 0
       },
-      check: function() {
-        is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5 line delta value");
-        is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5 line delta value");
-      }
     }, {
       event: {
         deltaMode: WheelEvent.DOM_DELTA_LINE,
@@ -96,9 +88,9 @@ function runTests()
         lineOrPageDeltaY: 1
       },
       check: function() {
-        ok(target.scrollLeft > scrollLeft,
+        is(target.scrollLeft - scrollLeft, 1,
            "not scrolled to right by 0.5 line delta value with pending 0.5 line delta");
-        ok(target.scrollTop > scrollTop,
+        is(target.scrollTop - scrollTop, 1,
            "not scrolled to bottom by 0.5 line delta value with pending 0.5 line delta");
       }
     }
@@ -106,19 +98,21 @@ function runTests()
 
   var nextTest = function() {
     var test = tests.shift();
-    synthesizeWheel(target, 10, 10, test.event);
-    hitEventLoop(function() {
-      test.check();
+    if (test.prepare) {
+      test.prepare();
+    }
+
+    sendWheelAndPaint(target, 10, 10, test.event, function() {
+      if (test.check) {
+        test.check();
+      }
       if (tests.length == 0) {
         SimpleTest.finish();
         return;
       }
 
-      scrollLeft = target.scrollLeft;
-      scrollTop = target.scrollTop;
-
       setTimeout(nextTest, 0);
-    }, 20);
+    });
   }
 
   nextTest();
