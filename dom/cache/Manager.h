@@ -133,8 +133,8 @@ public:
 
   // Marks the Manager "invalid".  Once the Context completes no new operations
   // will be permitted with this Manager.  New actors will get a new Manager.
-  void Invalidate();
-  bool IsValid() const;
+  void NoteClosing();
+  bool IsClosing() const;
 
   // If an actor represents a long term reference to a cache or body stream,
   // then they must call AddRefCacheId() or AddRefBodyId().  This will
@@ -185,6 +185,7 @@ private:
 
   Manager(ManagerId* aManagerId, nsIThread* aIOThread);
   ~Manager();
+  void Init();
   void Shutdown();
   already_AddRefed<Context> CurrentContext();
 
@@ -248,7 +249,7 @@ private:
   nsTArray<StreamList*> mStreamLists;
 
   bool mShuttingDown;
-  bool mValid;
+  bool mClosing;
 
   struct CacheIdRefCounter
   {
