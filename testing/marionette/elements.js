@@ -1,7 +1,10 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+let {utils: Cu} = Components;
+
+Cu.import("chrome://marionette/content/error.js");
 
 /**
  * The ElementManager manages DOM references and interactions with elements.
@@ -28,8 +31,8 @@ this.EXPORTED_SYMBOLS = [
 
 const DOCUMENT_POSITION_DISCONNECTED = 1;
 
-let uuidGen = Components.classes["@mozilla.org/uuid-generator;1"]
-             .getService(Components.interfaces.nsIUUIDGenerator);
+const uuidGen = Components.classes["@mozilla.org/uuid-generator;1"]
+    .getService(Components.interfaces.nsIUUIDGenerator);
 
 this.CLASS_NAME = "class name";
 this.SELECTOR = "css selector";
@@ -41,12 +44,6 @@ this.TAG = "tag name";
 this.XPATH = "xpath";
 this.ANON= "anon";
 this.ANON_ATTRIBUTE = "anon attribute";
-
-function ElementException(msg, num, stack) {
-  this.message = msg;
-  this.code = num;
-  this.stack = stack;
-}
 
 this.Accessibility = function Accessibility() {
   // A flag indicating whether the accessibility issue should be logged or cause
@@ -185,7 +182,7 @@ Accessibility.prototype = {
       return;
     }
     if (this.strict) {
-      throw new ElementException(message, 56, null);
+      throw new ElementNotAccessibleError(message);
     }
     dump(Date.now() + " Marionette: " + message);
   }
@@ -224,19 +221,17 @@ ElementManager.prototype = {
       let foundEl = null;
       try {
         foundEl = this.seenItems[i].get();
-      }
-      catch(e) {}
+      } catch (e) {}
       if (foundEl) {
         if (XPCNativeWrapper(foundEl) == XPCNativeWrapper(element)) {
           return i;
         }
-      }
-      else {
-        //cleanup reference to GC'd element
+      } else {
+        // cleanup reference to GC'd element
         delete this.seenItems[i];
       }
     }
-    var id = uuidGen.generateUUID().toString();
+    let id = uuidGen.generateUUID().toString();
     this.seenItems[id] = Components.utils.getWeakReference(element);
     return id;
   },
@@ -255,7 +250,7 @@ ElementManager.prototype = {
   getKnownElement: function EM_getKnownElement(id, win) {
     let el = this.seenItems[id];
     if (!el) {
-      throw new ElementException("Element has not been seen before. Id given was " + id, 17, null);
+      throw new JavaScriptError("Element has not been seen before. Id given was " + id);
     }
     try {
       el = el.get();
@@ -270,8 +265,9 @@ ElementManager.prototype = {
         !(XPCNativeWrapper(el).ownerDocument == wrappedWin.document) ||
         (XPCNativeWrapper(el).compareDocumentPosition(wrappedWin.document.documentElement) &
          DOCUMENT_POSITION_DISCONNECTED)) {
-      throw new ElementException("The element reference is stale. Either the element " +
-                                 "is no longer attached to the DOM or the page has been refreshed.", 10, null);
+      throw new StaleElementReferenceError(
+          "The element reference is stale. Either the element " +
+          "is no longer attached to the DOM or the page has been refreshed.");
     }
     return el;
   },
@@ -369,8 +365,9 @@ ElementManager.prototype = {
                      args.hasOwnProperty(this.w3cElementKey))) {
           let elementUniqueIdentifier = args[this.w3cElementKey] ? args[this.w3cElementKey] : args[this.elementKey];
           converted = this.getKnownElement(elementUniqueIdentifier,  win);
-          if (converted == null)
-            throw new ElementException("Unknown element: " + elementUniqueIdentifier, 500, null);
+          if (converted == null) {
+            throw new WebDriverError(`Unknown element: ${elementUniqueIdentifier}`);
+          }
         }
         else {
           converted = {};
@@ -443,7 +440,7 @@ ElementManager.prototype = {
     let startNode = (values.element != undefined) ?
                     this.getKnownElement(values.element, win) : win.document;
     if (this.elementStrategies.indexOf(values.using) < 0) {
-      throw new ElementException("No such strategy.", 32, null);
+      throw new InvalidSelectorError(`No such strategy: ${values.using}`);
     }
     let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
                       this.findElement(values.using, values.value, win.document, startNode);
@@ -461,7 +458,7 @@ ElementManager.prototype = {
           } else if (values.using == ANON_ATTRIBUTE) {
             message = "Unable to locate anonymous element: " + JSON.stringify(values.value);
           }
-          on_error({message: message, code: 7}, command_id);
+          on_error(new NoSuchElementError(message), command_id);
         }
       } else {
         values.time = startTime;
@@ -594,7 +591,7 @@ ElementManager.prototype = {
         element = rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
         break;
       default:
-        throw new ElementException("No such strategy", 500, null);
+        throw new WebDriverError("No such strategy");
     }
     return element;
   },
@@ -661,7 +658,7 @@ ElementManager.prototype = {
         }
         break;
       default:
-        throw new ElementException("No such strategy", 500, null);
+        throw new WebDriverError("No such strategy");
     }
     return elements;
   },
