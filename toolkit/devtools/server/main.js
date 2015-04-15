@@ -809,15 +809,13 @@ var DebuggerServer = {
    *        The debugger server connection to use.
    * @param nsIDOMElement aFrame
    *        The browser element that holds the child process.
-   * @param function [aOnDestroy]
-   *        Optional function to invoke when the child process closes
-   *        or the connection shuts down. (Need to forget about the
-   *        related TabActor)
+   * @param function [aOnDisconnect]
+   *        Optional function to invoke when the child is disconnected.
    * @return object
    *         A promise object that is resolved once the connection is
    *         established.
    */
-  connectToChild: function(aConnection, aFrame, aOnDestroy) {
+  connectToChild: function(aConnection, aFrame, aOnDisconnect) {
     let deferred = defer();
 
     let mm = aFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader
@@ -826,6 +824,7 @@ var DebuggerServer = {
 
     let actor, childTransport;
     let prefix = aConnection.allocID("child");
+    let childID = null;
     let netMonitor = null;
 
     // provides hook to actor modules that need to exchange messages
@@ -842,7 +841,7 @@ var DebuggerServer = {
           return false;
         }
 
-        m[setupParent]({ mm: mm, prefix: prefix });
+        m[setupParent]({ mm: mm, childID: childID });
 
         return true;
       } catch(e) {
@@ -856,10 +855,9 @@ var DebuggerServer = {
     mm.addMessageListener("debug:setup-in-parent", onSetupInParent);
 
     let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
-      if (msg.json.prefix != prefix) {
-        return;
-      }
       mm.removeMessageListener("debug:actor", onActorCreated);
+
+      childID = msg.json.childID;
 
       // Pipe Debugger message from/to parent/child via the message manager
       childTransport = new ChildDebuggerTransport(mm, prefix);
@@ -884,64 +882,69 @@ var DebuggerServer = {
     }).bind(this);
     mm.addMessageListener("debug:actor", onActorCreated);
 
-    let destroy = DevToolsUtils.makeInfallible(function () {
-      // provides hook to actor modules that need to exchange messages
-      // between e10s parent and child processes
-      DebuggerServer.emit("disconnected-from-child:" + prefix, { mm: mm, prefix: prefix });
+    let onMessageManagerClose = DevToolsUtils.makeInfallible(function (subject, topic, data) {
+      if (subject == mm) {
+        Services.obs.removeObserver(onMessageManagerClose, topic);
 
+        // provides hook to actor modules that need to exchange messages
+        // between e10s parent and child processes
+        this.emit("disconnected-from-child:" + childID, { mm: mm, childID: childID });
+
+        mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
+
+        if (childTransport) {
+          // If we have a child transport, the actor has already
+          // been created. We need to stop using this message manager.
+          childTransport.close();
+          childTransport = null;
+          aConnection.cancelForwarding(prefix);
+
+          // ... and notify the child process to clean the tab actors.
+          mm.sendAsyncMessage("debug:disconnect", { childID: childID });
+        } else {
+          // Otherwise, the app has been closed before the actor
+          // had a chance to be created, so we are not able to create
+          // the actor.
+          deferred.resolve(null);
+        }
+        if (actor) {
+          // The ContentActor within the child process doesn't necessary
+          // have to time to uninitialize itself when the app is closed/killed.
+          // So ensure telling the client that the related actor is detached.
+          aConnection.send({ from: actor.actor, type: "tabDetached" });
+          actor = null;
+        }
+
+        if (netMonitor) {
+          netMonitor.destroy();
+          netMonitor = null;
+        }
+
+        if (aOnDisconnect) {
+          aOnDisconnect(mm);
+        }
+      }
+    }).bind(this);
+    Services.obs.addObserver(onMessageManagerClose,
+                             "message-manager-close", false);
+
+    events.once(aConnection, "closed", () => {
       if (childTransport) {
-        // If we have a child transport, the actor has already
-        // been created. We need to stop using this message manager.
+        // When the client disconnects, we have to unplug the dedicated
+        // ChildDebuggerTransport...
         childTransport.close();
         childTransport = null;
         aConnection.cancelForwarding(prefix);
 
         // ... and notify the child process to clean the tab actors.
-        mm.sendAsyncMessage("debug:disconnect", { prefix: prefix });
-      } else {
-        // Otherwise, the app has been closed before the actor
-        // had a chance to be created, so we are not able to create
-        // the actor.
-        deferred.resolve(null);
-      }
-      if (actor) {
-        // The ContentActor within the child process doesn't necessary
-        // have time to uninitialize itself when the app is closed/killed.
-        // So ensure telling the client that the related actor is detached.
-        aConnection.send({ from: actor.actor, type: "tabDetached" });
-        actor = null;
-      }
+        mm.sendAsyncMessage("debug:disconnect", { childID: childID });
 
-      if (netMonitor) {
-        netMonitor.destroy();
-        netMonitor = null;
+        if (netMonitor) {
+          netMonitor.destroy();
+          netMonitor = null;
+        }
       }
-
-      if (aOnDestroy) {
-        aOnDestroy(mm);
-      }
-
-      // Cleanup all listeners
-      Services.obs.removeObserver(onMessageManagerClose, "message-manager-close");
-      mm.removeMessageListener("debug:setup-in-parent", onSetupInParent);
-      if (!actor) {
-        mm.removeMessageListener("debug:actor", onActorCreated);
-      }
-      events.off(aConnection, "closed", destroy);
     });
-
-    // Listen for app process exit
-    let onMessageManagerClose = function (subject, topic, data) {
-      if (subject == mm) {
-        destroy();
-      }
-    };
-    Services.obs.addObserver(onMessageManagerClose,
-                             "message-manager-close", false);
-
-    // Listen for connection close to cleanup things
-    // when user unplug the device or we lose the connection somehow.
-    events.on(aConnection, "closed", destroy);
 
     mm.sendAsyncMessage("debug:connect", { prefix: prefix });
 
