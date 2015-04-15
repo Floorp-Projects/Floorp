@@ -15,7 +15,11 @@ const TEST_URL = TEST_URL_ROOT + "doc_inspector_search-suggestions.html";
 const TEST_DATA = [
   {
     key: "d",
-    suggestions: [{label: "div", count: 4}]
+    suggestions: [
+      {label: "div", count: 4},
+      {label: "#d1", count: 1},
+      {label: "#d2", count: 1}
+    ]
   },
   {
     key: "i",
@@ -67,7 +71,11 @@ const TEST_DATA = [
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "div", count: 4}]
+    suggestions: [
+      {label: "div", count: 4},
+      {label: "#d1", count: 1},
+      {label: "#d2", count: 1}
+    ]
   },
   {
     key: "VK_BACK_SPACE",
@@ -135,16 +143,17 @@ add_task(function* () {
     info("Waiting for search query to complete");
     yield inspector.searchSuggestions._lastQuery;
 
-    info("Query completed. Performing checks for input '" + searchBox.value + "'");
+    info("Query completed. Performing checks for input '" + searchBox.value +
+      "' - key pressed: " + key);
     let actualSuggestions = popup.getItems().reverse();
 
     is(popup.isOpen ? actualSuggestions.length: 0, suggestions.length,
        "There are expected number of suggestions.");
 
     for (let i = 0; i < suggestions.length; i++) {
-      is(suggestions[i].label, actualSuggestions[i].label,
+      is(actualSuggestions[i].label, suggestions[i].label,
          "The suggestion at " + i + "th index is correct.");
-      is(suggestions[i].count || 1, actualSuggestions[i].count,
+      is(actualSuggestions[i].count, suggestions[i].count || 1,
          "The count for suggestion at " + i + "th index is correct.");
     }
   }
@@ -152,6 +161,6 @@ add_task(function* () {
 
 function formatSuggestions(suggestions) {
   return "[" + suggestions
-                .map(s => "'" + s.label + "' (" + s.count || 1 + ")")
+                .map(s => "'" + s.label + "' (" + (s.count || 1) + ")")
                 .join(", ") + "]";
 }
