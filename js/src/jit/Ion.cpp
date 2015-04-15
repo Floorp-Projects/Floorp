@@ -1411,7 +1411,7 @@ OptimizeMIR(MIRGenerator* mir)
 
     if (mir->optimizationInfo().eaaEnabled()) {
         AutoTraceLog log(logger, TraceLogger_EffectiveAddressAnalysis);
-        EffectiveAddressAnalysis eaa(mir, graph);
+        EffectiveAddressAnalysis eaa(graph);
         if (!eaa.analyze())
             return false;
         IonSpewPass("Effective Address Analysis");
