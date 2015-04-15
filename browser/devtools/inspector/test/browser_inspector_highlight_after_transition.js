@@ -4,14 +4,17 @@
 
 "use strict";
 
-const TEST_URI = TEST_URL_ROOT + "doc_inspector_highlight_after_transition.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/inspector/" +
+                 "test/browser_inspector_highlight_after_transition.html";
 
 // Test that the nodeinfobar is never displayed above the top or below the
 // bottom of the content area.
 add_task(function*() {
   info("Loading the test document and opening the inspector");
 
-  let {inspector} = yield openInspectorForURL(TEST_URI);
+  yield addTab(TEST_URI);
+
+  let {inspector} = yield openInspector();
 
   yield checkDivHeight(inspector);
 });

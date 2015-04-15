@@ -8,7 +8,8 @@
 // those nodes
 add_task(function*() {
   info("Loading the test document and opening the inspector");
-  let {toolbox, inspector} = yield openInspectorForURL("data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
+  yield addTab("data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
+  let {toolbox, inspector} = yield openInspector();
   info("Selecting the test node");
   yield selectNode("span", inspector);
   let bcButtons = inspector.breadcrumbs["container"];
