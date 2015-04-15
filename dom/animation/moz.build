@@ -8,11 +8,11 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
-    'Animation.h',
-    'AnimationEffect.h',
+    'AnimationEffectReadonly.h',
     'AnimationPlayer.h',
     'AnimationTimeline.h',
     'DocumentTimeline.h',
+    'KeyframeEffect.h',
 ]
 
 EXPORTS.mozilla += [
@@ -21,11 +21,11 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
-    'Animation.cpp',
-    'AnimationEffect.cpp',
+    'AnimationEffectReadonly.cpp',
     'AnimationPlayer.cpp',
     'AnimationTimeline.cpp',
     'DocumentTimeline.cpp',
+    'KeyframeEffect.cpp',
     'PendingPlayerTracker.cpp',
 ]
 

@@ -412,6 +412,9 @@ FontFaceSet::DestroyUserFontSet()
   mNonRuleFaces.Clear();
   mUnavailableFaces.Clear();
   mReady = nullptr;
+  if (mUserFontSet) {
+    mUserFontSet->mFontFaceSet = nullptr;
+  }
   mUserFontSet = nullptr;
 }
 

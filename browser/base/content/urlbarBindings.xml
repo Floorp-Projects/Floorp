@@ -168,7 +168,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               }
             }
           } else {
-            let originalUrl = ReaderParent.parseReaderUrl(aValue);
+            let originalUrl = ReaderMode.getOriginalUrl(aValue);
             if (originalUrl) {
               returnValue = originalUrl;
             }

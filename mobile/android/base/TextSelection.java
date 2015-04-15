@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko;
 
+import android.content.res.Resources;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.BitmapUtils.BitmapLoader;
 import org.mozilla.gecko.gfx.Layer;
@@ -16,6 +17,7 @@ import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.ActionModeCompat.Callback;
+import org.mozilla.gecko.AppConstants.Versions;
 
 import android.content.Context;
 import android.app.Activity;
@@ -279,11 +281,23 @@ class TextSelection extends Layer implements GeckoEventListener {
                     final int actionEnum = obj.optBoolean("showAsAction") ? GeckoMenuItem.SHOW_AS_ACTION_ALWAYS : GeckoMenuItem.SHOW_AS_ACTION_NEVER;
                     menuitem.setShowAsAction(actionEnum, R.attr.menuItemActionModeStyle);
 
-                    BitmapUtils.getDrawable(anchorHandle.getContext(), obj.optString("icon"), new BitmapLoader() {
+                    final String iconString = obj.optString("icon");
+                    BitmapUtils.getDrawable(anchorHandle.getContext(), iconString, new BitmapLoader() {
                         @Override
                         public void onBitmapFound(Drawable d) {
                             if (d != null) {
                                 menuitem.setIcon(d);
+
+                                // Dynamically add padding to align the share icon on GB devices.
+                                // To be removed in bug 1122752.
+                                if (Versions.preHC && "drawable://ic_menu_share".equals(iconString)) {
+                                    final View view = menuitem.getActionView();
+
+                                    final Resources res = view.getContext().getResources();
+                                    final int padding = res.getDimensionPixelSize(R.dimen.ab_share_padding);
+
+                                    view.setPadding(padding, padding, padding, padding);
+                                }
                             }
                         }
                     });

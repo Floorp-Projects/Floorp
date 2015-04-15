@@ -4,13 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/web-animations/#the-animationeffect-interface
+ * http://w3c.github.io/web-animations/#animationeffectreadonly
  *
- * Copyright © 2014 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
+ * Copyright © 2015 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
-interface AnimationEffect {
-  readonly attribute DOMString name;
+interface AnimationEffectReadonly {
+  // Not yet implemented:
+  // readonly attribute AnimationEffectTimingReadonly timing;
+  // readonly attribute ComputedTimingProperties      computedTiming;
 };

@@ -372,9 +372,10 @@ FormAutoCompleteChild.prototype = {
         this.stopAutoCompleteSearch();
       }
 
-      let rect = BrowserUtils.getElementBoundingScreenRect(aField);
-
       let window = aField.ownerDocument.defaultView;
+
+      let rect = BrowserUtils.getElementBoundingScreenRect(aField);
+      let direction = window.getComputedStyle(aField).direction;
       let topLevelDocshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIDocShell)
                                    .sameTypeRootTreeItem
@@ -389,7 +390,8 @@ FormAutoCompleteChild.prototype = {
         left: rect.left,
         top: rect.top,
         width: rect.width,
-        height: rect.height
+        height: rect.height,
+        direction: direction,
       });
 
       let search = this._pendingSearch = {};
