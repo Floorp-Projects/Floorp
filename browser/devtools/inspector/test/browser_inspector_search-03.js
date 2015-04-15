@@ -15,7 +15,11 @@ const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
 let TEST_DATA = [
   {
     key: "d",
-    suggestions: [{label: "div", count: 2}]
+    suggestions: [
+      {label: "div", count: 2},
+      {label: "#d1", count: 1},
+      {label: "#d2", count: 1}
+    ]
   },
   {
     key: "i",
@@ -50,7 +54,11 @@ let TEST_DATA = [
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "div", count: 2}]
+    suggestions: [
+      {label: "div", count: 2},
+      {label: "#d1", count: 1},
+      {label: "#d2", count: 1}
+    ]
   },
   {
     key: "VK_BACK_SPACE",
@@ -179,9 +187,9 @@ add_task(function* () {
        "There are expected number of suggestions.");
 
     for (let i = 0; i < suggestions.length; i++) {
-      is(suggestions[i].label, actualSuggestions[i].label,
+      is(actualSuggestions[i].label, suggestions[i].label,
          "The suggestion at " + i + "th index is correct.");
-      is(suggestions[i].count || 1, actualSuggestions[i].count,
+      is(actualSuggestions[i].count, suggestions[i].count || 1,
          "The count for suggestion at " + i + "th index is correct.");
     }
   }
@@ -189,6 +197,6 @@ add_task(function* () {
 
 function formatSuggestions(suggestions) {
   return "[" + suggestions
-                .map(s => "'" + s.label + "' (" + s.count || 1 + ")")
+                .map(s => "'" + s.label + "' (" + (s.count || 1) + ")")
                 .join(", ") + "]";
 }

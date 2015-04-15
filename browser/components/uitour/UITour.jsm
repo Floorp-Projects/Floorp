@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
   "resource://gre/modules/Metrics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
+  "resource:///modules/ReaderParent.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
@@ -34,6 +36,7 @@ const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
   "endUrlbarCapture",
+  "forceShowReaderIcon",
   "getConfiguration",
   "getTreatmentTag",
   "hideHighlight",
@@ -675,6 +678,11 @@ this.UITour = {
       case "ping": {
         if (typeof data.callbackID == "string")
           this.sendPageCallback(messageManager, data.callbackID);
+        break;
+      }
+
+      case "forceShowReaderIcon": {
+        ReaderParent.forceShowReaderIcon(browser);
         break;
       }
     }

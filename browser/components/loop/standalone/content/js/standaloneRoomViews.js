@@ -199,8 +199,43 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
+  var StandaloneRoomContextItem = React.createClass({displayName: "StandaloneRoomContextItem",
+    propTypes: {
+      receivingScreenShare: React.PropTypes.bool,
+      roomContextUrl: React.PropTypes.object
+    },
+
+    render: function() {
+      if (!this.props.roomContextUrl ||
+          !this.props.roomContextUrl.location) {
+        return null;
+      }
+
+      var location = this.props.roomContextUrl.location;
+
+      var cx = React.addons.classSet;
+
+      var classes = cx({
+        "standalone-context-url": true,
+        "screen-share-active": this.props.receivingScreenShare
+      });
+
+      return (
+        React.createElement("div", {className: classes}, 
+            React.createElement("img", {src: this.props.roomContextUrl.thumbnail}), 
+          React.createElement("div", {className: "standalone-context-url-description-wrapper"}, 
+            this.props.roomContextUrl.description, 
+            React.createElement("br", null), React.createElement("a", {href: location}, location)
+          )
+        )
+      );
+    }
+  });
+
   var StandaloneRoomContextView = React.createClass({displayName: "StandaloneRoomContextView",
     propTypes: {
+      receivingScreenShare: React.PropTypes.bool.isRequired,
+      roomContextUrls: React.PropTypes.array,
       roomName: React.PropTypes.string,
       roomInfoFailure: React.PropTypes.string
     },
@@ -216,8 +251,17 @@ loop.standaloneRoomViews = (function(mozL10n) {
         ));
       }
 
+      // We only support one item in the context Urls array for now.
+      var roomContextUrl = (this.props.roomContextUrls &&
+                            this.props.roomContextUrls.length > 0) ?
+                            this.props.roomContextUrls[0] : null;
       return (
-        React.createElement("h2", {className: "room-name"}, this.props.roomName)
+        React.createElement("div", {className: "standalone-room-info"}, 
+          React.createElement("h2", {className: "room-name"}, this.props.roomName), 
+          React.createElement(StandaloneRoomContextItem, {
+            receivingScreenShare: this.props.receivingScreenShare, 
+            roomContextUrl: roomContextUrl})
+        )
       );
     }
   });
@@ -482,8 +526,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                   roomUsed: this.state.used}), 
           React.createElement("div", {className: "video-layout-wrapper"}, 
             React.createElement("div", {className: "conversation room-conversation"}, 
-              React.createElement(StandaloneRoomContextView, {roomName: this.state.roomName, 
-                                         roomInfoFailure: this.state.roomInfoFailure}), 
+              React.createElement(StandaloneRoomContextView, {
+                receivingScreenShare: this.state.receivingScreenShare, 
+                roomContextUrls: this.state.roomContextUrls, 
+                roomName: this.state.roomName, 
+                roomInfoFailure: this.state.roomInfoFailure}), 
               React.createElement("div", {className: "media nested"}, 
                 React.createElement("span", {className: "self-view-hidden-message"}, 
                   mozL10n.get("self_view_hidden_message")

@@ -6,7 +6,7 @@
 
 const {InspectorFront} = require("devtools/server/actors/inspector");
 const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
-const TEST_URI = "data:text/html;charset=UTF-8,<html><body><b1></b1><b2></b2><body></html>";
+const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar><div id='baz'></div><body></html>";
 
 add_task(function*() {
   yield promiseTab(TEST_URI);
@@ -25,6 +25,8 @@ function* runTests() {
   });
   yield testMouse(ed, edWin);
   yield testKeyboard(ed, edWin);
+  yield testKeyboardCycle(ed, edWin);
+  yield testKeyboardCycleForPrefixedString(ed, edWin);
   teardown(ed, win);
 }
 
@@ -42,7 +44,47 @@ function* testKeyboard(ed, win) {
   yield popupOpened;
 
   EventUtils.synthesizeKey("VK_RETURN", { }, win);
-  is (ed.getText(), "b1", "Editor text has been updated");
+  is (ed.getText(), "bar", "Editor text has been updated");
+}
+
+function* testKeyboardCycle(ed, win) {
+  ed.focus();
+  ed.setText("b");
+  ed.setCursor({line: 1, ch: 1});
+
+  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+
+  let autocompleteKey = Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+  EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
+
+  info ("Waiting for popup to be opened");
+  yield popupOpened;
+
+  EventUtils.synthesizeKey("VK_DOWN", { }, win);
+  is (ed.getText(), "bar", "Editor text has been updated");
+
+  EventUtils.synthesizeKey("VK_DOWN", { }, win);
+  is (ed.getText(), "body", "Editor text has been updated");
+
+  EventUtils.synthesizeKey("VK_DOWN", { }, win);
+  is (ed.getText(), "#baz", "Editor text has been updated");
+}
+
+function* testKeyboardCycleForPrefixedString(ed, win) {
+  ed.focus();
+  ed.setText("#b");
+  ed.setCursor({line: 1, ch: 2});
+
+  let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
+
+  let autocompleteKey = Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+  EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
+
+  info ("Waiting for popup to be opened");
+  yield popupOpened;
+
+  EventUtils.synthesizeKey("VK_DOWN", { }, win);
+  is (ed.getText(), "#baz", "Editor text has been updated");
 }
 
 function* testMouse(ed, win) {
@@ -57,6 +99,6 @@ function* testMouse(ed, win) {
 
   info ("Waiting for popup to be opened");
   yield popupOpened;
-  ed.getAutocompletionPopup()._list.firstChild.click();
-  is (ed.getText(), "b1", "Editor text has been updated");
+  ed.getAutocompletionPopup()._list.children[2].click();
+  is (ed.getText(), "#baz", "Editor text has been updated");
 }

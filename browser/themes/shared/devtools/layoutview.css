@@ -47,7 +47,7 @@
 }
 
 .editable {
-  border-bottom: 1px dashed transparent;
+  border: 1px dashed transparent;
 }
 
 .editable:hover {

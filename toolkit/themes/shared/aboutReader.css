@@ -329,7 +329,8 @@ body.loaded {
   background-color: #fbfbfb;
   visibility: hidden;
   border-radius: 4px;
-  border: 1px 1px 0 1px solid #b5b5b5;
+  border: 1px solid #b5b5b5;
+  border-bottom-width: 0;
   box-shadow: 0 1px 12px #666;
 }
 
