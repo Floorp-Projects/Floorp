@@ -11,13 +11,13 @@ interface nsIInterceptedChannel;
 interface nsIPrincipal;
 interface nsIURI;
 
-[builtinclass, uuid(d4367ffe-e435-4195-95f8-0a51b1bbfdfb)]
+[scriptable, uuid(52ee2c9d-ee87-4caf-9588-23ae77ff8798)]
 interface nsIServiceWorkerUnregisterCallback : nsISupports
 {
   // aState is true if the unregistration succeded.
   // It's false if this ServiceWorkerRegistration doesn't exist.
-  [noscript] void UnregisterSucceeded(in bool aState);
-  [noscript] void UnregisterFailed();
+  void unregisterSucceeded(in bool aState);
+  void unregisterFailed();
 };
 
 [scriptable, builtinclass, uuid(8ce0d197-5740-4ddf-aa4a-e5a63e611d03)]

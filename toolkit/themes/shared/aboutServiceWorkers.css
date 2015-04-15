@@ -38,3 +38,7 @@ body {
 .active {
   display: block;
 }
+
+.inactive {
+  display: none;
+}
