@@ -6,8 +6,8 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 540247-1.xul 540247-1-ref.xul  # bug 9
 skip-if((B2G&&browserIsRemote)||Mulet) == 543681-1.html 543681-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == test-image-layers.html test-image-layers-ref.html
 random-if(B2G||Mulet) == test-image-layers-multiple-displayitem.html test-image-layers-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-pref(layout.animated-image-layers.enabled,true) random-if (Android||gtk2Widget) == test-animated-image-layers.html test-animated-image-layers-ref.html
-pref(layout.animated-image-layers.enabled,true) random-if (Android||gtk2Widget) == test-animated-image-layers-background.html test-animated-image-layers-ref.html
+pref(layout.animated-image-layers.enabled,true) random-if(Android||gtk2Widget) == test-animated-image-layers.html test-animated-image-layers-ref.html
+pref(layout.animated-image-layers.enabled,true) random-if(Android||gtk2Widget) == test-animated-image-layers-background.html test-animated-image-layers-ref.html
 == box-shadow-border-radius.html box-shadow-border-radius-ref.html
 == filter-userspace-offset.svg?offsetContainer=rect filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=use filter-userspace-offset.svg
