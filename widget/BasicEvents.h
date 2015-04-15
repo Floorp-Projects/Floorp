@@ -539,6 +539,10 @@ public:
   // for when the parent process need the know first how the event was used
   // by content before handling it itself.
   bool mWantReplyFromContentProcess : 1;
+  // The event's action will be handled by APZ. The main thread should not
+  // perform its associated action. This is currently only relevant for
+  // wheel events.
+  bool mHandledByAPZ : 1;
 
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const
