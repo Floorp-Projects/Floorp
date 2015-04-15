@@ -50,7 +50,6 @@ public:
   }
 
   virtual TaskDispatcher& TailDispatcher() override { MOZ_CRASH("Not implemented!"); }
-  virtual bool InTailDispatch() override { MOZ_CRASH("Not implemented!"); }
 
 private:
   nsRefPtr<nsIThread> mTarget;
