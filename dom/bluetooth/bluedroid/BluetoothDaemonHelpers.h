@@ -330,13 +330,6 @@ Convert(BluetoothSspVariant aIn, uint8_t& aOut);
 nsresult
 Convert(ControlPlayStatus aIn, uint8_t& aOut);
 
-#ifdef MOZ_B2G_BT_API_V2
-nsresult
-Convert(nsresult aIn, BluetoothStatus& aOut);
-#else
-// Missing in bluetooth1
-#endif
-
 //
 // Packing
 //
