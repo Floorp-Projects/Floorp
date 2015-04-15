@@ -212,15 +212,23 @@ function checkPayloadInfo(data) {
   const ALLOWED_REASONS = [
     "environment-change", "shutdown", "daily", "saved-session", "test-ping"
   ];
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   let numberCheck = arg => { return (typeof arg == "number"); };
   let positiveNumberCheck = arg => { return numberCheck(arg) && (arg >= 0); };
   let stringCheck = arg => { return (typeof arg == "string") && (arg != ""); };
-  let isoDateCheck = arg => { return stringCheck(arg) && !Number.isNaN(Date.parse(arg)); }
   let revisionCheck = arg => {
     return (Services.appinfo.isOfficial) ? stringCheck(arg) : (typeof arg == "string");
   };
-  let uuidCheck = arg => uuidRegex.test(arg);
+  let uuidCheck = arg => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(arg);
+  };
+  let isoDateCheck = arg => {
+    // We expect use of this version of the ISO format:
+    // 2015-04-12T18:51:19.1+00:00
+    const isoDateRegEx = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}$/;
+    return stringCheck(arg) && !Number.isNaN(Date.parse(arg)) &&
+           isoDateRegEx.test(arg);
+  };
 
   const EXPECTED_INFO_FIELDS_TYPES = {
     reason: stringCheck,
