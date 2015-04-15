@@ -505,3 +505,20 @@ assertEq(f(0x424242),0xAA);
 assertEq(f(0x1000000),0);
 assertEq(asmLink(m, this, null, new ArrayBuffer(0x2000000))(0),0);
 assertEq(asmLink(m, this, null, new ArrayBuffer(0x3000000))(0),0);
+
+// Heap offsets
+var asmMod = function test (glob, env, b) {
+    'use asm';
+    var i8 = new glob.Int8Array(b);
+    function f(i) {
+        i = i | 0;
+        i = i & 1;
+        i = (i - 0x40000000)|0;
+        i8[0x3fffffff] = 0;
+        return i8[(i + 0x7ffffffe) >> 0] | 0;
+    }
+    return f;
+};
+var buffer = new ArrayBuffer(0x40000000);
+var asm = asmMod(this, {}, buffer);
+assertEq(asm(-1),0);
