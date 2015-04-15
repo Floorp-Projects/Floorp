@@ -508,6 +508,7 @@ public:
     return rv;
   }
 
+#ifdef MOZ_B2G_BT_API_V2
   nsresult SspReplyCmd(const nsAString& aBdAddr, BluetoothSspVariant aVariant,
                        bool aAccept, uint32_t aPasskey,
                        BluetoothResultHandler* aRes)
@@ -529,6 +530,30 @@ public:
     unused << pdu.forget();
     return rv;
   }
+#else
+  nsresult SspReplyCmd(const nsAString& aBdAddr, const nsAString& aVariant,
+                       bool aAccept, uint32_t aPasskey,
+                       BluetoothResultHandler* aRes)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsAutoPtr<BluetoothDaemonPDU> pdu(new BluetoothDaemonPDU(0x01, 0x11, 0));
+
+    nsresult rv = PackPDU(
+      PackConversion<nsAString, BluetoothAddress>(aBdAddr),
+      PackConversion<nsAString, BluetoothSspVariant>(aVariant),
+      aAccept, aPasskey, *pdu);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Send(pdu, aRes);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    unused << pdu.forget();
+    return rv;
+  }
+#endif
 
   nsresult DutModeConfigureCmd(bool aEnable, BluetoothResultHandler* aRes)
   {
@@ -2404,6 +2429,7 @@ BluetoothDaemonInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
   }
 }
 
+#ifdef MOZ_B2G_BT_API_V2
 void
 BluetoothDaemonInterface::SspReply(const nsAString& aBdAddr,
                                    BluetoothSspVariant aVariant,
@@ -2416,6 +2442,20 @@ BluetoothDaemonInterface::SspReply(const nsAString& aBdAddr,
     DispatchError(aRes, rv);
   }
 }
+#else
+void
+BluetoothDaemonInterface::SspReply(const nsAString& aBdAddr,
+                                   const nsAString& aVariant,
+                                   bool aAccept, uint32_t aPasskey,
+                                   BluetoothResultHandler* aRes)
+{
+  nsresult rv = static_cast<BluetoothDaemonCoreModule*>
+    (mProtocol)->SspReplyCmd(aBdAddr, aVariant, aAccept, aPasskey, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+#endif
 
 /* DUT Mode */
 
