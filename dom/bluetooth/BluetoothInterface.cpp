@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 3; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -82,6 +82,41 @@ BluetoothAvrcpInterface::BluetoothAvrcpInterface()
 BluetoothAvrcpInterface::~BluetoothAvrcpInterface()
 { }
 
+//
+// Bluetooth GATT Interface
+//
+
+// Notification handling
+//
+
+BluetoothGattClientNotificationHandler::~BluetoothGattClientNotificationHandler()
+{ }
+
+BluetoothGattServerNotificationHandler::~BluetoothGattServerNotificationHandler()
+{ }
+
+BluetoothGattNotificationHandler::~BluetoothGattNotificationHandler()
+{ }
+
+// Interface
+//
+
+BluetoothGattClientInterface::BluetoothGattClientInterface()
+{ }
+
+BluetoothGattClientInterface::~BluetoothGattClientInterface()
+{ }
+
+BluetoothGattInterface::BluetoothGattInterface()
+{ }
+
+BluetoothGattInterface::~BluetoothGattInterface()
+{ }
+
+//
+// Bluetooth Core Interface
+//
+
 // Notification handling
 //
 
@@ -103,11 +138,20 @@ BluetoothInterface::GetInstance()
    */
 
   static const char* const sDefaultBackend[] = {
+#if MOZ_B2G_BT_API_V2
+#ifdef MOZ_B2G_BT_BLUEDROID
+    "bluedroid",
+#endif
+#ifdef MOZ_B2G_BT_DAEMON
+    "bluetoothd",
+#endif
+#else
 #ifdef MOZ_B2G_BT_DAEMON
     "bluetoothd",
 #endif
 #ifdef MOZ_B2G_BT_BLUEDROID
     "bluedroid",
+#endif
 #endif
     nullptr // no default backend; must be final element in array
   };

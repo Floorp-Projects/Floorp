@@ -1216,7 +1216,7 @@ BacktrackingAllocator::insertAllRanges(AllocatedRangeSet& set, const LiveInterva
 }
 
 // Add moves to resolve conflicting assignments between a block and its
-// predecessors. XXX try to common this with LinearScanAllocator.
+// predecessors.
 bool
 BacktrackingAllocator::resolveControlFlow()
 {

@@ -200,9 +200,7 @@ LIRGeneratorX86Shared::lowerDivI(MDiv* div)
             defineReuseInput(lir, div, 0);
             return;
         }
-        if (rhs != 0 &&
-            gen->optimizationInfo().registerAllocator() != RegisterAllocator_LSRA)
-        {
+        if (rhs != 0) {
             LDivOrModConstantI* lir;
             lir = new(alloc()) LDivOrModConstantI(useRegister(div->lhs()), rhs, tempFixed(eax));
             if (div->fallible())
@@ -237,9 +235,7 @@ LIRGeneratorX86Shared::lowerModI(MMod* mod)
             defineReuseInput(lir, mod, 0);
             return;
         }
-        if (rhs != 0 &&
-            gen->optimizationInfo().registerAllocator() != RegisterAllocator_LSRA)
-        {
+        if (rhs != 0) {
             LDivOrModConstantI* lir;
             lir = new(alloc()) LDivOrModConstantI(useRegister(mod->lhs()), rhs, tempFixed(edx));
             if (mod->fallible())

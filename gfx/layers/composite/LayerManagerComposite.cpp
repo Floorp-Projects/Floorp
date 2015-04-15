@@ -668,7 +668,10 @@ LayerManagerComposite::Render()
     composer2D = mCompositor->GetWidget()->GetComposer2D();
   }
 
-  if (!mTarget && composer2D && composer2D->TryRender(mRoot, mGeometryChanged)) {
+  if (!mTarget &&
+      gfxPrefs::Composer2DCompositionEnabled() &&
+      composer2D && composer2D->TryRender(mRoot, mGeometryChanged))
+  {
     LayerScope::SetHWComposed();
     if (mFPS) {
       double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
