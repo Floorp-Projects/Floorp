@@ -729,6 +729,46 @@ final class GeckoEditable
         }
     }
 
+    private void notifyCommitComposition() {
+        // Gecko already committed its composition, and
+        // we should remove the composition on our side as well.
+        boolean wasComposing = false;
+        final Object[] spans = mText.getSpans(0, mText.length(), Object.class);
+
+        for (Object span : spans) {
+            if ((mText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                mText.removeSpan(span);
+                wasComposing = true;
+            }
+        }
+
+        if (!wasComposing) {
+            return;
+        }
+
+        // Generate a text change notification if we actually cleared the composition.
+        final CharSequence text = TextUtils.stringOrSpannedString(mText);
+        geckoPostToIc(new Runnable() {
+            @Override
+            public void run() {
+                mListener.onTextChange(text, 0, text.length(), text.length());
+            }
+        });
+    }
+
+    private void notifyCancelComposition() {
+        // Composition should have been cancelled on our side
+        // through text update notifications; verify that here.
+        if (DEBUG) {
+            final Object[] spans = mText.getSpans(0, mText.length(), Object.class);
+            for (Object span : spans) {
+                if ((mText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                    throw new IllegalStateException("composition not cancelled");
+                }
+            }
+        }
+    }
+
     @Override
     public void notifyIME(final int type) {
         if (DEBUG) {
@@ -741,6 +781,7 @@ final class GeckoEditable
                               ")");
             }
         }
+
         if (type == NOTIFY_IME_REPLY_EVENT) {
             try {
                 if (mGeckoFocused) {
@@ -756,7 +797,14 @@ final class GeckoEditable
                 mActionQueue.poll();
             }
             return;
+        } else if (type == NOTIFY_IME_TO_COMMIT_COMPOSITION) {
+            notifyCommitComposition();
+            return;
+        } else if (type == NOTIFY_IME_TO_CANCEL_COMPOSITION) {
+            notifyCancelComposition();
+            return;
         }
+
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
