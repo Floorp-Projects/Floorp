@@ -37,6 +37,7 @@
 #include "nsError.h"
 #include "nsPrintfCString.h"
 #include "nsAlgorithm.h"
+#include "nsQueryObject.h"
 #include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
 #include "mozilla/Attributes.h"

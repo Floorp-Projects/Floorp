@@ -17,6 +17,7 @@
 #include "prprf.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
+#include "nsQueryObject.h"
 
 //Interfaces needed to be included
 #include "nsIAppShell.h"

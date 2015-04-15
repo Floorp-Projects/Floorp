@@ -45,6 +45,7 @@
 #include "SVGAnimatedPathSegList.h"
 #include "SVGContentUtils.h"
 #include "nsIFrame.h"
+#include "nsQueryObject.h"
 #include <stdarg.h>
 #include "nsSMILMappedAttribute.h"
 #include "SVGMotionSMILAttr.h"
