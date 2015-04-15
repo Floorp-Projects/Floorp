@@ -141,7 +141,7 @@ class Device(object):
             if os.path.isfile(logcat_log):
                 self._rotate_log(logcat_log)
             logcat_args = [self.app_ctx.adb, '-s', '%s' % serial,
-                           'logcat', '-v', 'time']
+                           'logcat', '-v', 'time', '-b', 'main', '-b', 'radio']
             self.logcat_proc = ProcessHandler(logcat_args, logfile=logcat_log)
             self.logcat_proc.run()
 
