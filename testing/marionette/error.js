@@ -12,6 +12,8 @@ const errors = [
   "FrameSendNotInitializedError",
   "IllegalArgumentError",
   "InvalidElementStateError",
+  "InvalidSelectorError",
+  "InvalidSessionIdError",
   "JavaScriptError",
   "NoAlertOpenError",
   "NoSuchElementError",
@@ -176,6 +178,22 @@ this.InvalidElementStateError = function(msg) {
 };
 InvalidElementStateError.prototype = Object.create(WebDriverError.prototype);
 
+this.InvalidSelectorError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "InvalidSelectorError";
+  this.status = "invalid selector";
+  this.code = 32;
+};
+InvalidSelectorError.prototype = Object.create(WebDriverError.prototype);
+
+this.InvalidSessionIdError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "InvalidSessionIdError";
+  this.status = "invalid session id";
+  this.code = 13;
+};
+InvalidSessionIdError.prototype = Object.create(WebDriverError.prototype);
+
 /**
  * Creates an error message for a JavaScript error thrown during
  * executeScript or executeAsyncScript.
@@ -311,6 +329,8 @@ const errorObjs = [
   this.FrameSendNotInitializedError,
   this.IllegalArgumentError,
   this.InvalidElementStateError,
+  this.InvalidSelectorError,
+  this.InvalidSessionIdError,
   this.JavaScriptError,
   this.NoAlertOpenError,
   this.NoSuchElementError,
