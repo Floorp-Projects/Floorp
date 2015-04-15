@@ -328,17 +328,17 @@ platform_files = [
 ]
 
 def prepare_upstream(prefix, commit=None):
-    if os.path.exists(prefix):
-        print "Please remove '%s' folder before running %s" % (prefix, sys.argv[0])
-        sys.exit(1)
-
     upstream_url = 'https://gerrit.chromium.org/gerrit/webm/libvpx'
-    subprocess.call(['git', 'clone', upstream_url, prefix])
-    if commit:
+    if os.path.exists(prefix):
+        print "Using existing repo in '%s'" % prefix
         os.chdir(prefix)
+        subprocess.call(['git', 'fetch', upstream_url, prefix])
+    else:
+        subprocess.call(['git', 'clone', upstream_url, prefix])
+        os.chdir(prefix)
+    if commit:
         subprocess.call(['git', 'checkout', commit])
     else:
-        os.chdir(prefix)
         p = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
         commit = stdout.strip()
@@ -377,7 +377,7 @@ def prepare_upstream(prefix, commit=None):
     return commit
 
 def cleanup_upstream():
-    shutil.rmtree(os.path.join(base, 'upstream'))
+    shutil.rmtree(os.path.join(base, 'upstream/objdir'))
 
 def get_module(key):
     for module in MODULES:
