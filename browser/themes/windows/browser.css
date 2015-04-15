@@ -1128,6 +1128,35 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   -moz-image-region: rect(32px, 48px, 48px, 32px);
 }
 
+@media not all and (-moz-os-version: windows-xp) {
+  #window-controls {
+    -moz-box-align: start;
+  }
+
+  #minimize-button,
+  #restore-button,
+  #close-button {
+    -moz-appearance: none;
+    border-style: none;
+    margin: 0;
+  }
+  #close-button {
+    -moz-image-region: rect(0, 49px, 16px, 32px);
+  }
+  #close-button:hover {
+    -moz-image-region: rect(16px, 49px, 32px, 32px);
+  }
+  #close-button:hover:active {
+    -moz-image-region: rect(32px, 49px, 48px, 32px);
+  }
+
+  #minimize-button:-moz-locale-dir(rtl),
+  #restore-button:-moz-locale-dir(rtl),
+  #close-button:-moz-locale-dir(rtl) {
+    transform: scaleX(-1);
+  }
+}
+
 /* ::::: Location Bar ::::: */
 
 #urlbar,
