@@ -653,8 +653,7 @@ public:
                         const nsAString& aPinCode,
                         BluetoothResultHandler* aRes) = 0;
 
-  virtual void SspReply(const nsAString& aBdAddr,
-                        BluetoothSspVariant aVariant,
+  virtual void SspReply(const nsAString& aBdAddr, const nsAString& aVariant,
                         bool aAccept, uint32_t aPasskey,
                         BluetoothResultHandler* aRes) = 0;
 

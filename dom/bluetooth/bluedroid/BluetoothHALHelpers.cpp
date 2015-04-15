@@ -80,6 +80,7 @@ Convert(const nsAString& aIn, bt_bdaddr_t& aOut)
   return NS_OK;
 }
 
+#ifdef MOZ_B2G_BT_API_V2
 nsresult
 Convert(const BluetoothSspVariant aIn, bt_ssp_variant_t& aOut)
 {
@@ -97,6 +98,26 @@ Convert(const BluetoothSspVariant aIn, bt_ssp_variant_t& aOut)
   aOut = sSspVariant[aIn];
   return NS_OK;
 }
+#else
+nsresult
+Convert(const nsAString& aIn, bt_ssp_variant_t& aOut)
+{
+  if (aIn.EqualsLiteral("PasskeyConfirmation")) {
+    aOut = BT_SSP_VARIANT_PASSKEY_CONFIRMATION;
+  } else if (aIn.EqualsLiteral("PasskeyEntry")) {
+    aOut = BT_SSP_VARIANT_PASSKEY_ENTRY;
+  } else if (aIn.EqualsLiteral("Consent")) {
+    aOut = BT_SSP_VARIANT_CONSENT;
+  } else if (aIn.EqualsLiteral("PasskeyNotification")) {
+    aOut = BT_SSP_VARIANT_PASSKEY_NOTIFICATION;
+  } else {
+    BT_LOGR("Invalid SSP variant name: %s", NS_ConvertUTF16toUTF8(aIn).get());
+    aOut = BT_SSP_VARIANT_PASSKEY_CONFIRMATION; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_OK;
+}
+#endif
 
 nsresult
 Convert(const uint8_t aIn[16], bt_uuid_t& aOut)
