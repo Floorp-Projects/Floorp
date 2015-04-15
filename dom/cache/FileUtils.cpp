@@ -23,11 +23,24 @@ namespace cache {
 using mozilla::dom::quota::FileInputStream;
 using mozilla::dom::quota::FileOutputStream;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
-using mozilla::unused;
+
+namespace {
+
+enum BodyFileType
+{
+  BODY_FILE_FINAL,
+  BODY_FILE_TMP
+};
+
+nsresult
+BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
+             nsIFile** aBodyFileOut);
+
+} // anonymous namespace
 
 // static
 nsresult
-FileUtils::BodyCreateDir(nsIFile* aBaseDir)
+BodyCreateDir(nsIFile* aBaseDir)
 {
   MOZ_ASSERT(aBaseDir);
 
@@ -49,7 +62,7 @@ FileUtils::BodyCreateDir(nsIFile* aBaseDir)
 
 // static
 nsresult
-FileUtils::BodyDeleteDir(nsIFile* aBaseDir)
+BodyDeleteDir(nsIFile* aBaseDir)
 {
   MOZ_ASSERT(aBaseDir);
 
@@ -72,8 +85,7 @@ FileUtils::BodyDeleteDir(nsIFile* aBaseDir)
 
 // static
 nsresult
-FileUtils::BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
-                           nsIFile** aCacheDirOut)
+BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId, nsIFile** aCacheDirOut)
 {
   MOZ_ASSERT(aBaseDir);
   MOZ_ASSERT(aCacheDirOut);
@@ -107,11 +119,11 @@ FileUtils::BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId,
 
 // static
 nsresult
-FileUtils::BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
-                                nsIFile* aBaseDir, nsIInputStream* aSource,
-                                void* aClosure,
-                                nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
-                                nsISupports** aCopyContextOut)
+BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
+                     nsIFile* aBaseDir, nsIInputStream* aSource,
+                     void* aClosure,
+                     nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
+                     nsISupports** aCopyContextOut)
 {
   MOZ_ASSERT(aBaseDir);
   MOZ_ASSERT(aSource);
@@ -168,7 +180,7 @@ FileUtils::BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
 
 // static
 void
-FileUtils::BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext)
+BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext)
 {
   MOZ_ASSERT(aBaseDir);
   MOZ_ASSERT(aCopyContext);
@@ -182,7 +194,7 @@ FileUtils::BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext)
 
 // static
 nsresult
-FileUtils::BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId)
+BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId)
 {
   MOZ_ASSERT(aBaseDir);
 
@@ -206,8 +218,8 @@ FileUtils::BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId)
 
 // static
 nsresult
-FileUtils::BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
-                    const nsID& aId, nsIInputStream** aStreamOut)
+BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
+         nsIInputStream** aStreamOut)
 {
   MOZ_ASSERT(aBaseDir);
   MOZ_ASSERT(aStreamOut);
@@ -234,7 +246,7 @@ FileUtils::BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
 
 // static
 nsresult
-FileUtils::BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList)
+BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList)
 {
   nsresult rv = NS_OK;
 
@@ -273,10 +285,11 @@ FileUtils::BodyDeleteFiles(nsIFile* aBaseDir, const nsTArray<nsID>& aIdList)
   return NS_OK;
 }
 
-// static
+namespace {
+
 nsresult
-FileUtils::BodyIdToFile(nsIFile* aBaseDir, const nsID& aId,
-                        BodyFileType aType, nsIFile** aBodyFileOut)
+BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
+             nsIFile** aBodyFileOut)
 {
   MOZ_ASSERT(aBaseDir);
   MOZ_ASSERT(aBodyFileOut);
@@ -303,6 +316,8 @@ FileUtils::BodyIdToFile(nsIFile* aBaseDir, const nsID& aId,
 
   return rv;
 }
+
+} // anonymous namespace
 
 } // namespace cache
 } // namespace dom
