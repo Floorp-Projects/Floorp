@@ -278,6 +278,9 @@ private:
    * Render the current layer tree to the active target.
    */
   void Render();
+#ifdef MOZ_WIDGET_ANDROID
+  void RenderToPresentationSurface();
+#endif
 
   /**
    * Render debug overlays such as the FPS/FrameCounter above the frame.
