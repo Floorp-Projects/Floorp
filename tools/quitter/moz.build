@@ -11,3 +11,8 @@ EXTRA_COMPONENTS += [
 XPI_NAME = 'quitter'
 
 JAR_MANIFESTS += ['jar.mn']
+
+DIST_FILES += [
+    'chrome.manifest',
+    'install.rdf',
+]

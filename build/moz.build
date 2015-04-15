@@ -70,3 +70,8 @@ FINAL_TARGET_FILES += [TOPSRCDIR + '/.gdbinit']
 # Install the clang-cl runtime library for ASAN next to the binaries we produce.
 if CONFIG['MOZ_ASAN'] and CONFIG['CLANG_CL']:
     FINAL_TARGET_FILES += [CONFIG['MOZ_CLANG_RT_ASAN_LIB_PATH']]
+
+if CONFIG['MOZ_APP_BASENAME']:
+    DIST_FILES += ['application.ini']
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
+        DIST_FILES += ['update-settings.ini']
