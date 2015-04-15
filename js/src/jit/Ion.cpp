@@ -32,7 +32,6 @@
 #include "jit/JitCompartment.h"
 #include "jit/JitSpewer.h"
 #include "jit/LICM.h"
-#include "jit/LinearScan.h"
 #include "jit/LIR.h"
 #include "jit/LoopUnroller.h"
 #include "jit/Lowering.h"
@@ -1519,25 +1518,6 @@ GenerateLIR(MIRGenerator* mir)
         AutoTraceLog log(logger, TraceLogger_RegisterAllocation);
 
         switch (mir->optimizationInfo().registerAllocator()) {
-          case RegisterAllocator_LSRA: {
-#ifdef DEBUG
-            if (!integrity.record())
-                return nullptr;
-#endif
-
-            LinearScanAllocator regalloc(mir, &lirgen, *lir);
-            if (!regalloc.go())
-                return nullptr;
-
-#ifdef DEBUG
-            if (!integrity.check(false))
-                return nullptr;
-#endif
-
-            IonSpewPass("Allocate Registers [LSRA]", &regalloc);
-            break;
-          }
-
           case RegisterAllocator_Backtracking: {
 #ifdef DEBUG
             if (!integrity.record())

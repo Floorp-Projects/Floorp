@@ -135,10 +135,7 @@ LBlock::getEntryMoveGroup(TempAllocator& alloc)
     if (entryMoveGroup_)
         return entryMoveGroup_;
     entryMoveGroup_ = LMoveGroup::New(alloc);
-    if (begin()->isLabel())
-        insertAfter(*begin(), entryMoveGroup_);
-    else
-        insertBefore(*begin(), entryMoveGroup_);
+    insertBefore(*begin(), entryMoveGroup_);
     return entryMoveGroup_;
 }
 
