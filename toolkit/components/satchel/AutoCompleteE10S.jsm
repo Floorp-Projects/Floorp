@@ -84,11 +84,12 @@ this.AutoCompleteE10S = {
     messageManager.addMessageListener("FormAutoComplete:ClosePopup", this);
   },
 
-  _initPopup: function(browserWindow, rect) {
+  _initPopup: function(browserWindow, rect, direction) {
     this.browser = browserWindow.gBrowser.selectedBrowser;
     this.popup = this.browser.autoCompletePopup;
     this.popup.hidden = false;
     this.popup.setAttribute("width", rect.width);
+    this.popup.style.direction = direction;
 
     this.x = rect.left;
     this.y = rect.top + rect.height;
@@ -137,8 +138,9 @@ this.AutoCompleteE10S = {
   search: function(message) {
     let browserWindow = message.target.ownerDocument.defaultView;
     let rect = message.data;
+    let direction = message.data.direction;
 
-    this._initPopup(browserWindow, rect);
+    this._initPopup(browserWindow, rect, direction);
 
     let formAutoComplete = Cc["@mozilla.org/satchel/form-autocomplete;1"]
                              .getService(Ci.nsIFormAutoComplete);

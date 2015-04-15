@@ -156,7 +156,10 @@ public:
     static void SetCompositor(mozilla::layers::LayerManager* aLayerManager,
                               mozilla::layers::CompositorParent* aCompositorParent,
                               mozilla::layers::CompositorChild* aCompositorChild);
+    static bool IsCompositionPaused();
     static void ScheduleComposite();
+    static void SchedulePauseComposition();
+    static void ScheduleResumeComposition();
     static void ScheduleResumeComposition(int width, int height);
     static void ForceIsFirstPaint();
     static float ComputeRenderIntegrity();
