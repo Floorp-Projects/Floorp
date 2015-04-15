@@ -42,7 +42,7 @@ mk_files = [
 extensions = ['.asm', '.c', '.h']
 
 MODULES = {
-    'UNIFIED_SOURCES': [
+    'SOURCES': [
         'API_DOC_SRCS-$(CONFIG_VP8_DECODER)',
         'API_DOC_SRCS-yes',
         'API_EXPORTS',
@@ -433,8 +433,6 @@ def get_sources(prefix):
                         unknown[key] = []
                     t = unknown[key]
                 t.append(f)
-
-    files['UNIFIED_SOURCES'] = [f for f in files['UNIFIED_SOURCES'] if f not in files['SOURCES']]
 
     for key in files:
         files[key] = list(sorted(set(files[key])))
