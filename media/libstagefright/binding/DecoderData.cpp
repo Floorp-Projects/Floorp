@@ -75,7 +75,7 @@ FindData(const MetaData* aMetaData, uint32_t aKey, nsTArray<T>* aDest)
 }
 
 static bool
-FindData(const MetaData* aMetaData, uint32_t aKey, mozilla::DataBuffer* aDest)
+FindData(const MetaData* aMetaData, uint32_t aKey, mozilla::MediaByteBuffer* aDest)
 {
   return FindData(aMetaData, aKey, static_cast<nsTArray<uint8_t>*>(aDest));
 }

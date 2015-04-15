@@ -30,7 +30,7 @@ struct JSContext;
 namespace mozilla {
 
 class ErrorResult;
-class LargeDataBuffer;
+class MediaLargeByteBuffer;
 class TrackBuffer;
 template <typename T> class AsyncEventRunner;
 typedef MediaPromise<bool, nsresult, /* IsExclusive = */ true> TrackBufferAppendPromise;
@@ -147,7 +147,7 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
-  void AppendData(LargeDataBuffer* aData, double aTimestampOffset,
+  void AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
                   uint32_t aAppendID);
 
   // Implement the "Append Error Algorithm".
@@ -156,11 +156,11 @@ private:
   // http://w3c.github.io/media-source/#sourcebuffer-append-error
   void AppendError(bool aDecoderError);
 
-  // Implements the "Prepare Append Algorithm". Returns LargeDataBuffer object
+  // Implements the "Prepare Append Algorithm". Returns MediaLargeByteBuffer object
   // on success or nullptr (with aRv set) on error.
-  already_AddRefed<LargeDataBuffer> PrepareAppend(const uint8_t* aData,
-                                                uint32_t aLength,
-                                                ErrorResult& aRv);
+  already_AddRefed<MediaLargeByteBuffer> PrepareAppend(const uint8_t* aData,
+                                                       uint32_t aLength,
+                                                       ErrorResult& aRv);
 
   void AppendDataCompletedWithSuccess(bool aValue);
   void AppendDataErrored(nsresult aError);

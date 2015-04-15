@@ -89,7 +89,7 @@ public:
   void ClearReorderedFrames();
   CFDictionaryRef CreateOutputConfiguration();
 
-  nsRefPtr<DataBuffer> mExtraData;
+  nsRefPtr<MediaByteBuffer> mExtraData;
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<layers::ImageContainer> mImageContainer;

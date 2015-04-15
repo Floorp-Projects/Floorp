@@ -46,7 +46,7 @@ namespace dom {
 class AppendDataRunnable : public nsRunnable {
 public:
   AppendDataRunnable(SourceBuffer* aSourceBuffer,
-                     LargeDataBuffer* aData,
+                     MediaLargeByteBuffer* aData,
                      double aTimestampOffset,
                      uint32_t aUpdateID)
   : mSourceBuffer(aSourceBuffer)
@@ -65,7 +65,7 @@ public:
 
 private:
   nsRefPtr<SourceBuffer> mSourceBuffer;
-  nsRefPtr<LargeDataBuffer> mData;
+  nsRefPtr<MediaLargeByteBuffer> mData;
   double mTimestampOffset;
   uint32_t mUpdateID;
 };
@@ -425,7 +425,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 {
   MSE_DEBUG("AppendData(aLength=%u)", aLength);
 
-  nsRefPtr<LargeDataBuffer> data = PrepareAppend(aData, aLength, aRv);
+  nsRefPtr<MediaLargeByteBuffer> data = PrepareAppend(aData, aLength, aRv);
   if (!data) {
     return;
   }
@@ -439,7 +439,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 }
 
 void
-SourceBuffer::AppendData(LargeDataBuffer* aData, double aTimestampOffset,
+SourceBuffer::AppendData(MediaLargeByteBuffer* aData, double aTimestampOffset,
                          uint32_t aUpdateID)
 {
   if (!mUpdating || aUpdateID != mUpdateID) {
@@ -528,7 +528,7 @@ SourceBuffer::AppendError(bool aDecoderError)
   }
 }
 
-already_AddRefed<LargeDataBuffer>
+already_AddRefed<MediaLargeByteBuffer>
 SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
 {
   if (!IsAttached() || mUpdating) {
@@ -574,7 +574,7 @@ SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult&
     return nullptr;
   }
 
-  nsRefPtr<LargeDataBuffer> data = new LargeDataBuffer();
+  nsRefPtr<MediaLargeByteBuffer> data = new MediaLargeByteBuffer();
   if (!data->AppendElements(aData, aLength)) {
     aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
     return nullptr;
