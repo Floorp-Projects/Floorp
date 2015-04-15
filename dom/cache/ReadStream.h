@@ -63,6 +63,9 @@ public:
     virtual bool
     MatchId(const nsID& aId) const = 0;
 
+    virtual bool
+    HasEverBeenRead() const = 0;
+
     NS_IMETHOD_(MozExternalRefCountType)
     AddRef(void) = 0;
 
