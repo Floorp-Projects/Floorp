@@ -112,7 +112,7 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        return (T*)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
+        return (T*)client()->onOutOfMemory(reinterpret_cast<void*>(1), numElems * sizeof(T));
     }
 
     template <class T, class U>
@@ -131,7 +131,7 @@ struct MallocProvider
             client()->updateMallocCounter(bytes);
             return p;
         }
-        return (T*)client()->onOutOfMemory(nullptr, bytes);
+        return (T*)client()->onOutOfMemory(reinterpret_cast<void*>(1), bytes);
     }
 
     template <class T>
