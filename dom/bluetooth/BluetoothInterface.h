@@ -496,8 +496,6 @@ protected:
 class BluetoothGattClientNotificationHandler
 {
 public:
-  virtual ~BluetoothGattClientNotificationHandler();
-
   virtual void
   RegisterClientNotification(BluetoothGattStatus aStatus,
                              int aClientIf,
@@ -526,6 +524,7 @@ public:
 
   virtual void
   SearchCompleteNotification(int aConnId, BluetoothGattStatus aStatus) { }
+
   virtual void
   SearchResultNotification(int aConnId,
                            const BluetoothGattServiceId& aServiceId)
@@ -606,6 +605,8 @@ public:
 protected:
   BluetoothGattClientNotificationHandler()
   { }
+
+  virtual ~BluetoothGattClientNotificationHandler();
 };
 
 class BluetoothGattServerNotificationHandler
@@ -635,8 +636,6 @@ class BluetoothGattClientResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattClientResultHandler)
-
-  virtual ~BluetoothGattClientResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -672,6 +671,9 @@ public:
   virtual void ReadRemoteRssi() { }
   virtual void GetDeviceType() { }
   virtual void SetAdvData() { }
+
+protected:
+  virtual ~BluetoothGattClientResultHandler() { }
 };
 
 // TODO: Add GattServerResultHandler
@@ -681,8 +683,6 @@ class BluetoothGattResultHandler
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothGattResultHandler)
 
-  virtual ~BluetoothGattResultHandler() { }
-
   virtual void OnError(BluetoothStatus aStatus)
   {
     BT_WARNING("Received error code %d", (int)aStatus);
@@ -690,6 +690,9 @@ public:
 
   virtual void Init() { }
   virtual void Cleanup() { }
+
+protected:
+  virtual ~BluetoothGattResultHandler() { }
 };
 
 class BluetoothGattClientInterface
