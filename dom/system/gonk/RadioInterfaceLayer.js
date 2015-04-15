@@ -169,11 +169,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDataCallInterfaceService",
                                    "@mozilla.org/datacall/interfaceservice;1",
                                    "nsIGonkDataCallInterfaceService");
 
-XPCOMUtils.defineLazyGetter(this, "gStkCmdFactory", function() {
-  let stk = {};
-  Cu.import("resource://gre/modules/StkProactiveCmdFactory.jsm", stk);
-  return stk.StkProactiveCmdFactory;
-});
+XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
+                                   "@mozilla.org/icc/stkcmdfactory;1",
+                                   "nsIStkCmdFactory");
 
 // TODO: Bug 815526, deprecate RILContentHelper.
 XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {

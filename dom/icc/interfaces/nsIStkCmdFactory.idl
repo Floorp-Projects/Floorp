@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define ICC_STK_CMD_FACTORY_CONTRACTID \
+  "@mozilla.org/icc/stkcmdfactory;1"
+%}
+
+interface nsIStkProactiveCmd;
+
+/**
+ * This StkCmdFactory provides series factory methods to create instances of
+ * MozStkCommand and nsIStkProactiveCmd.
+ */
+[scriptable, uuid(3b64fdec-e333-11e4-9602-9bd4d4283b56)]
+interface nsIStkCmdFactory : nsISupports
+{
+  /**
+   * @param  aCommandDetails
+   *         A JS object which complies with 'dictionary MozStkCommand'
+   *         in MozStkCommandEvent.webidl
+   *
+   * @return a nsIStkProactiveCmd instance.
+   */
+  nsIStkProactiveCmd createCommand(in jsval aCommandDetails);
+
+  /**
+   * @param  aStkProactiveCmd
+   *         a nsIStkProactiveCmd instance.
+   *
+   * @return a JS object which complies with 'dictionary MozStkCommand'
+   *         in MozStkCommandEvent.webidl
+   */
+  jsval createCommandMessage(in nsIStkProactiveCmd aStkProactiveCmd);
+};

@@ -1,0 +1,645 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(1510cf0c-5db6-11e4-9869-6bf419e26642)]
+interface nsIStkDuration : nsISupports
+{
+  /**
+   * The value of Time units defined in 12.8 Duration of TS 11.14.
+   */
+  readonly attribute unsigned short timeUnit;
+
+  /**
+   * The length of time required, expressed in timeUnit.
+   *
+   * Note: the range is from 1 unit to 255 units.
+   */
+  readonly attribute unsigned short timeInterval;
+};
+
+[scriptable, uuid(c7b6e57a-696d-11e4-bcaa-bfe8386e75a9)]
+interface nsIStkIcon : nsISupports
+{
+  /**
+   * The color coding schemes defined in 4.6.1.1 of TS 31.102.
+   */
+  const unsigned short CODING_SCHEME_BASIC              = 0x11;
+  const unsigned short CODING_SCHEME_COLOR              = 0x21;
+  const unsigned short CODING_SCHEME_COLOR_TRANSPARENCY = 0x22;
+
+  /**
+   * Width of the icon.
+   */
+  readonly attribute unsigned long width;
+
+  /**
+   * Height of the icon.
+   */
+  readonly attribute unsigned long height;
+
+  /**
+   * Image coding scheme of the icon.
+   * One of CODING_SCHEME_*.
+   */
+  readonly attribute unsigned short codingScheme;
+
+  /**
+   * Array of pixels. Each pixel represents a color in the RGBA format made up
+   * of four bytes, that is, the Red sample in the highest 8 bits, followed by
+   * the Green sample, Blue sample and the Alpha sample in the lowest 8 bits.
+   *
+   * @param aCount
+   *        The number of pixels.
+   *
+   * @returns a copy of the array of pixels.
+   */
+  void getPixels([optional] out unsigned long aCount,
+                 [array, size_is(aCount), retval] out unsigned long aPixels);
+};
+
+[scriptable, uuid(4a6d173e-5e8b-11e4-9d78-071bb3d6ba8f)]
+interface nsIStkIconInfo : nsISupports
+{
+  /**
+   * Indicates how the icon is to be used.
+   *
+   * @see TS 11.14, clause 12.31, Icon Identifier.
+   *
+   * true: icon replaces the text string.
+   * false: icon shall be displayed together with the text string.
+   */
+  readonly attribute boolean iconSelfExplanatory;
+
+  /**
+   * Icon(s) that replaces or accompanies the text string.
+   *
+   * @see TS 11.14, clause 12.31, Icon Identifier.
+   *
+   * Array of icons, basically of a same image, that may differ in size,
+   * resolution or coding scheme. The first icon should be the default one.
+   *
+   * @param aCount
+   *        The number of icons.
+   *
+   * @returns a copy of the list of icons.
+   */
+  void getIcons([optional] out unsigned long aCount,
+                [array, size_is(aCount), retval] out nsIStkIcon aIcons);
+};
+
+[scriptable, uuid(ea95d25c-5e84-11e4-bd96-07285c50c1f2)]
+interface nsIStkItem : nsISupports
+{
+  /**
+   * Identifier of item.
+   *
+   * The identifier is a single byte between '01' and 'FF'. Each item shall
+   * have a unique identifier within an Item list.
+   */
+  readonly attribute unsigned short identifier;
+
+  /**
+   * Text string of item.
+   */
+  readonly attribute DOMString text;
+
+  /**
+   * (Optional)
+   * Icon info of item.
+   */
+  readonly attribute nsIStkIconInfo iconInfo;
+};
+
+[scriptable, uuid(222651f0-6976-11e4-accf-736a9c6e7d19)]
+interface nsIStkTimer : nsISupports
+{
+  /**
+   * Identifier of a timer.
+   */
+  readonly attribute unsigned short timerId;
+
+  const unsigned long TIMER_VALUE_INVALID = 0xFFFFFFFF;
+
+  /**
+   * Length of time during which the timer has to run.
+   *
+   * The possible duration of a timer is between 1 s and 24 h.
+   * The resolution of a timer is 1 second.
+   *
+   * Note: In TS 11.14, clause 6.6.21 TIMER MANAGEMENT,
+   *       "
+   *        The SIM shall supply this data object only when a timer has to
+   *        be started.
+   *       "
+   *       Hence, set to TIMER_VALUE_INVALID when |timerAction| is not equal to
+   *       TIMER_ACTION_START.
+   */
+  readonly attribute unsigned long timerValue;
+
+  /*
+   * Times actions defined in TS 11.14, clause 12.6,
+   * Command Qualifier, TIMER MANAGEMENT
+   */
+  const unsigned short TIMER_ACTION_START             = 0x00;
+  const unsigned short TIMER_ACTION_DEACTIVATE        = 0x01;
+  const unsigned short TIMER_ACTION_GET_CURRENT_VALUE = 0x02;
+
+  /**
+   * The action requested from UICC.
+   * It shall be one of TIMER_ACTION_*.
+   */
+  readonly attribute unsigned short timerAction;
+};
+
+/**
+ * The base class of all STK Proactive Commands.
+ *
+ * This interface is to be applied by the commands that provide info no more than:
+ * |commandNumber|, |typeOfCommand|, |commandQualifier|.
+ *
+ * The commands in this category are:
+ * - STK_CMD_REFRESH
+ * - STK_CMD_POLL_OFF
+ */
+[scriptable, uuid(f47f25b2-5d84-11e4-8637-7f59ea6da82f)]
+interface nsIStkProactiveCmd : nsISupports
+{
+  /**
+   * The number of command issued by ICC. And it is assigned
+   * by ICC may take any hexadecimal value betweean '01' and 'FE'.
+   *
+   * @see TS 11.14, clause 6.5.1
+   */
+  readonly attribute unsigned short commandNumber;
+
+  /**
+   * The value of |Type of Command| defined in TS 11.14, clause 13.4
+   */
+  readonly attribute unsigned short typeOfCommand;
+
+  /**
+   * Qualifiers specific to the command.
+   */
+  readonly attribute unsigned short commandQualifier;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_POLL_INTERVAL.
+ */
+[scriptable, uuid(0a27c090-5dbc-11e4-92eb-ebc26db3db29)]
+interface nsIStkPollIntervalCmd : nsIStkProactiveCmd
+{
+  /**
+   * The maximum interval between two STATUS commands related to
+   * Proactive Polling.
+   *
+   * Note: Mandatory for STK_CMD_POLL_INTERVAL.
+   *
+   * @See TS 11.14, clause 6.6.6 POLL INTERVAL
+   */
+  readonly attribute nsIStkDuration duration;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_PROVIDE_LOCAL_INFO.
+ */
+[scriptable, uuid(89a304ce-5dc6-11e4-8dce-23723fb242b4)]
+interface nsIStkProvideLocalInfoCmd : nsIStkProactiveCmd
+{
+  /**
+   * Values defined in TS 11.14, clause 12.6, Command Qualifier,
+   * PROVIDE LOCAL INFORMATION
+   */
+  readonly attribute unsigned short localInfoType;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_SET_UP_EVENT_LIST.
+ */
+[scriptable, uuid(5f796dec-5e6a-11e4-aaf3-bb675cb36df5)]
+interface nsIStkSetupEventListCmd : nsIStkProactiveCmd
+{
+  /**
+   * (Optional)
+   * Get the list of events.
+   * Each event could be one of values defined in TS 11.14, clause 8.25, Event list.
+   *
+   * Note: It could be null as an indication to the terminal to remove the
+   *       existing list of events in the terminal.
+   *
+   * @param aCount
+   *        The number of events.
+   *
+   * @returns a copy of the list of events.
+   */
+  void getEventList([optional] out unsigned long aCount,
+                    [array, size_is(aCount), retval] out unsigned short aEventList);
+};
+
+/**
+ * This interface is to be applied by STK_CMD_SET_UP_MENU.
+ */
+[scriptable, uuid(d7a66664-a602-11e4-9cc7-c7ce5fdade7d)]
+interface nsIStkSetUpMenuCmd : nsIStkProactiveCmd
+{
+  /**
+   * (Optional for STK_CMD_SELECT_ITEM)
+   * Title of the menu.
+   */
+  readonly attribute DOMString title;
+
+  /**
+   * Get the list of menu items.
+   *
+   * Note: The minimal number of items is 1.
+   *       See TS 11.14, clause 6.6.7 SET-UP MENU and 6.6.8 SELECT ITEM.
+   *
+   * @param aCount
+   *        The number of items.
+   *
+   * @returns a copy of the list of menu items.
+   *          For |SET-UP MENU|, the 1st item in |aItems| could be null as an
+   *          indication to the ME to remove the existing menu from the menu
+   *          system in the ME.
+   */
+  void getItems([optional] out unsigned long aCount,
+                [array, size_is(aCount), retval] out nsIStkItem aItems);
+
+  /**
+   * (Optional)
+   * Get the list of Next Action Indicators.
+   *
+   * Each element should be the value of |Next Action Indicator| in TS 11.14,
+   * clause 13.4.
+   *
+   * @see TS 11.14, clause 12.24, Items Next Action Indicator.
+   *
+   * @param aCount
+   *        The number of indicators.
+   *
+   * @returns a copy of the list of Next Action Indicators.
+   */
+  void getNextActionList([optional] out unsigned long aCount,
+                         [array, size_is(aCount), retval] out unsigned short aActions);
+
+  /**
+   * (Optional)
+   * Icon info of the menu.
+   */
+  readonly attribute nsIStkIconInfo iconInfo;
+
+  /**
+   * Help information available or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, SET UP MENU, bit 8.
+   *
+   * true: help information available.
+   * false: no help information available.
+   *
+   */
+  readonly attribute boolean isHelpAvailable;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_SELECT_ITEM.
+ */
+[scriptable, uuid(eb71f0fa-a602-11e4-926f-a3814461d218)]
+interface nsIStkSelectItemCmd : nsIStkSetUpMenuCmd
+{
+  /**
+   * Presentation type, one of PRESENTATION_TYPE_*.
+   *
+   * @See TS 11.14, clause 12.6, Command Qualifier: Select Item
+   */
+  const unsigned short PRESENTATION_TYPE_NOT_SPECIFIED = 0x00;
+  const unsigned short PRESENTATION_TYPE_DATA_VALUES = 0x01;
+  const unsigned short PRESENTATION_TYPE_NAVIGATION_OPTIONS = 0x03;
+
+  readonly attribute unsigned short presentationType;
+
+  const unsigned short DEFAULT_ITEM_INVALID = 0xFFFF;
+
+  /**
+   * (Optional)
+   * Default item identifier of the menu.
+   *
+   * Set to DEFAULT_ITEM_INVALID if null.
+   */
+  readonly attribute unsigned short defaultItem;
+};
+
+/**
+ * This interface is to be applied by
+ * - STK_CMD_SET_UP_IDLE_MODE_TEXT
+ * - STK_CMD_SEND_{SS|USSD|SMS|DTMF}
+ * - STK_CMD_OPEN_CHANNEL
+ * - STK_CMD_CLOSE_CHANNEL
+ * - STK_CMD_SEND_DATA
+ * - STK_CMD_RECEIVE_DATA
+ */
+[scriptable, uuid(61c42b3c-6324-11e4-959e-7fb2dc9a3f0d)]
+interface nsIStkTextMessageCmd : nsIStkProactiveCmd
+{
+  /**
+   * Text String.
+   */
+  readonly attribute DOMString text;
+
+  /**
+   * (Optional)
+   * Icon to be displayed.
+   */
+  readonly attribute nsIStkIconInfo iconInfo;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_DISPLAY_TEXT.
+ */
+[scriptable, uuid(66a83f0a-6322-11e4-a773-9382de87a74a)]
+interface nsIStkDisplayTextCmd : nsIStkTextMessageCmd
+{
+  /**
+   * (Optional)
+   * The length of time for which the ME shall display the dialog.
+   */
+  readonly attribute nsIStkDuration duration;
+
+  /**
+   * Indicate this text message is high priority or normal priority.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, Display Text, bit 1.
+   *
+   * true: high priority
+   * false: normal priority
+   */
+  readonly attribute boolean isHighPriority;
+
+  /**
+   * Need to wait for user to clear message or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, Display Text, bit 8.
+   *
+   * true: Wait for user to clear message.
+   * false: clear message after a delay.
+   */
+  readonly attribute boolean userClear;
+
+  /**
+   * Need to response immediately or not.
+   *
+   * @see TS 11.14, clause 12.43, Immediate response.
+   *
+   * true: The terminal shall send response immediately.
+   * false: otherwise.
+   */
+  readonly attribute boolean responseNeeded;
+};
+
+/**
+ * The base interface of nsIStkInputKeyCmd, nsIStkInputTextCmd.
+ */
+[scriptable, uuid(ed16a67e-6022-11e4-a8fd-c34fe6e6bb11)]
+interface nsIStkInputCmd : nsIStkProactiveCmd
+{
+  /**
+   * Text for the ME to display in conjunction with asking the user to respond.
+   */
+  readonly attribute DOMString text;
+
+  /**
+   * (Optional)
+   * The length of time for which the ME shall display the dialog.
+   */
+  readonly attribute nsIStkDuration duration;
+
+  /**
+   * Minimum length of response.
+   * Set to 1 for STK_CMD_GET_INKEY.
+   */
+  readonly attribute unsigned short minLength;
+
+  /**
+   * Maximum length of response.
+   * Set to 1 for STK_CMD_GET_INKEY.
+   */
+  readonly attribute unsigned short maxLength;
+
+  /**
+   * (Optional)
+   * Text for the ME to display, corresponds to a default text string offered
+   * by the ICC.
+   */
+  readonly attribute DOMString defaultText;
+
+  /**
+   * Input format.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT/GET INKEY, bit 1.
+   *
+   * true: Alphabet set.
+   * false: Digits only.
+   */
+  readonly attribute boolean isAlphabet;
+
+  /**
+   * Alphabet encoding.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT/GET INKEY, bit 2.
+   *
+   * true: UCS2 alphabet.
+   * false: default SMS alphabet.
+   */
+  readonly attribute boolean isUCS2;
+
+  /**
+   * Help information available or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT/GET INKEY, bit 8.
+   *
+   * true: help information available.
+   * false: no help information available.
+   */
+  readonly attribute boolean isHelpAvailable;
+
+  /**
+   * (Optional)
+   * Icon to be displayed.
+   */
+  readonly attribute nsIStkIconInfo iconInfo;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_GET_INKEY.
+ */
+[scriptable, uuid(27a4078a-6025-11e4-a9ab-bf39252bfaf1)]
+interface nsIStkInputKeyCmd : nsIStkInputCmd
+{
+  /**
+   * Yes/No response is requested.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INKEY, bit 3.
+   *
+   * true: Yes/No response is requested, and character sets
+   *       (Alphabet set and UCS2) are disabled.
+   * false: Character sets (Alphabet set and UCS2) are enabled.
+   */
+  readonly attribute boolean isYesNoRequested;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_GET_INPUT.
+ */
+[scriptable, uuid(f3c33ae8-60d4-11e4-9da8-4ff4cb8566c3)]
+interface nsIStkInputTextCmd : nsIStkInputCmd
+{
+  /**
+   * Visibility of input.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 3.
+   *
+   * true: User input shall not be revealed in any way.
+   * false: ME may echo user input on the display.
+   */
+  readonly attribute boolean hideInput;
+
+  /**
+   * User input in packed or unpacked format.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 4.
+   *
+   * true: User input to be in SMS packed format.
+   * false: User input to be in unpacked format.
+   */
+  readonly attribute boolean isPacked;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_SET_UP_CALL.
+ */
+[scriptable, uuid(6abbf688-6956-11e4-a9d3-4b07f063ef21)]
+interface nsIStkSetUpCallCmd : nsIStkProactiveCmd
+{
+  /**
+   * The Dialling number.
+   */
+  readonly attribute DOMString address;
+
+  /**
+   * (Optional)
+   * The text message used in user confirmation phase.
+   */
+  readonly attribute DOMString confirmText;
+
+  /**
+   * (Optional)
+   * Icon to be displayed in user confirmation phase.
+   */
+  readonly attribute nsIStkIconInfo confirmIconInfo;
+
+  /**
+   * (Optional)
+   * The text message used in call set up phase.
+   */
+  readonly attribute DOMString callText;
+
+  /**
+   * (Optional)
+   * Icon to be displayed in call set up phase.
+   */
+  readonly attribute nsIStkIconInfo callIconInfo;
+
+  /**
+   * (Optional)
+   * The maximum duration for the redial mechanism.
+   * The time elapsed since the first call set-up attempt has exceeded the duration
+   * requested by the UICC, the redial mechanism is terminated.
+   */
+  readonly attribute nsIStkDuration duration;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_LAUNCH_BROWSER.
+ */
+[scriptable, uuid(b9bca548-695b-11e4-8c1f-cfb850f421ab)]
+interface nsIStkBrowserSettingCmd : nsIStkProactiveCmd
+{
+  /**
+   * The URL to be opened by browser.
+   */
+  readonly attribute DOMString url;
+
+  /**
+   * Browser launch mode.
+   * @See TS 11.14, clause 12.6, Command Qualifier, LAUNCH BROWSER.
+   */
+  readonly attribute unsigned short mode;
+
+  /**
+   * (Optional)
+   * Confirm message to launch browser.
+   */
+  readonly attribute DOMString confirmText;
+
+  /**
+   * (Optional)
+   * Icon to be displayed in user confirmation phase.
+   */
+  readonly attribute nsIStkIconInfo confirmIconInfo;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_PLAY_TONE.
+ */
+[scriptable, uuid(f49dd148-60ee-11e4-af46-6b938538de51)]
+interface nsIStkPlayToneCmd : nsIStkProactiveCmd
+{
+  const unsigned short TONE_TYPE_INVALID = 0xFFFF;
+
+  /**
+   * (Optional)
+   * Text String.
+   */
+  readonly attribute DOMString text;
+
+  /**
+   * (Optional)
+   * One of the tone value coded in TS 11.14, clause 12.16, Tone.
+   *
+   * Set to TONE_TYPE_INVALID if null.
+   */
+  readonly attribute unsigned short tone;
+
+  /**
+   * (Optional)
+   * The length of time for which the ME shall generate the tone.
+   */
+  readonly attribute nsIStkDuration duration;
+
+  /**
+   * Need to vibrate or not.
+   * true: vibrate alert, if available, with the tone.
+   * false: use of vibrate alert is up to the ME.
+   */
+  readonly attribute boolean isVibrate;
+
+  /**
+   * (Optional)
+   * Icon to be displayed.
+   */
+  readonly attribute nsIStkIconInfo iconInfo;
+};
+
+/**
+ * This interface is to be applied by STK_CMD_TIMER_MANAGEMENT.
+ */
+[scriptable, uuid(e421b122-60f3-11e4-b8d7-bfe75825a796)]
+interface nsIStkTimerManagementCmd : nsIStkProactiveCmd
+{
+  /**
+   * Timer Information.
+   */
+  readonly attribute nsIStkTimer timerInfo;
+};
