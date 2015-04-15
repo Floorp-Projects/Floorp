@@ -126,9 +126,6 @@ public:
   // Only callable from the thread that created the Context.
   void CancelAll();
 
-  // True if CancelAll() has been called.
-  bool IsCanceled() const;
-
   // Like CancelAll(), but also marks the Manager as "invalid".
   void Invalidate();
 
