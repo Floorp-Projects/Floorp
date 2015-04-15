@@ -457,7 +457,7 @@ public:
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    nsresult rv = db::DeleteCacheId(aConn, mCacheId, mDeletedBodyIdList);
+    nsresult rv = db::DeleteCache(aConn, mCacheId, mDeletedBodyIdList);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = trans.Commit();
@@ -1218,7 +1218,7 @@ public:
       return rv;
     }
 
-    rv = db::CreateCacheId(aConn, &mCacheId);
+    rv = db::CreateCache(aConn, &mCacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = db::StoragePutCache(aConn, mNamespace, mArgs.key(), mCacheId);
