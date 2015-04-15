@@ -146,7 +146,8 @@ function startTest(test, token)
     }
   );
 
-  LoadTestWithManagedLoadToken(test, v, manager, token);
+  LoadTestWithManagedLoadToken(test, v, manager, token,
+                               { onlyLoadFirstFragments:2, noEndOfStream:true });
 }
 
 function beginTest() {

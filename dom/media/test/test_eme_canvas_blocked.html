@@ -38,7 +38,8 @@ function startTest(test, token)
     manager.finished(token);
   });
 
-  LoadTestWithManagedLoadToken(test, v, manager, token);
+  LoadTestWithManagedLoadToken(test, v, manager, token,
+                               { onlyLoadFirstFragments:2, noEndOfStream:true });
 }
 
 function beginTest() {

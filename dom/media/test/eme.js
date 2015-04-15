@@ -144,23 +144,28 @@ function MaybeCrossOriginURI(test, uri)
   }
 }
 
-function AppendTrack(test, ms, track, token)
+function AppendTrack(test, ms, track, token, loadParams)
 {
   return new Promise(function(resolve, reject) {
     var sb;
     var curFragment = 0;
     var resolved = false;
+    var fragments = track.fragments;
     var fragmentFile;
 
+    if (loadParams && loadParams.onlyLoadFirstFragments) {
+      fragments = fragments.slice(0, loadParams.onlyLoadFirstFragments);
+    }
+
     function addNextFragment() {
-      if (curFragment >= track.fragments.length) {
+      if (curFragment >= fragments.length) {
         Log(token, track.name + ": end of track");
         resolve();
         resolved = true;
         return;
       }
 
-      fragmentFile = MaybeCrossOriginURI(test, track.fragments[curFragment++]);
+      fragmentFile = MaybeCrossOriginURI(test, fragments[curFragment++]);
 
       var req = new XMLHttpRequest();
       req.open("GET", fragmentFile);
@@ -206,7 +211,7 @@ function AppendTrack(test, ms, track, token)
 
 //Returns a promise that is resolved when the media element is ready to have
 //its play() function called; when it's loaded MSE fragments.
-function LoadTest(test, elem, token)
+function LoadTest(test, elem, token, loadParams)
 {
   if (!test.tracks) {
     ok(false, token + " test does not have a tracks list");
@@ -227,10 +232,14 @@ function LoadTest(test, elem, token)
       firstOpen = false;
       Log(token, "sourceopen");
       return Promise.all(test.tracks.map(function(track) {
-        return AppendTrack(test, ms, track, token);
+        return AppendTrack(test, ms, track, token, loadParams);
       })).then(function(){
-        Log(token, "end of stream");
-        ms.endOfStream();
+        if (loadParams && loadParams.noEndOfStream) {
+          Log(token, "Tracks loaded");
+        } else {
+          Log(token, "Tracks loaded, calling MediaSource.endOfStream()");
+          ms.endOfStream();
+        }
         resolve();
       });
     })
