@@ -9628,6 +9628,14 @@
         "url": "/XMLHttpRequest/send-timeout-events.htm"
       },
       {
+        "path": "XMLHttpRequest/send-usp.html",
+        "url": "/XMLHttpRequest/send-usp.html"
+      },
+      {
+        "path": "XMLHttpRequest/send-usp.worker.js",
+        "url": "/XMLHttpRequest/send-usp.worker"
+      },
+      {
         "path": "XMLHttpRequest/setrequestheader-after-send.htm",
         "url": "/XMLHttpRequest/setrequestheader-after-send.htm"
       },
@@ -16100,14 +16108,6 @@
         "url": "/service-workers/cache-storage/serviceworker/cache-delete.https.html"
       },
       {
-        "path": "service-workers/cache-storage/serviceworker/cache-match.https.html",
-        "url": "/service-workers/cache-storage/serviceworker/cache-match.https.html"
-      },
-      {
-        "path": "service-workers/cache-storage/serviceworker/cache-put.https.html",
-        "url": "/service-workers/cache-storage/serviceworker/cache-put.https.html"
-      },
-      {
         "path": "service-workers/cache-storage/serviceworker/cache-storage-keys.https.html",
         "url": "/service-workers/cache-storage/serviceworker/cache-storage-keys.https.html"
       },
@@ -16126,14 +16126,6 @@
       {
         "path": "service-workers/cache-storage/window/cache-delete.https.html",
         "url": "/service-workers/cache-storage/window/cache-delete.https.html"
-      },
-      {
-        "path": "service-workers/cache-storage/window/cache-match.https.html",
-        "url": "/service-workers/cache-storage/window/cache-match.https.html"
-      },
-      {
-        "path": "service-workers/cache-storage/window/cache-put.https.html",
-        "url": "/service-workers/cache-storage/window/cache-put.https.html"
       },
       {
         "path": "service-workers/cache-storage/window/cache-storage-keys.https.html",
@@ -16158,14 +16150,6 @@
       {
         "path": "service-workers/cache-storage/worker/cache-delete.https.html",
         "url": "/service-workers/cache-storage/worker/cache-delete.https.html"
-      },
-      {
-        "path": "service-workers/cache-storage/worker/cache-match.https.html",
-        "url": "/service-workers/cache-storage/worker/cache-match.https.html"
-      },
-      {
-        "path": "service-workers/cache-storage/worker/cache-put.https.html",
-        "url": "/service-workers/cache-storage/worker/cache-put.https.html"
       },
       {
         "path": "service-workers/cache-storage/worker/cache-storage-keys.https.html",
@@ -19515,6 +19499,36 @@
         "url": "/media-source/mediasource-redundant-seek.html"
       },
       {
+        "path": "service-workers/cache-storage/serviceworker/cache-match.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/serviceworker/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-put.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/serviceworker/cache-put.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-match.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/window/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-put.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/window/cache-put.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-match.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/worker/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-put.https.html",
+        "timeout": "long",
+        "url": "/service-workers/cache-storage/worker/cache-put.https.html"
+      },
+      {
         "path": "websockets/binary/002.html",
         "timeout": "long",
         "url": "/websockets/binary/002.html"
@@ -19646,52 +19660,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "service-workers/cache-storage/serviceworker/cache-match.https.html": [
-          {
-            "path": "service-workers/cache-storage/serviceworker/cache-match.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/serviceworker/cache-match.https.html"
-          }
-        ],
-        "service-workers/cache-storage/serviceworker/cache-put.https.html": [
-          {
-            "path": "service-workers/cache-storage/serviceworker/cache-put.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/serviceworker/cache-put.https.html"
-          }
-        ],
-        "service-workers/cache-storage/window/cache-match.https.html": [
-          {
-            "path": "service-workers/cache-storage/window/cache-match.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/window/cache-match.https.html"
-          }
-        ],
-        "service-workers/cache-storage/window/cache-put.https.html": [
-          {
-            "path": "service-workers/cache-storage/window/cache-put.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/window/cache-put.https.html"
-          }
-        ],
-        "service-workers/cache-storage/worker/cache-match.https.html": [
-          {
-            "path": "service-workers/cache-storage/worker/cache-match.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/worker/cache-match.https.html"
-          }
-        ],
-        "service-workers/cache-storage/worker/cache-put.https.html": [
-          {
-            "path": "service-workers/cache-storage/worker/cache-put.https.html",
-            "timeout": "long",
-            "url": "/service-workers/cache-storage/worker/cache-put.https.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -24760,7 +24729,7 @@
       }
     ]
   },
-  "rev": "7311aa630534282885b9add15b1c30b2b59316dd",
+  "rev": "89b6e2bc460316c7f273712d22f0b2d3a3d0c5be",
   "url_base": "/",
   "version": 2
 }
