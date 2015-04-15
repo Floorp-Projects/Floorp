@@ -870,3 +870,8 @@ pref("gfx.vsync.refreshdriver", true);
 
 // Selection carets never fall-back to internal LongTap detector.
 pref("selectioncaret.detects.longtap", false);
+
+// Enable Service workers for Android on non-release builds
+#ifdef NIGHTLY_BUILD
+pref("dom.serviceWorkers.enabled", true);
+#endif

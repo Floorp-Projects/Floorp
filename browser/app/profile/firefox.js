@@ -1887,3 +1887,8 @@ pref("browser.readinglist.sidebarEverOpened", false);
 // Enable the readinglist engine by default.
 pref("readinglist.scheduler.enabled", true);
 pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");
+
+// Enable Service workers for desktop on non-release builds
+#ifdef NIGHTLY_BUILD
+pref("dom.serviceWorkers.enabled", true);
+#endif
