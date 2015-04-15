@@ -10,6 +10,7 @@ interface WindowProxy;
 interface nsISupports;
 interface URI;
 interface nsIDocShell;
+interface nsILoadGroup;
 
 enum VisibilityState { "hidden", "visible" };
 
@@ -354,6 +355,8 @@ partial interface Document {
   [ChromeOnly] readonly attribute nsIDocShell? docShell;
 
   [ChromeOnly] readonly attribute DOMString contentLanguage;
+
+  [ChromeOnly] readonly attribute nsILoadGroup? documentLoadGroup;
 };
 
 // Extension to give chrome JS the ability to determine when a document was
