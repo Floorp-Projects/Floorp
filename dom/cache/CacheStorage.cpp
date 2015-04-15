@@ -13,7 +13,6 @@
 #include "mozilla/dom/cache/AutoUtils.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
-#include "mozilla/dom/cache/CacheOpChild.h"
 #include "mozilla/dom/cache/CacheStorageChild.h"
 #include "mozilla/dom/cache/Feature.h"
 #include "mozilla/dom/cache/PCacheChild.h"
@@ -440,9 +439,7 @@ CacheStorage::MaybeRunPendingRequests()
       entry->mPromise->MaybeReject(rv);
       continue;
     }
-    unused << mActor->SendPCacheOpConstructor(
-      new CacheOpChild(mActor->GetFeature(), mGlobal, this, entry->mPromise),
-      args.SendAsOpArgs());
+    mActor->ExecuteOp(mGlobal, entry->mPromise, args.SendAsOpArgs());
   }
   mPendingRequests.Clear();
 }
