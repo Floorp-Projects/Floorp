@@ -11,8 +11,6 @@ EXPORTS.mozilla.dom.cache += [
     'AutoUtils.h',
     'Cache.h',
     'CacheChild.h',
-    'CacheOpChild.h',
-    'CacheOpParent.h',
     'CacheParent.h',
     'CachePushStreamChild.h',
     'CachePushStreamParent.h',
@@ -48,8 +46,6 @@ UNIFIED_SOURCES += [
     'AutoUtils.cpp',
     'Cache.cpp',
     'CacheChild.cpp',
-    'CacheOpChild.cpp',
-    'CacheOpParent.cpp',
     'CacheParent.cpp',
     'CachePushStreamChild.cpp',
     'CachePushStreamParent.cpp',
@@ -77,8 +73,8 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'CacheInitData.ipdlh',
     'PCache.ipdl',
-    'PCacheOp.ipdl',
     'PCachePushStream.ipdl',
     'PCacheStorage.ipdl',
     'PCacheStreamControl.ipdl',
