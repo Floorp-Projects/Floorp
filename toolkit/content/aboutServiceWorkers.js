@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 const bundle = Services.strings.createBundle(
   "chrome://global/locale/aboutServiceWorkers.properties");
 
+let gSWM;
+
 function init() {
   let enabled = Services.prefs.getBoolPref("dom.serviceWorkers.enabled");
   if (!enabled) {
@@ -19,14 +21,14 @@ function init() {
     return;
   }
 
-  let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
-              .getService(Ci.nsIServiceWorkerManager);
-  if (!swm) {
+  gSWM = Cc["@mozilla.org/serviceworkers/manager;1"]
+           .getService(Ci.nsIServiceWorkerManager);
+  if (!gSWM) {
     dump("AboutServiceWorkers: Failed to get the ServiceWorkerManager service!\n");
     return;
   }
 
-  let data = swm.getAllRegistrations();
+  let data = gSWM.getAllRegistrations();
   if (!data) {
     dump("AboutServiceWorkers: Failed to retrieve the registrations.\n");
     return;
@@ -96,6 +98,13 @@ function display(info) {
   createItem(bundle.GetStringFromName('currentWorkerURL'), info.currentWorkerURL, true);
   createItem(bundle.GetStringFromName('activeCacheName'), info.activeCacheName);
   createItem(bundle.GetStringFromName('waitingCacheName'), info.waitingCacheName);
+
+  var updateButton = document.createElement("button");
+  updateButton.appendChild(document.createTextNode(bundle.GetStringFromName('update')));
+  updateButton.onclick = function() {
+    gSWM.update(info.scope);
+  };
+  div.appendChild(updateButton);
 
   let sep = document.createElement('hr');
   div.appendChild(sep);
