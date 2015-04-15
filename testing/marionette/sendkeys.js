@@ -17,11 +17,8 @@
  */
 
 let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
-Cu.import("chrome://marionette/content/error.js");
-
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
-    .getService(Ci.mozIJSSubScriptLoader);
+               .getService(Ci.mozIJSSubScriptLoader);
 
 let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
@@ -141,7 +138,8 @@ function sendKeysToElement (document, element, keysToSend, successCallback, erro
       sendSingleKey(c, modifiers, document);
     }
     successCallback(command_id);
-  } else {
-    errorCallback(new ElementNotVisibleError("Element is not visible"), command_id);
+  }
+  else {
+    errorCallback("Element is not visible", 11, null, command_id);
   }
 };
