@@ -10,10 +10,6 @@ if CONFIG['MOZ_B2G_BT']:
     # Generic code
     #
 
-    SOURCES += [
-        'BluetoothInterface.cpp'
-    ]
-
     if CONFIG['MOZ_B2G_BT_API_V2']:
         SOURCES += [
             'bluetooth2/BluetoothAdapter.cpp',
@@ -25,6 +21,7 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth2/BluetoothGattDescriptor.cpp',
             'bluetooth2/BluetoothGattService.cpp',
             'bluetooth2/BluetoothHidManager.cpp',
+            'bluetooth2/BluetoothInterface.cpp',
             'bluetooth2/BluetoothManager.cpp',
             'bluetooth2/BluetoothPairingHandle.cpp',
             'bluetooth2/BluetoothPairingListener.cpp',
@@ -52,6 +49,7 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth1/BluetoothAdapter.cpp',
             'bluetooth1/BluetoothDevice.cpp',
             'bluetooth1/BluetoothHidManager.cpp',
+            'bluetooth1/BluetoothInterface.cpp',
             'bluetooth1/BluetoothInterfaceHelpers.cpp',
             'bluetooth1/BluetoothManager.cpp',
             'bluetooth1/BluetoothProfileController.cpp',
