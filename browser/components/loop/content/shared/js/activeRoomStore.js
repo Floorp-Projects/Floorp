@@ -80,10 +80,14 @@ loop.store.ActiveRoomStore = (function() {
         remoteVideoDimensions: {},
         screenSharingState: SCREEN_SHARE_STATES.INACTIVE,
         receivingScreenShare: false,
+        // Any urls (aka context) associated with the room.
+        roomContextUrls: null,
         // The roomCryptoKey to decode the context data if necessary.
         roomCryptoKey: null,
         // Room information failed to be obtained for a reason. See ROOM_INFO_FAILURES.
         roomInfoFailure: null,
+        // The name of the room.
+        roomName: null,
         // Social API state.
         socialShareButtonAvailable: false,
         socialShareProviders: null
@@ -271,6 +275,7 @@ loop.store.ActiveRoomStore = (function() {
               .then(function(decryptedResult) {
           var realResult = JSON.parse(decryptedResult);
 
+          roomInfoData.urls = realResult.urls;
           roomInfoData.roomName = realResult.roomName;
 
           dispatcher.dispatch(roomInfoData);
@@ -320,6 +325,7 @@ loop.store.ActiveRoomStore = (function() {
      */
     updateRoomInfo: function(actionData) {
       this.setStoreState({
+        roomContextUrls: actionData.urls,
         roomInfoFailure: actionData.roomInfoFailure,
         roomName: actionData.roomName,
         roomOwner: actionData.roomOwner,

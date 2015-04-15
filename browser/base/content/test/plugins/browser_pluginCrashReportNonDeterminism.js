@@ -109,7 +109,7 @@ add_task(function* setup() {
     extraFile.remove(false);
   };
 
-  Services.obs.addObserver(crashObserver, "plugin-crashed");
+  Services.obs.addObserver(crashObserver, "plugin-crashed", false);
   // plugins.testmode will make BrowserPlugins:Test:ClearCrashData work.
   Services.prefs.setBoolPref("plugins.testmode", true);
   registerCleanupFunction(() => {

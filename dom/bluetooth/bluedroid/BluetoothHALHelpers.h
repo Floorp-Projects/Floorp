@@ -119,13 +119,8 @@ Convert(ConvertNamedValue& aIn, bt_property_t& aOut);
 nsresult
 Convert(const nsAString& aIn, bt_bdaddr_t& aOut);
 
-#ifdef MOZ_B2G_BT_API_V2
 nsresult
 Convert(BluetoothSspVariant aIn, bt_ssp_variant_t& aOut);
-#else
-nsresult
-Convert(const nsAString& aIn, bt_ssp_variant_t& aOut);
-#endif
 
 inline nsresult
 Convert(const bt_ssp_variant_t& aIn, BluetoothSspVariant& aOut)
