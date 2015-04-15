@@ -11,6 +11,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
+const GONK_STKCMDFACTORY_CONTRACTID = "@mozilla.org/icc/stkcmdfactory;1";
+const GONK_STKCMDFACTORY_CID = Components.ID("{7a663440-e336-11e4-8fd5-c3140a7ff307}");
+
 /**
  * Helper Utilities to convert JS Objects to IDL Objects.
  */
@@ -64,7 +67,7 @@ function appendIconInfo(aTarget, aStkIconInfo) {
 
 /**
  * The implementation of the data types used in variant types of
- * StkProactiveCommand.
+ * StkProactiveCommand, StkTerminalResponse, StkDownloadEvent.
  */
 
 function StkDuration(aTimeUnit, aTimeInterval) {
@@ -181,7 +184,7 @@ StkTimer.prototype = {
 };
 
 /**
- * The implementation of nsIStkProactiveCommand Set and STK System Message Set.
+ * The implementation of nsIStkProactiveCommand set and paired JS object set.
  */
 function StkProactiveCommand(aCommandDetails) {
   this.commandNumber = aCommandDetails.commandNumber;
@@ -998,11 +1001,21 @@ QueriedIFs[RIL.STK_CMD_RECEIVE_DATA] = Ci.nsIStkTextMessageCmd;
 /**
  * StkProactiveCmdFactory
  */
-this.StkProactiveCmdFactory = {
+function StkProactiveCmdFactory() {
+}
+StkProactiveCmdFactory.prototype = {
+  classID: GONK_STKCMDFACTORY_CID,
+
+  classInfo: XPCOMUtils.generateCI({classID: GONK_STKCMDFACTORY_CID,
+                                    contractID: GONK_STKCMDFACTORY_CONTRACTID,
+                                    classDescription: "StkProactiveCmdFactory",
+                                    interfaces: [Ci.nsIStkCmdFactory],
+                                    flags: Ci.nsIClassInfo.SINGLETON}),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStkCmdFactory]),
+
   /**
-   * @param  aCommandDetails
-   *         The CommandDetails decoded from ril_worker.js.
-   * @return a nsIStkProactiveCmd instance.
+   * nsIStkCmdFactory interface.
    */
   createCommand: function(aCommandDetails) {
     let cmdType = CmdPrototypes[aCommandDetails.typeOfCommand];
@@ -1014,10 +1027,6 @@ this.StkProactiveCmdFactory = {
     return new cmdType(aCommandDetails);
   },
 
-  /**
-   * @param  nsIStkProactiveCmd instance.
-   * @return a Javascript object with the same structure to MozStkCommandEvent.
-   */
   createCommandMessage: function(aStkProactiveCmd) {
     let cmd = null;
 
@@ -1039,6 +1048,4 @@ this.StkProactiveCmdFactory = {
   },
 };
 
-this.EXPORTED_SYMBOLS = [
-  'StkProactiveCmdFactory'
-];
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([StkProactiveCmdFactory]);
