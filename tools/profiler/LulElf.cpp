@@ -84,7 +84,7 @@ using lul::FindElfSectionByName;
 using lul::GetOffset;
 using lul::IsValidElf;
 using lul::Module;
-using lul::UniqueString;
+using lul::UniqueStringUniverse;
 using lul::scoped_ptr;
 using lul::Summariser;
 using std::string;
@@ -183,6 +183,7 @@ bool LoadDwarfCFI(const string& dwarf_filename,
                   const bool big_endian,
                   SecMap* smap,
                   uintptr_t text_bias,
+                  UniqueStringUniverse* usu,
                   void (*log)(const char*)) {
   // Find the appropriate set of register names for this file's
   // architecture.
@@ -209,7 +210,7 @@ bool LoadDwarfCFI(const string& dwarf_filename,
   Summariser* summ = new Summariser(smap, text_bias, log);
 
   DwarfCFIToModule::Reporter module_reporter(log, dwarf_filename, section_name);
-  DwarfCFIToModule handler(num_dw_regs, &module_reporter, summ);
+  DwarfCFIToModule handler(num_dw_regs, &module_reporter, usu, summ);
   lul::ByteReader byte_reader(endianness);
 
   byte_reader.SetAddressSize(ElfClass::kAddrSize);
@@ -447,6 +448,7 @@ bool LoadSymbols(const string& obj_file,
                  LoadSymbolsInfo<ElfClass>* info,
                  SecMap* smap,
                  void* rx_avma, size_t rx_size,
+                 UniqueStringUniverse* usu,
                  void (*log)(const char*)) {
   typedef typename ElfClass::Phdr Phdr;
   typedef typename ElfClass::Shdr Shdr;
@@ -492,7 +494,7 @@ bool LoadSymbols(const string& obj_file,
     bool result =
         LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".debug_frame",
                                dwarf_cfi_section, false, 0, 0, big_endian,
-                               smap, text_bias, log);
+                               smap, text_bias, usu, log);
     found_usable_info = found_usable_info || result;
     if (result)
       log("LoadSymbols:   read CFI from .debug_frame");
@@ -521,7 +523,7 @@ bool LoadSymbols(const string& obj_file,
         LoadDwarfCFI<ElfClass>(obj_file, elf_header, ".eh_frame",
                                eh_frame_section, true,
                                got_section, text_section, big_endian,
-                               smap, text_bias, log);
+                               smap, text_bias, usu, log);
     found_usable_info = found_usable_info || result;
     if (result)
       log("LoadSymbols:   read CFI from .eh_frame");
@@ -622,6 +624,7 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
                             const string& obj_filename,
                             const vector<string>& debug_dirs,
                             SecMap* smap, void* rx_avma, size_t rx_size,
+                            UniqueStringUniverse* usu,
                             void (*log)(const char*)) {
   typedef typename ElfClass::Ehdr Ehdr;
 
@@ -652,7 +655,7 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
   LoadSymbolsInfo<ElfClass> info(debug_dirs);
   if (!LoadSymbols<ElfClass>(obj_filename, big_endian, elf_header,
                              !debug_dirs.empty(), &info,
-                             smap, rx_avma, rx_size, log)) {
+                             smap, rx_avma, rx_size, usu, log)) {
     const string debuglink_file = info.debuglink_file();
     if (debuglink_file.empty())
       return false;
@@ -691,7 +694,7 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
 
     if (!LoadSymbols<ElfClass>(debuglink_file, debug_big_endian,
                                debug_elf_header, false, &info,
-                               smap, rx_avma, rx_size, log)) {
+                               smap, rx_avma, rx_size, usu, log)) {
       return false;
     }
   }
@@ -708,6 +711,7 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const string& obj_filename,
                             const vector<string>& debug_dirs,
                             SecMap* smap, void* rx_avma, size_t rx_size,
+                            UniqueStringUniverse* usu,
                             void (*log)(const char*)) {
 
   if (!IsValidElf(obj_file)) {
@@ -719,12 +723,12 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
   if (elfclass == ELFCLASS32) {
     return ReadSymbolDataElfClass<ElfClass32>(
         reinterpret_cast<const Elf32_Ehdr*>(obj_file),
-        obj_filename, debug_dirs, smap, rx_avma, rx_size, log);
+        obj_filename, debug_dirs, smap, rx_avma, rx_size, usu, log);
   }
   if (elfclass == ELFCLASS64) {
     return ReadSymbolDataElfClass<ElfClass64>(
         reinterpret_cast<const Elf64_Ehdr*>(obj_file),
-        obj_filename, debug_dirs, smap, rx_avma, rx_size, log);
+        obj_filename, debug_dirs, smap, rx_avma, rx_size, usu, log);
   }
 
   return false;
@@ -733,6 +737,7 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
 bool ReadSymbolData(const string& obj_file,
                     const vector<string>& debug_dirs,
                     SecMap* smap, void* rx_avma, size_t rx_size,
+                    UniqueStringUniverse* usu,
                     void (*log)(const char*)) {
   MmapWrapper map_wrapper;
   void* elf_header = NULL;
@@ -741,7 +746,7 @@ bool ReadSymbolData(const string& obj_file,
 
   return ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(elf_header),
                                 obj_file, debug_dirs,
-                                smap, rx_avma, rx_size, log);
+                                smap, rx_avma, rx_size, usu, log);
 }
 
 

@@ -14,12 +14,12 @@
 namespace js {
 namespace jit {
 
+class BacktrackingAllocator;
 class MDefinition;
 class MInstruction;
 class MBasicBlock;
 class MIRGraph;
 class MResumePoint;
-class LinearScanAllocator;
 class LNode;
 
 class JSONSpewer
@@ -63,7 +63,7 @@ class JSONSpewer
     void spewMIR(MIRGraph* mir);
     void spewLIns(LNode* ins);
     void spewLIR(MIRGraph* mir);
-    void spewIntervals(LinearScanAllocator* regalloc);
+    void spewIntervals(BacktrackingAllocator* regalloc);
     void endPass();
     void endFunction();
     void finish();

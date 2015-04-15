@@ -25,7 +25,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'Profiler.jsm',
     ]
     UNIFIED_SOURCES += [
-        'BreakpadSampler.cpp',
         'JSStreamWriter.cpp',
         'nsProfiler.cpp',
         'nsProfilerFactory.cpp',
@@ -39,7 +38,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'SyncProfile.cpp',
         'TableTicker.cpp',
         'ThreadResponsiveness.cpp',
-        'UnwinderThread2.cpp',
     ]
 
     # This file cannot be built in unified mode because of name clashes with mozglue headers on Android.
@@ -55,7 +53,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             'LulDwarfSummariser.cpp',
             'LulElf.cpp',
             'LulMain.cpp',
-            'LulRWLock.cpp',
+            'platform-linux-lul.cpp',
         ]
         # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [

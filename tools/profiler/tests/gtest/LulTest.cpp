@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/Atomics.h"
 #include "LulMain.h"
-#include "GeckoProfiler.h"     // for TracingMetadata
-#include "UnwinderThread2.h"   // for read_procmaps
+#include "GeckoProfiler.h"       // for TracingMetadata
+#include "platform-linux-lul.h"  // for read_procmaps
 
 // Set this to 0 to make LUL be completely silent during tests.
 // Set it to 1 to get logging output from LUL, presumably for
@@ -15,7 +16,7 @@
 
 // LUL needs a callback for its logging sink.
 static void
-logging_sink_for_LUL(const char* str) {
+gtest_logging_sink_for_LUL(const char* str) {
   if (DEBUG_LUL_TEST == 0) {
     return;
   }
@@ -35,12 +36,12 @@ TEST(LUL, unwind_consistency) {
   // Set up LUL and get it to read unwind info for libxul.so, which is
   // all we care about here, plus (incidentally) practically every
   // other object in the process too.
-  lul::LUL* lul = new lul::LUL(logging_sink_for_LUL);
-  lul->RegisterUnwinderThread();
+  lul::LUL* lul = new lul::LUL(gtest_logging_sink_for_LUL);
   read_procmaps(lul);
 
   // Run unwind tests and receive information about how many there
   // were and how many were successful.
+  lul->EnableUnwinding();
   int nTests = 0, nTestsPassed = 0;
   RunLulUnitTests(&nTests, &nTestsPassed, lul);
   EXPECT_TRUE(nTests == 6) << "Unexpected number of tests";

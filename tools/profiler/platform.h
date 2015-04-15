@@ -203,8 +203,7 @@ class Thread {
 // backtraces are available only on selected platforms.  Breakpad is
 // the only supported native unwinder.  HAVE_NATIVE_UNWIND is set at
 // build time to indicate whether native unwinding is possible on this
-// platform.  The actual unwind mode currently in use is stored in
-// sUnwindMode.
+// platform.
 
 #undef HAVE_NATIVE_UNWIND
 #if defined(MOZ_PROFILING) \
@@ -217,7 +216,6 @@ class Thread {
 
 /* Some values extracted at startup from environment variables, that
    control the behaviour of the breakpad unwinder. */
-extern const char* PROFILER_MODE;
 extern const char* PROFILER_INTERVAL;
 extern const char* PROFILER_ENTRIES;
 extern const char* PROFILER_STACK;
@@ -227,18 +225,10 @@ void read_profiler_env_vars();
 void profiler_usage();
 
 // Helper methods to expose modifying profiler behavior
-bool set_profiler_mode(const char*);
 bool set_profiler_interval(const char*);
 bool set_profiler_entries(const char*);
 bool set_profiler_scan(const char*);
 bool is_native_unwinding_avail();
-
-typedef  enum { UnwINVALID, UnwNATIVE, UnwPSEUDO, UnwCOMBINED }  UnwMode;
-extern UnwMode sUnwindMode;       /* what mode? */
-extern int     sUnwindInterval;   /* in milliseconds */
-extern int     sUnwindStackScan;  /* max # of dubious frames allowed */
-
-extern int     sProfileEntries;   /* how many entries do we store? */
 
 void set_tls_stack_top(void* stackTop);
 
