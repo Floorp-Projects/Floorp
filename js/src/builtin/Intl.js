@@ -539,10 +539,10 @@ function CanonicalizeLocaleList(locales) {
         if (kPresent) {
             var kValue = O[k];
             if (!(typeof kValue === "string" || IsObject(kValue)))
-                ThrowError(JSMSG_INVALID_LOCALES_ELEMENT);
+                ThrowTypeError(JSMSG_INVALID_LOCALES_ELEMENT);
             var tag = ToString(kValue);
             if (!IsStructurallyValidLanguageTag(tag))
-                ThrowError(JSMSG_INVALID_LANGUAGE_TAG, tag);
+                ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, tag);
             tag = CanonicalizeLanguageTag(tag);
             if (seen.indexOf(tag) === -1)
                 seen.push(tag);
