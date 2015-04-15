@@ -38,6 +38,7 @@
 #include "nsPrintfCString.h"
 #include "nsIFrame.h"
 #include "RestyleManager.h"
+#include "nsQueryObject.h"
 
 #include <inttypes.h>
 

@@ -17,6 +17,7 @@
 #include "nsIRunnable.h"
 #include "nsISeekableStream.h"
 #include "nsThreadUtils.h"
+#include "nsQueryObject.h"
 
 #ifdef DEBUG
 #include "nsXULAppAPI.h"

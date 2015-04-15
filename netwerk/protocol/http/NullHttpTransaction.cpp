@@ -13,6 +13,7 @@
 #include "nsHttpRequestHead.h"
 #include "nsIHttpActivityObserver.h"
 #include "NullHttpChannel.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {

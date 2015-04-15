@@ -24,6 +24,7 @@
 #include "nsFrame.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "ClientLayerManager.h"
+#include "nsQueryObject.h"
 
 #include "nsIScrollableFrame.h"
 
