@@ -239,7 +239,7 @@ private:
 
   nsresult InitializeRootNode();
 
-  void FinishedRestoringSelection() { mRestoringSelection = nullptr; }
+  void FinishedRestoringSelection();
 
   mozilla::dom::HTMLInputElement* GetParentNumberControl(nsFrame* aFrame) const;
 
@@ -271,7 +271,7 @@ private:
 
   nsITextControlElement* const mTextCtrlElement;
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
-  RestoreSelectionState* mRestoringSelection;
+  nsRefPtr<RestoreSelectionState> mRestoringSelection;
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<mozilla::dom::Element> mRootNode;
   nsCOMPtr<mozilla::dom::Element> mPlaceholderDiv;

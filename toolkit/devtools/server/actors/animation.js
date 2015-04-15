@@ -59,7 +59,7 @@ let AnimationPlayerActor = ActorClass({
     Actor.prototype.initialize.call(this, animationsActor.conn);
 
     this.player = player;
-    this.node = player.source.target;
+    this.node = player.effect.target;
     this.playerIndex = playerIndex;
     this.styles = this.node.ownerDocument.defaultView.getComputedStyle(this.node);
   },
@@ -115,7 +115,7 @@ let AnimationPlayerActor = ActorClass({
     // the list.
     names = names.split(",").map(n => n.trim());
     for (let i = 0; i < names.length; i ++) {
-      if (names[i] === this.player.source.effect.name) {
+      if (names[i] === this.player.effect.name) {
         return i;
       }
     }
@@ -207,7 +207,7 @@ let AnimationPlayerActor = ActorClass({
       currentTime: this.player.currentTime,
       playState: this.player.playState,
       playbackRate: this.player.playbackRate,
-      name: this.player.source.effect.name,
+      name: this.player.effect.name,
       duration: this.getDuration(),
       delay: this.getDelay(),
       iterationCount: this.getIterationCount(),
@@ -552,7 +552,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
           continue;
         }
         let actor = AnimationPlayerActor(
-          this, player, player.source.target.getAnimations().indexOf(player));
+          this, player, player.effect.target.getAnimations().indexOf(player));
         this.actors.push(actor);
         eventData.push({
           type: "added",

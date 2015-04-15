@@ -446,6 +446,9 @@ GLContextEGL::ReleaseSurface() {
     if (mOwnsContext) {
         mozilla::gl::DestroySurface(mSurface);
     }
+    if (mSurface == mSurfaceOverride) {
+        mSurfaceOverride = EGL_NO_SURFACE;
+    }
     mSurface = EGL_NO_SURFACE;
 }
 
@@ -812,6 +815,41 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     return glContext.forget();
 }
+
+#if defined(ANDROID)
+EGLSurface
+GLContextProviderEGL::CreateEGLSurface(void* aWindow)
+{
+    if (!sEGLLibrary.EnsureInitialized()) {
+        MOZ_CRASH("Failed to load EGL library!\n");
+    }
+
+    EGLConfig config;
+    if (!CreateConfig(&config)) {
+        MOZ_CRASH("Failed to create EGLConfig!\n");
+    }
+
+    MOZ_ASSERT(aWindow);
+
+    EGLSurface surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, aWindow, 0);
+
+    if (surface == EGL_NO_SURFACE) {
+        MOZ_CRASH("Failed to create EGLSurface!\n");
+    }
+
+    return surface;
+}
+
+void
+GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface)
+{
+    if (!sEGLLibrary.EnsureInitialized()) {
+        MOZ_CRASH("Failed to load EGL library!\n");
+    }
+
+    sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
+}
+#endif // defined(ANDROID)
 
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& size)

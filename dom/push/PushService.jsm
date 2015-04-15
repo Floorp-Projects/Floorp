@@ -493,8 +493,6 @@ this.PushService = {
 
   init: function() {
     debug("init()");
-    if (!prefs.get("enabled"))
-        return null;
 
     var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIFrameScriptLoader);

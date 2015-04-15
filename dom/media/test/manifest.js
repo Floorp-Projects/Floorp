@@ -647,7 +647,7 @@ var gMetadataTests = [
 // Test files for Encrypted Media Extensions
 var gEMETests = [
   {
-    name:"bipbop-cenc-videoinit.mp4",
+    name:"video-only with 2 keys",
     tracks: [
       {
         name:"video",
@@ -668,7 +668,7 @@ var gEMETests = [
     duration:1.60,
   },
   {
-    name:"bipbop-cenc-videoinit.mp4",
+    name:"video-only with 2 keys, CORS",
     tracks: [
       {
         name:"video",
@@ -690,7 +690,7 @@ var gEMETests = [
     duration:1.60,
   },
   {
-    name:"bipbop-cenc-videoinit.mp4",
+    name:"audio&video tracks, both with all keys",
     tracks: [
       {
         name:"audio",
@@ -720,7 +720,7 @@ var gEMETests = [
     duration:1.60,
   },
   {
-    name:"bipbop-cenc-videoinit.mp4",
+    name:"audio&video tracks, both with all keys, CORS",
     tracks: [
       {
         name:"audio",
@@ -748,6 +748,37 @@ var gEMETests = [
     sessionType:"temporary",
     sessionCount:2,
     crossOrigin:true,
+    duration:1.60,
+  },
+  {
+    name:"audio&video tracks, each with its key",
+    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/mp4; codecs=\"mp4a.40.2\"",
+        fragments:[ "bipbop-cenc1-audioinit.mp4",
+                    "bipbop-cenc1-audio1.m4s",
+                    "bipbop-cenc1-audio2.m4s",
+                    "bipbop-cenc1-audio3.m4s",
+                  ],
+      },
+      {
+        name:"video",
+        type:"video/mp4; codecs=\"avc1.64000d\"",
+        fragments:[ "bipbop-cenc1-videoinit.mp4",
+                    "bipbop-cenc1-video1.m4s",
+                    "bipbop-cenc1-video2.m4s",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
+      "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
+    },
+    sessionType:"temporary",
+    sessionCount:2,
     duration:1.60,
   },
 ];
@@ -903,27 +934,34 @@ function MediaTestManager() {
     this.tokens = [];
     this.isShutdown = false;
     this.numTestsRunning = 0;
+    this.handlers = {};
+
     // Always wait for explicit finish.
     SimpleTest.waitForExplicitFinish();
     SpecialPowers.pushPrefEnv({'set': gTestPrefs}, (function() {
       this.nextTest();
     }).bind(this));
+
+    SimpleTest.registerCleanupFunction(function() {
+      if (this.tokens.length > 0) {
+        info("Test timed out. Remaining tests=" + this.tokens);
+      }
+      for (var token of this.tokens) {
+        var handler = this.handlers[token];
+        if (handler && handler.ontimeout) {
+          handler.ontimeout();
+        }
+      }
+    }.bind(this));
   }
 
   // Registers that the test corresponding to 'token' has been started.
   // Don't call more than once per token.
-  this.started = function(token) {
+  this.started = function(token, handler) {
     this.tokens.push(token);
     this.numTestsRunning++;
+    this.handlers[token] = handler;
     is(this.numTestsRunning, this.tokens.length, "[started " + token + "] Length of array should match number of running tests");
-  }
-
-  this.watchdog = null;
-
-  this.watchdogFn = function() {
-    if (this.tokens.length > 0) {
-      info("Watchdog remaining tests= " + this.tokens);
-    }
   }
 
   // Registers that the test corresponding to 'token' has finished. Call when
@@ -937,17 +975,11 @@ function MediaTestManager() {
       this.tokens.splice(i, 1);
     }
 
-    if (this.watchdog) {
-      clearTimeout(this.watchdog);
-      this.watchdog = null;
-    }
-
     info("[finished " + token + "] remaining= " + this.tokens);
     this.numTestsRunning--;
     is(this.numTestsRunning, this.tokens.length, "[finished " + token + "] Length of array should match number of running tests");
     if (this.tokens.length < PARALLEL_TESTS) {
       this.nextTest();
-      this.watchdog = setTimeout(this.watchdogFn.bind(this), 10000);
     }
   }
 

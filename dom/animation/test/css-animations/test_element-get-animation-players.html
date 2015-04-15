@@ -243,7 +243,7 @@ test(function(t) {
   // Update duration (an Animation change)
   div.style.animationDuration = '200s';
   var extendedAnimation = div.getAnimations()[0];
-  // FIXME: Check extendedAnimation.source.timing.duration has changed once the
+  // FIXME: Check extendedAnimation.effect.timing.duration has changed once the
   // API is available
   assert_equals(originalAnimation, extendedAnimation,
                 'getAnimations returns the same objects even when their'

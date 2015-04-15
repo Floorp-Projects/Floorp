@@ -5,8 +5,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
-
 let Reader = {
   // These values should match those defined in BrowserContract.java.
   STATUS_UNFETCHED: 0,

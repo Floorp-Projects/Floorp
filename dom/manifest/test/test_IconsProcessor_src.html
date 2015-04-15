@@ -61,7 +61,7 @@ data.jsonText = JSON.stringify(noSrc);
 var result = processor.process(data);
 ise(result.icons.length, 0, expected);
 
-var expected = `Expect icon's src to be an instance of URL.`;
+var expected = `Expect icon's src to be a string.`;
 var withSrc = {
   icons: [{
     src: 'pass'
@@ -69,7 +69,7 @@ var withSrc = {
 };
 data.jsonText = JSON.stringify(withSrc);
 var result = processor.process(data);
-ise(SpecialPowers.unwrap(result.icons[0].src) instanceof URL, true, expected);
+ise(typeof result.icons[0].src, "string", expected);
 
 var expected = `Expect only icons with a src prop to be kept.`;
 var withSrc = {

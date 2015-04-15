@@ -10,9 +10,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
-#include "mozilla/dom/Animation.h" // for Animation
 #include "mozilla/dom/AnimationPlayerBinding.h" // for AnimationPlayState
 #include "mozilla/dom/DocumentTimeline.h" // for DocumentTimeline
+#include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadonly
 #include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
 
@@ -80,7 +80,7 @@ public:
   };
 
   // AnimationPlayer methods
-  Animation* GetSource() const { return mSource; }
+  KeyframeEffectReadonly* GetEffect() const { return mEffect; }
   DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
@@ -113,14 +113,14 @@ public:
   // CSSAnimationPlayer::PauseFromJS so we leave it for now.
   void PauseFromJS() { Pause(); }
 
-  void SetSource(Animation* aSource);
+  void SetEffect(KeyframeEffectReadonly* aEffect);
   void Tick();
 
   /**
    * Set the time to use for starting or pausing a pending player.
    *
    * Typically, when a player is played, it does not start immediately but is
-   * added to a table of pending players on the document of its source content.
+   * added to a table of pending players on the document of its effect.
    * In the meantime it sets its hold time to the time from which playback
    * should begin.
    *
@@ -203,7 +203,7 @@ public:
 
   const nsString& Name() const
   {
-    return mSource ? mSource->Name() : EmptyString();
+    return mEffect ? mEffect->Name() : EmptyString();
   }
 
   bool IsPausedOrPausing() const
@@ -212,17 +212,17 @@ public:
            mPendingState == PendingState::PausePending;
   }
 
-  bool HasInPlaySource() const
+  bool HasInPlayEffect() const
   {
-    return GetSource() && GetSource()->IsInPlay(*this);
+    return GetEffect() && GetEffect()->IsInPlay(*this);
   }
-  bool HasCurrentSource() const
+  bool HasCurrentEffect() const
   {
-    return GetSource() && GetSource()->IsCurrent(*this);
+    return GetEffect() && GetEffect()->IsCurrent(*this);
   }
-  bool HasInEffectSource() const
+  bool IsInEffect() const
   {
-    return GetSource() && GetSource()->IsInEffect();
+    return GetEffect() && GetEffect()->IsInEffect();
   }
 
   /**
@@ -235,9 +235,9 @@ public:
    */
   bool IsPlaying() const
   {
-    // We need to have a source animation in its active interval, and
+    // We need to have an effect in its active interval, and
     // be either running or waiting to run.
-    return HasInPlaySource() &&
+    return HasInPlayEffect() &&
            (PlayState() == AnimationPlayState::Running ||
             mPendingState == PendingState::PlayPending);
   }
@@ -253,13 +253,13 @@ public:
   // running on the compositor).
   bool CanThrottle() const;
 
-  // Updates |aStyleRule| with the animation values of this player's source
-  // content, if any.
+  // Updates |aStyleRule| with the animation values of this player's effect,
+  // if any.
   // Any properties already contained in |aSetProperties| are not changed. Any
   // properties that are changed are added to |aSetProperties|.
   // |aNeedsRefreshes| will be set to true if this player expects to update
   // the style rule on the next refresh driver tick as well (because it
-  // is running and has source content to sample).
+  // is running and has an effect to sample).
   void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
@@ -282,7 +282,7 @@ protected:
 
   void UpdateTiming();
   void UpdateFinishedState(bool aSeekFlag = false);
-  void UpdateSourceContent();
+  void UpdateEffect();
   void FlushStyle() const;
   void PostUpdate();
   /**
@@ -295,7 +295,7 @@ protected:
   bool IsFinished() const;
 
   bool IsPossiblyOrphanedPendingPlayer() const;
-  StickyTimeDuration SourceContentEnd() const;
+  StickyTimeDuration EffectEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
@@ -303,7 +303,7 @@ protected:
   AnimationPlayerCollection* GetCollection() const;
 
   nsRefPtr<DocumentTimeline> mTimeline;
-  nsRefPtr<Animation> mSource;
+  nsRefPtr<KeyframeEffectReadonly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
@@ -317,7 +317,7 @@ protected:
   // See http://w3c.github.io/web-animations/#current-ready-promise
   nsRefPtr<Promise> mReady;
 
-  // A Promise that is resolved when we reach the end of the source content, or
+  // A Promise that is resolved when we reach the end of the effect, or
   // 0 when playing backwards. The Promise is replaced if the animation is
   // finished but then a state change makes it not finished.
   // This object is lazily created by GetFinished.

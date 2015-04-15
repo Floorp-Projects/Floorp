@@ -20,7 +20,7 @@ class TrackInfo;
 class AudioInfo;
 class VideoInfo;
 class MediaRawData;
-class DataBuffer;
+class MediaByteBuffer;
 
 namespace layers {
 class ImageContainer;
