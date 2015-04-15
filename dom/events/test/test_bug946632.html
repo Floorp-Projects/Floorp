@@ -37,12 +37,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=946632
 <script type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTests, window);
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({
+    "set":[["general.smoothScroll", false],
+           ["mousewheel.system_scroll_override_on_root_content.enabled", false]]
+    }, runTests)
+  }, window);
 
 var input = document.querySelector("input");
 var container = document.querySelector("#container");
 
-function prepare(check)
+function reset()
 {
   container.scrollTop = 0;
   container.scrollLeft = 0;
@@ -50,6 +55,10 @@ function prepare(check)
   input.scrollLeft = 0;
   container.style.display='none';
   container.getBoundingClientRect();
+}
+
+function prepare(check)
+{
   container.style.display='';
   container.getBoundingClientRect();
   scrollHandler = function(event) {
@@ -70,9 +79,10 @@ var tests = [
       is(input.scrollTop, 0, "<input> horizontal line scroll input.scrollTop");
       is(input.scrollLeft, 0, "<input> horizontal line scroll input.scrollLeft");
     },
-    test: function() {
-      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                                     deltaY: 1.0, lineOrPageDeltaY: 1 });
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaY: 1.0,
+      lineOrPageDeltaY: 1,
     }
   },
  { 
@@ -83,9 +93,10 @@ var tests = [
       is(container.scrollTop, 0, "<input> horizontal line scroll container.scrollTop");
       is(container.scrollLeft, 0, "<input> horizontal line scroll container.scrollLeft");
     },
-    test: function() {
-      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                                     deltaX: 1.0, lineOrPageDeltaX: 1 });
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_LINE,
+      deltaX: 1.0,
+      lineOrPageDeltaX: 1
     }
   },
  { 
@@ -96,9 +107,10 @@ var tests = [
       is(input.scrollTop, 0, "<input> vertical page scroll input.scrollTop");
       is(input.scrollLeft, 0, "<input> vertical page scroll input.scrollLeft");
     },
-    test: function() {
-      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                                     deltaY: 1.0, lineOrPageDeltaY: 1 });
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_PAGE,
+      deltaY: 1.0,
+      lineOrPageDeltaY: 1
     }
   },
  { 
@@ -109,9 +121,10 @@ var tests = [
       is(container.scrollTop, 0, "<input> horizontal page scroll container.scrollTop");
       is(container.scrollLeft, 0, "<input> horizontal page scroll container.scrollLeft");
     },
-    test: function() {
-      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_PAGE,
-                                     deltaX: 1.0, lineOrPageDeltaX: 1 });
+    event: {
+      deltaMode: WheelEvent.DOM_DELTA_PAGE,
+      deltaX: 1.0,
+      lineOrPageDeltaX: 1
     }
   },
 ];
@@ -120,15 +133,20 @@ var i = 0;
 function nextTest()
 {
   if (i == tests.length) {
+    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
     SimpleTest.finish();
     return;
   }
   var test = tests[i];
   ++i;
-  prepare(test.check);
+  reset();
 
   window.waitForAllPaintsFlushed(function() {
-    test.test();
+    prepare(test.check);
+
+    sendWheelAndPaint(input, 5, 5, test.event, function() {
+      // Do nothing - we wait for the scroll event.
+    });
   });
 }
 
