@@ -40,11 +40,17 @@ MediaTaskQueue::TailDispatcher()
 
 nsresult
 MediaTaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
-                               DispatchMode aMode, DispatchReason aReason)
+                               DispatchMode aMode, DispatchFailureHandling aFailureHandling,
+                               DispatchReason aReason)
 {
-  MOZ_ASSERT_IF(aReason != TailDispatch, !CurrentThreadRequiresTailDispatch());
-  mQueueMonitor.AssertCurrentThreadOwns();
   nsCOMPtr<nsIRunnable> r = aRunnable;
+  AbstractThread* currentThread;
+  if (aReason != TailDispatch && (currentThread = GetCurrent()) && currentThread->RequiresTailDispatch()) {
+    currentThread->TailDispatcher().AddTask(this, r.forget(), aFailureHandling);
+    return NS_OK;
+  }
+
+  mQueueMonitor.AssertCurrentThreadOwns();
   if (mIsFlushing && aMode == AbortIfFlushing) {
     return NS_ERROR_ABORT;
   }
@@ -161,7 +167,7 @@ FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
   AutoSetFlushing autoFlush(this);
   FlushLocked();
   nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
-  nsresult rv = DispatchLocked(r.forget(), IgnoreFlushing);
+  nsresult rv = DispatchLocked(r.forget(), IgnoreFlushing, AssertDispatchSuccess);
   NS_ENSURE_SUCCESS(rv, rv);
   AwaitIdleLocked();
   return NS_OK;

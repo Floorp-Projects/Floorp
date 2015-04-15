@@ -47,7 +47,7 @@ public:
                 DispatchReason aReason = NormalDispatch) override
   {
     MonitorAutoLock mon(mQueueMonitor);
-    nsresult rv = DispatchLocked(Move(aRunnable), AbortIfFlushing, aReason);
+    nsresult rv = DispatchLocked(Move(aRunnable), AbortIfFlushing, aFailureHandling, aReason);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
     unused << rv;
   }
@@ -100,6 +100,7 @@ protected:
   enum DispatchMode { AbortIfFlushing, IgnoreFlushing };
 
   nsresult DispatchLocked(already_AddRefed<nsIRunnable> aRunnable, DispatchMode aMode,
+                          DispatchFailureHandling aFailureHandling,
                           DispatchReason aReason = NormalDispatch);
 
   RefPtr<SharedThreadPool> mPool;

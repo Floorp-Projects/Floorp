@@ -80,14 +80,6 @@ public:
   // Must be called exactly once during startup.
   static void InitStatics();
 
-  // Returns true if the currently-running thread is an AbstractThread that
-  // requires tail dispatch.
-  static bool CurrentThreadRequiresTailDispatch()
-  {
-    AbstractThread* current = GetCurrent();
-    return current && current->RequiresTailDispatch();
-  }
-
 protected:
   virtual ~AbstractThread() {}
   static ThreadLocal<AbstractThread*> sCurrentThreadTLS;
