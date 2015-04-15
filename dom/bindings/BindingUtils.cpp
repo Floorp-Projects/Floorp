@@ -149,6 +149,9 @@ ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
     message->mArgs.AppendElement(*va_arg(ap, nsString*));
   }
   mMessage = message;
+#ifdef DEBUG
+  mHasMessage = true;
+#endif
 }
 
 void
@@ -156,6 +159,7 @@ ErrorResult::SerializeMessage(IPC::Message* aMsg) const
 {
   using namespace IPC;
   MOZ_ASSERT(mMessage);
+  MOZ_ASSERT(mHasMessage);
   WriteParam(aMsg, mMessage->mArgs);
   WriteParam(aMsg, mMessage->mErrorNumber);
 }
@@ -169,10 +173,11 @@ ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
       !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
     return false;
   }
-  if (mMessage) {
-    delete mMessage;
-  }
+  MOZ_ASSERT(!mHasMessage);
   mMessage = readMessage.forget();
+#ifdef DEBUG
+  mHasMessage = true;
+#endif
   return true;
 }
 
@@ -198,6 +203,7 @@ void
 ErrorResult::ReportErrorWithMessage(JSContext* aCx)
 {
   MOZ_ASSERT(mMessage, "ReportErrorWithMessage() can be called only once");
+  MOZ_ASSERT(mHasMessage);
 
   Message* message = mMessage;
   const uint32_t argCount = message->mArgs.Length();
@@ -220,6 +226,9 @@ ErrorResult::ClearMessage()
   if (IsErrorWithMessage()) {
     delete mMessage;
     mMessage = nullptr;
+#ifdef DEBUG
+    mHasMessage = false;
+#endif
   }
 }
 
@@ -231,6 +240,9 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
 
   if (IsErrorWithMessage()) {
     delete mMessage;
+#ifdef DEBUG
+    mHasMessage = false;
+#endif
   }
 
   // Make sure mJSException is initialized _before_ we try to root it.  But
@@ -338,6 +350,10 @@ ErrorResult::operator=(ErrorResult&& aRHS)
   if (aRHS.IsErrorWithMessage()) {
     mMessage = aRHS.mMessage;
     aRHS.mMessage = nullptr;
+#ifdef DEBUG
+    mHasMessage = aRHS.mHasMessage;
+    aRHS.mHasMessage = false;
+#endif
   } else if (aRHS.IsJSException()) {
     JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
     MOZ_ASSERT(cx);
@@ -351,6 +367,9 @@ ErrorResult::operator=(ErrorResult&& aRHS)
   } else {
     // Null out the union on both sides for hygiene purposes.
     mMessage = aRHS.mMessage = nullptr;
+#ifdef DEBUG
+    mHasMessage = aRHS.mHasMessage = false;
+#endif
   }
   // Note: It's important to do this last, since this affects the condition
   // checks above!
