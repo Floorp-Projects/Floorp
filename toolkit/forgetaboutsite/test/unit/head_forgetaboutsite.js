@@ -15,7 +15,6 @@ var profileDir = do_get_profile();
 function cleanUp()
 {
   let files = [
-    "downloads.sqlite",
     "places.sqlite",
     "cookies.sqlite",
     "signons.sqlite",
@@ -30,14 +29,3 @@ function cleanUp()
   }
 }
 cleanUp();
-
-function oldDownloadManagerDisabled()
-{
-  try {
-    // This method throws an exception if the old Download Manager is disabled.
-    Services.downloads.activeDownloadCount;
-  } catch (ex) {
-    return true;
-  }
-  return false;
-}
