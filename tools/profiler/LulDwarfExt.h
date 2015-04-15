@@ -1224,9 +1224,10 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   // process.
   DwarfCFIToModule(const unsigned int num_dw_regs,
                    Reporter *reporter,
+                   /*MOD*/UniqueStringUniverse* usu,
                    /*OUT*/Summariser* summ)
-      : summ_(summ), num_dw_regs_(num_dw_regs), reporter_(reporter),
-        return_address_(-1) {
+      : summ_(summ), usu_(usu), num_dw_regs_(num_dw_regs),
+        reporter_(reporter), return_address_(-1) {
   }
   virtual ~DwarfCFIToModule() {}
 
@@ -1247,11 +1248,14 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   virtual bool End();
 
  private:
-  // Return the name to use for register REG.
+  // Return the name to use for register I.
   const UniqueString* RegisterName(int i);
 
   // The Summariser to which we should give entries
   Summariser* summ_;
+
+  // Universe for creating UniqueStrings in, should that be necessary.
+  UniqueStringUniverse* usu_;
 
   // The number of Dwarf-defined register names for this architecture.
   const unsigned int num_dw_regs_;

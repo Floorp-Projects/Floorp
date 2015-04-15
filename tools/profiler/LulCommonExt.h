@@ -73,6 +73,10 @@
 
 namespace lul {
 
+using std::string;
+using std::map;
+
+
 ////////////////////////////////////////////////////////////////
 // UniqueString
 //
@@ -80,49 +84,27 @@ namespace lul {
 // Abstract type
 class UniqueString;
 
-// Unique-ify a string.  |ToUniqueString| can never return nullptr.
-const UniqueString* ToUniqueString(std::string);
-
 // Get the contained C string (debugging only)
 const char* const FromUniqueString(const UniqueString*);
 
-// Some handy pre-uniqified strings.  Z is an escape character:
-//   ZS        '$'
-//   ZD        '.'
-//   Zeq       '='
-//   Zplus     '+'
-//   Zstar     '*'
-//   Zslash    '/'
-//   Zpercent  '%'
-//   Zat       '@'
-//   Zcaret    '^'
+// Is the given string empty (that is, "") ?
+bool IsEmptyUniqueString(const UniqueString*);
 
-// Note that ustr__empty and (UniqueString*)nullptr are considered
-// to be different.
+
+////////////////////////////////////////////////////////////////
+// UniqueStringUniverse
 //
-// Unfortunately these have to be written as functions so as to
-// make them safe to use in static initialisers.
 
-// ""
-inline static const UniqueString* ustr__empty() {
-  static const UniqueString* us = nullptr;
-  if (!us) us = ToUniqueString("");
-  return us;
-}
-
-// ".cfa"
-inline static const UniqueString* ustr__ZDcfa() {
-  static const UniqueString* us = nullptr;
-  if (!us) us = ToUniqueString(".cfa");
-  return us;
-}
-
-// ".ra"
-inline static const UniqueString* ustr__ZDra() {
-  static const UniqueString* us = nullptr;
-  if (!us) us = ToUniqueString(".ra");
-  return us;
-}
+// All UniqueStrings live in some specific UniqueStringUniverse.
+class UniqueStringUniverse {
+public:
+  UniqueStringUniverse() {}
+  ~UniqueStringUniverse();
+  // Convert a |string| to a UniqueString, that lives in this universe.
+  const UniqueString* ToUniqueString(string str);
+private:
+  map<string, UniqueString*> map_;
+};
 
 
 ////////////////////////////////////////////////////////////////
@@ -474,7 +456,7 @@ public:
   struct Expr {
     // Construct a simple-form expression
     Expr(const UniqueString* ident, long offset, bool deref) {
-      if (ident == ustr__empty()) {
+      if (IsEmptyUniqueString(ident)) {
         Expr();
       } else {
         postfix_ = "";
