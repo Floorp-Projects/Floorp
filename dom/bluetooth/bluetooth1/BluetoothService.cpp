@@ -571,6 +571,11 @@ BluetoothService::HandleSettingsChanged(nsISupports* aSubject)
     MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
     return NS_ERROR_UNEXPECTED;
   }
+  // Ignore bluetooth toggling request since toggling is already in progress.
+  if (sToggleInProgress) {
+    BT_LOGR("Ignore bluetooth toggling request since toggling is already in progress");
+    return NS_OK;
+  }
 
   sToggleInProgress = true;
 
