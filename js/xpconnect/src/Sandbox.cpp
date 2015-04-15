@@ -1507,7 +1507,7 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
     NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
 
     nsAutoCString filenameBuf;
-    if (!filename.IsVoid()) {
+    if (!filename.IsVoid() && filename.Length() != 0) {
         filenameBuf.Assign(filename);
     } else {
         // Default to the spec of the principal.

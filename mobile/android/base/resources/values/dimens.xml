@@ -213,6 +213,10 @@
     <dimen name="find_in_page_matchcase_padding">10dip</dimen>
     <dimen name="find_in_page_control_margin_top">2dip</dimen>
 
+    <!-- The share icon asset has no padding while the other action bar items do
+         so we dynamically add padding to compensate. To be removed in bug 1122752. -->
+    <dimen name="ab_share_padding">12dp</dimen>
+
     <!-- This is a 4:7 ratio (as per UX decision). -->
     <item name="thumbnail_aspect_ratio" format="float" type="dimen">0.571</item>
 
