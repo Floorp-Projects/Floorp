@@ -81,8 +81,6 @@ protected:
   nsIDocument* GetDocument();
   mozilla::layers::LayerTransactionChild* GetLayerTransaction();
 
-  nsView* GetViewToDispatchEvent(nsPresContext* presContext, nsIPresShell** presShell);
-
   NS_IMETHOD SendMouseEventCommon(const nsAString& aType,
                                   float aX,
                                   float aY,
@@ -129,8 +127,6 @@ protected:
                                   bool aIgnoreRootScrollFrame,
                                   bool aToWindow,
                                   bool* aPreventDefault);
-
-  static mozilla::Modifiers GetWidgetModifiers(int32_t aModifiers);
 };
 
 #endif
