@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/unused.h"
 #include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
 #include "MediaPromise.h"
@@ -74,10 +75,14 @@ public:
 #endif
 
   // For AbstractThread.
-  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) override
+  void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess) override
   {
     RefPtr<nsIRunnable> r(aRunnable);
-    return ForceDispatch(r);
+    MonitorAutoLock mon(mQueueMonitor);
+    nsresult rv = DispatchLocked(r, Forced);
+    MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
+    unused << rv;
   }
 
   // This should only be used for things that absolutely can't afford to be

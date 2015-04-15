@@ -282,7 +282,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
     // win8 64 debug when invoked from noop_resampler::fill on the cubeb audio
     // thread.
     nsCOMPtr<nsIRunnable> r = runnables[i].mRunnable;
-    runnables[i].mTarget->MaybeTailDispatch(r.forget(), /* aAssertDispatchSuccess = */ false);
+    runnables[i].mTarget->MaybeTailDispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 }
 
