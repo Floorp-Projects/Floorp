@@ -4,12 +4,13 @@
 
 include protocol PBackground;
 include protocol PCache;
-include protocol PCacheOp;
 include PCacheTypes;
 include protocol PFileDescriptorSet;
 
 include protocol PBlob; // FIXME: bug 792908
 include protocol PCacheStreamControl;
+
+using mozilla::dom::cache::RequestId from "mozilla/dom/cache/IPCUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -18,13 +19,23 @@ namespace cache {
 protocol PCacheStorage
 {
   manager PBackground;
-  manages PCacheOp;
 
 parent:
-  PCacheOp(CacheOpArgs aOpArgs);
   Teardown();
+  Match(RequestId aRequestId, PCacheRequest aRequest,
+        PCacheQueryParams aParams);
+  Has(RequestId aRequestId, nsString aKey);
+  Open(RequestId aRequestId, nsString aKey);
+  Delete(RequestId aRequestId, nsString aKey);
+  Keys(RequestId aRequestId);
 
 child:
+  MatchResponse(RequestId aRequestId, nsresult aRv,
+                PCacheResponseOrVoid aResponseOrVoid);
+  HasResponse(RequestId aRequestId, nsresult aRv, bool aSuccess);
+  OpenResponse(RequestId aRequestId, nsresult aRv, nullable PCache aActor);
+  DeleteResponse(RequestId aRequestId, nsresult aRv, bool aSuccess);
+  KeysResponse(RequestId aRequestId, nsresult aRv, nsString[] aKeys);
   __delete__();
 };
 

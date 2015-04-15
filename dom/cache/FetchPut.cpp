@@ -90,7 +90,8 @@ private:
 
 // static
 nsresult
-FetchPut::Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
+FetchPut::Create(Listener* aListener, Manager* aManager,
+                 RequestId aRequestId, CacheId aCacheId,
                  const nsTArray<PCacheRequest>& aRequests,
                  const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams,
                  FetchPut** aFetchPutOut)
@@ -106,7 +107,7 @@ FetchPut::Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
   }
 #endif
 
-  nsRefPtr<FetchPut> ref = new FetchPut(aListener, aManager, aCacheId,
+  nsRefPtr<FetchPut> ref = new FetchPut(aListener, aManager, aRequestId, aCacheId,
                                         aRequests, aRequestStreams);
 
   nsresult rv = ref->DispatchToMainThread();
@@ -124,11 +125,13 @@ FetchPut::ClearListener()
   mListener = nullptr;
 }
 
-FetchPut::FetchPut(Listener* aListener, Manager* aManager, CacheId aCacheId,
+FetchPut::FetchPut(Listener* aListener, Manager* aManager,
+                   RequestId aRequestId, CacheId aCacheId,
                    const nsTArray<PCacheRequest>& aRequests,
                    const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams)
   : mListener(aListener)
   , mManager(aManager)
+  , mRequestId(aRequestId)
   , mCacheId(aCacheId)
   , mInitiatingThread(NS_GetCurrentThread())
   , mStateList(aRequests.Length())
@@ -319,8 +322,8 @@ FetchPut::DoPutOnWorkerThread()
   }
   mStateList.Clear();
 
-  mManager->ExecutePutAll(this, mCacheId, putList, requestStreamList,
-                          responseStreamList);
+  mManager->CachePutAll(this, mRequestId, mCacheId, putList, requestStreamList,
+                        responseStreamList);
 }
 
 // static
@@ -415,14 +418,9 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
 }
 
 void
-FetchPut::OnOpComplete(nsresult aRv, const CacheOpResult& aResult,
-                       CacheId aOpenedCacheId,
-                       const nsTArray<SavedResponse>& aSavedResponseList,
-                       const nsTArray<SavedRequest>& aSavedRequestList,
-                       StreamList* aStreamList)
+FetchPut::OnCachePutAll(RequestId aRequestId, nsresult aRv)
 {
   MOZ_ASSERT(mInitiatingThread == NS_GetCurrentThread());
-  MOZ_ASSERT(aResult.type() == CacheOpResult::TCachePutAllResult);
   MaybeSetError(aRv);
   MaybeNotifyListener();
 }
@@ -443,7 +441,7 @@ FetchPut::MaybeNotifyListener()
   if (!mListener) {
     return;
   }
-  mListener->OnFetchPut(this, mResult);
+  mListener->OnFetchPut(this, mRequestId, mResult);
 }
 
 nsIGlobalObject*

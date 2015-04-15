@@ -41,17 +41,30 @@ private:
   virtual void
   ActorDestroy(ActorDestroyReason aReason) override;
 
-  virtual PCacheOpChild*
-  AllocPCacheOpChild(const CacheOpArgs& aOpArgs) override;
-
-  virtual bool
-  DeallocPCacheOpChild(PCacheOpChild* aActor) override;
-
   virtual PCachePushStreamChild*
   AllocPCachePushStreamChild() override;
 
   virtual bool
   DeallocPCachePushStreamChild(PCachePushStreamChild* aActor) override;
+
+  virtual bool
+  RecvMatchResponse(const RequestId& requestId, const nsresult& aRv,
+                    const PCacheResponseOrVoid& aResponse) override;
+  virtual bool
+  RecvMatchAllResponse(const RequestId& requestId, const nsresult& aRv,
+                       nsTArray<PCacheResponse>&& responses) override;
+  virtual bool
+  RecvAddAllResponse(const RequestId& requestId,
+                     const nsresult& aRv) override;
+  virtual bool
+  RecvPutResponse(const RequestId& aRequestId,
+                  const nsresult& aRv) override;
+  virtual bool
+  RecvDeleteResponse(const RequestId& requestId, const nsresult& aRv,
+                     const bool& result) override;
+  virtual bool
+  RecvKeysResponse(const RequestId& requestId, const nsresult& aRv,
+                   nsTArray<PCacheRequest>&& requests) override;
 
   // Use a weak ref so actor does not hold DOM object alive past content use.
   // The Cache object must call ClearListener() to null this before its
