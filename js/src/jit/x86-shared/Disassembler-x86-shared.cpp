@@ -531,8 +531,8 @@ js::jit::Disassembler::DumpHeapAccess(const HeapAccess& access)
 
     if (access.address().isPCRelative()) {
         fprintf(stderr, MEM_o32r " ", ADDR_o32r(access.address().disp()));
-    } else if (access.address().hasIndex()) {
-        if (access.address().hasBase()) {
+    } else if (access.address().index() != X86Encoding::invalid_reg) {
+        if (access.address().base() != X86Encoding::invalid_reg) {
             fprintf(stderr, MEM_obs " ",
                     ADDR_obs(access.address().disp(), access.address().base(),
                              access.address().index(), access.address().scale()));
@@ -541,7 +541,7 @@ js::jit::Disassembler::DumpHeapAccess(const HeapAccess& access)
                     ADDR_os(access.address().disp(),
                             access.address().index(), access.address().scale()));
         }
-    } else if (access.address().hasBase()) {
+    } else if (access.address().base() != X86Encoding::invalid_reg) {
         fprintf(stderr, MEM_ob " ", ADDR_ob(access.address().disp(), access.address().base()));
     } else {
         fprintf(stderr, MEM_o " ", ADDR_o(access.address().disp()));

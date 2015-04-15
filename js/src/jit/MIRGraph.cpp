@@ -108,45 +108,6 @@ MIRGenerator::addAbortedPreliminaryGroup(ObjectGroup* group)
         CrashAtUnhandlableOOM("addAbortedPreliminaryGroup");
 }
 
-bool
-MIRGenerator::needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const
-{
-    // A heap access needs a bounds-check branch if we're not relying on signal
-    // handlers to catch errors, and if it's not proven to be within bounds.
-    // We use signal-handlers on x64, but on x86 there isn't enough address
-    // space for a guard region.
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    if (usesSignalHandlersForAsmJSOOB_)
-        return false;
-#endif
-    return access->needsBoundsCheck();
-}
-
-size_t
-MIRGenerator::foldableOffsetRange(const MAsmJSHeapAccess* access) const
-{
-    // This determines whether it's ok to fold up to AsmJSImmediateSize
-    // offsets, instead of just AsmJSCheckedImmediateSize.
-
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    // With signal-handler OOB handling, we reserve guard space for the full
-    // immediate size.
-    if (usesSignalHandlersForAsmJSOOB_)
-        return AsmJSImmediateRange;
-#endif
-
-    // On 32-bit platforms, if we've proven the access is in bounds after
-    // 32-bit wrapping, we can fold full offsets because they're added with
-    // 32-bit arithmetic.
-    if (sizeof(intptr_t) == sizeof(int32_t) && !access->needsBoundsCheck())
-        return AsmJSImmediateRange;
-
-    // Otherwise, only allow the checked size. This is always less than the
-    // minimum heap length, and allows explicit bounds checks to fold in the
-    // offset without overflow.
-    return AsmJSCheckedImmediateRange;
-}
-
 void
 MIRGraph::addBlock(MBasicBlock* block)
 {
