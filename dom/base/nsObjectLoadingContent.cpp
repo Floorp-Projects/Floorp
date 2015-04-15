@@ -2720,8 +2720,10 @@ nsObjectLoadingContent::PluginDestroyed()
   // plugins in plugin host. Invalidate instance owner / prototype but otherwise
   // don't take any action.
   TeardownProtoChain();
-  mInstanceOwner->Destroy();
-  mInstanceOwner = nullptr;
+  if (mInstanceOwner) {
+    mInstanceOwner->Destroy();
+    mInstanceOwner = nullptr;
+  }
   return NS_OK;
 }
 
