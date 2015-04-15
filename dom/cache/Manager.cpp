@@ -34,8 +34,7 @@ namespace {
 
 using mozilla::unused;
 using mozilla::dom::cache::Action;
-using mozilla::dom::cache::BodyCreateDir;
-using mozilla::dom::cache::BodyDeleteFiles;
+using mozilla::dom::cache::FileUtils;
 using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::cache::SyncDBAction;
 using mozilla::dom::cache::db::CreateSchema;
@@ -60,7 +59,7 @@ public:
     // TODO: have Context create/delete marker files in constructor/destructor
     //       and only do expensive maintenance if that marker is present (bug 1110446)
 
-    nsresult rv = BodyCreateDir(aDBDir);
+    nsresult rv = FileUtils::BodyCreateDir(aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     mozStorageTransaction trans(aConn, false,
@@ -114,7 +113,7 @@ public:
       return;
     }
 
-    rv = BodyDeleteFiles(dbDir, mDeletedBodyIdList);
+    rv = FileUtils::BodyDeleteFiles(dbDir, mDeletedBodyIdList);
     unused << NS_WARN_IF(NS_FAILED(rv));
 
     aResolver->Resolve(rv);
@@ -509,7 +508,8 @@ public:
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId, getter_AddRefs(stream));
+    rv = FileUtils::BodyOpen(aQuotaInfo, aDBDir, mResponse.mBodyId,
+                             getter_AddRefs(stream));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
@@ -572,8 +572,9 @@ public:
       }
 
       nsCOMPtr<nsIInputStream> stream;
-      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponses[i].mBodyId,
-                    getter_AddRefs(stream));
+      rv = FileUtils::BodyOpen(aQuotaInfo, aDBDir,
+                               mSavedResponses[i].mBodyId,
+                               getter_AddRefs(stream));
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
       if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
@@ -758,14 +759,14 @@ private:
     for (uint32_t i = 0; i < mList.Length(); ++i) {
       Entry& e = mList[i];
       if (e.mRequestStream) {
-        rv = BodyFinalizeWrite(mDBDir, e.mRequestBodyId);
+        rv = FileUtils::BodyFinalizeWrite(mDBDir, e.mRequestBodyId);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           DoResolve(rv);
           return;
         }
       }
       if (e.mResponseStream) {
-        rv = BodyFinalizeWrite(mDBDir, e.mResponseBodyId);
+        rv = FileUtils::BodyFinalizeWrite(mDBDir, e.mResponseBodyId);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           DoResolve(rv);
           return;
@@ -870,9 +871,10 @@ private:
 
     nsCOMPtr<nsISupports> copyContext;
 
-    nsresult rv = BodyStartWriteStream(aQuotaInfo, mDBDir, source, this,
-                                       AsyncCopyCompleteFunc, bodyId,
-                                       getter_AddRefs(copyContext));
+    nsresult rv = FileUtils::BodyStartWriteStream(aQuotaInfo, mDBDir, source,
+                                                  this, AsyncCopyCompleteFunc,
+                                                  bodyId,
+                                                  getter_AddRefs(copyContext));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     mBodyIdWrittenList.AppendElement(*bodyId);
@@ -893,7 +895,7 @@ private:
     // May occur on either owning thread or target thread
     MutexAutoLock lock(mMutex);
     for (uint32_t i = 0; i < mCopyContextList.Length(); ++i) {
-      BodyCancelWrite(mDBDir, mCopyContextList[i]);
+      FileUtils::BodyCancelWrite(mDBDir, mCopyContextList[i]);
     }
     mCopyContextList.Clear();
   }
@@ -936,7 +938,7 @@ private:
 
     // Clean up any files we might have written before hitting the error.
     if (NS_FAILED(aRv)) {
-      BodyDeleteFiles(mDBDir, mBodyIdWrittenList);
+      FileUtils::BodyDeleteFiles(mDBDir, mBodyIdWrittenList);
     }
 
     // Must be released on the target thread where it was opened.
@@ -1061,8 +1063,9 @@ public:
       }
 
       nsCOMPtr<nsIInputStream> stream;
-      rv = BodyOpen(aQuotaInfo, aDBDir, mSavedRequests[i].mBodyId,
-                    getter_AddRefs(stream));
+      rv = FileUtils::BodyOpen(aQuotaInfo, aDBDir,
+                               mSavedRequests[i].mBodyId,
+                               getter_AddRefs(stream));
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
       if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 
@@ -1123,8 +1126,8 @@ public:
     }
 
     nsCOMPtr<nsIInputStream> stream;
-    rv = BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
-                  getter_AddRefs(stream));
+    rv = FileUtils::BodyOpen(aQuotaInfo, aDBDir, mSavedResponse.mBodyId,
+                             getter_AddRefs(stream));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     if (NS_WARN_IF(!stream)) { return NS_ERROR_FILE_NOT_FOUND; }
 

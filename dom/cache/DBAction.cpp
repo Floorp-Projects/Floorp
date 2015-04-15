@@ -170,7 +170,7 @@ DBAction::WipeDatabase(nsIFile* aDBFile, nsIFile* aDBDir)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   // Delete the morgue as well.
-  rv = BodyDeleteDir(aDBDir);
+  rv = FileUtils::BodyDeleteDir(aDBDir);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
