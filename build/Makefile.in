@@ -7,14 +7,6 @@ USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
 ifdef MOZ_APP_BASENAME
-DIST_FILES = $(srcdir)/application.ini
-
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-ifdef MOZ_UPDATER
-DIST_FILES += update-settings.ini
-endif
-endif
-
 ifdef LIBXUL_SDK
 APP_INI_DEPS = $(LIBXUL_DIST)/bin/platform.ini
 else

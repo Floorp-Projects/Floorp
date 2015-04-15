@@ -5,3 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPI_NAME = 'indexedDB'
+
+DIST_FILES += [
+    'bootstrap.js',
+    'install.rdf',
+]
