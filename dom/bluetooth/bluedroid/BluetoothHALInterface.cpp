@@ -1079,14 +1079,15 @@ BluetoothHALInterface::GetBluetoothAvrcpInterface()
   return GetProfileInterface<BluetoothAvrcpHALInterface>();
 }
 
-#ifdef MOZ_B2G_BT_API_V2
 BluetoothGattInterface*
 BluetoothHALInterface::GetBluetoothGattInterface()
 {
+#ifdef MOZ_B2G_BT_API_V2
   return GetProfileInterface<BluetoothGattHALInterface>();
-}
 #else
-// TODO: Support GATT
+  // TODO: Support GATT
+  return nullptr;
 #endif
+}
 
 END_BLUETOOTH_NAMESPACE
