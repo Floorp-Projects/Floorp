@@ -56,19 +56,6 @@ private:
   nsRefPtr<nsIThread> mTarget;
 };
 
-void
-AbstractThread::MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
-                                  DispatchFailureHandling aFailureHandling)
-{
-  AbstractThread* current = GetCurrent();
-  if (current && current->RequiresTailDispatch()) {
-    current->TailDispatcher().AddTask(this, Move(aRunnable), aFailureHandling);
-  } else {
-    Dispatch(Move(aRunnable), aFailureHandling);
-  }
-}
-
-
 AbstractThread*
 AbstractThread::MainThread()
 {
