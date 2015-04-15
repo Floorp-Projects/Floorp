@@ -7512,7 +7512,7 @@
     "description": "Whether a session is set to autostart e10s windows"
   },
   "E10S_AUTOSTART_STATUS": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
     "description": "Why e10s is enabled or disabled (0=ENABLED_BY_USER, 1=ENABLED_BY_DEFAULT, 2=DISABLED_BY_USER, 3=DISABLED_IN_SAFE_MODE, 4=DISABLED_FOR_ACCESSIBILITY, 5=DISABLED_FOR_MAC_GFX)"
@@ -7523,12 +7523,12 @@
     "description": "Whether a browser window is set as an e10s window"
   },
   "E10S_STILL_ACCEPTED_FROM_PROMPT": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Whether a user who accepted e10s from the prompt is still using e10s"
   },
   "E10S_BLOCKED_FROM_RUNNING": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
   },

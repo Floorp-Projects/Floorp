@@ -15,22 +15,22 @@
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'xyz 100s';
-  assert_equals(div.getAnimations()[0].source.effect.name, 'xyz',
+  assert_equals(div.getAnimations()[0].effect.name, 'xyz',
                 'Animation effect name matches keyframes rule name');
 }, 'Effect name makes keyframe rule');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'x\\yz 100s';
-  assert_equals(div.getAnimations()[0].source.effect.name, 'xyz',
+  assert_equals(div.getAnimations()[0].effect.name, 'xyz',
                 'Escaped animation effect name matches keyframes rule name');
 }, 'Escaped animation name');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'x\\79 z 100s';
-  assert_equals(div.getAnimations()[0].source.effect.name, 'xyz',
-                'Hex-escaped animation effect name matches keyframes rule'
+  assert_equals(div.getAnimations()[0].effect.name, 'xyz',
+                'Hex-escaped animation name matches keyframes rule'
                 + ' name');
 }, 'Animation name with hex-escape');
 

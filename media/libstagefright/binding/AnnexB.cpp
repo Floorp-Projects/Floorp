@@ -59,7 +59,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
   if (aSample->mKeyframe) {
-    nsRefPtr<DataBuffer> annexB =
+    nsRefPtr<MediaByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
       return false;
@@ -69,8 +69,8 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
   return true;
 }
 
-already_AddRefed<mozilla::DataBuffer>
-AnnexB::ConvertExtraDataToAnnexB(const mozilla::DataBuffer* aExtraData)
+already_AddRefed<mozilla::MediaByteBuffer>
+AnnexB::ConvertExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData)
 {
   // AVCC 6 byte header looks like:
   //     +------+------+------+------+------+------+------+------+
@@ -87,7 +87,7 @@ AnnexB::ConvertExtraDataToAnnexB(const mozilla::DataBuffer* aExtraData)
   // [5] | unused             | numSps                           |
   //     +------+------+------+------+------+------+------+------+
 
-  nsRefPtr<mozilla::DataBuffer> annexB = new mozilla::DataBuffer;
+  nsRefPtr<mozilla::MediaByteBuffer> annexB = new mozilla::MediaByteBuffer;
 
   ByteReader reader(*aExtraData);
   const uint8_t* ptr = reader.Read(5);
@@ -105,7 +105,7 @@ AnnexB::ConvertExtraDataToAnnexB(const mozilla::DataBuffer* aExtraData)
 
 void
 AnnexB::ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                        mozilla::DataBuffer* aAnnexB)
+                        mozilla::MediaByteBuffer* aAnnexB)
 {
   for (int i = 0; i < aCount; i++) {
     uint16_t length = aReader.ReadU16();
@@ -233,10 +233,10 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
   return samplewriter->Replace(nalu.begin(), nalu.length());
 }
 
-already_AddRefed<mozilla::DataBuffer>
+already_AddRefed<mozilla::MediaByteBuffer>
 AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
 {
-  nsRefPtr<mozilla::DataBuffer> extradata = new mozilla::DataBuffer;
+  nsRefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
   if (IsAVCC(aSample) && HasSPS(aSample->mExtraData)) {
     // We already have an explicit extradata, re-use it.
     extradata = aSample->mExtraData;
@@ -315,7 +315,7 @@ AnnexB::HasSPS(const mozilla::MediaRawData* aSample)
 }
 
 bool
-AnnexB::HasSPS(const mozilla::DataBuffer* aExtraData)
+AnnexB::HasSPS(const mozilla::MediaByteBuffer* aExtraData)
 {
   if (!aExtraData) {
     return false;
@@ -382,8 +382,8 @@ AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample)
 }
 
 bool
-AnnexB::CompareExtraData(const mozilla::DataBuffer* aExtraData1,
-                         const mozilla::DataBuffer* aExtraData2)
+AnnexB::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
+                         const mozilla::MediaByteBuffer* aExtraData2)
 {
   // Very crude comparison.
   return aExtraData1 == aExtraData2 || *aExtraData1 == *aExtraData2;

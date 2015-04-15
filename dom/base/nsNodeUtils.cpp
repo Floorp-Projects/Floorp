@@ -24,8 +24,10 @@
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/AnimationPlayer.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsObjectLoadingContent.h"
 #include "nsDOMMutationObserver.h"
@@ -216,14 +218,14 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 static inline Element*
 GetTarget(AnimationPlayer* aPlayer)
 {
-  Animation* source = aPlayer->GetSource();
-  if (!source) {
+  KeyframeEffectReadonly* effect = aPlayer->GetEffect();
+  if (!effect) {
     return nullptr;
   }
 
   Element* target;
   nsCSSPseudoElements::Type pseudoType;
-  source->GetTarget(target, pseudoType);
+  effect->GetTarget(target, pseudoType);
 
   // If the animation targets a pseudo-element, we don't dispatch
   // notifications for it.  (In the future we will have PseudoElement
@@ -232,7 +234,7 @@ GetTarget(AnimationPlayer* aPlayer)
     return nullptr;
   }
 
-  return source->GetTarget();
+  return effect->GetTarget();
 }
 
 void

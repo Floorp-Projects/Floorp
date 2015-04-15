@@ -30,9 +30,6 @@ PushServiceLauncher.prototype = {
         break;
       case "final-ui-startup":
         Services.obs.removeObserver(this, "final-ui-startup");
-        if (!Services.prefs.getBoolPref("dom.push.enabled")) {
-          return;
-        }
 
         let isParent = Cc["@mozilla.org/xre/runtime;1"]
                        .getService(Ci.nsIXULRuntime)

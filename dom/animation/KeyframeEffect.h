@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_Animation_h
-#define mozilla_dom_Animation_h
+#ifndef mozilla_dom_KeyframeEffect_h
+#define mozilla_dom_KeyframeEffect_h
 
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -15,6 +15,7 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/AnimationEffectReadonly.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
@@ -117,8 +118,8 @@ public:
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mType == aOther.mType &&
            (mType == nsTimingFunction::Function ?
-	    mTimingFunction == aOther.mTimingFunction :
-	    mSteps == aOther.mSteps);
+            mTimingFunction == aOther.mTimingFunction :
+            mSteps == aOther.mSteps);
   }
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
@@ -184,17 +185,15 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
-class AnimationEffect;
-
-class Animation : public nsWrapperCache
+class KeyframeEffectReadonly : public AnimationEffectReadonly
 {
 public:
-  Animation(nsIDocument* aDocument,
-            Element* aTarget,
-            nsCSSPseudoElements::Type aPseudoType,
-            const AnimationTiming &aTiming,
-            const nsSubstring& aName)
-    : mDocument(aDocument)
+  KeyframeEffectReadonly(nsIDocument* aDocument,
+                         Element* aTarget,
+                         nsCSSPseudoElements::Type aPseudoType,
+                         const AnimationTiming &aTiming,
+                         const nsSubstring& aName)
+    : AnimationEffectReadonly(aDocument)
     , mTarget(aTarget)
     , mTiming(aTiming)
     , mName(aName)
@@ -204,32 +203,31 @@ public:
     MOZ_ASSERT(aTarget, "null animation target is not yet supported");
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Animation)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(Animation)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadonly,
+                                                        AnimationEffectReadonly)
 
-  nsIDocument* GetParentObject() const { return mDocument; }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
-  // FIXME: If we succeed in moving transition-specific code to a type of
-  // AnimationEffect (as per the Web Animations API) we should remove these
-  // virtual methods.
   virtual ElementPropertyTransition* AsTransition() { return nullptr; }
   virtual const ElementPropertyTransition* AsTransition() const {
     return nullptr;
   }
 
-  // Animation interface
-  // This currently returns a new object each time when used from C++ but is
-  // cached when used from JS.
-  already_AddRefed<AnimationEffect> GetEffect();
+  // KeyframeEffectReadonly interface
   Element* GetTarget() const {
     // Currently we only implement Element.getAnimations() which only
     // returns animations targetting Elements so this should never
     // be called for an animation that targets a pseudo-element.
     MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
-               "Requesting the target of an Animation that targets a"
+               "Requesting the target of a KeyframeEffect that targets a"
                " pseudo-element is not yet supported.");
     return mTarget;
+  }
+  void GetName(nsString& aRetVal) const
+  {
+    aRetVal = Name();
   }
 
   // Temporary workaround to return both the target element and pseudo-type
@@ -239,6 +237,12 @@ public:
     aTarget = mTarget;
     aPseudoType = mPseudoType;
   }
+  // Alternative to GetName that returns a reference to the member for
+  // more efficient internal usage.
+  virtual const nsString& Name() const
+  {
+    return mName;
+  }
 
   void SetParentTime(Nullable<TimeDuration> aParentTime);
 
@@ -247,10 +251,6 @@ public:
   }
   AnimationTiming& Timing() {
     return mTiming;
-  }
-
-  virtual const nsString& Name() const {
-    return mName;
   }
 
   // Return the duration from the start the active interval to the point where
@@ -332,11 +332,8 @@ public:
                     nsCSSPropertySet& aSetProperties);
 
 protected:
-  virtual ~Animation() { }
+  virtual ~KeyframeEffectReadonly() { }
 
-  // We use a document for a parent object since the other likely candidate,
-  // the target element, can be empty.
-  nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<Element> mTarget;
   Nullable<TimeDuration> mParentTime;
 
@@ -353,4 +350,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_Animation_h
+#endif // mozilla_dom_KeyframeEffect_h

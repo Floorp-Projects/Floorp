@@ -21,6 +21,7 @@
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "RestyleManager.h"
 #include "nsRuleProcessorData.h"
 #include "nsStyleSet.h"
@@ -29,7 +30,7 @@
 
 using mozilla::layers::Layer;
 using mozilla::dom::AnimationPlayer;
-using mozilla::dom::Animation;
+using mozilla::dom::KeyframeEffectReadonly;
 
 namespace mozilla {
 
@@ -605,12 +606,12 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
       continue;
     }
 
-    const Animation* anim = player->GetSource();
-    MOZ_ASSERT(anim, "A playing player should have a source animation");
+    const KeyframeEffectReadonly* effect = player->GetEffect();
+    MOZ_ASSERT(effect, "A playing player should have an effect");
 
-    for (size_t propIdx = 0, propEnd = anim->Properties().Length();
+    for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(anim->Properties()[propIdx].mProperty)) {
+      if (IsGeometricProperty(effect->Properties()[propIdx].mProperty)) {
         aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
         break;
       }
@@ -624,14 +625,14 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
       continue;
     }
 
-    const Animation* anim = player->GetSource();
-    MOZ_ASSERT(anim, "A playing player should have a source animation");
+    const KeyframeEffectReadonly* effect = player->GetEffect();
+    MOZ_ASSERT(effect, "A playing player should have an effect");
 
-    existsProperty = existsProperty || anim->Properties().Length() > 0;
+    existsProperty = existsProperty || effect->Properties().Length() > 0;
 
-    for (size_t propIdx = 0, propEnd = anim->Properties().Length();
+    for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
-      const AnimationProperty& prop = anim->Properties()[propIdx];
+      const AnimationProperty& prop = effect->Properties()[propIdx];
       if (!CanAnimatePropertyOnCompositor(mElement,
                                           prop.mProperty,
                                           aFlags) ||
@@ -654,7 +655,7 @@ AnimationPlayerCollection::PostUpdateLayerAnimations()
 {
   nsCSSPropertySet propsHandled;
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const auto& properties = mPlayers[playerIdx]->GetSource()->Properties();
+    const auto& properties = mPlayers[playerIdx]->GetEffect()->Properties();
     for (size_t propIdx = properties.Length(); propIdx-- != 0; ) {
       nsCSSProperty prop = properties[propIdx].mProperty;
       if (nsCSSProps::PropHasFlags(prop,
@@ -678,9 +679,9 @@ AnimationPlayerCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const Animation* anim = mPlayers[playerIdx]->GetSource();
-    if (anim && anim->HasAnimationOfProperty(aProperty) &&
-        !anim->IsFinishedTransition()) {
+    const KeyframeEffectReadonly* effect = mPlayers[playerIdx]->GetEffect();
+    if (effect && effect->HasAnimationOfProperty(aProperty) &&
+        !effect->IsFinishedTransition()) {
       return true;
     }
   }
@@ -913,7 +914,7 @@ bool
 AnimationPlayerCollection::HasCurrentAnimations() const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    if (mPlayers[playerIdx]->HasCurrentSource()) {
+    if (mPlayers[playerIdx]->HasCurrentEffect()) {
       return true;
     }
   }
@@ -928,10 +929,10 @@ AnimationPlayerCollection::HasCurrentAnimationsForProperties(
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer& player = *mPlayers[playerIdx];
-    const Animation* anim = player.GetSource();
-    if (anim &&
-        anim->IsCurrent(player) &&
-        anim->HasAnimationOfProperties(aProperties, aPropertyCount)) {
+    const KeyframeEffectReadonly* effect = player.GetEffect();
+    if (effect &&
+        effect->IsCurrent(player) &&
+        effect->HasAnimationOfProperties(aProperties, aPropertyCount)) {
       return true;
     }
   }
