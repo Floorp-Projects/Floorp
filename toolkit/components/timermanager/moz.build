@@ -6,30 +6,16 @@
 
 XPIDL_MODULE = 'update'
 
-DIRS += [
-    'common',
-    'updater',
-]
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 XPIDL_SOURCES += [
-    'nsIUpdateService.idl',
+    'nsIUpdateTimerManager.idl',
 ]
-
-TEST_DIRS += ['tests']
 
 EXTRA_COMPONENTS += [
-    'nsUpdateService.js',
-    'nsUpdateService.manifest',
-    'nsUpdateServiceStub.js',
+    'nsUpdateTimerManager.js',
+    'nsUpdateTimerManager.manifest',
 ]
-
-EXTRA_JS_MODULES += [
-    'UpdateTelemetry.jsm',
-]
-
-JAR_MANIFESTS += ['jar.mn']
-
-FAIL_ON_WARNINGS = True
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Application Update')
