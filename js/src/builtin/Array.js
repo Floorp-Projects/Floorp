@@ -123,9 +123,9 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
 
     /* Step 4. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.every');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.every');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
