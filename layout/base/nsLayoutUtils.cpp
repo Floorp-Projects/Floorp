@@ -3025,7 +3025,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   bool usingDisplayPort = false;
   nsRect displayport;
   if (rootScrollFrame && !aFrame->GetParent() &&
-      (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW))) {
+      (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW)) &&
+      gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsRect displayportBase(
         nsPoint(0,0),
         nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame));
