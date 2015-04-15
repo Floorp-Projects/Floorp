@@ -3136,7 +3136,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (mGeckoChild) {
     nsIWidgetListener* listener = mGeckoChild->GetWidgetListener();
     if (listener) {
-      listener->GetPresShell()->ReconstructFrames();
+      nsIPresShell* presShell = listener->GetPresShell();
+      if (presShell) {
+        presShell->ReconstructFrames();
+      }
     }
   }
 }
