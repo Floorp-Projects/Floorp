@@ -36,11 +36,15 @@ var testParts = [
   // An invalid image (from bug 787899) that is further delivered with a
   // "special" bad MIME type that indicates that the necko
   // multipart/x-mixed-replace parser wasn't able to parse it.
-  [0, "rillybad.jpg"],
+  // We use a width of 80 because MultipartImage will just drop rillybad.jpg
+  // and re-present damon.jpg.
+  [80, "rillybad.jpg"],
   [80, "damon.jpg"],
-  [0, "bad.jpg"],
+  // Similarly, we'll drop bad.jpg, so we use damon.jpg's width.
+  [80, "bad.jpg"],
   [1, "red.png"],
-  [0, "invalid.jpg"],
+  // We also drop invalid.jpg, so we use red.png's width.
+  [1, "invalid.jpg"],
   [40, "animated-gif2.gif"]
 ];
 

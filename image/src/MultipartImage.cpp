@@ -151,6 +151,21 @@ void MultipartImage::FinishTransition()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mNextPart, "Should have a next part here");
 
+  nsRefPtr<ProgressTracker> newCurrentPartTracker =
+    mNextPart->GetProgressTracker();
+  if (newCurrentPartTracker->GetProgress() & FLAG_HAS_ERROR) {
+    // This frame has an error; drop it.
+    mNextPart = nullptr;
+
+    // We still need to notify, though.
+    mTracker->ResetForNewRequest();
+    nsRefPtr<ProgressTracker> currentPartTracker =
+      InnerImage()->GetProgressTracker();
+    mTracker->SyncNotifyProgress(currentPartTracker->GetProgress());
+
+    return;
+  }
+
   // Stop observing the current part.
   {
     nsRefPtr<ProgressTracker> currentPartTracker =
@@ -162,8 +177,6 @@ void MultipartImage::FinishTransition()
   mTracker->ResetForNewRequest();
   SetInnerImage(mNextPart);
   mNextPart = nullptr;
-  nsRefPtr<ProgressTracker> newCurrentPartTracker =
-    InnerImage()->GetProgressTracker();
   newCurrentPartTracker->AddObserver(this);
 
   // Finally, send all the notifications for the new current part and send a
@@ -210,12 +223,14 @@ MultipartImage::OnImageDataAvailable(nsIRequest* aRequest,
   // We may trigger notifications that will free mNextPart, so keep it alive.
   nsRefPtr<Image> nextPart = mNextPart;
   if (nextPart) {
-    return nextPart->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                          aSourceOffset, aCount);
+    nextPart->OnImageDataAvailable(aRequest, aContext, aInStr,
+                                   aSourceOffset, aCount);
+  } else {
+    InnerImage()->OnImageDataAvailable(aRequest, aContext, aInStr,
+                                       aSourceOffset, aCount);
   }
 
-  return InnerImage()->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                            aSourceOffset, aCount);
+  return NS_OK;
 }
 
 nsresult
@@ -230,12 +245,12 @@ MultipartImage::OnImageDataComplete(nsIRequest* aRequest,
   // We may trigger notifications that will free mNextPart, so keep it alive.
   nsRefPtr<Image> nextPart = mNextPart;
   if (nextPart) {
-    return nextPart->OnImageDataComplete(aRequest, aContext, aStatus,
-                                         aLastPart);
+    nextPart->OnImageDataComplete(aRequest, aContext, aStatus, aLastPart);
+  } else {
+    InnerImage()->OnImageDataComplete(aRequest, aContext, aStatus, aLastPart);
   }
 
-  return InnerImage()->OnImageDataComplete(aRequest, aContext, aStatus,
-                                           aLastPart);
+  return NS_OK;
 }
 
 void
