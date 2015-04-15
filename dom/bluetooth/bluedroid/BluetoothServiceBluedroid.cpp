@@ -1566,7 +1566,7 @@ BluetoothServiceBluedroid::SetPairingConfirmationInternal(
   ENSURE_BLUETOOTH_IS_READY(aRunnable, false);
 
   sBtInterface->SspReply(aDeviceAddress,
-                         SSP_VARIANT_PASSKEY_CONFIRMATION,
+                         NS_ConvertUTF8toUTF16("PasskeyConfirmation"),
                          aConfirm, 0, new SspReplyResultHandler(aRunnable));
   return true;
 }
