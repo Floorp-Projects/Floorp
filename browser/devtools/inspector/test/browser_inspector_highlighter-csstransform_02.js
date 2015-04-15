@@ -21,7 +21,7 @@ transform highlighter applies those values correctly to the SVG elements
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter_csstransform.html";
 
 add_task(function*() {
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector, toolbox} = yield openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
   let highlighter = yield front.getHighlighterByType("CssTransformHighlighter");
@@ -31,10 +31,13 @@ add_task(function*() {
   info("Displaying the transform highlighter on test node");
   yield highlighter.show(nodeFront);
 
-  let data = yield testActor.getAllAdjustedQuads("#test-node");
+  let {data} = yield executeInContent("Test:GetAllAdjustedQuads", {
+    selector: "#test-node"
+  });
   let [expected] = data.border;
 
-  let points = yield testActor.getHighlighterNodeAttribute("css-transform-transformed", "points", highlighter);
+  let points = yield getHighlighterNodeAttribute(highlighter,
+    "css-transform-transformed", "points");
   let polygonPoints = points.split(" ").map(p => {
     return {
       x: +p.substring(0, p.indexOf(",")),

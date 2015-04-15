@@ -37,7 +37,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
+  let { inspector } = yield openInspectorForURL(TEST_URL);
 
   yield testPasteOuterHTMLMenu();
   yield testPasteInnerHTMLMenu();
@@ -60,10 +60,9 @@ add_task(function* () {
     info("Waiting for inspector selection to update");
     yield onNodeReselected;
 
-    let outerHTML = yield testActor.getProperty("body", "outerHTML");
-    ok(outerHTML.contains(clipboard.get()),
+    ok(content.document.body.outerHTML.contains(clipboard.get()),
        "Clipboard content was pasted into the node's outer HTML.");
-    ok(!(yield testActor.hasNode(outerHTMLSelector)),
+    ok(!getNode(outerHTMLSelector, { expectNoMatch: true }),
       "The original node was removed.");
   }
 
@@ -71,8 +70,8 @@ add_task(function* () {
     info("Testing that 'Paste Inner HTML' menu item works.");
     clipboard.set("this was pasted (innerHTML)");
     let innerHTMLSelector = "#paste-area .inner";
-    let getInnerHTML = () => testActor.getProperty(innerHTMLSelector, "innerHTML");
-    let origInnerHTML = yield getInnerHTML();
+    let getInnerHTML = () => content.document.querySelector(innerHTMLSelector).innerHTML;
+    let origInnerHTML = getInnerHTML();
 
     let nodeFront = yield getNodeFront(innerHTMLSelector, inspector);
     yield selectNode(nodeFront, inspector);
@@ -86,17 +85,17 @@ add_task(function* () {
     info("Waiting for mutation to occur");
     yield onMutation;
 
-    ok((yield getInnerHTML()) === clipboard.get(),
+    ok(getInnerHTML() === clipboard.get(),
        "Clipboard content was pasted into the node's inner HTML.");
-    ok((yield testActor.hasNode(innerHTMLSelector)), "The original node has been preserved.");
+    ok(getNode(innerHTMLSelector), "The original node has been preserved.");
     yield undoChange(inspector);
-    ok((yield getInnerHTML()) === origInnerHTML, "Previous innerHTML has been " +
+    ok(getInnerHTML() === origInnerHTML, "Previous innerHTML has been " +
       "restored after undo");
   }
 
   function* testPasteAdjacentHTMLMenu() {
     let refSelector = "#paste-area .adjacent .ref";
-    let adjacentNodeSelector = "#paste-area .adjacent";
+    let adjacentNode = content.document.querySelector(refSelector).parentNode;
     let nodeFront = yield getNodeFront(refSelector, inspector);
     yield selectNode(nodeFront, inspector);
     let markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
@@ -114,13 +113,11 @@ add_task(function* () {
       yield onMutation;
     }
 
-    ok((yield testActor.getProperty(adjacentNodeSelector, "innerHTML")).trim() ===
-      "1<span class=\"ref\">234</span>" +
+    ok(adjacentNode.innerHTML.trim() === "1<span class=\"ref\">234</span>" +
       "<span>5</span>", "The Paste as Last Child / as First Child / Before " +
       "/ After worked as expected");
     yield undoChange(inspector);
-    ok((yield testActor.getProperty(adjacentNodeSelector, "innerHTML")).trim() ===
-      "1<span class=\"ref\">234</span>",
+    ok(adjacentNode.innerHTML.trim() === "1<span class=\"ref\">234</span>",
       "Undo works for paste adjacent HTML");
   }
 

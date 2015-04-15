@@ -24,12 +24,12 @@ const TEST_URI = 'data:text/xml,<?xml version="1.0" standalone="no"?>' +
 '</svg>';
 
 add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URI);
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
 
   let markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  yield testActor.eval("location.reload()");
+  content.location.reload();
 
   info("Waiting for markupview to load after reload.");
   yield markupLoaded;
@@ -41,7 +41,7 @@ add_task(function* () {
   yield selectNode("rect", inspector);
 
   info("Reloading page.");
-  yield testActor.eval("location.reload");
+  content.location.reload();
 
   let rectFront = yield getNodeFront("rect", inspector);
   is(inspector.selection.nodeFront, rectFront, "<rect> selected after reload.");

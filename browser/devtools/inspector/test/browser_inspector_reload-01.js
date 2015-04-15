@@ -13,13 +13,13 @@
 const TEST_URI = "data:text/html,<p id='1'>p</p>";
 
 add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URI);
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
   yield selectNode("p", inspector);
 
   let markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  yield testActor.eval("location.reload()");
+  content.location.reload();
 
   info("Waiting for markupview to load after reload.");
   yield markupLoaded;
