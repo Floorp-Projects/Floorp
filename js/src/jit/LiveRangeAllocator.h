@@ -216,8 +216,7 @@ FindReusingDefinition(LNode* ins, LAllocation* alloc)
  * splitting them as necessary and assigning allocations to them as it runs.
  */
 class LiveInterval
-  : public InlineListNode<LiveInterval>,
-    public TempObject
+  : public TempObject
 {
   public:
     /*
@@ -299,7 +298,6 @@ class LiveInterval
     void setFrom(CodePosition from);
     CodePosition intersect(LiveInterval* other);
     bool covers(CodePosition pos);
-    CodePosition nextCoveredAfter(CodePosition pos);
 
     CodePosition start() const {
         MOZ_ASSERT(!ranges_.empty());
@@ -387,7 +385,6 @@ class LiveInterval
     UsePosition* popUse();
     UsePosition* nextUseAfter(CodePosition pos);
     CodePosition nextUsePosAfter(CodePosition pos);
-    CodePosition firstIncompatibleUse(LAllocation alloc);
 
     UsePositionIterator usesBegin() const {
         return uses_.begin();
@@ -591,15 +588,7 @@ IsTraceable(VirtualRegister* reg)
     return false;
 }
 
-typedef InlineList<LiveInterval>::iterator IntervalIterator;
-typedef InlineList<LiveInterval>::reverse_iterator IntervalReverseIterator;
-
-// The forLSRA parameter indicates whether the underlying allocator is LSRA.
-// This changes the generated live ranges in various ways: inserting additional
-// fixed uses of registers, and shifting the boundaries of live ranges by small
-// amounts. This exists because different allocators handle live ranges
-// differently; ideally, they would all treat live ranges in the same way.
-template <typename VREG, bool forLSRA>
+template <typename VREG>
 class LiveRangeAllocator : protected RegisterAllocator
 {
   protected:
@@ -658,15 +647,6 @@ class LiveRangeAllocator : protected RegisterAllocator
         }
 #endif
     }
-
-#ifdef JS_NUNBOX32
-    VREG* otherHalfOfNunbox(VirtualRegister* vreg) {
-        signed offset = OffsetToOtherHalfOfNunbox(vreg->type());
-        VREG* other = &vregs[vreg->def()->virtualRegister() + offset];
-        AssertTypesFormANunbox(vreg->type(), other->type());
-        return other;
-    }
-#endif
 
     bool addMove(LMoveGroup* moves, LiveInterval* from, LiveInterval* to, LDefinition::Type type) {
         MOZ_ASSERT(*from->getAllocation() != *to->getAllocation());

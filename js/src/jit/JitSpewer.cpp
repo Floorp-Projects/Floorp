@@ -94,7 +94,7 @@ jit::IonSpewPass(const char* pass)
 }
 
 void
-jit::IonSpewPass(const char* pass, LinearScanAllocator* ra)
+jit::IonSpewPass(const char* pass, BacktrackingAllocator* ra)
 {
     if (GetJitContext()->runtime->onMainThread())
         ionspewer.spewPass(pass, ra);
@@ -171,7 +171,7 @@ IonSpewer::spewPass(const char* pass)
 }
 
 void
-IonSpewer::spewPass(const char* pass, LinearScanAllocator* ra)
+IonSpewer::spewPass(const char* pass, BacktrackingAllocator* ra)
 {
     if (!isSpewingFunction())
         return;

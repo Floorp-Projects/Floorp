@@ -1883,15 +1883,15 @@ bool DwarfCFIToModule::Entry(size_t offset, uint64 address, uint64 length,
 const UniqueString* DwarfCFIToModule::RegisterName(int i) {
   if (i < 0) {
     MOZ_ASSERT(i == kCFARegister);
-    return ustr__ZDcfa();
+    return usu_->ToUniqueString(".cfa");
   }
   unsigned reg = i;
   if (reg == return_address_)
-    return ustr__ZDra();
+    return usu_->ToUniqueString(".ra");
 
   char buf[30];
   sprintf(buf, "dwarf_reg_%u", reg);
-  return ToUniqueString(buf);
+  return usu_->ToUniqueString(buf);
 }
 
 bool DwarfCFIToModule::UndefinedRule(uint64 address, int reg) {

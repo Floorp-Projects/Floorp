@@ -8,7 +8,6 @@
 
 #include <stdarg.h>
 
-#include "jit/LinearScan.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
@@ -396,7 +395,7 @@ JSONSpewer::spewLIR(MIRGraph* mir)
 }
 
 void
-JSONSpewer::spewIntervals(LinearScanAllocator* regalloc)
+JSONSpewer::spewIntervals(BacktrackingAllocator* regalloc)
 {
     if (!fp_)
         return;

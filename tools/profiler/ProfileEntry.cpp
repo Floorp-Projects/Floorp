@@ -25,9 +25,11 @@
  #define snprintf _snprintf
 #endif
 
+using mozilla::MakeUnique;
 using mozilla::Maybe;
 using mozilla::Some;
 using mozilla::Nothing;
+
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileEntry

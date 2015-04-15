@@ -19,6 +19,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Likely.h"
+#include "mozilla/TypeTraits.h"
 
 //-----------------------------------------------------------------------------
 // These methods are alternatives to the methods on nsIThreadManager, provided
@@ -237,6 +238,33 @@ public:
 protected:
   virtual ~nsCancelableRunnable() {}
 };
+
+// An event that can be used to call a C++11 functions or function objects,
+// including lambdas. The function must have no required arguments, and must
+// return void.
+template<typename Function>
+class nsRunnableFunction : public nsRunnable
+{
+public:
+  explicit nsRunnableFunction(const Function& aFunction)
+    : mFunction(aFunction)
+  { }
+
+  NS_IMETHOD Run() {
+    static_assert(mozilla::IsVoid<decltype(mFunction())>::value,
+                  "The lambda must return void!");
+    mFunction();
+    return NS_OK;
+  }
+private:
+  Function mFunction;
+};
+
+template<typename Function>
+nsRunnableFunction<Function>* NS_NewRunnableFunction(const Function& aFunction)
+{
+  return new nsRunnableFunction<Function>(aFunction);
+}
 
 // An event that can be used to call a method on a class.  The class type must
 // support reference counting. This event supports Revoke for use

@@ -1787,21 +1787,6 @@ CodeGenerator::emitLambdaInit(Register output, Register scopeChain,
 }
 
 void
-CodeGenerator::visitLabel(LLabel* lir)
-{
-}
-
-void
-CodeGenerator::visitNop(LNop* lir)
-{
-}
-
-void
-CodeGenerator::visitMop(LMop* lir)
-{
-}
-
-void
 CodeGenerator::visitOsiPoint(LOsiPoint* lir)
 {
     // Note: markOsiPoint ensures enough space exists between the last
@@ -1820,7 +1805,7 @@ CodeGenerator::visitOsiPoint(LOsiPoint* lir)
     // an instruction and its OsiPoint. This is necessary because
     // we use the OsiPoint's snapshot from within VM calls.
     for (LInstructionReverseIterator iter(current->rbegin(lir)); iter != current->rend(); iter++) {
-        if (*iter == lir || iter->isNop())
+        if (*iter == lir)
             continue;
         MOZ_ASSERT(!iter->isMoveGroup());
         MOZ_ASSERT(iter->safepoint() == safepoint);
@@ -1873,9 +1858,7 @@ CodeGenerator::visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImpli
 
     LInstructionIterator iter = ool->block->begin();
     for (; iter != ool->block->end(); iter++) {
-        if (iter->isLabel()) {
-            // Nothing to do.
-        } else if (iter->isMoveGroup()) {
+        if (iter->isMoveGroup()) {
             // Replay this move group that preceds the interrupt check at the
             // start of the loop header. Any incoming jumps here will be from
             // the backedge and will skip over the move group emitted inline.

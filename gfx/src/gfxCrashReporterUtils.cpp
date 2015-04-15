@@ -14,6 +14,7 @@
 #include <string.h>                     // for strcmp
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Services.h"           // for GetObserverService
+#include "mozilla/StaticMutex.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for nsCOMPtr
@@ -33,6 +34,7 @@
 namespace mozilla {
 
 static nsTArray<nsCString> *gFeaturesAlreadyReported = nullptr;
+static StaticMutex gFeaturesAlreadyReportedMutex;
 
 class ObserverToDestroyFeaturesAlreadyReported final : public nsIObserver
 {
@@ -55,6 +57,7 @@ ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,
                                                   const char16_t* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
+    StaticMutexAutoLock al(gFeaturesAlreadyReportedMutex);
     if (gFeaturesAlreadyReported) {
       delete gFeaturesAlreadyReported;
       gFeaturesAlreadyReported = nullptr;
@@ -63,51 +66,48 @@ ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-class ScopedGfxFeatureReporter::AppNoteWritingRunnable : public nsRunnable {
+class RegisterObserverRunnable : public nsRunnable {
 public:
-  AppNoteWritingRunnable(char aStatusChar, const char *aFeature) :
-    mStatusChar(aStatusChar), mFeature(aFeature) {}
-  NS_IMETHOD Run() { 
+  NS_IMETHOD Run() {
     // LeakLog made me do this. Basically, I just wanted gFeaturesAlreadyReported to be a static nsTArray<nsCString>,
     // and LeakLog was complaining about leaks like this:
     //    leaked 1 instance of nsTArray_base with size 8 bytes
     //    leaked 7 instances of nsStringBuffer with size 8 bytes each (56 bytes total)
     // So this is a work-around using a pointer, and using a nsIObserver to deallocate on xpcom shutdown.
     // Yay for fighting bloat.
-    if (!gFeaturesAlreadyReported) {
-      nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-      if (!observerService)
-        return NS_OK;
-      nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
-      nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", false);
-      if (NS_FAILED(rv)) {
-        observer = nullptr;
-        return NS_OK;
-      }
-      gFeaturesAlreadyReported = new nsTArray<nsCString>;
-    }
-
-    nsAutoCString featureString;
-    featureString.AppendPrintf("%s%c ",
-                               mFeature,
-                               mStatusChar);
-
-    if (!gFeaturesAlreadyReported->Contains(featureString)) {
-      gFeaturesAlreadyReported->AppendElement(featureString);
-      CrashReporter::AppendAppNotesToCrashReport(featureString);
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (!observerService)
+      return NS_OK;
+    nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
+    nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", false);
+    if (NS_FAILED(rv)) {
+      observer = nullptr;
+      return NS_OK;
     }
     return NS_OK;
   }
-private:
-  char mStatusChar;
-  const char *mFeature;
 };
 
 void
 ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
 {
-  nsCOMPtr<nsIRunnable> r = new AppNoteWritingRunnable(statusChar, mFeature);
-  NS_DispatchToMainThread(r);
+  StaticMutexAutoLock al(gFeaturesAlreadyReportedMutex);
+
+  if (!gFeaturesAlreadyReported) {
+    gFeaturesAlreadyReported = new nsTArray<nsCString>;
+    nsCOMPtr<nsIRunnable> r = new RegisterObserverRunnable();
+    NS_DispatchToMainThread(r);
+  }
+
+  nsAutoCString featureString;
+  featureString.AppendPrintf("%s%c ",
+                             mFeature,
+                             mStatusChar);
+
+  if (!gFeaturesAlreadyReported->Contains(featureString)) {
+    gFeaturesAlreadyReported->AppendElement(featureString);
+    CrashReporter::AppendAppNotesToCrashReport(featureString);
+  }
 }
 
 } // end namespace mozilla
