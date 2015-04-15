@@ -40,16 +40,16 @@ add_task(function*() {
 
   info("Navigate to <p#two> with the keyboard");
   let onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("VK_DOWN", {}, inspector.panelWin);
   yield onUpdated;
   onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeKey("VK_DOWN", {});
+  EventUtils.synthesizeKey("VK_DOWN", {}, inspector.panelWin);
   yield onUpdated;
   yield isHighlighting("#two", "<p#two> is highlighted");
 
   info("Navigate back to <p#one> with the keyboard");
   onUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeKey("VK_UP", {});
+  EventUtils.synthesizeKey("VK_UP", {}, inspector.panelWin);
   yield onUpdated;
   yield isHighlighting("#one", "<p#one> is highlighted again");
 });
