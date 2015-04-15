@@ -47,45 +47,81 @@ function runTests()
 
   var scrollLeft = target.scrollLeft;
   var scrollTop = target.scrollTop;
-  synthesizeWheel(target, 10, 10,
-    { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-      deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
-  hitEventLoop(function () {
-    is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5px delta value");
-    is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5px delta value");
-    scrollLeft = target.scrollLeft;
-    scrollTop = target.scrollTop;
-    synthesizeWheel(target, 10, 10,
-      { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
-        deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
-    hitEventLoop(function () {
-      ok(target.scrollLeft > scrollLeft,
-         "not scrolled to right by 0.5px delta value with pending 0.5px delta");
-      ok(target.scrollTop > scrollTop,
-         "not scrolled to bottom by 0.5px delta value with pending 0.5px delta");
-      scrollLeft = target.scrollLeft;
-      scrollTop = target.scrollTop;
-      synthesizeWheel(target, 10, 10,
-        { deltaMode: WheelEvent.DOM_DELTA_LINE,
-          deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
-      hitEventLoop(function () {
+
+  var tests = [
+    {
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+        deltaX: 0.5,
+        deltaY: 0.5,
+        lineOrPageDeltaX: 0,
+        lineOrPageDeltaY: 0
+      },
+      check: function() {
+        is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5px delta value");
+        is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5px delta value");
+      }
+    }, {
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+        deltaX: 0.5,
+        deltaY: 0.5,
+        lineOrPageDeltaX: 0,
+        lineOrPageDeltaY: 0
+      },
+      check: function() {
+        ok(target.scrollLeft > scrollLeft,
+           "not scrolled to right by 0.5px delta value with pending 0.5px delta");
+        ok(target.scrollTop > scrollTop,
+           "not scrolled to bottom by 0.5px delta value with pending 0.5px delta");
+      },
+    }, {
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.5,
+        deltaY: 0.5,
+        lineOrPageDeltaX: 0,
+        lineOrPageDeltaY: 0
+      },
+      check: function() {
         is(target.scrollLeft, scrollLeft, "scrolled to right by 0.5 line delta value");
         is(target.scrollTop, scrollTop, "scrolled to bottom by 0.5 line delta value");
-        scrollLeft = target.scrollLeft;
-        scrollTop = target.scrollTop;
-        synthesizeWheel(target, 10, 10,
-          { deltaMode: WheelEvent.DOM_DELTA_LINE,
-            deltaX: 0.5, deltaY: 0.5, lineOrPageDeltaX: 1, lineOrPageDeltaY: 1 });
-        hitEventLoop(function () {
-          ok(target.scrollLeft > scrollLeft,
-             "not scrolled to right by 0.5 line delta value with pending 0.5 line delta");
-          ok(target.scrollTop > scrollTop,
-             "not scrolled to bottom by 0.5 line delta value with pending 0.5 line delta");
-          SimpleTest.finish();
-        }, 20);
-      }, 20);
+      }
+    }, {
+      event: {
+        deltaMode: WheelEvent.DOM_DELTA_LINE,
+        deltaX: 0.5,
+        deltaY: 0.5,
+        lineOrPageDeltaX: 1,
+        lineOrPageDeltaY: 1
+      },
+      check: function() {
+        ok(target.scrollLeft > scrollLeft,
+           "not scrolled to right by 0.5 line delta value with pending 0.5 line delta");
+        ok(target.scrollTop > scrollTop,
+           "not scrolled to bottom by 0.5 line delta value with pending 0.5 line delta");
+      }
+    }
+  ];
+
+  var nextTest = function() {
+    var test = tests.shift();
+    synthesizeWheel(target, 10, 10, test.event);
+    hitEventLoop(function() {
+      test.check();
+      if (tests.length == 0) {
+        SimpleTest.finish();
+        return;
+      }
+
+      scrollLeft = target.scrollLeft;
+      scrollTop = target.scrollTop;
+
+      setTimeout(nextTest, 0);
     }, 20);
-  }, 20);
+  }
+
+  nextTest();
 }
 
 </script>
