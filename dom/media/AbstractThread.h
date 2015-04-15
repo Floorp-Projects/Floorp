@@ -43,6 +43,10 @@ public:
   void MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
                          DispatchFailureHandling aFailureHandling = AssertDispatchSuccess);
 
+  // Returns true if dispatch is generally reliable. This is used to guard
+  // against FlushableMediaTaskQueues, which should go away.
+  virtual bool IsDispatchReliable() { return true; }
+
   // Convenience method for getting an AbstractThread for the main thread.
   static AbstractThread* MainThread();
 
