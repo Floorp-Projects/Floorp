@@ -331,14 +331,14 @@ struct SPSData
 class H264
 {
 public:
-  static bool DecodeSPSFromExtraData(const mozilla::DataBuffer* aExtraData, SPSData& aDest);
+  static bool DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData, SPSData& aDest);
   /* Extract RAW BYTE SEQUENCE PAYLOAD from NAL content.
      Returns nullptr if invalid content.
      This is compliant to ITU H.264 7.3.1 Syntax in tabular form NAL unit syntax
    */
-  static already_AddRefed<mozilla::DataBuffer> DecodeNALUnit(const mozilla::DataBuffer* aNAL);
+  static already_AddRefed<mozilla::MediaByteBuffer> DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL);
   /* Decode SPS NAL RBSP and fill SPSData structure */
-  static bool DecodeSPS(const mozilla::DataBuffer* aSPS, SPSData& aDest);
+  static bool DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest);
   // Ensure that SPS data makes sense, Return true if SPS data was, and false
   // otherwise. If false, then content will be adjusted accordingly.
   static bool EnsureSPSIsSane(SPSData& aSPS);

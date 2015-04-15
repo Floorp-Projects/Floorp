@@ -19,14 +19,7 @@ test $VARIANT
 
 . ../builder/setup-ccache.sh
 
-# First check if the mozharness directory is available. This is intended to be
-# used locally in development to test mozharness changes:
-#
-#   $ docker -v your_mozharness:/home/worker/mozharness ...
-#
-if [ ! -d mozharness ]; then
-  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
-fi
+tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
 
 # Figure out where the remote manifest is so we can use caches for it.
 MANIFEST=$(repository-url.py $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV b2g/config/$TARGET/sources.xml)

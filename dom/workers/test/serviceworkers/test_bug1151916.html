@@ -1,0 +1,104 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1151916 - Test principal is set on cached serviceworkers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<!--
+  If the principal is not set, accessing self.caches in the worker will crash.
+-->
+</head>
+<body>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var frame;
+
+  function listenForMessage() {
+    var p = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        if (e.data.status == "failed") {
+          ok(false, "iframe had error " + e.data.message);
+          reject(e.data.message);
+        } else if (e.data.status == "success") {
+          ok(true, "iframe step success " + e.data.message);
+          resolve(e.data.message);
+        } else {
+          ok(false, "Unexpected message " + e.data);
+          reject();
+        }
+      }
+    });
+
+    return p;
+  }
+
+  // We have the iframe register for its own scope so that this page is not
+  // holding any references when we GC.
+  function register() {
+    var p = listenForMessage();
+
+    frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    frame.src = "bug1151916_driver.html";
+
+    return p;
+  }
+
+  function unloadFrame() {
+    frame.src = "about:blank";
+    frame.parentNode.removeChild(frame);
+    frame = null;
+  }
+
+  function gc() {
+   return new Promise(function(resolve) {
+     SpecialPowers.exactGC(window, resolve);
+   });
+  }
+
+  function testCaches() {
+    var p = listenForMessage();
+
+    frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    frame.src = "bug1151916_driver.html";
+
+    return p;
+  }
+
+  function unregister() {
+    return navigator.serviceWorker.getRegistration("./bug1151916_driver.html").then(function(reg) {
+      ok(reg instanceof ServiceWorkerRegistration, "Must have valid registration.");
+      return reg.unregister();
+    });
+  }
+
+  function runTest() {
+     register()
+      .then(unloadFrame)
+      .then(gc)
+      .then(testCaches)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

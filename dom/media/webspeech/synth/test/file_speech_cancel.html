@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1150315
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1150315: Check that successive cancel/speak calls work</title>
+  <script type="application/javascript">
+    window.SimpleTest = parent.SimpleTest;
+    window.info = parent.info;
+    window.is = parent.is;
+    window.isnot = parent.isnot;
+    window.ok = parent.ok;
+  </script>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1150315">Mozilla Bug 1150315</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1150315 **/
+
+synthAddVoice('TestSpeechServiceWithAudio', 'Male 1', 'en-GB', true);
+
+var gotEndEvent = false;
+var utterance = new SpeechSynthesisUtterance("Hello, world!");
+utterance.addEventListener('start', function(e) {
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance2);
+});
+
+var utterance2 = new SpeechSynthesisUtterance("Hello, world 2!");
+utterance2.addEventListener('start', function() {
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance3);
+});
+utterance2.addEventListener('end', function(e) {
+  gotEndEvent = true;
+});
+
+var utterance3 = new SpeechSynthesisUtterance("Hello, world 3!");
+utterance3.addEventListener('start', function() {
+  ok(gotEndEvent, "didn't get start event for this utterance")
+});
+utterance3.addEventListener('end', function(e) {
+  synthCleanup();
+  SimpleTest.finish();
+});
+
+speechSynthesis.speak(utterance);
+ok(!speechSynthesis.speaking, "speechSynthesis is not speaking yet.");
+ok(speechSynthesis.pending, "speechSynthesis has an utterance queued.");
+
+</script>
+</pre>
+</body>
+</html>

@@ -1007,6 +1007,14 @@ private:
       if (NS_SUCCEEDED(rv)) {
         mWorkerPrivate->SetBaseURI(finalURI);
       }
+
+      nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+      MOZ_ASSERT(principal);
+      nsILoadGroup* loadGroup = mWorkerPrivate->GetLoadGroup();
+      MOZ_ASSERT(loadGroup);
+      // Needed to initialize the principal info. This is fine because
+      // the cache principal cannot change, unlike the channel principal.
+      mWorkerPrivate->SetPrincipal(principal, loadGroup);
     }
 
     if (NS_SUCCEEDED(rv)) {

@@ -48,6 +48,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIEventTarget.h"
 #include "nsProxyRelease.h"
+#include <list>
 
 // Undo the damage done by mozzconf.h
 #undef compress
@@ -574,6 +575,10 @@ public:
 
     static bool GetLayersTreeSendable() {return sLayersTreeSendable;}
 
+    static void ClearTextureIdList();
+
+    static bool IsTextureIdContainsInList(GLuint aTextureId);
+
 // Sender private functions
 private:
     static void SendColor(void* aLayerRef,
@@ -595,15 +600,39 @@ private:
 private:
     static bool sLayersTreeSendable;
     static bool sLayersBufferSendable;
+    static std::list<GLuint> sTextureIdList;
 };
 
 bool SenderHelper::sLayersTreeSendable = true;
 bool SenderHelper::sLayersBufferSendable = true;
+std::list<GLuint> SenderHelper::sTextureIdList;
 
 
 // ----------------------------------------------
 // SenderHelper implementation
 // ----------------------------------------------
+void
+SenderHelper::ClearTextureIdList()
+{
+    std::list<GLuint>::iterator it;
+    while (!sTextureIdList.empty()) {
+        it = sTextureIdList.begin();
+        sTextureIdList.erase(it);
+    }
+}
+
+bool
+SenderHelper::IsTextureIdContainsInList(GLuint aTextureId)
+{
+    for (std::list<GLuint>::iterator it = sTextureIdList.begin();
+         it != sTextureIdList.end(); ++it) {
+        if (*it == aTextureId) {
+          return true;
+        }
+    }
+    return false;
+}
+
 void
 SenderHelper::SendLayer(LayerComposite* aLayer,
                         int aWidth,
@@ -692,9 +721,12 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
                                                        size,
                                                        shaderConfig, aFlipY);
 
-    WebSocketHelper::GetSocketManager()->AppendDebugData(
-        new DebugGLTextureData(aGLContext, aLayerRef, textureTarget,
+    if (!IsTextureIdContainsInList(textureId)) {
+      sTextureIdList.push_back(textureId);
+      WebSocketHelper::GetSocketManager()->AppendDebugData(
+          new DebugGLTextureData(aGLContext, aLayerRef, textureTarget,
                                textureId, img));
+    }
 }
 
 void
@@ -1356,6 +1388,8 @@ LayerScopeAutoFrame::~LayerScopeAutoFrame()
 void
 LayerScopeAutoFrame::BeginFrame(int64_t aFrameStamp)
 {
+    SenderHelper::ClearTextureIdList();
+
     if (!LayerScope::CheckSendable()) {
         return;
     }
