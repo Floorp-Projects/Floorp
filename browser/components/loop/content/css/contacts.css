@@ -194,11 +194,12 @@
 }
 
 .contact > .dropdown-menu > .dropdown-menu-item > .icon {
+  display: inline-block;
   width: 20px;
   height: 10px;
   background-position: center left;
   background-size: 10px 10px;
-  margin-top: 3px;
+  background-repeat: no-repeat;
 }
 
 .contact > .dropdown-menu > .dropdown-menu-item > .icon-audio-call {
