@@ -12611,32 +12611,9 @@ class MAsmJSHeapAccess
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
-
-    bool tryAddDisplacement(int32_t o) {
-        // Compute the new offset. Check for overflow and negative. In theory it
-        // ought to be possible to support negative offsets, but it'd require
-        // more elaborate bounds checking mechanisms than we currently have.
-        MOZ_ASSERT(offset_ >= 0);
-        int32_t newOffset = uint32_t(offset_) + o;
-        if (newOffset < 0)
-            return false;
-
-        // Compute the new offset to the end of the access. Check for overflow
-        // and negative here also.
-        int32_t newEnd = uint32_t(newOffset) + byteSize();
-        if (newEnd < 0)
-            return false;
-        MOZ_ASSERT(uint32_t(newEnd) >= uint32_t(newOffset));
-
-        // If we need bounds checking, keep it within the more restrictive
-        // AsmJSCheckedImmediateRange. Otherwise, just keep it within what
-        // the instruction set can support.
-        size_t range = needsBoundsCheck() ? AsmJSCheckedImmediateRange : AsmJSImmediateRange;
-        if (size_t(newEnd) > range)
-            return false;
-
-        offset_ = newOffset;
-        return true;
+    void setOffset(int32_t o) {
+        MOZ_ASSERT(o >= 0);
+        offset_ = o;
     }
 };
 
