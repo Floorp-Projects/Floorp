@@ -33,7 +33,6 @@
 #include "TableTicker.h"
 #include "ThreadResponsiveness.h"
 #include "ProfileEntry.h"
-#include "UnwinderThread2.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
@@ -341,7 +340,6 @@ bool Sampler::RegisterCurrentThread(const char* aName,
 
   sRegisteredThreads->push_back(info);
 
-  uwt__register_thread_for_profiling(stackTop);
   return true;
 }
 
