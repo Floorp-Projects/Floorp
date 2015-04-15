@@ -2,10 +2,12 @@ importScripts("/resources/testharness.js");
 
 test(function() {
     var i = 0;
-    addEventListener("message", this.step_func(function listener(evt) {
-        ++i;
-        removeEventListener("message", listener, true);
-    }), true);
+    addEventListener("message", function listener(evt) {
+        this.step(function() {
+            ++i;
+            removeEventListener("message", listener, true);
+        });
+    }, true);
     self.dispatchEvent(new Event("message"));
     self.dispatchEvent(new Event("message"));
     assert_equals(i, 1);
