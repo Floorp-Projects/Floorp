@@ -18,11 +18,7 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
 
     HostProgram('host_obj_int_extract')
 
-# Unify fewer files together to reduce the chance of name collision
-FILES_PER_UNIFIED_FILE = 8
-
 SOURCES += files['SOURCES']
-UNIFIED_SOURCES += files['UNIFIED_SOURCES']
 
 if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
     SOURCES += files['ERROR_CONCEALMENT']
