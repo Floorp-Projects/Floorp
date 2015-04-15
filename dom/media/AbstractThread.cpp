@@ -80,14 +80,4 @@ AbstractThread::InitStatics()
   sCurrentThreadTLS.set(sMainThread);
 }
 
-#ifdef DEBUG
-void
-TaskDispatcher::AssertIsTailDispatcherIfRequired()
-{
-  AbstractThread* current = AbstractThread::GetCurrent();
-  MOZ_ASSERT_IF(current && current->RequiresTailDispatch(),
-                this == &current->TailDispatcher());
-}
-#endif
-
 } // namespace mozilla
