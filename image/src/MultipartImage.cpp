@@ -35,9 +35,13 @@ public:
     tracker->AddObserver(this);
   }
 
-  void FinishObservingWithoutNotifying()
+  void BlockUntilDecodedAndFinishObserving()
   {
-    FinishObserving(/* aNotify = */ false);
+    // Use GetFrame() to block until our image finishes decoding.
+    mImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                     imgIContainer::FLAG_SYNC_DECODE);
+
+    FinishObserving();
   }
 
   virtual void Notify(int32_t aType,
@@ -49,7 +53,7 @@ public:
     }
 
     if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-      FinishObserving(/* aNotify = */ true);
+      FinishObserving();
     }
   }
 
@@ -64,7 +68,7 @@ public:
     // notification, so go ahead and notify our owner right away.
     nsRefPtr<ProgressTracker> tracker = mImage->GetProgressTracker();
     if (tracker->GetProgress() & FLAG_HAS_ERROR) {
-      FinishObserving(/* aNotify = */ true);
+      FinishObserving();
     }
   }
 
@@ -79,7 +83,7 @@ public:
 private:
   virtual ~NextPartObserver() { }
 
-  void FinishObserving(bool aNotify)
+  void FinishObserving()
   {
     MOZ_ASSERT(mImage);
 
@@ -87,9 +91,7 @@ private:
     tracker->RemoveObserver(this);
     mImage = nullptr;
 
-    if (aNotify) {
-      mOwner->FinishTransition();
-    }
+    mOwner->FinishTransition();
   }
 
   MultipartImage* mOwner;
@@ -130,8 +132,9 @@ MultipartImage::BeginTransitionToPart(Image* aNextPart)
   MOZ_ASSERT(aNextPart);
 
   if (mNextPart) {
-    NS_WARNING("Decoder not keeping up with multipart image");
-    mNextPartObserver->FinishObservingWithoutNotifying();
+    // Let the decoder catch up so we don't drop frames.
+    mNextPartObserver->BlockUntilDecodedAndFinishObserving();
+    MOZ_ASSERT(!mNextPart);
   }
 
   mNextPart = aNextPart;
