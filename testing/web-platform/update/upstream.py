@@ -133,7 +133,7 @@ class GetBaseCommit(Step):
 class LoadCommits(Step):
     """Get a list of commits in the gecko tree that need to be upstreamed"""
 
-    provides = ["source_commits"]
+    provides = ["source_commits", "has_backouts"]
 
     def create(self, state):
         state.source_commits = state.local_tree.log(state.last_sync_commit,
@@ -141,22 +141,55 @@ class LoadCommits(Step):
 
         update_regexp = re.compile("Bug \d+ - Update web-platform-tests to revision [0-9a-f]{40}")
 
+        state.has_backouts = False
+
         for i, commit in enumerate(state.source_commits[:]):
             if update_regexp.match(commit.message.text):
                 # This is a previous update commit so ignore it
                 state.source_commits.remove(commit)
                 continue
 
-            if commit.message.backouts:
+            elif commit.message.backouts:
                 #TODO: Add support for collapsing backouts
-                raise NotImplementedError("Need to get the Git->Hg commits for backouts and remove the backed out patch")
+                state.has_backouts = True
 
-            if not commit.message.bug:
+            elif not commit.message.bug:
                 self.logger.error("Commit %i (%s) doesn't have an associated bug number." %
-                             (i + 1, commit.sha1))
+                                  (i + 1, commit.sha1))
                 return exit_unclean
 
         self.logger.debug("Source commits: %s" % state.source_commits)
+
+class SelectCommits(Step):
+    """Provide a UI to select which commits to upstream"""
+
+    def create(self, state):
+        while True:
+            commits = state.source_commits[:]
+            for i, commit in enumerate(commits):
+                print "%i:\t%s" % (i, commit.message.summary)
+
+            remove = raw_input("Provide a space-separated list of any commits numbers to remove from the list to upstream:\n").strip()
+            remove_idx = set()
+            for item in remove.split(" "):
+                try:
+                    item = int(item)
+                except:
+                    continue
+                if item < 0 or item >= len(commits):
+                    continue
+                remove_idx.add(item)
+
+            keep_commits = [(i,cmt) for i,cmt in enumerate(commits) if i not in remove_idx]
+            #TODO: consider printed removed commits
+            print "Selected the following commits to keep:"
+            for i, commit in keep_commits:
+                print "%i:\t%s" % (i, commit.message.summary)
+            confirm = raw_input("Keep the above commits? y/n\n").strip().lower()
+
+            if confirm == "y":
+                state.source_commits = [item[1] for item in keep_commits]
+                break
 
 class MovePatches(Step):
     """Convert gecko commits into patches against upstream and commit these to the sync tree."""
@@ -189,9 +222,6 @@ class RebaseCommits(Step):
     In that case the conflicts can be fixed up locally and the sync process restarted
     with --continue.
     """
-
-    provides = ["rebased_commits"]
-
     def create(self, state):
         self.logger.info("Rebasing local commits")
         continue_rebase = False
@@ -209,13 +239,14 @@ class RebaseCommits(Step):
         except subprocess.CalledProcessError:
             self.logger.info("Rebase failed, fix merge and run %s again with --continue" % sys.argv[0])
             raise
-        state.rebased_commits = state.sync_tree.log(state.base_commit)
         self.logger.info("Rebase successful")
 
 class CheckRebase(Step):
     """Check if there are any commits remaining after rebase"""
+    provides = ["rebased_commits"]
 
     def create(self, state):
+        state.rebased_commits = state.sync_tree.log(state.base_commit)
         if not state.rebased_commits:
             self.logger.info("Nothing to upstream, exiting")
             return exit_clean
@@ -329,6 +360,7 @@ class SyncToUpstreamRunner(StepRunner):
              GetLastSyncCommit,
              GetBaseCommit,
              LoadCommits,
+             SelectCommits,
              MovePatches,
              RebaseCommits,
              CheckRebase,
