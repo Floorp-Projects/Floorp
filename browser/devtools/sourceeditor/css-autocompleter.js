@@ -757,39 +757,54 @@ CSSCompleter.prototype = {
     result = result.suggestions;
     let query = this.selector;
     let completion = [];
-    for (let value of result) {
+    for (let [value, count, state] of result) {
       switch(this.selectorState) {
         case SELECTOR_STATES.id:
         case SELECTOR_STATES.class:
         case SELECTOR_STATES.pseudo:
           if (/^[.:#]$/.test(this.completing)) {
-            value[0] = query.slice(0, query.length - this.completing.length) +
-                       value[0];
+            value = query.slice(0, query.length - this.completing.length) +
+                       value;
           } else {
-            value[0] = query.slice(0, query.length - this.completing.length - 1) +
-                       value[0];
+            value = query.slice(0, query.length - this.completing.length - 1) +
+                       value;
           }
           break;
 
         case SELECTOR_STATES.tag:
-          value[0] = query.slice(0, query.length - this.completing.length) +
-                     value[0];
+          value = query.slice(0, query.length - this.completing.length) +
+                     value;
           break;
 
         case SELECTOR_STATES.null:
-          value[0] = query + value[0];
+          value = query + value;
           break;
 
         default:
-         value[0] = query.slice(0, query.length - this.completing.length) +
-                    value[0];
+         value = query.slice(0, query.length - this.completing.length) +
+                    value;
       }
-      completion.push({
-        label: value[0],
+
+      let item = {
+        label: value,
         preLabel: query,
-        text: value[0],
-        score: value[1]
-      });
+        text: value,
+        score: count
+      };
+
+      // In case the query's state is tag and the item's state is id or class
+      // adjust the preLabel
+      if (this.selectorState === SELECTOR_STATES.tag &&
+          state === SELECTOR_STATES.class) {
+        item.preLabel = "." + item.preLabel;
+      }
+      if (this.selectorState === SELECTOR_STATES.tag &&
+          state === SELECTOR_STATES.id) {
+        item.preLabel = "#" + item.preLabel;
+      }
+
+      completion.push(item);
+
       if (completion.length > this.maxEntries - 1)
         break;
     }

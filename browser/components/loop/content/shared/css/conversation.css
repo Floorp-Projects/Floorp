@@ -1032,18 +1032,44 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   max-width: 400px;
 }
 
-.standalone .room-conversation h2.room-name,
-.standalone .room-conversation h2.room-info-failure {
+.standalone-room-info {
   position: absolute;
-  display: inline-block;
+  display: block;
   top: 0;
   right: 10px;
   /* 20px is 10px for left and right margins. */
   width: calc(25% - 20px);
-  color: #fff;
   z-index: 2000000;
   font-size: 1.2em;
   padding: .4em;
+  height: 100%;
+}
+
+.standalone-room-info > h2 {
+  color: #fff;
+}
+
+.standalone-context-url {
+  color: #fff;
+  /* Try and keep clear of local video */
+  height: 40%;
+}
+
+.standalone-context-url.screen-share-active {
+  /* Try and keep clear of remote video when screensharing */
+  height: 15%;
+}
+
+.standalone-context-url > img {
+  margin: 1em auto;
+  max-width: 50%;
+  /* allows 20% for the description wrapper plus the margins */
+  max-height: calc(80% - 2em);
+}
+
+.standalone-context-url-description-wrapper {
+  /* So that we can use max-height for the image */
+  height: 20%;
 }
 
 .standalone .room-conversation .media {
@@ -1071,6 +1097,20 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 
 
 @media screen and (max-width:640px) {
+  .standalone-room-info {
+    /* This isn't perfect, we just center the heading for now. Bug 1141493
+       should fix this. */
+    position: absolute;
+    width: 100%;
+    right: 0px;
+  }
+
+  .standalone-context-url {
+    /* XXX We haven't got UX for standalone yet, so temporarily not displaying
+       on narrow window widths. See bug 1153827. */
+    display: none;
+  }
+
   /* Rooms specific responsive styling */
   .standalone .room-conversation {
     background: #000;
@@ -1091,6 +1131,10 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
   .standalone .room-conversation .video_wrapper.remote_wrapper {
     width: 100%;
   }
+  .standalone .room-conversation .video_wrapper.remote_wrapper.not-joined {
+    width: 100%;
+  }
+
   .standalone .conversation-toolbar {
     height: 38px;
     padding: 8px;

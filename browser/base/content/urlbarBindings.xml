@@ -1044,6 +1044,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           <xul:label anonid="searchbar-oneoffheader-searchtext" flex="1" crop="end" class="search-panel-input-value"/>
           <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value="&searchWith.label;"/>
         </xul:hbox>
+        <xul:hbox anonid="search-panel-searchonengine"
+                  class="search-panel-current-input">
+          <xul:label anonid="searchbar-oneoffheader-beforeengine" value="&search.label;"/>
+          <xul:label anonid="searchbar-oneoffheader-engine" flex="1" crop="end"
+                     class="search-panel-input-value"/>
+          <xul:label anonid="searchbar-oneoffheader-afterengine" flex="10000"
+                     value="&searchAfter.label;"/>
+        </xul:hbox>
       </xul:deck>
       <xul:description anonid="search-panel-one-offs"
                        role="group"
@@ -1140,19 +1148,24 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         let inputHandler = function() {
           headerSearchText.setAttribute("value", textbox.value);
           let groupText;
+          let isOneOffSelected =
+            this.selectedButton &&
+            this.selectedButton.classList.contains("searchbar-engine-one-off-item");
           if (textbox.value) {
             self.removeAttribute("showonlysettings");
             groupText = headerSearchText.previousSibling.value +
                         '"' + headerSearchText.value + '"' +
                         headerSearchText.nextSibling.value;
-            headerPanel.selectedIndex = 1;
+            if (!isOneOffSelected)
+              headerPanel.selectedIndex = 1;
           }
           else {
             let noSearchHeader =
               document.getAnonymousElementByAttribute(self, "anonid",
                                                       "searchbar-oneoffheader-search");
             groupText = noSearchHeader.value;
-            headerPanel.selectedIndex = 0;
+            if (!isOneOffSelected)
+              headerPanel.selectedIndex = 0;
           }
           list.setAttribute("aria-label", groupText);
         };

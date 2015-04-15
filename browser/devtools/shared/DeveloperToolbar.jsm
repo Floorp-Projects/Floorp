@@ -835,6 +835,7 @@ OutputPanel.prototype._init = function(devtoolbar) {
     this._frame.removeEventListener("load", onload, true);
 
     this.document = this._frame.contentDocument;
+    this._copyTheme();
 
     this._div = this.document.getElementById("gcli-output-root");
     this._div.classList.add('gcli-row-out');
@@ -850,6 +851,16 @@ OutputPanel.prototype._init = function(devtoolbar) {
 
   return deferred.promise;
 }
+
+/* Copy the current devtools theme attribute into the iframe,
+   so it can be styled correctly. */
+OutputPanel.prototype._copyTheme = function() {
+  if (this.document) {
+    let theme =
+      this._devtoolbar._doc.documentElement.getAttribute("devtoolstheme");
+    this.document.documentElement.setAttribute("devtoolstheme", theme);
+  }
+};
 
 /**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
@@ -875,6 +886,7 @@ OutputPanel.prototype.show = function() {
   this._frame.style.minHeight = this._frame.style.maxHeight = 0;
   this._frame.style.minWidth = 0;
 
+  this._copyTheme();
   this._panel.openPopup(this._input, "before_start", 0, 0, false, false, null);
   this._resize();
 
@@ -1090,6 +1102,7 @@ TooltipPanel.prototype._init = function(devtoolbar) {
   let deferred = promise.defer();
 
   let chromeDocument = devtoolbar._doc;
+  this._devtoolbar = devtoolbar;
   this._input = devtoolbar._doc.querySelector(".gclitoolbar-input-node");
   this._toolbar = devtoolbar._doc.querySelector("#developer-toolbar");
   this._dimensions = { start: 0, end: 0 };
@@ -1146,6 +1159,7 @@ TooltipPanel.prototype._init = function(devtoolbar) {
     this._frame.removeEventListener("load", onload, true);
 
     this.document = this._frame.contentDocument;
+    this._copyTheme();
     this.hintElement = this.document.getElementById("gcli-tooltip-root");
     this._connector = this.document.getElementById("gcli-tooltip-connector");
 
@@ -1158,7 +1172,17 @@ TooltipPanel.prototype._init = function(devtoolbar) {
   this._frame.addEventListener("load", onload, true);
 
   return deferred.promise;
-}
+};
+
+/* Copy the current devtools theme attribute into the iframe,
+   so it can be styled correctly. */
+TooltipPanel.prototype._copyTheme = function() {
+  if (this.document) {
+    let theme =
+      this._devtoolbar._doc.documentElement.getAttribute("devtoolstheme");
+    this.document.documentElement.setAttribute("devtoolstheme", theme);
+  }
+};
 
 /**
  * Prevent the popup from hiding if it is not permitted via this.canHide.
@@ -1191,6 +1215,7 @@ TooltipPanel.prototype.show = function(dimensions) {
     this.canHide = false;
   }
 
+  this._copyTheme();
   this._resize();
   this._panel.openPopup(this._input, "before_start", dimensions.start * 10, 0,
                         false, false, null);
