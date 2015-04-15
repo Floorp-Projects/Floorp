@@ -265,18 +265,19 @@ function CreateSocialStatusWidget(aId, aProvider) {
 
   CustomizableUI.createWidget({
     id: aId,
-    type: 'custom',
+    type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_NAVBAR,
     onBuild: function(aDocument) {
-      let node = aDocument.createElement('toolbarbutton');
+      let node = aDocument.createElement("toolbarbutton");
       node.id = this.id;
-      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-status-button badged-button');
+      node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional social-status-button badged-button");
       node.style.listStyleImage = "url(" + (aProvider.icon32URL || aProvider.iconURL) + ")";
       node.setAttribute("origin", aProvider.origin);
       node.setAttribute("label", aProvider.name);
       node.setAttribute("tooltiptext", aProvider.name);
       node.setAttribute("oncommand", "SocialStatus.showPopup(this);");
+      node.setAttribute("constrain-size", "true");
 
       if (PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView))
         node.setAttribute("disabled", "true");
@@ -298,14 +299,15 @@ function CreateSocialMarkWidget(aId, aProvider) {
 
   CustomizableUI.createWidget({
     id: aId,
-    type: 'custom',
+    type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_NAVBAR,
     onBuild: function(aDocument) {
-      let node = aDocument.createElement('toolbarbutton');
+      let node = aDocument.createElement("toolbarbutton");
       node.id = this.id;
-      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-mark-button');
-      node.setAttribute('type', "socialmark");
+      node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional social-mark-button");
+      node.setAttribute("type", "socialmark");
+      node.setAttribute("constrain-size", "true");
       node.style.listStyleImage = "url(" + (aProvider.unmarkedIcon || aProvider.icon32URL || aProvider.iconURL) + ")";
       node.setAttribute("origin", aProvider.origin);
 

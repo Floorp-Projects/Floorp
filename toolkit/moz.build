@@ -23,10 +23,17 @@ DIRS += [
     'webapps',
 ]
 
-DIRS += ['mozapps/update']
+if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    DIRS += ['mozapps/update']
 
 if CONFIG['MOZ_MAINTENANCE_SERVICE']:
-    DIRS += ['components/maintenanceservice']
+# Including mozapps/update/common-standalone allows the maintenance service
+# to be built so the maintenance service can be used for things other than
+# updating applications.
+    DIRS += [
+        'mozapps/update/common-standalone',
+        'components/maintenanceservice'
+    ]
 
 DIRS += ['xre']
 
@@ -61,6 +68,3 @@ with Files('mozapps/plugins/*'):
 
 with Files('mozapps/preferences/*'):
     BUG_COMPONENT = ('Toolkit', 'Preferences')
-
-with Files('mozapps/update/*'):
-    BUG_COMPONENT = ('Toolkit', 'Application Update')

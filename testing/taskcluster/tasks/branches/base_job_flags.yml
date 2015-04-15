@@ -22,6 +22,7 @@ flags:
     - dolphin-eng
     - dolphin-512
     - dolphin-512-eng
+    - aries-nightly
 
   tests:
     - cppunit

@@ -18,8 +18,6 @@ xpcshell-data_FILES  := $(filter-out $(pp_const_file),$(wildcard $(srcdir)/data/
 xpcshell-data_DEST   := $(XPCSHELLTESTROOT)/data
 xpcshell-data_TARGET := misc
 
-# Android doesn't use the Mozilla updater or the toolkit update UI
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 ifndef MOZ_PROFILE_GENERATE
 ifdef COMPILE_ENVIRONMENT
 INSTALL_TARGETS        += xpcshell-helper
@@ -47,11 +45,8 @@ INI_TEST_FILES = \
 
 MOZ_WINCONSOLE = 1
 
-endif # Not Android
-
 include $(topsrcdir)/config/rules.mk
 
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 # TestAUSReadStrings runs during check in the following directory with a Unicode
 # char in order to test bug 473417 on Windows.
 ifeq ($(OS_ARCH),WINNT)
@@ -67,4 +62,3 @@ check::
 	done
 	$(INSTALL) $(FINAL_TARGET)/TestAUSReadStrings$(BIN_SUFFIX) $(DEPTH)/_tests/updater/$(bug473417dir)/
 	@$(RUN_TEST_PROGRAM) $(DEPTH)/_tests/updater/$(bug473417dir)/TestAUSReadStrings$(BIN_SUFFIX)
-endif # Not Android

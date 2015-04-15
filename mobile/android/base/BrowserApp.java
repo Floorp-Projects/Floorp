@@ -779,6 +779,7 @@ public class BrowserApp extends GeckoApp
             "Menu:Add",
             "Menu:Remove",
             "Reader:Share",
+            "Sanitize:ClearHistory",
             "Settings:Show",
             "Telemetry:Gather",
             "Updater:Launch");
@@ -1324,6 +1325,7 @@ public class BrowserApp extends GeckoApp
             "Menu:Add",
             "Menu:Remove",
             "Reader:Share",
+            "Sanitize:ClearHistory",
             "Settings:Show",
             "Telemetry:Gather",
             "Updater:Launch");
@@ -1358,6 +1360,16 @@ public class BrowserApp extends GeckoApp
             onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, null);
             invalidateOptionsMenu();
         }
+    }
+
+    private void handleClearHistory(final boolean clearSearchHistory) {
+        final BrowserDB db = getProfile().getDB();
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                db.clearHistory(getContentResolver(), clearSearchHistory);
+            }
+        });
     }
 
     private void shareCurrentUrl() {
@@ -1636,7 +1648,9 @@ public class BrowserApp extends GeckoApp
             final String title = message.getString("title");
             final String url = message.getString("url");
             GeckoAppShell.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title);
-
+        } else if ("Sanitize:ClearHistory".equals(event)) {
+            handleClearHistory(message.optBoolean("clearSearchHistory", false));
+            callback.sendSuccess(true);
         } else if ("Settings:Show".equals(event)) {
             final String resource =
                     message.optString(GeckoPreferences.INTENT_EXTRA_RESOURCES, null);
