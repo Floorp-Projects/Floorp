@@ -2042,16 +2042,13 @@ CrossProcessCompositorParent::SetConfirmedTargetAPZC(const LayerTransactionParen
 {
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
-  CompositorParent* parent = nullptr;
-  {
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(id);
-    if (!state || !state->mParent) {
-      return;
-    }
-    parent = state->mParent;
+  const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(id);
+  if (!state) {
+    return;
   }
-  parent->SetConfirmedTargetAPZC(aLayerTree, aInputBlockId, aTargets);
+
+  MOZ_ASSERT(state->mParent);
+  state->mParent->SetConfirmedTargetAPZC(aLayerTree, aInputBlockId, aTargets);
 }
 
 AsyncCompositionManager*
