@@ -9,6 +9,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/KeyframeEffect.h"
 
 #include "nsPresContext.h"
 #include "nsStyleSet.h"
@@ -23,8 +24,8 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
-using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayer;
+using mozilla::dom::KeyframeEffectReadonly;
 using mozilla::CSSAnimationPlayer;
 
 mozilla::dom::Promise*
@@ -90,11 +91,11 @@ CSSAnimationPlayer::PauseFromStyle()
 void
 CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 {
-  if (!mSource) {
+  if (!mEffect) {
     return;
   }
 
-  ComputedTiming computedTiming = mSource->GetComputedTiming();
+  ComputedTiming computedTiming = mEffect->GetComputedTiming();
 
   if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Null) {
     return; // do nothing
@@ -132,7 +133,7 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 
   dom::Element* target;
   nsCSSPseudoElements::Type targetPseudoType;
-  mSource->GetTarget(target, targetPseudoType);
+  mEffect->GetTarget(target, targetPseudoType);
 
   uint32_t message;
 
@@ -146,7 +147,7 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
     // First notifying for start of 0th iteration by appending an
     // 'animationstart':
     StickyTimeDuration elapsedTime =
-      std::min(StickyTimeDuration(mSource->InitialAdvance()),
+      std::min(StickyTimeDuration(mEffect->InitialAdvance()),
                computedTiming.mActiveDuration);
     AnimationEventInfo ei(target, Name(), NS_ANIMATION_START,
                           elapsedTime,
@@ -162,10 +163,10 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 
   if (message == NS_ANIMATION_START ||
       message == NS_ANIMATION_ITERATION) {
-    TimeDuration iterationStart = mSource->Timing().mIterationDuration *
+    TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
                                     computedTiming.mCurrentIteration;
     elapsedTime = StickyTimeDuration(std::max(iterationStart,
-                                              mSource->InitialAdvance()));
+                                              mEffect->InitialAdvance()));
   } else {
     MOZ_ASSERT(message == NS_ANIMATION_END);
     elapsedTime = computedTiming.mActiveDuration;
@@ -229,7 +230,7 @@ nsAnimationManager::MaybeUpdateCascadeResults(AnimationPlayerCollection* aCollec
     CSSAnimationPlayer* player =
       aCollection->mPlayers[playerIdx]->AsCSSAnimationPlayer();
 
-    if (player->HasInEffectSource() != player->mInEffectForCascadeResults) {
+    if (player->IsInEffect() != player->mInEffectForCascadeResults) {
       // Update our own cascade results.
       mozilla::dom::Element* element = aCollection->GetElementToRestyle();
       if (element) {
@@ -354,14 +355,14 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
         // Update the old from the new so we can keep the original object
         // identity (and any expando properties attached to it).
-        if (oldPlayer->GetSource() && newPlayer->GetSource()) {
-          Animation* oldAnim = oldPlayer->GetSource();
-          Animation* newAnim = newPlayer->GetSource();
+        if (oldPlayer->GetEffect() && newPlayer->GetEffect()) {
+          KeyframeEffectReadonly* oldEffect = oldPlayer->GetEffect();
+          KeyframeEffectReadonly* newEffect = newPlayer->GetEffect();
           animationChanged =
-            oldAnim->Timing() != newAnim->Timing() ||
-            oldAnim->Properties() != newAnim->Properties();
-          oldAnim->Timing() = newAnim->Timing();
-          oldAnim->Properties() = newAnim->Properties();
+            oldEffect->Timing() != newEffect->Timing() ||
+            oldEffect->Properties() != newEffect->Properties();
+          oldEffect->Timing() = newEffect->Timing();
+          oldEffect->Properties() = newEffect->Properties();
         }
 
         // Reset compositor state so animation will be re-synchronized.
@@ -527,10 +528,11 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mDirection = src.GetDirection();
     timing.mFillMode = src.GetFillMode();
 
-    nsRefPtr<Animation> destAnim =
-      new Animation(mPresContext->Document(), aTarget,
-                    aStyleContext->GetPseudoType(), timing, src.GetName());
-    dest->SetSource(destAnim);
+    nsRefPtr<KeyframeEffectReadonly> destEffect =
+      new KeyframeEffectReadonly(mPresContext->Document(), aTarget,
+                                 aStyleContext->GetPseudoType(), timing,
+                                 src.GetName());
+    dest->SetEffect(destEffect);
 
     // Even in the case where we call PauseFromStyle below, we still need to
     // call PlayFromStyle first. This is because a newly-created player is idle
@@ -626,7 +628,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         lastKey = kf.mKey;
       }
 
-      AnimationProperty &propData = *destAnim->Properties().AppendElement();
+      AnimationProperty &propData = *destEffect->Properties().AppendElement();
       propData.mProperty = prop;
       propData.mWinsInCascade = true;
 
@@ -689,8 +691,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       // values (which?) or skip segments, so best to skip the whole
       // thing for now.)
       if (!interpolated) {
-        destAnim->Properties().RemoveElementAt(
-          destAnim->Properties().Length() - 1);
+        destEffect->Properties().RemoveElementAt(
+          destEffect->Properties().Length() - 1);
       }
     }
   }
@@ -753,14 +755,14 @@ nsAnimationManager::UpdateCascadeResults(
     for (size_t playerIdx = aElementAnimations->mPlayers.Length();
          playerIdx-- != 0; ) {
       const AnimationPlayer* player = aElementAnimations->mPlayers[playerIdx];
-      const Animation* anim = player->GetSource();
-      if (!anim) {
+      const KeyframeEffectReadonly* effect = player->GetEffect();
+      if (!effect) {
         continue;
       }
 
-      for (size_t propIdx = 0, propEnd = anim->Properties().Length();
+      for (size_t propIdx = 0, propEnd = effect->Properties().Length();
            propIdx != propEnd; ++propIdx) {
-        const AnimationProperty& prop = anim->Properties()[propIdx];
+        const AnimationProperty& prop = effect->Properties()[propIdx];
         // We only bother setting mWinsInCascade for properties that we
         // can animate on the compositor.
         if (nsCSSProps::PropHasFlags(prop.mProperty,
@@ -802,17 +804,17 @@ nsAnimationManager::UpdateCascadeResults(
        playerIdx-- != 0; ) {
     CSSAnimationPlayer* player =
       aElementAnimations->mPlayers[playerIdx]->AsCSSAnimationPlayer();
-    Animation* anim = player->GetSource();
+    KeyframeEffectReadonly* effect = player->GetEffect();
 
-    player->mInEffectForCascadeResults = player->HasInEffectSource();
+    player->mInEffectForCascadeResults = player->IsInEffect();
 
-    if (!anim) {
+    if (!effect) {
       continue;
     }
 
-    for (size_t propIdx = 0, propEnd = anim->Properties().Length();
+    for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
-      AnimationProperty& prop = anim->Properties()[propIdx];
+      AnimationProperty& prop = effect->Properties()[propIdx];
       // We only bother setting mWinsInCascade for properties that we
       // can animate on the compositor.
       if (nsCSSProps::PropHasFlags(prop.mProperty,

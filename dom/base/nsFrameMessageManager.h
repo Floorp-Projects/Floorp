@@ -27,6 +27,7 @@
 #include "mozilla/Attributes.h"
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"
+#include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/jsipc/CpowHolder.h"
 
@@ -203,8 +204,7 @@ private:
       }
       if (this == sChildProcessManager) {
         sChildProcessManager = nullptr;
-        delete sPendingSameProcessAsyncMessages;
-        sPendingSameProcessAsyncMessages = nullptr;
+        delete mozilla::dom::SameProcessMessageQueue::Get();
       }
       if (this == sSameProcessParentManager) {
         sSameProcessParentManager = nullptr;

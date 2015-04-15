@@ -95,10 +95,12 @@ uint32_t
 CertBlocklistItem::Hash() const
 {
   uint32_t hash;
-  // there's no requirement for a serial to be as large as 32 bits; if it's
-  // smaller, fall back to the first octet (otherwise, the last four)
-  if (mItemMechanism == BlockByIssuerAndSerial && mOtherLength >= 4) {
-    hash = *(uint32_t *)(mOtherData + mOtherLength - 4);
+  // there's no requirement for a serial to be as large as the size of the hash
+  // key; if it's smaller, fall back to the first octet (otherwise, the last
+  // four)
+  if (mItemMechanism == BlockByIssuerAndSerial &&
+      mOtherLength >= sizeof(hash)) {
+    memcpy(&hash, mOtherData + mOtherLength - sizeof(hash), sizeof(hash));
   } else {
     hash = *mOtherData;
   }

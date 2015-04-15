@@ -216,7 +216,7 @@ SourceBufferResource::EvictAll()
 }
 
 void
-SourceBufferResource::AppendData(LargeDataBuffer* aData)
+SourceBufferResource::AppendData(MediaLargeByteBuffer* aData)
 {
   SBR_DEBUG("AppendData(aData=%p, aLength=%u)",
             aData->Elements(), aData->Length());

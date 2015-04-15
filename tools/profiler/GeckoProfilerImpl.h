@@ -12,6 +12,8 @@
 #include <stdarg.h>
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/GuardObjects.h"
+#include "mozilla/UniquePtr.h"
 #include "nscore.h"
 #include "GeckoProfilerFunc.h"
 #include "PseudoStack.h"
@@ -355,6 +357,28 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 #define PROFILE_DEFAULT_FEATURE_COUNT 0
 
 namespace mozilla {
+
+class MOZ_STACK_CLASS GeckoProfilerTracingRAII {
+public:
+  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo,
+                           mozilla::UniquePtr<ProfilerBacktrace> aBacktrace
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mCategory(aCategory)
+    , mInfo(aInfo)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    profiler_tracing(mCategory, mInfo, aBacktrace.release(), TRACING_INTERVAL_START);
+  }
+
+  ~GeckoProfilerTracingRAII() {
+    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_END);
+  }
+
+protected:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  const char* mCategory;
+  const char* mInfo;
+};
 
 class MOZ_STACK_CLASS SamplerStackFrameRAII {
 public:

@@ -22,8 +22,8 @@ class Image;
 class ImageContainer;
 }
 
-class LargeDataBuffer;
-class DataBuffer;
+class MediaLargeByteBuffer;
+class MediaByteBuffer;
 
 // Container that holds media samples.
 class MediaData {
@@ -369,7 +369,7 @@ private:
   explicit MediaRawDataWriter(MediaRawData* aMediaRawData);
   bool EnsureSize(size_t aSize);
   MediaRawData* mTarget;
-  nsRefPtr<LargeDataBuffer> mBuffer;
+  nsRefPtr<MediaLargeByteBuffer> mBuffer;
 };
 
 class MediaRawData : public MediaData {
@@ -383,7 +383,7 @@ public:
   size_t mSize;
 
   const CryptoSample& mCrypto;
-  nsRefPtr<DataBuffer> mExtraData;
+  nsRefPtr<MediaByteBuffer> mExtraData;
 
   // Return a deep copy or nullptr if out of memory.
   virtual already_AddRefed<MediaRawData> Clone() const;
@@ -403,29 +403,29 @@ private:
   // read as required by some data decoders.
   // Returns false if memory couldn't be allocated.
   bool EnsureCapacity(size_t aSize);
-  nsRefPtr<LargeDataBuffer> mBuffer;
+  nsRefPtr<MediaLargeByteBuffer> mBuffer;
   CryptoSample mCryptoInternal;
   uint32_t mPadding;
   MediaRawData(const MediaRawData&); // Not implemented
 };
 
-  // LargeDataBuffer is a ref counted fallible TArray.
+  // MediaLargeByteBuffer is a ref counted fallible TArray.
   // It is designed to share potentially big byte arrays.
-class LargeDataBuffer : public FallibleTArray<uint8_t> {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LargeDataBuffer);
-  LargeDataBuffer() = default;
-  explicit LargeDataBuffer(size_t aCapacity) : FallibleTArray<uint8_t>(aCapacity) {}
+class MediaLargeByteBuffer : public FallibleTArray<uint8_t> {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaLargeByteBuffer);
+  MediaLargeByteBuffer() = default;
+  explicit MediaLargeByteBuffer(size_t aCapacity) : FallibleTArray<uint8_t>(aCapacity) {}
 
 private:
-  ~LargeDataBuffer() {}
+  ~MediaLargeByteBuffer() {}
 };
 
-  // DataBuffer is a ref counted infallible TArray.
-class DataBuffer : public nsTArray<uint8_t> {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataBuffer);
+  // MediaByteBuffer is a ref counted infallible TArray.
+class MediaByteBuffer : public nsTArray<uint8_t> {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaByteBuffer);
 
 private:
-  ~DataBuffer() {}
+  ~MediaByteBuffer() {}
 };
 
 } // namespace mozilla

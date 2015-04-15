@@ -399,6 +399,7 @@ public:
     bool RequestNotifyLayerTreeReady();
     bool RequestNotifyLayerTreeCleared();
     bool LayerTreeUpdate(bool aActive);
+    void SwapLayerTreeObservers(TabParent* aOther);
 
     virtual bool
     RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,

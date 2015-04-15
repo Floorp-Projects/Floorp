@@ -41,7 +41,7 @@ protected:
   FlushableMediaTaskQueue* mTaskQueue;
   AVCodecContext* mCodecContext;
   AVFrame*        mFrame;
-  nsRefPtr<DataBuffer> mExtraData;
+  nsRefPtr<MediaByteBuffer> mExtraData;
 
 private:
   static bool sFFmpegInitDone;

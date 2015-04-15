@@ -11,7 +11,6 @@ if [ ! -d $HOME/.ssh ]; then
 fi
 
 aws s3 cp s3://b2g-nightly-credentials/balrog_credentials .
-aws s3 cp s3://b2g-nightly-credentials/b2g-rsa $HOME/.ssh/
 
 ./mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-phone-nightly.py \
@@ -28,12 +27,11 @@ aws s3 cp s3://b2g-nightly-credentials/b2g-rsa $HOME/.ssh/
   --base-repo=$GECKO_BASE_REPOSITORY \
   --repo=$GECKO_HEAD_REPOSITORY \
   --platform $TARGET \
-  --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/0/artifacts/public/build/b2g-${TARGET%%-*}-gecko-update.mar \
+  --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/b2g-${TARGET%%-*}-gecko-update.mar \
 
 # Don't cache backups
 rm -rf $WORKSPACE/B2G/backup-*
 rm -f balrog_credentials
-rm -f $HOME/.ssh/b2g-rsa
 
 mkdir -p $HOME/artifacts
 mkdir -p $HOME/artifacts-public
