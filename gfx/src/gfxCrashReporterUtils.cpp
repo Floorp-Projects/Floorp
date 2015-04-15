@@ -68,7 +68,7 @@ ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,
 
 class RegisterObserverRunnable : public nsRunnable {
 public:
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() override {
     // LeakLog made me do this. Basically, I just wanted gFeaturesAlreadyReported to be a static nsTArray<nsCString>,
     // and LeakLog was complaining about leaks like this:
     //    leaked 1 instance of nsTArray_base with size 8 bytes
@@ -79,11 +79,7 @@ public:
     if (!observerService)
       return NS_OK;
     nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
-    nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", false);
-    if (NS_FAILED(rv)) {
-      observer = nullptr;
-      return NS_OK;
-    }
+    observerService->AddObserver(observer, "xpcom-shutdown", false);
     return NS_OK;
   }
 };
