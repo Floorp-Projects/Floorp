@@ -2631,8 +2631,10 @@ nsDOMWindowUtils::RestoreNormalRefresh()
     transaction->SendLeaveTestMode();
   }
 
-  nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
-  driver->RestoreNormalRefresh();
+  if (nsPresContext* pc = GetPresContext()) {
+    nsRefreshDriver* driver = pc->RefreshDriver();
+    driver->RestoreNormalRefresh();
+  }
 
   return NS_OK;
 }
