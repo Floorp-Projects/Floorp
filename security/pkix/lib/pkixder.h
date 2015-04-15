@@ -275,29 +275,7 @@ Result IntegralBytes(Reader& input, uint8_t tag,
 
 // This parser will only parse values between 0..127. If this range is
 // increased then callers will need to be changed.
-template <typename T> inline Result
-IntegralValue(Reader& input, uint8_t tag, T& value)
-{
-  // Conveniently, all the Integers that we actually have to be able to parse
-  // are positive and very small. Consequently, this parser is *much* simpler
-  // than a general Integer parser would need to be.
-  Input valueBytes;
-  Result rv = IntegralBytes(input, tag, IntegralValueRestriction::MustBe0To127,
-                            valueBytes, nullptr);
-  if (rv != Success) {
-    return rv;
-  }
-  Reader valueReader(valueBytes);
-  uint8_t valueByte;
-  rv = valueReader.Read(valueByte);
-  if (rv != Success) {
-    return NotReached("IntegralBytes already validated the value.", rv);
-  }
-  value = valueByte;
-  rv = End(valueReader);
-  assert(rv == Success); // guaranteed by IntegralBytes's range checks.
-  return rv;
-}
+Result IntegralValue(Reader& input, uint8_t tag, /*out*/ uint8_t& value);
 
 } // namespace internal
 
@@ -481,43 +459,11 @@ CertificateSerialNumber(Reader& input, /*out*/ Input& value)
 // only supports v1.
 enum class Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
 
-// X.509 Certificate and OCSP ResponseData both use this
-// "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with
-// different default versions.
-inline Result
-OptionalVersion(Reader& input, /*out*/ Version& version)
-{
-  static const uint8_t TAG = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
-  if (!input.Peek(TAG)) {
-    version = Version::v1;
-    return Success;
-  }
-  Reader value;
-  Result rv = ExpectTagAndGetValue(input, TAG, value);
-  if (rv != Success) {
-    return rv;
-  }
-  uint8_t integerValue;
-  rv = Integer(value, integerValue);
-  if (rv != Success) {
-    return rv;
-  }
-  rv = End(value);
-  if (rv != Success) {
-    return rv;
-  }
-  switch (integerValue) {
-    case static_cast<uint8_t>(Version::v3): version = Version::v3; break;
-    case static_cast<uint8_t>(Version::v2): version = Version::v2; break;
-    // XXX(bug 1031093): We shouldn't accept an explicit encoding of v1, but we
-    // do here for compatibility reasons.
-    case static_cast<uint8_t>(Version::v1): version = Version::v1; break;
-    case static_cast<uint8_t>(Version::v4): version = Version::v4; break;
-    default:
-      return Result::ERROR_BAD_DER;
-  }
-  return Success;
-}
+// X.509 Certificate and OCSP ResponseData both use
+// "[0] EXPLICIT Version DEFAULT v1". Although an explicit encoding of v1 is
+// illegal, we support it because some real-world OCSP responses explicitly
+// encode it.
+Result OptionalVersion(Reader& input, /*out*/ Version& version);
 
 template <typename ExtensionHandler>
 inline Result
@@ -528,73 +474,45 @@ OptionalExtensions(Reader& input, uint8_t tag,
     return Success;
   }
 
-  Result rv;
-
-  Reader extensions;
-  {
-    Reader tagged;
-    rv = ExpectTagAndGetValue(input, tag, tagged);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = ExpectTagAndGetValue(tagged, SEQUENCE, extensions);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = End(tagged);
-    if (rv != Success) {
-      return rv;
-    }
-  }
-
-  // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
-  //
-  // TODO(bug 997994): According to the specification, there should never be
-  // an empty sequence of extensions but we've found OCSP responses that have
-  // that (see bug 991898).
-  while (!extensions.AtEnd()) {
-    Reader extension;
-    rv = ExpectTagAndGetValue(extensions, SEQUENCE, extension);
-    if (rv != Success) {
-      return rv;
-    }
-
-    // Extension  ::=  SEQUENCE  {
-    //      extnID      OBJECT IDENTIFIER,
-    //      critical    BOOLEAN DEFAULT FALSE,
-    //      extnValue   OCTET STRING
-    //      }
-    Reader extnID;
-    rv = ExpectTagAndGetValue(extension, OIDTag, extnID);
-    if (rv != Success) {
-      return rv;
-    }
-    bool critical;
-    rv = OptionalBoolean(extension, critical);
-    if (rv != Success) {
-      return rv;
-    }
-    Input extnValue;
-    rv = ExpectTagAndGetValue(extension, OCTET_STRING, extnValue);
-    if (rv != Success) {
-      return rv;
-    }
-    rv = End(extension);
-    if (rv != Success) {
-      return rv;
-    }
-
-    bool understood = false;
-    rv = extensionHandler(extnID, extnValue, critical, understood);
-    if (rv != Success) {
-      return rv;
-    }
-    if (critical && !understood) {
-      return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
-    }
-  }
-
-  return Success;
+  return Nested(input, tag, [extensionHandler](Reader& tagged) {
+    // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
+    //
+    // TODO(bug 997994): According to the specification, there should never be
+    // an empty sequence of extensions but we've found OCSP responses that have
+    // that (see bug 991898).
+    return NestedOf(tagged, SEQUENCE, SEQUENCE, EmptyAllowed::Yes,
+                    [extensionHandler](Reader& extension) -> Result {
+      // Extension  ::=  SEQUENCE  {
+      //      extnID      OBJECT IDENTIFIER,
+      //      critical    BOOLEAN DEFAULT FALSE,
+      //      extnValue   OCTET STRING
+      //      }
+      Reader extnID;
+      Result rv = ExpectTagAndGetValue(extension, OIDTag, extnID);
+      if (rv != Success) {
+        return rv;
+      }
+      bool critical;
+      rv = OptionalBoolean(extension, critical);
+      if (rv != Success) {
+        return rv;
+      }
+      Input extnValue;
+      rv = ExpectTagAndGetValue(extension, OCTET_STRING, extnValue);
+      if (rv != Success) {
+        return rv;
+      }
+      bool understood = false;
+      rv = extensionHandler(extnID, extnValue, critical, understood);
+      if (rv != Success) {
+        return rv;
+      }
+      if (critical && !understood) {
+        return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
+      }
+      return Success;
+    });
+  });
 }
 
 Result DigestAlgorithmIdentifier(Reader& input,

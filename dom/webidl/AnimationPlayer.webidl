@@ -14,10 +14,9 @@ enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
 interface AnimationPlayer {
-  // Bug 1049975
-  //           attribute AnimationNode?     source;
+  // Bug 1049975: Make 'effect' writeable
   [Pure]
-  readonly attribute Animation? source;
+  readonly attribute AnimationEffectReadonly? effect;
   readonly attribute AnimationTimeline timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;

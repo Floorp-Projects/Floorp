@@ -16,7 +16,7 @@ test(function(t) {
   div.style.transition = 'all 100s';
   div.style.left = '100px';
 
-  assert_equals(div.getAnimations()[0].source.effect.name, 'left',
+  assert_equals(div.getAnimations()[0].effect.name, 'left',
                 'The name for the transitions corresponds to the property ' +
                 'being transitioned');
 }, 'Effect name for transitions');

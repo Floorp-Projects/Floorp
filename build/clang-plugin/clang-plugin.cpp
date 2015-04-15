@@ -79,6 +79,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class RefCountedInsideLambdaChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
@@ -86,6 +91,7 @@ private:
   TrivialCtorDtorChecker trivialCtorDtorChecker;
   NaNExprChecker nanExprChecker;
   NoAddRefReleaseOnReturnChecker noAddRefReleaseOnReturnChecker;
+  RefCountedInsideLambdaChecker refCountedInsideLambdaChecker;
   MatchFinder astMatcher;
 };
 
@@ -354,6 +360,62 @@ ClassAllocationNature getClassAttrs(QualType T) {
   return clazz ? getClassAttrs(clazz) : RegularClass;
 }
 
+/// A cached data of whether classes are refcounted or not.
+typedef DenseMap<const CXXRecordDecl *,
+  std::pair<const Decl *, bool> > RefCountedMap;
+RefCountedMap refCountedClasses;
+
+bool classHasAddRefRelease(const CXXRecordDecl *D) {
+  const RefCountedMap::iterator& it = refCountedClasses.find(D);
+  if (it != refCountedClasses.end()) {
+    return it->second.second;
+  }
+
+  bool seenAddRef = false;
+  bool seenRelease = false;
+  for (CXXRecordDecl::method_iterator method = D->method_begin();
+       method != D->method_end(); ++method) {
+    std::string name = method->getNameAsString();
+    if (name == "AddRef") {
+      seenAddRef = true;
+    } else if (name == "Release") {
+      seenRelease = true;
+    }
+  }
+  refCountedClasses[D] = std::make_pair(D, seenAddRef && seenRelease);
+  return seenAddRef && seenRelease;
+}
+
+bool isClassRefCounted(QualType T);
+
+bool isClassRefCounted(const CXXRecordDecl *D) {
+  // Normalize so that D points to the definition if it exists.
+  if (!D->hasDefinition())
+    return false;
+  D = D->getDefinition();
+  // Base class: anyone with AddRef/Release is obviously a refcounted class.
+  if (classHasAddRefRelease(D))
+    return true;
+
+  // Look through all base cases to figure out if the parent is a refcounted class.
+  for (CXXRecordDecl::base_class_const_iterator base = D->bases_begin();
+       base != D->bases_end(); ++base) {
+    bool super = isClassRefCounted(base->getType());
+    if (super) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool isClassRefCounted(QualType T) {
+  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
+    T = arrTy->getElementType();
+  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
+  return clazz ? isClassRefCounted(clazz) : RegularClass;
+}
+
 }
 
 namespace clang {
@@ -481,6 +543,11 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
   return false;
 }
 
+/// This matcher will select classes which are refcounted.
+AST_MATCHER(QualType, isRefCounted) {
+  return isClassRefCounted(Node);
+}
+
 }
 }
 
@@ -577,6 +644,11 @@ DiagnosticsMatcher::DiagnosticsMatcher()
                                                       hasParent(callExpr())).bind("member")
       )).bind("node"),
     &noAddRefReleaseOnReturnChecker);
+
+  astMatcher.addMatcher(lambdaExpr(
+            hasDescendant(declRefExpr(hasType(pointerType(pointee(isRefCounted())))).bind("node"))
+        ),
+    &refCountedInsideLambdaChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -773,6 +845,20 @@ void DiagnosticsMatcher::NoAddRefReleaseOnReturnChecker::run(
   const CXXMethodDecl *method = dyn_cast<CXXMethodDecl>(member->getMemberDecl());
 
   Diag.Report(node->getLocStart(), errorID) << func << method;
+}
+
+void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Refcounted variable %0 of type %1 cannot be used inside a lambda");
+  unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "Please consider using a smart pointer");
+  const DeclRefExpr *node = Result.Nodes.getNodeAs<DeclRefExpr>("node");
+
+  Diag.Report(node->getLocStart(), errorID) << node->getFoundDecl() <<
+    node->getType()->getPointeeType();
+  Diag.Report(node->getLocStart(), noteID);
 }
 
 class MozCheckAction : public PluginASTAction {

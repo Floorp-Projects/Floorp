@@ -59,6 +59,8 @@ function loopOfferAnser()
   let controllerDevice, controllerControlChannel;
   let presenterDevice, presenterControlChannel;
 
+  Services.prefs.setBoolPref("dom.presentation.tcp_server.debug", true);
+
   tps = Cc["@mozilla.org/presentation-device/tcp-presentation-server;1"]
         .createInstance(Ci.nsITCPPresentationServer);
   tps.init(null, PRESENTER_CONTROL_CHANNEL_PORT);
@@ -174,6 +176,7 @@ function shutdown()
   tps.listener = {
     onClose: function(aReason) {
       Assert.equal(aReason, Cr.NS_OK, 'TCPPresentationServer close success');
+      Services.prefs.clearUserPref("dom.presentation.tcp_server.debug");
       run_next_test();
     },
   }
