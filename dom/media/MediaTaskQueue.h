@@ -80,14 +80,10 @@ public:
   {
     RefPtr<nsIRunnable> r(aRunnable);
     MonitorAutoLock mon(mQueueMonitor);
-    nsresult rv = DispatchLocked(r, Forced);
+    nsresult rv = DispatchLocked(r, AbortIfFlushing);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
     unused << rv;
   }
-
-  // This should only be used for things that absolutely can't afford to be
-  // flushed. Normal operations should use Dispatch.
-  nsresult ForceDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   // DEPRECATED! Do not us, if a flush happens at the same time, this function
   // can hang and block forever!
@@ -123,7 +119,7 @@ protected:
   // mQueueMonitor must be held.
   void AwaitIdleLocked();
 
-  enum DispatchMode { AbortIfFlushing, IgnoreFlushing, Forced };
+  enum DispatchMode { AbortIfFlushing, IgnoreFlushing };
 
   nsresult DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
                           DispatchMode aMode);
@@ -133,17 +129,8 @@ protected:
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
 
-  struct TaskQueueEntry {
-    RefPtr<nsIRunnable> mRunnable;
-    bool mForceDispatch;
-
-    explicit TaskQueueEntry(TemporaryRef<nsIRunnable> aRunnable,
-                            bool aForceDispatch = false)
-      : mRunnable(aRunnable), mForceDispatch(aForceDispatch) {}
-  };
-
   // Queue of tasks to run.
-  std::queue<TaskQueueEntry> mTasks;
+  std::queue<RefPtr<nsIRunnable>> mTasks;
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
@@ -221,6 +208,8 @@ public:
   explicit FlushableMediaTaskQueue(TemporaryRef<SharedThreadPool> aPool) : MediaTaskQueue(aPool) {}
   nsresult FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable);
   void Flush();
+
+  bool IsDispatchReliable() override { return false; }
 
 private:
 
