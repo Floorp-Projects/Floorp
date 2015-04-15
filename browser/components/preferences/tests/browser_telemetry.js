@@ -3,6 +3,8 @@
 
 "use strict";
 
+const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+
 function runPaneTest(fn) {
   function observer(win, topic, data) {
     Services.obs.removeObserver(observer, "advanced-pane-loaded");
@@ -40,12 +42,16 @@ function testTelemetryState(win) {
   let telmetryCheckbox = doc.getElementById("submitTelemetryBox");
   Assert.ok(!telmetryCheckbox.disabled,
             "Telemetry checkbox must be enabled if FHR is checked.");
+  Assert.ok(Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED),
+            "Telemetry must be enabled if the checkbox is ticked.");
 
   // Uncheck the FHR checkbox and make sure that Telemetry checkbox gets disabled.
   fhrCheckbox.click();
 
   Assert.ok(telmetryCheckbox.disabled,
             "Telemetry checkbox must be disabled if FHR is unchecked.");
+  Assert.ok(!Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED),
+            "Telemetry must be disabled if the checkbox is unticked.");
 
   win.close();
   finish();
@@ -57,5 +63,6 @@ function resetPreferences() {
                   .wrappedJSObject;
   service.policy._prefs.resetBranch("datareporting.policy.");
   service.policy.dataSubmissionPolicyBypassNotification = true;
+  Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
 }
 
