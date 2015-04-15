@@ -51,11 +51,6 @@ public:
 
   virtual bool IsCurrentThreadIn() = 0;
 
-  // Convenience method for dispatching a runnable when we may be running on
-  // a thread that requires runnables to be dispatched with tail dispatch.
-  void MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
-                         DispatchFailureHandling aFailureHandling = AssertDispatchSuccess);
-
   // Returns true if dispatch is generally reliable. This is used to guard
   // against FlushableMediaTaskQueues, which should go away.
   virtual bool IsDispatchReliable() { return true; }

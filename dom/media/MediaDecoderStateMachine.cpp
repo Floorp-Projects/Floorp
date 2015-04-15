@@ -1410,7 +1410,7 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
       // Queue seek to new end position.
       nsCOMPtr<nsIRunnable> task =
         new SeekRunnable(mDecoder, double(mEndTime) / USECS_PER_S);
-      AbstractThread::MainThread()->MaybeTailDispatch(task.forget());
+      AbstractThread::MainThread()->Dispatch(task.forget());
     }
   }
 }
@@ -1424,7 +1424,7 @@ void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
     SetDuration(aDuration);
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
-    AbstractThread::MainThread()->MaybeTailDispatch(event.forget());
+    AbstractThread::MainThread()->Dispatch(event.forget());
   }
 }
 
@@ -3209,7 +3209,7 @@ void MediaDecoderStateMachine::UpdateReadyState() {
    */
   nsCOMPtr<nsIRunnable> event;
   event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::UpdateReadyStateForData);
-  AbstractThread::MainThread()->MaybeTailDispatch(event.forget());
+  AbstractThread::MainThread()->Dispatch(event.forget());
 }
 
 bool MediaDecoderStateMachine::JustExitedQuickBuffering()
@@ -3302,7 +3302,7 @@ MediaDecoderStateMachine::ScheduleStateMachine() {
 
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine);
-  TaskQueue()->MaybeTailDispatch(task.forget());
+  TaskQueue()->Dispatch(task.forget());
 }
 
 void
