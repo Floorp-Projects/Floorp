@@ -883,7 +883,6 @@ BluetoothHALInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
   }
 }
 
-#ifdef MOZ_B2G_BT_API_V2
 void
 BluetoothHALInterface::SspReply(const nsAString& aBdAddr,
                                 BluetoothSspVariant aVariant,
@@ -909,33 +908,6 @@ BluetoothHALInterface::SspReply(const nsAString& aBdAddr,
                                ConvertDefault(status, STATUS_FAIL));
   }
 }
-#else
-void
-BluetoothHALInterface::SspReply(const nsAString& aBdAddr,
-                                const nsAString& aVariant,
-                                bool aAccept, uint32_t aPasskey,
-                                BluetoothResultHandler* aRes)
-{
-  int status;
-  bt_bdaddr_t bdAddr;
-  bt_ssp_variant_t variant;
-  uint8_t accept;
-
-  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) &&
-      NS_SUCCEEDED(Convert(aVariant, variant)) &&
-      NS_SUCCEEDED(Convert(aAccept, accept))) {
-    status = mInterface->ssp_reply(&bdAddr, variant, accept, aPasskey);
-  } else {
-    status = BT_STATUS_PARM_INVALID;
-  }
-
-  if (aRes) {
-    DispatchBluetoothHALResult(aRes,
-                               &BluetoothResultHandler::SspReply,
-                               ConvertDefault(status, STATUS_FAIL));
-  }
-}
-#endif
 
 /* DUT Mode */
 
