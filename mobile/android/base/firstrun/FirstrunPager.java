@@ -72,7 +72,7 @@ public class FirstrunPager extends ViewPager {
 
         @Override
         public Fragment getItem(int i) {
-            final Fragment fragment = Fragment.instantiate(context, panels.get(i).getResource());
+            final Fragment fragment = Fragment.instantiate(context, panels.get(i).getClassname());
             ((FirstrunPanel) fragment).setOnFinishListener(listener);
             return fragment;
         }
@@ -84,7 +84,7 @@ public class FirstrunPager extends ViewPager {
 
         @Override
         public CharSequence getPageTitle(int i) {
-            return panels.get(i).getTitle().toUpperCase();
+            return context.getString(panels.get(i).getTitleRes()).toUpperCase();
         }
     }
 }
