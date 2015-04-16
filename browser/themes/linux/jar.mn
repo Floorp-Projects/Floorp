@@ -403,6 +403,9 @@ browser.jar:
   skin/classic/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
   skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
   skin/classic/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
+  skin/classic/browser/devtools/search-clear-failed.svg               (../shared/devtools/images/search-clear-failed.svg)
+  skin/classic/browser/devtools/search-clear-light.svg                (../shared/devtools/images/search-clear-light.svg)
+  skin/classic/browser/devtools/search-clear-dark.svg                 (../shared/devtools/images/search-clear-dark.svg)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png
