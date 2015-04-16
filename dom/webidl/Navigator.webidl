@@ -47,6 +47,7 @@ interface NavigatorID {
   readonly attribute DOMString product; // constant "Gecko"
 
   // Everyone but WebKit/Blink supports this.  See bug 679971.
+  [Exposed=Window]
   boolean taintEnabled(); // constant false
 };
 

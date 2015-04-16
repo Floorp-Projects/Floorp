@@ -12,7 +12,7 @@
 function getIdentityAssertion(fpArray) {
   var Cu = SpecialPowers.Cu;
   var rtcid = Cu.import('resource://gre/modules/media/IdpSandbox.jsm');
-  var sandbox = new rtcid.IdpSandbox('example.com', 'idp.js');
+  var sandbox = new rtcid.IdpSandbox('example.com', 'idp.js', window.document);
   return sandbox.start()
     .then(idp => SpecialPowers.wrap(idp)
                    .generateAssertion(JSON.stringify({ fingerprint: fpArray }),

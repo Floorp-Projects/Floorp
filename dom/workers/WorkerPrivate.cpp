@@ -3996,17 +3996,16 @@ WorkerPrivateParent<Derived>::SetBaseURI(nsIURI* aBaseURI)
     mLocationInfo.mHref.Truncate();
   }
 
-  if (NS_FAILED(aBaseURI->GetHost(mLocationInfo.mHostname))) {
-    mLocationInfo.mHostname.Truncate();
-  }
+  mLocationInfo.mHostname.Truncate();
+  nsContentUtils::GetHostOrIPv6WithBrackets(aBaseURI, mLocationInfo.mHostname);
 
-  if (NS_FAILED(aBaseURI->GetPath(mLocationInfo.mPathname))) {
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aBaseURI));
+  if (!url || NS_FAILED(url->GetFilePath(mLocationInfo.mPathname))) {
     mLocationInfo.mPathname.Truncate();
   }
 
   nsCString temp;
 
-  nsCOMPtr<nsIURL> url(do_QueryInterface(aBaseURI));
   if (url && NS_SUCCEEDED(url->GetQuery(temp)) && !temp.IsEmpty()) {
     mLocationInfo.mSearch.Assign('?');
     mLocationInfo.mSearch.Append(temp);
