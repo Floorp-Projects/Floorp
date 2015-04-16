@@ -45,7 +45,7 @@ public:
   virtual bool IsCurrentThreadIn() override
   {
     bool in = NS_GetCurrentThread() == mTarget;
-    MOZ_ASSERT_IF(in, GetCurrent() == this);
+    MOZ_ASSERT(in == (GetCurrent() == this));
     return in;
   }
 
