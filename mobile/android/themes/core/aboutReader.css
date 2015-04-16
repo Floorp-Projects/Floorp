@@ -620,6 +620,10 @@ body {
     height: 56px;
   }
 
+  .toolbar {
+    bottom: -57px;
+  }
+
   .toolbar > * {
     width: 56px;
   }
