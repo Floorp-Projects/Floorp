@@ -103,6 +103,20 @@
     animation: move .5s, glow 1s 2s infinite, grow 3s 1s 100;
   }
 
+  .all-transitions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: blue;
+    transition: all .2s;
+  }
+  .all-transitions.expand {
+    width: 200px;
+    height: 100px;
+  }
+
   @keyframes move {
     100% {
       transform: translateY(100px);
@@ -130,6 +144,7 @@
 <div class="delayed-transition"></div>
 <div class="delayed-multiple-animations"></div>
 <div class="multiple-animations-2"></div>
+<div class="all-transitions"></div>
 <script type="text/javascript">
   // Get the transitions started when the page loads
   var players;
