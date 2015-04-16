@@ -11,6 +11,8 @@ interface BluetoothGatt : EventTarget
   readonly attribute sequence<BluetoothGattService> services;
   readonly attribute BluetoothConnectionState       connectionState;
 
+  // Fired when the value of any characteristic changed
+           attribute EventHandler                   oncharacteristicchanged;
   // Fired when attribute connectionState changed
            attribute EventHandler                   onconnectionstatechanged;
 
