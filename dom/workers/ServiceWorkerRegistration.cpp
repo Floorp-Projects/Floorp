@@ -70,11 +70,14 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegi
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread)
 NS_INTERFACE_MAP_END_INHERITING(ServiceWorkerRegistrationBase)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistrationBase,
 #ifndef MOZ_SIMPLEPUSH
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistrationBase,
                                    mPushManager,
-#endif
                                    mInstallingWorker, mWaitingWorker, mActiveWorker);
+#else
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistrationBase,
+                                   mInstallingWorker, mWaitingWorker, mActiveWorker);
+#endif
 
 ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
                                                                          const nsAString& aScope)
