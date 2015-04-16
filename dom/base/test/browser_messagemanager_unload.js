@@ -70,6 +70,8 @@ function test() {
   gBrowser.selectedTab = newTab;
 
   let browser = newTab.linkedBrowser;
+  let frameLoader = browser.frameLoader;
+  ok(frameLoader !== null, "frameLoader looks okay");
 
   browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")()", false);
 
@@ -80,6 +82,8 @@ function test() {
   let index = 0;
   browser.messageManager.addMessageListener("Test:Event", (msg) => {
     ok(msg.target === browser, "<browser> is correct");
+    ok(msg.targetFrameLoader === frameLoader, "frameLoader is correct");
+    ok(browser.frameLoader === null, "browser frameloader null during teardown");
 
     info(JSON.stringify(msg.data));
 
