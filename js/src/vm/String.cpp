@@ -13,7 +13,6 @@
 #include "mozilla/TypeTraits.h"
 
 #include "gc/Marking.h"
-#include "js/UbiNode.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
@@ -66,23 +65,6 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
            ? mallocSizeOf(flat.rawLatin1Chars())
            : mallocSizeOf(flat.rawTwoByteChars());
 }
-
-size_t
-JS::ubi::Concrete<JSString>::size(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    JSString &str = get();
-    size_t size = str.isFatInline() ? sizeof(JSFatInlineString) : sizeof(JSString);
-
-    // We can't use mallocSizeof on things in the nursery. At the moment,
-    // strings are never in the nursery, but that may change.
-    MOZ_ASSERT(!IsInsideNursery(&str));
-    size += str.sizeOfExcludingThis(mallocSizeOf);
-
-    return size;
-}
-
-template<> const char16_t JS::ubi::TracerConcrete<JSString>::concreteTypeName[] =
-    MOZ_UTF16("JSString");
 
 #ifdef DEBUG
 
