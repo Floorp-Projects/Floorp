@@ -280,6 +280,7 @@ public:
 
   virtual void GetPreferredCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aHints);
 
+  bool IsPopup();
   virtual bool ShouldUseOffMainThreadCompositing();
 
 protected:

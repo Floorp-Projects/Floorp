@@ -123,7 +123,7 @@ ContentRestoreInternal.prototype = {
    * non-zero) is passed through to all the callbacks. If a load in the tab
    * is started while it is pending, the appropriate callbacks are called.
    */
-  restoreHistory(epoch, tabData, callbacks) {
+  restoreHistory(epoch, tabData, loadArguments, callbacks) {
     this._tabData = tabData;
     this._epoch = epoch;
 
@@ -133,11 +133,13 @@ ContentRestoreInternal.prototype = {
 
     // Make sure currentURI is set so that switch-to-tab works before the tab is
     // restored. We'll reset this to about:blank when we try to restore the tab
-    // to ensure that docshell doeesn't get confused.
+    // to ensure that docshell doeesn't get confused. Don't bother doing this if
+    // we're restoring immediately due to a process switch. It just causes the
+    // URL bar to be temporarily blank.
     let activeIndex = tabData.index - 1;
     let activePageData = tabData.entries[activeIndex] || {};
     let uri = activePageData.url || null;
-    if (uri) {
+    if (uri && !loadArguments) {
       webNavigation.setCurrentURI(Utils.makeURI(uri));
     }
 
@@ -191,8 +193,11 @@ ContentRestoreInternal.prototype = {
 
     // Reset the current URI to about:blank. We changed it above for
     // switch-to-tab, but now it must go back to the correct value before the
-    // load happens.
-    webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
+    // load happens. Don't bother doing this if we're restoring immediately
+    // due to a process switch.
+    if (!loadArguments) {
+      webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
+    }
 
     try {
       if (loadArguments) {
