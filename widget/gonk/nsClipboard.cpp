@@ -4,6 +4,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "nsClipboard.h"
+#include "nsClipboardProxy.h"
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -30,6 +31,12 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Re-direct to the clipboard proxy.
+    nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
+    return clipboardProxy->SetData(aTransferable, anOwner, aWhichClipboard);
+  }
+
   nsCOMPtr<nsISupports> tmp;
   uint32_t len;
   nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp),
@@ -46,15 +53,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    mClipboard = buffer;
-  } else {
-    bool isPrivateData = false;
-    aTransferable->GetIsPrivateData(&isPrivateData);
-    ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData,
-                                                       aWhichClipboard);
-  }
-
+  mClipboard = buffer;
   return NS_OK;
 }
 
@@ -65,12 +64,13 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsAutoString buffer;
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    buffer = mClipboard;
-  } else {
-    ContentChild::GetSingleton()->SendGetClipboardText(aWhichClipboard, &buffer);
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    // Re-direct to the clipboard proxy.
+    nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
+    return clipboardProxy->GetData(aTransferable, aWhichClipboard);
   }
+
+  nsAutoString buffer(mClipboard);
 
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
@@ -116,16 +116,17 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
 NS_IMETHODIMP
 nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
                                     uint32_t aLength, int32_t aWhichClipboard,
-                                    bool *aHasText)
+                                    bool *aHasType)
 {
-  *aHasText = false;
+  *aHasType = false;
   if (aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    *aHasText = !mClipboard.IsEmpty();
+    *aHasType = !mClipboard.IsEmpty();
   } else {
-    ContentChild::GetSingleton()->SendClipboardHasText(aWhichClipboard, aHasText);
+    nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
+    return clipboardProxy->HasDataMatchingFlavors(aFlavorList, aLength, aWhichClipboard, aHasType);
   }
   return NS_OK;
 }
