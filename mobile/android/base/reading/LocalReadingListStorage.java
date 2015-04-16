@@ -229,7 +229,12 @@ public class LocalReadingListStorage implements ReadingListStorage {
 
     @Override
     public void addDownloadedRecord(ServerReadingListRecord down) {
-      additionsOrChanges.add(down);
+      final Boolean deleted = down.fields.getBoolean("deleted");
+      if (deleted != null && deleted.booleanValue()) {
+        addDeletion(down.getGUID());
+      } else {
+        additionsOrChanges.add(down);
+      }
     }
   }
 
