@@ -36,6 +36,7 @@ private:
   ~ServiceWorkerPeriodicUpdater();
 
   static StaticRefPtr<ServiceWorkerPeriodicUpdater> sInstance;
+  static bool sPeriodicUpdatesEnabled;
 };
 
 } // namespace workers
