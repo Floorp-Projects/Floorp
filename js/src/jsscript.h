@@ -1634,6 +1634,9 @@ class JSScript : public js::gc::TenuredCell
         return arr->vector[index];
     }
 
+    // The following 3 functions find the static scope just before the
+    // execution of the instruction pointed to by pc.
+
     js::NestedScopeObject* getStaticBlockScope(jsbytecode* pc);
 
     // Returns the innermost static scope at pc if it falls within the extent
