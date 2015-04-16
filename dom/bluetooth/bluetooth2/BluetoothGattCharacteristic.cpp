@@ -36,6 +36,8 @@ BluetoothGattCharacteristic::BluetoothGattCharacteristic(
   : mOwner(aOwner)
   , mService(aService)
   , mCharId(aCharId)
+  , mProperties(BLUETOOTH_EMPTY_GATT_CHAR_PROP)
+  , mWriteType(GATT_WRITE_TYPE_NORMAL)
 {
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(mService);
@@ -154,4 +156,44 @@ BluetoothGattCharacteristic::WrapObject(JSContext* aContext,
                                         JS::Handle<JSObject*> aGivenProto)
 {
   return BluetoothGattCharacteristicBinding::Wrap(aContext, this, aGivenProto);
+}
+
+void
+BluetoothGattCharacteristic::GetValue(JSContext* cx,
+                                      JS::MutableHandle<JSObject*> aValue) const
+{
+  MOZ_ASSERT(aValue);
+
+  aValue.set(mValue.IsEmpty()
+             ? nullptr
+             : ArrayBuffer::Create(cx, mValue.Length(), mValue.Elements()));
+}
+
+void
+BluetoothGattCharacteristic::GetProperties(
+  mozilla::dom::GattCharacteristicProperties& aProperties) const
+{
+  aProperties.mBroadcast = mProperties & GATT_CHAR_PROP_BIT_BROADCAST;
+  aProperties.mRead = mProperties & GATT_CHAR_PROP_BIT_READ;
+  aProperties.mWriteNoResponse = mProperties & GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE;
+  aProperties.mWrite = mProperties & GATT_CHAR_PROP_BIT_WRITE;
+  aProperties.mNotify = mProperties & GATT_CHAR_PROP_BIT_NOTIFY;
+  aProperties.mIndicate = mProperties & GATT_CHAR_PROP_BIT_INDICATE;
+  aProperties.mSignedWrite = mProperties & GATT_CHAR_PROP_BIT_SIGNED_WRITE;
+  aProperties.mExtendedProps = mProperties & GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES;
+}
+
+already_AddRefed<Promise>
+BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
+{
+  // TODO: This will be implemented by later patch set in the same bug.
+  return nullptr;
+}
+
+already_AddRefed<Promise>
+BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
+                                        ErrorResult& aRv)
+{
+  // TODO: This will be implemented by later patch set in the same bug.
+  return nullptr;
 }
