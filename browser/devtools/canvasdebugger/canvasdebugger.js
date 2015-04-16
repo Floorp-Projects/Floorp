@@ -17,8 +17,6 @@ const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { CanvasFront } = require("devtools/server/actors/canvas");
-const Telemetry = require("devtools/shared/telemetry");
-const telemetry = new Telemetry();
 
 const CANVAS_ACTOR_RECORDING_ATTEMPT = gDevTools.testing ? 500 : 5000;
 
@@ -129,7 +127,6 @@ let EventsHandler = {
    * Listen for events emitted by the current tab target.
    */
   initialize: function() {
-    telemetry.toolOpened("canvasdebugger");
     this._onTabNavigated = this._onTabNavigated.bind(this);
     gTarget.on("will-navigate", this._onTabNavigated);
     gTarget.on("navigate", this._onTabNavigated);
@@ -139,7 +136,6 @@ let EventsHandler = {
    * Remove events emitted by the current tab target.
    */
   destroy: function() {
-    telemetry.toolClosed("canvasdebugger");
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
   },
