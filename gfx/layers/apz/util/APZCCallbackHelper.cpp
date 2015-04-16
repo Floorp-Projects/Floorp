@@ -26,18 +26,6 @@ namespace layers {
 
 using dom::TabParent;
 
-bool
-APZCCallbackHelper::HasValidPresShellId(nsIDOMWindowUtils* aUtils,
-                                        const FrameMetrics& aMetrics)
-{
-    MOZ_ASSERT(aUtils);
-
-    uint32_t presShellId;
-    nsresult rv = aUtils->GetPresShellId(&presShellId);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return NS_SUCCEEDED(rv) && aMetrics.GetPresShellId() == presShellId;
-}
-
 static void
 AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
                                 const CSSPoint& aActualScrollOffset)
@@ -156,24 +144,16 @@ ScrollFrame(nsIContent* aContent,
 }
 
 static void
-SetDisplayPortMargins(nsIDOMWindowUtils* aUtils,
+SetDisplayPortMargins(nsIPresShell* aPresShell,
                       nsIContent* aContent,
-                      FrameMetrics& aMetrics)
+                      const FrameMetrics& aMetrics)
 {
   if (!aContent) {
     return;
   }
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
-  if (!element) {
-    return;
-  }
 
   ScreenMargin margins = aMetrics.GetDisplayPortMargins();
-  aUtils->SetDisplayPortMarginsForElement(margins.left,
-                                          margins.top,
-                                          margins.right,
-                                          margins.bottom,
-                                          element, 0);
+  nsLayoutUtils::SetDisplayPortMargins(aContent, aPresShell, margins, 0);
   CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
   nsRect base(0, 0,
               baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
@@ -182,12 +162,10 @@ SetDisplayPortMargins(nsIDOMWindowUtils* aUtils,
 }
 
 void
-APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
-                                    nsIPresShell* aPresShell,
+APZCCallbackHelper::UpdateRootFrame(nsIPresShell* aPresShell,
                                     FrameMetrics& aMetrics)
 {
   // Precondition checks
-  MOZ_ASSERT(aUtils);
   MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
   if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
@@ -214,7 +192,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
   // Note that this needs to happen before scrolling the frame (in UpdateFrameCommon),
   // otherwise the scroll position may get clamped incorrectly.
   CSSSize scrollPort = aMetrics.CalculateCompositedSizeInCssPixels();
-  aUtils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
+  nsLayoutUtils::SetScrollPositionClampingScrollPortSize(aPresShell, scrollPort);
 
   nsIContent* content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
   ScrollFrame(content, aMetrics);
@@ -223,9 +201,19 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
   // last paint.
   presShellResolution = aMetrics.GetPresShellResolution()
                       * aMetrics.GetAsyncZoom().scale;
-  aUtils->SetResolutionAndScaleTo(presShellResolution);
+  nsLayoutUtils::SetResolutionAndScaleTo(aPresShell, presShellResolution);
 
-  SetDisplayPortMargins(aUtils, content, aMetrics);
+  SetDisplayPortMargins(aPresShell, content, aMetrics);
+}
+
+static already_AddRefed<nsIPresShell>
+GetPresShell(const nsIContent* aContent)
+{
+  nsCOMPtr<nsIPresShell> result;
+  if (nsIDocument* doc = aContent->GetComposedDoc()) {
+    result = doc->GetShell();
+  }
+  return result.forget();
 }
 
 void
@@ -239,31 +227,9 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
   // We don't currently support zooming for subframes, so nothing extra
   // needs to be done beyond the tasks common to this and UpdateRootFrame.
   ScrollFrame(aContent, aMetrics);
-  if (nsCOMPtr<nsIDOMWindowUtils> utils = GetDOMWindowUtils(aContent)) {
-    SetDisplayPortMargins(utils, aContent, aMetrics);
+  if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
+    SetDisplayPortMargins(shell, aContent, aMetrics);
   }
-}
-
-already_AddRefed<nsIDOMWindowUtils>
-APZCCallbackHelper::GetDOMWindowUtils(const nsIDocument* aDoc)
-{
-    nsCOMPtr<nsIDOMWindowUtils> utils;
-    nsCOMPtr<nsIDOMWindow> window = aDoc->GetDefaultView();
-    if (window) {
-        utils = do_GetInterface(window);
-    }
-    return utils.forget();
-}
-
-already_AddRefed<nsIDOMWindowUtils>
-APZCCallbackHelper::GetDOMWindowUtils(const nsIContent* aContent)
-{
-    nsCOMPtr<nsIDOMWindowUtils> utils;
-    nsIDocument* doc = aContent->GetComposedDoc();
-    if (doc) {
-        utils = GetDOMWindowUtils(doc);
-    }
-    return utils.forget();
 }
 
 bool
@@ -275,8 +241,11 @@ APZCCallbackHelper::GetOrCreateScrollIdentifiers(nsIContent* aContent,
         return false;
     }
     *aViewIdOut = nsLayoutUtils::FindOrCreateIDFor(aContent);
-    nsCOMPtr<nsIDOMWindowUtils> utils = GetDOMWindowUtils(aContent);
-    return utils && (utils->GetPresShellId(aPresShellIdOut) == NS_OK);
+    if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
+      *aPresShellIdOut = shell->GetPresShellId();
+      return true;
+    }
+    return false;
 }
 
 class FlingSnapEvent : public nsRunnable

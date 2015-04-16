@@ -15,6 +15,7 @@
 #include "nsDOMJSUtils.h"
 #include "nsError.h"
 #include "nsPIDOMWindow.h"
+#include "nsNullPrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -348,8 +349,8 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
     if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
       // Don't give DOMParsers the system principal.  Use a null
       // principal instead.
-      mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      mPrincipal = nsNullPrincipal::Create();
+      NS_ENSURE_TRUE(mPrincipal, NS_ERROR_FAILURE);
 
       if (!mDocumentURI) {
         rv = mPrincipal->GetURI(getter_AddRefs(mDocumentURI));
@@ -464,9 +465,8 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
     NS_ENSURE_TRUE(!mAttemptedInit, NS_ERROR_NOT_INITIALIZED);
     AttemptedInitMarker marker(&mAttemptedInit);
 
-    nsCOMPtr<nsIPrincipal> prin =
-      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> prin = nsNullPrincipal::Create();
+    NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
 
     rv = Init(prin, nullptr, nullptr, scriptHandlingObject);
     NS_ENSURE_SUCCESS(rv, rv);
