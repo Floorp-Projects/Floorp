@@ -1396,9 +1396,6 @@ public abstract class GeckoApp
             mLayerView = layerView;
             GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
                 GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, layerView.getLayerClientObject()));
-
-            // bind the GeckoEditable instance to the new LayerView
-            GeckoAppShell.notifyIMEContext(GeckoEditableListener.IME_STATE_DISABLED, "", "", "");
         }
     }
 
