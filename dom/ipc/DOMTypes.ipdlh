@@ -137,13 +137,24 @@ union BlobConstructorParams
 
 union IPCDataTransferData
 {
-  nsString;
-  PBlob;
+  nsString;  // text
+  nsCString; // images
+  PBlob;     // files
+};
+
+struct IPCDataTransferImage
+{
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+  uint8_t format;
 };
 
 struct IPCDataTransferItem
 {
   nsCString flavor;
+  // The image details are only used when transferring images.
+  IPCDataTransferImage imageDetails;
   IPCDataTransferData data;
 };
 
