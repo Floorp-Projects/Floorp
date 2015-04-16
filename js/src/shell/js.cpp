@@ -4314,7 +4314,7 @@ SetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-class SprintOptimizationTypeInfoOp : public ForEachTrackedOptimizationTypeInfoOp
+class SprintOptimizationTypeInfoOp : public JS::ForEachTrackedOptimizationTypeInfoOp
 {
     Sprinter* sp;
     bool startedTypes_;
@@ -4345,7 +4345,7 @@ class SprintOptimizationTypeInfoOp : public ForEachTrackedOptimizationTypeInfoOp
         Sprint(sp, "},");
     }
 
-    void operator()(TrackedTypeSite site, const char* mirType) override {
+    void operator()(JS::TrackedTypeSite site, const char* mirType) override {
         if (startedTypes_) {
             // Clear trailing ,
             if ((*sp)[sp->getOffset() - 1] == ',')
@@ -4361,7 +4361,7 @@ class SprintOptimizationTypeInfoOp : public ForEachTrackedOptimizationTypeInfoOp
     }
 };
 
-class SprintOptimizationAttemptsOp : public ForEachTrackedOptimizationAttemptOp
+class SprintOptimizationAttemptsOp : public JS::ForEachTrackedOptimizationAttemptOp
 {
     Sprinter* sp;
 
@@ -4370,7 +4370,7 @@ class SprintOptimizationAttemptsOp : public ForEachTrackedOptimizationAttemptOp
       : sp(sp)
     { }
 
-    void operator()(TrackedStrategy strategy, TrackedOutcome outcome) override {
+    void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
         Sprint(sp, "{\"strategy\":\"%s\",\"outcome\":\"%s\"},",
                TrackedStrategyString(strategy), TrackedOutcomeString(outcome));
     }
