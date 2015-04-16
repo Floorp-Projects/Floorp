@@ -729,7 +729,6 @@ add_test(function test_edit_postData() {
   }
 
   Task.spawn(function* () {
-    const POST_DATA_ANNO = "bookmarkProperties/POSTData";
     let postData = "post-test_edit_postData";
     let testURI = NetUtil.newURI("http://test_edit_postData.com");
 
