@@ -6,7 +6,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
-const { PerformanceFront, getPerformanceActorsConnection } = require("devtools/performance/front");
+const { PerformanceFront } = require("devtools/performance/front");
 
 Cu.import("resource://gre/modules/Task.jsm");
 
@@ -35,7 +35,11 @@ PerformancePanel.prototype = {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
 
-    this._connection = getPerformanceActorsConnection(this.target);
+    // Connection is already created in the toolbox; reuse
+    // the same connection.
+    this._connection = this.panelWin.gToolbox.getPerformanceActorsConnection();
+    // The toolbox will also open the connection, but attempt to open it again
+    // incase it's still in the process of opening.
     yield this._connection.open();
 
     this.panelWin.gFront = new PerformanceFront(this._connection);
@@ -56,9 +60,6 @@ PerformancePanel.prototype = {
     if (this._destroyed) {
       return;
     }
-
-    // Destroy the connection to ensure packet handlers are removed from client.
-    yield this._connection.destroy();
 
     yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");
