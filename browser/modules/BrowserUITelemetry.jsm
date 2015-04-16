@@ -287,9 +287,11 @@ this.BrowserUITelemetry = {
     });
 
     Services.search.init(rv => {
-      // If there are no such windows, we're out of luck. :(
-      this._firstWindowMeasurements = win ? this._getWindowMeasurements(win, rv)
-                                          : {};
+      // If there are no such windows (or we've just about found one
+      // but it's closed already), we're out of luck. :(
+      let hasWindow = win && !win.closed;
+      this._firstWindowMeasurements = hasWindow ? this._getWindowMeasurements(win, rv)
+                                                : {};
     });
   },
 
