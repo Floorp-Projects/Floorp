@@ -48,6 +48,11 @@ function removeAddon(addon)
 }
 
 add_task(function* test_addon_shims() {
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({set: [["dom.ipc.shims.enabledWarnings", true]]},
+                             resolve);
+  });
+
   let addon = yield addAddon(ADDON_URL);
   yield window.runAddonShimTests({ok: ok, is: is, info: info});
   yield removeAddon(addon);
