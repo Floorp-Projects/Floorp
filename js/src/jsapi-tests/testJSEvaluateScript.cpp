@@ -4,6 +4,8 @@
 
 #include "jsapi-tests/tests.h"
 
+using mozilla::ArrayLength;
+
 BEGIN_TEST(testJSEvaluateScript)
 {
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
