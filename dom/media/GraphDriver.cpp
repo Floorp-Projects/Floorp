@@ -23,7 +23,7 @@ extern PRLogModuleInfo* gMediaStreamGraphLog;
 #ifdef ENABLE_LIFECYCLE_LOG
 #ifdef ANDROID
 #include "android/log.h"
-#define LIFECYCLE_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - MSG" , ## __VA_ARGS__); printf(__VA_ARGS__);printf("\n");
+#define LIFECYCLE_LOG(...)  __android_log_print(ANDROID_LOG_INFO, "Gecko - MSG" , __VA_ARGS__); printf(__VA_ARGS__);printf("\n");
 #else
 #define LIFECYCLE_LOG(...) printf(__VA_ARGS__);printf("\n");
 #endif
@@ -95,9 +95,6 @@ void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
   LIFECYCLE_LOG("Switching to new driver: %p (%s)",
       aNextDriver, aNextDriver->AsAudioCallbackDriver() ?
       "AudioCallbackDriver" : "SystemClockDriver");
-  // Sometimes we switch twice to a new driver per iteration, this is probably a
-  // bug.
-  MOZ_ASSERT(!mNextDriver || mNextDriver->AsAudioCallbackDriver());
   mNextDriver = aNextDriver;
 }
 
@@ -145,7 +142,7 @@ public:
       LIFECYCLE_LOG("Releasing audio driver off main thread.");
       nsRefPtr<AsyncCubebTask> releaseEvent =
         new AsyncCubebTask(mDriver->AsAudioCallbackDriver(),
-                           AsyncCubebTask::SHUTDOWN);
+                           AsyncCubebOperation::SHUTDOWN);
       mDriver = nullptr;
       releaseEvent->Dispatch();
     } else {
@@ -163,7 +160,7 @@ void GraphDriver::Shutdown()
   if (AsAudioCallbackDriver()) {
     LIFECYCLE_LOG("Releasing audio driver off main thread (GraphDriver::Shutdown).\n");
     nsRefPtr<AsyncCubebTask> releaseEvent =
-      new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
+      new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebOperation::SHUTDOWN);
     releaseEvent->Dispatch();
   } else {
     Stop();
@@ -204,7 +201,7 @@ public:
       // because the osx audio stack is currently switching output device.
       if (!mDriver->mPreviousDriver->AsAudioCallbackDriver()->IsSwitchingDevice()) {
         nsRefPtr<AsyncCubebTask> releaseEvent =
-          new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebTask::SHUTDOWN);
+          new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebOperation::SHUTDOWN);
         mDriver->mPreviousDriver = nullptr;
         releaseEvent->Dispatch();
       }
@@ -505,35 +502,20 @@ AsyncCubebTask::Run()
   MOZ_ASSERT(mDriver);
 
   switch(mOperation) {
-    case AsyncCubebOperation::INIT:
+    case AsyncCubebOperation::INIT: {
       LIFECYCLE_LOG("AsyncCubebOperation::INIT\n");
       mDriver->Init();
+      mDriver->CompleteAudioContextOperations(mOperation);
       break;
-    case AsyncCubebOperation::SHUTDOWN:
+    }
+    case AsyncCubebOperation::SHUTDOWN: {
       LIFECYCLE_LOG("AsyncCubebOperation::SHUTDOWN\n");
       mDriver->Stop();
+
+      mDriver->CompleteAudioContextOperations(mOperation);
+
       mDriver = nullptr;
       mShutdownGrip = nullptr;
-      break;
-    case AsyncCubebOperation::SLEEP: {
-      {
-        LIFECYCLE_LOG("AsyncCubebOperation::SLEEP\n");
-        MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
-        // We might just have been awoken
-        if (mDriver->mGraphImpl->mNeedAnotherIteration) {
-          mDriver->mPauseRequested = false;
-          mDriver->mWaitState = AudioCallbackDriver::WAITSTATE_RUNNING;
-          mDriver->mGraphImpl->mGraphDriverAsleep = false	; // atomic
-          break;
-        }
-        mDriver->Stop();
-        mDriver->mGraphImpl->mGraphDriverAsleep = true; // atomic
-        mDriver->mWaitState = AudioCallbackDriver::WAITSTATE_WAITING_INDEFINITELY;
-        mDriver->mPauseRequested = false;
-        mDriver->mGraphImpl->GetMonitor().Wait(PR_INTERVAL_NO_TIMEOUT);
-      }
-      STREAM_LOG(PR_LOG_DEBUG, ("Restarting audio stream from sleep."));
-      mDriver->StartStream();
       break;
     }
     default:
@@ -544,6 +526,16 @@ AsyncCubebTask::Run()
   NS_DispatchToMainThread(this);
 
   return NS_OK;
+}
+
+StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
+                                          void* aPromise,
+                                          dom::AudioContextOperation aOperation)
+  : mStream(aStream)
+  , mPromise(aPromise)
+  , mOperation(aOperation)
+{
+  // MOZ_ASSERT(aPromise);
 }
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::AudioChannel aChannel)
@@ -561,7 +553,9 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::
 }
 
 AudioCallbackDriver::~AudioCallbackDriver()
-{}
+{
+  MOZ_ASSERT(mPromisesForOperation.IsEmpty());
+}
 
 void
 AudioCallbackDriver::Init()
@@ -651,11 +645,17 @@ AudioCallbackDriver::Start()
   if (NS_IsMainThread()) {
     STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p from a new thread.", mGraphImpl));
     nsRefPtr<AsyncCubebTask> initEvent =
-      new AsyncCubebTask(this, AsyncCubebTask::INIT);
+      new AsyncCubebTask(this, AsyncCubebOperation::INIT);
     initEvent->Dispatch();
   } else {
     STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p from the previous driver's thread", mGraphImpl));
     Init();
+
+    // Check if we need to resolve promises because the driver just got switched
+    // because of a resuming AudioContext
+    if (!mPromisesForOperation.IsEmpty()) {
+      CompleteAudioContextOperations(AsyncCubebOperation::INIT);
+    }
 
     if (mPreviousDriver) {
       nsCOMPtr<nsIRunnable> event =
@@ -704,7 +704,7 @@ AudioCallbackDriver::Revive()
   } else {
     STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p from a new thread.", mGraphImpl));
     nsRefPtr<AsyncCubebTask> initEvent =
-      new AsyncCubebTask(this, AsyncCubebTask::INIT);
+      new AsyncCubebTask(this, AsyncCubebOperation::INIT);
     initEvent->Dispatch();
   }
 }
@@ -729,20 +729,6 @@ AudioCallbackDriver::GetCurrentTime()
 
 void AudioCallbackDriver::WaitForNextIteration()
 {
-#if 0
-  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
-
-  // We can't block on the monitor in the audio callback, so we kick off a new
-  // thread that will pause the audio stream, and restart it when unblocked.
-  // We don't want to sleep when we haven't started the driver yet.
-  if (!mGraphImpl->mNeedAnotherIteration && mAudioStream && mGraphImpl->Running()) {
-    STREAM_LOG(PR_LOG_DEBUG+1, ("AudioCallbackDriver going to sleep"));
-    mPauseRequested = true;
-    nsRefPtr<AsyncCubebTask> sleepEvent =
-      new AsyncCubebTask(this, AsyncCubebTask::SLEEP);
-    sleepEvent->Dispatch();
-  }
-#endif
 }
 
 void
@@ -1072,6 +1058,48 @@ bool
 AudioCallbackDriver::IsStarted() {
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
   return mStarted;
+}
+
+void
+AudioCallbackDriver::EnqueueStreamAndPromiseForOperation(MediaStream* aStream,
+                                          void* aPromise,
+                                          dom::AudioContextOperation aOperation)
+{
+  MonitorAutoLock mon(mGraphImpl->GetMonitor());
+  mPromisesForOperation.AppendElement(StreamAndPromiseForOperation(aStream,
+                                                                   aPromise,
+                                                                   aOperation));
+}
+
+void AudioCallbackDriver::CompleteAudioContextOperations(AsyncCubebOperation aOperation)
+{
+  nsAutoTArray<StreamAndPromiseForOperation, 1> array;
+
+  // We can't lock for the whole function because AudioContextOperationCompleted
+  // will grab the monitor
+  {
+    MonitorAutoLock mon(GraphImpl()->GetMonitor());
+    array.SwapElements(mPromisesForOperation);
+  }
+
+  for (int32_t i = array.Length() - 1; i >= 0; i--) {
+    StreamAndPromiseForOperation& s = array[i];
+    if ((aOperation == AsyncCubebOperation::INIT &&
+         s.mOperation == AudioContextOperation::Resume) ||
+        (aOperation == AsyncCubebOperation::SHUTDOWN &&
+         s.mOperation != AudioContextOperation::Resume)) {
+
+      GraphImpl()->AudioContextOperationCompleted(s.mStream,
+                                                  s.mPromise,
+                                                  s.mOperation);
+      array.RemoveElementAt(i);
+    }
+  }
+
+  if (!array.IsEmpty()) {
+    MonitorAutoLock mon(GraphImpl()->GetMonitor());
+    mPromisesForOperation.AppendElements(array);
+  }
 }
 
 

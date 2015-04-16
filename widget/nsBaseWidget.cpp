@@ -1137,17 +1137,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   nsTArray<LayersBackend> backendHints;
   GetPreferredCompositorBackends(backendHints);
 
-#if !defined(MOZ_X11) && !defined(XP_WIN)
-  if (!mRequireOffMainThreadCompositing &&
-      !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false)) {
-    for (size_t i = 0; i < backendHints.Length(); ++i) {
-      if (backendHints[i] == LayersBackend::LAYERS_BASIC) {
-        backendHints[i] = LayersBackend::LAYERS_NONE;
-      }
-    }
-  }
-#endif
-
   bool success = false;
   if (!backendHints.IsEmpty()) {
     shadowManager = mCompositorChild->SendPLayerTransactionConstructor(

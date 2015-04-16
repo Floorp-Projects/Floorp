@@ -729,15 +729,6 @@ BluetoothService::Notify(const BluetoothSignal& aData)
 {
   nsString type = NS_LITERAL_STRING("bluetooth-pairing-request");
 
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
-  NS_ENSURE_TRUE_VOID(obj);
-
-  if (!SetJsObject(cx, aData.value(), obj)) {
-    BT_WARNING("Failed to set properties of system message!");
-    return;
-  }
-
   BT_LOGD("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
 
   if (aData.name().EqualsLiteral("RequestConfirmation")) {
@@ -765,13 +756,7 @@ BluetoothService::Notify(const BluetoothSignal& aData)
     return;
   }
 
-  nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
-    do_GetService("@mozilla.org/system-message-internal;1");
-  NS_ENSURE_TRUE_VOID(systemMessenger);
-
-  JS::Rooted<JS::Value> value(cx, JS::ObjectValue(*obj));
-  systemMessenger->BroadcastMessage(type, value,
-                                    JS::UndefinedHandleValue);
+  BroadcastSystemMessage(type, aData.value());
 }
 
 void

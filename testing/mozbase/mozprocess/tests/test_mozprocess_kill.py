@@ -4,6 +4,7 @@ import os
 import time
 import unittest
 import proctest
+import signal
 from mozprocess import processhandler
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -79,6 +80,27 @@ class ProcTestKill(proctest.ProcTest):
                               p.proc.returncode,
                               p.didTimeout,
                               expectedfail=('returncode',))
+
+    @unittest.skipUnless(processhandler.isPosix, "posix only")
+    def test_process_kill_with_sigterm(self):
+        script = os.path.join(here, 'infinite_loop.py')
+        p = processhandler.ProcessHandler([self.python, script])
+
+        p.run()
+        p.kill()
+
+        self.assertEquals(p.proc.returncode, -signal.SIGTERM)
+
+    @unittest.skipUnless(processhandler.isPosix, "posix only")
+    def test_process_kill_with_sigint_if_needed(self):
+        script = os.path.join(here, 'infinite_loop.py')
+        p = processhandler.ProcessHandler([self.python, script, 'deadlock'])
+
+        p.run()
+        time.sleep(1)
+        p.kill()
+
+        self.assertEquals(p.proc.returncode, -signal.SIGKILL)
 
 if __name__ == '__main__':
     unittest.main()

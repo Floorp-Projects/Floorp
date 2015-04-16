@@ -171,7 +171,7 @@ BezierCanvas.prototype = {
       this.ctx.closePath();
 
       var circle = function(ctx, cx, cy, r) {
-        return ctx.beginPath();
+        ctx.beginPath();
         ctx.arc(cx, cy, r, 0, 2*Math.PI, !1);
         ctx.closePath();
       };

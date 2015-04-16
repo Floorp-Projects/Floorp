@@ -35,7 +35,7 @@ function test()
 
 // Assertion failure: !(pn->pn_dflags & flag), at ../jsparse.h:651
 // =====
-  (function(){for(var x = arguments in []){} function x(){}})();
+  (function(){for(var x in [arguments]){} function x(){}})();
 
 // Assertion failure: dn->pn_defn, at ../jsemit.cpp:1873
 // =====
