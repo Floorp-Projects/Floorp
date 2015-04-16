@@ -140,6 +140,8 @@ class B2GDesktopReftest(RefTest):
         # Set a future policy version to avoid the telemetry prompt.
         prefs["toolkit.telemetry.prompted"] = 999
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
+        # Disable periodic updates of service workers
+        prefs["dom.serviceWorkers.periodic-updates.enabled"] = False
 
         # Set the extra prefs.
         profile.set_preferences(prefs)

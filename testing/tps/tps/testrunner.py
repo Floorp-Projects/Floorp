@@ -72,6 +72,8 @@ class TPSTestRunner(object):
         'services.sync.firstSync': 'notReady',
         'services.sync.lastversion': '1.0',
         'toolkit.startup.max_resumed_crashes': -1,
+        # Disable periodic updates of service workers
+        'dom.serviceWorkers.periodic-updates.enabled': False,
     }
 
     debug_preferences = {
