@@ -10446,7 +10446,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                     # The deleter method has a boolean out-parameter. When a
                     # property is found, the out-param indicates whether it was
                     # successfully deleted.
-                    decls = "bool result;\n"
+                    decls = ""
                     if foundVar is None:
                         foundVar = "found"
                         decls += "bool found = false;\n"
