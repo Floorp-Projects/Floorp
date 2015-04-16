@@ -275,4 +275,69 @@ this.BrowserTestUtils = {
       });
     });
   },
+
+  /**
+   *  Versions of EventUtils.jsm synthesizeMouse functions that synthesize a
+   *  mouse event in a child process and return promises that resolve when the
+   *  event has fired and completed. Instead of a window, a browser is required
+   *  to be passed to this function.
+   *
+   * @param {string} target
+   *        A selector that identifies the element to target. The syntax is as
+   *        for querySelector. This may also be a CPOW element for easier
+   *        test-conversion. If this is null, then the offset is from the
+   *        content document's edge.
+   * @param {integer} offsetX
+   *        x offset from target's left bounding edge
+   * @param {integer} offsetY
+   *        y offset from target's top bounding edge
+   * @param {Object} event object
+   *        Additional arguments, similar to the EventUtils.jsm version
+   * @param {Browser} browser
+   *        Browser element, must not be null
+   *
+   * @returns {Promise}
+   * @resolves True if the mouse event was cancelled.
+   */
+  synthesizeMouse(target, offsetX, offsetY, event, browser)
+  {
+    return new Promise(resolve => {
+      let mm = browser.messageManager;
+      mm.addMessageListener("Test:SynthesizeMouseDone", function mouseMsg(message) {
+        mm.removeMessageListener("Test:SynthesizeMouseDone", mouseMsg);
+        resolve(message.data.defaultPrevented);
+      });
+
+      let cpowObject = null;
+      if (typeof target != "string") {
+        cpowObject = target;
+        target = null;
+      }
+
+      mm.sendAsyncMessage("Test:SynthesizeMouse",
+                          {target, target, x: offsetX, y: offsetY, event: event},
+                          {object: cpowObject});
+    });
+  },
+
+  /**
+   *  Version of synthesizeMouse that uses the center of the target as the mouse
+   *  location. Arguments and the return value are the same.
+   */
+  synthesizeMouseAtCenter(target, event, browser)
+  {
+    // Use a flag to indicate to center rather than having a separate message.
+    event.centered = true;
+    return BrowserTestUtils.synthesizeMouse(target, 0, 0, event, browser);
+  },
+
+  /**
+   *  Version of synthesizeMouse that uses a client point within the child
+   *  window instead of a target as the offset. Otherwise, the arguments and
+   *  return value are the same as synthesizeMouse.
+   */
+  synthesizeMouseAtPoint(offsetX, offsetY, event, browser)
+  {
+    return BrowserTestUtils.synthesizeMouse(null, offsetX, offsetY, event, browser);
+  }
 };
