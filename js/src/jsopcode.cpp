@@ -1753,7 +1753,13 @@ FindStartPC(JSContext* cx, const FrameIter& iter, int spindex, int skipStackHits
 
     if (spindex == JSDVG_SEARCH_STACK) {
         size_t index = iter.numFrameSlots();
-        MOZ_ASSERT(index >= size_t(parser.stackDepthAtPC(current)));
+
+        // The decompiler may be called from inside functions that are not
+        // called from script, but via the C++ API directly, such as
+        // Invoke. In that case, the youngest script frame may have a
+        // completely unrelated pc and stack depth, so we give up.
+        if (index < size_t(parser.stackDepthAtPC(current)))
+            return true;
 
         // We search from fp->sp to base to find the most recently calculated
         // value matching v under assumption that it is the value that caused
