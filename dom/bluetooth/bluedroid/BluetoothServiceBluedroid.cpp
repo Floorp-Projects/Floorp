@@ -527,6 +527,45 @@ BluetoothServiceBluedroid::GattClientWriteCharacteristicValueInternal(
   gatt->WriteCharacteristicValue(aAppUuid, aServiceId, aCharacteristicId,
                                  aWriteType, aValue, aRunnable);
 }
+
+void
+BluetoothServiceBluedroid::GattClientReadDescriptorValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  const BluetoothGattId& aDescriptorId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->ReadDescriptorValue(aAppUuid, aServiceId, aCharacteristicId,
+                            aDescriptorId, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::GattClientWriteDescriptorValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  const BluetoothGattId& aDescriptorId,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->WriteDescriptorValue(aAppUuid, aServiceId, aCharacteristicId,
+                             aDescriptorId, aValue, aRunnable);
+}
 #else
 
 #define ENSURE_BLUETOOTH_IS_READY(runnable, result)                    \
