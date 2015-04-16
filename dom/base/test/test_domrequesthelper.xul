@@ -38,14 +38,21 @@
     };
 
     var dummy = new DummyHelperSubclass();
+    var isDOMRequestHelperDestroyed = false;
 
     /**
      * Init & destroy.
      */
     function initDOMRequestHelperTest(aMessages) {
-      is_loosely(dummy._requests, undefined, "Request is undefined");
+      // If we haven't initialized the DOMRequestHelper object, its private
+      // properties will be undefined, but once destroyDOMRequestHelper is
+      // called, they're set to null.
+      var expectedPrivatePropertyValues =
+        isDOMRequestHelperDestroyed ? null : undefined;
+
+      is(dummy._requests, expectedPrivatePropertyValues, "Request is expected");
       is(dummy._messages, undefined, "Messages is undefined");
-      is_loosely(dummy._window, undefined, "Window is undefined");
+      is(dummy._window, expectedPrivatePropertyValues, "Window is expected");
 
       dummy.initDOMRequestHelper(window, aMessages);
 
@@ -58,10 +65,11 @@
 
     function destroyDOMRequestHelperTest() {
       dummy.destroyDOMRequestHelper();
+      isDOMRequestHelperDestroyed = true;
 
-      is_loosely(dummy._requests, undefined, "Request is undefined");
+      is(dummy._requests, null, "Request is null");
       is(dummy._messages, undefined, "Messages is undefined");
-      is_loosely(dummy._window, undefined, "Window is undefined");
+      is(dummy._window, null, "Window is null");
     }
 
     /**
