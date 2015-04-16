@@ -51,6 +51,13 @@ MacroAssemblerMIPS::convertInt32ToDouble(const Address& src, FloatRegister dest)
 }
 
 void
+MacroAssemblerMIPS::convertInt32ToDouble(const BaseIndex& src, FloatRegister dest)
+{
+    computeScaledAddress(src, SecondScratchReg);
+    convertInt32ToDouble(Address(SecondScratchReg, src.offset), dest);
+}
+
+void
 MacroAssemblerMIPS::convertUInt32ToDouble(Register src, FloatRegister dest)
 {
     // We use SecondScratchDoubleReg because MacroAssembler::loadFromTypedArray
