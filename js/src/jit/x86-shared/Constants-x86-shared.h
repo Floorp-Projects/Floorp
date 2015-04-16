@@ -7,6 +7,11 @@
 #ifndef jit_x86_shared_Constants_x86_shared_h
 #define jit_x86_shared_Constants_x86_shared_h
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
+
+#include <stddef.h>
+
 namespace js {
 namespace jit {
 
