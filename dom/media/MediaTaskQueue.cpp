@@ -220,7 +220,7 @@ bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
   bool in = NS_GetCurrentThread() == mRunningThread;
-  MOZ_ASSERT_IF(in, GetCurrent() == this);
+  MOZ_ASSERT(in == (GetCurrent() == this));
   return in;
 }
 
