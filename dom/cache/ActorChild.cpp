@@ -7,6 +7,7 @@
 #include "mozilla/dom/cache/ActorChild.h"
 
 #include "mozilla/dom/cache/Feature.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,6 +33,7 @@ ActorChild::SetFeature(Feature* aFeature)
 void
 ActorChild::RemoveFeature()
 {
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mFeature);
   if (mFeature) {
     mFeature->RemoveActor(this);
     mFeature = nullptr;

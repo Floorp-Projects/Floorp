@@ -37,7 +37,6 @@ EXPORTS.mozilla.dom.cache += [
     'SavedTypes.h',
     'StreamControl.h',
     'StreamList.h',
-    'StreamUtils.h',
     'Types.h',
     'TypeUtils.h',
 ]
@@ -72,7 +71,6 @@ UNIFIED_SOURCES += [
     'ReadStream.cpp',
     'StreamControl.cpp',
     'StreamList.cpp',
-    'StreamUtils.cpp',
     'TypeUtils.cpp',
 ]
 
