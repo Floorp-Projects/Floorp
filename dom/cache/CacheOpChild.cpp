@@ -6,6 +6,9 @@
 
 #include "mozilla/dom/cache/CacheOpChild.h"
 
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Request.h"
+#include "mozilla/dom/Response.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
 
