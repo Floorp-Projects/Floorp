@@ -803,8 +803,6 @@ marquee[direction="up"], marquee[direction="down"] {
   }
   rt {
     display: ruby-text;
-    font-variant-east-asian: ruby;
-    text-emphasis: none;
   }
   rtc {
     display: ruby-text-container;
@@ -813,6 +811,12 @@ marquee[direction="up"], marquee[direction="down"] {
     white-space: nowrap;
     font-size: 50%;
     line-height: 1;
+    font-variant-east-asian: ruby;
+  }
+  @supports (text-emphasis: none) {
+    rtc, rt {
+      text-emphasis: none;
+    }
   }
   rtc:lang(zh), rt:lang(zh) {
     ruby-align: center;

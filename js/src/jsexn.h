@@ -125,7 +125,7 @@ class AutoClearPendingException
     { }
 
     ~AutoClearPendingException() {
-        cx->clearPendingException();
+        JS_ClearPendingException(cx);
     }
 };
 

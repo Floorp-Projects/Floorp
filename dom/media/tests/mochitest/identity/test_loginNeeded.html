@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript">var scriptRelativePath = "../";</script>
+  <script type="application/javascript" src="../pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: 'RTCPeerConnection identity with login',
+    bug: '1153314'
+  });
+
+function waitForLoginDone() {
+  return new Promise(resolve => {
+    window.addEventListener('message', function listener(e) {
+      is(e.origin, 'https://example.com', 'got the right message origin');
+      is(e.data, 'LOGINDONE', 'got the right message');
+      window.removeEventListener('message', listener);
+      resolve();
+    }, false);
+  });
+}
+
+function checkLogin(t, name, onLoginNeeded) {
+  t.pcLocal.setIdentityProvider('example.com', 'idp.js#login:' + name);
+  return t.pcLocal._pc.getIdentityAssertion()
+    .then(a => ok(false, 'should request login'),
+          e => {
+            is(e.name, 'IdpLoginError', 'name is IdpLoginError');
+            is(t.pcLocal._pc.idpLoginUrl.split('#')[0],
+               'https://example.com/.well-known/idp-proxy/login.html',
+               'got the right login URL from the IdP');
+            return t.pcLocal._pc.idpLoginUrl;
+          })
+    .then(onLoginNeeded)
+    .then(waitForLoginDone)
+    .then(() => t.pcLocal._pc.getIdentityAssertion())
+    .then(a => ok(a, 'got assertion'));
+}
+
+function theTest() {
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{audio: true}], [{audio: true}]);
+  test.chain.removeAfter('PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE');
+  test.chain.append([
+    function PC_LOCAL_IDENTITY_ASSERTION_WITH_IFRAME_LOGIN(t) {
+      return checkLogin(t, 'iframe', loginUrl => {
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('src', loginUrl);
+        iframe.frameBorder = 0;
+        iframe.width = 400;
+        iframe.height = 60;
+        document.getElementById('display').appendChild(iframe);
+      });
+    },
+    function PC_LOCAL_IDENTITY_ASSERTION_WITH_WINDOW_LOGIN(t) {
+      return checkLogin(t, 'openwin', loginUrl => {
+        window.open(loginUrl, 'login', 'width=400,height=60');
+      });
+    }
+  ]);
+  test.run();
+}
+runNetworkTest(theTest);
+
+</script>
+</pre>
+</body>
+</html>
