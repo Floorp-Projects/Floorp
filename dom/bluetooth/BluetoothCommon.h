@@ -608,6 +608,34 @@ enum BluetoothGattStatus {
   GATT_STATUS_ERROR
 };
 
+enum BluetoothGattWriteType {
+  GATT_WRITE_TYPE_NO_RESPONSE,
+  GATT_WRITE_TYPE_NORMAL,
+  GATT_WRITE_TYPE_PREPARE,
+  GATT_WRITE_TYPE_SIGNED
+};
+
+/*
+ * Bluetooth GATT Characteristic Properties bit field
+ */
+enum BluetoothGattCharPropBit {
+  GATT_CHAR_PROP_BIT_BROADCAST            = (1 << 0),
+  GATT_CHAR_PROP_BIT_READ                 = (1 << 1),
+  GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE    = (1 << 2),
+  GATT_CHAR_PROP_BIT_WRITE                = (1 << 3),
+  GATT_CHAR_PROP_BIT_NOTIFY               = (1 << 4),
+  GATT_CHAR_PROP_BIT_INDICATE             = (1 << 5),
+  GATT_CHAR_PROP_BIT_SIGNED_WRITE         = (1 << 6),
+  GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES  = (1 << 7)
+};
+
+/*
+ * BluetoothGattCharProp is used to store a bit mask value which contains
+ * each corresponding bit value of each BluetoothGattCharPropBit.
+ */
+typedef uint8_t BluetoothGattCharProp;
+#define BLUETOOTH_EMPTY_GATT_CHAR_PROP  static_cast<BluetoothGattCharProp>(0x00)
+
 struct BluetoothGattAdvData {
   uint8_t mAdvData[62];
 };
