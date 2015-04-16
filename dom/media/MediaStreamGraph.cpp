@@ -1817,8 +1817,19 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
     mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
 #endif
 
+  TaskDispatcher& tailDispatcher = AbstractThread::MainThread()->TailDispatcher();
   for (uint32_t i = 0; i < runnables.Length(); ++i) {
     runnables[i]->Run();
+    // "Direct" tail dispatcher are supposed to run immediately following the
+    // execution of the current task. So the meta-tasking that we do here in
+    // RunInStableState() breaks that abstraction a bit unless we handle it here.
+    //
+    // This is particularly important because we can end up with a "stream
+    // ended" notification immediately following a "stream available" notification,
+    // and we need to make sure that the watcher responding to "stream available"
+    // has a chance to run before the second notification starts tearing things
+    // down.
+    tailDispatcher.DrainDirectTasks();
   }
 }
 
