@@ -205,7 +205,7 @@ function test_DataTransfer(dt)
   var draggable = $("draggable");
   dt.setData("application/-moz-node", draggable);
   checkOneDataItem(dt, ["text/plain", "text/html", "application/-moz-node"],
-                       ["New Text", "<strong>Modified Text</strong>", draggable],
+                       ["New Text", "<strong>Modified Text</strong>", draggable.toString()],
                        0, "added node");
 
   dt.clearData(""); // null means clear all
@@ -501,8 +501,8 @@ function checkOneDataItem(dt, expectedtypes, expecteddata, index, testid)
   checkTypes(dt, expectedtypes, index, testid);
   for (var f = 0; f < expectedtypes.length; f++) {
     if (index == 0)
-      is_loosely(dt.getData(expectedtypes[f]), expecteddata[f], testid + " getData " + expectedtypes[f]);
-    is_loosely(dt.mozGetDataAt(expectedtypes[f], index), expecteddata[f] ? expecteddata[f] : null,
+      is(dt.getData(expectedtypes[f]), expecteddata[f], testid + " getData " + expectedtypes[f]);
+    is(dt.mozGetDataAt(expectedtypes[f], index), expecteddata[f] ? expecteddata[f] : null,
        testid + " getDataAt " + expectedtypes[f]);
   }
 }
