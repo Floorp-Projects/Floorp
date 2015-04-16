@@ -3,4 +3,10 @@
 //
 load(libdir + 'asserts.js');
 // value is not iterable
-assertThrowsInstanceOf(function(){for(var[x]=x>>x in[[]<[]]){[]}}, TypeError);
+(function() {
+  for (var [x]  in [[] < []])
+  {
+    // Just a useless expression.
+    [];
+  }
+})();

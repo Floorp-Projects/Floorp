@@ -12,6 +12,7 @@ from mozunit import main
 from mozbuild.frontend.data import (
     ConfigFileSubstitution,
     Defines,
+    DistFiles,
     DirectoryTraversal,
     Exports,
     GeneratedFile,
@@ -810,6 +811,27 @@ class TestEmitterBasic(unittest.TestCase):
             sources = suffix_map[suffix]
             self.assertEqual(sources.files, files)
             self.assertFalse(sources.have_unified_mapping)
+
+    def test_dist_files(self):
+        """Test that DIST_FILES works properly."""
+        reader = self.reader('dist-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], DistFiles)
+
+        self.assertEqual(len(objs[0].files), 2)
+
+        expected = {'install.rdf', 'main.js'}
+        for f in objs[0].files:
+            self.assertTrue(f in expected)
+
+    def test_missing_dist_files(self):
+        """Test that DIST_FILES with missing files throws errors."""
+        with self.assertRaisesRegexp(SandboxValidationError, 'File listed in '
+            'DIST_FILES does not exist'):
+            reader = self.reader('dist-files-missing')
+            self.read_topsrcdir(reader)
 
 if __name__ == '__main__':
     main()

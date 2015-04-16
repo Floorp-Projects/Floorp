@@ -190,8 +190,6 @@ class EqualTimeChunker(TestChunker):
 
 class TestFilter(object):
     def __init__(self, test_manifests, include=None, exclude=None, manifest_path=None):
-        test_manifests = test_manifests
-
         if manifest_path is not None and include is None:
             self.manifest = manifestinclude.get_manifest(manifest_path)
         else:
