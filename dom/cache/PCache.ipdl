@@ -11,6 +11,7 @@ include protocol PBlob; // FIXME: bug 792908
 include protocol PCacheStreamControl;
 
 using mozilla::dom::cache::RequestId from "mozilla/dom/cache/Types.h";
+using mozilla::ErrorResult from "ipc/ErrorIPCUtils.h";
 include "mozilla/dom/cache/IPCUtils.h";
 
 namespace mozilla {
@@ -35,7 +36,7 @@ parent:
 child:
   MatchResponse(RequestId requestId, nsresult aRv, PCacheResponseOrVoid aResponse);
   MatchAllResponse(RequestId requestId, nsresult aRv, PCacheResponse[] responses);
-  AddAllResponse(RequestId requestId, nsresult aRv);
+  AddAllResponse(RequestId requestId, ErrorResult aRv);
   PutResponse(RequestId requestId, nsresult aRv);
   DeleteResponse(RequestId requestId, nsresult aRv, bool success);
   KeysResponse(RequestId requestId, nsresult aRv, PCacheRequest[] requests);

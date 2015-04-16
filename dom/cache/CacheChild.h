@@ -55,7 +55,7 @@ private:
                        nsTArray<PCacheResponse>&& responses) override;
   virtual bool
   RecvAddAllResponse(const RequestId& requestId,
-                     const nsresult& aRv) override;
+                     const mozilla::ErrorResult& aError) override;
   virtual bool
   RecvPutResponse(const RequestId& aRequestId,
                   const nsresult& aRv) override;

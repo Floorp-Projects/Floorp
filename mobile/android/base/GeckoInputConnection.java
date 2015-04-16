@@ -227,7 +227,6 @@ class GeckoInputConnection
     private final ExtractedText mUpdateExtract = new ExtractedText();
     private boolean mBatchSelectionChanged;
     private boolean mBatchTextChanged;
-    private long mLastRestartInputTime;
     private final InputConnection mKeyInputConnection;
 
     public static GeckoEditableListener create(View targetView,
@@ -383,18 +382,7 @@ class GeckoInputConnection
         }
     }
 
-    private void tryRestartInput() {
-        // Coalesce restartInput calls because InputMethodManager.restartInput()
-        // is expensive and successive calls to it can lock up the keyboard
-        if (SystemClock.uptimeMillis() < mLastRestartInputTime + 200) {
-            return;
-        }
-        restartInput();
-    }
-
     private void restartInput() {
-
-        mLastRestartInputTime = SystemClock.uptimeMillis();
 
         final InputMethodManager imm = getInputMethodManager();
         if (imm == null) {
@@ -915,17 +903,6 @@ class GeckoInputConnection
     @Override
     public void notifyIME(int type) {
         switch (type) {
-
-            case NOTIFY_IME_TO_CANCEL_COMPOSITION:
-                // Set composition to empty and end composition
-                setComposingText("", 0);
-                // Fall through
-
-            case NOTIFY_IME_TO_COMMIT_COMPOSITION:
-                // Commit and end composition
-                finishComposingText();
-                tryRestartInput();
-                break;
 
             case NOTIFY_IME_OF_FOCUS:
             case NOTIFY_IME_OF_BLUR:

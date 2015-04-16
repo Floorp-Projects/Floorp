@@ -1344,7 +1344,7 @@ public:
 
   NS_IMETHODIMP Observe(nsISupports* aSubject,
                         const char* aTopic,
-                        const char16_t* aData)
+                        const char16_t* aData) override
   {
     if (!mTabParent) {
       // We already sent the notification

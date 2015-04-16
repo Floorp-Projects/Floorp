@@ -452,12 +452,16 @@ Cache::RecvMatchAllResponse(RequestId aRequestId, nsresult aRv,
 }
 
 void
-Cache::RecvAddAllResponse(RequestId aRequestId, nsresult aRv)
+Cache::RecvAddAllResponse(RequestId aRequestId,
+                          const mozilla::ErrorResult& aError)
 {
   nsRefPtr<Promise> promise = RemoveRequestPromise(aRequestId);
 
-  if (NS_FAILED(aRv)) {
-    promise->MaybeReject(aRv);
+  if (aError.Failed()) {
+    // TODO: Remove this const_cast (bug 1152078).
+    // It is safe for now since this ErrorResult is handed off to us by IPDL
+    // and is thrown into the trash afterwards.
+    promise->MaybeReject(const_cast<ErrorResult&>(aError));
     return;
   }
 

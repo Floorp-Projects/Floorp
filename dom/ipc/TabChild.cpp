@@ -219,8 +219,9 @@ TabChildBase::SetCSSViewport(const CSSSize& aSize)
   TABC_LOG("Setting CSS viewport to %s\n", Stringify(aSize).c_str());
 
   if (mContentDocumentIsDisplayed) {
-    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-    utils->SetCSSViewport(aSize.width, aSize.height);
+    if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
+      nsLayoutUtils::SetCSSViewport(shell, aSize);
+    }
   }
 }
 
@@ -274,7 +275,6 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
     Stringify(aOldScreenSize).c_str(), Stringify(mInnerSize).c_str());
 
   nsCOMPtr<nsIDocument> document(GetDocument());
-  nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
 
   nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
   uint32_t presShellId = 0;
@@ -358,9 +358,12 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
 
   // Changing the zoom when we're not doing a first paint will get ignored
   // by AsyncPanZoomController and causes a blurry flash.
-  bool isFirstPaint;
-  nsresult rv = utils->GetIsFirstPaint(&isFirstPaint);
-  if (NS_FAILED(rv) || isFirstPaint) {
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  bool isFirstPaint = true;
+  if (shell) {
+    isFirstPaint = shell->GetIsFirstPaint();
+  }
+  if (isFirstPaint) {
     // FIXME/bug 799585(?): GetViewportInfo() returns a defaultZoom of
     // 0.0 to mean "did not calculate a zoom".  In that case, we default
     // it to the intrinsic scale.
@@ -376,7 +379,7 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
     metrics.SetScrollId(viewId);
   }
 
-  if (nsIPresShell* shell = document->GetShell()) {
+  if (shell) {
     if (nsPresContext* context = shell->GetPresContext()) {
       metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(
         (float)nsPresContext::AppUnitsPerCSSPixel() / context->AppUnitsPerDevPixel()));
@@ -389,10 +392,11 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
   // This is the root layer, so the cumulative resolution is the same
   // as the resolution.
   metrics.SetPresShellResolution(metrics.GetCumulativeResolution().ToScaleFactor().scale);
-  utils->SetResolutionAndScaleTo(metrics.GetPresShellResolution());
-
-  CSSSize scrollPort = metrics.CalculateCompositedSizeInCssPixels();
-  utils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
+  if (shell) {
+    nsLayoutUtils::SetResolutionAndScaleTo(shell, metrics.GetPresShellResolution());
+    nsLayoutUtils::SetScrollPositionClampingScrollPortSize(shell,
+        metrics.CalculateCompositedSizeInCssPixels());
+  }
 
   // The call to GetPageSize forces a resize event to content, so we need to
   // make sure that we have the right CSS viewport and
@@ -457,6 +461,16 @@ TabChildBase::GetDocument() const
   return doc.forget();
 }
 
+already_AddRefed<nsIPresShell>
+TabChildBase::GetPresShell() const
+{
+  nsCOMPtr<nsIPresShell> result;
+  if (nsCOMPtr<nsIDocument> doc = GetDocument()) {
+    result = doc->GetShell();
+  }
+  return result.forget();
+}
+
 void
 TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
                                             const nsAString& aJSONData)
@@ -489,10 +503,13 @@ TabChildBase::UpdateFrameHandler(const FrameMetrics& aFrameMetrics)
   MOZ_ASSERT(aFrameMetrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID);
 
   if (aFrameMetrics.GetIsRoot()) {
-    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-    if (APZCCallbackHelper::HasValidPresShellId(utils, aFrameMetrics)) {
-      mLastRootMetrics = ProcessUpdateFrame(aFrameMetrics);
-      return true;
+    if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
+      // Guard against stale updates (updates meant for a pres shell which
+      // has since been torn down and destroyed).
+      if (aFrameMetrics.GetPresShellId() == shell->GetPresShellId()) {
+        mLastRootMetrics = ProcessUpdateFrame(aFrameMetrics);
+        return true;
+      }
     }
   } else {
     // aFrameMetrics.mIsRoot is false, so we are trying to update a subframe.
@@ -515,12 +532,9 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
         return aFrameMetrics;
     }
 
-    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-
     FrameMetrics newMetrics = aFrameMetrics;
-    nsCOMPtr<nsIDocument> doc = GetDocument();
-    if (doc && doc->GetShell()) {
-      APZCCallbackHelper::UpdateRootFrame(utils, doc->GetShell(), newMetrics);
+    if (nsCOMPtr<nsIPresShell> presShell = GetPresShell()) {
+      APZCCallbackHelper::UpdateRootFrame(presShell, newMetrics);
     }
 
     CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
@@ -908,8 +922,10 @@ TabChild::Observe(nsISupports *aSubject,
       nsCOMPtr<nsIDocument> doc(GetDocument());
 
       if (SameCOMIdentity(subject, doc)) {
-        nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-        utils->SetIsFirstPaint(true);
+        nsCOMPtr<nsIPresShell> shell(doc->GetShell());
+        if (shell) {
+          shell->SetIsFirstPaint(true);
+        }
 
         mContentDocumentIsDisplayed = true;
 
@@ -919,7 +935,9 @@ TabChild::Observe(nsISupports *aSubject,
         // until we we get an inner size.
         if (HasValidInnerSize()) {
           InitializeRootMetrics();
-          utils->SetResolutionAndScaleTo(mLastRootMetrics.GetPresShellResolution());
+          if (shell) {
+            nsLayoutUtils::SetResolutionAndScaleTo(shell, mLastRootMetrics.GetPresShellResolution());
+          }
           HandlePossibleViewportChange(mInnerSize);
         }
       }
