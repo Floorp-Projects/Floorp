@@ -198,9 +198,6 @@ function timerGuard(p, time, message) {
 
 /**
  * Closes the peer connection if it is active
- *
- * @param {Function} onSuccess
- *        Callback to execute when the peer connection has been closed successfully
  */
 PeerConnectionTest.prototype.closePC = function() {
   info("Closing peer connections");
@@ -989,9 +986,6 @@ PeerConnectionWrapper.prototype = {
 
   /**
    * Creates an offer and automatically handles the failure case.
-   *
-   * @param {function} onSuccess
-   *        Callback to execute if the offer was created successfully
    */
   createOffer : function() {
     return this._pc.createOffer(this.offerOptions).then(offer => {
