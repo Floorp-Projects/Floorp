@@ -42,6 +42,7 @@ using namespace js;
 using namespace js::selfhosted;
 
 using JS::AutoCheckCannotGC;
+using mozilla::UniquePtr;
 
 static void
 selfHosting_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
@@ -150,16 +151,15 @@ intrinsic_OwnPropertyKeys(JSContext* cx, unsigned argc, Value* vp)
                               JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
 }
 
-bool
-js::intrinsic_ThrowError(JSContext* cx, unsigned argc, Value* vp)
+static void
+ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() >= 1);
     uint32_t errorNumber = args[0].toInt32();
 
 #ifdef DEBUG
     const JSErrorFormatString* efs = GetErrorMessage(nullptr, errorNumber);
     MOZ_ASSERT(efs->argCount == args.length() - 1);
+    MOZ_ASSERT(efs->exnType == type, "error-throwing intrinsic and error number are inconsistent");
 #endif
 
     JSAutoByteString errorArgs[3];
@@ -168,19 +168,53 @@ js::intrinsic_ThrowError(JSContext* cx, unsigned argc, Value* vp)
         if (val.isInt32()) {
             JSString* str = ToString<CanGC>(cx, val);
             if (!str)
-                return false;
+                return;
             errorArgs[i - 1].encodeLatin1(cx, str);
         } else if (val.isString()) {
             errorArgs[i - 1].encodeLatin1(cx, val.toString());
         } else {
-            errorArgs[i - 1].initBytes(DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr()).release());
+            UniquePtr<char[], JS::FreePolicy> bytes =
+                DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+            if (!bytes)
+                return;
+            errorArgs[i - 1].initBytes(bytes.release());
         }
         if (!errorArgs[i - 1])
-            return false;
+            return;
     }
 
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber,
                          errorArgs[0].ptr(), errorArgs[1].ptr(), errorArgs[2].ptr());
+}
+
+bool
+js::intrinsic_ThrowError(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() >= 1);
+
+    uint32_t errorNumber = args[0].toInt32();
+    ThrowErrorWithType(cx, JSExnType(GetErrorMessage(nullptr, errorNumber)->exnType), args);
+    return false;
+}
+
+bool
+js::intrinsic_ThrowRangeError(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() >= 1);
+
+    ThrowErrorWithType(cx, JSEXN_RANGEERR, args);
+    return false;
+}
+
+bool
+js::intrinsic_ThrowTypeError(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() >= 1);
+
+    ThrowErrorWithType(cx, JSEXN_TYPEERR, args);
     return false;
 }
 
@@ -951,6 +985,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsConstructor",           intrinsic_IsConstructor,           1,0),
     JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
     JS_FN("ThrowError",              intrinsic_ThrowError,              4,0),
+    JS_FN("ThrowRangeError",         intrinsic_ThrowRangeError,         4,0),
+    JS_FN("ThrowTypeError",          intrinsic_ThrowTypeError,          4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       2,0),
     JS_FN("_IsConstructing",         intrinsic_IsConstructing,          0,0),

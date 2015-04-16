@@ -167,7 +167,8 @@
                  accesskey="&editBookmarkOverlay.description.accesskey;"
                  control="editBMPanel_descriptionField"/>
           <textbox id="editBMPanel_descriptionField"
-                   multiline="true"/>
+                   multiline="true"
+                   rows="4"/>
         </row>
       </rows>
     </grid>

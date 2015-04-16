@@ -39,6 +39,7 @@ let tests = [
         "devtools",
         "privateWindow",
         "quit",
+        "readerMode-urlBar",
         "search",
         "searchIcon",
         "urlbar",
@@ -69,6 +70,7 @@ let tests = [
         "home",
         "privateWindow",
         "quit",
+        "readerMode-urlBar",
         "search",
         "searchIcon",
         "urlbar",
@@ -104,6 +106,7 @@ let tests = [
         "devtools",
         "privateWindow",
         "quit",
+        "readerMode-urlBar",
         "urlbar",
         ...(hasWebIDE ? ["webide"] : [])
       ]);

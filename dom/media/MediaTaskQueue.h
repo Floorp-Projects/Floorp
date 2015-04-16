@@ -11,6 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/unused.h"
 #include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
 #include "MediaPromise.h"
@@ -40,7 +41,12 @@ public:
 
   explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool, bool aRequireTailDispatch = false);
 
-  nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
+  void Dispatch(TemporaryRef<nsIRunnable> aRunnable,
+                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess)
+  {
+    nsCOMPtr<nsIRunnable> r = dont_AddRef(aRunnable.take());
+    return Dispatch(r.forget(), aFailureHandling);
+  }
 
   // Returns a TaskDispatcher that will dispatch its tasks when the currently-
   // running tasks pops off the stack.
@@ -74,19 +80,18 @@ public:
 #endif
 
   // For AbstractThread.
-  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) override
+  void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                DispatchFailureHandling aFailureHandling = AssertDispatchSuccess) override
   {
-    RefPtr<nsIRunnable> r(aRunnable);
-    return ForceDispatch(r);
+    MonitorAutoLock mon(mQueueMonitor);
+    nsresult rv = DispatchLocked(Move(aRunnable), AbortIfFlushing);
+    MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
+    unused << rv;
   }
-
-  // This should only be used for things that absolutely can't afford to be
-  // flushed. Normal operations should use Dispatch.
-  nsresult ForceDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   // DEPRECATED! Do not us, if a flush happens at the same time, this function
   // can hang and block forever!
-  nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
+  void SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
@@ -118,27 +123,17 @@ protected:
   // mQueueMonitor must be held.
   void AwaitIdleLocked();
 
-  enum DispatchMode { AbortIfFlushing, IgnoreFlushing, Forced };
+  enum DispatchMode { AbortIfFlushing, IgnoreFlushing };
 
-  nsresult DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
-                          DispatchMode aMode);
+  nsresult DispatchLocked(already_AddRefed<nsIRunnable> aRunnable, DispatchMode aMode);
 
   RefPtr<SharedThreadPool> mPool;
 
   // Monitor that protects the queue and mIsRunning;
   Monitor mQueueMonitor;
 
-  struct TaskQueueEntry {
-    RefPtr<nsIRunnable> mRunnable;
-    bool mForceDispatch;
-
-    explicit TaskQueueEntry(TemporaryRef<nsIRunnable> aRunnable,
-                            bool aForceDispatch = false)
-      : mRunnable(aRunnable), mForceDispatch(aForceDispatch) {}
-  };
-
   // Queue of tasks to run.
-  std::queue<TaskQueueEntry> mTasks;
+  std::queue<nsCOMPtr<nsIRunnable>> mTasks;
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
@@ -216,6 +211,8 @@ public:
   explicit FlushableMediaTaskQueue(TemporaryRef<SharedThreadPool> aPool) : MediaTaskQueue(aPool) {}
   nsresult FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable);
   void Flush();
+
+  bool IsDispatchReliable() override { return false; }
 
 private:
 

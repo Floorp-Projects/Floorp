@@ -3034,12 +3034,9 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
         ScaleRegionToOutsidePixels(data->mDispatchToContentHitRegion));
     regions.mHitRegion.OrWith(maybeHitRegion);
 
-    nsIntPoint translation = -GetTranslationForPaintedLayer(data->mLayer);
-    regions.mHitRegion.MoveBy(translation);
-    regions.mDispatchToContentHitRegion.MoveBy(translation);
-    regions.mNoActionRegion.MoveBy(translation);
-    regions.mHorizontalPanRegion.MoveBy(translation);
-    regions.mVerticalPanRegion.MoveBy(translation);
+    Matrix mat = layer->GetBaseTransform().As2D();
+    mat.Invert();
+    regions.ApplyTranslationAndScale(mat._31, mat._32, mat._11, mat._22);
 
     layer->SetEventRegions(regions);
   }
