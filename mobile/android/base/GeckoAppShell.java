@@ -321,8 +321,17 @@ public class GeckoAppShell
             return;
         }
         sLayerView = lv;
-        // Install new Gecko-to-Java editable listener.
-        editableListener = new GeckoEditable();
+
+        // We should have a unique GeckoEditable instance per nsWindow instance,
+        // so even though we have a new view here, the underlying nsWindow is the same,
+        // and we don't create a new GeckoEditable.
+        if (editableListener == null) {
+            // Starting up; istall new Gecko-to-Java editable listener.
+            editableListener = new GeckoEditable();
+        } else {
+            // Bind the existing GeckoEditable instance to the new LayerView
+            GeckoAppShell.notifyIMEContext(GeckoEditableListener.IME_STATE_DISABLED, "", "", "");
+        }
     }
 
     @RobocopTarget
