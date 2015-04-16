@@ -564,12 +564,7 @@ TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
     NS_NewRunnableMethodWithArg<SourceBufferDecoder*>(this,
                                                       &TrackBuffer::InitializeDecoder,
                                                       aDecoder);
-  if (NS_FAILED(mTaskQueue->Dispatch(task))) {
-    MSE_DEBUG("failed to enqueue decoder initialization task");
-    RemoveDecoder(aDecoder);
-    mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
-    return false;
-  }
+  mTaskQueue->Dispatch(task);
   return true;
 }
 

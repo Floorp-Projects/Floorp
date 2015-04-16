@@ -21,6 +21,7 @@ from .base import (ExecutorException,
                    testharness_result_converter,
                    reftest_result_converter)
 from .process import ProcessTestExecutor
+from ..executors.base import browser_command
 
 hosts_text = """127.0.0.1 web-platform.test
 127.0.0.1 www.web-platform.test
@@ -39,11 +40,11 @@ def make_hosts_file():
 class ServoTestharnessExecutor(ProcessTestExecutor):
     convert_result = testharness_result_converter
 
-    def __init__(self, browser, server_config, timeout_multiplier=1, debug_args=None,
+    def __init__(self, browser, server_config, timeout_multiplier=1, debug_info=None,
                  pause_after_test=False):
         ProcessTestExecutor.__init__(self, browser, server_config,
                                      timeout_multiplier=timeout_multiplier,
-                                     debug_args=debug_args)
+                                     debug_info=debug_info)
         self.pause_after_test = pause_after_test
         self.result_data = None
         self.result_flag = None
@@ -61,13 +62,15 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
         self.result_data = None
         self.result_flag = threading.Event()
 
-        self.command = [self.binary, "--cpu", "--hard-fail", "-z", self.test_url(test)]
+        debug_args, command = browser_command(self.binary, ["--cpu", "--hard-fail", "-z", self.test_url(test)],
+                                              self.debug_info)
+
+        self.command = command
 
         if self.pause_after_test:
             self.command.remove("-z")
 
-        if self.debug_args:
-            self.command = list(self.debug_args) + self.command
+        self.command = debug_args + self.command
 
         env = os.environ.copy()
         env["HOST_FILE"] = self.hosts_path
@@ -83,7 +86,7 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
             timeout = test.timeout * self.timeout_multiplier
 
             # Now wait to get the output we expect, or until we reach the timeout
-            if self.debug_args is None and not self.pause_after_test:
+            if self.debug_info is None and not self.pause_after_test:
                 wait_timeout = timeout + 5
             else:
                 wait_timeout = None
@@ -150,13 +153,13 @@ class ServoRefTestExecutor(ProcessTestExecutor):
     convert_result = reftest_result_converter
 
     def __init__(self, browser, server_config, binary=None, timeout_multiplier=1,
-                 screenshot_cache=None, debug_args=None, pause_after_test=False):
+                 screenshot_cache=None, debug_info=None, pause_after_test=False):
 
         ProcessTestExecutor.__init__(self,
                                      browser,
                                      server_config,
                                      timeout_multiplier=timeout_multiplier,
-                                     debug_args=debug_args)
+                                     debug_info=debug_info)
 
         self.protocol = Protocol(self, browser)
         self.screenshot_cache = screenshot_cache

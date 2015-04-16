@@ -239,7 +239,7 @@ protected:
       // then shut down the thread or task queue that the promise result would
       // be dispatched on. So we unfortunately can't assert that promise
       // dispatch succeeds. :-(
-      aDispatcher.AddTask(mResponseTarget, runnable.forget(), /* aAssertDispatchSuccess = */ false);
+      aDispatcher.AddTask(mResponseTarget, runnable.forget(), AbstractThread::DontAssertDispatchSuccess);
     }
 
 #ifdef DEBUG
@@ -321,6 +321,7 @@ public:
     aDispatcher.AssertIsTailDispatcherIfRequired();
 
     MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(aResponseThread->IsDispatchReliable());
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
     mHaveConsumer = true;
     nsRefPtr<ThenValueBase> thenValue = new ThenValue<ThisType, ResolveMethodType, RejectMethodType>(
@@ -670,6 +671,7 @@ ProxyInternal(AbstractThread* aTarget, MethodCallBase<PromiseType>* aMethodCall,
 {
   nsRefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
   nsRefPtr<ProxyRunnable<PromiseType>> r = new ProxyRunnable<PromiseType>(p, aMethodCall);
+  MOZ_ASSERT(aTarget->IsDispatchReliable());
   aDispatcher.AddTask(aTarget, r.forget());
   return Move(p);
 }

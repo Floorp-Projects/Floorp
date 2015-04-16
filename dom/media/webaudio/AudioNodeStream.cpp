@@ -27,10 +27,12 @@ namespace mozilla {
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
                                  MediaStreamGraph::AudioNodeStreamKind aKind,
-                                 TrackRate aSampleRate)
+                                 TrackRate aSampleRate,
+                                 AudioContext::AudioContextId aContextId)
   : ProcessedMediaStream(nullptr),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
+    mAudioContextId(aContextId),
     mKind(aKind),
     mNumberOfInputChannels(2),
     mMarkAsFinishedAfterThisBlock(false),

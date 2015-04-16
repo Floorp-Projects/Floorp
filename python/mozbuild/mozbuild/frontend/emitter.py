@@ -28,6 +28,7 @@ from .data import (
     ConfigFileSubstitution,
     ContextWrapped,
     Defines,
+    DistFiles,
     DirectoryTraversal,
     Exports,
     FinalTargetFiles,
@@ -640,6 +641,16 @@ class TreeMetadataEmitter(LoggingMixin):
         final_target_files = context.get('FINAL_TARGET_FILES')
         if final_target_files:
             yield FinalTargetFiles(context, final_target_files, context['FINAL_TARGET'])
+
+        dist_files = context.get('DIST_FILES')
+        if dist_files:
+            for f in dist_files:
+                path = os.path.join(context.srcdir, f)
+                if not os.path.exists(path):
+                    raise SandboxValidationError('File listed in DIST_FILES '
+                        'does not exist: %s' % f, context)
+
+            yield DistFiles(context, dist_files, context['FINAL_TARGET'])
 
         self._handle_libraries(context)
 

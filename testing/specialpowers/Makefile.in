@@ -5,9 +5,6 @@
 
 NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = flat
-DIST_FILES = \
-  install.rdf \
-  $(NULL)
 
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
