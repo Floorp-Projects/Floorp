@@ -14,22 +14,22 @@ namespace dom {
 namespace cache {
 
 class Feature;
-class PCacheRequest;
-class PCacheResponse;
-class PCacheResponseOrVoid;
+class CacheRequest;
+class CacheResponse;
+class CacheResponseOrVoid;
 
-void StartDestroyStreamChild(const PCacheResponseOrVoid& aResponseOrVoid);
-void StartDestroyStreamChild(const PCacheResponse& aResponse);
-void StartDestroyStreamChild(const nsTArray<PCacheResponse>& aResponses);
-void StartDestroyStreamChild(const nsTArray<PCacheRequest>& aRequests);
+void StartDestroyStreamChild(const CacheResponseOrVoid& aResponseOrVoid);
+void StartDestroyStreamChild(const CacheResponse& aResponse);
+void StartDestroyStreamChild(const nsTArray<CacheResponse>& aResponses);
+void StartDestroyStreamChild(const nsTArray<CacheRequest>& aRequests);
 
-void AddFeatureToStreamChild(const PCacheResponseOrVoid& aResponseOrVoid,
+void AddFeatureToStreamChild(const CacheResponseOrVoid& aResponseOrVoid,
                              Feature* aFeature);
-void AddFeatureToStreamChild(const PCacheResponse& aResponse,
+void AddFeatureToStreamChild(const CacheResponse& aResponse,
                              Feature* aFeature);
-void AddFeatureToStreamChild(const nsTArray<PCacheResponse>& aResponses,
+void AddFeatureToStreamChild(const nsTArray<CacheResponse>& aResponses,
                               Feature* aFeature);
-void AddFeatureToStreamChild(const nsTArray<PCacheRequest>& aRequests,
+void AddFeatureToStreamChild(const nsTArray<CacheRequest>& aRequests,
                               Feature* aFeature);
 
 } // namespace cache

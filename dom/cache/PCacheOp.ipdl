@@ -3,14 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PCache;
-include protocol PCacheStorage;
-
-// these are needed indirectly through CacheOpResult
 include protocol PCachePushStream;
+include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
 
-include PCacheTypes;
+include CacheTypes;
 
 using mozilla::ErrorResult from "ipc/ErrorIPCUtils.h";
 

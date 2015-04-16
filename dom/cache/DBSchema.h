@@ -21,10 +21,10 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class PCacheQueryParams;
-class PCacheRequest;
-class PCacheRequestOrVoid;
-class PCacheResponse;
+class CacheQueryParams;
+class CacheRequest;
+class CacheRequestOrVoid;
+class CacheResponse;
 struct SavedRequest;
 struct SavedResponse;
 
@@ -46,34 +46,34 @@ public:
                                   CacheId aCacheId, bool* aOrphanedOut);
 
   static nsresult CacheMatch(mozIStorageConnection* aConn, CacheId aCacheId,
-                             const PCacheRequest& aRequest,
-                             const PCacheQueryParams& aParams,
+                             const CacheRequest& aRequest,
+                             const CacheQueryParams& aParams,
                              bool* aFoundResponseOut,
                              SavedResponse* aSavedResponseOut);
   static nsresult CacheMatchAll(mozIStorageConnection* aConn, CacheId aCacheId,
-                                const PCacheRequestOrVoid& aRequestOrVoid,
-                                const PCacheQueryParams& aParams,
+                                const CacheRequestOrVoid& aRequestOrVoid,
+                                const CacheQueryParams& aParams,
                                 nsTArray<SavedResponse>& aSavedResponsesOut);
   static nsresult CachePut(mozIStorageConnection* aConn, CacheId aCacheId,
-                           const PCacheRequest& aRequest,
+                           const CacheRequest& aRequest,
                            const nsID* aRequestBodyId,
-                           const PCacheResponse& aResponse,
+                           const CacheResponse& aResponse,
                            const nsID* aResponseBodyId,
                            nsTArray<nsID>& aDeletedBodyIdListOut);
   static nsresult CacheDelete(mozIStorageConnection* aConn, CacheId aCacheId,
-                              const PCacheRequest& aRequest,
-                              const PCacheQueryParams& aParams,
+                              const CacheRequest& aRequest,
+                              const CacheQueryParams& aParams,
                               nsTArray<nsID>& aDeletedBodyIdListOut,
                               bool* aSuccessOut);
   static nsresult CacheKeys(mozIStorageConnection* aConn, CacheId aCacheId,
-                            const PCacheRequestOrVoid& aRequestOrVoid,
-                            const PCacheQueryParams& aParams,
+                            const CacheRequestOrVoid& aRequestOrVoid,
+                            const CacheQueryParams& aParams,
                             nsTArray<SavedRequest>& aSavedRequestsOut);
 
   static nsresult StorageMatch(mozIStorageConnection* aConn,
                                Namespace aNamespace,
-                               const PCacheRequest& aRequest,
-                               const PCacheQueryParams& aParams,
+                               const CacheRequest& aRequest,
+                               const CacheQueryParams& aParams,
                                bool* aFoundResponseOut,
                                SavedResponse* aSavedResponseOut);
   static nsresult StorageGetCacheId(mozIStorageConnection* aConn,
@@ -98,21 +98,21 @@ private:
   static nsresult QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
                            nsTArray<EntryId>& aEntryIdListOut);
   static nsresult QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
-                             const PCacheRequest& aRequest,
-                             const PCacheQueryParams& aParams,
+                             const CacheRequest& aRequest,
+                             const CacheQueryParams& aParams,
                              nsTArray<EntryId>& aEntryIdListOut,
                              uint32_t aMaxResults = UINT32_MAX);
   static nsresult MatchByVaryHeader(mozIStorageConnection* aConn,
-                                    const PCacheRequest& aRequest,
+                                    const CacheRequest& aRequest,
                                     EntryId entryId, bool* aSuccessOut);
   static nsresult DeleteEntries(mozIStorageConnection* aConn,
                                 const nsTArray<EntryId>& aEntryIdList,
                                 nsTArray<nsID>& aDeletedBodyIdListOut,
                                 uint32_t aPos=0, int32_t aLen=-1);
   static nsresult InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
-                              const PCacheRequest& aRequest,
+                              const CacheRequest& aRequest,
                               const nsID* aRequestBodyId,
-                              const PCacheResponse& aResponse,
+                              const CacheResponse& aResponse,
                               const nsID* aResponseBodyId);
   static nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
                                SavedResponse* aSavedResponseOut);
