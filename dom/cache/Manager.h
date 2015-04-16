@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_cache_Manager_h
 #define mozilla_dom_cache_Manager_h
 
-#include "mozilla/dom/cache/CacheInitData.h"
 #include "mozilla/dom/cache/PCacheStreamControlParent.h"
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
@@ -22,6 +21,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+class CacheOpArgs;
+class CacheOpResult;
 class CacheRequestResponse;
 class Context;
 class ManagerId;
@@ -86,30 +87,36 @@ public:
   class Listener
   {
   public:
-    virtual void OnCacheMatch(RequestId aRequestId, nsresult aRv,
-                              const SavedResponse* aResponse,
-                              StreamList* aStreamList) { }
-    virtual void OnCacheMatchAll(RequestId aRequestId, nsresult aRv,
-                                 const nsTArray<SavedResponse>& aSavedResponses,
-                                 StreamList* aStreamList) { }
-    virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) { }
-    virtual void OnCacheDelete(RequestId aRequestId, nsresult aRv,
-                               bool aSuccess) { }
-    virtual void OnCacheKeys(RequestId aRequestId, nsresult aRv,
-                             const nsTArray<SavedRequest>& aSavedRequests,
-                             StreamList* aStreamList) { }
+    // convenience routines
+    void
+    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult);
 
-    virtual void OnStorageMatch(RequestId aRequestId, nsresult aRv,
-                                const SavedResponse* aResponse,
-                                StreamList* aStreamList) { }
-    virtual void OnStorageHas(RequestId aRequestId, nsresult aRv,
-                              bool aCacheFound) { }
-    virtual void OnStorageOpen(RequestId aRequestId, nsresult aRv,
-                               CacheId aCacheId) { }
-    virtual void OnStorageDelete(RequestId aRequestId, nsresult aRv,
-                                 bool aCacheDeleted) { }
-    virtual void OnStorageKeys(RequestId aRequestId, nsresult aRv,
-                               const nsTArray<nsString>& aKeys) { }
+    void
+    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                 CacheId aOpenedCacheId);
+
+    void
+    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                 const SavedResponse& aSavedResponse,
+                 StreamList* aStreamList);
+
+    void
+    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                 const nsTArray<SavedResponse>& aSavedResponseList,
+                 StreamList* aStreamList);
+
+    void
+    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                 const nsTArray<SavedRequest>& aSavedRequestList,
+                 StreamList* aStreamList);
+
+    // interface to be implemented
+    virtual void
+    OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                 CacheId aOpenedCacheId,
+                 const nsTArray<SavedResponse>& aSavedResponseList,
+                 const nsTArray<SavedRequest>& aSavedRequestList,
+                 StreamList* aStreamList) { }
 
   protected:
     ~Listener() { }
@@ -150,35 +157,15 @@ public:
   void AddStreamList(StreamList* aStreamList);
   void RemoveStreamList(StreamList* aStreamList);
 
-  // TODO: consider moving CacheId up in the argument lists below (bug 1110485)
-  void CacheMatch(Listener* aListener, RequestId aRequestId, CacheId aCacheId,
-                  const PCacheRequest& aRequest,
-                  const PCacheQueryParams& aParams);
-  void CacheMatchAll(Listener* aListener, RequestId aRequestId,
-                     CacheId aCacheId, const PCacheRequestOrVoid& aRequestOrVoid,
-                     const PCacheQueryParams& aParams);
-  void CachePutAll(Listener* aListener, RequestId aRequestId, CacheId aCacheId,
-                   const nsTArray<CacheRequestResponse>& aPutList,
-                   const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreamList,
-                   const nsTArray<nsCOMPtr<nsIInputStream>>& aResponseStreamList);
-  void CacheDelete(Listener* aListener, RequestId aRequestId,
-                   CacheId aCacheId, const PCacheRequest& aRequest,
-                   const PCacheQueryParams& aParams);
-  void CacheKeys(Listener* aListener, RequestId aRequestId,
-                 CacheId aCacheId, const PCacheRequestOrVoid& aRequestOrVoid,
-                 const PCacheQueryParams& aParams);
+  void ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
+                      const CacheOpArgs& aOpArgs);
+  void ExecutePutAll(Listener* aListener, CacheId aCacheId,
+                     const nsTArray<CacheRequestResponse>& aPutList,
+                     const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreamList,
+                     const nsTArray<nsCOMPtr<nsIInputStream>>& aResponseStreamList);
 
-  void StorageMatch(Listener* aListener, RequestId aRequestId,
-                    Namespace aNamespace, const PCacheRequest& aRequest,
-                    const PCacheQueryParams& aParams);
-  void StorageHas(Listener* aListener, RequestId aRequestId,
-                  Namespace aNamespace, const nsAString& aKey);
-  void StorageOpen(Listener* aListener, RequestId aRequestId,
-                   Namespace aNamespace, const nsAString& aKey);
-  void StorageDelete(Listener* aListener, RequestId aRequestId,
-                     Namespace aNamespace, const nsAString& aKey);
-  void StorageKeys(Listener* aListener, RequestId aRequestId,
-                   Namespace aNamespace);
+  void ExecuteStorageOp(Listener* aListener, Namespace aNamespace,
+                        const CacheOpArgs& aOpArgs);
 
 private:
   class Factory;

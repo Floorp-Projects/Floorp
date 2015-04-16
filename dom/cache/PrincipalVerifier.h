@@ -9,6 +9,7 @@
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsThreadUtils.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 
@@ -26,7 +27,7 @@ class PrincipalVerifier final : public nsRunnable
 public:
   // An interface to be implemented by code wishing to use the
   // PrincipalVerifier.  Note, the Listener implementation is responsible
-  // for calling ClearListener() on the PrincipalVerifier to clear the
+  // for calling RemoveListener() on the PrincipalVerifier to clear the
   // weak reference.
   class Listener
   {
@@ -38,9 +39,11 @@ public:
   CreateAndDispatch(Listener* aListener, mozilla::ipc::PBackgroundParent* aActor,
                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
-  // The Listener must call ClearListener() when OnPrincipalVerified() is
+  void AddListener(Listener* aListener);
+
+  // The Listener must call RemoveListener() when OnPrincipalVerified() is
   // called or when the Listener is destroyed.
-  void ClearListener();
+  void RemoveListener(Listener* aListener);
 
 private:
   PrincipalVerifier(Listener* aListener, mozilla::ipc::PBackgroundParent* aActor,
@@ -52,8 +55,9 @@ private:
 
   void DispatchToInitiatingThread(nsresult aRv);
 
-  // Weak reference cleared by ClearListener()
-  Listener* mListener;
+  // Weak reference cleared by RemoveListener()
+  typedef nsTObserverArray<Listener*> ListenerList;
+  ListenerList mListenerList;
 
   // set in originating thread at construction, but must be accessed and
   // released on main thread

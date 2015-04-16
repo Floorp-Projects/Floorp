@@ -98,8 +98,7 @@ private:
 
 // static
 nsresult
-FetchPut::Create(Listener* aListener, Manager* aManager,
-                 RequestId aRequestId, CacheId aCacheId,
+FetchPut::Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
                  const nsTArray<PCacheRequest>& aRequests,
                  const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams,
                  FetchPut** aFetchPutOut)
@@ -115,7 +114,7 @@ FetchPut::Create(Listener* aListener, Manager* aManager,
   }
 #endif
 
-  nsRefPtr<FetchPut> ref = new FetchPut(aListener, aManager, aRequestId, aCacheId,
+  nsRefPtr<FetchPut> ref = new FetchPut(aListener, aManager, aCacheId,
                                         aRequests, aRequestStreams);
 
   nsresult rv = ref->DispatchToMainThread();
@@ -133,13 +132,11 @@ FetchPut::ClearListener()
   mListener = nullptr;
 }
 
-FetchPut::FetchPut(Listener* aListener, Manager* aManager,
-                   RequestId aRequestId, CacheId aCacheId,
+FetchPut::FetchPut(Listener* aListener, Manager* aManager, CacheId aCacheId,
                    const nsTArray<PCacheRequest>& aRequests,
                    const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams)
   : mListener(aListener)
   , mManager(aManager)
-  , mRequestId(aRequestId)
   , mCacheId(aCacheId)
   , mInitiatingThread(NS_GetCurrentThread())
   , mStateList(aRequests.Length())
@@ -211,7 +208,7 @@ FetchPut::DoFetchOnMainThread()
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsresult rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), principal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MaybeSetError(rv);
+    MaybeSetError(ErrorResult(rv));
     MaybeCompleteOnMainThread();
     return;
   }
@@ -240,7 +237,7 @@ FetchPut::DoFetchOnMainThread()
     mStateList[i].mFetchObserver = new FetchObserver(this);
     rv = fetchDriver->Fetch(mStateList[i].mFetchObserver);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      MaybeSetError(rv);
+      MaybeSetError(ErrorResult(rv));
       mStateList[i].mFetchObserver = nullptr;
       mPendingCount -= 1;
       continue;
@@ -258,7 +255,7 @@ FetchPut::FetchComplete(FetchObserver* aObserver,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aInternalResponse->IsError() && !mResult.Failed()) {
-    MaybeSetError(NS_ERROR_FAILURE);
+    MaybeSetError(ErrorResult(NS_ERROR_FAILURE));
   }
 
   for (uint32_t i = 0; i < mStateList.Length(); ++i) {
@@ -317,7 +314,7 @@ FetchPut::DoPutOnWorkerThread()
     // The spec requires us to catch if content tries to insert a set of
     // requests that would overwrite each other.
     if (MatchInPutList(mStateList[i].mPCacheRequest, putList)) {
-      MaybeSetError(NS_ERROR_DOM_INVALID_STATE_ERR);
+      MaybeSetError(ErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
       MaybeNotifyListener();
       return;
     }
@@ -330,8 +327,8 @@ FetchPut::DoPutOnWorkerThread()
   }
   mStateList.Clear();
 
-  mManager->CachePutAll(this, mRequestId, mCacheId, putList, requestStreamList,
-                        responseStreamList);
+  mManager->ExecutePutAll(this, mCacheId, putList, requestStreamList,
+                          responseStreamList);
 }
 
 // static
@@ -426,20 +423,25 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
 }
 
 void
-FetchPut::OnCachePutAll(RequestId aRequestId, nsresult aRv)
+FetchPut::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                       CacheId aOpenedCacheId,
+                       const nsTArray<SavedResponse>& aSavedResponseList,
+                       const nsTArray<SavedRequest>& aSavedRequestList,
+                       StreamList* aStreamList)
 {
   MOZ_ASSERT(mInitiatingThread == NS_GetCurrentThread());
-  MaybeSetError(aRv);
+  MOZ_ASSERT(aResult.type() == CacheOpResult::TCachePutAllResult);
+  MaybeSetError(Move(aRv));
   MaybeNotifyListener();
 }
 
 void
-FetchPut::MaybeSetError(nsresult aRv)
+FetchPut::MaybeSetError(ErrorResult&& aRv)
 {
-  if (mResult.Failed() || NS_SUCCEEDED(aRv)) {
+  if (mResult.Failed() || !aRv.Failed()) {
     return;
   }
-  mResult.Throw(aRv);
+  mResult = Move(aRv);
 }
 
 void
@@ -453,8 +455,7 @@ FetchPut::MaybeNotifyListener()
   // object is removed from CacheParent::mFetchPutList, so make sure that
   // doesn't happen until this method returns.
   nsRefPtr<FetchPut> kungFuDeathGrip(this);
-  mListener->OnFetchPut(this, mRequestId, mResult);
-  mResult.ClearMessage(); // This may contain a TypeError.
+  mListener->OnFetchPut(this, Move(mResult));
 }
 
 nsIGlobalObject*
