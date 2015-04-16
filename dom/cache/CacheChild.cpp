@@ -9,6 +9,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/Cache.h"
+#include "mozilla/dom/cache/PCacheOpChild.h"
 #include "mozilla/dom/cache/PCachePushStreamChild.h"
 #include "mozilla/dom/cache/StreamUtils.h"
 
@@ -72,6 +73,8 @@ CacheChild::StartDestroy()
     return;
   }
 
+  // TODO: only destroy if there are no ops or push streams still running
+
   listener->DestroyInternal(this);
 
   // Cache listener should call ClearListener() in DestroyInternal()
@@ -95,6 +98,20 @@ CacheChild::ActorDestroy(ActorDestroyReason aReason)
   RemoveFeature();
 }
 
+PCacheOpChild*
+CacheChild::AllocPCacheOpChild(const CacheOpArgs& aOpArgs)
+{
+  MOZ_CRASH("CacheOpChild should be manually constructed.");
+  return nullptr;
+}
+
+bool
+CacheChild::DeallocPCacheOpChild(PCacheOpChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
 PCachePushStreamChild*
 CacheChild::AllocPCachePushStreamChild()
 {
@@ -106,95 +123,6 @@ bool
 CacheChild::DeallocPCachePushStreamChild(PCachePushStreamChild* aActor)
 {
   delete aActor;
-  return true;
-}
-
-bool
-CacheChild::RecvMatchResponse(const RequestId& requestId, const nsresult& aRv,
-                              const PCacheResponseOrVoid& aResponse)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheChild);
-
-  AddFeatureToStreamChild(aResponse, GetFeature());
-
-  nsRefPtr<Cache> listener = mListener;
-  if (!listener) {
-    StartDestroyStreamChild(aResponse);
-    return true;
-  }
-
-  listener->RecvMatchResponse(requestId, aRv, aResponse);
-  return true;
-}
-
-bool
-CacheChild::RecvMatchAllResponse(const RequestId& requestId, const nsresult& aRv,
-                                 nsTArray<PCacheResponse>&& aResponses)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheChild);
-
-  AddFeatureToStreamChild(aResponses, GetFeature());
-
-  nsRefPtr<Cache> listener = mListener;
-  if (!listener) {
-    StartDestroyStreamChild(aResponses);
-    return true;
-  }
-
-  listener->RecvMatchAllResponse(requestId, aRv, aResponses);
-  return true;
-}
-
-bool
-CacheChild::RecvAddAllResponse(const RequestId& requestId,
-                               const mozilla::ErrorResult& aError)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheChild);
-  nsRefPtr<Cache> listener = mListener;
-  if (listener) {
-    listener->RecvAddAllResponse(requestId, aError);
-  }
-  return true;
-}
-
-bool
-CacheChild::RecvPutResponse(const RequestId& aRequestId, const nsresult& aRv)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheChild);
-  nsRefPtr<Cache> listener = mListener;
-  if (listener) {
-    listener->RecvPutResponse(aRequestId, aRv);
-  }
-  return true;
-}
-
-bool
-CacheChild::RecvDeleteResponse(const RequestId& requestId, const nsresult& aRv,
-                               const bool& result)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheChild);
-  nsRefPtr<Cache> listener = mListener;
-  if (listener) {
-    listener->RecvDeleteResponse(requestId, aRv, result);
-  }
-  return true;
-}
-
-bool
-CacheChild::RecvKeysResponse(const RequestId& requestId, const nsresult& aRv,
-                             nsTArray<PCacheRequest>&& aRequests)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheChild);
-
-  AddFeatureToStreamChild(aRequests, GetFeature());
-
-  nsRefPtr<Cache> listener = mListener;
-  if (!listener) {
-    StartDestroyStreamChild(aRequests);
-    return true;
-  }
-
-  listener->RecvKeysResponse(requestId, aRv, aRequests);
   return true;
 }
 
