@@ -26,7 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=8675309
 
 /** Test for Bug 8675309 **/
 
-is_loosely(1, "1", "sanity check");
 ok(true, "sanity check");
 
 
