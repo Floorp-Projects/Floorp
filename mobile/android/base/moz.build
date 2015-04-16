@@ -15,6 +15,7 @@ constants_jar = add_java_jar('constants')
 constants_jar.sources = [
     'adjust/AdjustHelperInterface.java',
     'annotation/JNITarget.java',
+    'annotation/ReflectionTarget.java',
     'annotation/RobocopTarget.java',
     'annotation/WebRTCJNITarget.java',
     'annotation/WrapForJNI.java',
