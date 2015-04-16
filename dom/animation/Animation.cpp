@@ -218,6 +218,32 @@ Animation::GetFinished(ErrorResult& aRv)
 }
 
 void
+Animation::Finish(ErrorResult& aRv)
+{
+  // https://w3c.github.io/web-animations/#finish-an-animation
+
+  if (mPlaybackRate == 0 ||
+      (mPlaybackRate > 0 && EffectEnd() == TimeDuration::Forever())) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  TimeDuration limit =
+    mPlaybackRate > 0 ? TimeDuration(EffectEnd()) : TimeDuration(0);
+
+  SetCurrentTime(limit);
+
+  if (mPendingState == PendingState::PlayPending) {
+    CancelPendingTasks();
+    if (mReady) {
+      mReady->MaybeResolve(this);
+    }
+  }
+  UpdateFinishedState(true);
+  PostUpdate();
+}
+
+void
 Animation::Play(LimitBehavior aLimitBehavior)
 {
   DoPlay(aLimitBehavior);
