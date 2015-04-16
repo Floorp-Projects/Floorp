@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* CSS Variables specific to this panel that aren't defined by the themes */
+.theme-light {
+  --rule-highlight-background-color: #ffee99;
+}
+
+.theme-dark {
+  --rule-highlight-background-color: #594724;
+}
+
 .ruleview {
   height: 100%;
 }
@@ -216,6 +225,10 @@
 
 .ruleview-property[dirty] {
   border-left-color: var(--theme-highlight-green);
+}
+
+.ruleview-highlight {
+  background-color: var(--rule-highlight-background-color);
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,
