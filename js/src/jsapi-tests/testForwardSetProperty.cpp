@@ -45,7 +45,7 @@ BEGIN_TEST(testForwardSetProperty)
 
     // Non-strict setter
 
-    ObjectOpResult result;
+    JS::ObjectOpResult result;
     CHECK(JS_ForwardSetPropertyTo(cx, obj2, prop, setval, v3, result));
     CHECK(result);
 

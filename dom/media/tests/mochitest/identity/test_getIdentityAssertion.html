@@ -55,11 +55,12 @@ function theTest() {
     },
 
     function PC_LOCAL_IDP_LOGIN_ERROR(t) {
-      return getAssertion(t, '#loginerror')
-        .then(a => ok(false, '#loginerror should not work'),
+      return getAssertion(t, '#login')
+        .then(a => ok(false, '#login should not work'),
               e => {
                 is(e.name, 'IdpLoginError', 'name is IdpLoginError');
-                is(t.pcLocal._pc.idpLoginUrl, 'https://example.com/log/in/here',
+                is(t.pcLocal._pc.idpLoginUrl.split('#')[0],
+                   'https://example.com/.well-known/idp-proxy/login.html',
                    'got the right login URL from the IdP');
               });
     },
