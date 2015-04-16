@@ -227,6 +227,7 @@ gbjar.sources += [
     'FilePicker.java',
     'FilePickerResultHandler.java',
     'FindInPageBar.java',
+    'firstrun/ImportPanel.java',
     'firstrun/FirstrunPager.java',
     'firstrun/FirstrunPagerConfig.java',
     'firstrun/FirstrunPane.java',
