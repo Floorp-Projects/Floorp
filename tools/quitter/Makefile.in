@@ -6,10 +6,5 @@
 XPI_PKGNAME = quitter@mozilla.org
 NO_JS_MANIFEST = 1
 
-DIST_FILES = \
-  install.rdf \
-  chrome.manifest \
-  $(NULL)
-
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1

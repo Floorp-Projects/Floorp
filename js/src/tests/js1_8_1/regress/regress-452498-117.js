@@ -75,7 +75,7 @@ function test()
 
 // Assertion failure: pnu->pn_lexdef == dn, at ../jsemit.cpp:1817
 // =====
-  uneval(function(){for(var [arguments] = ({ get y(){} }) in y ) (x);});
+  uneval(function(){arguments = ({ get y(){} }); for(var [arguments] in y ) (x);});
 
 // Assertion failure: n != 0, at ../jsfun.cpp:2689
 // =====

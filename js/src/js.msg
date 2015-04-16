@@ -253,8 +253,7 @@ MSG_DEF(JSMSG_GARBAGE_AFTER_INPUT,     2, JSEXN_SYNTAXERR, "unexpected garbage a
 MSG_DEF(JSMSG_IDSTART_AFTER_NUMBER,    0, JSEXN_SYNTAXERR, "identifier starts immediately after numeric literal")
 MSG_DEF(JSMSG_ILLEGAL_CHARACTER,       0, JSEXN_SYNTAXERR, "illegal character")
 MSG_DEF(JSMSG_IMPORT_DECL_AT_TOP_LEVEL, 0, JSEXN_SYNTAXERR, "import declarations may only appear at top level")
-MSG_DEF(JSMSG_INVALID_FOR_IN_INIT,     0, JSEXN_SYNTAXERR, "for-in loop let declaration may not have an initializer")
-MSG_DEF(JSMSG_INVALID_FOR_OF_INIT,     0, JSEXN_SYNTAXERR, "for-of loop variable declaration may not have an initializer")
+MSG_DEF(JSMSG_INVALID_FOR_INOF_DECL_WITH_INIT,1,JSEXN_SYNTAXERR,"for-{0} loop head declarations may not have initializers")
 MSG_DEF(JSMSG_IN_AFTER_FOR_NAME,       0, JSEXN_SYNTAXERR, "missing 'in' or 'of' after for")
 MSG_DEF(JSMSG_LABEL_NOT_FOUND,         0, JSEXN_SYNTAXERR, "label not found")
 MSG_DEF(JSMSG_LET_CLASS_BINDING,       0, JSEXN_SYNTAXERR, "'let' is not a valid name for a class")
@@ -456,8 +455,8 @@ MSG_DEF(JSMSG_TYPEDOBJECT_TOO_BIG,     0, JSEXN_ERR, "Type is too large to alloc
 MSG_DEF(JSMSG_BAD_INDEX,               0, JSEXN_RANGEERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_TYPEERR, "invalid arguments")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
-MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,   0, JSEXN_ERR, "invalid or out-of-range index")
-MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG,1, JSEXN_ERR, "argument {0} must be >= 0")
+MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,   0, JSEXN_RANGEERR, "invalid or out-of-range index")
+MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG,1, JSEXN_RANGEERR, "argument {0} must be >= 0")
 MSG_DEF(JSMSG_TYPED_ARRAY_DETACHED,    0, JSEXN_TYPEERR, "attempting to access detached ArrayBuffer")
 
 // Shared array buffer

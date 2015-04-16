@@ -18,6 +18,8 @@ XPI_NAME = 'mochijar'
 
 JAR_MANIFESTS += ['jar.mn']
 
+DIST_FILES += ['install.rdf']
+
 MOCHITEST_MANIFESTS += [
     'dynamic/mochitest.ini',
     'MochiKit/mochitest.ini',
