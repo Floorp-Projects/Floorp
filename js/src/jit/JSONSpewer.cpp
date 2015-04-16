@@ -8,6 +8,7 @@
 
 #include <stdarg.h>
 
+#include "jit/BacktrackingAllocator.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"

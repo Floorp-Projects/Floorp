@@ -55,8 +55,8 @@
 
 #include "prmjtime.h"
 
+#include "asmjs/AsmJSModule.h"
 #include "jit/AtomicOperations.h"
-
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
 #include "vm/SharedTypedArrayObject.h"
