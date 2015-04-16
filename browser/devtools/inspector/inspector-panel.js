@@ -409,6 +409,10 @@ InspectorPanel.prototype = {
    * reload
    */
   set selectionCssSelector(cssSelector = null) {
+    if (this._panelDestroyer) {
+      return;
+    }
+
     this._selectionCssSelector = {
       selector: cssSelector,
       url: this._target.url

@@ -55,7 +55,7 @@ let shutdown = Task.async(function*() {
   yield AnimationsController.destroy();
   // Don't assume that AnimationsPanel is defined here, it's in another file.
   if (typeof AnimationsPanel !== "undefined") {
-    yield AnimationsPanel.destroy()
+    yield AnimationsPanel.destroy();
   }
   gToolbox = gInspector = null;
 });
@@ -97,8 +97,11 @@ let AnimationsController = {
     }
     this.initialized = promise.defer();
 
+    this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
+    this.onNewNodeFront = this.onNewNodeFront.bind(this);
+    this.onAnimationMutations = this.onAnimationMutations.bind(this);
+
     let target = gToolbox.target;
-    this.animationsFront = new AnimationsFront(target.client, target.form);
 
     // Expose actor capabilities.
     this.hasToggleAll = yield target.actorHasMethod("animations", "toggleAll");
@@ -109,12 +112,13 @@ let AnimationsController = {
     this.hasSetPlaybackRate = yield target.actorHasMethod("animationplayer",
                                                           "setPlaybackRate");
 
-    this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
-    this.onNewNodeFront = this.onNewNodeFront.bind(this);
-    this.onAnimationMutations = this.onAnimationMutations.bind(this);
+    if (this.destroyed) {
+      console.warn("Could not fully initialize the AnimationsController");
+      return;
+    }
 
+    this.animationsFront = new AnimationsFront(target.client, target.form);
     this.startListeners();
-
     yield this.onNewNodeFront();
 
     this.initialized.resolve();
