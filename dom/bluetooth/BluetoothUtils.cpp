@@ -31,10 +31,11 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
   memcpy(&uuid4, &aUuid.mUuid[10], sizeof(uint32_t));
   memcpy(&uuid5, &aUuid.mUuid[14], sizeof(uint16_t));
 
-  sprintf(uuidStr, "%.8x-%.4x-%.4x-%.4x-%.8x%.4x",
-          ntohl(uuid0), ntohs(uuid1),
-          ntohs(uuid2), ntohs(uuid3),
-          ntohl(uuid4), ntohs(uuid5));
+  snprintf(uuidStr, sizeof(uuidStr),
+           "%.8x-%.4x-%.4x-%.4x-%.8x%.4x",
+           ntohl(uuid0), ntohs(uuid1),
+           ntohs(uuid2), ntohs(uuid3),
+           ntohl(uuid4), ntohs(uuid5));
 
   aString.Truncate();
   aString.AssignLiteral(uuidStr);
