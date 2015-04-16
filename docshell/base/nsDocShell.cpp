@@ -11474,7 +11474,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
     nsCOMPtr<nsIPrincipal> origPrincipal = origDocument->NodePrincipal();
 
     scContainer = new nsStructuredCloneContainer();
-    rv = scContainer->InitFromJSVal(aData);
+    rv = scContainer->InitFromJSVal(aData, aCx);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDocument> newDocument = GetDocument();
