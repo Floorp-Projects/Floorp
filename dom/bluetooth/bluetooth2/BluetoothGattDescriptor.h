@@ -24,6 +24,7 @@ class BluetoothValue;
 
 class BluetoothGattDescriptor final : public nsISupports
                                     , public nsWrapperCache
+                                    , public BluetoothSignalObserver
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -70,6 +71,13 @@ public:
 
 private:
   ~BluetoothGattDescriptor();
+
+  /**
+   * Update the value of this descriptor.
+   *
+   * @param aValue [in] BluetoothValue which contains an uint8_t array.
+   */
+  void HandleDescriptorValueUpdated(const BluetoothValue& aValue);
 
   /****************************************************************************
    * Variables
