@@ -200,6 +200,7 @@ loop.shared.actions = (function() {
      * dispatched when a stream connects for the first time.
      */
     VideoDimensionsChanged: Action.define("videoDimensionsChanged", {
+      isLocal: Boolean,
       videoType: String,
       dimensions: Object
     }),

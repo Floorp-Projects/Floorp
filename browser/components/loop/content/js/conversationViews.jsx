@@ -560,7 +560,7 @@ loop.conversationViews = (function(mozL10n) {
             <button className={emailClasses}
                     onClick={this.emailLink}
                     disabled={this.state.emailLinkButtonDisabled}>
-              {mozL10n.get("share_button2")}
+              {mozL10n.get("share_button3")}
             </button>
           </div>
         </div>
