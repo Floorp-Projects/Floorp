@@ -1607,7 +1607,39 @@ BluetoothGattManager::RegisterNotificationNotification(
 void
 BluetoothGattManager::NotifyNotification(
   int aConnId, const BluetoothGattNotifyParam& aNotifyParam)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sClients->IndexOf(aConnId, 0 /* Start */, ConnIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+
+  // Notify BluetoothGattCharacteristic to update characteristic value
+  nsString path;
+  GeneratePathFromGattId(aNotifyParam.mCharId, path);
+
+  nsTArray<uint8_t> value;
+  value.AppendElements(aNotifyParam.mValue, aNotifyParam.mLength);
+
+  bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicValueUpdated"),
+                       path,
+                       BluetoothValue(value));
+
+  // Notify BluetoothGatt for characteristic changed
+  nsTArray<BluetoothNamedValue> ids;
+  ids.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("serviceId"),
+                                        aNotifyParam.mServiceId));
+  ids.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("charId"),
+                                        aNotifyParam.mCharId));
+
+  bs->DistributeSignal(NS_LITERAL_STRING(GATT_CHARACTERISTIC_CHANGED_ID),
+                       client->mAppUuid,
+                       BluetoothValue(ids));
+}
 
 void
 BluetoothGattManager::ReadCharacteristicNotification(
@@ -1640,6 +1672,17 @@ BluetoothGattManager::ReadCharacteristicNotification(
     bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicValueUpdated"),
                          path,
                          BluetoothValue(value));
+
+    // Notify BluetoothGatt for characteristic changed
+    nsTArray<BluetoothNamedValue> ids;
+    ids.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("serviceId"),
+                                          aReadParam.mServiceId));
+    ids.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("charId"),
+                                          aReadParam.mCharId));
+
+    bs->DistributeSignal(NS_LITERAL_STRING(GATT_CHARACTERISTIC_CHANGED_ID),
+                         client->mAppUuid,
+                         BluetoothValue(ids));
 
     // Resolve the promise
     DispatchReplySuccess(runnable, BluetoothValue(value));

@@ -228,6 +228,12 @@ extern bool gBluetoothDebugFlag;
 #define REQUEST_MEDIA_PLAYSTATUS_ID          "requestmediaplaystatus"
 
 /**
+ * When the value of a characteristic of a remote BLE device changes, we'll
+ * dispatch an event
+ */
+#define GATT_CHARACTERISTIC_CHANGED_ID       "characteristicchanged"
+
+/**
  * When a remote BLE device gets connected / disconnected, we'll dispatch an
  * event
  */
@@ -722,7 +728,7 @@ struct BluetoothGattNotifyParam {
   BluetoothGattServiceId mServiceId;
   BluetoothGattId mCharId;
   uint16_t mLength;
-  uint8_t mIsNotify;
+  bool mIsNotify;
 };
 
 END_BLUETOOTH_NAMESPACE
