@@ -888,3 +888,5 @@ if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
 if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     # The Search Activity code is built as part of Fennec, so we follow suit in Eclipse.
     main.add_classpathentry('search', TOPSRCDIR + '/mobile/android/search/java', dstdir='search')
+
+DIST_FILES += ['package-name.txt.in']

@@ -21,7 +21,8 @@
    GLIBCXX_3.4.17 is from gcc 4.7.0 (174383)
    GLIBCXX_3.4.18 is from gcc 4.8.0 (190787)
    GLIBCXX_3.4.19 is from gcc 4.8.1 (199309)
-   GLIBCXX_3.4.20 is from gcc 4.9.0 (199307) */
+   GLIBCXX_3.4.20 is from gcc 4.9.0 (199307)
+   GLIBCXX_3.4.21 is from gcc 5.0 (210290) */
 
 #define GLIBCXX_VERSION(a, b, c) (((a) << 16) | ((b) << 8) | (c))
 
@@ -59,9 +60,14 @@ namespace std {
     template wstring& wstring::assign(wstring&&);
 #endif /* __GXX_EXPERIMENTAL_CXX0X__ */
 #endif /* (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5) */
+#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 16)
+    /* Instantiate these templates to avoid GLIBCXX_3.4.16 symbol versions
+     * depending on compiler optimizations */
+    template int string::_S_compare(size_type, size_type);
+#endif
 }
 
-namespace std __attribute__((visibility("default"))) {
+namespace std MOZ_EXPORT {
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 14)
     /* Hack to avoid GLIBCXX_3.4.14 symbol versions */
     struct _List_node_base
@@ -174,5 +180,18 @@ extern "C" void
 __cxa_throw_bad_array_new_length()
 {
     MOZ_CRASH();
+}
+#endif
+
+#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 21)
+/* While we generally don't build with exceptions, we have some host tools
+ * that do use them. libstdc++ from GCC 5.0 added exception constructors with
+ * char const* argument. Older versions only have a constructor with
+ * std::string. */
+namespace std {
+    runtime_error::runtime_error(char const* s)
+    : runtime_error(std::string(s))
+    {
+    }
 }
 #endif

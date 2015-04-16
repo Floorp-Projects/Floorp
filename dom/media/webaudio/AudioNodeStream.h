@@ -47,7 +47,8 @@ public:
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
                   MediaStreamGraph::AudioNodeStreamKind aKind,
-                  TrackRate aSampleRate);
+                  TrackRate aSampleRate,
+                  AudioContext::AudioContextId aContextId);
 
 protected:
   ~AudioNodeStream();
@@ -121,6 +122,7 @@ public:
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }
   TrackRate SampleRate() const { return mSampleRate; }
+  AudioContext::AudioContextId AudioContextId() const override { return mAudioContextId; }
 
   /**
    * Convert a time in seconds on the destination stream to ticks
@@ -147,6 +149,7 @@ public:
   void SizeOfAudioNodesIncludingThis(MallocSizeOf aMallocSizeOf,
                                      AudioNodeSizes& aUsage) const;
 
+
 protected:
   void AdvanceOutputSegment();
   void FinishOutput();
@@ -166,8 +169,11 @@ protected:
   OutputChunks mLastChunks;
   // The stream's sampling rate
   const TrackRate mSampleRate;
+  // This is necessary to be able to find all the nodes for a given
+  // AudioContext. It is set on the main thread, in the constructor.
+  const AudioContext::AudioContextId mAudioContextId;
   // Whether this is an internal or external stream
-  MediaStreamGraph::AudioNodeStreamKind mKind;
+  const MediaStreamGraph::AudioNodeStreamKind mKind;
   // The number of input channels that this stream requires. 0 means don't care.
   uint32_t mNumberOfInputChannels;
   // The mixing modes

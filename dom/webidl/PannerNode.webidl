@@ -29,6 +29,7 @@ interface PannerNode : AudioNode {
     // Uses a 3D cartesian coordinate system
     void setPosition(double x, double y, double z);
     void setOrientation(double x, double y, double z);
+    [Deprecated="PannerNodeDoppler"]
     void setVelocity(double x, double y, double z);
 
     // Distance model and attributes

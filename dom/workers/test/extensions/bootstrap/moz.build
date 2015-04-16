@@ -5,3 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPI_NAME = 'workerbootstrap'
+
+DIST_FILES += [
+    'bootstrap.js',
+    'install.rdf',
+    'worker.js',
+]
