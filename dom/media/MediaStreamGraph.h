@@ -22,6 +22,7 @@
 #include <speex/speex_resampler.h>
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "DOMMediaStream.h"
+#include "AudioContext.h"
 
 class nsIRunnable;
 
@@ -318,6 +319,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
   explicit MediaStream(DOMMediaStream* aWrapper);
+  virtual dom::AudioContext::AudioContextId AudioContextId() const { return 0; }
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -364,6 +366,8 @@ public:
   // Explicitly block. Useful for example if a media element is pausing
   // and we need to stop its stream emitting its buffered data.
   virtual void ChangeExplicitBlockerCount(int32_t aDelta);
+  void BlockStreamIfNeeded();
+  void UnblockStreamIfNeeded();
   // Events will be dispatched by calling methods of aListener.
   virtual void AddListener(MediaStreamListener* aListener);
   virtual void RemoveListener(MediaStreamListener* aListener);
@@ -464,6 +468,22 @@ public:
   void ChangeExplicitBlockerCountImpl(GraphTime aTime, int32_t aDelta)
   {
     mExplicitBlockerCount.SetAtAndAfter(aTime, mExplicitBlockerCount.GetAt(aTime) + aDelta);
+  }
+  void BlockStreamIfNeededImpl(GraphTime aTime)
+  {
+    bool blocked = mExplicitBlockerCount.GetAt(aTime) > 0;
+    if (blocked) {
+      return;
+    }
+    ChangeExplicitBlockerCountImpl(aTime, 1);
+  }
+  void UnblockStreamIfNeededImpl(GraphTime aTime)
+  {
+    bool blocked = mExplicitBlockerCount.GetAt(aTime) > 0;
+    if (!blocked) {
+      return;
+    }
+    ChangeExplicitBlockerCountImpl(aTime, -1);
   }
   void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener);
@@ -1226,6 +1246,21 @@ public:
   AudioNodeExternalInputStream*
   CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine,
                                      TrackRate aSampleRate = 0);
+
+  /* From the main thread, ask the MSG to send back an event when the graph
+   * thread is running, and audio is being processed. */
+  void NotifyWhenGraphStarted(AudioNodeStream* aNodeStream);
+  /* From the main thread, suspend, resume or close an AudioContext.
+   * aNodeStream is the stream of the DestinationNode of the AudioContext.
+   *
+   * This can possibly pause the graph thread, releasing system resources, if
+   * all streams have been suspended/closed.
+   *
+   * When the operation is complete, aPromise is resolved.
+   */
+  void ApplyAudioContextOperation(AudioNodeStream* aNodeStream,
+                                  dom::AudioContextOperation aState,
+                                  void * aPromise);
 
   bool IsNonRealtime() const;
   /**

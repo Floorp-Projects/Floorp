@@ -256,7 +256,11 @@ AudioSink::Cleanup()
   AssertCurrentThreadInMonitor();
   nsRefPtr<AudioStream> audioStream;
   audioStream.swap(mAudioStream);
-  mStateMachine->DispatchOnAudioSinkComplete();
+  // Suppress the callback when the stop is requested by MediaDecoderStateMachine.
+  // See Bug 115334.
+  if (!mStopAudioThread) {
+    mStateMachine->DispatchOnAudioSinkComplete();
+  }
 
   ReentrantMonitorAutoExit exit(GetReentrantMonitor());
   audioStream->Shutdown();

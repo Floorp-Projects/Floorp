@@ -11,40 +11,47 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/unused.h"
 
 namespace mozilla {
 
 StaticRefPtr<AbstractThread> sMainThread;
 
-template<>
-nsresult
-AbstractThreadImpl<nsIThread>::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
+class XPCOMThreadWrapper : public AbstractThread
 {
-  MediaTaskQueue::AssertInTailDispatchIfNeeded();
-  nsCOMPtr<nsIRunnable> r = aRunnable;
-  return mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
-}
+public:
+  explicit XPCOMThreadWrapper(nsIThread* aTarget) : mTarget(aTarget) {}
 
-template<>
-bool
-AbstractThreadImpl<nsIThread>::IsCurrentThreadIn()
-{
-  bool in = NS_GetCurrentThread() == mTarget;
-  MOZ_ASSERT_IF(in, MediaTaskQueue::GetCurrentQueue() == nullptr);
-  return in;
-}
+  virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+                        DispatchFailureHandling aFailureHandling = AssertDispatchSuccess) override
+  {
+    MediaTaskQueue::AssertInTailDispatchIfNeeded();
+    nsCOMPtr<nsIRunnable> r = aRunnable;
+    nsresult rv = mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
+    MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
+    unused << rv;
+  }
+
+  virtual bool IsCurrentThreadIn() override
+  {
+    bool in = NS_GetCurrentThread() == mTarget;
+    MOZ_ASSERT_IF(in, MediaTaskQueue::GetCurrentQueue() == nullptr);
+    return in;
+  }
+
+private:
+  nsRefPtr<nsIThread> mTarget;
+};
 
 void
 AbstractThread::MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
-                                  bool aAssertDispatchSuccess)
+                                  DispatchFailureHandling aFailureHandling)
 {
   MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
   if (currentQueue && currentQueue->RequiresTailDispatch()) {
-    currentQueue->TailDispatcher().AddTask(this, Move(aRunnable), aAssertDispatchSuccess);
+    currentQueue->TailDispatcher().AddTask(this, Move(aRunnable), aFailureHandling);
   } else {
-    nsresult rv = Dispatch(Move(aRunnable));
-    MOZ_DIAGNOSTIC_ASSERT(!aAssertDispatchSuccess || NS_SUCCEEDED(rv));
-    unused << rv;
+    Dispatch(Move(aRunnable), aFailureHandling);
   }
 }
 
@@ -64,7 +71,7 @@ AbstractThread::InitStatics()
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
-  sMainThread = new AbstractThreadImpl<nsIThread>(mainThread.get());
+  sMainThread = new XPCOMThreadWrapper(mainThread.get());
   ClearOnShutdown(&sMainThread);
 }
 

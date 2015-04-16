@@ -44,8 +44,27 @@ class TimerTest : public ::testing::Test {
     return ret;
   }
 
+  int ArmCancelTimer(int timeout) {
+    int ret;
+
+    test_utils->sts_target()->Dispatch(
+        WrapRunnableRet(this, &TimerTest::ArmCancelTimer_w, timeout, &ret),
+        NS_DISPATCH_SYNC);
+
+    return ret;
+  }
+
   int ArmTimer_w(int timeout) {
     return NR_ASYNC_TIMER_SET(timeout, cb, this, &handle_);
+  }
+
+  int ArmCancelTimer_w(int timeout) {
+    int r;
+    r = ArmTimer_w(timeout);
+    if (r)
+      return r;
+
+    return CancelTimer_w();
   }
 
   int CancelTimer() {
@@ -74,7 +93,7 @@ class TimerTest : public ::testing::Test {
 
   int Schedule_w() {
     NR_ASYNC_SCHEDULE(cb, this);
-    
+
     return 0;
   }
 
@@ -102,6 +121,12 @@ TEST_F(TimerTest, CancelTimer) {
   ArmTimer(1000);
   CancelTimer();
   PR_Sleep(2000);
+  ASSERT_FALSE(fired_);
+}
+
+TEST_F(TimerTest, CancelTimer0) {
+  ArmCancelTimer(0);
+  PR_Sleep(100);
   ASSERT_FALSE(fired_);
 }
 

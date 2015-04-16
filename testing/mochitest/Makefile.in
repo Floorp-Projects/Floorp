@@ -5,7 +5,6 @@
 
 NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = jar
-DIST_FILES = install.rdf
 
 # Used in install.rdf
 USE_EXTENSION_MANIFEST = 1

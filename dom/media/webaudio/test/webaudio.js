@@ -33,6 +33,18 @@ function expectTypeError(func) {
   ok(threw, "The exception was thrown");
 }
 
+function expectRejectedPromise(that, func, exceptionName) {
+  var promise = that[func]();
+
+  ok(promise instanceof Promise, "Expect a Promise");
+
+  promise.then(function(res) {
+    ok(false, "Promise resolved when it should have been rejected.");
+  }).catch(function(err) {
+    is(err.name, exceptionName, "Promise correctly reject with " + exceptionName);
+  });
+}
+
 function fuzzyCompare(a, b) {
   return Math.abs(a - b) < 9e-3;
 }
