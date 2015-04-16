@@ -240,8 +240,9 @@ let CustomizableUIInternal = {
         return Services.appinfo.OS == "WINNT" &&
                Services.sysinfo.getProperty("version") != "5.1";
 #endif
-#endif
+#else
         return false;
+#endif
       }
     }, true);
 #endif
