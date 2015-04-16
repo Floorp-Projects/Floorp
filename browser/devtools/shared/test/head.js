@@ -6,12 +6,22 @@ let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {TargetFactory, require} = devtools;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/framework/toolbox-hosts");
 
+let oldCanRecord = Services.telemetry.canRecordExtended;
+
 gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
+registerCleanupFunction(() => {
+  _stopTelemetry();
   gDevTools.testing = false;
+
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
+
+  console = undefined;
 });
 
 const TEST_URI_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
@@ -42,14 +52,6 @@ function promiseTab(aURL) {
   return new Promise(resolve =>
     addTab(aURL, resolve));
 }
-
-registerCleanupFunction(function tearDown() {
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
-
-  console = undefined;
-});
 
 function catchFail(func) {
   return function() {
@@ -150,73 +152,124 @@ let createHost = Task.async(function*(type = "bottom", src = "data:text/html;cha
   return [host, iframe.contentWindow, iframe.contentDocument];
 });
 
-/**
- * Load the Telemetry utils, then stub Telemetry.prototype.log in order to
- * record everything that's logged in it.
- * Store all recordings on Telemetry.telemetryInfo.
- * @return {Telemetry}
- */
-function loadTelemetryAndRecordLogs() {
-  info("Mock the Telemetry log function to record logged information");
+function reportError(error) {
+  let stack = "    " + error.stack.replace(/\n?.*?@/g, "\n    JS frame :: ");
 
-  let Telemetry = require("devtools/shared/telemetry");
-  Telemetry.prototype.telemetryInfo = {};
-  Telemetry.prototype._oldlog = Telemetry.prototype.log;
-  Telemetry.prototype.log = function(histogramId, value) {
-    if (!this.telemetryInfo) {
-      // Can be removed when Bug 992911 lands (see Bug 1011652 Comment 10)
-      return;
-    }
-    if (histogramId) {
-      if (!this.telemetryInfo[histogramId]) {
-        this.telemetryInfo[histogramId] = [];
-      }
+  ok(false, "ERROR: " + error + " at " + error.fileName + ":" +
+            error.lineNumber + "\n\nStack trace:" + stack);
 
-      this.telemetryInfo[histogramId].push(value);
-    }
-  };
+  if (finishUp) {
+    finishUp();
+  }
+}
 
-  return Telemetry;
+function startTelemetry() {
+  Services.telemetry.canRecordExtended = true;
 }
 
 /**
- * Stop recording the Telemetry logs and put back the utils as it was before.
+ * This method is automatically called on teardown.
  */
-function stopRecordingTelemetryLogs(Telemetry) {
-  Telemetry.prototype.log = Telemetry.prototype._oldlog;
-  delete Telemetry.prototype._oldlog;
-  delete Telemetry.prototype.telemetryInfo;
-}
+function _stopTelemetry() {
+  let Telemetry = devtools.require("devtools/shared/telemetry");
+  let telemetry = new Telemetry();
 
-/**
- * Check the correctness of the data recorded in Telemetry after
- * loadTelemetryAndRecordLogs was called.
- */
-function checkTelemetryResults(Telemetry) {
-  let result = Telemetry.prototype.telemetryInfo;
+  telemetry.clearToolsOpenedPref();
 
-  for (let [histId, value] of Iterator(result)) {
-    if (histId.endsWith("OPENED_PER_USER_FLAG")) {
-      ok(value.length === 1 && value[0] === true,
-         "Per user value " + histId + " has a single value of true");
-    } else if (histId.endsWith("OPENED_BOOLEAN")) {
-      ok(value.length > 1, histId + " has more than one entry");
+  Services.telemetry.canRecordExtended = oldCanRecord;
 
-      let okay = value.every(function(element) {
-        return element === true;
-      });
-
-      ok(okay, "All " + histId + " entries are === true");
-    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
-      ok(value.length > 1, histId + " has more than one entry");
-
-      let okay = value.every(function(element) {
-        return element > 0;
-      });
-
-      ok(okay, "All " + histId + " entries have time > 0");
+  // Clean up telemetry histogram changes
+  for (let histId in Services.telemetry.histogramSnapshots) {
+    try {
+      let histogram = Services.telemetry.getHistogramById(histId);
+      histogram.clear();
+    } catch(e) {
+      // Histograms is not listed in histograms.json, do nothing.
     }
   }
+}
+
+/**
+ * Check the value of a given telemetry histogram.
+ *
+ * @param  {String} histId
+ *         Histogram id
+ * @param  {Array|Number} expected
+ *         Expected value
+ * @param  {String} checkType
+ *         "array" (default) - Check that an array matches the histogram data.
+ *         "hasentries"  - For non-enumerated linear and exponential
+ *                             histograms. This checks for at least one entry.
+ */
+function checkTelemetry(histId, expected, checkType="array") {
+  let actual = Services.telemetry.getHistogramById(histId).snapshot().counts;
+
+  switch (checkType) {
+    case "array":
+      is(JSON.stringify(actual), JSON.stringify(expected), histId + " correct.");
+    break;
+    case "hasentries":
+      let hasEntry = actual.some(num => num > 0);
+      ok(hasEntry, histId + " has at least one entry.");
+    break;
+  }
+}
+
+/**
+ * Generate telemetry tests. You should call generateTelemetryTests("DEVTOOLS_")
+ * from your result checking code in telemetry tests. It logs checkTelemetry
+ * calls for all changed telemetry values.
+ *
+ * @param  {String} prefix
+ *         Optionally limits results to histogram ids starting with prefix.
+ */
+function generateTelemetryTests(prefix="") {
+  dump("=".repeat(80) + "\n");
+  for (let histId in Services.telemetry.histogramSnapshots) {
+    if (!histId.startsWith(prefix)) {
+      continue;
+    }
+
+    let snapshot = Services.telemetry.histogramSnapshots[histId];
+    let actual = snapshot.counts;
+
+    switch (snapshot.histogram_type) {
+      case Services.telemetry.HISTOGRAM_EXPONENTIAL:
+      case Services.telemetry.HISTOGRAM_LINEAR:
+        let total = 0;
+        for (let val of actual) {
+          total += val;
+        }
+
+        if (histId.endsWith("_ENUMERATED")) {
+          if (total > 0) {
+            dump("checkTelemetry(\"" + histId + "\", " + JSON.stringify(actual) + ");\n");
+          }
+          continue;
+        }
+
+        dump("checkTelemetry(\"" + histId + "\", null, \"hasentries\");\n");
+      break;
+      case Services.telemetry.HISTOGRAM_BOOLEAN:
+        actual = JSON.stringify(actual);
+
+        if (actual !== "[0,0,0]") {
+          dump("checkTelemetry(\"" + histId + "\", " + actual + ");\n");
+        }
+      break;
+      case Services.telemetry.HISTOGRAM_FLAG:
+        actual = JSON.stringify(actual);
+
+        if (actual !== "[1,0,0]") {
+          dump("checkTelemetry(\"" + histId + "\", " + actual + ");\n");
+        }
+      break;
+      case Services.telemetry.HISTOGRAM_COUNT:
+        dump("checkTelemetry(\"" + histId + "\", " + actual + ");\n");
+      break;
+    }
+  }
+  dump("=".repeat(80) + "\n");
 }
 
 /**
@@ -230,7 +283,7 @@ function* openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
   for (let i = 0; i < nbOfTimes; i ++) {
     info("Opening toolbox " + (i + 1));
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    yield gDevTools.showToolbox(target, toolId)
+    yield gDevTools.showToolbox(target, toolId);
 
     // We use a timeout to check the toolbox's active time
     yield new Promise(resolve => setTimeout(resolve, usageTime));
