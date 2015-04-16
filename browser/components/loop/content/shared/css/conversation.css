@@ -1103,6 +1103,12 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
     position: absolute;
     width: 100%;
     right: 0px;
+
+    /* Override the 100% specified in the .standalone-room-info selector
+       block so that this div doesn't take over the _whole_ screen and
+       transparently occlude UI widgetry (like the Join button), making
+       it unusable. */
+    height: auto;
   }
 
   .standalone-context-url {

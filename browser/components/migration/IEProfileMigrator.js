@@ -85,15 +85,17 @@ let CtypesHelpers = {
   },
 
   /**
-   * Converts a FILETIME struct (2 DWORDS), to a SYSTEMTIME struct.
+   * Converts a FILETIME struct (2 DWORDS), to a SYSTEMTIME struct,
+   * and then deduces the number of seconds since the epoch (which
+   * is the data we want for the cookie expiry date).
    *
    * @param aTimeHi
    *        Least significant DWORD.
    * @param aTimeLo
    *        Most significant DWORD.
-   * @return a Date object representing the converted datetime.
+   * @return the number of seconds since the epoch
    */
-  fileTimeToDate: function CH_fileTimeToDate(aTimeHi, aTimeLo) {
+  fileTimeToSecondsSinceEpoch(aTimeHi, aTimeLo) {
     let fileTime = this._structs.FILETIME();
     fileTime.dwLowDateTime = aTimeLo;
     fileTime.dwHighDateTime = aTimeHi;
@@ -103,13 +105,15 @@ let CtypesHelpers = {
     if (result == 0)
       throw new Error(ctypes.winLastError);
 
-    return new Date(systemTime.wYear,
-                    systemTime.wMonth - 1,
-                    systemTime.wDay,
-                    systemTime.wHour,
-                    systemTime.wMinute,
-                    systemTime.wSecond,
-                    systemTime.wMilliseconds);
+    // System time is in UTC, so we use Date.UTC to get milliseconds from epoch,
+    // then divide by 1000 to get seconds, and round down:
+    return Math.floor(Date.UTC(systemTime.wYear,
+                               systemTime.wMonth - 1,
+                               systemTime.wDay,
+                               systemTime.wHour,
+                               systemTime.wMinute,
+                               systemTime.wSecond,
+                               systemTime.wMilliseconds) / 1000);
   }
 };
 
@@ -458,8 +462,8 @@ Cookies.prototype = {
           host = "." + host;
       }
 
-      let expireTime = CtypesHelpers.fileTimeToDate(Number(expireTimeHi),
-                                                    Number(expireTimeLo));
+      let expireTime = CtypesHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
+                                                                 Number(expireTimeLo));
       Services.cookies.add(host,
                            path,
                            name,

@@ -14,6 +14,10 @@ let AnimationsPanel = {
   PANEL_INITIALIZED: "panel-initialized",
 
   initialize: Task.async(function*() {
+    if (AnimationsController.destroyed) {
+      console.warn("Could not initialize the animation-panel, controller was destroyed");
+      return;
+    }
     if (this.initialized) {
       return this.initialized.promise;
     }

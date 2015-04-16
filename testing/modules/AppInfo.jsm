@@ -26,8 +26,20 @@ let APP_INFO = {
   logConsoleErrors: true,
   OS: "XPCShell",
   XPCOMABI: "noarch-spidermonkey",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
-  invalidateCachesOnRestart: function() {},
+
+  invalidateCachesOnRestart() {},
+
+  // nsIWinAppHelper
+  get userCanElevate() false,
+
+  QueryInterface(iid) {
+    let interfaces = [ Ci.nsIXULAppInfo, Ci.nsIXULRuntime ];
+    if ("nsIWinAppHelper" in Ci)
+      interfaces.push(Ci.nsIWinAppHelper);
+    if (!interfaces.some(v => iid.equals(v)))
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
 };
 
 
