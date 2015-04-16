@@ -558,7 +558,7 @@ public:
   }
 
   void
-  Run(DataStoreDB* aDb, RunStatus aStatus)
+  Run(DataStoreDB* aDb, RunStatus aStatus) override
   {
     AssertIsInMainProcess();
     MOZ_ASSERT(NS_IsMainThread());
@@ -640,7 +640,7 @@ public:
 
   // nsIDOMEventListener
   NS_IMETHOD
-  HandleEvent(nsIDOMEvent* aEvent)
+  HandleEvent(nsIDOMEvent* aEvent) override
   {
     AssertIsInMainProcess();
     MOZ_ASSERT(NS_IsMainThread());
