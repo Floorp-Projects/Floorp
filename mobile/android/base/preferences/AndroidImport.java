@@ -23,7 +23,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-class AndroidImport implements Runnable {
+public class AndroidImport implements Runnable {
     /**
      * The Android M SDK removed several fields and methods from android.provider.Browser. This class is used as a
      * replacement to support building with the new SDK but at the same time still use these fields on lower Android
