@@ -1157,46 +1157,6 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
   return true;
 }
 
-bool test_range_based_for_loop_stable_iterator()
-{
-  const int N = 10;
-  FallibleTArray<int> f;
-  AutoFallibleTArray<int, N> fauto;
-
-  InfallibleTArray<int> i;
-  AutoInfallibleTArray<int, N> iauto;
-
-  nsTArray<int> t;
-  nsAutoTArray<int, N> tauto;
-
-#define DO_TEST(var) {             \
-    var.AppendElement(2);          \
-    var.AppendElement(3);          \
-    var.AppendElement(4);          \
-    int count = 0;                 \
-    for (const auto& elem : var) { \
-      if (elem == 2) {             \
-        var.RemoveElementAt(1);    \
-      }                            \
-      ++count;                     \
-    }                              \
-    if (count != 3) {              \
-      return false;                \
-    }                              \
-  }
-
-  DO_TEST(f)
-  DO_TEST(fauto)
-  DO_TEST(i)
-  DO_TEST(iauto)
-  DO_TEST(t)
-  DO_TEST(tauto)
-
-#undef DO_TEST
-
-  return true;
-}
-
 //----
 
 typedef bool (*TestFunc)();
@@ -1225,7 +1185,6 @@ static const struct Test {
   DECL_TEST(test_fallible),
   DECL_TEST(test_conversion_operator),
   DECL_TEST(test_SetLengthAndRetainStorage_no_ctor),
-  DECL_TEST(test_range_based_for_loop_stable_iterator),
   { nullptr, nullptr }
 };
 
