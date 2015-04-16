@@ -20,16 +20,19 @@ namespace cache {
 class CachePushStreamChild final : public PCachePushStreamChild
                                  , public ActorChild
 {
+  friend class CacheChild;
+
 public:
-  CachePushStreamChild(Feature* aFeature, nsIAsyncInputStream* aStream);
-  ~CachePushStreamChild();
+  void Start();
 
   virtual void StartDestroy() override;
 
-  void Start();
-
 private:
   class Callback;
+
+  // This class must be constructed using CacheChild::CreatePushStream()
+  CachePushStreamChild(Feature* aFeature, nsIAsyncInputStream* aStream);
+  ~CachePushStreamChild();
 
   // PCachePushStreamChild methods
   virtual void

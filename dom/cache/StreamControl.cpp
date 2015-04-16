@@ -84,6 +84,18 @@ StreamControl::CloseAllReadStreamsWithoutReporting()
   }
 }
 
+bool
+StreamControl::HasEverBeenRead() const
+{
+  ReadStreamList::ForwardIterator iter(mReadStreamList);
+  while (iter.HasMore()) {
+    if (iter.GetNext()->HasEverBeenRead()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } // namespace cache
 } // namespace dom
 } // namespace mozilla
