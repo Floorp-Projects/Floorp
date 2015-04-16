@@ -7,6 +7,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const policy = Cc["@mozilla.org/datareporting/service;1"]
                  .getService(Ci.nsISupports)
@@ -62,6 +63,10 @@ MozSelfSupportInterface.prototype = {
         aReject(new Error("No reporter"));
       }
     }.bind(this));
+  },
+
+  resetPref: function(name) {
+    Services.prefs.clearUserPref(name);
   },
 }
 
