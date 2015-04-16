@@ -158,10 +158,13 @@ class GCMarker : public JSTracer
     void reset();
 
     // Mark the given GC thing and traverse its children at some point.
-    template <typename T> void traverse(T* thing);
+    template <typename T> void traverse(T thing);
 
     // Calls traverse on target after making additional assertions.
-    template <typename T> void traverse(JSObject* source, T* target);
+    template <typename S, typename T> void traverse(S source, T target);
+
+    // C++ requires explicit declarations of partial template instantiations.
+    template <typename S> void traverse(S source, jsid target);
 
     /*
      * Care must be taken changing the mark color from gray to black. The cycle
@@ -239,6 +242,7 @@ class GCMarker : public JSTracer
         pushTaggedPtr(ObjectTag, obj);
     }
 
+    template <typename T> void markAndTraceChildren(T* thing);
     template <typename T> void markAndPush(StackTag tag, T* thing);
     template <typename T> void markAndScan(T* thing);
     void eagerlyMarkChildren(Shape* shape);
