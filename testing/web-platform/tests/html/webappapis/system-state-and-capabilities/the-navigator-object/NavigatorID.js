@@ -23,10 +23,6 @@ function run_test() {
   }, "product");
 
   test(function() {
-    assert_false(navigator.taintEnabled());
-  }, "taintEnabled");
-
-  test(function() {
     assert_equals(typeof navigator.userAgent, "string",
                   "navigator.userAgent should be a string");
   }, "userAgent type");

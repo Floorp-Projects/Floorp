@@ -2490,6 +2490,7 @@ js::GetDebugScopeForFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc)
     assertSameCompartment(cx, frame);
     if (CanUseDebugScopeMaps(cx) && !DebugScopes::updateLiveScopes(cx))
         return nullptr;
+
     ScopeIter si(cx, frame, pc);
     return GetDebugScope(cx, si);
 }

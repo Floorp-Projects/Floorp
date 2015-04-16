@@ -126,8 +126,9 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   mAudioOffloadPlayer = nullptr;
   int64_t timeUsecs = 0;
   SecondsToUsecs(mCurrentTime, timeUsecs);
-  mRequestedSeekTarget = SeekTarget(timeUsecs, SeekTarget::Accurate);
-
+  mRequestedSeekTarget = SeekTarget(timeUsecs,
+                                    SeekTarget::Accurate,
+                                    MediaDecoderEventVisibility::Suppressed);
   mNextState = mPlayState;
   ChangeState(PLAY_STATE_LOADING);
   // exit dormant state
@@ -193,10 +194,25 @@ MediaOmxCommonDecoder::ChangeState(PlayState aState)
   // in between
   MediaDecoder::ChangeState(aState);
 
-  if (mAudioOffloadPlayer) {
-    status_t err = mAudioOffloadPlayer->ChangeState(aState);
-    if (err != OK) {
-      ResumeStateMachine();
+  if (!mAudioOffloadPlayer) {
+    return;
+  }
+
+  status_t err = mAudioOffloadPlayer->ChangeState(aState);
+  if (err != OK) {
+    ResumeStateMachine();
+    return;
+  }
+
+  switch (mPlayState) {
+    case PLAY_STATE_SEEKING:
+      mSeekRequest.Begin(mAudioOffloadPlayer->Seek(mRequestedSeekTarget)
+        ->RefableThen(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),
+                      &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+      mRequestedSeekTarget.Reset();
+      break;
+    default: {
+      break;
     }
   }
 }
