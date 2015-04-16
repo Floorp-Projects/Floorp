@@ -1532,8 +1532,8 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter& writer,
 JS_PUBLIC_API(JS::ProfilingFrameIterator::FrameKind)
 JS::GetProfilingFrameKindFromNativeAddr(JSRuntime* rt, void* addr)
 {
-    JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
-    JitcodeGlobalEntry entry;
+    js::jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
+    js::jit::JitcodeGlobalEntry entry;
     table->lookupInfallible(addr, &entry, rt);
     MOZ_ASSERT(entry.isIon() || entry.isIonCache() || entry.isBaseline());
 

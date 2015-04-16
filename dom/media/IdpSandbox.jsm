@@ -40,16 +40,19 @@ function ResourceLoader(res, rej) {
   this.data = '';
 }
 
-/** Loads the identified https:// URL.  */
-ResourceLoader.load = function(uri) {
+/** Loads the identified https:// URL. */
+ResourceLoader.load = function(uri, doc) {
   return new Promise((resolve, reject) => {
     let listener = new ResourceLoader(resolve, reject);
     let ioService = Cc['@mozilla.org/network/io-service;1']
       .getService(Ci.nsIIOService);
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     // the '2' identifies this as a script load
-    let ioChannel = ioService.newChannelFromURI2(uri, null, systemPrincipal,
-                                                 systemPrincipal, 0, 2);
+    let ioChannel = ioService.newChannelFromURI2(uri, doc, doc.nodePrincipal,
+                                                 systemPrincipal, 0,
+                                                 Ci.nsIContentPolicy.TYPE_SCRIPT);
+
+    ioChannel.loadGroup = doc.documentLoadGroup.QueryInterface(Ci.nsILoadGroup);
     ioChannel.notificationCallbacks = new RedirectHttpsOnly();
     ioChannel.asyncOpen(listener, null);
   });
@@ -110,12 +113,14 @@ function createLocationFromURI(uri) {
  *
  * @param domain (string) the domain of the IdP
  * @param protocol (string?) the protocol of the IdP [default: 'default']
+ * @param doc (obj) the current document
  * @throws if the domain or protocol aren't valid
  */
-function IdpSandbox(domain, protocol) {
+function IdpSandbox(domain, protocol, doc) {
   this.source = IdpSandbox.createIdpUri(domain, protocol || "default");
   this.active = null;
   this.sandbox = null;
+  this.document = doc;
 }
 
 IdpSandbox.checkDomain = function(domain) {
@@ -176,7 +181,7 @@ IdpSandbox.prototype = {
 
   start: function() {
     if (!this.active) {
-      this.active = ResourceLoader.load(this.source)
+      this.active = ResourceLoader.load(this.source, this.document)
         .then(result => this._createSandbox(result));
     }
     return this.active;

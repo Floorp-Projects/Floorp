@@ -57,13 +57,10 @@ static const uint64_t OFFLOAD_PAUSE_MAX_MSECS = 60000ll;
 AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
   mStarted(false),
   mPlaying(false),
-  mSeeking(false),
   mReachedEOS(false),
-  mSeekDuringPause(false),
   mIsElementVisible(true),
   mSampleRate(0),
   mStartPosUs(0),
-  mSeekTimeUs(0),
   mPositionTimeMediaUs(-1),
   mInputBuffer(nullptr),
   mObserver(aObserver)
@@ -199,13 +196,6 @@ status_t AudioOffloadPlayer::ChangeState(MediaDecoder::PlayState aState)
       StartTimeUpdate();
     } break;
 
-    case MediaDecoder::PLAY_STATE_SEEKING: {
-      int64_t seekTimeUs
-          = mObserver->GetSeekTime();
-      SeekTo(seekTimeUs, true);
-      mObserver->ResetSeekTime();
-    } break;
-
     case MediaDecoder::PLAY_STATE_PAUSED:
     case MediaDecoder::PLAY_STATE_SHUTDOWN:
       // Just pause here during play state shutdown as well to stop playing
@@ -278,8 +268,12 @@ status_t AudioOffloadPlayer::Play()
       return err;
     }
     // Seek to last play position only when there was no seek during last pause
-    if (!mSeeking) {
-      SeekTo(mPositionTimeMediaUs);
+    android::Mutex::Autolock autoLock(mLock);
+    if (!mSeekTarget.IsValid()) {
+      mSeekTarget = SeekTarget(mPositionTimeMediaUs,
+                               SeekTarget::Accurate,
+                               MediaDecoderEventVisibility::Suppressed);
+      DoSeek();
     }
   }
 
@@ -343,28 +337,36 @@ void AudioOffloadPlayer::Reset()
   WakeLockRelease();
 }
 
-status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
+nsRefPtr<MediaDecoder::SeekPromise> AudioOffloadPlayer::Seek(SeekTarget aTarget)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  CHECK(mAudioSink.get());
-
   android::Mutex::Autolock autoLock(mLock);
 
-  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("SeekTo ( %lld )", aTimeUs));
+  mSeekPromise.RejectIfExists(true, __func__);
+  mSeekTarget = aTarget;
+  nsRefPtr<MediaDecoder::SeekPromise> p = mSeekPromise.Ensure(__func__);
+  DoSeek();
+  return p;
+}
 
-  mSeeking = true;
+status_t AudioOffloadPlayer::DoSeek()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mSeekTarget.IsValid());
+  CHECK(mAudioSink.get());
+
+  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("DoSeek ( %lld )", mSeekTarget.mTime));
+
   mReachedEOS = false;
   mPositionTimeMediaUs = -1;
-  mSeekTimeUs = aTimeUs;
-  mStartPosUs = aTimeUs;
-  mDispatchSeekEvents = aDispatchSeekEvents;
+  mStartPosUs = mSeekTarget.mTime;
 
-  if (mDispatchSeekEvents) {
+  if (!mSeekPromise.IsEmpty()) {
     nsCOMPtr<nsIRunnable> nsEvent =
       NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
         mObserver,
         &MediaDecoder::SeekingStarted,
-        MediaDecoderEventVisibility::Observable);
+        mSeekTarget.mEventVisibility);
     NS_DispatchToCurrentThread(nsEvent);
   }
 
@@ -374,21 +376,15 @@ status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
     mAudioSink->Start();
 
   } else {
-    mSeekDuringPause = true;
-
     if (mStarted) {
       mAudioSink->Flush();
     }
 
-    if (mDispatchSeekEvents) {
-      mDispatchSeekEvents = false;
+    if (!mSeekPromise.IsEmpty()) {
       AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Fake seek complete during pause"));
-      nsCOMPtr<nsIRunnable> nsEvent =
-        NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-          mObserver,
-          &MediaDecoder::SimulateSeekResolvedForAudioOffload,
-          MediaDecoderEventVisibility::Observable);
-      NS_DispatchToCurrentThread(nsEvent);
+      // We do not reset mSeekTarget here.
+      MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
+      mSeekPromise.Resolve(val, __func__);
     }
   }
 
@@ -407,8 +403,8 @@ int64_t AudioOffloadPlayer::GetMediaTimeUs()
   android::Mutex::Autolock autoLock(mLock);
 
   int64_t playPosition = 0;
-  if (mSeeking) {
-    return mSeekTimeUs;
+  if (mSeekTarget.IsValid()) {
+    return mSeekTarget.mTime;
   }
   if (!mStarted) {
     return mPositionTimeMediaUs;
@@ -439,6 +435,12 @@ int64_t AudioOffloadPlayer::GetOutputPlayPositionUs_l() const
 
 void AudioOffloadPlayer::NotifyAudioEOS()
 {
+  android::Mutex::Autolock autoLock(mLock);
+  // We do not reset mSeekTarget here.
+  if (!mSeekPromise.IsEmpty()) {
+    MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
+    mSeekPromise.Resolve(val, __func__);
+  }
   nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
       &MediaDecoder::PlaybackEnded);
   NS_DispatchToMainThread(nsEvent);
@@ -456,6 +458,15 @@ void AudioOffloadPlayer::NotifyPositionChanged()
 
 void AudioOffloadPlayer::NotifyAudioTearDown()
 {
+  // Fallback to state machine.
+  // state machine's seeks will be done with
+  // MediaDecoderEventVisibility::Suppressed.
+  android::Mutex::Autolock autoLock(mLock);
+  // We do not reset mSeekTarget here.
+  if (!mSeekPromise.IsEmpty()) {
+    MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
+    mSeekPromise.Resolve(val, __func__);
+  }
   nsCOMPtr<nsIRunnable> nsEvent = NS_NewRunnableMethod(mObserver,
       &MediaOmxCommonDecoder::AudioOffloadTearDown);
   NS_DispatchToMainThread(nsEvent);
@@ -506,27 +517,26 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
 
   size_t sizeDone = 0;
   size_t sizeRemaining = aSize;
+  int64_t seekTimeUs = -1;
   while (sizeRemaining > 0) {
     MediaSource::ReadOptions options;
     bool refreshSeekTime = false;
-
     {
       android::Mutex::Autolock autoLock(mLock);
 
-      if (mSeeking) {
-        options.setSeekTo(mSeekTimeUs);
+      if (mSeekTarget.IsValid()) {
+        seekTimeUs = mSeekTarget.mTime;
+        options.setSeekTo(seekTimeUs);
         refreshSeekTime = true;
 
         if (mInputBuffer) {
           mInputBuffer->release();
           mInputBuffer = nullptr;
         }
-        mSeeking = false;
       }
     }
 
     if (!mInputBuffer) {
-
       status_t err;
       err = mSource->read(&mInputBuffer, &options);
 
@@ -535,6 +545,9 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
       android::Mutex::Autolock autoLock(mLock);
 
       if (err != OK) {
+        if (mSeekTarget.IsValid()) {
+          mSeekTarget.Reset();
+        }
         AUDIO_OFFLOAD_LOG(PR_LOG_ERROR, ("Error while reading media source %d "
             "Ok to receive EOS error at end", err));
         if (!mReachedEOS) {
@@ -564,25 +577,19 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
             kKeyTime, &mPositionTimeMediaUs));
       }
 
-      if (refreshSeekTime) {
-        if (mDispatchSeekEvents && !mSeekDuringPause) {
-          mDispatchSeekEvents = false;
+      if (mSeekTarget.IsValid() && seekTimeUs == mSeekTarget.mTime) {
+        MOZ_ASSERT(mSeekTarget.IsValid());
+        mSeekTarget.Reset();
+        if (!mSeekPromise.IsEmpty()) {
           AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("FillBuffer posting SEEK_COMPLETE"));
-          nsCOMPtr<nsIRunnable> nsEvent =
-            NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
-              mObserver,
-              &MediaDecoder::SimulateSeekResolvedForAudioOffload,
-              MediaDecoderEventVisibility::Observable);
-          NS_DispatchToMainThread(nsEvent, NS_DISPATCH_NORMAL);
-
-        } else if (mSeekDuringPause) {
-          // Callback is already called for seek during pause. Just reset the
-          // flag
-          AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Not posting seek complete as its"
-              " already faked"));
-          mSeekDuringPause = false;
+          MediaDecoder::SeekResolveValue val(mReachedEOS, mSeekTarget.mEventVisibility);
+          mSeekPromise.Resolve(val, __func__);
         }
+      } else if (mSeekTarget.IsValid()) {
+        AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("seek is updated during unlocking mLock"));
+      }
 
+      if (refreshSeekTime) {
         NotifyPositionChanged();
 
         // need to adjust the mStartPosUs for offload decoding since parser
@@ -590,14 +597,6 @@ size_t AudioOffloadPlayer::FillBuffer(void* aData, size_t aSize)
         mStartPosUs = mPositionTimeMediaUs;
         AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Adjust seek time to: %.2f",
             mStartPosUs / 1E6));
-
-        // clear seek time with mLock locked and once we have valid
-        // mPositionTimeMediaUs
-        // before clearing mSeekTimeUs check if a new seek request has been
-        // received while we were reading from the source with mLock released.
-        if (!mSeeking) {
-          mSeekTimeUs = 0;
-        }
       }
     }
 
