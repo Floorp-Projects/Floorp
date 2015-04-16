@@ -382,10 +382,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     };
     nscoord spanISize = ReflowSpans(reflowState);
     isize = std::max(isize, spanISize);
-    if (isize > aReflowState.AvailableISize() &&
-        aReflowState.mLineLayout->HasOptionalBreakPosition()) {
-      aStatus = NS_INLINE_LINE_BREAK_BEFORE();
-    }
   }
 
   for (uint32_t i = 0; i < rtcCount; i++) {
