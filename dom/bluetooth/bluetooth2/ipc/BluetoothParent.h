@@ -243,6 +243,12 @@ protected:
 
   bool
   DoRequest(const GattClientReadRemoteRssiRequest& aRequest);
+
+  bool
+  DoRequest(const GattClientReadCharacteristicValueRequest& aRequest);
+
+  bool
+  DoRequest(const GattClientWriteCharacteristicValueRequest& aRequest);
 };
 
 END_BLUETOOTH_NAMESPACE
