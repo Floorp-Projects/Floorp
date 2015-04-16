@@ -19,7 +19,7 @@ interface nsIDocument;
  * structured clone algorithm.
  *
  * You can copy an object into an nsIStructuredCloneContainer using
- * initFromVariant or initFromBase64.  It's an error to initialize an
+ * initFromJSVal or initFromBase64.  It's an error to initialize an
  * nsIStructuredCloneContainer more than once.
  *
  * Once you've initialized the container, you can get a copy of the object it
@@ -27,14 +27,14 @@ interface nsIDocument;
  * string containing a copy of the container's serialized data, using
  * getDataAsBase64.
  */
-[scriptable, uuid(8144021a-7f8a-483a-a0f1-ca02b761403f)]
+[scriptable, uuid(63eeafec-63f5-42c3-aea9-5c04678784e7)]
 interface nsIStructuredCloneContainer : nsISupports
 {
   /**
    * Initialize this structured clone container so it contains a clone of the
    * given jsval.
    */
-  [noscript]
+  [noscript, implicit_jscontext]
   void initFromJSVal(in jsval aData);
 
   /**
