@@ -299,6 +299,13 @@ let ReadingListUI = {
     this.toolbarButton.removeAttribute("hidden");
   },
 
+  buttonClick(event) {
+    if (event.button != 0) {
+      return;
+    }
+    this.togglePageByBrowser(gBrowser.selectedBrowser);
+  },
+
   /**
    * Toggle a page (from a browser) in the ReadingList, adding if it's not already added, or
    * removing otherwise.
