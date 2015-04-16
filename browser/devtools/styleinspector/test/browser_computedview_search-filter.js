@@ -46,12 +46,7 @@ function* testAddTextInFilter(inspector, computedView) {
   searchField.focus();
 
   let win = computedView.styleWindow;
-  EventUtils.synthesizeKey("c", {}, win);
-  EventUtils.synthesizeKey("o", {}, win);
-  EventUtils.synthesizeKey("l", {}, win);
-  EventUtils.synthesizeKey("o", {}, win);
-  EventUtils.synthesizeKey("r", {}, win);
-
+  synthesizeKeys("color", win);
   yield onRefreshed;
 
   info("check that the correct properties are visible");
