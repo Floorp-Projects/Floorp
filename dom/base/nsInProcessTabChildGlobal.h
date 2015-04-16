@@ -150,6 +150,9 @@ public:
   {
     MOZ_CRASH("nsInProcessTabChildGlobal doesn't use DOM bindings!");
   }
+
+  already_AddRefed<nsIFrameLoader> GetFrameLoader();
+
 protected:
   virtual ~nsInProcessTabChildGlobal();
 
@@ -165,6 +168,11 @@ protected:
   // PreHandleEvent.
   bool mIsBrowserOrAppFrame;
   bool mPreventEventsEscaping;
+
+  // We keep a strong reference to the frameloader after we've started
+  // teardown. This allows us to dispatch message manager messages during this
+  // time.
+  nsCOMPtr<nsIFrameLoader> mFrameLoader;
 public:
   nsIContent* mOwner;
   nsFrameMessageManager* mChromeMessageManager;
