@@ -26,12 +26,16 @@ DIRS += [
 if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['mozapps/update']
 
-if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+if CONFIG['MOZ_MAINTENANCE_SERVICE'] or CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # Including mozapps/update/common-standalone allows the maintenance service
 # to be built so the maintenance service can be used for things other than
 # updating applications.
     DIRS += [
         'mozapps/update/common-standalone',
+    ]
+
+if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+    DIRS += [
         'components/maintenanceservice'
     ]
 
