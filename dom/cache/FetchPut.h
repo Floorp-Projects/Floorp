@@ -40,12 +40,11 @@ public:
   {
   public:
     virtual void
-    OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId, const ErrorResult& aRv) = 0;
+    OnFetchPut(FetchPut* aFetchPut, ErrorResult&& aRv) = 0;
   };
 
   static nsresult
-  Create(Listener* aListener, Manager* aManager,
-         RequestId aRequestId, CacheId aCacheId,
+  Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
          const nsTArray<PCacheRequest>& aRequests,
          const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams,
          FetchPut** aFetchPutOut);
@@ -68,8 +67,7 @@ private:
     nsRefPtr<Response> mResponse;
   };
 
-  FetchPut(Listener* aListener, Manager* aManager,
-           RequestId aRequestId, CacheId aCacheId,
+  FetchPut(Listener* aListener, Manager* aManager, CacheId aCacheId,
            const nsTArray<PCacheRequest>& aRequests,
            const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams);
   ~FetchPut();
@@ -85,9 +83,15 @@ private:
   void DoPutOnWorkerThread();
   static bool MatchInPutList(const PCacheRequest& aRequest,
                              const nsTArray<CacheRequestResponse>& aPutList);
-  virtual void OnCachePutAll(RequestId aRequestId, nsresult aRv) override;
 
-  void MaybeSetError(nsresult aRv);
+  virtual void
+  OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+               CacheId aOpenedCacheId,
+               const nsTArray<SavedResponse>& aSavedResponseList,
+               const nsTArray<SavedRequest>& aSavedRequestList,
+               StreamList* aStreamList) override;
+
+  void MaybeSetError(ErrorResult&& aRv);
   void MaybeNotifyListener();
 
   // TypeUtils methods
@@ -101,7 +105,6 @@ private:
 
   Listener* mListener;
   nsRefPtr<Manager> mManager;
-  const RequestId mRequestId;
   const CacheId mCacheId;
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsTArray<State> mStateList;

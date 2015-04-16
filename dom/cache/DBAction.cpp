@@ -14,6 +14,7 @@
 #include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsThreadUtils.h"
 #include "DBSchema.h"
 #include "FileUtils.h"
 
