@@ -158,11 +158,73 @@ let gTests = [{
     let dialog = yield dialogPromise;
 
     ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
-    ise(content.gSubDialog._frame.style.height, "40em", "Height should be set on the frame from the dialog");
+    ise(content.gSubDialog._frame.style.height, "5em", "Height should be set on the frame from the dialog");
 
     content.gSubDialog.close();
     yield deferredClose.promise;
   },
+},
+{
+  desc: "Check that a set width and content causing wrapping still lead to correct scrollHeight-implied height",
+  run: function* () {
+    let deferredClose = Promise.defer();
+    let dialogPromise = openAndLoadSubDialog(gDialogURL, null, null,
+                                             (aEvent) => dialogClosingCallback(deferredClose, aEvent));
+
+    let oldHeight;
+    content.addEventListener("DOMFrameContentLoaded", function frame2Loaded() {
+      content.removeEventListener("DOMFrameContentLoaded", frame2Loaded);
+      let doc = content.gSubDialog._frame.contentDocument;
+      oldHeight = doc.documentElement.scrollHeight;
+      doc.documentElement.style.removeProperty("height");
+      doc.getElementById("desc").textContent = `
+        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
+        laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
+        architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas
+        sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
+        laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
+        architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas
+        sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
+        laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
+        architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas
+        sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione
+        voluptatem sequi nesciunt.`
+      doc = null;
+    });
+
+    let dialog = yield dialogPromise;
+
+    ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
+    let docEl = content.gSubDialog._frame.contentDocument.documentElement;
+    ok(docEl.scrollHeight > oldHeight, "Content height increased (from " + oldHeight + " to " + docEl.scrollHeight + ").");
+    ise(content.gSubDialog._frame.style.height, docEl.scrollHeight + "px", "Height on the frame should be higher now");
+
+    content.gSubDialog.close();
+    yield deferredClose.promise;
+  },
+},
+{
+  desc: "Check that a dialog that is too high gets cut down to size",
+  run: function* () {
+    let deferredClose = Promise.defer();
+    let dialogPromise = openAndLoadSubDialog(gDialogURL, null, null,
+                                             (aEvent) => dialogClosingCallback(deferredClose, aEvent));
+
+    content.addEventListener("DOMFrameContentLoaded", function frame3Loaded() {
+      content.removeEventListener("DOMFrameContentLoaded", frame3Loaded);
+      content.gSubDialog._frame.contentDocument.documentElement.style.height = '100000px';
+    });
+
+    let dialog = yield dialogPromise;
+
+    ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
+    let newHeight = content.gSubDialog._frame.contentDocument.documentElement.scrollHeight;
+    ok(parseInt(content.gSubDialog._frame.style.height) < window.innerHeight,
+       "Height on the frame should be smaller than window's innerHeight");
+
+    content.gSubDialog.close();
+    yield deferredClose.promise;
+  }
 },
 {
   desc: "Check that scrollWidth and scrollHeight from the sub-dialog are used to size the <browser>",
@@ -173,16 +235,16 @@ let gTests = [{
 
     content.addEventListener("DOMFrameContentLoaded", function frameLoaded() {
       content.removeEventListener("DOMFrameContentLoaded", frameLoaded);
-      content.gSubDialog._frame.contentDocument.documentElement.style.height = "";
-      content.gSubDialog._frame.contentDocument.documentElement.style.width = "";
+      content.gSubDialog._frame.contentDocument.documentElement.style.removeProperty("height");
+      content.gSubDialog._frame.contentDocument.documentElement.style.removeProperty("width");
     });
 
     let dialog = yield dialogPromise;
 
     ok(content.gSubDialog._frame.style.width.endsWith("px"),
-       "Width should be set to a px value of the scrollWidth from the dialog");
+       "Width (" + content.gSubDialog._frame.style.width + ") should be set to a px value of the scrollWidth from the dialog");
     ok(content.gSubDialog._frame.style.height.endsWith("px"),
-       "Height should be set to a px value of the scrollHeight from the dialog");
+       "Height (" + content.gSubDialog._frame.style.height + ") should be set to a px value of the scrollHeight from the dialog");
 
     gTeardownAfterClose = true;
     content.gSubDialog.close();
