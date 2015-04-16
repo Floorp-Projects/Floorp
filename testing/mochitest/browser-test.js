@@ -132,6 +132,9 @@ function testInit() {
     // In non-e10s, only run the ShutdownLeaksCollector in the parent process.
     Components.utils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
   }
+
+  let gmm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+  gmm.loadFrameScript("chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js", true);
 }
 
 function Tester(aTests, aDumper, aCallback) {
