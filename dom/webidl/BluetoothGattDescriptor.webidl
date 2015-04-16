@@ -9,4 +9,10 @@ interface BluetoothGattDescriptor
 {
   readonly attribute BluetoothGattCharacteristic            characteristic;
   readonly attribute DOMString                              uuid;
+  readonly attribute ArrayBuffer?                           value;
+
+  [NewObject]
+  Promise<ArrayBuffer>  readValue();
+  [NewObject]
+  Promise<void>         writeValue(ArrayBuffer value);
 };

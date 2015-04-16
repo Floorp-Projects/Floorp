@@ -10,6 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BluetoothGattDescriptorBinding.h"
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/TypedArray.h"
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
@@ -39,6 +41,15 @@ public:
   {
     aUuidStr = mUuidStr;
   }
+
+  void GetValue(JSContext* cx, JS::MutableHandle<JSObject*> aValue) const;
+
+  /****************************************************************************
+   * Methods (Web API Implementation)
+   ***************************************************************************/
+  already_AddRefed<Promise> ReadValue(ErrorResult& aRv);
+  already_AddRefed<Promise> WriteValue(
+    const RootedTypedArray<ArrayBuffer>& aValue, ErrorResult& aRv);
 
   /****************************************************************************
    * Others
@@ -81,6 +92,11 @@ private:
    * UUID string of this GATT descriptor.
    */
   nsString mUuidStr;
+
+  /**
+   * Value of this GATT descriptor.
+   */
+  nsTArray<uint8_t> mValue;
 };
 
 END_BLUETOOTH_NAMESPACE
