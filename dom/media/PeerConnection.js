@@ -20,7 +20,6 @@ const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
-const PC_IDENTITY_CONTRACT = "@mozilla.org/dom/rtcidentityassertion;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
 const PC_RECEIVER_CONTRACT = "@mozilla.org/dom/rtpreceiver;1";
@@ -31,7 +30,6 @@ const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
-const PC_IDENTITY_CID = Components.ID("{1abc7499-3c54-43e0-bd60-686e2703f072}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
 const PC_SENDER_CID = Components.ID("{4fff5d46-d827-4cd4-a970-8fd53977440e}");
 const PC_RECEIVER_CID = Components.ID("{d974b814-8fde-411c-8c45-b86791b81030}");
@@ -270,22 +268,6 @@ RTCStatsReport.prototype = {
   },
 
   get mozPcid() { return this._pcid; }
-};
-
-function RTCIdentityAssertion() {}
-RTCIdentityAssertion.prototype = {
-  classDescription: "RTCIdentityAssertion",
-  classID: PC_IDENTITY_CID,
-  contractID: PC_IDENTITY_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(idp, name) {
-    this.idp = idp;
-    this.name  = name;
-  }
 };
 
 function RTCPeerConnection() {
@@ -717,9 +699,10 @@ RTCPeerConnection.prototype = {
         if (msg) {
           // Set new identity and generate an event.
           this._impl.peerIdentity = msg.identity;
-          let assertion = new this._win.RTCIdentityAssertion(
-            this._remoteIdp.provider, msg.identity);
-          this._resolvePeerIdentity(assertion);
+          this._resolvePeerIdentity(Cu.cloneInto({
+            idp: this._remoteIdp.provider,
+            name: msg.identity
+          }, this._win));
         }
       })
       .catch(e => {
@@ -1343,6 +1326,5 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
    RTCRtpReceiver,
    RTCRtpSender,
    RTCStatsReport,
-   RTCIdentityAssertion,
    PeerConnectionObserver]
 );
