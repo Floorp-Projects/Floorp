@@ -139,6 +139,7 @@ SyncImpl.prototype = {
    */
   _start: Task.async(function* () {
     log.info("Starting sync");
+    yield this._logDiagnostics();
     yield this._uploadStatusChanges();
     yield this._uploadNewItems();
     yield this._uploadDeletedItems();
@@ -148,6 +149,43 @@ SyncImpl.prototype = {
     yield this._uploadMaterialChanges();
 
     log.info("Sync done");
+  }),
+
+  /**
+   * Phase 0 - for debugging we log some stuff about the local store before
+   * we start syncing.
+   * We only do this when the log level is "Trace" or lower as the info (a)
+   * may be expensive to generate, (b) generate alot of output and (c) may
+   * contain private information.
+   */
+  _logDiagnostics: Task.async(function* () {
+    // Sadly our log is likely to have Log.Level.All, so loop over our
+    // appenders looking for the effective level.
+    let smallestLevel = log.appenders.reduce(
+      (prev, appender) => Math.min(prev, appender.level),
+      Log.Level.Error);
+
+    if (smallestLevel > Log.Level.Trace) {
+      return;
+    }
+
+    let localItems = [];
+    yield this.list.forEachItem(localItem => localItems.push(localItem));
+    log.trace("Have " + localItems.length + " local item(s)");
+    for (let localItem of localItems) {
+      // We need to use .record so we get access to a couple of the "internal" fields.
+      let record = localItem._record;
+      let redacted = {};
+      for (let attr of ["guid", "url", "resolvedURL", "serverLastModified", "syncStatus"]) {
+        redacted[attr] = record[attr];
+      }
+      log.trace(JSON.stringify(redacted));
+    }
+    // and the GUIDs of deleted items.
+    let deletedGuids = []
+    yield this.list.forEachSyncedDeletedGUID(guid => deletedGuids.push(guid));
+    // This might be a huge line, but that's OK.
+    log.trace("Have ${num} deleted item(s): ${deletedGuids}", {num: deletedGuids.length, deletedGuids});
   }),
 
   /**
@@ -196,7 +234,7 @@ SyncImpl.prototype = {
     };
     let batchResponse = yield this._postBatch(request);
     if (batchResponse.status != 200) {
-      this._handleUnexpectedResponse("uploading changes", batchResponse);
+      this._handleUnexpectedResponse(true, "uploading changes", batchResponse);
       return;
     }
 
@@ -215,7 +253,7 @@ SyncImpl.prototype = {
         continue;
       }
       if (response.status != 200) {
-        this._handleUnexpectedResponse("uploading a change", response);
+        this._handleUnexpectedResponse(false, "uploading a change", response);
         continue;
       }
       // Don't assume the local record and the server record aren't materially
@@ -259,7 +297,7 @@ SyncImpl.prototype = {
     };
     let batchResponse = yield this._postBatch(request);
     if (batchResponse.status != 200) {
-      this._handleUnexpectedResponse("uploading new items", batchResponse);
+      this._handleUnexpectedResponse(true, "uploading new items", batchResponse);
       return;
     }
 
@@ -281,7 +319,7 @@ SyncImpl.prototype = {
         log.debug("Attempting to upload a new item found the server already had it", response);
         // but we still process it.
       } else if (response.status != 201) {
-        this._handleUnexpectedResponse("uploading a new item", response);
+        this._handleUnexpectedResponse(false, "uploading a new item", response);
         continue;
       }
       let item = yield this.list.itemForURL(response.body.url);
@@ -320,7 +358,7 @@ SyncImpl.prototype = {
     };
     let batchResponse = yield this._postBatch(request);
     if (batchResponse.status != 200) {
-      this._handleUnexpectedResponse("uploading deleted items", batchResponse);
+      this._handleUnexpectedResponse(true, "uploading deleted items", batchResponse);
       return;
     }
 
@@ -329,7 +367,7 @@ SyncImpl.prototype = {
       // A 404 means the item was already deleted on the server, which is OK.
       // We still need to make sure it's deleted locally, though.
       if (response.status != 200 && response.status != 404) {
-        this._handleUnexpectedResponse("uploading a deleted item", response);
+        this._handleUnexpectedResponse(false, "uploading a deleted item", response);
         continue;
       }
       yield this._deleteItemForGUID(response.body.id);
@@ -355,7 +393,7 @@ SyncImpl.prototype = {
     };
     let response = yield this._sendRequest(request);
     if (response.status != 200) {
-      this._handleUnexpectedResponse("downloading modified items", response);
+      this._handleUnexpectedResponse(true, "downloading modified items", response);
       return;
     }
 
@@ -549,8 +587,16 @@ SyncImpl.prototype = {
     return bigResponse;
   }),
 
-  _handleUnexpectedResponse(contextMsgFragment, response) {
+  _handleUnexpectedResponse(isTopLevel, contextMsgFragment, response) {
     log.error(`Unexpected response ${contextMsgFragment}`, response);
+    // We want to throw in some cases so the sync engine knows there was an
+    // error and retries using the error schedule. 401 implies an auth issue
+    // (possibly transient, possibly not) - but things like 404 might just
+    // relate to a single item and need not throw.  Any 5XX implies a
+    // (hopefully transient) server error.
+    if (isTopLevel && (response.status == 401 || response.status >= 500)) {
+      throw new Error("Sync aborted due to " + response.status + " server response.");
+    }
   },
 
   // TODO: Wipe this pref when user logs out.
