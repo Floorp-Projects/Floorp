@@ -535,7 +535,7 @@ public:
                                 BluetoothGattStatus aStatus,
                                 const BluetoothGattServiceId& aServiceId,
                                 const BluetoothGattId& aCharId,
-                                int aCharProperty)
+                                const BluetoothGattCharProp& aCharProperty)
   { }
 
   virtual void
@@ -755,15 +755,14 @@ public:
   virtual void ReadCharacteristic(int aConnId,
                                   const BluetoothGattServiceId& aServiceId,
                                   const BluetoothGattId& aCharId,
-                                  int aAuthReq,
+                                  BluetoothGattAuthReq aAuthReq,
                                   BluetoothGattClientResultHandler* aRes) = 0;
   virtual void WriteCharacteristic(int aConnId,
                                    const BluetoothGattServiceId& aServiceId,
                                    const BluetoothGattId& aCharId,
-                                   int aWriteType,
-                                   int aLen,
-                                   int aAuthReq,
-                                   const ArrayBuffer& aValue,
+                                   BluetoothGattWriteType aWriteType,
+                                   BluetoothGattAuthReq aAuthReq,
+                                   const nsTArray<uint8_t>& aValue,
                                    BluetoothGattClientResultHandler* aRes) = 0;
   virtual void ReadDescriptor(int aConnId,
                               const BluetoothGattServiceId& aServiceId,

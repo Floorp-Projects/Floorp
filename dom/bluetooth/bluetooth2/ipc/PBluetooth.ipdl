@@ -232,6 +232,22 @@ struct GattClientReadRemoteRssiRequest
   nsString deviceAddress;
 };
 
+struct GattClientReadCharacteristicValueRequest
+{
+  nsString appUuid;
+  BluetoothGattServiceId serviceId;
+  BluetoothGattId charId;
+};
+
+struct GattClientWriteCharacteristicValueRequest
+{
+  nsString appUuid;
+  BluetoothGattServiceId serviceId;
+  BluetoothGattId charId;
+  BluetoothGattWriteType writeType;
+  uint8_t[] value;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -273,6 +289,8 @@ union Request
   GattClientStopNotificationsRequest;
   UnregisterGattClientRequest;
   GattClientReadRemoteRssiRequest;
+  GattClientReadCharacteristicValueRequest;
+  GattClientWriteCharacteristicValueRequest;
 };
 
 protocol PBluetooth
