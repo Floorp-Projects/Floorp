@@ -17,13 +17,6 @@ if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
   setFavIcon("chrome://browser/skin/Privacy-16.png");
 }
 
-var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIWebNavigation)
-                       .QueryInterface(Ci.nsIDocShellTreeItem)
-                       .rootTreeItem
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindow);
-
 function setFavIcon(url) {
   var icon = document.createElement("link");
   icon.setAttribute("rel", "icon");
@@ -54,5 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
 }, false);
 
 function openPrivateWindow() {
-  mainWindow.OpenBrowserWindow({private: true});
+  // Ask chrome to open a private window
+  document.dispatchEvent(
+    new CustomEvent("AboutPrivateBrowsingOpenWindow", {bubbles:true}));
 }

@@ -7,24 +7,17 @@
  * opened one time when in private browsing.
  */
 
-function test() {
-  waitForExplicitFinish();
-	
-  var win = OpenBrowserWindow({private: true});
+add_task(function* test() {
+  let win = yield BrowserTestUtils.openNewBrowserWindow({private: true});
 
-  whenDelayedStartupFinished(win, function() {
-    win.gBrowser.loadURI("about:addons");
+  let tab = win.gBrowser.selectedTab = win.gBrowser.addTab("about:addons");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  yield promiseWaitForFocus(win);
 
-    waitForFocus(function() {
-      EventUtils.synthesizeKey("a", { ctrlKey: true, shiftKey: true }, win);
+  EventUtils.synthesizeKey("a", { ctrlKey: true, shiftKey: true }, win);
 
-      is(win.gBrowser.tabs.length, 1, "about:addons tab was re-focused.");
-      is(win.gBrowser.currentURI.spec, "about:addons", "Addons tab was opened.");
+  is(win.gBrowser.tabs.length, 2, "about:addons tab was re-focused.");
+  is(win.gBrowser.currentURI.spec, "about:addons", "Addons tab was opened.");
 
-      win.close();
-      finish();    
-    });
-  });
-}
-
-
+  yield BrowserTestUtils.closeWindow(win);
+});
