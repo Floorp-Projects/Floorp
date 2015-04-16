@@ -98,7 +98,7 @@ GeneratePathFromGattId(const BluetoothGattId& aId,
 /**
  * |SetJsObject| is an internal function used by |BroadcastSystemMessage| only
  */
-bool
+static bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
             JS::Handle<JSObject*> aObj)
@@ -219,6 +219,7 @@ BroadcastSystemMessage(const nsAString& aType,
   return true;
 }
 
+#ifdef MOZ_B2G_BT_API_V2
 void
 DispatchReplySuccess(BluetoothReplyRunnable* aRunnable)
 {
@@ -281,6 +282,48 @@ DispatchStatusChangedEvent(const nsAString& aType,
   NS_ENSURE_TRUE_VOID(bs);
   bs->DistributeSignal(aType, NS_LITERAL_STRING(KEY_ADAPTER), data);
 }
+#else
+// TODO: remove with bluetooth1
+void
+DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
+                       const BluetoothValue& aValue,
+                       const nsAString& aErrorStr)
+{
+  // Reply will be deleted by the runnable after running on main thread
+  BluetoothReply* reply;
+  if (!aErrorStr.IsEmpty()) {
+    nsString err(aErrorStr);
+    reply = new BluetoothReply(BluetoothReplyError(err));
+  } else {
+    MOZ_ASSERT(aValue.type() != BluetoothValue::T__None);
+    reply = new BluetoothReply(BluetoothReplySuccess(aValue));
+  }
+
+  aRunnable->SetReply(reply);
+  if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
+}
+
+// TODO: remove with bluetooth1
+void
+DispatchStatusChangedEvent(const nsAString& aType,
+                           const nsAString& aAddress,
+                           bool aStatus)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  InfallibleTArray<BluetoothNamedValue> data;
+  BT_APPEND_NAMED_VALUE(data, "address", nsString(aAddress));
+  BT_APPEND_NAMED_VALUE(data, "status", aStatus);
+
+  BluetoothSignal signal(nsString(aType), NS_LITERAL_STRING(KEY_ADAPTER), data);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->DistributeSignal(signal);
+}
+#endif
 
 bool
 IsMainProcess()
