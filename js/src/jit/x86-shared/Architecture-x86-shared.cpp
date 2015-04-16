@@ -9,8 +9,10 @@
 # error "Wrong architecture. Only x86 and x64 should build this file!"
 #endif
 
+#include "jit/RegisterSets.h"
+
 const char*
-FloatRegister::name() const {
+js::jit::FloatRegister::name() const {
     static const char* const names[] = {
 
 #ifdef JS_CODEGEN_X64
@@ -38,8 +40,8 @@ FloatRegister::name() const {
     return names[size_t(code())];
 }
 
-FloatRegisterSet
-FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
+js::jit::FloatRegisterSet
+js::jit::FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     SetType bits = s.bits();
 
@@ -58,7 +60,7 @@ FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 }
 
 uint32_t
-FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
+js::jit::FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 {
     SetType all = s.bits();
     SetType float32x4Set =
@@ -92,7 +94,7 @@ FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
         + count32b * sizeof(float);
 }
 uint32_t
-FloatRegister::getRegisterDumpOffsetInBytes()
+js::jit::FloatRegister::getRegisterDumpOffsetInBytes()
 {
     return uint32_t(encoding()) * sizeof(FloatRegisters::RegisterContent);
 }

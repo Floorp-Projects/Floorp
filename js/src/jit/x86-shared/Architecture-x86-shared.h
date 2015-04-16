@@ -11,6 +11,10 @@
 # error "Unsupported architecture!"
 #endif
 
+#include "mozilla/MathAlgorithms.h"
+
+#include <string.h>
+
 #include "jit/x86-shared/Constants-x86-shared.h"
 
 namespace js {
