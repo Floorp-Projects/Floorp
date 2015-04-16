@@ -1,0 +1,9 @@
+<iframe></iframe>
+<script>
+try { frames[0].history.pushState({ dummy: function() {} }, ''); }
+catch (e) {}
+var doc = frames[0].document;
+var s = doc.createElement("script");
+s.textContent = "1";
+doc.body.appendChild(s);
+</script>

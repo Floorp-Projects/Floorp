@@ -927,7 +927,7 @@ Notification::InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
     return;
   }
   mDataObjectContainer = new nsStructuredCloneContainer();
-  aRv = mDataObjectContainer->InitFromJSVal(aData);
+  aRv = mDataObjectContainer->InitFromJSVal(aData, aCx);
 }
 
 void Notification::InitFromBase64(JSContext* aCx, const nsAString& aData,
