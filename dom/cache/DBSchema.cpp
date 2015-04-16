@@ -359,7 +359,7 @@ InitializeConnection(mozIStorageConnection* aConn)
 }
 
 nsresult
-CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
+CreateCacheId(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
@@ -388,8 +388,8 @@ CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
 }
 
 nsresult
-DeleteCache(mozIStorageConnection* aConn, CacheId aCacheId,
-            nsTArray<nsID>& aDeletedBodyIdListOut)
+DeleteCacheId(mozIStorageConnection* aConn, CacheId aCacheId,
+              nsTArray<nsID>& aDeletedBodyIdListOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(aConn);
