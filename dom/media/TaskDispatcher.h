@@ -44,6 +44,8 @@ public:
   virtual void AddTask(AbstractThread* aThread,
                        already_AddRefed<nsIRunnable> aRunnable,
                        AbstractThread::DispatchFailureHandling aFailureHandling = AbstractThread::AssertDispatchSuccess) = 0;
+
+  virtual bool HasTasksFor(AbstractThread* aThread) = 0;
 };
 
 /*
@@ -88,6 +90,8 @@ public:
     }
   }
 
+  bool HasTasksFor(AbstractThread* aThread) override { return !!GetTaskGroup(aThread); }
+
 private:
 
   struct PerThreadTaskGroup
@@ -131,14 +135,25 @@ private:
 
   PerThreadTaskGroup& EnsureTaskGroup(AbstractThread* aThread)
   {
-    for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
-      if (mTaskGroups[i]->mThread == aThread) {
-        return *mTaskGroups[i];
-      }
+    PerThreadTaskGroup* existing = GetTaskGroup(aThread);
+    if (existing) {
+      return *existing;
     }
 
     mTaskGroups.AppendElement(new PerThreadTaskGroup(aThread));
     return *mTaskGroups.LastElement();
+  }
+
+  PerThreadTaskGroup* GetTaskGroup(AbstractThread* aThread)
+  {
+    for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
+      if (mTaskGroups[i]->mThread == aThread) {
+        return mTaskGroups[i].get();
+      }
+    }
+
+    // Not found.
+    return nullptr;
   }
 
   // Task groups, organized by thread.
