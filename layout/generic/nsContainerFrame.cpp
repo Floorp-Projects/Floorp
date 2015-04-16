@@ -142,12 +142,11 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
   nsIPresShell* shell = PresContext()->PresShell();
   nsContainerFrame* lastParent = nullptr;
   while (aOldFrame) {
-    //XXXfr probably should use StealFrame here. I'm not sure if we need to
-    //      check the overflow lists atm, but we'll need a prescontext lookup
-    //      for overflow containers once we can split abspos elements with
-    //      inline containing blocks.
     nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
     nsContainerFrame* parent = aOldFrame->GetParent();
+    // Please note that 'parent' may not actually be where 'aOldFrame' lives.
+    // We really MUST use StealFrame() and nothing else here.
+    // @see nsInlineFrame::StealFrame for details.
     parent->StealFrame(aOldFrame, true);
     aOldFrame->Destroy();
     aOldFrame = oldFrameNextContinuation;
