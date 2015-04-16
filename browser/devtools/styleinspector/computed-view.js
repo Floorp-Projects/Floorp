@@ -154,6 +154,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
   this._onIncludeBrowserStyles = this._onIncludeBrowserStyles.bind(this);
+  this._onFilterTextboxContextMenu = this._onFilterTextboxContextMenu.bind(this);
 
   let doc = this.styleDocument;
   this.root = doc.getElementById("root");
@@ -167,6 +168,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
+  this.searchField.addEventListener("contextmenu", this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
   this.includeBrowserStylesCheckbox.addEventListener("command",
     this._onIncludeBrowserStyles);
@@ -829,6 +831,19 @@ CssHtmlTree.prototype = {
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   },
 
+   /**
+   * Context menu handler for filter style search box.
+   */
+  _onFilterTextboxContextMenu: function(event) {
+    try {
+      this.styleDocument.defaultView.focus();
+      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
+      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
+    } catch(e) {
+      console.error(e);
+    }
+  },
+
   /**
    * Called when the user clicks on the clear button in the filter style search
    * box.
@@ -891,6 +906,7 @@ CssHtmlTree.prototype = {
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.searchField.removeEventListener("input", this._onFilterStyles);
+    this.searchField.removeEventListener("contextmenu", this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.includeBrowserStylesCheckbox.removeEventListener("command",
       this.includeBrowserStylesChanged);
