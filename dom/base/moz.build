@@ -417,6 +417,7 @@ LOCAL_INCLUDES += [
     '/dom/xml',
     '/dom/xslt/xpath',
     '/dom/xul',
+    '/gfx/2d',
     '/image/src',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',

@@ -171,6 +171,7 @@
 #include "nsReferencedElement.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
+#include "nsStreamUtils.h"
 #include "nsSVGFeatures.h"
 #include "nsTextEditorState.h"
 #include "nsTextFragment.h"
@@ -7219,7 +7220,6 @@ nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables
                                                 mozilla::dom::nsIContentParent* aParent)
 {
   aIPC.Clear();
-  MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
   if (aTransferables) {
     uint32_t transferableCount = 0;
     aTransferables->Count(&transferableCount);
@@ -7227,79 +7227,167 @@ nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables
       IPCDataTransfer* dt = aIPC.AppendElement();
       nsCOMPtr<nsISupports> genericItem;
       aTransferables->GetElementAt(i, getter_AddRefs(genericItem));
-      nsCOMPtr<nsITransferable> item(do_QueryInterface(genericItem));
-      if (item) {
-        nsCOMPtr<nsISupportsArray> flavorList;
-        item->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
-        if (flavorList) {
-          uint32_t flavorCount = 0;
-          flavorList->Count(&flavorCount);
-          for (uint32_t j = 0; j < flavorCount; ++j) {
-            nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavorList, j);
-            if (!flavor) {
-              continue;
+      nsCOMPtr<nsITransferable> transferable(do_QueryInterface(genericItem));
+      TransferableToIPCTransferable(transferable, dt, aChild, aParent);
+    }
+  }
+}
+
+void
+nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
+                                              IPCDataTransfer* aIPCDataTransfer,
+                                              mozilla::dom::nsIContentChild* aChild,
+                                              mozilla::dom::nsIContentParent* aParent)
+{
+  MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
+
+  if (aTransferable) {
+    nsCOMPtr<nsISupportsArray> flavorList;
+    aTransferable->FlavorsTransferableCanExport(getter_AddRefs(flavorList));
+    if (flavorList) {
+      uint32_t flavorCount = 0;
+      flavorList->Count(&flavorCount);
+      for (uint32_t j = 0; j < flavorCount; ++j) {
+        nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavorList, j);
+        if (!flavor) {
+          continue;
+        }
+
+        nsAutoCString flavorStr;
+        flavor->GetData(flavorStr);
+        if (!flavorStr.Length()) {
+          continue;
+        }
+
+        nsCOMPtr<nsISupports> data;
+        uint32_t dataLen = 0;
+        aTransferable->GetTransferData(flavorStr.get(), getter_AddRefs(data), &dataLen);
+
+        nsCOMPtr<nsISupportsString> text = do_QueryInterface(data);
+        nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data);
+        if (text) {
+          nsAutoString dataAsString;
+          text->GetData(dataAsString);
+          IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+          item->flavor() = nsCString(flavorStr);
+          item->data() = nsString(dataAsString);
+        } else if (ctext) {
+          nsAutoCString dataAsString;
+          ctext->GetData(dataAsString);
+          IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+          item->flavor() = nsCString(flavorStr);
+          item->data() = nsCString(dataAsString);
+        } else {
+          nsCOMPtr<nsISupportsInterfacePointer> sip =
+            do_QueryInterface(data);
+          if (sip) {
+            sip->GetData(getter_AddRefs(data));
+          }
+
+          // Images to be pasted on the clipboard are nsIInputStreams
+          nsCOMPtr<nsIInputStream> stream(do_QueryInterface(data));
+          if (stream) {
+            IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+            item->flavor() = nsCString(flavorStr);
+
+            nsCString imageData;
+            NS_ConsumeStream(stream, UINT32_MAX, imageData);
+            item->data() = imageData;
+            continue;
+          }
+
+          // Images to be placed on the clipboard are imgIContainers.
+          nsCOMPtr<imgIContainer> image(do_QueryInterface(data));
+          if (image) {
+            RefPtr<mozilla::gfx::SourceSurface> surface =
+              image->GetFrame(imgIContainer::FRAME_CURRENT,
+                              imgIContainer::FLAG_SYNC_DECODE);
+
+            mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+              surface->GetDataSurface();
+            size_t length;
+            int32_t stride;
+            mozilla::UniquePtr<char[]> surfaceData =
+              nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
+            
+            IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+            item->flavor() = nsCString(flavorStr);
+            item->data() = nsCString(surfaceData.get(), length);
+
+            IPCDataTransferImage& imageDetails = item->imageDetails();
+            mozilla::gfx::IntSize size = dataSurface->GetSize();
+            imageDetails.width() = size.width;
+            imageDetails.height() = size.height;
+            imageDetails.stride() = stride;
+            imageDetails.format() = static_cast<uint8_t>(dataSurface->GetFormat());
+
+            continue;
+          }
+
+          // Otherwise, handle this as a file.
+          nsCOMPtr<FileImpl> fileImpl;
+          nsCOMPtr<nsIFile> file = do_QueryInterface(data);
+          if (file) {
+            fileImpl = new FileImplFile(file, false);
+            ErrorResult rv;
+            fileImpl->GetSize(rv);
+            fileImpl->GetLastModified(rv);
+          } else {
+            fileImpl = do_QueryInterface(data);
+          }
+          if (fileImpl) {
+            IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+            item->flavor() = nsCString(flavorStr);
+            if (aChild) {
+              item->data() =
+                mozilla::dom::BlobChild::GetOrCreate(aChild,
+                  static_cast<FileImpl*>(fileImpl.get()));
+            } else if (aParent) {
+              item->data() =
+                mozilla::dom::BlobParent::GetOrCreate(aParent,
+                  static_cast<FileImpl*>(fileImpl.get()));
             }
-
-            nsAutoCString flavorStr;
-            flavor->GetData(flavorStr);
-            if (!flavorStr.Length()) {
-              continue;
-            }
-
-            nsCOMPtr<nsISupports> data;
-            uint32_t dataLen = 0;
-            item->GetTransferData(flavorStr.get(), getter_AddRefs(data), &dataLen);
-
-            nsCOMPtr<nsISupportsString> text = do_QueryInterface(data);
-            if (text) {
-              nsAutoString dataAsString;
-              text->GetData(dataAsString);
-              IPCDataTransferItem* item = dt->items().AppendElement();
+          } else {
+            // This is a hack to support kFilePromiseMime.
+            // On Windows there just needs to be an entry for it, 
+            // and for OSX we need to create
+            // nsContentAreaDragDropDataProvider as nsIFlavorDataProvider.
+            if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
+              IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
               item->flavor() = nsCString(flavorStr);
-              item->data() = nsString(dataAsString);
-            } else {
-              nsCOMPtr<nsISupportsInterfacePointer> sip =
-                do_QueryInterface(data);
-              if (sip) {
-                sip->GetData(getter_AddRefs(data));
-              }
-              nsCOMPtr<FileImpl> fileImpl;
-              nsCOMPtr<nsIFile> file = do_QueryInterface(data);
-              if (file) {
-                fileImpl = new FileImplFile(file, false);
-                ErrorResult rv;
-                fileImpl->GetSize(rv);
-                fileImpl->GetLastModified(rv);
-              } else {
-                fileImpl = do_QueryInterface(data);
-              }
-              if (fileImpl) {
-                IPCDataTransferItem* item = dt->items().AppendElement();
-                item->flavor() = nsCString(flavorStr);
-                if (aChild) {
-                  item->data() =
-                    mozilla::dom::BlobChild::GetOrCreate(aChild,
-                      static_cast<FileImpl*>(fileImpl.get()));
-                } else if (aParent) {
-                  item->data() =
-                    mozilla::dom::BlobParent::GetOrCreate(aParent,
-                      static_cast<FileImpl*>(fileImpl.get()));
-                }
-              } else {
-                // This is a hack to support kFilePromiseMime.
-                // On Windows there just needs to be an entry for it, 
-                // and for OSX we need to create
-                // nsContentAreaDragDropDataProvider as nsIFlavorDataProvider.
-                if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
-                  IPCDataTransferItem* item = dt->items().AppendElement();
-                  item->flavor() = nsCString(flavorStr);
-                  item->data() = NS_ConvertUTF8toUTF16(flavorStr);
-                }
-              }
+              item->data() = NS_ConvertUTF8toUTF16(flavorStr);
             }
           }
         }
       }
     }
   }
+}
+
+mozilla::UniquePtr<char[]>
+nsContentUtils::GetSurfaceData(mozilla::gfx::DataSourceSurface* aSurface,
+                               size_t* aLength, int32_t* aStride)
+{
+  mozilla::gfx::DataSourceSurface::MappedSurface map;
+  aSurface->Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map);
+  mozilla::gfx::IntSize size = aSurface->GetSize();
+  mozilla::CheckedInt32 requiredBytes =
+    mozilla::CheckedInt32(map.mStride) * mozilla::CheckedInt32(size.height);
+  size_t maxBufLen = requiredBytes.isValid() ? requiredBytes.value() : 0;
+  mozilla::gfx::SurfaceFormat format = aSurface->GetFormat();
+
+  // Surface data handling is totally nuts. This is the magic one needs to
+  // know to access the data.
+  size_t bufLen = maxBufLen - map.mStride + (size.width * BytesPerPixel(format));
+
+  // nsDependentCString wants null-terminated string.
+  mozilla::UniquePtr<char[]> surfaceData(new char[maxBufLen + 1]);
+  memcpy(surfaceData.get(), reinterpret_cast<char*>(map.mData), bufLen);
+  memset(surfaceData.get() + bufLen, 0, maxBufLen - bufLen + 1);
+
+  *aLength = maxBufLen;
+  *aStride = map.mStride;
+
+  aSurface->Unmap();
+  return surfaceData;
 }
