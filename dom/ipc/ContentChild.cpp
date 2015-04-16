@@ -2800,6 +2800,8 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
             BlobChild* blob = static_cast<BlobChild*>(item.data().get_PBlobChild());
             nsRefPtr<FileImpl> fileImpl = blob->GetBlobImpl();
             variant->SetAsISupports(fileImpl);
+          } else {
+            continue;
           }
           dataTransfer->SetDataWithPrincipal(NS_ConvertUTF8toUTF16(item.flavor()),
                                              variant, i,
