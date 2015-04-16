@@ -27,12 +27,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
   "resource://gre/modules/Metrics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
+const PREF_READERVIEW_TRIGGER = "browser.uitour.readerViewTrigger";
 
 const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
   "endUrlbarCapture",
@@ -190,6 +193,7 @@ this.UITour = {
     }],
     ["privateWindow",  {query: "#privatebrowsing-button"}],
     ["quit",        {query: "#PanelUI-quit"}],
+    ["readerMode-urlBar", {query: "#reader-mode-button"}],
     ["search",      {
       infoPanelOffsetX: 18,
       infoPanelPosition: "after_start",
@@ -342,6 +346,22 @@ this.UITour = {
 
     Services.prefs.setCharPref(PREF_SEENPAGEIDS,
                                JSON.stringify([...this.seenPageIDs]));
+  },
+
+  get _readerViewTriggerRegEx() {
+    delete this._readerViewTriggerRegEx;
+    let readerViewUITourTrigger = Services.prefs.getCharPref(PREF_READERVIEW_TRIGGER);
+    return this._readerViewTriggerRegEx = new RegExp(readerViewUITourTrigger, "i");
+  },
+
+  onLocationChange: function(aLocation) {
+    // The ReadingList/ReaderView tour page is expected to run in Reader View,
+    // which disables JavaScript on the page. To get around that, we
+    // automatically start a pre-defined tour on page load.
+    let originalUrl = ReaderMode.getOriginalUrl(aLocation);
+    if (this._readerViewTriggerRegEx.test(originalUrl)) {
+      this.startSubTour("readinglist");
+    }
   },
 
   onPageEvent: function(aMessage, aEvent) {
@@ -684,6 +704,13 @@ this.UITour = {
       case "forceShowReaderIcon": {
         ReaderParent.forceShowReaderIcon(browser);
         break;
+      }
+
+      case "toggleReaderMode": {
+        let targetPromise = this.getTarget(window, "readerMode-urlBar");
+        targetPromise.then(target => {
+          ReaderParent.toggleReaderMode({target: target.node});
+        });
       }
     }
 
@@ -1718,6 +1745,20 @@ this.UITour = {
         targets: [],
       });
     });
+  },
+
+  startSubTour: function (aFeature) {
+    if (aFeature != "string") {
+      log.error("startSubTour: No feature option specified");
+      return;
+    }
+
+    if (aFeature == "readinglist") {
+      ReaderParent.showReaderModeInfoPanel(browser);
+    } else {
+      log.error("startSubTour: Unknown feature option specified");
+      return;
+    }
   },
 
   addNavBarWidget: function (aTarget, aMessageManager, aCallbackID) {

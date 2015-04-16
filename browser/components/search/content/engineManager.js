@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
@@ -105,7 +110,7 @@ var gEngineManagerDialog = {
     document.getElementById("engineList").focus();
   },
 
-  editKeyword: function engineManager_editKeyword() {
+  editKeyword: Task.async(function* () {
     var selectedEngine = gEngineView.selectedEngine;
     if (!selectedEngine)
       return;
@@ -121,12 +126,8 @@ var gEngineManagerDialog = {
       var dupName = "";
 
       if (alias.value != "") {
-        try {
-          let bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                       getService(Ci.nsINavBookmarksService);
-          if (bmserv.getURIForKeyword(alias.value))
-            bduplicate = true;
-        } catch(ex) {}
+        // Check for duplicates in Places keywords.
+        bduplicate = !!(yield PlacesUtils.keywords.fetch(alias.value));
 
         // Check for duplicates in changes we haven't committed yet
         let engines = gEngineView._engineStore.engines;
@@ -154,7 +155,7 @@ var gEngineManagerDialog = {
         break;
       }
     }
-  },
+  }),
 
   onSelect: function engineManager_onSelect() {
     // Buttons only work if an engine is selected and it's not the last engine,
