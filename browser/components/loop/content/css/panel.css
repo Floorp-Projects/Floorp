@@ -455,44 +455,6 @@ body[dir=rtl] .rooms > div > .context > .context-preview {
   border: none;
 }
 
-/* Dropdown menu */
-
-.dropdown {
-  position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  background-color: #fdfdfd;
-  box-shadow: 0 1px 3px rgba(0,0,0,.3);
-  list-style: none;
-  padding: 5px;
-  border-radius: 2px;
-}
-
-body[dir=rtl] .dropdown-menu-item {
-  left: auto;
-  right: 10px;
-}
-
-.dropdown-menu-item {
-  text-align: start;
-  margin: .3em 0;
-  padding: .2em .5em;
-  cursor: pointer;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  font-size: 1em;
-  white-space: nowrap;
-}
-
-.dropdown-menu-item:hover {
-  border: 1px solid #ccc;
-  background-color: #eee;
-}
-
 /* Spinner */
 
 @keyframes spinnerRotate {
@@ -734,11 +696,11 @@ body[dir=rtl] .generate-url-spinner {
 }
 
 .settings-menu .icon {
-  display: inline-block;
   background-size: contain;
   width: 12px;
   height: 12px;
   margin-right: 1em;
+  margin-top: 2px;
 }
 
 .settings-menu .icon-settings {
