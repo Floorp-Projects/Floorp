@@ -8,7 +8,7 @@
 
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
-#include "mozilla/dom/cache/PCacheTypes.h"
+#include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 
@@ -22,13 +22,13 @@ using mozilla::unused;
 using mozilla::void_t;
 using mozilla::dom::cache::CacheStreamControlChild;
 using mozilla::dom::cache::Feature;
-using mozilla::dom::cache::PCacheReadStream;
+using mozilla::dom::cache::CacheReadStream;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::FileDescriptorSetChild;
 using mozilla::ipc::OptionalFileDescriptorSet;
 
 void
-StartDestroyStreamChild(const PCacheReadStream& aReadStream)
+StartDestroyStreamChild(const CacheReadStream& aReadStream)
 {
   CacheStreamControlChild* cacheControl =
     static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
@@ -52,7 +52,7 @@ StartDestroyStreamChild(const PCacheReadStream& aReadStream)
 }
 
 void
-AddFeatureToStreamChild(const PCacheReadStream& aReadStream, Feature* aFeature)
+AddFeatureToStreamChild(const CacheReadStream& aReadStream, Feature* aFeature)
 {
   CacheStreamControlChild* cacheControl =
     static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
@@ -64,27 +64,27 @@ AddFeatureToStreamChild(const PCacheReadStream& aReadStream, Feature* aFeature)
 } // anonymous namespace
 
 void
-StartDestroyStreamChild(const PCacheResponseOrVoid& aResponseOrVoid)
+StartDestroyStreamChild(const CacheResponseOrVoid& aResponseOrVoid)
 {
-  if (aResponseOrVoid.type() == PCacheResponseOrVoid::Tvoid_t) {
+  if (aResponseOrVoid.type() == CacheResponseOrVoid::Tvoid_t) {
     return;
   }
 
-  StartDestroyStreamChild(aResponseOrVoid.get_PCacheResponse());
+  StartDestroyStreamChild(aResponseOrVoid.get_CacheResponse());
 }
 
 void
-StartDestroyStreamChild(const PCacheResponse& aResponse)
+StartDestroyStreamChild(const CacheResponse& aResponse)
 {
-  if (aResponse.body().type() == PCacheReadStreamOrVoid::Tvoid_t) {
+  if (aResponse.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
     return;
   }
 
-  StartDestroyStreamChild(aResponse.body().get_PCacheReadStream());
+  StartDestroyStreamChild(aResponse.body().get_CacheReadStream());
 }
 
 void
-StartDestroyStreamChild(const nsTArray<PCacheResponse>& aResponses)
+StartDestroyStreamChild(const nsTArray<CacheResponse>& aResponses)
 {
   for (uint32_t i = 0; i < aResponses.Length(); ++i) {
     StartDestroyStreamChild(aResponses[i]);
@@ -92,40 +92,40 @@ StartDestroyStreamChild(const nsTArray<PCacheResponse>& aResponses)
 }
 
 void
-StartDestroyStreamChild(const nsTArray<PCacheRequest>& aRequests)
+StartDestroyStreamChild(const nsTArray<CacheRequest>& aRequests)
 {
   for (uint32_t i = 0; i < aRequests.Length(); ++i) {
-    if (aRequests[i].body().type() == PCacheReadStreamOrVoid::Tvoid_t) {
+    if (aRequests[i].body().type() == CacheReadStreamOrVoid::Tvoid_t) {
       continue;
     }
-    StartDestroyStreamChild(aRequests[i].body().get_PCacheReadStream());
+    StartDestroyStreamChild(aRequests[i].body().get_CacheReadStream());
   }
 }
 
 void
-AddFeatureToStreamChild(const PCacheResponseOrVoid& aResponseOrVoid,
+AddFeatureToStreamChild(const CacheResponseOrVoid& aResponseOrVoid,
                         Feature* aFeature)
 {
-  if (aResponseOrVoid.type() == PCacheResponseOrVoid::Tvoid_t) {
+  if (aResponseOrVoid.type() == CacheResponseOrVoid::Tvoid_t) {
     return;
   }
 
-  AddFeatureToStreamChild(aResponseOrVoid.get_PCacheResponse(), aFeature);
+  AddFeatureToStreamChild(aResponseOrVoid.get_CacheResponse(), aFeature);
 }
 
 void
-AddFeatureToStreamChild(const PCacheResponse& aResponse,
+AddFeatureToStreamChild(const CacheResponse& aResponse,
                         Feature* aFeature)
 {
-  if (aResponse.body().type() == PCacheReadStreamOrVoid::Tvoid_t) {
+  if (aResponse.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
     return;
   }
 
-  AddFeatureToStreamChild(aResponse.body().get_PCacheReadStream(), aFeature);
+  AddFeatureToStreamChild(aResponse.body().get_CacheReadStream(), aFeature);
 }
 
 void
-AddFeatureToStreamChild(const nsTArray<PCacheResponse>& aResponses,
+AddFeatureToStreamChild(const nsTArray<CacheResponse>& aResponses,
                          Feature* aFeature)
 {
   for (uint32_t i = 0; i < aResponses.Length(); ++i) {
@@ -134,14 +134,14 @@ AddFeatureToStreamChild(const nsTArray<PCacheResponse>& aResponses,
 }
 
 void
-AddFeatureToStreamChild(const nsTArray<PCacheRequest>& aRequests,
+AddFeatureToStreamChild(const nsTArray<CacheRequest>& aRequests,
                          Feature* aFeature)
 {
   for (uint32_t i = 0; i < aRequests.Length(); ++i) {
-    if (aRequests[i].body().type() == PCacheReadStreamOrVoid::Tvoid_t) {
+    if (aRequests[i].body().type() == CacheReadStreamOrVoid::Tvoid_t) {
       continue;
     }
-    AddFeatureToStreamChild(aRequests[i].body().get_PCacheReadStream(),
+    AddFeatureToStreamChild(aRequests[i].body().get_CacheReadStream(),
                             aFeature);
   }
 }
