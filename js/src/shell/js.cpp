@@ -2203,6 +2203,30 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 }
 
 static bool
+BlockNotes(JSContext* cx, HandleScript script, Sprinter* sp)
+{
+    if (!script->hasBlockScopes())
+        return true;
+
+    Sprint(sp, "\nBlock table:\n   index   parent    start      end\n");
+
+    BlockScopeArray* scopes = script->blockScopes();
+    for (uint32_t i = 0; i < scopes->length; i++) {
+        const BlockScopeNote* note = &scopes->vector[i];
+        if (note->index == BlockScopeNote::NoBlockScopeIndex)
+            Sprint(sp, "%8s ", "(none)");
+        else
+            Sprint(sp, "%8u ", note->index);
+        if (note->parent == BlockScopeNote::NoBlockScopeIndex)
+            Sprint(sp, "%8s ", "(none)");
+        else
+            Sprint(sp, "%8u ", note->parent);
+        Sprint(sp, "%8u %8u\n", note->start, note->start + note->length);
+    }
+    return true;
+}
+
+static bool
 DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun, bool lines,
                   bool recursive, Sprinter* sp)
 {
@@ -2229,6 +2253,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun, bool l
         return false;
     SrcNotes(cx, script, sp);
     TryNotes(cx, script, sp);
+    BlockNotes(cx, script, sp);
 
     if (recursive && script->hasObjects()) {
         ObjectArray* objects = script->objects();
@@ -2299,6 +2324,7 @@ DisassembleToSprinter(JSContext* cx, unsigned argc, jsval* vp, Sprinter* sprinte
                 return false;
             SrcNotes(cx, script, sprinter);
             TryNotes(cx, script, sprinter);
+            BlockNotes(cx, script, sprinter);
         }
     } else {
         for (unsigned i = 0; i < p.argc; i++) {
