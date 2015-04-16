@@ -7,7 +7,7 @@
 
 <dialog id="subDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Sample sub-dialog" style="width: 32em; height: 40em;"
+        title="Sample sub-dialog" style="width: 32em; height: 5em;"
         onload="document.getElementById('textbox').focus();"
         ondialogaccept="acceptSubdialog();">
   <script>
@@ -16,7 +16,7 @@
     }
   </script>
 
-  <description>A sample sub-dialog for testing</description>
+  <description id="desc">A sample sub-dialog for testing</description>
 
   <textbox id="textbox" value="Default text" />
 
