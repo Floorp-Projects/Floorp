@@ -49,6 +49,20 @@
 
   <body>
 
+    <div id="root" class="devtools-monospace">
+      <div class="devtools-toolbar">
+        <div class="devtools-searchbox">
+          <input id="computedview-searchbox"
+                 class="devtools-searchinput devtools-rule-searchbox"
+                 type="search" placeholder="&userStylesSearch;"/>
+          <button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></button>
+        </div>
+        <xul:checkbox id="browser-style-checkbox"
+                      class="includebrowserstyles"
+                      checked="false" label="&browserStylesLabel;"/>
+      </div>
+    </div>
+
     <!-- The output from #templateProperty (below) is appended here. -->
     <div id="propertyContainer" class="devtools-monospace">
     </div>
@@ -58,30 +72,10 @@
       &noPropertiesFound;
     </div>
 
-    <!-- The output from #templateRoot (below) is inserted here. -->
-    <div id="root" class="devtools-monospace"></div>
-
     <!--
     To visually debug the templates without running firefox, alter the display:none
     -->
     <div style="display:none;">
-      <!--
-      templateRoot sits at the top of the window and contains the "include default
-      styles" checkbox. For data it needs an instance of CssHtmlTree.
-      -->
-      <div id="templateRoot">
-        <xul:hbox class="devtools-toolbar" flex="1" align="center">
-          <xul:checkbox class="includebrowserstyles"
-                        save="${includeBrowserStylesCheckbox}"
-                        oncommand="${includeBrowserStylesChanged}" checked="false"
-                        label="&browserStylesLabel;"/>
-          <xul:textbox class="devtools-searchinput" type="search" save="${searchField}"
-                      placeholder="&userStylesSearch;" flex="1"
-                      oncommand="${filterChanged}"/>
-        </xul:hbox>
-      </div>
-
-
       <!--
       A templateMatchedSelectors sits inside each templateProperties showing the
       list of selectors that affect that property. Each needs data like this:

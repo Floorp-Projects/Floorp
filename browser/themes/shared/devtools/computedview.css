@@ -153,6 +153,7 @@ body {
 
 #root .devtools-toolbar {
   width: 100%;
+  display: -moz-box;
 }
 
 .link {
