@@ -804,9 +804,6 @@ endif
 endif
 endif
 endif
-ifndef CROSS_COMPILE
-	$(call CHECK_STDCXX,$@)
-endif
 
 # On Darwin (Mac OS X), dwarf2 debugging uses debug info left in .o files,
 # so instead of deleting .o files after repacking them into a dylib, we make
