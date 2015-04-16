@@ -627,6 +627,21 @@ class TestRecursiveMakeBackend(BackendTester):
                 str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
 
+    def test_dist_files(self):
+        """Test that DIST_FILES is written to backend.mk correctly."""
+        env = self._consume('dist-files', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'DIST_FILES += install.rdf',
+            'DIST_FILES += main.js',
+        ]
+
+        found = [str for str in lines if str.startswith('DIST_FILES')]
+        self.assertEqual(found, expected)
+
     def test_config(self):
         """Test that CONFIGURE_SUBST_FILES and CONFIGURE_DEFINE_FILES are
         properly handled."""

@@ -12,15 +12,18 @@
 
 interface AudioListener {
 
-    // same as OpenAL (default 1) 
+    // same as OpenAL (default 1)
+    [Deprecated="PannerNodeDoppler"]
     attribute double dopplerFactor;
 
-    // in meters / second (default 343.3) 
+    // in meters / second (default 343.3)
+    [Deprecated="PannerNodeDoppler"]
     attribute double speedOfSound;
 
-    // Uses a 3D cartesian coordinate system 
+    // Uses a 3D cartesian coordinate system
     void setPosition(double x, double y, double z);
     void setOrientation(double x, double y, double z, double xUp, double yUp, double zUp);
+    [Deprecated="PannerNodeDoppler"]
     void setVelocity(double x, double y, double z);
 
 };

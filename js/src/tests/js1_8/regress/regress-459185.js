@@ -22,7 +22,7 @@ function test()
 
   try
   {
-    for (var {a: []} = 2 in []) { }
+    for (var {a: []} in []) { }
   }
   catch(ex)
   {

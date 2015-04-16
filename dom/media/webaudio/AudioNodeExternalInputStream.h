@@ -20,7 +20,7 @@ namespace mozilla {
  */
 class AudioNodeExternalInputStream : public AudioNodeStream {
 public:
-  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
+  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate, uint32_t aContextId);
 protected:
   ~AudioNodeExternalInputStream();
 

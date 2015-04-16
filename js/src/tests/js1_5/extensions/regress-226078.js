@@ -15,7 +15,7 @@ printStatus (summary);
 
 function SetLangHead(l){
   with(p){
-    for(var i=0 in x)
+    for(var i in x)
       if(getElementById("TxtH"+i)!=undefined)
         printStatus('huh');
   }
