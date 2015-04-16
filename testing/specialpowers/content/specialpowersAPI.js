@@ -1922,6 +1922,10 @@ SpecialPowersAPI.prototype = {
   createDOMFile: function(path, options) {
     return new File(path, options);
   },
+
+  startPeriodicServiceWorkerUpdates: function() {
+    return this._sendSyncMessage('SPPeriodicServiceWorkerUpdates', {});
+  },
 };
 
 this.SpecialPowersAPI = SpecialPowersAPI;
