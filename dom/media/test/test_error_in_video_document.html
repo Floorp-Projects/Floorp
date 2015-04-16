@@ -21,9 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=604067
 
 /** Test for Bug 604067 **/
 
+function documentVideo() {
+  return document.body.getElementsByTagName("iframe")[0]
+                 .contentDocument.body.getElementsByTagName("video")[0];
+}
+
 function check() {
-  var v = document.body.getElementsByTagName("iframe")[0]
-                  .contentDocument.body.getElementsByTagName("video")[0];
+  var v = documentVideo();
 
   // Debug info for Bug 608634
   ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
@@ -47,7 +51,15 @@ if (!t) {
 
   var f = document.createElement("iframe");
   f.src = t.name;
-  f.addEventListener("load", function() { SimpleTest.executeSoon(check); }, false);
+  f.addEventListener("load", function() {
+    if (documentVideo().error) {
+      info("Error occured by the time we got |load| - checking directly.");
+      check();
+    } else {
+      todo(false, "Error hasn't occurred yet - adding |error| event listener. This shouldn't happen, see bug 608634.");
+      documentVideo().addEventListener("error", check);
+    }
+  }, false);
   document.body.appendChild(f);
 }
 
