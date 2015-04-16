@@ -281,6 +281,10 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
+	Mozilla.UITour.toggleReaderMode = function(feature) {
+		_sendEvent('toggleReaderMode');
+	};
+
 })();
 
 // Make this library Require-able.
