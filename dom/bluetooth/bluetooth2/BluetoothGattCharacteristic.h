@@ -97,7 +97,7 @@ public:
 
   BluetoothGattCharacteristic(nsPIDOMWindow* aOwner,
                               BluetoothGattService* aService,
-                              const BluetoothGattId& aCharId);
+                              const BluetoothGattCharAttribute& aChar);
 
 private:
   ~BluetoothGattCharacteristic();
@@ -110,6 +110,13 @@ private:
    *                    BluetoothGattId of all discovered descriptors.
    */
   void HandleDescriptorsDiscovered(const BluetoothValue& aValue);
+
+  /**
+   * Update the value of this characteristic.
+   *
+   * @param aValue [in] BluetoothValue which contains an uint8_t array.
+   */
+  void HandleCharacteristicValueUpdated(const BluetoothValue& aValue);
 
   /****************************************************************************
    * Variables

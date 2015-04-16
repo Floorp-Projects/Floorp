@@ -605,14 +605,40 @@ struct BluetoothAvrcpPlayerSettings {
 
 enum BluetoothGattStatus {
   GATT_STATUS_SUCCESS,
-  GATT_STATUS_ERROR
+  GATT_STATUS_INVALID_HANDLE,
+  GATT_STATUS_READ_NOT_PERMITTED,
+  GATT_STATUS_WRITE_NOT_PERMITTED,
+  GATT_STATUS_INVALID_PDU,
+  GATT_STATUS_INSUFFICIENT_AUTHENTICATION,
+  GATT_STATUS_REQUEST_NOT_SUPPORTED,
+  GATT_STATUS_INVALID_OFFSET,
+  GATT_STATUS_INSUFFICIENT_AUTHORIZATION,
+  GATT_STATUS_PREPARE_QUEUE_FULL,
+  GATT_STATUS_ATTRIBUTE_NOT_FOUND,
+  GATT_STATUS_ATTRIBUTE_NOT_LONG,
+  GATT_STATUS_INSUFFICIENT_ENCRYPTION_KEY_SIZE,
+  GATT_STATUS_INVALID_ATTRIBUTE_LENGTH,
+  GATT_STATUS_UNLIKELY_ERROR,
+  GATT_STATUS_INSUFFICIENT_ENCRYPTION,
+  GATT_STATUS_UNSUPPORTED_GROUP_TYPE,
+  GATT_STATUS_INSUFFICIENT_RESOURCES,
+  GATT_STATUS_UNKNOWN_ERROR
+};
+
+enum BluetoothGattAuthReq {
+  GATT_AUTH_REQ_NONE,
+  GATT_AUTH_REQ_NO_MITM,
+  GATT_AUTH_REQ_MITM,
+  GATT_AUTH_REQ_SIGNED_NO_MITM,
+  GATT_AUTH_REQ_SIGNED_MITM
 };
 
 enum BluetoothGattWriteType {
   GATT_WRITE_TYPE_NO_RESPONSE,
   GATT_WRITE_TYPE_NORMAL,
   GATT_WRITE_TYPE_PREPARE,
-  GATT_WRITE_TYPE_SIGNED
+  GATT_WRITE_TYPE_SIGNED,
+  GATT_WRITE_TYPE_END_GUARD
 };
 
 /*
@@ -657,6 +683,19 @@ struct BluetoothGattServiceId {
   bool operator==(const BluetoothGattServiceId& aOther) const
   {
     return mId == aOther.mId && mIsPrimary == aOther.mIsPrimary;
+  }
+};
+
+struct BluetoothGattCharAttribute {
+  BluetoothGattId mId;
+  BluetoothGattCharProp mProperties;
+  BluetoothGattWriteType mWriteType;
+
+  bool operator==(const BluetoothGattCharAttribute& aOther) const
+  {
+    return mId == aOther.mId &&
+           mProperties == aOther.mProperties &&
+           mWriteType == aOther.mWriteType;
   }
 };
 

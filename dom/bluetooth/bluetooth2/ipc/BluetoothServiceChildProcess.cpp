@@ -462,6 +462,36 @@ BluetoothServiceChildProcess::GattClientReadRemoteRssiInternal(
                                               nsString(aDeviceAddress)));
 }
 
+void
+BluetoothServiceChildProcess::GattClientReadCharacteristicValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattClientReadCharacteristicValueRequest(nsString(aAppUuid),
+                                             aServiceId,
+                                             aCharacteristicId));
+}
+
+void
+BluetoothServiceChildProcess::GattClientWriteCharacteristicValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  const BluetoothGattWriteType& aWriteType,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattClientWriteCharacteristicValueRequest(nsString(aAppUuid),
+                                              aServiceId,
+                                              aCharacteristicId,
+                                              aWriteType,
+                                              aValue));
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {
