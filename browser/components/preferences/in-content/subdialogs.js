@@ -180,41 +180,65 @@ let gSubDialog = {
                               parseFloat(getComputedStyle(groupBoxTitle).borderBottomWidth);
 
     let groupBoxBody = document.getAnonymousElementByAttribute(this._box, "class", "groupbox-body");
+    // These are deduced from styles which we don't change, so it's safe to get them now:
     let boxVerticalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingTop);
     let boxHorizontalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingLeft);
+    let boxHorizontalBorder = 2 * parseFloat(getComputedStyle(this._box).borderLeftWidth);
+    let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
+
+    // The difference between the frame and box shouldn't change, either:
+    let boxRect = this._box.getBoundingClientRect();
+    let frameRect = this._frame.getBoundingClientRect();
+    let frameSizeDifference = (frameRect.top - boxRect.top) + (boxRect.bottom - frameRect.bottom);
+
+    // Then determine and set a bunch of width stuff:
     let frameMinWidth = docEl.style.width || docEl.scrollWidth + "px";
     let frameWidth = docEl.getAttribute("width") ? docEl.getAttribute("width") + "px" :
                      frameMinWidth;
+    this._frame.style.width = frameWidth;
+    this._box.style.minWidth = "calc(" +
+                               (boxHorizontalBorder + boxHorizontalPadding) +
+                               "px + " + frameMinWidth + ")";
+
+    // Now do the same but for the height. We need to do this afterwards because otherwise
+    // XUL assumes we'll optimize for height and gives us "wrong" values which then are no
+    // longer correct after we set the width:
     let frameMinHeight = docEl.style.height || docEl.scrollHeight + "px";
     let frameHeight = docEl.getAttribute("height") ? docEl.getAttribute("height") + "px" :
-                      frameMinHeight;
-    let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
-    let boxHorizontalBorder = 2 * parseFloat(getComputedStyle(this._box).borderLeftWidth);
-
-    let frameRect = this._frame.getBoundingClientRect();
-    let boxRect = this._box.getBoundingClientRect();
-    let frameSizeDifference = (frameRect.top - boxRect.top) + (boxRect.bottom - frameRect.bottom);
+                                                     frameMinHeight;
 
     // Now check if the frame height we calculated is possible at this window size,
     // accounting for titlebar, padding/border and some spacing.
     let maxHeight = window.innerHeight - frameSizeDifference - 30;
-    if (frameHeight > maxHeight) {
-      // If not, we should probably let the dialog scroll:
-      frameHeight = maxHeight;
+    // Do this with a frame height in pixels...
+    let comparisonFrameHeight;
+    if (frameHeight.endsWith("em")) {
+      let fontSize = parseFloat(getComputedStyle(this._frame).fontSize);
+      comparisonFrameHeight = parseFloat(frameHeight, 10) * fontSize;
+    } else if (frameHeight.endsWith("px")) {
+      comparisonFrameHeight = parseFloat(frameHeight, 10);
+    } else {
+      Cu.reportError("This dialog (" + this._frame.contentWindow.location.href + ") " +
+                     "set a height in non-px-non-em units ('" + frameHeight + "'), " +
+                     "which is likely to lead to bad sizing in in-content preferences. " +
+                     "Please consider changing this.");
+      comparisonFrameHeight = parseFloat(frameHeight);
+    }
+
+    if (comparisonFrameHeight > maxHeight) {
+      // If the height is bigger than that of the window, we should let the contents scroll:
+      frameHeight = maxHeight + "px";
+      frameMinHeight = maxHeight + "px";
       let containers = this._frame.contentDocument.querySelectorAll('.largeDialogContainer');
       for (let container of containers) {
         container.classList.add("doScroll");
       }
     }
 
-    this._frame.style.width = frameWidth;
     this._frame.style.height = frameHeight;
     this._box.style.minHeight = "calc(" +
                                 (boxVerticalBorder + groupBoxTitleHeight + boxVerticalPadding) +
                                 "px + " + frameMinHeight + ")";
-    this._box.style.minWidth = "calc(" +
-                               (boxHorizontalBorder + boxHorizontalPadding) +
-                               "px + " + frameMinWidth + ")";
 
     this._overlay.style.visibility = "visible";
     this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
