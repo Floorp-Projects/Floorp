@@ -777,8 +777,7 @@ let emulator = (function() {
       promises.push(waitForNamedStateEvent(call, "held"));
     }
 
-    let promise = waitForNamedStateEvent(conference, "holding")
-      .then(() => waitForNamedStateEvent(conference, "held"))
+    let promise = waitForNamedStateEvent(conference, "held")
       .then(() => {
         if (typeof heldCallback === "function") {
           heldCallback();
@@ -810,8 +809,7 @@ let emulator = (function() {
       promises.push(waitForNamedStateEvent(call, "connected"));
     }
 
-    let promise = waitForNamedStateEvent(conference, "resuming")
-      .then(() => waitForNamedStateEvent(conference, "connected"))
+    let promise = waitForNamedStateEvent(conference, "connected")
       .then(() => {
         if (typeof connectedCallback === "function") {
           connectedCallback();
