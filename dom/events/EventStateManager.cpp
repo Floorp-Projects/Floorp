@@ -3071,9 +3071,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // When APZ is enabled, the actual scroll animation might be handled by
       // the compositor.
       WheelPrefs::Action action;
-      if (gfxPrefs::AsyncPanZoomEnabled() &&
-          layers::APZCTreeManager::WillHandleWheelEvent(wheelEvent))
-      {
+      if (wheelEvent->mFlags.mHandledByAPZ) {
         action = WheelPrefs::ACTION_NONE;
       } else {
         action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);

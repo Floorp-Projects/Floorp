@@ -7,11 +7,13 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 const bundle = Services.strings.createBundle(
   "chrome://global/locale/aboutServiceWorkers.properties");
 
 let gSWM;
+let gSWCount = 0;
 
 function init() {
   let enabled = Services.prefs.getBoolPref("dom.serviceWorkers.enabled");
@@ -99,15 +101,48 @@ function display(info) {
   createItem(bundle.GetStringFromName('activeCacheName'), info.activeCacheName);
   createItem(bundle.GetStringFromName('waitingCacheName'), info.waitingCacheName);
 
-  var updateButton = document.createElement("button");
+  let updateButton = document.createElement("button");
   updateButton.appendChild(document.createTextNode(bundle.GetStringFromName('update')));
   updateButton.onclick = function() {
     gSWM.update(info.scope);
   };
   div.appendChild(updateButton);
 
+  let unregisterButton = document.createElement("button");
+  unregisterButton.appendChild(document.createTextNode(bundle.GetStringFromName('unregister')));
+  div.appendChild(unregisterButton);
+
+  let loadingMessage = document.createElement('span');
+  loadingMessage.appendChild(document.createTextNode(bundle.GetStringFromName('waiting')));
+  loadingMessage.classList.add('inactive');
+  div.appendChild(loadingMessage);
+
+  unregisterButton.onclick = function() {
+    let cb = {
+      unregisterSucceeded: function() {
+        parent.removeChild(div);
+
+        if (!--gSWCount) {
+         let div = document.getElementById("warning_no_serviceworkers");
+         div.classList.add("active");
+        }
+      },
+
+      unregisterFailed: function() {
+        alert(bundle.GetStringFromName('unregisterError'));
+      },
+
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback])
+    };
+
+    loadingMessage.classList.remove('inactive');
+    gSWM.unregister(info.principal, cb, info.scope);
+  };
+
   let sep = document.createElement('hr');
   div.appendChild(sep);
+
+  ++gSWCount;
 }
 
 window.addEventListener("DOMContentLoaded", function load() {

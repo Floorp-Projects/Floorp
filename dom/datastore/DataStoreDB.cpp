@@ -23,6 +23,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
+#include "nsNullPrincipal.h"
 
 #define DATASTOREDB_VERSION        1
 #define DATASTOREDB_NAME           "DataStoreDB"
@@ -103,10 +104,9 @@ DataStoreDB::CreateFactoryIfNeeded()
 {
   if (!mFactory) {
     nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal =
-      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();
+    if (!principal) {
+      return NS_ERROR_FAILURE;
     }
 
     nsIXPConnect* xpc = nsContentUtils::XPConnect();
