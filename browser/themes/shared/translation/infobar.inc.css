@@ -26,6 +26,10 @@ notification[value="translation"][state="translating"] .messageImage {
   }
 }
 
+notification[value="translation"] hbox[anonid="details"] {
+  overflow: hidden;
+}
+
 notification[value="translation"] button,
 notification[value="translation"] menulist {
   -moz-appearance: none;
