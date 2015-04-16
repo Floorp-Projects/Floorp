@@ -19,10 +19,9 @@ let { EventTarget } = require("sdk/event/target");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { Class } = require("sdk/core/heritage");
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
+const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
-const Telemetry = require("devtools/shared/telemetry");
-const telemetry = new Telemetry();
+
 devtools.lazyImporter(this, "LineGraphWidget",
   "resource:///modules/devtools/Graphs.jsm");
 

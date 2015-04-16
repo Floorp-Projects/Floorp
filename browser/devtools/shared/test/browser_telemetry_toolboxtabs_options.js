@@ -9,11 +9,19 @@ const TOOL_DELAY = 200;
 
 add_task(function*() {
   yield promiseTab(TEST_URI);
-  let Telemetry = loadTelemetryAndRecordLogs();
+
+  startTelemetry();
 
   yield openAndCloseToolbox(2, TOOL_DELAY, "options");
-  checkTelemetryResults(Telemetry);
+  checkResults();
 
-  stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
 });
+
+function checkResults() {
+  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
+  // here.
+  checkTelemetry("DEVTOOLS_OPTIONS_OPENED_BOOLEAN", [0,2,0]);
+  checkTelemetry("DEVTOOLS_OPTIONS_OPENED_PER_USER_FLAG", [0,1,0]);
+  checkTelemetry("DEVTOOLS_OPTIONS_TIME_ACTIVE_SECONDS", null, "hasentries");
+}
