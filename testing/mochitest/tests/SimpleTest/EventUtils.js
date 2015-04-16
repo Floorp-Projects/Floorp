@@ -382,8 +382,8 @@ function synthesizePointerAtPoint(left, top, aEvent, aWindow)
 function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
 {
   var rect = aTarget.getBoundingClientRect();
-  synthesizeMouse(aTarget, rect.width / 2, rect.height / 2, aEvent,
-                  aWindow);
+  return synthesizeMouse(aTarget, rect.width / 2, rect.height / 2, aEvent,
+                         aWindow);
 }
 function synthesizeTouchAtCenter(aTarget, aEvent, aWindow)
 {
