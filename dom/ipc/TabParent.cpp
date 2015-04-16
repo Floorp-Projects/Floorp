@@ -3151,7 +3151,7 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
       if (item.data().type() == IPCDataTransferData::TnsString) {
         localItem->mType = DataTransferItem::DataType::eString;
         localItem->mStringData = item.data().get_nsString();
-      } else {
+      } else if (item.data().type() == IPCDataTransferData::TPBlobChild) {
         localItem->mType = DataTransferItem::DataType::eBlob;
         BlobParent* blobParent =
           static_cast<BlobParent*>(item.data().get_PBlobParent());
