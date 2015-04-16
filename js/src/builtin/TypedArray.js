@@ -105,9 +105,9 @@ function TypedArrayEvery(callbackfn, thisArg = undefined) {
 
     // Step 6.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.every");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.every");
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 7.
     var T = thisArg;
@@ -186,9 +186,9 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
 
     // Step 5.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.filter");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.filter");
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
     var T = thisArg;

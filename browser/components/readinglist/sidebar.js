@@ -57,7 +57,9 @@ let RLSidebar = {
     this.emptyListInfo = document.getElementById("emptyListInfo");
     this.itemTemplate = document.getElementById("item-template");
 
-    this.list.addEventListener("click", event => this.onListClick(event));
+    // click events for middle-clicks are not sent to DOM nodes, only to the document.
+    document.addEventListener("click", event => this.onClick(event));
+
     this.list.addEventListener("mousemove", event => this.onListMouseMove(event));
     this.list.addEventListener("keydown", event => this.onListKeyDown(event), true);
 
@@ -384,10 +386,10 @@ let RLSidebar = {
   },
 
   /**
-   * Handle a click event on the list box.
+   * Handle a click event on the sidebar.
    * @param {Event} event - Triggering event.
    */
-  onListClick(event) {
+  onClick(event) {
     let itemNode = this.findParentItemNode(event.target);
     if (!itemNode)
       return;

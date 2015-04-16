@@ -3106,7 +3106,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
    */
   onMutations: protocol.preEvent("new-mutations", function() {
     // Fetch and process the mutations.
-    this.getMutations({cleanup: this.autoCleanup}).then(null, console.error);
+    this.getMutations({cleanup: this.autoCleanup}).catch(() => {});
   }),
 
   isLocal: function() {

@@ -1,0 +1,400 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test suspend, resume and close method of the AudioContext</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.requestCompleteLog();
+
+function tryToToCreateNodeOnClosedContext(ctx) {
+  ok(ctx.state, "closed", "The context is in closed state");
+
+  [ { name: "createBufferSource" },
+    { name: "createMediaStreamDestination",
+      onOfflineAudioContext: false},
+    { name: "createScriptProcessor" },
+    { name: "createStereoPanner" },
+    { name: "createAnalyser" },
+    { name: "createGain" },
+    { name: "createDelay" },
+    { name: "createBiquadFilter" },
+    { name: "createWaveShaper" },
+    { name: "createPanner" },
+    { name: "createConvolver" },
+    { name: "createChannelSplitter" },
+    { name: "createChannelMerger" },
+    { name: "createDynamicsCompressor" },
+    { name: "createOscillator" },
+    { name: "createMediaElementSource",
+      args: [new Audio()],
+      onOfflineAudioContext: false },
+    { name: "createMediaStreamSource",
+      args: [new Audio().mozCaptureStream()],
+      onOfflineAudioContext: false } ].forEach(function(e) {
+
+      if (e.onOfflineAudioContext == false &&
+          ctx instanceof OfflineAudioContext) {
+        return;
+      }
+
+      expectException(function() {
+        ctx[e.name].apply(ctx, e.args);
+      }, DOMException.INVALID_STATE_ERR);
+    });
+}
+
+function loadFile(url, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    callback(xhr.response);
+  };
+  xhr.send();
+}
+
+// createBuffer, createPeriodicWave and decodeAudioData should work on a context
+// that has `state` == "closed"
+function tryLegalOpeerationsOnClosedContext(ctx) {
+  ok(ctx.state, "closed", "The context is in closed state");
+
+  [ { name: "createBuffer",
+      args: [1, 44100, 44100] },
+    { name: "createPeriodicWave",
+      args: [new Float32Array(10), new Float32Array(10)] }
+  ].forEach(function(e) {
+    expectNoException(function() {
+      ctx[e.name].apply(ctx, e.args);
+    });
+  });
+  loadFile("ting-44.1k-1ch.ogg", function(buf) {
+    ctx.decodeAudioData(buf).then(function(decodedBuf) {
+      ok(true, "decodeAudioData on a closed context should work, it did.")
+      todo(false, "0 " + (ctx instanceof OfflineAudioContext ? "Offline" : "Realtime"));
+      finish();
+    }).catch(function(e){
+      ok(false, "decodeAudioData on a closed context should work, it did not");
+      finish();
+    });
+  });
+}
+
+// Test that MediaStreams that are the output of a suspended AudioContext are
+// producing silence
+// ac1 produce a sine fed to a MediaStreamAudioDestinationNode
+// ac2 is connected to ac1 with a MediaStreamAudioSourceNode, and check that
+// there is silence when ac1 is suspended
+function testMultiContextOutput() {
+  var ac1 = new AudioContext(),
+      ac2 = new AudioContext();
+
+  var osc1 = ac1.createOscillator(),
+      mediaStreamDestination1 = ac1.createMediaStreamDestination();
+
+  var mediaStreamAudioSourceNode2 =
+    ac2.createMediaStreamSource(mediaStreamDestination1.stream),
+    sp2 = ac2.createScriptProcessor(),
+    suspendCalled = false,
+    silentBuffersInARow = 0;
+
+
+  sp2.onaudioprocess = function(e) {
+    if (!suspendCalled) {
+      ac1.suspend();
+      suspendCalled = true;
+    } else {
+      // Wait until the context that produce the tone is actually suspended. It
+      // can be that the second context receives a little amount of data because
+      // of the buffering between the two contexts.
+      if (ac1.state == "suspended") {
+        var input = e.inputBuffer.getChannelData(0);
+        var silent = true;
+        for (var i = 0; i < input.length; i++) {
+          if (input[i] != 0.0) {
+            silent = false;
+          }
+        }
+
+        if (silent) {
+          silentBuffersInARow++;
+          if (silentBuffersInARow == 10) {
+            ok(true,
+                "MediaStreams produce silence when their input is blocked.");
+            sp2.onaudioprocess = null;
+            ac1.close();
+            ac2.close();
+            todo(false,"1");
+            finish();
+          }
+        } else {
+          is(silentBuffersInARow, 0,
+              "No non silent buffer inbetween silent buffers.");
+        }
+      }
+    }
+  }
+
+  osc1.connect(mediaStreamDestination1);
+
+  mediaStreamAudioSourceNode2.connect(sp2);
+  osc1.start();
+}
+
+
+// Test that there is no buffering between contexts when connecting a running
+// AudioContext to a suspended AudioContext. Our ScriptProcessorNode does some
+// buffering internally, so we ensure this by using a very very low frequency
+// on a sine, and oberve that the phase has changed by a big enough margin.
+function testMultiContextInput() {
+  var ac1 = new AudioContext(),
+      ac2 = new AudioContext();
+
+  var osc1 = ac1.createOscillator(),
+      mediaStreamDestination1 = ac1.createMediaStreamDestination(),
+      sp1 = ac1.createScriptProcessor();
+
+  var mediaStreamAudioSourceNode2 =
+    ac2.createMediaStreamSource(mediaStreamDestination1.stream),
+    sp2 = ac2.createScriptProcessor(),
+    resumed = false,
+    suspended = false,
+    countEventOnFirstSP = true,
+    eventReceived = 0;
+
+
+  osc1.frequency.value = 0.0001;
+
+  // We keep a first ScriptProcessor to get a periodic callback, since we can't
+  // use setTimeout anymore.
+  sp1.onaudioprocess = function(e) {
+    if (countEventOnFirstSP) {
+      eventReceived++;
+    }
+    if (eventReceived > 3 && suspended) {
+      countEventOnFirstSP = false;
+      eventReceived = 0;
+      ac2.resume().then(function() {
+        resumed = true;
+      });
+    }
+  }
+
+  sp2.onaudioprocess = function(e) {
+    var inputBuffer = e.inputBuffer.getChannelData(0);
+    if (!resumed) {
+      // save the last value of the buffer before suspending.
+      sp2.value = inputBuffer[inputBuffer.length - 1];
+      ac2.suspend().then(function() {
+        suspended = true;
+      });
+    } else {
+      eventReceived++;
+      if (eventReceived == 3) {
+        var delta = Math.abs(inputBuffer[1] - sp2.value),
+            theoreticalIncrement = 2048 * 3 * Math.PI * 2 * osc1.frequency.value / ac1.sampleRate;
+        ok(delta >= theoreticalIncrement,
+            "Buffering did not occur when the context was suspended (delta:" + delta + " increment: " + theoreticalIncrement+")");
+        ac1.close();
+        ac2.close();
+        sp1.onaudioprocess = null;
+        sp2.onaudioprocess = null;
+        todo(false, "2");
+        finish();
+      }
+    }
+  }
+
+  osc1.connect(mediaStreamDestination1);
+  osc1.connect(sp1);
+
+  mediaStreamAudioSourceNode2.connect(sp2);
+  osc1.start();
+}
+
+// Test that ScriptProcessorNode's onaudioprocess don't get called while the
+// context is suspended/closed. It is possible that we get the handler called
+// exactly once after suspend, because the event has already been sent to the
+// event loop.
+function testScriptProcessNodeSuspended() {
+  var ac = new AudioContext();
+  var sp = ac.createScriptProcessor();
+  var remainingIterations = 30;
+  var afterResume = false;
+  sp.onaudioprocess = function() {
+    ok(ac.state == "running" || remainingIterations == 3, "If onaudioprocess is called, the context" +
+        " must be running (was " + ac.state + ", remainingIterations:" + remainingIterations +")");
+    remainingIterations--;
+    if (!afterResume) {
+      if (remainingIterations == 0) {
+        ac.suspend().then(function() {
+          ac.resume().then(function() {
+            remainingIterations = 30;
+            afterResume = true;
+          });
+        });
+      }
+    } else {
+      sp.onaudioprocess = null;
+      todo(false,"3");
+      finish();
+    }
+  }
+  sp.connect(ac.destination);
+}
+
+// Take an AudioContext, make sure it switches to running when the audio starts
+// flowing, and then, call suspend, resume and close on it, tracking its state.
+function testAudioContext() {
+  var ac = new AudioContext();
+  is(ac.state, "suspended", "AudioContext should start in suspended state.");
+  var stateTracker = {
+    previous: ac.state,
+     // no promise for the initial suspended -> running
+    initial: {  handler: false },
+    suspend: { promise: false, handler: false },
+    resume: { promise: false, handler: false },
+    close: { promise: false, handler: false }
+  };
+
+  function initialSuspendToRunning() {
+    ok(stateTracker.previous == "suspended" &&
+       ac.state == "running",
+       "AudioContext should switch to \"running\" when the audio hardware is" +
+       " ready.");
+
+    stateTracker.previous = ac.state;
+    ac.onstatechange = afterSuspend;
+    stateTracker.initial.handler = true;
+
+    ac.suspend().then(function() {
+      ok(!stateTracker.suspend.promise && !stateTracker.suspend.handler,
+        "Promise should be resolved before the callback, and only once.")
+      stateTracker.suspend.promise = true;
+    });
+  }
+
+  function afterSuspend() {
+    ok(stateTracker.previous == "running" &&
+       ac.state == "suspended",
+       "AudioContext should switch to \"suspend\" when the audio stream is" +
+       "suspended.");
+    ok(stateTracker.suspend.promise && !stateTracker.suspend.handler,
+        "Handler should be called after the callback, and only once");
+
+    stateTracker.suspend.handler = true;
+    stateTracker.previous = ac.state;
+    ac.onstatechange = afterResume;
+
+    ac.resume().then(function() {
+      ok(!stateTracker.resume.promise && !stateTracker.resume.handler,
+        "Promise should be called before the callback, and only once");
+      stateTracker.resume.promise = true;
+    });
+  }
+
+  function afterResume() {
+    ok(stateTracker.previous == "suspended" &&
+       ac.state == "running",
+   "AudioContext should switch to \"running\" when the audio stream resumes.");
+
+    ok(stateTracker.resume.promise && !stateTracker.resume.handler,
+       "Handler should be called after the callback, and only once");
+
+    stateTracker.resume.handler = true;
+    stateTracker.previous = ac.state;
+    ac.onstatechange = afterClose;
+
+    ac.close().then(function() {
+      ok(!stateTracker.close.promise && !stateTracker.close.handler,
+        "Promise should be called before the callback, and only once");
+      stateTracker.close.promise = true;
+      tryToToCreateNodeOnClosedContext(ac);
+      tryLegalOpeerationsOnClosedContext(ac);
+    });
+  }
+
+  function afterClose() {
+    ok(stateTracker.previous == "running" &&
+       ac.state == "closed",
+       "AudioContext should switch to \"closed\" when the audio stream is" +
+       " closed.");
+    ok(stateTracker.close.promise && !stateTracker.close.handler,
+       "Handler should be called after the callback, and only once");
+  }
+
+  ac.onstatechange = initialSuspendToRunning;
+}
+
+function testOfflineAudioContext() {
+  var o = new OfflineAudioContext(1, 44100, 44100);
+  is(o.state, "suspended", "OfflineAudioContext should start in suspended state.");
+
+  expectRejectedPromise(o, "suspend", "NotSupportedError");
+  expectRejectedPromise(o, "resume", "NotSupportedError");
+  expectRejectedPromise(o, "close", "NotSupportedError");
+
+  var previousState = o.state,
+      finishedRendering = false;
+  function beforeStartRendering() {
+    ok(previousState == "suspended" && o.state == "running", "onstatechanged" +
+        "handler is called on state changed, and the new state is running");
+    previousState = o.state;
+    o.onstatechange = onRenderingFinished;
+  }
+
+  function onRenderingFinished() {
+    ok(previousState == "running" && o.state == "closed",
+        "onstatechanged handler is called when rendering finishes, " +
+        "and the new state is closed");
+    ok(finishedRendering, "The Promise that is resolved when the rendering is" +
+                    "done should be resolved earlier than the state change.");
+    previousState = o.state;
+    o.onstatechange = afterRenderingFinished;
+
+    tryToToCreateNodeOnClosedContext(o);
+    tryLegalOpeerationsOnClosedContext(o);
+  }
+
+  function afterRenderingFinished() {
+    ok(false, "There should be no transition out of the closed state.");
+  }
+
+  o.onstatechange = beforeStartRendering;
+
+  o.startRendering().then(function(buffer) {
+    finishedRendering = true;
+  });
+}
+
+var remaining = 0;
+function finish() {
+  remaining--;
+  if (remaining == 0) {
+    SimpleTest.finish();
+  }
+}
+
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var tests = [
+    testAudioContext,
+    testOfflineAudioContext,
+    testScriptProcessNodeSuspended,
+    testMultiContextOutput,
+    testMultiContextInput
+  ];
+  remaining = tests.length;
+  tests.forEach(function(f) { f() });
+});
+
+</script>
+</pre>
+</body>
+</html>

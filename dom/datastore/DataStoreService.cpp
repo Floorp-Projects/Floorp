@@ -542,9 +542,10 @@ private:
 // This DataStoreDBCallback is called when DataStoreDB opens the DataStore DB.
 // Then the first revision will be created if it's needed.
 class FirstRevisionIdCallback final : public DataStoreDBCallback
+                                    , public nsIDOMEventListener
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(FirstRevisionIdCallback)
+  NS_DECL_ISUPPORTS
 
   FirstRevisionIdCallback(uint32_t aAppId, const nsAString& aName,
                           const nsAString& aManifestURL)
@@ -568,13 +569,30 @@ public:
       return;
     }
 
-    if (aStatus == Success) {
-      nsRefPtr<DataStoreService> service = DataStoreService::Get();
-      MOZ_ASSERT(service);
+    ErrorResult error;
 
-      nsresult rv = service->EnableDataStore(mAppId, mName, mManifestURL);
+    if (aStatus == Success) {
+      mTxn = aDb->Transaction();
+
+      nsRefPtr<IDBObjectStore> store =
+      mTxn->ObjectStore(NS_LITERAL_STRING(DATASTOREDB_REVISION), error);
+      if (NS_WARN_IF(error.Failed())) {
+        return;
+      }
+
+      AutoSafeJSContext cx;
+      mRequest = store->OpenCursor(cx, JS::UndefinedHandleValue,
+                                   IDBCursorDirection::Prev, error);
+      if (NS_WARN_IF(error.Failed())) {
+        return;
+      }
+
+      nsresult rv;
+      rv = mRequest->EventTarget::AddEventListener(NS_LITERAL_STRING("success"),
+                                                   this, false);
       if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to enable a DataStore.");
+        NS_WARNING("Failed to add an EventListener.");
+        return;
       }
 
       return;
@@ -582,13 +600,22 @@ public:
 
     // The DB has just been created.
 
+    error = CreateFirstRevision(aDb->Transaction());
+    if (error.Failed()) {
+      NS_WARNING("Failed to add a revision to a DataStore.");
+    }
+  }
+
+  nsresult
+  CreateFirstRevision(IDBTransaction* aTxn)
+  {
+    MOZ_ASSERT(aTxn);
+
     ErrorResult error;
     nsRefPtr<IDBObjectStore> store =
-      aDb->Transaction()->ObjectStore(NS_LITERAL_STRING(DATASTOREDB_REVISION),
-                                      error);
-    if (error.Failed()) {
-      NS_WARNING("Failed to get an ObjectStore object.");
-      return;
+      aTxn->ObjectStore(NS_LITERAL_STRING(DATASTOREDB_REVISION), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.ErrorCode();
     }
     MOZ_ASSERT(store);
 
@@ -604,18 +631,82 @@ public:
     nsresult rv = revision->AddRevision(cx, store, 0,
                                         DataStoreRevision::RevisionVoid,
                                         callback);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to add a revision to a DataStore.");
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
+
+    return NS_OK;
+  }
+
+  // nsIDOMEventListener
+  NS_IMETHOD
+  HandleEvent(nsIDOMEvent* aEvent)
+  {
+    AssertIsInMainProcess();
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsRefPtr<IDBRequest> request;
+    request.swap(mRequest);
+
+    nsRefPtr<IDBTransaction> txn;
+    txn.swap(mTxn);
+
+    request->RemoveEventListener(NS_LITERAL_STRING("success"), this, false);
+
+    nsString type;
+    nsresult rv = aEvent->GetType(type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+#ifdef DEBUG
+    MOZ_ASSERT(type.EqualsASCII("success"));
+#endif
+
+    AutoSafeJSContext cx;
+
+    ErrorResult error;
+    JS::Rooted<JS::Value> result(cx);
+    request->GetResult(cx, &result, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.ErrorCode();
+    }
+
+    // This means that the content is a IDBCursor, so the first revision already
+    // exists.
+    if (result.isObject()) {
+#ifdef DEBUG
+      IDBCursor* cursor = nullptr;
+      error = UNWRAP_OBJECT(IDBCursor, &result.toObject(), cursor);
+      MOZ_ASSERT(!error.Failed());
+#endif
+
+      nsRefPtr<DataStoreService> service = DataStoreService::Get();
+      MOZ_ASSERT(service);
+
+      return service->EnableDataStore(mAppId, mName, mManifestURL);
+    }
+
+    rv = CreateFirstRevision(txn);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
   }
 
 private:
   ~FirstRevisionIdCallback() {}
 
+  nsRefPtr<IDBRequest> mRequest;
+  nsRefPtr<IDBTransaction> mTxn;
+
   uint32_t mAppId;
   nsString mName;
   nsString mManifestURL;
 };
+
+NS_IMPL_ISUPPORTS(FirstRevisionIdCallback, nsIDOMEventListener)
 
 // This class calls the 'retrieveRevisionId' method of the DataStore object for
 // any DataStore in the 'mResults' array. When all of them are called, the

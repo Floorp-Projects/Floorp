@@ -32,6 +32,7 @@ from ..frontend.data import (
     ContextDerived,
     ContextWrapped,
     Defines,
+    DistFiles,
     DirectoryTraversal,
     Exports,
     ExternalLibrary,
@@ -557,6 +558,15 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, FinalTargetFiles):
             self._process_final_target_files(obj, obj.files, obj.target)
+
+        elif isinstance(obj, DistFiles):
+            # We'd like to install these via manifests as preprocessed files.
+            # But they currently depend on non-standard flags being added via
+            # some Makefiles, so for now we just pass them through to the
+            # underlying Makefile.in.
+            for f in obj.files:
+                backend_file.write('DIST_FILES += %s\n' % f)
+
         else:
             return
         obj.ack()

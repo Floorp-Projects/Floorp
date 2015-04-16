@@ -52,7 +52,7 @@ function test()
 //
   try
   {
-    for (var [x] = x in y) var x;
+    for (var [x] in y) var x;
   }
   catch(ex)
   {
