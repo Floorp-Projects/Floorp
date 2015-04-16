@@ -170,6 +170,12 @@ this.DataStoreCursor.prototype = {
     let self = this;
     let request = aRevisionStore.openCursor(null, 'prev');
     request.onsuccess = function(aEvent) {
+      if (aEvent.target.result === undefined) {
+        aReject(self._window.DOMError("InvalidRevision",
+                                      "The DataStore is corrupted"));
+        return;
+      }
+
       self._revision = aEvent.target.result.value;
       self._objectId = 0;
       self._state = STATE_SEND_ALL;
