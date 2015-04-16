@@ -36,7 +36,7 @@
              oncommand="gEngineManagerDialog.bump(-1);"
              disabled="true"/>
     <command id="cmd_editkeyword"
-             oncommand="gEngineManagerDialog.editKeyword();"
+             oncommand="gEngineManagerDialog.editKeyword().catch(Components.utils.reportError);"
              disabled="true"/>
   </commandset>
 
