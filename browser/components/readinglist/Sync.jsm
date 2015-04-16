@@ -139,6 +139,7 @@ SyncImpl.prototype = {
    */
   _start: Task.async(function* () {
     log.info("Starting sync");
+    yield this._logDiagnostics();
     yield this._uploadStatusChanges();
     yield this._uploadNewItems();
     yield this._uploadDeletedItems();
@@ -148,6 +149,43 @@ SyncImpl.prototype = {
     yield this._uploadMaterialChanges();
 
     log.info("Sync done");
+  }),
+
+  /**
+   * Phase 0 - for debugging we log some stuff about the local store before
+   * we start syncing.
+   * We only do this when the log level is "Trace" or lower as the info (a)
+   * may be expensive to generate, (b) generate alot of output and (c) may
+   * contain private information.
+   */
+  _logDiagnostics: Task.async(function* () {
+    // Sadly our log is likely to have Log.Level.All, so loop over our
+    // appenders looking for the effective level.
+    let smallestLevel = log.appenders.reduce(
+      (prev, appender) => Math.min(prev, appender.level),
+      Log.Level.Error);
+
+    if (smallestLevel > Log.Level.Trace) {
+      return;
+    }
+
+    let localItems = [];
+    yield this.list.forEachItem(localItem => localItems.push(localItem));
+    log.trace("Have " + localItems.length + " local item(s)");
+    for (let localItem of localItems) {
+      // We need to use .record so we get access to a couple of the "internal" fields.
+      let record = localItem._record;
+      let redacted = {};
+      for (let attr of ["guid", "url", "resolvedURL", "serverLastModified", "syncStatus"]) {
+        redacted[attr] = record[attr];
+      }
+      log.trace(JSON.stringify(redacted));
+    }
+    // and the GUIDs of deleted items.
+    let deletedGuids = []
+    yield this.list.forEachSyncedDeletedGUID(guid => deletedGuids.push(guid));
+    // This might be a huge line, but that's OK.
+    log.trace("Have ${num} deleted item(s): ${deletedGuids}", {num: deletedGuids.length, deletedGuids});
   }),
 
   /**
