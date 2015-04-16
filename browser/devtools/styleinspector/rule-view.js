@@ -1128,6 +1128,7 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this._onToggleOrigSources = this._onToggleOrigSources.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
+  this._onFilterTextboxContextMenu = this._onFilterTextboxContextMenu.bind(this);
 
   this.element = this.doc.getElementById("ruleview-container");
   this.searchField = this.doc.getElementById("ruleview-searchbox");
@@ -1138,6 +1139,7 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
+  this.searchField.addEventListener("contextmenu", this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
@@ -1625,6 +1627,19 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Context menu handler for filter style search box.
+   */
+  _onFilterTextboxContextMenu: function(event) {
+    try {
+      this.doc.defaultView.focus();
+      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
+      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
+    } catch(e) {
+      console.error(e);
+    }
+  },
+
+  /**
    * Called when the user clicks on the clear button in the filter style search
    * box.
    */
@@ -1685,6 +1700,8 @@ CssRuleView.prototype = {
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.searchField.removeEventListener("input", this._onFilterStyles);
+    this.searchField.removeEventListener("contextmenu",
+      this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.searchField = null;
     this.searchClearButton = null;
