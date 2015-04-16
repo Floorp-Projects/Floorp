@@ -11,7 +11,6 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheOpChild.h"
 #include "mozilla/dom/cache/CachePushStreamChild.h"
-#include "mozilla/dom/cache/StreamUtils.h"
 
 namespace mozilla {
 namespace dom {

@@ -191,6 +191,14 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
   MOZ_ASSERT(mIpcManager);
   MOZ_ASSERT(mManager);
 
+  // Never send an op-specific result if we have an error.  Instead, send
+  // void_t() to ensure that we don't leak actors on the child side.
+  if (aRv.Failed()) {
+    unused << Send__delete__(this, aRv, void_t());
+    aRv.ClearMessage(); // This may contain a TypeError.
+    return;
+  }
+
   // The result must contain the appropriate type at this point.  It may
   // or may not contain the additional result data yet.  For types that
   // do not need special processing, it should already be set.  If the
@@ -198,13 +206,6 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
   // If the type and data types don't match, then we will trigger an
   // assertion in AutoParentOpResult::Add().
   AutoParentOpResult result(mIpcManager, aResult);
-
-  if (aRv.Failed()) {
-    // TODO: send full ErrorCode
-    unused << Send__delete__(this, aRv, result.SendAsOpResult());
-    aRv.ClearMessage(); // This may contain a TypeError.
-    return;
-  }
 
   if (aOpenedCacheId != INVALID_CACHE_ID) {
     result.Add(aOpenedCacheId, mManager);
@@ -218,7 +219,6 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
     result.Add(aSavedRequestList[i], aStreamList);
   }
 
-  // TODO: send full ErrorCode
   unused << Send__delete__(this, aRv, result.SendAsOpResult());
 }
 

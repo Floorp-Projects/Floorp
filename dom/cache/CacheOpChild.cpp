@@ -11,10 +11,50 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
+#include "mozilla/dom/cache/CacheStreamControlChild.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
+
+namespace {
+
+void
+AddFeatureToStreamChild(const CacheReadStream& aReadStream, Feature* aFeature)
+{
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
+  CacheStreamControlChild* cacheControl =
+    static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
+  if (cacheControl) {
+    cacheControl->SetFeature(aFeature);
+  }
+}
+
+void
+AddFeatureToStreamChild(const CacheResponse& aResponse, Feature* aFeature)
+{
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
+
+  if (aResponse.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
+    return;
+  }
+
+  AddFeatureToStreamChild(aResponse.body().get_CacheReadStream(), aFeature);
+}
+
+void
+AddFeatureToStreamChild(const CacheRequest& aRequest, Feature* aFeature)
+{
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
+
+  if (aRequest.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
+    return;
+  }
+
+  AddFeatureToStreamChild(aRequest.body().get_CacheReadStream(), aFeature);
+}
+
+} // anonymous namespace
 
 CacheOpChild::CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
                            Promise* aPromise)
@@ -56,6 +96,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
 
   if (aRv.Failed()) {
+    MOZ_ASSERT(aResult.type() == CacheOpResult::Tvoid_t);
     // TODO: Remove this const_cast (bug 1152078).
     // It is safe for now since this ErrorResult is handed off to us by IPDL
     // and is thrown into the trash afterwards.
@@ -161,15 +202,15 @@ CacheOpChild::CreatePushStream(nsIAsyncInputStream* aStream)
 void
 CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
 {
-  nsRefPtr<Response> response;
-  if (aResponseOrVoid.type() == CacheResponseOrVoid::TCacheResponse) {
-    response = ToResponse(aResponseOrVoid);
-  }
-
-  if (!response) {
+  if (aResponseOrVoid.type() == CacheResponseOrVoid::Tvoid_t) {
     mPromise->MaybeResolve(JS::UndefinedHandleValue);
     return;
   }
+
+  const CacheResponse& cacheResponse = aResponseOrVoid.get_CacheResponse();
+
+  AddFeatureToStreamChild(cacheResponse, GetFeature());
+  nsRefPtr<Response> response = ToResponse(cacheResponse);
 
   mPromise->MaybeResolve(response);
 }
@@ -181,6 +222,7 @@ CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
   responses.SetCapacity(aResponseList.Length());
 
   for (uint32_t i = 0; i < aResponseList.Length(); ++i) {
+    AddFeatureToStreamChild(aResponseList[i], GetFeature());
     responses.AppendElement(ToResponse(aResponseList[i]));
   }
 
@@ -194,6 +236,7 @@ CacheOpChild::HandleRequestList(const nsTArray<CacheRequest>& aRequestList)
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
+    AddFeatureToStreamChild(aRequestList[i], GetFeature());
     requests.AppendElement(ToRequest(aRequestList[i]));
   }
 
