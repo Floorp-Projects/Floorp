@@ -12,6 +12,7 @@ public class FirstrunPagerConfig {
     public static List<FirstrunPanel> getDefault() {
         final List<FirstrunPanel> panels = new LinkedList<>();
         panels.add(new FirstrunPanel(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
+        panels.add(new FirstrunPanel(ImportPanel.class.getName(), ImportPanel.TITLE_RES));
         return panels;
     }
 
