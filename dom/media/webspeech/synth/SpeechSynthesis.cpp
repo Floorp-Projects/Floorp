@@ -196,7 +196,7 @@ SpeechSynthesis::Cancel()
 void
 SpeechSynthesis::Pause()
 {
-  if (mCurrentTask) {
+  if (mCurrentTask && !Paused() && (Speaking() || Pending())) {
     mCurrentTask->Pause();
   }
 }
@@ -204,7 +204,7 @@ SpeechSynthesis::Pause()
 void
 SpeechSynthesis::Resume()
 {
-  if (mCurrentTask) {
+  if (mCurrentTask && Paused()) {
     mCurrentTask->Resume();
   }
 }
