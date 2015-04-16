@@ -4203,7 +4203,6 @@ var XULBrowserWindow = {
 
         BookmarkingUI.onLocationChange();
         SocialUI.updateState(location);
-        UITour.onLocationChange(location);
       }
 
       // Utility functions for disabling find

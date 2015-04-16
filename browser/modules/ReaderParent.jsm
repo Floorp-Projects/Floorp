@@ -16,7 +16,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils","resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReadingList", "resource:///modules/readinglist/ReadingList.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
 
 const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
@@ -187,23 +186,6 @@ let ReaderParent = {
     } else {
       browser.messageManager.sendAsyncMessage("Reader:ParseDocument", { url: url });
     }
-  },
-
-  /**
-   * Shows an info panel from the UITour for Reader Mode.
-   *
-   * @param browser The <browser> that the tour should be started for.
-   */
-  showReaderModeInfoPanel(browser) {
-    let win = browser.ownerDocument.defaultView;
-    let targetPromise = UITour.getTarget(win, "readerMode-urlBar");
-    targetPromise.then(target => {
-      let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-      UITour.showInfo(win, browser.messageManager, target,
-                      browserBundle.GetStringFromName("readerView.promo.firstDetectedArticle.title"),
-                      browserBundle.GetStringFromName("readerView.promo.firstDetectedArticle.body"),
-                      "chrome://browser/skin/reader-tour.png");
-    });
   },
 
   /**
