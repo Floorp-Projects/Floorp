@@ -70,6 +70,21 @@ public:
     const nsTArray<uint8_t>& aValue,
     BluetoothReplyRunnable* aRunnable);
 
+  void ReadDescriptorValue(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothGattId& aCharacteristicId,
+    const BluetoothGattId& aDescriptorId,
+    BluetoothReplyRunnable* aRunnable);
+
+  void WriteDescriptorValue(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothGattId& aCharacteristicId,
+    const BluetoothGattId& aDescriptorId,
+    const nsTArray<uint8_t>& aValue,
+    BluetoothReplyRunnable* aRunnable);
+
 private:
   class CleanupResultHandler;
   class CleanupResultHandlerRunnable;
@@ -84,6 +99,8 @@ private:
   class DeregisterNotificationsResultHandler;
   class ReadCharacteristicValueResultHandler;
   class WriteCharacteristicValueResultHandler;
+  class ReadDescriptorValueResultHandler;
+  class WriteDescriptorValueResultHandler;
 
   BluetoothGattManager();
 
