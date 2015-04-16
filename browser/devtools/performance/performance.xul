@@ -158,6 +158,16 @@
                       checked="true" />
               <label value="&profilerUI.stopNotice2;"/>
             </hbox>
+            <hbox id="console-recording-notice"
+                  class="notice-container"
+                  align="center"
+                  pack="center"
+                  flex="1">
+                  <vbox>
+                    <label class="console-profile-recording-notice" />
+                    <label class="console-profile-stop-notice" />
+                  </vbox>
+            </hbox>
             <deck id="details-pane" flex="1">
               <hbox id="waterfall-view" flex="1">
                 <vbox id="waterfall-breakdown" flex="1" />
