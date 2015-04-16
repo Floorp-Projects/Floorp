@@ -321,7 +321,7 @@ Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut)
 
   memcpy(aOut.mValue, aIn.value, aIn.len);
   aOut.mLength = aIn.len;
-  aOut.mIsNotify = aIn.is_notify;
+  aOut.mIsNotify = (aIn.is_notify != 0);
 
   return NS_OK;
 }
