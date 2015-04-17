@@ -2289,8 +2289,8 @@ nsWindow::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
     mIMESelectionChanged = false;
     NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE);
 
-    AddIMETextChange(IMEChange(aIMENotification));
     PostFlushIMEChanges();
+    AddIMETextChange(IMEChange(aIMENotification));
     return NS_OK;
 }
 
