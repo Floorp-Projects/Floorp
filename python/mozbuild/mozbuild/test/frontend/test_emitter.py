@@ -160,7 +160,7 @@ class TestEmitterBasic(unittest.TestCase):
 
         wanted = {
             'DISABLE_STL_WRAPPING': True,
-            'EXTRA_COMPONENTS': ['fans.js', 'tans.js'],
+            'EXTRA_COMPONENTS': ['dummy.manifest', 'fans.js', 'tans.js'],
             'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
             'FAIL_ON_WARNINGS': True,
             'MSVC_ENABLE_PGO': True,
