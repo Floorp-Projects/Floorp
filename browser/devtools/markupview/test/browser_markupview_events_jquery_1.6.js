@@ -119,16 +119,6 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "keydown",
-        filename: TEST_URL + ":36",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "var handler9 = function divKeyDown() {\n" +
-                 "  alert(9);\n" +
-                 "}"
-      },
-      {
         type: "click",
         filename: TEST_URL_ROOT + TEST_LIB + ":16",
         attributes: [
@@ -137,6 +127,16 @@ const TEST_DATA = [
         ],
         handler: "i.handle = k = function(a) {\n" +
                  "  return typeof f != \"undefined\" && (!a || f.event.triggered !== a.type) ? f.event.handle.apply(k.elem, arguments) : b\n" +
+                 "}"
+      },
+      {
+        type: "keydown",
+        filename: TEST_URL + ":36",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "var handler9 = function divKeyDown() {\n" +
+                 "  alert(9);\n" +
                  "}"
       },
       {
@@ -167,39 +167,6 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "dragstart",
-        filename: TEST_URL + ":29",
-        attributes: [
-          "jQuery",
-          "Live"
-        ],
-        handler: "var handler2 = function liveDivDragStart() {\n" +
-                 "  alert(2);\n" +
-                 "}"
-      },
-      {
-        type: "dragleave",
-        filename: TEST_URL + ":30",
-        attributes: [
-          "jQuery",
-          "Live"
-        ],
-        handler: "var handler3 = function liveDivDragLeave() {\n" +
-                 "  alert(3);\n" +
-                 "}"
-      },
-      {
-        type: "dragend",
-        filename: TEST_URL + ":31",
-        attributes: [
-          "jQuery",
-          "Live"
-        ],
-        handler: "var handler4 = function liveDivDragEnd() {\n" +
-                 "  alert(4);\n" +
-                 "}"
-      },
-      {
         type: "dblclick",
         filename: TEST_URL_ROOT + TEST_LIB + ":16",
         attributes: [
@@ -244,7 +211,18 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "dragstart",
+        type: "dragend",
+        filename: TEST_URL + ":31",
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
+        handler: "var handler4 = function liveDivDragEnd() {\n" +
+                 "  alert(4);\n" +
+                 "}"
+      },
+      {
+        type: "dragend",
         filename: TEST_URL_ROOT + TEST_LIB + ":16",
         attributes: [
           "jQuery",
@@ -285,6 +263,17 @@ const TEST_DATA = [
                  "    }\n" +
                  "    return b\n" +
                  "  }\n" +
+                 "}"
+      },
+      {
+        type: "dragleave",
+        filename: TEST_URL + ":30",
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
+        handler: "var handler3 = function liveDivDragLeave() {\n" +
+                 "  alert(3);\n" +
                  "}"
       },
       {
@@ -332,7 +321,18 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "dragend",
+        type: "dragstart",
+        filename: TEST_URL + ":29",
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
+        handler: "var handler2 = function liveDivDragStart() {\n" +
+                 "  alert(2);\n" +
+                 "}"
+      },
+      {
+        type: "dragstart",
         filename: TEST_URL_ROOT + TEST_LIB + ":16",
         attributes: [
           "jQuery",
