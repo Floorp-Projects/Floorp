@@ -44,8 +44,9 @@ public:
 
     void CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
                            GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
-    void GetBufferSubData(GLenum target, GLintptr offset, const dom::ArrayBuffer& returnedData);
-    void GetBufferSubData(GLenum target, GLintptr offset, const dom::ArrayBufferView& returnedData);
+    void GetBufferSubData(GLenum target, GLintptr offset,
+                          const dom::Nullable<dom::ArrayBuffer>& maybeData);
+
 
     // -------------------------------------------------------------------------
     // Framebuffer objects - WebGL2ContextFramebuffers.cpp
