@@ -19,9 +19,9 @@ function run_test() {
   let updaterBin = binDir.clone();
   updaterBin.append(FILE_UPDATER_BIN);
 
-  logTestInfo("Launching maintenance service bin: " +
-              maintenanceServiceBin.path + " to check updater: " +
-              updaterBin.path + " signature.");
+  debugDump("Launching maintenance service bin: " +
+            maintenanceServiceBin.path + " to check updater: " +
+            updaterBin.path + " signature.");
 
   // Bypass the manifest and run as invoker
   let env = Cc["@mozilla.org/process/environment;1"].
@@ -36,5 +36,6 @@ function run_test() {
   maintenanceServiceBinProcess.init(maintenanceServiceBin);
   maintenanceServiceBinProcess.run(true, maintenanceServiceBinArgs,
                                    maintenanceServiceBinArgs.length);
-  do_check_eq(maintenanceServiceBinProcess.exitValue, 0);
+  Assert.equal(maintenanceServiceBinProcess.exitValue, 0,
+               "the maintenance service exit value should be 0");
 }
