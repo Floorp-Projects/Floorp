@@ -4763,7 +4763,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                       extraConditionForNull=extraConditionForNull)
         elif (not type.hasNullableType and defaultValue and
               isinstance(defaultValue, IDLNullValue)):
-            assert type.hasDictionaryType
+            assert type.hasDictionaryType()
             assert defaultValue.type.isDictionary()
             if not isOwningUnion and typeNeedsRooting(defaultValue.type):
                 ctorArgs = "cx"
