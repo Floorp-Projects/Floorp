@@ -4,6 +4,9 @@
 
 /* Application in use complete MAR file staged patch apply failure test */
 
+const START_STATE = STATE_PENDING_SVC;
+const END_STATE = STATE_FAILED_WRITE_ERROR;
+
 function run_test() {
   if (!shouldRunServiceTest()) {
     return;
@@ -33,7 +36,7 @@ function setupAppFilesFinished() {
 }
 
 function doUpdate() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_APPLIED);
+  runUpdateUsingService(START_STATE, STATE_APPLIED);
 }
 
 function checkUpdateFinished() {
@@ -41,7 +44,7 @@ function checkUpdateFinished() {
   gStageUpdate = false;
   gSwitchApp = true;
   gDisableReplaceFallback = true;
-  runUpdate(1, STATE_FAILED_WRITE_ERROR);
+  runUpdate(1, END_STATE, checkUpdateApplied);
 }
 
 function checkUpdateApplied() {

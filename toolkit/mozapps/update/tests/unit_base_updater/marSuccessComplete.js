@@ -21,30 +21,21 @@ function run_test() {
   }
 
   createUpdaterINI();
+  setAppBundleModTime();
 
-  // For Mac OS X set the last modified time for the root directory to a date in
-  // the past to test that the last modified time is updated on a successful
-  // update (bug 600098).
-  if (IS_MACOSX) {
-    let now = Date.now();
-    let yesterday = now - (1000 * 60 * 60 * 24);
-    let applyToDir = getApplyDirFile();
-    applyToDir.lastModifiedTime = yesterday;
-  }
-
-  runUpdate(0, STATE_SUCCEEDED);
+  runUpdate(0, STATE_SUCCEEDED, checkUpdateFinished);
 }
 
 /**
  * Checks if the post update binary was properly launched for the platforms that
  * support launching post update process.
  */
-function checkUpdateApplied() {
+function checkUpdateFinished() {
   if (IS_WIN || IS_MACOSX) {
-    gCheckFunc = finishCheckUpdateApplied;
+    gCheckFunc = finishCheckUpdateFinished;
     checkPostUpdateAppLog();
   } else {
-    finishCheckUpdateApplied();
+    finishCheckUpdateFinished();
   }
 }
 
@@ -52,43 +43,28 @@ function checkUpdateApplied() {
  * Checks if the update has finished and if it has finished performs checks for
  * the test.
  */
-function finishCheckUpdateApplied() {
-  if (IS_MACOSX) {
-    debugDump("testing last modified time on the apply to directory has " +
-              "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let applyToDir = getApplyDirFile();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
-  }
-
+function finishCheckUpdateFinished() {
   let distributionDir = getApplyDirFile(DIR_RESOURCES + "distribution", true);
   if (IS_MACOSX) {
-    debugDump("testing that the distribution directory is moved from the " +
-              "old location to the new location");
-    debugDump("testing " + distributionDir.path + " should exist");
-    do_check_true(distributionDir.exists());
+    Assert.ok(distributionDir.exists(), MSG_SHOULD_EXIST);
 
     let testFile = getApplyDirFile(DIR_RESOURCES + "distribution/testFile", true);
-    debugDump("testing " + testFile.path + " should exist");
-    do_check_true(testFile.exists());
+    Assert.ok(testFile.exists(), MSG_SHOULD_EXIST);
 
     testFile = getApplyDirFile(DIR_RESOURCES + "distribution/test/testFile", true);
-    debugDump("testing " + testFile.path + " should exist");
-    do_check_true(testFile.exists());
+    Assert.ok(testFile.exists(), MSG_SHOULD_EXIST);
 
     distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    debugDump("testing " + distributionDir.path + " shouldn't exist");
-    do_check_false(distributionDir.exists());
+    Assert.ok(!distributionDir.exists(), MSG_SHOULD_NOT_EXIST);
 
     checkUpdateLogContains("Moving old distribution directory to new location");
   } else {
     debugDump("testing that files aren't added with an add-if instruction " +
               "when the file's destination directory doesn't exist");
-    debugDump("testing " + distributionDir.path + " shouldn't exist");
-    do_check_false(distributionDir.exists());
+    Assert.ok(!distributionDir.exists(), MSG_SHOULD_NOT_EXIST);
   }
 
+  checkAppBundleModTime();
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
   standardInit();
