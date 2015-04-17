@@ -19,7 +19,7 @@ extern bool IsOnGMPThread();
 void
 VideoCallbackAdapter::Decoded(GMPVideoi420Frame* aDecodedFrame)
 {
-  GMPUnique<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
+  GMPUniquePtr<GMPVideoi420Frame> decodedFrame(aDecodedFrame);
 
   MOZ_ASSERT(IsOnGMPThread());
 
@@ -115,7 +115,7 @@ GMPVideoDecoder::GetNodeId()
   return NS_LITERAL_CSTRING("");
 }
 
-GMPUnique<GMPVideoEncodedFrame>
+GMPUniquePtr<GMPVideoEncodedFrame>
 GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
 {
   GMPVideoFrame* ftmp = nullptr;
@@ -125,7 +125,7 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
     return nullptr;
   }
 
-  GMPUnique<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
+  GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aSample->mSize);
   if (GMP_FAILED(err)) {
     mCallback->Error();
@@ -248,7 +248,7 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 
   mAdapter->SetLastStreamOffset(sample->mOffset);
 
-  GMPUnique<GMPVideoEncodedFrame> frame = CreateFrame(sample);
+  GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {
