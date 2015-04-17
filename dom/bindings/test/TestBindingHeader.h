@@ -712,6 +712,7 @@ public:
 
   // Dictionary tests
   void PassDictionary(JSContext*, const Dict&);
+  void PassDictionary2(JSContext*, const Dict&);
   void GetReadonlyDictionary(JSContext*, Dict&);
   void GetReadonlyNullableDictionary(JSContext*, Nullable<Dict>&);
   void GetWritableDictionary(JSContext*, Dict&);
