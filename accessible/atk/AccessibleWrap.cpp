@@ -129,6 +129,20 @@ static const uintptr_t IS_PROXY = 1;
 
 static GQuark quark_mai_hyperlink = 0;
 
+AtkHyperlink*
+MaiAtkObject::GetAtkHyperlink()
+{
+  NS_ASSERTION(quark_mai_hyperlink, "quark_mai_hyperlink not initialized");
+  MaiHyperlink* maiHyperlink =
+    (MaiHyperlink*)g_object_get_qdata(G_OBJECT(this), quark_mai_hyperlink);
+  if (!maiHyperlink) {
+    maiHyperlink = new MaiHyperlink(reinterpret_cast<Accessible*>(accWrap));
+    g_object_set_qdata(G_OBJECT(this), quark_mai_hyperlink, maiHyperlink);
+  }
+
+  return maiHyperlink->GetAtkHyperlink();
+}
+
 void
 MaiAtkObject::Shutdown()
 {
@@ -265,27 +279,6 @@ AccessibleWrap::Shutdown()
 {
   ShutdownAtkObject();
   Accessible::Shutdown();
-}
-
-MaiHyperlink*
-AccessibleWrap::GetMaiHyperlink(bool aCreate /* = true */)
-{
-    // make sure mAtkObject is created
-    GetAtkObject();
-
-    NS_ASSERTION(quark_mai_hyperlink, "quark_mai_hyperlink not initialized");
-    NS_ASSERTION(IS_MAI_OBJECT(mAtkObject), "Invalid AtkObject");
-    MaiHyperlink* maiHyperlink = nullptr;
-    if (quark_mai_hyperlink && IS_MAI_OBJECT(mAtkObject)) {
-        maiHyperlink = (MaiHyperlink*)g_object_get_qdata(G_OBJECT(mAtkObject),
-                                                         quark_mai_hyperlink);
-        if (!maiHyperlink && aCreate) {
-            maiHyperlink = new MaiHyperlink(this);
-            g_object_set_qdata(G_OBJECT(mAtkObject), quark_mai_hyperlink,
-                               maiHyperlink);
-        }
-    }
-    return maiHyperlink;
 }
 
 void
