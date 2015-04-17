@@ -1304,6 +1304,24 @@ ArrayLengthOverflow(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
 }
 
 static bool
+ArgumentRangeMismatch(JSContext* cx, const char* arg, const char* func,
+                     const char* range)
+{
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_ARG_RANGE_MISMATCH, arg, func, range);
+  return false;
+}
+
+static bool
+ArgumentTypeMismatch(JSContext* cx, const char* arg, const char* func,
+                     const char* type)
+{
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_ARG_TYPE_MISMATCH, arg, func, type);
+  return false;
+}
+
+static bool
 EmptyFinalizerError(JSContext* cx, ConversionType convType,
                     HandleObject funObj = NullPtr(), unsigned argIndex = 0)
 {
@@ -4371,8 +4389,8 @@ CType::CreateArray(JSContext* cx, unsigned argc, jsval* vp)
   // Convert the length argument to a size_t.
   size_t length = 0;
   if (args.length() == 1 && !jsvalToSize(cx, args[0], false, &length)) {
-    JS_ReportError(cx, "argument must be a nonnegative integer");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "CType.prototype.array",
+                                "a nonnegative integer");
   }
 
   JSObject* result = ArrayType::CreateInternal(cx, baseType, length, args.length() == 1);
@@ -4554,8 +4572,7 @@ PointerType::Create(JSContext* cx, unsigned argc, jsval* vp)
   jsval arg = args[0];
   RootedObject obj(cx);
   if (arg.isPrimitive() || !CType::IsCType(obj = &arg.toObject())) {
-    JS_ReportError(cx, "first argument must be a CType");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "PointerType", "a CType");
   }
 
   JSObject* result = CreateInternal(cx, obj);
@@ -4852,17 +4869,15 @@ ArrayType::Create(JSContext* cx, unsigned argc, jsval* vp)
     return ArgumentLengthError(cx, "ArrayType", "one or two", "s");
   }
 
-  if (args[0].isPrimitive() ||
-      !CType::IsCType(&args[0].toObject())) {
-    JS_ReportError(cx, "first argument must be a CType");
-    return false;
+  if (args[0].isPrimitive() || !CType::IsCType(&args[0].toObject())) {
+    return ArgumentTypeMismatch(cx, "first ", "ArrayType", "a CType");
   }
 
   // Convert the length argument to a size_t.
   size_t length = 0;
   if (args.length() == 2 && !jsvalToSize(cx, args[1], false, &length)) {
-    JS_ReportError(cx, "second argument must be a nonnegative integer");
-    return false;
+    return ArgumentTypeMismatch(cx, "second ", "ArrayType",
+                                "a nonnegative integer");
   }
 
   RootedObject baseType(cx, &args[0].toObject());
@@ -4973,8 +4988,9 @@ ArrayType::ConstructData(JSContext* cx,
       RootedValue lengthVal(cx);
       if (!JS_GetProperty(cx, arg, "length", &lengthVal) ||
           !jsvalToSize(cx, lengthVal, false, &length)) {
-        JS_ReportError(cx, "argument must be an array object or length");
-        return false;
+        return ArgumentTypeMismatch(cx, "",
+                                    "size undefined ArrayType constructor",
+                                    "an array object or integer");
       }
 
     } else if (args[0].isString()) {
@@ -5006,8 +5022,9 @@ ArrayType::ConstructData(JSContext* cx,
       }
 
     } else {
-      JS_ReportError(cx, "argument must be an array object or length");
-      return false;
+      return ArgumentTypeMismatch(cx, "",
+                                  "size undefined ArrayType constructor",
+                                  "an array object or integer");
     }
 
     // Construct a new ArrayType of defined length, for the new CData object.
@@ -5397,8 +5414,7 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
 
   jsval name = args[0];
   if (!name.isString()) {
-    JS_ReportError(cx, "first argument must be a string");
-    return false;
+    return ArgumentTypeMismatch(cx, "first ", "StructType", "a string");
   }
 
   // Get ctypes.StructType.prototype from the ctypes.StructType constructor.
@@ -5415,8 +5431,7 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
   if (args.length() == 2) {
     RootedObject arr(cx, args[1].isPrimitive() ? nullptr : &args[1].toObject());
     if (!arr || !JS_IsArrayObject(cx, arr)) {
-      JS_ReportError(cx, "second argument must be an array");
-      return false;
+      return ArgumentTypeMismatch(cx, "second ", "StructType", "an array");
     }
 
     // Define the struct fields.
@@ -5685,13 +5700,13 @@ StructType::Define(JSContext* cx, unsigned argc, jsval* vp)
 
   jsval arg = args[0];
   if (arg.isPrimitive()) {
-    JS_ReportError(cx, "argument must be an array");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "StructType.prototype.define",
+                                "an array");
   }
   RootedObject arr(cx, arg.toObjectOrNull());
   if (!JS_IsArrayObject(cx, arr)) {
-    JS_ReportError(cx, "argument must be an array");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "StructType.prototype.define",
+                                "an array");
   }
 
   return DefineInternal(cx, obj, arr);
@@ -5975,8 +5990,8 @@ StructType::AddressOfField(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (!args[0].isString()) {
-    JS_ReportError(cx, "argument must be a string");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "StructType.prototype.addressOfField",
+                                "a string");
   }
 
   JSFlatString* str = JS_FlattenString(cx, args[0].toString());
@@ -6326,8 +6341,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
     if (args[2].isObject())
       arrayObj = &args[2].toObject();
     if (!arrayObj || !JS_IsArrayObject(cx, arrayObj)) {
-      JS_ReportError(cx, "third argument must be an array");
-      return false;
+      return ArgumentTypeMismatch(cx, "third ", "FunctionType", "an array");
     }
 
     uint32_t len;
@@ -7198,15 +7212,13 @@ CData::Cast(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (args[0].isPrimitive() || !CData::IsCData(&args[0].toObject())) {
-    JS_ReportError(cx, "first argument must be a CData");
-    return false;
+    return ArgumentTypeMismatch(cx, "first ", "ctypes.cast", "a CData");
   }
   RootedObject sourceData(cx, &args[0].toObject());
   JSObject* sourceType = CData::GetCType(sourceData);
 
   if (args[1].isPrimitive() || !CType::IsCType(&args[1].toObject())) {
-    JS_ReportError(cx, "second argument must be a CType");
-    return false;
+    return ArgumentTypeMismatch(cx, "second ", "ctypes.cast", "a CType");
   }
 
   RootedObject targetType(cx, &args[1].toObject());
@@ -7238,8 +7250,7 @@ CData::GetRuntime(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (args[0].isPrimitive() || !CType::IsCType(&args[0].toObject())) {
-    JS_ReportError(cx, "first argument must be a CType");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "ctypes.getRuntime", "a CType");
   }
 
   RootedObject targetType(cx, &args[0].toObject());
@@ -8063,8 +8074,10 @@ Int64Base::ToString(JSContext* cx,
     if (arg.isInt32())
       radix = arg.toInt32();
     if (!arg.isInt32() || radix < 2 || radix > 36) {
-      JS_ReportError(cx, "radix argument must be an integer between 2 and 36");
-      return false;
+      if (isUnsigned) {
+        return ArgumentRangeMismatch(cx, "", "UInt64.prototype.toString", "an integer at least 2 and no greater than 36");
+      }
+      return ArgumentRangeMismatch(cx, "", "Int64.prototype.toString", "an integer at least 2 and no greater than 36");
     }
   }
 
@@ -8190,12 +8203,11 @@ Int64::Compare(JSContext* cx, unsigned argc, jsval* vp)
   if (args.length() != 2) {
     return ArgumentLengthError(cx, "Int64.compare", "two", "s");
   }
-  if (args[0].isPrimitive() ||
-      args[1].isPrimitive() ||
-      !Int64::IsInt64(&args[0].toObject()) ||
-      !Int64::IsInt64(&args[1].toObject())) {
-    JS_ReportError(cx, "compare takes two Int64 arguments");
-    return false;
+  if (args[0].isPrimitive() || !Int64::IsInt64(&args[0].toObject())) {
+    return ArgumentTypeMismatch(cx, "first ", "Int64.compare", "a Int64");
+  }
+  if (args[1].isPrimitive() ||!Int64::IsInt64(&args[1].toObject())) {
+    return ArgumentTypeMismatch(cx, "second ", "Int64.compare", "a Int64");
   }
 
   JSObject* obj1 = &args[0].toObject();
@@ -8226,8 +8238,7 @@ Int64::Lo(JSContext* cx, unsigned argc, jsval* vp)
     return ArgumentLengthError(cx, "Int64.lo", "one", "");
   }
   if (args[0].isPrimitive() || !Int64::IsInt64(&args[0].toObject())) {
-    JS_ReportError(cx, "lo takes one Int64 argument");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "Int64.lo", "a Int64");
   }
 
   JSObject* obj = &args[0].toObject();
@@ -8246,8 +8257,7 @@ Int64::Hi(JSContext* cx, unsigned argc, jsval* vp)
     return ArgumentLengthError(cx, "Int64.hi", "one", "");
   }
   if (args[0].isPrimitive() || !Int64::IsInt64(&args[0].toObject())) {
-    JS_ReportError(cx, "hi takes one Int64 argument");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "Int64.hi", "a Int64");
   }
 
   JSObject* obj = &args[0].toObject();
@@ -8365,12 +8375,11 @@ UInt64::Compare(JSContext* cx, unsigned argc, jsval* vp)
   if (args.length() != 2) {
     return ArgumentLengthError(cx, "UInt64.compare", "two", "s");
   }
-  if (args[0].isPrimitive() ||
-      args[1].isPrimitive() ||
-      !UInt64::IsUInt64(&args[0].toObject()) ||
-      !UInt64::IsUInt64(&args[1].toObject())) {
-    JS_ReportError(cx, "compare takes two UInt64 arguments");
-    return false;
+  if (args[0].isPrimitive() || !UInt64::IsUInt64(&args[0].toObject())) {
+    return ArgumentTypeMismatch(cx, "first ", "UInt64.compare", "a UInt64");
+  }
+  if (args[1].isPrimitive() || !UInt64::IsUInt64(&args[1].toObject())) {
+    return ArgumentTypeMismatch(cx, "second ", "UInt64.compare", "a UInt64");
   }
 
   JSObject* obj1 = &args[0].toObject();
@@ -8397,8 +8406,7 @@ UInt64::Lo(JSContext* cx, unsigned argc, jsval* vp)
     return ArgumentLengthError(cx, "UInt64.lo", "one", "");
   }
   if (args[0].isPrimitive() || !UInt64::IsUInt64(&args[0].toObject())) {
-    JS_ReportError(cx, "lo takes one UInt64 argument");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "UInt64.lo", "a UInt64");
   }
 
   JSObject* obj = &args[0].toObject();
@@ -8417,8 +8425,7 @@ UInt64::Hi(JSContext* cx, unsigned argc, jsval* vp)
     return ArgumentLengthError(cx, "UInt64.hi", "one", "");
   }
   if (args[0].isPrimitive() || !UInt64::IsUInt64(&args[0].toObject())) {
-    JS_ReportError(cx, "hi takes one UInt64 argument");
-    return false;
+    return ArgumentTypeMismatch(cx, "", "UInt64.hi", "a UInt64");
   }
 
   JSObject* obj = &args[0].toObject();
