@@ -2087,12 +2087,35 @@ HttpChannelChild::ResetInterception()
 
 void
 HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
-                                                  nsInputStreamPump* aPump,
-                                                  int64_t aStreamLength)
+                                                  nsIInputStream* aSynthesizedInput,
+                                                  nsIStreamListener* aStreamListener)
 {
-  mSynthesizedResponsePump = aPump;
+  // In our current implementation, the FetchEvent handler will copy the
+  // response stream completely into the pipe backing the input stream so we
+  // can treat the available as the length of the stream.
+  uint64_t available;
+  nsresult rv = aSynthesizedInput->Available(&available);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mSynthesizedStreamLength = -1;
+  } else {
+    mSynthesizedStreamLength = int64_t(available);
+  }
+
+  rv = nsInputStreamPump::Create(getter_AddRefs(mSynthesizedResponsePump),
+                                 aSynthesizedInput,
+                                 int64_t(-1), int64_t(-1), 0, 0, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aSynthesizedInput->Close();
+    return;
+  }
+
+  rv = mSynthesizedResponsePump->AsyncRead(aStreamListener, nullptr);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  // Intercepted responses should already be decoded.
+  SetApplyConversion(false);
+
   mResponseHead = aResponseHead;
-  mSynthesizedStreamLength = aStreamLength;
 
   // if this channel has been suspended previously, the pump needs to be
   // correspondingly suspended now that it exists.
