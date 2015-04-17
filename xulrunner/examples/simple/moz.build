@@ -17,3 +17,6 @@ JS_PREFERENCE_FILES += [
 DIST_FILES += [
     'application.ini',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    FINAL_TARGET_FILES.chrome.icons.default += ['icons/simple.ico']
