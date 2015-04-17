@@ -41,7 +41,6 @@ using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
-using struct mozilla::layers::FenceHandleFromChild from "mozilla/layers/FenceUtils.h";
 using std::string from "string";
 
 namespace mozilla {
@@ -368,9 +367,13 @@ struct OpRemoveTextureAsync {
 };
 
 struct OpReplyRemoveTexture {
-  bool isMain;
   uint64_t holderId;
   uint64_t transactionId;
+};
+
+union MaybeFence {
+  FenceHandle;
+  null_t;
 };
 
 /**
@@ -380,6 +383,7 @@ struct OpReplyRemoveTexture {
 struct OpUseTexture {
   PCompositable compositable;
   PTexture texture;
+  MaybeFence fence;
 };
 
 struct OpUseComponentAlphaTextures {
@@ -394,26 +398,14 @@ union MaybeRegion {
 };
 
 struct OpDeliverFence {
-  uint64_t transactionId;
   PTexture texture;
   FenceHandle fence;
 };
 
 struct OpDeliverFenceToTracker {
-  uint64_t transactionId;
   uint64_t destHolderId;
   uint64_t destTransactionId;
   FenceHandle fence;
-};
-
-struct OpDeliverFenceFromChild {
-  uint64_t transactionId;
-  PTexture texture;
-  FenceHandleFromChild fence;
-};
-
-struct OpReplyDeliverFence {
-  uint64_t transactionId;
 };
 
 union CompositableOperation {
@@ -481,13 +473,10 @@ union EditReply {
 union AsyncParentMessageData {
   OpDeliverFence;
   OpDeliverFenceToTracker;
-  OpReplyDeliverFence;
   OpReplyRemoveTexture;
 };
 
 union AsyncChildMessageData {
-  OpDeliverFenceFromChild;
-  OpReplyDeliverFence;
   OpRemoveTextureAsync;
 };
 

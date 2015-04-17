@@ -51,7 +51,7 @@ interface FontFaceSet : EventTarget {
   // check and start loads if appropriate
   // and fulfill promise when all loads complete
   // Not implemented yet: bug 1072102.
-  [Throws] Promise<sequence<FontFace>> load(DOMString font, optional DOMString text = " ");
+  // [Throws] Promise<sequence<FontFace>> load(DOMString font, optional DOMString text = " ");
 
   // return whether all fonts in the fontlist are loaded
   // (does not initiate load if not available)

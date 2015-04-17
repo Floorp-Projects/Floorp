@@ -1,0 +1,244 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PCache;
+include protocol PCachePushStream;
+include protocol PCacheStreamControl;
+include InputStreamParams;
+
+using HeadersGuardEnum from "mozilla/dom/cache/IPCUtils.h";
+using RequestCredentials from "mozilla/dom/cache/IPCUtils.h";
+using RequestMode from "mozilla/dom/cache/IPCUtils.h";
+using RequestCache from "mozilla/dom/cache/IPCUtils.h";
+using RequestContext from "mozilla/dom/cache/IPCUtils.h";
+using ResponseType from "mozilla/dom/cache/IPCUtils.h";
+using mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct nsID from "nsID.h";
+
+namespace mozilla {
+namespace dom {
+namespace cache {
+
+struct CacheQueryParams
+{
+  bool ignoreSearch;
+  bool ignoreMethod;
+  bool ignoreVary;
+  bool cacheNameSet;
+  nsString cacheName;
+};
+
+struct CacheReadStream
+{
+  nsID id;
+  OptionalInputStreamParams params;
+  OptionalFileDescriptorSet fds;
+  nullable PCacheStreamControl control;
+  nullable PCachePushStream pushStream;
+};
+
+union CacheReadStreamOrVoid
+{
+  void_t;
+  CacheReadStream;
+};
+
+struct HeadersEntry
+{
+  nsCString name;
+  nsCString value;
+};
+
+struct CacheRequest
+{
+  nsCString method;
+  nsString url;
+  nsString urlWithoutQuery;
+  HeadersEntry[] headers;
+  HeadersGuardEnum headersGuard;
+  nsString referrer;
+  RequestMode mode;
+  RequestCredentials credentials;
+  CacheReadStreamOrVoid body;
+  uint32_t contentPolicyType;
+  RequestContext context;
+  RequestCache requestCache;
+};
+
+union CacheRequestOrVoid
+{
+  void_t;
+  CacheRequest;
+};
+
+struct CacheResponse
+{
+  ResponseType type;
+  nsString url;
+  uint32_t status;
+  nsCString statusText;
+  HeadersEntry[] headers;
+  HeadersGuardEnum headersGuard;
+  CacheReadStreamOrVoid body;
+  nsCString securityInfo;
+};
+
+union CacheResponseOrVoid
+{
+  void_t;
+  CacheResponse;
+};
+
+struct CacheRequestResponse
+{
+  CacheRequest request;
+  CacheResponse response;
+};
+
+struct CacheMatchArgs
+{
+  CacheRequest request;
+  CacheQueryParams params;
+};
+
+struct CacheMatchAllArgs
+{
+  CacheRequestOrVoid requestOrVoid;
+  CacheQueryParams params;
+};
+
+struct CacheAddAllArgs
+{
+  CacheRequest[] requestList;
+};
+
+struct CachePutAllArgs
+{
+  CacheRequestResponse[] requestResponseList;
+};
+
+struct CacheDeleteArgs
+{
+  CacheRequest request;
+  CacheQueryParams params;
+};
+
+struct CacheKeysArgs
+{
+  CacheRequestOrVoid requestOrVoid;
+  CacheQueryParams params;
+};
+
+struct StorageMatchArgs
+{
+  CacheRequest request;
+  CacheQueryParams params;
+};
+
+struct StorageHasArgs
+{
+  nsString key;
+};
+
+struct StorageOpenArgs
+{
+  nsString key;
+};
+
+struct StorageDeleteArgs
+{
+  nsString key;
+};
+
+struct StorageKeysArgs
+{
+};
+
+union CacheOpArgs
+{
+  CacheMatchArgs;
+  CacheMatchAllArgs;
+  CacheAddAllArgs;
+  CachePutAllArgs;
+  CacheDeleteArgs;
+  CacheKeysArgs;
+  StorageMatchArgs;
+  StorageHasArgs;
+  StorageOpenArgs;
+  StorageDeleteArgs;
+  StorageKeysArgs;
+};
+
+struct CacheMatchResult
+{
+  CacheResponseOrVoid responseOrVoid;
+};
+
+struct CacheMatchAllResult
+{
+  CacheResponse[] responseList;
+};
+
+struct CacheAddAllResult
+{
+};
+
+struct CachePutAllResult
+{
+};
+
+struct CacheDeleteResult
+{
+  bool success;
+};
+
+struct CacheKeysResult
+{
+  CacheRequest[] requestList;
+};
+
+struct StorageMatchResult
+{
+  CacheResponseOrVoid responseOrVoid;
+};
+
+struct StorageHasResult
+{
+  bool success;
+};
+
+struct StorageOpenResult
+{
+  nullable PCache actor;
+};
+
+struct StorageDeleteResult
+{
+  bool success;
+};
+
+struct StorageKeysResult
+{
+  nsString[] keyList;
+};
+
+union CacheOpResult
+{
+  void_t;
+  CacheMatchResult;
+  CacheMatchAllResult;
+  CacheAddAllResult;
+  CachePutAllResult;
+  CacheDeleteResult;
+  CacheKeysResult;
+  StorageMatchResult;
+  StorageHasResult;
+  StorageOpenResult;
+  StorageDeleteResult;
+  StorageKeysResult;
+};
+
+} // namespace cache
+} // namespace dom
+} // namespace mozilla

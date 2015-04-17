@@ -22,15 +22,22 @@ extern "C" {
 typedef struct {
   unsigned int lowvalue;
   unsigned int range;
+  unsigned int value;
   int count;
   unsigned int pos;
   uint8_t *buffer;
+
+  // Variables used to track bit costs without outputing to the bitstream
+  unsigned int  measure_cost;
+  uint64_t bit_counter;
 } vp9_writer;
+
+extern const unsigned int vp9_prob_cost[256];
 
 void vp9_start_encode(vp9_writer *bc, uint8_t *buffer);
 void vp9_stop_encode(vp9_writer *bc);
 
-static INLINE void vp9_write(vp9_writer *br, int bit, int probability) {
+static void vp9_write(vp9_writer *br, int bit, int probability) {
   unsigned int split;
   int count = br->count;
   unsigned int range = br->range;
@@ -78,11 +85,11 @@ static INLINE void vp9_write(vp9_writer *br, int bit, int probability) {
   br->range = range;
 }
 
-static INLINE void vp9_write_bit(vp9_writer *w, int bit) {
+static void vp9_write_bit(vp9_writer *w, int bit) {
   vp9_write(w, bit, 128);  // vp9_prob_half
 }
 
-static INLINE void vp9_write_literal(vp9_writer *w, int data, int bits) {
+static void vp9_write_literal(vp9_writer *w, int data, int bits) {
   int bit;
 
   for (bit = bits - 1; bit >= 0; bit--)

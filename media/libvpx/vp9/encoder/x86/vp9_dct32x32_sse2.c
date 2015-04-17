@@ -12,9 +12,6 @@
 #include "vp9/common/vp9_idct.h"  // for cospi constants
 #include "vpx_ports/mem.h"
 
-#define pair_set_epi32(a, b) \
-  _mm_set_epi32(b, a, b, a)
-
 #if FDCT32x32_HIGH_PRECISION
 static INLINE __m128i k_madd_epi32(__m128i a, __m128i b) {
   __m128i buf0, buf1;

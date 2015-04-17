@@ -9,7 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
-#include "mozilla/dom/cache/PCacheTypes.h"
+#include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -41,6 +41,7 @@ DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor)
 
 CacheStreamControlChild::CacheStreamControlChild()
   : mDestroyStarted(false)
+  , mDestroyDelayed(false)
 {
   MOZ_COUNT_CTOR(cache::CacheStreamControlChild);
 }
@@ -63,13 +64,28 @@ CacheStreamControlChild::StartDestroy()
   }
   mDestroyStarted = true;
 
+  // If any of the streams have started to be read, then wait for them to close
+  // naturally.
+  if (HasEverBeenRead()) {
+    // Note that we are delaying so that we can re-check for active streams
+    // in NoteClosedAfterForget().
+    mDestroyDelayed = true;
+    return;
+  }
+
+  // Otherwise, if the streams have not been touched then just pre-emptively
+  // close them now.  This handles the case where someone retrieves a Response
+  // from the Cache, but never accesses the body.  We should not keep the
+  // Worker alive until that Response is GC'd just because of its ignored
+  // body stream.
+
   // Begin shutting down all streams.  This is the same as if the parent had
   // asked us to shutdown.  So simulate the CloseAll IPC message.
   RecvCloseAll();
 }
 
 void
-CacheStreamControlChild::SerializeControl(PCacheReadStream* aReadStreamOut)
+CacheStreamControlChild::SerializeControl(CacheReadStream* aReadStreamOut)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   aReadStreamOut->controlParent() = nullptr;
@@ -77,7 +93,7 @@ CacheStreamControlChild::SerializeControl(PCacheReadStream* aReadStreamOut)
 }
 
 void
-CacheStreamControlChild::SerializeFds(PCacheReadStream* aReadStreamOut,
+CacheStreamControlChild::SerializeFds(CacheReadStream* aReadStreamOut,
                                       const nsTArray<FileDescriptor>& aFds)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
@@ -97,7 +113,7 @@ CacheStreamControlChild::SerializeFds(PCacheReadStream* aReadStreamOut,
 }
 
 void
-CacheStreamControlChild::DeserializeFds(const PCacheReadStream& aReadStream,
+CacheStreamControlChild::DeserializeFds(const CacheReadStream& aReadStream,
                                         nsTArray<FileDescriptor>& aFdsOut)
 {
   if (aReadStream.fds().type() !=
@@ -120,6 +136,15 @@ CacheStreamControlChild::NoteClosedAfterForget(const nsID& aId)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   unused << SendNoteClosed(aId);
+
+  // A stream has closed.  If we delayed StartDestry() due to this stream
+  // being read, then we should check to see if any of the remaining streams
+  // are active.  If none of our other streams have been read, then we can
+  // proceed with the shutdown now.
+  if (mDestroyDelayed && !HasEverBeenRead()) {
+    mDestroyDelayed = false;
+    RecvCloseAll();
+  }
 }
 
 #ifdef DEBUG

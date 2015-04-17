@@ -15,36 +15,8 @@
 #include "vpx_mem/vpx_mem.h"
 #include "vpx/vpx_integer.h"
 
-const vp9_prob vp9_cat1_prob[] = { 159 };
-const vp9_prob vp9_cat2_prob[] = { 165, 145 };
-const vp9_prob vp9_cat3_prob[] = { 173, 148, 140 };
-const vp9_prob vp9_cat4_prob[] = { 176, 155, 140, 135 };
-const vp9_prob vp9_cat5_prob[] = { 180, 157, 141, 134, 130 };
-const vp9_prob vp9_cat6_prob[] = {
-    254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129
-};
-#if CONFIG_VP9_HIGHBITDEPTH
-const vp9_prob vp9_cat1_prob_high10[] = { 159 };
-const vp9_prob vp9_cat2_prob_high10[] = { 165, 145 };
-const vp9_prob vp9_cat3_prob_high10[] = { 173, 148, 140 };
-const vp9_prob vp9_cat4_prob_high10[] = { 176, 155, 140, 135 };
-const vp9_prob vp9_cat5_prob_high10[] = { 180, 157, 141, 134, 130 };
-const vp9_prob vp9_cat6_prob_high10[] = {
-    255, 255, 254, 254, 254, 252, 249, 243,
-    230, 196, 177, 153, 140, 133, 130, 129
-};
-const vp9_prob vp9_cat1_prob_high12[] = { 159 };
-const vp9_prob vp9_cat2_prob_high12[] = { 165, 145 };
-const vp9_prob vp9_cat3_prob_high12[] = { 173, 148, 140 };
-const vp9_prob vp9_cat4_prob_high12[] = { 176, 155, 140, 135 };
-const vp9_prob vp9_cat5_prob_high12[] = { 180, 157, 141, 134, 130 };
-const vp9_prob vp9_cat6_prob_high12[] = {
-    255, 255, 255, 255, 254, 254, 254, 252, 249,
-    243, 230, 196, 177, 153, 140, 133, 130, 129
-};
-#endif
 
-const uint8_t vp9_coefband_trans_8x8plus[1024] = {
+DECLARE_ALIGNED(16, const uint8_t, vp9_coefband_trans_8x8plus[1024]) = {
   0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4,
   4, 4, 4, 4, 4, 5,
   // beyond MAXBAND_INDEX+1 all values are filled as 5
@@ -113,11 +85,11 @@ const uint8_t vp9_coefband_trans_8x8plus[1024] = {
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
 };
 
-const uint8_t vp9_coefband_trans_4x4[16] = {
+DECLARE_ALIGNED(16, const uint8_t, vp9_coefband_trans_4x4[16]) = {
   0, 1, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5,
 };
 
-const uint8_t vp9_pt_energy_class[ENTROPY_TOKENS] = {
+DECLARE_ALIGNED(16, const uint8_t, vp9_pt_energy_class[ENTROPY_TOKENS]) = {
   0, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5
 };
 

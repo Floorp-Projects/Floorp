@@ -11,6 +11,8 @@ EXPORTS.mozilla.dom.cache += [
     'AutoUtils.h',
     'Cache.h',
     'CacheChild.h',
+    'CacheOpChild.h',
+    'CacheOpParent.h',
     'CacheParent.h',
     'CachePushStreamChild.h',
     'CachePushStreamParent.h',
@@ -35,7 +37,6 @@ EXPORTS.mozilla.dom.cache += [
     'SavedTypes.h',
     'StreamControl.h',
     'StreamList.h',
-    'StreamUtils.h',
     'Types.h',
     'TypeUtils.h',
 ]
@@ -46,6 +47,8 @@ UNIFIED_SOURCES += [
     'AutoUtils.cpp',
     'Cache.cpp',
     'CacheChild.cpp',
+    'CacheOpChild.cpp',
+    'CacheOpParent.cpp',
     'CacheParent.cpp',
     'CachePushStreamChild.cpp',
     'CachePushStreamParent.cpp',
@@ -68,17 +71,16 @@ UNIFIED_SOURCES += [
     'ReadStream.cpp',
     'StreamControl.cpp',
     'StreamList.cpp',
-    'StreamUtils.cpp',
     'TypeUtils.cpp',
 ]
 
 IPDL_SOURCES += [
-    'CacheInitData.ipdlh',
+    'CacheTypes.ipdlh',
     'PCache.ipdl',
+    'PCacheOp.ipdl',
     'PCachePushStream.ipdl',
     'PCacheStorage.ipdl',
     'PCacheStreamControl.ipdl',
-    'PCacheTypes.ipdlh',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -153,6 +153,7 @@ extern "C" {
   typedef long vpx_codec_caps_t;
 #define VPX_CODEC_CAP_DECODER 0x1 /**< Is a decoder */
 #define VPX_CODEC_CAP_ENCODER 0x2 /**< Is an encoder */
+#define VPX_CODEC_CAP_XMA     0x4 /**< Supports eXternal Memory Allocation */
 
 
   /*! \brief Initialization-time Feature Enabling
@@ -163,6 +164,7 @@ extern "C" {
    *  The available flags are specified by VPX_CODEC_USE_* defines.
    */
   typedef long vpx_codec_flags_t;
+#define VPX_CODEC_USE_XMA 0x00000001    /**< Use eXternal Memory Allocation mode */
 
 
   /*!\brief Codec interface structure.
@@ -203,24 +205,13 @@ extern "C" {
     const char              *err_detail;  /**< Detailed info, if available */
     vpx_codec_flags_t        init_flags;  /**< Flags passed at init time */
     union {
-      /**< Decoder Configuration Pointer */
-      const struct vpx_codec_dec_cfg *dec;
-      /**< Encoder Configuration Pointer */
-      const struct vpx_codec_enc_cfg *enc;
-      const void                     *raw;
+      struct vpx_codec_dec_cfg  *dec;   /**< Decoder Configuration Pointer */
+      struct vpx_codec_enc_cfg  *enc;   /**< Encoder Configuration Pointer */
+      void                      *raw;
     }                        config;      /**< Configuration pointer aliasing union */
     vpx_codec_priv_t        *priv;        /**< Algorithm private storage */
   } vpx_codec_ctx_t;
 
-  /*!\brief Bit depth for codec
-   * *
-   * This enumeration determines the bit depth of the codec.
-   */
-  typedef enum vpx_bit_depth {
-    VPX_BITS_8  =  8,  /**<  8 bits */
-    VPX_BITS_10 = 10,  /**< 10 bits */
-    VPX_BITS_12 = 12,  /**< 12 bits */
-  } vpx_bit_depth_t;
 
   /*
    * Library Version Number Interface
@@ -471,6 +462,94 @@ extern "C" {
 
 #endif
 
+
+  /*!\defgroup cap_xma External Memory Allocation Functions
+   *
+   * The following functions are required to be implemented for all codecs
+   * that advertise the VPX_CODEC_CAP_XMA capability. Calling these functions
+   * for codecs that don't advertise this capability will result in an error
+   * code being returned, usually VPX_CODEC_INCAPABLE
+   * @{
+   */
+
+
+  /*!\brief Memory Map Entry
+   *
+   * This structure is used to contain the properties of a memory segment. It
+   * is populated by the codec in the request phase, and by the calling
+   * application once the requested allocation has been performed.
+   */
+  typedef struct vpx_codec_mmap {
+    /*
+     * The following members are set by the codec when requesting a segment
+     */
+    unsigned int   id;     /**< identifier for the segment's contents */
+    unsigned long  sz;     /**< size of the segment, in bytes */
+    unsigned int   align;  /**< required alignment of the segment, in bytes */
+    unsigned int   flags;  /**< bitfield containing segment properties */
+#define VPX_CODEC_MEM_ZERO     0x1  /**< Segment must be zeroed by allocation */
+#define VPX_CODEC_MEM_WRONLY   0x2  /**< Segment need not be readable */
+#define VPX_CODEC_MEM_FAST     0x4  /**< Place in fast memory, if available */
+
+    /* The following members are to be filled in by the allocation function */
+    void          *base;   /**< pointer to the allocated segment */
+    void (*dtor)(struct vpx_codec_mmap *map);         /**< destructor to call */
+    void          *priv;   /**< allocator private storage */
+  } vpx_codec_mmap_t; /**< alias for struct vpx_codec_mmap */
+
+
+  /*!\brief Iterate over the list of segments to allocate.
+   *
+   * Iterates over a list of the segments to allocate. The iterator storage
+   * should be initialized to NULL to start the iteration. Iteration is complete
+   * when this function returns VPX_CODEC_LIST_END. The amount of memory needed to
+   * allocate is dependent upon the size of the encoded stream. In cases where the
+   * stream is not available at allocation time, a fixed size must be requested.
+   * The codec will not be able to operate on streams larger than the size used at
+   * allocation time.
+   *
+   * \param[in]      ctx     Pointer to this instance's context.
+   * \param[out]     mmap    Pointer to the memory map entry to populate.
+   * \param[in,out]  iter    Iterator storage, initialized to NULL
+   *
+   * \retval #VPX_CODEC_OK
+   *     The memory map entry was populated.
+   * \retval #VPX_CODEC_ERROR
+   *     Codec does not support XMA mode.
+   * \retval #VPX_CODEC_MEM_ERROR
+   *     Unable to determine segment size from stream info.
+   */
+  vpx_codec_err_t vpx_codec_get_mem_map(vpx_codec_ctx_t                *ctx,
+                                        vpx_codec_mmap_t               *mmap,
+                                        vpx_codec_iter_t               *iter);
+
+
+  /*!\brief Identify allocated segments to codec instance
+   *
+   * Stores a list of allocated segments in the codec. Segments \ref MUST be
+   * passed in the order they are read from vpx_codec_get_mem_map(), but may be
+   * passed in groups of any size. Segments \ref MUST be set only once. The
+   * allocation function \ref MUST ensure that the vpx_codec_mmap_t::base member
+   * is non-NULL. If the segment requires cleanup handling (e.g., calling free()
+   * or close()) then the vpx_codec_mmap_t::dtor member \ref MUST be populated.
+   *
+   * \param[in]      ctx     Pointer to this instance's context.
+   * \param[in]      mmaps   Pointer to the first memory map entry in the list.
+   * \param[in]      num_maps  Number of entries being set at this time
+   *
+   * \retval #VPX_CODEC_OK
+   *     The segment was stored in the codec context.
+   * \retval #VPX_CODEC_INCAPABLE
+   *     Codec does not support XMA mode.
+   * \retval #VPX_CODEC_MEM_ERROR
+   *     Segment base address was not set, or segment was already stored.
+
+   */
+  vpx_codec_err_t  vpx_codec_set_mem_map(vpx_codec_ctx_t   *ctx,
+                                         vpx_codec_mmap_t  *mmaps,
+                                         unsigned int       num_maps);
+
+  /*!@} - end defgroup cap_xma*/
   /*!@} - end defgroup codec*/
 #ifdef __cplusplus
 }

@@ -10831,8 +10831,8 @@ nsIDocument::Children()
 {
   if (!mChildrenCollection) {
     mChildrenCollection = new nsContentList(this, kNameSpaceID_Wildcard,
-                                            nsGkAtoms::_asterix,
-                                            nsGkAtoms::_asterix,
+                                            nsGkAtoms::_asterisk,
+                                            nsGkAtoms::_asterisk,
                                             false);
   }
 

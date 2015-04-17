@@ -10,7 +10,7 @@
 
 #include "vp9/common/vp9_prob.h"
 
-const uint8_t vp9_norm[256] = {
+DECLARE_ALIGNED(16, const uint8_t, vp9_norm[256]) = {
   0, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
   2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,

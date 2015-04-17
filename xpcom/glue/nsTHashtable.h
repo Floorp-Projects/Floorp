@@ -156,7 +156,8 @@ public:
       (PL_DHashTableAdd(&mTable, EntryType::KeyToPointer(aKey)));
   }
 
-  EntryType* PutEntry(KeyType aKey, const fallible_t&) NS_WARN_UNUSED_RESULT
+  MOZ_WARN_UNUSED_RESULT
+  EntryType* PutEntry(KeyType aKey, const fallible_t&)
   {
     NS_ASSERTION(mTable.IsInitialized(),
                  "nsTHashtable was not initialized properly.");

@@ -16,8 +16,7 @@ class PrintSettingsDialogChild final : public PPrintSettingsDialogChild
 public:
   MOZ_IMPLICIT PrintSettingsDialogChild();
 
-  virtual bool Recv__delete__(const nsresult& aResult,
-                              const PrintData& aData) override;
+  virtual bool Recv__delete__(const PrintDataOrNSResult& aData) override;
 
   bool returned() { return mReturned; };
   nsresult result() { return mResult; };

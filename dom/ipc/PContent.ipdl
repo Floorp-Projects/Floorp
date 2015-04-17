@@ -776,12 +776,22 @@ parent:
     // nsIPermissionManager messages
     sync ReadPermissions() returns (Permission[] permissions);
 
-    SetClipboardText(nsString text, bool isPrivateData, int32_t whichClipboard);
-    sync GetClipboardText(int32_t whichClipboard)
-        returns (nsString text);
-    EmptyClipboard(int32_t whichClipboard);
-    sync ClipboardHasText(int32_t whichClipboard)
-        returns (bool hasText);
+    // Places the items within dataTransfer on the clipboard.
+    SetClipboard(IPCDataTransfer aDataTransfer,
+                 bool aIsPrivateData,
+                 int32_t aWhichClipboard);
+
+    // Given a list of supported types, returns the clipboard data for the
+    // first type that matches.
+    sync GetClipboard(nsCString[] aTypes, int32_t aWhichClipboard)
+        returns (IPCDataTransfer dataTransfer);
+
+    // Clears the clipboard.
+    EmptyClipboard(int32_t aWhichClipboard);
+
+    // Returns true if data of one of the specified types is on the clipboard.
+    sync ClipboardHasType(nsCString[] aTypes, int32_t aWhichClipboard)
+        returns (bool hasType);
 
     sync GetSystemColors(uint32_t colorsCount)
         returns (uint32_t[] colors);

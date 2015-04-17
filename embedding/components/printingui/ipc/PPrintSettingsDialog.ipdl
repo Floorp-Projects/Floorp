@@ -9,12 +9,19 @@ include protocol PPrinting;
 namespace mozilla {
 namespace embedding {
 
+// A PrintData for success, a failure nsresult for failure.
+union PrintDataOrNSResult
+{
+  PrintData;
+  nsresult;
+};
+
 protocol PPrintSettingsDialog
 {
   manager PPrinting;
 
 child:
-  __delete__(nsresult rv, PrintData data);
+  __delete__(PrintDataOrNSResult result);
 };
 
 } // namespace embedding

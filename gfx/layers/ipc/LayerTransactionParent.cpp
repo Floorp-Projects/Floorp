@@ -211,8 +211,8 @@ public:
 
   ~AutoLayerTransactionParentAsyncMessageSender()
   {
-    mLayerTransaction->SendPendingAsyncMessges();
-    ImageBridgeParent::SendPendingAsyncMessges(mLayerTransaction->GetChildProcessId());
+    mLayerTransaction->SendPendingAsyncMessages();
+    ImageBridgeParent::SendPendingAsyncMessages(mLayerTransaction->GetChildProcessId());
   }
 private:
   LayerTransactionParent* mLayerTransaction;
@@ -914,32 +914,6 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
     const AsyncChildMessageData& message = aMessages[i];
 
     switch (message.type()) {
-      case AsyncChildMessageData::TOpDeliverFenceFromChild: {
-        const OpDeliverFenceFromChild& op = message.get_OpDeliverFenceFromChild();
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-        FenceHandle fence = FenceHandle(op.fence());
-        PTextureParent* parent = op.textureParent();
-
-        TextureHostOGL* hostOGL = nullptr;
-        RefPtr<TextureHost> texture = TextureHost::AsTextureHost(parent);
-        if (texture) {
-          hostOGL = texture->AsHostOGL();
-        }
-        if (hostOGL) {
-          hostOGL->SetAcquireFence(fence.mFence);
-        }
-#endif
-        // Send back a response.
-        InfallibleTArray<AsyncParentMessageData> replies;
-        replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
-        mozilla::unused << SendParentAsyncMessages(replies);
-        break;
-      }
-      case AsyncChildMessageData::TOpReplyDeliverFence: {
-        const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
-        TransactionCompleteted(op.transactionId());
-        break;
-      }
       case AsyncChildMessageData::TOpRemoveTextureAsync: {
         const OpRemoveTextureAsync& op = message.get_OpRemoveTextureAsync();
         CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
@@ -951,7 +925,7 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
         MOZ_ASSERT(ImageBridgeParent::GetInstance(GetChildProcessId()));
         if (ImageBridgeParent::GetInstance(GetChildProcessId())) {
           // send FenceHandle if present via ImageBridge.
-          ImageBridgeParent::SendFenceHandleToTrackerIfPresent(
+          ImageBridgeParent::AppendDeliverFenceMessage(
             GetChildProcessId(),
             op.holderId(),
             op.transactionId(),
@@ -960,9 +934,8 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
           // Send message back via PImageBridge.
           ImageBridgeParent::ReplyRemoveTexture(
             GetChildProcessId(),
-            OpReplyRemoveTexture(true, // isMain
-            op.holderId(),
-            op.transactionId()));
+            OpReplyRemoveTexture(op.holderId(),
+                                 op.transactionId()));
         } else {
           NS_ERROR("ImageBridgeParent should exist");
         }
@@ -979,7 +952,6 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
 void
 LayerTransactionParent::ActorDestroy(ActorDestroyReason why)
 {
-  DestroyAsyncTransactionTrackersHolder();
 }
 
 bool LayerTransactionParent::IsSameProcess() const
@@ -1000,10 +972,7 @@ LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
   if (aCompositableHost && aCompositableHost->GetCompositor()) {
     FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
     if (fence.IsValid()) {
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-      HoldUntilComplete(tracker);
-      mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
-                                                    aTexture, nullptr,
+      mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
                                                     fence));
     }
   }
@@ -1011,25 +980,9 @@ LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
   // Send a ReleaseFence that is set by HwcComposer2D.
   FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
   if (fence.IsValid()) {
-    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-    HoldUntilComplete(tracker);
-    mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
-                                                  aTexture, nullptr,
+    mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
                                                   fence));
   }
-}
-
-void
-LayerTransactionParent::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                        PTextureParent* aTexture,
-                                        const FenceHandle& aFence)
-{
-  HoldUntilComplete(aTracker);
-  InfallibleTArray<AsyncParentMessageData> messages;
-  messages.AppendElement(OpDeliverFence(aTracker->GetId(),
-                                        aTexture, nullptr,
-                                        aFence));
-  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 void

@@ -56,19 +56,22 @@ class Thread;
 
 class nsBaseWidget;
 
+// Helper class used in shutting down gfx related code.
 class WidgetShutdownObserver final : public nsIObserver
 {
-  ~WidgetShutdownObserver() {}
+  ~WidgetShutdownObserver();
 
 public:
-  explicit WidgetShutdownObserver(nsBaseWidget* aWidget)
-    : mWidget(aWidget)
-  { }
+  explicit WidgetShutdownObserver(nsBaseWidget* aWidget);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
+  void Register();
+  void Unregister();
+
   nsBaseWidget *mWidget;
+  bool mRegistered;
 };
 
 /**
@@ -306,16 +309,6 @@ public:
   };
   friend class AutoLayerManagerSetup;
 
-  class AutoUseBasicLayerManager {
-  public:
-    explicit AutoUseBasicLayerManager(nsBaseWidget* aWidget);
-    ~AutoUseBasicLayerManager();
-  private:
-    nsBaseWidget* mWidget;
-    bool mPreviousTemporarilyUseBasicLayerManager;
-  };
-  friend class AutoUseBasicLayerManager;
-
   virtual bool            ShouldUseOffMainThreadCompositing();
 
   static nsIRollupListener* GetActiveRollupListener();
@@ -471,10 +464,11 @@ protected:
   void DestroyCompositor();
   void DestroyLayerManager();
 
+  void FreeShutdownObserver();
+
   nsIWidgetListener* mWidgetListener;
   nsIWidgetListener* mAttachedWidgetListener;
   nsRefPtr<LayerManager> mLayerManager;
-  nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
@@ -488,7 +482,6 @@ protected:
   nsBorderStyle     mBorderStyle;
   bool              mUseLayersAcceleration;
   bool              mForceLayersAcceleration;
-  bool              mTemporarilyUseBasicLayerManager;
   // Windows with out-of-process tabs always require OMTC. This flag designates
   // such windows.
   bool              mRequireOffMainThreadCompositing;

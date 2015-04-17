@@ -17,15 +17,6 @@
 
 #if !defined(VPX_DONT_DEFINE_STDINT_TYPES)
 
-#if defined(_MSC_VER)
-#define VPX_FORCE_INLINE __forceinline
-#define VPX_INLINE __inline
-#else
-#define VPX_FORCE_INLINE __inline__ __attribute__(always_inline)
-// TODO(jbb): Allow a way to force inline off for older compilers.
-#define VPX_INLINE inline
-#endif
-
 #if (defined(_MSC_VER) && (_MSC_VER < 1600)) || defined(VPX_EMULATE_INTTYPES)
 typedef signed char  int8_t;
 typedef signed short int16_t;
