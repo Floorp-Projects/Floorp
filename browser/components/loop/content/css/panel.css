@@ -121,7 +121,6 @@ body {
   margin-right: auto;
   font-size: 1rem;
   padding: .5rem 1rem;
-  height: auto; /* Needed to override .button's height:26px; */
 }
 
 #fte-getstarted + #powered-by-wrapper {
@@ -403,7 +402,7 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
   color: #333;
   border: 1px solid #c1c1c1;
   border-radius: 2px;
-  height: 26px;
+  min-height: 26px;
   font-size: 12px;
 }
 
