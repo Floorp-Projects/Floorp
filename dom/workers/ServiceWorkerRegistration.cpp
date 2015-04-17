@@ -847,11 +847,17 @@ public:
 void
 ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
 {
-  // Can't assert worker thread here since the worker may have gone away.
-  MOZ_ASSERT(!NS_IsMainThread());
   if (!mListener) {
     return;
   }
+
+  // We can assert worker here, because:
+  // 1) We always AddFeature, so if the worker has shutdown already, we'll have
+  //    received Notify and removed it. If AddFeature had failed, mListener will
+  //    be null and we won't reach here.
+  // 2) Otherwise, worker is still around even if we are going away.
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  mWorkerPrivate->RemoveFeature(mWorkerPrivate->GetJSContext(), this);
 
   mListener->ClearRegistration();
 
@@ -870,6 +876,13 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
   }
   mListener = nullptr;
   mWorkerPrivate = nullptr;
+}
+
+bool
+ServiceWorkerRegistrationWorkerThread::Notify(JSContext* aCx, workers::Status aStatus)
+{
+  ReleaseListener(WorkerIsGoingAway);
+  return true;
 }
 
 class FireUpdateFoundRunnable final : public WorkerRunnable

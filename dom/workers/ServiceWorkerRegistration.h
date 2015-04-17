@@ -210,11 +210,7 @@ public:
   }
 
   bool
-  Notify(JSContext* aCx, workers::Status aStatus) override
-  {
-    ReleaseListener(WorkerIsGoingAway);
-    return true;
-  }
+  Notify(JSContext* aCx, workers::Status aStatus) override;
 
 private:
   enum Reason
