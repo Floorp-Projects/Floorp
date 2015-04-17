@@ -7,7 +7,11 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js" />
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <style type="text/css">
@@ -113,11 +117,13 @@ var gPrefSvc = Components.classes["@mozilla.org/preferences-service;1"].
 const kPrefSmoothScroll = "general.smoothScroll";
 const kPrefNameTimeout = "mousewheel.transaction.timeout";
 const kPrefNameIgnoreMoveDelay = "mousewheel.transaction.ignoremovedelay";
+const kPrefTestEventsAsyncEnabled = "test.events.async.enabled";
 
 const kDefaultTimeout = gPrefSvc.getIntPref(kPrefNameTimeout);
 const kDefaultIgnoreMoveDelay = gPrefSvc.getIntPref(kPrefNameIgnoreMoveDelay);
 
 gPrefSvc.setBoolPref(kPrefSmoothScroll, false);
+gPrefSvc.setBoolPref(kPrefTestEventsAsyncEnabled, true);
 
 var gTimeout, gIgnoreMoveDelay;
 var gEnoughForTimeout, gEnoughForIgnoreMoveDelay;
@@ -175,7 +181,9 @@ function onunload()
 {
   resetTimeoutPrefs();
   gPrefSvc.clearUserPref(kPrefSmoothScroll);
+  gPrefSvc.clearUserPref(kPrefTestEventsAsyncEnabled);
   disableNonTestMouseEvents(false);
+  SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
   window.opener.wrappedJSObject.SimpleTest.finish();
 }
 
@@ -1095,7 +1103,7 @@ function _fireWheelScrollEvent(aOffset, aIsVertical, aForward, aDelta)
   } else {
     event.deltaX = aForward ? aDelta : -aDelta;
   }
-  synthesizeWheel(gRootView, aOffset.x, aOffset.y, event, window);
+  sendWheelAndPaint(gRootView, aOffset.x, aOffset.y, event, null, window);
 }
 
 function _canScroll(aElement, aIsVertical, aForward)
