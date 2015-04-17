@@ -1003,6 +1003,13 @@ FreshenBlockScope(JSContext* cx, BaselineFrame* frame)
 }
 
 bool
+DebugLeaveThenFreshenBlockScope(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
+{
+    DebugLeaveBlock(cx, frame, pc);
+    return frame->freshenBlock(cx);
+}
+
+bool
 DebugLeaveBlock(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
 {
     MOZ_ASSERT(frame->script()->baselineScript()->hasDebugInstrumentation());
