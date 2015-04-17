@@ -1048,9 +1048,10 @@ public:
     nsChildContentList* mChildNodes;
 
     /**
-     * Weak reference to this node
+     * Weak reference to this node.  This is cleared by the destructor of
+     * nsNodeWeakReference.
      */
-    nsNodeWeakReference* mWeakReference;
+    nsNodeWeakReference* MOZ_NON_OWNING_REF mWeakReference;
   };
 
   /**
