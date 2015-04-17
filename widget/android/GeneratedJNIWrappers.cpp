@@ -510,14 +510,6 @@ void GeckoAppShell::NotifyWakeLockChanged(mozilla::jni::String::Param a0, mozill
     return mozilla::jni::Method<NotifyWakeLockChanged_t>::Call(nullptr, nullptr, a0, a1);
 }
 
-constexpr char GeckoAppShell::NotifyXreExit_t::name[];
-constexpr char GeckoAppShell::NotifyXreExit_t::signature[];
-
-void GeckoAppShell::NotifyXreExit()
-{
-    return mozilla::jni::Method<NotifyXreExit_t>::Call(nullptr, nullptr);
-}
-
 constexpr char GeckoAppShell::OpenUriExternal_t::name[];
 constexpr char GeckoAppShell::OpenUriExternal_t::signature[];
 
