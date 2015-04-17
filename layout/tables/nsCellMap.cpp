@@ -28,7 +28,7 @@ SetDamageArea(int32_t aXOrigin,
   aDamageArea.width  = aWidth;
   aDamageArea.height = aHeight;
 }
- 
+
 // Empty static array used for SafeElementAt() calls on mRows.
 static nsCellMap::CellDataArray * sEmptyRow;
 
