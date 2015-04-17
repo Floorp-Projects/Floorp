@@ -249,7 +249,7 @@ TouchCaret::GetCaretYCenterPosition()
 }
 
 void
-TouchCaret::SetTouchFramePos(const nsRect& aCaretRect)
+TouchCaret::SetTouchFramePos(const nsPoint& aOrigin)
 {
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) {
@@ -263,17 +263,14 @@ TouchCaret::SetTouchFramePos(const nsRect& aCaretRect)
 
   // Convert aOrigin to CSS pixels.
   nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  int32_t x = presContext->AppUnitsToIntCSSPixels(aCaretRect.Center().x);
-  int32_t y = presContext->AppUnitsToIntCSSPixels(aCaretRect.y);
-  int32_t padding = presContext->AppUnitsToIntCSSPixels(aCaretRect.height);
+  int32_t x = presContext->AppUnitsToIntCSSPixels(aOrigin.x);
+  int32_t y = presContext->AppUnitsToIntCSSPixels(aOrigin.y);
 
   nsAutoString styleStr;
   styleStr.AppendLiteral("left: ");
   styleStr.AppendInt(x);
   styleStr.AppendLiteral("px; top: ");
   styleStr.AppendInt(y);
-  styleStr.AppendLiteral("px; padding-top: ");
-  styleStr.AppendInt(padding);
   styleStr.AppendLiteral("px;");
 
   TOUCHCARET_LOG("Set style: %s", NS_ConvertUTF16toUTF8(styleStr).get());
@@ -486,27 +483,32 @@ TouchCaret::UpdatePosition()
 {
   MOZ_ASSERT(mVisible);
 
-  nsRect rect = GetTouchCaretRect();
-  rect = ClampRectToScrollFrame(rect);
-  SetTouchFramePos(rect);
+  nsPoint pos = GetTouchCaretPosition();
+  pos = ClampPositionToScrollFrame(pos);
+  SetTouchFramePos(pos);
 }
 
-nsRect
-TouchCaret::GetTouchCaretRect()
+nsPoint
+TouchCaret::GetTouchCaretPosition()
 {
   nsRect focusRect;
   nsIFrame* focusFrame = GetCaretFocusFrame(&focusRect);
   nsIFrame* rootFrame = GetRootFrame();
-  // Transform the position to make it relative to root frame.
-  nsLayoutUtils::TransformRect(focusFrame, rootFrame, focusRect);
 
-  return focusRect;
+  // Position of the touch caret relative to focusFrame.
+  nsPoint pos = nsPoint(focusRect.x + (focusRect.width / 2),
+                        focusRect.y + focusRect.height);
+
+  // Transform the position to make it relative to root frame.
+  nsLayoutUtils::TransformPoint(focusFrame, rootFrame, pos);
+
+  return pos;
 }
 
-nsRect
-TouchCaret::ClampRectToScrollFrame(const nsRect& aRect)
+nsPoint
+TouchCaret::ClampPositionToScrollFrame(const nsPoint& aPosition)
 {
-  nsRect rect = aRect;
+  nsPoint pos = aPosition;
   nsIFrame* focusFrame = GetCaretFocusFrame();
   nsIFrame* rootFrame = GetRootFrame();
 
@@ -520,7 +522,7 @@ TouchCaret::ClampRectToScrollFrame(const nsRect& aRect)
 
     // Clamp the touch caret in the scroll port.
     nsLayoutUtils::TransformRect(closestScrollFrame, rootFrame, visualRect);
-    rect = rect.Intersect(visualRect);
+    pos = visualRect.ClampPoint(pos);
 
     // Get next ancestor scroll frame.
     closestScrollFrame =
@@ -528,7 +530,7 @@ TouchCaret::ClampRectToScrollFrame(const nsRect& aRect)
                                            nsGkAtoms::scrollFrame);
   }
 
-  return rect;
+  return pos;
 }
 
 /* static */void

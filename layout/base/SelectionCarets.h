@@ -147,16 +147,16 @@ private:
   void SetSelectionDirection(nsDirection aDir);
 
   /**
-   * Move start frame of selection caret based on current caret pos.
+   * Move start frame of selection caret to given position.
    * In app units.
    */
-  void SetStartFramePos(const nsRect& aCaretRect);
+  void SetStartFramePos(const nsPoint& aPosition);
 
   /**
-   * Move end frame of selection caret based on current caret pos.
+   * Move end frame of selection caret to given position.
    * In app units.
    */
-  void SetEndFramePos(const nsRect& aCaretRect);
+  void SetEndFramePos(const nsPoint& aPosition);
 
   /**
    * Check if aPosition is on the start or end frame of the
