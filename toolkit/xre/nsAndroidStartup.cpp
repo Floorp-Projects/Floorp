@@ -34,7 +34,7 @@ struct AutoAttachJavaThread {
         attached = mozilla_AndroidBridge_SetMainThread(pthread_self());
     }
     ~AutoAttachJavaThread() {
-        mozilla_AndroidBridge_SetMainThread(-1);
+        mozilla_AndroidBridge_SetMainThread(pthread_t());
         attached = false;
     }
 
