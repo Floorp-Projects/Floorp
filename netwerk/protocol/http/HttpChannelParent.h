@@ -20,6 +20,7 @@
 #include "nsHttpChannel.h"
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "nsINetworkInterceptController.h"
 
 class nsICacheEntry;
 class nsIAssociatedContentSecurity;
@@ -41,6 +42,7 @@ class HttpChannelParent final : public PHttpChannelParent
                               , public nsIInterfaceRequestor
                               , public ADivertableParentChannel
                               , public nsIAuthPromptProvider
+                              , public nsINetworkInterceptController
                               , public DisconnectableParent
 {
   virtual ~HttpChannelParent();
@@ -54,6 +56,7 @@ public:
   NS_DECL_NSIPROGRESSEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
+  NS_DECL_NSINETWORKINTERCEPTCONTROLLER
 
   HttpChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                     nsILoadContext* aLoadContext,
@@ -116,7 +119,8 @@ protected:
                    const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
                    const uint32_t&            aSecurityFlags,
                    const uint32_t&            aContentPolicyType,
-                   const uint32_t&            aInnerWindowID);
+                   const uint32_t&            aInnerWindowID,
+                   const OptionalHttpResponseHead& aSynthesizedResponseHead);
 
   virtual bool RecvSetPriority(const uint16_t& priority) override;
   virtual bool RecvSetClassOfService(const uint32_t& cos) override;
@@ -177,6 +181,8 @@ private:
 
   nsCOMPtr<nsILoadContext> mLoadContext;
   nsRefPtr<nsHttpHandler>  mHttpHandler;
+
+  nsAutoPtr<nsHttpResponseHead> mSynthesizedResponseHead;
 
   nsRefPtr<HttpChannelParentListener> mParentListener;
   // This is listener we are diverting to.

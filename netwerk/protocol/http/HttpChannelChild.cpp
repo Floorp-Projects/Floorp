@@ -1578,6 +1578,12 @@ HttpChannelChild::ContinueAsyncOpen()
   nsTArray<mozilla::ipc::FileDescriptor> fds;
   SerializeInputStream(mUploadStream, openArgs.uploadStream(), fds);
 
+  if (mResponseHead) {
+    openArgs.synthesizedResponseHead() = *mResponseHead;
+  } else {
+    openArgs.synthesizedResponseHead() = mozilla::void_t();
+  }
+
   OptionalFileDescriptorSet optionalFDs;
 
   if (fds.IsEmpty()) {
@@ -2090,6 +2096,19 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
                                                   nsIInputStream* aSynthesizedInput,
                                                   nsIStreamListener* aStreamListener)
 {
+  // Intercepted responses should already be decoded.
+  SetApplyConversion(false);
+
+  mResponseHead = aResponseHead;
+
+  uint16_t status = mResponseHead->Status();
+  if (status != 200 && status != 404) {
+    // Continue with the original cross-process request
+    nsresult rv = ContinueAsyncOpen();
+    NS_ENSURE_SUCCESS_VOID(rv);
+    return;
+  }
+
   // In our current implementation, the FetchEvent handler will copy the
   // response stream completely into the pipe backing the input stream so we
   // can treat the available as the length of the stream.
@@ -2111,11 +2130,6 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
 
   rv = mSynthesizedResponsePump->AsyncRead(aStreamListener, nullptr);
   NS_ENSURE_SUCCESS_VOID(rv);
-
-  // Intercepted responses should already be decoded.
-  SetApplyConversion(false);
-
-  mResponseHead = aResponseHead;
 
   // if this channel has been suspended previously, the pump needs to be
   // correspondingly suspended now that it exists.
