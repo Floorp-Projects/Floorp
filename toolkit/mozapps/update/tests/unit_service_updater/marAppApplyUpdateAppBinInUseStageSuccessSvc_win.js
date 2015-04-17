@@ -7,7 +7,8 @@
  * apply it.
  */
 
-Cu.import("resource://gre/modules/ctypes.jsm");
+const START_STATE = STATE_PENDING_SVC;
+const END_STATE = STATE_APPLIED_SVC;
 
 function run_test() {
   if (MOZ_APP_NAME == "xulrunner") {
@@ -32,31 +33,23 @@ function run_test() {
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    STATE_PENDING_SVC);
+                                    START_STATE);
   let updates = getLocalUpdateString(patches, null, null, null, null, null,
                                      null, null, null, null, null, null,
                                      null, "true", channel);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(getAppVersion());
-  writeStatusFile(STATE_PENDING_SVC);
+  writeStatusFile(START_STATE);
 
   reloadUpdateManagerData();
-  do_check_true(!!gUpdateManager.activeUpdate);
+  Assert.ok(!!gUpdateManager.activeUpdate,
+            "the active update should be defined");
 
   setupAppFilesAsync();
 }
 
 function setupAppFilesFinished() {
-  // For Mac OS X set the last modified time for the root directory to a date in
-  // the past to test that the last modified time is updated on a successful
-  // update (bug 600098).
-  if (IS_MACOSX) {
-    let now = Date.now();
-    let yesterday = now - (1000 * 60 * 60 * 24);
-    let applyToDir = getApplyDirFile();
-    applyToDir.lastModifiedTime = yesterday;
-  }
-
+  setAppBundleModTime();
   stageUpdate();
 }
 
@@ -78,7 +71,8 @@ function customLaunchAppToApplyUpdate() {
   gHandle = CreateFile(getAppBaseDir().path, GENERIC_READ,
                        FILE_SHARE_READ | FILE_SHARE_WRITE, LPVOID(0),
                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, LPVOID(0));
-  do_check_neq(gHandle.toString(), INVALID_HANDLE_VALUE.toString());
+  Assert.notEqual(gHandle.toString(), INVALID_HANDLE_VALUE.toString(),
+                  "the handle should not equal INVALID_HANDLE_VALUE");
   kernel32.close();
   debugDump("finish - locking installation directory");
 }
@@ -89,28 +83,27 @@ function customLaunchAppToApplyUpdate() {
 function checkUpdateApplied() {
   gTimeoutRuns++;
   // Don't proceed until the active update's state is the expected value.
-  if (gUpdateManager.activeUpdate.state != STATE_APPLIED_SVC) {
+  if (gUpdateManager.activeUpdate.state != END_STATE) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for update to equal: " +
-               STATE_APPLIED_SVC +
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
+               "active update status state to equal: " +
+               END_STATE +
                ", current state: " + gUpdateManager.activeUpdate.state);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
   // Don't proceed until the update's status state is the expected value.
   let state = readStatusState();
-  if (state != STATE_APPLIED_SVC) {
+  if (state != END_STATE) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal: " +
-               STATE_APPLIED_SVC +
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update" +
+               "status file state to equal: " +
+               END_STATE +
                ", current status state: " + state);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
@@ -127,61 +120,42 @@ function checkUpdateApplied() {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update log " +
                "to be created. Path: " + log.path);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
-  if (IS_WIN || IS_MACOSX) {
-    let running = getPostUpdateFile(".running");
-    debugDump("checking that the post update process running file doesn't " +
-              "exist. Path: " + running.path);
-    do_check_false(running.exists());
-  }
-
+  checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true, false);
 
   log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
   if (IS_WIN || IS_MACOSX) {
-    debugDump("testing " + log.path + " should exist");
-    do_check_true(log.exists());
+    Assert.ok(log.exists(), MSG_SHOULD_EXIST);
   } else {
-    debugDump("testing " + log.path + " shouldn't exist");
-    do_check_false(log.exists());
+    Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
   }
 
   log = getUpdatesDir();
   log.append(FILE_BACKUP_LOG);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  let updatesDir = getStageDirFile(DIR_UPDATES + "/0", true);
-  debugDump("testing " + updatesDir.path + " shouldn't exist");
-  do_check_false(updatesDir.exists());
-
-  log = getStageDirFile(DIR_UPDATES + "/0/" + FILE_UPDATE_LOG, true);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  let updatesDir = getStageDirFile(DIR_UPDATES + "/" + DIR_PATCH, true);
+  Assert.ok(!updatesDir.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getStageDirFile(DIR_UPDATES + "/" + FILE_LAST_LOG, true);
   if (IS_WIN || IS_MACOSX) {
-    debugDump("testing " + log.path + " shouldn't exist");
-    do_check_false(log.exists());
+    Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
   } else {
-    debugDump("testing " + log.path + " should exist");
-    do_check_true(log.exists());
+    Assert.ok(log.exists(), MSG_SHOULD_EXIST);
   }
 
   log = getStageDirFile(DIR_UPDATES + "/" + FILE_BACKUP_LOG, true);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   // Switch the application to the staged application that was updated by
   // launching the application.
@@ -211,13 +185,12 @@ function finishCheckUpdateFinished() {
   let state = readStatusState();
   if (state != STATE_SUCCEEDED) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal: " +
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
+               "update status file state to equal: " +
                STATE_SUCCEEDED +
                ", current status state: " + state);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     return;
   }
 
@@ -226,11 +199,10 @@ function finishCheckUpdateFinished() {
   let updatedDir = getStageDirFile(null, true);
   if (updatedDir.exists()) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded while waiting for updated dir to not exist. Path: " +
-               updatedDir.path);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the updated " +
+               "directory to not exist. Path: " + updatedDir.path);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     return;
   }
 
@@ -240,35 +212,20 @@ function finishCheckUpdateFinished() {
     updater.append(FILE_UPDATER_BIN);
     if (updater.exists()) {
       if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded while waiting for updater binary to no longer be " +
-                 "in use");
-      } else {
-        try {
-          updater.remove(false);
-        } catch (e) {
-          do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-          return;
-        }
+        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
+                 "updater binary to no longer be in use");
+      }
+      try {
+        updater.remove(false);
+      } catch (e) {
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
+        return;
       }
     }
   }
 
-  if (IS_MACOSX) {
-    debugDump("testing last modified time on the apply to directory has " +
-              "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let applyToDir = getApplyDirFile();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
-  }
-
-  if (IS_WIN || IS_MACOSX) {
-    let running = getPostUpdateFile(".running");
-    debugDump("checking that the post update process running file exists. " +
-              "Path: " + running.path);
-    do_check_true(running.exists());
-  }
-
+  checkPostUpdateRunningFile(true);
+  checkAppBundleModTime();
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
   checkCallbackAppLog();
@@ -276,26 +233,23 @@ function finishCheckUpdateFinished() {
   standardInit();
 
   let update = gUpdateManager.getUpdateAt(0);
-  do_check_eq(update.state, STATE_SUCCEEDED);
+  Assert.equal(update.state, STATE_SUCCEEDED,
+               "the update state" + MSG_SHOULD_EQUAL);
 
   let updatesDir = getUpdatesPatchDir();
-  debugDump("testing " + updatesDir.path + " should exist");
-  do_check_true(updatesDir.exists());
+  Assert.ok(updatesDir.exists(), MSG_SHOULD_EXIST);
 
   let log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
-  debugDump("testing " + log.path + " should exist");
-  do_check_true(log.exists());
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST);
 
   log = getUpdatesDir();
   log.append(FILE_BACKUP_LOG);
-  debugDump("testing " + log.path + " should exist");
-  do_check_true(log.exists());
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST);
 
   waitForFilesInUse();
 }

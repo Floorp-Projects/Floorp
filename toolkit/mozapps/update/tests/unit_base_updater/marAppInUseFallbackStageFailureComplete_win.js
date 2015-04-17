@@ -4,6 +4,9 @@
 
 /* Application in use complete MAR file staged patch apply failure fallback test */
 
+const START_STATE = STATE_APPLIED;
+const END_STATE = STATE_PENDING;
+
 function run_test() {
   gStageUpdate = true;
   setupTestCommon();
@@ -25,12 +28,12 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(0, STATE_APPLIED, null);
+  runUpdate(0, START_STATE, null);
 
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(1, STATE_PENDING);
+  runUpdate(1, END_STATE, checkUpdateApplied);
 }
 
 function checkUpdateApplied() {
