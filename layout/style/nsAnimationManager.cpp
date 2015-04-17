@@ -511,8 +511,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     nsCSSKeyframesRule* rule =
       src.GetName().IsEmpty()
       ? nullptr
-      : mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
-                                                       src.GetName());
+      : mPresContext->StyleSet()->KeyframesRuleForName(src.GetName());
     if (!rule) {
       continue;
     }

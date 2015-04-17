@@ -209,40 +209,35 @@ class nsStyleSet
 
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
-  bool AppendFontFaceRules(nsPresContext* aPresContext,
-                             nsTArray<nsFontFaceRuleContainer>& aArray);
+  bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
   // Return the winning (in the cascade) @keyframes rule for the given name.
-  nsCSSKeyframesRule* KeyframesRuleForName(nsPresContext* aPresContext,
-                                           const nsString& aName);
+  nsCSSKeyframesRule* KeyframesRuleForName(const nsString& aName);
 
   // Return the winning (in the cascade) @counter-style rule for the given name.
-  nsCSSCounterStyleRule* CounterStyleRuleForName(nsPresContext* aPresContext,
-                                                 const nsAString& aName);
+  nsCSSCounterStyleRule* CounterStyleRuleForName(const nsAString& aName);
 
   // Fetch object for looking up font feature values
   already_AddRefed<gfxFontFeatureValueSet> GetFontFeatureValuesLookup();
 
   // Append all the currently-active font feature values rules to aArray.
   // Return true for success and false for failure.
-  bool AppendFontFeatureValuesRules(nsPresContext* aPresContext,
+  bool AppendFontFeatureValuesRules(
                               nsTArray<nsCSSFontFeatureValuesRule*>& aArray);
 
   // Append all the currently-active page rules to aArray.  Return
   // true for success and false for failure.
-  bool AppendPageRules(nsPresContext* aPresContext,
-                       nsTArray<nsCSSPageRule*>& aArray);
+  bool AppendPageRules(nsTArray<nsCSSPageRule*>& aArray);
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.
-  void BeginShutdown(nsPresContext* aPresContext);
+  void BeginShutdown();
 
   // Free all of the data associated with this style set.
-  void Shutdown(nsPresContext* aPresContext);
+  void Shutdown();
 
   // Notification that a style context is being destroyed.
-  void NotifyStyleContextDestroyed(nsPresContext* aPresContext,
-                                   nsStyleContext* aStyleContext);
+  void NotifyStyleContextDestroyed(nsStyleContext* aStyleContext);
 
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent is the
@@ -256,23 +251,19 @@ class nsStyleSet
                        mozilla::dom::Element* aElement);
 
   // Test if style is dependent on a document state.
-  bool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
-                                      nsIContent*    aContent,
+  bool HasDocumentStateDependentStyle(nsIContent*    aContent,
                                       mozilla::EventStates aStateMask);
 
   // Test if style is dependent on content state
-  nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
-                                       mozilla::dom::Element* aElement,
+  nsRestyleHint HasStateDependentStyle(mozilla::dom::Element* aElement,
                                        mozilla::EventStates aStateMask);
-  nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
-                                       mozilla::dom::Element* aElement,
+  nsRestyleHint HasStateDependentStyle(mozilla::dom::Element* aElement,
                                        nsCSSPseudoElements::Type aPseudoType,
                                        mozilla::dom::Element* aPseudoElement,
                                        mozilla::EventStates aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
-  nsRestyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
-                                           mozilla::dom::Element* aElement,
+  nsRestyleHint HasAttributeDependentStyle(mozilla::dom::Element* aElement,
                                            nsIAtom*       aAttribute,
                                            int32_t        aModType,
                                            bool           aAttrHasChanged);
@@ -282,7 +273,7 @@ class nsStyleSet
    * the characteristics of the medium, and return whether style rules
    * may have changed as a result.
    */
-  bool MediumFeaturesChanged(nsPresContext* aPresContext);
+  bool MediumFeaturesChanged();
 
   // APIs for registering objects that can supply additional
   // rules during processing.

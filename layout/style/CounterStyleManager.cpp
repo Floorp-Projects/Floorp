@@ -2021,7 +2021,7 @@ CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
   // It is intentional that the predefined names are case-insensitive
   // but the user-defined names case-sensitive.
   nsCSSCounterStyleRule* rule =
-    mPresContext->StyleSet()->CounterStyleRuleForName(mPresContext, aName);
+    mPresContext->StyleSet()->CounterStyleRuleForName(aName);
   if (rule) {
     data = new (mPresContext) CustomCounterStyle(this, rule);
   } else {
@@ -2074,7 +2074,7 @@ InvalidateOldStyle(const nsSubstring& aKey,
   bool toBeUpdated = false;
   bool toBeRemoved = false;
   nsCSSCounterStyleRule* newRule = data->mPresContext->
-    StyleSet()->CounterStyleRuleForName(data->mPresContext, aKey);
+    StyleSet()->CounterStyleRuleForName(aKey);
   if (!newRule) {
     if (aStyle->IsCustomStyle()) {
       toBeRemoved = true;
