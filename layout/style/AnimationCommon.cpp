@@ -511,6 +511,15 @@ AnimationPlayerCollection::CanAnimatePropertyOnCompositor(
   CanAnimateFlags aFlags)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
+  if (!gfxPlatform::OffMainThreadCompositingEnabled()) {
+    if (shouldLog) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Compositor disabled");
+      LogAsyncAnimationFailure(message);
+    }
+    return false;
+  }
+
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
   if (IsGeometricProperty(aProperty)) {
     if (shouldLog) {
@@ -575,19 +584,6 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
 {
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
   if (!frame) {
-    return false;
-  }
-
-  nsIWidget* widget = frame->GetNearestWidget();
-  if (!widget ||
-      widget->GetLayerManager()->GetBackendType() !=
-        layers::LayersBackend::LAYERS_CLIENT) {
-    // No widget (huh?), or a widget not using off-main-thread compositor.
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Compositor disabled");
-      LogAsyncAnimationFailure(message);
-    }
     return false;
   }
 
