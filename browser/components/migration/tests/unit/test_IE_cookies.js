@@ -65,3 +65,8 @@ add_task(function* () {
   Assert.equal(foundCookie.host, "." + COOKIE.host);
   Assert.equal(foundCookie.expiry, Math.floor(COOKIE.expiry / 1000));
 });
+
+function run_test() {
+  run_next_test()
+}
+
