@@ -21,11 +21,15 @@ PrintSettingsDialogChild::~PrintSettingsDialogChild()
 }
 
 bool
-PrintSettingsDialogChild::Recv__delete__(const nsresult& aResult,
-                                         const PrintData& aData)
+PrintSettingsDialogChild::Recv__delete__(const PrintDataOrNSResult& aData)
 {
-  mResult = aResult;
-  mData = aData;
+  if (aData.type() == PrintDataOrNSResult::Tnsresult) {
+    mResult = aData.get_nsresult();
+    MOZ_ASSERT(NS_FAILED(mResult), "expected a failure result");
+  } else {
+    mResult = NS_OK;
+    mData = aData.get_PrintData();
+  }
   mReturned = true;
   return true;
 }
