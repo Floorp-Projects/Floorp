@@ -96,9 +96,6 @@ class InterceptedChannelContent : public InterceptedChannelBase
   // Reader-side of the response body when synthesizing in a child proces
   nsCOMPtr<nsIInputStream> mSynthesizedInput;
 
-  // Pump to read the synthesized body in child processes
-  nsRefPtr<nsInputStreamPump> mStoragePump;
-
   // Listener for the synthesized response to fix up the notifications before they reach
   // the actual channel.
   nsCOMPtr<nsIStreamListener> mStreamListener;
