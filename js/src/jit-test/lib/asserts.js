@@ -65,23 +65,3 @@ if (typeof assertNoWarning === 'undefined') {
         }
     };
 }
-
-if (typeof assertTypeErrorMessage === 'undefined') {
-    var assertTypeErrorMessage = function assertTypeErrorMessage(f, test) {
-        try {
-            f();
-        } catch (e) {
-            if (!(e instanceof TypeError))
-                throw new Error("Assertion failed: expected exception TypeError, got " + e);
-            if (typeof test == "string") {
-                if (test != e.message)
-                    throw new Error("Assertion failed: expeceted " + test + ", got " + e.message);
-            } else {
-                if (!test.test(e.message))
-                    throw new Error("Assertion failed: expeceted " + test.toString() + ", got " + e.message);
-            }
-            return;
-        }
-        throw new Error("Assertion failed: expected exception TypeError, no exception thrown");
-    };
-}
