@@ -126,7 +126,7 @@ GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
 }
 
 GMPErr
-GMPVideoEncoderParent::Encode(GMPUnique<GMPVideoi420Frame>::Ptr aInputFrame,
+GMPVideoEncoderParent::Encode(GMPUnique<GMPVideoi420Frame> aInputFrame,
                               const nsTArray<uint8_t>& aCodecSpecificInfo,
                               const nsTArray<GMPVideoFrameType>& aFrameTypes)
 {
@@ -137,7 +137,7 @@ GMPVideoEncoderParent::Encode(GMPUnique<GMPVideoi420Frame>::Ptr aInputFrame,
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
-  GMPUnique<GMPVideoi420FrameImpl>::Ptr inputFrameImpl(
+  GMPUnique<GMPVideoi420FrameImpl> inputFrameImpl(
     static_cast<GMPVideoi420FrameImpl*>(aInputFrame.release()));
 
   // Very rough kill-switch if the plugin stops processing.  If it's merely
