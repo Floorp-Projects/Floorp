@@ -540,8 +540,7 @@ nsSHistory::GetTransactionAtIndex(int32_t aIndex, nsISHTransaction ** aResult)
     if (NS_SUCCEEDED(rv) && ptr) {
       cnt++;
       if (cnt == aIndex) {
-        *aResult = ptr;
-        NS_ADDREF(*aResult);
+        ptr.forget(aResult);
         break;
       }
       else {
