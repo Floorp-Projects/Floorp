@@ -37,6 +37,10 @@ enum nsCharType   {
   eCharType_PopDirectionalFormat     = 16,
   eCharType_DirNonSpacingMark        = 17,
   eCharType_BoundaryNeutral          = 18,
+  eCharType_LeftToRightIsolate       = 19,
+  eCharType_RightToLeftIsolate       = 20,
+  eCharType_FirstStrongIsolate       = 21,
+  eCharType_PopDirectionalIsolate    = 22,
   eCharType_CharTypeCount
 };
 
