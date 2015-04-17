@@ -1431,7 +1431,12 @@ public class BrowserApp extends GeckoApp
             public void run() {
                 final float translationY = marginTop - browserChrome.getHeight();
                 ViewHelper.setTranslationY(browserChrome, translationY);
-                ViewHelper.setTranslationY(progressView, translationY);
+
+                // Stop the progressView from moving all the way up so that we can still see a good chunk of it
+                // when the chrome is offscreen.
+                final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
+                final float progressTranslationY = Math.max(marginTop - browserChrome.getHeight(), offset - browserChrome.getHeight());
+                ViewHelper.setTranslationY(progressView, progressTranslationY);
 
                 if (mDoorHangerPopup.isShowing()) {
                     mDoorHangerPopup.updatePopup();
