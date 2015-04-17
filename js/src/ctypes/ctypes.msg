@@ -34,6 +34,4 @@ MSG_DEF(CTYPESMSG_EMPTY_FIN,     1, JSEXN_TYPEERR, "attempting to convert an emp
 MSG_DEF(CTYPESMSG_FIN_SIZE_ERROR,2, JSEXN_TYPEERR, "expected an object with the same size as argument 1 of {0}, got {1}")
 
 /* native function */
-MSG_DEF(CTYPESMSG_ARG_RANGE_MISMATCH,3, JSEXN_RANGEERR, "{0}argument of {1} must be {2}")
-MSG_DEF(CTYPESMSG_ARG_TYPE_MISMATCH,3, JSEXN_TYPEERR, "{0}argument of {1} must be {2}")
 MSG_DEF(CTYPESMSG_WRONG_ARG_LENGTH,3, JSEXN_TYPEERR, "{0} takes {1} argument{2}")
