@@ -1688,7 +1688,7 @@ pref("shumway.swf.whitelist", "http://g-ecx.images-amazon.com/*/AiryBasicRendere
 pref("image.mem.max_decoded_image_kb", 256000);
 
 pref("loop.enabled", true);
-pref("loop.screenshare.enabled", true);
+pref("loop.screenshare.enabled", false);
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.seenToS", "unseen");
 pref("loop.showPartnerLogo", true);
