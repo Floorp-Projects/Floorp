@@ -223,6 +223,18 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetIsInitializedFromPrefs(&data->isInitializedFromPrefs());
   aSettings->GetPersistMarginBoxSettings(&data->persistMarginBoxSettings());
 
+  // Initialize the platform-specific values that don't
+  // default-initialize, so that we don't send uninitialized data over
+  // IPC (which leads to valgrind warnings, and, for bools, fatal
+  // assertions).
+  // data->driverName() default-initializes
+  // data->deviceName() default-initializes
+  data->isFramesetDocument() = false;
+  data->isFramesetFrameSelected() = false;
+  data->isIFrameSelected() = false;
+  data->isRangeSelection() = false;
+  // data->GTKPrintSettings() default-initializes
+
   return NS_OK;
 }
 
