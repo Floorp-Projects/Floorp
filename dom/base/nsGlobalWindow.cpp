@@ -13676,6 +13676,14 @@ nsGlobalWindow::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
   aError = widget->BeginMoveDrag(mouseEvent);
 }
 
+already_AddRefed<nsWindowRoot>
+nsGlobalWindow::GetWindowRoot(mozilla::ErrorResult& aError)
+{
+  FORWARD_TO_OUTER_OR_THROW(GetWindowRoot, (aError), aError, nullptr);
+  nsCOMPtr<nsPIWindowRoot> root = GetTopWindowRoot();
+  return root.forget().downcast<nsWindowRoot>();
+}
+
 //Note: This call will lock the cursor, it will not change as it moves.
 //To unlock, the cursor must be set back to CURSOR_AUTO.
 NS_IMETHODIMP
