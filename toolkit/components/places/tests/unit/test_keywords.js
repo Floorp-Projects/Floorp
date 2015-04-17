@@ -5,13 +5,21 @@ function* check_keyword(aExpectExists, aHref, aKeyword, aPostData = null) {
   aKeyword = aKeyword.toUpperCase();
 
   let entry = yield PlacesUtils.keywords.fetch(aKeyword);
+
+  Assert.deepEqual(entry, yield PlacesUtils.keywords.fetch({ keyword: aKeyword }));
+
   if (aExpectExists) {
     Assert.ok(!!entry, "A keyword should exist");
     Assert.equal(entry.url.href, aHref);
     Assert.equal(entry.postData, aPostData);
+    Assert.deepEqual(entry, yield PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
+    let entries = [];
+    yield PlacesUtils.keywords.fetch({ url: aHref }, e => entries.push(e));
+    Assert.ok(entries.some(e => e.url.href == aHref && e.keyword == aKeyword.toLowerCase()));
   } else {
     Assert.ok(!entry || entry.url.href != aHref,
               "The given keyword entry should not exist");
+    Assert.equal(null, yield PlacesUtils.keywords.fetch({ keyword: aKeyword, url: aHref }));
   }
 }
 
@@ -74,10 +82,28 @@ function expectBookmarkNotifications() {
 add_task(function* test_invalid_input() {
   Assert.throws(() => PlacesUtils.keywords.fetch(null),
                 /Invalid keyword/);
-  Assert.throws(() => PlacesUtils.keywords.fetch({}),
-                /Invalid keyword/);
   Assert.throws(() => PlacesUtils.keywords.fetch(5),
                 /Invalid keyword/);
+  Assert.throws(() => PlacesUtils.keywords.fetch(undefined),
+                /Invalid keyword/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ keyword: null }),
+                /Invalid keyword/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ keyword: {} }),
+                /Invalid keyword/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ keyword: 5 }),
+                /Invalid keyword/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({}),
+                /At least keyword or url must be provided/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ keyword: "test" }, "test"),
+                /onResult callback must be a valid function/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ url: "test" }),
+                /is not a valid URL/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ url: {} }),
+                /is not a valid URL/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ url: null }),
+                /is not a valid URL/);
+  Assert.throws(() => PlacesUtils.keywords.fetch({ url: "" }),
+                /is not a valid URL/);
 
   Assert.throws(() => PlacesUtils.keywords.insert(null),
                 /Input should be a valid object/);
@@ -211,6 +237,10 @@ add_task(function* test_addKeywordToURIHavingKeyword() {
   yield check_keyword(true, "http://example.com/", "keyword");
   yield check_keyword(true, "http://example.com/", "keyword2");
   Assert.equal((yield foreign_count("http://example.com/")), fc + 2); // +1 keyword
+  let entries = [];
+  let entry = yield PlacesUtils.keywords.fetch({ url: "http://example.com/" }, e => entries.push(e));
+  Assert.equal(entries.length, 2);
+  Assert.deepEqual(entries[0], entry);
 
   // Now remove the keywords.
   observer = expectBookmarkNotifications();
