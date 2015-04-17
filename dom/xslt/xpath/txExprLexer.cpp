@@ -284,7 +284,7 @@ txExprLexer::parse(const nsASingleFragmentString& aPattern)
         newToken = new Token(mPosition, Token::SUBTRACTION_OP);
         ++mPosition;
         break;
-      case ASTERIX:
+      case ASTERISK:
         if (nextIsOperatorToken(prevToken)) {
           newToken = new Token(mPosition, Token::MULTIPLY_OP);
         }
