@@ -19,6 +19,8 @@ else:
 
 JAR_MANIFESTS += ['jar.mn']
 
+USE_EXTENSION_MANIFEST = True
+
 XPI_NAME = 'reftest'
 
 DIST_FILES += ['install.rdf']
