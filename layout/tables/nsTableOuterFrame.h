@@ -6,6 +6,7 @@
 #define nsTableOuterFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsCellMap.h"
@@ -220,11 +221,11 @@ protected:
                             nsPoint&         aOrigin);
   
   // reflow the child (caption or innertable frame)
-  void OuterBeginReflowChild(nsPresContext*           aPresContext,
-                             nsIFrame*                aChildFrame,
-                             const nsHTMLReflowState& aOuterRS,
-                             void*                    aChildRSSpace,
-                             nscoord                  aAvailISize);
+  void OuterBeginReflowChild(nsPresContext*                     aPresContext,
+                             nsIFrame*                          aChildFrame,
+                             const nsHTMLReflowState&           aOuterRS,
+                             mozilla::Maybe<nsHTMLReflowState>& aChildRS,
+                             nscoord                            aAvailISize);
 
   void OuterDoReflowChild(nsPresContext*           aPresContext,
                           nsIFrame*                aChildFrame,
