@@ -6,9 +6,6 @@
 NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = flat
 
-# Used in install.rdf
-USE_EXTENSION_MANIFEST=1
-
 TEST_EXTENSIONS_DIR = $(DEPTH)/testing/specialpowers
 
 include $(topsrcdir)/config/rules.mk

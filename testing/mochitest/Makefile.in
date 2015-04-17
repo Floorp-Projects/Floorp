@@ -6,9 +6,6 @@
 NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = jar
 
-# Used in install.rdf
-USE_EXTENSION_MANIFEST = 1
-
 _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
 
 include $(topsrcdir)/config/rules.mk
