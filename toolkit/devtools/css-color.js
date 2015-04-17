@@ -95,7 +95,21 @@ CssColor.COLORUNIT = {
 };
 
 CssColor.prototype = {
+  _colorUnit: null,
+
   authored: null,
+
+  get colorUnit() {
+    if (this._colorUnit === null) {
+      let defaultUnit = Services.prefs.getCharPref(COLOR_UNIT_PREF);
+      this._colorUnit = CssColor.COLORUNIT[defaultUnit];
+    }
+    return this._colorUnit;
+  },
+
+  set colorUnit(unit) {
+    this._colorUnit = unit;
+  },
 
   get hasAlpha() {
     if (!this.valid) {
@@ -269,15 +283,31 @@ CssColor.prototype = {
     return this;
   },
 
+  nextColorUnit: function() {
+    // Reorder the formats array to have the current format at the
+    // front so we can cycle through.
+    let formats = ["authored", "hex", "hsl", "rgb", "name"];
+    let putOnEnd = formats.splice(0, formats.indexOf(this.colorUnit));
+    formats = formats.concat(putOnEnd);
+    let currentDisplayedColor = this[formats[0]];
+
+    for (let format of formats) {
+      if (this[format].toLowerCase() !== currentDisplayedColor.toLowerCase()) {
+        this.colorUnit = CssColor.COLORUNIT[format];
+        break;
+      }
+    }
+
+    return this.toString();
+  },
+
   /**
    * Return a string representing a color of type defined in COLOR_UNIT_PREF.
    */
   toString: function() {
     let color;
-    let defaultUnit = Services.prefs.getCharPref(COLOR_UNIT_PREF);
-    let unit = CssColor.COLORUNIT[defaultUnit];
 
-    switch(unit) {
+    switch(this.colorUnit) {
       case CssColor.COLORUNIT.authored:
         color = this.authored;
         break;

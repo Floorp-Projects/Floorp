@@ -72,38 +72,5 @@
       &noPropertiesFound;
     </div>
 
-    <!--
-    To visually debug the templates without running firefox, alter the display:none
-    -->
-    <div style="display:none;">
-      <!--
-      A templateMatchedSelectors sits inside each templateProperties showing the
-      list of selectors that affect that property. Each needs data like this:
-      {
-        matchedSelectorViews: ..., // from cssHtmlTree.propertyViews[name].matchedSelectorViews
-      }
-      This is a template so the parent does not need to be a table, except that
-      using a div as the parent causes the DOM to muck with the tr elements
-      -->
-      <div id="templateMatchedSelectors">
-        <loop foreach="selector in ${matchedSelectorViews}">
-          <p>
-            <span class="rule-link">
-              <a target="_blank" class="link theme-link"
-                  onclick="${selector.openStyleEditor}"
-                  onkeydown="${selector.maybeOpenStyleEditor}"
-                  title="${selector.href}"
-                  sourcelocation="${selector.source}"
-                  tabindex="0">${selector.source}</a>
-            </span>
-            <span dir="ltr" class="rule-text ${selector.statusClass} theme-fg-color3" title="${selector.statusText}">
-              ${selector.sourceText}
-              <span class="other-property-value theme-fg-color1">${selector.outputFragment}</span>
-            </span>
-          </p>
-        </loop>
-      </div>
-    </div>
-
   </body>
 </html>
