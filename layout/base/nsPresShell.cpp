@@ -746,7 +746,6 @@ PresShell::BeforeAfterKeyboardEventEnabled()
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
-  mSelection = nullptr;
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
   mReflowCountMgr->SetPresContext(mPresContext);
@@ -835,10 +834,6 @@ PresShell::~PresShell()
   delete mFrameConstructor;
 
   mCurrentEventContent = nullptr;
-
-  NS_IF_RELEASE(mPresContext);
-  NS_IF_RELEASE(mDocument);
-  NS_IF_RELEASE(mSelection);
 }
 
 /**
@@ -864,7 +859,6 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   mDocument = aDocument;
-  NS_ADDREF(mDocument);
   mViewManager = aViewManager;
 
   // Create our frame constructor.
@@ -877,7 +871,6 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  NS_ADDREF(mPresContext);
   aPresContext->SetShell(this);
 
   // Now we can initialize the style set.
@@ -905,7 +898,7 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
 
-  NS_ADDREF(mSelection = new nsFrameSelection());
+  mSelection = new nsFrameSelection();
 
   mSelection->Init(this, nullptr);
 
