@@ -38,7 +38,7 @@ public:
                               const nsTArray<uint8_t>& aCodecSpecific,
                               GMPVideoDecoderCallbackProxy* aCallback,
                               int32_t aCoreCount) = 0;
-  virtual nsresult Decode(mozilla::GMPUnique<GMPVideoEncodedFrame>::Ptr aInputFrame,
+  virtual nsresult Decode(mozilla::GMPUnique<GMPVideoEncodedFrame> aInputFrame,
                           bool aMissingFrames,
                           const nsTArray<uint8_t>& aCodecSpecificInfo,
                           int64_t aRenderTimeMs = -1) = 0;
