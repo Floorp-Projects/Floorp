@@ -585,6 +585,17 @@ let getFontFamilyDataURL = Task.async(function*(font, nodeFront) {
   return dataURL;
 });
 
+/**
+ * Simulate the key input for the given input in the window.
+ * @param {String} input The string value to input
+ * @param {Window} win The window containing the panel
+ */
+function synthesizeKeys(input, win) {
+  for (let key of input.split("")) {
+     EventUtils.synthesizeKey(key, {}, win);
+  }
+}
+
 /* *********************************************
  * RULE-VIEW
  * *********************************************

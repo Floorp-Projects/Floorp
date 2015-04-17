@@ -2,7 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#root {
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#ruleview-container {
+  -moz-user-select: text;
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+#root .devtools-toolbar {
+  width: 100%;
   display: -moz-box;
 }
 

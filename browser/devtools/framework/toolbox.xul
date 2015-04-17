@@ -2,13 +2,17 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+
 <!DOCTYPE window [
 <!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd" >
  %toolboxDTD;
+<!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuStrings;
 ]>
-<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -64,6 +68,19 @@
          oncommand="void(0);"
          modifiers="accel"/>
   </keyset>
+
+  <popupset>
+    <menupopup id="toolbox-textbox-context-popup">
+      <menuitem id="cMenu_undo"/>
+      <menuseparator/>
+      <menuitem id="cMenu_cut"/>
+      <menuitem id="cMenu_copy"/>
+      <menuitem id="cMenu_paste"/>
+      <menuitem id="cMenu_delete"/>
+      <menuseparator/>
+      <menuitem id="cMenu_selectAll"/>
+    </menupopup>
+  </popupset>
 
   <notificationbox id="toolbox-notificationbox" flex="1">
     <toolbar class="devtools-tabbar">

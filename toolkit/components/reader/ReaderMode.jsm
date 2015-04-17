@@ -32,7 +32,12 @@ this.ReaderMode = {
 
   // Don't try to parse the page if it has too many elements (for memory and
   // performance reasons)
-  MAX_ELEMS_TO_PARSE: 3000,
+  get maxElemsToParse() {
+    delete this.parseNodeLimit;
+
+    Services.prefs.addObserver("reader.parse-node-limit", this, false);
+    return this.parseNodeLimit = Services.prefs.getIntPref("reader.parse-node-limit");
+  },
 
   get isEnabledForParseOnLoad() {
     delete this.isEnabledForParseOnLoad;
@@ -62,6 +67,8 @@ this.ReaderMode = {
       case "nsPref:changed":
         if (aData.startsWith("reader.parse-on-load.")) {
           this.isEnabledForParseOnLoad = this._getStateForParseOnLoad();
+        } else if (aData === "reader.parse-node-limit") {
+          this.parseNodeLimit = Services.prefs.getIntPref(aData);
         }
         break;
     }
@@ -256,10 +263,12 @@ this.ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   _readerParse: Task.async(function* (uri, doc) {
-    let numTags = doc.getElementsByTagName("*").length;
-    if (numTags > this.MAX_ELEMS_TO_PARSE) {
-      this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
-      return null;
+    if (this.parseNodeLimit) {
+      let numTags = doc.getElementsByTagName("*").length;
+      if (numTags > this.parseNodeLimit) {
+        this.log("Aborting parse for " + uri.spec + "; " + numTags + " elements found");
+        return null;
+      }
     }
 
     let uriParam = {
