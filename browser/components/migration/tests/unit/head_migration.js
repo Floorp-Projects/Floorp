@@ -35,3 +35,26 @@ function promiseMigration(migrator, resourceType) {
     migrator.migrate(resourceType, null, null);
   });
 }
+
+/**
+ * Replaces a directory service entry with a given nsIFile.
+ */
+function registerFakePath(key, file) {
+   // Register our own provider for the Library directory.
+  let provider = {
+    getFile(prop, persistent) {
+      persistent.value = true;
+      if (prop == key) {
+        return file;
+      }
+      throw Cr.NS_ERROR_FAILURE;
+    },
+    QueryInterface: XPCOMUtils.generateQI([ Ci.nsIDirectoryServiceProvider ])
+  };
+  Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
+                 .registerProvider(provider);
+  do_register_cleanup(() => {
+    Services.dirsvc.QueryInterface(Ci.nsIDirectoryService)
+                   .unregisterProvider(provider);
+  });
+}
