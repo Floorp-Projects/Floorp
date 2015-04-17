@@ -211,7 +211,6 @@ pkix_pl_PublicKey_Hashcode(
         PKIX_UInt32 algOIDHash;
         PKIX_UInt32 algParamsHash;
         PKIX_UInt32 pubKeyHash;
-        PKIX_UInt32 fullHash;
 
         PKIX_ENTER(PUBLICKEY, "pkix_pl_PublicKey_Hashcode");
         PKIX_NULLCHECK_TWO(object, pHashcode);
@@ -238,8 +237,6 @@ pkix_pl_PublicKey_Hashcode(
         PKIX_CHECK(pkix_hash
                     (nssPubKey.data, nssPubKey.len, &pubKeyHash, plContext),
                     PKIX_HASHFAILED);
-
-        fullHash = algOIDHash + algParamsHash + pubKeyHash;
 
         *pHashcode = pubKeyHash;
 

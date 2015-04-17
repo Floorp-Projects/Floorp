@@ -120,9 +120,10 @@ typedef struct StringNode_str {
 StringNode* StringNode_new()
 {
 	StringNode* new_this;
-	new_this = (StringNode*)malloc(sizeof(StringNode));
-  new_this->str=NULL;
-  new_this->next=NULL;
+	new_this = (StringNode*)PR_Malloc(sizeof(StringNode));
+	PORT_Assert(new_this != NULL);
+	new_this->str = NULL;
+	new_this->next = NULL;
 	return new_this;
 }
 
