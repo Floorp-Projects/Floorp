@@ -53,12 +53,12 @@ WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
     mVideoWidth(0),
     mVideoHeight(0),
     mVideoStride(0),
-    mAudioFrameSum(0),
     mAudioFrameOffset(0),
+    mAudioFrameSum(0),
+    mMustRecaptureAudioPosition(true),
     mHasAudio(false),
     mHasVideo(false),
     mUseHwAccel(false),
-    mMustRecaptureAudioPosition(true),
     mIsMP3Enabled(WMFDecoder::IsMP3Supported()),
     mCOMInitialized(false)
 {
