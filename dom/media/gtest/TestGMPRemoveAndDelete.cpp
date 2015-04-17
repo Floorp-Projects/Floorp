@@ -351,7 +351,7 @@ GMPRemoveTest::gmp_Decode()
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &absFrame);
   EXPECT_EQ(err, GMPNoErr);
 
-  GMPUnique<GMPVideoEncodedFrame>
+  GMPUniquePtr<GMPVideoEncodedFrame>
     frame(static_cast<GMPVideoEncodedFrame*>(absFrame));
   err = frame->CreateEmptyFrame(sizeof(EncodedFrame) /* size */);
   EXPECT_EQ(err, GMPNoErr);

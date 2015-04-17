@@ -40,7 +40,7 @@ public:
                             GMPVideoEncoderCallbackProxy* aCallback,
                             int32_t aNumberOfCores,
                             uint32_t aMaxPayloadSize) = 0;
-  virtual GMPErr Encode(mozilla::GMPUnique<GMPVideoi420Frame> aInputFrame,
+  virtual GMPErr Encode(mozilla::GMPUniquePtr<GMPVideoi420Frame> aInputFrame,
                         const nsTArray<uint8_t>& aCodecSpecificInfo,
                         const nsTArray<GMPVideoFrameType>& aFrameTypes) = 0;
   virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) = 0;
