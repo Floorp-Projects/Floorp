@@ -172,16 +172,6 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "keydown",
-        filename: TEST_URL + ":36",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "var handler9 = function divKeyDown() {\n" +
-                 "  alert(9);\n" +
-                 "}"
-      },
-      {
         type: "click",
         filename: TEST_URL_ROOT + TEST_LIB + ":1224",
         attributes: [
@@ -219,6 +209,16 @@ const TEST_DATA = [
                  "  if (jQuery.browser.msie) event.target = event.preventDefault = event.stopPropagation = event.handler = event.data = null;\n" +
                  "\n" +
                  "  return returnValue;\n" +
+                 "}"
+      },
+      {
+        type: "keydown",
+        filename: TEST_URL + ":36",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "var handler9 = function divKeyDown() {\n" +
+                 "  alert(9);\n" +
                  "}"
       },
       {
