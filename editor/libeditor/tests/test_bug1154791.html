@@ -1,0 +1,64 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1154791
+-->
+<head>
+  <title>Test for Bug 1154791</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<div id="display">
+</div>
+
+<div id="content" contenteditable>
+<tt>thiss onee is stilll a</tt>
+</div>
+
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 1154791 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("content");
+  div.focus();
+  synthesizeMouseAtCenter(div, {});
+  synthesizeKey("VK_LEFT", {});
+  synthesizeKey("VK_LEFT", {});
+
+  setTimeout(function() {
+    synthesizeKey("VK_BACK_SPACE", {});
+    setTimeout(function() {
+      synthesizeKey(" ", {});
+
+      var sel = getSpellCheckSelection();
+      is(sel.rangeCount, 2, "We should have two misspelled words");
+      is(sel.getRangeAt(0), "thiss", "Correct misspelled word");
+      is(sel.getRangeAt(1), "onee", "Correct misspelled word");
+
+      SimpleTest.finish();
+    },0);
+  },0);
+
+});
+
+function getSpellCheckSelection() {
+  var Ci = Components.interfaces;
+  var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIWebNavigation)
+                             .QueryInterface(Ci.nsIInterfaceRequestor)
+                             .getInterface(Ci.nsIEditingSession);
+  var editor = editingSession.getEditorForWindow(window);
+  var selcon = editor.selectionController;
+  return selcon.getSelection(selcon.SELECTION_SPELLCHECK);
+}
+
+</script>
+</body>
+
+</html>
