@@ -117,22 +117,22 @@ private:
   nscoord GetCaretYCenterPosition();
 
   /**
-   * Retrieve the rect of the touch caret.
-   * The returned rect is relative to the canvas frame.
+   * Retrieve the position of the touch caret.
+   * The returned point is relative to the canvas frame.
    */
-  nsRect GetTouchCaretRect();
+  nsPoint GetTouchCaretPosition();
 
   /**
    * Clamp the position of the touch caret to the scroll frame boundary.
-   * The returned rect is relative to the canvas frame.
+   * The returned point is relative to the canvas frame.
    */
-  nsRect ClampRectToScrollFrame(const nsRect& aRect);
+  nsPoint ClampPositionToScrollFrame(const nsPoint& aPosition);
 
   /**
    * Set the position of the touch caret.
    * Touch caret is an absolute positioned div.
    */
-  void SetTouchFramePos(const nsRect& aRect);
+  void SetTouchFramePos(const nsPoint& aOrigin);
 
   void LaunchExpirationTimer();
   void CancelExpirationTimer();

@@ -537,8 +537,8 @@ SelectionCarets::UpdateSelectionCarets()
   SetStartFrameVisibility(startFrameVisible);
   SetEndFrameVisibility(endFrameVisible);
 
-  SetStartFramePos(firstRectInRootFrame);
-  SetEndFramePos(lastRectInRootFrame);
+  SetStartFramePos(firstRectInRootFrame.BottomLeft());
+  SetEndFramePos(lastRectInRootFrame.BottomRight());
   SetVisibility(true);
 
   // Use half of the first(last) rect as the dragup(dragdown) boundary
@@ -885,7 +885,7 @@ SelectionCarets::SetSelectionDirection(nsDirection aDir)
 }
 
 static void
-SetFramePos(dom::Element* aElement, const nsRect& aCaretRect)
+SetFramePos(dom::Element* aElement, const nsPoint& aPosition)
 {
   if (!aElement) {
     return;
@@ -893,11 +893,9 @@ SetFramePos(dom::Element* aElement, const nsRect& aCaretRect)
 
   nsAutoString styleStr;
   styleStr.AppendLiteral("left: ");
-  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(aCaretRect.Center().x));
+  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(aPosition.x));
   styleStr.AppendLiteral("px; top: ");
-  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(aCaretRect.y));
-  styleStr.AppendLiteral("px; padding-top: ");
-  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(aCaretRect.height));
+  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(aPosition.y));
   styleStr.AppendLiteral("px;");
 
   SELECTIONCARETS_LOG_STATIC("Set style: %s",
@@ -907,19 +905,17 @@ SetFramePos(dom::Element* aElement, const nsRect& aCaretRect)
 }
 
 void
-SelectionCarets::SetStartFramePos(const nsRect& aCaretRect)
+SelectionCarets::SetStartFramePos(const nsPoint& aPosition)
 {
-  SELECTIONCARETS_LOG("x=%d, y=%d, w=%d, h=%d",
-    aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height);
-  SetFramePos(mPresShell->GetSelectionCaretsStartElement(), aCaretRect);
+  SELECTIONCARETS_LOG("x=%d, y=%d", aPosition.x, aPosition.y);
+  SetFramePos(mPresShell->GetSelectionCaretsStartElement(), aPosition);
 }
 
 void
-SelectionCarets::SetEndFramePos(const nsRect& aCaretRect)
+SelectionCarets::SetEndFramePos(const nsPoint& aPosition)
 {
-  SELECTIONCARETS_LOG("x=%d, y=%d, w=%d, h=%d",
-    aCaretRect.x, aCaretRect.y, aCaretRect.width, aCaretRect.height);
-  SetFramePos(mPresShell->GetSelectionCaretsEndElement(), aCaretRect);
+  SELECTIONCARETS_LOG("x=%d, y=%d", aPosition.y, aPosition.y);
+  SetFramePos(mPresShell->GetSelectionCaretsEndElement(), aPosition);
 }
 
 bool
