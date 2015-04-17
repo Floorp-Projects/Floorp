@@ -65,6 +65,7 @@ EXTRA_JS_MODULES += [
     'SelectContentHelper.jsm',
     'SelectParentHelper.jsm',
     'Services.jsm',
+    'SessionRecorder.jsm',
     'sessionstore/FormData.jsm',
     'sessionstore/ScrollPosition.jsm',
     'sessionstore/XPathGenerator.jsm',
@@ -83,7 +84,6 @@ EXTRA_JS_MODULES += [
 
 EXTRA_PP_JS_MODULES += [
     'AppConstants.jsm',
-    'SessionRecorder.jsm',
 ]
 
 if 'Android' != CONFIG['OS_TARGET']:
