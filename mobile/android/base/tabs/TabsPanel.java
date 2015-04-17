@@ -9,11 +9,11 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.lwt.LightweightTheme;
 import org.mozilla.gecko.lwt.LightweightThemeDrawable;
@@ -31,7 +31,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewStub;
-import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -378,19 +377,9 @@ public class TabsPanel extends LinearLayout
 
     public void show(Panel panelToShow) {
         prepareToShow(panelToShow);
-
-        final ViewTreeObserver vto = mTabsContainer.getViewTreeObserver();
-        if (vto.isAlive()) {
-            vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    vto.removeGlobalOnLayoutListener(this);
-                    int height = getVerticalPanelHeight();
-                    dispatchLayoutChange(getWidth(), height);
-                    mHeaderVisible = true;
-                }
-            });
-        }
+        int height = getVerticalPanelHeight();
+        dispatchLayoutChange(getWidth(), height);
+        mHeaderVisible = true;
     }
 
     public void prepareToDrag() {
@@ -471,22 +460,8 @@ public class TabsPanel extends LinearLayout
         inflateLayout(mContext);
         initialize();
 
-        if (mVisible) {
-            final ViewTreeObserver vto = getViewTreeObserver();
-            if (vto.isAlive()) {
-                vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        vto.removeGlobalOnLayoutListener(this);
-
-                        // If we've just inflated the tabs panel, only show it once the current
-                        // layout pass is done to avoid displayed temporary UI states during
-                        // relayout.
-                        show(mCurrentPanel);
-                    }
-                });
-            }
-        }
+        if (mVisible)
+            show(mCurrentPanel);
     }
 
     public void autoHidePanel() {
