@@ -12,4 +12,6 @@ XPI_NAME = 'specialpowers'
 
 JAR_MANIFESTS += ['jar.mn']
 
+USE_EXTENSION_MANIFEST = True
+
 DIST_FILES += ['install.rdf']

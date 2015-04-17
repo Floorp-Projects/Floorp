@@ -551,6 +551,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'DEFFILE',
             'WIN32_EXE_LDFLAGS',
             'LD_VERSION_SCRIPT',
+            'USE_EXTENSION_MANIFEST',
         ]
         for v in varlist:
             if v in context and context[v]:
