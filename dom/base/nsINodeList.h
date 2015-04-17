@@ -8,12 +8,14 @@
 
 #include "nsIDOMNodeList.h"
 #include "nsWrapperCache.h"
-#include "nsIContent.h"
 
 // IID for the nsINodeList interface
 #define NS_INODELIST_IID \
 { 0xadb5e54c, 0x6e96, 0x4102, \
  { 0x8d, 0x40, 0xe0, 0x12, 0x3d, 0xcf, 0x48, 0x7a } }
+
+class nsIContent;
+class nsINode;
 
 /**
  * An internal interface for a reasonably fast indexOf.
