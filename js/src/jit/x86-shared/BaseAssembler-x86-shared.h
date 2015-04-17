@@ -335,10 +335,10 @@ public:
     {
         spew("addl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
-            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_ADD);
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_ADD);
             m_formatter.immediate8s(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_ADD);
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_ADD);
             m_formatter.immediate32(imm);
         }
     }
@@ -742,10 +742,10 @@ public:
     {
         spew("andl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
-            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_AND);
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_AND);
             m_formatter.immediate8s(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_AND);
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_AND);
             m_formatter.immediate32(imm);
         }
     }
@@ -920,10 +920,10 @@ public:
     {
         spew("orl        $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
-            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_OR);
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_OR);
             m_formatter.immediate8s(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_OR);
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_OR);
             m_formatter.immediate32(imm);
         }
     }
@@ -1030,10 +1030,10 @@ public:
     {
         spew("subl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
-            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_SUB);
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_SUB);
             m_formatter.immediate8s(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_SUB);
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_SUB);
             m_formatter.immediate32(imm);
         }
     }
@@ -1131,10 +1131,10 @@ public:
     {
         spew("xorl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
-            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_XOR);
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, index, scale, GROUP1_OP_XOR);
             m_formatter.immediate8s(imm);
         } else {
-            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_XOR);
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, index, scale, GROUP1_OP_XOR);
             m_formatter.immediate32(imm);
         }
     }
