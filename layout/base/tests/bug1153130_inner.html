@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1153130
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1153130</title>
+  <meta name="author" content="Maksim Lebedev" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #target { background: yellow; padding: 10px; }
+  </style>
+  <script type="application/javascript">
+    var target = undefined;
+    var test_down = false;
+    var test_capture = false;
+    var test_move = false;
+    var test_success = false;
+
+    function TargetHandler(event) {
+      logger("Target receive event: " + event.type);
+      if(event.type == "pointerdown") {
+        test_down = true;
+        target.setPointerCapture(event.pointerId);
+      } else if(event.type == "gotpointercapture") {
+        test_capture = true;
+      } else if(event.type == "pointermove" && test_capture) {
+        test_move = true;
+      }
+    }
+    function logger(message) {
+      console.log(message);
+      var log = document.getElementById('target');
+      log.innerHTML = message + "<br>" + log.innerHTML;
+    }
+    function prepareTest() {
+      parent.turnOnPointerEvents(executeTest);
+    }
+    function executeTest() {
+      logger("executeTest");
+      target = document.getElementById("target");
+      target.addEventListener("pointerdown",        TargetHandler,  false);
+      target.addEventListener("gotpointercapture",  TargetHandler,  false);
+      target.addEventListener("pointermove",        TargetHandler,  false);
+      var rect = target.getBoundingClientRect();
+      synthesizePointer(target, rect.width/5, rect.height/5,  {type: "pointermove"});
+      synthesizePointer(target, rect.width/5, rect.height/5,  {type: "pointerdown"});
+      synthesizePointer(target, rect.width/4, rect.height/4,  {type: "pointermove"});
+      synthesizePointer(target, rect.width/3, rect.height/3,  {type: "pointermove"});
+      synthesizePointer(target, rect.width/3, rect.height/3,  {type: "pointerup"});
+      synthesizePointer(target, rect.width/2, rect.height/2,  {type: "pointermove"});
+      test_success = true;
+      finishTest();
+    }
+    function finishTest() {
+      parent.is(test_down,    true, "pointerdown event should be received by target");
+      parent.is(test_capture, true, "gotpointercapture event should be received by target");
+      parent.is(test_move,    true, "pointermove event should be received by target while pointer capture is active");
+      parent.is(test_success, true, "Firefox should be live!");
+      logger("finishTest");
+      parent.finishTest();
+    }
+  </script>
+</head>
+<body onload="prepareTest()">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1153130">Mozilla Bug 1153130</a>
+  <div id="target">div id=target</div>
+</body>
+</html>
