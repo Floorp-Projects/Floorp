@@ -32,12 +32,9 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     }
 
     AtkObject* hyperLinkAtkObj = AccessibleWrap::GetAtkObject(hyperLink);
-    AccessibleWrap* accChild = GetAccessibleWrap(hyperLinkAtkObj);
-    NS_ENSURE_TRUE(accChild, nullptr);
+    NS_ENSURE_TRUE(IS_MAI_OBJECT(hyperLinkAtkObj), nullptr);
 
-    MaiHyperlink* maiHyperlink = accChild->GetMaiHyperlink();
-    NS_ENSURE_TRUE(maiHyperlink, nullptr);
-    return maiHyperlink->GetAtkHyperlink();
+    return MAI_ATK_OBJECT(hyperLinkAtkObj)->GetAtkHyperlink();
   }
 
   if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {

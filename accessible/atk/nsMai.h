@@ -64,6 +64,11 @@ struct MaiAtkObject
   uintptr_t accWrap;
 
   /*
+   * Get the AtkHyperlink for this atk object.
+   */
+  AtkHyperlink* GetAtkHyperlink();
+
+  /*
    * Shutdown this AtkObject.
    */
   void Shutdown();
