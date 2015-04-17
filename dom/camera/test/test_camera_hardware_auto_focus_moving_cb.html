@@ -34,8 +34,34 @@ suite.test('auto-focus-moving', function() {
     return sync;
   }
 
+  function waitAutoFocusComplete(p) {
+    var sync = new Promise(function(resolve, reject) {
+      function onEvent(e) {
+        suite.camera.removeEventListener('focus', onEvent);
+        ok(e.newState === 'focused', 'autofocus event state focused == ' + e.newState);
+        resolve();
+      }
+      suite.camera.addEventListener('focus', onEvent);
+    });
+
+    // Missing the fireAutoFocusComplete but it should timeout on its own
+    suite.hw.fireAutoFocusMoving(false);
+    return sync;
+  }
+
+  function runAutoFocusCycle(p) {
+    return triggerAutoFocusMoving(p)
+      .then(waitAutoFocusComplete);
+  }
+
+  /* If the driver doesn't supply an onAutoFocusComplete notification,
+     gecko will timeout and provide it. After three times, it will no
+     longer rely upon a timeout and fire it immediately. */
   return suite.getCamera()
-    .then(triggerAutoFocusMoving);
+    .then(runAutoFocusCycle)
+    .then(runAutoFocusCycle)
+    .then(runAutoFocusCycle)
+    .then(runAutoFocusCycle);
 });
 
 suite.setup()

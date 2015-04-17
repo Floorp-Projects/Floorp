@@ -37,6 +37,14 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothStatus>
 { };
 
 template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattWriteType>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::bluetooth::BluetoothGattWriteType,
+             mozilla::dom::bluetooth::GATT_WRITE_TYPE_NO_RESPONSE,
+             mozilla::dom::bluetooth::GATT_WRITE_TYPE_END_GUARD>
+{ };
+
+template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothUuid>
 {
   typedef mozilla::dom::bluetooth::BluetoothUuid paramType;
@@ -97,6 +105,28 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattServiceId>
   {
     if (!ReadParam(aMsg, aIter, &(aResult->mId)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIsPrimary))) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattCharAttribute>
+{
+  typedef mozilla::dom::bluetooth::BluetoothGattCharAttribute paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mId);
+    WriteParam(aMsg, aParam.mProperties);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mId)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mProperties))) {
       return false;
     }
 

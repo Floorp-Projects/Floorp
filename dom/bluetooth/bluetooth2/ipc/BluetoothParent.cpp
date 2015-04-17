@@ -270,6 +270,18 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
     case Request::TGattClientReadRemoteRssiRequest:
       return actor->DoRequest(aRequest.get_GattClientReadRemoteRssiRequest());
+    case Request::TGattClientReadCharacteristicValueRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientReadCharacteristicValueRequest());
+    case Request::TGattClientWriteCharacteristicValueRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientWriteCharacteristicValueRequest());
+    case Request::TGattClientReadDescriptorValueRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientReadDescriptorValueRequest());
+    case Request::TGattClientWriteDescriptorValueRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientWriteDescriptorValueRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -823,6 +835,75 @@ BluetoothRequestParent::DoRequest(
   mService->GattClientReadRemoteRssiInternal(aRequest.clientIf(),
                                              aRequest.deviceAddress(),
                                              mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientReadCharacteristicValueRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattClientReadCharacteristicValueRequest);
+
+  mService->GattClientReadCharacteristicValueInternal(aRequest.appUuid(),
+                                                      aRequest.serviceId(),
+                                                      aRequest.charId(),
+                                                      mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientWriteCharacteristicValueRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattClientWriteCharacteristicValueRequest);
+
+  mService->GattClientWriteCharacteristicValueInternal(aRequest.appUuid(),
+                                                       aRequest.serviceId(),
+                                                       aRequest.charId(),
+                                                       aRequest.writeType(),
+                                                       aRequest.value(),
+                                                       mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientReadDescriptorValueRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattClientReadDescriptorValueRequest);
+
+  mService->GattClientReadDescriptorValueInternal(aRequest.appUuid(),
+                                                  aRequest.serviceId(),
+                                                  aRequest.charId(),
+                                                  aRequest.descId(),
+                                                  mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientWriteDescriptorValueRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattClientWriteDescriptorValueRequest);
+
+  mService->GattClientWriteDescriptorValueInternal(aRequest.appUuid(),
+                                                   aRequest.serviceId(),
+                                                   aRequest.charId(),
+                                                   aRequest.descId(),
+                                                   aRequest.value(),
+                                                   mReplyRunnable.get());
 
   return true;
 }

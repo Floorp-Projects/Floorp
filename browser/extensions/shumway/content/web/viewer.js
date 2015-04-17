@@ -49,7 +49,6 @@ function runViewer() {
   movieUrl = flashParams.url;
   if (!movieUrl) {
     console.log("no movie url provided -- stopping here");
-    ShumwayCom.endActivation();
     return;
   }
 
@@ -164,17 +163,14 @@ var easelHost;
 function parseSwf(url, baseUrl, movieParams, objectParams) {
   var settings = ShumwayCom.getSettings();
   var compilerSettings = settings.compilerSettings;
+  var playerSettings = settings.playerSettings;
 
   // init misc preferences
-  var turboMode = settings.playerSettings.turboMode;
-  Shumway.GFX.hud.value = settings.playerSettings.hud;
+  Shumway.GFX.hud.value = playerSettings.hud;
   //forceHidpi.value = settings.playerSettings.forceHidpi;
 
   console.info("Compiler settings: " + JSON.stringify(compilerSettings));
   console.info("Parsing " + url + "...");
-  function loaded() {
-    ShumwayCom.endActivation();
-  }
 
   var backgroundColor;
   if (objectParams) {
@@ -200,7 +196,8 @@ function parseSwf(url, baseUrl, movieParams, objectParams) {
       movieParams: movieParams,
       objectParams: objectParams,
       displayParameters: displayParameters,
-      turboMode: turboMode,
+      turboMode: playerSettings.turboMode,
+      env: playerSettings.env,
       bgcolor: backgroundColor,
       url: url,
       baseUrl: baseUrl || url
@@ -215,5 +212,7 @@ function createEasel(backgroundColor) {
   var Canvas2DRenderer = Shumway.GFX.Canvas2DRenderer;
 
   Shumway.GFX.WebGL.SHADER_ROOT = SHUMWAY_ROOT + "gfx/gl/shaders/";
-  return new Easel(document.getElementById("easelContainer"), false, backgroundColor);
+  var easel = new Easel(document.getElementById("easelContainer"), false, backgroundColor);
+  easel.startRendering();
+  return easel;
 }

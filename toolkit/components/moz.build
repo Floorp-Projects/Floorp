@@ -36,6 +36,7 @@ DIRS += [
     'parentalcontrols',
     'passwordmgr',
     'perf',
+    'perfmonitoring',
     'places',
     'processsingleton',
     'promiseworker',

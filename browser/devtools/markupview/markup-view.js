@@ -753,6 +753,11 @@ MarkupView.prototype = {
       this._inspector.immediateLayoutChange();
     }
     this._waitForChildren().then((nodes) => {
+      if (this._destroyer) {
+        console.warn("Could not fully update after markup mutations, " +
+          "the markup-view was destroyed while waiting for children.");
+        return;
+      }
       this._flashMutatedNodes(aMutations);
       this._inspector.emit("markupmutation", aMutations);
 
@@ -868,7 +873,7 @@ MarkupView.prototype = {
       if (this._destroyer) {
         console.warn("Could not expand the node, the markup-view was destroyed");
         return;
-      } 
+      }
       aContainer.expanded = true;
     });
   },

@@ -594,7 +594,7 @@ PlayerMetaDataHeader.prototype = {
       }
     });
 
-    // Animation name (value hidden by default since transitions don't have names).
+    // Animation name.
     this.nameLabel = createNode({
       parent: this.el,
       nodeType: "span"
@@ -678,12 +678,12 @@ PlayerMetaDataHeader.prototype = {
     // Update the name if needed.
     if (state.name !== this.state.name) {
       if (state.name) {
-        // Css animations have names.
+        // Animations (and transitions since bug 1122414) have names.
         this.nameLabel.textContent = L10N.getStr("player.animationNameLabel");
         this.nameValue.style.display = "inline";
         this.nameValue.textContent = state.name;
       } else {
-        // Css transitions don't.
+        // With older actors, Css transitions don't have names.
         this.nameLabel.textContent = L10N.getStr("player.transitionNameLabel");
         this.nameValue.style.display = "none";
       }

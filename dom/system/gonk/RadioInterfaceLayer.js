@@ -2265,7 +2265,8 @@ RadioInterface.prototype = {
     gMessageManager.sendIccMessage("RIL:IccInfoChanged",
                                    this.clientId,
                                    message.iccid ? message : null);
-    gIccService.notifyIccInfoChanged(this.clientId, this.rilContext.iccInfo);
+    gIccService.notifyIccInfoChanged(this.clientId,
+                                     message.iccid ? message : null);
 
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {

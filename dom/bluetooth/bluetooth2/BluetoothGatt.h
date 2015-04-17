@@ -50,6 +50,7 @@ public:
   /****************************************************************************
    * Event Handlers
    ***************************************************************************/
+  IMPL_EVENT_HANDLER(characteristicchanged);
   IMPL_EVENT_HANDLER(connectionstatechanged);
 
   /****************************************************************************
@@ -103,6 +104,20 @@ private:
    *                    BluetoothGattServiceId of all discovered services.
    */
   void HandleServicesDiscovered(const BluetoothValue& aValue);
+
+  /**
+   * The value of a GATT characteristic has changed. In the mean time, the
+   * cached value of this GATT characteristic has already been updated. An
+   * 'characteristicchanged' event will be fired by this function.
+   *
+   * @param aValue [in] BluetoothValue which contains an array of
+   *                    BluetoothNamedValue. There are exact two elements in
+   *                    the array. The first element uses 'serviceId' as the
+   *                    name and uses BluetoothGattServiceId as the value. The
+   *                    second element uses 'charId' as the name and uses
+   *                    BluetoothGattId as the value.
+   */
+  void HandleCharacteristicChanged(const BluetoothValue& aValue);
 
   /****************************************************************************
    * Variables

@@ -407,6 +407,55 @@ public:
                                    const nsAString& aDeviceAddress,
                                    BluetoothReplyRunnable* aRunnable) = 0;
 
+  /**
+   * Read the value of a characteristic on a GATT client.
+   * (platform specific implementation)
+   */
+  virtual void
+  GattClientReadCharacteristicValueInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothGattId& aCharacteristicId,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Write the value of a characteristic on a GATT client.
+   * (platform specific implementation)
+   */
+  virtual void
+  GattClientWriteCharacteristicValueInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothGattId& aCharacteristicId,
+    const BluetoothGattWriteType& aWriteType,
+    const nsTArray<uint8_t>& aValue,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Read the value of a descriptor of a characteristic on a GATT client.
+   * (platform specific implementation)
+   */
+  virtual void
+  GattClientReadDescriptorValueInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothGattId& aCharacteristicId,
+    const BluetoothGattId& aDescriptorId,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Write the value of a descriptor of a characteristic on a GATT client.
+   * (platform specific implementation)
+   */
+  virtual void
+  GattClientWriteDescriptorValueInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServiceId,
+    const BluetoothGattId& aCharacteristicId,
+    const BluetoothGattId& aDescriptorId,
+    const nsTArray<uint8_t>& aValue,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
   bool
   IsEnabled() const
   {

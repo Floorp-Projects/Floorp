@@ -31,7 +31,7 @@ function* testToggleDefaultStyles(inspector, computedView) {
   info("checking \"Browser styles\" checkbox");
 
   let doc = computedView.styleDocument;
-  let checkbox = doc.querySelector(".includebrowserstyles");
+  let checkbox = computedView.includeBrowserStylesCheckbox;
   let onRefreshed = inspector.once("computed-view-refreshed");
   checkbox.click();
   yield onRefreshed;
@@ -41,17 +41,12 @@ function* testAddTextInFilter(inspector, computedView) {
   info("setting filter text to \"color\"");
 
   let doc = computedView.styleDocument;
-  let searchbar = doc.querySelector(".devtools-searchinput");
+  let searchField = computedView.searchField;
   let onRefreshed = inspector.once("computed-view-refreshed");
-  searchbar.focus();
+  searchField.focus();
 
   let win = computedView.styleWindow;
-  EventUtils.synthesizeKey("c", {}, win);
-  EventUtils.synthesizeKey("o", {}, win);
-  EventUtils.synthesizeKey("l", {}, win);
-  EventUtils.synthesizeKey("o", {}, win);
-  EventUtils.synthesizeKey("r", {}, win);
-
+  synthesizeKeys("color", win);
   yield onRefreshed;
 
   info("check that the correct properties are visible");
