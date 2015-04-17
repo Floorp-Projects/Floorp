@@ -129,13 +129,13 @@ private:
                                      void *arg);
 
   PLHashTable *mNodeInfoHash;
-  nsIDocument *mDocument; // WEAK
+  nsIDocument * MOZ_NON_OWNING_REF mDocument; // WEAK
   uint32_t mNonDocumentNodeInfos;
   nsCOMPtr<nsIPrincipal> mPrincipal; // Never null after Init() succeeds.
   nsCOMPtr<nsIPrincipal> mDefaultPrincipal; // Never null after Init() succeeds
-  mozilla::dom::NodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
-  mozilla::dom::NodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
-  mozilla::dom::NodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
+  mozilla::dom::NodeInfo * MOZ_NON_OWNING_REF mTextNodeInfo; // WEAK to avoid circular ownership
+  mozilla::dom::NodeInfo * MOZ_NON_OWNING_REF mCommentNodeInfo; // WEAK to avoid circular ownership
+  mozilla::dom::NodeInfo * MOZ_NON_OWNING_REF mDocumentNodeInfo; // WEAK to avoid circular ownership
   nsRefPtr<nsBindingManager> mBindingManager;
 };
 
