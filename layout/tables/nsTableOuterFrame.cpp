@@ -692,11 +692,11 @@ nsTableOuterFrame::GetInnerOrigin(uint32_t         aCaptionSide,
 }
 
 void
-nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
-                                         nsIFrame*                aChildFrame,
-                                         const nsHTMLReflowState& aOuterRS,
-                                         void*                    aChildRSSpace,
-                                         nscoord                  aAvailISize)
+nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*            aPresContext,
+                                         nsIFrame*                 aChildFrame,
+                                         const nsHTMLReflowState&  aOuterRS,
+                                         Maybe<nsHTMLReflowState>& aChildRS,
+                                         nscoord                   aAvailISize)
 {
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   WritingMode wm = aChildFrame->GetWritingMode();
@@ -720,21 +720,19 @@ nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
     }
   }
   LogicalSize availSize(wm, aAvailISize, availBSize);
-  // create and init the child reflow state, using placement new on
-  // stack space allocated by the caller, so that the caller can destroy
-  // it
-  nsHTMLReflowState &childRS = * new (aChildRSSpace)
-    nsHTMLReflowState(aPresContext, aOuterRS, aChildFrame, availSize,
-                      -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
-  InitChildReflowState(*aPresContext, childRS);
+  // create and init the child reflow state, using passed-in Maybe<>,
+  // so that caller can use it after we return.
+  aChildRS.emplace(aPresContext, aOuterRS, aChildFrame, availSize,
+                  -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
+  InitChildReflowState(*aPresContext, *aChildRS);
 
   // see if we need to reset top-of-page due to a caption
-  if (childRS.mFlags.mIsTopOfPage &&
+  if (aChildRS->mFlags.mIsTopOfPage &&
       mCaptionFrames.FirstChild() == aChildFrame) {
     uint8_t captionSide = GetCaptionSide();
     if (captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM ||
         captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE) {
-      childRS.mFlags.mIsTopOfPage = false;
+      aChildRS->mFlags.mIsTopOfPage = false;
     }
   }
 }
@@ -802,15 +800,8 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     MoveOverflowToChildList();
   }
 
-  // Use longs to get more-aligned space.
-  #define LONGS_IN_HTMLRS \
-    ((sizeof(nsHTMLReflowState) + sizeof(long) - 1) / sizeof(long))
-  long captionRSSpace[LONGS_IN_HTMLRS];
-  nsHTMLReflowState *captionRS =
-    static_cast<nsHTMLReflowState*>((void*)captionRSSpace);
-  long innerRSSpace[LONGS_IN_HTMLRS];
-  nsHTMLReflowState *innerRS =
-    static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
+  Maybe<nsHTMLReflowState> captionRS;
+  Maybe<nsHTMLReflowState> innerRS;
 
   nsRect origInnerRect = InnerTableFrame()->GetRect();
   nsRect origInnerVisualOverflow = InnerTableFrame()->GetVisualOverflowRect();
@@ -833,18 +824,18 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     // We don't have a caption.
     wm = InnerTableFrame()->GetWritingMode();
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRS,
-                          innerRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));
+                          innerRS, aOuterRS.ComputedSize(wm).ISize(wm));
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_LEFT ||
              captionSide == NS_STYLE_CAPTION_SIDE_RIGHT) {
     // ComputeAutoSize takes care of making side captions small. Compute
     // the caption's size first, and tell the table to fit in what's left.
     wm = mCaptionFrames.FirstChild()->GetWritingMode();
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRS,
-                          captionRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));
+                          captionRS, aOuterRS.ComputedSize(wm).ISize(wm));
     nscoord innerAvailISize = aOuterRS.ComputedSize(wm).ISize(wm) -
       captionRS->ComputedSizeWithMarginBorderPadding(wm).ISize(wm);
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRS,
-                          innerRSSpace, innerAvailISize);
+                          innerRS, innerAvailISize);
 
   } else if (captionSide == NS_STYLE_CAPTION_SIDE_TOP ||
              captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM) {
@@ -858,7 +849,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     // it would break 'auto' margins), but this effectively does that.
     wm = InnerTableFrame()->GetWritingMode();
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRS,
-                          innerRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));
+                          innerRS, aOuterRS.ComputedSize(wm).ISize(wm));
     // It's good that CSS 2.1 says not to include margins, since we
     // can't, since they already been converted so they exactly
     // fill the available width (ignoring the margin on one side if
@@ -867,7 +858,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     nscoord innerBorderWidth =
       innerRS->ComputedSizeWithBorderPadding(wm).ISize(wm);
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRS,
-                          captionRSSpace, innerBorderWidth);
+                          captionRS, innerBorderWidth);
   } else {
     NS_ASSERTION(captionSide == NS_STYLE_CAPTION_SIDE_TOP_OUTSIDE ||
                  captionSide == NS_STYLE_CAPTION_SIDE_BOTTOM_OUTSIDE,
@@ -875,10 +866,10 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     // Size the table and the caption independently.
     wm = mCaptionFrames.FirstChild()->GetWritingMode();
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRS,
-                          captionRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));
+                          captionRS, aOuterRS.ComputedSize(wm).ISize(wm));
     wm = InnerTableFrame()->GetWritingMode();
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRS,
-                          innerRSSpace, aOuterRS.ComputedSize(wm).ISize(wm));
+                          innerRS, aOuterRS.ComputedSize(wm).ISize(wm));
   }
 
   // Don't do incremental reflow until we've taught tables how to do
@@ -901,15 +892,16 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // First reflow the caption.
-  nsHTMLReflowMetrics captionMet(captionRS->GetWritingMode());
+  Maybe<nsHTMLReflowMetrics> captionMet;
   nsSize captionSize;
   nsMargin captionMargin;
   if (mCaptionFrames.NotEmpty()) {
+    captionMet.emplace(captionRS->GetWritingMode());
     nsReflowStatus capStatus; // don't let the caption cause incomplete
     OuterDoReflowChild(aPresContext, mCaptionFrames.FirstChild(),
-                       *captionRS, captionMet, capStatus);
-    captionSize.width = captionMet.Width();
-    captionSize.height = captionMet.Height();
+                       *captionRS, *captionMet, capStatus);
+    captionSize.width = captionMet->Width();
+    captionSize.height = captionMet->Height();
     captionMargin = captionRS->ComputedPhysicalMargin();
     // Now that we know the height of the caption, reduce the available height
     // for the table frame if we are height constrained and the caption is above
@@ -955,9 +947,9 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     nsPoint captionOrigin;
     GetCaptionOrigin(captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
-    FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, captionMet,
-                      captionRS, captionOrigin.x, captionOrigin.y, 0);
-    captionRS->~nsHTMLReflowState();
+    FinishReflowChild(mCaptionFrames.FirstChild(), aPresContext, *captionMet,
+                      captionRS.ptr(), captionOrigin.x, captionOrigin.y, 0);
+    captionRS.reset();
   }
   // XXX If the height is constrained then we need to check whether
   // everything still fits...
@@ -965,9 +957,9 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsPoint innerOrigin;
   GetInnerOrigin(captionSide, containSize, captionSize, 
                  captionMargin, innerSize, innerMargin, innerOrigin);
-  FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRS,
+  FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRS.ptr(),
                     innerOrigin.x, innerOrigin.y, 0);
-  innerRS->~nsHTMLReflowState();
+  innerRS.reset();
 
   nsTableFrame::InvalidateTableFrame(InnerTableFrame(), origInnerRect,
                                      origInnerVisualOverflow, innerFirstReflow);
