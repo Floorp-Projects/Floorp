@@ -178,7 +178,7 @@ public:
         R_ANGLE        = '>',
         COMMA          = ',',
         PERIOD         = '.',
-        ASTERIX        = '*',
+        ASTERISK       = '*',
         FORWARD_SLASH  = '/',
         EQUAL          = '=',
         BANG           = '!',
