@@ -15,6 +15,7 @@ include PBackgroundSharedTypes;
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
+using class nsHttpResponseHead from "nsHttpResponseHead.h";
 
 namespace mozilla {
 namespace net {
@@ -22,6 +23,12 @@ namespace net {
 //-----------------------------------------------------------------------------
 // HTTP IPDL structs
 //-----------------------------------------------------------------------------
+
+union OptionalHttpResponseHead
+{
+  void_t;
+  nsHttpResponseHead;
+};
 
 struct HttpChannelOpenArgs
 {
@@ -59,6 +66,7 @@ struct HttpChannelOpenArgs
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
   uint32_t                    innerWindowID;
+  OptionalHttpResponseHead    synthesizedResponseHead;
 };
 
 struct HttpChannelConnectArgs
