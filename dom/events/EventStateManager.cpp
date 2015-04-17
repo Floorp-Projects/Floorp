@@ -484,8 +484,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   NS_WARN_IF_FALSE(!aTargetFrame ||
                    !aTargetFrame->GetContent() ||
-                   aTargetFrame->GetContent() == aTargetContent,
-                   "aTargetContent should be related with aTargetFrame");
+                   aTargetFrame->GetContent() == aTargetContent ||
+                   aTargetFrame->GetContent()->GetParent() == aTargetContent,
+                   "aTargetFrame should be related with aTargetContent");
 
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nullptr;
