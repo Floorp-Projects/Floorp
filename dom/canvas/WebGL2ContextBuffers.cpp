@@ -151,14 +151,87 @@ WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
 
 void
 WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
-                                const dom::ArrayBuffer& returnedData)
+                                const dom::Nullable<dom::ArrayBuffer>& maybeData)
 {
-    MOZ_CRASH("Not Implemented.");
-}
+    if (IsContextLost())
+        return;
+    
+    // For the WebGLBuffer bound to the passed target, read
+    // returnedData.byteLength bytes from the buffer starting at byte
+    // offset offset and write them to returnedData.
 
-void
-WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
-                                const dom::ArrayBufferView& returnedData)
-{
-    MOZ_CRASH("Not Implemented.");
+    // If zero is bound to target, an INVALID_OPERATION error is
+    // generated.
+    if (!ValidateBufferTarget(target, "getBufferSubData"))
+        return;
+
+    // If offset is less than zero, an INVALID_VALUE error is
+    // generated.
+    if (offset < 0)
+        return ErrorInvalidValue("getBufferSubData: negative offset"); 
+
+    // If returnedData is null then an INVALID_VALUE error is
+    // generated.
+    if (maybeData.IsNull())
+        return ErrorInvalidValue("getBufferSubData: returnedData is null");
+
+    WebGLRefPtr<WebGLBuffer>& bufferSlot = GetBufferSlotByTarget(target);
+    WebGLBuffer* boundBuffer = bufferSlot.get();
+    if (!boundBuffer)
+        return ErrorInvalidOperation("getBufferSubData: no buffer bound");
+    
+    // If offset + returnedData.byteLength would extend beyond the end
+    // of the buffer an INVALID_VALUE error is generated.
+    const dom::ArrayBuffer& data = maybeData.Value();
+    data.ComputeLengthAndData();
+
+    CheckedInt<WebGLsizeiptr> neededByteLength = CheckedInt<WebGLsizeiptr>(offset) + data.Length();
+    if (!neededByteLength.isValid()) {
+        ErrorInvalidValue("getBufferSubData: Integer overflow computing the needed"
+                          " byte length.");
+        return;
+    }
+
+    if (neededByteLength.value() > boundBuffer->ByteLength()) {
+        ErrorInvalidValue("getBufferSubData: Not enough data. Operation requires"
+                          " %d bytes, but buffer only has %d bytes.",
+                          neededByteLength.value(), boundBuffer->ByteLength());
+        return;
+    }
+
+    // If target is TRANSFORM_FEEDBACK_BUFFER, and any transform
+    // feedback object is currently active, an INVALID_OPERATION error
+    // is generated.
+    WebGLTransformFeedback* currentTF = mBoundTransformFeedback;
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER && currentTF) {
+        if (currentTF->mIsActive)
+            return ErrorInvalidOperation("getBufferSubData: Currently bound transform"
+                                         " feedback is active");
+
+        // https://github.com/NVIDIA/WebGL/commit/63aff5e58c1d79825a596f0f4aa46174b9a5f72c
+        // Performing reads and writes on a buffer that is currently
+        // bound for transform feedback causes undefined results in
+        // GLES3.0 and OpenGL 4.5. In practice results of reads and
+        // writes might be consistent as long as transform feedback
+        // objects are not active, but neither GLES3.0 nor OpenGL 4.5
+        // spec guarantees this - just being bound for transform
+        // feedback is sufficient to cause undefined results.
+
+        BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, nullptr);
+    }
+
+    /* If the buffer is written and read sequentially by other
+     * operations and getBufferSubData, it is the responsibility of
+     * the WebGL API to ensure that data are access
+     * consistently. This applies even if the buffer is currently
+     * bound to a transform feedback binding point.
+     */
+
+    void* ptr = gl->fMapBufferRange(target, offset, data.Length(), LOCAL_GL_MAP_READ_BIT);
+    memcpy(data.Data(), ptr, data.Length());
+    gl->fUnmapBuffer(target);
+
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER && currentTF) {
+        BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, currentTF);
+    }
 }
