@@ -7,8 +7,7 @@
 #include "GLContext.h"
 #include "WebGLQuery.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 /*
  * We fake ANY_SAMPLES_PASSED and ANY_SAMPLES_PASSED_CONSERVATIVE with
@@ -26,14 +25,14 @@ GetQueryTargetEnumString(GLenum target)
 {
     switch (target)
     {
-        case LOCAL_GL_ANY_SAMPLES_PASSED:
-            return "ANY_SAMPLES_PASSED";
-        case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
-            return "ANY_SAMPLES_PASSED_CONSERVATIVE";
-        case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
-            return "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN";
-        default:
-            break;
+    case LOCAL_GL_ANY_SAMPLES_PASSED:
+        return "ANY_SAMPLES_PASSED";
+    case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        return "ANY_SAMPLES_PASSED_CONSERVATIVE";
+    case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        return "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN";
+    default:
+        break;
     }
 
     MOZ_ASSERT(false, "Unknown query `target`.");
@@ -56,19 +55,23 @@ SimulateOcclusionQueryTarget(const gl::GLContext* gl, GLenum target)
     return LOCAL_GL_SAMPLES_PASSED;
 }
 
-WebGLRefPtr<WebGLQuery>*
-WebGLContext::GetQueryTargetSlot(GLenum target)
+WebGLRefPtr<WebGLQuery>&
+WebGLContext::GetQuerySlotByTarget(GLenum target)
 {
+    /* This function assumes that target has been validated for either
+     * WebGL1 or WebGL2.
+     */
     switch (target) {
-        case LOCAL_GL_ANY_SAMPLES_PASSED:
-        case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
-            return &mActiveOcclusionQuery;
+    case LOCAL_GL_ANY_SAMPLES_PASSED:
+    case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        return mActiveOcclusionQuery;
 
-        case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
-            return &mActiveTransformFeedbackQuery;
+    case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        return mActiveTransformFeedbackQuery;
+
+    default:
+        MOZ_CRASH("Should not get here.");
     }
-
-    return nullptr;
 }
 
 
@@ -152,11 +155,8 @@ WebGL2Context::BeginQuery(GLenum target, WebGLQuery* query)
     if (IsContextLost())
         return;
 
-    WebGLRefPtr<WebGLQuery>* targetSlot = GetQueryTargetSlot(target);
-    if (!targetSlot) {
-        ErrorInvalidEnum("beginQuery: unknown query target");
+    if (!ValidateQueryTarget(target, "beginQuery"))
         return;
-    }
 
     if (!query) {
         /* From GLES's EXT_occlusion_query_boolean:
@@ -193,10 +193,10 @@ WebGL2Context::BeginQuery(GLenum target, WebGLQuery* query)
         return;
     }
 
-    if (*targetSlot) {
-        ErrorInvalidOperation("beginQuery: An other query already active.");
-        return;
-    }
+    WebGLRefPtr<WebGLQuery>& querySlot = GetQuerySlotByTarget(target);
+    WebGLQuery* activeQuery = querySlot.get();
+    if (activeQuery)
+        return ErrorInvalidOperation("beginQuery: An other query already active.");
 
     if (!query->HasEverBeenActive())
         query->mType = target;
@@ -211,7 +211,7 @@ WebGL2Context::BeginQuery(GLenum target, WebGLQuery* query)
                         query->mGLName);
     }
 
-    *targetSlot = query;
+    UpdateBoundQuery(target, query);
 }
 
 void
@@ -220,14 +220,13 @@ WebGL2Context::EndQuery(GLenum target)
     if (IsContextLost())
         return;
 
-    WebGLRefPtr<WebGLQuery>* targetSlot = GetQueryTargetSlot(target);
-    if (!targetSlot) {
-        ErrorInvalidEnum("endQuery: unknown query target");
+    if (!ValidateQueryTarget(target, "endQuery"))
         return;
-    }
 
-    if (!*targetSlot ||
-        target != (*targetSlot)->mType)
+    WebGLRefPtr<WebGLQuery>& querySlot = GetQuerySlotByTarget(target);
+    WebGLQuery* activeQuery = querySlot.get();
+
+    if (!activeQuery || target != activeQuery->mType)
     {
         /* From GLES's EXT_occlusion_query_boolean:
          *     marks the end of the sequence of commands to be tracked for the
@@ -255,7 +254,7 @@ WebGL2Context::EndQuery(GLenum target)
         gl->fEndQuery(SimulateOcclusionQueryTarget(gl, target));
     }
 
-    *targetSlot = nullptr;
+    UpdateBoundQuery(target, nullptr);
 }
 
 already_AddRefed<WebGLQuery>
@@ -264,11 +263,8 @@ WebGL2Context::GetQuery(GLenum target, GLenum pname)
     if (IsContextLost())
         return nullptr;
 
-    WebGLRefPtr<WebGLQuery>* targetSlot = GetQueryTargetSlot(target);
-    if (!targetSlot) {
-        ErrorInvalidEnum("getQuery: unknown query target");
+    if (!ValidateQueryTarget(target, "getQuery"))
         return nullptr;
-    }
 
     if (pname != LOCAL_GL_CURRENT_QUERY) {
         /* OpenGL ES 3.0 spec 6.1.7:
@@ -278,7 +274,9 @@ WebGL2Context::GetQuery(GLenum target, GLenum pname)
         return nullptr;
     }
 
-    nsRefPtr<WebGLQuery> tmp = targetSlot->get();
+    WebGLRefPtr<WebGLQuery>& targetSlot = GetQuerySlotByTarget(target);
+
+    nsRefPtr<WebGLQuery> tmp = targetSlot.get();
     return tmp.forget();
 }
 
@@ -353,3 +351,27 @@ WebGL2Context::GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname,
 
     ErrorInvalidEnum("getQueryObject: `pname` must be QUERY_RESULT{_AVAILABLE}.");
 }
+
+void
+WebGL2Context::UpdateBoundQuery(GLenum target, WebGLQuery* query)
+{
+    WebGLRefPtr<WebGLQuery>& querySlot = GetQuerySlotByTarget(target);
+    querySlot = query;
+}
+
+bool
+WebGL2Context::ValidateQueryTarget(GLenum target, const char* info)
+{
+    switch (target) {
+    case LOCAL_GL_ANY_SAMPLES_PASSED:
+    case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+    case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        return true;
+
+    default:
+        ErrorInvalidEnumInfo(info, target);
+        return false;
+    }
+}
+
+} // namespace mozilla
