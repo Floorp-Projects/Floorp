@@ -238,6 +238,12 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     if (mFBDevice && mFBDevice->compositionComplete) {
         mFBDevice->compositionComplete(mFBDevice);
     }
+
+#if ANDROID_VERSION == 17
+    mList->dpy = dpy;
+    mList->sur = sur;
+#endif
+    eglSwapBuffers(dpy, sur);
     return Post(mFBSurface->lastHandle, mFBSurface->GetPrevFBAcquireFd());
 }
 
