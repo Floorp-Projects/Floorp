@@ -16,7 +16,6 @@
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/cache/ManagerId.h"
-#include "mozilla/dom/cache/PCacheTypes.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
@@ -98,9 +97,8 @@ private:
 
 // static
 nsresult
-FetchPut::Create(Listener* aListener, Manager* aManager,
-                 RequestId aRequestId, CacheId aCacheId,
-                 const nsTArray<PCacheRequest>& aRequests,
+FetchPut::Create(Listener* aListener, Manager* aManager, CacheId aCacheId,
+                 const nsTArray<CacheRequest>& aRequests,
                  const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams,
                  FetchPut** aFetchPutOut)
 {
@@ -115,7 +113,7 @@ FetchPut::Create(Listener* aListener, Manager* aManager,
   }
 #endif
 
-  nsRefPtr<FetchPut> ref = new FetchPut(aListener, aManager, aRequestId, aCacheId,
+  nsRefPtr<FetchPut> ref = new FetchPut(aListener, aManager, aCacheId,
                                         aRequests, aRequestStreams);
 
   nsresult rv = ref->DispatchToMainThread();
@@ -133,13 +131,11 @@ FetchPut::ClearListener()
   mListener = nullptr;
 }
 
-FetchPut::FetchPut(Listener* aListener, Manager* aManager,
-                   RequestId aRequestId, CacheId aCacheId,
-                   const nsTArray<PCacheRequest>& aRequests,
+FetchPut::FetchPut(Listener* aListener, Manager* aManager, CacheId aCacheId,
+                   const nsTArray<CacheRequest>& aRequests,
                    const nsTArray<nsCOMPtr<nsIInputStream>>& aRequestStreams)
   : mListener(aListener)
   , mManager(aManager)
-  , mRequestId(aRequestId)
   , mCacheId(aCacheId)
   , mInitiatingThread(NS_GetCurrentThread())
   , mStateList(aRequests.Length())
@@ -151,7 +147,7 @@ FetchPut::FetchPut(Listener* aListener, Manager* aManager,
 
   for (uint32_t i = 0; i < aRequests.Length(); ++i) {
     State* s = mStateList.AppendElement();
-    s->mPCacheRequest = aRequests[i];
+    s->mCacheRequest = aRequests[i];
     s->mRequestStream = aRequestStreams[i];
   }
 
@@ -211,14 +207,14 @@ FetchPut::DoFetchOnMainThread()
   nsCOMPtr<nsILoadGroup> loadGroup;
   nsresult rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), principal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MaybeSetError(rv);
+    MaybeSetError(ErrorResult(rv));
     MaybeCompleteOnMainThread();
     return;
   }
 
   for (uint32_t i = 0; i < mStateList.Length(); ++i) {
     nsRefPtr<InternalRequest> internalRequest =
-      ToInternalRequest(mStateList[i].mPCacheRequest);
+      ToInternalRequest(mStateList[i].mCacheRequest);
 
     // If there is a stream we must clone it so that its still available
     // to store in the cache later;
@@ -240,7 +236,7 @@ FetchPut::DoFetchOnMainThread()
     mStateList[i].mFetchObserver = new FetchObserver(this);
     rv = fetchDriver->Fetch(mStateList[i].mFetchObserver);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      MaybeSetError(rv);
+      MaybeSetError(ErrorResult(rv));
       mStateList[i].mFetchObserver = nullptr;
       mPendingCount -= 1;
       continue;
@@ -258,16 +254,16 @@ FetchPut::FetchComplete(FetchObserver* aObserver,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aInternalResponse->IsError() && !mResult.Failed()) {
-    MaybeSetError(NS_ERROR_FAILURE);
+    MaybeSetError(ErrorResult(NS_ERROR_FAILURE));
   }
 
   for (uint32_t i = 0; i < mStateList.Length(); ++i) {
     if (mStateList[i].mFetchObserver == aObserver) {
       ErrorResult rv;
-      ToPCacheResponseWithoutBody(mStateList[i].mPCacheResponse,
+      ToCacheResponseWithoutBody(mStateList[i].mCacheResponse,
                                   *aInternalResponse, rv);
       if (rv.Failed()) {
-        mResult = Move(rv);
+        MaybeSetError(Move(rv));
       } else {
         aInternalResponse->GetBody(getter_AddRefs(mStateList[i].mResponseStream));
       }
@@ -316,27 +312,27 @@ FetchPut::DoPutOnWorkerThread()
   for (uint32_t i = 0; i < mStateList.Length(); ++i) {
     // The spec requires us to catch if content tries to insert a set of
     // requests that would overwrite each other.
-    if (MatchInPutList(mStateList[i].mPCacheRequest, putList)) {
-      MaybeSetError(NS_ERROR_DOM_INVALID_STATE_ERR);
+    if (MatchInPutList(mStateList[i].mCacheRequest, putList)) {
+      MaybeSetError(ErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
       MaybeNotifyListener();
       return;
     }
 
     CacheRequestResponse* entry = putList.AppendElement();
-    entry->request() = mStateList[i].mPCacheRequest;
-    entry->response() = mStateList[i].mPCacheResponse;
+    entry->request() = mStateList[i].mCacheRequest;
+    entry->response() = mStateList[i].mCacheResponse;
     requestStreamList.AppendElement(mStateList[i].mRequestStream.forget());
     responseStreamList.AppendElement(mStateList[i].mResponseStream.forget());
   }
   mStateList.Clear();
 
-  mManager->CachePutAll(this, mRequestId, mCacheId, putList, requestStreamList,
-                        responseStreamList);
+  mManager->ExecutePutAll(this, mCacheId, putList, requestStreamList,
+                          responseStreamList);
 }
 
 // static
 bool
-FetchPut::MatchInPutList(const PCacheRequest& aRequest,
+FetchPut::MatchInPutList(const CacheRequest& aRequest,
                          const nsTArray<CacheRequestResponse>& aPutList)
 {
   // This method implements the SW spec QueryCache algorithm against an
@@ -351,11 +347,11 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
   }
 
   nsRefPtr<InternalHeaders> requestHeaders =
-    new InternalHeaders(aRequest.headers());
+    ToInternalHeaders(aRequest.headers());
 
   for (uint32_t i = 0; i < aPutList.Length(); ++i) {
-    const PCacheRequest& cachedRequest = aPutList[i].request();
-    const PCacheResponse& cachedResponse = aPutList[i].response();
+    const CacheRequest& cachedRequest = aPutList[i].request();
+    const CacheResponse& cachedResponse = aPutList[i].response();
 
     // If the URLs don't match, then just skip to the next entry.
     if (aRequest.url() != cachedRequest.url()) {
@@ -363,10 +359,10 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
     }
 
     nsRefPtr<InternalHeaders> cachedRequestHeaders =
-      new InternalHeaders(cachedRequest.headers());
+      ToInternalHeaders(cachedRequest.headers());
 
     nsRefPtr<InternalHeaders> cachedResponseHeaders =
-      new InternalHeaders(cachedResponse.headers());
+      ToInternalHeaders(cachedResponse.headers());
 
     nsAutoTArray<nsCString, 16> varyHeaders;
     ErrorResult rv;
@@ -426,20 +422,25 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
 }
 
 void
-FetchPut::OnCachePutAll(RequestId aRequestId, nsresult aRv)
+FetchPut::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
+                       CacheId aOpenedCacheId,
+                       const nsTArray<SavedResponse>& aSavedResponseList,
+                       const nsTArray<SavedRequest>& aSavedRequestList,
+                       StreamList* aStreamList)
 {
   MOZ_ASSERT(mInitiatingThread == NS_GetCurrentThread());
-  MaybeSetError(aRv);
+  MOZ_ASSERT(aResult.type() == CacheOpResult::TCachePutAllResult);
+  MaybeSetError(Move(aRv));
   MaybeNotifyListener();
 }
 
 void
-FetchPut::MaybeSetError(nsresult aRv)
+FetchPut::MaybeSetError(ErrorResult&& aRv)
 {
-  if (mResult.Failed() || NS_SUCCEEDED(aRv)) {
+  if (mResult.Failed() || !aRv.Failed()) {
     return;
   }
-  mResult.Throw(aRv);
+  mResult = Move(aRv);
 }
 
 void
@@ -453,8 +454,7 @@ FetchPut::MaybeNotifyListener()
   // object is removed from CacheParent::mFetchPutList, so make sure that
   // doesn't happen until this method returns.
   nsRefPtr<FetchPut> kungFuDeathGrip(this);
-  mListener->OnFetchPut(this, mRequestId, mResult);
-  mResult.ClearMessage(); // This may contain a TypeError.
+  mListener->OnFetchPut(this, Move(mResult));
 }
 
 nsIGlobalObject*

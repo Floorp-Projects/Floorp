@@ -1,0 +1,28 @@
+Bug 318040 - Accept abbreviated words without dots to workaround incomplete tokenization. r=ehsan
+
+diff --git a/extensions/spellcheck/hunspell/src/hunspell.cxx b/extensions/spellcheck/hunspell/src/hunspell.cxx
+--- a/extensions/spellcheck/hunspell/src/hunspell.cxx
++++ b/extensions/spellcheck/hunspell/src/hunspell.cxx
+@@ -347,16 +347,22 @@ int Hunspell::spell(const char * word, i
+   int abbv = 0;
+   int wl = 0;
+ 
+   // input conversion
+   RepList * rl = (pAMgr) ? pAMgr->get_iconvtable() : NULL;
+   if (rl && rl->conv(word, wspace)) wl = cleanword2(cw, wspace, unicw, &nc, &captype, &abbv);
+   else wl = cleanword2(cw, word, unicw, &nc, &captype, &abbv);
+ 
++#ifdef MOZILLA_CLIENT
++  // accept the abbreviated words without dots
++  // workaround for the incomplete tokenization of Mozilla
++  abbv = 1;
++#endif
++
+   if (wl == 0 || maxdic == 0) return 1;
+   if (root) *root = NULL;
+ 
+   // allow numbers with dots, dashes and commas (but forbid double separators: "..", "--" etc.)
+   enum { NBEGIN, NNUM, NSEP };
+   int nstate = NBEGIN;
+   int i;
+ 

@@ -404,8 +404,8 @@ nsContentList::nsContentList(nsINode* aRootNode,
     mFuncMayDependOnAttr(false)
 {
   NS_ASSERTION(mRootNode, "Must have root");
-  if (nsGkAtoms::_asterix == mHTMLMatchAtom) {
-    NS_ASSERTION(mXMLMatchAtom == nsGkAtoms::_asterix, "HTML atom and XML atom are not both asterix?");
+  if (nsGkAtoms::_asterisk == mHTMLMatchAtom) {
+    NS_ASSERTION(mXMLMatchAtom == nsGkAtoms::_asterisk, "HTML atom and XML atom are not both asterisk?");
     mMatchAll = true;
   }
   else {

@@ -117,7 +117,11 @@ PrintingParent::RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
   // to hear about the print settings. We return the results
   // with an async message which frees the child process from
   // its nested event loop.
-  mozilla::unused << aDialog->Send__delete__(aDialog, rv, resultData);
+  if (NS_FAILED(rv)) {
+    mozilla::unused << aDialog->Send__delete__(aDialog, rv);
+  } else {
+    mozilla::unused << aDialog->Send__delete__(aDialog, resultData);
+  }
   return true;
 }
 

@@ -1,29 +1,71 @@
 diff --git a/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c b/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c
+index 0ffb1bc..733693d 100644
 --- a/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c
 +++ b/media/libvpx/vp9/common/x86/vp9_subpixel_8t_intrin_avx2.c
-@@ -27,21 +27,24 @@ DECLARE_ALIGNED(32, static const uint8_t
-   4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12
- };
- 
- DECLARE_ALIGNED(32, static const uint8_t, filt4_global_avx2[32]) = {
+@@ -28,6 +28,26 @@ DECLARE_ALIGNED(32, const unsigned char, filt4_global_avx2[32])= {
    6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14,
-   6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14
- };
+   6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14};
  
- #if defined(__clang__)
- # if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ <= 3) || \
--      (defined(__APPLE__) && __clang_major__ == 5 && __clang_minor__ == 0)
-+      (defined(__APPLE__) && \
-+          (__clang_major__ == 4 && __clang_minor__ >= 0 && \
-+              __clang_minor__ <= 2) || \
-+          (__clang_major__ == 5 && __clang_minor__ == 0))
- #  define MM256_BROADCASTSI128_SI256(x) \
-        _mm_broadcastsi128_si256((__m128i const *)&(x))
- # else  // clang > 3.3, and not 5.0 on macosx.
- #  define MM256_BROADCASTSI128_SI256(x) _mm256_broadcastsi128_si256(x)
- # endif  // clang <= 3.3
- #elif defined(__GNUC__)
- # if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ <= 6)
- #  define MM256_BROADCASTSI128_SI256(x) \
-        _mm_broadcastsi128_si256((__m128i const *)&(x))
- # elif __GNUC__ == 4 && __GNUC_MINOR__ == 7
++#if defined(__clang__)
++# if __clang_major__ < 3 || (__clang_major__ == 3 && __clang_minor__ <= 3) || \
++     (defined(__APPLE__) && __clang_major__ == 5 && __clang_minor__ == 0)
++#  define MM256_BROADCASTSI128_SI256(x) \
++         _mm_broadcastsi128_si256((__m128i const *)&(x))
++# else  // clang > 3.3, and not 5.0 on macosx.
++#  define MM256_BROADCASTSI128_SI256(x) _mm256_broadcastsi128_si256(x)
++# endif  // clang <= 3.3
++#elif defined(__GNUC__)
++# if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ <= 6)
++#  define MM256_BROADCASTSI128_SI256(x) \
++         _mm_broadcastsi128_si256((__m128i const *)&(x))
++# elif __GNUC__ == 4 && __GNUC_MINOR__ == 7
++#  define MM256_BROADCASTSI128_SI256(x) _mm_broadcastsi128_si256(x)
++# else  // gcc > 4.7
++#  define MM256_BROADCASTSI128_SI256(x) _mm256_broadcastsi128_si256(x)
++# endif  // gcc <= 4.6
++#else  // !(gcc || clang)
++# define MM256_BROADCASTSI128_SI256(x) _mm256_broadcastsi128_si256(x)
++#endif  // __clang__
+ 
+ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
+                                   unsigned int src_pixels_per_line,
+@@ -50,18 +70,7 @@ void vp9_filter_block1d16_h8_avx2(unsigned char *src_ptr,
+   // in both lanes of 128 bit register.
+   filtersReg =_mm_packs_epi16(filtersReg, filtersReg);
+   // have the same data in both lanes of a 256 bit register
+-#if defined (__GNUC__)
+-#if ( __GNUC__ < 4 || (__GNUC__ == 4 && \
+-(__GNUC_MINOR__ < 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0))))
+-  filtersReg32 = _mm_broadcastsi128_si256((__m128i const *)&filtersReg);
+-#elif(__GNUC__ == 4 && (__GNUC_MINOR__ == 7 && __GNUC_PATCHLEVEL__ > 0))
+-  filtersReg32 = _mm_broadcastsi128_si256(filtersReg);
+-#else
+-  filtersReg32 = _mm256_broadcastsi128_si256(filtersReg);
+-#endif
+-#else
+-  filtersReg32 = _mm256_broadcastsi128_si256(filtersReg);
+-#endif
++  filtersReg32 = MM256_BROADCASTSI128_SI256(filtersReg);
+ 
+   // duplicate only the first 16 bits (first and second byte)
+   // across 256 bit register
+@@ -306,18 +315,7 @@ void vp9_filter_block1d16_v8_avx2(unsigned char *src_ptr,
+   // same data in both lanes of 128 bit register.
+   filtersReg =_mm_packs_epi16(filtersReg, filtersReg);
+   // have the same data in both lanes of a 256 bit register
+-#if defined (__GNUC__)
+-#if ( __GNUC__ < 4 || (__GNUC__ == 4 && \
+-(__GNUC_MINOR__ < 6 || (__GNUC_MINOR__ == 6 && __GNUC_PATCHLEVEL__ > 0))))
+-  filtersReg32 = _mm_broadcastsi128_si256((__m128i const *)&filtersReg);
+-#elif(__GNUC__ == 4 && (__GNUC_MINOR__ == 7 && __GNUC_PATCHLEVEL__ > 0))
+-  filtersReg32 = _mm_broadcastsi128_si256(filtersReg);
+-#else
+-  filtersReg32 = _mm256_broadcastsi128_si256(filtersReg);
+-#endif
+-#else
+-  filtersReg32 = _mm256_broadcastsi128_si256(filtersReg);
+-#endif
++  filtersReg32 = MM256_BROADCASTSI128_SI256(filtersReg);
+ 
+   // duplicate only the first 16 bits (first and second byte)
+   // across 256 bit register

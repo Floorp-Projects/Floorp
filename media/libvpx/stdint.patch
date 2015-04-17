@@ -6,9 +6,9 @@
  
 +#if !defined(VPX_DONT_DEFINE_STDINT_TYPES)
 +
- #if defined(_MSC_VER)
- #define VPX_FORCE_INLINE __forceinline
- #define VPX_INLINE __inline
+ #if (defined(_MSC_VER) && (_MSC_VER < 1600)) || defined(VPX_EMULATE_INTTYPES)
+ typedef signed char  int8_t;
+ typedef signed short int16_t;
 @@ -56,6 +58,8 @@
  
  #endif

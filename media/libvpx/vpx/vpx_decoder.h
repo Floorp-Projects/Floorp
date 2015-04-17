@@ -122,6 +122,10 @@ extern "C" {
    * is not thread safe and should be guarded with a lock if being used
    * in a multithreaded context.
    *
+   * In XMA mode (activated by setting VPX_CODEC_USE_XMA in the flags
+   * parameter), the storage pointed to by the cfg parameter must be
+   * kept readable and stable until all memory maps have been set.
+   *
    * \param[in]    ctx     Pointer to this instance's context.
    * \param[in]    iface   Pointer to the algorithm interface to use.
    * \param[in]    cfg     Configuration to use, if known. May be NULL.
@@ -135,7 +139,7 @@ extern "C" {
    */
   vpx_codec_err_t vpx_codec_dec_init_ver(vpx_codec_ctx_t      *ctx,
                                          vpx_codec_iface_t    *iface,
-                                         const vpx_codec_dec_cfg_t *cfg,
+                                         vpx_codec_dec_cfg_t  *cfg,
                                          vpx_codec_flags_t     flags,
                                          int                   ver);
 

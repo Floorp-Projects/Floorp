@@ -206,21 +206,6 @@ THREAD_FUNCTION thread_encoding_proc(void *p_data)
                         }
 
 #endif
-                        // Keep track of how many (consecutive) times a  block
-                        // is coded as ZEROMV_LASTREF, for base layer frames.
-                        // Reset to 0 if its coded as anything else.
-                        if (cpi->current_layer == 0) {
-                          if (xd->mode_info_context->mbmi.mode == ZEROMV &&
-                              xd->mode_info_context->mbmi.ref_frame ==
-                                  LAST_FRAME) {
-                            // Increment, check for wrap-around.
-                            if (cpi->consec_zero_last[map_index+mb_col] < 255)
-                              cpi->consec_zero_last[map_index+mb_col] +=
-                                  1;
-                          } else {
-                            cpi->consec_zero_last[map_index+mb_col] = 0;
-                          }
-                        }
 
                         /* Special case code for cyclic refresh
                          * If cyclic update enabled then copy

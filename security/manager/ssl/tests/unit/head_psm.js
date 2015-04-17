@@ -582,3 +582,45 @@ FakeSSLStatus.prototype = {
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 }
+
+// Utility functions for adding tests relating to certificate error overrides
+
+// Helper function for add_cert_override_test and
+// add_prevented_cert_override_test. Probably doesn't need to be called
+// directly.
+function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
+  let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                               .SSLStatus;
+  let bits =
+    (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
+    (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
+    (sslstatus.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
+  do_check_eq(bits, aExpectedBits);
+  let cert = sslstatus.serverCert;
+  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                              .getService(Ci.nsICertOverrideService);
+  certOverrideService.rememberValidityOverride(aHost, 8443, cert, aExpectedBits,
+                                               true);
+}
+
+// Given a host, expected error bits (see nsICertOverrideService.idl), and
+// an expected error code, tests that an initial connection to the host fails
+// with the expected errors and that adding an override results in a subsequent
+// connection succeeding.
+function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
+  add_connection_test(aHost, aExpectedError, null,
+                      add_cert_override.bind(this, aHost, aExpectedBits));
+  add_connection_test(aHost, PRErrorCodeSuccess);
+}
+
+// Given a host, expected error bits (see nsICertOverrideService.idl), and
+// an expected error code, tests that an initial connection to the host fails
+// with the expected errors and that adding an override does not result in a
+// subsequent connection succeeding (i.e. the same error code is encountered).
+// The idea here is that for HSTS hosts or hosts with key pins, no error is
+// overridable, even if an entry is added to the override service.
+function add_prevented_cert_override_test(aHost, aExpectedBits, aExpectedError) {
+  add_connection_test(aHost, aExpectedError, null,
+                      add_cert_override.bind(this, aHost, aExpectedBits));
+  add_connection_test(aHost, aExpectedError);
+}

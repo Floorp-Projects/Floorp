@@ -9,7 +9,7 @@
 ;
 
     EXPORT  |vp9_idct8x8_64_add_neon|
-    EXPORT  |vp9_idct8x8_12_add_neon|
+    EXPORT  |vp9_idct8x8_10_add_neon|
     ARM
     REQUIRE8
     PRESERVE8
@@ -310,13 +310,13 @@
     bx              lr
     ENDP  ; |vp9_idct8x8_64_add_neon|
 
-;void vp9_idct8x8_12_add_neon(int16_t *input, uint8_t *dest, int dest_stride)
+;void vp9_idct8x8_10_add_neon(int16_t *input, uint8_t *dest, int dest_stride)
 ;
 ; r0  int16_t input
 ; r1  uint8_t *dest
 ; r2  int dest_stride)
 
-|vp9_idct8x8_12_add_neon| PROC
+|vp9_idct8x8_10_add_neon| PROC
     push            {r4-r9}
     vpush           {d8-d15}
     vld1.s16        {q8,q9}, [r0]!
@@ -514,6 +514,6 @@
     vpop            {d8-d15}
     pop             {r4-r9}
     bx              lr
-    ENDP  ; |vp9_idct8x8_12_add_neon|
+    ENDP  ; |vp9_idct8x8_10_add_neon|
 
     END

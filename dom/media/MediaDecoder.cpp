@@ -121,8 +121,6 @@ void
 MediaDecoder::InitStatics()
 {
   AbstractThread::InitStatics();
-
-  MediaTaskQueue::InitStatics();
 }
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)

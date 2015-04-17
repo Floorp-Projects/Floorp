@@ -128,7 +128,7 @@ txXPathOptimizer::optimizeStep(Expr* aInExpr, Expr** aOutExpr)
         if (!step->getSubExprAt(0) &&
             step->getNodeTest()->getType() == txNameTest::NAME_TEST &&
             (nameTest = static_cast<txNameTest*>(step->getNodeTest()))->
-                mLocalName != nsGkAtoms::_asterix) {
+                mLocalName != nsGkAtoms::_asterisk) {
 
             *aOutExpr = new txNamedAttributeStep(nameTest->mNamespace,
                                                  nameTest->mPrefix,

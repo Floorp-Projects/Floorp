@@ -51,14 +51,75 @@ this.BrowserTestUtils = {
    * @rejects Any exception from taskFn is propagated.
    */
   withNewTab: Task.async(function* (options, taskFn) {
-    let tab = options.gBrowser.addTab(options.url);
-    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-    options.gBrowser.selectedTab = tab;
-
+    let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
     yield taskFn(tab.linkedBrowser);
-
     options.gBrowser.removeTab(tab);
   }),
+
+  /**
+   * Opens a new tab in the foreground.
+   *
+   * @param {tabbrowser} tabbrowser
+   *        The tabbrowser to open the tab new in.
+   * @param {string} opening
+   *        May be either a string URL to load in the tab, or a function that
+   *        will be called to open a foreground tab. Defaults to "about:blank".
+   * @param {boolean} waitForLoad
+   *        True to wait for the page in the new tab to load. Defaults to true.
+   *
+   * @return {Promise}
+   *         Resolves when the tab is ready and loaded as necessary.
+   * @resolves The new tab.
+   */
+  openNewForegroundTab(tabbrowser, opening = "about:blank", aWaitForLoad = true) {
+    let tab;
+    let promises = [
+      BrowserTestUtils.switchTab(tabbrowser, function () {
+        if (typeof opening == "function") {
+          opening();
+          tab = tabbrowser.selectedTab;
+        }
+        else {
+          tabbrowser.selectedTab = tab = tabbrowser.addTab(opening);
+        }
+      })
+    ];
+
+    if (aWaitForLoad) {
+      promises.push(BrowserTestUtils.browserLoaded(tab.linkedBrowser));
+    }
+
+    return Promise.all(promises).then(() => tab);
+  },
+
+  /**
+   * Switches to a tab and resolves when it is ready.
+   *
+   * @param {tabbrowser} tabbrowser
+   *        The tabbrowser.
+   * @param {tab} tab
+   *        Either a tab element to switch to or a function to perform the switch.
+   *
+   * @return {Promise}
+   *         Resolves when the tab has been switched to.
+   * @resolves The tab switched to.
+   */
+  switchTab(tabbrowser, tab) {
+    let promise = new Promise(resolve => {
+      tabbrowser.addEventListener("TabSwitchDone", function onSwitch() {
+        tabbrowser.removeEventListener("TabSwitchDone", onSwitch);
+        TestUtils.executeSoon(() => resolve(tabbrowser.selectedTab));
+      });
+    });
+
+    if (typeof tab == "function") {
+      tab();
+    }
+    else {
+      tabbrowser.selectedTab = tab;
+    }
+    return promise;
+  },
 
   /**
    * Waits for an ongoing page load in a browser window to complete.
@@ -214,4 +275,69 @@ this.BrowserTestUtils = {
       });
     });
   },
+
+  /**
+   *  Versions of EventUtils.jsm synthesizeMouse functions that synthesize a
+   *  mouse event in a child process and return promises that resolve when the
+   *  event has fired and completed. Instead of a window, a browser is required
+   *  to be passed to this function.
+   *
+   * @param {string} target
+   *        A selector that identifies the element to target. The syntax is as
+   *        for querySelector. This may also be a CPOW element for easier
+   *        test-conversion. If this is null, then the offset is from the
+   *        content document's edge.
+   * @param {integer} offsetX
+   *        x offset from target's left bounding edge
+   * @param {integer} offsetY
+   *        y offset from target's top bounding edge
+   * @param {Object} event object
+   *        Additional arguments, similar to the EventUtils.jsm version
+   * @param {Browser} browser
+   *        Browser element, must not be null
+   *
+   * @returns {Promise}
+   * @resolves True if the mouse event was cancelled.
+   */
+  synthesizeMouse(target, offsetX, offsetY, event, browser)
+  {
+    return new Promise(resolve => {
+      let mm = browser.messageManager;
+      mm.addMessageListener("Test:SynthesizeMouseDone", function mouseMsg(message) {
+        mm.removeMessageListener("Test:SynthesizeMouseDone", mouseMsg);
+        resolve(message.data.defaultPrevented);
+      });
+
+      let cpowObject = null;
+      if (typeof target != "string") {
+        cpowObject = target;
+        target = null;
+      }
+
+      mm.sendAsyncMessage("Test:SynthesizeMouse",
+                          {target, target, x: offsetX, y: offsetY, event: event},
+                          {object: cpowObject});
+    });
+  },
+
+  /**
+   *  Version of synthesizeMouse that uses the center of the target as the mouse
+   *  location. Arguments and the return value are the same.
+   */
+  synthesizeMouseAtCenter(target, event, browser)
+  {
+    // Use a flag to indicate to center rather than having a separate message.
+    event.centered = true;
+    return BrowserTestUtils.synthesizeMouse(target, 0, 0, event, browser);
+  },
+
+  /**
+   *  Version of synthesizeMouse that uses a client point within the child
+   *  window instead of a target as the offset. Otherwise, the arguments and
+   *  return value are the same as synthesizeMouse.
+   */
+  synthesizeMouseAtPoint(offsetX, offsetY, event, browser)
+  {
+    return BrowserTestUtils.synthesizeMouse(null, offsetX, offsetY, event, browser);
+  }
 };

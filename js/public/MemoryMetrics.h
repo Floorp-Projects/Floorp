@@ -147,11 +147,15 @@ struct ClassInfo
         FOR_EACH_SIZE(SUB_OTHER_SIZE)
     }
 
-    bool isNotable() const {
-        static const size_t NotabilityThreshold = 16 * 1024;
+    size_t sizeOfAllThings() const {
         size_t n = 0;
         FOR_EACH_SIZE(ADD_SIZE_TO_N)
-        return n >= NotabilityThreshold;
+        return n;
+    }
+
+    bool isNotable() const {
+        static const size_t NotabilityThreshold = 16 * 1024;
+        return sizeOfAllThings() >= NotabilityThreshold;
     }
 
     size_t sizeOfLiveGCThings() const {

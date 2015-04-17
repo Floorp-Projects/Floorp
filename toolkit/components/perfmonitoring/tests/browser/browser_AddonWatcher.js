@@ -41,7 +41,7 @@ add_task(function* init() {
     Services.prefs.clearUserPref("browser.addon-watch.interval");
   });
 
-  let oldCanRecord = Services.telemetry.canRecord;
+  let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
   registerCleanupFunction(function () {
     Services.telemetry.canRecordExtended = oldCanRecord;

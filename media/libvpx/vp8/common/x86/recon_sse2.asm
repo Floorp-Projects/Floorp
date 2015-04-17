@@ -365,7 +365,6 @@ sym(vp8_intra_pred_uv_tm_%1):
     GET_GOT     rbx
     push        rsi
     push        rdi
-    push        rbx
     ; end prolog
 
     ; read top row
@@ -396,11 +395,8 @@ sym(vp8_intra_pred_uv_tm_%1):
     movsxd      rcx,        dword ptr arg(1) ;dst_stride
 
 .vp8_intra_pred_uv_tm_%1_loop:
-    mov         bl,         [rsi]
-    movd        xmm3,       ebx
-
-    mov         bl,         [rsi+rax]
-    movd        xmm5,       ebx
+    movd        xmm3,       [rsi]
+    movd        xmm5,       [rsi+rax]
 %ifidn %1, sse2
     punpcklbw   xmm3,       xmm0
     punpcklbw   xmm5,       xmm0
@@ -423,7 +419,6 @@ sym(vp8_intra_pred_uv_tm_%1):
     jnz .vp8_intra_pred_uv_tm_%1_loop
 
     ; begin epilog
-    pop         rbx
     pop         rdi
     pop         rsi
     RESTORE_GOT
@@ -491,8 +486,10 @@ sym(vp8_intra_pred_uv_ho_%1):
     SHADOW_ARGS_TO_STACK 5
     push        rsi
     push        rdi
-    push        rbx
 %ifidn %1, ssse3
+%ifndef GET_GOT_SAVE_ARG
+    push        rbx
+%endif
     GET_GOT     rbx
 %endif
     ; end prolog
@@ -510,16 +507,13 @@ sym(vp8_intra_pred_uv_ho_%1):
 %ifidn %1, ssse3
     lea         rdx,        [rcx*3]
     movdqa      xmm2,       [GLOBAL(dc_00001111)]
+    lea         rbx,        [rax*3]
 %endif
 
 %ifidn %1, mmx2
 .vp8_intra_pred_uv_ho_%1_loop:
-    mov         bl,         [rsi]
-    movd        mm0,        ebx
-
-    mov         bl,         [rsi+rax]
-    movd        mm1,        ebx
-
+    movd        mm0,        [rsi]
+    movd        mm1,        [rsi+rax]
     punpcklbw   mm0,        mm0
     punpcklbw   mm1,        mm1
     pshufw      mm0,        mm0, 0x0
@@ -531,19 +525,10 @@ sym(vp8_intra_pred_uv_ho_%1):
     dec         edx
     jnz .vp8_intra_pred_uv_ho_%1_loop
 %else
-    mov         bl,         [rsi]
-    movd        xmm0,       ebx
-
-    mov         bl,         [rsi+rax]
-    movd        xmm3,       ebx
-
-    mov         bl,         [rsi+rax*2]
-    movd        xmm1,       ebx
-
-    lea         rbx,        [rax*3]
-    mov         bl,         [rsi+rbx]
-    movd        xmm4,       ebx
-
+    movd        xmm0,       [rsi]
+    movd        xmm3,       [rsi+rax]
+    movd        xmm1,       [rsi+rax*2]
+    movd        xmm4,       [rsi+rbx]
     punpcklbw   xmm0,       xmm3
     punpcklbw   xmm1,       xmm4
     pshufb      xmm0,       xmm2
@@ -554,20 +539,10 @@ sym(vp8_intra_pred_uv_ho_%1):
     movhps [rdi+rdx],       xmm1
     lea         rsi,        [rsi+rax*4]
     lea         rdi,        [rdi+rcx*4]
-
-    mov         bl,         [rsi]
-    movd        xmm0,       ebx
-
-    mov         bl,         [rsi+rax]
-    movd        xmm3,       ebx
-
-    mov         bl,         [rsi+rax*2]
-    movd        xmm1,       ebx
-
-    lea         rbx,        [rax*3]
-    mov         bl,         [rsi+rbx]
-    movd        xmm4,       ebx
-
+    movd        xmm0,       [rsi]
+    movd        xmm3,       [rsi+rax]
+    movd        xmm1,       [rsi+rax*2]
+    movd        xmm4,       [rsi+rbx]
     punpcklbw   xmm0,       xmm3
     punpcklbw   xmm1,       xmm4
     pshufb      xmm0,       xmm2
@@ -581,8 +556,10 @@ sym(vp8_intra_pred_uv_ho_%1):
     ; begin epilog
 %ifidn %1, ssse3
     RESTORE_GOT
-%endif
+%ifndef GET_GOT_SAVE_ARG
     pop         rbx
+%endif
+%endif
     pop         rdi
     pop         rsi
     UNSHADOW_ARGS
@@ -916,7 +893,6 @@ sym(vp8_intra_pred_y_tm_%1):
     SAVE_XMM 7
     push        rsi
     push        rdi
-    push        rbx
     GET_GOT     rbx
     ; end prolog
 
@@ -950,11 +926,8 @@ sym(vp8_intra_pred_y_tm_%1):
     mov         rdi,        arg(0) ;dst;
     movsxd      rcx,        dword ptr arg(1) ;dst_stride
 vp8_intra_pred_y_tm_%1_loop:
-    mov         bl,         [rsi]
-    movd        xmm4,       ebx
-
-    mov         bl,         [rsi+rax]
-    movd        xmm5,       ebx
+    movd        xmm4,       [rsi]
+    movd        xmm5,       [rsi+rax]
 %ifidn %1, sse2
     punpcklbw   xmm4,       xmm0
     punpcklbw   xmm5,       xmm0
@@ -983,7 +956,6 @@ vp8_intra_pred_y_tm_%1_loop:
 
     ; begin epilog
     RESTORE_GOT
-    pop         rbx
     pop         rdi
     pop         rsi
     RESTORE_XMM
@@ -1057,7 +1029,6 @@ sym(vp8_intra_pred_y_ho_sse2):
     SHADOW_ARGS_TO_STACK 5
     push        rsi
     push        rdi
-    push        rbx
     ; end prolog
 
     ;arg(2) not used
@@ -1070,11 +1041,8 @@ sym(vp8_intra_pred_y_ho_sse2):
     movsxd      rcx,        dword ptr arg(1) ;dst_stride
 
 vp8_intra_pred_y_ho_sse2_loop:
-    mov         bl,         [rsi]
-    movd        xmm0,       ebx
-    mov         bl,         [rsi+rax]
-    movd        xmm1,       ebx
-
+    movd        xmm0,       [rsi]
+    movd        xmm1,       [rsi+rax]
     ; FIXME use pshufb for ssse3 version
     punpcklbw   xmm0,       xmm0
     punpcklbw   xmm1,       xmm1
@@ -1090,7 +1058,6 @@ vp8_intra_pred_y_ho_sse2_loop:
     jnz vp8_intra_pred_y_ho_sse2_loop
 
     ; begin epilog
-    pop         rbx
     pop         rdi
     pop         rsi
     UNSHADOW_ARGS

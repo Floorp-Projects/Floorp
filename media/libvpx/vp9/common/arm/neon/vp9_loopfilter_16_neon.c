@@ -9,7 +9,6 @@
  */
 
 #include "./vp9_rtcd.h"
-#include "vpx/vpx_integer.h"
 
 void vp9_lpf_horizontal_8_dual_neon(uint8_t *s, int p /* pitch */,
                                     const uint8_t *blimit0,

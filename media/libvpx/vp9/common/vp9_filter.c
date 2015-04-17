@@ -10,9 +10,12 @@
 
 #include <assert.h>
 
+#include "vpx_ports/mem.h"
+
 #include "vp9/common/vp9_filter.h"
 
-const InterpKernel vp9_bilinear_filters[SUBPEL_SHIFTS] = {
+DECLARE_ALIGNED(256, const InterpKernel,
+                vp9_bilinear_filters[SUBPEL_SHIFTS]) = {
   { 0, 0, 0, 128,   0, 0, 0, 0 },
   { 0, 0, 0, 120,   8, 0, 0, 0 },
   { 0, 0, 0, 112,  16, 0, 0, 0 },

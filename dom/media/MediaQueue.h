@@ -186,7 +186,7 @@ private:
     for (uint32_t i = 0; i < mPopListeners.Length(); i++) {
       Listener& l = mPopListeners[i];
       nsCOMPtr<nsIRunnable> r = l.mRunnable;
-      l.mTarget->MaybeTailDispatch(r.forget());
+      l.mTarget->Dispatch(r.forget());
     }
   }
 

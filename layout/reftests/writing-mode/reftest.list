@@ -111,7 +111,7 @@ HTTP(..) == 1127488-align-right-vertical-lr-ltr.html 1127488-align-bottom-left-r
 == 1134849-orthogonal-inline.html 1134849-orthogonal-inline-ref.html
 fails-if(B2G||Mulet) == 1135361-ruby-justify-1.html 1135361-ruby-justify-1-ref.html # bug 1136067 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(Mulet) fuzzy-if(winWidget,255,163) == 1136557-1-nested-spans.html 1136557-1-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Mulet) fuzzy-if(winWidget,255,199) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+skip-if(Mulet) fuzzy-if(winWidget,255,221) == 1136557-2-nested-spans.html 1136557-2-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(Mulet) fuzzy-if(winWidget,255,58) == 1136557-3-nested-spans.html 1136557-3-nested-spans-ref.html # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 == 1138356-1-button-contents-alignment.html 1138356-1-button-contents-alignment-ref.html
 != 1138356-2-button-contents-alignment.html 1138356-2-button-contents-alignment-notref.html
@@ -124,3 +124,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) != font-inflation-1c.html font-inflation-1d.html
 test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1c.html font-inflation-1c-ref.html
 test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == font-inflation-1d.html font-inflation-1d-ref.html
+
+== 1144501-1a-block-end-margin-orthogonal-size.html 1144501-1-block-end-margin-orthogonal-size-ref.html
+== 1144501-1b-block-end-margin-orthogonal-size.html 1144501-1-block-end-margin-orthogonal-size-ref.html
+== 1151993-1-orthogonal-block-size.html 1151993-1-orthogonal-block-size-ref.html
