@@ -367,8 +367,9 @@ nsINodeList*
 nsINode::ChildNodes()
 {
   nsSlots* slots = Slots();
-  MOZ_ASSERT(!slots->mChildNodes);
-  slots->mChildNodes = new nsChildContentList(this);
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+  }
 
   return slots->mChildNodes;
 }
