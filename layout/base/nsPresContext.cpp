@@ -1881,7 +1881,7 @@ nsPresContext::MediaFeatureValuesChanged(nsRestyleHint aRestyleHint,
   mPendingMediaFeatureValuesChanged = false;
 
   // MediumFeaturesChanged updates the applied rules, so it always gets called.
-  if (mShell && mShell->StyleSet()->MediumFeaturesChanged(this)) {
+  if (mShell && mShell->StyleSet()->MediumFeaturesChanged()) {
     aRestyleHint |= eRestyle_Subtree;
   }
 
@@ -2095,7 +2095,7 @@ nsPresContext::FlushUserFontSet()
   if (mFontFaceSetDirty) {
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
       nsTArray<nsFontFaceRuleContainer> rules;
-      if (!mShell->StyleSet()->AppendFontFaceRules(this, rules)) {
+      if (!mShell->StyleSet()->AppendFontFaceRules(rules)) {
         return;
       }
 
