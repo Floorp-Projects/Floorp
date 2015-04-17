@@ -2043,6 +2043,9 @@ class MOZ_STACK_CLASS ModuleCompiler
           case JS::AsmJSCache_QuotaExceeded:
             cacheString = "not enough temporary storage quota to store in cache";
             break;
+          case JS::AsmJSCache_StorageInitFailure:
+            cacheString = "storage initialization failed (consider filing a bug)";
+            break;
           case JS::AsmJSCache_Disabled_Internal:
             cacheString = "caching disabled by internal configuration (consider filing a bug)";
             break;
