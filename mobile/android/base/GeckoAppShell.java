@@ -520,6 +520,14 @@ public class GeckoAppShell
             sendEventToGecko(e);
             sWaitingForEventAck = true;
             while (true) {
+                if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExiting) ||
+                        GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
+                    // Gecko is quitting; don't do anything.
+                    Log.d(LOGTAG, "Skipping Gecko event sync during exit");
+                    sWaitingForEventAck = false;
+                    return;
+                }
+
                 try {
                     sEventAckLock.wait(1000);
                 } catch (InterruptedException ie) {
