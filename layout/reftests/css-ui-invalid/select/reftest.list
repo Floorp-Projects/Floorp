@@ -10,7 +10,7 @@ needs-focus == select-required-invalid-changed-1.html select-required-ref.html
 needs-focus == select-required-invalid-changed-2.html select-required-ref.html
 needs-focus == select-required-valid.html select-required-ref.html
 needs-focus == select-required-multiple-invalid.html select-required-multiple-ref.html
-needs-focus == select-required-multiple-invalid-changed.html select-required-multiple-ref.html
+skip-if(asyncPanZoom) needs-focus == select-required-multiple-invalid-changed.html select-required-multiple-ref.html
 needs-focus == select-required-multiple-valid.html select-required-multiple-ref.html
 skip-if(B2G||Mulet) fails-if(Android) needs-focus == select-disabled-fieldset-1.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) needs-focus == select-disabled-fieldset-2.html select-fieldset-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

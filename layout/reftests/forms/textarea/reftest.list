@@ -10,4 +10,4 @@ skip-if(B2G||Mulet) fails-if(Android) fails-if(gtk2Widget) != rtl.html no-resize
 == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
 == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
-== padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
+skip-if(asyncPanZoom) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
