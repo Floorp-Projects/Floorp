@@ -11,7 +11,7 @@ const errors = [
   "ElementNotVisibleError",
   "FrameSendFailureError",
   "FrameSendNotInitializedError",
-  "IllegalArgumentError",
+  "InvalidArgumentError",
   "InvalidElementStateError",
   "InvalidSelectorError",
   "InvalidSessionIdError",
@@ -171,12 +171,12 @@ this.FrameSendNotInitializedError = function(frame) {
 };
 FrameSendNotInitializedError.prototype = Object.create(WebDriverError.prototype);
 
-this.IllegalArgumentError = function(msg) {
+this.InvalidArgumentError = function(msg) {
   WebDriverError.call(this, msg);
-  this.name = "IllegalArgumentError";
-  this.status = "illegal argument";
+  this.name = "InvalidArgumentError";
+  this.status = "invalid argument";
 };
-IllegalArgumentError.prototype = Object.create(WebDriverError.prototype);
+InvalidArgumentError.prototype = Object.create(WebDriverError.prototype);
 
 this.InvalidElementStateError = function(msg) {
   WebDriverError.call(this, msg);
