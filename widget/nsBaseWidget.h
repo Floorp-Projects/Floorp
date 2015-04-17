@@ -309,16 +309,6 @@ public:
   };
   friend class AutoLayerManagerSetup;
 
-  class AutoUseBasicLayerManager {
-  public:
-    explicit AutoUseBasicLayerManager(nsBaseWidget* aWidget);
-    ~AutoUseBasicLayerManager();
-  private:
-    nsBaseWidget* mWidget;
-    bool mPreviousTemporarilyUseBasicLayerManager;
-  };
-  friend class AutoUseBasicLayerManager;
-
   virtual bool            ShouldUseOffMainThreadCompositing();
 
   static nsIRollupListener* GetActiveRollupListener();
@@ -479,7 +469,6 @@ protected:
   nsIWidgetListener* mWidgetListener;
   nsIWidgetListener* mAttachedWidgetListener;
   nsRefPtr<LayerManager> mLayerManager;
-  nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
   nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
@@ -493,7 +482,6 @@ protected:
   nsBorderStyle     mBorderStyle;
   bool              mUseLayersAcceleration;
   bool              mForceLayersAcceleration;
-  bool              mTemporarilyUseBasicLayerManager;
   // Windows with out-of-process tabs always require OMTC. This flag designates
   // such windows.
   bool              mRequireOffMainThreadCompositing;
