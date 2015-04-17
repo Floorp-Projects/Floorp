@@ -69,6 +69,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "messenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
+                                   "@mozilla.org/icc/iccservice;1",
+                                   "nsIIccService");
+
 this.NetworkStatsService = {
   init: function() {
     debug("Service started");
@@ -253,11 +257,12 @@ this.NetworkStatsService = {
     let networks = {};
     let numRadioInterfaces = gRil.numRadioInterfaces;
     for (let i = 0; i < numRadioInterfaces; i++) {
+      let icc = gIccService.getIccByServiceId(i);
       let radioInterface = gRil.getRadioInterface(i);
-      if (radioInterface.rilContext.iccInfo) {
-        let netId = this.getNetworkId(radioInterface.rilContext.iccInfo.iccid,
+      if (icc && icc.iccInfo) {
+        let netId = this.getNetworkId(icc.iccInfo.iccid,
                                       NET_TYPE_MOBILE);
-        networks[netId] = { id : radioInterface.rilContext.iccInfo.iccid,
+        networks[netId] = { id : icc.iccInfo.iccid,
                             type: NET_TYPE_MOBILE };
       }
     }

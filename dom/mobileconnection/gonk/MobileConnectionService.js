@@ -56,6 +56,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
+                                   "@mozilla.org/icc/iccservice;1",
+                                   "nsIIccService");
+
 XPCOMUtils.defineLazyGetter(this, "gRadioInterfaceLayer", function() {
   let ril = { numRadioInterfaces: 0 };
   try {
@@ -387,9 +391,8 @@ MobileConnectionProvider.prototype = {
    * really the case. See bug 787967
    */
   _checkRoamingBetweenOperators: function(aNetworkInfo) {
-    // TODO: Bug 864489 - B2G RIL: use ipdl as IPC in MozIccManager
-    // Should get iccInfo from GonkIccProvider.
-    let iccInfo = this._radioInterface.rilContext.iccInfo;
+    let icc = gIccService.getIccByServiceId(this._clientId);
+    let iccInfo = icc ? icc.iccInfo : null;
     let operator = aNetworkInfo.network;
     let state = aNetworkInfo.state;
 
