@@ -106,7 +106,7 @@ GonkCameraParameters::Unflatten(const String8& aFlatParameters)
       break;
     }
 
-    nsAutoCString key(data, pos - data);
+    nsDependentCSubstring key(data, pos - data);
     data = pos + 1;
 
     nsCString* value;
