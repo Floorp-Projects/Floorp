@@ -3025,14 +3025,24 @@ typedef bool (*FreshenBlockScopeFn)(JSContext*, BaselineFrame*);
 static const VMFunction FreshenBlockScopeInfo =
     FunctionInfo<FreshenBlockScopeFn>(jit::FreshenBlockScope);
 
+typedef bool (*DebugLeaveThenFreshenBlockScopeFn)(JSContext*, BaselineFrame*, jsbytecode* pc);
+static const VMFunction DebugLeaveThenFreshenBlockScopeInfo =
+    FunctionInfo<DebugLeaveThenFreshenBlockScopeFn>(jit::DebugLeaveThenFreshenBlockScope);
+
 bool
 BaselineCompiler::emit_JSOP_FRESHENBLOCKSCOPE()
 {
     prepareVMCall();
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    pushArg(R0.scratchReg());
 
+    if (compileDebugInstrumentation_) {
+        pushArg(ImmPtr(pc));
+        pushArg(R0.scratchReg());
+        return callVM(DebugLeaveThenFreshenBlockScopeInfo);
+    }
+
+    pushArg(R0.scratchReg());
     return callVM(FreshenBlockScopeInfo);
 }
 

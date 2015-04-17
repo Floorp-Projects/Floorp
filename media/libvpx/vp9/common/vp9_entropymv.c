@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_entropymv.h"
 
 #define MV_COUNT_SAT 20
 #define MV_MAX_UPDATE_FACTOR 128
 
-// Integer pel reference mv threshold for use of high-precision 1/8 mv
+/* Integer pel reference mv threshold for use of high-precision 1/8 mv */
 #define COMPANDED_MVREF_THRESH 8
 
 const vp9_tree_index vp9_mv_joint_tree[TREE_SIZE(MV_JOINTS)] = {
@@ -48,29 +49,31 @@ const vp9_tree_index vp9_mv_fp_tree[TREE_SIZE(MV_FP_SIZE)] = {
 
 static const nmv_context default_nmv_context = {
   {32, 64, 96},
-  {
-    { // Vertical component
-      128,                                                  // sign
-      {224, 144, 192, 168, 192, 176, 192, 198, 198, 245},   // class
-      {216},                                                // class0
-      {136, 140, 148, 160, 176, 192, 224, 234, 234, 240},   // bits
-      {{128, 128, 64}, {96, 112, 64}},                      // class0_fp
-      {64, 96, 64},                                         // fp
-      160,                                                  // class0_hp bit
-      128,                                                  // hp
+  { // NOLINT
+    { /* vert component */ // NOLINT
+      128,                                                  /* sign */
+      {224, 144, 192, 168, 192, 176, 192, 198, 198, 245},   /* class */
+      {216},                                                /* class0 */
+      {136, 140, 148, 160, 176, 192, 224, 234, 234, 240},   /* bits */
+      {{128, 128, 64}, {96, 112, 64}},                      /* class0_fp */
+      {64, 96, 64},                                         /* fp */
+      160,                                                  /* class0_hp bit */
+      128,                                                  /* hp */
     },
-    { // Horizontal component
-      128,                                                  // sign
-      {216, 128, 176, 160, 176, 176, 192, 198, 198, 208},   // class
-      {208},                                                // class0
-      {136, 140, 148, 160, 176, 192, 224, 234, 234, 240},   // bits
-      {{128, 128, 64}, {96, 112, 64}},                      // class0_fp
-      {64, 96, 64},                                         // fp
-      160,                                                  // class0_hp bit
-      128,                                                  // hp
+    { /* hor component */ // NOLINT
+      128,                                                  /* sign */
+      {216, 128, 176, 160, 176, 176, 192, 198, 198, 208},   /* class */
+      {208},                                                /* class0 */
+      {136, 140, 148, 160, 176, 192, 224, 234, 234, 240},   /* bits */
+      {{128, 128, 64}, {96, 112, 64}},                      /* class0_fp */
+      {64, 96, 64},                                         /* fp */
+      160,                                                  /* class0_hp bit */
+      128,                                                  /* hp */
     }
   },
 };
+
+#define mv_class_base(c) ((c) ? (CLASS0_SIZE << (c + 2)) : 0)
 
 static const uint8_t log_in_base_2[] = {
   0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -118,13 +121,13 @@ static const uint8_t log_in_base_2[] = {
   9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10
 };
 
-static INLINE int mv_class_base(MV_CLASS_TYPE c) {
-  return c ? CLASS0_SIZE << (c + 2) : 0;
-}
-
 MV_CLASS_TYPE vp9_get_mv_class(int z, int *offset) {
-  const MV_CLASS_TYPE c = (z >= CLASS0_SIZE * 4096) ?
-      MV_CLASS_10 : (MV_CLASS_TYPE)log_in_base_2[z >> 3];
+  MV_CLASS_TYPE c = MV_CLASS_0;
+  if (z >= CLASS0_SIZE * 4096)
+    c = MV_CLASS_10;
+  else
+    c = log_in_base_2[z >> 3];
+
   if (offset)
     *offset = z - mv_class_base(c);
   return c;

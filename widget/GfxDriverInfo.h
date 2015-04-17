@@ -85,6 +85,7 @@ enum DeviceFamily {
   RadeonX1000,
   Geforce7300GT,
   Nvidia310M,
+  Nvidia8800GTS,
   AMDRadeonHD5800,
   Bug1137716,
   Bug1116812,

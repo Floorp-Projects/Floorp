@@ -27,9 +27,6 @@ typedef struct TileInfo {
 void vp9_tile_init(TileInfo *tile, const struct VP9Common *cm,
                    int row, int col);
 
-void vp9_tile_set_row(TileInfo *tile, const struct VP9Common *cm, int row);
-void vp9_tile_set_col(TileInfo *tile, const struct VP9Common *cm, int col);
-
 void vp9_get_tile_n_bits(int mi_cols,
                          int *min_log2_tile_cols, int *max_log2_tile_cols);
 

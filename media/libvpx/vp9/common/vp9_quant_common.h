@@ -11,7 +11,6 @@
 #ifndef VP9_COMMON_VP9_QUANT_COMMON_H_
 #define VP9_COMMON_VP9_QUANT_COMMON_H_
 
-#include "vpx/vpx_codec.h"
 #include "vp9/common/vp9_blockd.h"
 
 #ifdef __cplusplus
@@ -23,8 +22,10 @@ extern "C" {
 #define QINDEX_RANGE (MAXQ - MINQ + 1)
 #define QINDEX_BITS 8
 
-int16_t vp9_dc_quant(int qindex, int delta, vpx_bit_depth_t bit_depth);
-int16_t vp9_ac_quant(int qindex, int delta, vpx_bit_depth_t bit_depth);
+void vp9_init_quant_tables();
+
+int16_t vp9_dc_quant(int qindex, int delta);
+int16_t vp9_ac_quant(int qindex, int delta);
 
 int vp9_get_qindex(const struct segmentation *seg, int segment_id,
                    int base_qindex);

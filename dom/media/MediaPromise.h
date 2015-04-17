@@ -10,7 +10,6 @@
 #include "prlog.h"
 
 #include "AbstractThread.h"
-#include "TaskDispatcher.h"
 
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -75,20 +74,18 @@ public:
   class Private;
 
   static nsRefPtr<MediaPromise>
-  CreateAndResolve(ResolveValueType aResolveValue, const char* aResolveSite,
-                   TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+  CreateAndResolve(ResolveValueType aResolveValue, const char* aResolveSite)
   {
     nsRefPtr<typename MediaPromise::Private> p = new MediaPromise::Private(aResolveSite);
-    p->Resolve(aResolveValue, aResolveSite, aDispatcher);
+    p->Resolve(aResolveValue, aResolveSite);
     return Move(p);
   }
 
   static nsRefPtr<MediaPromise>
-  CreateAndReject(RejectValueType aRejectValue, const char* aRejectSite,
-                  TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+  CreateAndReject(RejectValueType aRejectValue, const char* aRejectSite)
   {
     nsRefPtr<typename MediaPromise::Private> p = new MediaPromise::Private(aRejectSite);
-    p->Reject(aRejectValue, aRejectSite, aDispatcher);
+    p->Reject(aRejectValue, aRejectSite);
     return Move(p);
   }
 
@@ -174,8 +171,7 @@ protected:
 
     explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite) {}
 
-    virtual void Dispatch(MediaPromise *aPromise,
-                          TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>()) = 0;
+    virtual void Dispatch(MediaPromise *aPromise) = 0;
 
   protected:
     virtual void DoResolve(ResolveValueType aResolveValue) = 0;
@@ -223,7 +219,7 @@ protected:
       , mResolveMethod(aResolveMethod)
       , mRejectMethod(aRejectMethod) {}
 
-    void Dispatch(MediaPromise *aPromise, TaskDispatcher& aDispatcher) override
+    void Dispatch(MediaPromise *aPromise) override
     {
       aPromise->mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!aPromise->IsPending());
@@ -239,7 +235,7 @@ protected:
       // then shut down the thread or task queue that the promise result would
       // be dispatched on. So we unfortunately can't assert that promise
       // dispatch succeeds. :-(
-      aDispatcher.AddTask(mResponseTarget, runnable.forget(), AbstractThread::DontAssertDispatchSuccess);
+      mResponseTarget->Dispatch(runnable.forget(), AbstractThread::DontAssertDispatchSuccess);
     }
 
 #ifdef DEBUG
@@ -308,18 +304,8 @@ public:
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
   already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-                                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
-                                         TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+                                         ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
-    // {Refable,}Then() rarely dispatch directly - they do so only in the case
-    // where the promise has already been resolved by the time {Refable,}Then()
-    // is invoked. This case is rare, but it _can_ happen, which makes it a ripe
-    // target for race bugs. So we do an extra assertion here to make sure our
-    // caller is using tail dispatch correctly no matter what, rather than
-    // relying on the assertion in Dispatch(), which may be called extremely
-    // infrequently.
-    aDispatcher.AssertIsTailDispatcherIfRequired();
-
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aResponseThread->IsDispatchReliable());
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
@@ -329,7 +315,7 @@ public:
     PROMISE_LOG("%s invoking Then() [this=%p, thenValue=%p, aThisVal=%p, isPending=%d]",
                 aCallSite, this, thenValue.get(), aThisVal, (int) IsPending());
     if (!IsPending()) {
-      thenValue->Dispatch(this, aDispatcher);
+      thenValue->Dispatch(this);
     } else {
       mThenValues.AppendElement(thenValue);
     }
@@ -339,16 +325,14 @@ public:
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
   void Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
-            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
-            TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+            ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
     nsRefPtr<Consumer> c =
-      RefableThen(aResponseThread, aCallSite, aThisVal, aResolveMethod, aRejectMethod, aDispatcher);
+      RefableThen(aResponseThread, aCallSite, aThisVal, aResolveMethod, aRejectMethod);
     return;
   }
 
-  void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite,
-               TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+  void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
@@ -357,7 +341,7 @@ public:
     PROMISE_LOG("%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
                 aCallSite, this, chainedPromise.get(), (int) IsPending());
     if (!IsPending()) {
-      ForwardTo(chainedPromise, aDispatcher);
+      ForwardTo(chainedPromise);
     } else {
       mChainedPromises.AppendElement(chainedPromise);
     }
@@ -365,27 +349,27 @@ public:
 
 protected:
   bool IsPending() { return mResolveValue.isNothing() && mRejectValue.isNothing(); }
-  void DispatchAll(TaskDispatcher& aDispatcher)
+  void DispatchAll()
   {
     mMutex.AssertCurrentThreadOwns();
     for (size_t i = 0; i < mThenValues.Length(); ++i) {
-      mThenValues[i]->Dispatch(this, aDispatcher);
+      mThenValues[i]->Dispatch(this);
     }
     mThenValues.Clear();
 
     for (size_t i = 0; i < mChainedPromises.Length(); ++i) {
-      ForwardTo(mChainedPromises[i], aDispatcher);
+      ForwardTo(mChainedPromises[i]);
     }
     mChainedPromises.Clear();
   }
 
-  void ForwardTo(Private* aOther, TaskDispatcher& aDispatcher)
+  void ForwardTo(Private* aOther)
   {
     MOZ_ASSERT(!IsPending());
     if (mResolveValue.isSome()) {
-      aOther->Resolve(mResolveValue.ref(), "<chained promise>", aDispatcher);
+      aOther->Resolve(mResolveValue.ref(), "<chained promise>");
     } else {
-      aOther->Reject(mRejectValue.ref(), "<chained promise>", aDispatcher);
+      aOther->Reject(mRejectValue.ref(), "<chained promise>");
     }
   }
 
@@ -413,24 +397,22 @@ class MediaPromise<ResolveValueT, RejectValueT, IsExclusive>::Private
 public:
   explicit Private(const char* aCreationSite) : MediaPromise(aCreationSite) {}
 
-  void Resolve(ResolveValueT aResolveValue, const char* aResolveSite,
-               TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+  void Resolve(ResolveValueT aResolveValue, const char* aResolveSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s resolving MediaPromise (%p created at %s)", aResolveSite, this, mCreationSite);
     mResolveValue.emplace(aResolveValue);
-    DispatchAll(aDispatcher);
+    DispatchAll();
   }
 
-  void Reject(RejectValueT aRejectValue, const char* aRejectSite,
-              TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+  void Reject(RejectValueT aRejectValue, const char* aRejectSite)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(IsPending());
     PROMISE_LOG("%s rejecting MediaPromise (%p created at %s)", aRejectSite, this, mCreationSite);
     mRejectValue.emplace(aRejectValue);
-    DispatchAll(aDispatcher);
+    DispatchAll();
   }
 };
 
@@ -491,46 +473,42 @@ public:
   }
 
   void Resolve(typename PromiseType::ResolveValueType aResolveValue,
-               const char* aMethodName,
-               TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+               const char* aMethodName)
   {
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
     MOZ_ASSERT(mPromise);
-    mPromise->Resolve(aResolveValue, aMethodName, aDispatcher);
+    mPromise->Resolve(aResolveValue, aMethodName);
     mPromise = nullptr;
   }
 
 
   void ResolveIfExists(typename PromiseType::ResolveValueType aResolveValue,
-                       const char* aMethodName,
-                       TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+                       const char* aMethodName)
   {
     if (!IsEmpty()) {
-      Resolve(aResolveValue, aMethodName, aDispatcher);
+      Resolve(aResolveValue, aMethodName);
     }
   }
 
   void Reject(typename PromiseType::RejectValueType aRejectValue,
-              const char* aMethodName,
-              TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+              const char* aMethodName)
   {
     if (mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
     }
     MOZ_ASSERT(mPromise);
-    mPromise->Reject(aRejectValue, aMethodName, aDispatcher);
+    mPromise->Reject(aRejectValue, aMethodName);
     mPromise = nullptr;
   }
 
 
   void RejectIfExists(typename PromiseType::RejectValueType aRejectValue,
-                      const char* aMethodName,
-                      TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+                      const char* aMethodName)
   {
     if (!IsEmpty()) {
-      Reject(aRejectValue, aMethodName, aDispatcher);
+      Reject(aRejectValue, aMethodName);
     }
   }
 
@@ -666,13 +644,12 @@ private:
 
 template<typename PromiseType>
 static nsRefPtr<PromiseType>
-ProxyInternal(AbstractThread* aTarget, MethodCallBase<PromiseType>* aMethodCall, const char* aCallerName,
-              TaskDispatcher& aDispatcher)
+ProxyInternal(AbstractThread* aTarget, MethodCallBase<PromiseType>* aMethodCall, const char* aCallerName)
 {
   nsRefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
   nsRefPtr<ProxyRunnable<PromiseType>> r = new ProxyRunnable<PromiseType>(p, aMethodCall);
   MOZ_ASSERT(aTarget->IsDispatchReliable());
-  aDispatcher.AddTask(aTarget, r.forget());
+  aTarget->Dispatch(r.forget());
   return Move(p);
 }
 
@@ -681,34 +658,31 @@ ProxyInternal(AbstractThread* aTarget, MethodCallBase<PromiseType>* aMethodCall,
 template<typename PromiseType, typename ThisType>
 static nsRefPtr<PromiseType>
 ProxyMediaCall(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-               nsRefPtr<PromiseType>(ThisType::*aMethod)(),
-               TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+               nsRefPtr<PromiseType>(ThisType::*aMethod)())
 {
   typedef detail::MethodCallWithNoArgs<PromiseType, ThisType> MethodCallType;
   MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName, aDispatcher);
+  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
 }
 
 template<typename PromiseType, typename ThisType, typename Arg1Type>
 static nsRefPtr<PromiseType>
 ProxyMediaCall(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-               nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type), Arg1Type aArg1,
-               TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+               nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type), Arg1Type aArg1)
 {
   typedef detail::MethodCallWithOneArg<PromiseType, ThisType, Arg1Type> MethodCallType;
   MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod, aArg1);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName, aDispatcher);
+  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
 }
 
 template<typename PromiseType, typename ThisType, typename Arg1Type, typename Arg2Type>
 static nsRefPtr<PromiseType>
 ProxyMediaCall(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-               nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type, Arg2Type), Arg1Type aArg1, Arg2Type aArg2,
-               TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
+               nsRefPtr<PromiseType>(ThisType::*aMethod)(Arg1Type, Arg2Type), Arg1Type aArg1, Arg2Type aArg2)
 {
   typedef detail::MethodCallWithTwoArgs<PromiseType, ThisType, Arg1Type, Arg2Type> MethodCallType;
   MethodCallType* methodCall = new MethodCallType(aThisVal, aMethod, aArg1, aArg2);
-  return detail::ProxyInternal(aTarget, methodCall, aCallerName, aDispatcher);
+  return detail::ProxyInternal(aTarget, methodCall, aCallerName);
 }
 
 #undef PROMISE_LOG

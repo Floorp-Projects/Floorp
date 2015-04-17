@@ -27,19 +27,14 @@ typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 // so both manager protocols implement this and we keep a reference to them
 // through this interface.
 class CompositableParentManager : public ISurfaceAllocator
-                                , public AsyncTransactionTrackersHolder
 {
 public:
   virtual void SendFenceHandleIfPresent(PTextureParent* aTexture,
                                         CompositableHost* aCompositableHost) = 0;
 
-  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
-                               PTextureParent* aTexture,
-                               const FenceHandle& aFence) = 0;
-
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) = 0;
 
-  void SendPendingAsyncMessges();
+  void SendPendingAsyncMessages();
 
   /**
    * Get child side's process Id.

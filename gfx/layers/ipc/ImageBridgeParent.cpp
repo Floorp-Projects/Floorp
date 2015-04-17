@@ -103,7 +103,7 @@ public:
 
   ~AutoImageBridgeParentAsyncMessageSender()
   {
-    mImageBridge->SendPendingAsyncMessges();
+    mImageBridge->SendPendingAsyncMessages();
   }
 private:
   ImageBridgeParent* mImageBridge;
@@ -243,19 +243,6 @@ ImageBridgeParent::DeallocPTextureParent(PTextureParent* actor)
 }
 
 void
-ImageBridgeParent::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                   PTextureParent* aTexture,
-                                   const FenceHandle& aFence)
-{
-  HoldUntilComplete(aTracker);
-  InfallibleTArray<AsyncParentMessageData> messages;
-  messages.AppendElement(OpDeliverFence(aTracker->GetId(),
-                                        aTexture, nullptr,
-                                        aFence));
-  mozilla::unused << SendParentAsyncMessages(messages);
-}
-
-void
 ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
   mozilla::unused << SendParentAsyncMessages(aMessage);
@@ -264,41 +251,6 @@ ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageDat
 bool
 ImageBridgeParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages)
 {
-  for (AsyncChildMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
-    const AsyncChildMessageData& message = aMessages[i];
-
-    switch (message.type()) {
-      case AsyncChildMessageData::TOpDeliverFenceFromChild: {
-        const OpDeliverFenceFromChild& op = message.get_OpDeliverFenceFromChild();
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-        FenceHandle fence = FenceHandle(op.fence());
-        PTextureParent* parent = op.textureParent();
-
-        TextureHostOGL* hostOGL = nullptr;
-        RefPtr<TextureHost> texture = TextureHost::AsTextureHost(parent);
-        if (texture) {
-          hostOGL = texture->AsHostOGL();
-        }
-        if (hostOGL) {
-          hostOGL->SetAcquireFence(fence.mFence);
-        }
-#endif
-        // Send back a response.
-        InfallibleTArray<AsyncParentMessageData> replies;
-        replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
-        mozilla::unused << SendParentAsyncMessages(replies);
-        break;
-      }
-      case AsyncChildMessageData::TOpReplyDeliverFence: {
-        const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
-        TransactionCompleteted(op.transactionId());
-        break;
-      }
-      default:
-        NS_ERROR("unknown AsyncChildMessageData type");
-        return false;
-    }
-  }
   return true;
 }
 
@@ -373,10 +325,7 @@ ImageBridgeParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
   if (aCompositableHost && aCompositableHost->GetCompositor()) {
     FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
     if (fence.IsValid()) {
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-      HoldUntilComplete(tracker);
-      mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
-                                                    aTexture, nullptr,
+      mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
                                                     fence));
     }
   }
@@ -384,19 +333,16 @@ ImageBridgeParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
   // Send a ReleaseFence that is set by HwcComposer2D.
   FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
   if (fence.IsValid()) {
-    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-    HoldUntilComplete(tracker);
-    mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
-                                                  aTexture, nullptr,
+    mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
                                                   fence));
   }
 }
 
 void
-ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
-                                                     uint64_t aTransactionId,
-                                                     PTextureParent* aTexture,
-                                                     CompositableHost* aCompositableHost)
+ImageBridgeParent::AppendDeliverFenceMessage(uint64_t aDestHolderId,
+                                             uint64_t aTransactionId,
+                                             PTextureParent* aTexture,
+                                             CompositableHost* aCompositableHost)
 {
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
@@ -407,10 +353,7 @@ ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
   if (aCompositableHost && aCompositableHost->GetCompositor()) {
     FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
     if (fence.IsValid()) {
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-      HoldUntilComplete(tracker);
-      mPendingAsyncMessage.push_back(OpDeliverFenceToTracker(tracker->GetId(),
-                                                             aDestHolderId,
+      mPendingAsyncMessage.push_back(OpDeliverFenceToTracker(aDestHolderId,
                                                              aTransactionId,
                                                              fence));
     }
@@ -419,40 +362,37 @@ ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
   // Send a ReleaseFence that is set by HwcComposer2D.
   FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
   if (fence.IsValid()) {
-    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
-    HoldUntilComplete(tracker);
-    mPendingAsyncMessage.push_back(OpDeliverFenceToTracker(tracker->GetId(),
-                                                           aDestHolderId,
+    mPendingAsyncMessage.push_back(OpDeliverFenceToTracker(aDestHolderId,
                                                            aTransactionId,
                                                            fence));
   }
 }
 
 /*static*/ void
-ImageBridgeParent::SendFenceHandleToTrackerIfPresent(base::ProcessId aChildProcessId,
-                                                     uint64_t aDestHolderId,
-                                                     uint64_t aTransactionId,
-                                                     PTextureParent* aTexture,
-                                                     CompositableHost* aCompositableHost)
+ImageBridgeParent::AppendDeliverFenceMessage(base::ProcessId aChildProcessId,
+                                             uint64_t aDestHolderId,
+                                             uint64_t aTransactionId,
+                                             PTextureParent* aTexture,
+                                             CompositableHost* aCompositableHost)
 {
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
   if (!imageBridge) {
     return;
   }
-  imageBridge->SendFenceHandleToTrackerIfPresent(aDestHolderId,
-                                                 aTransactionId,
-                                                 aTexture,
-                                                 aCompositableHost);
+  imageBridge->AppendDeliverFenceMessage(aDestHolderId,
+                                         aTransactionId,
+                                         aTexture,
+                                         aCompositableHost);
 }
 
 /*static*/ void
-ImageBridgeParent::SendPendingAsyncMessges(base::ProcessId aChildProcessId)
+ImageBridgeParent::SendPendingAsyncMessages(base::ProcessId aChildProcessId)
 {
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
   if (!imageBridge) {
     return;
   }
-  imageBridge->SendPendingAsyncMessges();
+  imageBridge->SendPendingAsyncMessages();
 }
 
 } // layers

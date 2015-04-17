@@ -25,20 +25,6 @@ extern "C" {
 
 #define MI_MASK (MI_BLOCK_SIZE - 1)
 
-// Bitstream profiles indicated by 2-3 bits in the uncompressed header.
-// 00: Profile 0.  8-bit 4:2:0 only.
-// 10: Profile 1.  8-bit 4:4:4, 4:2:2, and 4:4:0.
-// 01: Profile 2.  10-bit and 12-bit color only, with 4:2:0 sampling.
-// 110: Profile 3. 10-bit and 12-bit color only, with 4:2:2/4:4:4/4:4:0
-//                 sampling.
-// 111: Undefined profile.
-typedef enum BITSTREAM_PROFILE {
-  PROFILE_0,
-  PROFILE_1,
-  PROFILE_2,
-  PROFILE_3,
-  MAX_PROFILES
-} BITSTREAM_PROFILE;
 
 typedef enum BLOCK_SIZE {
   BLOCK_4X4,
@@ -107,12 +93,6 @@ typedef enum {
   RESERVED_2 = 6,
   SRGB       = 7   // RGB
 } COLOR_SPACE;
-
-typedef enum {
-  VP9_LAST_FLAG = 1 << 0,
-  VP9_GOLD_FLAG = 1 << 1,
-  VP9_ALT_FLAG = 1 << 2,
-} VP9_REFFRAME;
 
 #ifdef __cplusplus
 }  // extern "C"

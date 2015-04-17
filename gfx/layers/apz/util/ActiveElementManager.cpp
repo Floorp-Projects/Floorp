@@ -164,7 +164,7 @@ ElementHasActiveStyle(dom::Element* aElement)
   }
   nsStyleSet* styleSet = pc->StyleSet();
   for (dom::Element* e = aElement; e; e = e->GetParentElement()) {
-    if (styleSet->HasStateDependentStyle(pc, e, NS_EVENT_STATE_ACTIVE)) {
+    if (styleSet->HasStateDependentStyle(e, NS_EVENT_STATE_ACTIVE)) {
       AEM_LOG("Element %p's style is dependent on the active state\n", e);
       return true;
     }

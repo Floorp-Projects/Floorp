@@ -156,7 +156,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
             {
                 // this won't match anything as we walk up the tree
                 // but it's what the spec says to do
-                nodeTest = new txNameTest(0, nsGkAtoms::_asterix, 0,
+                nodeTest = new txNameTest(0, nsGkAtoms::_asterisk, 0,
                                           nodeType);
                 break;
             }

@@ -10,6 +10,7 @@
 
 #include "vpx_config.h"
 #include "vp8/common/variance.h"
+#include "vp8/common/pragmas.h"
 #include "vpx_ports/mem.h"
 #include "vp8/common/x86/filter_x86.h"
 

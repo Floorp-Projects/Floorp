@@ -25,10 +25,10 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define SOFTOKEN_VERSION  "3.18.1" SOFTOKEN_ECC_STRING " Beta"
+#define SOFTOKEN_VERSION  "3.19" SOFTOKEN_ECC_STRING " Beta"
 #define SOFTOKEN_VMAJOR   3
-#define SOFTOKEN_VMINOR   18
-#define SOFTOKEN_VPATCH   1
+#define SOFTOKEN_VMINOR   19
+#define SOFTOKEN_VPATCH   0
 #define SOFTOKEN_VBUILD   0
 #define SOFTOKEN_BETA     PR_TRUE
 

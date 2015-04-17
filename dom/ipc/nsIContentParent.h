@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_nsIContentParent_h
 #define mozilla_dom_nsIContentParent_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/ipc/IdType.h"
 
 #include "nsFrameMessageManager.h"
@@ -55,10 +56,12 @@ public:
   virtual bool IsForApp() = 0;
   virtual bool IsForBrowser() = 0;
 
+  MOZ_WARN_UNUSED_RESULT
   virtual PBlobParent* SendPBlobConstructor(
     PBlobParent* aActor,
-    const BlobConstructorParams& aParams) NS_WARN_UNUSED_RESULT = 0;
+    const BlobConstructorParams& aParams) = 0;
 
+  MOZ_WARN_UNUSED_RESULT
   virtual PBrowserParent* SendPBrowserConstructor(
     PBrowserParent* actor,
     const TabId& aTabId,
@@ -66,7 +69,7 @@ public:
     const uint32_t& chromeFlags,
     const ContentParentId& aCpId,
     const bool& aIsForApp,
-    const bool& aIsForBrowser) NS_WARN_UNUSED_RESULT = 0;
+    const bool& aIsForBrowser) = 0;
 
   virtual bool IsContentParent() { return false; }
   ContentParent* AsContentParent();

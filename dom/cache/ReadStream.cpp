@@ -9,7 +9,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
 #include "mozilla/dom/cache/CacheStreamControlParent.h"
-#include "mozilla/dom/cache/PCacheTypes.h"
+#include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/SnappyUncompressInputStream.h"
@@ -35,10 +35,10 @@ public:
         nsIInputStream* aStream);
 
   void
-  Serialize(PCacheReadStreamOrVoid* aReadStreamOut);
+  Serialize(CacheReadStreamOrVoid* aReadStreamOut);
 
   void
-  Serialize(PCacheReadStream* aReadStreamOut);
+  Serialize(CacheReadStream* aReadStreamOut);
 
   // ReadStream::Controllable methods
   virtual void
@@ -49,6 +49,9 @@ public:
 
   virtual bool
   MatchId(const nsID& aId) const override;
+
+  virtual bool
+  HasEverBeenRead() const override;
 
   // Simulate nsIInputStream methods, but we don't actually inherit from it
   NS_METHOD
@@ -103,6 +106,7 @@ private:
     NumStates
   };
   Atomic<State> mState;
+  Atomic<bool> mHasEverBeenRead;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner, override)
 };
@@ -193,17 +197,17 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
 }
 
 void
-ReadStream::Inner::Serialize(PCacheReadStreamOrVoid* aReadStreamOut)
+ReadStream::Inner::Serialize(CacheReadStreamOrVoid* aReadStreamOut)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
   MOZ_ASSERT(aReadStreamOut);
-  PCacheReadStream stream;
+  CacheReadStream stream;
   Serialize(&stream);
   *aReadStreamOut = stream;
 }
 
 void
-ReadStream::Inner::Serialize(PCacheReadStream* aReadStreamOut)
+ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
   MOZ_ASSERT(aReadStreamOut);
@@ -249,6 +253,13 @@ ReadStream::Inner::MatchId(const nsID& aId) const
   return mId.Equals(aId);
 }
 
+bool
+ReadStream::Inner::HasEverBeenRead() const
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
+  return mHasEverBeenRead;
+}
+
 NS_IMETHODIMP
 ReadStream::Inner::Close()
 {
@@ -284,6 +295,8 @@ ReadStream::Inner::Read(char* aBuf, uint32_t aCount, uint32_t* aNumReadOut)
     Close();
   }
 
+  mHasEverBeenRead = true;
+
   return rv;
 }
 
@@ -294,12 +307,24 @@ ReadStream::Inner::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   // stream ops can happen on any thread
   MOZ_ASSERT(aNumReadOut);
 
+  if (aCount) {
+    mHasEverBeenRead = true;
+  }
+
   nsresult rv = mSnappyStream->ReadSegments(aWriter, aClosure, aCount,
                                             aNumReadOut);
 
   if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK &&
                         rv != NS_ERROR_NOT_IMPLEMENTED) || *aNumReadOut == 0) {
     Close();
+  }
+
+  // Verify bytes were actually read before marking as being ever read.  For
+  // example, code can test if the stream supports ReadSegments() by calling
+  // this method with a dummy callback which doesn't read anything.  We don't
+  // want to trigger on that.
+  if (*aNumReadOut) {
+    mHasEverBeenRead = true;
   }
 
   return rv;
@@ -391,18 +416,18 @@ NS_IMPL_ISUPPORTS(cache::ReadStream, nsIInputStream, ReadStream);
 
 // static
 already_AddRefed<ReadStream>
-ReadStream::Create(const PCacheReadStreamOrVoid& aReadStreamOrVoid)
+ReadStream::Create(const CacheReadStreamOrVoid& aReadStreamOrVoid)
 {
-  if (aReadStreamOrVoid.type() == PCacheReadStreamOrVoid::Tvoid_t) {
+  if (aReadStreamOrVoid.type() == CacheReadStreamOrVoid::Tvoid_t) {
     return nullptr;
   }
 
-  return Create(aReadStreamOrVoid.get_PCacheReadStream());
+  return Create(aReadStreamOrVoid.get_CacheReadStream());
 }
 
 // static
 already_AddRefed<ReadStream>
-ReadStream::Create(const PCacheReadStream& aReadStream)
+ReadStream::Create(const CacheReadStream& aReadStream)
 {
   // The parameter may or may not be for a Cache created stream.  The way we
   // tell is by looking at the stream control actor.  If the actor exists,
@@ -457,13 +482,13 @@ ReadStream::Create(PCacheStreamControlParent* aControl, const nsID& aId,
 }
 
 void
-ReadStream::Serialize(PCacheReadStreamOrVoid* aReadStreamOut)
+ReadStream::Serialize(CacheReadStreamOrVoid* aReadStreamOut)
 {
   mInner->Serialize(aReadStreamOut);
 }
 
 void
-ReadStream::Serialize(PCacheReadStream* aReadStreamOut)
+ReadStream::Serialize(CacheReadStream* aReadStreamOut)
 {
   mInner->Serialize(aReadStreamOut);
 }

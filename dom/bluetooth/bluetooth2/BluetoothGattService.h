@@ -143,4 +143,25 @@ private:
 
 END_BLUETOOTH_NAMESPACE
 
+/**
+ * Explicit Specialization of Function Templates
+ *
+ * Allows customizing the template code for a given set of template arguments.
+ * With this function template, nsTArray can handle comparison between
+ * 'nsRefPtr<BluetoothGattService>' and 'BluetoothGattServiceId' properly,
+ * including IndexOf() and Contains();
+ */
+template <>
+class nsDefaultComparator <
+  nsRefPtr<mozilla::dom::bluetooth::BluetoothGattService>,
+  mozilla::dom::bluetooth::BluetoothGattServiceId> {
+public:
+  bool Equals(
+    const nsRefPtr<mozilla::dom::bluetooth::BluetoothGattService>& aService,
+    const mozilla::dom::bluetooth::BluetoothGattServiceId& aServiceId) const
+  {
+    return aService->GetServiceId() == aServiceId;
+  }
+};
+
 #endif

@@ -10,30 +10,46 @@
 
 
 #include <limits.h>
-
 #include "vpx_mem/vpx_mem.h"
-
+#include "vp9/encoder/vp9_segmentation.h"
 #include "vp9/common/vp9_pred_common.h"
 #include "vp9/common/vp9_tile_common.h"
 
-#include "vp9/encoder/vp9_cost.h"
-#include "vp9/encoder/vp9_segmentation.h"
+void vp9_enable_segmentation(VP9_PTR ptr) {
+  VP9_COMP *cpi = (VP9_COMP *)ptr;
+  struct segmentation *const seg =  &cpi->common.seg;
 
-void vp9_enable_segmentation(struct segmentation *seg) {
   seg->enabled = 1;
   seg->update_map = 1;
   seg->update_data = 1;
 }
 
-void vp9_disable_segmentation(struct segmentation *seg) {
+void vp9_disable_segmentation(VP9_PTR ptr) {
+  VP9_COMP *cpi = (VP9_COMP *)ptr;
+  struct segmentation *const seg =  &cpi->common.seg;
   seg->enabled = 0;
-  seg->update_map = 0;
-  seg->update_data = 0;
 }
 
-void vp9_set_segment_data(struct segmentation *seg,
+void vp9_set_segmentation_map(VP9_PTR ptr,
+                              unsigned char *segmentation_map) {
+  VP9_COMP *cpi = (VP9_COMP *)ptr;
+  struct segmentation *const seg = &cpi->common.seg;
+
+  // Copy in the new segmentation map
+  vpx_memcpy(cpi->segmentation_map, segmentation_map,
+             (cpi->common.mi_rows * cpi->common.mi_cols));
+
+  // Signal that the map should be updated.
+  seg->update_map = 1;
+  seg->update_data = 1;
+}
+
+void vp9_set_segment_data(VP9_PTR ptr,
                           signed char *feature_data,
                           unsigned char abs_delta) {
+  VP9_COMP *cpi = (VP9_COMP *)ptr;
+  struct segmentation *const seg = &cpi->common.seg;
+
   seg->abs_delta = abs_delta;
 
   vpx_memcpy(seg->feature_data, feature_data, sizeof(seg->feature_data));
@@ -110,19 +126,21 @@ static int cost_segmap(int *segcounts, vp9_prob *probs) {
   return cost;
 }
 
-static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
-                       const TileInfo *tile, MODE_INFO *mi,
+static void count_segs(VP9_COMP *cpi, const TileInfo *const tile,
+                       MODE_INFO **mi_8x8,
                        int *no_pred_segcounts,
                        int (*temporal_predictor_count)[2],
                        int *t_unpred_seg_counts,
                        int bw, int bh, int mi_row, int mi_col) {
+  VP9_COMMON *const cm = &cpi->common;
+  MACROBLOCKD *const xd = &cpi->mb.e_mbd;
   int segment_id;
 
   if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols)
     return;
 
-  xd->mi = mi;
-  segment_id = xd->mi[0].src_mi->mbmi.segment_id;
+  xd->mi_8x8 = mi_8x8;
+  segment_id = xd->mi_8x8[0]->mbmi.segment_id;
 
   set_mi_row_col(xd, tile, mi_row, bh, mi_col, bw, cm->mi_rows, cm->mi_cols);
 
@@ -131,7 +149,7 @@ static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
 
   // Temporal prediction not allowed on key frames
   if (cm->frame_type != KEY_FRAME) {
-    const BLOCK_SIZE bsize = xd->mi[0].src_mi->mbmi.sb_type;
+    const BLOCK_SIZE bsize = mi_8x8[0]->mbmi.sb_type;
     // Test to see if the segment id matches the predicted value.
     const int pred_segment_id = vp9_get_segment_id(cm, cm->last_frame_seg_map,
                                                    bsize, mi_row, mi_col);
@@ -140,45 +158,46 @@ static void count_segs(const VP9_COMMON *cm, MACROBLOCKD *xd,
 
     // Store the prediction status for this mb and update counts
     // as appropriate
-    xd->mi[0].src_mi->mbmi.seg_id_predicted = pred_flag;
+    xd->mi_8x8[0]->mbmi.seg_id_predicted = pred_flag;
     temporal_predictor_count[pred_context][pred_flag]++;
 
-    // Update the "unpredicted" segment count
     if (!pred_flag)
+      // Update the "unpredicted" segment count
       t_unpred_seg_counts[segment_id]++;
   }
 }
 
-static void count_segs_sb(const VP9_COMMON *cm, MACROBLOCKD *xd,
-                          const TileInfo *tile, MODE_INFO *mi,
+static void count_segs_sb(VP9_COMP *cpi, const TileInfo *const tile,
+                          MODE_INFO **mi_8x8,
                           int *no_pred_segcounts,
                           int (*temporal_predictor_count)[2],
                           int *t_unpred_seg_counts,
                           int mi_row, int mi_col,
                           BLOCK_SIZE bsize) {
-  const int mis = cm->mi_stride;
+  const VP9_COMMON *const cm = &cpi->common;
+  const int mis = cm->mode_info_stride;
   int bw, bh;
   const int bs = num_8x8_blocks_wide_lookup[bsize], hbs = bs / 2;
 
   if (mi_row >= cm->mi_rows || mi_col >= cm->mi_cols)
     return;
 
-  bw = num_8x8_blocks_wide_lookup[mi[0].src_mi->mbmi.sb_type];
-  bh = num_8x8_blocks_high_lookup[mi[0].src_mi->mbmi.sb_type];
+  bw = num_8x8_blocks_wide_lookup[mi_8x8[0]->mbmi.sb_type];
+  bh = num_8x8_blocks_high_lookup[mi_8x8[0]->mbmi.sb_type];
 
   if (bw == bs && bh == bs) {
-    count_segs(cm, xd, tile, mi, no_pred_segcounts, temporal_predictor_count,
+    count_segs(cpi, tile, mi_8x8, no_pred_segcounts, temporal_predictor_count,
                t_unpred_seg_counts, bs, bs, mi_row, mi_col);
   } else if (bw == bs && bh < bs) {
-    count_segs(cm, xd, tile, mi, no_pred_segcounts, temporal_predictor_count,
+    count_segs(cpi, tile, mi_8x8, no_pred_segcounts, temporal_predictor_count,
                t_unpred_seg_counts, bs, hbs, mi_row, mi_col);
-    count_segs(cm, xd, tile, mi + hbs * mis, no_pred_segcounts,
+    count_segs(cpi, tile, mi_8x8 + hbs * mis, no_pred_segcounts,
                temporal_predictor_count, t_unpred_seg_counts, bs, hbs,
                mi_row + hbs, mi_col);
   } else if (bw < bs && bh == bs) {
-    count_segs(cm, xd, tile, mi, no_pred_segcounts, temporal_predictor_count,
+    count_segs(cpi, tile, mi_8x8, no_pred_segcounts, temporal_predictor_count,
                t_unpred_seg_counts, hbs, bs, mi_row, mi_col);
-    count_segs(cm, xd, tile, mi + hbs,
+    count_segs(cpi, tile, mi_8x8 + hbs,
                no_pred_segcounts, temporal_predictor_count, t_unpred_seg_counts,
                hbs, bs, mi_row, mi_col + hbs);
   } else {
@@ -191,7 +210,7 @@ static void count_segs_sb(const VP9_COMMON *cm, MACROBLOCKD *xd,
       const int mi_dc = hbs * (n & 1);
       const int mi_dr = hbs * (n >> 1);
 
-      count_segs_sb(cm, xd, tile, &mi[mi_dr * mis + mi_dc],
+      count_segs_sb(cpi, tile, &mi_8x8[mi_dr * mis + mi_dc],
                     no_pred_segcounts, temporal_predictor_count,
                     t_unpred_seg_counts,
                     mi_row + mi_dr, mi_col + mi_dc, subsize);
@@ -199,7 +218,8 @@ static void count_segs_sb(const VP9_COMMON *cm, MACROBLOCKD *xd,
   }
 }
 
-void vp9_choose_segmap_coding_method(VP9_COMMON *cm, MACROBLOCKD *xd) {
+void vp9_choose_segmap_coding_method(VP9_COMP *cpi) {
+  VP9_COMMON *const cm = &cpi->common;
   struct segmentation *seg = &cm->seg;
 
   int no_pred_cost;
@@ -215,6 +235,9 @@ void vp9_choose_segmap_coding_method(VP9_COMMON *cm, MACROBLOCKD *xd) {
   vp9_prob t_pred_tree[SEG_TREE_PROBS];
   vp9_prob t_nopred_prob[PREDICTION_PROBS];
 
+  const int mis = cm->mode_info_stride;
+  MODE_INFO **mi_ptr, **mi;
+
   // Set default state for the segment tree probabilities and the
   // temporal coding probabilities
   vpx_memset(seg->tree_probs, 255, sizeof(seg->tree_probs));
@@ -224,16 +247,15 @@ void vp9_choose_segmap_coding_method(VP9_COMMON *cm, MACROBLOCKD *xd) {
   // predicts this one
   for (tile_col = 0; tile_col < 1 << cm->log2_tile_cols; tile_col++) {
     TileInfo tile;
-    MODE_INFO *mi_ptr;
-    vp9_tile_init(&tile, cm, 0, tile_col);
 
-    mi_ptr = cm->mi + tile.mi_col_start;
+    vp9_tile_init(&tile, cm, 0, tile_col);
+    mi_ptr = cm->mi_grid_visible + tile.mi_col_start;
     for (mi_row = 0; mi_row < cm->mi_rows;
-         mi_row += 8, mi_ptr += 8 * cm->mi_stride) {
-      MODE_INFO *mi = mi_ptr;
+         mi_row += 8, mi_ptr += 8 * mis) {
+      mi = mi_ptr;
       for (mi_col = tile.mi_col_start; mi_col < tile.mi_col_end;
            mi_col += 8, mi += 8)
-        count_segs_sb(cm, xd, &tile, mi, no_pred_segcounts,
+        count_segs_sb(cpi, &tile, mi, no_pred_segcounts,
                       temporal_predictor_count, t_unpred_seg_counts,
                       mi_row, mi_col, BLOCK_64X64);
     }
