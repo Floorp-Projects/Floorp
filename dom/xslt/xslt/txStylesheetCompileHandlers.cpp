@@ -1062,7 +1062,7 @@ txFnStartStripSpace(int32_t aNamespaceID,
                 }
                 prefix = localName;
             }
-            localName = nsGkAtoms::_asterix;
+            localName = nsGkAtoms::_asterisk;
         }
         if (prefix) {
             ns = aState.mElementContext->mMappings->lookupNamespace(prefix);
