@@ -86,14 +86,6 @@ const KEY_EXECUTABLE      = "XREExeF";
 const KEY_UPDATE_ARCHIVE_DIR = "UpdArchD"
 #endif
 
-#ifdef XP_WIN
-#define CHECK_CAN_USE_SERVICE
-#elifdef MOZ_WIDGET_GONK
-// In Gonk, the updater will remount the /system partition to move staged files
-// into place, so we skip the test here to keep things isolated.
-#define CHECK_CAN_USE_SERVICE
-#endif
-
 const DIR_UPDATES         = "updates";
 #ifdef XP_MACOSX
 const UPDATED_DIR         = "Updated.app";
@@ -721,11 +713,20 @@ function getCanStageUpdates() {
     return false;
   }
 
-#ifdef CHECK_CAN_USE_SERVICE
-  if (getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
+#ifdef XP_WIN
+  if (isServiceInstalled() && shouldUseService()) {
     // No need to perform directory write checks, the maintenance service will
     // be able to write to all directories.
     LOG("getCanStageUpdates - able to stage updates because we'll use the service");
+    return true;
+  }
+#endif
+
+#ifdef MOZ_WIDGET_GONK
+  // For Gonk, the updater will remount the /system partition to move staged
+  // files into place.
+  if (getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
+    LOG("getCanStageUpdates - able to stage updates because this is gonk");
     return true;
   }
 #endif
