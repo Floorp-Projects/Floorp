@@ -21,30 +21,15 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(4441e660-4ad0-11e4-916c-0800200c9a66)]
-interface nsIRilContext : nsISupports
-{
-  /**
-   * One of the nsIIcc.CARD_STATE_* values.
-   */
-  readonly attribute unsigned long cardState;
-
-  readonly attribute DOMString imsi;
-
-  readonly attribute nsIIccInfo iccInfo;
-};
-
 [scriptable, function, uuid(3bc96351-53b0-47a1-a888-c74c64b60f25)]
 interface nsIRilSendWorkerMessageCallback : nsISupports
 {
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(fe01c648-867a-11e4-915f-033b36e8177b)]
+[scriptable, uuid(1a3ef88a-e4d1-11e4-8512-176220f2b32b)]
 interface nsIRadioInterface : nsISupports
 {
-  readonly attribute nsIRilContext rilContext;
-
   /**
    * PDP APIs
    *
@@ -78,14 +63,4 @@ interface nsIRadioInterfaceLayer : nsISupports
   unsigned long getClientIdForEmergencyCall();
 
   void setMicrophoneMuted(in boolean muted);
-};
-
-
-/**
- * Helper Interface to define new APIs of nsIRadioInterfaceLayer during
- * ril-interfaces frozen phase.
- */
-[scriptable, uuid(f8ec63da-c22e-11e4-89f3-b767dae42a13)]
-interface nsIRadioInterfaceLayer_new : nsIRadioInterfaceLayer
-{
 };

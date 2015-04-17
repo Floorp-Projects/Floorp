@@ -97,7 +97,7 @@ NS_CreateIccService();
 /**
  * XPCOM component that provides the access to the selected ICC.
  */
-[scriptable, uuid(38a5bbe2-add6-11e4-ba9e-e390d1d19195)]
+[scriptable, uuid(20a99186-e4cb-11e4-a5f9-938abcf7c826)]
 interface nsIIcc : nsISupports
 {
   /**
@@ -213,6 +213,11 @@ interface nsIIcc : nsISupports
    * One of the CARD_STATE_* values.
    */
   readonly attribute unsigned long cardState;
+
+  /**
+   * IMSI of this ICC.
+   */
+  readonly attribute DOMString imsi;
 
   /**
    * Get the status of an ICC lock (e.g. the PIN lock).
