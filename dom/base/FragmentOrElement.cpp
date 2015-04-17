@@ -456,7 +456,7 @@ FragmentOrElement::Children()
 
   if (!slots->mChildrenList) {
     slots->mChildrenList = new nsContentList(this, kNameSpaceID_Wildcard, 
-                                             nsGkAtoms::_asterix, nsGkAtoms::_asterix,
+                                             nsGkAtoms::_asterisk, nsGkAtoms::_asterisk,
                                              false);
   }
 

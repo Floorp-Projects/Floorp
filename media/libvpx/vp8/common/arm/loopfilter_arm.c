@@ -34,11 +34,11 @@ typedef void loopfilter_uv_neon(unsigned char *u, int pitch,
 
 extern loopfilter_y_neon vp8_loop_filter_horizontal_edge_y_neon;
 extern loopfilter_y_neon vp8_loop_filter_vertical_edge_y_neon;
-extern loopfilter_uv_neon vp8_loop_filter_horizontal_edge_uv_neon;
-extern loopfilter_uv_neon vp8_loop_filter_vertical_edge_uv_neon;
-
 extern loopfilter_y_neon vp8_mbloop_filter_horizontal_edge_y_neon;
 extern loopfilter_y_neon vp8_mbloop_filter_vertical_edge_y_neon;
+
+extern loopfilter_uv_neon vp8_loop_filter_horizontal_edge_uv_neon;
+extern loopfilter_uv_neon vp8_loop_filter_vertical_edge_uv_neon;
 extern loopfilter_uv_neon vp8_mbloop_filter_horizontal_edge_uv_neon;
 extern loopfilter_uv_neon vp8_mbloop_filter_vertical_edge_uv_neon;
 #endif

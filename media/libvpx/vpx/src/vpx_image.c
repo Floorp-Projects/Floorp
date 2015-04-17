@@ -8,20 +8,45 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+
 #include <stdlib.h>
 #include <string.h>
-
 #include "vpx/vpx_image.h"
-#include "vpx/vpx_integer.h"
-#include "vpx_mem/vpx_mem.h"
 
-static vpx_image_t *img_alloc_helper(vpx_image_t   *img,
-                                     vpx_img_fmt_t  fmt,
-                                     unsigned int   d_w,
-                                     unsigned int   d_h,
-                                     unsigned int   buf_align,
-                                     unsigned int   stride_align,
-                                     unsigned char *img_data) {
+#define ADDRESS_STORAGE_SIZE      sizeof(size_t)
+/*returns an addr aligned to the byte boundary specified by align*/
+#define align_addr(addr,align) (void*)(((size_t)(addr) + ((align) - 1)) & (size_t)-(align))
+
+/* Memalign code is copied from vpx_mem.c */
+static void *img_buf_memalign(size_t align, size_t size) {
+  void *addr,
+       * x = NULL;
+
+  addr = malloc(size + align - 1 + ADDRESS_STORAGE_SIZE);
+
+  if (addr) {
+    x = align_addr((unsigned char *)addr + ADDRESS_STORAGE_SIZE, (int)align);
+    /* save the actual malloc address */
+    ((size_t *)x)[-1] = (size_t)addr;
+  }
+
+  return x;
+}
+
+static void img_buf_free(void *memblk) {
+  if (memblk) {
+    void *addr = (void *)(((size_t *)memblk)[-1]);
+    free(addr);
+  }
+}
+
+static vpx_image_t *img_alloc_helper(vpx_image_t  *img,
+                                     vpx_img_fmt_t fmt,
+                                     unsigned int  d_w,
+                                     unsigned int  d_h,
+                                     unsigned int  buf_align,
+                                     unsigned int  stride_align,
+                                     unsigned char      *img_data) {
 
   unsigned int  h, w, s, xcs, ycs, bps;
   int           align;
@@ -69,21 +94,6 @@ static vpx_image_t *img_alloc_helper(vpx_image_t   *img,
     case VPX_IMG_FMT_VPXYV12:
       bps = 12;
       break;
-    case VPX_IMG_FMT_I422:
-      bps = 16;
-      break;
-    case VPX_IMG_FMT_I444:
-      bps = 24;
-      break;
-    case VPX_IMG_FMT_I42016:
-      bps = 24;
-      break;
-    case VPX_IMG_FMT_I42216:
-      bps = 32;
-      break;
-    case VPX_IMG_FMT_I44416:
-      bps = 48;
-      break;
     default:
       bps = 16;
       break;
@@ -95,9 +105,6 @@ static vpx_image_t *img_alloc_helper(vpx_image_t   *img,
     case VPX_IMG_FMT_YV12:
     case VPX_IMG_FMT_VPXI420:
     case VPX_IMG_FMT_VPXYV12:
-    case VPX_IMG_FMT_I422:
-    case VPX_IMG_FMT_I42016:
-    case VPX_IMG_FMT_I42216:
       xcs = 1;
       break;
     default:
@@ -140,13 +147,8 @@ static vpx_image_t *img_alloc_helper(vpx_image_t   *img,
   img->img_data = img_data;
 
   if (!img_data) {
-    const uint64_t alloc_size = (fmt & VPX_IMG_FMT_PLANAR) ?
-                                (uint64_t)h * s * bps / 8 : (uint64_t)h * s;
-
-    if (alloc_size != (size_t)alloc_size)
-      goto fail;
-
-    img->img_data = (uint8_t *)vpx_memalign(buf_align, (size_t)alloc_size);
+    img->img_data = img_buf_memalign(buf_align, ((fmt & VPX_IMG_FMT_PLANAR) ?
+                                                 h * s * bps / 8 : h * s));
     img->img_data_owner = 1;
   }
 
@@ -154,7 +156,6 @@ static vpx_image_t *img_alloc_helper(vpx_image_t   *img,
     goto fail;
 
   img->fmt = fmt;
-  img->bit_depth = (fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? 16 : 8;
   img->w = w;
   img->h = h;
   img->x_chroma_shift = xcs;
@@ -270,7 +271,7 @@ void vpx_img_flip(vpx_image_t *img) {
 void vpx_img_free(vpx_image_t *img) {
   if (img) {
     if (img->img_data && img->img_data_owner)
-      vpx_free(img->img_data);
+      img_buf_free(img->img_data);
 
     if (img->self_allocd)
       free(img);

@@ -41,23 +41,25 @@ using mozilla::ipc::PrincipalToPrincipalInfo;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozilla::dom::cache::CacheStorage);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozilla::dom::cache::CacheStorage);
-NS_IMPL_CYCLE_COLLECTION_CLASS(mozilla::dom::cache::CacheStorage)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(mozilla::dom::cache::CacheStorage)
-  tmp->DisconnectFromActor();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mRequestPromises)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(mozilla::dom::cache::CacheStorage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mRequestPromises)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(mozilla::dom::cache::CacheStorage)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(mozilla::dom::cache::CacheStorage,
+                                      mGlobal);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CacheStorage)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIIPCBackgroundChildCreateCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
 NS_INTERFACE_MAP_END
+
+// We cannot reference IPC types in a webidl binding implementation header.  So
+// define this in the .cpp and use heap storage in the mPendingRequests list.
+struct CacheStorage::Entry final
+{
+  nsRefPtr<Promise> mPromise;
+  CacheOpArgs mArgs;
+  // We cannot add the requests until after the actor is present.  So store
+  // the request data separately for now.
+  nsRefPtr<InternalRequest> mRequest;
+};
 
 // static
 already_AddRefed<CacheStorage>
@@ -175,29 +177,31 @@ CacheStorage::Match(const RequestOrUSVString& aRequest,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
+  if (mFailedActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsRefPtr<InternalRequest> request = ToInternalRequest(aRequest, IgnoreBody,
+                                                        aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (!promise) {
     return nullptr;
   }
 
-  if (mFailedActor) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
+  CacheQueryParams params;
+  ToCacheQueryParams(params, aOptions);
 
-  RequestId requestId = AddRequestPromise(promise, aRv);
+  nsAutoPtr<Entry> entry(new Entry());
+  entry->mPromise = promise;
+  entry->mArgs = StorageMatchArgs(CacheRequest(), params);
+  entry->mRequest = request;
 
-  Entry entry;
-  entry.mRequestId = requestId;
-  entry.mOp = OP_MATCH;
-  entry.mOptions = aOptions;
-  entry.mRequest = ToInternalRequest(aRequest, IgnoreBody, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  mPendingRequests.AppendElement(entry);
-
+  mPendingRequests.AppendElement(entry.forget());
   MaybeRunPendingRequests();
 
   return promise.forget();
@@ -208,23 +212,21 @@ CacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
+  if (mFailedActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (!promise) {
     return nullptr;
   }
 
-  if (mFailedActor) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
+  nsAutoPtr<Entry> entry(new Entry());
+  entry->mPromise = promise;
+  entry->mArgs = StorageHasArgs(nsString(aKey));
 
-  RequestId requestId = AddRequestPromise(promise, aRv);
-
-  Entry* entry = mPendingRequests.AppendElement();
-  entry->mRequestId = requestId;
-  entry->mOp = OP_HAS;
-  entry->mKey = aKey;
-
+  mPendingRequests.AppendElement(entry.forget());
   MaybeRunPendingRequests();
 
   return promise.forget();
@@ -235,23 +237,21 @@ CacheStorage::Open(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
+  if (mFailedActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (!promise) {
     return nullptr;
   }
 
-  if (mFailedActor) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
+  nsAutoPtr<Entry> entry(new Entry());
+  entry->mPromise = promise;
+  entry->mArgs = StorageOpenArgs(nsString(aKey));
 
-  RequestId requestId = AddRequestPromise(promise, aRv);
-
-  Entry* entry = mPendingRequests.AppendElement();
-  entry->mRequestId = requestId;
-  entry->mOp = OP_OPEN;
-  entry->mKey = aKey;
-
+  mPendingRequests.AppendElement(entry.forget());
   MaybeRunPendingRequests();
 
   return promise.forget();
@@ -262,23 +262,21 @@ CacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
+  if (mFailedActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (!promise) {
     return nullptr;
   }
 
-  if (mFailedActor) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
+  nsAutoPtr<Entry> entry(new Entry());
+  entry->mPromise = promise;
+  entry->mArgs = StorageDeleteArgs(nsString(aKey));
 
-  RequestId requestId = AddRequestPromise(promise, aRv);
-
-  Entry* entry = mPendingRequests.AppendElement();
-  entry->mRequestId = requestId;
-  entry->mOp = OP_DELETE;
-  entry->mKey = aKey;
-
+  mPendingRequests.AppendElement(entry.forget());
   MaybeRunPendingRequests();
 
   return promise.forget();
@@ -289,22 +287,21 @@ CacheStorage::Keys(ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
+  if (mFailedActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (!promise) {
     return nullptr;
   }
 
-  if (mFailedActor) {
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
-    return promise.forget();
-  }
+  nsAutoPtr<Entry> entry(new Entry());
+  entry->mPromise = promise;
+  entry->mArgs = StorageKeysArgs();
 
-  RequestId requestId = AddRequestPromise(promise, aRv);
-
-  Entry* entry = mPendingRequests.AppendElement();
-  entry->mRequestId = requestId;
-  entry->mOp = OP_KEYS;
-
+  mPendingRequests.AppendElement(entry.forget());
   MaybeRunPendingRequests();
 
   return promise.forget();
@@ -371,9 +368,8 @@ CacheStorage::ActorFailed()
   mFeature = nullptr;
 
   for (uint32_t i = 0; i < mPendingRequests.Length(); ++i) {
-    RequestId requestId = mPendingRequests[i].mRequestId;
-    nsRefPtr<Promise> promise = RemoveRequestPromise(requestId);
-    promise->MaybeReject(NS_ERROR_UNEXPECTED);
+    nsAutoPtr<Entry> entry(mPendingRequests[i].forget());
+    entry->mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
   }
   mPendingRequests.Clear();
 }
@@ -390,117 +386,6 @@ CacheStorage::DestroyInternal(CacheStorageChild* aActor)
   // Note that we will never get an actor again in case another request is
   // made before this object is destructed.
   ActorFailed();
-}
-
-void
-CacheStorage::RecvMatchResponse(RequestId aRequestId, nsresult aRv,
-                                const PCacheResponseOrVoid& aResponse)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  // Convert the response immediately if its present.  This ensures that
-  // any stream actors are cleaned up, even if we error out below.
-  nsRefPtr<Response> response;
-  if (aResponse.type() == PCacheResponseOrVoid::TPCacheResponse) {
-    response = ToResponse(aResponse);
-  }
-
-  nsRefPtr<Promise> promise = RemoveRequestPromise(aRequestId);
-
-  if (NS_FAILED(aRv)) {
-    promise->MaybeReject(aRv);
-    return;
-  }
-
-  // If cache name was specified in the request options and the cache does
-  // not exist, then an error code will already have been set.  If we
-  // still do not have a response, then we just resolve undefined like a
-  // normal Cache::Match.
-  if (!response) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
-    return;
-  }
-
-  promise->MaybeResolve(response);
-}
-
-void
-CacheStorage::RecvHasResponse(RequestId aRequestId, nsresult aRv, bool aSuccess)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  nsRefPtr<Promise> promise = RemoveRequestPromise(aRequestId);
-
-  if (NS_FAILED(aRv)) {
-    promise->MaybeReject(aRv);
-    return;
-
-  }
-
-  promise->MaybeResolve(aSuccess);
-}
-
-void
-CacheStorage::RecvOpenResponse(RequestId aRequestId, nsresult aRv,
-                               CacheChild* aActor)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  // Unlike most of our async callback Recv*() methods, this one gets back
-  // an actor.  We need to make sure to clean it up in case of error.
-
-  nsRefPtr<Promise> promise = RemoveRequestPromise(aRequestId);
-
-  if (NS_FAILED(aRv)) {
-    if (aActor) {
-      // We cannot use the CacheChild::StartDestroy() method because there
-      // is no Cache object associated with the actor yet.  Instead, just
-      // send the underlying Teardown message.
-      unused << aActor->SendTeardown();
-    }
-    promise->MaybeReject(aRv);
-    return;
-  }
-
-  if (!aActor) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return;
-  }
-
-  nsRefPtr<Cache> cache = new Cache(mGlobal, aActor);
-  promise->MaybeResolve(cache);
-}
-
-void
-CacheStorage::RecvDeleteResponse(RequestId aRequestId, nsresult aRv,
-                                 bool aSuccess)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  nsRefPtr<Promise> promise = RemoveRequestPromise(aRequestId);
-
-  if (NS_FAILED(aRv)) {
-    promise->MaybeReject(aRv);
-    return;
-  }
-
-  promise->MaybeResolve(aSuccess);
-}
-
-void
-CacheStorage::RecvKeysResponse(RequestId aRequestId, nsresult aRv,
-                               const nsTArray<nsString>& aKeys)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
-  nsRefPtr<Promise> promise = RemoveRequestPromise(aRequestId);
-
-  if (NS_FAILED(aRv)) {
-    promise->MaybeReject(aRv);
-    return;
-  }
-
-  promise->MaybeResolve(aKeys);
 }
 
 nsIGlobalObject*
@@ -524,32 +409,9 @@ CacheStorage::CreatePushStream(nsIAsyncInputStream* aStream)
   MOZ_CRASH("CacheStorage should never create a push stream.");
 }
 
-void
-CacheStorage::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  // Do nothing.  The Promise will automatically drop the ref to us after
-  // calling the callback.  This is what we want as we only registered in order
-  // to be held alive via the Promise handle.
-}
-
-void
-CacheStorage::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
-{
-  // Do nothing.  The Promise will automatically drop the ref to us after
-  // calling the callback.  This is what we want as we only registered in order
-  // to be held alive via the Promise handle.
-}
-
 CacheStorage::~CacheStorage()
 {
-  DisconnectFromActor();
-}
-
-void
-CacheStorage::DisconnectFromActor()
-{
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-
   if (mActor) {
     mActor->StartDestroy();
     // DestroyInternal() is called synchronously by StartDestroy().  So we
@@ -566,87 +428,20 @@ CacheStorage::MaybeRunPendingRequests()
   }
 
   for (uint32_t i = 0; i < mPendingRequests.Length(); ++i) {
-    // Note, the entry can be modified below due to Request/Response body
-    // being marked used.
-    Entry& entry = mPendingRequests[i];
-    RequestId requestId = entry.mRequestId;
-    switch(entry.mOp) {
-      case OP_MATCH:
-      {
-        AutoChildRequest request(this);
-        ErrorResult rv;
-        request.Add(entry.mRequest, IgnoreBody, PassThroughReferrer,
-                    IgnoreInvalidScheme, rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          nsRefPtr<Promise> promise = RemoveRequestPromise(requestId);
-          promise->MaybeReject(rv);
-          break;
-        }
-
-        PCacheQueryParams params;
-        ToPCacheQueryParams(params, entry.mOptions);
-
-        unused << mActor->SendMatch(requestId, request.SendAsRequest(), params);
-        break;
-      }
-      case OP_HAS:
-        unused << mActor->SendHas(requestId, entry.mKey);
-        break;
-      case OP_OPEN:
-        unused << mActor->SendOpen(requestId, entry.mKey);
-        break;
-      case OP_DELETE:
-        unused << mActor->SendDelete(requestId, entry.mKey);
-        break;
-      case OP_KEYS:
-        unused << mActor->SendKeys(requestId);
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unknown pending CacheStorage op.");
+    ErrorResult rv;
+    nsAutoPtr<Entry> entry(mPendingRequests[i].forget());
+    AutoChildOpArgs args(this, entry->mArgs);
+    if (entry->mRequest) {
+      args.Add(entry->mRequest, IgnoreBody, PassThroughReferrer,
+               IgnoreInvalidScheme, rv);
     }
+    if (rv.Failed()) {
+      entry->mPromise->MaybeReject(rv);
+      continue;
+    }
+    mActor->ExecuteOp(mGlobal, entry->mPromise, args.SendAsOpArgs());
   }
   mPendingRequests.Clear();
-}
-
-RequestId
-CacheStorage::AddRequestPromise(Promise* aPromise, ErrorResult& aRv)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(aPromise);
-  MOZ_ASSERT(!mRequestPromises.Contains(aPromise));
-
-  // Register ourself as a promise handler so that the promise will hold us
-  // alive.  This allows the client code to drop the ref to the CacheStorage
-  // object and just keep their promise.  This is fairly common in promise
-  // chaining code.
-  aPromise->AppendNativeHandler(this);
-
-  mRequestPromises.AppendElement(aPromise);
-
-  // (Ab)use the promise pointer as our request ID.  This is a fast, thread-safe
-  // way to get a unique ID for the promise to be resolved later.
-  return reinterpret_cast<RequestId>(aPromise);
-}
-
-already_AddRefed<Promise>
-CacheStorage::RemoveRequestPromise(RequestId aRequestId)
-{
-  NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(aRequestId != INVALID_REQUEST_ID);
-
-  for (uint32_t i = 0; i < mRequestPromises.Length(); ++i) {
-    nsRefPtr<Promise>& promise = mRequestPromises.ElementAt(i);
-    // To be safe, only cast promise pointers to our integer RequestId
-    // type and never cast an integer to a pointer.
-    if (aRequestId == reinterpret_cast<RequestId>(promise.get())) {
-      nsRefPtr<Promise> ref;
-      ref.swap(promise);
-      mRequestPromises.RemoveElementAt(i);
-      return ref.forget();
-    }
-  }
-  MOZ_ASSERT_UNREACHABLE("Received response without a matching promise!");
-  return nullptr;
 }
 
 } // namespace cache

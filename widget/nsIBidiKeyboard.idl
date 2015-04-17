@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0d53579c-8f40-4bcf-9b87-61979c09f924)]
+[builtinclass, scriptable, uuid(288dae24-76e2-43a3-befe-9d9fabe8014e)]
 interface nsIBidiKeyboard : nsISupports
 {
   /**

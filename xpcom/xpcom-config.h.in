@@ -18,12 +18,6 @@
 /* Define if a dyanmic_cast to void* gives the most derived object */
 #undef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 
-/* Define to either __attribute__((malloc)) or nothing */
-#undef NS_ATTR_MALLOC
-
-/* Define to either __attribute__((warn_unused_result)) or nothing */
-#undef NS_WARN_UNUSED_RESULT
-
 /* Define to a string describing the XPCOM ABI in use */
 #undef TARGET_XPCOM_ABI
 

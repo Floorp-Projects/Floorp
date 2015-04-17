@@ -44,12 +44,6 @@ public:
   virtual void AddTask(AbstractThread* aThread,
                        already_AddRefed<nsIRunnable> aRunnable,
                        AbstractThread::DispatchFailureHandling aFailureHandling = AbstractThread::AssertDispatchSuccess) = 0;
-
-#ifdef DEBUG
-  void AssertIsTailDispatcherIfRequired();
-#else
-  void AssertIsTailDispatcherIfRequired() {}
-#endif
 };
 
 /*
@@ -59,7 +53,7 @@ public:
 class MOZ_STACK_CLASS AutoTaskDispatcher : public TaskDispatcher
 {
 public:
-  AutoTaskDispatcher() {}
+  explicit AutoTaskDispatcher(bool aIsTailDispatcher = false) : mIsTailDispatcher(aIsTailDispatcher) {}
   ~AutoTaskDispatcher()
   {
     for (size_t i = 0; i < mTaskGroups.Length(); ++i) {
@@ -67,8 +61,10 @@ public:
       nsRefPtr<AbstractThread> thread = group->mThread;
 
       AbstractThread::DispatchFailureHandling failureHandling = group->mFailureHandling;
+      AbstractThread::DispatchReason reason = mIsTailDispatcher ? AbstractThread::TailDispatch
+                                                                : AbstractThread::NormalDispatch;
       nsCOMPtr<nsIRunnable> r = new TaskGroupRunnable(Move(group));
-      thread->Dispatch(r.forget(), failureHandling);
+      thread->Dispatch(r.forget(), failureHandling, reason);
     }
   }
 
@@ -147,6 +143,10 @@ private:
 
   // Task groups, organized by thread.
   nsTArray<UniquePtr<PerThreadTaskGroup>> mTaskGroups;
+
+  // True if this TaskDispatcher represents the tail dispatcher for the thread
+  // upon which it runs.
+  const bool mIsTailDispatcher;
 };
 
 // Little utility class to allow declaring AutoTaskDispatcher as a default

@@ -425,7 +425,7 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
 
 extern JS_FRIEND_DATA(const js::Class* const) ProxyClassPtr;
 
-inline bool IsProxy(JSObject* obj)
+inline bool IsProxy(const JSObject* obj)
 {
     return GetObjectClass(obj)->isProxy();
 }

@@ -76,6 +76,7 @@ nsScriptLoadRequestList::Clear()
 {
   while (!isEmpty()) {
     nsRefPtr<nsScriptLoadRequest> first = StealFirst();
+    first->Cancel();
     // And just let it go out of scope and die.
   }
 }
@@ -1486,6 +1487,10 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     return aStatus;
   }
 
+  if (aRequest->IsCanceled()) {
+    return NS_BINDING_ABORTED;
+  }
+
   // If we don't have a document, then we need to abort further
   // evaluation.
   if (!mDocument) {
@@ -1556,10 +1561,15 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   // Mark this as loaded
   aRequest->mLoading = false;
 
-  // And if it's async, move it to the loaded list.
+  // And if it's async, move it to the loaded list.  aRequest->mIsAsync really
+  // _should_ be in a list, but the consequences if it's not are bad enough we
+  // want to avoid trying to move it if it's not.
   if (aRequest->mIsAsync) {
-    nsRefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
-    mLoadedAsyncRequests.AppendElement(req);
+    MOZ_ASSERT(aRequest->isInList());
+    if (aRequest->isInList()) {
+      nsRefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
+      mLoadedAsyncRequests.AppendElement(req);
+    }
   }
 
   return NS_OK;
@@ -1580,7 +1590,10 @@ nsScriptLoader::ParsingComplete(bool aTerminated)
     mLoadedAsyncRequests.Clear();
     mNonAsyncExternalScriptInsertedRequests.Clear();
     mXSLTRequests.Clear();
-    mParserBlockingRequest = nullptr;
+    if (mParserBlockingRequest) {
+      mParserBlockingRequest->Cancel();
+      mParserBlockingRequest = nullptr;
+    }
   }
 
   // Have to call this even if aTerminated so we'll correctly unblock

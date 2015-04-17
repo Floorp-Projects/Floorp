@@ -17,7 +17,6 @@
 #include "nsAttrAndChildArray.h"          // member
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_*
 #include "nsIContent.h"                   // base class
-#include "nsINodeList.h"                  // base class
 #include "nsIWeakReference.h"             // base class
 #include "nsNodeUtils.h"                  // class member nsNodeUtils::CloneNodeImpl
 #include "nsIHTMLCollection.h"
@@ -37,50 +36,6 @@ namespace dom {
 class Element;
 }
 }
-
-/**
- * Class that implements the nsIDOMNodeList interface (a list of children of
- * the content), by holding a reference to the content and delegating GetLength
- * and Item to its existing child list.
- * @see nsIDOMNodeList
- */
-class nsChildContentList final : public nsINodeList
-{
-public:
-  explicit nsChildContentList(nsINode* aNode)
-    : mNode(aNode)
-  {
-  }
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsChildContentList)
-
-  // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-
-  // nsIDOMNodeList interface
-  NS_DECL_NSIDOMNODELIST
-
-  // nsINodeList interface
-  virtual int32_t IndexOf(nsIContent* aContent) override;
-  virtual nsIContent* Item(uint32_t aIndex) override;
-
-  void DropReference()
-  {
-    mNode = nullptr;
-  }
-
-  virtual nsINode* GetParentObject() override
-  {
-    return mNode;
-  }
-
-private:
-  ~nsChildContentList() {}
-
-  // The node whose children make up the list (weak reference)
-  nsINode* mNode;
-};
 
 /**
  * A class that implements nsIWeakReference
@@ -186,8 +141,8 @@ public:
   virtual bool TextIsOnlyWhitespace() override;
   virtual bool HasTextForTranslation() override;
   virtual void AppendTextTo(nsAString& aResult) override;
-  virtual bool AppendTextTo(nsAString& aResult,
-                            const mozilla::fallible_t&) override NS_WARN_UNUSED_RESULT; 
+  MOZ_WARN_UNUSED_RESULT
+  virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) override;
   virtual nsIContent *GetBindingParent() const override;
   virtual nsXBLBinding *GetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,

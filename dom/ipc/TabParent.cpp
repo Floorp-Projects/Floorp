@@ -283,6 +283,8 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mTabId(aTabId)
   , mCreatingWindow(false)
   , mNeedLayerTreeReadyNotification(false)
+  , mCursor(nsCursor(-1))
+  , mTabSetsCursor(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -1168,6 +1170,25 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
     return false;
   }
   event.refPoint += GetChildProcessOffset();
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    // When we mouseenter the tab, the tab's cursor should become the current
+    // cursor.  When we mouseexit, we stop.
+    if (event.message == NS_MOUSE_ENTER ||
+        event.message == NS_MOUSE_ENTER_SYNTH) {
+      mTabSetsCursor = true;
+      if (mCursor != nsCursor(-1)) {
+        widget->SetCursor(mCursor);
+      }
+      // We don't actually want to forward NS_MOUSE_ENTER messages.
+      return true;
+    } else if (event.message == NS_MOUSE_EXIT ||
+               event.message == NS_MOUSE_EXIT_SYNTH) {
+      mTabSetsCursor = false;
+    }
+  }
+
   if (event.message == NS_MOUSE_MOVE) {
     return SendRealMouseMoveEvent(event);
   }
@@ -1636,12 +1657,16 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
 bool
 TabParent::RecvSetCursor(const uint32_t& aCursor, const bool& aForce)
 {
+  mCursor = static_cast<nsCursor>(aCursor);
+
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
     if (aForce) {
       widget->ClearCachedCursor();
     }
-    widget->SetCursor((nsCursor) aCursor);
+    if (mTabSetsCursor) {
+      widget->SetCursor(mCursor);
+    }
   }
   return true;
 }
@@ -3126,7 +3151,7 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
       if (item.data().type() == IPCDataTransferData::TnsString) {
         localItem->mType = DataTransferItem::DataType::eString;
         localItem->mStringData = item.data().get_nsString();
-      } else {
+      } else if (item.data().type() == IPCDataTransferData::TPBlobChild) {
         localItem->mType = DataTransferItem::DataType::eBlob;
         BlobParent* blobParent =
           static_cast<BlobParent*>(item.data().get_PBlobParent());

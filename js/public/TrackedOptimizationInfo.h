@@ -215,12 +215,12 @@ struct ForEachTrackedOptimizationTypeInfoOp
     //
     // The lineno parameter is the line number if the type is keyed by
     // "constructor", "alloc site", or if the type itself refers to a scripted
-    // function. Otherwise it is UINT32_MAX.
+    // function. Otherwise it is Nothing().
     //
     // The location parameter is the only one that may need escaping if being
     // quoted.
     virtual void readType(const char* keyedBy, const char* name,
-                          const char* location, unsigned lineno) = 0;
+                          const char* location, mozilla::Maybe<unsigned> lineno) = 0;
 
     // Called once per entry.
     virtual void operator()(TrackedTypeSite site, const char* mirType) = 0;

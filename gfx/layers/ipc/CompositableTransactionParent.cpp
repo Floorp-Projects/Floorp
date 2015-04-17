@@ -145,7 +145,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       if (!IsAsync() && ImageBridgeParent::GetInstance(GetChildProcessId())) {
         // send FenceHandle if present via ImageBridge.
-        ImageBridgeParent::SendFenceHandleToTrackerIfPresent(
+        ImageBridgeParent::AppendDeliverFenceMessage(
                              GetChildProcessId(),
                              op.holderId(),
                              op.transactionId(),
@@ -156,15 +156,13 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         // Send message back via PImageBridge.
         ImageBridgeParent::ReplyRemoveTexture(
                              GetChildProcessId(),
-                             OpReplyRemoveTexture(true, // isMain
-                                                  op.holderId(),
+                             OpReplyRemoveTexture(op.holderId(),
                                                   op.transactionId()));
       } else {
         // send FenceHandle if present.
         SendFenceHandleIfPresent(op.textureParent(), compositable);
 
-        ReplyRemoveTexture(OpReplyRemoveTexture(false, // isMain
-                                                op.holderId(),
+        ReplyRemoveTexture(OpReplyRemoveTexture(op.holderId(),
                                                 op.transactionId()));
       }
       break;
@@ -176,6 +174,19 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       MOZ_ASSERT(tex.get());
       compositable->UseTextureHost(tex);
+
+      MaybeFence maybeFence = op.fence();
+      if (maybeFence.type() == MaybeFence::TFenceHandle) {
+        FenceHandle fence = maybeFence.get_FenceHandle();
+        if (fence.IsValid() && tex) {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+          TextureHostOGL* hostOGL = tex->AsHostOGL();
+          if (hostOGL) {
+            hostOGL->SetAcquireFence(fence.mFence);
+          }
+#endif
+        }
+      }
 
       if (IsAsync() && compositable->GetLayer()) {
         ScheduleComposition(op);
@@ -217,7 +228,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 }
 
 void
-CompositableParentManager::SendPendingAsyncMessges()
+CompositableParentManager::SendPendingAsyncMessages()
 {
   if (mPendingAsyncMessage.empty()) {
     return;

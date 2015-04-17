@@ -565,26 +565,26 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     }
 };
 
-// For JS_TraceChildren-based types that have both a 'compartment' method and a
-// JSObject's [[Class]] name.
-template<typename Referent>
-class TracerConcreteWithCompartmentAndClassName : public TracerConcreteWithCompartment<Referent> {
-    typedef TracerConcreteWithCompartment<Referent> TracerBase;
-    const char* jsObjectClassName() const override;
-
-    explicit TracerConcreteWithCompartmentAndClassName(Referent* ptr) : TracerBase(ptr) { }
-
-  public:
-    static void construct(void* storage, Referent* ptr) {
-        new (storage) TracerConcreteWithCompartmentAndClassName(ptr);
-    }
-};
-
 // Define specializations for some commonly-used public JSAPI types.
+// These can use the generic templates above.
 template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
 template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> { };
-template<> struct Concrete<JSObject> : TracerConcreteWithCompartmentAndClassName<JSObject> { };
+
+// The JSObject specialization.
+template<>
+class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
+    const char* jsObjectClassName() const override;
+    size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  protected:
+    explicit Concrete(JSObject* ptr) : TracerConcreteWithCompartment(ptr) { }
+
+  public:
+    static void construct(void* storage, JSObject* ptr) {
+        new (storage) Concrete(ptr);
+    }
+};
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>

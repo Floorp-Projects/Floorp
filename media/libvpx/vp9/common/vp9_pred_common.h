@@ -19,14 +19,14 @@ extern "C" {
 #endif
 
 static INLINE const MODE_INFO *get_above_mi(const MACROBLOCKD *const xd) {
-  return xd->up_available ? xd->mi[-xd->mi_stride].src_mi : NULL;
+  return xd->up_available ? xd->mi_8x8[-xd->mode_info_stride] : NULL;
 }
 
 static INLINE const MODE_INFO *get_left_mi(const MACROBLOCKD *const xd) {
-  return xd->left_available ? xd->mi[-1].src_mi : NULL;
+  return xd->left_available ? xd->mi_8x8[-1] : NULL;
 }
 
-int vp9_get_segment_id(const VP9_COMMON *cm, const uint8_t *segment_ids,
+int vp9_get_segment_id(VP9_COMMON *cm, const uint8_t *segment_ids,
                        BLOCK_SIZE bsize, int mi_row, int mi_col);
 
 static INLINE int vp9_get_pred_context_seg_id(const MACROBLOCKD *xd) {
@@ -39,7 +39,7 @@ static INLINE int vp9_get_pred_context_seg_id(const MACROBLOCKD *xd) {
   return above_sip + left_sip;
 }
 
-static INLINE vp9_prob vp9_get_pred_prob_seg_id(const struct segmentation *seg,
+static INLINE vp9_prob vp9_get_pred_prob_seg_id(struct segmentation *seg,
                                                 const MACROBLOCKD *xd) {
   return seg->pred_probs[vp9_get_pred_context_seg_id(xd)];
 }

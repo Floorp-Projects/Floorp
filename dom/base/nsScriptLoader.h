@@ -64,6 +64,7 @@ public:
       mIsAsync(false),
       mIsNonAsyncScriptInserted(false),
       mIsXSLT(false),
+      mIsCanceled(false),
       mScriptTextBuf(nullptr),
       mScriptTextLength(0),
       mJSVersion(aVersion),
@@ -89,6 +90,16 @@ public:
     return mElement == nullptr;
   }
 
+  void Cancel()
+  {
+    mIsCanceled = true;
+  }
+
+  bool IsCanceled() const
+  {
+    return mIsCanceled;
+  }
+
   using super::getNext;
   using super::isInList;
 
@@ -100,6 +111,7 @@ public:
   bool mIsAsync;          // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
   bool mIsNonAsyncScriptInserted; // True if we live in mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;           // True if we live in mXSLTRequests.
+  bool mIsCanceled;       // True if we have been explicitly canceled.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
   char16_t* mScriptTextBuf; // Holds script text for non-inline scripts. Don't
   size_t mScriptTextLength; // use nsString so we can give ownership to jsapi.

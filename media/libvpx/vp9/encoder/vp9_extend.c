@@ -75,6 +75,18 @@ void vp9_copy_and_extend_frame(const YV12_BUFFER_CONFIG *src,
   const int eb_uv = eb_y >> uv_height_subsampling;
   const int er_uv = er_y >> uv_width_subsampling;
 
+#if CONFIG_ALPHA
+  const int et_a = dst->border >> (dst->alpha_height != dst->y_height);
+  const int el_a = dst->border >> (dst->alpha_width != dst->y_width);
+  const int eb_a = et_a + dst->alpha_height - src->alpha_height;
+  const int er_a = el_a + dst->alpha_width - src->alpha_width;
+
+  copy_and_extend_plane(src->alpha_buffer, src->alpha_stride,
+                        dst->alpha_buffer, dst->alpha_stride,
+                        src->alpha_width, src->alpha_height,
+                        et_a, el_a, eb_a, er_a);
+#endif
+
   copy_and_extend_plane(src->y_buffer, src->y_stride,
                         dst->y_buffer, dst->y_stride,
                         src->y_width, src->y_height,
