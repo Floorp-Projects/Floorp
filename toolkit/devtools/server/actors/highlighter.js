@@ -170,7 +170,9 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   },
 
   _onNavigate: function({isTopLevel}) {
-    if (!isTopLevel) {
+    // Skip navigation events for non top-level windows, or if the document
+    // doesn't exist anymore.
+    if (!isTopLevel || !this._tabActor.window.document.documentElement) {
       return;
     }
 
@@ -547,9 +549,10 @@ CanvasFrameAnonymousContentHelper.prototype = {
   },
 
   _insert: function() {
-    // Re-insert the content node after page navigation only if the new page
-    // isn't XUL.
-    if (isXUL(this.tabActor)) {
+    // Insert the content node only if the page isn't in a XUL window, and if
+    // the document still exists.
+    if (!this.tabActor.window.document.documentElement ||
+        isXUL(this.tabActor)) {
       return;
     }
     let doc = this.tabActor.window.document;
