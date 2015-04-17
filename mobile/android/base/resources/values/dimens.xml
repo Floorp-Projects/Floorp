@@ -104,7 +104,8 @@
     <dimen name="doorhanger_spinner_textsize">9sp</dimen>
     <dimen name="doorhanger_padding">15dp</dimen>
     <dimen name="doorhanger_offsetX">10dp</dimen>
-    <dimen name="doorhanger_offsetY">7dp</dimen>
+    <dimen name="doorhanger_offsetY">67dp</dimen>
+    <dimen name="doorhanger_GB_offsetY">7dp</dimen>
     <dimen name="doorhanger_drawable_padding">5dp</dimen>
     <dimen name="doorhanger_section_padding_small">20dp</dimen>
     <dimen name="doorhanger_section_padding_large">30dp</dimen>
