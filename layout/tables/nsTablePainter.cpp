@@ -91,8 +91,8 @@
    painting process, since they were skipped. They call the appropriate
    sub-part of the loop (e.g. PaintRow) which will paint the frame and
    descendants.
-   
-   XXX views are going 
+
+   XXX views are going
  */
 
 using namespace mozilla::image;
@@ -327,7 +327,7 @@ TableBackgroundPainter::PaintTable(nsTableFrame*   aTableFrame,
         cgFrame->GetContinuousBCBorderWidth(border);
         cgData.SetBCBorder(border);
       }
-      
+
       /*Loop over columns in this colgroup*/
       for (nsTableColFrame* col = cgFrame->GetFirstColumn(); col;
            col = static_cast<nsTableColFrame*>(col->GetNextSibling())) {
@@ -426,7 +426,7 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
   }
 
   // It's OK if cursor is null here.
-  nsTableRowFrame* row = static_cast<nsTableRowFrame*>(cursor);  
+  nsTableRowFrame* row = static_cast<nsTableRowFrame*>(cursor);
   if (!row) {
     // No useful cursor; just start at the top.  Don't bother to set up a
     // cursor; if we've gotten this far then we've already built the display
@@ -434,9 +434,9 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
     // good reason we don't have a cursor and we shouldn't create one here.
     row = firstRow;
   }
-  
+
   DrawResult result = DrawResult::SUCCESS;
-  
+
   /* Finally paint */
   for (; row; row = row->GetNextRow()) {
     TableBackgroundData rowBackgroundData(row);
@@ -451,7 +451,7 @@ TableBackgroundPainter::PaintRowGroup(nsTableRowGroupFrame* aFrame,
       // All done; cells originating in later rows can't intersect mDirtyRect.
       break;
     }
-    
+
     DrawResult rowResult =
       PaintRow(row, aRowGroupBGData, rowBackgroundData,
                aPassThrough || row->IsPseudoStackingContextFromStyle());
@@ -511,7 +511,7 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
   //else: Use row group's coord system -> no translation necessary
 
   DrawResult result = DrawResult::SUCCESS;
-  
+
   for (nsTableCellFrame* cell = aFrame->GetFirstCell(); cell; cell = cell->GetNextCell()) {
     nsRect cellBGRect, rowBGRect, rowGroupBGRect, colBGRect;
     ComputeCellBackgrounds(cell, aRowGroupBGData, aRowBGData,

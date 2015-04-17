@@ -47,7 +47,7 @@ static inline bool FrameHasBorderOrBackground(nsIFrame* f) {
 class nsDisplayTableItem : public nsDisplayItem
 {
 public:
-  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) : 
+  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
       nsDisplayItem(aBuilder, aFrame),
       mPartHasFixedBackground(false) {}
 
@@ -72,7 +72,7 @@ class nsAutoPushCurrentTableItem
 {
 public:
   nsAutoPushCurrentTableItem() : mBuilder(nullptr) {}
-  
+
   void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem)
   {
     mBuilder = aBuilder;
@@ -133,7 +133,7 @@ public:
                                         nsStyleContext* aContext);
 
   /** sets defaults for table-specific style.
-    * @see nsIFrame::Init 
+    * @see nsIFrame::Init
     */
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -150,14 +150,14 @@ public:
   static void CheckRequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
 
   // Notify the frame and its ancestors (up to the containing table) that a special
-  // height reflow will occur. 
+  // height reflow will occur.
   static void RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState);
 
   static void RePositionViews(nsIFrame* aFrame);
 
   static bool PageBreakAfter(nsIFrame* aSourceFrame,
                                nsIFrame* aNextFrame);
-  
+
   // Register a positioned table part with its nsTableFrame. These objects will
   // be visited by FixupPositionedTableParts after reflow is complete. (See that
   // function for more explanation.) Should be called during frame construction.
@@ -172,12 +172,12 @@ public:
    * Notification that aAttribute has changed for content inside a table (cell, row, etc)
    */
   void AttributeChangedFor(nsIFrame*       aFrame,
-                           nsIContent*     aContent, 
-                           nsIAtom*        aAttribute); 
+                           nsIContent*     aContent,
+                           nsIAtom*        aAttribute);
 
   /** @see nsIFrame::DestroyFrom */
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-  
+
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
@@ -200,7 +200,7 @@ public:
 
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
-                                 
+
   /* Like GetTableFrame, but will return nullptr if we don't pass through
    * aMustPassThrough on the way to the table.
    */
@@ -237,7 +237,7 @@ public:
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
   bool IsAutoHeight();
-  
+
   /** @return true if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
     */
@@ -290,7 +290,7 @@ public:
   void SetContinuousLeftBCBorderWidth(nscoord aValue);
 
   friend class nsDelayedCalcBCBorders;
-  
+
   void AddBCDamageArea(const nsIntRect& aValue);
   bool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                         nsStyleContext* aNewStyleContext);
@@ -583,7 +583,7 @@ public:
 
 protected:
 
-  /** protected constructor. 
+  /** protected constructor.
     * @see NewFrame
     */
   explicit nsTableFrame(nsStyleContext* aContext);
@@ -600,7 +600,7 @@ public:
   void   SetRowInserted(bool aValue);
 
 protected:
-    
+
   // A helper function to reflow a header or footer with unconstrained height
   // to see if it should be made repeatable and also to determine its desired
   // height.
@@ -624,7 +624,7 @@ protected:
     */
   nscoord GetCollapsedWidth(nsMargin aBorderPadding);
 
-  
+
   /** Adjust the table for visibility.collapse set on rowgroups, rows,
     * colgroups and cols
     * @param aDesiredSize    the metrics of the table
@@ -663,7 +663,7 @@ private:
 
 public:
 
-  // calculate the computed height of aFrame including its border and padding given 
+  // calculate the computed height of aFrame including its border and padding given
   // its reflow state.
   nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
 
@@ -674,8 +674,8 @@ protected:
   // this function can change the overflow area
   void CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
 
-  // The following is a helper for CalcDesiredHeight 
- 
+  // The following is a helper for CalcDesiredHeight
+
   void DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                               nscoord                  aAmount);
 
@@ -762,15 +762,15 @@ public:
     */
   nsTableCellMap* GetCellMap() const;
 
-  /** Iterate over the row groups and adjust the row indices of all rows 
-    * whose index is >= aRowIndex.  
+  /** Iterate over the row groups and adjust the row indices of all rows
+    * whose index is >= aRowIndex.
     * @param aRowIndex   - start adjusting with this index
     * @param aAdjustment - shift the row index by this amount
     */
   void AdjustRowIndices(int32_t aRowIndex,
                         int32_t aAdjustment);
 
-  /** Reset the rowindices of all rows as they might have changed due to 
+  /** Reset the rowindices of all rows as they might have changed due to
     * rowgroup reordering, exclude new row group frames that show in the
     * reordering but are not yet inserted into the cellmap
     * @param aRowGroupsToExclude - an iterator that will produce the row groups
@@ -808,7 +808,7 @@ public: /* ----- Cell Map public methods ----- */
     return GetCellMap()->GetRowCount();
   }
 
-  /** returns the number of columns in this table after redundant columns have been removed 
+  /** returns the number of columns in this table after redundant columns have been removed
     */
   int32_t GetEffectiveColCount() const;
 
@@ -825,10 +825,10 @@ public: /* ----- Cell Map public methods ----- */
   bool IsAutoLayout();
 
 public:
- 
+
 #ifdef DEBUG
   void Dump(bool            aDumpRows,
-            bool            aDumpCols, 
+            bool            aDumpCols,
             bool            aDumpCellMap);
 #endif
 
@@ -957,7 +957,7 @@ inline bool nsTableFrame::IsBorderCollapse() const
   return (bool)mBits.mIsBorderCollapse;
 }
 
-inline void nsTableFrame::SetBorderCollapse(bool aValue) 
+inline void nsTableFrame::SetBorderCollapse(bool aValue)
 {
   mBits.mIsBorderCollapse = aValue;
 }
@@ -1009,6 +1009,6 @@ return;}
 
 #define ABORT1(aReturn) \
 {NS_ASSERTION(false, "CellIterator program error"); \
-return aReturn;} 
+return aReturn;}
 
 #endif

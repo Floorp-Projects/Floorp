@@ -1325,7 +1325,7 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         DisplayBackgroundUnconditional(aBuilder, aLists, false);
       }
     }
-    
+
     // This background is created if any of the table parts are visible,
     // or if we're doing event handling (since DisplayGenericTablePart
     // needs the item for the |sortEventBackgrounds|-dependent code).
@@ -2855,7 +2855,7 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
   return NS_OK;
 }
 
-void 
+void
 nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
                                   nsTableRowGroupFrame *aTfoot,
                                   nscoord aFooterHeight)
@@ -2874,7 +2874,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
 
   nsRect origTfootRect = aTfoot->GetRect();
   nsRect origTfootVisualOverflow = aTfoot->GetVisualOverflowRect();
-          
+
   nsReflowStatus footerStatus;
   nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
   desiredSize.ClearSize();
@@ -2886,7 +2886,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
   PlaceChild(aReflowState, aTfoot, kidPosition, desiredSize, origTfootRect,
              origTfootVisualOverflow);
 }
-                    
+
 // Reflow the children based on the avail size and reason in aReflowState
 // update aReflowMetrics a aStatus
 void
