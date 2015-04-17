@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+'use strict';
+
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -320,8 +322,8 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
             winVer.dwOSVersionInfoSize = OSVERSIONINFOEXW.size;
 
             if(0 !== GetVersionEx(winVer.address())) {
-              osVersion += "." + winVer.wServicePackMajor
-                        +  "." + winVer.wServicePackMinor;
+              osVersion += "." + winVer.wServicePackMajor +
+                           "." + winVer.wServicePackMinor;
             } else {
               LOG("gOSVersion - Unknown failure in GetVersionEX (returned 0)");
               osVersion += ".unknown";
@@ -513,7 +515,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
         appDirTestFile.append(FILE_PERMS_TEST);
         LOG("gCanApplyUpdates - testing write access " + appDirTestFile.path);
         if (appDirTestFile.exists()) {
-          appDirTestFile.remove(false)
+          appDirTestFile.remove(false);
         }
         appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
         appDirTestFile.remove(false);
@@ -578,8 +580,9 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
           let appDirTestFile = getAppBaseDir();
           appDirTestFile.append(FILE_PERMS_TEST);
           LOG("gCanApplyUpdates - testing write access " + appDirTestFile.path);
-          if (appDirTestFile.exists())
-            appDirTestFile.remove(false)
+          if (appDirTestFile.exists()) {
+            appDirTestFile.remove(false);
+          }
           appDirTestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
           appDirTestFile.remove(false);
         }
@@ -592,6 +595,43 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
   } // if (!useService)
 
   LOG("gCanApplyUpdates - able to apply updates");
+  return true;
+});
+
+/**
+ * Whether or not the application can stage an update for the current session.
+ * These checks are only performed once per session due to using a lazy getter.
+ *
+ * @return true if updates can be staged for this session.
+ */
+XPCOMUtils.defineLazyGetter(this, "gCanStageUpdatesSession",
+                            function aus_gCanStageUpdatesSession() {
+  try {
+    let updateTestFile = getInstallDirRoot();
+    updateTestFile.append(FILE_PERMS_TEST);
+    LOG("gCanStageUpdatesSession - testing write access " +
+        updateTestFile.path);
+    testWriteAccess(updateTestFile, true);
+    if (AppConstants.platform != "macosx") {
+      // On all platforms except Mac, we need to test the parent directory as
+      // well, as we need to be able to move files in that directory during the
+      // replacing step.
+      updateTestFile = getInstallDirRoot().parent;
+      updateTestFile.append(FILE_PERMS_TEST);
+      LOG("gCanStageUpdatesSession - testing write access " +
+          updateTestFile.path);
+      updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
+                                  FileUtils.PERMS_DIRECTORY);
+      updateTestFile.remove(false);
+    }
+  } catch (e) {
+     LOG("gCanStageUpdatesSession - unable to stage updates. Exception: " +
+         e);
+    // No write privileges
+    return false;
+  }
+
+  LOG("gCanStageUpdatesSession - able to stage updates");
   return true;
 });
 
@@ -631,43 +671,7 @@ function getCanStageUpdates() {
     return false;
   }
 
-  /**
-   * Whether or not the application can stage an update for the current session.
-   * These checks are only performed once per session due to using a lazy getter.
-   *
-   * @return true if updates can be staged for this session.
-   */
-  XPCOMUtils.defineLazyGetter(this, "canStageUpdatesSession", function canStageUpdatesSession() {
-    try {
-      var updateTestFile = getInstallDirRoot();
-      updateTestFile.append(FILE_PERMS_TEST);
-      LOG("canStageUpdatesSession - testing write access " +
-          updateTestFile.path);
-      testWriteAccess(updateTestFile, true);
-      if (AppConstants.platform != "macosx") {
-        // On all platforms except Mac, we need to test the parent directory as
-        // well, as we need to be able to move files in that directory during the
-        // replacing step.
-        updateTestFile = getInstallDirRoot().parent;
-        updateTestFile.append(FILE_PERMS_TEST);
-        LOG("canStageUpdatesSession - testing write access " +
-            updateTestFile.path);
-        updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
-                                    FileUtils.PERMS_DIRECTORY);
-        updateTestFile.remove(false);
-      }
-    } catch (e) {
-       LOG("canStageUpdatesSession - unable to stage updates. Exception: " +
-           e);
-      // No write privileges
-      return false;
-    }
-
-    LOG("canStageUpdatesSession - able to stage updates");
-    return true;
-  });
-
-  return canStageUpdatesSession;
+  return gCanStageUpdatesSession;
 }
 
 XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckForUpdates() {
@@ -1121,8 +1125,9 @@ function cleanUpMozUpdaterDirs() {
  */
 function cleanUpUpdatesDir(aBackgroundUpdate) {
   // Bail out if we don't have appropriate permissions
+  let updateDir;
   try {
-    var updateDir = getUpdatesDir();
+    updateDir = getUpdatesDir();
   } catch (e) {
     return;
   }
@@ -1205,18 +1210,20 @@ function cleanupActiveUpdate() {
  * the application directory.
  */
 function getLocale() {
-  if (gLocale)
+  if (gLocale) {
     return gLocale;
+  }
 
+  let channel;
   for (let res of ['app', 'gre']) {
-    var channel = Services.io.newChannel2("resource://" + res + "/" + FILE_UPDATE_LOCALE,
-                                          null,
-                                          null,
-                                          null,      // aLoadingNode
-                                          Services.scriptSecurityManager.getSystemPrincipal(),
-                                          null,      // aTriggeringPrincipal
-                                          Ci.nsILoadInfo.SEC_NORMAL,
-                                          Ci.nsIContentPolicy.TYPE_DATAREQUEST);
+    channel = Services.io.newChannel2("resource://" + res + "/" + FILE_UPDATE_LOCALE,
+                                      null,
+                                      null,
+                                      null,      // aLoadingNode
+                                      Services.scriptSecurityManager.getSystemPrincipal(),
+                                      null,      // aTriggeringPrincipal
+                                      Ci.nsILoadInfo.SEC_NORMAL,
+                                      Ci.nsIContentPolicy.TYPE_DATAREQUEST);
     try {
       var inputStream = channel.open();
       gLocale = readStringFromInputStream(inputStream);
@@ -1281,7 +1288,7 @@ ArrayEnumerator.prototype = {
  * written to the file.  This function only works with ASCII text.
  */
 function writeStringToFile(file, text) {
-  var fos = FileUtils.openSafeFileOutputStream(file)
+  let fos = FileUtils.openSafeFileOutputStream(file);
   text += "\n";
   fos.write(text, text.length);
   FileUtils.closeSafeFileOutputStream(fos);
@@ -1522,7 +1529,7 @@ UpdatePatch.prototype = {
     }
     patch.setAttribute("state", this.state);
 
-    for (var p in this._properties) {
+    for (let p in this._properties) {
       if (this._properties[p].present) {
         patch.setAttribute(p, this._properties[p].data);
       }
@@ -1629,8 +1636,9 @@ function Update(update) {
   }
 
   const ELEMENT_NODE = Ci.nsIDOMNode.ELEMENT_NODE;
-  for (var i = 0; i < update.childNodes.length; ++i) {
-    var patchElement = update.childNodes.item(i);
+  let patch;
+  for (let i = 0; i < update.childNodes.length; ++i) {
+    let patchElement = update.childNodes.item(i);
     if (patchElement.nodeType != ELEMENT_NODE ||
         patchElement.localName != "patch") {
       continue;
@@ -1638,7 +1646,7 @@ function Update(update) {
 
     patchElement.QueryInterface(Ci.nsIDOMElement);
     try {
-      var patch = new UpdatePatch(patchElement);
+      patch = new UpdatePatch(patchElement);
     } catch (e) {
       continue;
     }
@@ -1666,7 +1674,7 @@ function Update(update) {
   // equal 0.
   this.installDate = (new Date()).getTime();
 
-  for (var i = 0; i < update.attributes.length; ++i) {
+  for (let i = 0; i < update.attributes.length; ++i) {
     var attr = update.attributes.item(i);
     attr.QueryInterface(Ci.nsIDOMAttr);
     if (attr.value == "undefined") {
@@ -1867,7 +1875,7 @@ Update.prototype = {
     }
     updates.documentElement.appendChild(update);
 
-    for (var p in this._properties) {
+    for (let p in this._properties) {
       if (this._properties[p].present) {
         update.setAttribute(p, this._properties[p].data);
       }
@@ -1907,8 +1915,9 @@ Update.prototype = {
    */
   get enumerator() {
     var properties = [];
-    for (var p in this._properties)
+    for (let p in this._properties) {
       properties.push(this._properties[p].data);
+    }
     return new ArrayEnumerator(properties);
   },
 
@@ -2100,7 +2109,7 @@ UpdateService.prototype = {
           "state");
       if (update && update.state != STATE_SUCCEEDED) {
         // Resume download
-        var status = this.downloadUpdate(update, true);
+        status = this.downloadUpdate(update, true);
         if (status == STATE_NONE)
           cleanupActiveUpdate();
       }
@@ -2173,7 +2182,7 @@ UpdateService.prototype = {
       update = new Update(null);
     }
 
-    var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+    let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                    createInstance(Ci.nsIUpdatePrompt);
 
     update.state = status;
@@ -2288,7 +2297,7 @@ UpdateService.prototype = {
 
     let checkCode;
     if (errCount >= maxErrors) {
-      var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+      let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateError(update);
 
@@ -2323,7 +2332,7 @@ UpdateService.prototype = {
    * Called when a connection should be resumed
    */
   _attemptResume: function AUS_attemptResume() {
-    LOG("UpdateService:_attemptResume")
+    LOG("UpdateService:_attemptResume");
     // If a download is in progress, then resume it.
     if (this._downloader && this._downloader._patch &&
         this._downloader._patch.state == STATE_DOWNLOADING &&
@@ -2688,9 +2697,10 @@ UpdateService.prototype = {
       // Do not prompt regardless of add-on incompatibilities
       LOG("UpdateService:_selectAndInstallUpdate - add-on compatibility " +
           "check disabled by preference, just download the update");
-      var status = this.downloadUpdate(update, true);
-      if (status == STATE_NONE)
+      let status = this.downloadUpdate(update, true);
+      if (status == STATE_NONE) {
         cleanupActiveUpdate();
+      }
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_ADDON_PREF_DISABLED);
       return;
     }
@@ -2714,7 +2724,7 @@ UpdateService.prototype = {
   },
 
   _showPrompt: function AUS__showPrompt(update) {
-    var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+    let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                    createInstance(Ci.nsIUpdatePrompt);
     prompter.showUpdateAvailable(update);
   },
@@ -3163,8 +3173,9 @@ UpdateManager.prototype = {
           continue;
 
         updateElement.QueryInterface(Ci.nsIDOMElement);
+        let update;
         try {
-          var update = new Update(updateElement);
+          update = new Update(updateElement);
         } catch (e) {
           LOG("UpdateManager:_loadXMLFileIntoArray - invalid update");
           continue;
@@ -3570,8 +3581,9 @@ Checker.prototype = {
         continue;
 
       updateElement.QueryInterface(Ci.nsIDOMElement);
+      let update;
       try {
-        var update = new Update(updateElement);
+        update = new Update(updateElement);
       } catch (e) {
         LOG("Checker:_updates get - invalid <update/>, ignoring...");
         continue;
@@ -4414,7 +4426,7 @@ Downloader.prototype = {
         if (!Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME)) {
           this._update.QueryInterface(Ci.nsIWritablePropertyBag);
           if (this._update.getProperty("foregroundDownload") == "true") {
-            var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+            let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                            createInstance(Ci.nsIUpdatePrompt);
             prompter.showUpdateError(this._update);
           }
