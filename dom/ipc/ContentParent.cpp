@@ -30,6 +30,7 @@
 #include "CrashReporterParent.h"
 #include "GMPServiceParent.h"
 #include "IHistory.h"
+#include "imgIContainer.h"
 #include "mozIApplication.h"
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleParent.h"
