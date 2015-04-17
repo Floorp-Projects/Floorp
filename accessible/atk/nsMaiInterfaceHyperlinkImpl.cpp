@@ -21,9 +21,7 @@ getHyperlinkCB(AtkHyperlinkImpl* aImpl)
 
   NS_ENSURE_TRUE(accWrap->IsLink(), nullptr);
 
-  MaiHyperlink* maiHyperlink = accWrap->GetMaiHyperlink();
-  NS_ENSURE_TRUE(maiHyperlink, nullptr);
-  return maiHyperlink->GetAtkHyperlink();
+  return MAI_ATK_OBJECT(aImpl)->GetAtkHyperlink();
 }
 }
 

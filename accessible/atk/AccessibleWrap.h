@@ -63,9 +63,6 @@ public:
 
   bool IsValidObject();
 
-  // get the MaiHyperlink object for this AccessibleWrap
-  MaiHyperlink* GetMaiHyperlink(bool aCreate = true);
-
   static const char * ReturnString(nsAString &aString) {
     static nsCString returnedString;
     returnedString = NS_ConvertUTF16toUTF8(aString);
