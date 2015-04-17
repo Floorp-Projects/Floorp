@@ -159,6 +159,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       0% { opacity: 0.2 }
       100% { opacity: 0.8 }
     }
+
+    @keyframes transformnone {
+      0%, 100% { transform: translateX(50px) }
+      25%, 75% { transform: none }
+    }
   </style>
 </head>
 <body>
@@ -2256,6 +2261,17 @@ addAsyncAnimTest(function *() {
   advance_clock(75);
   omta_is("opacity", 0.875, RunningOn.Compositor,
           "anim2 at 900ms");
+  done_div();
+
+  // Test that an interpolation that produces transform: none doesn't
+  // crash.
+  new_div("animation: transformnone 1s linear");
+  yield waitForPaintsFlushed();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "transformnone animation at 0ms");
+  advance_clock(500);
+  omta_is("transform", { tx: 0 }, RunningOn.Compositor,
+          "transformnone animation at 500ms, interpolating none values");
   done_div();
 });
 

@@ -607,8 +607,13 @@ ReadTransforms(const nsCSSValueList* aList,
 
   for (const nsCSSValueList* curr = aList; curr != nullptr; curr = curr->mNext) {
     const nsCSSValue &currElem = curr->mValue;
-    NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
-                 "Stream should consist solely of functions!");
+    if (currElem.GetUnit() != eCSSUnit_Function) {
+      NS_ASSERTION(currElem.GetUnit() == eCSSUnit_None &&
+                   !aList->mNext,
+                   "stream should either be a list of functions or a "
+                   "lone None");
+      continue;
+    }
     NS_ASSERTION(currElem.GetArrayValue()->Count() >= 1,
                  "Incoming function is too short!");
 
