@@ -46,16 +46,37 @@ const MCC = "aMcc";
 const ANOTHER_MCC = "anotherMcc";
 const OPERATOR = "aOperator";
 const ANOTHER_OPERATOR = "anotherOperator";
+const ICC_INFO = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGsmIccInfo,
+                                         Ci.nsIIccInfo]),
+  iccType: "usim",
+  iccid: ICC_ID,
+  mcc: MCC,
+  mnc: MNC,
+  msisdn: PHONE_NUMBER,
+  operator: OPERATOR
+};
+const ANOTHER_ICC_INFO = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGsmIccInfo,
+                                         Ci.nsIIccInfo]),
+  iccType: "usim",
+  iccid: ANOTHER_ICC_ID,
+  mcc: ANOTHER_MCC,
+  mnc: ANOTHER_MNC,
+  msisdn: ANOTHER_PHONE_NUMBER,
+  operator: ANOTHER_OPERATOR
+};
+const INVALID_ICC_INFO = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGsmIccInfo,
+                                         Ci.nsIIccInfo]),
+  iccType: "usim",
+  iccid: null,
+  mcc: "",
+  mnc: "",
+  msisdn: "",
+  operator: ""
+};
 const RADIO_INTERFACE = {
-  rilContext: {
-    iccInfo: {
-      iccid: ICC_ID,
-      mcc: MCC,
-      mnc: MNC,
-      msisdn: PHONE_NUMBER,
-      operator: OPERATOR
-    }
-  },
   voice: {
     network: {
       shortName: OPERATOR
@@ -69,15 +90,6 @@ const RADIO_INTERFACE = {
   }
 };
 const ANOTHER_RADIO_INTERFACE = {
-  rilContext: {
-    iccInfo: {
-      iccid: ANOTHER_ICC_ID,
-      mcc: ANOTHER_MCC,
-      mnc: ANOTHER_MNC,
-      msisdn: ANOTHER_PHONE_NUMBER,
-      operator: ANOTHER_OPERATOR
-    }
-  },
   voice: {
     network: {
       shortName: ANOTHER_OPERATOR
@@ -92,15 +104,6 @@ const ANOTHER_RADIO_INTERFACE = {
 };
 
 const INVALID_RADIO_INTERFACE = {
-  rilContext: {
-    iccInfo: {
-      iccid: null,
-      mcc: "",
-      mnc: "",
-      msisdn: "",
-      operator: ""
-    }
-  },
   voice: {
     network: {
       shortName: ""
