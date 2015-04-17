@@ -34,10 +34,10 @@ public:
   int32_t  mNamespaceID;
 
   /**
-   * The atom for attribute, weak ref. is fine as we only use it for the
-   * hashcode, we never dereference it.
+   * The atom for attribute, stored as void*, to make sure that we only use it
+   * for the hashcode, and we can never dereference it.
    */
-  nsIAtom* mLocalName;
+  void* mLocalName;
 
   nsAttrKey(int32_t aNs, nsIAtom* aName)
     : mNamespaceID(aNs), mLocalName(aName) {}

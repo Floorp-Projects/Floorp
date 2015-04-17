@@ -116,7 +116,7 @@ void __cpuid(int CPUInfo[4], int info_type);
 #define BIT(n) (1<<n)
 #endif
 
-static INLINE int
+static int
 x86_simd_caps(void) {
   unsigned int flags = 0;
   unsigned int mask = ~0;
@@ -172,7 +172,7 @@ x86_simd_caps(void) {
 unsigned __int64 __rdtsc(void);
 #pragma intrinsic(__rdtsc)
 #endif
-static INLINE unsigned int
+static unsigned int
 x86_readtsc(void) {
 #if defined(__GNUC__) && __GNUC__
   unsigned int tsc;
@@ -249,9 +249,9 @@ x87_get_control_word(void) {
 }
 #endif
 
-static INLINE unsigned int
+static unsigned short
 x87_set_double_precision(void) {
-  unsigned int mode = x87_get_control_word();
+  unsigned short mode = x87_get_control_word();
   x87_set_control_word((mode&~0x300) | 0x200);
   return mode;
 }

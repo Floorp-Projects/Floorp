@@ -78,7 +78,7 @@ interface nsISpeechTask : nsISupports
   void dispatchEnd(in float aElapsedTime, in unsigned long aCharIndex);
 
   /**
-   * Dispatch pause event. Should not be called directly by service.
+   * Dispatch pause event.
    *
    * @param aElapsedTime time in seconds since speech has started.
    * @param aCharIndex   offset of spoken characters.
@@ -86,7 +86,7 @@ interface nsISpeechTask : nsISupports
   void dispatchPause(in float aElapsedTime, in unsigned long aCharIndex);
 
   /**
-   * Dispatch resume event. Should not be called directly by service.
+   * Dispatch resume event.
    *
    * @param aElapsedTime time in seconds since speech has started.
    * @param aCharIndex   offset of spoken characters.

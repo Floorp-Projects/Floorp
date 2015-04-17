@@ -732,6 +732,7 @@ Context::Dispatch(nsIEventTarget* aTarget, Action* aAction)
   MOZ_ASSERT(aTarget);
   MOZ_ASSERT(aAction);
 
+  MOZ_ASSERT(mState != STATE_CONTEXT_CANCELED);
   if (mState == STATE_CONTEXT_CANCELED) {
     return;
   } else if (mState == STATE_CONTEXT_INIT) {
@@ -766,11 +767,18 @@ Context::CancelAll()
   AllowToClose();
 }
 
+bool
+Context::IsCanceled() const
+{
+  NS_ASSERT_OWNINGTHREAD(Context);
+  return mState == STATE_CONTEXT_CANCELED;
+}
+
 void
 Context::Invalidate()
 {
   NS_ASSERT_OWNINGTHREAD(Context);
-  mManager->Invalidate();
+  mManager->NoteClosing();
   CancelAll();
 }
 

@@ -16,11 +16,9 @@ static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG  *yv12,
     * the Y, U, and V planes, nor other alignment adjustments that
     * might be representable by a YV12_BUFFER_CONFIG, so we just
     * initialize all the fields.*/
-  const int ss_x = yv12->uv_crop_width < yv12->y_crop_width;
-  const int ss_y = yv12->uv_crop_height < yv12->y_crop_height;
-  int bps;
-  if (!ss_y) {
-    if (!ss_x) {
+  int bps = 12;
+  if (yv12->uv_height == yv12->y_height) {
+    if (yv12->uv_width == yv12->y_width) {
       img->fmt = VPX_IMG_FMT_I444;
       bps = 24;
     } else {
@@ -29,23 +27,21 @@ static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG  *yv12,
     }
   } else {
     img->fmt = VPX_IMG_FMT_I420;
-    bps = 12;
   }
-  img->bit_depth = 8;
   img->w = yv12->y_stride;
   img->h = ALIGN_POWER_OF_TWO(yv12->y_height + 2 * VP9_ENC_BORDER_IN_PIXELS, 3);
   img->d_w = yv12->y_crop_width;
   img->d_h = yv12->y_crop_height;
-  img->x_chroma_shift = ss_x;
-  img->y_chroma_shift = ss_y;
+  img->x_chroma_shift = yv12->uv_width < yv12->y_width;
+  img->y_chroma_shift = yv12->uv_height < yv12->y_height;
   img->planes[VPX_PLANE_Y] = yv12->y_buffer;
   img->planes[VPX_PLANE_U] = yv12->u_buffer;
   img->planes[VPX_PLANE_V] = yv12->v_buffer;
-  img->planes[VPX_PLANE_ALPHA] = NULL;
+  img->planes[VPX_PLANE_ALPHA] = yv12->alpha_buffer;
   img->stride[VPX_PLANE_Y] = yv12->y_stride;
   img->stride[VPX_PLANE_U] = yv12->uv_stride;
   img->stride[VPX_PLANE_V] = yv12->uv_stride;
-  img->stride[VPX_PLANE_ALPHA] = yv12->y_stride;
+  img->stride[VPX_PLANE_ALPHA] = yv12->alpha_stride;
   img->bps = bps;
   img->user_priv = user_priv;
   img->img_data = yv12->buffer_alloc;
@@ -58,6 +54,7 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t *img,
   yv12->y_buffer = img->planes[VPX_PLANE_Y];
   yv12->u_buffer = img->planes[VPX_PLANE_U];
   yv12->v_buffer = img->planes[VPX_PLANE_V];
+  yv12->alpha_buffer = img->planes[VPX_PLANE_ALPHA];
 
   yv12->y_crop_width  = img->d_w;
   yv12->y_crop_height = img->d_h;
@@ -69,10 +66,21 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t *img,
   yv12->uv_height = img->y_chroma_shift == 1 ? (1 + yv12->y_height) / 2
                                              : yv12->y_height;
 
+  yv12->alpha_width = yv12->alpha_buffer ? img->d_w : 0;
+  yv12->alpha_height = yv12->alpha_buffer ? img->d_h : 0;
+
   yv12->y_stride = img->stride[VPX_PLANE_Y];
   yv12->uv_stride = img->stride[VPX_PLANE_U];
+  yv12->alpha_stride = yv12->alpha_buffer ? img->stride[VPX_PLANE_ALPHA] : 0;
 
   yv12->border  = (img->stride[VPX_PLANE_Y] - img->w) / 2;
+#if CONFIG_ALPHA
+  // For development purposes, force alpha to hold the same data as Y for now.
+  yv12->alpha_buffer = yv12->y_buffer;
+  yv12->alpha_width = yv12->y_width;
+  yv12->alpha_height = yv12->y_height;
+  yv12->alpha_stride = yv12->y_stride;
+#endif
   return VPX_CODEC_OK;
 }
 

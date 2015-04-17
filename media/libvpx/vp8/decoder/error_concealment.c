@@ -15,7 +15,9 @@
 #include "decodemv.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vp8/common/findnearmv.h"
-#include "vp8/common/common.h"
+
+#define MIN(x,y) (((x)<(y))?(x):(y))
+#define MAX(x,y) (((x)>(y))?(x):(y))
 
 #define FLOOR(x,q) ((x) & -(1 << (q)))
 

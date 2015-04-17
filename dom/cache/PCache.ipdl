@@ -3,16 +3,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
+include protocol PBlob; // FIXME: bug 792908
+include protocol PCacheOp;
 include protocol PCachePushStream;
-include PCacheTypes;
+include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
 
-include protocol PBlob; // FIXME: bug 792908
-include protocol PCacheStreamControl;
-
-using mozilla::dom::cache::RequestId from "mozilla/dom/cache/Types.h";
-using mozilla::ErrorResult from "ipc/ErrorIPCUtils.h";
-include "mozilla/dom/cache/IPCUtils.h";
+include CacheTypes;
 
 namespace mozilla {
 namespace dom {
@@ -21,27 +18,15 @@ namespace cache {
 protocol PCache
 {
   manager PBackground;
+  manages PCacheOp;
   manages PCachePushStream;
 
 parent:
+  PCacheOp(CacheOpArgs aOpArgs);
   PCachePushStream();
   Teardown();
-  Match(RequestId requestId, PCacheRequest request, PCacheQueryParams params);
-  MatchAll(RequestId requestId, PCacheRequestOrVoid request, PCacheQueryParams params);
-  AddAll(RequestId requestId, PCacheRequest[] requests);
-  Put(RequestId requestId, CacheRequestResponse aPut);
-  Delete(RequestId requestId, PCacheRequest request, PCacheQueryParams params);
-  Keys(RequestId requestId, PCacheRequestOrVoid request, PCacheQueryParams params);
 
 child:
-  MatchResponse(RequestId requestId, nsresult aRv, PCacheResponseOrVoid aResponse);
-  MatchAllResponse(RequestId requestId, nsresult aRv, PCacheResponse[] responses);
-  AddAllResponse(RequestId requestId, ErrorResult aRv);
-  PutResponse(RequestId requestId, nsresult aRv);
-  DeleteResponse(RequestId requestId, nsresult aRv, bool success);
-  KeysResponse(RequestId requestId, nsresult aRv, PCacheRequest[] requests);
-
-both:
   __delete__();
 };
 

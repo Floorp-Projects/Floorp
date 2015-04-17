@@ -10,7 +10,7 @@
 
 #include <arm_neon.h>
 
-static const uint8_t bifilter4_coeff[8][2] = {
+static const uint16_t bifilter4_coeff[8][2] = {
     {128,   0},
     {112,  16},
     { 96,  32},
@@ -30,6 +30,7 @@ void vp8_bilinear_predict4x4_neon(
         int dst_pitch) {
     uint8x8_t d0u8, d1u8, d2u8, d3u8, d4u8, d5u8, d6u8;
     uint8x8_t d26u8, d27u8, d28u8, d29u8, d30u8;
+    uint32x2_t d28u32, d29u32, d30u32;
     uint8x16_t q1u8, q2u8;
     uint16x8_t q1u16, q2u16;
     uint16x8_t q7u16, q8u16, q9u16;
@@ -38,10 +39,6 @@ void vp8_bilinear_predict4x4_neon(
     uint32x2x2_t d0u32x2, d1u32x2, d2u32x2, d3u32x2;
 
     if (xoffset == 0) {  // skip_1stpass_filter
-        uint32x2_t d28u32 = vdup_n_u32(0);
-        uint32x2_t d29u32 = vdup_n_u32(0);
-        uint32x2_t d30u32 = vdup_n_u32(0);
-
         d28u32 = vld1_lane_u32((const uint32_t *)src_ptr, d28u32, 0);
         src_ptr += src_pixels_per_line;
         d28u32 = vld1_lane_u32((const uint32_t *)src_ptr, d28u32, 1);
@@ -64,8 +61,8 @@ void vp8_bilinear_predict4x4_neon(
         q1u8 = vcombine_u8(d2u8, d3u8);
         q2u8 = vcombine_u8(d4u8, d5u8);
 
-        d0u8 = vdup_n_u8(bifilter4_coeff[xoffset][0]);
-        d1u8 = vdup_n_u8(bifilter4_coeff[xoffset][1]);
+        d0u8 = vdup_n_u8((uint8_t)bifilter4_coeff[xoffset][0]);
+        d1u8 = vdup_n_u8((uint8_t)bifilter4_coeff[xoffset][1]);
 
         q4u64  = vshrq_n_u64(vreinterpretq_u64_u8(q1u8), 8);
         q5u64  = vshrq_n_u64(vreinterpretq_u64_u8(q2u8), 8);
@@ -155,8 +152,8 @@ void vp8_bilinear_predict8x4_neon(
         q4u8 = vld1q_u8(src_ptr); src_ptr += src_pixels_per_line;
         q5u8 = vld1q_u8(src_ptr);
 
-        d0u8 = vdup_n_u8(bifilter4_coeff[xoffset][0]);
-        d1u8 = vdup_n_u8(bifilter4_coeff[xoffset][1]);
+        d0u8 = vdup_n_u8((uint8_t)bifilter4_coeff[xoffset][0]);
+        d1u8 = vdup_n_u8((uint8_t)bifilter4_coeff[xoffset][1]);
 
         q6u16 = vmull_u8(vget_low_u8(q1u8), d0u8);
         q7u16 = vmull_u8(vget_low_u8(q2u8), d0u8);
@@ -245,8 +242,8 @@ void vp8_bilinear_predict8x8_neon(
         q3u8 = vld1q_u8(src_ptr); src_ptr += src_pixels_per_line;
         q4u8 = vld1q_u8(src_ptr); src_ptr += src_pixels_per_line;
 
-        d0u8 = vdup_n_u8(bifilter4_coeff[xoffset][0]);
-        d1u8 = vdup_n_u8(bifilter4_coeff[xoffset][1]);
+        d0u8 = vdup_n_u8((uint8_t)bifilter4_coeff[xoffset][0]);
+        d1u8 = vdup_n_u8((uint8_t)bifilter4_coeff[xoffset][1]);
 
         q6u16 = vmull_u8(vget_low_u8(q1u8), d0u8);
         q7u16 = vmull_u8(vget_low_u8(q2u8), d0u8);

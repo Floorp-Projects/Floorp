@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/InternalHeaders.h"
 #include "nsError.h"
 
 class nsIGlobalObject;
@@ -29,11 +30,12 @@ class Response;
 namespace cache {
 
 class CachePushStreamChild;
-class PCacheQueryParams;
-class PCacheReadStream;
-class PCacheReadStreamOrVoid;
-class PCacheRequest;
-class PCacheResponse;
+class CacheQueryParams;
+class CacheReadStream;
+class CacheReadStreamOrVoid;
+class CacheRequest;
+class CacheResponse;
+class HeadersEntry;
 
 class TypeUtils
 {
@@ -77,28 +79,33 @@ public:
                     ErrorResult& aRv);
 
   void
-  ToPCacheRequest(PCacheRequest& aOut, InternalRequest* aIn,
-                  BodyAction aBodyAction, ReferrerAction aReferrerAction,
-                  SchemeAction aSchemeAction, ErrorResult& aRv);
+  ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
+                 BodyAction aBodyAction, ReferrerAction aReferrerAction,
+                 SchemeAction aSchemeAction, ErrorResult& aRv);
 
   void
-  ToPCacheResponseWithoutBody(PCacheResponse& aOut, InternalResponse& aIn,
-                              ErrorResult& aRv);
+  ToCacheResponseWithoutBody(CacheResponse& aOut, InternalResponse& aIn,
+                             ErrorResult& aRv);
 
   void
-  ToPCacheResponse(PCacheResponse& aOut, Response& aIn, ErrorResult& aRv);
+  ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv);
 
   void
-  ToPCacheQueryParams(PCacheQueryParams& aOut, const CacheQueryOptions& aIn);
+  ToCacheQueryParams(CacheQueryParams& aOut, const CacheQueryOptions& aIn);
 
   already_AddRefed<Response>
-  ToResponse(const PCacheResponse& aIn);
+  ToResponse(const CacheResponse& aIn);
 
   already_AddRefed<InternalRequest>
-  ToInternalRequest(const PCacheRequest& aIn);
+  ToInternalRequest(const CacheRequest& aIn);
 
   already_AddRefed<Request>
-  ToRequest(const PCacheRequest& aIn);
+  ToRequest(const CacheRequest& aIn);
+
+  // static methods
+  static already_AddRefed<InternalHeaders>
+  ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
+                    HeadersGuardEnum aGuard = HeadersGuardEnum::None);
 
 private:
   void
@@ -109,11 +116,11 @@ private:
   ToInternalRequest(const nsAString& aIn, ErrorResult& aRv);
 
   void
-  SerializeCacheStream(nsIInputStream* aStream, PCacheReadStreamOrVoid* aStreamOut,
+  SerializeCacheStream(nsIInputStream* aStream, CacheReadStreamOrVoid* aStreamOut,
                        ErrorResult& aRv);
 
   void
-  SerializePushStream(nsIInputStream* aStream, PCacheReadStream& aReadStreamOut,
+  SerializePushStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut,
                       ErrorResult& aRv);
 };
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 ##
 ##  Copyright (c) 2013 The WebM project authors. All Rights Reserved.
 ##
@@ -51,7 +51,7 @@ sub FixThumbInstructions($$)
 
     # Convert register post indexing to a separate add instruction.
     # This converts "ldrneb r9, [r0], r2" into "ldrneb r9, [r0]",
-    # "addne r0, r0, r2".
+    # "add r0, r2".
     s/^(\s*)((ldr|str)(ne)?[bhd]?)(\s+)(\w+),(\s*\w+,)?\s*\[(\w+)\],\s*(\w+)/$1$2$5$6,$7 [$8]\n$1add$4$5$8, $8, $9/g;
 
     # Convert a conditional addition to the pc register into a series of

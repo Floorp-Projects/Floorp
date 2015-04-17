@@ -47,7 +47,7 @@ struct VP9_COMP;
 void vp9_tokenize_sb(struct VP9_COMP *cpi, TOKENEXTRA **t, int dry_run,
                      BLOCK_SIZE bsize);
 
-extern const int16_t *vp9_dct_value_cost_ptr;
+extern const int *vp9_dct_value_cost_ptr;
 /* TODO: The Token field should be broken out into a separate char array to
  *  improve cache locality, since it's needed for costing when the rest of the
  *  fields are not.

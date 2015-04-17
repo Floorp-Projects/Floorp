@@ -2659,20 +2659,6 @@ AC_CACHE_CHECK(for __attribute__((always_inline)),
                                ac_cv_attribute_always_inline=yes,
                                ac_cv_attribute_always_inline=no)])
 
-AC_CACHE_CHECK(for __attribute__((malloc)),
-               ac_cv_attribute_malloc,
-               [AC_TRY_COMPILE([void* f(int) __attribute__((malloc));],
-                               [],
-                               ac_cv_attribute_malloc=yes,
-                               ac_cv_attribute_malloc=no)])
-
-AC_CACHE_CHECK(for __attribute__((warn_unused_result)),
-               ac_cv_attribute_warn_unused,
-               [AC_TRY_COMPILE([int f(void) __attribute__((warn_unused_result));],
-                               [],
-                               ac_cv_attribute_warn_unused=yes,
-                               ac_cv_attribute_warn_unused=no)])
-
 dnl End of C++ language/feature checks
 AC_LANG_C
 
@@ -2703,25 +2689,6 @@ if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
     TARGET_XPCOM_ABI="${CPU_ARCH}-${TARGET_COMPILER_ABI}"
 fi
 
-dnl Mozilla specific options
-dnl ========================================================
-dnl The macros used for command line options
-dnl are defined in build/autoconf/altoptions.m4.
-
-dnl If the compiler supports these attributes, define them as
-dnl convenience macros.
-if test "$ac_cv_attribute_malloc" = yes ; then
-  AC_DEFINE(NS_ATTR_MALLOC, [__attribute__((malloc))])
-else
-  AC_DEFINE(NS_ATTR_MALLOC,)
-fi
-
-if test "$ac_cv_attribute_warn_unused" = yes ; then
-  AC_DEFINE(NS_WARN_UNUSED_RESULT, [__attribute__((warn_unused_result))])
-else
-  AC_DEFINE(NS_WARN_UNUSED_RESULT,)
-fi
-
 dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
 dnl features that Windows actually does support.
 
@@ -2731,6 +2698,11 @@ if test -n "$SKIP_COMPILER_CHECKS"; then
    AC_DEFINE(HAVE_FORCEINLINE)
    AC_DEFINE(HAVE_LOCALECONV)
 fi # SKIP_COMPILER_CHECKS
+
+dnl Mozilla specific options
+dnl ========================================================
+dnl The macros used for command line options
+dnl are defined in build/autoconf/altoptions.m4.
 
 dnl ========================================================
 dnl = Mozilla update channel, used for disabling features

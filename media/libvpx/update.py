@@ -42,7 +42,7 @@ mk_files = [
 extensions = ['.asm', '.c', '.h']
 
 MODULES = {
-    'UNIFIED_SOURCES': [
+    'SOURCES': [
         'API_DOC_SRCS-$(CONFIG_VP8_DECODER)',
         'API_DOC_SRCS-yes',
         'API_EXPORTS',
@@ -217,8 +217,8 @@ files = {
     ],
     'X86-64_ASM': [
         'third_party/x86inc/x86inc.asm',
-        'vp8/common/x86/loopfilter_block_sse2_x86_64.asm',
-        'vp9/encoder/x86/vp9_quantize_ssse3_x86_64.asm',
+        'vp8/common/x86/loopfilter_block_sse2.asm',
+        'vp9/encoder/x86/vp9_quantize_ssse3.asm',
     ],
     'SOURCES': [
         'vp8/common/rtcd.c',
@@ -226,6 +226,7 @@ files = {
         'vp8/encoder/bitstream.c',
         'vp8/encoder/onyx_if.c',
         'vp8/vp8_dx_iface.c',
+        'vp9/common/generic/vp9_systemdependent.c',
         'vp9/common/vp9_alloccommon.c',
         'vp9/common/vp9_blockd.c',
         'vp9/common/vp9_common_data.c',
@@ -249,48 +250,39 @@ files = {
         'vp9/common/vp9_scale.c',
         'vp9/common/vp9_scan.c',
         'vp9/common/vp9_seg_common.c',
-        'vp9/common/vp9_thread.c',
         'vp9/common/vp9_tile_common.c',
         'vp9/decoder/vp9_decodeframe.c',
         'vp9/decoder/vp9_decodemv.c',
-        'vp9/decoder/vp9_decoder.c',
         'vp9/decoder/vp9_detokenize.c',
         'vp9/decoder/vp9_dsubexp.c',
         'vp9/decoder/vp9_dthread.c',
+        'vp9/decoder/vp9_onyxd_if.c',
         'vp9/decoder/vp9_reader.c',
         'vp9/encoder/vp9_bitstream.c',
-        'vp9/encoder/vp9_aq_complexity.c',
-        'vp9/encoder/vp9_aq_cyclicrefresh.c',
-        'vp9/encoder/vp9_aq_variance.c',
-        'vp9/encoder/vp9_context_tree.c',
-        'vp9/encoder/vp9_cost.c',
         'vp9/encoder/vp9_dct.c',
         'vp9/encoder/vp9_encodeframe.c',
         'vp9/encoder/vp9_encodemb.c',
         'vp9/encoder/vp9_encodemv.c',
-        'vp9/encoder/vp9_encoder.c',
         'vp9/encoder/vp9_extend.c',
         'vp9/encoder/vp9_firstpass.c',
         'vp9/encoder/vp9_lookahead.c',
         'vp9/encoder/vp9_mbgraph.c',
         'vp9/encoder/vp9_mcomp.c',
+        'vp9/encoder/vp9_onyx_if.c',
         'vp9/encoder/vp9_picklpf.c',
         'vp9/encoder/vp9_pickmode.c',
         'vp9/encoder/vp9_quantize.c',
         'vp9/encoder/vp9_ratectrl.c',
-        'vp9/encoder/vp9_rd.c',
         'vp9/encoder/vp9_rdopt.c',
         'vp9/encoder/vp9_resize.c',
         'vp9/encoder/vp9_sad.c',
         'vp9/encoder/vp9_segmentation.c',
-        'vp9/encoder/vp9_speed_features.c',
         'vp9/encoder/vp9_subexp.c',
-        'vp9/encoder/vp9_svc_layercontext.c',
         'vp9/encoder/vp9_temporal_filter.c',
         'vp9/encoder/vp9_tokenize.c',
         'vp9/encoder/vp9_treewriter.c',
+        'vp9/encoder/vp9_vaq.c',
         'vp9/encoder/vp9_variance.c',
-        'vp9/encoder/vp9_write_bit_buffer.c',
         'vp9/encoder/vp9_writer.c',
         'vp9/vp9_cx_iface.c',
         'vp9/vp9_dx_iface.c',
@@ -307,9 +299,9 @@ manual = [
     # special case in moz.build
     'vp8/encoder/boolhuff.c',
 
-    # 64bit only
-    'vp8/common/x86/loopfilter_block_sse2_x86_64.asm',
-    'vp9/encoder/x86/vp9_quantize_ssse3_x86_64.asm',
+    # These 64-bit only files end up in X86_ASM. Filter them out.
+    'vp8/common/x86/loopfilter_block_sse2.asm',
+    'vp9/encoder/x86/vp9_quantize_ssse3.asm',
 
     # offsets are special cased in Makefile.in
     'vp8/encoder/vp8_asm_enc_offsets.c',
@@ -336,17 +328,17 @@ platform_files = [
 ]
 
 def prepare_upstream(prefix, commit=None):
-    if os.path.exists(prefix):
-        print "Please remove '%s' folder before running %s" % (prefix, sys.argv[0])
-        sys.exit(1)
-
     upstream_url = 'https://gerrit.chromium.org/gerrit/webm/libvpx'
-    subprocess.call(['git', 'clone', upstream_url, prefix])
-    if commit:
+    if os.path.exists(prefix):
+        print "Using existing repo in '%s'" % prefix
         os.chdir(prefix)
+        subprocess.call(['git', 'fetch', upstream_url, prefix])
+    else:
+        subprocess.call(['git', 'clone', upstream_url, prefix])
+        os.chdir(prefix)
+    if commit:
         subprocess.call(['git', 'checkout', commit])
     else:
-        os.chdir(prefix)
         p = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE)
         stdout, stderr = p.communicate()
         commit = stdout.strip()
@@ -385,7 +377,7 @@ def prepare_upstream(prefix, commit=None):
     return commit
 
 def cleanup_upstream():
-    shutil.rmtree(os.path.join(base, 'upstream'))
+    shutil.rmtree(os.path.join(base, 'upstream/objdir'))
 
 def get_module(key):
     for module in MODULES:
@@ -441,8 +433,6 @@ def get_sources(prefix):
                         unknown[key] = []
                     t = unknown[key]
                 t.append(f)
-
-    files['UNIFIED_SOURCES'] = [f for f in files['UNIFIED_SOURCES'] if f not in files['SOURCES']]
 
     for key in files:
         files[key] = list(sorted(set(files[key])))
@@ -530,7 +520,7 @@ def update_and_remove_files(prefix, libvpx_files, files):
 def apply_patches():
     # Patch to permit vpx users to specify their own <stdint.h> types.
     os.system("patch -p0 < stdint.patch")
-    # Patch to allow older versions of Apple's clang to build libvpx.
+    # Patch for AVX intrinsic support with Apple's clang.
     os.system("patch -p3 < apple-clang.patch")
     # Patch to allow MSVC 2015 to compile libvpx
     os.system("patch -p3 < msvc2015.patch")

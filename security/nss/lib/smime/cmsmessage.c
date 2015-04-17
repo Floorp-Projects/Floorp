@@ -28,26 +28,26 @@ NSS_CMSMessage_Create(PLArenaPool *poolp)
     PRBool poolp_is_ours = PR_FALSE;
 
     if (poolp == NULL) {
-	poolp = PORT_NewArena (1024);           /* XXX what is right value? */
-	if (poolp == NULL)
-	    return NULL;
-	poolp_is_ours = PR_TRUE;
-    } 
+        poolp = PORT_NewArena (1024);           /* XXX what is right value? */
+        if (poolp == NULL)
+            return NULL;
+        poolp_is_ours = PR_TRUE;
+    }
 
     if (!poolp_is_ours)
-	mark = PORT_ArenaMark(poolp);
+        mark = PORT_ArenaMark(poolp);
 
-    cmsg = (NSSCMSMessage *)PORT_ArenaZAlloc (poolp, sizeof(NSSCMSMessage));
-    if (cmsg == NULL) {
-	if (!poolp_is_ours) {
-	    if (mark) {
-		PORT_ArenaRelease(poolp, mark);
-	    }
-	} else
-	    PORT_FreeArena(poolp, PR_FALSE);
-	return NULL;
+    cmsg = (NSSCMSMessage *)PORT_ArenaZAlloc(poolp, sizeof(NSSCMSMessage));
+    if (cmsg == NULL ||
+        NSS_CMSContentInfo_Private_Init(&(cmsg->contentInfo)) != SECSuccess) {
+        if (!poolp_is_ours) {
+            if (mark) {
+                PORT_ArenaRelease(poolp, mark);
+            }
+        } else
+            PORT_FreeArena(poolp, PR_FALSE);
+        return NULL;
     }
-    NSS_CMSContentInfo_Private_Init(&(cmsg->contentInfo));
 
     cmsg->poolp = poolp;
     cmsg->poolp_is_ours = poolp_is_ours;

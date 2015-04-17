@@ -90,19 +90,6 @@ LayerTransactionChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
         if (texture) {
           texture->SetReleaseFenceHandle(fence);
         }
-        if (mForwarder) {
-          mForwarder->HoldTransactionsToRespond(op.transactionId());
-        } else {
-          // Send back a response.
-          InfallibleTArray<AsyncChildMessageData> replies;
-          replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
-          SendChildAsyncMessages(replies);
-        }
-        break;
-      }
-      case AsyncParentMessageData::TOpReplyDeliverFence: {
-        const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
-        TransactionCompleteted(op.transactionId());
         break;
       }
       case AsyncParentMessageData::TOpReplyRemoveTexture: {
@@ -118,19 +105,6 @@ LayerTransactionChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
     }
   }
   return true;
-}
-
-void
-LayerTransactionChild::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                       PTextureChild* aTexture,
-                                       const FenceHandle& aFence)
-{
-  HoldUntilComplete(aTracker);
-  InfallibleTArray<AsyncChildMessageData> messages;
-  messages.AppendElement(OpDeliverFenceFromChild(aTracker->GetId(),
-                                                 nullptr, aTexture,
-                                                 FenceHandleFromChild(aFence)));
-  SendChildAsyncMessages(messages);
 }
 
 void

@@ -3807,6 +3807,9 @@ END_CASE(JSOP_DEBUGLEAVEBLOCK)
 
 CASE(JSOP_FRESHENBLOCKSCOPE)
 {
+    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        DebugScopes::onPopBlock(cx, REGS.fp(), REGS.pc);
+
     if (!REGS.fp()->freshenBlock(cx))
         goto error;
 }

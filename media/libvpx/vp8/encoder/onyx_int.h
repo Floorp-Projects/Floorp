@@ -61,6 +61,9 @@ extern "C" {
 #define VP8_TEMPORAL_ALT_REF 1
 #endif
 
+#define MAX(x,y) (((x)>(y))?(x):(y))
+#define MIN(x,y) (((x)<(y))?(x):(y))
+
 typedef struct
 {
     int kf_indicated;
@@ -511,8 +514,6 @@ typedef struct VP8_COMP
     int cyclic_refresh_mode_index;
     int cyclic_refresh_q;
     signed char *cyclic_refresh_map;
-    // Count on how many (consecutive) times a macroblock uses ZER0MV_LAST.
-    unsigned char *consec_zero_last;
 
     // Frame counter for the temporal pattern. Counter is rest when the temporal
     // layers are changed dynamically (run-time change).
@@ -684,10 +685,9 @@ typedef struct VP8_COMP
     int    mr_low_res_mb_cols;
     /* Indicate if lower-res mv info is available */
     unsigned char  mr_low_res_mv_avail;
-#endif
     /* The frame number of each reference frames */
     unsigned int current_ref_frames[MAX_REF_FRAMES];
-    MV_REFERENCE_FRAME closest_reference_frame;
+#endif
 
     struct rd_costs_struct
     {

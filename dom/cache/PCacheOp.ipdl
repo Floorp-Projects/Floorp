@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PCache;
+include protocol PCachePushStream;
+include protocol PCacheStorage;
+include protocol PCacheStreamControl;
+include protocol PFileDescriptorSet;
+
+include CacheTypes;
+
+using mozilla::ErrorResult from "ipc/ErrorIPCUtils.h";
+
+namespace mozilla {
+namespace dom {
+namespace cache {
+
+protocol PCacheOp
+{
+  manager PCache or PCacheStorage;
+
+child:
+  __delete__(ErrorResult aRv, CacheOpResult aResult);
+};
+
+} // namespace cache
+} // namespace dom
+} // namespace mozilla
