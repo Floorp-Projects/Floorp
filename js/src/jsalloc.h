@@ -77,7 +77,7 @@ class TempAllocPolicy
     T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
         T* p2 = js_pod_realloc<T>(prior, oldSize, newSize);
         if (MOZ_UNLIKELY(!p2))
-            p2 = static_cast<T*>(onOutOfMemory(p2, newSize * sizeof(T)));
+            p2 = static_cast<T*>(onOutOfMemory(prior, newSize * sizeof(T)));
         return p2;
     }
 
