@@ -25,6 +25,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
+const FILTER_CHANGED_TIMEOUT = 150;
 
 /**
  * These regular expressions are adapted from firebug's css.js, and are
@@ -537,7 +538,7 @@ Rule.prototype = {
 
       this._originalSourceStrings = sourceStrings;
       return sourceStrings;
-    }, console.error);
+    });
   },
 
   /**
@@ -1113,21 +1114,33 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this.doc = aDoc;
   this.store = aStore || {};
   this.pageStyle = aPageStyle;
-  this.element = this.doc.createElementNS(HTML_NS, "div");
-  this.element.className = "ruleview devtools-monospace";
-  this.element.flex = 1;
 
+  this._highlightedElements = [];
   this._outputParser = new OutputParser();
 
   this._buildContextMenu = this._buildContextMenu.bind(this);
+  this._onContextMenu = this._onContextMenu.bind(this);
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
   this._onAddRule = this._onAddRule.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
   this._onToggleOrigSources = this._onToggleOrigSources.bind(this);
+  this._onFilterStyles = this._onFilterStyles.bind(this);
+  this._onClearSearch = this._onClearSearch.bind(this);
+  this._onFilterTextboxContextMenu = this._onFilterTextboxContextMenu.bind(this);
+
+  this.element = this.doc.getElementById("ruleview-container");
+  this.searchField = this.doc.getElementById("ruleview-searchbox");
+  this.searchClearButton = this.doc.getElementById("ruleview-searchinput-clear");
+
+  this.searchClearButton.hidden = true;
 
   this.element.addEventListener("copy", this._onCopy);
+  this.element.addEventListener("contextmenu", this._onContextMenu);
+  this.searchField.addEventListener("input", this._onFilterStyles);
+  this.searchField.addEventListener("contextmenu", this._onFilterTextboxContextMenu);
+  this.searchClearButton.addEventListener("click", this._onClearSearch);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
   this._onSourcePrefChanged = this._onSourcePrefChanged.bind(this);
@@ -1162,6 +1175,9 @@ exports.CssRuleView = CssRuleView;
 CssRuleView.prototype = {
   // The element that we're inspecting.
   _viewedElement: null,
+
+  // Used for cancelling timeouts in the style filter.
+  _filterChangedTimeout: null,
 
   /**
    * Build the context menu.
@@ -1421,6 +1437,21 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Context menu handler.
+   */
+  _onContextMenu: function(event) {
+    try {
+      // In the sidebar we do not have this.doc.popupNode so we need to save
+      // the node ourselves.
+      this.doc.popupNode = event.explicitOriginalTarget;
+      this.doc.defaultView.focus();
+      this._contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
+    } catch(e) {
+      console.error(e);
+    }
+  },
+
+  /**
    * Select all text.
    */
   _onSelectAll: function() {
@@ -1567,6 +1598,57 @@ CssRuleView.prototype = {
     }
   },
 
+  /**
+   * Called when the user enters a search term in the filter style search box.
+   */
+  _onFilterStyles: function() {
+    if (this._filterChangedTimeout) {
+      clearTimeout(this._filterChangedTimeout);
+    }
+
+    let filterTimeout = (this.searchField.value.length > 0)
+      ? FILTER_CHANGED_TIMEOUT : 0;
+    this.searchClearButton.hidden = this.searchField.value.length === 0;
+
+    this._filterChangedTimeout = setTimeout(() => {
+      if (this.searchField.value.length > 0) {
+        this.searchField.setAttribute("filled", true);
+      } else {
+        this.searchField.removeAttribute("filled");
+      }
+
+      this._clearRules();
+      this._createEditors();
+
+      this.inspector.emit("ruleview-filtered");
+
+      this._filterChangeTimeout = null;
+    }, filterTimeout);
+  },
+
+  /**
+   * Context menu handler for filter style search box.
+   */
+  _onFilterTextboxContextMenu: function(event) {
+    try {
+      this.doc.defaultView.focus();
+      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
+      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
+    } catch(e) {
+      console.error(e);
+    }
+  },
+
+  /**
+   * Called when the user clicks on the clear button in the filter style search
+   * box.
+   */
+  _onClearSearch: function() {
+    this.searchField.value = "";
+    this.searchField.focus();
+    this._onFilterStyles();
+  },
+
   destroy: function() {
     this.isDestroyed = true;
     this.clear();
@@ -1578,10 +1660,8 @@ CssRuleView.prototype = {
     this._prefObserver.off(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
     this._prefObserver.destroy();
 
-    this.element.removeEventListener("copy", this._onCopy);
-    this._onCopy = null;
-
     this._outputParser = null;
+    this._highlightedElements = null;
 
     // Remove context menu
     if (this._contextmenu) {
@@ -1615,6 +1695,16 @@ CssRuleView.prototype = {
 
     this.tooltips.destroy();
     this.highlighters.destroy();
+
+    // Remove bound listeners
+    this.element.removeEventListener("copy", this._onCopy);
+    this.element.removeEventListener("contextmenu", this._onContextMenu);
+    this.searchField.removeEventListener("input", this._onFilterStyles);
+    this.searchField.removeEventListener("contextmenu",
+      this._onFilterTextboxContextMenu);
+    this.searchClearButton.removeEventListener("click", this._onClearSearch);
+    this.searchField = null;
+    this.searchClearButton = null;
 
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
@@ -1855,15 +1945,36 @@ CssRuleView.prototype = {
     let lastKeyframes = null;
     let seenPseudoElement = false;
     let seenNormalElement = false;
+    let seenSearchTerm = false;
     let container = null;
+    let searchTerm = this.searchField.value.toLowerCase();
+    let isValidSearchTerm = searchTerm.trim().length > 0;
 
     if (!this._elementStyle.rules) {
       return;
     }
 
+    if (this._highlightedElements.length > 0) {
+      this.clearHighlight();
+    }
+
     for (let rule of this._elementStyle.rules) {
       if (rule.domRule.system) {
         continue;
+      }
+
+      // Initialize rule editor
+      if (!rule.editor) {
+        rule.editor = new RuleEditor(this, rule);
+      }
+
+      // Filter the rules and highlight any matches if there is a search input
+      if (isValidSearchTerm) {
+        if (this.highlightRules(rule, searchTerm)) {
+          seenSearchTerm = true;
+        } else if (rule.domRule.type !== ELEMENT_STYLE) {
+          continue;
+        }
       }
 
       // Only print header for this element if there are pseudo elements
@@ -1895,16 +2006,95 @@ CssRuleView.prototype = {
         container = this.createExpandableContainer(rule.keyframesName);
       }
 
-      if (!rule.editor) {
-        rule.editor = new RuleEditor(this, rule);
-      }
-
       if (container && (rule.pseudoElement || keyframes)) {
         container.appendChild(rule.editor.element);
       } else {
         this.element.appendChild(rule.editor.element);
       }
     }
+
+    if (searchTerm && !seenSearchTerm) {
+      this.searchField.classList.add("devtools-style-searchbox-no-match");
+    } else {
+      this.searchField.classList.remove("devtools-style-searchbox-no-match");
+    }
+  },
+
+  /**
+   * Highlight rules that matches the given search value and returns a boolean
+   * indicating whether or not rules were highlighted.
+   *
+   * @param {Rule} aRule
+   *        The rule object we're highlighting if its rule selectors or property
+   *        values match the search value.
+   * @param {String} aValue
+   *        The search value.
+   */
+  highlightRules: function(aRule, aValue) {
+    let isHighlighted = false;
+
+    let selectorNodes = [...aRule.editor.selectorText.childNodes];
+    if (aRule.domRule.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) {
+      selectorNodes = [aRule.editor.selectorText];
+    } else if (aRule.domRule.type === ELEMENT_STYLE) {
+      selectorNodes = [];
+    }
+
+    aValue = aValue.trim();
+
+    // Highlight search matches in the rule selectors
+    for (let selectorNode of selectorNodes) {
+      if (selectorNode.textContent.toLowerCase().contains(aValue)) {
+        selectorNode.classList.add("ruleview-highlight");
+        this._highlightedElements.push(selectorNode);
+        isHighlighted = true;
+      }
+    }
+
+    // Parse search value as a single property line and extract the property
+    // name and value. Otherwise, use the search value as both the name and
+    // value.
+    let propertyMatch = CSS_PROP_RE.exec(aValue);
+    let name = propertyMatch ? propertyMatch[1] : aValue;
+    let value = propertyMatch ? propertyMatch[2] : aValue;
+
+    // Highlight search matches in the rule properties
+    for (let textProp of aRule.textProps) {
+      // Get the actual property value displayed in the rule view
+      let propertyValue = textProp.editor.valueSpan.textContent.toLowerCase();
+      let propertyName = textProp.name.toLowerCase();
+
+      // If the input value matches a property line like `font-family: arial`,
+      // then check to make sure the name and value match.  Otherwise, just
+      // compare the input string directly against the name and value elements.
+      let matches = false;
+      if (propertyMatch && name && value) {
+        matches = propertyName.contains(name) && propertyValue.contains(value);
+      } else {
+        matches = (name && propertyName.contains(name)) ||
+                  (value && propertyValue.contains(value));
+      }
+
+      if (matches) {
+      // if (matchTextProperty || matchNameOrValue) {
+        textProp.editor.element.classList.add("ruleview-highlight");
+        this._highlightedElements.push(textProp.editor.element);
+        isHighlighted = true;
+      }
+    }
+
+    return isHighlighted;
+  },
+
+  /**
+   * Clear all search filter highlights in the panel.
+   */
+  clearHighlight: function() {
+    for (let element of this._highlightedElements) {
+      element.classList.remove("ruleview-highlight");
+    }
+
+    this._highlightedElements = [];
   }
 };
 
@@ -2034,22 +2224,6 @@ RuleEditor.prototype = {
       tabindex: this.isEditable ? "0" : "-1",
       textContent: "}"
     });
-
-    this.element.addEventListener("contextmenu", event => {
-      try {
-        // In the sidebar we do not have this.doc.popupNode so we need to save
-        // the node ourselves.
-        this.doc.popupNode = event.explicitOriginalTarget;
-        let win = this.doc.defaultView;
-        win.focus();
-
-        this.ruleView._contextmenu.openPopupAtScreen(
-          event.screenX, event.screenY, true);
-
-      } catch(e) {
-        console.error(e);
-      }
-    }, false);
 
     if (this.isEditable) {
       code.addEventListener("click", () => {

@@ -165,7 +165,7 @@ let ReaderParent = {
     this.updateReaderButton(browser);
   },
 
-  buttonClick: function(event) {
+  buttonClick(event) {
     if (event.button != 0) {
       return;
     }

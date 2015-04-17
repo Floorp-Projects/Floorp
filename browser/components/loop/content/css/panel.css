@@ -121,7 +121,6 @@ body {
   margin-right: auto;
   font-size: 1rem;
   padding: .5rem 1rem;
-  height: auto; /* Needed to override .button's height:26px; */
 }
 
 #fte-getstarted + #powered-by-wrapper {
@@ -253,7 +252,8 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
 
 .room-list > .room-entry {
   padding: .5rem 1rem;
-  cursor: pointer;
+  /* Always show the default pointer, even over the text part of the entry. */
+  cursor: default;
 }
 
 .room-list > .room-entry > h2 {
@@ -325,7 +325,6 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
 .room-list > .room-entry:hover > h2 > button {
   animation: drop-and-fade-in 0.250s;
   animation-fill-mode: forwards;
-  cursor: pointer;
 }
 
 .room-list > .room-entry:hover > h2 > .copy-link {
@@ -355,27 +354,6 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
   vertical-align: middle;
 }
 
-/* Edit in place */
-
-.room-list > .room-entry > h2 > .edit-in-place {
-  cursor: text;
-}
-
-.room-list > .room-entry > h2 > .edit-in-place:hover {
-  background: #fefbc4;
-}
-
-.room-list > .room-entry > h2 > form {
-  display: inline-block;
-}
-
-.room-list > .room-entry > h2 > form > input {
-  border: none;
-  background: #fefbc4;
-  font-size: 13.6px;
-  padding: 0;
-}
-
 /* Buttons */
 
 .button-group {
@@ -403,7 +381,7 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
   color: #333;
   border: 1px solid #c1c1c1;
   border-radius: 2px;
-  height: 26px;
+  min-height: 26px;
   font-size: 12px;
 }
 

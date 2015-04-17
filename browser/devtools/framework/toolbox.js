@@ -122,6 +122,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
+  this._updateTextboxMenuItems = this._updateTextboxMenuItems.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -335,6 +336,11 @@ Toolbox.prototype = {
 
       let framesMenu = this.doc.getElementById("command-button-frames");
       framesMenu.addEventListener("command", this.selectFrame, true);
+
+      this.textboxContextMenuPopup =
+        this.doc.getElementById("toolbox-textbox-context-popup");
+      this.textboxContextMenuPopup.addEventListener("popupshowing",
+        this._updateTextboxMenuItems, true);
 
       this._buildDockButtons();
       this._buildOptions();
@@ -1705,6 +1711,8 @@ Toolbox.prototype = {
         this._saveSplitConsoleHeight);
     }
     this.closeButton.removeEventListener("command", this.destroy, true);
+    this.textboxContextMenuPopup.removeEventListener("popupshowing",
+      this._updateTextboxMenuItems, true);
 
     let outstanding = [];
     for (let [id, panel] of this._toolPanels) {
@@ -1820,6 +1828,15 @@ Toolbox.prototype = {
     }
     let window = this.frame.contentWindow;
     showDoorhanger({ window, type: "deveditionpromo" });
+  },
+
+  /**
+   * Enable / disable necessary textbox menu items using globalOverlay.js.
+   */
+  _updateTextboxMenuItems: function() {
+    let window = this.doc.defaultView;
+    ['cmd_undo', 'cmd_delete', 'cmd_cut',
+     'cmd_copy', 'cmd_paste','cmd_selectAll'].forEach(window.goUpdateCommand);
   },
 
   getPerformanceActorsConnection: function() {

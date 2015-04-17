@@ -9,6 +9,21 @@
 %define solidSeparatorDark linear-gradient(#2d5b7d, #2d5b7d)
 %define solidSeparatorLight linear-gradient(#aaa, #aaa)
 
+/* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
+.theme-light {
+  --searchbox-background-color: #ffee99;
+  --searchbox-border-color: #ffbf00;
+  --searcbox-no-match-background-color: #ffe5e5;
+  --searcbox-no-match-border-color: #e52e2e;
+}
+
+.theme-dark {
+  --searchbox-background-color: #4d4222;
+  --searchbox-border-color: #d99f2b;
+  --searcbox-no-match-background-color: #402325;
+  --searcbox-no-match-border-color: #cc3d3d;
+}
+
 /* Toolbars */
 .devtools-toolbar,
 .devtools-sidebar-tabs tabs,
@@ -30,10 +45,12 @@
 .devtools-toolbar checkbox {
   margin: 0 2px;
   padding: 0;
+  line-height: -moz-block-height;
 }
 .devtools-toolbar checkbox .checkbox-check {
   margin: 0;
   padding: 0;
+  vertical-align: bottom;
 }
 .devtools-toolbar checkbox .checkbox-label-box {
   border: none !important; /* overrides .checkbox-label-box from checkbox.css */
@@ -327,7 +344,7 @@
   margin-bottom: 1px;
   padding: 0;
   -moz-padding-start: 22px;
-  -moz-padding-end: 12px;
+  -moz-padding-end: 4px;
   background-position: 8px center;
   background-size: 11px 11px;
   background-repeat: no-repeat;
@@ -342,6 +359,85 @@
   background-image: url(magnifying-glass-light.png);
 }
 
+.devtools-searchinput:-moz-locale-dir(rtl) {
+  background-position: calc(100% - 8px) center;
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
+  visibility: hidden;
+}
+
+/* Searchbox is a div container element for a search input element */
+.devtools-searchbox {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  position: relative;
+}
+
+.devtools-rule-searchbox {
+  -moz-box-flex: 1;
+  padding-right: 23px;
+  width: 100%;
+  font: inherit;
+}
+
+.devtools-rule-searchbox[filled] {
+  background-color: var(--searchbox-background-color);
+  border-color: var(--searchbox-border-color);
+}
+
+.devtools-style-searchbox-no-match {
+  background-color: var(--searcbox-no-match-background-color) !important;
+  border-color: var(--searcbox-no-match-border-color) !important;
+}
+
+.devtools-no-search-result {
+  border-color: var(--theme-highlight-red) !important;
+}
+
+.devtools-searchinput-clear {
+  position: absolute;
+  top: 3.5px;
+  right: 7px;
+  padding: 0;
+  border: 0;
+  width: 16px;
+  height: 16px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+
+.theme-dark .devtools-searchinput-clear {
+  background-image: url("chrome://browser/skin/devtools/search-clear-dark.svg");
+}
+
+.theme-light .devtools-searchinput-clear {
+  background-image: url("chrome://browser/skin/devtools/search-clear-light.svg");
+}
+
+.devtools-style-searchbox-no-match + .devtools-searchinput-clear {
+  background-image: url("chrome://browser/skin/devtools/search-clear-failed.svg") !important;
+}
+
+.devtools-searchinput-clear:hover {
+  background-position: -16px 0;
+}
+
+.theme-dark .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url("chrome://browser/skin/devtools/search-clear-dark.svg");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.theme-light .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url("chrome://browser/skin/devtools/search-clear-light.svg");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
 @media (min-resolution: 2dppx) {
   .theme-dark .devtools-searchinput {
     background-image: url(magnifying-glass@2x.png);
@@ -350,18 +446,6 @@
   .theme-light .devtools-searchinput {
     background-image: url(magnifying-glass-light@2x.png);
   }
-}
-
-.devtools-searchinput:-moz-locale-dir(rtl) {
-  background-position: calc(100% - 8px) center;
-}
-
-.devtools-searchinput > .textbox-input-box > .textbox-search-icons {
-  display: none;
-}
-
-.devtools-no-search-result {
-  border-color: var(--theme-highlight-red) !important;
 }
 
 /* Close button */

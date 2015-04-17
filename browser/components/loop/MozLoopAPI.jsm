@@ -774,14 +774,14 @@ function injectLoopAPI(targetWindow) {
     /**
      * Adds a value to a telemetry histogram.
      *
-     * @param  {string} histogramId Name of the telemetry histogram to update.
-     * @param  {string} value       Label of bucket to increment in the histogram.
+     * @param  {String}  histogramId Name of the telemetry histogram to update.
+     * @param  {String}  value       Label of bucket to increment in the histogram.
      */
-    telemetryAddKeyedValue: {
+    telemetryAddValue: {
       enumerable: true,
       writable: true,
       value: function(histogramId, value) {
-        Services.telemetry.getKeyedHistogramById(histogramId).add(value);
+        Services.telemetry.getHistogramById(histogramId).add(value);
       }
     },
 

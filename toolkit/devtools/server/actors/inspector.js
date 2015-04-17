@@ -217,7 +217,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
 
   isDocumentElement: function() {
     return this.rawNode.ownerDocument &&
-        this.rawNode.ownerDocument.documentElement === this.rawNode;
+           this.rawNode.ownerDocument.documentElement === this.rawNode;
   },
 
   // Returns the JSON representation of this object over the wire.
@@ -285,7 +285,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   // Estimate the number of children that the walker will return without making
   // a call to children() if possible.
   get numChildren() {
-
     // For pseudo elements, childNodes.length returns 1, but the walker
     // will return 0.
     if (this.isBeforePseudoElement || this.isAfterPseudoElement) {
@@ -325,7 +324,8 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    */
   get isDisplayed() {
     // Consider all non-element nodes as displayed.
-    if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+    if (isNodeDead(this) ||
+        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
         this.isAfterPseudoElement ||
         this.isBeforePseudoElement) {
       return true;
@@ -1363,7 +1363,7 @@ var WalkerActor = protocol.ActorClass({
    *        return the root.
    */
   document: method(function(node) {
-    let doc = node ? nodeDocument(node.rawNode) : this.rootDoc;
+    let doc = isNodeDead(node) ? this.rootDoc : nodeDocument(node.rawNode);
     return this._ref(doc);
   }, {
     request: { node: Arg(0, "nullable:domnode") },
@@ -1378,7 +1378,9 @@ var WalkerActor = protocol.ActorClass({
    *        to use the root document.
    */
   documentElement: method(function(node) {
-    let elt = node ? nodeDocument(node.rawNode).documentElement : this.rootDoc.documentElement;
+    let elt = isNodeDead(node)
+              ? this.rootDoc.documentElement
+              : nodeDocument(node.rawNode).documentElement;
     return this._ref(elt);
   }, {
     request: { node: Arg(0, "nullable:domnode") },
@@ -1396,6 +1398,10 @@ var WalkerActor = protocol.ActorClass({
    *      document as the node.
    */
   parents: method(function(node, options={}) {
+    if (isNodeDead(node)) {
+      return [];
+    }
+
     let walker = this.getDocumentWalker(node.rawNode);
     let parents = [];
     let cur;
@@ -1468,6 +1474,10 @@ var WalkerActor = protocol.ActorClass({
    * Release actors for a node and all child nodes.
    */
   releaseNode: method(function(node, options={}) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     if (node.retained && !options.force) {
       this._retainedOrphans.add(node);
       return;
@@ -1545,6 +1555,10 @@ var WalkerActor = protocol.ActorClass({
    *    nodes: Child nodes returned by the request.
    */
   children: method(function(node, options={}) {
+    if (isNodeDead(node)) {
+      return { hasFirst: true, hasLast: true, nodes: [] };
+    }
+
     if (options.center && options.start) {
       throw Error("Can't specify both 'center' and 'start' options.");
     }
@@ -1639,6 +1653,10 @@ var WalkerActor = protocol.ActorClass({
    *    nodes: Child nodes returned by the request.
    */
   siblings: method(function(node, options={}) {
+    if (isNodeDead(node)) {
+      return { hasFirst: true, hasLast: true, nodes: [] };
+    }
+
     let parentNode = this.getDocumentWalker(node.rawNode, options.whatToShow).parentNode();
     if (!parentNode) {
       return {
@@ -1665,6 +1683,10 @@ var WalkerActor = protocol.ActorClass({
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
   nextSibling: method(function(node, options={}) {
+    if (isNodeDead(node)) {
+      return null;
+    }
+
     let walker = this.getDocumentWalker(node.rawNode, options.whatToShow);
     let sibling = walker.nextSibling();
     return sibling ? this._ref(sibling) : null;
@@ -1680,6 +1702,10 @@ var WalkerActor = protocol.ActorClass({
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
   previousSibling: method(function(node, options={}) {
+    if (isNodeDead(node)) {
+      return null;
+    }
+
     let walker = this.getDocumentWalker(node.rawNode, options.whatToShow);
     let sibling = walker.previousSibling();
     return sibling ? this._ref(sibling) : null;
@@ -1741,11 +1767,11 @@ var WalkerActor = protocol.ActorClass({
    * @param string selector
    */
   querySelector: method(function(baseNode, selector) {
-    if (!baseNode) {
-      return {}
-    };
-    let node = baseNode.rawNode.querySelector(selector);
+    if (isNodeDead(baseNode)) {
+      return {};
+    }
 
+    let node = baseNode.rawNode.querySelector(selector);
     if (!node) {
       return {}
     };
@@ -2012,6 +2038,10 @@ var WalkerActor = protocol.ActorClass({
    *    be queued for any changed nodes.
    */
   addPseudoClassLock: method(function(node, pseudo, options={}) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     this._addPseudoClassLock(node, pseudo);
 
     if (!options.parents) {
@@ -2066,6 +2096,10 @@ var WalkerActor = protocol.ActorClass({
   },
 
   hideNode: method(function(node) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     this._installHelperSheet(node);
     node.rawNode.classList.add(HIDDEN_CLASS);
   }, {
@@ -2073,6 +2107,10 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   unhideNode: method(function(node) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     node.rawNode.classList.remove(HIDDEN_CLASS);
   }, {
     request: { node: Arg(0, "domnode") }
@@ -2093,6 +2131,10 @@ var WalkerActor = protocol.ActorClass({
    *    will be emitted for any changed nodes.
    */
   removePseudoClassLock: method(function(node, pseudo, options={}) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     this._removePseudoClassLock(node, pseudo);
 
     if (!options.parents) {
@@ -2132,6 +2174,10 @@ var WalkerActor = protocol.ActorClass({
    * @param {NodeActor} node Optional node to clear pseudo-classes on
    */
   clearPseudoClassLocks: method(function(node) {
+    if (node && isNodeDead(node)) {
+      return;
+    }
+
     if (node) {
       DOMUtils.clearPseudoClassLocks(node.rawNode);
       this._activePseudoClassLocks.delete(node);
@@ -2154,7 +2200,11 @@ var WalkerActor = protocol.ActorClass({
    * Get a node's innerHTML property.
    */
   innerHTML: method(function(node) {
-    return LongStringActor(this.conn, node.rawNode.innerHTML);
+    let html = "";
+    if (!isNodeDead(node)) {
+      html = node.rawNode.innerHTML;
+    }
+    return LongStringActor(this.conn, html);
   }, {
     request: {
       node: Arg(0, "domnode")
@@ -2171,6 +2221,10 @@ var WalkerActor = protocol.ActorClass({
    * @param {string} value The piece of HTML content.
    */
   setInnerHTML: method(function(node, value) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     let rawNode = node.rawNode;
     if (rawNode.nodeType !== rawNode.ownerDocument.ELEMENT_NODE)
       throw new Error("Can only change innerHTML to element nodes");
@@ -2189,7 +2243,11 @@ var WalkerActor = protocol.ActorClass({
    * @param {NodeActor} node The node.
    */
   outerHTML: method(function(node) {
-    return LongStringActor(this.conn, node.rawNode.outerHTML);
+    let html = "";
+    if (!isNodeDead(node)) {
+      html = node.rawNode.outerHTML;
+    }
+    return LongStringActor(this.conn, html);
   }, {
     request: {
       node: Arg(0, "domnode")
@@ -2206,6 +2264,10 @@ var WalkerActor = protocol.ActorClass({
    * @param {string} value The piece of HTML content.
    */
   setOuterHTML: method(function(node, value) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     let parsedDOM = DOMParser.parseFromString(value, "text/html");
     let rawNode = node.rawNode;
     let parentNode = rawNode.parentNode;
@@ -2266,6 +2328,10 @@ var WalkerActor = protocol.ActorClass({
    * @param {string} value The HTML content.
    */
   insertAdjacentHTML: method(function(node, position, value) {
+    if (isNodeDead(node)) {
+      return {node: [], newParents: []}
+    }
+
     let rawNode = node.rawNode;
     // Don't insert anything adjacent to the document element,
     // the head or the body.
@@ -2345,8 +2411,10 @@ var WalkerActor = protocol.ActorClass({
    * @returns The node's nextSibling before it was removed.
    */
   removeNode: method(function(node) {
-    if (this.isDocumentOrDocumentElementNode(node))
-      throw Error("Cannot remove document or document elements.");
+    if (isNodeDead(node) || this.isDocumentOrDocumentElementNode(node)) {
+      throw Error("Cannot remove document, document elements or dead nodes.");
+    }
+
     let nextSibling = this.nextSibling(node);
     node.rawNode.remove();
     // Mutation events will take care of the rest.
@@ -2368,8 +2436,9 @@ var WalkerActor = protocol.ActorClass({
   removeNodes: method(function(nodes) {
     // Check that all nodes are valid before processing the removals.
     for (let node of nodes) {
-      if (this.isDocumentOrDocumentElementNode(node))
-        throw Error("Cannot remove document or document elements.");
+      if (isNodeDead(node) || this.isDocumentOrDocumentElementNode(node)) {
+        throw Error("Cannot remove document, document elements or dead nodes");
+      }
     }
 
     for (let node of nodes) {
@@ -2387,6 +2456,12 @@ var WalkerActor = protocol.ActorClass({
    * Insert a node into the DOM.
    */
   insertBefore: method(function(node, parent, sibling) {
+    if (isNodeDead(node) ||
+        isNodeDead(parent) ||
+        (sibling && isNodeDead(sibling))) {
+      return null;
+    }
+
     parent.rawNode.insertBefore(node.rawNode, sibling ? sibling.rawNode : null);
   }, {
     request: {
@@ -2404,6 +2479,10 @@ var WalkerActor = protocol.ActorClass({
    * informing the consumers about changes.
    */
   editTagName: method(function(node, tagName) {
+    if (isNodeDead(node)) {
+      return;
+    }
+
     let oldNode = node.rawNode;
 
     // Create a new element with the same attributes as the current element and
@@ -2740,7 +2819,10 @@ var WalkerActor = protocol.ActorClass({
    * @see _isInDomTree
    */
   isInDOMTree: method(function(node) {
-    return node ? this._isInDOMTree(node.rawNode) : false;
+    if (isNodeDead(node)) {
+      return false;
+    }
+    return this._isInDOMTree(node.rawNode);
   }, {
     request: { node: Arg(0, "domnode") },
     response: { attached: RetVal("boolean") }
@@ -3417,7 +3499,14 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
 exports._documentWalker = DocumentWalker;
 
 function nodeDocument(node) {
+  if (Cu.isDeadWrapper(node)) {
+    return null;
+  }
   return node.ownerDocument || (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ? node : null);
+}
+
+function isNodeDead(node) {
+  return !node || !node.rawNode || Cu.isDeadWrapper(node.rawNode);
 }
 
 /**

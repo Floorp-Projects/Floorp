@@ -1,0 +1,367 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1121528
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1121528</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+const {Promise: promise} = Components.utils.import("resource://gre/modules/Promise.jsm", {});
+
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker, gDoc;
+
+addAsyncTest(function() {
+  let url = document.getElementById("inspectorContent").href;
+
+  let def = promise.defer();
+  attachURL(url, function(err, client, tab, doc) {
+    def.resolve({client, tab, doc});
+  });
+  let {client, tab, doc} = yield def.promise;
+  gDoc = doc;
+
+  let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+  let inspector = InspectorFront(client, tab);
+  gWalker = yield inspector.getWalker();
+
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.parents(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.parents(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.parents() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.children(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "body");
+  gDoc.defaultView.location.reload();
+  yield gWalker.children(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.children() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.siblings(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.siblings(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.siblings() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.nextSibling(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.nextSibling(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.nextSibling() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.previousSibling(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.previousSibling(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.previousSibling() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.addPseudoClassLock(nodeFront) before the load completes " +
+    "shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.addPseudoClassLock(nodeFront, ":hover");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.addPseudoClassLock() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.removePseudoClassLock(nodeFront) before the load completes " +
+    "shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.removePseudoClassLock(nodeFront, ":hover");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.removePseudoClassLock() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.clearPseudoClassLocks(nodeFront) before the load completes " +
+    "shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.clearPseudoClassLocks(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.clearPseudoClassLocks() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.innerHTML(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.innerHTML(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.innerHTML() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.setInnerHTML(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.setInnerHTML(nodeFront, "<span>innerHTML changed</span>");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.setInnerHTML() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.outerHTML(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.outerHTML(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.outerHTML() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.setOuterHTML(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.setOuterHTML(nodeFront, "<h1><span>innerHTML changed</span></h1>");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.setOuterHTML() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.insertAdjacentHTML(nodeFront) before the load completes shouldn't " +
+    "fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.insertAdjacentHTML(nodeFront, "afterEnd",
+    "<span>new adjacent HTML</span>");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.insertAdjacentHTML() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.removeNode(nodeFront) before the load completes should throw");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  let hasThrown = false;
+  try {
+    yield gWalker.removeNode(nodeFront);
+  } catch (e) {
+    hasThrown = true;
+  }
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(hasThrown, "The call to walker.removeNode() threw");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.removeNodes([nodeFront]) before the load completes should throw");
+
+  let nodeFront1 = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  let nodeFront2 = yield gWalker.querySelector(gWalker.rootNode, "#longstring");
+  let nodeFront3 = yield gWalker.querySelector(gWalker.rootNode, "#shortstring");
+  gDoc.defaultView.location.reload();
+  let hasThrown = false;
+  try {
+    yield gWalker.removeNodes([nodeFront1, nodeFront2, nodeFront3]);
+  } catch (e) {
+    hasThrown = true;
+  }
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(hasThrown, "The call to walker.removeNodes() threw");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.insertBefore(nodeFront, parent, null) before the load completes " +
+    "shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  let newParentFront = yield gWalker.querySelector(gWalker.rootNode, "#longlist");
+  gDoc.defaultView.location.reload();
+  yield gWalker.insertBefore(nodeFront, newParentFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.insertBefore() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.insertBefore(nodeFront, parent, sibling) before the load completes " +
+    "shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  let newParentFront = yield gWalker.querySelector(gWalker.rootNode, "#longlist");
+  let siblingFront = yield gWalker.querySelector(gWalker.rootNode, "#b");
+  gDoc.defaultView.location.reload();
+  yield gWalker.insertBefore(nodeFront, newParentFront, siblingFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.insertBefore() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.editTagName(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.editTagName(nodeFront, "h2");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.editTagName() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.hideNode(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.hideNode(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.hideNode() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.unhideNode(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.unhideNode(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.unhideNode() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.releaseNode(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "h1");
+  gDoc.defaultView.location.reload();
+  yield gWalker.releaseNode(nodeFront);
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.releaseNode() didn't fail");
+  runNextTest();
+});
+
+addAsyncTest(function() {
+  info("Getting a nodeFront, reloading the page, and calling " +
+    "walker.querySelector(nodeFront) before the load completes shouldn't fail");
+
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, "body");
+  gDoc.defaultView.location.reload();
+  yield gWalker.querySelector(nodeFront, "h1");
+  yield waitForMutation(gWalker, isNewRoot);
+
+  ok(true, "The call to walker.querySelector() didn't fail");
+  runNextTest();
+});
+
+addTest(function cleanup() {
+  gWalker = gDoc = null;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=932937">Mozilla Bug 1121528</a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
