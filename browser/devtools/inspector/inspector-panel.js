@@ -259,10 +259,10 @@ InspectorPanel.prototype = {
       if (front) {
         return front;
       }
-      return this.walker.documentElement(this.walker.rootNode);
+      return this.walker.documentElement();
     }).then(node => {
-      if (walker !== this.walker) {
-        promise.reject(null);
+      if (hasNavigated()) {
+        return promise.reject("navigated; resolution of _defaultNode aborted");
       }
       this._defaultNode = node;
       return node;

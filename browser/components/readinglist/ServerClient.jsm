@@ -136,8 +136,14 @@ ServerClient.prototype = {
         if (response && response.headers) {
           let backoff = response.headers["backoff"] || response.headers["retry-after"];
           if (backoff) {
-            log.info("Server requested backoff", backoff);
-            Services.obs.notifyObservers(null, "readinglist:backoff-requested", backoff);
+            let numeric = backoff.toLowerCase() == "none" ? 0 :
+                          parseInt(backoff, 10);
+            if (isNaN(numeric)) {
+              log.info("Server requested unrecognized backoff", backoff);
+            } else if (numeric > 0) {
+              log.info("Server requested backoff", numeric);
+              Services.obs.notifyObservers(null, "readinglist:backoff-requested", String(numeric));
+            }
           }
         }
         if (error) {

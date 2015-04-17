@@ -6,7 +6,7 @@
 Cu.import("resource://gre/modules/PerformanceStats.jsm", this);
 Cu.import("resource://testing-common/ContentTask.jsm", this);
 
-const URL = "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" + Math.random();
+const URL = "http://example.com/browser/toolkit/components/perfmonitoring/tests/browser/browser_compartments.html?test=" + Math.random();
 
 // This function is injected as source as a frameScript
 function frameScript() {
@@ -49,28 +49,28 @@ function monotinicity_tester(source, testName) {
   };
 
   let sanityCheck = function(prev, next) {
-    dump(`Sanity check: ${JSON.stringify(next, null, "\t")}\n`);
+    info(`Sanity check: ${JSON.stringify(next, null, "\t")}`);
     if (prev == null) {
       return;
     }
     for (let k of ["name", "addonId", "isSystem"]) {
-      Assert.equal(prev[k], next[k], `Sanity check (${name}): ${k} hasn't changed.`);
+      Assert.equal(prev[k], next[k], `Sanity check (${testName}): ${k} hasn't changed.`);
     }
     for (let k of ["totalUserTime", "totalSystemTime", "totalCPOWTime", "ticks"]) {
-      Assert.equal(typeof next[k], "number", `Sanity check (${name}): ${k} is a number.`);
-      Assert_leq(prev[k], next[k], `Sanity check (${name}): ${k} is monotonic.`);
-      Assert_leq(0, next[k], `Sanity check (${name}): ${k} is >= 0.`)
+      Assert.equal(typeof next[k], "number", `Sanity check (${testName}): ${k} is a number.`);
+      Assert_leq(prev[k], next[k], `Sanity check (${testName}): ${k} is monotonic.`);
+      Assert_leq(0, next[k], `Sanity check (${testName}): ${k} is >= 0.`)
     }
     Assert.equal(prev.durations.length, next.durations.length);
     for (let i = 0; i < next.durations.length; ++i) {
       Assert.ok(typeof next.durations[i] == "number" && next.durations[i] >= 0,
-        `Sanity check (${name}): durations[${i}] is a non-negative number.`);
+        `Sanity check (${testName}): durations[${i}] is a non-negative number.`);
       Assert_leq(prev.durations[i], next.durations[i],
-        `Sanity check (${name}): durations[${i}] is monotonic.`)
+        `Sanity check (${testName}): durations[${i}] is monotonic.`)
     }
     for (let i = 0; i < next.durations.length - 1; ++i) {
       Assert_leq(next.durations[i + 1], next.durations[i],
-        `Sanity check (${name}): durations[${i}] >= durations[${i + 1}].`)
+        `Sanity check (${testName}): durations[${i}] >= durations[${i + 1}].`)
     }
   };
   let iteration = 0;
@@ -103,7 +103,7 @@ function monotinicity_tester(source, testName) {
 
       for (let k of ["totalUserTime", "totalSystemTime", "totalCPOWTime"]) {
         Assert_leq(item[k], snapshot.processData[k],
-          `Sanity check (${name}): component has a lower ${k} than process`);
+          `Sanity check (${testName}): component has a lower ${k} than process`);
       }
     }
     // Check that we do not have duplicate components.

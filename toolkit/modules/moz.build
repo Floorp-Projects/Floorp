@@ -12,7 +12,6 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 SPHINX_TREES['toolkit_modules'] = 'docs'
 
 EXTRA_JS_MODULES += [
-    'AddonWatcher.jsm',
     'Battery.jsm',
     'BinarySearch.jsm',
     'BrowserUtils.jsm',
@@ -36,7 +35,6 @@ EXTRA_JS_MODULES += [
     'ObjectUtils.jsm',
     'PageMenu.jsm',
     'PageMetadata.jsm',
-    'PerformanceStats.jsm',
     'PermissionsUtils.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',

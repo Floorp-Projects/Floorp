@@ -45,6 +45,8 @@ public:
   //static nsVolumeService* GetSingleton();
   static void Shutdown();
 
+  void DumpNoLock(const char* aLabel);
+
   void UpdateVolume(nsIVolume* aVolume, bool aNotifyObservers = true);
   void UpdateVolumeIOThread(const Volume* aVolume);
 

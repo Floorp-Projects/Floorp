@@ -37,7 +37,7 @@ function runSwfPlayer(flashParams) {
   Shumway.createAVM2(Shumway.AVM2LoadLibrariesFlags.Builtin | Shumway.AVM2LoadLibrariesFlags.Playerglobal, sysMode, appMode).then(function (avm2) {
     function runSWF(file, buffer, baseUrl) {
       var gfxService = new Shumway.Player.Window.WindowGFXService(window, window.parent);
-      var player = new Shumway.Player.Player(gfxService);
+      var player = new Shumway.Player.Player(gfxService, flashParams.env);
       player.defaultStageColor = flashParams.bgcolor;
       player.movieParams = flashParams.movieParams;
       player.stageAlign = (objectParams && (objectParams.salign || objectParams.align)) || '';

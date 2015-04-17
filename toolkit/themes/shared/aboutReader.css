@@ -40,13 +40,15 @@ body.loaded {
 }
 
 .sans-serif,
+.sans-serif-button,
 .sans-serif .remove-button {
-  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .serif,
+.serif-button,
 .serif .remove-button {
-  font-family: "Charis SIL", Georgia, "Times New Roman", serif;
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 .font-size1 {
@@ -107,7 +109,7 @@ body.loaded {
   font-size: 0.9em;
   line-height: 1.48em;
   padding-bottom: 4px;
-  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   text-decoration: none;
   border-bottom: 1px solid;
   color: #0095dd;
@@ -269,7 +271,7 @@ body.loaded {
 /*======= Controls toolbar =======*/
 
 .toolbar {
-  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   position: fixed;
   height: 100%;
   top: 0;
@@ -404,14 +406,8 @@ body.loaded {
 
 #font-type-buttons > button {
   display: inline-block;
-  font-size: 58px;
+  font-size: 62px;
   height: 100px;
-}
-
-/* Make the serif button content the same size as the sans-serif button content. */
-#font-type-buttons > .serif-button {
-  padding-top: 1px;
-  font-size: 60px;
 }
 
 #font-size-buttons > button,
@@ -431,11 +427,51 @@ body.loaded {
   border-bottom: 1px solid #FC6420;
 }
 
-#font-type-buttons > button > div {
+/* Make the serif button content the same size as the sans-serif button content. */
+#font-type-buttons > button > .description {
   color: #666;
   font-size: 12px;
+  margin-top: -5px;
+}
+
+/* Font sizes are different per-platform, so we need custom CSS to line them up. */
+%ifdef XP_MACOSX
+#font-type-buttons > .sans-serif-button > .name {
+  margin-top: 10px;
+}
+
+#font-type-buttons > .sans-serif-button > .description {
   margin-top: -4px;
 }
+
+#font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%elifdef XP_WIN
+#font-type-buttons > .sans-serif-button > .name {
+  margin-top: 2px;
+}
+
+#font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
+}
+
+#font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%else
+#font-type-buttons > .sans-serif-button > .name {
+  margin-top: 5px;
+}
+
+#font-type-buttons > .sans-serif-button > .description {
+  margin-top: -8px;
+}
+
+#font-type-buttons > .serif-button > .name {
+  font-size: 70px;
+}
+%endif
 
 .button:hover,
 #font-size-buttons > button:hover,
@@ -453,10 +489,6 @@ body.loaded {
 /* Only used on Android */
 #font-size-sample {
   display: none;
-}
-
-.serif-button {
-  font-family: "Charis SIL", Georgia, "Times New Roman", serif;
 }
 
 .minus-button,

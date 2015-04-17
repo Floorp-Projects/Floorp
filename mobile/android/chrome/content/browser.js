@@ -6372,7 +6372,12 @@ var ViewportHandler = {
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
     let tab = BrowserApp.getTabForWindow(aWindow);
-    if (tab.desktopMode) {
+    let readerMode = false;
+    try {
+      readerMode = tab.browser.contentDocument.documentURI.startsWith("about:reader");
+    } catch (e) {
+    }
+    if (tab.desktopMode && !readerMode) {
       return new ViewportMetadata({
         minZoom: kViewportMinScale,
         maxZoom: kViewportMaxScale,

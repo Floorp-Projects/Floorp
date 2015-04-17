@@ -34,6 +34,7 @@
 #include "FallbackCameraPlatform.h"
 #endif
 
+class nsITimer;
 
 namespace android {
   class GonkCameraHardware;
@@ -56,7 +57,8 @@ class nsGonkCameraControl : public CameraControlImpl
 public:
   nsGonkCameraControl(uint32_t aCameraId);
 
-  void OnAutoFocusComplete(bool aSuccess);
+  void OnAutoFocusMoving(bool aIsMoving);
+  void OnAutoFocusComplete(bool aSuccess, bool aExpired);
   void OnFacesDetected(camera_frame_metadata_t* aMetaData);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength);
   void OnTakePictureError();
@@ -198,6 +200,10 @@ protected:
 
   nsRefPtr<DeviceStorageFile> mVideoFile;
   nsString                  mFileFormat;
+
+  bool                      mAutoFocusPending;
+  nsCOMPtr<nsITimer>        mAutoFocusCompleteTimer;
+  int32_t                   mAutoFocusCompleteExpired;
 
   // Guards against calling StartPreviewImpl() while in OnTakePictureComplete().
   ReentrantMonitor          mReentrantMonitor;
