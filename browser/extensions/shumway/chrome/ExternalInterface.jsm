@@ -18,53 +18,46 @@ var EXPORTED_SYMBOLS = ['ExternalInterface'];
 
 Components.utils.import('resource://gre/modules/Services.jsm');
 
+// Helper class to forward external interface messages between chrome code and
+// content window / object element.
 function ExternalInterface(window, embedTag, callback) {
   this.window = window;
   this.embedTag = embedTag;
   this.callback = callback;
   this.externalComInitialized = false;
-
-  initExternalCom(window, embedTag, callback);
 }
 ExternalInterface.prototype = {
   processAction: function (data) {
     var parentWindow = this.window;
     var embedTag = this.embedTag;
+
     switch (data.action) {
       case 'init':
         if (this.externalComInitialized)
           return;
 
         this.externalComInitialized = true;
-        initExternalCom(parentWindow, embedTag, this.callback);
+        this.initExternalCom(parentWindow, embedTag, this.callback);
         return;
       case 'getId':
         return embedTag.id;
       case 'eval':
-        return parentWindow.__flash__eval(data.expression);
+        return this.__flash__eval(data.expression);
       case 'call':
-        return parentWindow.__flash__call(data.request);
+        return this.__flash__call(data.request);
       case 'register':
-        return embedTag.__flash__registerCallback(data.functionName);
+        return this.__flash__registerCallback(data.functionName);
       case 'unregister':
-        return embedTag.__flash__unregisterCallback(data.functionName);
+        return this.__flash__unregisterCallback(data.functionName);
     }
-  }
-};
+  },
 
-function getBoolPref(pref, def) {
-  try {
-    return Services.prefs.getBoolPref(pref);
-  } catch (ex) {
-    return def;
-  }
-}
-
-function initExternalCom(wrappedWindow, wrappedObject, onExternalCallback) {
-  var traceExternalInterface = getBoolPref('shumway.externalInterface.trace', false);
-  if (!wrappedWindow.__flash__initialized) {
-    wrappedWindow.__flash__initialized = true;
-    wrappedWindow.__flash__toXML = function __flash__toXML(obj) {
+  initExternalCom: function (window, embedTag, onExternalCallback) {
+    var traceExternalInterface = getBoolPref('shumway.externalInterface.trace', false);
+    // Initialize convenience functions. Notice that these functions are
+    // exposed to the content via Cu.exportFunction, so be careful (e.g. don't
+    // use `this` pointer).
+    this.__flash__toXML = function __flash__toXML(obj) {
       switch (typeof obj) {
         case 'boolean':
           return obj ? '<true/>' : '<false/>';
@@ -93,33 +86,62 @@ function initExternalCom(wrappedWindow, wrappedObject, onExternalCallback) {
           return '<undefined/>';
       }
     };
-    wrappedWindow.__flash__eval = function (expr) {
-      traceExternalInterface && this.console.log('__flash__eval: ' + expr);
+    this.__flash__eval = function (expr) {
+      traceExternalInterface && window.console.log('__flash__eval: ' + expr);
       // allowScriptAccess protects page from unwanted swf scripts,
       // we can execute script in the page context without restrictions.
-      var result = this.eval(expr);
-      traceExternalInterface && this.console.log('__flash__eval (result): ' + result);
+      var result = window.eval(expr);
+      traceExternalInterface && window.console.log('__flash__eval (result): ' + result);
       return result;
-    }.bind(wrappedWindow);
-    wrappedWindow.__flash__call = function (expr) {
-      traceExternalInterface && this.console.log('__flash__call (ignored): ' + expr);
     };
+    this.__flash__call = function (expr) {
+      traceExternalInterface && window.console.log('__flash__call (ignored): ' + expr);
+    };
+
+    this.__flash__registerCallback = function (functionName) {
+      traceExternalInterface && window.console.log('__flash__registerCallback: ' + functionName);
+      Components.utils.exportFunction(function () {
+        var args = Array.prototype.slice.call(arguments, 0);
+        traceExternalInterface && window.console.log('__flash__callIn: ' + functionName);
+        var result;
+        if (onExternalCallback) {
+          result = onExternalCallback({functionName: functionName, args: args});
+          traceExternalInterface && window.console.log('__flash__callIn (result): ' + result);
+        }
+        return window.eval(result);
+      }, embedTag.wrappedJSObject, {defineAs: functionName});
+    };
+    this.__flash__unregisterCallback = function (functionName) {
+      traceExternalInterface && window.console.log('__flash__unregisterCallback: ' + functionName);
+      delete embedTag.wrappedJSObject[functionName];
+    };
+
+    this.exportInterfaceFunctions();
+  },
+
+  exportInterfaceFunctions: function () {
+    var window = this.window;
+    // We need to export window functions only once.
+    if (!window.wrappedJSObject.__flash__initialized) {
+      window.wrappedJSObject.__flash__initialized = true;
+      // JavaScript eval'ed code use those functions.
+      // TODO find the case when JavaScript code patches those
+      // __flash__toXML will be called by the eval'ed code.
+      Components.utils.exportFunction(this.__flash__toXML, window.wrappedJSObject,
+        {defineAs: '__flash__toXML'});
+      // The functions below are used for compatibility and are not called by chrome code.
+      Components.utils.exportFunction(this.__flash__eval, window.wrappedJSObject,
+        {defineAs: '__flash__eval'});
+      Components.utils.exportFunction(this.__flash__call, window.wrappedJSObject,
+        {defineAs: '__flash__call'});
+    }
   }
-  wrappedObject.__flash__registerCallback = function (functionName) {
-    traceExternalInterface && wrappedWindow.console.log('__flash__registerCallback: ' + functionName);
-    Components.utils.exportFunction(function () {
-      var args = Array.prototype.slice.call(arguments, 0);
-      traceExternalInterface && wrappedWindow.console.log('__flash__callIn: ' + functionName);
-      var result;
-      if (onExternalCallback) {
-        result = onExternalCallback({functionName: functionName, args: args});
-        traceExternalInterface && wrappedWindow.console.log('__flash__callIn (result): ' + result);
-      }
-      return wrappedWindow.eval(result);
-    }, this, { defineAs: functionName });
-  };
-  wrappedObject.__flash__unregisterCallback = function (functionName) {
-    traceExternalInterface && wrappedWindow.console.log('__flash__unregisterCallback: ' + functionName);
-    delete this[functionName];
-  };
+};
+
+function getBoolPref(pref, def) {
+  try {
+    return Services.prefs.getBoolPref(pref);
+  } catch (ex) {
+    return def;
+  }
 }

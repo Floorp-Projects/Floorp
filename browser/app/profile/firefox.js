@@ -1888,6 +1888,9 @@ pref("browser.readinglist.sidebarEverOpened", false);
 pref("readinglist.scheduler.enabled", true);
 pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");
 
+// Don't limit how many nodes we care about on desktop:
+pref("reader.parse-node-limit", 0);
+
 // Enable Service workers for desktop on non-release builds
 #ifdef NIGHTLY_BUILD
 pref("dom.serviceWorkers.enabled", true);

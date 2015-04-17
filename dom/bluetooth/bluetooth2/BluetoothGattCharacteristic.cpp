@@ -32,10 +32,12 @@ NS_INTERFACE_MAP_END
 BluetoothGattCharacteristic::BluetoothGattCharacteristic(
   nsPIDOMWindow* aOwner,
   BluetoothGattService* aService,
-  const BluetoothGattId& aCharId)
+  const BluetoothGattCharAttribute& aChar)
   : mOwner(aOwner)
   , mService(aService)
-  , mCharId(aCharId)
+  , mCharId(aChar.mId)
+  , mProperties(aChar.mProperties)
+  , mWriteType(aChar.mWriteType)
 {
   MOZ_ASSERT(aOwner);
   MOZ_ASSERT(mService);
@@ -136,6 +138,15 @@ BluetoothGattCharacteristic::HandleDescriptorsDiscovered(
 }
 
 void
+BluetoothGattCharacteristic::HandleCharacteristicValueUpdated(
+  const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfuint8_t);
+
+  mValue = aValue.get_ArrayOfuint8_t();
+}
+
+void
 BluetoothGattCharacteristic::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -143,6 +154,8 @@ BluetoothGattCharacteristic::Notify(const BluetoothSignal& aData)
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("DescriptorsDiscovered")) {
     HandleDescriptorsDiscovered(v);
+  } else if (aData.name().EqualsLiteral("CharacteristicValueUpdated")) {
+    HandleCharacteristicValueUpdated(v);
   } else {
     BT_WARNING("Not handling GATT Characteristic signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -154,4 +167,139 @@ BluetoothGattCharacteristic::WrapObject(JSContext* aContext,
                                         JS::Handle<JSObject*> aGivenProto)
 {
   return BluetoothGattCharacteristicBinding::Wrap(aContext, this, aGivenProto);
+}
+
+void
+BluetoothGattCharacteristic::GetValue(JSContext* cx,
+                                      JS::MutableHandle<JSObject*> aValue) const
+{
+  MOZ_ASSERT(aValue);
+
+  aValue.set(mValue.IsEmpty()
+             ? nullptr
+             : ArrayBuffer::Create(cx, mValue.Length(), mValue.Elements()));
+}
+
+void
+BluetoothGattCharacteristic::GetProperties(
+  mozilla::dom::GattCharacteristicProperties& aProperties) const
+{
+  aProperties.mBroadcast = mProperties & GATT_CHAR_PROP_BIT_BROADCAST;
+  aProperties.mRead = mProperties & GATT_CHAR_PROP_BIT_READ;
+  aProperties.mWriteNoResponse = mProperties & GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE;
+  aProperties.mWrite = mProperties & GATT_CHAR_PROP_BIT_WRITE;
+  aProperties.mNotify = mProperties & GATT_CHAR_PROP_BIT_NOTIFY;
+  aProperties.mIndicate = mProperties & GATT_CHAR_PROP_BIT_INDICATE;
+  aProperties.mSignedWrite = mProperties & GATT_CHAR_PROP_BIT_SIGNED_WRITE;
+  aProperties.mExtendedProps = mProperties & GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES;
+}
+
+class ReadValueTask final : public BluetoothReplyRunnable
+{
+public:
+  ReadValueTask(BluetoothGattCharacteristic* aCharacteristic, Promise* aPromise)
+    : BluetoothReplyRunnable(
+        nullptr, aPromise,
+        NS_LITERAL_STRING("GattClientReadCharacteristicValue"))
+    , mCharacteristic(aCharacteristic)
+  {
+    MOZ_ASSERT(aCharacteristic);
+    MOZ_ASSERT(aPromise);
+  }
+
+  bool
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
+  {
+    aValue.setUndefined();
+
+    const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
+    NS_ENSURE_TRUE(v.type() == BluetoothValue::TArrayOfuint8_t, false);
+
+    AutoJSAPI jsapi;
+    NS_ENSURE_TRUE(jsapi.Init(mCharacteristic->GetParentObject()), false);
+
+    JSContext* cx = jsapi.cx();
+    if (!ToJSValue(cx, v.get_ArrayOfuint8_t(), aValue)) {
+      JS_ClearPendingException(cx);
+      return false;
+    }
+
+    return true;
+  }
+
+  void
+  ReleaseMembers()
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mCharacteristic = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
+};
+
+already_AddRefed<Promise>
+BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(mProperties & GATT_CHAR_PROP_BIT_READ,
+                        NS_ERROR_NOT_AVAILABLE);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<BluetoothReplyRunnable> result = new ReadValueTask(this, promise);
+  bs->GattClientReadCharacteristicValueInternal(mService->GetAppUuid(),
+                                                mService->GetServiceId(),
+                                                mCharId,
+                                                result);
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
+BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
+                                        ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(mProperties &
+                          (GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE ||
+                           GATT_CHAR_PROP_BIT_WRITE ||
+                           GATT_CHAR_PROP_BIT_SIGNED_WRITE),
+                        NS_ERROR_NOT_AVAILABLE);
+
+  aValue.ComputeLengthAndData();
+
+  nsTArray<uint8_t> value;
+  value.AppendElements(aValue.Data(), aValue.Length());
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<BluetoothReplyRunnable> result = new BluetoothVoidReplyRunnable(
+    nullptr, promise, NS_LITERAL_STRING("GattClientWriteCharacteristicValue"));
+  bs->GattClientWriteCharacteristicValueInternal(mService->GetAppUuid(),
+                                                 mService->GetServiceId(),
+                                                 mCharId,
+                                                 mWriteType,
+                                                 value,
+                                                 result);
+
+  return promise.forget();
 }

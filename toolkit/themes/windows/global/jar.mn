@@ -8,7 +8,7 @@ toolkit.jar:
         skin/classic/global/aboutCache.css                       (../../shared/aboutCache.css)
         skin/classic/global/aboutCacheEntry.css                  (../../shared/aboutCacheEntry.css)
         skin/classic/global/aboutMemory.css                      (../../shared/aboutMemory.css)
-        skin/classic/global/aboutReader.css                      (../../shared/aboutReader.css)
+*       skin/classic/global/aboutReader.css                      (../../shared/aboutReader.css)
         skin/classic/global/aboutSupport.css                     (../../shared/aboutSupport.css)
         skin/classic/global/appPicker.css                        (../../shared/appPicker.css)
         skin/classic/global/arrow.css

@@ -16,12 +16,12 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../../xre',
-    '../aboutperformance',
     '../alerts',
     '../downloads',
     '../feeds',
     '../find',
     '../jsdownloads/src',
+    '../perfmonitoring',
     '../protobuf',
     '../startup',
     '../statusfilter',

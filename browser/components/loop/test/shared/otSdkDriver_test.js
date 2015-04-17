@@ -65,7 +65,7 @@ describe("loop.OTSdkDriver", function () {
     };
 
     mozLoop = {
-      telemetryAddKeyedValue: sinon.stub(),
+      telemetryAddValue: sinon.stub(),
       TWO_WAY_MEDIA_CONN_LENGTH: {
         SHORTER_THAN_10S: "SHORTER_THAN_10S",
         BETWEEN_10S_AND_30S: "BETWEEN_10S_AND_30S",
@@ -446,8 +446,8 @@ describe("loop.OTSdkDriver", function () {
 
       driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-      sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+      sinon.assert.calledWith(mozLoop.telemetryAddValue,
         "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
         mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.SHORTER_THAN_10S);
     });
@@ -458,8 +458,8 @@ describe("loop.OTSdkDriver", function () {
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-        sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-        sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+        sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+        sinon.assert.calledWith(mozLoop.telemetryAddValue,
           "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
           mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_10S_AND_30S);
       });
@@ -470,8 +470,8 @@ describe("loop.OTSdkDriver", function () {
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-        sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-        sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+        sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+        sinon.assert.calledWith(mozLoop.telemetryAddValue,
           "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
           mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_30S_AND_5M);
       });
@@ -481,8 +481,8 @@ describe("loop.OTSdkDriver", function () {
 
       driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-      sinon.assert.calledWith(mozLoop.telemetryAddKeyedValue,
+      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+      sinon.assert.calledWith(mozLoop.telemetryAddValue,
         "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
         mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M);
     });
@@ -495,7 +495,7 @@ describe("loop.OTSdkDriver", function () {
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-        sinon.assert.notCalled(mozLoop.telemetryAddKeyedValue);
+        sinon.assert.notCalled(mozLoop.telemetryAddValue);
       });
   });
 
@@ -503,8 +503,8 @@ describe("loop.OTSdkDriver", function () {
     it("should record enabled sharing states for window", function() {
       driver._noteSharingState("window", true);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE",
         mozLoop.SHARING_STATE_CHANGE.WINDOW_ENABLED);
     });
@@ -512,8 +512,8 @@ describe("loop.OTSdkDriver", function () {
     it("should record enabled sharing states for browser", function() {
       driver._noteSharingState("browser", true);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE",
         mozLoop.SHARING_STATE_CHANGE.BROWSER_ENABLED);
     });
@@ -521,8 +521,8 @@ describe("loop.OTSdkDriver", function () {
     it("should record disabled sharing states for window", function() {
       driver._noteSharingState("window", false);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE",
         mozLoop.SHARING_STATE_CHANGE.WINDOW_DISABLED);
     });
@@ -530,8 +530,8 @@ describe("loop.OTSdkDriver", function () {
     it("should record disabled sharing states for browser", function() {
       driver._noteSharingState("browser", false);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE",
         mozLoop.SHARING_STATE_CHANGE.BROWSER_DISABLED);
     });

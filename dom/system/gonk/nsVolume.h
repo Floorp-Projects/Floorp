@@ -73,6 +73,8 @@ public:
   const nsString& Name() const        { return mName; }
   nsCString NameStr() const           { return NS_LossyConvertUTF16toASCII(mName); }
 
+  void Dump(const char* aLabel) const;
+
   int32_t MountGeneration() const     { return mMountGeneration; }
   bool IsMountLocked() const          { return mMountLocked; }
 

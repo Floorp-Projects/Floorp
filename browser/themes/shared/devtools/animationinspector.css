@@ -178,6 +178,7 @@ body {
 .timeline .rate {
   -moz-appearance: none;
   text-align: center;
+  color: var(--theme-body-color);
   border-right: 1px solid var(--theme-splitter-color);
 }
 

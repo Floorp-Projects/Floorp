@@ -3,18 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 webapprt.jar:
-% skin webapprt classic/1.0 %skin/classic/webapprt/ os=WINNT osversion<6
-% skin webapprt classic/1.0 %skin/classic/webapprt/ os!=WINNT
-# NOTE: If you add a new file here, you'll need to add it to the aero
-# section at the bottom of this file
+% skin webapprt classic/1.0 %skin/classic/webapprt/
         skin/classic/webapprt/downloads/downloadButtons.png         (downloads/downloadButtons.png)
+        skin/classic/webapprt/downloads/downloadButtons-XP.png      (downloads/downloadButtons-XP.png)
         skin/classic/webapprt/downloads/downloadIcon.png            (downloads/downloadIcon.png)
+        skin/classic/webapprt/downloads/downloadIcon-XP.png         (downloads/downloadIcon-XP.png)
         skin/classic/webapprt/downloads/downloads.css               (downloads/downloads.css)
 
-#ifdef XP_WIN
-webapprt.jar:
-% skin webapprt classic/1.0 %skin/classic/aero/webapprt/ os=WINNT osversion>=6
-        skin/classic/aero/webapprt/downloads/downloadButtons.png            (downloads/downloadButtons-aero.png)
-        skin/classic/aero/webapprt/downloads/downloadIcon.png               (downloads/downloadIcon-aero.png)
-*       skin/classic/aero/webapprt/downloads/downloads.css                  (downloads/downloads-aero.css)
-#endif
+% override chrome://webapprt/skin/downloads/downloadButtons.png     chrome://webapprt/skin/downloads/downloadButtons-XP.png  os=WINNT osversion<6
+% override chrome://webapprt/skin/downloads/downloadIcon.png        chrome://webapprt/skin/downloads/downloadIcon-XP.png     os=WINNT osversion<6

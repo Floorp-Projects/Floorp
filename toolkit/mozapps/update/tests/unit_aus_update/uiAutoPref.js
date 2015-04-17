@@ -88,4 +88,4 @@ const WindowMediator = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
-}
+};

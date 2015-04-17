@@ -134,9 +134,9 @@ struct BluetoothGattClientCallback
   typedef BluetoothNotificationHALRunnable5<
     GattClientNotificationHandlerWrapper, void,
     int, BluetoothGattStatus, BluetoothGattServiceId,
-    BluetoothGattId, int,
+    BluetoothGattId, BluetoothGattCharProp,
     int, BluetoothGattStatus, const BluetoothGattServiceId&,
-    const BluetoothGattId&>
+    const BluetoothGattId&, const BluetoothGattCharProp&>
     GetCharacteristicNotification;
 
   typedef BluetoothNotificationHALRunnable5<
@@ -745,18 +745,20 @@ BluetoothGattClientHALInterface::GetDescriptor(
 void
 BluetoothGattClientHALInterface::ReadCharacteristic(
   int aConnId, const BluetoothGattServiceId& aServiceId,
-  const BluetoothGattId& aCharId, int aAuthReq,
+  const BluetoothGattId& aCharId, BluetoothGattAuthReq aAuthReq,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
 #if ANDROID_VERSION >= 19
   btgatt_srvc_id_t serviceId;
   btgatt_gatt_id_t charId;
+  int authReq;
 
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
-      NS_SUCCEEDED(Convert(aCharId, charId))) {
+      NS_SUCCEEDED(Convert(aCharId, charId)) &&
+      NS_SUCCEEDED(Convert(aAuthReq, authReq))) {
     status = mInterface->read_characteristic(aConnId, &serviceId, &charId,
-                                             aAuthReq);
+                                             authReq);
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
@@ -774,22 +776,25 @@ BluetoothGattClientHALInterface::ReadCharacteristic(
 void
 BluetoothGattClientHALInterface::WriteCharacteristic(
   int aConnId, const BluetoothGattServiceId& aServiceId,
-  const BluetoothGattId& aCharId, int aWriteType, int aLen,
-  int aAuthReq, const ArrayBuffer& aValue,
+  const BluetoothGattId& aCharId, BluetoothGattWriteType aWriteType,
+  BluetoothGattAuthReq aAuthReq, const nsTArray<uint8_t>& aValue,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
 #if ANDROID_VERSION >= 19
   btgatt_srvc_id_t serviceId;
   btgatt_gatt_id_t charId;
-  char value[aLen + 1];
+  int writeType;
+  int authReq;
 
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
       NS_SUCCEEDED(Convert(aCharId, charId)) &&
-      NS_SUCCEEDED(Convert(aValue, value))) {
-    status = mInterface->write_characteristic(aConnId, &serviceId, &charId,
-                                              aWriteType, aLen, aAuthReq,
-                                              value);
+      NS_SUCCEEDED(Convert(aWriteType, writeType)) &&
+      NS_SUCCEEDED(Convert(aAuthReq, authReq))) {
+    status = mInterface->write_characteristic(
+      aConnId, &serviceId, &charId, writeType,
+      aValue.Length() * sizeof(uint8_t), authReq,
+      reinterpret_cast<char*>(const_cast<uint8_t*>(aValue.Elements())));
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
@@ -809,19 +814,21 @@ BluetoothGattClientHALInterface::ReadDescriptor(
   int aConnId, const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId,
   const BluetoothGattId& aDescriptorId,
-  int aAuthReq, BluetoothGattClientResultHandler* aRes)
+  BluetoothGattAuthReq aAuthReq, BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
 #if ANDROID_VERSION >= 19
   btgatt_srvc_id_t serviceId;
   btgatt_gatt_id_t charId;
   btgatt_gatt_id_t descriptorId;
+  int authReq;
 
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
       NS_SUCCEEDED(Convert(aCharId, charId)) &&
-      NS_SUCCEEDED(Convert(aDescriptorId, descriptorId))) {
+      NS_SUCCEEDED(Convert(aDescriptorId, descriptorId)) &&
+      NS_SUCCEEDED(Convert(aAuthReq, authReq))) {
     status = mInterface->read_descriptor(aConnId, &serviceId, &charId,
-                                         &descriptorId, aAuthReq);
+                                         &descriptorId, authReq);
   } else {
     status = BT_STATUS_PARM_INVALID;
   }
@@ -841,8 +848,9 @@ BluetoothGattClientHALInterface::WriteDescriptor(
   int aConnId, const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId,
   const BluetoothGattId& aDescriptorId,
-  int aWriteType, int aLen, int aAuthReq,
-  const ArrayBuffer& aValue,
+  BluetoothGattWriteType aWriteType,
+  BluetoothGattAuthReq aAuthReq,
+  const nsTArray<uint8_t>& aValue,
   BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
@@ -850,15 +858,18 @@ BluetoothGattClientHALInterface::WriteDescriptor(
   btgatt_srvc_id_t serviceId;
   btgatt_gatt_id_t charId;
   btgatt_gatt_id_t descriptorId;
-  char value[aLen + 1];
+  int writeType;
+  int authReq;
 
   if (NS_SUCCEEDED(Convert(aServiceId, serviceId)) &&
       NS_SUCCEEDED(Convert(aCharId, charId)) &&
       NS_SUCCEEDED(Convert(aDescriptorId, descriptorId)) &&
-      NS_SUCCEEDED(Convert(aValue, value))) {
-    status = mInterface->write_descriptor(aConnId, &serviceId, &charId,
-                                          &descriptorId, aWriteType, aLen,
-                                          aAuthReq, value);
+      NS_SUCCEEDED(Convert(aWriteType, writeType)) &&
+      NS_SUCCEEDED(Convert(aAuthReq, authReq))) {
+    status = mInterface->write_descriptor(
+      aConnId, &serviceId, &charId, &descriptorId, writeType,
+      aValue.Length() * sizeof(uint8_t), authReq,
+      reinterpret_cast<char*>(const_cast<uint8_t*>(aValue.Elements())));
   } else {
     status = BT_STATUS_PARM_INVALID;
   }

@@ -111,105 +111,6 @@ function isShumwayEnabledFor(startupInfo) {
   return true;
 }
 
-var ActivationQueue = {
-  nonActive: [],
-  initializing: -1,
-  activationTimeout: null,
-  get currentNonActive() {
-    return this.nonActive[this.initializing].startupInfo;
-  },
-  enqueue: function ActivationQueue_enqueue(startupInfo, callback) {
-    this.nonActive.push({startupInfo: startupInfo, callback: callback});
-    if (this.nonActive.length === 1) {
-      this.activateNext();
-    }
-  },
-  findLastOnPage: function ActivationQueue_findLastOnPage(baseUrl) {
-    for (var i = this.nonActive.length - 1; i >= 0; i--) {
-      if (this.nonActive[i].startupInfo.baseUrl === baseUrl) {
-        return this.nonActive[i].startupInfo;
-      }
-    }
-    return null;
-  },
-  activateNext: function ActivationQueue_activateNext() {
-    function weightInstance(startupInfo) {
-      // set of heuristics for find the most important instance to load
-      var weight = 0;
-      // using linear distance to the top-left of the view area
-      if (startupInfo.embedTag) {
-        var window = startupInfo.window;
-        var clientRect = startupInfo.embedTag.getBoundingClientRect();
-        weight -= Math.abs(clientRect.left - window.scrollX) +
-                  Math.abs(clientRect.top - window.scrollY);
-      }
-      var doc = startupInfo.window.document;
-      if (!doc.hidden) {
-        weight += 100000; // might not be that important if hidden
-      }
-      if (startupInfo.embedTag &&
-          startupInfo.embedTag.ownerDocument.hasFocus()) {
-        weight += 10000; // parent document is focused
-      }
-      return weight;
-    }
-
-    if (this.activationTimeout) {
-      this.activationTimeout.cancel();
-      this.activationTimeout = null;
-    }
-
-    if (this.initializing >= 0) {
-      this.nonActive.splice(this.initializing, 1);
-    }
-    var weights = [];
-    for (var i = 0; i < this.nonActive.length; i++) {
-      try {
-        var weight = weightInstance(this.nonActive[i].startupInfo);
-        weights.push(weight);
-      } catch (ex) {
-        // unable to calc weight the instance, removing
-        log('Shumway instance weight calculation failed: ' + ex);
-        this.nonActive.splice(i, 1);
-        i--;
-      }
-    }
-
-    do {
-      if (this.nonActive.length === 0) {
-        this.initializing = -1;
-        return;
-      }
-
-      var maxWeightIndex = 0;
-      var maxWeight = weights[0];
-      for (var i = 1; i < weights.length; i++) {
-        if (maxWeight < weights[i]) {
-          maxWeight = weights[i];
-          maxWeightIndex = i;
-        }
-      }
-      try {
-        this.initializing = maxWeightIndex;
-        this.nonActive[maxWeightIndex].callback();
-        break;
-      } catch (ex) {
-        // unable to initialize the instance, trying another one
-        log('Shumway instance initialization failed: ' + ex);
-        this.nonActive.splice(maxWeightIndex, 1);
-        weights.splice(maxWeightIndex, 1);
-      }
-    } while (true);
-
-    var ACTIVATION_TIMEOUT = 3000;
-    this.activationTimeout = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.activationTimeout.initWithCallback(function () {
-      log('Timeout during shumway instance initialization');
-      this.activateNext();
-    }.bind(this), ACTIVATION_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
-};
-
 function activateShumwayScripts(window) {
   function initScripts() {
     window.wrappedJSObject.runViewer();
@@ -272,13 +173,6 @@ function activateShumwayScripts(window) {
     window.addEventListener('shumwayFallback', function (e) {
       var automatic = !!e.detail.automatic;
       fallbackToNativePlugin(window, !automatic, automatic);
-    });
-
-    window.addEventListener('shumwayActivated', function (e) {
-      if (ActivationQueue.currentNonActive &&
-          ActivationQueue.currentNonActive.window === window) {
-        ActivationQueue.activateNext();
-      }
     });
   }
 
@@ -395,9 +289,11 @@ ShumwayStreamConverterBase.prototype = {
     baseUrl = pageUrl;
     if (objectParams.base) {
       try {
+        // Verifying base URL, passed in object parameters. It shall be okay to
+        // ignore bad/corrupted base.
         var parsedPageUrl = Services.io.newURI(pageUrl);
         baseUrl = Services.io.newURI(objectParams.base, null, parsedPageUrl).spec;
-      } catch (e) { /* ignore */ }
+      } catch (e) { /* it's okay to ignore any exception */ }
     }
 
     var movieParams = {};
@@ -512,20 +408,10 @@ ShumwayStreamConverterBase.prototype = {
 
         domWindow.shumwayStartupInfo = startupInfo;
 
-        // Report telemetry on amount of swfs on the page
-        if (startupInfo.isOverlay) {
-          // Looking for last actions with same baseUrl
-          var prevPageStartupInfo = ActivationQueue.findLastOnPage(startupInfo.baseUrl);
-          var pageIndex = !prevPageStartupInfo ? 1 : (prevPageStartupInfo.pageIndex + 1);
-          startupInfo.pageIndex = pageIndex;
-          ShumwayTelemetry.onPageIndex(pageIndex);
-        } else {
-          ShumwayTelemetry.onPageIndex(0);
-        }
+        // TODO Report telemetry on amount of swfs on the page
+        // ShumwayTelemetry.onPageIndex(pageIndex);
 
-        ActivationQueue.enqueue(startupInfo, function(domWindow) {
-          activateShumwayScripts(domWindow);
-        }.bind(null, domWindow));
+        activateShumwayScripts(domWindow);
       }
     };
 
@@ -554,7 +440,7 @@ function setupSimpleExternalInterface(embedTag) {
       case '$version':
         return 'SHUMWAY 10,0,0';
       default:
-        log('GetVariable: ' + variable);
+        log('Unsupported GetVariable() call: ' + variable);
         return undefined;
     }
   }, embedTag.wrappedJSObject, {defineAs: 'GetVariable'});

@@ -16,8 +16,8 @@
 */
 console.time("Load Shared Dependencies");
 var Shumway, Shumway$$inline_0 = Shumway || (Shumway = {});
-Shumway$$inline_0.version = "0.10.312";
-Shumway$$inline_0.build = "9de7c7a";
+Shumway$$inline_0.version = "0.10.346";
+Shumway$$inline_0.build = "84cafb5";
 var jsGlobal = function() {
   return this || (0,eval)("this//# sourceURL=jsGlobal-getter");
 }(), inBrowser = "undefined" !== typeof window && "document" in window && "plugins" in window.document, inFirefox = "undefined" !== typeof navigator && 0 <= navigator.userAgent.indexOf("Firefox");
@@ -1010,8 +1010,8 @@ var START_TIME = performance.now();
       c |= 0;
       d |= 0;
       for (var f = 0, e = q.length - 2, a = 0;a < e;a += 2) {
-        var h = q[a + 0], p = q[a + 1], b = q[a + 2], m = q[a + 3];
-        (p <= d && m > d || p > d && m <= d) && c < h + (d - p) / (m - p) * (b - h) && f++;
+        var h = q[a + 0], p = q[a + 1], m = q[a + 2], b = q[a + 3];
+        (p <= d && b > d || p > d && b <= d) && c < h + (d - p) / (b - p) * (m - h) && f++;
       }
       return 1 === (f & 1);
     };
@@ -4451,7 +4451,6 @@ var __extends = this.__extends || function(k, r) {
         b[b.CODE_REMOVE_OBJECT2 = 28] = "CODE_REMOVE_OBJECT2";
         b[b.CODE_START_SOUND = 15] = "CODE_START_SOUND";
         b[b.CODE_START_SOUND2 = 89] = "CODE_START_SOUND2";
-        b[b.CODE_VIDEO_FRAME = 61] = "CODE_VIDEO_FRAME";
       })(g.ControlTags || (g.ControlTags = {}));
       (function(b) {
         b[b.Move = 1] = "Move";
@@ -4541,17 +4540,17 @@ var __extends = this.__extends || function(k, r) {
       }
     };
     b.prototype.readAsync = function(b, n, a, h, p) {
-      var l = new XMLHttpRequest({mozSystem:!0}), g = this.url, m = 0, t = 0;
-      l.open(this.method || "GET", g, !0);
+      var l = new XMLHttpRequest({mozSystem:!0}), w = this.url, m = 0, t = 0;
+      l.open(this.method || "GET", w, !0);
       l.responseType = "moz-chunked-arraybuffer";
-      var k = "moz-chunked-arraybuffer" !== l.responseType;
-      k && (l.responseType = "arraybuffer");
+      var g = "moz-chunked-arraybuffer" !== l.responseType;
+      g && (l.responseType = "arraybuffer");
       l.onprogress = function(e) {
-        k || (m = e.loaded, t = e.total, b(new Uint8Array(l.response), {loaded:m, total:t}));
+        g || (m = e.loaded, t = e.total, b(new Uint8Array(l.response), {loaded:m, total:t}));
       };
       l.onreadystatechange = function(e) {
-        2 === l.readyState && p && p(g, l.status, l.getAllResponseHeaders());
-        4 === l.readyState && (200 !== l.status && 0 !== l.status || null === l.response && (0 === t || m !== t) ? n(l.statusText) : (k && (e = l.response, b(new Uint8Array(e), {loaded:0, total:e.byteLength})), h && h()));
+        2 === l.readyState && p && p(w, l.status, l.getAllResponseHeaders());
+        4 === l.readyState && (200 !== l.status && 0 !== l.status || null === l.response && (0 === t || m !== t) ? n(l.statusText) : (g && (e = l.response, b(new Uint8Array(e), {loaded:0, total:e.byteLength})), h && h()));
       };
       this.mimeType && l.setRequestHeader("Content-Type", this.mimeType);
       l.send(this.data || null);
@@ -8586,8 +8585,8 @@ __extends = this.__extends || function(k, r) {
         a.set(this);
         return a;
       };
-      d.prototype.set = function(d) {
-        this.matrix.set(d.matrix);
+      d.prototype.set = function(a) {
+        this.matrix.set(a.matrix);
       };
       d.prototype.free = function() {
         d._dirtyStack.push(this);
@@ -8602,26 +8601,26 @@ __extends = this.__extends || function(k, r) {
         this.isDirty = !0;
       }
       __extends(d, a);
-      d.prototype.start = function(d, a) {
-        this._dirtyRegion = a;
+      d.prototype.start = function(a, d) {
+        this._dirtyRegion = d;
         var c = new w;
         c.matrix.setIdentity();
-        d.visit(this, c);
+        a.visit(this, c);
         c.free();
       };
-      d.prototype.visitGroup = function(d, a) {
-        var c = d.getChildren();
-        this.visitNode(d, a);
+      d.prototype.visitGroup = function(a, d) {
+        var c = a.getChildren();
+        this.visitNode(a, d);
         for (var b = 0;b < c.length;b++) {
-          var e = c[b], f = a.transform(e.getTransform());
+          var e = c[b], f = d.transform(e.getTransform());
           e.visit(this, f);
           f.free();
         }
       };
-      d.prototype.visitNode = function(d, a) {
-        d.hasFlags(16) && (this.isDirty = !0);
-        d.toggleFlags(16, !1);
-        d.depth = a.depth++;
+      d.prototype.visitNode = function(a, d) {
+        a.hasFlags(16) && (this.isDirty = !0);
+        a.toggleFlags(16, !1);
+        a.depth = d.depth++;
       };
       return d;
     }(p);
@@ -8632,23 +8631,23 @@ __extends = this.__extends || function(k, r) {
         this.writer = d;
       }
       __extends(d, a);
-      d.prototype.visitNode = function(d, a) {
+      d.prototype.visitNode = function(a, d) {
       };
-      d.prototype.visitShape = function(d, a) {
-        this.writer.writeLn(d.toString());
-        this.visitNode(d, a);
+      d.prototype.visitShape = function(a, d) {
+        this.writer.writeLn(a.toString());
+        this.visitNode(a, d);
       };
-      d.prototype.visitGroup = function(d, a) {
-        this.visitNode(d, a);
-        var c = d.getChildren();
-        this.writer.enter(d.toString() + " " + c.length);
+      d.prototype.visitGroup = function(a, d) {
+        this.visitNode(a, d);
+        var c = a.getChildren();
+        this.writer.enter(a.toString() + " " + c.length);
         for (var b = 0;b < c.length;b++) {
-          c[b].visit(this, a);
+          c[b].visit(this, d);
         }
         this.writer.outdent();
       };
-      d.prototype.visitStage = function(d, a) {
-        this.visitGroup(d, a);
+      d.prototype.visitStage = function(a, d) {
+        this.visitGroup(a, d);
       };
       return d;
     }(p);
@@ -8666,11 +8665,11 @@ __extends = this.__extends || function(k, r) {
       Object.defineProperty(c.prototype, "id", {get:function() {
         return this._id;
       }, enumerable:!0, configurable:!0});
-      c.prototype._dispatchEvent = function(d) {
+      c.prototype._dispatchEvent = function(a) {
         if (this._eventListeners) {
-          for (var a = this._eventListeners, c = 0;c < a.length;c++) {
-            var b = a[c];
-            b.type === d && b.listener(this, d);
+          for (var c = this._eventListeners, b = 0;b < c.length;b++) {
+            var e = c[b];
+            e.type === a && e.listener(this, a);
           }
         }
       };
@@ -10690,7 +10689,7 @@ __extends = this.__extends || function(k, r) {
         }
         __extends(b, a);
         b.createEmptyVertices = function(a, b) {
-          for (var h = [], m = 0;m < b;m++) {
+          for (var h = [], g = 0;g < b;g++) {
             h.push(new a(0, 0, 0));
           }
           return h;
@@ -11967,6 +11966,8 @@ __extends = this.__extends || function(k, r) {
         this.paused = !1;
         this.viewport = null;
         this._selectedNodes = [];
+        this._isRendering = !1;
+        this._rAF = void 0;
         this._eventListeners = Object.create(null);
         this._fullScreen = !1;
         this._container = b;
@@ -12039,7 +12040,6 @@ __extends = this.__extends || function(k, r) {
             d._persistentState.onKeyUp(d, a);
           }
         }, !1);
-        this._enterRenderLoop();
       }
       a.prototype._listenForContainerSizeChanges = function() {
         var a = this._containerWidth, b = this._containerHeight;
@@ -12069,12 +12069,18 @@ __extends = this.__extends || function(k, r) {
           }
         }
       };
-      a.prototype._enterRenderLoop = function() {
-        var a = this;
-        requestAnimationFrame(function x() {
-          a.render();
-          requestAnimationFrame(x);
-        });
+      a.prototype.startRendering = function() {
+        if (!this._isRendering) {
+          this._isRendering = !0;
+          var a = this;
+          this._rAF = requestAnimationFrame(function x() {
+            a.render();
+            a._rAF = requestAnimationFrame(x);
+          });
+        }
+      };
+      a.prototype.stopRendering = function() {
+        this._isRendering && (this._isRendering = !1, cancelAnimationFrame(this._rAF));
       };
       Object.defineProperty(a.prototype, "state", {set:function(a) {
         this._state = a;
@@ -12775,26 +12781,26 @@ __extends = this.__extends || function(k, r) {
         };
         a.prototype._onWorkerMessage = function(a, g) {
           void 0 === g && (g = !0);
-          var k = a.data;
-          if ("object" === typeof k && null !== k) {
-            switch(k.type) {
+          var l = a.data;
+          if ("object" === typeof l && null !== l) {
+            switch(l.type) {
               case "player":
-                var n = b.FromArrayBuffer(k.updates.buffer);
+                var k = b.FromArrayBuffer(l.updates.buffer);
                 if (g) {
-                  this.processUpdates(n, k.assets);
+                  this.processUpdates(k, l.assets);
                 } else {
                   var m = new b;
-                  this.processUpdates(n, k.assets, m);
+                  this.processUpdates(k, l.assets, m);
                   a.result = m.toPlainObject();
                   a.handled = !0;
                 }
                 break;
               case "videoControl":
-                a.result = this.processVideoControl(k.id, k.eventType, k.data);
+                a.result = this.processVideoControl(l.id, l.eventType, l.data);
                 a.handled = !0;
                 break;
               case "registerFontOrImage":
-                this.processRegisterFontOrImage(k.syncId, k.symbolId, k.assetType, k.data, this._sendRegisterFontOrImageResponse.bind(this, k.requestId)), a.handled = !0;
+                this.processRegisterFontOrImage(l.syncId, l.symbolId, l.assetType, l.data, this._sendRegisterFontOrImageResponse.bind(this, l.requestId)), a.handled = !0;
             }
           }
         };
@@ -12818,51 +12824,51 @@ __extends = this.__extends || function(k, r) {
         function g(a) {
           switch(typeof a) {
             case "undefined":
-              k.writeByte(0);
+              l.writeByte(0);
               break;
             case "boolean":
-              k.writeByte(a ? 2 : 3);
+              l.writeByte(a ? 2 : 3);
               break;
             case "number":
-              k.writeByte(4);
-              k.writeDouble(a);
+              l.writeByte(4);
+              l.writeDouble(a);
               break;
             case "string":
-              k.writeByte(5);
-              k.writeUTF(a);
+              l.writeByte(5);
+              l.writeUTF(a);
               break;
             default:
               if (null === a) {
-                k.writeByte(1);
+                l.writeByte(1);
                 break;
               }
               if (Array.isArray(a) && a instanceof Int32Array) {
-                k.writeByte(6);
-                k.writeInt(a.length);
+                l.writeByte(6);
+                l.writeInt(a.length);
                 for (var f = 0;f < a.length;f++) {
                   g(a[f]);
                 }
               } else {
                 if (a instanceof Uint8Array) {
-                  k.writeByte(9), b(k, a);
+                  l.writeByte(9), b(l, a);
                 } else {
                   if ("length" in a && "buffer" in a && "littleEndian" in a) {
-                    k.writeByte(a.littleEndian ? 10 : 11), b(k, new Uint8Array(a.buffer, 0, a.length));
+                    l.writeByte(a.littleEndian ? 10 : 11), b(l, new Uint8Array(a.buffer, 0, a.length));
                   } else {
                     if (a instanceof ArrayBuffer) {
-                      k.writeByte(8), b(k, new Uint8Array(a));
+                      l.writeByte(8), b(l, new Uint8Array(a));
                     } else {
                       if (a instanceof Int32Array) {
-                        k.writeByte(12), b(k, new Uint8Array(a.buffer, a.byteOffset, a.byteLength));
+                        l.writeByte(12), b(l, new Uint8Array(a.buffer, a.byteOffset, a.byteLength));
                       } else {
                         if (a.buffer instanceof ArrayBuffer && "number" === typeof a.byteOffset) {
                           throw Error("Some unsupported TypedArray is used");
                         }
-                        k.writeByte(7);
+                        l.writeByte(7);
                         for (f in a) {
-                          k.writeUTF(f), g(a[f]);
+                          l.writeUTF(f), g(a[f]);
                         }
-                        k.writeUTF("");
+                        l.writeUTF("");
                       }
                     }
                   }
@@ -12871,9 +12877,9 @@ __extends = this.__extends || function(k, r) {
             ;
           }
         }
-        var k = new h;
+        var l = new h;
         g(a);
-        return k.getBytes();
+        return l.getBytes();
       }
       function n(a) {
         var b = new h, g = a.readInt();
@@ -13055,8 +13061,14 @@ __extends = this.__extends || function(k, r) {
       var b = k.ArrayUtilities.DataBuffer, v = function(k) {
         function a(a) {
           k.call(this, a);
+          this.alwaysRenderFrame = this.ignoreTimestamps = !1;
+          this.cpuTimeRendering = this.cpuTimeUpdates = 0;
+          this.onComplete = null;
         }
         __extends(a, k);
+        Object.defineProperty(a.prototype, "cpuTime", {get:function() {
+          return this.cpuTimeUpdates + this.cpuTimeRendering;
+        }, enumerable:!0, configurable:!0});
         a.prototype.playUrl = function(a) {
           var b = new XMLHttpRequest;
           b.open("GET", a, !0);
@@ -13082,20 +13094,24 @@ __extends = this.__extends || function(k, r) {
         };
         a.prototype._parseNext = function() {
           if (0 !== this._parser.readNextRecord()) {
-            var a = this._parser.currentTimestamp - this._lastTimestamp;
+            var a = this._runRecord.bind(this), b = this._parser.currentTimestamp - this._lastTimestamp;
             this._lastTimestamp = this._parser.currentTimestamp;
-            setTimeout(this._runRecord.bind(this), a);
+            5 > b ? Promise.resolve(void 0).then(a) : this.ignoreTimestamps ? setTimeout(a) : setTimeout(a, b);
+          } else {
+            if (this.onComplete) {
+              this.onComplete();
+            }
           }
         };
         a.prototype._runRecord = function() {
-          var a;
+          var a, g = performance.now();
           switch(this._parser.currentType) {
             case 1:
             ;
             case 2:
               a = this._parser.parsePlayerCommand();
-              var g = 2 === this._parser.currentType, k = b.FromArrayBuffer(a.updates.buffer);
-              g ? this.processUpdates(k, a.assets) : (g = new b, this.processUpdates(k, a.assets, g));
+              var l = 2 === this._parser.currentType, k = b.FromArrayBuffer(a.updates.buffer);
+              l ? this.processUpdates(k, a.assets) : (l = new b, this.processUpdates(k, a.assets, l));
               break;
             case 3:
               break;
@@ -13110,6 +13126,13 @@ __extends = this.__extends || function(k, r) {
             default:
               throw Error("Invalid movie record type");;
           }
+          this.cpuTimeUpdates += performance.now() - g;
+          3 === this._parser.currentType && this.alwaysRenderFrame ? requestAnimationFrame(this._renderFrameJustAfterRAF.bind(this)) : this._parseNext();
+        };
+        a.prototype._renderFrameJustAfterRAF = function() {
+          var a = performance.now();
+          this.easel.render();
+          this.cpuTimeRendering += performance.now() - a;
           this._parseNext();
         };
         return a;

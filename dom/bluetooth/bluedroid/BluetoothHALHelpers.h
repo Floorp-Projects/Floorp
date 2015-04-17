@@ -783,22 +783,97 @@ Convert(btrc_remote_features_t aIn, unsigned long& aOut)
 inline nsresult
 Convert(int aIn, BluetoothGattStatus& aOut)
 {
-  /**
-   * Currently we only map bluedroid's GATT status into GATT_STATUS_SUCCESS and
-   * GATT_STATUS_ERROR. This function needs to be revised if we want to support
-   * specific error status.
-   */
-  if (!aIn) {
-    aOut = GATT_STATUS_SUCCESS;
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const BluetoothGattStatus sGattStatus[] = {
+    CONVERT(0x0000, GATT_STATUS_SUCCESS),
+    CONVERT(0x0001, GATT_STATUS_INVALID_HANDLE),
+    CONVERT(0x0002, GATT_STATUS_READ_NOT_PERMITTED),
+    CONVERT(0x0003, GATT_STATUS_WRITE_NOT_PERMITTED),
+    CONVERT(0x0004, GATT_STATUS_INVALID_PDU),
+    CONVERT(0x0005, GATT_STATUS_INSUFFICIENT_AUTHENTICATION),
+    CONVERT(0x0006, GATT_STATUS_REQUEST_NOT_SUPPORTED),
+    CONVERT(0x0007, GATT_STATUS_INVALID_OFFSET),
+    CONVERT(0x0008, GATT_STATUS_INSUFFICIENT_AUTHORIZATION),
+    CONVERT(0x0009, GATT_STATUS_PREPARE_QUEUE_FULL),
+    CONVERT(0x000a, GATT_STATUS_ATTRIBUTE_NOT_FOUND),
+    CONVERT(0x000b, GATT_STATUS_ATTRIBUTE_NOT_LONG),
+    CONVERT(0x000c, GATT_STATUS_INSUFFICIENT_ENCRYPTION_KEY_SIZE),
+    CONVERT(0x000d, GATT_STATUS_INVALID_ATTRIBUTE_LENGTH),
+    CONVERT(0x000e, GATT_STATUS_UNLIKELY_ERROR),
+    CONVERT(0x000f, GATT_STATUS_INSUFFICIENT_ENCRYPTION),
+    CONVERT(0x0010, GATT_STATUS_UNSUPPORTED_GROUP_TYPE),
+    CONVERT(0x0011, GATT_STATUS_INSUFFICIENT_RESOURCES)
+  };
+  if (static_cast<uint32_t>(aIn) >= MOZ_ARRAY_LENGTH(sGattStatus)) {
+    aOut = GATT_STATUS_UNKNOWN_ERROR;
   } else {
-    aOut = GATT_STATUS_ERROR;
+    aOut = sGattStatus[aIn];
   }
-
   return NS_OK;
 }
 
 nsresult
 Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut);
+
+inline nsresult
+Convert(int aIn, BluetoothGattCharProp& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const uint8_t sGattCharPropBit[] = {
+    CONVERT(0, GATT_CHAR_PROP_BIT_BROADCAST),
+    CONVERT(1, GATT_CHAR_PROP_BIT_READ),
+    CONVERT(2, GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE),
+    CONVERT(3, GATT_CHAR_PROP_BIT_WRITE),
+    CONVERT(4, GATT_CHAR_PROP_BIT_NOTIFY),
+    CONVERT(5, GATT_CHAR_PROP_BIT_INDICATE),
+    CONVERT(6, GATT_CHAR_PROP_BIT_SIGNED_WRITE),
+    CONVERT(7, GATT_CHAR_PROP_BIT_EXTENDED_PROPERTIES)
+  };
+  aOut = BLUETOOTH_EMPTY_GATT_CHAR_PROP;
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sGattCharPropBit); i++) {
+    if (aIn & (1 << i)) {
+      aOut |= sGattCharPropBit[i];
+    }
+  }
+  return NS_OK;
+}
+
+inline nsresult
+Convert(BluetoothGattAuthReq aIn, int& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const int sGattAuthReq[] = {
+    CONVERT(GATT_AUTH_REQ_NONE, 0),
+    CONVERT(GATT_AUTH_REQ_NO_MITM, 1),
+    CONVERT(GATT_AUTH_REQ_MITM, 2),
+    CONVERT(GATT_AUTH_REQ_SIGNED_NO_MITM, 3),
+    CONVERT(GATT_AUTH_REQ_SIGNED_MITM, 4)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sGattAuthReq)) {
+    aOut = GATT_AUTH_REQ_NONE; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sGattAuthReq[aIn];
+  return NS_OK;
+}
+
+inline nsresult
+Convert(BluetoothGattWriteType aIn, int& aOut)
+{
+  /* Reference: $B2G/external/bluetooth/bluedroid/stack/include/gatt_api.h */
+  static const int sGattWriteType[] = {
+    CONVERT(GATT_WRITE_TYPE_NO_RESPONSE, 1),
+    CONVERT(GATT_WRITE_TYPE_NORMAL, 2),
+    CONVERT(GATT_WRITE_TYPE_PREPARE, 3),
+    CONVERT(GATT_WRITE_TYPE_SIGNED, 4)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sGattWriteType)) {
+    aOut = GATT_WRITE_TYPE_NORMAL; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sGattWriteType[aIn];
+  return NS_OK;
+}
 
 #if ANDROID_VERSION >= 19
 nsresult

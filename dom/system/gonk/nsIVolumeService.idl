@@ -8,7 +8,7 @@
 
 interface nsIArray;
 
-[scriptable, uuid(c31b182c-61a3-449c-bba8-fd45044499c2)]
+[scriptable, uuid(879874c6-5532-437a-bf76-703d0c2e7e77)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
@@ -18,6 +18,8 @@ interface nsIVolumeService : nsISupports
     nsIVolumeMountLock createMountLock(in DOMString volName);
 
     nsIArray getVolumeNames();
+
+    void Dump(in DOMString label);
 
     /* for test case only to simulate sdcard insertion/removal */
     void createFakeVolume(in DOMString name, in DOMString path);

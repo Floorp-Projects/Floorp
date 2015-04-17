@@ -80,30 +80,28 @@ public:
   void ReadCharacteristic(int aConnId,
                           const BluetoothGattServiceId& aServiceId,
                           const BluetoothGattId& aCharId,
-                          int aAuthReq,
+                          BluetoothGattAuthReq aAuthReq,
                           BluetoothGattClientResultHandler* aRes);
   void WriteCharacteristic(int aConnId,
                            const BluetoothGattServiceId& aServiceId,
                            const BluetoothGattId& aCharId,
-                           int aWriteType,
-                           int aLen,
-                           int aAuthReq,
-                           const ArrayBuffer& aValue,
+                           BluetoothGattWriteType aWriteType,
+                           BluetoothGattAuthReq aAuthReq,
+                           const nsTArray<uint8_t>& aValue,
                            BluetoothGattClientResultHandler* aRes);
   void ReadDescriptor(int aConnId,
                       const BluetoothGattServiceId& aServiceId,
                       const BluetoothGattId& aCharId,
                       const BluetoothGattId& aDescriptorId,
-                      int aAuthReq,
+                      BluetoothGattAuthReq aAuthReq,
                       BluetoothGattClientResultHandler* aRes);
   void WriteDescriptor(int aConnId,
                        const BluetoothGattServiceId& aServiceId,
                        const BluetoothGattId& aCharId,
                        const BluetoothGattId& aDescriptorId,
-                       int aWriteType,
-                       int aLen,
-                       int aAuthReq,
-                       const ArrayBuffer& aValue,
+                       BluetoothGattWriteType aWriteType,
+                       BluetoothGattAuthReq aAuthReq,
+                       const nsTArray<uint8_t>& aValue,
                        BluetoothGattClientResultHandler* aRes);
 
   /* Execute / Abort Prepared Write*/

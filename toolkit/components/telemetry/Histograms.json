@@ -7492,19 +7492,20 @@
     "description": "Stores 1 every time the URL is copied or shared."
   },
   "LOOP_TWO_WAY_MEDIA_CONN_LENGTH": {
+    "alert_emails": ["firefox-dev@mozilla.org", "dmose@mozilla.com"],
     "expires_in_version": "43",
-    "kind": "count",
-    "keyed": true,
+    "kind": "enumerated",
+    "n_values": 8,
     "releaseChannelCollection": "opt-out",
-    "description": "Connection length for bi-directionally connected media"
+    "description": "Connection length for bi-directionally connected media (0=SHORTER_THAN_10S, 1=BETWEEN_10S_AND_30S, 2=BETWEEN_30S_AND_5M, 3=MORE_THAN_5M)"
   },
   "LOOP_SHARING_STATE_CHANGE": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
     "expires_in_version": "43",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-in",
-    "description": "Number of times the sharing feature has been enabled and disabled"
+    "kind": "enumerated",
+    "n_values": 8,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of times the sharing feature has been enabled and disabled (0=WINDOW_ENABLED, 1=WINDOW_DISABLED, 2=BROWSER_ENABLED, 3=BROWSER_DISABLED)"
   },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",

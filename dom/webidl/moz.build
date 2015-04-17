@@ -792,6 +792,7 @@ if CONFIG['MOZ_B2G_BT']:
         GENERATED_EVENTS_WEBIDL_FILES += [
             'BluetoothAdapterEvent.webidl',
             'BluetoothAttributeEvent.webidl',
+            'BluetoothGattCharacteristicEvent.webidl',
             'BluetoothPairingEvent.webidl',
         ]
     else:
