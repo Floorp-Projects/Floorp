@@ -482,6 +482,10 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
  * This requires including paint_listener.js. Tests must call
  * DOMWindowUtils.restoreNormalRefresh() before finishing, if they use this
  * function.
+ *
+ * If no callback is provided, the caller is assumed to have its own method of
+ * determining scroll completion and the refresh driver is not automatically
+ * restored.
  */
 function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWindow) {
   aWindow = aWindow || window;
@@ -508,6 +512,10 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
     // to be added yet.
     setTimeout(function() {
       utils.advanceTimeAndRefresh(1000);
+
+      if (!aCallback)
+        return;
+
       aWindow.waitForAllPaintsFlushed(function() {
         utils.restoreNormalRefresh();
         aCallback();
