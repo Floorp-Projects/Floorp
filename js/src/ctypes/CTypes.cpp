@@ -1235,6 +1235,15 @@ ArgumentConvError(JSContext* cx, HandleValue actual, const char* funStr,
 }
 
 static bool
+ArgumentLengthError(JSContext* cx, const char* fun, const char* count,
+                    const char* s)
+{
+  JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                       CTYPESMSG_WRONG_ARG_LENGTH, fun, count, s);
+  return false;
+}
+
+static bool
 ArrayLengthMismatch(JSContext* cx, unsigned expectedLength, HandleObject arrObj,
                     unsigned actualLength, HandleValue actual,
                     ConversionType convType)
@@ -3834,8 +3843,7 @@ CType::ConstructBasic(JSContext* cx,
                       const CallArgs& args)
 {
   if (args.length() > 1) {
-    JS_ReportError(cx, "CType constructor takes zero or one argument");
-    return false;
+    return ArgumentLengthError(cx, "CType constructor", "at most one", "");
   }
 
   // construct a CData object
@@ -4357,8 +4365,7 @@ CType::CreateArray(JSContext* cx, unsigned argc, jsval* vp)
 
   // Construct and return a new ArrayType object.
   if (args.length() > 1) {
-    JS_ReportError(cx, "array takes zero or one argument");
-    return false;
+    return ArgumentLengthError(cx, "CType.prototype.array", "at most one", "");
   }
 
   // Convert the length argument to a size_t.
@@ -4497,8 +4504,7 @@ ABI::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "toSource takes zero arguments");
-    return false;
+    return ArgumentLengthError(cx, "ABI.prototype.toSource", "no", "s");
   }
 
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
@@ -4542,8 +4548,7 @@ PointerType::Create(JSContext* cx, unsigned argc, jsval* vp)
   CallArgs args = CallArgsFromVp(argc, vp);
   // Construct and return a new PointerType object.
   if (args.length() != 1) {
-    JS_ReportError(cx, "PointerType takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "PointerType", "one", "");
   }
 
   jsval arg = args[0];
@@ -4608,8 +4613,8 @@ PointerType::ConstructData(JSContext* cx,
   }
 
   if (args.length() > 3) {
-    JS_ReportError(cx, "constructor takes 0, 1, 2, or 3 arguments");
-    return false;
+    return ArgumentLengthError(cx, "PointerType constructor", "0, 1, 2, or 3",
+                               "s");
   }
 
   RootedObject result(cx, CData::Create(cx, obj, NullPtr(), nullptr, true));
@@ -4643,8 +4648,7 @@ PointerType::ConstructData(JSContext* cx,
   //
   if (!looksLikeClosure) {
     if (args.length() != 1) {
-      JS_ReportError(cx, "first argument must be a function");
-      return false;
+      return ArgumentLengthError(cx, "FunctionType constructor", "one", "");
     }
     return ExplicitConvert(cx, args[0], obj, CData::GetData(result),
                            ConversionType::Construct);
@@ -4845,8 +4849,7 @@ ArrayType::Create(JSContext* cx, unsigned argc, jsval* vp)
   CallArgs args = CallArgsFromVp(argc, vp);
   // Construct and return a new ArrayType object.
   if (args.length() < 1 || args.length() > 2) {
-    JS_ReportError(cx, "ArrayType takes one or two arguments");
-    return false;
+    return ArgumentLengthError(cx, "ArrayType", "one or two", "s");
   }
 
   if (args[0].isPrimitive() ||
@@ -4946,14 +4949,14 @@ ArrayType::ConstructData(JSContext* cx,
   // with a length argument, or with an actual JS array.
   if (CType::IsSizeDefined(obj)) {
     if (args.length() > 1) {
-      JS_ReportError(cx, "constructor takes zero or one argument");
-      return false;
+      return ArgumentLengthError(cx, "size defined ArrayType constructor",
+                                 "at most one", "");
     }
 
   } else {
     if (args.length() != 1) {
-      JS_ReportError(cx, "constructor takes one argument");
-      return false;
+      return ArgumentLengthError(cx, "size undefined ArrayType constructor",
+                                 "one", "");
     }
 
     RootedObject baseType(cx, GetBaseType(obj));
@@ -5268,8 +5271,8 @@ ArrayType::AddressOfElement(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (args.length() != 1) {
-    JS_ReportError(cx, "addressOfElement takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "ArrayType.prototype.addressOfElement",
+                               "one", "");
   }
 
   RootedObject baseType(cx, GetBaseType(typeObj));
@@ -5389,8 +5392,7 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
 
   // Construct and return a new StructType object.
   if (args.length() < 1 || args.length() > 2) {
-    JS_ReportError(cx, "StructType takes one or two arguments");
-    return false;
+    return ArgumentLengthError(cx, "StructType", "one or two", "s");
   }
 
   jsval name = args[0];
@@ -5678,8 +5680,7 @@ StructType::Define(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (args.length() != 1) {
-    JS_ReportError(cx, "define takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "StructType.prototype.define", "one", "");
   }
 
   jsval arg = args[0];
@@ -5766,9 +5767,14 @@ StructType::ConstructData(JSContext* cx,
     return true;
   }
 
-  JS_ReportError(cx, "constructor takes 0, 1, or %u arguments",
-    fields->count());
-  return false;
+  size_t count = fields->count();
+  if (count >= 2) {
+    char fieldLengthStr[32];
+    JS_snprintf(fieldLengthStr, 32, "0, 1, or %u", count);
+    return ArgumentLengthError(cx, "StructType constructor", fieldLengthStr,
+                               "s");
+  }
+  return ArgumentLengthError(cx, "StructType constructor", "at most one", "");
 }
 
 const FieldInfoHash*
@@ -5964,8 +5970,8 @@ StructType::AddressOfField(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (args.length() != 1) {
-    JS_ReportError(cx, "addressOfField takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "StructType.prototype.addressOfField",
+                               "one", "");
   }
 
   if (!args[0].isString()) {
@@ -6309,8 +6315,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
   // Construct and return a new FunctionType object.
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() < 2 || args.length() > 3) {
-    JS_ReportError(cx, "FunctionType takes two or three arguments");
-    return false;
+    return ArgumentLengthError(cx, "FunctionType", "two or three", "s");
   }
 
   AutoValueVector argTypes(cx);
@@ -7155,8 +7160,7 @@ CData::Address(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "address takes zero arguments");
-    return false;
+    return ArgumentLengthError(cx, "CData.prototype.address", "no", "s");
   }
 
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -7190,8 +7194,7 @@ CData::Cast(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 2) {
-    JS_ReportError(cx, "cast takes two arguments");
-    return false;
+    return ArgumentLengthError(cx, "ctypes.cast", "two", "s");
   }
 
   if (args[0].isPrimitive() || !CData::IsCData(&args[0].toObject())) {
@@ -7231,8 +7234,7 @@ CData::GetRuntime(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
-    JS_ReportError(cx, "getRuntime takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "ctypes.getRuntime", "one", "");
   }
 
   if (args[0].isPrimitive() || !CType::IsCType(&args[0].toObject())) {
@@ -7264,8 +7266,11 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc, js
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "readString takes zero arguments");
-    return false;
+    if (inflateUTF8 == JS::UTF8CharsToNewTwoByteCharsZ) {
+      return ArgumentLengthError(cx, "CData.prototype.readString", "no", "s");
+    }
+    return ArgumentLengthError(cx, "CData.prototype.readStringReplaceMalformed",
+                               "no", "s");
   }
 
   JSObject* obj = CDataFinalizer::GetCData(cx, JS_THIS_OBJECT(cx, vp));
@@ -7380,8 +7385,7 @@ CData::ToSource(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "toSource takes zero arguments");
-    return false;
+    return ArgumentLengthError(cx, "CData.prototype.toSource", "no", "s");
   }
 
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
@@ -7609,8 +7613,7 @@ CDataFinalizer::Construct(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   if (args.length() != 2) {
-    JS_ReportError(cx, "CDataFinalizer takes 2 arguments");
-    return false;
+    return ArgumentLengthError(cx, "CDataFinalizer constructor", "two", "s");
   }
 
   JS::HandleValue valCodePtr = args[1];
@@ -7824,8 +7827,8 @@ CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "CDataFinalizer.prototype.forget takes no arguments");
-    return false;
+    return ArgumentLengthError(cx, "CDataFinalizer.prototype.forget", "no",
+                               "s");
   }
 
   JS::Rooted<JSObject*> obj(cx, args.thisv().toObjectOrNull());
@@ -7872,8 +7875,8 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
-    JS_ReportError(cx, "CDataFinalizer.prototype.dispose takes no arguments");
-    return false;
+    return ArgumentLengthError(cx, "CDataFinalizer.prototype.dispose", "no",
+                               "s");
   }
 
   RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -8046,8 +8049,12 @@ Int64Base::ToString(JSContext* cx,
                     bool isUnsigned)
 {
   if (args.length() > 1) {
-    JS_ReportError(cx, "toString takes zero or one argument");
-    return false;
+    if (isUnsigned) {
+      return ArgumentLengthError(cx, "UInt64.prototype.toString",
+                                 "at most one", "");
+    }
+    return ArgumentLengthError(cx, "Int64.prototype.toString",
+                               "at most one", "");
   }
 
   int radix = 10;
@@ -8083,8 +8090,10 @@ Int64Base::ToSource(JSContext* cx,
                     bool isUnsigned)
 {
   if (args.length() != 0) {
-    JS_ReportError(cx, "toSource takes zero arguments");
-    return false;
+    if (isUnsigned) {
+      return ArgumentLengthError(cx, "UInt64.prototype.toSource", "no", "s");
+    }
+    return ArgumentLengthError(cx, "Int64.prototype.toSource", "no", "s");
   }
 
   // Return a decimal string suitable for constructing the number.
@@ -8115,8 +8124,7 @@ Int64::Construct(JSContext* cx,
 
   // Construct and return a new Int64 object.
   if (args.length() != 1) {
-    JS_ReportError(cx, "Int64 takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "Int64 constructor", "one", "");
   }
 
   int64_t i = 0;
@@ -8179,8 +8187,10 @@ bool
 Int64::Compare(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 2 ||
-      args[0].isPrimitive() ||
+  if (args.length() != 2) {
+    return ArgumentLengthError(cx, "Int64.compare", "two", "s");
+  }
+  if (args[0].isPrimitive() ||
       args[1].isPrimitive() ||
       !Int64::IsInt64(&args[0].toObject()) ||
       !Int64::IsInt64(&args[1].toObject())) {
@@ -8212,8 +8222,10 @@ bool
 Int64::Lo(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 1 || args[0].isPrimitive() ||
-      !Int64::IsInt64(&args[0].toObject())) {
+  if (args.length() != 1) {
+    return ArgumentLengthError(cx, "Int64.lo", "one", "");
+  }
+  if (args[0].isPrimitive() || !Int64::IsInt64(&args[0].toObject())) {
     JS_ReportError(cx, "lo takes one Int64 argument");
     return false;
   }
@@ -8230,8 +8242,10 @@ bool
 Int64::Hi(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 1 || args[0].isPrimitive() ||
-      !Int64::IsInt64(&args[0].toObject())) {
+  if (args.length() != 1) {
+    return ArgumentLengthError(cx, "Int64.hi", "one", "");
+  }
+  if (args[0].isPrimitive() || !Int64::IsInt64(&args[0].toObject())) {
     JS_ReportError(cx, "hi takes one Int64 argument");
     return false;
   }
@@ -8249,8 +8263,7 @@ Int64::Join(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 2) {
-    JS_ReportError(cx, "join takes two arguments");
-    return false;
+    return ArgumentLengthError(cx, "Int64.join", "two", "s");
   }
 
   int32_t hi;
@@ -8286,8 +8299,7 @@ UInt64::Construct(JSContext* cx,
 
   // Construct and return a new UInt64 object.
   if (args.length() != 1) {
-    JS_ReportError(cx, "UInt64 takes one argument");
-    return false;
+    return ArgumentLengthError(cx, "UInt64 constructor", "one", "");
   }
 
   uint64_t u = 0;
@@ -8350,8 +8362,10 @@ bool
 UInt64::Compare(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 2 ||
-      args[0].isPrimitive() ||
+  if (args.length() != 2) {
+    return ArgumentLengthError(cx, "UInt64.compare", "two", "s");
+  }
+  if (args[0].isPrimitive() ||
       args[1].isPrimitive() ||
       !UInt64::IsUInt64(&args[0].toObject()) ||
       !UInt64::IsUInt64(&args[1].toObject())) {
@@ -8379,8 +8393,10 @@ bool
 UInt64::Lo(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 1 || args[0].isPrimitive() ||
-      !UInt64::IsUInt64(&args[0].toObject())) {
+  if (args.length() != 1) {
+    return ArgumentLengthError(cx, "UInt64.lo", "one", "");
+  }
+  if (args[0].isPrimitive() || !UInt64::IsUInt64(&args[0].toObject())) {
     JS_ReportError(cx, "lo takes one UInt64 argument");
     return false;
   }
@@ -8397,8 +8413,10 @@ bool
 UInt64::Hi(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (args.length() != 1 || args[0].isPrimitive() ||
-      !UInt64::IsUInt64(&args[0].toObject())) {
+  if (args.length() != 1) {
+    return ArgumentLengthError(cx, "UInt64.hi", "one", "");
+  }
+  if (args[0].isPrimitive() || !UInt64::IsUInt64(&args[0].toObject())) {
     JS_ReportError(cx, "hi takes one UInt64 argument");
     return false;
   }
@@ -8416,8 +8434,7 @@ UInt64::Join(JSContext* cx, unsigned argc, jsval* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 2) {
-    JS_ReportError(cx, "join takes two arguments");
-    return false;
+    return ArgumentLengthError(cx, "UInt64.join", "two", "s");
   }
 
   uint32_t hi;
