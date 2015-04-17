@@ -313,35 +313,11 @@ InterceptedChannelContent::FinishSynthesizedResponse()
 
   EnsureSynthesizedResponse();
 
-  nsresult rv = nsInputStreamPump::Create(getter_AddRefs(mStoragePump), mSynthesizedInput,
-                                          int64_t(-1), int64_t(-1), 0, 0, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    mSynthesizedInput->Close();
-    return rv;
-  }
+  mChannel->OverrideWithSynthesizedResponse(mSynthesizedResponseHead.ref(),
+                                            mSynthesizedInput,
+                                            mStreamListener);
 
   mResponseBody = nullptr;
-
-  rv = mStoragePump->AsyncRead(mStreamListener, nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Intercepted responses should already be decoded.
-  mChannel->SetApplyConversion(false);
-
-  // In our current implementation, the FetchEvent handler will copy the
-  // response stream completely into the pipe backing the input stream so we
-  // can treat the available as the length of the stream.
-  int64_t streamLength;
-  uint64_t available;
-  rv = mSynthesizedInput->Available(&available);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    streamLength = -1;
-  } else {
-    streamLength = int64_t(available);
-  }
-
-  mChannel->OverrideWithSynthesizedResponse(mSynthesizedResponseHead.ref(), mStoragePump, streamLength);
-
   mChannel = nullptr;
   mStreamListener = nullptr;
   return NS_OK;
