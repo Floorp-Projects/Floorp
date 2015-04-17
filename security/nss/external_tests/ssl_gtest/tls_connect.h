@@ -39,8 +39,11 @@ class TlsConnectTestBase : public ::testing::Test {
 
   // Initialize client and server.
   void Init();
-  // Re-initialize client and server.
-  void Reset();
+  // Re-initialize client and server with the default RSA cert.
+  void ResetRsa();
+  // Re-initialize client and server with an ECDSA cert on the server
+  // and some ECDHE suites.
+  void ResetEcdsa();
   // Make sure TLS is configured for a connection.
   void EnsureTlsSetup();
 
@@ -51,7 +54,7 @@ class TlsConnectTestBase : public ::testing::Test {
   // Connect and expect it to fail.
   void ConnectExpectFail();
 
-  void EnableSomeECDHECiphers();
+  void EnableSomeEcdheCiphers();
   void ConfigureSessionCache(SessionResumptionMode client,
                              SessionResumptionMode server);
   void CheckResumption(SessionResumptionMode expected);
@@ -65,6 +68,9 @@ class TlsConnectTestBase : public ::testing::Test {
   TlsAgent* server_;
   uint16_t version_;
   std::vector<std::vector<uint8_t>> session_ids_;
+
+ private:
+  void Reset(const std::string& server_name, SSLKEAType kea);
 };
 
 // A TLS-only test base.
