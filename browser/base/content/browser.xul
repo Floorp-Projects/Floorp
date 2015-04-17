@@ -831,7 +831,7 @@
                 <image id="readinglist-addremove-button"
                        class="urlbar-icon"
                        hidden="true"
-                       onclick="ReadingListUI.togglePageByBrowser(gBrowser.selectedBrowser);"/>
+                       onclick="ReadingListUI.buttonClick(event);"/>
                 <image id="reader-mode-button"
                        class="urlbar-icon"
                        hidden="true"

@@ -36,9 +36,7 @@ function* enterInvalidFilter(inspector, computedView) {
 
   let onRefreshed = inspector.once("computed-view-refreshed");
   searchbar.focus();
-  for each (let c in searchTerm) {
-    EventUtils.synthesizeKey(c, {}, computedView.styleWindow);
-  }
+  synthesizeKeys(searchTerm, computedView.styleWindow)
   yield onRefreshed;
 }
 

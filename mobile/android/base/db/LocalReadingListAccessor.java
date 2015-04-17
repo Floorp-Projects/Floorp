@@ -157,7 +157,6 @@ public class LocalReadingListAccessor implements ReadingListAccessor {
 
     @Override
     public void removeReadingListItemWithURL(final ContentResolver cr, String uri) {
-        uri = stripURI(uri);
         cr.delete(mReadingListUriWithProfile,
                   ReadingListItems.URL + " = ? OR " + ReadingListItems.RESOLVED_URL + " = ?",
                   new String[]{ uri, uri });

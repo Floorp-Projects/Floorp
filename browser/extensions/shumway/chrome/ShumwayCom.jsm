@@ -39,10 +39,77 @@ function getBoolPref(pref, def) {
   }
 }
 
+function getCharPref(pref, def) {
+  try {
+    return Services.prefs.getCharPref(pref);
+  } catch (ex) {
+    return def;
+  }
+}
+
 function log(aMsg) {
   let msg = 'ShumwayCom.js: ' + (aMsg.join ? aMsg.join('') : aMsg);
   Services.console.logStringMessage(msg);
   dump(msg + '\n');
+}
+
+function sanitizeTelemetryArgs(args) {
+  var request = {
+    topic: String(args.topic)
+  };
+  switch (request.topic) {
+    case 'firstFrame':
+      break;
+    case 'parseInfo':
+      request.info = {
+        parseTime: +args.parseTime,
+        size: +args.bytesTotal,
+        swfVersion: args.swfVersion | 0,
+        frameRate: +args.frameRate,
+        width: args.width | 0,
+        height: args.height | 0,
+        bannerType: args.bannerType | 0,
+        isAvm2: !!args.isAvm2
+      };
+      break;
+    case 'feature':
+      request.featureType = args.feature | 0;
+      break;
+    case 'error':
+      request.errorType = args.error | 0;
+      break;
+  }
+  return request;
+}
+
+function sanitizeLoadFileArgs(args) {
+  return {
+    url: String(args.url || ''),
+    checkPolicyFile: !!args.checkPolicyFile,
+    sessionId: +args.sessionId,
+    limit: +args.limit || 0,
+    mimeType: String(args.mimeType || ''),
+    postData: args.postData || null
+  };
+}
+
+function sanitizeExternalComArgs(args) {
+  var request = {
+    action: String(args.action)
+  };
+  switch (request.action) {
+    case 'eval':
+      request.expression = String(args.expression);
+      break;
+    case 'call':
+      request.expression = String(args.request);
+      break;
+    case 'register':
+    case 'unregister':
+      request.functionName = String(args.functionName);
+      break;
+  }
+  return request;
 }
 
 var ShumwayCom = {
@@ -55,11 +122,8 @@ var ShumwayCom = {
       },
 
       setFullscreen: function setFullscreen(value) {
+        value = !!value;
         callbacks.sendMessage('setFullscreen', value, false);
-      },
-
-      endActivation: function endActivation() {
-        callbacks.sendMessage('endActivation', null, false);
       },
 
       fallback: function fallback() {
@@ -81,7 +145,8 @@ var ShumwayCom = {
       },
 
       reportTelemetry: function reportTelemetry(args) {
-        callbacks.sendMessage('reportTelemetry', args, false);
+        var request = sanitizeTelemetryArgs(args);
+        callbacks.sendMessage('reportTelemetry', request, false);
       },
 
       userInput: function userInput() {
@@ -94,6 +159,7 @@ var ShumwayCom = {
         function postSyncMessage(msg) {
           if (onSyncMessageCallback) {
             // the msg came from other content window
+            // waiveXrays are used due to bug 1150771.
             var reclonedMsg = Components.utils.cloneInto(Components.utils.waiveXrays(msg), content);
             var result = onSyncMessageCallback(reclonedMsg);
             // the result will be sent later to other content window
@@ -108,11 +174,14 @@ var ShumwayCom = {
       },
 
       setSyncMessageCallback: function (callback) {
+        if (callback !== null && typeof callback !== 'function') {
+          return;
+        }
         onSyncMessageCallback = callback;
       }
     };
 
-    var onSyncMessageCallback;
+    var onSyncMessageCallback = null;
 
     var shumwayComAdapter = Components.utils.cloneInto(wrapped, content, {cloneFunctions:true});
     content.ShumwayCom = shumwayComAdapter;
@@ -123,24 +192,34 @@ var ShumwayCom = {
     // up Xray wrappers.
     var wrapped = {
       externalCom: function externalCom(args) {
-        var result = String(callbacks.sendMessage('externalCom', args, true));
-        return Components.utils.cloneInto(result, content);
+        var request = sanitizeExternalComArgs(args);
+        var result = String(callbacks.sendMessage('externalCom', request, true));
+        return result;
       },
 
       loadFile: function loadFile(args) {
-        callbacks.sendMessage('loadFile', args, false);
+        var request = sanitizeLoadFileArgs(args);
+        callbacks.sendMessage('loadFile', request, false);
       },
 
       reportTelemetry: function reportTelemetry(args) {
-        callbacks.sendMessage('reportTelemetry', args, false);
+        var request = sanitizeTelemetryArgs(args);
+        callbacks.sendMessage('reportTelemetry', request, false);
       },
 
       setClipboard: function setClipboard(args) {
+        if (typeof args !== 'string') {
+          return; // ignore non-string argument
+        }
         callbacks.sendMessage('setClipboard', args, false);
       },
 
       navigateTo: function navigateTo(args) {
-        callbacks.sendMessage('navigateTo', args, false);
+        var request = {
+          url: String(args.url || ''),
+          target: String(args.target || '')
+        };
+        callbacks.sendMessage('navigateTo', request, false);
       },
 
       loadSystemResource: function loadSystemResource(id) {
@@ -172,12 +251,21 @@ var ShumwayCom = {
       },
 
       setLoadFileCallback: function (callback) {
+        if (callback !== null && typeof callback !== 'function') {
+          return;
+        }
         onLoadFileCallback = callback;
       },
       setExternalCallback: function (callback) {
+        if (callback !== null && typeof callback !== 'function') {
+          return;
+        }
         onExternalCallback = callback;
       },
       setSystemResourceCallback: function (callback) {
+        if (callback !== null && typeof callback !== 'function') {
+          return;
+        }
         onSystemResourceCallback = callback;
       }
     };
@@ -201,9 +289,9 @@ var ShumwayCom = {
       };
     }
 
-    var onSystemResourceCallback;
-    var onExternalCallback;
-    var onLoadFileCallback;
+    var onSystemResourceCallback = null;
+    var onExternalCallback = null;
+    var onLoadFileCallback = null;
 
     hooks.onLoadFileCallback = function (arg) {
       if (onLoadFileCallback) {
@@ -312,7 +400,8 @@ ShumwayChromeActions.prototype = {
       playerSettings: {
         turboMode: getBoolPref('shumway.turboMode', false),
         hud: getBoolPref('shumway.hud', false),
-        forceHidpi: getBoolPref('shumway.force_hidpi', false)
+        forceHidpi: getBoolPref('shumway.force_hidpi', false),
+        env: getCharPref('shumway.environment', 'dev')
       }
     }
   },
@@ -347,8 +436,7 @@ ShumwayChromeActions.prototype = {
     if (!this.isUserInputInProgress()) {
       return;
     }
-    log('!!navigateTo: ' + url + ' ... ' + target);
-    var embedTag = this.embedTag.wrappedJSObject;
+    var embedTag = this.embedTag;
     var window = embedTag ? embedTag.ownerDocument.defaultView : this.window;
     window.open(url, target);
   },
@@ -387,7 +475,7 @@ ShumwayChromeActions.prototype = {
   },
 
   setClipboard: function (data) {
-    if (typeof data !== 'string' || !this.isUserInputInProgress()) {
+    if (!this.isUserInputInProgress()) {
       return;
     }
 
@@ -397,8 +485,6 @@ ShumwayChromeActions.prototype = {
   },
 
   setFullscreen: function (enabled) {
-    enabled = !!enabled;
-
     if (!this.isUserInputInProgress()) {
       return;
     }
@@ -411,33 +497,17 @@ ShumwayChromeActions.prototype = {
     }
   },
 
-  endActivation: function () {
-    var event = this.document.createEvent('CustomEvent');
-    event.initCustomEvent('shumwayActivated', true, true, null);
-    this.window.dispatchEvent(event);
-  },
-
-  reportTelemetry: function (data) {
-    var topic = data.topic;
-    switch (topic) {
+  reportTelemetry: function (request) {
+    switch (request.topic) {
       case 'firstFrame':
         var time = Date.now() - this.telemetry.startTime;
         ShumwayTelemetry.onFirstFrame(time);
         break;
       case 'parseInfo':
-        ShumwayTelemetry.onParseInfo({
-          parseTime: +data.parseTime,
-          size: +data.bytesTotal,
-          swfVersion: data.swfVersion|0,
-          frameRate: +data.frameRate,
-          width: data.width|0,
-          height: data.height|0,
-          bannerType: data.bannerType|0,
-          isAvm2: !!data.isAvm2
-        });
+        ShumwayTelemetry.onParseInfo(request.info);
         break;
       case 'feature':
-        var featureType = data.feature|0;
+        var featureType = request.featureType;
         var MIN_FEATURE_TYPE = 0, MAX_FEATURE_TYPE = 999;
         if (featureType >= MIN_FEATURE_TYPE && featureType <= MAX_FEATURE_TYPE &&
           !this.telemetry.features[featureType]) {
@@ -446,7 +516,7 @@ ShumwayChromeActions.prototype = {
         }
         break;
       case 'error':
-        var errorType = data.error|0;
+        var errorType = request.errorType;
         var MIN_ERROR_TYPE = 0, MAX_ERROR_TYPE = 2;
         if (errorType >= MIN_ERROR_TYPE && errorType <= MAX_ERROR_TYPE &&
           !this.telemetry.errors[errorType]) {
@@ -462,7 +532,7 @@ ShumwayChromeActions.prototype = {
       "&rep_platform=All&target_milestone=---&version=Trunk&product=Firefox" +
       "&component=Shumway&short_desc=&comment={comment}" +
       "&bug_file_loc={url}";
-    var windowUrl = this.window.parent.wrappedJSObject.location + '';
+    var windowUrl = this.window.parent.location.href + '';
     var url = urlTemplate.split('{url}').join(encodeURIComponent(windowUrl));
     var params = {
       swf: encodeURIComponent(this.url)
@@ -489,10 +559,10 @@ ShumwayChromeActions.prototype = {
 
     // TODO check more security stuff ?
     if (!this.externalInterface) {
-      var parentWindow = this.window.parent.wrappedJSObject;
-      var embedTag = this.embedTag.wrappedJSObject;
+      var parentWindow = this.window.parent; // host page -- parent of PlayPreview frame
+      var embedTag = this.embedTag;
       this.externalInterface = new ExternalInterface(parentWindow, embedTag, function (call) {
-        this.onExternalCallback(call);
+        return this.onExternalCallback(call);
       }.bind(this));
     }
 
