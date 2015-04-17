@@ -36,10 +36,10 @@ EMEVideoDecoder::GetNodeId()
   return mProxy->GetNodeId();
 }
 
-GMPUnique<GMPVideoEncodedFrame>::Ptr
+GMPUnique<GMPVideoEncodedFrame>
 EMEVideoDecoder::CreateFrame(MediaRawData* aSample)
 {
-  GMPUnique<GMPVideoEncodedFrame>::Ptr frame = GMPVideoDecoder::CreateFrame(aSample);
+  GMPUnique<GMPVideoEncodedFrame> frame = GMPVideoDecoder::CreateFrame(aSample);
   if (frame && aSample->mCrypto.mValid) {
     static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->mCrypto);
   }
