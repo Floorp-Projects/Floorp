@@ -1357,8 +1357,9 @@ function handleUpdateFailure(update, errorCode) {
     Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS, cancelations);
     return true;
   }
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SERVICE_ERRORS)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_SERVICE_ERRORS);
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS);
   }
 
   // Replace with Array.prototype.includes when it has stabilized.
@@ -1384,6 +1385,11 @@ function handleUpdateFailure(update, errorCode) {
     writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
     return true;
   }
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SERVICE_ERRORS)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_SERVICE_ERRORS);
+  }
+
   return false;
 }
 
