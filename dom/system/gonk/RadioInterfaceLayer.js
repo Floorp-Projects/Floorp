@@ -161,7 +161,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
                                    "nsIGonkMobileConnectionService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
-                                   "@mozilla.org/cellbroadcast/gonkservice;1",
+                                   "@mozilla.org/cellbroadcast/cellbroadcastservice;1",
                                    "nsIGonkCellBroadcastService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
