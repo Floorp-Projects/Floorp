@@ -153,7 +153,7 @@ class HeaderVisitor final : public nsIHttpHeaderVisitor
   {
   }
 public:
-  HeaderVisitor(nsIInterceptedChannel* aChannel) : mChannel(aChannel)
+  explicit HeaderVisitor(nsIInterceptedChannel* aChannel) : mChannel(aChannel)
   {
   }
 
@@ -172,7 +172,7 @@ class FinishSynthesizedResponse : public nsRunnable
 {
   nsCOMPtr<nsIInterceptedChannel> mChannel;
 public:
-  FinishSynthesizedResponse(nsIInterceptedChannel* aChannel)
+  explicit FinishSynthesizedResponse(nsIInterceptedChannel* aChannel)
   : mChannel(aChannel)
   {
   }
