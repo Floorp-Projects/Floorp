@@ -973,21 +973,6 @@ public:
     static void NotifyWakeLockChanged(mozilla::jni::String::Param, mozilla::jni::String::Param);
 
 public:
-    struct NotifyXreExit_t {
-        typedef GeckoAppShell Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        static constexpr char name[] = "onXreExit";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = true;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode = mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static void NotifyXreExit();
-
-public:
     struct OpenUriExternal_t {
         typedef GeckoAppShell Owner;
         typedef bool ReturnType;
