@@ -667,21 +667,23 @@ GeckoMediaPluginServiceParent::ClonePlugin(const GMPParent* aOriginal)
 
 class NotifyObserversTask final : public nsRunnable {
 public:
-  explicit NotifyObserversTask(const char* aTopic)
+  explicit NotifyObserversTask(const char* aTopic, nsString aData = EmptyString())
     : mTopic(aTopic)
+    , mData(aData)
   {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
     MOZ_ASSERT(obsService);
     if (obsService) {
-      obsService->NotifyObservers(nullptr, mTopic, nullptr);
+      obsService->NotifyObservers(nullptr, mTopic, mData.get());
     }
     return NS_OK;
   }
 private:
   ~NotifyObserversTask() {}
   const char* mTopic;
+  const nsString mData;
 };
 
 void
@@ -763,6 +765,9 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
   if (aDeleteFromDisk && !inUse) {
     if (NS_SUCCEEDED(directory->Remove(true))) {
       mPluginsWaitingForDeletion.RemoveElement(aDirectory);
+      NS_DispatchToMainThread(new NotifyObserversTask("gmp-directory-deleted",
+                                                      nsString(aDirectory)),
+                              NS_DISPATCH_NORMAL);
     }
   }
 }
