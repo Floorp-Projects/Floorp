@@ -4,13 +4,23 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['mozjemalloc']
+DIRS += [
+    'mozalloc',
+    'fallible',
+]
 
-if CONFIG['MOZ_JEMALLOC3'] or CONFIG['MOZ_REPLACE_MALLOC']:
-    if not CONFIG['MOZ_NATIVE_JEMALLOC']:
-        DIRS += ['jemalloc']
+if not CONFIG['JS_STANDALONE']:
+    DIRS += ['volatile']
 
-DIRS += ['build']
+if CONFIG['MOZ_MEMORY']:
+    DIRS += [
+        'build',
+        'mozjemalloc',
+    ]
 
-if CONFIG['MOZ_REPLACE_MALLOC']:
-    DIRS += ['replace']
+    if CONFIG['MOZ_JEMALLOC3'] or CONFIG['MOZ_REPLACE_MALLOC']:
+        if not CONFIG['MOZ_NATIVE_JEMALLOC']:
+            DIRS += ['jemalloc']
+
+    if CONFIG['MOZ_REPLACE_MALLOC']:
+        DIRS += ['replace']

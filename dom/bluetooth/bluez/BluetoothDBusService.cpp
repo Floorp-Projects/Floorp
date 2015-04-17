@@ -4741,6 +4741,47 @@ BluetoothDBusService::GattClientReadRemoteRssiInternal(
   BluetoothReplyRunnable* aRunnable)
 {
 }
+
+void
+BluetoothDBusService::GattClientReadCharacteristicValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::GattClientWriteCharacteristicValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  const BluetoothGattWriteType& aWriteType,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::GattClientReadDescriptorValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  const BluetoothGattId& aDescriptorId,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::GattClientWriteDescriptorValueInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharacteristicId,
+  const BluetoothGattId& aDescriptorId,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+}
 #else
 // Missing in bluetooth1
 #endif

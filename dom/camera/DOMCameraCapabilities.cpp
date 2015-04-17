@@ -323,6 +323,7 @@ CameraCapabilities::CameraCapabilities(nsPIDOMWindow* aWindow,
   , mCameraControl(aCameraControl)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  MOZ_COUNT_CTOR(CameraCapabilities);
   if (mCameraControl) {
     mListener = new CameraClosedListenerProxy<CameraCapabilities>(this);
     mCameraControl->AddListener(mListener);

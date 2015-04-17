@@ -77,14 +77,15 @@ void
 BluetoothGattService::HandleCharacteristicsDiscovered(
   const BluetoothValue& aValue)
 {
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothGattId);
+  MOZ_ASSERT(aValue.type() ==
+             BluetoothValue::TArrayOfBluetoothGattCharAttribute);
 
-  const InfallibleTArray<BluetoothGattId>& characteristicIds =
-    aValue.get_ArrayOfBluetoothGattId();
+  const InfallibleTArray<BluetoothGattCharAttribute>& characteristics =
+    aValue.get_ArrayOfBluetoothGattCharAttribute();
 
-  for (uint32_t i = 0; i < characteristicIds.Length(); i++) {
+  for (uint32_t i = 0; i < characteristics.Length(); i++) {
     mCharacteristics.AppendElement(new BluetoothGattCharacteristic(
-      GetParentObject(), this, characteristicIds[i]));
+      GetParentObject(), this, characteristics[i]));
   }
 
   BluetoothGattServiceBinding::ClearCachedCharacteristicsValue(this);

@@ -1855,8 +1855,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     // Add any @page rules that are specified.
     nsTArray<nsCSSPageRule*> rules;
     nsTArray<css::ImportantRule*> importantRules;
-    nsPresContext* presContext = PresContext();
-    presContext->StyleSet()->AppendPageRules(presContext, rules);
+    PresContext()->StyleSet()->AppendPageRules(rules);
     for (uint32_t i = 0, i_end = rules.Length(); i != i_end; ++i) {
       ruleWalker.Forward(rules[i]);
       css::ImportantRule* importantRule = rules[i]->GetImportantRule();
@@ -1916,30 +1915,30 @@ nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
 #endif
 
 bool
-nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
-                                nsTArray<nsFontFaceRuleContainer>& aArray)
+nsStyleSet::AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray)
 {
   NS_ENSURE_FALSE(mInShutdown, false);
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
+  nsPresContext* presContext = PresContext();
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
       continue;
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
-    if (ruleProc && !ruleProc->AppendFontFaceRules(aPresContext, aArray))
+    if (ruleProc && !ruleProc->AppendFontFaceRules(presContext, aArray))
       return false;
   }
   return true;
 }
 
 nsCSSKeyframesRule*
-nsStyleSet::KeyframesRuleForName(nsPresContext* aPresContext,
-                                 const nsString& aName)
+nsStyleSet::KeyframesRuleForName(const nsString& aName)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
+  nsPresContext* presContext = PresContext();
   for (uint32_t i = ArrayLength(gCSSSheetTypes); i-- != 0; ) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
       continue;
@@ -1948,7 +1947,7 @@ nsStyleSet::KeyframesRuleForName(nsPresContext* aPresContext,
     if (!ruleProc)
       continue;
     nsCSSKeyframesRule* result =
-      ruleProc->KeyframesRuleForName(aPresContext, aName);
+      ruleProc->KeyframesRuleForName(presContext, aName);
     if (result)
       return result;
   }
@@ -1956,12 +1955,12 @@ nsStyleSet::KeyframesRuleForName(nsPresContext* aPresContext,
 }
 
 nsCSSCounterStyleRule*
-nsStyleSet::CounterStyleRuleForName(nsPresContext* aPresContext,
-                                    const nsAString& aName)
+nsStyleSet::CounterStyleRuleForName(const nsAString& aName)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
+  nsPresContext* presContext = PresContext();
   for (uint32_t i = ArrayLength(gCSSSheetTypes); i-- != 0; ) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
       continue;
@@ -1970,7 +1969,7 @@ nsStyleSet::CounterStyleRuleForName(nsPresContext* aPresContext,
     if (!ruleProc)
       continue;
     nsCSSCounterStyleRule *result =
-      ruleProc->CounterStyleRuleForName(aPresContext, aName);
+      ruleProc->CounterStyleRuleForName(presContext, aName);
     if (result)
       return result;
   }
@@ -1978,17 +1977,18 @@ nsStyleSet::CounterStyleRuleForName(nsPresContext* aPresContext,
 }
 
 bool
-nsStyleSet::AppendFontFeatureValuesRules(nsPresContext* aPresContext,
+nsStyleSet::AppendFontFeatureValuesRules(
                                  nsTArray<nsCSSFontFeatureValuesRule*>& aArray)
 {
   NS_ENSURE_FALSE(mInShutdown, false);
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
+  nsPresContext* presContext = PresContext();
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
     if (ruleProc &&
-        !ruleProc->AppendFontFeatureValuesRules(aPresContext, aArray))
+        !ruleProc->AppendFontFeatureValuesRules(presContext, aArray))
     {
       return false;
     }
@@ -2003,7 +2003,7 @@ nsStyleSet::GetFontFeatureValuesLookup()
     mInitFontFeatureValuesLookup = false;
 
     nsTArray<nsCSSFontFeatureValuesRule*> rules;
-    AppendFontFeatureValuesRules(PresContext(), rules);
+    AppendFontFeatureValuesRules(rules);
 
     mFontFeatureValuesLookup = new gfxFontFeatureValueSet();
 
@@ -2031,32 +2031,32 @@ nsStyleSet::GetFontFeatureValuesLookup()
 }
 
 bool
-nsStyleSet::AppendPageRules(nsPresContext* aPresContext,
-                            nsTArray<nsCSSPageRule*>& aArray)
+nsStyleSet::AppendPageRules(nsTArray<nsCSSPageRule*>& aArray)
 {
   NS_ENSURE_FALSE(mInShutdown, false);
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
+  nsPresContext* presContext = PresContext();
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
       continue;
     nsCSSRuleProcessor* ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
-    if (ruleProc && !ruleProc->AppendPageRules(aPresContext, aArray))
+    if (ruleProc && !ruleProc->AppendPageRules(presContext, aArray))
       return false;
   }
   return true;
 }
 
 void
-nsStyleSet::BeginShutdown(nsPresContext* aPresContext)
+nsStyleSet::BeginShutdown()
 {
   mInShutdown = 1;
   mRoots.Clear(); // no longer valid, since we won't keep it up to date
 }
 
 void
-nsStyleSet::Shutdown(nsPresContext* aPresContext)
+nsStyleSet::Shutdown()
 {
   mRuleTree->Destroy();
   mRuleTree = nullptr;
@@ -2074,8 +2074,7 @@ nsStyleSet::Shutdown(nsPresContext* aPresContext)
 static const uint32_t kGCInterval = 300;
 
 void
-nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
-                                        nsStyleContext* aStyleContext)
+nsStyleSet::NotifyStyleContextDestroyed(nsStyleContext* aStyleContext)
 {
   if (mInShutdown)
     return;
@@ -2223,8 +2222,7 @@ static bool SheetHasDocumentStateStyle(nsIStyleRuleProcessor* aProcessor,
 
 // Test if style is dependent on a document state.
 bool
-nsStyleSet::HasDocumentStateDependentStyle(nsPresContext* aPresContext,
-                                           nsIContent*    aContent,
+nsStyleSet::HasDocumentStateDependentStyle(nsIContent*    aContent,
                                            EventStates    aStateMask)
 {
   if (!aContent || !aContent->IsElement())
@@ -2233,7 +2231,7 @@ nsStyleSet::HasDocumentStateDependentStyle(nsPresContext* aPresContext,
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aContent->OwnerDoc());
   InitStyleScopes(treeContext, aContent->AsElement());
-  StatefulData data(aPresContext, aContent->AsElement(), aStateMask,
+  StatefulData data(PresContext(), aContent->AsElement(), aStateMask,
                     treeContext);
   WalkRuleProcessors(SheetHasDocumentStateStyle, &data, true);
   return data.mHint != 0;
@@ -2259,21 +2257,19 @@ static bool SheetHasStatefulPseudoElementStyle(nsIStyleRuleProcessor* aProcessor
 
 // Test if style is dependent on content state
 nsRestyleHint
-nsStyleSet::HasStateDependentStyle(nsPresContext*       aPresContext,
-                                   Element*             aElement,
+nsStyleSet::HasStateDependentStyle(Element*             aElement,
                                    EventStates          aStateMask)
 {
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
   InitStyleScopes(treeContext, aElement);
-  StatefulData data(aPresContext, aElement, aStateMask, treeContext);
+  StatefulData data(PresContext(), aElement, aStateMask, treeContext);
   WalkRuleProcessors(SheetHasStatefulStyle, &data, false);
   return data.mHint;
 }
 
 nsRestyleHint
-nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
-                                   Element* aElement,
+nsStyleSet::HasStateDependentStyle(Element* aElement,
                                    nsCSSPseudoElements::Type aPseudoType,
                                    Element* aPseudoElement,
                                    EventStates aStateMask)
@@ -2281,7 +2277,7 @@ nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
   InitStyleScopes(treeContext, aElement);
-  StatefulPseudoElementData data(aPresContext, aElement, aStateMask,
+  StatefulPseudoElementData data(PresContext(), aElement, aStateMask,
                                  aPseudoType, treeContext, aPseudoElement);
   WalkRuleProcessors(SheetHasStatefulPseudoElementStyle, &data, false);
   return data.mHint;
@@ -2309,8 +2305,7 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 
 // Test if style is dependent on content state
 nsRestyleHint
-nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
-                                       Element*       aElement,
+nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
                                        nsIAtom*       aAttribute,
                                        int32_t        aModType,
                                        bool           aAttrHasChanged)
@@ -2318,36 +2313,37 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
   InitStyleScopes(treeContext, aElement);
-  AttributeData data(aPresContext, aElement, aAttribute,
+  AttributeData data(PresContext(), aElement, aAttribute,
                      aModType, aAttrHasChanged, treeContext);
   WalkRuleProcessors(SheetHasAttributeStyle, &data, false);
   return data.mHint;
 }
 
 bool
-nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
+nsStyleSet::MediumFeaturesChanged()
 {
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
   // We can't use WalkRuleProcessors without a content node.
+  nsPresContext* presContext = PresContext();
   bool stylesChanged = false;
   for (uint32_t i = 0; i < ArrayLength(mRuleProcessors); ++i) {
     nsIStyleRuleProcessor *processor = mRuleProcessors[i];
     if (!processor) {
       continue;
     }
-    bool thisChanged = processor->MediumFeaturesChanged(aPresContext);
+    bool thisChanged = processor->MediumFeaturesChanged(presContext);
     stylesChanged = stylesChanged || thisChanged;
   }
   for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); ++i) {
     nsIStyleRuleProcessor *processor = mScopedDocSheetRuleProcessors[i];
-    bool thisChanged = processor->MediumFeaturesChanged(aPresContext);
+    bool thisChanged = processor->MediumFeaturesChanged(presContext);
     stylesChanged = stylesChanged || thisChanged;
   }
 
   if (mBindingManager) {
     bool thisChanged = false;
-    mBindingManager->MediumFeaturesChanged(aPresContext, &thisChanged);
+    mBindingManager->MediumFeaturesChanged(presContext, &thisChanged);
     stylesChanged = stylesChanged || thisChanged;
   }
 

@@ -13,7 +13,11 @@
 #include "nsIThread.h"
 #include "nsRefPtr.h"
 
+#include "mozilla/ThreadLocal.h"
+
 namespace mozilla {
+
+class TaskDispatcher;
 
 /*
  * We often want to run tasks on a target that guarantees that events will never
@@ -31,21 +35,36 @@ namespace mozilla {
 class AbstractThread
 {
 public:
+  // Returns the AbstractThread that the caller is currently running in, or null
+  // if the caller is not running in an AbstractThread.
+  static AbstractThread* GetCurrent() { return sCurrentThreadTLS.get(); }
+
+  AbstractThread(bool aRequireTailDispatch) : mRequireTailDispatch(aRequireTailDispatch) {}
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractThread);
 
   enum DispatchFailureHandling { AssertDispatchSuccess, DontAssertDispatchSuccess };
+  enum DispatchReason { NormalDispatch, TailDispatch };
   virtual void Dispatch(already_AddRefed<nsIRunnable> aRunnable,
-                        DispatchFailureHandling aHandling = AssertDispatchSuccess) = 0;
-  virtual bool IsCurrentThreadIn() = 0;
+                        DispatchFailureHandling aHandling = AssertDispatchSuccess,
+                        DispatchReason aReason = NormalDispatch) = 0;
 
-  // Convenience method for dispatching a runnable when we may be running on
-  // a thread that requires runnables to be dispatched with tail dispatch.
-  void MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
-                         DispatchFailureHandling aFailureHandling = AssertDispatchSuccess);
+  virtual bool IsCurrentThreadIn() = 0;
 
   // Returns true if dispatch is generally reliable. This is used to guard
   // against FlushableMediaTaskQueues, which should go away.
   virtual bool IsDispatchReliable() { return true; }
+
+  // Returns a TaskDispatcher that will dispatch its tasks when the currently-
+  // running tasks pops off the stack.
+  //
+  // May only be called when running within the it is invoked up, and only on
+  // threads which support it.
+  virtual TaskDispatcher& TailDispatcher() = 0;
+
+  // Returns true if this task queue requires all dispatches performed by its
+  // tasks to go through the tail dispatcher.
+  bool RequiresTailDispatch() const { return mRequireTailDispatch; }
 
   // Convenience method for getting an AbstractThread for the main thread.
   static AbstractThread* MainThread();
@@ -55,6 +74,11 @@ public:
 
 protected:
   virtual ~AbstractThread() {}
+  static ThreadLocal<AbstractThread*> sCurrentThreadTLS;
+
+  // True if we want to require that every task dispatched from tasks running in
+  // this queue go through our queue's tail dispatcher.
+  const bool mRequireTailDispatch;
 };
 
 } // namespace mozilla

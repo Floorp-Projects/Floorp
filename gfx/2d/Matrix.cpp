@@ -220,7 +220,7 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
     }
   }
 
-  if (max_x <= min_x || max_y <= min_y) {
+  if (max_x < min_x || max_y < min_y) {
     return Rect(0, 0, 0, 0);
   }
 

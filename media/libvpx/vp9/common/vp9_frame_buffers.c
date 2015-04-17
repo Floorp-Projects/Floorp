@@ -19,9 +19,8 @@ int vp9_alloc_internal_frame_buffers(InternalFrameBufferList *list) {
 
   list->num_internal_frame_buffers =
       VP9_MAXIMUM_REF_BUFFERS + VPX_MAXIMUM_WORK_BUFFERS;
-  list->int_fb =
-      (InternalFrameBuffer *)vpx_calloc(list->num_internal_frame_buffers,
-                                        sizeof(*list->int_fb));
+  list->int_fb = vpx_calloc(list->num_internal_frame_buffers,
+                            sizeof(*list->int_fb));
   return (list->int_fb == NULL);
 }
 
@@ -61,10 +60,6 @@ int vp9_get_frame_buffer(void *cb_priv, size_t min_size,
     if (!int_fb_list->int_fb[i].data)
       return -1;
 
-    // This memset is needed for fixing valgrind error from C loop filter
-    // due to access uninitialized memory in frame border. It could be
-    // removed if border is totally removed.
-    vpx_memset(int_fb_list->int_fb[i].data, 0, min_size);
     int_fb_list->int_fb[i].size = min_size;
   }
 
@@ -80,7 +75,6 @@ int vp9_get_frame_buffer(void *cb_priv, size_t min_size,
 int vp9_release_frame_buffer(void *cb_priv, vpx_codec_frame_buffer_t *fb) {
   InternalFrameBuffer *const int_fb = (InternalFrameBuffer *)fb->priv;
   (void)cb_priv;
-  if (int_fb)
-    int_fb->in_use = 0;
+  int_fb->in_use = 0;
   return 0;
 }

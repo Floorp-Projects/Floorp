@@ -21,8 +21,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class PCacheReadStream;
-class PCacheReadStreamOrVoid;
+class CacheReadStream;
+class CacheReadStreamOrVoid;
 class PCacheStreamControlParent;
 
 // IID for the dom::cache::ReadStream interface
@@ -63,6 +63,9 @@ public:
     virtual bool
     MatchId(const nsID& aId) const = 0;
 
+    virtual bool
+    HasEverBeenRead() const = 0;
+
     NS_IMETHOD_(MozExternalRefCountType)
     AddRef(void) = 0;
 
@@ -71,17 +74,17 @@ public:
   };
 
   static already_AddRefed<ReadStream>
-  Create(const PCacheReadStreamOrVoid& aReadStreamOrVoid);
+  Create(const CacheReadStreamOrVoid& aReadStreamOrVoid);
 
   static already_AddRefed<ReadStream>
-  Create(const PCacheReadStream& aReadStream);
+  Create(const CacheReadStream& aReadStream);
 
   static already_AddRefed<ReadStream>
   Create(PCacheStreamControlParent* aControl, const nsID& aId,
          nsIInputStream* aStream);
 
-  void Serialize(PCacheReadStreamOrVoid* aReadStreamOut);
-  void Serialize(PCacheReadStream* aReadStreamOut);
+  void Serialize(CacheReadStreamOrVoid* aReadStreamOut);
+  void Serialize(CacheReadStream* aReadStreamOut);
 
 private:
   class Inner;

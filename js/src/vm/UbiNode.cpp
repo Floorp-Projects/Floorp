@@ -43,7 +43,6 @@ using JS::ubi::SimpleEdge;
 using JS::ubi::SimpleEdgeVector;
 using JS::ubi::TracerConcrete;
 using JS::ubi::TracerConcreteWithCompartment;
-using JS::ubi::TracerConcreteWithCompartmentAndClassName;
 
 // All operations on null ubi::Nodes crash.
 const char16_t* Concrete<void>::typeName() const          { MOZ_CRASH("null ubi::Node"); }
@@ -223,15 +222,12 @@ TracerConcreteWithCompartment<Referent>::compartment() const
     return TracerBase::get().compartment();
 }
 
-template<typename Referent>
 const char*
-TracerConcreteWithCompartmentAndClassName<Referent>::jsObjectClassName() const
+Concrete<JSObject>::jsObjectClassName() const
 {
-    return TracerBase::get().getClass()->name;
+    return Concrete::get().getClass()->name;
 }
 
-template<> const char16_t TracerConcrete<JSObject>::concreteTypeName[] =
-    MOZ_UTF16("JSObject");
 template<> const char16_t TracerConcrete<JSString>::concreteTypeName[] =
     MOZ_UTF16("JSString");
 template<> const char16_t TracerConcrete<JS::Symbol>::concreteTypeName[] =

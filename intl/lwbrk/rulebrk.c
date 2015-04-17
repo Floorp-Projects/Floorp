@@ -4,6 +4,7 @@
 #define TH_UNICODE
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <assert.h>
 #include "th_char.h"
 #define th_isalpha(c)   (((c)>='a'&&(c)<='z')||((c)>='A'&&(c)<='Z'))

@@ -34,18 +34,6 @@ int log_msg(const char *fmt, ...) {
 }
 
 #if defined(__GNUC__) && __GNUC__
-
-#if defined(FORCE_PARSE_ELF)
-
-#if defined(__MACH__)
-#undef __MACH__
-#endif
-
-#if !defined(__ELF__)
-#define __ELF__
-#endif
-#endif
-
 #if defined(__MACH__)
 
 #include <mach-o/loader.h>

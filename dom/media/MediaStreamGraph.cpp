@@ -304,7 +304,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
     // win8 64 debug when invoked from noop_resampler::fill on the cubeb audio
     // thread.
     nsCOMPtr<nsIRunnable> r = runnables[i].mRunnable;
-    runnables[i].mTarget->MaybeTailDispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+    runnables[i].mTarget->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 }
 
@@ -2614,7 +2614,7 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
   TrackData* data = FindDataForTrack(aID);
   if (!data) {
     nsCOMPtr<nsIRunnable> r = aSignalRunnable;
-    aSignalQueue->MaybeTailDispatch(r.forget());
+    aSignalQueue->Dispatch(r.forget());
     return;
   }
 
@@ -2624,7 +2624,7 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
     }
   } else {
     nsCOMPtr<nsIRunnable> r = aSignalRunnable;
-    aSignalQueue->MaybeTailDispatch(r.forget());
+    aSignalQueue->Dispatch(r.forget());
   }
 }
 

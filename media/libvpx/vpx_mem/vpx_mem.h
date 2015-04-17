@@ -73,9 +73,6 @@ extern "C" {
 
   void *vpx_memcpy(void *dest, const void *src, size_t length);
   void *vpx_memset(void *dest, int val, size_t length);
-#if CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
-  void *vpx_memset16(void *dest, int val, size_t length);
-#endif
   void *vpx_memmove(void *dest, const void *src, size_t count);
 
   /* special memory functions */

@@ -16,21 +16,7 @@
 extern "C" {
 #endif
 
-#include "vp9/encoder/vp9_encoder.h"
-
-void vp9_entropy_mode_init();
-
-void vp9_pack_bitstream(VP9_COMP *cpi, uint8_t *dest, size_t *size);
-
-static INLINE int vp9_preserve_existing_gf(VP9_COMP *cpi) {
-  return !cpi->multi_arf_allowed && cpi->refresh_golden_frame &&
-         cpi->rc.is_src_frame_alt_ref &&
-         (!cpi->use_svc ||      // Add spatial svc base layer case here
-          (is_two_pass_svc(cpi) &&
-           cpi->svc.spatial_layer_id == 0 &&
-           cpi->svc.layer_context[0].gold_ref_idx >=0 &&
-           cpi->oxcf.ss_play_alternate[0]));
-}
+void vp9_update_skip_probs(VP9_COMMON *cm, vp9_writer *bc);
 
 #ifdef __cplusplus
 }  // extern "C"

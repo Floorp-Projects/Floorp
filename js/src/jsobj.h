@@ -289,12 +289,21 @@ class JSObject : public js::gc::Cell
     static MOZ_ALWAYS_INLINE void writeBarrierPostRelocate(JSObject* obj, void* cellp);
     static MOZ_ALWAYS_INLINE void writeBarrierPostRemove(JSObject* obj, void* cellp);
 
+    /* Return the allocKind we would use if we were to tenure this object. */
+    js::gc::AllocKind allocKindForTenure(const js::Nursery &nursery) const;
+
     size_t tenuredSizeOfThis() const {
         MOZ_ASSERT(isTenured());
         return js::gc::Arena::thingSize(asTenured().getAllocKind());
     }
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info);
+
+    // We can only use addSizeOfExcludingThis on tenured objects: it assumes it
+    // can apply mallocSizeOf to bits and pieces of the object, whereas objects
+    // in the nursery may have those bits and pieces allocated in the nursery
+    // along with them, and are not each their own malloc blocks.
+    size_t sizeOfIncludingThisInNursery() const;
 
     /*
      * Marks this object as having a singleton type, and leave the group lazy.

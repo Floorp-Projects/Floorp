@@ -143,6 +143,8 @@ function fakeSchedulerTimer(set, clear) {
 function fakeNow(...arguments) {
   const date = new Date(...arguments);
 
+  let ping = Cu.import("resource://gre/modules/TelemetryPing.jsm");
+  ping.Policy.now = () => date;
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.now = () => date;
   let environment = Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");

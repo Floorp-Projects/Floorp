@@ -32,10 +32,6 @@ MediaStreamPlayback.prototype = {
    *
    * @param {Boolean} isResume specifies if this media element is being resumed
    *                           from a previous run
-   * @param {Function} onSuccess the success callback if the media playback
-   *                             start and stop cycle completes successfully
-   * @param {Function} onError the error callback if the media playback
-   *                           start and stop cycle fails
    */
   playMedia : function(isResume) {
     return this.startMedia(isResume)

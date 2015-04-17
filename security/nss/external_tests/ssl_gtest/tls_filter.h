@@ -43,6 +43,10 @@ class TlsHandshakeFilter : public TlsRecordFilter {
  public:
   TlsHandshakeFilter() {}
 
+  // Reads the length from the record header.
+  // This also reads the DTLS fragment information and checks it.
+  static bool ReadLength(TlsParser* parser, uint16_t version, uint32_t *length);
+
  protected:
   virtual bool FilterRecord(uint8_t content_type, uint16_t version,
                             const DataBuffer& input, DataBuffer* output);
@@ -50,7 +54,6 @@ class TlsHandshakeFilter : public TlsRecordFilter {
                                const DataBuffer& input, DataBuffer* output) = 0;
 
  private:
-  bool CheckDtls(TlsParser& parser, size_t length);
   size_t ApplyFilter(uint16_t version, uint8_t handshake_type,
                      const DataBuffer& record, DataBuffer* output,
                      size_t length_offset, size_t value_offset, bool* changed);

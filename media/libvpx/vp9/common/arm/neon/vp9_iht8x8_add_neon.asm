@@ -576,7 +576,6 @@
     vld1.s16        {q14,q15}, [r0]!
 
     push            {r0-r10}
-    vpush           {d8-d15}
 
     ; transpose the input data
     TRANSPOSE8X8
@@ -637,7 +636,6 @@ iadst_iadst
     IADST8X8_1D
 
 end_vp9_iht8x8_64_add_neon
-    vpop           {d8-d15}
     pop            {r0-r10}
 
     ; ROUND_POWER_OF_TWO(temp_out[j], 5)
