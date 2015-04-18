@@ -17,17 +17,8 @@
 <script class="testbody" type="text/javascript">
 
   function runTest() {
-    navigator.serviceWorker.register("empty.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            e.target.onstatechange = null;
-            done(registration);
-          };
-        } else {
-          done(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(done);
+    navigator.serviceWorker.register("empty.js", {scope: "."});
   }
 
   function done(registration) {

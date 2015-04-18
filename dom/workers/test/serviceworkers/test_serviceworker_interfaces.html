@@ -85,17 +85,8 @@
   }
 
   function runTest() {
-    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            setupSW(registration);
-            e.target.onstatechange = null;
-          };
-        } else {
-          setupSW(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(setupSW);
+    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."});
   }
 
   SimpleTest.waitForExplicitFinish();

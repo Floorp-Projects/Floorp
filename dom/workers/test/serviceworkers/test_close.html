@@ -19,17 +19,8 @@
 
   var iframe;
   function runTest() {
-    navigator.serviceWorker.register("close_test.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            setupSW(registration);
-            e.target.onstatechange = null;
-          };
-        } else {
-          setupSW(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(setupSW);
+    navigator.serviceWorker.register("close_test.js", {scope: "."});
 
     function setupSW(registration) {
       var worker = registration.waiting ||
