@@ -1444,7 +1444,7 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->StyleDisplay()->mDisplay) {
         NS_ASSERTION(colX < GetColCount(), "invalid number of columns");
-        nscoord colWidth = GetColumnWidth(colX);
+        nscoord colWidth = GetColumnISize(colX);
         nsRect colRect(colOrigin.x, colOrigin.y, colWidth, colHeight);
         colFrame->SetRect(colRect);
         cellSpacingX = GetColSpacing(colX);
@@ -2179,7 +2179,7 @@ nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->StyleVisibility();
         bool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
-        int32_t colWidth = GetColumnWidth(colX);
+        int32_t colWidth = GetColumnISize(colX);
         if (!collapseGroup && !collapseCol) {
           width += colWidth;
           if (ColumnHasCellSpacingBefore(colX))
@@ -3540,14 +3540,14 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
   ResizeCells(*this);
 }
 
-int32_t nsTableFrame::GetColumnWidth(int32_t aColIndex)
+int32_t nsTableFrame::GetColumnISize(int32_t aColIndex)
 {
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
   if (this == firstInFlow) {
     nsTableColFrame* colFrame = GetColFrame(aColIndex);
     return colFrame ? colFrame->GetFinalISize() : 0;
   }
-  return firstInFlow->GetColumnWidth(aColIndex);
+  return firstInFlow->GetColumnISize(aColIndex);
 }
 
 nscoord nsTableFrame::GetColSpacing()
@@ -3812,7 +3812,7 @@ nsTableFrame::Dump(bool            aDumpRows,
   int32_t numCols = GetColCount();
   int32_t colX;
   for (colX = 0; colX < numCols; colX++) {
-    printf("%d ", GetColumnWidth(colX));
+    printf("%d ", GetColumnISize(colX));
   }
   printf("\n");
 
