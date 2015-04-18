@@ -18,6 +18,8 @@ namespace JS {
       "getprop inferred constant")                      \
     _(GetProp_Constant,                                 \
       "getprop constant")                               \
+    _(GetProp_StaticName,                               \
+      "getprop static name")                            \
     _(GetProp_TypedObject,                              \
       "getprop TypedObject")                            \
     _(GetProp_DefiniteSlot,                             \
