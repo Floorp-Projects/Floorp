@@ -170,12 +170,12 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
     // border-spacing isn't part of the basis for percentages.
     tableWidth -= mTableFrame->GetColSpacing(-1, colCount);
 
-    // store the old column widths. We might call multiple times SetFinalWidth
+    // store the old column widths. We might call multiple times SetFinalISize
     // on the columns, due to this we can't compare at the last call that the
     // width has changed with the respect to the last call to
     // ComputeColumnISizes. In order to overcome this we store the old values
-    // in this array. A single call to SetFinalWidth would make it possible to
-    // call GetFinalWidth before and to compare when setting the final width.
+    // in this array. A single call to SetFinalISize would make it possible to
+    // call GetFinalISize before and to compare when setting the final width.
     nsTArray<nscoord> oldColWidths;
 
     // XXX This ignores the 'min-width' and 'max-width' properties
@@ -203,7 +203,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        oldColWidths.AppendElement(colFrame->GetFinalWidth());
+        oldColWidths.AppendElement(colFrame->GetFinalISize());
         colFrame->ResetPrefPercent();
         const nsStyleCoord *styleWidth =
             &colFrame->StylePosition()->mWidth;
@@ -294,7 +294,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
             }
         }
 
-        colFrame->SetFinalWidth(colWidth);
+        colFrame->SetFinalISize(colWidth);
 
         if (colWidth == unassignedMarker) {
             ++unassignedCount;
@@ -317,12 +317,12 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
                     NS_ERROR("column frames out of sync with cell map");
                     continue;
                 }
-                nscoord colWidth = colFrame->GetFinalWidth();
+                nscoord colWidth = colFrame->GetFinalISize();
                 colWidth -= NSToCoordFloor(colFrame->GetPrefPercent() *
                                            reduceRatio);
                 if (colWidth < 0)
                     colWidth = 0;
-                colFrame->SetFinalWidth(colWidth);
+                colFrame->SetFinalISize(colWidth);
             }
         }
         unassignedSpace = 0;
@@ -338,8 +338,8 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
                 NS_ERROR("column frames out of sync with cell map");
                 continue;
             }
-            if (colFrame->GetFinalWidth() == unassignedMarker)
-                colFrame->SetFinalWidth(toAssign);
+            if (colFrame->GetFinalISize() == unassignedMarker)
+                colFrame->SetFinalISize(toAssign);
         }
     } else if (unassignedSpace > 0) {
         // The spec doesn't say how to distribute the unassigned space.
@@ -353,12 +353,12 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
                     continue;
                 }
                 if (colFrame->GetPrefPercent() == 0.0f) {
-                    NS_ASSERTION(colFrame->GetFinalWidth() <= specUndist,
+                    NS_ASSERTION(colFrame->GetFinalISize() <= specUndist,
                                  "widths don't add up");
                     nscoord toAdd = AllocateUnassigned(unassignedSpace,
-                       float(colFrame->GetFinalWidth()) / float(specUndist));
-                    specUndist -= colFrame->GetFinalWidth();
-                    colFrame->SetFinalWidth(colFrame->GetFinalWidth() + toAdd);
+                       float(colFrame->GetFinalISize()) / float(specUndist));
+                    specUndist -= colFrame->GetFinalISize();
+                    colFrame->SetFinalISize(colFrame->GetFinalISize() + toAdd);
                     unassignedSpace -= toAdd;
                     if (specUndist <= 0) {
                         NS_ASSERTION(specUndist == 0,
@@ -386,7 +386,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
                 }
                 nscoord toAdd = AllocateUnassigned(unassignedSpace,
                     colFrame->GetPrefPercent() / pctUndist);
-                colFrame->SetFinalWidth(colFrame->GetFinalWidth() + toAdd);
+                colFrame->SetFinalISize(colFrame->GetFinalISize() + toAdd);
                 unassignedSpace -= toAdd;
                 pctUndist -= colFrame->GetPrefPercent();
                 if (pctUndist <= 0.0f) {
@@ -403,10 +403,10 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
                     NS_ERROR("column frames out of sync with cell map");
                     continue;
                 }
-                NS_ASSERTION(colFrame->GetFinalWidth() == 0, "yikes");
+                NS_ASSERTION(colFrame->GetFinalISize() == 0, "yikes");
                 nscoord toAdd = AllocateUnassigned(unassignedSpace,
                                                    1.0f / float(colsLeft));
-                colFrame->SetFinalWidth(toAdd);
+                colFrame->SetFinalISize(toAdd);
                 unassignedSpace -= toAdd;
                 --colsLeft;
             }
@@ -419,7 +419,7 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
             NS_ERROR("column frames out of sync with cell map");
             continue;
         }
-        if (oldColWidths.ElementAt(col) != colFrame->GetFinalWidth()) {
+        if (oldColWidths.ElementAt(col) != colFrame->GetFinalISize()) {
             mTableFrame->DidResizeColumns();
             break;
         }
