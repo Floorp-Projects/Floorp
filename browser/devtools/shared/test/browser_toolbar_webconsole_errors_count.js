@@ -28,7 +28,7 @@ function test() {
     expectUncaughtException();
 
     if (!DeveloperToolbar.visible) {
-      DeveloperToolbar.show(true, onOpenToolbar);
+      DeveloperToolbar.show(true).then(onOpenToolbar);
     }
     else {
       onOpenToolbar();
