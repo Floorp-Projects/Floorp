@@ -4163,7 +4163,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Func" or
               identifier == "AvailableIn" or
               identifier == "CheckPermissions" or
-              identifier == "BinaryName"):
+              identifier == "BinaryName" or
+              identifier == "MethodIdentityTestable"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
