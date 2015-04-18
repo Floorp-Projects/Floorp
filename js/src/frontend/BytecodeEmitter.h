@@ -524,6 +524,9 @@ struct BytecodeEmitter
     // the stack.
     bool emitInitializeDestructuringDecls(JSOp prologueOp, ParseNode* pattern);
 
+    // Convert the value atop the stack to an object using ToObject.
+    bool emitToObject();
+
     // emitIterator expects the iterable to already be on the stack.
     // It will replace that stack value with the corresponding iterator
     bool emitIterator();
