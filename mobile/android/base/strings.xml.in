@@ -380,6 +380,8 @@
   <string name="button_no">&button_no;</string>
   <string name="button_remember">&button_remember;</string>
 
+  <string name="firstrun_panel_title_welcome">&firstrun_panel_title_welcome;</string>
+
   <string name="home_title">&home_title;</string>
   <string name="home_top_sites_title">&home_top_sites_title;</string>
   <string name="home_top_sites_add">&home_top_sites_add;</string>

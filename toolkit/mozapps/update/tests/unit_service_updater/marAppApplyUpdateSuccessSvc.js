@@ -7,6 +7,9 @@
  * apply it.
  */
 
+const START_STATE = STATE_PENDING_SVC;
+const END_STATE = STATE_SUCCEEDED;
+
 function run_test() {
   if (MOZ_APP_NAME == "xulrunner") {
     logTestInfo("Unable to run this test on xulrunner");
@@ -23,32 +26,23 @@ function run_test() {
   setupUpdaterTest(FILE_COMPLETE_MAR);
 
   createUpdaterINI();
-
-  // For Mac OS X set the last modified time for the root directory to a date in
-  // the past to test that the last modified time is updated on a successful
-  // update (bug 600098).
-  if (IS_MACOSX) {
-    let now = Date.now();
-    let yesterday = now - (1000 * 60 * 60 * 24);
-    let applyToDir = getApplyDirFile();
-    applyToDir.lastModifiedTime = yesterday;
-  }
+  setAppBundleModTime();
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    STATE_PENDING);
+                                    START_STATE);
   let updates = getLocalUpdateString(patches, null, null, null, null, null,
                                      null, null, null, null, null, null,
                                      null, "true", channel);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(getAppVersion());
-  writeStatusFile(STATE_PENDING_SVC);
+  writeStatusFile(START_STATE);
 
   setupAppFilesAsync();
 }
 
 function setupAppFilesFinished() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED);
+  runUpdateUsingService(START_STATE, END_STATE);
 }
 
 /**
@@ -72,10 +66,10 @@ function finishCheckUpdateFinished() {
   gTimeoutRuns++;
   // Don't proceed until the update's status state is the expected value.
   let state = readStatusState();
-  if (state != STATE_SUCCEEDED) {
+  if (state != END_STATE) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal: " + STATE_SUCCEEDED +
+               "status state to equal: " + END_STATE +
                ", current status state: " + state);
     } else {
       do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
@@ -90,9 +84,8 @@ function finishCheckUpdateFinished() {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update log " +
                "to be created. Path: " + log.path);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     return;
   }
 
@@ -104,26 +97,17 @@ function finishCheckUpdateFinished() {
       if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
         do_throw("Exceeded while waiting for updater binary to no longer be " +
                  "in use");
-      } else {
-        try {
-          updater.remove(false);
-        } catch (e) {
-          do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-          return;
-        }
+      }
+      try {
+        updater.remove(false);
+      } catch (e) {
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
+        return;
       }
     }
   }
 
-  if (IS_MACOSX) {
-    debugDump("testing last modified time on the apply to directory has " +
-              "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let applyToDir = getApplyDirFile();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
-  }
-
+  checkAppBundleModTime();
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
   checkCallbackAppLog();
@@ -131,26 +115,23 @@ function finishCheckUpdateFinished() {
   standardInit();
 
   let update = gUpdateManager.getUpdateAt(0);
-  do_check_eq(update.state, STATE_SUCCEEDED);
+  Assert.equal(update.state, END_STATE,
+               "the update state" + MSG_SHOULD_EQUAL);
 
-  let updatesPatchDir = getUpdatesPatchDir();
-  debugDump("testing " + updatesPatchDir.path + " should exist");
-  do_check_true(updatesPatchDir.exists());
+  let updatesDir = getUpdatesPatchDir();
+  Assert.ok(updatesDir.exists(), MSG_SHOULD_EXIST);
 
   log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
-  debugDump("testing " + log.path + " should exist");
-  do_check_true(log.exists());
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST);
 
   log = getUpdatesDir();
   log.append(FILE_BACKUP_LOG);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   waitForFilesInUse();
 }

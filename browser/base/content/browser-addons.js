@@ -198,6 +198,9 @@ const gXPInstallObserver = {
         }
       };
 
+      options.learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") +
+                             "find-and-install-add-ons";
+
       messageString = gNavigatorBundle.getString("addonConfirmInstall.message");
       messageString = PluralForm.get(installInfo.installs.length, messageString);
       messageString = messageString.replace("#1", brandShortName);
