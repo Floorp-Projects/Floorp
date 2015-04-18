@@ -42,7 +42,7 @@ function doUpdate() {
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(1, STATE_PENDING);
+  runUpdate(1, STATE_PENDING, checkUpdateApplied);
 }
 
 function checkUpdateApplied() {

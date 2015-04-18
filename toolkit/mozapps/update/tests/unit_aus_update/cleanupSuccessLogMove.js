@@ -17,31 +17,26 @@ function run_test() {
 
   let dir = getUpdatesDir();
   let log = dir.clone();
-  log.append("0");
+  log.append(DIR_PATCH);
   log.append(FILE_UPDATE_LOG);
   writeFile(log, "Last Update Log");
 
   standardInit();
 
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
   log = dir.clone();
   log.append(FILE_LAST_LOG);
-  debugDump("testing " + log.path + " should exist");
-  do_check_true(log.exists());
-
-  debugDump("testing " + log.path + " contents");
-  do_check_eq(readFile(log), "Last Update Log");
+  Assert.ok(log.exists(), MSG_SHOULD_EXIST);
+  Assert.equal(readFile(log), "Last Update Log",
+               "the last update log contents" + MSG_SHOULD_EQUAL);
 
   log = dir.clone();
   log.append(FILE_BACKUP_LOG);
-  debugDump("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
 
-  dir.append("0");
-  debugDump("testing " + dir.path + " should exist (bug 512994)");
-  do_check_true(dir.exists());
+  dir.append(DIR_PATCH);
+  Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
 
   doTestFinish();
 }
