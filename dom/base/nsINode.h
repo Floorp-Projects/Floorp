@@ -1992,7 +1992,9 @@ protected:
     nsIFrame* mPrimaryFrame;
 
     // Pointer to the root of our subtree.  Might be null.
-    nsINode* mSubtreeRoot;
+    // This reference is non-owning and safe, since it either points to the
+    // object itself, or is reset by ClearSubtreeRootPointer.
+    nsINode* MOZ_NON_OWNING_REF mSubtreeRoot;
   };
 
   // Storage for more members that are usually not needed; allocated lazily.
