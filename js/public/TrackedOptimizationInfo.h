@@ -16,6 +16,7 @@ namespace JS {
     _(GetProp_ArgumentsCallee)                          \
     _(GetProp_InferredConstant)                         \
     _(GetProp_Constant)                                 \
+    _(GetProp_StaticName)                               \
     _(GetProp_SimdGetter)                               \
     _(GetProp_TypedObject)                              \
     _(GetProp_DefiniteSlot)                             \
