@@ -151,7 +151,7 @@ AllocateUnassigned(nscoord aUnassignedSpace, float aShare)
 }
 
 /* virtual */ void
-FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowState)
+FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowState)
 {
     nscoord tableWidth = aReflowState.ComputedWidth();
 
@@ -173,7 +173,7 @@ FixedTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     // store the old column widths. We might call multiple times SetFinalWidth
     // on the columns, due to this we can't compare at the last call that the
     // width has changed with the respect to the last call to
-    // ComputeColumnWidths. In order to overcome this we store the old values
+    // ComputeColumnISizes. In order to overcome this we store the old values
     // in this array. A single call to SetFinalWidth would make it possible to
     // call GetFinalWidth before and to compare when setting the final width.
     nsTArray<nscoord> oldColWidths;
