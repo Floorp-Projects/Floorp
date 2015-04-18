@@ -6593,7 +6593,7 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   // want to support this case. See bug 593471
   if (!(prefs.mDisableAcceleration ||
         mTransparencyMode == eTransparencyTransparent ||
-        IsPopup())) {
+        (IsPopup() && gfxWindowsPlatform::GetPlatform()->IsWARP()))) {
     // See bug 1150376, D3D11 composition can cause issues on some devices
     // on windows 7 where presentation fails randomly for windows with drop
     // shadows.

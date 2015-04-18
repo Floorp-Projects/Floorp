@@ -182,7 +182,7 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
             type = tDbl;
         } else if (val.isBoolean()) {
             type = tBool;
-        } else if (val.isUndefined()) {
+        } else if (val.isUndefined() || val.isSymbol()) {
             state = tVar;
             break;
         } else if (val.isNull()) {
@@ -265,7 +265,8 @@ bool XPCVariant::InitializeData(JSContext* cx)
         return NS_SUCCEEDED(nsVariant::SetFromDouble(&mData, val.toDouble()));
     if (val.isBoolean())
         return NS_SUCCEEDED(nsVariant::SetFromBool(&mData, val.toBoolean()));
-    if (val.isUndefined())
+    // We can't represent symbol on C++ side, so pretend it is void.
+    if (val.isUndefined() || val.isSymbol())
         return NS_SUCCEEDED(nsVariant::SetToVoid(&mData));
     if (val.isNull())
         return NS_SUCCEEDED(nsVariant::SetToEmpty(&mData));

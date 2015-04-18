@@ -4,13 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.w3.org/TR/2013/WD-webrtc-20130910/#idl-def-RTCIdentityAssertion
+ * http://w3c.github.io/webrtc-pc/#idl-def-RTCIdentityAssertion
  */
 
-[Pref="media.peerconnection.identity.enabled",
- JSImplementation="@mozilla.org/dom/rtcidentityassertion;1",
- Constructor(DOMString idp, DOMString name)]
-interface RTCIdentityAssertion {
-  attribute DOMString idp;
-  attribute DOMString name;
+dictionary RTCIdentityAssertion {
+  DOMString idp;
+  DOMString name;
 };

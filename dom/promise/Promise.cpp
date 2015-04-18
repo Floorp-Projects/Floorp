@@ -225,7 +225,7 @@ protected:
     JS::Rooted<JSObject*> rootedThenable(cx, mThenable);
 
     mThen->Call(rootedThenable, resolveFunc, rejectFunc, rv,
-                CallbackObject::eRethrowExceptions,
+                "promise thenable", CallbackObject::eRethrowExceptions,
                 mPromise->Compartment());
 
     rv.WouldReportJSException();
@@ -630,8 +630,8 @@ Promise::CallInitFunction(const GlobalObject& aGlobal,
     return;
   }
 
-  aInit.Call(resolveFunc, rejectFunc, aRv, CallbackObject::eRethrowExceptions,
-             Compartment());
+  aInit.Call(resolveFunc, rejectFunc, aRv, "promise initializer",
+             CallbackObject::eRethrowExceptions, Compartment());
   aRv.WouldReportJSException();
 
   if (aRv.IsJSException()) {

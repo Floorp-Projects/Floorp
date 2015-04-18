@@ -46,6 +46,19 @@ fetchXHR('synthesized-headers.txt', function(xhr) {
   finish();
 });
 
+fetch('synthesized-redirect-real-file.txt', function(xhr) {
+dump("Got status AARRGH " + xhr.status + " " + xhr.responseText + "\n");
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.responseText == "This is a real file.\n", "Redirect to real file should complete.");
+  finish();
+});
+
+fetch('synthesized-redirect-synthesized.txt', function(xhr) {
+  my_ok(xhr.status == 200, "load should be successful");
+  my_ok(xhr.responseText == "synthesized response body", "load should have synthesized response");
+  finish();
+});
+
 fetchXHR('ignored.txt', function(xhr) {
   my_ok(xhr.status == 404, "load should be uninterrupted");
   finish();

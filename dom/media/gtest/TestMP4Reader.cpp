@@ -58,7 +58,11 @@ private:
   {
     {
       nsRefPtr<MediaTaskQueue> queue = reader->GetTaskQueue();
-      queue->Dispatch(NS_NewRunnableMethod(reader, &MP4Reader::Shutdown));
+      nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(reader, &MP4Reader::Shutdown);
+      // Hackily bypass the tail dispatcher so that we can AwaitShutdownAndIdle.
+      // In production code we'd use BeginShutdown + promises.
+      queue->Dispatch(task.forget(), AbstractThread::AssertDispatchSuccess,
+                      AbstractThread::TailDispatch);
       queue->AwaitShutdownAndIdle();
     }
     decoder = nullptr;
