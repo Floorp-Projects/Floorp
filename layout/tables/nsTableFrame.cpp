@@ -3545,7 +3545,7 @@ int32_t nsTableFrame::GetColumnWidth(int32_t aColIndex)
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
   if (this == firstInFlow) {
     nsTableColFrame* colFrame = GetColFrame(aColIndex);
-    return colFrame ? colFrame->GetFinalWidth() : 0;
+    return colFrame ? colFrame->GetFinalISize() : 0;
   }
   return firstInFlow->GetColumnWidth(aColIndex);
 }

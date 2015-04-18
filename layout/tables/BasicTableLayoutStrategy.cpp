@@ -1045,8 +1045,8 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                 break;
             case BTLS_FINAL_WIDTH:
                 {
-                    nscoord old_final = colFrame->GetFinalWidth();
-                    colFrame->SetFinalWidth(col_width);
+                    nscoord old_final = colFrame->GetFinalISize();
+                    colFrame->SetFinalISize(col_width);
                     
                     if (old_final != col_width)
                         mTableFrame->DidResizeColumns();
