@@ -380,15 +380,10 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name="org.mozilla.gecko.Restarter"
-                  android:process="@ANDROID_PACKAGE_NAME@Restarter"
-                  android:noHistory="true"
-                  android:theme="@style/Gecko">
-          <intent-filter>
-            <action android:name="org.mozilla.gecko.restart"/>
-            <action android:name="org.mozilla.gecko.restart_update"/>
-          </intent-filter>
-        </activity>
+        <service android:name="org.mozilla.gecko.Restarter"
+                  android:exported="false"
+                  android:process="@MANGLED_ANDROID_PACKAGE_NAME@.Restarter">
+        </service>
 
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_activities.xml.in

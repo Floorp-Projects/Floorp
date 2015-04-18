@@ -107,7 +107,7 @@ class JitCode : public gc::TenuredCell
     size_t instructionsSize() const {
         return insnSize_;
     }
-    void trace(JSTracer* trc);
+    void traceChildren(JSTracer* trc);
     void finalize(FreeOp* fop);
     void fixupAfterMovingGC() {}
     void setInvalidated() {

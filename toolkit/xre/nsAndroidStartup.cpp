@@ -34,7 +34,7 @@ struct AutoAttachJavaThread {
         attached = mozilla_AndroidBridge_SetMainThread(pthread_self());
     }
     ~AutoAttachJavaThread() {
-        mozilla_AndroidBridge_SetMainThread(-1);
+        mozilla_AndroidBridge_SetMainThread(pthread_t());
         attached = false;
     }
 
@@ -74,10 +74,4 @@ GeckoStart(void *data, const nsXREAppData *appData)
 
     if (result)
         LOG("XRE_main returned %d", result);
-
-    mozilla::widget::GeckoAppShell::NotifyXreExit();
-
-    free(targs[0]);
-    free(data);
-    return;
 }
