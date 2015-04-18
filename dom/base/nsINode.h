@@ -275,8 +275,10 @@ public:
 private:
   ~nsChildContentList() {}
 
-  // The node whose children make up the list (weak reference)
-  nsINode* mNode;
+  // The node whose children make up the list.
+  // This is a non-owning ref which is safe because it's set to nullptr by
+  // DropReference() by the node slots get destroyed.
+  nsINode* MOZ_NON_OWNING_REF mNode;
 };
 
 // This should be used for any nsINode sub-class that has fields of its own
