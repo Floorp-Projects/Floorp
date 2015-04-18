@@ -63,6 +63,16 @@ function startTest() {
 
   ok(win.scrollY <= oldY, "Page is not scrolled down");
   ok(clicked, "The button should be clicked");
+  synthesizeKey("VK_TAB", {}, win);
+
+  step();
+
+  oldY = win.scrollY;
+  synthesizeKey(" ", {}, win);
+
+  step()
+
+  ok(win.scrollY >= oldY, "Page is scrolled down");
 
   win.close();
   cwu.restoreNormalRefresh();
