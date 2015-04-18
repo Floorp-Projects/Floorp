@@ -898,15 +898,14 @@ js::PerformanceGroupHolder::~PerformanceGroupHolder()
 }
 
 void*
-js::PerformanceGroupHolder::getHashKey()
+js::PerformanceGroupHolder::getHashKey(JSContext* cx)
 {
-    return compartment_->isSystem() ?
-        (void*)compartment_->addonId :
-        (void*)JS_GetCompartmentPrincipals(compartment_);
-    // This key may be `nullptr` if we have `isSystem() == true`
-    // and `compartment_->addonId`. This is absolutely correct,
-    // and this represents the `PerformanceGroup` used to track
-    // the performance of the the platform compartments.
+    if (runtime_->stopwatch.currentPerfGroupCallback) {
+        return (*runtime_->stopwatch.currentPerfGroupCallback)(cx);
+    }
+
+    // As a fallback, put everything in the same PerformanceGroup.
+    return nullptr;
 }
 
 void
@@ -927,26 +926,26 @@ js::PerformanceGroupHolder::unlink()
 
 
     JSRuntime::Stopwatch::Groups::Ptr ptr =
-        runtime_->stopwatch.groups_.lookup(getHashKey());
+        runtime_->stopwatch.groups_.lookup(group->key_);
     MOZ_ASSERT(ptr);
     runtime_->stopwatch.groups_.remove(ptr);
     js_delete(group);
 }
 
 PerformanceGroup*
-js::PerformanceGroupHolder::getGroup()
+js::PerformanceGroupHolder::getGroup(JSContext* cx)
 {
     if (group_)
         return group_;
 
-    void* key = getHashKey();
+    void* key = getHashKey(cx);
     JSRuntime::Stopwatch::Groups::AddPtr ptr =
         runtime_->stopwatch.groups_.lookupForAdd(key);
     if (ptr) {
         group_ = ptr->value();
         MOZ_ASSERT(group_);
     } else {
-        group_ = runtime_->new_<PerformanceGroup>();
+        group_ = runtime_->new_<PerformanceGroup>(key);
         runtime_->stopwatch.groups_.add(ptr, key, group_);
     }
 
@@ -959,4 +958,10 @@ PerformanceData*
 js::GetPerformanceData(JSRuntime* rt)
 {
     return &rt->stopwatch.performance;
+}
+
+void
+JS_SetCurrentPerfGroupCallback(JSRuntime *rt, JSCurrentPerfGroupCallback cb)
+{
+    rt->stopwatch.currentPerfGroupCallback = cb;
 }
