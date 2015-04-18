@@ -297,8 +297,11 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 void
 nsWindow::RedrawAll()
 {
-    if (mFocus && mFocus->mWidgetListener) {
-        mFocus->mWidgetListener->RequestRepaint();
+    if (mFocus) {
+        mFocus->RedrawAll();
+    }
+    if (mWidgetListener) {
+        mWidgetListener->RequestRepaint();
     }
 }
 
@@ -658,7 +661,7 @@ nsWindow::WidgetToScreenOffset()
 
 NS_IMETHODIMP
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
-                        nsEventStatus &aStatus)
+                        nsEventStatus& aStatus)
 {
     aStatus = DispatchEvent(aEvent);
     return NS_OK;
@@ -667,6 +670,20 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
 nsEventStatus
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
 {
+    if (this == TopWindow() && mFocus) {
+        // On Fennec the window structure has two windows, a root-level window
+        // and a child window. The root-level window has a nsWebShellWindow as
+        // a widget listener, and that does nothing in its HandleEvent call. The
+        // child window however is hooked up to a nsView, and is the window
+        // we actually want to send events to. The child window also always has
+        // focus and completely covers the root window, so technically the child
+        // window is "topmost" and should be receiving all events. So when
+        // dispatching an event to the root window, redispatch it to the child
+        // window instead.
+        return mFocus->DispatchEvent(aEvent);
+    }
+
+    aEvent->widget = this;
     if (mWidgetListener) {
         return mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
     }
@@ -823,27 +840,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
         case AndroidGeckoEvent::APZ_INPUT_EVENT:
         case AndroidGeckoEvent::MOTION_EVENT: {
             win->UserActivity();
-            if (!gTopLevelWindows.IsEmpty()) {
-                nsIntPoint pt(0,0);
-                const nsTArray<nsIntPoint>& points = ae->Points();
-                if (points.Length() > 0) {
-                    pt = points[0];
-                }
-                pt.x = clamped(pt.x, 0, std::max(gAndroidBounds.width - 1, 0));
-                pt.y = clamped(pt.y, 0, std::max(gAndroidBounds.height - 1, 0));
-                nsWindow *target = win->FindWindowForPoint(pt);
-#if 0
-                ALOG("MOTION_EVENT %f,%f -> %p (visible: %d children: %d)", pt.x, pt.y, (void*)target,
-                     target ? target->mIsVisible : 0,
-                     target ? target->mChildren.Length() : 0);
-
-                DumpWindows();
-#endif
-                if (target) {
-                    bool preventDefaultActions = target->OnMultitouchEvent(ae);
-                    if (!preventDefaultActions && ae->Count() < 2)
-                        target->OnMouseEvent(ae);
-                }
+            bool preventDefaultActions = win->OnMultitouchEvent(ae);
+            if (!preventDefaultActions && ae->Count() < 2) {
+                win->OnMouseEvent(ae);
             }
             break;
         }
@@ -856,64 +855,35 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             nsCOMPtr<nsIObserverService> obsServ = mozilla::services::GetObserverService();
             obsServ->NotifyObservers(nullptr, "before-build-contextmenu", nullptr);
 
-            nsIntPoint pt;
-            const nsTArray<nsIntPoint>& points = ae->Points();
-            if (points.Length() > 0) {
-                pt = nsIntPoint(points[0].x, points[0].y);
-            }
-
-            // Clamp our point within bounds, and locate the target element for the event.
-            pt.x = clamped(pt.x, 0, std::max(gAndroidBounds.width - 1, 0));
-            pt.y = clamped(pt.y, 0, std::max(gAndroidBounds.height - 1, 0));
-            nsWindow *target = win->FindWindowForPoint(pt);
-            if (target) {
-                // Send the contextmenu event to Gecko.
-                if (!target->OnContextmenuEvent(ae)) {
-                    // If not consumed, continue as a LongTap, possibly trigger
-                    // Gecko Text Selection Carets.
-                    target->OnLongTapEvent(ae);
-                }
+            // Send the contextmenu event to Gecko.
+            if (!win->OnContextmenuEvent(ae)) {
+                // If not consumed, continue as a LongTap, possibly trigger
+                // Gecko Text Selection Carets.
+                win->OnLongTapEvent(ae);
             }
             break;
         }
 
         case AndroidGeckoEvent::NATIVE_GESTURE_EVENT: {
-            nsIntPoint pt(0,0);
-            const nsTArray<nsIntPoint>& points = ae->Points();
-            if (points.Length() > 0) {
-                pt = points[0];
-            }
-            pt.x = clamped(pt.x, 0, std::max(gAndroidBounds.width - 1, 0));
-            pt.y = clamped(pt.y, 0, std::max(gAndroidBounds.height - 1, 0));
-            nsWindow *target = win->FindWindowForPoint(pt);
-
-            target->OnNativeGestureEvent(ae);
+            win->OnNativeGestureEvent(ae);
             break;
         }
 
         case AndroidGeckoEvent::KEY_EVENT:
             win->UserActivity();
-            if (win->mFocus)
-                win->mFocus->OnKeyEvent(ae);
+            win->OnKeyEvent(ae);
             break;
 
         case AndroidGeckoEvent::IME_EVENT:
             win->UserActivity();
-            if (win->mFocus) {
-                win->mFocus->OnIMEEvent(ae);
-            } else {
-                NS_WARNING("Sending unexpected IME event to top window");
-                win->OnIMEEvent(ae);
-            }
+            win->OnIMEEvent(ae);
             break;
 
         case AndroidGeckoEvent::IME_KEY_EVENT:
             // Keys synthesized by Java IME code are saved in the mIMEKeyEvents
             // array until the next IME_REPLACE_TEXT event, at which point
             // these keys are dispatched in sequence.
-            if (win->mFocus) {
-                win->mFocus->mIMEKeyEvents.AppendElement(*ae);
-            }
+            win->mIMEKeyEvents.AppendElement(*ae);
             break;
 
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
@@ -1008,7 +978,6 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
         return;
     }
 
-    // XXX add the double-click handling logic here
     DispatchEvent(&event);
 }
 
@@ -1153,45 +1122,39 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 void
 nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
 {
-  LayoutDeviceIntPoint pt(ae->Points()[0].x,
-                          ae->Points()[0].y);
-  double delta = ae->X();
-  int msg = 0;
+    LayoutDeviceIntPoint pt(ae->Points()[0].x,
+                            ae->Points()[0].y);
+    double delta = ae->X();
+    int msg = 0;
 
-  switch (ae->Action()) {
-      case AndroidMotionEvent::ACTION_MAGNIFY_START:
-          msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
-          mStartDist = delta;
-          mLastDist = delta;
-          break;
-      case AndroidMotionEvent::ACTION_MAGNIFY:
-          msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-          delta -= mLastDist;
-          mLastDist += delta;
-          break;
-      case AndroidMotionEvent::ACTION_MAGNIFY_END:
-          msg = NS_SIMPLE_GESTURE_MAGNIFY;
-          delta -= mStartDist;
-          break;
-      default:
-          return;
-  }
+    switch (ae->Action()) {
+        case AndroidMotionEvent::ACTION_MAGNIFY_START:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_START;
+            mStartDist = delta;
+            mLastDist = delta;
+            break;
+        case AndroidMotionEvent::ACTION_MAGNIFY:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
+            delta -= mLastDist;
+            mLastDist += delta;
+            break;
+        case AndroidMotionEvent::ACTION_MAGNIFY_END:
+            msg = NS_SIMPLE_GESTURE_MAGNIFY;
+            delta -= mStartDist;
+            break;
+        default:
+            return;
+    }
 
-  nsRefPtr<nsWindow> kungFuDeathGrip(this);
-  DispatchGestureEvent(msg, 0, delta, pt, ae->Time());
-}
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-void
-nsWindow::DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
-                               const LayoutDeviceIntPoint &refPoint, uint64_t time)
-{
     WidgetSimpleGestureEvent event(true, msg, this);
 
-    event.direction = direction;
+    event.direction = 0;
     event.delta = delta;
     event.modifiers = 0;
-    event.time = time;
-    event.refPoint = refPoint;
+    event.time = ae->Time();
+    event.refPoint = pt;
 
     DispatchEvent(&event);
 }
@@ -1708,7 +1671,17 @@ public:
 nsRefPtr<mozilla::TextComposition>
 nsWindow::GetIMEComposition()
 {
-    return mozilla::IMEStateManager::GetTextCompositionFor(this);
+    // See comment in DispatchEvent. This function gets called on the root
+    // window, but the IMEStateManager uses the IME event's widget pointer
+    // (which is the child window) to maintain state. Therefore when requesting
+    // the text composition from the IMEStateManager we need to use the child
+    // window.
+    MOZ_ASSERT(this == TopWindow());
+    nsWindow* win = this;
+    if (mFocus) {
+        win = mFocus;
+    }
+    return mozilla::IMEStateManager::GetTextCompositionFor(win);
 }
 
 /*
@@ -2043,23 +2016,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     }
 }
 
-nsWindow *
-nsWindow::FindWindowForPoint(const nsIntPoint& pt)
-{
-    if (!mBounds.Contains(pt))
-        return nullptr;
-
-    // children mBounds are relative to their parent
-    nsIntPoint childPoint(pt.x - mBounds.x, pt.y - mBounds.y);
-
-    for (uint32_t i = 0; i < mChildren.Length(); ++i) {
-        if (mChildren[i]->mBounds.Contains(childPoint))
-            return mChildren[i]->FindWindowForPoint(childPoint);
-    }
-
-    return this;
-}
-
 void
 nsWindow::UserActivity()
 {
@@ -2075,6 +2031,14 @@ nsWindow::UserActivity()
 nsresult
 nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
+    // See comment in DispatchEvent. This function may get called on the child
+    // window, but all of our IME state is in the root window. So when this
+    // function is called, pass it on to the root window.
+    nsWindow* top = TopWindow();
+    if (top && top != this) {
+        return top->NotifyIMEInternal(aIMENotification);
+    }
+
     switch (aIMENotification.mMessage) {
         case REQUEST_TO_COMMIT_COMPOSITION:
             //ALOGIME("IME: REQUEST_TO_COMMIT_COMPOSITION: s=%d", aState);
@@ -2140,12 +2104,12 @@ nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
     nsWindow *top = TopWindow();
-    if (top && top->mFocus && this != top->mFocus) {
+    if (top && this != top) {
         // We are using an IME event later to notify Java, and the IME event
-        // will be processed by the focused window. Therefore, to ensure the
-        // IME event uses the correct mInputContext, we need to let the focused
+        // will be processed by the top window. Therefore, to ensure the
+        // IME event uses the correct mInputContext, we need to let the top
         // window process SetInputContext
-        top->mFocus->SetInputContext(aContext, aAction);
+        top->SetInputContext(aContext, aAction);
         return;
     }
 
@@ -2195,10 +2159,10 @@ NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
     nsWindow *top = TopWindow();
-    if (top && top->mFocus && this != top->mFocus) {
-        // We let the focused window process SetInputContext,
+    if (top && this != top) {
+        // We let the top window process SetInputContext,
         // so we should let it process GetInputContext as well.
-        return top->mFocus->GetInputContext();
+        return top->GetInputContext();
     }
     InputContext context = mInputContext;
     context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
@@ -2289,8 +2253,8 @@ nsWindow::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
     mIMESelectionChanged = false;
     NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE);
 
-    AddIMETextChange(IMEChange(aIMENotification));
     PostFlushIMEChanges();
+    AddIMETextChange(IMEChange(aIMENotification));
     return NS_OK;
 }
 

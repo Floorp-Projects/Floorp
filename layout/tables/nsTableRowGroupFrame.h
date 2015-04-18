@@ -34,7 +34,7 @@ struct nsRowGroupReflowState {
   {
     availSize.width  = reflowState.AvailableWidth();
     availSize.height = reflowState.AvailableHeight();
-    y = 0;  
+    y = 0;
   }
 
   ~nsRowGroupReflowState() {}
@@ -43,11 +43,11 @@ struct nsRowGroupReflowState {
 #define MIN_ROWS_NEEDING_CURSOR 20
 
 /**
- * nsTableRowGroupFrame is the frame that maps row groups 
+ * nsTableRowGroupFrame is the frame that maps row groups
  * (HTML tags THEAD, TFOOT, and TBODY). This class cannot be reused
- * outside of an nsTableFrame.  It assumes that its parent is an nsTableFrame, and 
+ * outside of an nsTableFrame.  It assumes that its parent is an nsTableFrame, and
  * its children are nsTableRowFrames.
- * 
+ *
  * @see nsTableFrame
  * @see nsTableRowFrame
  */
@@ -73,7 +73,7 @@ public:
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
-  
+
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) override;
   virtual void InsertFrames(ChildListID     aListID,
@@ -94,7 +94,7 @@ public:
     * Rows are all set to the same width and stacked vertically.
     * <P> rows are not split unless absolutely necessary.
     *
-    * @param aDesiredSize width set to width of rows, height set to 
+    * @param aDesiredSize width set to width of rows, height set to
     *                     sum of height of rows that fit in aMaxSize.height.
     *
     * @see nsIFrame::Reflow
@@ -127,7 +127,7 @@ public:
     */
   int32_t GetStartRowIndex();
 
-  /** Adjust the row indices of all rows  whose index is >= aRowIndex.  
+  /** Adjust the row indices of all rows  whose index is >= aRowIndex.
     * @param aRowIndex   - start adjusting with this index
     * @param aAdjustment - shift the row index by this amount
     */
@@ -146,12 +146,12 @@ public:
   nsresult  InitRepeatedFrame(nsPresContext*        aPresContext,
                               nsTableRowGroupFrame* aHeaderFooterFrame);
 
-  
+
   /**
    * Get the total height of all the row rects
    */
   nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
-  
+
   nsMargin* GetBCBorderWidth(nsMargin& aBorder);
 
   /**
@@ -183,13 +183,13 @@ public:
 public:
   virtual void DisposeLineIterator() override { }
 
-  // The table row is the equivalent to a line in block layout. 
+  // The table row is the equivalent to a line in block layout.
   // The nsILineIterator assumes that a line resides in a block, this role is
   // fullfilled by the row group. Rows in table are counted relative to the
   // table. The row index of row corresponds to the cellmap coordinates. The
   // line index with respect to a row group can be computed by substracting the
   // row index of the first row in the row group.
-   
+
   /** Get the number of rows in a row group
     * @return the number of lines in a row group
     */
@@ -199,11 +199,11 @@ public:
     * @return true if the table is rtl
     */
   virtual bool GetDirection() override;
-  
-  /** Return structural information about a line. 
+
+  /** Return structural information about a line.
     * @param aLineNumber       - the index of the row relative to the row group
     *                            If the line-number is invalid then
-    *                            aFirstFrameOnLine will be nullptr and 
+    *                            aFirstFrameOnLine will be nullptr and
     *                            aNumFramesOnLine will be zero.
     * @param aFirstFrameOnLine - the first cell frame that originates in row
     *                            with a rowindex that matches a line number
@@ -215,7 +215,7 @@ public:
                      nsIFrame** aFirstFrameOnLine,
                      int32_t* aNumFramesOnLine,
                      nsRect& aLineBounds) override;
-  
+
   /** Given a frame that's a child of the rowgroup, find which line its on.
     * @param aFrame       - frame, should be a row
     * @param aStartLine   - minimal index to return
@@ -255,11 +255,11 @@ public:
                             nsIFrame                 **aFirstVisual,
                             nsIFrame                 **aLastVisual) override;
 
-  /** Find the next originating cell frame that originates in the row.    
+  /** Find the next originating cell frame that originates in the row.
     * @param aFrame      - cell frame to start with, will return the next cell
     *                      originating in a row
     * @param aLineNumber - the index of the row relative to the table
-    */  
+    */
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, int32_t aLineNumber) override;
 
   // row cursor methods to speed up searching for the row(s)
@@ -277,13 +277,13 @@ public:
     uint32_t            mCursorIndex;
     nscoord             mOverflowAbove;
     nscoord             mOverflowBelow;
-    
+
     FrameCursorData()
       : mFrames(MIN_ROWS_NEEDING_CURSOR), mCursorIndex(0), mOverflowAbove(0),
         mOverflowBelow(0) {}
 
     bool AppendFrame(nsIFrame* aFrame);
-    
+
     void FinishBuildingCursor() {
       mFrames.Compact();
     }
@@ -328,10 +328,10 @@ public:
 protected:
   explicit nsTableRowGroupFrame(nsStyleContext* aContext);
 
-  void InitChildReflowState(nsPresContext&     aPresContext, 
+  void InitChildReflowState(nsPresContext&     aPresContext,
                             bool               aBorderCollapse,
                             nsHTMLReflowState& aReflowState);
-  
+
   virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
 
   void PlaceChild(nsPresContext*         aPresContext,
@@ -342,7 +342,7 @@ protected:
                   const nsRect&          aOriginalKidRect,
                   const nsRect&          aOriginalKidVisualOverflow);
 
-  void CalculateRowHeights(nsPresContext*           aPresContext, 
+  void CalculateRowHeights(nsPresContext*           aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState);
 
@@ -350,7 +350,7 @@ protected:
 
   void SlideChild(nsRowGroupReflowState& aReflowState,
                   nsIFrame*              aKidFrame);
-  
+
   /**
    * Reflow the frames we've already created
    *
@@ -373,8 +373,8 @@ protected:
   void SplitSpanningCells(nsPresContext&           aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           nsTableFrame&            aTableFrame,
-                          nsTableRowFrame&         aFirstRow, 
-                          nsTableRowFrame&         aLastRow,  
+                          nsTableRowFrame&         aFirstRow,
+                          nsTableRowFrame&         aLastRow,
                           bool                     aFirstRowIsTopOfPage,
                           nscoord                  aSpanningRowBottom,
                           nsTableRowFrame*&        aContRowFrame,
@@ -385,14 +385,14 @@ protected:
                                 nsIFrame&      aRowFrame,
                                 nsIFrame**     aContRowFrame);
 
-  bool IsSimpleRowFrame(nsTableFrame* aTableFrame, 
+  bool IsSimpleRowFrame(nsTableFrame* aTableFrame,
                           nsIFrame*     aFrame);
 
   void GetNextRowSibling(nsIFrame** aRowFrame);
 
   void UndoContinuedRow(nsPresContext*   aPresContext,
                         nsTableRowFrame* aRow);
-                        
+
 private:
   // border widths in pixels in the collapsing border model
   BCPixelSize mRightContBorderWidth;

@@ -23,6 +23,18 @@
 
 #include "vm/NativeObject.h"
 
+#define FOR_EACH_GC_LAYOUT(D) \
+    D(Object, JSObject) \
+    D(String, JSString) \
+    D(Symbol, JS::Symbol) \
+    D(Script, JSScript) \
+    D(AccessorShape, js::AccessorShape) \
+    D(Shape, js::Shape) \
+    D(BaseShape, js::BaseShape) \
+    D(JitCode, js::jit::JitCode) \
+    D(LazyScript, js::LazyScript) \
+    D(ObjectGroup, js::ObjectGroup)
+
 namespace js {
 
 unsigned GetCPUCount();
@@ -1088,19 +1100,6 @@ struct GCChunkHasher {
 };
 
 typedef HashSet<js::gc::Chunk*, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
-
-struct GrayRoot {
-    void* thing;
-    JSGCTraceKind kind;
-#ifdef DEBUG
-    JSTraceNamePrinter debugPrinter;
-    const void* debugPrintArg;
-    size_t debugPrintIndex;
-#endif
-
-    GrayRoot(void* thing, JSGCTraceKind kind)
-        : thing(thing), kind(kind) {}
-};
 
 typedef void (*IterateChunkCallback)(JSRuntime* rt, void* data, gc::Chunk* chunk);
 typedef void (*IterateZoneCallback)(JSRuntime* rt, void* data, JS::Zone* zone);

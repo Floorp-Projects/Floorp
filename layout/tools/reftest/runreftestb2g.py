@@ -450,6 +450,8 @@ class B2GRemoteReftest(RefTest):
         # Disable tiles also
         prefs["browser.newtabpage.directory.source"] = ""
         prefs["browser.newtabpage.directory.ping"] = ""
+        # Disable periodic updates of service workers
+        prefs["dom.serviceWorkers.periodic-updates.enabled"] = False
 
         if options.oop:
             prefs['browser.tabs.remote.autostart'] = True

@@ -4763,7 +4763,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                       extraConditionForNull=extraConditionForNull)
         elif (not type.hasNullableType and defaultValue and
               isinstance(defaultValue, IDLNullValue)):
-            assert type.hasDictionaryType
+            assert type.hasDictionaryType()
             assert defaultValue.type.isDictionary()
             if not isOwningUnion and typeNeedsRooting(defaultValue.type):
                 ctorArgs = "cx"
@@ -13759,9 +13759,9 @@ class CGCallback(CGClass):
         self.baseName = baseName
         self._deps = idlObject.getDeps()
         self.idlObject = idlObject
-        name = idlObject.identifier.name
+        self.name = idlObject.identifier.name
         if isJSImplementedDescriptor(descriptorProvider):
-            name = jsImplName(name)
+            self.name = jsImplName(self.name)
         # For our public methods that needThisHandling we want most of the
         # same args and the same return type as what CallbackMember
         # generates.  So we want to take advantage of all its
@@ -13776,11 +13776,11 @@ class CGCallback(CGClass):
                 realMethods.extend(self.getMethodImpls(method))
         realMethods.append(
             ClassMethod("operator==", "bool",
-                        [Argument("const %s&" % name, "aOther")],
+                        [Argument("const %s&" % self.name, "aOther")],
                         inline=True, bodyInHeader=True,
                         const=True,
                         body=("return %s::operator==(aOther);\n" % baseName)))
-        CGClass.__init__(self, name,
+        CGClass.__init__(self, self.name,
                          bases=[ClassBase(baseName)],
                          constructors=self.getConstructors(),
                          methods=realMethods+getters+setters)
@@ -13818,8 +13818,10 @@ class CGCallback(CGClass):
         argnamesWithThis = ["s.GetContext()", "thisValJS"] + argnames
         argnamesWithoutThis = ["s.GetContext()", "JS::UndefinedHandleValue"] + argnames
         # Now that we've recorded the argnames for our call to our private
-        # method, insert our optional argument for deciding whether the
-        # CallSetup should re-throw exceptions on aRv.
+        # method, insert our optional arguments for the execution reason and for
+        # deciding whether the CallSetup should re-throw exceptions on aRv.
+        args.append(Argument("const char*", "aExecutionReason",
+                             "nullptr"))
         args.append(Argument("ExceptionHandling", "aExceptionHandling",
                              "eReportExceptions"))
         # And the argument for communicating when exceptions should really be
@@ -13835,13 +13837,17 @@ class CGCallback(CGClass):
 
         setupCall = fill(
             """
-            CallSetup s(this, aRv, aExceptionHandling, aCompartment);
+            if (!aExecutionReason) {
+              aExecutionReason = "${executionReason}";
+            }
+            CallSetup s(this, aRv, aExecutionReason, aExceptionHandling, aCompartment);
             if (!s.GetContext()) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
             }
             """,
-            errorReturn=errorReturn)
+            errorReturn=errorReturn,
+            executionReason=method.getPrettyName())
 
         bodyWithThis = fill(
             """
@@ -14145,6 +14151,8 @@ class CallbackMember(CGNativeMember):
             # Since we don't need this handling, we're the actual method that
             # will be called, so we need an aRethrowExceptions argument.
             if not self.rethrowContentException:
+                args.append(Argument("const char*", "aExecutionReason",
+                                     "nullptr"))
                 args.append(Argument("ExceptionHandling", "aExceptionHandling",
                                      "eReportExceptions"))
             args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
@@ -14162,10 +14170,10 @@ class CallbackMember(CGNativeMember):
         if self.rethrowContentException:
             # getArgs doesn't add the aExceptionHandling argument but does add
             # aCompartment for us.
-            callSetup += ", eRethrowContentExceptions, aCompartment, /* aIsJSImplementedWebIDL = */ "
+            callSetup += ', "%s", eRethrowContentExceptions, aCompartment, /* aIsJSImplementedWebIDL = */ ' % self.getPrettyName()
             callSetup += toStringBool(isJSImplementedDescriptor(self.descriptorProvider))
         else:
-            callSetup += ", aExceptionHandling, aCompartment"
+            callSetup += ', "%s", aExceptionHandling, aCompartment' % self.getPrettyName()
         callSetup += ");\n"
         return fill(
             """

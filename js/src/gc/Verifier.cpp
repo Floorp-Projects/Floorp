@@ -133,7 +133,7 @@ AccumulateEdge(JS::CallbackTracer* jstrc, void** thingp, JSGCTraceKind kind)
 
     node->edges[i].thing = *thingp;
     node->edges[i].kind = kind;
-    node->edges[i].label = trc->tracingName("<unknown>");
+    node->edges[i].label = trc->contextName();
     node->count++;
 }
 
@@ -312,9 +312,7 @@ AssertMarkedOrAllocated(const EdgeValue& edge)
         return;
 
     char msgbuf[1024];
-    const char* label = edge.label;
-
-    JS_snprintf(msgbuf, sizeof(msgbuf), "[barrier verifier] Unmarked edge: %s", label);
+    JS_snprintf(msgbuf, sizeof(msgbuf), "[barrier verifier] Unmarked edge: %s", edge.label);
     MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
     MOZ_CRASH();
 }
@@ -389,7 +387,7 @@ struct VerifyPostTracer : JS::CallbackTracer
     int count;
 
     /* The set of edges in the StoreBuffer at the end of verification. */
-    typedef HashSet<void**, PointerHasher<void**, 3>, SystemAllocPolicy> EdgeSet;
+    typedef HashSet<void*const*, PointerHasher<void*const*, 3>, SystemAllocPolicy> EdgeSet;
     EdgeSet* edges;
 
     VerifyPostTracer(JSRuntime* rt, JSTraceCallback callback)
@@ -438,13 +436,13 @@ PostVerifierCollectStoreBufferEdges(JS::CallbackTracer* jstrc, void** thingp, JS
      * only things that enter this callback are marked by the store buffer. The
      * store buffer ensures that the real tracing location is set correctly.
      */
-    void** loc = trc->tracingLocation(thingp);
+    void*const* loc = trc->tracingLocation(thingp);
 
     trc->edges->put(loc);
 }
 
 static void
-AssertStoreBufferContainsEdge(VerifyPostTracer::EdgeSet* edges, void** loc, JSObject* dst)
+AssertStoreBufferContainsEdge(VerifyPostTracer::EdgeSet* edges, void*const* loc, JSObject* dst)
 {
     if (edges->has(loc))
         return;
@@ -477,7 +475,7 @@ PostVerifierVisitEdge(JS::CallbackTracer* jstrc, void** thingp, JSGCTraceKind ki
      * below. Since JSObject::markChildren handles this, the real trace
      * location will be set correctly in these cases.
      */
-    void** loc = trc->tracingLocation(thingp);
+    void*const* loc = trc->tracingLocation(thingp);
 
     AssertStoreBufferContainsEdge(trc->edges, loc, dst);
 }

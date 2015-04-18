@@ -205,7 +205,8 @@ WrapperPromiseCallback::Call(JSContext* aCx,
 
   // PromiseReactionTask step 6
   JS::Rooted<JS::Value> retValue(aCx);
-  mCallback->Call(value, &retValue, rv, CallbackObject::eRethrowExceptions,
+  mCallback->Call(value, &retValue, rv, "promise callback",
+                  CallbackObject::eRethrowExceptions,
                   mNextPromise->Compartment());
 
   rv.WouldReportJSException();

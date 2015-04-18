@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<script>
+  var isDone = false;
+  function done() {
+    if (!isDone) {
+      parent.callback();
+      isDone = true;
+    }
+  }
+
+  navigator.serviceWorker.register("../periodic.sjs", {scope: "."})
+    .then(function(registration) {
+      if (registration.installing) {
+        registration.installing.onstatechange = function(e) {
+          done();
+        };
+      } else {
+        done();
+      }
+    });
+</script>

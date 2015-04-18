@@ -685,6 +685,7 @@ interface TestInterface {
   attribute byte otherAttributeRenamedFrom;
 
   void passDictionary(optional Dict x);
+  void passDictionary2(Dict x);
   [Cached, Pure]
   readonly attribute Dict readonlyDictionary;
   [Cached, Pure]

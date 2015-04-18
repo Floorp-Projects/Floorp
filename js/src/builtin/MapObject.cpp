@@ -839,7 +839,7 @@ HashableValue
 HashableValue::mark(JSTracer* trc) const
 {
     HashableValue hv(*this);
-    trc->setTracingLocation((void*)this);
+    JS::AutoOriginalTraceLocation reloc(trc, (void**)this);
     TraceEdge(trc, &hv.value, "key");
     return hv;
 }
