@@ -1978,8 +1978,10 @@ private:
   uint32_t mBoolFlags;
 
 protected:
-  nsIContent* mNextSibling;
-  nsIContent* mPreviousSibling;
+  // These references are non-owning and safe, as they are managed by
+  // nsAttrAndChildArray.
+  nsIContent* MOZ_NON_OWNING_REF mNextSibling;
+  nsIContent* MOZ_NON_OWNING_REF mPreviousSibling;
   // This reference is non-owning and safe, since in the case of documents,
   // it is set to null when the document gets destroyed, and in the case of
   // other nodes, the children keep the parents alive.
