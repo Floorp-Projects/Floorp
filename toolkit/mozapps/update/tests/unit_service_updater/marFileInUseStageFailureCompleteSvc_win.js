@@ -42,7 +42,7 @@ function checkUpdateFinished() {
   gStageUpdate = false;
   gSwitchApp = true;
   gDisableReplaceFallback = true;
-  runUpdate(1, STATE_FAILED_WRITE_ERROR);
+  runUpdate(1, STATE_FAILED_WRITE_ERROR, checkUpdateApplied);
 }
 
 function checkUpdateApplied() {

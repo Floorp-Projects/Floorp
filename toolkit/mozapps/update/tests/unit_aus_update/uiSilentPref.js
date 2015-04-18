@@ -34,7 +34,8 @@ function run_test() {
   gUP.showUpdateInstalled();
   // Report a successful check after the call to showUpdateInstalled since it
   // didn't throw and otherwise it would report no tests run.
-  do_check_true(true);
+  Assert.ok(true,
+            "calling showUpdateInstalled should not attempt to open a window");
 
   debugDump("testing showUpdateAvailable should not call openWindow");
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
@@ -50,7 +51,8 @@ function run_test() {
   gUP.showUpdateAvailable(update);
   // Report a successful check after the call to showUpdateAvailable since it
   // didn't throw and otherwise it would report no tests run.
-  do_check_true(true);
+  Assert.ok(true,
+            "calling showUpdateAvailable should not attempt to open a window");
 
   debugDump("testing showUpdateError should not call getNewPrompter");
   gCheckFunc = check_showUpdateError;
@@ -58,7 +60,8 @@ function run_test() {
   gUP.showUpdateError(update);
   // Report a successful check after the call to showUpdateError since it
   // didn't throw and otherwise it would report no tests run.
-  do_check_true(true);
+  Assert.ok(true,
+            "calling showUpdateError should not attempt to open a window");
 
   doTestFinish();
 }

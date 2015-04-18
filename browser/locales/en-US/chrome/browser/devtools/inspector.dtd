@@ -68,6 +68,11 @@
 <!ENTITY inspectorHTMLPasteLastChild.label       "As Last Child">
 <!ENTITY inspectorHTMLPasteLastChild.accesskey   "L">
 
+<!-- LOCALIZATION NOTE (inspectorScrollNodeIntoView.label): This is the label
+     shown in the inspector contextual-menu for the item that lets users scroll
+     the current node into view -->
+<!ENTITY inspectorScrollNodeIntoView.label       "Scroll Into View">
+<!ENTITY inspectorScrollNodeIntoView.accesskey   "S">
 
 <!-- LOCALIZATION NOTE (inspectorHTMLDelete.label): This is the label shown in
      the inspector contextual-menu for the item that lets users delete the
