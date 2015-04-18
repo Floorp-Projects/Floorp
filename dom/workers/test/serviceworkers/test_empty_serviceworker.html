@@ -26,6 +26,9 @@
     registration.unregister().then(function(success) {
       ok(success, "unregister worked");
       SimpleTest.finish();
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+      SimpleTest.finish();
     });
   }
 
