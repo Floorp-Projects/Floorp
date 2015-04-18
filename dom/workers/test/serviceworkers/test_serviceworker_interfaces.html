@@ -20,6 +20,9 @@
           ok(success, "The service worker should be unregistered successfully");
 
           SimpleTest.finish();
+        }, function(e) {
+          dump("Unregistering the SW failed with " + e + "\n");
+          SimpleTest.finish();
         });
       } else if (event.data.type == 'status') {
         ok(event.data.status, event.data.msg);

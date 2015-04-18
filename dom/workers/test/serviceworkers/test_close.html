@@ -38,7 +38,11 @@
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "done") {
         navigator.serviceWorker.getRegistration().then(function(registration) {
-          registration.unregister().then(function() {
+          registration.unregister().then(function(result) {
+            ok(result, "Unregistering the service worker should succeed");
+            SimpleTest.finish();
+          }, function(e) {
+            dump("Unregistering the SW failed with " + e + "\n");
             SimpleTest.finish();
           });
         });

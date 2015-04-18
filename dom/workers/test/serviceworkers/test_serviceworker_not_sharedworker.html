@@ -41,6 +41,9 @@
           registration.unregister().then(function(success) {
             ok(success, "unregister should succeed");
             SimpleTest.finish();
+          }, function(e) {
+            dump("Unregistering the SW failed with " + e + "\n");
+            SimpleTest.finish();
           });
         };
         worker.port.postMessage({msg: "whoareyou"});
