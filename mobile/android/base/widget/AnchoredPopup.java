@@ -100,11 +100,15 @@ public abstract class AnchoredPopup extends PopupWindow {
             return;
         }
 
-        // If the anchor is null or out of the window bounds, just show the popup at the top of the
-        // root view.
-        final boolean validAnchor = (mAnchor != null) && (anchorLocation[1] > 0);
-        final View anchor = validAnchor ? mAnchor : decorView;
+        if (HardwareUtils.isTablet()) {
+            showAsDropDown(mAnchor, 0, 0);
+        } else {
+            // If the anchor is null or out of the window bounds, just show the popup at the top of the
+            // root view.
+            final boolean validAnchor = (mAnchor != null) && (anchorLocation[1] > 0);
+            final View anchor = validAnchor ? mAnchor : decorView;
 
-        showAtLocation(anchor, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, offsetY);
+            showAtLocation(anchor, Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, offsetY);
+        }
     }
 }
