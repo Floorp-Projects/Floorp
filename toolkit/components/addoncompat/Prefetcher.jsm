@@ -99,21 +99,22 @@ function objAddr(obj)
   return String(obj);
 }
 
-function log(...args)
+function log(/*...args*/)
 {
-  return;
-
+/*
   for (let arg of args) {
     dump(arg);
     dump(" ");
   }
   dump("\n");
+*/
 }
 
-function logPrefetch(kind, value1, component, value2)
+function logPrefetch(/*kind, value1, component, value2*/)
 {
-  return;
+/*
   log("prefetching", kind, objAddr(value1) + "." + component, "=", objAddr(value2));
+*/
 }
 
 /*
