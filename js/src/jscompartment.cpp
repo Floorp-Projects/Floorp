@@ -53,7 +53,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
 #endif
     global_(nullptr),
     enterCompartmentDepth(0),
-    performanceMonitoring(runtime_, this),
+    performanceMonitoring(runtime_),
     data(nullptr),
     objectMetadataCallback(nullptr),
     lastAnimationTime(0),
