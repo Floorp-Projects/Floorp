@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
     'ClippedImage.cpp',
     'DecodePool.cpp',
     'Decoder.cpp',
-    'Downscaler.cpp',
     'DynamicImage.cpp',
     'FrameAnimator.cpp',
     'FrozenImage.cpp',
@@ -39,6 +38,8 @@ UNIFIED_SOURCES += [
     'SVGDocumentWrapper.cpp',
     'VectorImage.cpp',
 ]
+if CONFIG['MOZ_ENABLE_SKIA']:
+    UNIFIED_SOURCES += [ 'Downscaler.cpp']
 
 # These files can't be unified because of ImageLogging.h #include order issues.
 SOURCES += [
