@@ -2346,7 +2346,7 @@ struct JSJitInfo {
 #define JITINFO_OP_TYPE_BITS 4
 #define JITINFO_ALIAS_SET_BITS 4
 #define JITINFO_RETURN_TYPE_BITS 8
-#define JITINFO_SLOT_INDEX_BITS 11
+#define JITINFO_SLOT_INDEX_BITS 10
 
     // The OpType that says what sort of function we are.
     uint32_t type_ : JITINFO_OP_TYPE_BITS;
@@ -2375,7 +2375,10 @@ struct JSJitInfo {
     uint32_t isMovable : 1;    /* Is op movable?  To be movable the op must
                                   not AliasEverything, but even that might
                                   not be enough (e.g. in cases when it can
-                                  throw). */
+                                  throw or is explicitly not movable). */
+    uint32_t isEliminatable : 1; /* Can op be dead-code eliminated? Again, this
+                                    depends on whether the op can throw, in
+                                    addition to the alias set. */
     // XXXbz should we have a JSValueType for the type of the member?
     uint32_t isAlwaysInSlot : 1; /* True if this is a getter that can always
                                     get the value from a slot of the "this"
