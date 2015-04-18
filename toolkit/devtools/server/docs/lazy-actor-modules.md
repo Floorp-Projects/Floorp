@@ -76,7 +76,7 @@ connected to the child process as parameter, e.g. in the **director-registry**:
 
 let gTrackedMessageManager = new Set();
 
-exports.setupParentProcess = function setupParentProcess({ mm, childID }) {
+exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
   if (gTrackedMessageManager.has(mm)) { return; }
   gTrackedMessageManager.add(mm);
 
@@ -84,7 +84,7 @@ exports.setupParentProcess = function setupParentProcess({ mm, childID }) {
   mm.addMessageListener("debug:director-registry-request", handleChildRequest);
 
   // time to unsubscribe from the disconnected message manager
-  DebuggerServer.once("disconnected-from-child:" + childID, handleMessageManagerDisconnected);
+  DebuggerServer.once("disconnected-from-child:" + prefix, handleMessageManagerDisconnected);
 
   function handleMessageManagerDisconnected(evt, { mm: disconnected_mm }) {
     ...
@@ -109,8 +109,8 @@ In the child process:
 In the parent process:
 - The DebuggerServer receives the DebuggerServer.setupInParent request
 - it tries to load the required module
-- it tries to call the **mod[setupParent]** method with the frame message manager and the childID
-  in the json parameter **{ mm, childID }**
+- it tries to call the **mod[setupParent]** method with the frame message manager and the prefix
+  in the json parameter **{ mm, prefix }**
   - the module setupParent helper use the mm to subscribe the messagemanager events
   - the module setupParent helper use the DebuggerServer object to subscribe *once* the
-    **"disconnected-from-child:CHILDID"** event (needed to unsubscribe the messagemanager events)
+    **"disconnected-from-child:PREFIX"** event (needed to unsubscribe the messagemanager events)
