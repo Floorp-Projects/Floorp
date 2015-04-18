@@ -3741,13 +3741,13 @@ class MCallDOMNative : public MCall
     MCallDOMNative(JSFunction* target, uint32_t numActualArgs)
         : MCall(target, numActualArgs, false)
     {
-        // If our jitinfo is not marked movable, that means that our C++
+        // If our jitinfo is not marked eliminatable, that means that our C++
         // implementation is fallible or that it never wants to be eliminated or
-        // coalesced or that we have no hope of ever doing the sort of argument
-        // analysis that would allow us to detemine that we're side-effect-free.
-        // In the latter case we wouldn't get DCEd no matter what, but for the
-        // former two cases we have to explicitly say that we can't be DCEd.
-        if (!getJitInfo()->isMovable)
+        // that we have no hope of ever doing the sort of argument analysis that
+        // would allow us to detemine that we're side-effect-free.  In the
+        // latter case we wouldn't get DCEd no matter what, but for the former
+        // two cases we have to explicitly say that we can't be DCEd.
+        if (!getJitInfo()->isEliminatable)
             setGuard();
     }
 
