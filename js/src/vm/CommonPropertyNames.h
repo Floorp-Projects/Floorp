@@ -201,6 +201,7 @@
     macro(toISOString, toISOString, "toISOString") \
     macro(toJSON, toJSON, "toJSON") \
     macro(toLocaleString, toLocaleString, "toLocaleString") \
+    macro(ToObject, ToObject, "ToObject") \
     macro(toSource, toSource, "toSource") \
     macro(toString, toString, "toString") \
     macro(toUTCString, toUTCString, "toUTCString") \

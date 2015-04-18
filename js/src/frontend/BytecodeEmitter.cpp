@@ -3726,7 +3726,10 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
 
-    MOZ_ASSERT(this->stackDepth != 0);                            // ... OBJ
+    MOZ_ASSERT(this->stackDepth != 0);                            // ... RHS
+
+    if (!emitToObject())                                          // ... OBJ
+        return false;
 
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
         // Duplicate the value being destructured to use as a reference base.
@@ -4949,6 +4952,21 @@ BytecodeEmitter::emitWith(ParseNode* pn)
         return false;
     if (!leaveNestedScope(&stmtInfo))
         return false;
+    return true;
+}
+
+bool
+BytecodeEmitter::emitToObject()
+{
+    if (!emitAtomOp(cx->names().ToObject, JSOP_GETINTRINSIC)) // VAL TOOBJECT
+        return false;
+    if (!emit1(JSOP_UNDEFINED))                               // VAL TOOBJECT UNDEFINED
+        return false;
+    if (!emit2(JSOP_PICK, (jsbytecode)2))                     // TOOBJECT UNDEFINED VAL
+        return false;
+    if (!emitCall(JSOP_CALL, 1))                              // OBJ
+        return false;
+    checkTypeSet(JSOP_CALL);
     return true;
 }
 
