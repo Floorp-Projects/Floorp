@@ -711,7 +711,7 @@ Transform(const gfxImageSurface* aDest,
                                                  (uint32_t*)aSrc->GetData(),
                                                  aSrc->Stride());
 
-  NS_ABORT_IF_FALSE(src && dest, "Failed to create pixman images?");
+  MOZ_ASSERT(src != 0 && dest !=0, "Failed to create pixman images?");
 
   pixman_transform pixTransform = BasicLayerManager_Matrix3DToPixman(aTransform);
   pixman_transform pixTransformInverted;

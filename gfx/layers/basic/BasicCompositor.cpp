@@ -280,7 +280,7 @@ Transform(DataSourceSurface* aDest,
                                                  (uint32_t*)aSource->GetData(),
                                                  aSource->Stride());
 
-  NS_ABORT_IF_FALSE(src && dest, "Failed to create pixman images?");
+  MOZ_ASSERT(src !=0 && dest != 0, "Failed to create pixman images?");
 
   pixman_transform pixTransform = Matrix3DToPixman(aTransform);
   pixman_transform pixTransformInverted;
