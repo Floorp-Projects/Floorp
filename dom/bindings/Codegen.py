@@ -8566,6 +8566,26 @@ class CGStaticMethodJitinfo(CGGeneric):
                  IDLToCIdentifier(method.identifier.name))))
 
 
+class CGMethodIdentityTest(CGAbstractMethod):
+    """
+    A class to generate a method-identity test for a given IDL operation.
+    """
+    def __init__(self, descriptor, method):
+        self.method = method
+        name = "Is%sMethod" % MakeNativeName(method.identifier.name)
+        CGAbstractMethod.__init__(self, descriptor, name, 'bool',
+                                  [Argument('JS::Handle<JSObject*>', 'aObj')])
+
+    def definition_body(self):
+        return dedent(
+            """
+            MOZ_ASSERT(aObj);
+            return js::IsFunctionObject(aObj) &&
+                   js::FunctionObjectIsNative(aObj) &&
+                   FUNCTION_VALUE_TO_JITINFO(JS::ObjectValue(*aObj)) == &%s_methodinfo;
+            """ % IDLToCIdentifier(self.method.identifier.name))
+
+
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
     # characters in them.  Deal with the former by returning "_empty",
@@ -11162,6 +11182,8 @@ class CGDescriptor(CGThing):
                         cgThings.append(CGMemberJITInfo(descriptor, m))
                         if props.isCrossOriginMethod:
                             crossOriginMethods.add(m.identifier.name)
+                        if m.getExtendedAttribute("MethodIdentityTestable"):
+                            cgThings.append(CGMethodIdentityTest(descriptor, m))
             elif m.isAttr():
                 if m.stringifier:
                     raise TypeError("Stringifier attributes not supported yet. "
