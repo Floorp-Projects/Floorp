@@ -2028,7 +2028,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   aLastChildReflowed = nullptr;
 
   if (!GetPrevInFlow()) {
-    mTableLayoutStrategy->ComputeColumnWidths(aReflowState);
+    mTableLayoutStrategy->ComputeColumnISizes(aReflowState);
   }
   // Constrain our reflow width to the computed table width (of the 1st in flow).
   // and our reflow height to our avail height minus border, padding, cellspacing
