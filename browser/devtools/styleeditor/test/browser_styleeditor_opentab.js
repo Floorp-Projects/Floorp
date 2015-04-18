@@ -5,11 +5,9 @@
 // A test to check the 'Open Link in new tab' functionality in the
 // context menu item for stylesheets (bug 992947).
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
-waitForExplicitFinish();
 
 add_task(function*() {
-  let panel = yield addTabAndOpenStyleEditors(2, null, TESTCASE_URI);
-  let ui = panel.UI;
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
   yield rightClickStyleSheet(ui, ui.editors[0]);
   is(ui._openLinkNewTabItem.getAttribute("disabled"), "false", "The menu item is not disabled");
@@ -73,7 +71,7 @@ function rightClickStyleSheet(ui, editor) {
   EventUtils.synthesizeMouseAtCenter(
     editor.summary.querySelector(".stylesheet-name"),
     {button: 2, type: "contextmenu"},
-    gPanelWindow);
+    ui._window);
 
   return defer.promise;
 }
@@ -91,7 +89,7 @@ function rightClickInlineStyleSheet(ui, editor) {
   EventUtils.synthesizeMouseAtCenter(
     editor.summary.querySelector(".stylesheet-name"),
     {button: 2, type: "contextmenu"},
-    gPanelWindow);
+    ui._window);
 
   return defer.promise;
 }
@@ -109,7 +107,7 @@ function rightClickNoStyleSheet(ui) {
   EventUtils.synthesizeMouseAtCenter(
     ui._panelDoc.querySelector("#splitview-tpl-summary-stylesheet"),
     {button: 2, type: "contextmenu"},
-    gPanelWindow);
+    ui._window);
 
   return defer.promise;
 }
