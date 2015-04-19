@@ -62,8 +62,6 @@ using namespace std;
 
 #define PLUGIN_VERSION     "1.0.0.0"
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
-#define STATIC_ASSERT(condition)                                \
-    extern void np_static_assert(int arg[(condition) ? 1 : -1])
 
 extern const char *sPluginName;
 extern const char *sPluginDescription;
@@ -305,8 +303,9 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   echoString,
 };
 
-STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
-              ARRAY_LENGTH(sPluginMethodFunctions));
+static_assert(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
+              ARRAY_LENGTH(sPluginMethodFunctions),
+              "Arrays should have the same size");
 
 static const NPUTF8* sPluginPropertyIdentifierNames[] = {
   "propertyAndMethod"

@@ -197,12 +197,6 @@ inline void MOZ_PretendNoReturn()
 #define STATIC_PASTE2(X,Y) X ## Y
 #define STATIC_PASTE1(X,Y) STATIC_PASTE2(X,Y)
 
-#define STATIC_ASSERT(COND)                          \
-  do {                                               \
-    __attribute__((assert_static(#COND), unused))    \
-    int STATIC_PASTE1(assert_static_, __COUNTER__);  \
-  } while(0)
-
 #define STATIC_ASSUME(COND)                          \
   do {                                               \
     __attribute__((assume_static(#COND), unused))    \
@@ -224,7 +218,6 @@ inline void MOZ_PretendNoReturn()
 #define STATIC_INVARIANT(COND)             /* nothing */
 #define STATIC_INVARIANT_ASSUME(COND)      /* nothing */
 
-#define STATIC_ASSERT(COND)          do { /* nothing */ } while(0)
 #define STATIC_ASSUME(COND)          do { /* nothing */ } while(0)
 #define STATIC_ASSERT_RUNTIME(COND)  do { /* nothing */ } while(0)
 
