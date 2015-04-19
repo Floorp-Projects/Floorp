@@ -19,11 +19,18 @@ template<class T>
 class OwningNonNull
 {
 public:
-  OwningNonNull()
-#ifdef DEBUG
-    : mInited(false)
-#endif
-  {}
+  OwningNonNull() {}
+
+  MOZ_IMPLICIT OwningNonNull(T& aValue)
+  {
+    init(&aValue);
+  }
+
+  template<class U>
+  MOZ_IMPLICIT OwningNonNull(already_AddRefed<U>&& aValue)
+  {
+    init(aValue.take());
+  }
 
   // This is no worse than get() in terms of const handling.
   operator T&() const
@@ -34,6 +41,17 @@ public:
   }
 
   operator T*() const
+  {
+    MOZ_ASSERT(mInited);
+    MOZ_ASSERT(mPtr, "OwningNonNull<T> was set to null");
+    return mPtr;
+  }
+
+  // Conversion to bool is always true, so delete to catch errors
+  explicit operator bool() const = delete;
+
+  T*
+  operator->() const
   {
     MOZ_ASSERT(mInited);
     MOZ_ASSERT(mPtr, "OwningNonNull<T> was set to null");
@@ -71,6 +89,12 @@ public:
     return mPtr;
   }
 
+  template<typename U>
+  void swap(U& aOther)
+  {
+    mPtr.swap(aOther);
+  }
+
 protected:
   template<typename U>
   void init(U aValue)
@@ -84,7 +108,7 @@ protected:
 
   nsRefPtr<T> mPtr;
 #ifdef DEBUG
-  bool mInited;
+  bool mInited = false;
 #endif
 };
 
