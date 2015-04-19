@@ -200,7 +200,7 @@ void
 nsHTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                          nsIDOMEventListener* aListener,
                                          bool aUseCapture,
-                                         nsIDOMElement* aElement,
+                                         Element* aElement,
                                          nsIContent * aParentContent,
                                          nsIPresShell* aShell)
 {
@@ -208,7 +208,7 @@ nsHTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
   if (evtTarget) {
     evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
-  DeleteRefToAnonymousNode(aElement, aParentContent, aShell);
+  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(aElement)), aParentContent, aShell);
 }
 
 // Deletes all references to an anonymous element
@@ -339,14 +339,14 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   // side effects while this code runs (bug 420439).
 
   if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
-      absPosElement != mAbsolutelyPositionedObject) {
+      absPosElement != GetAsDOMNode(mAbsolutelyPositionedObject)) {
     res = HideGrabber();
     NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
   if (mIsObjectResizingEnabled && mResizedObject &&
-      mResizedObject != focusElement) {
+      GetAsDOMNode(mResizedObject) != focusElement) {
     res = HideResizers();
     NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mResizedObject, "HideResizers failed");

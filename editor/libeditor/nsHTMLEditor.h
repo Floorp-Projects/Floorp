@@ -788,7 +788,7 @@ protected:
   void     RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                       nsIDOMEventListener* aListener,
                                       bool aUseCapture,
-                                      nsIDOMElement* aElement,
+                                      mozilla::dom::Element* aElement,
                                       nsIContent* aParentContent,
                                       nsIPresShell* aShell);
   void     DeleteRefToAnonymousNode(nsIDOMElement* aElement,
@@ -830,21 +830,21 @@ protected:
 
   /* RESIZING */
 
-  nsCOMPtr<nsIDOMElement> mTopLeftHandle;
-  nsCOMPtr<nsIDOMElement> mTopHandle;
-  nsCOMPtr<nsIDOMElement> mTopRightHandle;
-  nsCOMPtr<nsIDOMElement> mLeftHandle;
-  nsCOMPtr<nsIDOMElement> mRightHandle;
-  nsCOMPtr<nsIDOMElement> mBottomLeftHandle;
-  nsCOMPtr<nsIDOMElement> mBottomHandle;
-  nsCOMPtr<nsIDOMElement> mBottomRightHandle;
+  nsCOMPtr<mozilla::dom::Element> mTopLeftHandle;
+  nsCOMPtr<mozilla::dom::Element> mTopHandle;
+  nsCOMPtr<mozilla::dom::Element> mTopRightHandle;
+  nsCOMPtr<mozilla::dom::Element> mLeftHandle;
+  nsCOMPtr<mozilla::dom::Element> mRightHandle;
+  nsCOMPtr<mozilla::dom::Element> mBottomLeftHandle;
+  nsCOMPtr<mozilla::dom::Element> mBottomHandle;
+  nsCOMPtr<mozilla::dom::Element> mBottomRightHandle;
 
-  nsCOMPtr<nsIDOMElement> mActivatedHandle;
+  nsCOMPtr<mozilla::dom::Element> mActivatedHandle;
 
-  nsCOMPtr<nsIDOMElement> mResizingShadow;
-  nsCOMPtr<nsIDOMElement> mResizingInfo;
+  nsCOMPtr<mozilla::dom::Element> mResizingShadow;
+  nsCOMPtr<mozilla::dom::Element> mResizingInfo;
 
-  nsCOMPtr<nsIDOMElement> mResizedObject;
+  nsCOMPtr<mozilla::dom::Element> mResizedObject;
 
   nsCOMPtr<nsIDOMEventListener>  mMouseMotionListenerP;
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
@@ -875,17 +875,18 @@ protected:
 
   nsresult SetAllResizersPosition();
 
-  nsresult CreateResizer(nsIDOMElement ** aReturn, int16_t aLocation, nsIDOMNode * aParentNode);
+  already_AddRefed<mozilla::dom::Element>
+    CreateResizer(int16_t aLocation, nsIDOMNode* aParentNode);
   void     SetAnonymousElementPosition(int32_t aX, int32_t aY, nsIDOMElement *aResizer);
 
-  nsresult CreateShadow(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode,
-                        nsIDOMElement * aOriginalObject);
-  nsresult SetShadowPosition(nsIDOMElement * aShadow,
-                             nsIDOMElement * aOriginalObject,
+  already_AddRefed<mozilla::dom::Element>
+    CreateShadow(nsIDOMNode* aParentNode, nsIDOMElement* aOriginalObject);
+  nsresult SetShadowPosition(mozilla::dom::Element* aShadow,
+                             mozilla::dom::Element* aOriginalObject,
                              int32_t aOriginalObjectX,
                              int32_t aOriginalObjectY);
 
-  nsresult CreateResizingInfo(nsIDOMElement ** aReturn, nsIDOMNode * aParentNode);
+  already_AddRefed<mozilla::dom::Element> CreateResizingInfo(nsIDOMNode* aParentNode);
   nsresult SetResizingInfoPosition(int32_t aX, int32_t aY,
                                    int32_t aW, int32_t aH);
 
@@ -913,13 +914,13 @@ protected:
   int32_t mPositionedObjectBorderLeft;
   int32_t mPositionedObjectBorderTop;
 
-  nsCOMPtr<nsIDOMElement> mAbsolutelyPositionedObject;
-  nsCOMPtr<nsIDOMElement> mGrabber;
-  nsCOMPtr<nsIDOMElement> mPositioningShadow;
+  nsCOMPtr<mozilla::dom::Element> mAbsolutelyPositionedObject;
+  nsCOMPtr<mozilla::dom::Element> mGrabber;
+  nsCOMPtr<mozilla::dom::Element> mPositioningShadow;
 
   int32_t      mGridSize;
 
-  nsresult CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn);
+  already_AddRefed<mozilla::dom::Element> CreateGrabber(nsINode* aParentNode);
   nsresult StartMoving(nsIDOMElement * aHandle);
   nsresult SetFinalPosition(int32_t aX, int32_t aY);
   void     AddPositioningOffset(int32_t & aX, int32_t & aY);
