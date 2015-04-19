@@ -677,7 +677,8 @@ protected:
                              nsIAtom *aProperty, 
                              const nsAString *aAttribute, 
                              const bool aChildrenOnly = false);
-  nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAString *aAttribute);
+  nsresult RemoveInlinePropertyImpl(nsIAtom* aProperty,
+                                    const nsAString* aAttribute);
 
   bool NodeIsProperty(nsIDOMNode *aNode);
   bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
