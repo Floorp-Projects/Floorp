@@ -253,9 +253,11 @@ nsHTMLEditor::SetAllResizersPosition()
   nsAutoString value;
   float resizerWidth, resizerHeight;
   nsCOMPtr<nsIAtom> dummyUnit;
-  mHTMLCSSUtils->GetComputedProperty(static_cast<nsIDOMElement*>(GetAsDOMNode(mTopLeftHandle)), nsGkAtoms::width, value);
+  mHTMLCSSUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::width,
+                                     value);
   mHTMLCSSUtils->ParseLength(value, &resizerWidth, getter_AddRefs(dummyUnit));
-  mHTMLCSSUtils->GetComputedProperty(static_cast<nsIDOMElement*>(GetAsDOMNode(mTopLeftHandle)), nsGkAtoms::height, value);
+  mHTMLCSSUtils->GetComputedProperty(*mTopLeftHandle, *nsGkAtoms::height,
+                                     value);
   mHTMLCSSUtils->ParseLength(value, &resizerHeight, getter_AddRefs(dummyUnit));
 
   int32_t rw  = (int32_t)((resizerWidth + 1) / 2);

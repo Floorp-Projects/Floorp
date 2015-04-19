@@ -943,9 +943,12 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   return NS_OK;
 }
 
-nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils, nsIDOMNode* aNode) {
+static nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils,
+                                            nsIDOMNode* aNode) {
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node || !aNode, nsGkAtoms::marginLeft);
   nsAutoString direction;
-  aHTMLCSSUtils->GetComputedProperty(aNode, nsGkAtoms::direction, direction);
+  aHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::direction, direction);
   return direction.EqualsLiteral("rtl") ?
     nsGkAtoms::marginRight : nsGkAtoms::marginLeft;
 }
@@ -976,21 +979,24 @@ nsHTMLEditRules::GetIndentState(bool *aCanIndent, bool *aCanOutdent)
   bool useCSS = mHTMLEditor->IsCSSEnabled();
   for (i=listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+    nsCOMPtr<nsINode> curNode = do_QueryInterface(arrayOfNodes[i]);
+    NS_ENSURE_STATE(curNode || !arrayOfNodes[i]);
     
-    if (nsHTMLEditUtils::IsNodeThatCanOutdent(curNode))
-    {
+    if (nsHTMLEditUtils::IsNodeThatCanOutdent(GetAsDOMNode(curNode))) {
       *aCanOutdent = true;
       break;
     }
     else if (useCSS) {
       // we are in CSS mode, indentation is done using the margin-left (or margin-right) property
       NS_ENSURE_STATE(mHTMLEditor);
-      nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
+      nsIAtom* marginProperty =
+        MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
+                                    GetAsDOMNode(curNode));
       nsAutoString value;
       // retrieve its specified value
       NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, marginProperty, value);
+      mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*curNode,
+                                                       *marginProperty, value);
       float f;
       nsCOMPtr<nsIAtom> unit;
       // get its number part and its unit
@@ -4143,7 +4149,9 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
         nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
         nsAutoString value;
         NS_ENSURE_STATE(mHTMLEditor);
-        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, marginProperty, value);
+        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*curNode_,
+                                                         *marginProperty,
+                                                         value);
         float f;
         nsCOMPtr<nsIAtom> unit;
         NS_ENSURE_STATE(mHTMLEditor);
@@ -4201,24 +4209,21 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
       }
       
       // are we inside a blockquote?
-      nsCOMPtr<nsIDOMNode> n = curNode;
-      nsCOMPtr<nsIDOMNode> tmp;
+      nsCOMPtr<nsINode> n = curNode_;
       curBlockQuoteIsIndentedWithCSS = false;
       // keep looking up the hierarchy as long as we don't hit the body or the
       // active editing host or a table element (other than an entire table)
-      while (!nsTextEditUtils::IsBody(n) && mHTMLEditor &&
-             mHTMLEditor->IsDescendantOfEditorRoot(n)
-          && (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
-      {
-        n->GetParentNode(getter_AddRefs(tmp));
-        if (!tmp) {
+      while (!n->IsHTMLElement(nsGkAtoms::body) && mHTMLEditor &&
+             mHTMLEditor->IsDescendantOfEditorRoot(n) &&
+             (n->IsHTMLElement(nsGkAtoms::table) ||
+              !nsHTMLEditUtils::IsTableElement(n))) {
+        if (!n->GetParentNode()) {
           break;
         }
-        n = tmp;
-        if (nsHTMLEditUtils::IsBlockquote(n))
-        {
+        n = n->GetParentNode();
+        if (n->IsHTMLElement(nsGkAtoms::blockquote)) {
           // if so, remember it, and remember first node we are taking out of it.
-          curBlockQuote = n;
+          curBlockQuote = GetAsDOMNode(n);
           firstBQChild  = curNode;
           lastBQChild   = curNode;
           break;
@@ -4229,14 +4234,15 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
           nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
           nsAutoString value;
           NS_ENSURE_STATE(mHTMLEditor);
-          mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(n, marginProperty, value);
+          mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*n, *marginProperty,
+                                                           value);
           float f;
           nsCOMPtr<nsIAtom> unit;
           NS_ENSURE_STATE(mHTMLEditor);
           mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
           if (f > 0 && !(nsHTMLEditUtils::IsList(curParent) && nsHTMLEditUtils::IsList(curNode)))
           {
-            curBlockQuote = n;
+            curBlockQuote = GetAsDOMNode(n);
             firstBQChild  = curNode;
             lastBQChild   = curNode;
             curBlockQuoteIsIndentedWithCSS = true;
@@ -8969,7 +8975,8 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
                                 GetAsDOMNode(element));
   nsAutoString value;
   NS_ENSURE_STATE(mHTMLEditor);
-  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, marginProperty, value);
+  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*element, *marginProperty,
+                                                   value);
   float f;
   nsCOMPtr<nsIAtom> unit;
   NS_ENSURE_STATE(mHTMLEditor);
