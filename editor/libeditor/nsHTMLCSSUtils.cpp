@@ -575,12 +575,12 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
   return mHTMLEditor->RemoveContainer(element);
 }
 
-// Answers true is the property can be removed by setting a "none" CSS value
+// Answers true if the property can be removed by setting a "none" CSS value
 // on a node
 bool
-nsHTMLCSSUtils::IsCSSInvertable(nsIAtom *aProperty, const nsAString *aAttribute)
+nsHTMLCSSUtils::IsCSSInvertible(nsIAtom& aProperty, const nsAString* aAttribute)
 {
-  return nsGkAtoms::b == aProperty;
+  return nsGkAtoms::b == &aProperty;
 }
 
 // Get the default browser background color if we need it for GetCSSBackgroundColorState
