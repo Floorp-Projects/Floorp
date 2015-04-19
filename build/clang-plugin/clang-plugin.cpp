@@ -690,10 +690,18 @@ DiagnosticsMatcher::DiagnosticsMatcher()
       )).bind("node"),
     &nanExprChecker);
 
+  // First, look for direct parents of the MemberExpr.
   astMatcher.addMatcher(callExpr(callee(functionDecl(hasNoAddRefReleaseOnReturnAttr()).bind("func")),
                                  hasParent(memberExpr(isAddRefOrRelease(),
                                                       hasParent(callExpr())).bind("member")
       )).bind("node"),
+    &noAddRefReleaseOnReturnChecker);
+  // Then, look for MemberExpr that need to be casted to the right type using
+  // an intermediary CastExpr before we get to the CallExpr.
+  astMatcher.addMatcher(callExpr(callee(functionDecl(hasNoAddRefReleaseOnReturnAttr()).bind("func")),
+                                 hasParent(castExpr(hasParent(memberExpr(isAddRefOrRelease(),
+                                                                         hasParent(callExpr())).bind("member"))))
+      ).bind("node"),
     &noAddRefReleaseOnReturnChecker);
 
   astMatcher.addMatcher(lambdaExpr(

@@ -223,8 +223,8 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 
   // Only support nsILoadContext if child channel's callbacks did too
   if (aIID.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
-    NS_ADDREF(mLoadContext);
-    *result = static_cast<nsILoadContext*>(mLoadContext);
+    nsCOMPtr<nsILoadContext> copy = mLoadContext;
+    copy.forget(result);
     return NS_OK;
   }
 

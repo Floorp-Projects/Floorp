@@ -341,8 +341,8 @@ WyciwygChannelParent::GetInterface(const nsIID& uuid, void** result)
 {
   // Only support nsILoadContext if child channel's callbacks did too
   if (uuid.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
-    NS_ADDREF(mLoadContext);
-    *result = static_cast<nsILoadContext*>(mLoadContext);
+    nsCOMPtr<nsILoadContext> copy = mLoadContext;
+    copy.forget(result);
     return NS_OK;
   }
 
