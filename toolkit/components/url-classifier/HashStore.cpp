@@ -375,6 +375,7 @@ HashStore::ReadChunkNumbers()
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mInputStream);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
                                sizeof(Header));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mAddChunks.Read(mInputStream, mHeader.numAddChunks);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -401,6 +402,7 @@ HashStore::ReadHashes()
   uint32_t offset = sizeof(Header);
   offset += (mHeader.numAddChunks + mHeader.numSubChunks) * sizeof(uint32_t);
   nsresult rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, offset);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = ReadAddPrefixes();
   NS_ENSURE_SUCCESS(rv, rv);
