@@ -238,7 +238,7 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
     nscoord pctBasis = 0;
     if (textIndent.HasPercent()) {
       pctBasis =
-        nsHTMLReflowState::GetContainingBlockContentWidth(mBlockReflowState);
+        mBlockReflowState->GetContainingBlockContentISize(aWritingMode);
     }
     nscoord indent = nsRuleNode::ComputeCoordPercentCalc(textIndent, pctBasis);
 
