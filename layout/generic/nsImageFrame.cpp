@@ -182,7 +182,7 @@ nsImageFrame::DisconnectMap()
 {
   if (mImageMap) {
     mImageMap->Destroy();
-    NS_RELEASE(mImageMap);
+    mImageMap = nullptr;
 
 #ifdef ACCESSIBILITY
   nsAccessibilityService* accService = GetAccService();
@@ -1779,7 +1779,6 @@ nsImageFrame::GetImageMap()
     nsIContent* map = GetMapElement();
     if (map) {
       mImageMap = new nsImageMap();
-      NS_ADDREF(mImageMap);
       mImageMap->Init(this, map);
     }
   }
