@@ -237,24 +237,24 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
   return NS_OK;
 }
 
-nsresult
-nsHTMLEditor::CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn)
+already_AddRefed<Element>
+nsHTMLEditor::CreateGrabber(nsINode* aParentNode)
 {
   // let's create a grabber through the element factory
-  nsresult res = CreateAnonymousElement(NS_LITERAL_STRING("span"),
-                                        aParentNode,
-                                        NS_LITERAL_STRING("mozGrabber"),
-                                        false,
-                                        aReturn);
+  nsCOMPtr<nsIDOMElement> retDOM;
+  CreateAnonymousElement(NS_LITERAL_STRING("span"), GetAsDOMNode(aParentNode),
+                         NS_LITERAL_STRING("mozGrabber"), false,
+                         getter_AddRefs(retDOM));
 
-  NS_ENSURE_TRUE(*aReturn, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(retDOM, nullptr);
 
   // add the mouse listener so we can detect a click on a resizer
-  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(*aReturn));
+  nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(retDOM));
   evtTarget->AddEventListener(NS_LITERAL_STRING("mousedown"),
                               mEventListener, false);
 
-  return res;
+  nsCOMPtr<Element> ret = do_QueryInterface(retDOM);
+  return ret.forget();
 }
 
 NS_IMETHODIMP
@@ -262,7 +262,7 @@ nsHTMLEditor::RefreshGrabber()
 {
   NS_ENSURE_TRUE(mAbsolutelyPositionedObject, NS_ERROR_NULL_POINTER);
 
-  nsresult res = GetPositionAndDimensions(mAbsolutelyPositionedObject,
+  nsresult res = GetPositionAndDimensions(static_cast<nsIDOMElement*>(GetAsDOMNode(mAbsolutelyPositionedObject)),
                                          mPositionedObjectX,
                                          mPositionedObjectY,
                                          mPositionedObjectWidth,
@@ -276,15 +276,16 @@ nsHTMLEditor::RefreshGrabber()
 
   SetAnonymousElementPosition(mPositionedObjectX+12,
                               mPositionedObjectY-14,
-                              mGrabber);
+                              static_cast<nsIDOMElement*>(GetAsDOMNode(mGrabber)));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLEditor::HideGrabber()
 {
-  nsresult res =
-    mAbsolutelyPositionedObject->RemoveAttribute(NS_LITERAL_STRING("_moz_abspos"));
+  nsresult res = mAbsolutelyPositionedObject->UnsetAttr(kNameSpaceID_None,
+                                                        nsGkAtoms::_moz_abspos,
+                                                        true);
   NS_ENSURE_SUCCESS(res, res);
 
   mAbsolutelyPositionedObject = nullptr;
@@ -296,16 +297,12 @@ nsHTMLEditor::HideGrabber()
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
 
-  nsCOMPtr<nsIDOMNode> parentNode;
-  res = mGrabber->GetParentNode(getter_AddRefs(parentNode));
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parentNode);
+  nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
   NS_ENSURE_TRUE(parentContent, NS_ERROR_NULL_POINTER);
 
-  DeleteRefToAnonymousNode(mGrabber, parentContent, ps);
+  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(mGrabber)), parentContent, ps);
   mGrabber = nullptr;
-  DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
+  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(mPositioningShadow)), parentContent, ps);
   mPositioningShadow = nullptr;
 
   return NS_OK;
@@ -314,7 +311,8 @@ nsHTMLEditor::HideGrabber()
 NS_IMETHODIMP
 nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
 
   if (mGrabber) {
     NS_ERROR("call HideGrabber first");
@@ -325,19 +323,15 @@ nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
   nsresult res = CheckPositionedElementBGandFG(aElement, classValue);
   NS_ENSURE_SUCCESS(res, res);
 
-  res = aElement->SetAttribute(NS_LITERAL_STRING("_moz_abspos"),
-                               classValue);
+  res = element->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_abspos,
+                         classValue, true);
   NS_ENSURE_SUCCESS(res, res);
 
   // first, let's keep track of that element...
-  mAbsolutelyPositionedObject = aElement;
+  mAbsolutelyPositionedObject = element;
 
-  nsCOMPtr<nsIDOMNode> parentNode;
-  res = aElement->GetParentNode(getter_AddRefs(parentNode));
-  NS_ENSURE_SUCCESS(res, res);
-
-  res = CreateGrabber(parentNode, getter_AddRefs(mGrabber));
-  NS_ENSURE_SUCCESS(res, res);
+  mGrabber = CreateGrabber(element->GetParentNode());
+  NS_ENSURE_TRUE(mGrabber, NS_ERROR_FAILURE);
 
   // and set its position
   return RefreshGrabber();
@@ -346,27 +340,24 @@ nsHTMLEditor::ShowGrabberOnElement(nsIDOMElement * aElement)
 nsresult
 nsHTMLEditor::StartMoving(nsIDOMElement *aHandle)
 {
-  nsCOMPtr<nsIDOMNode> parentNode;
-  nsresult res = mGrabber->GetParentNode(getter_AddRefs(parentNode));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsINode> parentNode = mGrabber->GetParentNode();
 
   // now, let's create the resizing shadow
-  res = CreateShadow(getter_AddRefs(mPositioningShadow),
-                                 parentNode, mAbsolutelyPositionedObject);
-  NS_ENSURE_SUCCESS(res,res);
-  res = SetShadowPosition(mPositioningShadow, mAbsolutelyPositionedObject,
-                             mPositionedObjectX, mPositionedObjectY);
+  mPositioningShadow = CreateShadow(GetAsDOMNode(parentNode),
+      static_cast<nsIDOMElement*>(GetAsDOMNode(mAbsolutelyPositionedObject)));
+  NS_ENSURE_TRUE(mPositioningShadow, NS_ERROR_FAILURE);
+  nsresult res = SetShadowPosition(mPositioningShadow,
+                                   mAbsolutelyPositionedObject,
+                                   mPositionedObjectX, mPositionedObjectY);
   NS_ENSURE_SUCCESS(res,res);
 
   // make the shadow appear
-  mPositioningShadow->RemoveAttribute(NS_LITERAL_STRING("class"));
+  mPositioningShadow->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 
   // position it
-  mHTMLCSSUtils->SetCSSPropertyPixels(mPositioningShadow,
-                                      NS_LITERAL_STRING("width"),
+  mHTMLCSSUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::width,
                                       mPositionedObjectWidth);
-  mHTMLCSSUtils->SetCSSPropertyPixels(mPositioningShadow,
-                                      NS_LITERAL_STRING("height"),
+  mHTMLCSSUtils->SetCSSPropertyPixels(*mPositioningShadow, *nsGkAtoms::height,
                                       mPositionedObjectHeight);
 
   mIsMoving = true;
@@ -411,14 +402,11 @@ nsHTMLEditor::EndMoving()
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
     NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-    nsCOMPtr<nsIDOMNode> parentNode;
-    nsresult res = mGrabber->GetParentNode(getter_AddRefs(parentNode));
-    NS_ENSURE_SUCCESS(res, res);
-
-    nsCOMPtr<nsIContent> parentContent( do_QueryInterface(parentNode) );
+    nsCOMPtr<nsIContent> parentContent = mGrabber->GetParent();
     NS_ENSURE_TRUE(parentContent, NS_ERROR_FAILURE);
 
-    DeleteRefToAnonymousNode(mPositioningShadow, parentContent, ps);
+    DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(mPositioningShadow)),
+                             parentContent, ps);
 
     mPositioningShadow = nullptr;
   }
@@ -606,8 +594,9 @@ nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, int32_t aX, int32_t aY
 NS_IMETHODIMP
 nsHTMLEditor::GetPositionedElement(nsIDOMElement ** aReturn)
 {
-  *aReturn = mAbsolutelyPositionedObject;
-  NS_IF_ADDREF(*aReturn);
+  nsCOMPtr<nsIDOMElement> ret =
+    static_cast<nsIDOMElement*>(GetAsDOMNode(mAbsolutelyPositionedObject));
+  ret.forget(aReturn);
   return NS_OK;
 }
 
