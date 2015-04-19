@@ -328,8 +328,6 @@ public:
    * Gets the computed style for a given element.  Can return null.
    */
   already_AddRefed<nsComputedDOMStyle>
-    GetComputedStyle(nsIDOMElement* aElement);
-  already_AddRefed<nsComputedDOMStyle>
     GetComputedStyle(mozilla::dom::Element* aElement);
 
 

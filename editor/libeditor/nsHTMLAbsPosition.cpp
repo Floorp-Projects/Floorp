@@ -625,6 +625,8 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
   //   If the background color is 'auto' and at least one of R G B values of
   //       the foreground is below #d0, use a white background
   // Otherwise don't change background/foreground
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element || !aElement);
 
   aReturn.Truncate();
   
@@ -641,7 +643,7 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
     NS_ENSURE_SUCCESS(res, res);
     if (bgColorStr.EqualsLiteral("transparent")) {
       nsRefPtr<nsComputedDOMStyle> cssDecl =
-        mHTMLCSSUtils->GetComputedStyle(aElement);
+        mHTMLCSSUtils->GetComputedStyle(element);
       NS_ENSURE_STATE(cssDecl);
 
       // from these declarations, get the one we want and that one only

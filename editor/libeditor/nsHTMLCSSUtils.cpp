@@ -539,13 +539,6 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
 }
 
 already_AddRefed<nsComputedDOMStyle>
-nsHTMLCSSUtils::GetComputedStyle(nsIDOMElement* aElement)
-{
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
-  return GetComputedStyle(element);
-}
-
-already_AddRefed<nsComputedDOMStyle>
 nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
 {
   MOZ_ASSERT(aElement);
