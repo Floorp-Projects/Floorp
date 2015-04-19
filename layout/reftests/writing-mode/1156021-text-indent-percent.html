@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+  font-size: 10px;
+}
+div {
+  width: 100px;
+  height: 200px;
+  margin: 5px;
+  border: 1px solid silver;
+  display: inline-block;
+  vertical-align: top;
+}
+.vlr {
+  writing-mode: vertical-lr;
+}
+.vrl {
+  writing-mode: vertical-rl;
+}
+p {
+  inline-size: 100%;
+  text-indent: 20%;
+  margin: 0;
+}
+span {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: green;
+}
+</style>
+</head>
+<body>
+<div> <p><span></span></p> </div>
+<div dir="rtl"> <p><span></span></p> </div>
+<div class="vlr"> <p><span></span></p> </div>
+<div class="vlr" dir="rtl"> <p><span></span></p> </div>
+<div class="vrl"> <p><span></span></p> </div>
+<div class="vrl" dir="rtl"> <p><span></span></p> </div>
+<br>
+<div> <p><span></span></p> </div>
+<div> <p dir="rtl"><span></span></p> </div>
+<div> <p class="vlr"><span></span></p> </div>
+<div> <p class="vlr" dir="rtl"><span></span></p> </div>
+<div> <p class="vrl"><span></span></p> </div>
+<div> <p class="vrl" dir="rtl"><span></span></p> </div>
+</body>
+</html>
