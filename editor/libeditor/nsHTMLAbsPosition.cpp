@@ -88,20 +88,17 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
   NS_ENSURE_SUCCESS(res, res);
 
   nsAutoString positionStr;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
+  nsCOMPtr<nsINode> node = do_QueryInterface(element);
   nsCOMPtr<nsIDOMNode> resultNode;
 
-  while (!resultNode && node && !nsEditor::NodeIsType(node, nsGkAtoms::html)) {
-    res = mHTMLCSSUtils->GetComputedProperty(node, nsGkAtoms::position,
+  while (!resultNode && node && !node->IsHTMLElement(nsGkAtoms::html)) {
+    res = mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::position,
                                              positionStr);
     NS_ENSURE_SUCCESS(res, res);
     if (positionStr.EqualsLiteral("absolute"))
-      resultNode = node;
+      resultNode = GetAsDOMNode(node);
     else {
-      nsCOMPtr<nsIDOMNode> parentNode;
-      res = node->GetParentNode(getter_AddRefs(parentNode));
-      NS_ENSURE_SUCCESS(res, res);
-      node.swap(parentNode);
+      node = node->GetParentNode();
     }
   }
 
@@ -195,11 +192,13 @@ NS_IMETHODIMP
 nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
                                int32_t * aZindex)
 {
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element || !aElement);
   nsAutoString zIndexStr;
   *aZindex = 0;
 
-  nsresult res = mHTMLCSSUtils->GetSpecifiedProperty(aElement,
-                                                     nsGkAtoms::z_index,
+  nsresult res = mHTMLCSSUtils->GetSpecifiedProperty(*element,
+                                                     *nsGkAtoms::z_index,
                                                      zIndexStr);
   NS_ENSURE_SUCCESS(res, res);
   if (zIndexStr.EqualsLiteral("auto")) {
@@ -208,24 +207,21 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
     nsCOMPtr<nsIDOMNode> parentNode;
     res = aElement->GetParentNode(getter_AddRefs(parentNode));
     NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsIDOMNode> node = parentNode;
+    nsCOMPtr<nsINode> node = do_QueryInterface(parentNode);
     nsAutoString positionStr;
-    while (node && 
-           zIndexStr.EqualsLiteral("auto") &&
-           !nsTextEditUtils::IsBody(node)) {
-      res = mHTMLCSSUtils->GetComputedProperty(node, nsGkAtoms::position,
+    while (node && zIndexStr.EqualsLiteral("auto") &&
+           !node->IsHTMLElement(nsGkAtoms::body)) {
+      res = mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::position,
                                                positionStr);
       NS_ENSURE_SUCCESS(res, res);
       if (positionStr.EqualsLiteral("absolute")) {
         // ah, we found one, what's its z-index ? If its z-index is auto,
         // we have to continue climbing the document's tree
-        res = mHTMLCSSUtils->GetComputedProperty(node, nsGkAtoms::z_index,
+        res = mHTMLCSSUtils->GetComputedProperty(*node, *nsGkAtoms::z_index,
                                                  zIndexStr);
         NS_ENSURE_SUCCESS(res, res);
       }
-      res = node->GetParentNode(getter_AddRefs(parentNode));
-      NS_ENSURE_SUCCESS(res, res);
-      node = parentNode;
+      node = node->GetParentNode();
     }
   }
 
@@ -485,7 +481,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
   NS_ENSURE_ARG_POINTER(element);
 
   nsAutoString positionStr;
-  mHTMLCSSUtils->GetComputedProperty(aElement, nsGkAtoms::position,
+  mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::position,
                                      positionStr);
   bool isPositioned = (positionStr.EqualsLiteral("absolute"));
 
@@ -621,13 +617,13 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
   
   nsAutoString bgImageStr;
   nsresult res =
-    mHTMLCSSUtils->GetComputedProperty(aElement, nsGkAtoms::background_image,
+    mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::background_image,
                                        bgImageStr);
   NS_ENSURE_SUCCESS(res, res);
   if (bgImageStr.EqualsLiteral("none")) {
     nsAutoString bgColorStr;
     res =
-      mHTMLCSSUtils->GetComputedProperty(aElement, nsGkAtoms::backgroundColor,
+      mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::backgroundColor,
                                          bgColorStr);
     NS_ENSURE_SUCCESS(res, res);
     if (bgColorStr.EqualsLiteral("transparent")) {

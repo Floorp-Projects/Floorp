@@ -739,7 +739,7 @@ AssertParserServiceIsCorrect(nsIAtom* aTag, bool aIsBlock)
  * Can be used to determine if a new paragraph should be started.
  */
 bool
-nsHTMLEditor::NodeIsBlockStatic(const dom::Element* aElement)
+nsHTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
 {
   MOZ_ASSERT(aElement);
 
@@ -795,7 +795,7 @@ nsHTMLEditor::NodeIsBlock(nsIDOMNode *aNode, bool *aIsBlock)
 bool
 nsHTMLEditor::IsBlockNode(nsINode *aNode)
 {
-  return aNode && aNode->IsElement() && NodeIsBlockStatic(aNode->AsElement());
+  return aNode && NodeIsBlockStatic(aNode);
 }
 
 // Non-static version for the nsIEditor interface and JavaScript
@@ -825,7 +825,7 @@ nsHTMLEditor::GetBlockNodeParent(nsINode* aNode)
   nsCOMPtr<nsINode> p = aNode->GetParentNode();
 
   while (p) {
-    if (p->IsElement() && NodeIsBlockStatic(p->AsElement())) {
+    if (NodeIsBlockStatic(p)) {
       return p.forget().downcast<Element>();
     }
     p = p->GetParentNode();
@@ -1731,59 +1731,48 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
   
   // get selection
   nsRefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
+  NS_ENSURE_STATE(selection && selection->GetRangeAt(0));
 
   // get selection location
-  nsCOMPtr<nsIDOMNode> parent;
-  int32_t offset;
-  nsresult res = GetStartNodeAndOffset(selection, getter_AddRefs(parent),
-                                       &offset);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsINode> parent = selection->GetRangeAt(0)->GetStartParent();
+  int32_t offset = selection->GetRangeAt(0)->StartOffset();
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
   // is the selection collapsed?
-  nsCOMPtr<nsIDOMNode> nodeToExamine;
+  nsCOMPtr<nsINode> nodeToExamine;
   if (selection->Collapsed() || IsTextNode(parent)) {
     // we want to look at the parent and ancestors
     nodeToExamine = parent;
   } else {
     // otherwise we want to look at the first editable node after
     // {parent,offset} and its ancestors for divs with alignment on them
-    nodeToExamine = GetChildAt(parent, offset);
+    nodeToExamine = parent->GetChildAt(offset);
     //GetNextNode(parent, offset, true, address_of(nodeToExamine));
   }
   
   NS_ENSURE_TRUE(nodeToExamine, NS_ERROR_NULL_POINTER);
 
-  // is the node to examine a block ?
-  bool isBlock;
-  res = NodeIsBlockStatic(nodeToExamine, &isBlock);
-  NS_ENSURE_SUCCESS(res, res);
-
-  nsCOMPtr<nsIDOMNode> tmp;
-
   if (aBlockLevel) {
     // we are querying the block background (and not the text background), let's
     // climb to the block container
-    nsCOMPtr<nsIDOMNode> blockParent = nodeToExamine;
-    if (!isBlock) {
+    nsCOMPtr<Element> blockParent;
+    if (NodeIsBlockStatic(nodeToExamine)) {
+      blockParent = nodeToExamine->AsElement();
+    } else {
       blockParent = GetBlockNodeParent(nodeToExamine);
-      NS_ENSURE_TRUE(blockParent, NS_OK);
     }
+    NS_ENSURE_TRUE(blockParent, NS_OK);
 
     // Make sure to not walk off onto the Document node
-    nsCOMPtr<nsIDOMElement> element;
     do {
       // retrieve the computed style of background-color for blockParent
-      mHTMLCSSUtils->GetComputedProperty(blockParent,
-                                         nsGkAtoms::backgroundColor,
+      mHTMLCSSUtils->GetComputedProperty(*blockParent,
+                                         *nsGkAtoms::backgroundColor,
                                          aOutColor);
-      tmp.swap(blockParent);
-      res = tmp->GetParentNode(getter_AddRefs(blockParent));
-      element = do_QueryInterface(blockParent);
+      blockParent = blockParent->GetParentElement();
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
-    } while (aOutColor.EqualsLiteral("transparent") && element);
+    } while (aOutColor.EqualsLiteral("transparent") && blockParent);
     if (aOutColor.EqualsLiteral("transparent")) {
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
@@ -1795,15 +1784,11 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
     // no, we are querying the text background for the Text Highlight button
     if (IsTextNode(nodeToExamine)) {
       // if the node of interest is a text node, let's climb a level
-      res = nodeToExamine->GetParentNode(getter_AddRefs(parent));
-      NS_ENSURE_SUCCESS(res, res);
-      nodeToExamine = parent;
+      nodeToExamine = nodeToExamine->GetParentNode();
     }
     do {
       // is the node to examine a block ?
-      res = NodeIsBlockStatic(nodeToExamine, &isBlock);
-      NS_ENSURE_SUCCESS(res, res);
-      if (isBlock) {
+      if (NodeIsBlockStatic(nodeToExamine)) {
         // yes it is a block; in that case, the text background color is transparent
         aOutColor.AssignLiteral("transparent");
         break;
@@ -1811,16 +1796,14 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
       else {
         // no, it's not; let's retrieve the computed style of background-color for the
         // node to examine
-        mHTMLCSSUtils->GetComputedProperty(nodeToExamine,
-                                           nsGkAtoms::backgroundColor,
+        mHTMLCSSUtils->GetComputedProperty(*nodeToExamine,
+                                           *nsGkAtoms::backgroundColor,
                                            aOutColor);
         if (!aOutColor.EqualsLiteral("transparent")) {
           break;
         }
       }
-      tmp.swap(nodeToExamine);
-      res = tmp->GetParentNode(getter_AddRefs(nodeToExamine));
-      NS_ENSURE_SUCCESS(res, res);
+      nodeToExamine = nodeToExamine->GetParentNode();
     } while ( aOutColor.EqualsLiteral("transparent") && nodeToExamine );
   }
   return NS_OK;

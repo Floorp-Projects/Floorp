@@ -479,26 +479,17 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(Element& aElement, nsIAtom& aAttribute,
 }
 
 nsresult
-nsHTMLCSSUtils::GetSpecifiedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                     nsAString & aValue)
+nsHTMLCSSUtils::GetSpecifiedProperty(nsINode& aNode, nsIAtom& aProperty,
+                                     nsAString& aValue)
 {
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, eSpecified);
+  return GetCSSInlinePropertyBase(&aNode, &aProperty, aValue, eSpecified);
 }
 
 nsresult
-nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                    nsAString & aValue)
+nsHTMLCSSUtils::GetComputedProperty(nsINode& aNode, nsIAtom& aProperty,
+                                    nsAString& aValue)
 {
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, eComputed);
-}
-
-nsresult
-nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
-                                         nsAString& aValue,
-                                         StyleType aStyleType)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return GetCSSInlinePropertyBase(node, aProperty, aValue, aStyleType);
+  return GetCSSInlinePropertyBase(&aNode, &aProperty, aValue, eComputed);
 }
 
 nsresult
