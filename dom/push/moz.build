@@ -16,3 +16,7 @@ EXTRA_PP_JS_MODULES += [
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell/xpcshell.ini',
+]
