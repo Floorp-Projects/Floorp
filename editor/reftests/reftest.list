@@ -77,7 +77,7 @@ skip-if(B2G||Mulet) fails-if(Android) needs-focus != spellcheck-hyphen-multiple-
 == unneeded_scroll.html unneeded_scroll-ref.html
 skip-if(B2G||Mulet) == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet||asyncPanZoom) == 642800.html 642800-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == 642800.html 642800-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
 != selection_visibility_after_reframe-3.html selection_visibility_after_reframe-ref.html
