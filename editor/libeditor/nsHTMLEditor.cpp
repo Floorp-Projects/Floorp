@@ -3551,17 +3551,17 @@ nsHTMLEditor::SelectAll()
 
 // this will NOT find aAttribute unless aAttribute has a non-null value
 // so singleton attributes like <Table border> will not be matched!
-bool nsHTMLEditor::IsTextPropertySetByContent(nsIContent*      aContent,
+bool nsHTMLEditor::IsTextPropertySetByContent(nsINode*         aNode,
                                               nsIAtom*         aProperty,
                                               const nsAString* aAttribute,
                                               const nsAString* aValue,
                                               nsAString*       outValue)
 {
-  MOZ_ASSERT(aContent && aProperty);
+  MOZ_ASSERT(aNode && aProperty);
   MOZ_ASSERT_IF(aAttribute, aValue);
   bool isSet;
-  IsTextPropertySetByContent(aContent->AsDOMNode(), aProperty, aAttribute,
-                             aValue, isSet, outValue);
+  IsTextPropertySetByContent(aNode->AsDOMNode(), aProperty, aAttribute, aValue,
+                             isSet, outValue);
   return isSet;
 }
 
