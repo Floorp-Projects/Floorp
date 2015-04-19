@@ -501,7 +501,9 @@ public:
 private:
   ~nsGlobalWindowObserver() {}
 
-  nsGlobalWindow* mWindow;
+  // This reference is non-owning and safe because it's cleared by
+  // nsGlobalWindow::CleanUp().
+  nsGlobalWindow* MOZ_NON_OWNING_REF mWindow;
 };
 
 NS_IMPL_ISUPPORTS(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
