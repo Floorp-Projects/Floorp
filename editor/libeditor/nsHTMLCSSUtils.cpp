@@ -301,18 +301,6 @@ nsHTMLCSSUtils::~nsHTMLCSSUtils()
 // Answers true if we have some CSS equivalence for the HTML style defined
 // by aProperty and/or aAttribute for the node aNode
 bool
-nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode* aNode,
-                                      nsIAtom* aProperty,
-                                      const nsAString* aAttribute)
-{
-  NS_ASSERTION(aNode, "Shouldn't you pass aNode? - Bug 214025");
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(content, false);
-  return IsCSSEditableProperty(content, aProperty, aAttribute);
-}
-
-bool
 nsHTMLCSSUtils::IsCSSEditableProperty(nsINode* aNode, nsIAtom* aProperty,
                                       const nsAString* aAttribute)
 {

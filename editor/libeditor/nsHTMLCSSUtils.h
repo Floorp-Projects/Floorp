@@ -85,7 +85,6 @@ public:
     */
   bool IsCSSEditableProperty(nsINode* aNode, nsIAtom* aProperty,
                              const nsAString* aAttribute);
-  bool IsCSSEditableProperty(nsIDOMNode* aNode, nsIAtom* aProperty, const nsAString* aAttribute);
 
   /** adds/remove a CSS declaration to the STYLE atrribute carried by a given element
     *
