@@ -646,12 +646,12 @@ protected:
   nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
   /* helper routines for inline style */
-  nsresult SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode, 
-                                        int32_t aStartOffset,
-                                        int32_t aEndOffset,
-                                        nsIAtom *aProperty, 
-                                        const nsAString *aAttribute,
-                                        const nsAString *aValue);
+  nsresult SetInlinePropertyOnTextNode(mozilla::dom::Text& aData,
+                                       int32_t aStartOffset,
+                                       int32_t aEndOffset,
+                                       nsIAtom& aProperty,
+                                       const nsAString* aAttribute,
+                                       const nsAString& aValue);
   nsresult SetInlinePropertyOnNode( nsIDOMNode *aNode,
                                     nsIAtom *aProperty, 
                                     const nsAString *aAttribute,
