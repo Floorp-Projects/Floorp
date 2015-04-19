@@ -684,8 +684,8 @@ protected:
 
     class CachedChromeStreamListener : public nsIStreamListener {
     protected:
-        XULDocument* mDocument;
-        bool         mProtoLoaded;
+        nsRefPtr<XULDocument> mDocument;
+        bool mProtoLoaded;
 
         virtual ~CachedChromeStreamListener();
 
