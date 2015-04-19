@@ -153,6 +153,7 @@ public:
       if (isDir) {
         if (leafName.EqualsLiteral("morgue")) {
           rv = GetBodyUsage(file, aUsageInfo);
+          if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
         } else {
           NS_WARNING("Unknown Cache directory found!");
         }
