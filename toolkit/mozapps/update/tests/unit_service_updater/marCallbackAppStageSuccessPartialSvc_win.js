@@ -28,7 +28,7 @@ function checkUpdateFinished() {
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(0, STATE_SUCCEEDED);
+  runUpdate(0, STATE_SUCCEEDED, checkUpdateApplied);
 }
 
 function checkUpdateApplied() {

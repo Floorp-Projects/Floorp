@@ -1517,7 +1517,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
 
             // We are almost certainly going to run script here, so we need an
             // AutoEntryScript. This is Gecko-specific and not in any spec.
-            dom::AutoEntryScript aes(backstagePass);
+            dom::AutoEntryScript aes(backstagePass,
+                                     "xpcshell argument processing");
             result = ProcessArgs(aes.cx(), argv, argc, &dirprovider);
 
             JS_DropPrincipals(rt, gJSPrincipals);

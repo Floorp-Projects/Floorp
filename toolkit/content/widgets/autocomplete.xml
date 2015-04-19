@@ -304,7 +304,7 @@
       <!-- option to allow scrolling through the list via the tab key, rather than
            tab moving focus out of the textbox -->
       <property name="tabScrolling"
-                onset="return this.setAttribute('tabscrolling', val); return val;"
+                onset="this.setAttribute('tabscrolling', val); return val;"
                 onget="return this.getAttribute('tabscrolling') == 'true';"/>
 
       <!-- disable key navigation handling in the popup results -->

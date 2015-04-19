@@ -1498,7 +1498,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     return false;
   }
 
-  dom::AutoEntryScript aes(win);
+  dom::AutoEntryScript aes(win, "NPAPI NPN_evaluate");
   JSContext* cx = aes.cx();
 
   JS::Rooted<JSObject*> obj(cx, nsNPObjWrapper::GetNewOrUsed(npp, cx, npobj));

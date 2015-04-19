@@ -404,20 +404,9 @@ NoteJSChild(JS::CallbackTracer* aTrc, JS::GCCellPtr aThing)
    */
   if (AddToCCKind(aThing.kind())) {
     if (MOZ_UNLIKELY(tracer->mCb.WantDebugInfo())) {
-      // based on DumpNotify in jsapi.cpp
-      if (tracer->debugPrinter()) {
-        char buffer[200];
-        tracer->debugPrinter()(aTrc, buffer, sizeof(buffer));
-        tracer->mCb.NoteNextEdgeName(buffer);
-      } else if (tracer->debugPrintIndex() != (size_t)-1) {
-        char buffer[200];
-        JS_snprintf(buffer, sizeof(buffer), "%s[%lu]",
-                    static_cast<const char*>(tracer->debugPrintArg()),
-                    tracer->debugPrintIndex());
-        tracer->mCb.NoteNextEdgeName(buffer);
-      } else {
-        tracer->mCb.NoteNextEdgeName(static_cast<const char*>(tracer->debugPrintArg()));
-      }
+      char buffer[200];
+      tracer->getTracingEdgeName(buffer, sizeof(buffer));
+      tracer->mCb.NoteNextEdgeName(buffer);
     }
     if (aThing.isObject()) {
       tracer->mCb.NoteJSObject(aThing.toObject());

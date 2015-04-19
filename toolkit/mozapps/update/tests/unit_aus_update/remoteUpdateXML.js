@@ -31,7 +31,8 @@ function run_test_helper_pt1(aMsg, aExpectedCount, aNextRunFunc) {
 }
 
 function check_test_helper_pt1() {
-  do_check_eq(gUpdateCount, gExpectedCount);
+  Assert.equal(gUpdateCount, gExpectedCount,
+               "the update count" + MSG_SHOULD_EQUAL);
   gNextRunFunc();
 }
 
@@ -100,60 +101,100 @@ function check_test_pt02() {
 //    defaultDetailsURL = "";
 //  }
 
-  do_check_eq(gUpdateCount, 1);
+  Assert.equal(gUpdateCount, 1,
+               "the update count" + MSG_SHOULD_EQUAL);
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount).QueryInterface(Ci.nsIPropertyBag);
-  do_check_eq(bestUpdate.type, "minor");
-  do_check_eq(bestUpdate.name, "Minor Test");
-  do_check_eq(bestUpdate.displayVersion, "version 2.1a1pre");
-  do_check_eq(bestUpdate.appVersion, "2.1a1pre");
-  do_check_eq(bestUpdate.platformVersion, "3.1a1pre");
-  do_check_eq(bestUpdate.buildID, "20080811053724");
-  do_check_eq(bestUpdate.detailsURL, "http://details/");
-  do_check_eq(bestUpdate.billboardURL, "http://billboard/");
-  do_check_eq(bestUpdate.licenseURL, "http://license/");
-  do_check_true(bestUpdate.showPrompt);
-  do_check_true(bestUpdate.showNeverForVersion);
-  do_check_eq(bestUpdate.promptWaitTime, "345600");
-  do_check_eq(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1");
-  do_check_eq(bestUpdate.channel, "test_channel");
-  do_check_false(bestUpdate.isCompleteUpdate);
-  do_check_false(bestUpdate.isSecurityUpdate);
+  Assert.equal(bestUpdate.type, "minor",
+               "the update type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.name, "Minor Test",
+               "the update name attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.displayVersion, "version 2.1a1pre",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.appVersion, "2.1a1pre",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.platformVersion, "3.1a1pre",
+               "the update platformVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.buildID, "20080811053724",
+               "the update buildID attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.detailsURL, "http://details/",
+               "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.billboardURL, "http://billboard/",
+               "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.licenseURL, "http://license/",
+               "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(bestUpdate.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(bestUpdate.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.promptWaitTime, "345600",
+               "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1",
+               "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.channel, "test_channel",
+               "the update channel attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!bestUpdate.isCompleteUpdate,
+            "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!bestUpdate.isSecurityUpdate,
+            "the update isSecurityUpdate attribute" + MSG_SHOULD_EQUAL);
   // Check that installDate is within 10 seconds of the current date.
-  do_check_true((Date.now() - bestUpdate.installDate) < 10000);
-  do_check_eq(bestUpdate.statusText, null);
+  Assert.ok((Date.now() - bestUpdate.installDate) < 10000,
+            "the update installDate attribute should be within 10 seconds of " +
+            "the current time");
+  Assert.ok(!bestUpdate.statusText,
+            "the update statusText attribute" + MSG_SHOULD_EQUAL);
   // nsIUpdate:state returns an empty string when no action has been performed
   // on an available update
-  do_check_eq(bestUpdate.state, "");
-  do_check_eq(bestUpdate.errorCode, 0);
-  do_check_eq(bestUpdate.patchCount, 2);
+  Assert.equal(bestUpdate.state, "",
+               "the update state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.errorCode, 0,
+               "the update errorCode attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.patchCount, 2,
+               "the update patchCount attribute" + MSG_SHOULD_EQUAL);
   //XXX TODO - test nsIUpdate:serialize
 
-  do_check_eq(bestUpdate.getProperty("custom1_attr"), "custom1 value");
-  do_check_eq(bestUpdate.getProperty("custom2_attr"), "custom2 value");
+  Assert.equal(bestUpdate.getProperty("custom1_attr"), "custom1 value",
+               "the update custom1_attr property" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.getProperty("custom2_attr"), "custom2 value",
+               "the update custom2_attr property" + MSG_SHOULD_EQUAL);
 
   let patch = bestUpdate.getPatchAt(0);
-  do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, "http://complete/");
-  do_check_eq(patch.hashFunction, "SHA1");
-  do_check_eq(patch.hashValue, "98db9dad8e1d80eda7e1170d0187d6f53e477059");
-  do_check_eq(patch.size, 9856459);
+  Assert.equal(patch.type, "complete",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, "http://complete/",
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "SHA1",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, "98db9dad8e1d80eda7e1170d0187d6f53e477059",
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, 9856459,
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
   // The value for patch.state can be the string 'null' as a valid value. This
   // is confusing if it returns null which is an invalid value since the test
   // failure output will show a failure for null == null. To lessen the
   // confusion first check that the typeof for patch.state is string.
-  do_check_eq(typeof(patch.state), "string");
-  do_check_eq(patch.state, STATE_NONE);
-  do_check_false(patch.selected);
+  Assert.equal(typeof(patch.state), "string",
+               "the update patch state typeof value should equal |string|");
+  Assert.equal(patch.state, STATE_NONE,
+               "the update patch state attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
   //XXX TODO - test nsIUpdatePatch:serialize
 
   patch = bestUpdate.getPatchAt(1);
-  do_check_eq(patch.type, "partial");
-  do_check_eq(patch.URL, "http://partial/");
-  do_check_eq(patch.hashFunction, "SHA1");
-  do_check_eq(patch.hashValue, "e6678ca40ae7582316acdeddf3c133c9c8577de4");
-  do_check_eq(patch.size, 1316138);
-  do_check_eq(patch.state, STATE_NONE);
-  do_check_false(patch.selected);
+  Assert.equal(patch.type, "partial",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, "http://partial/",
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "SHA1",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, "e6678ca40ae7582316acdeddf3c133c9c8577de4",
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, 1316138,
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.state, STATE_NONE,
+               "the update patch state attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
   //XXX TODO - test nsIUpdatePatch:serialize
 
   run_test_pt03();
@@ -180,47 +221,78 @@ function run_test_pt03() {
 }
 
 function check_test_pt03() {
-  do_check_eq(gUpdateCount, 1);
+  Assert.equal(gUpdateCount, 1,
+               "the update count" + MSG_SHOULD_EQUAL);
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  do_check_eq(bestUpdate.type, "major");
-  do_check_eq(bestUpdate.name, "Major Test");
-  do_check_eq(bestUpdate.displayVersion, "version 4.1a1pre");
-  do_check_eq(bestUpdate.appVersion, "4.1a1pre");
-  do_check_eq(bestUpdate.platformVersion, "5.1a1pre");
-  do_check_eq(bestUpdate.buildID, "20080811053724");
-  do_check_eq(bestUpdate.detailsURL, "http://details/");
-  do_check_eq(bestUpdate.billboardURL, "http://details/");
-  do_check_eq(bestUpdate.licenseURL, null);
-  do_check_true(bestUpdate.showPrompt);
-  do_check_true(bestUpdate.showNeverForVersion);
-  do_check_eq(bestUpdate.promptWaitTime, "691200");
-  do_check_eq(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1");
-  do_check_eq(bestUpdate.channel, "test_channel");
-  do_check_false(bestUpdate.isCompleteUpdate);
-  do_check_false(bestUpdate.isSecurityUpdate);
+  Assert.equal(bestUpdate.type, "major",
+               "the update type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.name, "Major Test",
+               "the update name attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.displayVersion, "version 4.1a1pre",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.appVersion, "4.1a1pre",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.platformVersion, "5.1a1pre",
+               "the update platformVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.buildID, "20080811053724",
+               "the update buildID attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.detailsURL, "http://details/",
+               "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.billboardURL, "http://details/",
+               "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!bestUpdate.licenseURL,
+            "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(bestUpdate.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(bestUpdate.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.promptWaitTime, "691200",
+               "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1",
+               "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.channel, "test_channel",
+               "the update channel attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!bestUpdate.isCompleteUpdate,
+            "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!bestUpdate.isSecurityUpdate,
+            "the update isSecurityUpdate attribute" + MSG_SHOULD_EQUAL);
   // Check that installDate is within 10 seconds of the current date.
-  do_check_true((Date.now() - bestUpdate.installDate) < 10000);
-  do_check_eq(bestUpdate.statusText, null);
+  Assert.ok((Date.now() - bestUpdate.installDate) < 10000,
+            "the update installDate attribute should be within 10 seconds of " +
+            "the current time");
+  Assert.ok(!bestUpdate.statusText,
+            "the update statusText attribute" + MSG_SHOULD_EQUAL);
   // nsIUpdate:state returns an empty string when no action has been performed
   // on an available update
-  do_check_eq(bestUpdate.state, "");
-  do_check_eq(bestUpdate.errorCode, 0);
-  do_check_eq(bestUpdate.patchCount, 1);
+  Assert.equal(bestUpdate.state, "",
+               "the update state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.errorCode, 0,
+               "the update errorCode attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(bestUpdate.patchCount, 1,
+               "the update patchCount attribute" + MSG_SHOULD_EQUAL);
   //XXX TODO - test nsIUpdate:serialize
 
   let patch = bestUpdate.getPatchAt(0);
-  do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, "http://complete/");
-  do_check_eq(patch.hashFunction, "SHA1");
-  do_check_eq(patch.hashValue, "98db9dad8e1d80eda7e1170d0187d6f53e477059");
-  do_check_eq(patch.size, 9856459);
+  Assert.equal(patch.type, "complete",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, "http://complete/",
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "SHA1",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, "98db9dad8e1d80eda7e1170d0187d6f53e477059",
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, 9856459,
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
   // The value for patch.state can be the string 'null' as a valid value. This
   // is confusing if it returns null which is an invalid value since the test
   // failure output will show a failure for null == null. To lessen the
   // confusion first check that the typeof for patch.state is string.
-  do_check_eq(typeof(patch.state), "string");
-  do_check_eq(patch.state, STATE_NONE);
-  do_check_false(patch.selected);
+  Assert.equal(typeof(patch.state), "string",
+               "the update patch state typeof value should equal |string|");
+  Assert.equal(patch.state, STATE_NONE,
+               "the update patch state attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
   //XXX TODO - test nsIUpdatePatch:serialize
 
   run_test_pt04();
@@ -304,7 +376,7 @@ function run_test_pt11() {
 
 function check_test_pt11() {
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  do_check_eq(bestUpdate, null);
+  Assert.ok(!bestUpdate);
   run_test_pt12();
 }
 
@@ -320,8 +392,9 @@ function run_test_pt12() {
 
 function check_test_pt12() {
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  do_check_neq(bestUpdate, null);
-  do_check_eq(bestUpdate.displayVersion, "version 1.0");
+  Assert.ok(!!bestUpdate);
+  Assert.equal(bestUpdate.displayVersion, "version 1.0",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
 
   doTestFinish();
 }

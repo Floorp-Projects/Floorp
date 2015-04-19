@@ -263,7 +263,7 @@ class JSObject : public js::gc::Cell
 
     /* GC support. */
 
-    void markChildren(JSTracer* trc);
+    void traceChildren(JSTracer* trc);
 
     void fixupAfterMovingGC();
 
@@ -1257,9 +1257,6 @@ XDRObjectLiteral(XDRState<mode>* xdr, MutableHandleObject obj);
 
 extern JSObject*
 CloneObjectLiteral(JSContext* cx, HandleObject srcObj);
-
-extern void
-GetObjectSlotName(JSTracer* trc, char* buf, size_t bufsize);
 
 extern bool
 ReportGetterOnlyAssignment(JSContext* cx, bool strict);

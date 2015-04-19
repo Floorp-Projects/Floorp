@@ -13,6 +13,7 @@ add_task(function* () {
   yield testShowDOMProperties();
   yield testDeleteNode();
   yield testDeleteRootNode();
+  yield testScrollIntoView();
 
   function* testShowDOMProperties() {
     info("Testing 'Show DOM Properties' menu item.");
@@ -61,6 +62,11 @@ add_task(function* () {
     executeSoon(() => {
       ok(content.document.documentElement, "Document element still alive.");
     });
+  }
+
+  function* testScrollIntoView() {
+    // Follow up bug to add this test - https://bugzilla.mozilla.org/show_bug.cgi?id=1154107
+    todo(false, "Verify that node is scrolled into the viewport.");
   }
 
   function dispatchCommandEvent(node) {
