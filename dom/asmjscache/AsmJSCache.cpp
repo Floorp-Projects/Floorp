@@ -759,7 +759,10 @@ MainProcessRunnable::ReadMetadata()
   nsresult rv =
     qm->EnsureOriginIsInitialized(mPersistence, mGroup, mOrigin, mIsApp,
                                   getter_AddRefs(mDirectory));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mResult = JS::AsmJSCache_StorageInitFailure;
+    return rv;
+  }
 
   rv = mDirectory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -322,3 +322,6 @@ user_pref("network.proxy.pac_generator", false);
 // selected by default).
 user_pref("lightweightThemes.selectedThemeID", "");
 user_pref("browser.devedition.theme.enabled", false);
+
+// Disable periodic updates of service workers.
+user_pref("dom.serviceWorkers.periodic-updates.enabled", false);

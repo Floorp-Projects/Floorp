@@ -61,8 +61,11 @@ nsTraversal::TestNode(nsINode* aNode, mozilla::ErrorResult& aResult)
     if (mFilter.HasWebIDLCallback()) {
         AutoRestore<bool> inAcceptNode(mInAcceptNode);
         mInAcceptNode = true;
+        // No need to pass in an execution reason, since the generated default,
+        // "NodeFilter.acceptNode", is pretty much exactly what we'd say anyway.
         return mFilter.GetWebIDLCallback()->
-            AcceptNode(*aNode, aResult, CallbackObject::eRethrowExceptions);
+            AcceptNode(*aNode, aResult, nullptr,
+                       CallbackObject::eRethrowExceptions);
     }
 
     nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNode);

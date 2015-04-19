@@ -146,4 +146,4 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 869833-1.xul 869833-1-ref.xul # Initia
 == 1067268-1.html 1067268-1-ref.html
 == 1069941-inline-bidi-border-1.html 1069941-inline-bidi-border-1-ref.html
 == 1069941-inline-bidi-margin-1.html 1069941-inline-bidi-margin-1-ref.html
-
+skip-if(B2G||Mulet) != 1155359-1.xul 1155359-1-ref.xul
