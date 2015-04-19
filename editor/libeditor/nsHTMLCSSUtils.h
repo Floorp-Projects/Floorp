@@ -146,7 +146,7 @@ public:
      * @param aProperty     [IN] an atom containing a CSS property
      * @param aAttribute    [IN] pointer to an attribute name or null if this information is irrelevant
      */
-  bool        IsCSSInvertable(nsIAtom * aProperty, const nsAString * aAttribute);
+  bool        IsCSSInvertible(nsIAtom& aProperty, const nsAString* aAttribute);
 
   /** Get the default browser background color if we need it for GetCSSBackgroundColorState
     *

@@ -1374,7 +1374,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
             // HTML style to remove is applied; but we found no element in the
             // ancestors of startNode carrying specified styles; assume it
             // comes from a rule and try to insert a span "inverting" the style
-            if (mHTMLCSSUtils->IsCSSInvertable(aProperty, aAttribute)) {
+            if (mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
               NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
               SetInlinePropertyOnTextNode(*startNode->GetAsText(),
                                           range->StartOffset(),
@@ -1414,7 +1414,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
               // in the ancestors of startNode carrying specified styles;
               // assume it comes from a rule and let's try to insert a span
               // "inverting" the style
-              mHTMLCSSUtils->IsCSSInvertable(aProperty, aAttribute)) {
+              mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
             NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
             SetInlinePropertyOnNode(node->AsContent(), aProperty,
                                     aAttribute, &value);
