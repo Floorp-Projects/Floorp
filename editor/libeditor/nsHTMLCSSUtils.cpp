@@ -1035,13 +1035,24 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                     const nsAString& aValue,
                                                     StyleType aStyleType)
 {
+  // Use aValue as only an in param, not in-out
+  nsAutoString value(aValue);
+  return IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, aAttribute,
+                                             value, aStyleType);
+}
+
+bool
+nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
+                                                    nsIAtom* aProperty,
+                                                    const nsAString* aAttribute,
+                                                    nsAString& aValue,
+                                                    StyleType aStyleType)
+{
   MOZ_ASSERT(aNode && aProperty);
   bool isSet;
-  nsAutoString value(aValue);
   nsresult res = IsCSSEquivalentToHTMLInlineStyleSet(aNode->AsDOMNode(),
                                                      aProperty, aAttribute,
-                                                     isSet, value, aStyleType);
-  NS_ASSERTION(NS_SUCCEEDED(res), "IsCSSEquivalentToHTMLInlineStyleSet failed");
+                                                     isSet, aValue, aStyleType);
   NS_ENSURE_SUCCESS(res, false);
   return isSet;
 }

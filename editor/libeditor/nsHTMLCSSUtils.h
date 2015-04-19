@@ -194,6 +194,12 @@ public:
                                            const nsAString& aValue,
                                            StyleType aStyleType);
 
+  bool IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aContent,
+                                           nsIAtom* aProperty,
+                                           const nsAString* aAttribute,
+                                           nsAString& aValue,
+                                           StyleType aStyleType);
+
   nsresult    IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
                                                   nsIAtom * aHTMLProperty,
                                                   const nsAString * aAttribute,
