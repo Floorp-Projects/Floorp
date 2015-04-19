@@ -211,7 +211,7 @@ private:
    * XXX this means that new nsTreeColumn objects are unnecessarily created
    *     for untouched columns.
    */
-  nsTreeColumn* mFirstColumn;
+  nsRefPtr<nsTreeColumn> mFirstColumn;
 };
 
 #endif // nsTreeColumns_h__
