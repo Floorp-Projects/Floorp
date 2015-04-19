@@ -29,7 +29,7 @@ function run_test() {
 // call the nsIDOMEventListener's handleEvent method for onload.
 function callHandleEvent(aXHR) {
   aXHR.status = gExpectedStatusCode;
-  var e = { target: aXHR };
+  let e = { target: aXHR };
   aXHR.onload(e);
 }
 
@@ -45,9 +45,11 @@ function run_test_helper(aNextRunFunc, aExpectedStatusCode, aMsg) {
 }
 
 function check_test_helper() {
-  do_check_eq(gStatusCode, gExpectedStatusCode);
+  Assert.equal(gStatusCode, gExpectedStatusCode,
+               "the download status code" + MSG_SHOULD_EQUAL);
   let expectedStatusText = getStatusText(gExpectedStatusCode);
-  do_check_eq(gStatusText, expectedStatusText);
+  Assert.equal(gStatusText, expectedStatusText,
+               "the update status text" + MSG_SHOULD_EQUAL);
   gNextRunFunc();
 }
 
@@ -66,9 +68,11 @@ function run_test_pt1() {
 }
 
 function check_test_pt1() {
-  do_check_eq(gStatusCode, gExpectedStatusCode);
+  Assert.equal(gStatusCode, gExpectedStatusCode,
+               "the download status code" + MSG_SHOULD_EQUAL);
   let expectedStatusText = getStatusText(404);
-  do_check_eq(gStatusText, expectedStatusText);
+  Assert.equal(gStatusText, expectedStatusText,
+               "the update status text" + MSG_SHOULD_EQUAL);
   run_test_pt2();
 }
 

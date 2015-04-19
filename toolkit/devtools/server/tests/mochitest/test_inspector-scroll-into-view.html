@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=901250
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 901250</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+const {Promise: promise} = Components.utils.import("resource://gre/modules/Promise.jsm", {});
+const Ci = Components.interfaces;
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gInspectee = null;
+var gClient = null;
+var gWalker = null;
+
+function assertOwnership() {
+  assertOwnershipTrees(gWalker);
+}
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    gInspectee = doc;
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+    promiseDone(inspector.getWalker().then(walker => {
+      ok(walker, "getWalker() should return an actor.");
+      gClient = client;
+      gWalker = walker;
+    }).then(runNextTest));
+  });
+});
+
+addTest(Task.async(function* testScrollIntoView() {
+  let id = "#scroll-into-view";
+  let rect = gInspectee.querySelector(id).getBoundingClientRect();
+  let nodeFront = yield gWalker.querySelector(gWalker.rootNode, id);
+  let inViewport = rect.x >= 0 &&
+                   rect.y >= 0 &&
+                   rect.y <= gInspectee.defaultView.innerHeight &&
+                   rect.x <= gInspectee.defaultView.innerWidth;
+
+  ok(!inViewport, "Element is not in viewport.");
+
+  yield nodeFront.scrollIntoView();
+
+  SimpleTest.executeSoon(() => {
+    rect = gInspectee.querySelector(id).getBoundingClientRect();
+    inViewport = rect.x >= 0 &&
+                 rect.y >= 0 &&
+                 rect.y <= gInspectee.defaultView.innerHeight &&
+                 rect.x <= gInspectee.defaultView.innerWidth;
+
+    ok(inViewport, "Element is in viewport.");
+
+    runNextTest();
+  });
+}));
+
+addTest(function cleanup() {
+  delete gWalker;
+  delete gInspectee;
+  delete gClient;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=901250">Mozilla Bug 901250</a>
+<a id="inspectorContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
