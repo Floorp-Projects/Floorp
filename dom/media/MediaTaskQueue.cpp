@@ -106,8 +106,16 @@ private:
 void
 MediaTaskQueue::SyncDispatch(TemporaryRef<nsIRunnable> aRunnable) {
   NS_WARNING("MediaTaskQueue::SyncDispatch is dangerous and deprecated. Stop using this!");
-  RefPtr<MediaTaskQueueSyncRunnable> task(new MediaTaskQueueSyncRunnable(aRunnable));
-  Dispatch(task);
+  nsRefPtr<MediaTaskQueueSyncRunnable> task(new MediaTaskQueueSyncRunnable(aRunnable));
+
+  // Tail dispatchers don't interact nicely with sync dispatch. We require that
+  // nothing is already in the tail dispatcher, and then sidestep it for this
+  // task.
+  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
+                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+  nsRefPtr<MediaTaskQueueSyncRunnable> taskRef = task;
+  Dispatch(taskRef.forget(), AssertDispatchSuccess, TailDispatch);
+
   task->WaitUntilDone();
 }
 
@@ -121,6 +129,11 @@ MediaTaskQueue::AwaitIdle()
 void
 MediaTaskQueue::AwaitIdleLocked()
 {
+  // Make the there are no tasks for this queue waiting in the caller's tail
+  // dispatcher.
+  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
+                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+
   mQueueMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsRunning || mTasks.empty());
   while (mIsRunning) {
@@ -131,6 +144,11 @@ MediaTaskQueue::AwaitIdleLocked()
 void
 MediaTaskQueue::AwaitShutdownAndIdle()
 {
+  // Make the there are no tasks for this queue waiting in the caller's tail
+  // dispatcher.
+  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
+                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+
   MonitorAutoLock mon(mQueueMonitor);
   while (!mIsShutdown) {
     mQueueMonitor.Wait();
@@ -176,6 +194,11 @@ FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
 void
 FlushableMediaTaskQueue::FlushLocked()
 {
+  // Make the there are no tasks for this queue waiting in the caller's tail
+  // dispatcher.
+  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
+                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+
   mQueueMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mIsFlushing);
 
@@ -197,7 +220,7 @@ bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
   bool in = NS_GetCurrentThread() == mRunningThread;
-  MOZ_ASSERT_IF(in, GetCurrent() == this);
+  MOZ_ASSERT(in == (GetCurrent() == this));
   return in;
 }
 

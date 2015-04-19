@@ -20,20 +20,18 @@ function run_test() {
 
   // Check that there is no activeUpdate first so the updates directory is
   // cleaned up by the UpdateManager before the remaining tests.
-  debugDump("testing activeUpdate == null");
-  do_check_eq(gUpdateManager.activeUpdate, null);
-  debugDump("testing updateCount == 0");
-  do_check_eq(gUpdateManager.updateCount, 0);
+  Assert.ok(!gUpdateManager.activeUpdate,
+            "there should not be an active update");
+  Assert.equal(gUpdateManager.updateCount, 0,
+               "the update manager update count" + MSG_SHOULD_EQUAL);
 
   let dir = getUpdatesDir();
-  dir.append("0");
-  debugDump("testing " + dir.path + " should exist");
-  do_check_true(dir.exists());
+  dir.append(DIR_PATCH);
+  Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
 
   let versionFile = dir.clone();
   versionFile.append(FILE_UPDATE_VERSION);
-  debugDump("testing " + versionFile.path + " should not exist");
-  do_check_false(versionFile.exists());
+  Assert.ok(!versionFile.exists(), MSG_SHOULD_NOT_EXIST);
 
   doTestFinish();
 }

@@ -10,6 +10,7 @@ import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -179,6 +180,17 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
         // and then fire us up
         GeckoAppShell.runGecko(path, args, mUri, type);
+
+        // And... we're done.
+        GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoExited);
+
+        try {
+            final JSONObject msg = new JSONObject();
+            msg.put("type", "Gecko:Exited");
+            EventDispatcher.getInstance().dispatchEvent(msg, null);
+        } catch (final JSONException e) {
+            Log.e(LOGTAG, "unable to dispatch event", e);
+        }
     }
 
     @Override

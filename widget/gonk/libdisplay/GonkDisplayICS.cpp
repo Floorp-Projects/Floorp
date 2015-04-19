@@ -186,8 +186,9 @@ GonkDisplayICS::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     // Only HWC v1.0 needs this call. ICS gonk always needs the call.
     mFBSurface->compositionComplete();
 
-    if (!mHwc)
-        return eglSwapBuffers(dpy, sur);
+    if (!mHwc) {
+        return true;
+    }
 
     mHwc->prepare(mHwc, nullptr);
     return !mHwc->set(mHwc, dpy, sur, 0);

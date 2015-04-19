@@ -34,10 +34,10 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(1, STATE_FAILED_WRITE_ERROR);
+  runUpdate(1, STATE_FAILED_WRITE_ERROR, checkUpdateFinished);
 }
 
-function checkUpdateApplied() {
+function checkUpdateFinished() {
   setupHelperFinish();
 }
 

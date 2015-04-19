@@ -65,7 +65,8 @@ function run_test_helper_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
 }
 
 function check_test_helper_pt1_1() {
-  do_check_eq(gUpdateCount, 1);
+  Assert.equal(gUpdateCount, 1,
+               "the update count" + MSG_SHOULD_EQUAL);
   gCheckFunc = check_test_helper_pt1_2;
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   let state = gAUS.downloadUpdate(bestUpdate, false);
@@ -76,7 +77,8 @@ function check_test_helper_pt1_1() {
 }
 
 function check_test_helper_pt1_2() {
-  do_check_eq(gStatusResult, gExpectedStatusResult);
+  Assert.equal(gStatusResult, gExpectedStatusResult,
+               "the download status result" + MSG_SHOULD_EQUAL);
   gAUS.removeDownloadListener(downloadListener);
   gNextRunFunc();
 }

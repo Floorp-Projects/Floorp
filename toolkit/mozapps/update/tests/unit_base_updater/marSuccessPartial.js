@@ -27,30 +27,21 @@ function run_test() {
   }
 
   createUpdaterINI(true);
+  setAppBundleModTime();
 
-  // For Mac OS X set the last modified time for the root directory to a date in
-  // the past to test that the last modified time is updated on all updates since
-  // the precomplete file in the root of the bundle is renamed, etc. (bug 600098).
-  if (IS_MACOSX) {
-    let now = Date.now();
-    let yesterday = now - (1000 * 60 * 60 * 24);
-    let applyToDir = getApplyDirFile();
-    applyToDir.lastModifiedTime = yesterday;
-  }
-
-  runUpdate(0, STATE_SUCCEEDED);
+  runUpdate(0, STATE_SUCCEEDED, checkUpdateFinished);
 }
 
 /**
  * Checks if the post update binary was properly launched for the platforms that
  * support launching post update process.
  */
-function checkUpdateApplied() {
+function checkUpdateFinished() {
   if (IS_WIN || IS_MACOSX) {
-    gCheckFunc = finishCheckUpdateApplied;
+    gCheckFunc = finishCheckUpdateFinished;
     checkPostUpdateAppLog();
   } else {
-    finishCheckUpdateApplied();
+    finishCheckUpdateFinished();
   }
 }
 
@@ -58,27 +49,14 @@ function checkUpdateApplied() {
  * Checks if the update has finished and if it has finished performs checks for
  * the test.
  */
-function finishCheckUpdateApplied() {
+function finishCheckUpdateFinished() {
   if (IS_MACOSX) {
-    debugDump("testing last modified time on the apply to directory has " +
-              "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let applyToDir = getApplyDirFile();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
-  }
-
-  if (IS_MACOSX) {
-    debugDump("testing that the distribution directory is removed from the " +
-              "old location when there is a distribution directory in the " +
-              "new location");
     let distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    debugDump("testing " + distributionDir.path + " shouldn't exist");
-    do_check_false(distributionDir.exists());
-
+    Assert.ok(!distributionDir.exists(), MSG_SHOULD_NOT_EXIST);
     checkUpdateLogContains("removing old distribution directory");
   }
 
+  checkAppBundleModTime();
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
   standardInit();

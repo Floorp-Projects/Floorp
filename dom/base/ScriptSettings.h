@@ -318,11 +318,16 @@ private:
 
 /*
  * A class that represents a new script entry point.
+ *
+ * |aReason| should be a statically-allocated C string naming the reason we're
+ * invoking JavaScript code: "setTimeout", "event", and so on. The devtools use
+ * these strings to label JS execution in timeline and profiling displays.
  */
 class MOZ_STACK_CLASS AutoEntryScript : public AutoJSAPI,
                                         protected ScriptSettingsStackEntry {
 public:
-  explicit AutoEntryScript(nsIGlobalObject* aGlobalObject,
+  AutoEntryScript(nsIGlobalObject* aGlobalObject,
+                  const char *aReason,
                   bool aIsMainThread = NS_IsMainThread(),
                   // Note: aCx is mandatory off-main-thread.
                   JSContext* aCx = nullptr);

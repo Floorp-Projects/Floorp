@@ -301,6 +301,8 @@ public:
 
     virtual bool RecvBidiKeyboardNotify(const bool& isLangRTL) override;
 
+    virtual bool RecvUpdateServiceWorkerRegistrations() override;
+
     virtual bool RecvNotifyVisited(const URIParams& aURI) override;
     // auto remove when alertfinished is received.
     nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);

@@ -45,75 +45,133 @@ function run_test() {
 
   standardInit();
 
-  do_check_eq(gUpdateManager.activeUpdate, null);
-  do_check_eq(gUpdateManager.updateCount, 2);
+  Assert.ok(!gUpdateManager.activeUpdate,
+            "the update manager activeUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.updateCount, 2,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
 
   let update = gUpdateManager.getUpdateAt(0).QueryInterface(Ci.nsIPropertyBag);
-  do_check_eq(update.state, STATE_SUCCEEDED);
-  do_check_eq(update.type, "major");
-  do_check_eq(update.name, "New");
-  do_check_eq(update.displayVersion, "version 4");
-  do_check_eq(update.appVersion, "4.0");
-  do_check_eq(update.platformVersion, "4.0");
-  do_check_eq(update.buildID, "20070811053724");
-  do_check_eq(update.detailsURL, "http://details1/");
-  do_check_eq(update.billboardURL, "http://billboard1/");
-  do_check_eq(update.licenseURL, "http://license1/");
-  do_check_eq(update.serviceURL, "http://service1/");
-  do_check_eq(update.installDate, "1238441300314");
+  Assert.equal(update.state, STATE_SUCCEEDED,
+               "the update state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.type, "major",
+               "the update type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.name, "New",
+               "the update name attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.displayVersion, "version 4",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.appVersion, "4.0",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.platformVersion, "4.0",
+               "the update platformVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.buildID, "20070811053724",
+               "the update buildID attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.detailsURL, "http://details1/",
+               "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.billboardURL, "http://billboard1/",
+               "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.licenseURL, "http://license1/",
+               "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.serviceURL, "http://service1/",
+               "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.installDate, "1238441300314",
+               "the update installDate attribute" + MSG_SHOULD_EQUAL);
   // statusText is updated
-  do_check_eq(update.statusText, getString("installSuccess"));
-  do_check_false(update.isCompleteUpdate);
-  do_check_eq(update.channel, "test_channel");
-  do_check_true(update.showPrompt);
-  do_check_true(update.showNeverForVersion);
-  do_check_eq(update.promptWaitTime, "345600");
-  do_check_eq(update.previousAppVersion, "3.0");
+  Assert.equal(update.statusText, getString("installSuccess"),
+               "the update statusText attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.isCompleteUpdate,
+            "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.channel, "test_channel",
+               "the update channel attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.promptWaitTime, "345600",
+               "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.previousAppVersion, "3.0",
+               "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
-  do_check_eq(update.getProperty("custom1_attr"), "custom1 value");
-  do_check_eq(update.getProperty("custom2_attr"), "custom2 value");
+  Assert.equal(update.getProperty("custom1_attr"), "custom1 value",
+               "the update custom1_attr property" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.getProperty("custom2_attr"), "custom2 value",
+               "the update custom2_attr property" + MSG_SHOULD_EQUAL);
 
   let patch = update.selectedPatch;
-  do_check_eq(patch.type, "partial");
-  do_check_eq(patch.URL, "http://partial/");
-  do_check_eq(patch.hashFunction, "SHA256");
-  do_check_eq(patch.hashValue, "cd43");
-  do_check_eq(patch.size, "86");
-  do_check_true(patch.selected);
-  do_check_eq(patch.state, STATE_SUCCEEDED);
+  Assert.equal(patch.type, "partial",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, "http://partial/",
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "SHA256",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, "cd43",
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, "86",
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.state, STATE_SUCCEEDED,
+               "the update patch state attribute" + MSG_SHOULD_EQUAL);
 
   update = gUpdateManager.getUpdateAt(1).QueryInterface(Ci.nsIPropertyBag);
-  do_check_eq(update.state, STATE_FAILED);
-  do_check_eq(update.name, "Existing");
-  do_check_eq(update.type, "major");
-  do_check_eq(update.displayVersion, "version 3");
-  do_check_eq(update.appVersion, "3.0");
-  do_check_eq(update.platformVersion, "3.0");
-  do_check_eq(update.detailsURL, "http://details2/");
-  do_check_eq(update.billboardURL, "http://details2/");
-  do_check_eq(update.licenseURL, null);
-  do_check_eq(update.serviceURL, "http://service2/");
-  do_check_eq(update.installDate, "1238441400314");
-  do_check_eq(update.statusText, getString("patchApplyFailure"));
-  do_check_eq(update.buildID, "20080811053724");
-  do_check_true(update.isCompleteUpdate);
-  do_check_eq(update.channel, "test_channel");
-  do_check_true(update.showPrompt);
-  do_check_true(update.showNeverForVersion);
-  do_check_eq(update.promptWaitTime, "691200");
-  do_check_eq(update.previousAppVersion, null);
+  Assert.equal(update.state, STATE_FAILED,
+               "the update state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.name, "Existing",
+               "the update name attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.type, "major",
+               "the update type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.displayVersion, "version 3",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.appVersion, "3.0",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.platformVersion, "3.0",
+               "the update platformVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.detailsURL, "http://details2/",
+               "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.billboardURL, "http://details2/",
+               "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.licenseURL,
+            "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.serviceURL, "http://service2/",
+               "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.installDate, "1238441400314",
+               "the update installDate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.statusText, getString("patchApplyFailure"),
+               "the update statusText attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.buildID, "20080811053724",
+               "the update buildID attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.isCompleteUpdate,
+            "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.channel, "test_channel",
+               "the update channel attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.promptWaitTime, "691200",
+               "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.previousAppVersion, null,
+               "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
   // Custom attributes
-  do_check_eq(update.getProperty("custom3_attr"), "custom3 value");
-  do_check_eq(update.getProperty("custom4_attr"), "custom4 value");
+  Assert.equal(update.getProperty("custom3_attr"), "custom3 value",
+               "the update custom3_attr property" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.getProperty("custom4_attr"), "custom4 value",
+               "the update custom4_attr property" + MSG_SHOULD_EQUAL);
 
   patch = update.selectedPatch;
-  do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, "http://complete/");
-  do_check_eq(patch.hashFunction, "SHA1");
-  do_check_eq(patch.hashValue, "6232");
-  do_check_eq(patch.size, "75");
-  do_check_true(patch.selected);
-  do_check_eq(patch.state, STATE_FAILED);
+  Assert.equal(patch.type, "complete",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, "http://complete/",
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "SHA1",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, "6232",
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, "75",
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.state, STATE_FAILED,
+               "the update patch state attribute" + MSG_SHOULD_EQUAL);
 
   removeUpdateDirsAndFiles();
 
@@ -145,68 +203,122 @@ function run_test() {
   reloadUpdateManagerData();
   initUpdateServiceStub();
 
-  do_check_eq(gUpdateManager.activeUpdate, null);
-  do_check_eq(gUpdateManager.updateCount, 2);
+  Assert.ok(!gUpdateManager.activeUpdate,
+            "the update manager activeUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(gUpdateManager.updateCount, 2,
+               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
 
   update = gUpdateManager.getUpdateAt(0);
-  do_check_eq(update.state, STATE_SUCCEEDED);
-  do_check_eq(update.type, "major");
-  do_check_eq(update.name, "New");
-  do_check_eq(update.displayVersion, "version 4.0");
-  do_check_eq(update.appVersion, "4.0");
-  do_check_eq(update.platformVersion, "4.0");
-  do_check_eq(update.detailsURL, "http://details/");
-  do_check_eq(update.billboardURL, "http://billboard/");
-  do_check_eq(update.licenseURL, "http://license/");
-  do_check_eq(update.serviceURL, "http://service/");
-  do_check_eq(update.installDate, "1238441400314");
-  do_check_eq(update.statusText, getString("installSuccess"));
-  do_check_eq(update.buildID, "20080811053724");
-  do_check_true(update.isCompleteUpdate);
-  do_check_eq(update.channel, "test_channel");
-  do_check_true(update.showPrompt);
-  do_check_true(update.showNeverForVersion);
-  do_check_eq(update.promptWaitTime, "100");
-  do_check_eq(update.previousAppVersion, "3.0");
+  Assert.equal(update.state, STATE_SUCCEEDED,
+               "the update state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.type, "major",
+               "the update type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.name, "New",
+               "the update name attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.displayVersion, "version 4.0",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.appVersion, "4.0",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.platformVersion, "4.0",
+               "the update platformVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.detailsURL, "http://details/",
+               "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.billboardURL, "http://billboard/",
+               "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.licenseURL, "http://license/",
+               "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.serviceURL, "http://service/",
+               "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.installDate, "1238441400314",
+               "the update installDate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.statusText, getString("installSuccess"),
+               "the update statusText attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.buildID, "20080811053724",
+               "the update buildID attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.isCompleteUpdate,
+            "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.channel, "test_channel",
+               "the update channel attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.promptWaitTime, "100",
+               "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.previousAppVersion, "3.0",
+               "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
 
   patch = update.selectedPatch;
-  do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, URL_HOST + "/" + FILE_SIMPLE_MAR);
-  do_check_eq(patch.hashFunction, "MD5");
-  do_check_eq(patch.hashValue, MD5_HASH_SIMPLE_MAR);
-  do_check_eq(patch.size, SIZE_SIMPLE_MAR);
-  do_check_true(patch.selected);
-  do_check_eq(patch.state, STATE_SUCCEEDED);
+  Assert.equal(patch.type, "complete",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, URL_HOST + "/" + FILE_SIMPLE_MAR,
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "MD5",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, MD5_HASH_SIMPLE_MAR,
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, SIZE_SIMPLE_MAR,
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.state, STATE_SUCCEEDED,
+            "the update patch state attribute" + MSG_SHOULD_EQUAL);
 
   update = gUpdateManager.getUpdateAt(1);
-  do_check_eq(update.state, STATE_FAILED);
-  do_check_eq(update.name, "Existing");
-  do_check_eq(update.type, "major");
-  do_check_eq(update.displayVersion, "version 3.0");
-  do_check_eq(update.appVersion, "3.0");
-  do_check_eq(update.platformVersion, "3.0");
-  do_check_eq(update.detailsURL, "http://details/");
-  do_check_eq(update.billboardURL, null);
-  do_check_eq(update.licenseURL, null);
-  do_check_eq(update.serviceURL, "http://service/");
-  do_check_eq(update.installDate, "1238441400314");
-  do_check_eq(update.statusText, getString("patchApplyFailure"));
-  do_check_eq(update.buildID, "20080811053724");
-  do_check_true(update.isCompleteUpdate);
-  do_check_eq(update.channel, "test_channel");
-  do_check_false(update.showPrompt);
-  do_check_false(update.showNeverForVersion);
-  do_check_eq(update.promptWaitTime, "200");
-  do_check_eq(update.previousAppVersion, null);
+  Assert.equal(update.state, STATE_FAILED,
+               "the update state attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.name, "Existing",
+               "the update name attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.type, "major",
+               "the update type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.displayVersion, "version 3.0",
+               "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.appVersion, "3.0",
+               "the update appVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.platformVersion, "3.0",
+               "the update platformVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.detailsURL, "http://details/",
+               "the update detailsURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.billboardURL,
+            "the update billboardURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.licenseURL,
+            "the update licenseURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.serviceURL, "http://service/",
+               "the update serviceURL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.installDate, "1238441400314",
+               "the update installDate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.statusText, getString("patchApplyFailure"),
+               "the update statusText attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.buildID, "20080811053724",
+               "the update buildID attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!update.isCompleteUpdate,
+            "the update isCompleteUpdate attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.channel, "test_channel",
+               "the update channel attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.showPrompt,
+            "the update showPrompt attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.showNeverForVersion,
+            "the update showNeverForVersion attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.promptWaitTime, "200",
+               "the update promptWaitTime attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!update.previousAppVersion,
+            "the update previousAppVersion attribute" + MSG_SHOULD_EQUAL);
 
   patch = update.selectedPatch;
-  do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, URL_HOST + "/" + FILE_SIMPLE_MAR);
-  do_check_eq(patch.hashFunction, "MD5");
-  do_check_eq(patch.hashValue, MD5_HASH_SIMPLE_MAR);
-  do_check_eq(patch.size, SIZE_SIMPLE_MAR);
-  do_check_true(patch.selected);
-  do_check_eq(patch.state, STATE_FAILED);
+  Assert.equal(patch.type, "complete",
+               "the update patch type attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.URL, URL_HOST + "/" + FILE_SIMPLE_MAR,
+               "the update patch URL attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashFunction, "MD5",
+               "the update patch hashFunction attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.hashValue, MD5_HASH_SIMPLE_MAR,
+               "the update patch hashValue attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.size, SIZE_SIMPLE_MAR,
+               "the update patch size attribute" + MSG_SHOULD_EQUAL);
+  Assert.ok(!!patch.selected,
+            "the update patch selected attribute" + MSG_SHOULD_EQUAL);
+  Assert.equal(patch.state, STATE_FAILED,
+               "the update patch state attribute" + MSG_SHOULD_EQUAL);
 
   doTestFinish();
 }
