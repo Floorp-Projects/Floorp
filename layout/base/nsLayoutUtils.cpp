@@ -1068,6 +1068,9 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                                      uint32_t aPriority,
                                      RepaintMode aRepaintMode)
 {
+  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(aContent->GetCurrentDoc() == aPresShell->GetDocument());
+
   DisplayPortMarginsPropertyData* currentData =
     static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
   if (currentData && currentData->mPriority > aPriority) {
