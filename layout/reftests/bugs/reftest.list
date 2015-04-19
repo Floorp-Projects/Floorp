@@ -88,7 +88,7 @@ fuzzy-if(gtk2Widget,6,26200) == 28811-2b.html 28811-2-ref.html  # Bug 1128229
 != 82711-1-ref.html 82711-2-ref.html
 != 82711-1-ref.html 82711-3-ref.html
 != 82711-2-ref.html 82711-3-ref.html
-skip-if(asyncPanZoom) == 84400-1.html 84400-1-ref.html
+== 84400-1.html 84400-1-ref.html
 == 84400-2.html 84400-2-ref.html
 == 97777-1.html 97777-1-ref.html
 == 97777-2.html 97777-2-ref.html
@@ -1404,7 +1404,7 @@ skip-if(B2G||Mulet) == 502447-1.html 502447-1-ref.html # Initial mulet triage: p
 needs-focus fails == 503531-1.html 503531-1-ref.html
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
-skip-if(B2G||Mulet||asyncPanZoom) fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,5,2800) == 506481-1.html 506481-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 507187-1.html 507187-1-ref.html
 == 507487-1.html 507487-1-ref.html
 == 507487-2.xhtml 507487-2-ref.xhtml
@@ -1417,7 +1417,7 @@ skip-if(B2G||Mulet) == 508816-2.html 508816-2-ref.html # Initial mulet triage: p
 skip-if((B2G&&browserIsRemote)||Mulet) == 508908-1.xul 508908-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 508919-1.xhtml 508919-1-ref.xhtml
 == 509155-1.xhtml 509155-1-ref.xhtml
-skip-if(B2G||Mulet||asyncPanZoom) fuzzy-if(Android,5,1656) == 512410.html 512410-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android,5,1656) == 512410.html 512410-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 512631-1.html 512631-1-ref.html
 == 513153-1a.html 513153-1-ref.html
 == 513153-1b.html 513153-1-ref.html
@@ -1491,7 +1491,7 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 550325-2.html 550325-1-ref.html
 == 550325-3.html 550325-1-ref.html
 == 550716-1.html 550716-1-ref.html
-skip-if(B2G||Mulet||asyncPanZoom) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.html 551463-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.html 551463-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 551699-1.html 551699-1-ref.html
 == 552334-1.html 552334-1-ref.html
 # Bug 553571 was specific to MS Indic shaping behavior and Win7 font support;
@@ -1575,7 +1575,7 @@ random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574
 skip-if(!haveTestPlugin) skip-if(B2G||Mulet) fails-if(Android) == 579808-1.html 579808-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) random-if(layersGPUAccelerated) == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) skip-if(Android) == 580160-1.html 580160-1-ref.html # bug 920927 for Android; issues without the test-plugin # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(asyncPanZoom) HTTP(..) == 580863-1.html 580863-1-ref.html
+HTTP(..) == 580863-1.html 580863-1-ref.html
 skip-if(B2G||Mulet) fails-if(Android) random-if(layersGPUAccelerated) == 581317-1.html 581317-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
@@ -1667,11 +1667,11 @@ random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-1.html 637852-1-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-2.html 637852-2-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,500) == 637852-3.html 637852-3-ref.html
-skip-if(B2G||Mulet||asyncPanZoom) == 641770-1.html 641770-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == 641770-1.html 641770-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
 == 645768-1.html 645768-1-ref.html
-skip-if(asyncPanZoom) fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
+fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 needs-focus == 652301-1a.html 652301-1-ref.html
 needs-focus == 652301-1b.html 652301-1-ref.html
 == 652775-1.html 652775-1-ref.html
@@ -1756,7 +1756,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android,4,400) == 815593-1.html 815593-1-ref.html #
 == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
 skip-if(B2G||Mulet) == 818276-1.html 818276-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(asyncPanZoom) == 825999.html 825999-ref.html
+fuzzy-if(asyncPanZoom,190,27) == 825999.html 825999-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
@@ -1806,7 +1806,7 @@ fuzzy-if(B2G,1,7) == 942672-1.html 942672-1-ref.html
 == 961887-1.html 961887-1-ref.html
 == 961887-2.html 961887-2-ref.html
 == 961887-3.html 961887-3-ref.html
-skip-if(asyncPanZoom) == 966992-1.html 966992-1-ref.html
+pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) == 966992-1.html 966992-1-ref.html
 skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other than the root probably won't work well on android until bug 776030 is fixed
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 == 978911-1.svg 978911-1-ref.svg
