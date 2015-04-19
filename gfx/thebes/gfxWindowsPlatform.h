@@ -257,10 +257,10 @@ public:
 
     bool IsWARP() { return mIsWARP; }
 
-    bool SupportsApzWheelInput() override {
+    bool SupportsApzWheelInput() const override {
       return true;
     }
-    bool SupportsApzTouchInput() override;
+    bool SupportsApzTouchInput() const override;
 
     virtual already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
     static mozilla::Atomic<size_t> sD3D11MemoryUsed;
