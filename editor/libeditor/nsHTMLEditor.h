@@ -513,7 +513,7 @@ protected:
     *
     * The nsIContent variant returns aIsSet instead of using an out parameter.
     */
-  bool IsTextPropertySetByContent(nsIContent*      aContent,
+  bool IsTextPropertySetByContent(nsINode*         aNode,
                                   nsIAtom*         aProperty,
                                   const nsAString* aAttribute,
                                   const nsAString* aValue,

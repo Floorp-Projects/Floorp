@@ -313,17 +313,16 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode* aNode,
 }
 
 bool
-nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
-                                      nsIAtom* aProperty,
+nsHTMLCSSUtils::IsCSSEditableProperty(nsINode* aNode, nsIAtom* aProperty,
                                       const nsAString* aAttribute)
 {
   MOZ_ASSERT(aNode);
 
-  nsIContent* content = aNode;
+  nsINode* node = aNode;
   // we need an element node here
-  if (content->NodeType() == nsIDOMNode::TEXT_NODE) {
-    content = content->GetParent();
-    NS_ENSURE_TRUE(content, false);
+  if (node->NodeType() == nsIDOMNode::TEXT_NODE) {
+    node = node->GetParentNode();
+    NS_ENSURE_TRUE(node, false);
   }
 
   // html inline styles B I TT U STRIKE and COLOR/FACE on FONT
@@ -340,43 +339,42 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
 
   // ALIGN attribute on elements supporting it
   if (aAttribute && (aAttribute->EqualsLiteral("align")) &&
-      content->IsAnyOfHTMLElements(nsGkAtoms::div,
-                                   nsGkAtoms::p ,
-                                   nsGkAtoms::h1,
-                                   nsGkAtoms::h2,
-                                   nsGkAtoms::h3,
-                                   nsGkAtoms::h4,
-                                   nsGkAtoms::h5,
-                                   nsGkAtoms::h6,
-                                   nsGkAtoms::td,
-                                   nsGkAtoms::th,
-                                   nsGkAtoms::table,
-                                   nsGkAtoms::hr,
-				   // brade: for the above, why not use
-				   // nsHTMLEditUtils::SupportsAlignAttr
-				   // brade: but it also checks for tbody,
-				   // tfoot, thead Let's add the following
-				   // elements here even if ALIGN has not the
-				   // same meaning for them
-                                   nsGkAtoms::legend,
-                                   nsGkAtoms::caption)) {
+      node->IsAnyOfHTMLElements(nsGkAtoms::div,
+                                nsGkAtoms::p,
+                                nsGkAtoms::h1,
+                                nsGkAtoms::h2,
+                                nsGkAtoms::h3,
+                                nsGkAtoms::h4,
+                                nsGkAtoms::h5,
+                                nsGkAtoms::h6,
+                                nsGkAtoms::td,
+                                nsGkAtoms::th,
+                                nsGkAtoms::table,
+                                nsGkAtoms::hr,
+                                // For the above, why not use
+                                // nsHTMLEditUtils::SupportsAlignAttr?
+                                // It also checks for tbody, tfoot, thead.
+                                // Let's add the following elements here even
+                                // if "align" has a different meaning for them
+                                nsGkAtoms::legend,
+                                nsGkAtoms::caption)) {
     return true;
   }
 
   if (aAttribute && (aAttribute->EqualsLiteral("valign")) &&
-      content->IsAnyOfHTMLElements(nsGkAtoms::col,
-                                   nsGkAtoms::colgroup,
-                                   nsGkAtoms::tbody,
-                                   nsGkAtoms::td,
-                                   nsGkAtoms::th,
-                                   nsGkAtoms::tfoot,
-                                   nsGkAtoms::thead,
-                                   nsGkAtoms::tr)) {
+      node->IsAnyOfHTMLElements(nsGkAtoms::col,
+                                nsGkAtoms::colgroup,
+                                nsGkAtoms::tbody,
+                                nsGkAtoms::td,
+                                nsGkAtoms::th,
+                                nsGkAtoms::tfoot,
+                                nsGkAtoms::thead,
+                                nsGkAtoms::tr)) {
     return true;
   }
 
   // attributes TEXT, BACKGROUND and BGCOLOR on BODY
-  if (aAttribute && content->IsHTMLElement(nsGkAtoms::body) &&
+  if (aAttribute && node->IsHTMLElement(nsGkAtoms::body) &&
       (aAttribute->EqualsLiteral("text")
        || aAttribute->EqualsLiteral("background")
        || aAttribute->EqualsLiteral("bgcolor"))) {
@@ -390,7 +388,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
 
   // attributes HEIGHT, WIDTH and NOWRAP on TD and TH
   if (aAttribute &&
-      content->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th) &&
+      node->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th) &&
       (aAttribute->EqualsLiteral("height")
        || aAttribute->EqualsLiteral("width")
        || aAttribute->EqualsLiteral("nowrap"))) {
@@ -398,14 +396,14 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
   }
 
   // attributes HEIGHT and WIDTH on TABLE
-  if (aAttribute && content->IsHTMLElement(nsGkAtoms::table) &&
+  if (aAttribute && node->IsHTMLElement(nsGkAtoms::table) &&
       (aAttribute->EqualsLiteral("height")
        || aAttribute->EqualsLiteral("width"))) {
     return true;
   }
 
   // attributes SIZE and WIDTH on HR
-  if (aAttribute && content->IsHTMLElement(nsGkAtoms::hr) &&
+  if (aAttribute && node->IsHTMLElement(nsGkAtoms::hr) &&
       (aAttribute->EqualsLiteral("size")
        || aAttribute->EqualsLiteral("width"))) {
     return true;
@@ -413,13 +411,13 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
 
   // attribute TYPE on OL UL LI
   if (aAttribute &&
-      content->IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
-                                   nsGkAtoms::li) &&
+      node->IsAnyOfHTMLElements(nsGkAtoms::ol, nsGkAtoms::ul,
+                                nsGkAtoms::li) &&
       aAttribute->EqualsLiteral("type")) {
     return true;
   }
 
-  if (aAttribute && content->IsHTMLElement(nsGkAtoms::img) &&
+  if (aAttribute && node->IsHTMLElement(nsGkAtoms::img) &&
       (aAttribute->EqualsLiteral("border")
        || aAttribute->EqualsLiteral("width")
        || aAttribute->EqualsLiteral("height"))) {
@@ -429,14 +427,14 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
   // other elements that we can align using CSS even if they
   // can't carry the html ALIGN attribute
   if (aAttribute && aAttribute->EqualsLiteral("align") &&
-      content->IsAnyOfHTMLElements(nsGkAtoms::ul,
-                                   nsGkAtoms::ol,
-                                   nsGkAtoms::dl,
-                                   nsGkAtoms::li,
-                                   nsGkAtoms::dd,
-                                   nsGkAtoms::dt,
-                                   nsGkAtoms::address,
-                                   nsGkAtoms::pre)) {
+      node->IsAnyOfHTMLElements(nsGkAtoms::ul,
+                                nsGkAtoms::ol,
+                                nsGkAtoms::dl,
+                                nsGkAtoms::li,
+                                nsGkAtoms::dd,
+                                nsGkAtoms::dt,
+                                nsGkAtoms::address,
+                                nsGkAtoms::pre)) {
     return true;
   }
 
@@ -1031,16 +1029,16 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
 // The nsIContent variant returns aIsSet instead of using an out parameter, and
 // does not modify aValue.
 bool
-nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIContent* aContent,
+nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                     nsIAtom* aProperty,
                                                     const nsAString* aAttribute,
                                                     const nsAString& aValue,
                                                     StyleType aStyleType)
 {
-  MOZ_ASSERT(aContent && aProperty);
+  MOZ_ASSERT(aNode && aProperty);
   bool isSet;
   nsAutoString value(aValue);
-  nsresult res = IsCSSEquivalentToHTMLInlineStyleSet(aContent->AsDOMNode(),
+  nsresult res = IsCSSEquivalentToHTMLInlineStyleSet(aNode->AsDOMNode(),
                                                      aProperty, aAttribute,
                                                      isSet, value, aStyleType);
   NS_ASSERTION(NS_SUCCEEDED(res), "IsCSSEquivalentToHTMLInlineStyleSet failed");
