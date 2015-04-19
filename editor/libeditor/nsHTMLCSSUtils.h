@@ -117,17 +117,17 @@ public:
                                    const nsAString & aProperty,
                                    int32_t aIntValue);
 
-  /** gets the specified/computed style value of a CSS property for a given node (or its element
-    * ancestor if it is not an element)
+  /** Gets the specified/computed style value of a CSS property for a given
+    * node (or its element ancestor if it is not an element)
     *
     * @param aNode          [IN] a DOM node
     * @param aProperty      [IN] an atom containing the CSS property to get
     * @param aPropertyValue [OUT] the retrieved value of the property
     */
-  nsresult    GetSpecifiedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                   nsAString & aValue);
-  nsresult    GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                  nsAString & aValue);
+  nsresult    GetSpecifiedProperty(nsINode& aNode, nsIAtom& aProperty,
+                                   nsAString& aValue);
+  nsresult    GetComputedProperty(nsINode& aNode, nsIAtom& aProperty,
+                                  nsAString& aValue);
 
   /** Removes a CSS property from the specified declarations in STYLE attribute
    ** and removes the node if it is an useless span
@@ -400,8 +400,6 @@ private:
    * @param aStyleType          [IN] eSpecified or eComputed
    */
   nsresult GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
-                                    nsAString& aValue, StyleType aStyleType);
-  nsresult GetCSSInlinePropertyBase(nsIDOMNode* aNode, nsIAtom* aProperty,
                                     nsAString& aValue, StyleType aStyleType);
 
 
