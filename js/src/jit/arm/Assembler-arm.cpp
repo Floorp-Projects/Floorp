@@ -2722,7 +2722,8 @@ struct PoolHeader : Instruction {
 void
 Assembler::WritePoolHeader(uint8_t* start, Pool* p, bool isNatural)
 {
-    STATIC_ASSERT(sizeof(PoolHeader) == 4);
+    static_assert(sizeof(PoolHeader) == 4,
+                  "PoolHandler must have the correct size.");
     uint8_t* pool = start + 4;
     // Go through the usual rigmarole to get the size of the pool.
     pool += p->getPoolSize();
