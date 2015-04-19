@@ -406,7 +406,8 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
                                        int32_t & aMarginLeft,
                                        int32_t & aMarginTop)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
 
   // Is the element positioned ? let's check the cheap way first...
   bool isPositioned = false;
@@ -426,7 +427,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 
     // Get the all the computed css styles attached to the element node
     nsRefPtr<nsComputedDOMStyle> cssDecl =
-      mHTMLCSSUtils->GetComputedStyle(aElement);
+      mHTMLCSSUtils->GetComputedStyle(element);
     NS_ENSURE_STATE(cssDecl);
 
     aBorderLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));
