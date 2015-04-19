@@ -26,7 +26,8 @@ const ALL_MENU_ITEMS = [
   "node-menu-delete",
   "node-menu-pseudo-hover",
   "node-menu-pseudo-active",
-  "node-menu-pseudo-focus"
+  "node-menu-pseudo-focus",
+  "node-menu-scrollnodeintoview"
 ].concat(PASTE_MENU_ITEMS);
 
 const ITEMS_WITHOUT_SHOWDOMPROPS =

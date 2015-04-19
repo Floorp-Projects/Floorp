@@ -43,16 +43,19 @@ function run_test() {
 }
 
 const WindowWatcher = {
-  getNewPrompter: function(aParent) {
-    do_check_eq(aParent, null);
+  getNewPrompter: function WW_getNewPrompter(aParent) {
+    Assert.ok(!aParent,
+              "the aParent parameter should not be defined");
     return {
-      alert: function(aTitle, aText) {
+      alert: function WW_GNP_alert(aTitle, aText) {
         let title = getString("updaterIOErrorTitle");
-        do_check_eq(aTitle, title);
+        Assert.equal(aTitle, title,
+                     "the ui string for title" + MSG_SHOULD_EQUAL);
         let text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
                                                       [Services.appinfo.name,
                                                        Services.appinfo.name], 2);
-        do_check_eq(aText, text);
+        Assert.equal(aText, text,
+                     "the ui string for message" + MSG_SHOULD_EQUAL);
 
         doTestFinish();
       }

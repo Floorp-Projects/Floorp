@@ -48,7 +48,8 @@ function check_test() {
     do_execute_soon(check_test);
     return;
   }
-  do_check_true(true);
+  Assert.ok(true,
+            PREF_APP_UPDATE_BACKGROUNDERRORS + " preference should not exist");
 
   doTestFinish();
 }
