@@ -37,10 +37,6 @@ using mozilla::dom::NodeInfo;
 NodeInfo::~NodeInfo()
 {
   mOwnerManager->RemoveNodeInfo(this);
-
-  NS_RELEASE(mInner.mName);
-  NS_IF_RELEASE(mInner.mPrefix);
-  NS_IF_RELEASE(mInner.mExtraName);
 }
 
 NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
@@ -51,12 +47,12 @@ NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
   MOZ_ASSERT(aOwnerManager, "Invalid aOwnerManager");
 
   // Initialize mInner
-  NS_ADDREF(mInner.mName = aName);
-  NS_IF_ADDREF(mInner.mPrefix = aPrefix);
+  mInner.mName = aName;
+  mInner.mPrefix = aPrefix;
   mInner.mNamespaceID = aNamespaceID;
   mInner.mNodeType = aNodeType;
   mOwnerManager = aOwnerManager;
-  NS_IF_ADDREF(mInner.mExtraName = aExtraName);
+  mInner.mExtraName = aExtraName;
 
   mDocument = aOwnerManager->GetDocument();
 
