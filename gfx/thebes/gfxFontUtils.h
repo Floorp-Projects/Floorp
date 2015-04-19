@@ -99,7 +99,6 @@ public:
         bool hasBlocksInRange = false;
 
         endBlock = aEnd >> BLOCK_INDEX_SHIFT;
-        blockIndex = startBlock;
         for (blockIndex = startBlock; blockIndex <= endBlock; blockIndex++) {
             if (blockIndex < blockLen && mBlocks[blockIndex])
                 hasBlocksInRange = true;
