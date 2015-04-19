@@ -718,14 +718,14 @@ protected:
   nsIContent* GetFirstEditableLeaf(nsINode& aNode);
   nsIContent* GetLastEditableLeaf(nsINode& aNode);
 
-  nsresult GetInlinePropertyBase(nsIAtom *aProperty, 
-                             const nsAString *aAttribute,
-                             const nsAString *aValue,
-                             bool *aFirst, 
-                             bool *aAny, 
-                             bool *aAll,
-                             nsAString *outValue,
-                             bool aCheckDefaults = true);
+  nsresult GetInlinePropertyBase(nsIAtom& aProperty,
+                                 const nsAString* aAttribute,
+                                 const nsAString* aValue,
+                                 bool* aFirst,
+                                 bool* aAny,
+                                 bool* aAll,
+                                 nsAString* outValue,
+                                 bool aCheckDefaults = true);
   bool HasStyleOrIdOrClass(mozilla::dom::Element* aElement);
   nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMNode* aElement);
 
