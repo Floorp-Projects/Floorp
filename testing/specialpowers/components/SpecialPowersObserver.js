@@ -86,6 +86,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
       this._messageManager.addMessageListener("SPChromeScriptMessage", this);
       this._messageManager.addMessageListener("SPQuotaManager", this);
       this._messageManager.addMessageListener("SPSetTestPluginEnabledState", this);
+      this._messageManager.addMessageListener("SPPeriodicServiceWorkerUpdates", this);
 
       this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
       this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
@@ -144,6 +145,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
       this._messageManager.removeMessageListener("SPChromeScriptMessage", this);
       this._messageManager.removeMessageListener("SPQuotaManager", this);
       this._messageManager.removeMessageListener("SPSetTestPluginEnabledState", this);
+      this._messageManager.removeMessageListener("SPPeriodicServiceWorkerUpdates", this);
 
       this._messageManager.removeDelayedFrameScript(CHILD_LOGGER_SCRIPT);
       this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT_API);

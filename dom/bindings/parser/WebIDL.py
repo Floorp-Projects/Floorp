@@ -1471,6 +1471,14 @@ class IDLDictionary(IDLObjectWithScope):
     def isDictionary(self):
         return True;
 
+    def canBeEmpty(self):
+        """
+        Returns true if this dictionary can be empty (that is, it has no
+        required members and neither do any of its ancestors).
+        """
+        return (all(member.optional for member in self.members) and
+                (not self.parent or self.parent.canBeEmpty()))
+
     def finish(self, scope):
         if self._finished:
             return
@@ -2133,7 +2141,7 @@ class IDLUnionType(IDLType):
         IDLType.__init__(self, location, "")
         self.memberTypes = memberTypes
         self.hasNullableType = False
-        self.hasDictionaryType = False
+        self._dictionaryType = None
         self.flatMemberTypes = None
         self.builtin = False
 
@@ -2189,10 +2197,10 @@ class IDLUnionType(IDLType):
                 if self.hasNullableType:
                     raise WebIDLError("Can't have more than one nullable types in a union",
                                       [nullableType.location, self.flatMemberTypes[i].location])
-                if self.hasDictionaryType:
+                if self.hasDictionaryType():
                     raise WebIDLError("Can't have a nullable type and a "
                                       "dictionary type in a union",
-                                      [dictionaryType.location,
+                                      [self._dictionaryType.location,
                                        self.flatMemberTypes[i].location])
                 self.hasNullableType = True
                 nullableType = self.flatMemberTypes[i]
@@ -2204,8 +2212,7 @@ class IDLUnionType(IDLType):
                                       "dictionary type in a union",
                                       [nullableType.location,
                                        self.flatMemberTypes[i].location])
-                self.hasDictionaryType = True
-                dictionaryType = self.flatMemberTypes[i]
+                self._dictionaryType = self.flatMemberTypes[i]
             elif self.flatMemberTypes[i].isUnion():
                 self.flatMemberTypes[i:i + 1] = self.flatMemberTypes[i].memberTypes
                 continue
@@ -2243,6 +2250,13 @@ class IDLUnionType(IDLType):
                        in self.flatMemberTypes):
                 return False
         return True
+
+    def hasDictionaryType(self):
+        return self._dictionaryType is not None
+
+    def hasPossiblyEmptyDictionaryType(self):
+        return (self._dictionaryType is not None and
+                self._dictionaryType.inner.canBeEmpty())
 
     def _getDependentObjects(self):
         return set(self.memberTypes)
@@ -3036,14 +3050,14 @@ class IDLNullValue(IDLObject):
     def coerceToType(self, type, location):
         if (not isinstance(type, IDLNullableType) and
             not (type.isUnion() and type.hasNullableType) and
-            not (type.isUnion() and type.hasDictionaryType) and
+            not (type.isUnion() and type.hasDictionaryType()) and
             not type.isDictionary() and
             not type.isAny()):
             raise WebIDLError("Cannot coerce null value to type %s." % type,
                               [location])
 
         nullValue = IDLNullValue(self.location)
-        if type.isUnion() and not type.nullable() and type.hasDictionaryType:
+        if type.isUnion() and not type.nullable() and type.hasDictionaryType():
             # We're actually a default value for the union's dictionary member.
             # Use its type.
             for t in type.flatMemberTypes:
@@ -3608,7 +3622,7 @@ class IDLArgument(IDLObjectWithIdentifier):
             self.type = type
 
         if ((self.type.isDictionary() or
-             self.type.isUnion() and self.type.unroll().hasDictionaryType) and
+             self.type.isUnion() and self.type.unroll().hasDictionaryType()) and
             self.optional and not self.defaultValue and not self.variadic):
             # Default optional non-variadic dictionaries to null,
             # for simplicity, so the codegen doesn't have to special-case this.
@@ -3930,45 +3944,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def finish(self, scope):
         IDLInterfaceMember.finish(self, scope)
 
-        overloadWithPromiseReturnType = None
-        overloadWithoutPromiseReturnType = None
         for overload in self._overloads:
-            variadicArgument = None
-
-            arguments = overload.arguments
-            for (idx, argument) in enumerate(arguments):
-                if not argument.isComplete():
-                    argument.complete(scope)
-                assert argument.type.isComplete()
-
-                if (argument.type.isDictionary() or
-                    (argument.type.isUnion() and
-                     argument.type.unroll().hasDictionaryType)):
-                    # Dictionaries and unions containing dictionaries at the
-                    # end of the list or followed by optional arguments must be
-                    # optional.
-                    if (not argument.optional and
-                        all(arg.optional for arg in arguments[idx+1:])):
-                        raise WebIDLError("Dictionary argument or union "
-                                          "argument containing a dictionary "
-                                          "not followed by a required argument "
-                                          "must be optional",
-                                          [argument.location])
-
-                    # An argument cannot be a Nullable Dictionary
-                    if argument.type.nullable():
-                        raise WebIDLError("An argument cannot be a nullable "
-                                          "dictionary or nullable union "
-                                          "containing a dictionary",
-                                          [argument.location])
-
-                # Only the last argument can be variadic
-                if variadicArgument:
-                    raise WebIDLError("Variadic argument is not last argument",
-                                      [variadicArgument.location])
-                if argument.variadic:
-                    variadicArgument = argument
-
             returnType = overload.returnType
             if not returnType.isComplete():
                 returnType = returnType.complete(scope)
@@ -3977,22 +3953,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 assert not isinstance(returnType.name, IDLUnresolvedIdentifier)
                 overload.returnType = returnType
 
-            if returnType.isPromise():
-                overloadWithPromiseReturnType = overload
-            else:
-                overloadWithoutPromiseReturnType = overload
-
-        # Make sure either all our overloads return Promises or none do
-        if overloadWithPromiseReturnType and overloadWithoutPromiseReturnType:
-            raise WebIDLError("We have overloads with both Promise and "
-                              "non-Promise return types",
-                              [overloadWithPromiseReturnType.location,
-                               overloadWithoutPromiseReturnType.location])
-
-        if overloadWithPromiseReturnType and self._legacycaller:
-            raise WebIDLError("May not have a Promise return type for a "
-                              "legacycaller.",
-                              [overloadWithPromiseReturnType.location])
+            for argument in overload.arguments:
+                if not argument.isComplete():
+                    argument.complete(scope)
+                assert argument.type.isComplete()
 
         # Now compute various information that will be used by the
         # WebIDL overload resolution algorithm.
@@ -4022,11 +3986,66 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                              distinguishingIndex),
                             [self.location, overload.location])
 
+        overloadWithPromiseReturnType = None
+        overloadWithoutPromiseReturnType = None
         for overload in self._overloads:
-            if not overload.returnType.unroll().isExposedInAllOf(self.exposureSet):
+            returnType = overload.returnType
+            if not returnType.unroll().isExposedInAllOf(self.exposureSet):
                 raise WebIDLError("Overload returns a type that is not exposed "
                                   "everywhere where the method is exposed",
                                   [overload.location])
+
+            variadicArgument = None
+
+            arguments = overload.arguments
+            for (idx, argument) in enumerate(arguments):
+                assert argument.type.isComplete()
+
+                if ((argument.type.isDictionary() and
+                     argument.type.inner.canBeEmpty())or
+                    (argument.type.isUnion() and
+                     argument.type.unroll().hasPossiblyEmptyDictionaryType())):
+                    # Optional dictionaries and unions containing optional
+                    # dictionaries at the end of the list or followed by
+                    # optional arguments must be optional.
+                    if (not argument.optional and
+                        all(arg.optional for arg in arguments[idx+1:])):
+                        raise WebIDLError("Dictionary argument or union "
+                                          "argument containing a dictionary "
+                                          "not followed by a required argument "
+                                          "must be optional",
+                                          [argument.location])
+
+                    # An argument cannot be a Nullable Dictionary
+                    if argument.type.nullable():
+                        raise WebIDLError("An argument cannot be a nullable "
+                                          "dictionary or nullable union "
+                                          "containing a dictionary",
+                                          [argument.location])
+
+                # Only the last argument can be variadic
+                if variadicArgument:
+                    raise WebIDLError("Variadic argument is not last argument",
+                                      [variadicArgument.location])
+                if argument.variadic:
+                    variadicArgument = argument
+
+            if returnType.isPromise():
+                overloadWithPromiseReturnType = overload
+            else:
+                overloadWithoutPromiseReturnType = overload
+
+        # Make sure either all our overloads return Promises or none do
+        if overloadWithPromiseReturnType and overloadWithoutPromiseReturnType:
+            raise WebIDLError("We have overloads with both Promise and "
+                              "non-Promise return types",
+                              [overloadWithPromiseReturnType.location,
+                               overloadWithoutPromiseReturnType.location])
+
+        if overloadWithPromiseReturnType and self._legacycaller:
+            raise WebIDLError("May not have a Promise return type for a "
+                              "legacycaller.",
+                              [overloadWithPromiseReturnType.location])
 
     def overloadsForArgCount(self, argc):
         return [overload for overload in self._overloads if

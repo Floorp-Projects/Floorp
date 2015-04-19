@@ -90,6 +90,11 @@
         </menupopup>
       </menu>
       <menuseparator/>
+      <menuitem id="node-menu-scrollnodeintoview"
+        label="&inspectorScrollNodeIntoView.label;"
+        accesskey="&inspectorScrollNodeIntoView.accesskey;"
+        oncommand="inspector.scrollNodeIntoView()"/>
+      <menuseparator/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
         accesskey="&inspectorHTMLDelete.accesskey;"

@@ -24,10 +24,10 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(0, STATE_SUCCEEDED);
+  runUpdate(0, STATE_SUCCEEDED, checkUpdateFinished);
 }
 
-function checkUpdateApplied() {
+function checkUpdateFinished() {
   setupHelperFinish();
 }
 

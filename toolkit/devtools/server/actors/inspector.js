@@ -582,6 +582,16 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
   }),
 
   /**
+   * Scroll the selected node into view.
+   */
+  scrollIntoView: method(function() {
+    this.rawNode.scrollIntoView(true);
+  }, {
+    request: {},
+    response: {}
+  }),
+
+  /**
    * Get the node's image data if any (for canvas and img nodes).
    * Returns an imageData object with the actual data being a LongStringActor
    * and a size json object.

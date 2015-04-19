@@ -7,6 +7,9 @@
  * apply it.
  */
 
+const START_STATE = STATE_PENDING;
+const END_STATE = STATE_PENDING;
+
 function run_test() {
   if (MOZ_APP_NAME == "xulrunner") {
     logTestInfo("Unable to run this test on xulrunner");
@@ -27,16 +30,17 @@ function run_test() {
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    STATE_PENDING);
+                                    START_STATE);
   let updates = getLocalUpdateString(patches, null, null, null, null, null,
                                      null, null, null, null, null, null,
                                      null, "true", channel);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(getAppVersion());
-  writeStatusFile(STATE_PENDING);
+  writeStatusFile(START_STATE);
 
   reloadUpdateManagerData();
-  do_check_true(!!gUpdateManager.activeUpdate);
+  Assert.ok(!!gUpdateManager.activeUpdate,
+            "the active update should be defined");
 
   lockDirectory(getAppBaseDir());
 
@@ -44,16 +48,6 @@ function run_test() {
 }
 
 function setupAppFilesFinished() {
-  // For Mac OS X set the last modified time for the root directory to a date in
-  // the past to test that the last modified time is updated on a successful
-  // update (bug 600098).
-  if (IS_MACOSX) {
-    let now = Date.now();
-    let yesterday = now - (1000 * 60 * 60 * 24);
-    let applyToDir = getApplyDirFile();
-    applyToDir.lastModifiedTime = yesterday;
-  }
-
   stageUpdate();
 }
 
@@ -66,14 +60,14 @@ function end_test() {
  */
 function checkUpdateApplied() {
   // Don't proceed until the update has failed, and reset to pending.
-  if (gUpdateManager.activeUpdate.state != STATE_PENDING) {
+  if (gUpdateManager.activeUpdate.state != END_STATE) {
     if (++gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for update to equal: " +
-               STATE_PENDING +
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
+               "active update status state to equal: " +
+               END_STATE +
                ", current state: " + gUpdateManager.activeUpdate.state);
-    } else {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     }
+    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
     return;
   }
 
@@ -81,12 +75,9 @@ function checkUpdateApplied() {
 }
 
 function finishTest() {
-  if (IS_WIN || IS_MACOSX) {
-    // Check that the post update process was not launched.
-    do_check_false(getPostUpdateFile(".running").exists());
-  }
-
-  do_check_eq(readStatusState(), STATE_PENDING);
+  checkPostUpdateRunningFile(false);
+  Assert.equal(readStatusState(), END_STATE,
+               "the status state" + MSG_SHOULD_EQUAL);
   checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   unlockDirectory(getAppBaseDir());
   standardInit();
