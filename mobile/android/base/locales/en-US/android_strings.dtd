@@ -448,6 +448,8 @@ size. -->
 <!ENTITY button_clear "Clear">
 <!ENTITY button_remember "Remember">
 
+<!ENTITY firstrun_panel_title_welcome "Welcome">
+
 <!ENTITY home_top_sites_title "Top Sites">
 <!-- Localization note (home_top_sites_add): This string is used as placeholder
      text underneath empty thumbnails in the Top Sites page on about:home. -->

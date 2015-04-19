@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko;
 
-import android.app.Presentation;
-import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.media.MediaControlIntent;
@@ -15,29 +12,21 @@ import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
 import android.support.v7.media.MediaRouter.RouteInfo;
 import android.util.Log;
-import android.view.Display;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.view.WindowManager;
 
 import com.google.android.gms.cast.CastMediaControlIntent;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-/* Manages a list of GeckoMediaPlayers methods (i.e. Chromecast/Miracast). Routes messages
+/**
+ * Manages a list of GeckoMediaPlayers methods (i.e. Chromecast/Miracast). Routes messages
  * from Gecko to the correct caster based on the id of the display
  */
 public class MediaPlayerManager extends Fragment implements NativeEventListener {
@@ -47,7 +36,11 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
      */
     @JNITarget
     public static MediaPlayerManager newInstance() {
-        return new MediaPlayerManager();
+        if (Versions.feature17Plus) {
+            return new PresentationMediaPlayerManager();
+        } else {
+            return new MediaPlayerManager();
+        }
     }
 
     private static final String LOGTAG = "GeckoMediaPlayerManager";
@@ -69,9 +62,8 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
         }
     }
 
-    private MediaRouter mediaRouter = null;
-    private final Map<String, GeckoMediaPlayer> displays = new HashMap<String, GeckoMediaPlayer>();
-    private GeckoPresentation presentation = null;
+    protected MediaRouter mediaRouter = null;
+    protected final Map<String, GeckoMediaPlayer> displays = new HashMap<String, GeckoMediaPlayer>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -239,85 +231,5 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
         mediaRouter.addCallback(selectorBuilder, callback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (presentation != null) {
-            presentation.dismiss();
-            presentation = null;
-        }
-    }
-
-    private void updatePresentation() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return;
-        }
-
-        if (mediaRouter == null) {
-            return;
-        }
-
-        MediaRouter.RouteInfo route = mediaRouter.getSelectedRoute();
-        Display display = route != null ? route.getPresentationDisplay() : null;
-
-        if (display != null) {
-            if ((presentation != null) && (presentation.getDisplay() != display)) {
-                presentation.dismiss();
-                presentation = null;
-            }
-
-            if (presentation == null) {
-                presentation = new GeckoPresentation(getActivity(), display);
-
-                try {
-                    presentation.show();
-                } catch (WindowManager.InvalidDisplayException ex) {
-                    Log.w(LOGTAG, "Couldn't show presentation!  Display was removed in "
-                            + "the meantime.", ex);
-                    presentation = null;
-                }
-            }
-        } else if (presentation != null) {
-            presentation.dismiss();
-            presentation = null;
-        }
-    }
-
-    private static class SurfaceListener implements SurfaceHolder.Callback {
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width,
-                                                int height) {
-            // Surface changed so force a composite
-            GeckoAppShell.scheduleComposite();
-        }
-
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            GeckoAppShell.addPresentationSurface(holder.getSurface());
-            GeckoAppShell.scheduleComposite();
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            GeckoAppShell.removePresentationSurface(holder.getSurface());
-        }
-    }
-
-    private final static class GeckoPresentation extends Presentation {
-        private SurfaceView mView;
-        public GeckoPresentation(Context context, Display display) {
-            super(context, display);
-        }
-
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-
-            mView = new SurfaceView(getContext());
-            setContentView(mView, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-            mView.getHolder().addCallback(new SurfaceListener());
-        }
-    }
+    protected void updatePresentation() { /* Overridden in sub-classes. */ }
 }

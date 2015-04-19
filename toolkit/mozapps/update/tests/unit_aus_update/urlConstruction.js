@@ -5,8 +5,6 @@
 
 /* General URL Construction Tests */
 
-Cu.import("resource://gre/modules/ctypes.jsm")
-
 const URL_PREFIX = URL_HOST + "/";
 
 var gAppInfo;
@@ -32,7 +30,7 @@ function callHandleEvent(aXHR) {
   // The mock xmlhttprequest needs a status code to return to the consumer and
   // the value is not important for this test.
   aXHR.status = 404;
-  var e = { target: aXHR };
+  let e = { target: aXHR };
   aXHR.onload(e);
 }
 
@@ -51,7 +49,8 @@ function run_test_pt1() {
 }
 
 function check_test_pt1() {
-  do_check_eq(getResult(gRequestURL), gAppInfo.name);
+  Assert.equal(getResult(gRequestURL), gAppInfo.name,
+               "the url param for %PRODUCT%" + MSG_SHOULD_EQUAL);
   run_test_pt2();
 }
 
@@ -65,7 +64,8 @@ function run_test_pt2() {
 }
 
 function check_test_pt2() {
-  do_check_eq(getResult(gRequestURL), gAppInfo.version);
+  Assert.equal(getResult(gRequestURL), gAppInfo.version,
+               "the url param for %VERSION%" + MSG_SHOULD_EQUAL);
   run_test_pt3();
 }
 
@@ -79,7 +79,8 @@ function run_test_pt3() {
 }
 
 function check_test_pt3() {
-  do_check_eq(getResult(gRequestURL), gAppInfo.appBuildID);
+  Assert.equal(getResult(gRequestURL), gAppInfo.appBuildID,
+               "the url param for %BUILD_ID%" + MSG_SHOULD_EQUAL);
   run_test_pt4();
 }
 
@@ -113,7 +114,8 @@ function check_test_pt4() {
     }
   }
 
-  do_check_eq(getResult(gRequestURL), gAppInfo.OS + "_" + abi);
+  Assert.equal(getResult(gRequestURL), gAppInfo.OS + "_" + abi,
+               "the url param for %BUILD_TARGET%" + MSG_SHOULD_EQUAL);
   run_test_pt5();
 }
 
@@ -139,7 +141,8 @@ function run_test_pt5() {
 }
 
 function check_test_pt5() {
-  do_check_eq(getResult(gRequestURL), INSTALL_LOCALE);
+  Assert.equal(getResult(gRequestURL), INSTALL_LOCALE,
+               "the url param for %LOCALE%" + MSG_SHOULD_EQUAL);
   run_test_pt6();
 }
 
@@ -154,7 +157,8 @@ function run_test_pt6() {
 }
 
 function check_test_pt6() {
-  do_check_eq(getResult(gRequestURL), "test_channel");
+  Assert.equal(getResult(gRequestURL), "test_channel",
+               "the url param for %CHANNEL%" + MSG_SHOULD_EQUAL);
   run_test_pt7();
 }
 
@@ -164,13 +168,17 @@ function run_test_pt7() {
   let url = URL_PREFIX + "%CHANNEL%/";
   debugDump("testing url constructed with %CHANNEL% - " + url);
   setUpdateURLOverride(url);
-  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1", "test_partner1");
-  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2", "test_partner2");
+  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1",
+                                 "test_partner1");
+  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2",
+                                 "test_partner2");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
 function check_test_pt7() {
-  do_check_eq(getResult(gRequestURL), "test_channel-cck-test_partner1-test_partner2");
+  Assert.equal(getResult(gRequestURL),
+               "test_channel-cck-test_partner1-test_partner2",
+               "the url param for %CHANNEL%" + MSG_SHOULD_EQUAL);
   run_test_pt8();
 }
 
@@ -184,7 +192,8 @@ function run_test_pt8() {
 }
 
 function check_test_pt8() {
-  do_check_eq(getResult(gRequestURL), gAppInfo.platformVersion);
+  Assert.equal(getResult(gRequestURL), gAppInfo.platformVersion,
+               "the url param for %PLATFORM_VERSION%" + MSG_SHOULD_EQUAL);
   run_test_pt9();
 }
 
@@ -332,7 +341,8 @@ function check_test_pt9() {
     osVersion = encodeURIComponent(osVersion);
   }
 
-  do_check_eq(getResult(gRequestURL), osVersion);
+  Assert.equal(getResult(gRequestURL), osVersion,
+               "the url param for %OS_VERSION%" + MSG_SHOULD_EQUAL);
   run_test_pt10();
 }
 
@@ -347,7 +357,8 @@ function run_test_pt10() {
 }
 
 function check_test_pt10() {
-  do_check_eq(getResult(gRequestURL), "test_distro");
+  Assert.equal(getResult(gRequestURL), "test_distro",
+               "the url param for %DISTRIBUTION%" + MSG_SHOULD_EQUAL);
   run_test_pt11();
 }
 
@@ -362,7 +373,8 @@ function run_test_pt11() {
 }
 
 function check_test_pt11() {
-  do_check_eq(getResult(gRequestURL), "test_distro_version");
+  Assert.equal(getResult(gRequestURL), "test_distro_version",
+               "the url param for %DISTRIBUTION_VERSION%" + MSG_SHOULD_EQUAL);
   run_test_pt12();
 }
 
@@ -377,7 +389,8 @@ function run_test_pt12() {
 }
 
 function check_test_pt12() {
-  do_check_eq(getResult(gRequestURL), "?force=1");
+  Assert.equal(getResult(gRequestURL), "?force=1",
+               "the url query string for force" + MSG_SHOULD_EQUAL);
   run_test_pt13();
 }
 
@@ -391,7 +404,9 @@ function run_test_pt13() {
 }
 
 function check_test_pt13() {
-  do_check_eq(getResult(gRequestURL), "?extra=param&force=1");
+  Assert.equal(getResult(gRequestURL), "?extra=param&force=1",
+               "the url query string for force with an extra string" +
+               MSG_SHOULD_EQUAL);
   run_test_pt14();
 }
 
@@ -405,6 +420,8 @@ function run_test_pt14() {
 }
 
 function check_test_pt14() {
-  do_check_eq(getResult(gRequestURL), "?custom=custom&force=1");
+  Assert.equal(getResult(gRequestURL), "?custom=custom&force=1",
+               "the url query string for force with a custom string" +
+               MSG_SHOULD_EQUAL);
   doTestFinish();
 }

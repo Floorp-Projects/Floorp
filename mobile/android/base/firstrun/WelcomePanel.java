@@ -16,6 +16,8 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 
 public class WelcomePanel extends FirstrunPanel {
+    public static final int TITLE_RES = R.string.firstrun_panel_title_welcome;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
         final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_welcome_fragment, container, false);
