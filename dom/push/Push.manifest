@@ -5,7 +5,10 @@ contract @mozilla.org/push/PushManager;1 {cde1d019-fad8-4044-b141-65fb4fb7a245}
 component {CA86B665-BEDA-4212-8D0F-5C9F65270B58} Push.js
 contract @mozilla.org/push/PushSubscription;1 {CA86B665-BEDA-4212-8D0F-5C9F65270B58}
 
-# Component to initialize PushService on startup.
-component {4b8caa3b-3c58-4f3c-a7f5-7bd9cb24c11d} PushServiceLauncher.js
-contract @mozilla.org/push/ServiceLauncher;1 {4b8caa3b-3c58-4f3c-a7f5-7bd9cb24c11d}
-category app-startup PushServiceLauncher @mozilla.org/push/ServiceLauncher;1
+# XPCOM component; initializes the PushService on startup.
+component {32028e38-903b-4a64-a180-5857eb4cb3dd} PushNotificationService.js
+contract @mozilla.org/push/NotificationService;1 {32028e38-903b-4a64-a180-5857eb4cb3dd}
+category app-startup PushNotificationService @mozilla.org/push/NotificationService;1
+
+component {66a87970-6dc9-46e0-ac61-adb4a13791de} PushNotificationService.js
+contract @mozilla.org/push/ObserverNotification;1 {66a87970-6dc9-46e0-ac61-adb4a13791de}
