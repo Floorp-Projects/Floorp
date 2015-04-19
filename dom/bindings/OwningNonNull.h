@@ -58,20 +58,29 @@ public:
     return mPtr;
   }
 
-  void operator=(T* aValue)
+  OwningNonNull<T>&
+  operator=(T* aValue)
   {
     init(aValue);
+    return *this;
   }
 
-  void operator=(T& aValue)
+  OwningNonNull<T>&
+  operator=(T& aValue)
   {
     init(&aValue);
+    return *this;
   }
 
-  void operator=(const already_AddRefed<T>& aValue)
+  OwningNonNull<T>&
+  operator=(const already_AddRefed<T>& aValue)
   {
     init(aValue);
+    return *this;
   }
+
+  // Don't allow assigning nullptr, it makes no sense
+  void operator=(decltype(nullptr)) = delete;
 
   already_AddRefed<T> forget()
   {
@@ -124,5 +133,31 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 
 } // namespace dom
 } // namespace mozilla
+
+// Declared in nsCOMPtr.h
+template<class T> template<class U>
+nsCOMPtr<T>::nsCOMPtr(const mozilla::dom::OwningNonNull<U>& aOther)
+  : nsCOMPtr(aOther.get())
+{}
+
+template<class T> template<class U>
+nsCOMPtr<T>&
+nsCOMPtr<T>::operator=(const mozilla::dom::OwningNonNull<U>& aOther)
+{
+  return operator=(aOther.get());
+}
+
+// Declared in nsRefPtr.h
+template<class T> template<class U>
+nsRefPtr<T>::nsRefPtr(const mozilla::dom::OwningNonNull<U>& aOther)
+  : nsRefPtr(aOther.get())
+{}
+
+template<class T> template<class U>
+nsRefPtr<T>&
+nsRefPtr<T>::operator=(const mozilla::dom::OwningNonNull<U>& aOther)
+{
+  return operator=(aOther.get());
+}
 
 #endif // mozilla_dom_OwningNonNull_h
