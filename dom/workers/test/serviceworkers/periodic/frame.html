@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<script>
+  fetch("get-sw-version").then(function(r) {
+    return r.text();
+  }).then(function(body) {
+    parent.callback(body);
+  });
+</script>

@@ -83,6 +83,7 @@ class MethodHandler(object):
 
         # argparse.ArgumentParser instance to use as the basis for command
         # arguments.
+        '_parser',
         'parser',
 
         # Arguments added to this command's parser. This is a 2-tuple of
@@ -108,8 +109,17 @@ class MethodHandler(object):
         self.category = category
         self.description = description
         self.conditions = conditions or []
-        self.parser = parser
         self.arguments = arguments or []
         self.argument_group_names = argument_group_names or []
         self.pass_context = pass_context
         self.subcommand_handlers = subcommand_handlers or {}
+        self._parser = parser
+
+    @property
+    def parser(self):
+        # creating cli parsers at command dispatch time can potentially be
+        # expensive, make it possible to lazy load them.
+        if callable(self._parser):
+            self._parser = self._parser()
+        return self._parser
+

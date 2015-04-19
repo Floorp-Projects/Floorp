@@ -31,6 +31,7 @@
 #include "gfxUtils.h"
 #include "GLContextProvider.h"
 #include "GLContext.h"
+#include "GLContextEGL.h"
 #include "nsAutoPtr.h"
 #include "nsAppShell.h"
 #include "nsIdleService.h"
@@ -600,9 +601,26 @@ nsWindow::GetNativeData(uint32_t aDataType)
 {
     switch (aDataType) {
     case NS_NATIVE_WINDOW:
+        // Called before primary display's EGLSurface creation.
         return GetGonkDisplay()->GetNativeWindow();
     }
     return nullptr;
+}
+
+void
+nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
+{
+    switch (aDataType) {
+    case NS_NATIVE_OPENGL_CONTEXT:
+        // Called after primary display's GLContextEGL creation.
+        GLContext* context = reinterpret_cast<GLContext*>(aVal);
+
+        HwcComposer2D* hwc = HwcComposer2D::GetInstance();
+        hwc->SetEGLInfo(GLContextEGL::Cast(context)->GetEGLDisplay(),
+                        GLContextEGL::Cast(context)->GetEGLSurface(),
+                        context);
+        return;
+    }
 }
 
 NS_IMETHODIMP
@@ -857,11 +875,7 @@ nsWindow::NeedsPaint()
 Composer2D*
 nsWindow::GetComposer2D()
 {
-    if (HwcComposer2D* hwc = HwcComposer2D::GetInstance()) {
-        return hwc->Initialized() ? hwc : nullptr;
-    }
-
-    return nullptr;
+    return HwcComposer2D::GetInstance();
 }
 
 // nsScreenGonk.cpp

@@ -32,14 +32,14 @@ nsTableColFrame::~nsTableColFrame()
 {
 }
 
-nsTableColType 
-nsTableColFrame::GetColType() const 
+nsTableColType
+nsTableColFrame::GetColType() const
 {
   return (nsTableColType)((mState & COL_TYPE_BITS) >> COL_TYPE_OFFSET);
 }
 
-void 
-nsTableColFrame::SetColType(nsTableColType aType) 
+void
+nsTableColFrame::SetColType(nsTableColType aType)
 {
   NS_ASSERTION(aType != eColAnonymousCol ||
                (GetPrevContinuation() &&
@@ -58,7 +58,7 @@ nsTableColFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
   if (!aOldStyleContext) //avoid this on init
     return;
-     
+
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
@@ -127,13 +127,13 @@ void nsTableColFrame::Dump(int32_t aIndent)
   case eColContent:
     printf(" content ");
     break;
-  case eColAnonymousCol: 
+  case eColAnonymousCol:
     printf(" anonymous-column ");
     break;
   case eColAnonymousColGroup:
     printf(" anonymous-colgroup ");
     break;
-  case eColAnonymousCell: 
+  case eColAnonymousCell:
     printf(" anonymous-cell ");
     break;
   }
@@ -149,7 +149,7 @@ void nsTableColFrame::Dump(int32_t aIndent)
 #endif
 /* ----- global methods ----- */
 
-nsTableColFrame* 
+nsTableColFrame*
 NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   return new (aPresShell) nsTableColFrame(aContext);
@@ -157,7 +157,7 @@ NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableColFrame)
 
-nsTableColFrame*  
+nsTableColFrame*
 nsTableColFrame::GetNextCol() const
 {
   nsIFrame* childFrame = GetNextSibling();

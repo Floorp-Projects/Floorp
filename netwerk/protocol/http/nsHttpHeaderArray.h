@@ -79,7 +79,17 @@ public:
             return entry.header == header;
           }
         };
+
+        bool operator==(const nsEntry& aOther) const
+        {
+            return header == aOther.header && value == aOther.value;
+        }
     };
+
+    bool operator==(const nsHttpHeaderArray& aOther) const
+    {
+        return mHeaders == aOther.mHeaders;
+    }
 
 private:
     int32_t LookupEntry(nsHttpAtom header, const nsEntry **) const;

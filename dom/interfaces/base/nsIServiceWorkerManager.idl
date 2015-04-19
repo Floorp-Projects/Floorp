@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(3cd3acce-8c80-4fcc-9265-067ebe8cab92)]
+[scriptable, builtinclass, uuid(c05b3b45-7f39-458c-8097-afafc7d69b01)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -124,6 +124,8 @@ interface nsIServiceWorkerManager : nsISupports
 
   void sendPushEvent(in ACString scope, in DOMString data);
   void sendPushSubscriptionChangedEvent(in ACString scope);
+
+  void updateAllRegistrations();
 };
 
 %{ C++

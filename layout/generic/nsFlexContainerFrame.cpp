@@ -269,22 +269,6 @@ public:
       LogicalSize(mWM, aCrossSize, aMainSize);
   }
 
-  /**
-   * Converts a "flex-relative" size (a main-axis & cross-axis size)
-   * into nsSize (using physical coordinates).
-   *
-   *  @arg aMainSize  The main-axis size.
-   *  @arg aCrossSize The cross-axis size.
-   *  @return A nsSize that represents the same size, using the corresponding
-   *          physical coordinates.
-   */
-  nsSize PhysicalSizeFromFlexRelativeSizes(nscoord aMainSize,
-                                           nscoord aCrossSize) const {
-    return IsMainAxisHorizontal() ?
-      nsSize(aMainSize, aCrossSize) :
-      nsSize(aCrossSize, aMainSize);
-  }
-
   // Are my axes reversed with respect to what the author asked for?
   // (We may reverse the axes in the FlexboxAxisTracker constructor and set
   // this flag, to avoid reflowing our children in bottom-to-top order.)
@@ -3774,6 +3758,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // writing-mode/GetLogicalSkipSides.  We add it lower down, after we've
   // established baseline and decided whether bottom border-padding fits (if
   // we're fragmented).
+  const nscoord blockEndContainerBP = containerBP.BEnd(flexWM);
   const LogicalSides skipSides =
     GetLogicalSkipSides(&aReflowState) | LogicalSides(eLogicalSideBitsBEnd);
   containerBP.ApplySkipSides(skipSides);
@@ -3846,20 +3831,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     }
   }
 
-  // XXXdholbert preserving the physical-coords var "containerBorderPadding"
-  // for now, while it has usages; removing it & its usages in bug 1155312.
-  nsMargin containerBorderPadding(aReflowState.ComputedPhysicalBorderPadding());
-  containerBorderPadding.ApplySkipSides(GetSkipSides(&aReflowState));
-
-  nsSize desiredContentBoxSize =
-    aAxisTracker.PhysicalSizeFromFlexRelativeSizes(aContentBoxMainSize,
-                                                   contentBoxCrossSize);
-
-  aDesiredSize.Width() = desiredContentBoxSize.width +
-    containerBorderPadding.LeftRight();
-  // Does *NOT* include bottom border/padding yet (we add that a bit lower down)
-  aDesiredSize.Height() = desiredContentBoxSize.height +
-    containerBorderPadding.top;
+  // Compute flex container's desired size (in its own writing-mode),
+  // starting w/ content-box size & growing from there:
+  LogicalSize desiredSizeInFlexWM =
+    aAxisTracker.LogicalSizeFromFlexRelativeSizes(aContentBoxMainSize,
+                                                  contentBoxCrossSize);
+  // Add border/padding (w/ skipSides already applied):
+  desiredSizeInFlexWM.ISize(flexWM) += containerBP.IStartEnd(flexWM);
+  desiredSizeInFlexWM.BSize(flexWM) += containerBP.BStartEnd(flexWM);
 
   if (flexContainerAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no
@@ -3869,37 +3848,43 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     NS_WARN_IF_FALSE(lines.getFirst()->IsEmpty(),
                      "Have flex items but didn't get an ascent - that's odd "
                      "(or there are just gigantic sizes involved)");
-    // Per spec, just use the bottom of content-box.
-    flexContainerAscent = aDesiredSize.Height();
+    // Per spec, synthesize baseline from the flex container's content box
+    // (i.e. use block-end side of content-box)
+    // XXXdholbert This only makes sense if parent's writing mode is
+    // horizontal (& even then, really we should be using the BSize in terms
+    // of the parent's writing mode, not ours). Clean up in bug 1155322.
+    flexContainerAscent = desiredSizeInFlexWM.BSize(flexWM);
   }
+
+  // XXXdholbert flexContainerAscent needs to be in terms of
+  // our parent's writing-mode here. See bug 1155322.
   aDesiredSize.SetBlockStartAscent(flexContainerAscent);
 
-  // Now: If we're complete, add bottom border/padding to desired height
-  // (unless that pushes us over available height, in which case we become
-  // incomplete (unless we already weren't asking for any height, in which case
-  // we stay complete to avoid looping forever)).
+  // Now: If we're complete, add bottom border/padding to desired height (which
+  // we skipped via skipSides) -- unless that pushes us over available height,
+  // in which case we become incomplete (unless we already weren't asking for
+  // any height, in which case we stay complete to avoid looping forever).
   // NOTE: If we're auto-height, we allow our bottom border/padding to push us
   // over the available height without requesting a continuation, for
   // consistency with the behavior of "display:block" elements.
   if (NS_FRAME_IS_COMPLETE(aStatus)) {
-    // NOTE: We can't use containerBorderPadding.bottom for this, because if
-    // we're auto-height, ApplySkipSides will have zeroed it (because it
-    // assumed we might get a continuation). We have the correct value in
-    // aReflowState.ComputedPhyiscalBorderPadding().bottom, though, so we use that.
-    nscoord desiredHeightWithBottomBP =
-      aDesiredSize.Height() + aReflowState.ComputedPhysicalBorderPadding().bottom;
+    nscoord desiredBSizeWithBEndBP =
+      desiredSizeInFlexWM.BSize(flexWM) + blockEndContainerBP;
 
-    if (aReflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE ||
-        aDesiredSize.Height() == 0 ||
-        desiredHeightWithBottomBP <= aReflowState.AvailableHeight() ||
-        aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
-      // Update desired height to include bottom border/padding
-      aDesiredSize.Height() = desiredHeightWithBottomBP;
+    if (aReflowState.AvailableBSize() == NS_UNCONSTRAINEDSIZE ||
+        desiredSizeInFlexWM.BSize(flexWM) == 0 ||
+        desiredBSizeWithBEndBP <= aReflowState.AvailableBSize() ||
+        aReflowState.ComputedBSize() == NS_INTRINSICSIZE) {
+      // Update desired height to include block-end border/padding
+      desiredSizeInFlexWM.BSize(flexWM) = desiredBSizeWithBEndBP;
     } else {
       // We couldn't fit bottom border/padding, so we'll need a continuation.
       NS_FRAME_SET_INCOMPLETE(aStatus);
     }
   }
+
+  // Convert flex container's final desired size to parent's WM, for outparam.
+  aDesiredSize.SetSize(flexWM, desiredSizeInFlexWM);
 
   // Overflow area = union(my overflow area, kids' overflow areas)
   aDesiredSize.SetOverflowAreasToDesiredBounds();

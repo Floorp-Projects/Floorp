@@ -29,6 +29,63 @@ using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
 
+template <typename T>
+void
+DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
+{
+    JSGCTraceKind kind = MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind;
+    JS::AutoTracingName ctx(trc, name);
+    trc->invoke((void**)thingp, kind);
+}
+#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type) \
+    template void DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
+FOR_EACH_GC_LAYOUT(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
+#undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
+
+template <>
+void
+DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name)
+{
+    if (vp->isObject()) {
+        JSObject* prior = &vp->toObject();
+        JSObject* obj = prior;
+        DoCallback(trc, &obj, name);
+        if (obj != prior)
+            vp->setObjectOrNull(obj);
+    } else if (vp->isString()) {
+        JSString* prior = vp->toString();
+        JSString* str = prior;
+        DoCallback(trc, &str, name);
+        if (str != prior)
+            vp->setString(str);
+    } else if (vp->isSymbol()) {
+        JS::Symbol* prior = vp->toSymbol();
+        JS::Symbol* sym = prior;
+        DoCallback(trc, &sym, name);
+        if (sym != prior)
+            vp->setSymbol(sym);
+    }
+}
+
+template <>
+void
+DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
+{
+    if (JSID_IS_STRING(*idp)) {
+        JSString* prior = JSID_TO_STRING(*idp);
+        JSString* str = prior;
+        DoCallback(trc, &str, name);
+        if (str != prior)
+            *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
+    } else if (JSID_IS_SYMBOL(*idp)) {
+        JS::Symbol* prior = JSID_TO_SYMBOL(*idp);
+        JS::Symbol* sym = prior;
+        DoCallback(trc, &sym, name);
+        if (sym != prior)
+            *idp = SYMBOL_TO_JSID(sym);
+    }
+}
+
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredValueTracer(JSTracer* trc, Value* valuep, const char* name)
 {
@@ -102,7 +159,7 @@ JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, cons
     if (!obj)
         return;
 
-    trc->setTracingLocation((void*)objp);
+    JS::AutoOriginalTraceLocation reloc(trc, (void**)objp);
     TraceManuallyBarrieredEdge(trc, &obj, name);
 
     objp->setPtr(obj);
@@ -329,61 +386,22 @@ JSTracer::JSTracer(JSRuntime* rt, TracerKindTag kindTag,
                    WeakMapTraceKind weakTraceKind /* = TraceWeakMapValues */)
   : runtime_(rt)
   , tag(kindTag)
-  , debugPrinter_(nullptr)
-  , debugPrintArg_(nullptr)
-  , debugPrintIndex_(size_t(-1))
   , eagerlyTraceWeakMaps_(weakTraceKind)
-#ifdef JS_GC_ZEAL
-  , realLocation_(nullptr)
-#endif
 {
-}
-
-bool
-JSTracer::hasTracingDetails() const
-{
-    return debugPrinter_ || debugPrintArg_;
 }
 
 const char*
-JSTracer::tracingName(const char* fallback) const
+JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
 {
-    MOZ_ASSERT(hasTracingDetails());
-    return debugPrinter_ ? fallback : (const char*)debugPrintArg_;
-}
-
-const char*
-JSTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
-{
-    if (debugPrinter_) {
-        debugPrinter_(this, buffer, bufferSize);
+    if (contextFunctor_) {
+        (*contextFunctor_)(this, buffer, bufferSize);
         return buffer;
     }
-    if (debugPrintIndex_ != size_t(-1)) {
-        JS_snprintf(buffer, bufferSize, "%s[%lu]",
-                    (const char*)debugPrintArg_,
-                    debugPrintIndex_);
+    if (contextIndex_ != InvalidIndex) {
+        JS_snprintf(buffer, bufferSize, "%s[%lu]", contextName_, contextIndex_);
         return buffer;
     }
-    return (const char*)debugPrintArg_;
-}
-
-JSTraceNamePrinter
-JSTracer::debugPrinter() const
-{
-    return debugPrinter_;
-}
-
-const void*
-JSTracer::debugPrintArg() const
-{
-    return debugPrintArg_;
-}
-
-size_t
-JSTracer::debugPrintIndex() const
-{
-    return debugPrintIndex_;
+    return contextName_;
 }
 
 void
@@ -391,27 +409,6 @@ JS::CallbackTracer::setTraceCallback(JSTraceCallback traceCallback)
 {
     callback = traceCallback;
 }
-
-#ifdef JS_GC_ZEAL
-void
-JSTracer::setTracingLocation(void* location)
-{
-    if (!realLocation_ || !location)
-        realLocation_ = location;
-}
-
-void
-JSTracer::unsetTracingLocation()
-{
-    realLocation_ = nullptr;
-}
-
-void**
-JSTracer::tracingLocation(void** thingp)
-{
-    return realLocation_ ? (void**)realLocation_ : thingp;
-}
-#endif
 
 bool
 MarkStack::init(JSGCMode gcMode)
