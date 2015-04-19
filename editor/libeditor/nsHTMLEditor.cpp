@@ -3558,7 +3558,6 @@ bool nsHTMLEditor::IsTextPropertySetByContent(nsINode*         aNode,
                                               nsAString*       outValue)
 {
   MOZ_ASSERT(aNode && aProperty);
-  MOZ_ASSERT_IF(aAttribute, aValue);
   bool isSet;
   IsTextPropertySetByContent(aNode->AsDOMNode(), aProperty, aAttribute, aValue,
                              isSet, outValue);
