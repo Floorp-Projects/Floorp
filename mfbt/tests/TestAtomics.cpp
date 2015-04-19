@@ -239,6 +239,8 @@ main()
 {
   TestType<uint32_t>();
   TestType<int32_t>();
+  TestType<uint64_t>();
+  TestType<int64_t>();
   TestType<intptr_t>();
   TestType<uintptr_t>();
   TestPointer<int>();

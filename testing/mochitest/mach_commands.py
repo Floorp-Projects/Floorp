@@ -794,8 +794,6 @@ def setup_argument_parser():
     structured.commandline.add_logging_group(parser)
     return parser
 
-_st_parser = setup_argument_parser()
-
 
 # condition filters
 
@@ -839,7 +837,7 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[is_platform_in('firefox', 'mulet', 'b2g', 'b2g_desktop', 'android')],
         description='Run a plain mochitest (integration test, plain web page).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_plain(self, test_paths, **kwargs):
         if is_platform_in('firefox', 'mulet')(self):
             return self.run_mochitest(test_paths, 'plain', **kwargs)
@@ -855,7 +853,7 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[is_platform_in('firefox', 'emulator', 'android')],
         description='Run a chrome mochitest (integration test with some XUL).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_chrome(self, test_paths, **kwargs):
         if conditions.is_firefox(self):
             return self.run_mochitest(test_paths, 'chrome', **kwargs)
@@ -869,7 +867,7 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[conditions.is_firefox],
         description='Run a mochitest with browser chrome (integration test with a standard browser).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_browser(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'browser', **kwargs)
 
@@ -878,7 +876,7 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[conditions.is_firefox],
         description='Run a devtools mochitest with browser chrome (integration test with a standard browser with the devtools frame).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_devtools(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'devtools', **kwargs)
 
@@ -899,14 +897,14 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[conditions.is_firefox],
         description='Run a mochitest with metro browser chrome (tests for Windows touch interface).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_metro(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'metro', **kwargs)
 
     @Command('mochitest-a11y', category='testing',
              conditions=[conditions.is_firefox],
              description='Run an a11y mochitest (accessibility tests).',
-             parser=_st_parser)
+             parser=setup_argument_parser)
     def run_mochitest_a11y(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'a11y', **kwargs)
 
@@ -915,7 +913,7 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[conditions.is_firefox],
         description='Run a webapprt chrome mochitest (Web App Runtime with the browser chrome).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_webapprt_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-chrome', **kwargs)
 
@@ -924,14 +922,14 @@ class MachCommands(MachCommandBase):
         category='testing',
         conditions=[conditions.is_firefox],
         description='Run a webapprt content mochitest (Content rendering of the Web App Runtime).',
-        parser=_st_parser)
+        parser=setup_argument_parser)
     def run_mochitest_webapprt_content(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-content', **kwargs)
 
     @Command('mochitest', category='testing',
              conditions=[conditions.is_firefox],
              description='Run any flavor of mochitest (integration test).',
-             parser=_st_parser)
+             parser=setup_argument_parser)
     @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
                      help='Only run tests of this flavor.')
     def run_mochitest_general(self, test_paths, flavor=None, test_objects=None,
