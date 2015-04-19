@@ -16,9 +16,9 @@
 
 function reloadAndCheckLogins(aExpectedLogins)
 {
-  yield LoginTest.reloadData();
-  LoginTest.checkLogins(aExpectedLogins);
-  LoginTest.clearData();
+  yield LoginTestUtils.reloadData();
+  LoginTestUtils.checkLogins(aExpectedLogins);
+  LoginTestUtils.clearData();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

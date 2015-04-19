@@ -52,7 +52,7 @@ function checkSearchLogins(aQuery, aExpectedCount)
   let outCount = {};
   let logins = Services.logins.searchLogins(outCount, newPropertyBag(aQuery));
   do_check_eq(outCount.value, expectedLogins.length);
-  LoginTest.assertLoginListsEqual(logins, expectedLogins);
+  LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 }
 
 /**
@@ -87,7 +87,7 @@ function checkAllSearches(aQuery, aExpectedCount)
   let logins = Services.logins.findLogins(outCount, hostname, formSubmitURL,
                                           httpRealm);
   do_check_eq(outCount.value, expectedLogins.length);
-  LoginTest.assertLoginListsEqual(logins, expectedLogins);
+  LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 
   // Test countLogins.
   let count = Services.logins.countLogins(hostname, formSubmitURL, httpRealm)
