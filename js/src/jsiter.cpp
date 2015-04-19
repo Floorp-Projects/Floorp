@@ -468,6 +468,8 @@ Compare(T* a, T* b, size_t c)
     return true;
 }
 
+static bool iterator_next(JSContext* cx, unsigned argc, Value* vp);
+
 static inline PropertyIteratorObject*
 NewPropertyIteratorObject(JSContext* cx, unsigned flags)
 {
@@ -487,13 +489,33 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
                                          GetInitialHeap(GenericObject, clasp), shape, group);
         if (!obj)
             return nullptr;
+
         PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 
         MOZ_ASSERT(res->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
         return res;
     }
 
-    return NewBuiltinClassInstance<PropertyIteratorObject>(cx);
+    Rooted<PropertyIteratorObject*> res(cx, NewBuiltinClassInstance<PropertyIteratorObject>(cx));
+    if (!res)
+        return nullptr;
+
+    if (flags == 0) {
+        // Redefine next as an own property. This ensure that deleting the
+        // next method on the prototype doesn't break cross-global for .. in.
+        // We don't have to do this for JSITER_ENUMERATE because that object always
+        // takes an optimized path.
+        RootedFunction next(cx, NewNativeFunction(cx, iterator_next, 0,
+                                                  HandlePropertyName(cx->names().next)));
+        if (!next)
+            return nullptr;
+
+        RootedValue value(cx, ObjectValue(*next));
+        if (!DefineProperty(cx, res, cx->names().next, value))
+            return nullptr;
+    }
+
+    return res;
 }
 
 NativeIterator*
