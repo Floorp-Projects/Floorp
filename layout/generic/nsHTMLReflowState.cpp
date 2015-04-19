@@ -702,14 +702,15 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
   }
 }
 
-/* static */
 nscoord
-nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState)
+nsHTMLReflowState::GetContainingBlockContentISize(WritingMode aWritingMode) const
 {
-  const nsHTMLReflowState* rs = aReflowState->mCBReflowState;
-  if (!rs)
+  if (!mCBReflowState) {
     return 0;
-  return rs->ComputedWidth();
+  }
+  return mCBReflowState->GetWritingMode().IsOrthogonalTo(aWritingMode)
+    ? mCBReflowState->ComputedBSize()
+    : mCBReflowState->ComputedISize();
 }
 
 void
