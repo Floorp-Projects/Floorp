@@ -613,6 +613,10 @@ Nfc.prototype = {
     message.target.sendAsyncMessage(nfcMsgType, message.data);
   },
 
+  getErrorMessage: function getErrorMessage(errorCode) {
+    return NFC.NFC_ERROR_MSG[errorCode];
+  },
+
   /**
    * Process the incoming message from the NFC Service.
    */
