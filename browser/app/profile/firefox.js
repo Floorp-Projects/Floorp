@@ -1880,12 +1880,9 @@ pref("dom.ipc.reportProcessHangs", false);
 pref("dom.ipc.reportProcessHangs", true);
 #endif
 
-// Enable ReadingList browser UI by default.
-pref("browser.readinglist.enabled", true);
+pref("browser.readinglist.enabled", false);
 pref("browser.readinglist.sidebarEverOpened", false);
-
-// Enable the readinglist engine by default.
-pref("readinglist.scheduler.enabled", true);
+pref("readinglist.scheduler.enabled", false);
 pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");
 
 // Don't limit how many nodes we care about on desktop:
