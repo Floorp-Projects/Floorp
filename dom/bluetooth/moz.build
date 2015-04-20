@@ -11,11 +11,18 @@ if CONFIG['MOZ_B2G_BT']:
     #
 
     SOURCES += [
+        'BluetoothHidManager.cpp',
         'BluetoothInterface.cpp',
         'BluetoothInterfaceHelpers.cpp',
         'BluetoothUtils.cpp',
-        'BluetoothUuid.cpp'
+        'BluetoothUuid.cpp',
+        'ObexBase.cpp'
     ]
+
+    if CONFIG['MOZ_B2G_RIL']:
+        SOURCES += [
+            'BluetoothRilListener.cpp'
+        ]
 
     if CONFIG['MOZ_B2G_BT_API_V2']:
         SOURCES += [
@@ -27,7 +34,6 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth2/BluetoothGattCharacteristic.cpp',
             'bluetooth2/BluetoothGattDescriptor.cpp',
             'bluetooth2/BluetoothGattService.cpp',
-            'bluetooth2/BluetoothHidManager.cpp',
             'bluetooth2/BluetoothManager.cpp',
             'bluetooth2/BluetoothPairingHandle.cpp',
             'bluetooth2/BluetoothPairingListener.cpp',
@@ -37,12 +43,7 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth2/ipc/BluetoothChild.cpp',
             'bluetooth2/ipc/BluetoothParent.cpp',
             'bluetooth2/ipc/BluetoothServiceChildProcess.cpp',
-            'bluetooth2/ObexBase.cpp'
         ]
-        if CONFIG['MOZ_B2G_RIL']:
-            SOURCES += [
-                'bluetooth2/BluetoothRilListener.cpp',
-            ]
         LOCAL_INCLUDES += [
             'bluetooth2',
             'bluetooth2/ipc',
@@ -52,7 +53,6 @@ if CONFIG['MOZ_B2G_BT']:
         SOURCES += [
             'bluetooth1/BluetoothAdapter.cpp',
             'bluetooth1/BluetoothDevice.cpp',
-            'bluetooth1/BluetoothHidManager.cpp',
             'bluetooth1/BluetoothManager.cpp',
             'bluetooth1/BluetoothProfileController.cpp',
             'bluetooth1/BluetoothPropertyContainer.cpp',
@@ -61,12 +61,7 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth1/ipc/BluetoothChild.cpp',
             'bluetooth1/ipc/BluetoothParent.cpp',
             'bluetooth1/ipc/BluetoothServiceChildProcess.cpp',
-            'bluetooth1/ObexBase.cpp'
         ]
-        if CONFIG['MOZ_B2G_RIL']:
-            SOURCES += [
-                'bluetooth1/BluetoothRilListener.cpp',
-            ]
         LOCAL_INCLUDES += [
             'bluetooth1',
             'bluetooth1/ipc',
