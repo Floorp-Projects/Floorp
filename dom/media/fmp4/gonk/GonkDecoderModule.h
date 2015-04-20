@@ -34,6 +34,9 @@ public:
 
   virtual ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
+
+  virtual bool SupportsMimeType(const nsACString& aMimeType) override;
+
 };
 
 } // namespace mozilla
