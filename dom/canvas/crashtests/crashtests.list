@@ -14,7 +14,7 @@ load 746813-1.html
 load 743499-negative-size.html
 skip-if(Android) load 767337-1.html
 skip-if(Android||B2G) load 780392-1.html # bug 833371 for B2G
-skip-if(Android||B2G) skip-if(gtk2Widget&&isDebugBuild) load 789933-1.html # bug 833371 for B2G, bug 1155252 for linux
+skip-if(Android||B2G) load 789933-1.html # bug 833371
 load 794463-1.html
 load 802926-1.html
 load 896047-1.html
