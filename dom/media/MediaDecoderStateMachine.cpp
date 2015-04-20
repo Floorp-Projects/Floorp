@@ -1086,6 +1086,7 @@ MediaDecoderStateMachine::CheckIfSeekComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
 
   const bool videoSeekComplete = IsVideoSeekComplete();
   if (HasVideo() && !videoSeekComplete) {
@@ -1110,9 +1111,7 @@ MediaDecoderStateMachine::CheckIfSeekComplete()
 
   if (audioSeekComplete && videoSeekComplete) {
     mDecodeToSeekTarget = false;
-    nsCOMPtr<nsIRunnable> task(
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::SeekCompleted));
-    TaskQueue()->Dispatch(task.forget());
+    SeekCompleted();
   }
 }
 
@@ -2393,15 +2392,7 @@ MediaDecoderStateMachine::SeekCompleted()
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  if (mState != DECODER_STATE_SEEKING) {
-    MOZ_DIAGNOSTIC_ASSERT(mState == DECODER_STATE_DORMANT ||
-                          IsShutdown());
-    // It would be nice to assert mCurrent.Exists() here, but it's possible that
-    // we've transitioned to DECODER_STATE_SHUTDOWN but not yet gone through
-    // RunStateMachine in that state, which is where this promise gets rejected.
-    return;
-  }
+  MOZ_ASSERT(mState == DECODER_STATE_SEEKING);
 
   int64_t seekTime = mCurrentSeek.mTarget.mTime;
   int64_t newCurrentTime = seekTime;
