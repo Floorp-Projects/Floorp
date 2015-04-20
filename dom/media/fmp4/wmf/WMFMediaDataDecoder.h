@@ -74,9 +74,9 @@ public:
 
 private:
 
-  void Decode();
-  void EnsureDecodeTaskDispatched();
-  void PurgeInputQueue();
+  // Called on the task queue. Inserts the sample into the decoder, and
+  // extracts output if available.
+  void ProcessDecode(MediaRawData* aSample);
 
   // Called on the task queue. Extracts output if available, and delivers
   // it to the reader. Called after ProcessDecode() and ProcessDrain().
@@ -97,11 +97,6 @@ private:
   // The last offset into the media resource that was passed into Input().
   // This is used to approximate the decoder's position in the media resource.
   int64_t mLastStreamOffset;
-
-  Monitor mMonitor;
-  std::queue<nsRefPtr<MediaRawData>> mInput;
-  bool mIsDecodeTaskDispatched;
-  bool mIsFlushing;
 };
 
 } // namespace mozilla
