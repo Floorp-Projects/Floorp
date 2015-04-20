@@ -371,29 +371,30 @@ exports.testTabMove = function(assert, done) {
 };
 
 exports.testIgnoreClosing = function(assert, done) {
-  let originalWindow = browserWindows.activeWindow;
+  let originalWindow = viewFor(browserWindows.activeWindow);
   openBrowserWindow(function(window, browser) {
-    let url = "data:text/html;charset=utf-8,foobar";
+    onFocus(window).then(() => {
+      let url = "data:text/html;charset=utf-8,foobar";
 
-    assert.equal(tabs.length, 2, "should be two windows open each with one tab");
+      assert.equal(tabs.length, 2, "should be two windows open each with one tab");
 
-    tabs.on('ready', function onReady(tab) {
-      tabs.removeListener('ready', onReady);
+      tabs.on('ready', function onReady(tab) {
+        tabs.removeListener('ready', onReady);
 
-      let win = tab.window;
-      assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
-      assert.equal(tabs.length, 3, "should be three tabs in total");
+        let win = tab.window;
+        assert.equal(win.tabs.length, 2, "should be two tabs in the new window");
+        assert.equal(tabs.length, 3, "should be three tabs in total");
 
-      tab.close(function() {
-        assert.equal(win.tabs.length, 1, "should be one tab in the new window");
-        assert.equal(tabs.length, 2, "should be two tabs in total");
+        tab.close(function() {
+          assert.equal(win.tabs.length, 1, "should be one tab in the new window");
+          assert.equal(tabs.length, 2, "should be two tabs in total");
 
-        originalWindow.once("activate", done);
-        close(window);
+          close(window).then(onFocus(originalWindow)).then(done).then(null, assert.fail);
+        });
       });
-    });
 
-    tabs.open(url);
+      tabs.open(url);
+    });
   });
 };
 
