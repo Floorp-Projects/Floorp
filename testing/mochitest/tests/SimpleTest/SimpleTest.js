@@ -292,15 +292,6 @@ SimpleTest.isnot = function (a, b, name) {
 };
 
 /**
- * Roughly equivalent to ok(a==b, name)
-**/
-SimpleTest.is_loosely = function (a, b, name) {
-    var pass = (a == b);
-    var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b)
-    SimpleTest.ok(pass, name, diag);
-};
-
-/**
  * Check that the function call throws an exception.
  */
 SimpleTest.doesThrow = function(fn, name) {
@@ -1454,7 +1445,6 @@ var is = SimpleTest.is;
 var isfuzzy = SimpleTest.isfuzzy;
 var isnot = SimpleTest.isnot;
 var ise = SimpleTest.ise;
-var is_loosely = SimpleTest.is_loosely;
 var todo = SimpleTest.todo;
 var todo_is = SimpleTest.todo_is;
 var todo_isnot = SimpleTest.todo_isnot;
