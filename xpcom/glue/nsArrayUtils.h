@@ -11,7 +11,7 @@
 #include "nsIArray.h"
 
 // helper class for do_QueryElementAt
-class MOZ_STACK_CLASS nsQueryArrayElementAt : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryArrayElementAt final : public nsCOMPtr_helper
 {
 public:
   nsQueryArrayElementAt(nsIArray* aArray, uint32_t aIndex,
