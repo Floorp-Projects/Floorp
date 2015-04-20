@@ -90,14 +90,14 @@ add_task(function test_export_bookmarks() {
 });
 
 add_task(function test_import_exported_bookmarks() {
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
   yield PlacesTestUtils.promiseAsyncUpdates();
   yield testImportedBookmarks();
 });
 
 add_task(function test_import_ontop() {
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
   yield PlacesTestUtils.promiseAsyncUpdates();
   yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
@@ -108,7 +108,7 @@ add_task(function test_import_ontop() {
 });
 
 add_task(function test_clean() {
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 function testImportedBookmarks() {
