@@ -594,7 +594,7 @@ wasapi_stream_render_loop(LPVOID stream)
       if (SUCCEEDED(hr)) {
         double playing_frame = stm->mix_params.rate * (double)position / stm->device_frequency;
         double last_written_frame = stm->clock - stm->base_clock;
-        latency_set(stm, max(last_written_frame - playing_frame, 0));
+        latency_set(stm, std::max(last_written_frame - playing_frame, 0.0));
       }
 
       if (stm->draining) {
