@@ -401,6 +401,12 @@ partial interface Window {
   [ChromeOnly, Throws] readonly attribute object? __content;
 
   [Throws, ChromeOnly] any getInterface(IID iid);
+
+  /**
+   * Same as nsIDOMWindow.windowRoot, useful for event listener targeting.
+   */
+  [ChromeOnly, Throws]
+  readonly attribute WindowRoot? windowRoot;
 };
 
 Window implements TouchEventHandlers;
