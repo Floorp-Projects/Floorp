@@ -170,6 +170,32 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
 
+  // Don't do incremental reflow until we've taught tables how to do
+  // it right in paginated mode.
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // Return our desired size
+    SetDesiredSize(aDesiredSize, aReflowState, mSize.width, mSize.height);
+    aDesiredSize.SetOverflowAreasToDesiredBounds();
+    FinishAndStoreOverflow(&aDesiredSize);
+
+    if (GetRect().Width() != aDesiredSize.Width()) {
+      // Our width is changing; we need to re-center our children (our pages).
+      for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+        nsIFrame* child = e.get();
+        nsMargin pageCSSMargin = child->GetUsedMargin();
+        nscoord centeringMargin =
+          ComputeCenteringMargin(aReflowState.ComputedWidth(),
+                                 child->GetRect().width,
+                                 pageCSSMargin);
+        nscoord newX = pageCSSMargin.left + centeringMargin;
+
+        // Adjust the child's x-position:
+        child->MovePositionBy(nsPoint(newX - child->GetNormalPosition().x, 0));
+      }
+    }
+    return;
+  }
+
   // See if we can get a Print Settings from the Context
   if (!mPageData->mPrintSettings &&
       aPresContext->Medium() == nsGkAtoms::print) {
