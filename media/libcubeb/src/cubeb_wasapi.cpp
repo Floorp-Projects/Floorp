@@ -8,6 +8,7 @@
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
+#include <algorithm>
 #include <windows.h>
 #include <mmdeviceapi.h>
 #include <windef.h>
