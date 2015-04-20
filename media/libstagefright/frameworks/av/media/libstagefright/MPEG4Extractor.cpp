@@ -1843,6 +1843,10 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 size = 0;
             }
 
+            // Make sure (size + chunk_size) isn't going to overflow.
+            if (size > (size_t)-1 - chunk_size) {
+                return ERROR_MALFORMED;
+            }
             uint8_t *buffer = new uint8_t[size + chunk_size];
 
             if (size > 0) {
@@ -2686,6 +2690,11 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
         }
     } else if (chunk_size < 8) {
         // The smallest valid chunk is 8 bytes long.
+        return ERROR_MALFORMED;
+    }
+
+    if (chunk_size >= INT32_MAX - 128) {
+        // Could cause an overflow later. Abort.
         return ERROR_MALFORMED;
     }
 
