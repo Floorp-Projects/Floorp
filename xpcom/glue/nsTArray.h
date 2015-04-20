@@ -306,6 +306,35 @@ struct nsTArray_SafeElementAtHelper<nsRefPtr<E>, Derived>
 {
 };
 
+namespace mozilla {
+namespace dom {
+template<class T> class OwningNonNull;
+}
+}
+
+template<class E, class Derived>
+struct nsTArray_SafeElementAtHelper<mozilla::dom::OwningNonNull<E>, Derived>
+{
+  typedef E*     elem_type;
+  typedef size_t index_type;
+
+  elem_type SafeElementAt(index_type aIndex)
+  {
+    if (aIndex < static_cast<Derived*>(this)->Length()) {
+      return static_cast<Derived*>(this)->ElementAt(aIndex);
+    }
+    return nullptr;
+  }
+
+  const elem_type SafeElementAt(index_type aIndex) const
+  {
+    if (aIndex < static_cast<const Derived*>(this)->Length()) {
+      return static_cast<const Derived*>(this)->ElementAt(aIndex);
+    }
+    return nullptr;
+  }
+};
+
 //
 // This class serves as a base class for nsTArray.  It shouldn't be used
 // directly.  It holds common implementation code that does not depend on the

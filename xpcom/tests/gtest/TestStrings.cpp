@@ -44,6 +44,7 @@ TEST(Strings, test1)
   nsAutoString buf(aStr);
 
   int32_t n = buf.FindChar(',');
+  EXPECT_EQ(n, kNotFound);
 
   n = buf.Length();
 

@@ -6,7 +6,7 @@
 
 /*
  * interface for the set of algorithms that determine column and table
- * widths
+ * isizes
  */
 
 #ifndef nsITableLayoutStrategy_h_
@@ -34,10 +34,10 @@ public:
     virtual void MarkIntrinsicISizesDirty() = 0;
 
     /**
-     * Compute final column widths based on the intrinsic width data and
-     * the available width.
+     * Compute final column isizes based on the intrinsic isize data and
+     * the available isize.
      */
-    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState) = 0;
+    virtual void ComputeColumnISizes(const nsHTMLReflowState& aReflowState) = 0;
 
     /**
      * Return the type of table layout strategy, without the cost of

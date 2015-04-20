@@ -254,14 +254,14 @@ public:
   }
 
   // The final width of the column.
-  void ResetFinalWidth() {
-    mFinalWidth = nscoord_MIN; // so we detect that it changed
+  void ResetFinalISize() {
+    mFinalISize = nscoord_MIN; // so we detect that it changed
   }
-  void SetFinalWidth(nscoord aFinalWidth) {
-    mFinalWidth = aFinalWidth;
+  void SetFinalISize(nscoord aFinalISize) {
+    mFinalISize = aFinalISize;
   }
-  nscoord GetFinalWidth() {
-    return mFinalWidth;
+  nscoord GetFinalISize() {
+    return mFinalISize;
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
@@ -288,7 +288,7 @@ protected:
   // a separate array allocated only during
   // BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes (and only
   // when colspans were present).
-  nscoord mFinalWidth;
+  nscoord mFinalISize;
 
   // the index of the column with respect to the whole table (starting at 0)
   // it should never be smaller then the start column index of the parent

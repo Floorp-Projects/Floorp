@@ -523,7 +523,7 @@ BasicTableLayoutStrategy::MarkIntrinsicISizesDirty()
 }
 
 /* virtual */ void
-BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowState)
+BasicTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowState)
 {
     nscoord width = aReflowState.ComputedWidth();
 
@@ -549,7 +549,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     DistributeWidthToColumns(width, 0, colCount, BTLS_FINAL_WIDTH, false);
 
 #ifdef DEBUG_TABLE_STRATEGY
-    printf("ComputeColumnWidths final\n");
+    printf("ComputeColumnISizes final\n");
     mTableFrame->Dump(false, true, false);
 #endif
 }
@@ -850,7 +850,7 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
     }
 
 #ifdef DEBUG_dbaron_off
-    printf("ComputeColumnWidths: %d columns in width %d,\n"
+    printf("ComputeColumnISizes: %d columns in width %d,\n"
            "  guesses=[%d,%d,%d,%d], totals=[%d,%d,%f],\n"
            "  l2t=%d, space=%d, basis.c=%d\n",
            aColCount, aWidth,
@@ -1045,8 +1045,8 @@ BasicTableLayoutStrategy::DistributeWidthToColumns(nscoord aWidth,
                 break;
             case BTLS_FINAL_WIDTH:
                 {
-                    nscoord old_final = colFrame->GetFinalWidth();
-                    colFrame->SetFinalWidth(col_width);
+                    nscoord old_final = colFrame->GetFinalISize();
+                    colFrame->SetFinalISize(col_width);
                     
                     if (old_final != col_width)
                         mTableFrame->DidResizeColumns();
