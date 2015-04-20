@@ -74,9 +74,15 @@ MozCameraTestHardware.prototype = {
   },
 
   dispatchEvent: function(evt) {
-    if (this._handler) {
-      this._handler.handleEvent(evt);
-    }
+    var self = this;
+    /* We should not dispatch the event in the current thread
+       context because it may be directly from a driver call
+       and we could hit a deadlock situation. */
+    this._window.setTimeout(function() {
+      if (self._handler) {
+        self._handler.handleEvent(evt);
+      }
+    }, 0);
   },
 
   reset: function(aWindow) {
