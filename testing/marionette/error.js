@@ -14,7 +14,6 @@ const errors = [
   "IllegalArgumentError",
   "InvalidElementStateError",
   "InvalidSelectorError",
-  "InvalidSessionIdError",
   "JavaScriptError",
   "NoAlertOpenError",
   "NoSuchElementError",
@@ -211,14 +210,6 @@ this.InvalidSelectorError = function(msg) {
   this.code = 32;
 };
 InvalidSelectorError.prototype = Object.create(WebDriverError.prototype);
-
-this.InvalidSessionIdError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InvalidSessionIdError";
-  this.status = "invalid session id";
-  this.code = 13;
-};
-InvalidSessionIdError.prototype = Object.create(WebDriverError.prototype);
 
 /**
  * Creates an error message for a JavaScript error thrown during
