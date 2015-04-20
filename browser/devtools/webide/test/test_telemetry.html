@@ -15,6 +15,7 @@
   <body>
 
     <script type="application/javascript;version=1.8">
+      const Telemetry = require("devtools/shared/telemetry");
       const { _DeprecatedUSBRuntime, _WiFiRuntime, _SimulatorRuntime,
               _gRemoteRuntime, _gLocalRuntime, RuntimeTypes }
             = require("devtools/webide/runtimes");
@@ -22,6 +23,25 @@
       // Because we need to gather stats for the period of time that a tool has
       // been opened we make use of setTimeout() to create tool active times.
       const TOOL_DELAY = 200;
+
+      function patchTelemetry() {
+        Telemetry.prototype.telemetryInfo = {};
+        Telemetry.prototype._oldlog = Telemetry.prototype.log;
+        Telemetry.prototype.log = function(histogramId, value) {
+          if (histogramId) {
+            if (!this.telemetryInfo[histogramId]) {
+              this.telemetryInfo[histogramId] = [];
+            }
+            this.telemetryInfo[histogramId].push(value);
+          }
+        }
+      }
+
+      function resetTelemetry() {
+        Telemetry.prototype.log = Telemetry.prototype._oldlog;
+        delete Telemetry.prototype._oldlog;
+        delete Telemetry.prototype.telemetryInfo;
+      }
 
       function cycleWebIDE() {
         return Task.spawn(function*() {
@@ -130,22 +150,58 @@
       }
 
       function checkResults() {
-        // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
-        // here.
-        checkTelemetry("DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTTABS_MS", null, "hasentries");
-        checkTelemetry("DEVTOOLS_WEBIDE_CONNECTION_DEBUG_USED", [6,0,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_CONNECTION_PLAY_USED", [6,0,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_CONNECTION_RESULT", [0,6,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS", null, "hasentries");
-        checkTelemetry("DEVTOOLS_WEBIDE_LOCAL_CONNECTION_RESULT", [0,1,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_OPENED_BOOLEAN", [0,2,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_OPENED_PER_USER_FLAG", [0,1,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_OTHER_CONNECTION_RESULT", [0,1,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_REMOTE_CONNECTION_RESULT", [0,1,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_SIMULATOR_CONNECTION_RESULT", [0,1,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_TIME_ACTIVE_SECONDS", null, "hasentries");
-        checkTelemetry("DEVTOOLS_WEBIDE_USB_CONNECTION_RESULT", [0,1,0]);
-        checkTelemetry("DEVTOOLS_WEBIDE_WIFI_CONNECTION_RESULT", [0,1,0]);
+        let result = Telemetry.prototype.telemetryInfo;
+        for (let [histId, value] of Iterator(result)) {
+          if (histId.endsWith("OPENED_PER_USER_FLAG")) {
+            ok(value.length === 1 && !!value[0],
+               "Per user value " + histId + " has a single value of true");
+          } else if (histId.endsWith("OPENED_BOOLEAN")) {
+            ok(value.length > 1, histId + " has more than one entry");
+
+            let okay = value.every(function(element) {
+              return !!element;
+            });
+
+            ok(okay, "All " + histId + " entries are true");
+          } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
+            ok(value.length > 1, histId + " has more than one entry");
+
+            let okay = value.every(function(element) {
+              return element > 0;
+            });
+
+            ok(okay, "All " + histId + " entries have time > 0");
+          } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_RESULT") {
+            ok(value.length === 6, histId + " has 6 connection results");
+
+            let okay = value.every(function(element) {
+              return !!element;
+            });
+
+            ok(okay, "All " + histId + " connections succeeded");
+          } else if (histId.endsWith("CONNECTION_RESULT")) {
+            ok(value.length === 1 && !!value[0],
+               histId + " has 1 successful connection");
+          } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS") {
+            ok(value.length === 6, histId + " has 6 connection results");
+
+            let okay = value.every(function(element) {
+              return element > 0;
+            });
+
+            ok(okay, "All " + histId + " connections have time > 0");
+          } else if (histId.endsWith("USED")) {
+            ok(value.length === 6, histId + " has 6 connection actions");
+
+            let okay = value.every(function(element) {
+              return !element;
+            });
+
+            ok(okay, "All " + histId + " actions were skipped");
+          } else {
+            ok(false, "Unexpected " + histId + " was logged");
+          }
+        }
       }
 
       window.onload = function() {
@@ -160,6 +216,7 @@
             }
             DebuggerServer.destroy();
             yield removeAllProjects();
+            resetTelemetry();
           });
         });
 
@@ -171,7 +228,7 @@
             DebuggerServer.addBrowserActors();
           }
 
-          startTelemetry();
+          patchTelemetry();
 
           // Cycle once, so we can test for multiple opens
           yield cycleWebIDE();

@@ -10,28 +10,28 @@ const TOOL_DELAY = 200;
 
 add_task(function*() {
   yield promiseTab(TEST_URI);
-
-  startTelemetry();
+  let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = yield gDevTools.showToolbox(target, "inspector");
   info("inspector opened");
 
   info("testing the paintflashing button");
-  yield testButton(toolbox);
+  yield testButton(toolbox, Telemetry);
 
+  stopRecordingTelemetryLogs(Telemetry);
   yield gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });
 
-function* testButton(toolbox) {
+function* testButton(toolbox, Telemetry) {
   info("Testing command-button-paintflashing");
 
   let button = toolbox.doc.querySelector("#command-button-paintflashing");
   ok(button, "Captain, we have the button");
 
   yield delayedClicks(button, 4);
-  checkResults();
+  checkResults("_PAINTFLASHING_", Telemetry);
 }
 
 function delayedClicks(node, clicks) {
@@ -53,10 +53,37 @@ function delayedClicks(node, clicks) {
   });
 }
 
-function checkResults() {
-  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
-  // here.
-  checkTelemetry("DEVTOOLS_PAINTFLASHING_OPENED_BOOLEAN", [0,2,0]);
-  checkTelemetry("DEVTOOLS_PAINTFLASHING_OPENED_PER_USER_FLAG", [0,1,0]);
-  checkTelemetry("DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS", null, "hasentries");
+function checkResults(histIdFocus, Telemetry) {
+  let result = Telemetry.prototype.telemetryInfo;
+
+  for (let [histId, value] of Iterator(result)) {
+    if (histId.startsWith("DEVTOOLS_INSPECTOR_") ||
+        !histId.contains(histIdFocus)) {
+      // Inspector stats are tested in
+      // browser_telemetry_toolboxtabs_{toolname}.js so we skip them here
+      // because we only open the inspector once for this test.
+      continue;
+    }
+
+    if (histId.endsWith("OPENED_PER_USER_FLAG")) {
+      ok(value.length === 1 && value[0] === true,
+         "Per user value " + histId + " has a single value of true");
+    } else if (histId.endsWith("OPENED_BOOLEAN")) {
+      ok(value.length > 1, histId + " has more than one entry");
+
+      let okay = value.every(function(element) {
+        return element === true;
+      });
+
+      ok(okay, "All " + histId + " entries are === true");
+    } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
+      ok(value.length > 1, histId + " has more than one entry");
+
+      let okay = value.every(function(element) {
+        return element > 0;
+      });
+
+      ok(okay, "All " + histId + " entries have time > 0");
+    }
+  }
 }

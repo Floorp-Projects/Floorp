@@ -20,22 +20,14 @@ add_task(function*() {
   Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);
 
   yield promiseTab(TEST_URI);
-
-  startTelemetry();
+  let Telemetry = loadTelemetryAndRecordLogs();
 
   yield openAndCloseToolbox(2, TOOL_DELAY, "shadereditor");
-  checkResults();
+  checkTelemetryResults(Telemetry);
 
+  stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
 
   info("De-activate the sharer editor");
   Services.prefs.setBoolPref("devtools.shadereditor.enabled", originalPref);
 });
-
-function checkResults() {
-  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
-  // here.
-  checkTelemetry("DEVTOOLS_SHADEREDITOR_OPENED_BOOLEAN", [0,2,0]);
-  checkTelemetry("DEVTOOLS_SHADEREDITOR_OPENED_PER_USER_FLAG", [0,1,0]);
-  checkTelemetry("DEVTOOLS_SHADEREDITOR_TIME_ACTIVE_SECONDS", null, "hasentries");
-}
