@@ -1556,6 +1556,9 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
       (*i)->mState = JsepTransport::kJsepTransportClosed;
     }
   }
+
+  mGeneratedLocalDescription.reset();
+
   return NS_OK;
 }
 
@@ -2100,7 +2103,11 @@ nsresult
 JsepSessionImpl::ValidateLocalDescription(const Sdp& description)
 {
   // TODO(bug 1095226): Better checking.
-  // (Also, at what point do we clear out the generated offer?)
+  if (!mGeneratedLocalDescription) {
+    JSEP_SET_ERROR("Calling SetLocal without first calling CreateOffer/Answer"
+                   " is not supported.");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   if (description.GetMediaSectionCount() !=
       mGeneratedLocalDescription->GetMediaSectionCount()) {
