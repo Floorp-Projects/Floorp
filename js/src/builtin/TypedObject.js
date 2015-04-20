@@ -788,7 +788,7 @@ function ComputeIterationSpace(arrayType, depth, len) {
       grainType = grainType.elementType;
     } else {
       // RangeError("Depth "+depth+" too high");
-      ThrowError(JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
+      ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     }
   }
   return { iterationSpace: iterationSpace,
@@ -894,7 +894,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   for (var i = 0; i < depth; i++)
     if (inIterationSpace[i] !== iterationSpace[i])
       // TypeError("Incompatible iteration space in input and output type");
-      ThrowError(JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
+      ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // Create a zeroed instance with no data
   var result = new outputType();
@@ -987,7 +987,7 @@ function ReduceTypedSeqImpl(array, outputType, func, initial) {
 
   if (initial === undefined && array.length < 1)
     // RangeError("reduce requires array of length > 0")
-    ThrowError(JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
+    ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // FIXME bug 950106 Should reduce method supply an outptr handle?
   // For now, reduce never supplies an outptr, regardless of outputType.
