@@ -11,3 +11,4 @@ skip-if(B2G||Mulet) fails-if(Android) fails-if(gtk2Widget) != rtl.html no-resize
 == rtl.html in-dynamic-rtl-doc.html
 == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
 == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
+== various-cols.html various-cols-ref.html
