@@ -791,7 +791,7 @@ BluetoothAdapter::SetAdapterState(BluetoothAdapterState aState)
   mState = aState;
 
   // Fire BluetoothAttributeEvent for changed adapter state
-  nsTArray<nsString> types;
+  Sequence<nsString> types;
   BT_APPEND_ENUM_STRING(types,
                         BluetoothAdapterAttribute,
                         BluetoothAdapterAttribute::State);
@@ -806,7 +806,7 @@ BluetoothAdapter::HandlePropertyChanged(const BluetoothValue& aValue)
   const InfallibleTArray<BluetoothNamedValue>& arr =
     aValue.get_ArrayOfBluetoothNamedValue();
 
-  nsTArray<nsString> types;
+  Sequence<nsString> types;
   for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
     BluetoothAdapterAttribute type =
       ConvertStringToAdapterAttribute(arr[i].name());
@@ -912,26 +912,17 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
 }
 
 void
-BluetoothAdapter::DispatchAttributeEvent(const nsTArray<nsString>& aTypes)
+BluetoothAdapter::DispatchAttributeEvent(const Sequence<nsString>& aTypes)
 {
   NS_ENSURE_TRUE_VOID(aTypes.Length());
 
-  AutoJSAPI jsapi;
-  NS_ENSURE_TRUE_VOID(jsapi.Init(GetOwner()));
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JS::Value> value(cx);
+  BluetoothAttributeEventInit init;
+  init.mAttrs = aTypes;
 
-  if (!ToJSValue(cx, aTypes, &value)) {
-    JS_ClearPendingException(cx);
-    return;
-  }
-
-  RootedDictionary<BluetoothAttributeEventInit> init(cx);
-  init.mAttrs = value;
   nsRefPtr<BluetoothAttributeEvent> event =
-    BluetoothAttributeEvent::Constructor(this,
-                                         NS_LITERAL_STRING("attributechanged"),
-                                         init);
+    BluetoothAttributeEvent::Constructor(
+      this, NS_LITERAL_STRING(ATTRIBUTE_CHANGED_ID), init);
+
   DispatchTrustedEvent(event);
 }
 

@@ -9,13 +9,11 @@
              optional BluetoothAttributeEventInit eventInitDict)]
 interface BluetoothAttributeEvent : Event
 {
-  readonly attribute any attrs;
-  // We don't support sequence in event codegen yet (Bug 1023762)
-  // Bug 1015796:
-  // readonly attribute sequence<DOMString> attrs;
+  [Cached, Constant]
+  readonly attribute sequence<DOMString> attrs;
 };
 
 dictionary BluetoothAttributeEventInit : EventInit
 {
-  any attrs = null;
+  required sequence<DOMString> attrs;
 };
