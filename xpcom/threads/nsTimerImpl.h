@@ -129,7 +129,7 @@ private:
   // timer is firing.
   nsCOMPtr<nsITimerCallback> mTimerCallbackWhileFiring;
 
-  // These members are set by Init (called from NS_NewTimer) and never reset.
+  // These members are set by Init and never reset.
   CallbackType          mCallbackType;
 
   // These members are set by the initiating thread, when the timer's type is

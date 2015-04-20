@@ -819,22 +819,3 @@ nsTimerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
 }
-
-// NOT FOR PUBLIC CONSUMPTION!
-nsresult
-NS_NewTimer(nsITimer** aResult, nsTimerCallbackFunc aCallback, void* aClosure,
-            uint32_t aDelay, uint32_t aType)
-{
-  nsTimerImpl* timer = new nsTimerImpl();
-  NS_ADDREF(timer);
-
-  nsresult rv = timer->InitWithFuncCallback(aCallback, aClosure,
-                                            aDelay, aType);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(timer);
-    return rv;
-  }
-
-  *aResult = timer;
-  return NS_OK;
-}
