@@ -112,7 +112,7 @@ Structure::
         gfx: {
             D2DEnabled: <bool>, // null on failure
             DWriteEnabled: <bool>, // null on failure
-            DWriteVersion: <string>, // null on failure
+            //DWriteVersion: <string>, // temporarily removed, pending bug 1154500
             adapters: [
               {
                 description: <string>, // e.g. "Intel(R) HD Graphics 4600", null on failure
