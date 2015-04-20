@@ -41,10 +41,19 @@
    background / shadows for different states */
 #back-button,
 #forward-button {
-  height: 22px !important;
+  height: 24px !important;
   box-shadow: none !important;
-  border: none !important;
+  border: 1px solid var(--chrome-nav-bar-controls-border-color) !important;
   background: var(--chrome-nav-buttons-background) !important;
+}
+
+#forward-button {
+  -moz-border-start: none !important;
+}
+
+#forward-button > .toolbarbutton-icon {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 #back-button:hover:not([disabled="true"]),

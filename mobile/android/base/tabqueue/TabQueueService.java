@@ -143,7 +143,7 @@ public class TabQueueService extends Service {
 
         tabQueueHandler.postDelayed(stopServiceRunnable, TOAST_TIMEOUT);
 
-        return START_FLAG_REDELIVERY;
+        return START_REDELIVER_INTENT;
     }
 
     private void removeView() {
