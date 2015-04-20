@@ -14,13 +14,7 @@ this.SelectParentHelper = {
   populate: function(menulist, items, selectedIndex) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
-    populateChildren(menulist.menupopup, items, selectedIndex);
-    // We expect the parent element of the popup to be a <xul:menulist> that
-    // has the popuponly attribute set to "true". This is necessary in order
-    // for a <xul:menupopup> to act like a proper <html:select> dropdown, as
-    // the <xul:menulist> does things like remember state and set the
-    // _moz-menuactive attribute on the selected <xul:menuitem>.
-    menulist.selectedIndex = selectedIndex;
+    populateChildren(menulist, items, selectedIndex);
   },
 
   open: function(browser, menulist, rect) {
@@ -71,8 +65,9 @@ this.SelectParentHelper = {
 
 };
 
-function populateChildren(element, options, selectedIndex, startIndex = 0, isGroup = false) {
+function populateChildren(menulist, options, selectedIndex, startIndex = 0, isGroup = false) {
   let index = startIndex;
+  let element = menulist.menupopup;
 
   for (let option of options) {
     let item = element.ownerDocument.createElement("menuitem");
@@ -84,8 +79,16 @@ function populateChildren(element, options, selectedIndex, startIndex = 0, isGro
     if (option.children.length > 0) {
       item.classList.add("contentSelectDropdown-optgroup");
       item.setAttribute("disabled", "true");
-      index = populateChildren(element, option.children, selectedIndex, index, true);
+      index = populateChildren(menulist, option.children, selectedIndex, index, true);
     } else {
+      if (index == selectedIndex) {
+        // We expect the parent element of the popup to be a <xul:menulist> that
+        // has the popuponly attribute set to "true". This is necessary in order
+        // for a <xul:menupopup> to act like a proper <html:select> dropdown, as
+        // the <xul:menulist> does things like remember state and set the
+        // _moz-menuactive attribute on the selected <xul:menuitem>.
+        menulist.selectedItem = item;
+      }
       item.setAttribute("value", index++);
 
       if (isGroup) {
