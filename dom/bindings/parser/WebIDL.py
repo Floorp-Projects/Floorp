@@ -2776,7 +2776,7 @@ class IDLBuiltinType(IDLType):
                self._typeTag == IDLBuiltinType.Types.unrestricted_double
 
     def isSerializable(self):
-        return self.isPrimitive() or self.isDOMString() or self.isDate()
+        return self.isPrimitive() or self.isString() or self.isDate()
 
     def includesRestrictedFloat(self):
         return self.isFloat() and not self.isUnrestricted()
