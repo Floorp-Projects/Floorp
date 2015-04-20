@@ -1419,6 +1419,12 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
                       FULLFUNCTION, (void*) stream, (int) reason));
 
     AStream* s = static_cast<AStream*>(stream->pdata);
+    if (!s) {
+        // The stream has already been deleted by other means.
+        // With async plugin init this could happen if async NPP_NewStream
+        // returns an error code.
+        return NPERR_NO_ERROR;
+    }
     if (s->IsBrowserStream()) {
         BrowserStreamParent* sp =
             static_cast<BrowserStreamParent*>(s);
