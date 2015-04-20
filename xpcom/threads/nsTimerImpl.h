@@ -101,9 +101,12 @@ private:
 
   bool IsRepeating() const
   {
-    PR_STATIC_ASSERT(TYPE_ONE_SHOT < TYPE_REPEATING_SLACK);
-    PR_STATIC_ASSERT(TYPE_REPEATING_SLACK < TYPE_REPEATING_PRECISE);
-    PR_STATIC_ASSERT(TYPE_REPEATING_PRECISE < TYPE_REPEATING_PRECISE_CAN_SKIP);
+    static_assert(TYPE_ONE_SHOT < TYPE_REPEATING_SLACK,
+                  "invalid ordering of timer types!");
+    static_assert(TYPE_REPEATING_SLACK < TYPE_REPEATING_PRECISE,
+                  "invalid ordering of timer types!");
+    static_assert(TYPE_REPEATING_PRECISE < TYPE_REPEATING_PRECISE_CAN_SKIP,
+                  "invalid ordering of timer types!");
     return mType >= TYPE_REPEATING_SLACK;
   }
 
