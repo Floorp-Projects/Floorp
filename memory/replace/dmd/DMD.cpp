@@ -82,13 +82,13 @@ class DMDBridge : public ReplaceMallocBridge
   virtual DMDFuncs* GetDMDFuncs() override;
 };
 
-static DMDBridge sDMDBridge;
-static DMDFuncs sDMDFuncs;
+static DMDBridge* gDMDBridge;
+static DMDFuncs gDMDFuncs;
 
 DMDFuncs*
 DMDBridge::GetDMDFuncs()
 {
-  return &sDMDFuncs;
+  return &gDMDFuncs;
 }
 
 inline void
@@ -96,7 +96,7 @@ StatusMsg(const char* aFmt, ...)
 {
   va_list ap;
   va_start(ap, aFmt);
-  sDMDFuncs.StatusMsg(aFmt, ap);
+  gDMDFuncs.StatusMsg(aFmt, ap);
   va_end(ap);
 }
 
@@ -1211,7 +1211,7 @@ replace_init(const malloc_table_t* aMallocTable)
 ReplaceMallocBridge*
 replace_get_bridge()
 {
-  return &mozilla::dmd::sDMDBridge;
+  return mozilla::dmd::gDMDBridge;
 }
 
 void*
@@ -1518,6 +1518,7 @@ static void
 Init(const malloc_table_t* aMallocTable)
 {
   gMallocTable = aMallocTable;
+  gDMDBridge = InfallibleAllocPolicy::new_<DMDBridge>();
 
   // DMD is controlled by the |DMD| environment variable.
   const char* e = getenv("DMD");
