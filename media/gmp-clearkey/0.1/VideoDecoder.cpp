@@ -56,12 +56,14 @@ VideoDecoder::InitDecode(const GMPVideoCodec& aCodecSettings,
   mDecoder = new WMFH264Decoder();
   HRESULT hr = mDecoder->Init();
   if (FAILED(hr)) {
+    CK_LOGD("VideoDecoder::InitDecode failed to init WMFH264Decoder");
     mCallback->Error(GMPGenericErr);
     return;
   }
 
   auto err = GetPlatform()->createmutex(&mMutex);
   if (GMP_FAILED(err)) {
+    CK_LOGD("VideoDecoder::InitDecode failed to create GMPMutex");
     mCallback->Error(GMPGenericErr);
     return;
   }

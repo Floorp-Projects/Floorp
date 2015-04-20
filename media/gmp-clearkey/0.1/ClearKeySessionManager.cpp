@@ -26,6 +26,7 @@
 #include "gmp-task-utils.h"
 #if defined(ENABLE_WMF)
 #include "WMFUtils.h"
+#include <VersionHelpers.h>
 #endif
 
 #include <assert.h>
@@ -51,6 +52,16 @@ ClearKeySessionManager::~ClearKeySessionManager()
 }
 
 static bool
+ShouldBeAbleToDecode()
+{
+#if !defined(ENABLE_WMF)
+  return false;
+#else
+  return IsWindowsVistaOrGreater();
+#endif
+}
+
+static bool
 CanDecode()
 {
   return
@@ -65,9 +76,18 @@ ClearKeySessionManager::Init(GMPDecryptorCallback* aCallback)
 {
   CK_LOGD("ClearKeySessionManager::Init");
   mCallback = aCallback;
-  mCallback->SetCapabilities(CanDecode() ?
-                             GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO | GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO :
-                             GMP_EME_CAP_DECRYPT_AUDIO | GMP_EME_CAP_DECRYPT_VIDEO);
+  if (ShouldBeAbleToDecode()) {
+    if (!CanDecode()) {
+      const char* err = "EME plugin can't load system decoder!";
+      mCallback->SessionError(nullptr, 0, kGMPAbortError, 0, err, strlen(err));
+    } else {
+      mCallback->SetCapabilities(GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO |
+                                 GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO);
+    }
+  } else {
+    mCallback->SetCapabilities(GMP_EME_CAP_DECRYPT_AUDIO |
+                               GMP_EME_CAP_DECRYPT_VIDEO);
+  }
   ClearKeyPersistence::EnsureInitialized();
 }
 
