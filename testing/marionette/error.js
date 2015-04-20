@@ -24,6 +24,7 @@ const errors = [
   "SessionNotCreatedError",
   "StaleElementReferenceError",
   "TimeoutError",
+  "UnableToSetCookieError",
   "UnknownCommandError",
   "UnknownError",
   "UnsupportedOperationError",
@@ -332,6 +333,14 @@ this.TimeoutError = function(msg) {
   this.code = 21;
 };
 TimeoutError.prototype = Object.create(WebDriverError.prototype);
+
+this.UnableToSetCookieError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "UnableToSetCookieError";
+  this.status = "unable to set cookie";
+  this.code = 25;
+};
+UnableToSetCookieError.prototype = Object.create(WebDriverError.prototype);
 
 this.UnknownCommandError = function(msg) {
   WebDriverError.call(this, msg);
