@@ -1421,6 +1421,13 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fGetUniformuiv(GLuint program, GLint location, GLuint* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetUniformuiv);
+        mSymbols.fGetUniformuiv(program, location, params);
+        AFTER_GL_CALL;
+    }
+
     GLint fGetUniformLocation (GLint programObj, const GLchar* name) {
         BEFORE_GL_CALL;
         GLint retval = mSymbols.fGetUniformLocation(programObj, name);
