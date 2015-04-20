@@ -111,7 +111,7 @@ public:
   // will run on the QuotaManager IO thread.  Note, this Action must
   // be execute synchronously.
   static already_AddRefed<Context>
-  Create(Manager* aManager, Action* aQuotaIOThreadAction);
+  Create(Manager* aManager, Action* aQuotaIOThreadAction, Context* aOldContext);
 
   // Execute given action on the target once the quota manager has been
   // initialized.
@@ -157,6 +157,7 @@ private:
 
   enum State
   {
+    STATE_CONTEXT_PREINIT,
     STATE_CONTEXT_INIT,
     STATE_CONTEXT_READY,
     STATE_CONTEXT_CANCELED
@@ -170,12 +171,16 @@ private:
 
   explicit Context(Manager* aManager);
   ~Context();
+  void Start();
   void DispatchAction(nsIEventTarget* aTarget, Action* aAction);
   void OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
                    nsMainThreadPtrHandle<OfflineStorage>& aOfflineStorage);
 
   already_AddRefed<ThreadsafeHandle>
   CreateThreadsafeHandle();
+
+  void
+  SetNextContext(Context* aNextContext);
 
   nsRefPtr<Manager> mManager;
   State mState;
@@ -194,6 +199,7 @@ private:
   nsRefPtr<ThreadsafeHandle> mThreadsafeHandle;
 
   nsMainThreadPtrHandle<OfflineStorage> mOfflineStorage;
+  nsRefPtr<Context> mNextContext;
 
 public:
   NS_INLINE_DECL_REFCOUNTING(cache::Context)
