@@ -762,11 +762,16 @@ setReq.onerror = function() {
             if self._capabilities['device'] == "desktop":
                 need_external_ip = False
 
+        # Gaia sets server_root and that means we shouldn't spin up our own httpd
         if not self.httpd:
-            self.logger.info("starting httpd")
-            self.start_httpd(need_external_ip)
-            self.marionette.baseurl = self.httpd.get_url()
-            self.logger.info("running httpd on %s" % self.marionette.baseurl)
+            if self.server_root is None or os.path.isdir(self.server_root):
+                self.logger.info("starting httpd")
+                self.start_httpd(need_external_ip)
+                self.marionette.baseurl = self.httpd.get_url()
+                self.logger.info("running httpd on %s" % self.marionette.baseurl)
+            else:
+                self.marionette.baseurl = self.server_root
+                self.logger.info("using remote content from %s" % self.marionette.baseurl)
 
         for test in tests:
             self.add_test(test)
