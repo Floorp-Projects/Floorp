@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Algorithms that determine column and table widths used for CSS2's
+ * Algorithms that determine column and table isizes used for CSS2's
  * 'table-layout: fixed'.
  */
 
@@ -28,7 +28,7 @@ public:
     virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext,
                                  bool aComputingSize) override;
     virtual void MarkIntrinsicISizesDirty() override;
-    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState) override;
+    virtual void ComputeColumnISizes(const nsHTMLReflowState& aReflowState) override;
 
 private:
     nsTableFrame *mTableFrame;

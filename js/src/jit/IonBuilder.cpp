@@ -10014,6 +10014,14 @@ IonBuilder::jsop_getprop(PropertyName* name)
         return resumeAfter(call) && pushTypeBarrier(call, types, BarrierKind::TypeSet);
     }
 
+    // Try to optimize accesses on outer window proxies, for example window.foo.
+    // This needs to come before the various strategies getPropTryInnerize tries
+    // internally, since some of those strategies will "succeed" in silly ways
+    // even for an outer object.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_Innerize);
+    if (!getPropTryInnerize(&emitted, obj, name, types) || emitted)
+        return emitted;
+
     // Try to hardcode known constants.
     trackOptimizationAttempt(TrackedStrategy::GetProp_Constant);
     if (!getPropTryConstant(&emitted, obj, name, types) || emitted)
@@ -10047,11 +10055,6 @@ IonBuilder::jsop_getprop(PropertyName* name)
     // Try to emit a monomorphic/polymorphic access based on baseline caches.
     trackOptimizationAttempt(TrackedStrategy::GetProp_InlineAccess);
     if (!getPropTryInlineAccess(&emitted, obj, name, barrier, types) || emitted)
-        return emitted;
-
-    // Try to optimize accesses on outer window proxies, for example window.foo.
-    trackOptimizationAttempt(TrackedStrategy::GetProp_Innerize);
-    if (!getPropTryInnerize(&emitted, obj, name, types) || emitted)
         return emitted;
 
     // Try to emit a polymorphic cache.
@@ -11051,12 +11054,20 @@ IonBuilder::getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* na
     // possible the global property's HeapTypeSet has not been initialized
     // yet. In this case we'll fall back to getPropTryCache for now.
 
+    // Note that it's important that we do this _before_ we'd try to
+    // do the optimizations below on obj normally, since some of those
+    // optimizations have fallback paths that are slower than the path
+    // we'd produce here.
+
+    trackOptimizationAttempt(TrackedStrategy::GetProp_Constant);
     if (!getPropTryConstant(emitted, inner, name, types) || *emitted)
         return *emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetProp_StaticName);
     if (!getStaticName(&script()->global(), name, emitted) || *emitted)
         return *emitted;
 
+    trackOptimizationAttempt(TrackedStrategy::GetProp_CommonGetter);
     if (!getPropTryCommonGetter(emitted, inner, name, types) || *emitted)
         return *emitted;
 
@@ -11064,6 +11075,7 @@ IonBuilder::getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* na
     // needsOuterizedThisObject check in IsCacheableGetPropCallNative.
     BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                        inner, name, types);
+    trackOptimizationAttempt(TrackedStrategy::GetProp_InlineCache);
     if (!getPropTryCache(emitted, inner, name, barrier, types) || *emitted)
         return *emitted;
 

@@ -5,12 +5,6 @@
 // the "exported" symbols
 let LoopUI;
 
-XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI", "resource:///modules/loop/MozLoopAPI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms", "resource:///modules/loop/LoopRooms.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService", "resource:///modules/loop/MozLoopService.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/PanelFrame.jsm");
-
-
 (function() {
   const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   const kBrowserSharingNotificationId = "loop-sharing-notification";
@@ -134,15 +128,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
             return;
           }
 
-          iframe.addEventListener("DOMContentLoaded", function documentDOMLoaded() {
+          let documentDOMLoaded = () => {
             iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
-            injectLoopAPI(iframe.contentWindow);
-            iframe.contentWindow.addEventListener("loopPanelInitialized", function loopPanelInitialized() {
+  	    this.injectLoopAPI(iframe.contentWindow);
+  	    iframe.contentWindow.addEventListener("loopPanelInitialized", function loopPanelInitialized() {
               iframe.contentWindow.removeEventListener("loopPanelInitialized",
                                                        loopPanelInitialized);
               showTab();
-            });
-          }, true);
+	    });
+	  };
+	  iframe.addEventListener("DOMContentLoaded", documentDOMLoaded, true); 
         };
 
         // Used to clear the temporary "login" state from the button.
@@ -153,12 +148,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
             // Assume the conversation with the visitor wasn't open since we would
             // have resumed the tour as soon as the visitor joined if it was (and
             // the pref would have been set to false already.
-            MozLoopService.resumeTour("waiting");
+            this.MozLoopService.resumeTour("waiting");
             resolve();
             return;
           }
 
-          PanelFrame.showPopup(window, event ? event.target : this.toolbarButton.node,
+          this.PanelFrame.showPopup(window, event ? event.target : this.toolbarButton.node,
                                "loop", null, "about:looppanel", null, callback);
         });
       });
@@ -179,7 +174,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
         return false;
       }
 
-      if (!LoopRooms.participantsCount) {
+      if (!this.LoopRooms.participantsCount) {
         // Nobody is in the rooms
         return false;
       }
@@ -198,7 +193,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      */
     roomsWithNonOwners: function() {
       return new Promise(resolve => {
-        LoopRooms.getAll((error, rooms) => {
+        this.LoopRooms.getAll((error, rooms) => {
           let roomsWithNonOwners = [];
           for (let room of rooms) {
             if (!("participants" in room)) {
@@ -223,7 +218,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       // Add observer notifications before the service is initialized
       Services.obs.addObserver(this, "loop-status-changed", false);
 
-      MozLoopService.initialize();
+      this.MozLoopService.initialize();
       this.updateToolbarState();
     },
 
@@ -254,15 +249,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
         return;
       }
       let state = "";
-      if (MozLoopService.errors.size) {
+      if (this.MozLoopService.errors.size) {
         state = "error";
-      } else if (MozLoopService.screenShareActive) {
+      } else if (this.MozLoopService.screenShareActive) {
         state = "action";
-      } else if (aReason == "login" && MozLoopService.userProfile) {
+      } else if (aReason == "login" && this.MozLoopService.userProfile) {
         state = "active";
-      } else if (MozLoopService.doNotDisturb) {
+      } else if (this.MozLoopService.doNotDisturb) {
         state = "disabled";
-      } else if (MozLoopService.roomsParticipantsCount > 0) {
+      } else if (this.MozLoopService.roomsParticipantsCount > 0) {
         state = "active";
       }
       this.toolbarButton.node.setAttribute("state", state);
@@ -285,7 +280,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      *                                                  Opens the panel by default.
      */
     showNotification: function(options) {
-      if (MozLoopService.doNotDisturb) {
+      if (this.MozLoopService.doNotDisturb) {
         return;
       }
 
@@ -336,7 +331,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      * @param {String} name Name of the sound, like 'ringtone' or 'room-joined'
      */
     playSound: function(name) {
-      if (this.ActiveSound || MozLoopService.doNotDisturb) {
+      if (this.ActiveSound || this.MozLoopService.doNotDisturb) {
         return;
       }
 
@@ -401,7 +396,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      * @return {String}
      */
     _getString: function(key) {
-      let str = MozLoopService.getStrings(key);
+      let str = this.MozLoopService.getStrings(key);
       if (str) {
         str = JSON.parse(str).textContent;
       }
@@ -417,7 +412,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       this._hideBrowserSharingInfoBar();
 
       // Don't show the infobar if it's been permanently disabled from the menu.
-      if (!MozLoopService.getLoopPref(kPrefBrowserSharingInfoBar)) {
+      if (!this.MozLoopService.getLoopPref(kPrefBrowserSharingInfoBar)) {
         return;
       }
 
@@ -473,7 +468,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       }
 
       if (permanently) {
-        MozLoopService.setLoopPref(kPrefBrowserSharingInfoBar, false);
+        this.MozLoopService.setLoopPref(kPrefBrowserSharingInfoBar, false);
       }
 
       return removed;
@@ -511,3 +506,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
     },
   };
 })();
+
+XPCOMUtils.defineLazyModuleGetter(LoopUI, "injectLoopAPI", "resource:///modules/loop/MozLoopAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopRooms", "resource:///modules/loop/LoopRooms.jsm");
+XPCOMUtils.defineLazyModuleGetter(LoopUI, "MozLoopService", "resource:///modules/loop/MozLoopService.jsm");
+XPCOMUtils.defineLazyModuleGetter(LoopUI, "PanelFrame", "resource:///modules/PanelFrame.jsm");
