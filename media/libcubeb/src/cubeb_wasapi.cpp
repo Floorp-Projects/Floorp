@@ -414,7 +414,7 @@ upmix(T * in, long inframes, T * out, int32_t in_channels, int32_t out_channels)
     mono_to_stereo(in, inframes, out, out_channels);
   } else {
     /* Copy through. */
-    for (int i = 0, o = 0; i < inframes * in_channels'
+    for (int i = 0, o = 0; i < inframes * in_channels;
         i += in_channels, o += out_channels) {
       for (int j = 0; j < in_channels; ++j) {
         out[o + j] = in[i + j];
