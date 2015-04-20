@@ -372,7 +372,7 @@ function test() {
           newWin.removeEventListener("load", whenloaded, false);
 
           newWin.gBrowser.tabContainer.addEventListener("SSTabRestored", function whenSSTabRestored() {
-            newWin.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+            newWin.gBrowser.tabContainer.removeEventListener("SSTabRestored", whenSSTabRestored, false);
 
             whenNewWindowLoaded({}, function (newWin2) {
               is(newWin2.gBrowser.browsers.length, 1,
