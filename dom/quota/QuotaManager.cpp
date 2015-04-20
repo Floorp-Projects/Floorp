@@ -5002,7 +5002,7 @@ OriginParser::HandleToken(const nsDependentCSubstring& aToken)
 void
 OriginParser::HandleTrailingSeparator()
 {
-  MOZ_ASSERT(mState = eComplete);
+  MOZ_ASSERT(mState == eComplete);
   MOZ_ASSERT(mSchemaType == eFile);
 
   mPathnameComponents.AppendElement(EmptyCString());
