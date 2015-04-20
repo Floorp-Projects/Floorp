@@ -8,7 +8,6 @@ UNIFIED_SOURCES += [
     'MockMediaResource.cpp',
     'TestAudioCompactor.cpp',
     'TestGMPCrossOrigin.cpp',
-    'TestGMPRemoveAndDelete.cpp',
     'TestMP4Demuxer.cpp',
     'TestMP4Reader.cpp',
     'TestTrackEncoder.cpp',
