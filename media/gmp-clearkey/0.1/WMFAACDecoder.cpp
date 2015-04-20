@@ -92,11 +92,11 @@ WMFAACDecoder::Init(int32_t aChannelCount,
 
   // AAC decoder is in msauddecmft on Win8, and msmpeg2adec in earlier versions.
   hr = CreateMFT(CLSID_CMSAACDecMFT,
-                 "msauddecmft.dll",
+                 WMFDecoderDllNameFor(AAC),
                  mDecoder);
   if (FAILED(hr)) {
     hr = CreateMFT(CLSID_CMSAACDecMFT,
-                   "msmpeg2adec.dll",
+                   WMFDecoderDllNameFor(AAC),
                    mDecoder);
     if (FAILED(hr)) {
       LOG("Failed to create AAC decoder\n");
