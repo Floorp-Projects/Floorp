@@ -21,6 +21,7 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
+#include "nsQueryObject.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIDOMCSSStyleSheet.h"

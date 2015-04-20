@@ -19,6 +19,7 @@
 #include "CameraPreferences.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

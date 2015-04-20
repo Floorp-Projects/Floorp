@@ -93,7 +93,7 @@ public:
 protected:
   virtual void InitTags(nsTArray<nsCString>& aTags);
   virtual nsCString GetNodeId();
-  virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(MediaRawData* aSample);
+  virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample);
 
 private:
   class GMPInitDoneRunnable : public nsRunnable

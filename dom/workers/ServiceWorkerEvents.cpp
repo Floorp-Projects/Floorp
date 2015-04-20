@@ -16,6 +16,7 @@
 #include "nsStreamUtils.h"
 #include "nsNetCID.h"
 #include "nsSerializationHelper.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"

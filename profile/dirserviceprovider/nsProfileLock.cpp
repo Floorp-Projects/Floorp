@@ -6,6 +6,7 @@
 #include "nsProfileStringTypes.h"
 #include "nsProfileLock.h"
 #include "nsCOMPtr.h"
+#include "nsQueryObject.h"
 
 #if defined(XP_WIN)
 #include "mozilla/ProfileUnlockerWin.h"
