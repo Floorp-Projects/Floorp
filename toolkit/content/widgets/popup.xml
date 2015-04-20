@@ -633,8 +633,6 @@
 
             return false;
           }, this);
-
-          return false;
         ]]>
         </body>
       </method>

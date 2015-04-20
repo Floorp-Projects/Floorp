@@ -650,11 +650,12 @@ public:
             nscoord         aContainingBlockBSize = -1,
             const nsMargin* aBorder = nullptr,
             const nsMargin* aPadding = nullptr);
+
   /**
-   * Find the content width of the containing block of aReflowState
+   * Find the content isize of our containing block for the given writing mode,
+   * which need not be the same as the reflow state's mode.
    */
-  static nscoord
-    GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState);
+  nscoord GetContainingBlockContentISize(mozilla::WritingMode aWritingMode) const;
 
   /**
    * Calculate the used line-height property. The return value will be >= 0.
