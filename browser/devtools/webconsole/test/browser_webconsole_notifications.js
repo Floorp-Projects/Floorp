@@ -8,14 +8,14 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>Web Console test for notificat
 let test = asyncTest(function* () {
   yield loadTab(TEST_URI);
 
-  let gotEvents = waitForEvents();
-
-  let hud = yield openConsole();
+  let consoleOpened = promise.defer();
+  let gotEvents = waitForEvents(consoleOpened.promise);
+  let hud = yield openConsole().then(() => consoleOpened.resolve());
 
   yield gotEvents;
 });
 
-function waitForEvents() {
+function waitForEvents(onConsoleOpened) {
   let deferred = promise.defer();
 
   function webConsoleCreated(aID)
@@ -37,7 +37,7 @@ function waitForEvents() {
     Services.obs.removeObserver(observer, "web-console-message-created");
     ok(aID, "we have a console ID");
     is(typeof aNodeID, "string", "message node id is a string");
-    executeSoon(closeConsole);
+    onConsoleOpened.then(closeConsole);
   }
 
   let observer = {
