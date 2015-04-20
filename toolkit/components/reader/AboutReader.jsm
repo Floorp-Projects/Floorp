@@ -68,7 +68,11 @@ let AboutReader = function(mm, win, articlePromise) {
   this._setupButton("share-button", this._onShare.bind(this), "aboutReader.toolbar.share");
 
   try {
+#ifdef MOZ_FENNEC
     if (Services.prefs.getBoolPref("browser.readinglist.enabled")) {
+#else
+    if (false) {
+#endif
       this._setupButton("toggle-button", this._onReaderToggle.bind(this, "button"), "aboutReader.toolbar.addToReadingList");
       this._setupButton("list-button", this._onList.bind(this), "aboutReader.toolbar.openReadingList");
       this._setupButton("remove-button", this._onReaderToggle.bind(this, "footer"),

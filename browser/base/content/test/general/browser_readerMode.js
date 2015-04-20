@@ -55,6 +55,8 @@ add_task(function* test_reader_button() {
 
   // Readinglist button should be present, and status should be "openned", as the
   // first time in readerMode opens the Sidebar ReadingList as a feature introduction.
+/*
+  // Reading List test disabled, bug 1155191
   let listButton;
   yield promiseWaitForCondition(() =>
     listButton = gBrowser.contentDocument.getElementById("list-button"));
@@ -72,6 +74,7 @@ add_task(function* test_reader_button() {
     "List button should now indicate SideBar-ReadingList closed.");
   ok(!ReadingListUI.isSidebarOpen,
     "The ReadingListUI should now indicate SideBar-ReadingList closed.");
+*/
 
   // Switch page back out of reader mode.
   readerButton.click();
