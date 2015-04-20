@@ -275,6 +275,9 @@ TabChildBase::HandlePossibleViewportChange(const ScreenIntSize& aOldScreenSize)
     Stringify(aOldScreenSize).c_str(), Stringify(mInnerSize).c_str());
 
   nsCOMPtr<nsIDocument> document(GetDocument());
+  if (!document) {
+    return false;
+  }
 
   nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
   uint32_t presShellId = 0;
