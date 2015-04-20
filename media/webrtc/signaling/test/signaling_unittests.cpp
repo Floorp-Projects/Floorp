@@ -32,6 +32,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIDNSService.h"
+#include "nsQueryObject.h"
 #include "nsWeakReference.h"
 #include "nricectx.h"
 #include "rlogringbuffer.h"

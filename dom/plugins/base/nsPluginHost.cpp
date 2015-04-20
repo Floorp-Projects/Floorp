@@ -72,6 +72,7 @@
 #include "prprf.h"
 #include "nsThreadUtils.h"
 #include "nsIInputStreamTee.h"
+#include "nsQueryObject.h"
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"

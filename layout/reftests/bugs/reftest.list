@@ -1014,7 +1014,7 @@ skip-if(B2G||Mulet) == 421234-1.html 421234-1-ref.html # Initial mulet triage: p
 == 421436-1b.html 421436-1-ref.html
 == 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank
-skip-if(B2G||Mulet) fails-if(Android) == 421885-1.xml 421885-1-ref.xml # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) fails-if(!supportsRepeatResampling) == 421885-1.xml 421885-1-ref.xml # Initial mulet triage: parity with B2G/B2G Desktop
 == 421955-1.html 421955-1-ref.html
 skip-if(B2G||Mulet) == 422249-1.html 422249-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 422394-1.html 422394-1-ref.html
@@ -1164,13 +1164,13 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1c.html 445142-1-ref.html
 == 445142-2a.html 445142-2-ref.html
 == 445142-2b.html 445142-2-ref.html
-== 446100-1a.html about:blank
-skip-if(B2G||Mulet) fails-if(Android) == 446100-1b.html about:blank # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(Android) == 446100-1c.html about:blank # Initial mulet triage: parity with B2G/B2G Desktop
-== 446100-1d.html about:blank
+fails-if(!supportsRepeatResampling) == 446100-1a.html about:blank
+skip-if(B2G||Mulet) fails-if(Android) fails-if(!supportsRepeatResampling) == 446100-1b.html about:blank # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) fails-if(!supportsRepeatResampling) == 446100-1c.html about:blank # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(!supportsRepeatResampling) == 446100-1d.html about:blank
 == 446100-1e.html about:blank
 == 446100-1f.html about:blank
-skip-if(B2G||Mulet) fails-if(Android) == 446100-1g.html about:blank # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) fails-if(!supportsRepeatResampling) == 446100-1g.html about:blank # Initial mulet triage: parity with B2G/B2G Desktop
 == 446100-1h.html about:blank
 skip-if(B2G||Mulet) == 447749-1.html 447749-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy(127,2) == 448193.html 448193-ref.html
@@ -1875,3 +1875,4 @@ fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fa
 skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html
+== 1156129-1.html 1156129-1-ref.html

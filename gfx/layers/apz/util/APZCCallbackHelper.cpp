@@ -433,7 +433,7 @@ APZCCallbackHelper::DispatchSynthesizedMouseEvent(uint32_t aMsg,
 }
 
 bool
-APZCCallbackHelper::DispatchMouseEvent(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
+APZCCallbackHelper::DispatchMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
                                        const nsString& aType,
                                        const CSSPoint& aPoint,
                                        int32_t aButton,
@@ -442,11 +442,12 @@ APZCCallbackHelper::DispatchMouseEvent(const nsCOMPtr<nsIDOMWindowUtils>& aUtils
                                        bool aIgnoreRootScrollFrame,
                                        unsigned short aInputSourceArg)
 {
-  NS_ENSURE_TRUE(aUtils, true);
+  NS_ENSURE_TRUE(aPresShell, true);
 
   bool defaultPrevented = false;
-  aUtils->SendMouseEvent(aType, aPoint.x, aPoint.y, aButton, aClickCount, aModifiers,
-                         aIgnoreRootScrollFrame, 0, aInputSourceArg, false, 4, &defaultPrevented);
+  nsContentUtils::SendMouseEvent(aPresShell, aType, aPoint.x, aPoint.y,
+      aButton, aClickCount, aModifiers, aIgnoreRootScrollFrame, 0,
+      aInputSourceArg, false, &defaultPrevented, false);
   return defaultPrevented;
 }
 

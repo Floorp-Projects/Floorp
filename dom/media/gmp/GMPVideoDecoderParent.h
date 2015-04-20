@@ -38,7 +38,7 @@ public:
                               const nsTArray<uint8_t>& aCodecSpecific,
                               GMPVideoDecoderCallbackProxy* aCallback,
                               int32_t aCoreCount) override;
-  virtual nsresult Decode(GMPUnique<GMPVideoEncodedFrame>::Ptr aInputFrame,
+  virtual nsresult Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
                           bool aMissingFrames,
                           const nsTArray<uint8_t>& aCodecSpecificInfo,
                           int64_t aRenderTimeMs = -1) override;
