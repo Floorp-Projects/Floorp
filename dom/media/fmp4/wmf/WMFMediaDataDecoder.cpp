@@ -27,13 +27,14 @@ WMFMediaDataDecoder::WMFMediaDataDecoder(MFTManager* aMFTManager,
   : mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
   , mMFTManager(aMFTManager)
+  , mMonitor("WMFMediaDataDecoder")
+  , mIsDecodeTaskDispatched(false)
+  , mIsFlushing(false)
 {
-  MOZ_COUNT_CTOR(WMFMediaDataDecoder);
 }
 
 WMFMediaDataDecoder::~WMFMediaDataDecoder()
 {
-  MOZ_COUNT_DTOR(WMFMediaDataDecoder);
 }
 
 nsresult
@@ -48,11 +49,16 @@ WMFMediaDataDecoder::Init()
 nsresult
 WMFMediaDataDecoder::Shutdown()
 {
-  DebugOnly<nsresult> rv = mTaskQueue->FlushAndDispatch(
+  nsresult rv = mTaskQueue->Dispatch(
     NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
     NS_WARNING("WMFMediaDataDecoder::Shutdown() dispatch of task failed!");
+  }
+  {
+    MonitorAutoLock mon(mMonitor);
+    // The MP4Reader should have flushed before calling Shutdown().
+    MOZ_ASSERT(!mIsDecodeTaskDispatched);
   }
 #endif
   return NS_OK;
@@ -61,36 +67,73 @@ WMFMediaDataDecoder::Shutdown()
 void
 WMFMediaDataDecoder::ProcessShutdown()
 {
-  mMFTManager->Shutdown();
-  mMFTManager = nullptr;
+  if (mMFTManager) {
+    mMFTManager->Shutdown();
+    mMFTManager = nullptr;
+  }
   mDecoder = nullptr;
+}
+
+void
+WMFMediaDataDecoder::EnsureDecodeTaskDispatched()
+{
+  mMonitor.AssertCurrentThreadOwns();
+  if (!mIsDecodeTaskDispatched) {
+    mTaskQueue->Dispatch(
+      NS_NewRunnableMethod(this,
+      &WMFMediaDataDecoder::Decode));
+    mIsDecodeTaskDispatched = true;
+  }
 }
 
 // Inserts data into the decoder's pipeline.
 nsresult
 WMFMediaDataDecoder::Input(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(
-    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
-      this,
-      &WMFMediaDataDecoder::ProcessDecode,
-      nsRefPtr<MediaRawData>(aSample)));
+  MonitorAutoLock mon(mMonitor);
+  mInput.push(aSample);
+  EnsureDecodeTaskDispatched();
   return NS_OK;
 }
 
 void
-WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
+WMFMediaDataDecoder::Decode()
 {
-  HRESULT hr = mMFTManager->Input(aSample);
-  if (FAILED(hr)) {
-    NS_WARNING("MFTManager rejected sample");
-    mCallback->Error();
-    return;
+  while (true) {
+    nsRefPtr<MediaRawData> input;
+    {
+      MonitorAutoLock mon(mMonitor);
+      MOZ_ASSERT(mIsDecodeTaskDispatched);
+      if (mInput.empty()) {
+        if (mIsFlushing) {
+          if (mDecoder) {
+            mDecoder->Flush();
+          }
+          mIsFlushing = false;
+        }
+        mIsDecodeTaskDispatched = false;
+        mon.NotifyAll();
+        return;
+      }
+      input = mInput.front();
+      mInput.pop();
+    }
+
+    HRESULT hr = mMFTManager->Input(input);
+    if (FAILED(hr)) {
+      NS_WARNING("MFTManager rejected sample");
+      {
+        MonitorAutoLock mon(mMonitor);
+        PurgeInputQueue();
+      }
+      mCallback->Error();
+      return;
+    }
+
+    mLastStreamOffset = input->mOffset;
+
+    ProcessOutput();
   }
-
-  mLastStreamOffset = aSample->mOffset;
-
-  ProcessOutput();
 }
 
 void
@@ -108,24 +151,33 @@ WMFMediaDataDecoder::ProcessOutput()
     }
   } else if (FAILED(hr)) {
     NS_WARNING("WMFMediaDataDecoder failed to output data");
+    {
+      MonitorAutoLock mon(mMonitor);
+      PurgeInputQueue();
+    }
     mCallback->Error();
+  }
+}
+
+void
+WMFMediaDataDecoder::PurgeInputQueue()
+{
+  mMonitor.AssertCurrentThreadOwns();
+  while (!mInput.empty()) {
+    mInput.pop();
   }
 }
 
 nsresult
 WMFMediaDataDecoder::Flush()
 {
-  // Flush the input task queue. This cancels all pending Decode() calls.
-  // Note this blocks until the task queue finishes its current job, if
-  // it's executing at all. Note the MP4Reader ignores all output while
-  // flushing.
-  mTaskQueue->Flush();
-
-  // Order the MFT to flush; drop all internal data.
-  NS_ENSURE_TRUE(mDecoder, NS_ERROR_FAILURE);
-  HRESULT hr = mDecoder->Flush();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
-
+  MonitorAutoLock mon(mMonitor);
+  PurgeInputQueue();
+  mIsFlushing = true;
+  EnsureDecodeTaskDispatched();
+  while (mIsDecodeTaskDispatched || mIsFlushing) {
+    mon.Wait();
+  }
   return NS_OK;
 }
 
