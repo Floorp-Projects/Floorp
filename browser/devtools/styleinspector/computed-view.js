@@ -980,6 +980,7 @@ function PropertyView(aTree, aName)
 
   this.link = "https://developer.mozilla.org/CSS/" + aName;
 
+  this.templateMatchedSelectors = aTree.styleDocument.getElementById("templateMatchedSelectors");
   this._propertyInfo = new PropertyInfo(aTree, aName);
 }
 
@@ -1191,7 +1192,6 @@ PropertyView.prototype = {
       this.propertyInfo.value,
       {
         colorSwatchClass: "computedview-colorswatch",
-        colorClass: "computedview-color",
         urlClass: "theme-link"
         // No need to use baseURI here as computed URIs are never relative.
       });
@@ -1222,10 +1222,9 @@ PropertyView.prototype = {
         }
 
         this._matchedSelectorResponse = matched;
-
-        this._buildMatchedSelectors();
+        CssHtmlTree.processTemplate(this.templateMatchedSelectors,
+          this.matchedSelectorsContainer, this);
         this.matchedExpander.setAttribute("open", "");
-
         this.tree.inspector.emit("computed-view-property-expanded");
       }).then(null, console.error);
     } else {
@@ -1239,40 +1238,6 @@ PropertyView.prototype = {
   get matchedSelectors()
   {
     return this._matchedSelectorResponse;
-  },
-
-  _buildMatchedSelectors: function() {
-    let frag = this.element.ownerDocument.createDocumentFragment();
-
-    for (let selector of this.matchedSelectorViews) {
-      let p = createChild(frag, "p");
-      let span = createChild(p, "span", {
-        class: "rule-link"
-      });
-      let link = createChild(span, "a", {
-        target: "_blank",
-        class: "link theme-link",
-        title: selector.href,
-        sourcelocation: selector.source,
-        tabindex: "0",
-        textContent: selector.source
-      });
-      link.addEventListener("click", selector.openStyleEditor, false);
-      link.addEventListener("keydown", selector.maybeOpenStyleEditor, false);
-
-      let status = createChild(p, "span", {
-        dir: "ltr",
-        class: "rule-text theme-fg-color3 " + selector.statusClass,
-        title: selector.statusText,
-        textContent: selector.sourceText
-      });
-      let valueSpan = createChild(status, "span", {
-        class: "other-property-value theme-fg-color1"
-      });
-      valueSpan.appendChild(selector.outputFragment);
-    }
-
-    this.matchedSelectorsContainer.appendChild(frag);
   },
 
   /**
@@ -1314,9 +1279,6 @@ PropertyView.prototype = {
    */
   onMatchedToggle: function PropertyView_onMatchedToggle(aEvent)
   {
-    if (aEvent.shiftKey) {
-      return;
-    }
     this.matchedExpanded = !this.matchedExpanded;
     this.refreshMatchedSelectors();
     aEvent.preventDefault();
@@ -1365,9 +1327,6 @@ function SelectorView(aTree, aSelectorInfo)
   this.tree = aTree;
   this.selectorInfo = aSelectorInfo;
   this._cacheStatusNames();
-
-  this.openStyleEditor = this.openStyleEditor.bind(this);
-  this.maybeOpenStyleEditor = this.maybeOpenStyleEditor.bind(this);
 
   this.updateSourceLink();
 }
@@ -1459,7 +1418,6 @@ SelectorView.prototype = {
       this.selectorInfo.name,
       this.selectorInfo.value, {
       colorSwatchClass: "computedview-colorswatch",
-      colorClass: "computedview-color",
       urlClass: "theme-link",
       baseURI: this.selectorInfo.rule.href
     });
@@ -1581,33 +1539,6 @@ SelectorView.prototype = {
     });
   }
 };
-
-/**
- * Create a child element with a set of attributes.
- *
- * @param {Element} aParent
- *        The parent node.
- * @param {string} aTag
- *        The tag name.
- * @param {object} aAttributes
- *        A set of attributes to set on the node.
- */
-function createChild(aParent, aTag, aAttributes={}) {
-  let elt = aParent.ownerDocument.createElementNS(HTML_NS, aTag);
-  for (let attr in aAttributes) {
-    if (aAttributes.hasOwnProperty(attr)) {
-      if (attr === "textContent") {
-        elt.textContent = aAttributes[attr];
-      } else if(attr === "child") {
-        elt.appendChild(aAttributes[attr]);
-      } else {
-        elt.setAttribute(attr, aAttributes[attr]);
-      }
-    }
-  }
-  aParent.appendChild(elt);
-  return elt;
-}
 
 exports.CssHtmlTree = CssHtmlTree;
 exports.PropertyView = PropertyView;
