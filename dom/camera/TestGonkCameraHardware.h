@@ -33,6 +33,7 @@ class TestGonkCameraHardware : public android::GonkCameraHardware
 public:
   virtual nsresult Init() override;
   virtual int AutoFocus() override;
+  virtual int CancelAutoFocus() override;
   virtual int StartFaceDetection() override;
   virtual int StopFaceDetection() override;
   virtual int TakePicture() override;

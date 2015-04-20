@@ -413,6 +413,32 @@ TestGonkCameraHardware::AutoFocus()
 }
 
 int
+TestGonkCameraHardware::CancelAutoFocus()
+{
+  class Delegate : public ControlMessage
+  {
+  public:
+    Delegate(TestGonkCameraHardware* aTestHw)
+      : ControlMessage(aTestHw)
+    { }
+
+  protected:
+    NS_IMETHOD
+    RunImpl() override
+    {
+      return mJSTestWrapper->CancelAutoFocus();
+    }
+  };
+
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+  nsresult rv = WaitWhileRunningOnMainThread(new Delegate(this));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return UNKNOWN_ERROR;
+  }
+  return OK;
+}
+
+int
 TestGonkCameraHardware::StartFaceDetection()
 {
   class Delegate : public ControlMessage

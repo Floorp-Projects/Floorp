@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=940424
+-->
+<head>
+  <title>Bug 940424 - Test camera hardware API failure handling</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940424">Mozilla Bug 940424</a>
+  <video id="viewfinder" width = "200" height = "200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var suite = new CameraTestSuite();
+
+suite.test('take-picture-failures', function() {
+  function startTakePictureProcessError(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        suite.hw.fireTakePictureError();
+      }
+    });
+    return suite.camera.takePicture();
+  }
+
+  function rejectTakePictureProcessError(e) {
+    ok(e.name === 'NS_ERROR_FAILURE', 'takePicture() process should fail: ' + e);
+  }
+
+  function startTakePictureError(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        throw SpecialPowers.Cr.NS_ERROR_FAILURE;
+      }
+    });
+    return suite.camera.takePicture();
+  }
+
+  function rejectTakePictureError(e) {
+    ok(e.name === 'NS_ERROR_FAILURE', 'takePicture() should fail: ' + e);
+  }
+
+  return suite.getCamera()
+    .catch(suite.rejectGetCamera)
+    .then(startTakePictureProcessError)
+    .then(suite.expectedRejectTakePicture, rejectTakePictureProcessError)
+    .then(startTakePictureError)
+    .then(suite.expectedRejectTakePicture, rejectTakePictureError)
+});
+
+suite.test('shutter', function() {
+  function shutter(p) {
+    return new Promise(function(resolve, reject) {
+      function onShutter(e) {
+        ok(true, 'received shutter event');
+        suite.camera.removeEventListener('shutter', onShutter);
+        resolve();
+      }
+      suite.camera.addEventListener('shutter', onShutter);
+      suite.hw.fireShutter();
+    });
+  }
+
+  return suite.getCamera()
+    .then(shutter, suite.rejectGetCamera)
+});
+
+suite.test('take-picture', function() {
+  suite.hw.params['picture-format-values'] = 'jpeg,png';
+  suite.hw.params['picture-format'] = 'jpeg';
+
+  var config = {
+    fileFormat: 'png',
+    latitude: 1.0,
+    longitude: 2.0,
+    altitude: 3.0,
+    timestamp: 4
+  };
+
+  var data = 'this is a test';
+
+  var eventPromise;
+
+  function takePicture(p) {
+    eventPromise = new Promise(function(resolve, reject) {
+      function onPicture(evt) {
+        ok(true, 'got picture event');
+        try {
+          verifyPicture(evt.data);
+        } catch(e) {
+          reject(e);
+        }
+        suite.camera.removeEventListener('picture', onPicture);
+        resolve();
+      }
+      suite.camera.addEventListener('picture', onPicture);
+    });
+
+    suite.hw.attach({
+      takePicture: function() {
+        ok(suite.hw.params['picture-format'] === 'png', "requested format is '" + suite.hw.params['picture-format'] + "'");
+        suite.hw.fireTakePictureComplete(new window.Blob([data], {'type': config.fileFormat}));
+      }
+    });
+
+    return suite.camera.takePicture(config);
+  }
+
+  function verifyPicture(blob) {
+    ok(blob.size == data.length, "picture blob is " + blob.size + " bytes");
+    ok(blob.type === 'image/' + config.fileFormat, "picture blob format is '" + blob.type + "'");
+  }
+
+  function tookPicture(p) {
+    ok(true, 'got picture promise');
+    verifyPicture(p);
+    return eventPromise;
+  }
+
+  return suite.getCamera()
+    .then(takePicture, suite.rejectGetCamera)
+    .then(tookPicture, suite.rejectTakePicture);
+});
+
+suite.test('take-picture-no-config', function() {
+  var data = 'this is a test';
+  var format = 'jpeg';
+
+  suite.hw.params['picture-format-values'] = 'jpeg,png';
+  suite.hw.params['picture-format'] = format;
+
+  function takePicture(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        ok(suite.hw.params['picture-format'] === format, "requested format is '" + suite.hw.params['picture-format'] + "'");
+        suite.hw.fireTakePictureComplete(new window.Blob([data], {'type': format}));
+      }
+    });
+
+    return suite.camera.takePicture();
+  }
+
+  function verifyPicture(blob) {
+    ok(blob.size == data.length, "picture blob is " + blob.size + " bytes");
+    ok(blob.type === 'image/' + format, "picture blob format is '" + blob.type + "'");
+  }
+
+  return suite.getCamera()
+    .then(takePicture, suite.rejectGetCamera)
+    .then(verifyPicture, suite.rejectTakePicture);
+});
+
+suite.setup()
+  .then(suite.run);
+
+</script>
+</body>
+
+</html>

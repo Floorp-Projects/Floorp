@@ -1,0 +1,545 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for camera configuration</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var suite = new CameraTestSuite();
+
+function verifyConfig(cfg, expConfig)
+{
+  ok(cfg.mode === expConfig.mode, "Configured mode = " + cfg.mode +
+     ", expected = " + expConfig.mode);
+  ok(cfg.previewSize.width === expConfig.previewSize.width &&
+     cfg.previewSize.height === expConfig.previewSize.height,
+     "Configured preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height +
+     ", expected = " + expConfig.previewSize.width + "x" + expConfig.previewSize.height);
+  ok(cfg.pictureSize.width === expConfig.pictureSize.width &&
+     cfg.pictureSize.height === expConfig.pictureSize.height,
+     "Configured picture size = " + cfg.pictureSize.width + "x" + cfg.pictureSize.height +
+     ", expected = " + expConfig.pictureSize.width + "x" + expConfig.pictureSize.height);
+  ok(cfg.recorderProfile === expConfig.recorderProfile,
+     "Configured recorder profile = '" + cfg.recorderProfile + "'" +
+     ", expected = '" + expConfig.recorderProfile + "'");
+}
+
+function setAndVerifyConfig(setConfig, expConfig)
+{
+  return suite.getCamera(undefined, setConfig)
+    .catch(suite.rejectGetCamera)
+    .then(function(p) {
+      verifyConfig(p.configuration, expConfig);
+    });
+}
+
+suite.test('bad-initial-config', function() {
+  function getCamera() {
+    var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+    var config = {
+      mode: 'picture',
+      recorderProfile: 'foobar',
+    };
+
+    return navigator.mozCameras.getCamera(whichCamera, config);
+  }
+
+  function rejectGetCamera(error) {
+    ok(error.name === "NS_ERROR_NOT_AVAILABLE",
+      "getCamera() failed with: " + error.name);
+    return Promise.resolve();
+  }
+
+  return getCamera()
+    .then(suite.expectedRejectGetCamera, rejectGetCamera);
+});
+
+suite.test('start-unspecified', function() {
+  // bug 1037322
+  var cameraManager = navigator.mozCameras;
+  var whichCamera = cameraManager.getListOfCameras()[0];
+
+  var postConfig = {
+    mode: 'picture',
+    recorderProfile: 'low',
+    previewSize: {
+      width: 320,
+      height: 240
+    },
+    pictureSize: {
+      width: 320,
+      height: 240
+    }
+  };
+
+  function resolveGetCamera(p) {
+    suite.camera = p.camera;
+
+    // Check the default configuration
+    var cfg = p.configuration;
+    ok(cfg.mode === "unspecified", "Initial mode = " + cfg.mode);
+    ok(cfg.previewSize.width === 0 && cfg.previewSize.height === 0,
+       "Initial preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
+    ok(cfg.recorderProfile === "default",
+       "Initial recorder profile = '" + cfg.recorderProfile + "'");
+  }
+
+  function configure(p) {
+    // Apply our specific configuration
+    return suite.camera.setConfiguration(postConfig);
+  }
+
+  function resolveConfigure(cfg) {
+    // Check our specific configuration
+    verifyConfig(cfg, postConfig);
+  }
+
+  return cameraManager.getCamera(whichCamera, {mode: 'unspecified'})
+    .then(resolveGetCamera, suite.rejectGetCamera)
+    .then(configure)
+    .then(resolveConfigure, suite.rejectConfigure);
+});
+
+suite.test('picture-mode', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '320x240';
+
+  var setConfig = {
+    mode: 'picture',
+    previewSize: {
+      width: 640,
+      height: 480
+    }
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 640,
+      height: 480
+    }
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('picture-mode-larger-picture-size', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '320x240';
+
+  var setConfig = {
+    mode: 'picture',
+    previewSize: {
+      width: 640,
+      height: 480
+    }
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 1280,
+      height: 960
+    }
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('picture-mode-size-unsupported-big', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '320x240';
+
+  var setConfig = {
+    mode: 'picture',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 2000,
+      height: 2000
+    },
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 1280,
+      height: 960
+    },
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('picture-mode-size-unsupported', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,100x100,1x1';
+  suite.hw.params['video-size-values'] = '320x240';
+
+  var setConfig = {
+    mode: 'picture',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 641,
+      height: 481,
+    },
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 640,
+      height: 480
+    },
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('picture-mode-asr-mismatch', function() {
+  suite.hw.params['preview-size'] = '320x240';
+  suite.hw.params['picture-size'] = '640x480';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,50x50';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,100x100';
+  suite.hw.params['video-size-values'] = '320x240';
+
+  var setConfig = {
+    mode: 'picture',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 100,
+      height: 100,
+    },
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 50,
+      height: 50
+    },
+    pictureSize: {
+      width: 100,
+      height: 100,
+    },
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('picture-mode-update-video-size', function() {
+  suite.hw.params['preview-size'] = '320x240';
+  suite.hw.params['picture-size'] = '640x480';
+  suite.hw.params['video-size'] = '50x50';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,50x50';
+  suite.hw.params['video-size-values'] = '1280x960,640x480,320x240,50x50';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,100x100';
+
+  var setConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    },
+    pictureSize: {
+      width: 320,
+      height: 240,
+    },
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    },
+    pictureSize: {
+      width: 320,
+      height: 240,
+    },
+  };
+
+  function checkVideoSize(p) {
+    ok(suite.hw.params['video-size'] === '320x240', 'video size reset with picture mode switch');
+  }
+
+  return setAndVerifyConfig(setConfig, expConfig)
+    .then(checkVideoSize);
+});
+
+suite.test('picture-mode-no-update-video-size', function() {
+  suite.hw.params['preview-size'] = '320x240';
+  suite.hw.params['picture-size'] = '640x480';
+  suite.hw.params['video-size'] = '1280x960';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,50x50';
+  suite.hw.params['video-size-values'] = '1280x960,640x480,320x240,50x50';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,100x100';
+
+  var setConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 640,
+      height: 480,
+    },
+  };
+
+  var expConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
+      width: 640,
+      height: 480,
+    },
+  };
+
+  function checkVideoSize(p) {
+    ok(suite.hw.params['video-size'] === '1280x960', 'video size retained with picture mode switch');
+  }
+
+  return setAndVerifyConfig(setConfig, expConfig)
+    .then(checkVideoSize);
+});
+
+suite.test('video-mode-preview-size', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['recording-hint'] = 'false';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '700x700,640x480,320x240,1x1';
+
+  var setConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga'
+  };
+
+  var expConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    },
+    pictureSize: {
+      width: 700,
+      height: 700
+    }
+  };
+
+  function checkRecordingHint(p) {
+    ok(suite.hw.params['recording-hint'] === 'true', 'recording hint enabled');
+  }
+
+  return setAndVerifyConfig(setConfig, expConfig)
+    .then(checkRecordingHint);
+});
+
+suite.test('video-mode', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['video-size'] = '1x1';
+  suite.hw.params['recording-hint'] = 'false';
+  suite.hw.params['preferred-preview-size-for-video'] = '640x480';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '700x700,640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '700x700,640x480,320x240,1x1';
+
+  var setConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    }
+  };
+
+  var expConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    },
+    pictureSize: {
+      width: 700,
+      height: 700
+    }
+  };
+
+  function checkRecordingHint(p) {
+    ok(suite.hw.params['recording-hint'] === 'true', 'recording hint enabled');
+  }
+
+  return setAndVerifyConfig(setConfig, expConfig)
+    .then(checkRecordingHint);
+});
+
+suite.test('video-mode-larger-preview-size', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['video-size'] = '1x1';
+  suite.hw.params['recording-hint'] = 'false';
+  suite.hw.params['preferred-preview-size-for-video'] = '640x480';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '700x700,640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '700x700,640x480,320x240,1x1';
+
+  var setConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    }
+  };
+
+  var expConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    },
+    pictureSize: {
+      width: 700,
+      height: 700
+    }
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('video-mode-smaller-preview-size', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['video-size'] = '1x1';
+  suite.hw.params['recording-hint'] = 'false';
+  suite.hw.params['preferred-preview-size-for-video'] = '640x480';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,160x120,1x1';
+  suite.hw.params['picture-size-values'] = '700x700,640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '700x700,640x480,320x240,1x1';
+
+  var setConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 160,
+      height: 120
+    }
+  };
+
+  var expConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 160,
+      height: 120
+    },
+    pictureSize: {
+      width: 700,
+      height: 700
+    }
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.test('video-mode-larger-preview-size-than-preferred', function() {
+  suite.hw.params['preview-size'] = '1x1';
+  suite.hw.params['picture-size'] = '1x1';
+  suite.hw.params['video-size'] = '1x1';
+  suite.hw.params['recording-hint'] = 'false';
+  suite.hw.params['preferred-preview-size-for-video'] = '200x200';
+  suite.hw.params['preview-size-values'] = '640x480,320x240,160x120,1x1';
+  suite.hw.params['picture-size-values'] = '700x700,640x480,320x240,1x1';
+  suite.hw.params['video-size-values'] = '700x700,640x480,400x400,320x240,1x1';
+
+  var setConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 320,
+      height: 240
+    }
+  };
+
+  var expConfig = {
+    mode: 'video',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 160,
+      height: 120
+    },
+    pictureSize: {
+      width: 700,
+      height: 700
+    }
+  };
+
+  return setAndVerifyConfig(setConfig, expConfig);
+});
+
+suite.setup()
+  .then(suite.run);
+
+</script>
+</body>
+
+</html>

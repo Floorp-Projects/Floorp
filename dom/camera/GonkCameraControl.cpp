@@ -1255,7 +1255,7 @@ nsGonkCameraControl::StopRecordingImpl()
   class RecordingComplete : public nsRunnable
   {
   public:
-    RecordingComplete(DeviceStorageFile* aFile)
+    RecordingComplete(already_AddRefed<DeviceStorageFile> aFile)
       : mFile(aFile)
     { }
 
@@ -1285,6 +1285,11 @@ nsGonkCameraControl::StopRecordingImpl()
 
   mRecorder->stop();
   mRecorder = nullptr;
+#else
+  if (!mVideoFile) {
+    return NS_OK;
+  }
+#endif
   OnRecorderStateChange(CameraControlListener::kRecorderStopped);
 
   {
@@ -1299,10 +1304,7 @@ nsGonkCameraControl::StopRecordingImpl()
   }
 
   // notify DeviceStorage that the new video file is closed and ready
-  return NS_DispatchToMainThread(new RecordingComplete(mVideoFile));
-#else
-  return NS_OK;
-#endif
+  return NS_DispatchToMainThread(new RecordingComplete(mVideoFile.forget()));
 }
 
 nsresult
