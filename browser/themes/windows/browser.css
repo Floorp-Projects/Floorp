@@ -577,7 +577,7 @@ menuitem.bookmark-item {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/menupanel.inc.css
 
-@media (-moz-windows-theme: luna-silver) {
+@media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
   :-moz-any(@primaryToolbarButtons@),
   #bookmarks-menu-button.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");

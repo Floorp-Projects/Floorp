@@ -958,8 +958,10 @@ nsDOMCameraControl::TakePicture(const CameraPictureOptions& aOptions,
     if (s.width && s.height) {
       mCameraControl->Set(CAMERA_PARAM_PICTURE_SIZE, s);
     }
+    if (!aOptions.mFileFormat.IsEmpty()) {
+      mCameraControl->Set(CAMERA_PARAM_PICTURE_FILEFORMAT, aOptions.mFileFormat);
+    }
     mCameraControl->Set(CAMERA_PARAM_PICTURE_ROTATION, aOptions.mRotation);
-    mCameraControl->Set(CAMERA_PARAM_PICTURE_FILEFORMAT, aOptions.mFileFormat);
     mCameraControl->Set(CAMERA_PARAM_PICTURE_DATETIME, aOptions.mDateTime);
     mCameraControl->SetLocation(p);
   }

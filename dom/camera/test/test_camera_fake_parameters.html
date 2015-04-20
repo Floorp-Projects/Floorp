@@ -132,6 +132,133 @@ suite.test('fake-low-memory-platform', function() {
     .then(resolve, suite.rejectGetCamera);
 });
 
+suite.test('fake-effects', function() {
+  var supportedValues = ['none', 'mono', 'negative', 'solarize', 'sepia', 'posterize', 'whiteboard', 'blackboard', 'aqua'];
+  suite.hw.params['effect'] = 'none';
+  suite.hw.params['effect-values'] = supportedValues.join(',');
+
+  function resolve(p) {
+    var cap = suite.camera.capabilities;
+    ok(cap.effects.length == supportedValues.length, "Effects length = " + cap.effects.length);
+
+    // make sure expected values are present
+    supportedValues.forEach(function(val) {
+      ok(cap.effects.indexOf(val) != -1, "Effect '" + val + "' is present");
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-flash-modes', function() {
+  var supportedValues = ['off', 'auto', 'on', 'red-eye', 'torch'];
+  suite.hw.params['flash-mode'] = 'auto';
+  suite.hw.params['flash-mode-values'] = supportedValues.join(',');
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.flashModes.length == supportedValues.length, "Flash modes length = " + cap.flashModes.length);
+
+    // make sure expected values are present
+    supportedValues.forEach(function(val) {
+      ok(cap.flashModes.indexOf(val) != -1, "Flash mode '" + val + "' is present");
+    });
+
+    // test setters/getters
+    cap.flashModes.forEach(function(val, index) {
+      cam.flashMode = val;
+      ok(cam.flashMode === val,
+        "Flash Mode [" + index + "] = " + val + ", cam.flashMode = " + cam.flashMode);
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-focus-modes', function() {
+  var supportedValues = ['auto', 'infinity', 'macro', 'fixed', 'edof', 'continuous-video'];
+  suite.hw.params['focus-mode'] = 'auto';
+  suite.hw.params['focus-mode-values'] = supportedValues.join(',');
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.focusModes.length == supportedValues.length, "Focus modes length = " + cap.focusModes.length);
+
+    // make sure expected values are present
+    supportedValues.forEach(function(val) {
+      ok(cap.focusModes.indexOf(val) != -1, "Focus mode '" + val + "' is present");
+    });
+
+    // test setters/getters
+    cap.focusModes.forEach(function(val, index) {
+      cam.focusMode = val;
+      ok(cam.focusMode === val,
+        "Focus Mode [" + index + "] = " + val + ", cam.focusMode = " + cam.focusMode);
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-white-balance-modes', function() {
+  var supportedValues = ['auto', 'incandescent', 'fluorescent', 'warm-fluorescent', 'daylight', 'cloudy-daylight', 'twilight', 'shade'];
+  suite.hw.params['whitebalance'] = 'auto';
+  suite.hw.params['whitebalance-values'] = supportedValues.join(',');
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.whiteBalanceModes.length == supportedValues.length, "White balance modes length = " + cap.whiteBalanceModes.length);
+
+    // make sure expected values are present
+    supportedValues.forEach(function(val) {
+      ok(cap.whiteBalanceModes.indexOf(val) != -1, "White balance mode '" + val + "' is present");
+    });
+
+    // test setters/getters
+    cap.whiteBalanceModes.forEach(function(val, index) {
+      cam.whiteBalanceMode = val;
+      ok(cam.whiteBalanceMode === val,
+	"White balance mode [" + index + "] = " + val + ", cam.whiteBalanceMode = " + cam.whiteBalanceMode);
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-video-sizes', function() {
+  var supportedValues = ['auto', 'incandescent', 'fluorescent', 'warm-fluorescent', 'daylight', 'cloudy-daylight', 'twilight', 'shade'];
+  suite.hw.params['whitebalance'] = 'auto';
+  suite.hw.params['whitebalance-values'] = supportedValues.join(',');
+
+  function resolve(p) {
+    var cam = suite.camera;
+    var cap = cam.capabilities;
+    ok(cap.whiteBalanceModes.length == supportedValues.length, "White balance modes length = " + cap.whiteBalanceModes.length);
+
+    // make sure expected values are present
+    supportedValues.forEach(function(val) {
+      ok(cap.whiteBalanceModes.indexOf(val) != -1, "White balance mode '" + val + "' is present");
+    });
+
+    // test setters/getters
+    cap.whiteBalanceModes.forEach(function(val, index) {
+      cam.whiteBalanceMode = val;
+      ok(cam.whiteBalanceMode === val,
+	"White balance mode [" + index + "] = " + val + ", cam.whiteBalanceMode = " + cam.whiteBalanceMode);
+    });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
 suite.test('fake-iso', function() {
   suite.hw.params['iso'] = 'auto';
   suite.hw.params['iso-values'] = 'auto,ISO_HJR,ISO100,foo,ISObar,ISO150moz,ISO200,400,ISO800,1600';
@@ -158,10 +285,23 @@ suite.test('fake-iso', function() {
 
     // test setters/getters for individual ISO modes
     cap.isoModes.forEach(function(iso, index) {
-      cam.iso = iso;
-      ok(cam.iso === iso,
-        "ISO[" + index + "] = " + iso + ", cam.iso = " + cam.iso);
+      cam.isoMode = iso;
+      ok(cam.isoMode === iso,
+        "ISO[" + index + "] = " + iso + ", cam.iso = " + cam.isoMode);
     });
+  }
+
+  return suite.getCamera()
+    .then(resolve, suite.rejectGetCamera);
+});
+
+suite.test('fake-faces-detected', function() {
+  suite.hw.params['max-num-detected-faces-hw'] = '5';
+
+  function resolve(p) {
+    var cap = suite.camera.capabilities;
+
+    ok(cap.maxDetectedFaces == 5, "maxDetectedFaces = " + cap.maxDetectedFaces);
   }
 
   return suite.getCamera()
