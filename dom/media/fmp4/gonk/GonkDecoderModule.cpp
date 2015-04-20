@@ -61,4 +61,12 @@ GonkDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
   }
 }
 
+bool
+GonkDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+{
+  return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+    aMimeType.EqualsLiteral("video/mp4") ||
+    aMimeType.EqualsLiteral("video/mp4v-es") ||
+    aMimeType.EqualsLiteral("video/avc");
+}
 } // namespace mozilla

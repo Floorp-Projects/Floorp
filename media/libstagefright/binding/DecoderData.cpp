@@ -166,6 +166,19 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
   mImage.height = FindInt32(aMetaData, kKeyHeight);
 
   FindData(aMetaData, kKeyAVCC, mExtraData);
+  if (!mExtraData->Length()) {
+    if (FindData(aMetaData, kKeyESDS, mExtraData)) {
+      ESDS esds(mExtraData->Elements(), mExtraData->Length());
+
+      const void* data;
+      size_t size;
+      if (esds.getCodecSpecificInfo(&data, &size) == OK) {
+        const uint8_t* cdata = reinterpret_cast<const uint8_t*>(data);
+        mCodecSpecificConfig->AppendElements(cdata, size);
+      }
+    }
+  }
+
 }
 
 bool
