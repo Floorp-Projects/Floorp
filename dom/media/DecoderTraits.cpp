@@ -354,12 +354,16 @@ IsMP4SupportedType(const nsACString& aType,
 // For other normal MP4, it still uses current omx decoder.
 // Bug 1061034 is a follow-up bug to enable all MP4s with MOZ_FMP4
 #ifdef MOZ_OMX_DECODER
-  return false;
-#else
+  // Use MP4Decoder when blank-decoder is enabled so that we can run EME
+  // mochitests on B2G platforms. This will be removed once bug 1146729 is
+  // fixed when we don't need blank-decoder to play mp4 on B2G.
+  if (!Preferences::GetBool("media.fragmented-mp4.use-blank-decoder", false)) {
+    return false;
+  }
+#endif
   bool haveAAC, haveMP3, haveH264;
   return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
          MP4Decoder::CanHandleMediaType(aType, aCodecs, haveAAC, haveH264, haveMP3);
-#endif
 }
 #endif
 
