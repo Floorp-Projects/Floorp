@@ -44,13 +44,13 @@ async_test(function(t) {
   var animation = div.getAnimations()[0];
 
   var originalReadyPromise = animation.ready;
-  animation.ready.then(function() {
+  animation.ready.then(t.step_func(function() {
     div.style.animationPlayState = 'running';
     assert_not_equals(animation.ready, originalReadyPromise,
                       'After updating animation-play-state a new ready promise'
                       + ' object is created');
     t.done();
-  });
+  }));
 }, 'A new ready promise is created when setting animation-play-state: running');
 
 async_test(function(t) {
@@ -58,14 +58,14 @@ async_test(function(t) {
   div.style.animation = 'abc 100s';
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(function() {
+  animation.ready.then(t.step_func(function() {
     var promiseBeforeCallingPlay = animation.ready;
     animation.play();
     assert_equals(animation.ready, promiseBeforeCallingPlay,
                   'Ready promise has same object identity after redundant call'
                   + ' to play()');
     t.done();
-  });
+  }));
 }, 'Redundant calls to play() do not generate new ready promise objects');
 
 async_test(function(t) {
@@ -73,12 +73,12 @@ async_test(function(t) {
   div.style.animation = 'abc 100s';
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(function(resolvedAnimation) {
+  animation.ready.then(t.step_func(function(resolvedAnimation) {
     assert_equals(resolvedAnimation, animation,
                   'Object identity of Animation passed to Promise callback'
                   + ' matches the Animation object owning the Promise');
     t.done();
-  });
+  }));
 }, 'The ready promise is fulfilled with its Animation');
 
 async_test(function(t) {

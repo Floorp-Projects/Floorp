@@ -251,11 +251,11 @@ async_test(function(t) {
     return animation.ready;
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
-  })).then(function() {
+  })).then(t.step_func(function() {
     assert_equals(animation.currentTime, storedCurrentTime,
       'Test that hold time is correct');
     t.done();
-  });
+  }));
 }, 'Setting startTime to null');
 
 
