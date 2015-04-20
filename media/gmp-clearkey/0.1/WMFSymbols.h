@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-MFPLAT_FUNC(MFCreateSample);
-MFPLAT_FUNC(MFCreateAlignedMemoryBuffer);
-MFPLAT_FUNC(MFGetStrideForBitmapInfoHeader);
-MFPLAT_FUNC(MFCreateMediaType);
+MFPLAT_FUNC(MFCreateSample, "mfplat.dll");
+MFPLAT_FUNC(MFCreateAlignedMemoryBuffer, "mfplat.dll");
+MFPLAT_FUNC(MFGetStrideForBitmapInfoHeader, "evr.dll");
+MFPLAT_FUNC(MFCreateMediaType, "mfplat.dll");
