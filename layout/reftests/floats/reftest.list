@@ -35,7 +35,3 @@ fails == 345369-2.html 345369-2-ref.html
 == float-in-rtl-4b.html float-in-rtl-4-ref.html
 == float-in-rtl-4c.html float-in-rtl-4-ref.html
 == float-in-rtl-4d.html float-in-rtl-4-ref.html
-fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
-== orthogonal-floats-1b.html orthogonal-floats-1-ref.html
-fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
-fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
