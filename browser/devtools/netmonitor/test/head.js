@@ -275,6 +275,7 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   let name = uri.fileName || "/";
   let query = uri.query;
   let hostPort = uri.hostPort;
+  let remoteAddress = attachment.remoteAddress;
 
   if (fuzzyUrl) {
     ok(attachment.method.startsWith(aMethod), "The attached method is incorrect.");
@@ -301,8 +302,10 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
 
   is(target.querySelector(".requests-menu-domain").getAttribute("value"),
     hostPort, "The displayed domain is incorrect.");
+
+  let domainTooltip = hostPort + (remoteAddress ? " (" + remoteAddress + ")" : "");
   is(target.querySelector(".requests-menu-domain").getAttribute("tooltiptext"),
-    hostPort, "The tooltip domain is incorrect.");
+    domainTooltip, "The tooltip domain is incorrect.");
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-menu-status").getAttribute("code");

@@ -1230,6 +1230,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
             break;
           case "remoteAddress":
             requestItem.attachment.remoteAddress = value;
+            this.updateMenuView(requestItem, key, value);
             break;
           case "remotePort":
             requestItem.attachment.remotePort = value;
@@ -1382,6 +1383,11 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         domain.setAttribute("tooltiptext", hostPort);
         break;
       }
+      case "remoteAddress":
+        let domain = $(".requests-menu-domain", target);
+        let tooltip = domain.getAttribute("value") + " (" + aValue + ")";
+        domain.setAttribute("tooltiptext", tooltip);
+        break;
       case "securityState": {
         let tooltip = L10N.getStr("netmonitor.security.state." + aValue);
         let icon = $(".requests-security-state-icon", target);
