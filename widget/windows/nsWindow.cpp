@@ -6553,7 +6553,7 @@ nsWindow::IsPopup()
   return mWindowType == eWindowType_popup;
 }
 
-+bool
+bool
 nsWindow::ShouldUseOffMainThreadCompositing()
 {
   // We don't currently support using an accelerated layer manager with
