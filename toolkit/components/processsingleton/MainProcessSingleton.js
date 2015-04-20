@@ -12,13 +12,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
-// Temporary workaround for bug 1141661
-function convertURL(url) {
-  let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                       getService(Ci.nsIChromeRegistry);
-  return chromeRegistry.convertChromeURL(Services.io.newURI(url, null, null)).spec;
-}
-
 function MainProcessSingleton() {}
 MainProcessSingleton.prototype = {
   classID: Components.ID("{0636a680-45cb-11e4-916c-0800200c9a66}"),
@@ -85,7 +78,7 @@ MainProcessSingleton.prototype = {
       // Load this script early so that console.* is initialized
       // before other frame scripts.
       Services.mm.loadFrameScript("chrome://global/content/browser-content.js", true);
-      Services.ppmm.loadProcessScript(convertURL("chrome://global/content/process-content.js"), true);
+      Services.ppmm.loadProcessScript("chrome://global/content/process-content.js", true);
       Services.ppmm.addMessageListener("Console:Log", this.logConsoleMessage);
       Services.mm.addMessageListener("Search:AddEngine", this.addSearchEngine);
       break;
