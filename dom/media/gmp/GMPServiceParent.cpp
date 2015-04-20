@@ -584,11 +584,9 @@ GeckoMediaPluginServiceParent::SelectPluginForAPI(const nsACString& aNodeId,
         return gmp;
       }
 
-      if (!gmp->IsMarkedForDeletion()) {
-        // This GMP has the correct type but has the wrong nodeId; hold on to it
-        // in case we need to clone it.
-        gmpToClone = gmp;
-      }
+      // This GMP has the correct type but has the wrong nodeId; hold on to it
+      // in case we need to clone it.
+      gmpToClone = gmp;
       // Loop around and try the next plugin; it may be usable from aNodeId.
       index++;
     }
@@ -667,23 +665,21 @@ GeckoMediaPluginServiceParent::ClonePlugin(const GMPParent* aOriginal)
 
 class NotifyObserversTask final : public nsRunnable {
 public:
-  explicit NotifyObserversTask(const char* aTopic, nsString aData = EmptyString())
+  explicit NotifyObserversTask(const char* aTopic)
     : mTopic(aTopic)
-    , mData(aData)
   {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
     MOZ_ASSERT(obsService);
     if (obsService) {
-      obsService->NotifyObservers(nullptr, mTopic, mData.get());
+      obsService->NotifyObservers(nullptr, mTopic, nullptr);
     }
     return NS_OK;
   }
 private:
   ~NotifyObserversTask() {}
   const char* mTopic;
-  const nsString mData;
 };
 
 void
@@ -733,7 +729,6 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     return;
   }
 
-  bool inUse = false;
   MutexAutoLock lock(mMutex);
   for (size_t i = mPlugins.Length() - 1; i < mPlugins.Length(); i--) {
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
@@ -746,7 +741,6 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     if (aDeleteFromDisk && gmp->State() != GMPStateNotLoaded) {
       // We have to wait for the child process to release its lib handle
       // before we can delete the GMP.
-      inUse = true;
       gmp->MarkForDeletion();
 
       if (!mPluginsWaitingForDeletion.Contains(aDirectory)) {
@@ -762,12 +756,9 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     }
   }
 
-  if (aDeleteFromDisk && !inUse) {
+  if (aDeleteFromDisk) {
     if (NS_SUCCEEDED(directory->Remove(true))) {
       mPluginsWaitingForDeletion.RemoveElement(aDirectory);
-      NS_DispatchToMainThread(new NotifyObserversTask("gmp-directory-deleted",
-                                                      nsString(aDirectory)),
-                              NS_DISPATCH_NORMAL);
     }
   }
 }
