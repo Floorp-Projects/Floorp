@@ -1875,3 +1875,4 @@ fuzzy-if(d2d,36,304) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fa
 skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html
+== 1156129-1.html 1156129-1-ref.html
