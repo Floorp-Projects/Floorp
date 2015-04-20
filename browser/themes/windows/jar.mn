@@ -84,9 +84,6 @@ browser.jar:
         skin/classic/browser/pointerLock-64.png
         skin/classic/browser/Privacy-16.png
         skin/classic/browser/Privacy-16-XP.png
-        skin/classic/browser/Privacy-32.png
-        skin/classic/browser/Privacy-32-XP.png
-        skin/classic/browser/Privacy-48.png
         skin/classic/browser/privatebrowsing-mask-tabstrip.png
         skin/classic/browser/privatebrowsing-mask-tabstrip-XPVista7.png
         skin/classic/browser/privatebrowsing-mask-titlebar.png
@@ -541,7 +538,6 @@ browser.jar:
 % override chrome://browser/skin/menu-forward.png                     chrome://browser/skin/menu-forward-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/pageInfo.png                         chrome://browser/skin/pageInfo-XP.png                             os=WINNT osversion<6
 % override chrome://browser/skin/Privacy-16.png                       chrome://browser/skin/Privacy-16-XP.png                           os=WINNT osversion<6
-% override chrome://browser/skin/Privacy-32.png                       chrome://browser/skin/Privacy-32-XP.png                           os=WINNT osversion<6
 % override chrome://browser/skin/searchbar-dropdown-arrow.png         chrome://browser/skin/searchbar-dropdown-arrow-XP.png             os=WINNT osversion<6
 % override chrome://browser/skin/Secure24.png                         chrome://browser/skin/Secure24-XP.png                             os=WINNT osversion<6
 % override chrome://browser/skin/downloads/buttons.png                chrome://browser/skin/downloads/buttons-XP.png                    os=WINNT osversion<6

@@ -5,6 +5,7 @@ const HAWK_TOKEN_LENGTH = 64;
 const {
   LOOP_SESSION_TYPE,
   MozLoopServiceInternal,
+  MozLoopService,
 } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 const {LoopCalls} = Cu.import("resource:///modules/loop/LoopCalls.jsm", {});
 const {LoopRooms} = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
