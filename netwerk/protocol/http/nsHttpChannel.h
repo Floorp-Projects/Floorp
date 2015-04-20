@@ -33,14 +33,6 @@ class nsISSLStatus;
 namespace mozilla { namespace net {
 
 class Http2PushedStream;
-
-class HttpChannelSecurityWarningReporter
-{
-public:
-  virtual nsresult ReportSecurityMessage(const nsAString& aMessageTag,
-                                         const nsAString& aMessageCategory) = 0;
-};
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel
 //-----------------------------------------------------------------------------
@@ -148,12 +140,6 @@ public:
     NS_IMETHOD GetRequestStart(mozilla::TimeStamp *aRequestStart) override;
     NS_IMETHOD GetResponseStart(mozilla::TimeStamp *aResponseStart) override;
     NS_IMETHOD GetResponseEnd(mozilla::TimeStamp *aResponseEnd) override;
-
-    nsresult AddSecurityMessage(const nsAString& aMessageTag,
-                                const nsAString& aMessageCategory) override;
-
-    void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter)
-      { mWarningReporter = aReporter; }
 
 public: /* internal necko use only */
 
@@ -490,9 +476,6 @@ private:
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
 
     nsCString mUsername;
-
-    // If non-null, warnings should be reported to this object.
-    HttpChannelSecurityWarningReporter* mWarningReporter;
 
 protected:
     virtual void DoNotifyListenerCleanup() override;

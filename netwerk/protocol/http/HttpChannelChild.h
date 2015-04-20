@@ -140,9 +140,6 @@ protected:
   bool RecvDivertMessages() override;
   bool RecvDeleteSelf() override;
 
-  bool RecvReportSecurityMessage(const nsString& messageTag,
-                                 const nsString& messageCategory) override;
-
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
 

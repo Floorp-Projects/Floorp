@@ -991,14 +991,6 @@ HttpChannelChild::DeleteSelf()
   Send__delete__(this);
 }
 
-bool
-HttpChannelChild::RecvReportSecurityMessage(const nsString& messageTag,
-                                            const nsString& messageCategory)
-{
-  AddSecurityMessage(messageTag, messageCategory);
-  return true;
-}
-
 class Redirect1Event : public ChannelEvent
 {
  public:
