@@ -87,41 +87,47 @@ TelephonyCallGroup::ChangeState(uint16_t aCallState)
   if (mCallState == aCallState) {
     return;
   }
+  // Update the internal state.
+  mCallState = aCallState;
 
-  nsString stateString;
+  // Indicate whether the external state should be changed.
+  bool externalStateChanged = true;
   switch (aCallState) {
+    // These states are used internally to mark this CallGroup is currently
+    // being controlled, and we should block consecutive requests of the same
+    // type according to these states.
+    case nsITelephonyService::CALL_STATE_HOLDING:
+    case nsITelephonyService::CALL_STATE_RESUMING:
+      externalStateChanged = false;
+      break;
+    // These states will be translated into literal strings which are used to
+    // show the current status of this CallGroup.
     case nsITelephonyService::CALL_STATE_UNKNOWN:
+      mState.AssignLiteral("");
       break;
     case nsITelephonyService::CALL_STATE_CONNECTED:
-      stateString.AssignLiteral("connected");
-      break;
-    case nsITelephonyService::CALL_STATE_HOLDING:
-      stateString.AssignLiteral("holding");
+      mState.AssignLiteral("connected");
       break;
     case nsITelephonyService::CALL_STATE_HELD:
-      stateString.AssignLiteral("held");
-      break;
-    case nsITelephonyService::CALL_STATE_RESUMING:
-      stateString.AssignLiteral("resuming");
+      mState.AssignLiteral("held");
       break;
     default:
       NS_NOTREACHED("Unknown state!");
   }
 
-  mState = stateString;
-  mCallState = aCallState;
-
-  nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("statechange"), nullptr);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch specific event!");
-  }
-  if (!stateString.IsEmpty()) {
-    // This can change if the statechange handler called back here... Need to
-    // figure out something smarter.
-    if (mCallState == aCallState) {
-      rv = DispatchCallEvent(stateString, nullptr);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to dispatch specific event!");
+  if (externalStateChanged) {
+    nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("statechange"), nullptr);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch specific event!");
+    }
+    if (!mState.IsEmpty()) {
+      // This can change if the statechange handler called back here... Need to
+      // figure out something smarter.
+      if (mCallState == aCallState) {
+        rv = DispatchCallEvent(mState, nullptr);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Failed to dispatch specific event!");
+        }
       }
     }
   }
