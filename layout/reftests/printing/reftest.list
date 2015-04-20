@@ -32,4 +32,4 @@ skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,1,5000) == 745025-1.html 745025-1-ref.h
 random-if((B2G&&browserIsRemote)||Mulet) == 960822.html 960822-ref.html # reftest-print doesn't work on B2G (scrollbar difference only) # Initial mulet triage: parity with B2G/B2G Desktop
 == 966419-1.html 966419-1-ref.html
 == 966419-2.html 966419-2-ref.html
-# skip-if(B2G||Mulet) asserts(3) HTTP(..) == 1108104.html 1108104-ref.html # bug 1067755, 1135556 # Initial mulet triage: parity with B2G/B2G Desktop
+# skip-if(B2G||Mulet) asserts(3) HTTP(..) fails 1108104.html 1108104-ref.html # bug 1067755, 1135556 # Initial mulet triage: parity with B2G/B2G Desktop
