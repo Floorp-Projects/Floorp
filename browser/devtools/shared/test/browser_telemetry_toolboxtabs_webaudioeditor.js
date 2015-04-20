@@ -13,22 +13,14 @@ add_task(function*() {
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
 
   yield promiseTab(TEST_URI);
-
-  startTelemetry();
+  let Telemetry = loadTelemetryAndRecordLogs();
 
   yield openAndCloseToolbox(2, TOOL_DELAY, "webaudioeditor");
-  checkResults();
+  checkTelemetryResults(Telemetry);
 
+  stopRecordingTelemetryLogs(Telemetry);
   gBrowser.removeCurrentTab();
 
   info("De-activating the webaudioeditor");
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", originalPref);
 });
-
-function checkResults() {
-  // For help generating these tests use generateTelemetryTests("DEVTOOLS_")
-  // here.
-  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_OPENED_BOOLEAN", [0,2,0]);
-  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_OPENED_PER_USER_FLAG", [0,1,0]);
-  checkTelemetry("DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS", null, "hasentries");
-}
