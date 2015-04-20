@@ -6,6 +6,7 @@
 
 Cu.import("resource://services-common/logmanager.js");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 function run_test() {
   run_next_test();
@@ -100,4 +101,35 @@ add_task(function* test_SharedLogs() {
 
   lm1.finalize();
   lm2.finalize();
+});
+
+// A little helper to test what log files exist.  We expect exactly zero (if
+// prefix is null) or exactly one with the specified prefix.
+function checkLogFile(prefix) {
+  let logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
+  let entries = logsdir.directoryEntries;
+  if (!prefix) {
+    // expecting no files.
+    ok(!entries.hasMoreElements());
+  } else {
+    // expecting 1 file.
+    ok(entries.hasMoreElements());
+    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+    equal(logfile.leafName.slice(-4), ".txt");
+    ok(logfile.leafName.startsWith(prefix + "-test-"), logfile.leafName);
+    // and remove it ready for the next check.
+    logfile.remove(false);
+  }
+}
+
+// Test that we correctly write error logs by default
+add_task(function* test_logFileErrorDefault() {
+  let lm = new LogManager("log-manager.test.", ["TestLog2"], "test");
+
+  let log = Log.repository.getLogger("TestLog2");
+  log.error("an error message");
+  yield lm.resetFileLog(lm.REASON_ERROR);
+  // One error log file exists.
+  checkLogFile("error");
+  lm.finalize();
 });

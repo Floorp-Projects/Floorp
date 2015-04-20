@@ -142,20 +142,23 @@ LogManager.prototype = {
     this._prefs = null;
   },
 
-  get _logFileDirectory() {
-    // At this point we don't allow a custom directory for the logs so
-    // about:sync-log can be used. We could fix this later if necessary.
-    return FileUtils.getDir("ProfD", ["weave", "logs"]);
+  get _logFileSubDirectoryEntries() {
+    // At this point we don't allow a custom directory for the logs, nor allow
+    // it to be outside the profile directory.
+    // This returns an array of the the relative directory entries below the
+    // profile dir, and is the directory about:sync-log uses.
+    return ["weave", "logs"];
   },
 
   /**
    * Copy an input stream to the named file, doing everything off the main
    * thread.
-   * outputFile is an nsIFile, but is used only for the name.
-   * Returns a promise that is resolved with the file modification date on
-   * completion or rejected if there is an error.
+   * outputFileName is a string with the tail of the filename - the file will
+   * be created in the log directory.
+   * Returns a promise that is resolved<undefined> on completion or rejected if
+   * there is an error.
    */
-  _copyStreamToFile: Task.async(function* (inputStream, outputFile) {
+  _copyStreamToFile: Task.async(function* (inputStream, outputFileName) {
     // The log data could be large, so we don't want to pass it all in a single
     // message, so use BUFFER_SIZE chunks.
     const BUFFER_SIZE = 8192;
@@ -163,7 +166,11 @@ LogManager.prototype = {
     // get a binary stream
     let binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(Ci.nsIBinaryInputStream);
     binaryStream.setInputStream(inputStream);
-    yield OS.File.makeDir(outputFile.parent.path, { ignoreExisting: true });
+    // We assume the profile directory exists, but not that the dirs under it do.
+    let profd = FileUtils.getDir("ProfD", []);
+    let outputFile = FileUtils.getDir("ProfD", this._logFileSubDirectoryEntries);
+    yield OS.File.makeDir(outputFile.path, { ignoreExisting: true, from: profd.path });
+    outputFile.append(outputFileName);
     let output = yield OS.File.open(outputFile.path, { write: true} );
     try {
       while (true) {
@@ -221,12 +228,10 @@ LogManager.prototype = {
         // We have reasonPrefix at the start of the filename so all "error"
         // logs are grouped in about:sync-log.
         let filename = reasonPrefix + "-" + this.logFilePrefix + "-" + Date.now() + ".txt";
-        let file = this._logFileDirectory;
-        file.append(filename);
-        this._log.trace("Beginning stream copy to " + file.leafName + ": " +
+        this._log.trace("Beginning stream copy to " + filename + ": " +
                         Date.now());
         try {
-          yield this._copyStreamToFile(inStream, file);
+          yield this._copyStreamToFile(inStream, filename);
           this._log.trace("onCopyComplete", Date.now());
         } catch (ex) {
           this._log.error("Failed to copy log stream to file", ex);
@@ -256,7 +261,8 @@ LogManager.prototype = {
    */
   cleanupLogs: Task.async(function* () {
     this._cleaningUpFileLogs = true;
-    let iterator = new OS.File.DirectoryIterator(this._logFileDirectory.path);
+    let logDir = FileUtils.getDir("ProfD", this._logFileSubDirectoryEntries);
+    let iterator = new OS.File.DirectoryIterator(logDir.path);
     let maxAge = this._prefs.get("log.appender.file.maxErrorAge", DEFAULT_MAX_ERROR_AGE);
     let threshold = Date.now() - 1000 * maxAge;
 
