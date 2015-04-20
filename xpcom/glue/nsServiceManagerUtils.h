@@ -34,7 +34,7 @@ do_GetService(const char* aContractID, nsresult* aError)
   return nsGetServiceByContractIDWithError(aContractID, aError);
 }
 
-class MOZ_STACK_CLASS nsGetServiceFromCategory : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsGetServiceFromCategory final : public nsCOMPtr_helper
 {
 public:
   nsGetServiceFromCategory(const char* aCategory, const char* aEntry,
