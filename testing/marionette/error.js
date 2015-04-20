@@ -4,16 +4,14 @@
 
 "use strict";
 
-const {results: Cr, utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 const errors = [
-  "ElementNotAccessibleError",
   "ElementNotVisibleError",
   "FrameSendFailureError",
   "FrameSendNotInitializedError",
   "IllegalArgumentError",
   "InvalidElementStateError",
-  "InvalidSelectorError",
   "JavaScriptError",
   "NoAlertOpenError",
   "NoSuchElementError",
@@ -21,7 +19,6 @@ const errors = [
   "NoSuchWindowError",
   "ScriptTimeoutError",
   "SessionNotCreatedError",
-  "StaleElementReferenceError",
   "TimeoutError",
   "UnknownCommandError",
   "UnknownError",
@@ -30,26 +27,6 @@ const errors = [
 ];
 
 this.EXPORTED_SYMBOLS = ["error"].concat(errors);
-
-// Because XPCOM is a cesspool of undocumented odd behaviour,
-// Object.getPrototypeOf(err) causes another exception if err is an XPCOM
-// exception, and cannot be used to determine if err is a prototypal Error.
-//
-// Consequently we need to check for properties in its prototypal chain
-// (using in, instead of err.hasOwnProperty because that causes other
-// issues).
-//
-// Since the input is arbitrary it might _not_ be an Error, and can as
-// such be an object with a "result" property without it being considered to
-// be an exception.  The solution is to build a lookup table of XPCOM
-// exceptions from Components.results and check if the value of err#results
-// is in that table.
-const XPCOM_EXCEPTIONS = [];
-{
-  for (let prop in Cr) {
-    XPCOM_EXCEPTIONS.push(Cr[prop]);
-  }
-}
 
 this.error = {};
 
@@ -60,6 +37,11 @@ error.toJSON = function(err) {
     status: err.code
   };
 };
+
+/**
+ * Gets WebDriver error by its Selenium status code number.
+ */
+error.byCode = n => lookup.get(n);
 
 /**
  * Determines if the given status code is successful.
@@ -83,19 +65,18 @@ let isOldStyleError = function(obj) {
  * Prefer using this over using instanceof since the Error prototype
  * isn't unique across browsers, and XPCOM exceptions are special
  * snowflakes.
- *
- * @param {*} val
- *     Any value that should be undergo the test for errorness.
- * @return {boolean}
- *     True if error, false otherwise.
  */
-error.isError = function(val) {
-  if (val === null || typeof val != "object") {
+error.isError = function(obj) {
+  if (obj === null || typeof obj != "object") {
     return false;
-  } else if ("result" in val && val.result in XPCOM_EXCEPTIONS) {
+  // XPCOM exception.
+  // Object.getPrototypeOf(obj).result throws error,
+  // consequently we must do the check for properties in its
+  // prototypal chain (using in, instead of obj.hasOwnProperty) here.
+  } else if ("result" in obj) {
     return true;
   } else {
-    return Object.getPrototypeOf(val) == "Error" || isOldStyleError(val);
+    return Object.getPrototypeOf(obj) == "Error" || isOldStyleError(obj);
   }
 };
 
@@ -149,14 +130,6 @@ this.WebDriverError = function(msg) {
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
-this.ElementNotAccessibleError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "ElementNotAccessibleError";
-  this.status = "element not accessible";
-  this.code = 56;
-};
-ElementNotAccessibleError.prototype = Object.create(WebDriverError.prototype);
-
 this.ElementNotVisibleError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "ElementNotVisibleError";
@@ -202,14 +175,6 @@ this.InvalidElementStateError = function(msg) {
   this.code = 12;
 };
 InvalidElementStateError.prototype = Object.create(WebDriverError.prototype);
-
-this.InvalidSelectorError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "InvalidSelectorError";
-  this.status = "invalid selector";
-  this.code = 32;
-};
-InvalidSelectorError.prototype = Object.create(WebDriverError.prototype);
 
 /**
  * Creates an error message for a JavaScript error thrown during
@@ -305,16 +270,8 @@ this.SessionNotCreatedError = function(msg) {
   this.status = "session not created";
   // should be 33 to match Selenium
   this.code = 71;
-};
+}
 SessionNotCreatedError.prototype = Object.create(WebDriverError.prototype);
-
-this.StaleElementReferenceError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "StaleElementReferenceError";
-  this.status = "stale element reference";
-  this.code = 10;
-};
-StaleElementReferenceError.prototype = Object.create(WebDriverError.prototype);
 
 this.TimeoutError = function(msg) {
   WebDriverError.call(this, msg);
@@ -347,3 +304,24 @@ this.UnsupportedOperationError = function(msg) {
   this.code = 405;
 };
 UnsupportedOperationError.prototype = Object.create(WebDriverError.prototype);
+
+const errorObjs = [
+  this.ElementNotVisibleError,
+  this.FrameSendFailureError,
+  this.FrameSendNotInitializedError,
+  this.IllegalArgumentError,
+  this.InvalidElementStateError,
+  this.JavaScriptError,
+  this.NoAlertOpenError,
+  this.NoSuchElementError,
+  this.NoSuchFrameError,
+  this.NoSuchWindowError,
+  this.ScriptTimeoutError,
+  this.SessionNotCreatedError,
+  this.TimeoutError,
+  this.UnknownCommandError,
+  this.UnknownError,
+  this.UnsupportedOperationError,
+  this.WebDriverError,
+];
+const lookup = new Map(errorObjs.map(err => [new err().code, err]));
