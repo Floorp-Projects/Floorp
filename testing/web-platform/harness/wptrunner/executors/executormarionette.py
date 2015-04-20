@@ -131,7 +131,7 @@ class MarionetteProtocol(Protocol):
                 self.marionette.execute_async_script("");
             except errors.ScriptTimeoutException:
                 pass
-            except (socket.timeout, errors.InvalidResponseException, IOError):
+            except (socket.timeout, IOError):
                 break
             except Exception as e:
                 self.logger.error(traceback.format_exc(e))
@@ -227,7 +227,7 @@ class MarionetteRun(object):
                 # make that possible. It also seems to time out immediately if the
                 # timeout is set too high. This works at least.
                 self.marionette.set_script_timeout(2**31 - 1)
-        except (IOError, errors.InvalidResponseException):
+        except IOError:
             self.logger.error("Lost marionette connection before starting test")
             return Stop
 
@@ -253,7 +253,7 @@ class MarionetteRun(object):
         except errors.ScriptTimeoutException:
             self.logger.debug("Got a marionette timeout")
             self.result = False, ("EXTERNAL-TIMEOUT", None)
-        except (socket.timeout, errors.InvalidResponseException, IOError):
+        except (socket.timeout, IOError):
             # This can happen on a crash
             # Also, should check after the test if the firefox process is still running
             # and otherwise ignore any other result and set it to crash
