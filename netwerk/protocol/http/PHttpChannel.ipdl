@@ -139,10 +139,6 @@ child:
   // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
   DivertMessages();
 
-  // Report a security message to the console associated with this
-  // channel.
-  ReportSecurityMessage(nsString messageTag, nsString messageCategory);
-
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).
   DeleteSelf();

@@ -43,8 +43,7 @@ class HttpChannelParent final : public PHttpChannelParent
                               , public ADivertableParentChannel
                               , public nsIAuthPromptProvider
                               , public nsINetworkInterceptController
-                              , public DisconnectableParent,
-                              , public HttpChannelSecurityWarningReporter
+                              , public DisconnectableParent
 {
   virtual ~HttpChannelParent();
 
@@ -154,9 +153,6 @@ protected:
 
   void OfflineDisconnect() override;
   uint32_t GetAppId() override;
-
-  nsresult ReportSecurityMessage(const nsAString& aMessageTag,
-                                 const nsAString& aMessageCategory) override;
 
 private:
   nsRefPtr<nsHttpChannel>       mChannel;
