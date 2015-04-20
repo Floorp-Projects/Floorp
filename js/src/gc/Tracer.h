@@ -246,7 +246,6 @@ class GCMarker : public JSTracer
     template <typename T> void markAndPush(StackTag tag, T* thing);
     template <typename T> void markAndScan(T* thing);
     void eagerlyMarkChildren(Shape* shape);
-    void eagerlyMarkChildren(BaseShape* base);
     void eagerlyMarkChildren(JSString* str);
     void eagerlyMarkChildren(JS::Symbol* sym);
 
