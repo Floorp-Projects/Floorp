@@ -10,7 +10,7 @@
 */
 
 /*global ToObject: false, ToInteger: false, IsCallable: false,
-         ThrowError: false, ThrowRangeError: false, ThrowTypeError: false,
+         ThrowRangeError: false, ThrowTypeError: false,
          AssertionFailed: false,
          MakeConstructible: false, DecompileArg: false,
          RuntimeDefaultLocale: false,
