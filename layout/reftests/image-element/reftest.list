@@ -18,7 +18,7 @@ fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-
 == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
 == element-paint-native-widget.html element-paint-native-widget-ref.html
-== element-paint-subimage-sampling-restriction.html about:blank
+fails-if(!supportsRepeatResampling) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
 == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
