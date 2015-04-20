@@ -310,6 +310,10 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
     {
        "d3d9.dll", // Create an `IDirect3D9` to get adapter information
        "dxva2.dll", // Get monitor information
+       "evr.dll", // MFGetStrideForBitmapInfoHeader
+       "mfh264dec.dll", // H.264 decoder (on Windows Vista)
+       "mfheaacdec.dll", // AAC decoder (on Windows Vista)
+       "mfplat.dll", // MFCreateSample, MFCreateAlignedMemoryBuffer, MFCreateMediaType
        "msauddecmft.dll", // AAC decoder (on Windows 8)
        "msmpeg2adec.dll", // AAC decoder (on Windows 7)
        "msmpeg2vdec.dll", // H.264 decoder
