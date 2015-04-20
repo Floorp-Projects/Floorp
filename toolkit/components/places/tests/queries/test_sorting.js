@@ -1278,7 +1278,7 @@ add_task(function test_sorting()
     // sorting reversed, usually SORT_BY have ASC and DESC
     test.check_reverse();
     // Execute cleanup tasks
-    remove_all_bookmarks();
+    yield PlacesUtils.bookmarks.eraseEverything();
     yield PlacesTestUtils.clearHistory();
   }
 });
