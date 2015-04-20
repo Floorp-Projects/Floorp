@@ -584,9 +584,11 @@ GeckoMediaPluginServiceParent::SelectPluginForAPI(const nsACString& aNodeId,
         return gmp;
       }
 
-      // This GMP has the correct type but has the wrong nodeId; hold on to it
-      // in case we need to clone it.
-      gmpToClone = gmp;
+      if (!gmp->IsMarkedForDeletion()) {
+        // This GMP has the correct type but has the wrong nodeId; hold on to it
+        // in case we need to clone it.
+        gmpToClone = gmp;
+      }
       // Loop around and try the next plugin; it may be usable from aNodeId.
       index++;
     }
@@ -729,6 +731,7 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     return;
   }
 
+  bool inUse = false;
   MutexAutoLock lock(mMutex);
   for (size_t i = mPlugins.Length() - 1; i < mPlugins.Length(); i--) {
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
@@ -741,6 +744,7 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     if (aDeleteFromDisk && gmp->State() != GMPStateNotLoaded) {
       // We have to wait for the child process to release its lib handle
       // before we can delete the GMP.
+      inUse = true;
       gmp->MarkForDeletion();
 
       if (!mPluginsWaitingForDeletion.Contains(aDirectory)) {
@@ -756,7 +760,7 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     }
   }
 
-  if (aDeleteFromDisk) {
+  if (aDeleteFromDisk && !inUse) {
     if (NS_SUCCEEDED(directory->Remove(true))) {
       mPluginsWaitingForDeletion.RemoveElement(aDirectory);
     }
