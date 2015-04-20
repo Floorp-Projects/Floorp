@@ -2808,7 +2808,7 @@ IonBuilder::inlineAtomicsStore(CallInfo& callInfo)
     }
 
     Scalar::Type arrayType;
-    if (!atomicsMeetsPreconditions(callInfo, &arrayType))
+    if (!atomicsMeetsPreconditions(callInfo, &arrayType, DontCheckAtomicResult))
         return InliningStatus_NotInlined;
 
     MDefinition* value = callInfo.getArg(2);
@@ -2917,7 +2917,8 @@ IonBuilder::inlineAtomicsBinop(CallInfo& callInfo, JSFunction* target)
 }
 
 bool
-IonBuilder::atomicsMeetsPreconditions(CallInfo& callInfo, Scalar::Type* arrayType)
+IonBuilder::atomicsMeetsPreconditions(CallInfo& callInfo, Scalar::Type* arrayType,
+                                      AtomicCheckResult checkResult)
 {
     if (!JitSupportsAtomics())
         return false;
@@ -2945,12 +2946,12 @@ IonBuilder::atomicsMeetsPreconditions(CallInfo& callInfo, Scalar::Type* arrayTyp
       case Scalar::Int16:
       case Scalar::Uint16:
       case Scalar::Int32:
-        return getInlineReturnType() == MIRType_Int32;
+        return checkResult == DontCheckAtomicResult || getInlineReturnType() == MIRType_Int32;
       case Scalar::Uint32:
         // Bug 1077305: it would be attractive to allow inlining even
         // if the inline return type is Int32, which it will frequently
         // be.
-        return getInlineReturnType() == MIRType_Double;
+        return checkResult == DontCheckAtomicResult || getInlineReturnType() == MIRType_Double;
       default:
         // Excludes floating types and Uint8Clamped
         return false;
