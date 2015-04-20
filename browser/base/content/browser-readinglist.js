@@ -71,7 +71,7 @@ let ReadingListUI = {
    * @type {boolean}
    */
   get enabled() {
-    return Preferences.get("browser.readinglist.enabled", false);
+    return false;
   },
 
   /**
