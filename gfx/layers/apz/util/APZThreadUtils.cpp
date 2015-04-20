@@ -6,7 +6,9 @@
 #include "mozilla/layers/APZThreadUtils.h"
 
 #include "mozilla/layers/Compositor.h"
+#ifdef MOZ_ANDROID_APZ
 #include "AndroidBridge.h"
+#endif
 
 namespace mozilla {
 namespace layers {
