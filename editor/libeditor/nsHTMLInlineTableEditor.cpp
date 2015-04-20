@@ -149,7 +149,7 @@ nsHTMLEditor::DoInlineTableEditingAction(nsIDOMElement * aElement)
     NS_ENSURE_SUCCESS(res, res);
 
     bool hideUI = false;
-    bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
+    bool hideResizersWithInlineTableUI = (GetAsDOMNode(mResizedObject) == tableElement);
 
     if (anonclass.EqualsLiteral("mozTableAddColumnBefore"))
       InsertTableColumn(1, false);

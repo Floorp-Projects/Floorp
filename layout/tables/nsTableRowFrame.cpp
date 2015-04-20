@@ -682,7 +682,7 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
   NS_ASSERTION(colspan > 0, "effective colspan should be positive");
 
   for (int32_t spanX = 0; spanX < colspan; spanX++) {
-    cellAvailWidth += aTableFrame.GetColumnWidth(colIndex + spanX);
+    cellAvailWidth += aTableFrame.GetColumnISize(colIndex + spanX);
     if (spanX > 0 &&
         aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
       cellAvailWidth += aTableFrame.GetColSpacing(colIndex + spanX - 1);
@@ -705,7 +705,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
     for (colX = aPrevColIndex + 1; aColIndex > colX; colX++) {
       bool isCollapsed = false;
       if (!aCheckVisibility) {
-        space += aTableFrame.GetColumnWidth(colX);
+        space += aTableFrame.GetColumnISize(colX);
       }
       else {
         nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
@@ -717,7 +717,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
                                 groupVis->mVisible);
         isCollapsed = collapseCol || collapseGroup;
         if (!isCollapsed)
-          space += aTableFrame.GetColumnWidth(colX);
+          space += aTableFrame.GetColumnISize(colX);
       }
       if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colX)) {
         space += aTableFrame.GetColSpacing(colX - 1);
@@ -729,7 +729,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
     for (colX = aPrevColIndex - 1; colX > lastCol; colX--) {
       bool isCollapsed = false;
       if (!aCheckVisibility) {
-        space += aTableFrame.GetColumnWidth(colX);
+        space += aTableFrame.GetColumnISize(colX);
       }
       else {
         nsTableColFrame* colFrame = aTableFrame.GetColFrame(colX);
@@ -741,7 +741,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
                                 groupVis->mVisible);
         isCollapsed = collapseCol || collapseGroup;
         if (!isCollapsed)
-          space += aTableFrame.GetColumnWidth(colX);
+          space += aTableFrame.GetColumnISize(colX);
       }
       if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colX)) {
         space += aTableFrame.GetColSpacing(colX - 1);
@@ -1241,7 +1241,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                   groupVis->mVisible);
           bool isCollapsed = collapseCol || collapseGroup;
           if (!isCollapsed) {
-            cRect.width += tableFrame->GetColumnWidth(colX);
+            cRect.width += tableFrame->GetColumnISize(colX);
             isVisible = true;
             if ((actualColSpan > 1)) {
               nsTableColFrame* nextColFrame =

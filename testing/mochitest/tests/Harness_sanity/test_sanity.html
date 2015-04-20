@@ -22,15 +22,11 @@
 
 /** Test for sanity  **/
 ok(true, "true must be ok");
-is_loosely(1, true, "1 must loosely be true");
 isnot(1, true, "1 must not be true");
 isnot(1, false, "1 must not be false");
-is_loosely(0, false, "0 must loosely be false");
 isnot(0, false, "0 must not be false");
 isnot(0, true, "0 must not be true");
-is_loosely("", 0, "Empty string must loosely be 0");
 isnot("", 0, "Empty string must not be 0");
-is_loosely("1", 1, "Numeric string must loosely equal the number");
 isnot("1", 1, "Numeric string must not equal the number");
 isnot("", null, "Empty string must not be null");
 isnot(undefined, null, "Undefined must not be null");

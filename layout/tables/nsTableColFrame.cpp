@@ -25,7 +25,7 @@ nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) :
   SetColType(eColContent);
   ResetIntrinsics();
   ResetSpanIntrinsics();
-  ResetFinalWidth();
+  ResetFinalISize();
 }
 
 nsTableColFrame::~nsTableColFrame()
@@ -142,7 +142,7 @@ void nsTableColFrame::Dump(int32_t aIndent)
          mHasSpecifiedCoord ? 's' : 'u', mPrefPercent,
          int32_t(mSpanMinCoord), int32_t(mSpanPrefCoord),
          mSpanPrefPercent,
-         int32_t(GetFinalWidth()));
+         int32_t(GetFinalISize()));
   printf("\n%s**END COL DUMP** ", indent);
   delete [] indent;
 }

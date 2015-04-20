@@ -200,7 +200,7 @@ void
 nsHTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                          nsIDOMEventListener* aListener,
                                          bool aUseCapture,
-                                         nsIDOMElement* aElement,
+                                         Element* aElement,
                                          nsIContent * aParentContent,
                                          nsIPresShell* aShell)
 {
@@ -208,7 +208,7 @@ nsHTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
   if (evtTarget) {
     evtTarget->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
-  DeleteRefToAnonymousNode(aElement, aParentContent, aShell);
+  DeleteRefToAnonymousNode(static_cast<nsIDOMElement*>(GetAsDOMNode(aElement)), aParentContent, aShell);
 }
 
 // Deletes all references to an anonymous element
@@ -339,14 +339,14 @@ nsHTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection * aSelection)
   // side effects while this code runs (bug 420439).
 
   if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
-      absPosElement != mAbsolutelyPositionedObject) {
+      absPosElement != GetAsDOMNode(mAbsolutelyPositionedObject)) {
     res = HideGrabber();
     NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
   }
 
   if (mIsObjectResizingEnabled && mResizedObject &&
-      mResizedObject != focusElement) {
+      GetAsDOMNode(mResizedObject) != focusElement) {
     res = HideResizers();
     NS_ENSURE_SUCCESS(res, res);
     NS_ASSERTION(!mResizedObject, "HideResizers failed");
@@ -406,7 +406,8 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
                                        int32_t & aMarginLeft,
                                        int32_t & aMarginTop)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(element);
 
   // Is the element positioned ? let's check the cheap way first...
   bool isPositioned = false;
@@ -415,7 +416,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
   if (!isPositioned) {
     // hmmm... the expensive way now...
     nsAutoString positionStr;
-    mHTMLCSSUtils->GetComputedProperty(aElement, nsGkAtoms::position,
+    mHTMLCSSUtils->GetComputedProperty(*element, *nsGkAtoms::position,
                                        positionStr);
     isPositioned = positionStr.EqualsLiteral("absolute");
   }
@@ -426,7 +427,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
 
     // Get the all the computed css styles attached to the element node
     nsRefPtr<nsComputedDOMStyle> cssDecl =
-      mHTMLCSSUtils->GetComputedStyle(aElement);
+      mHTMLCSSUtils->GetComputedStyle(element);
     NS_ENSURE_STATE(cssDecl);
 
     aBorderLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));
