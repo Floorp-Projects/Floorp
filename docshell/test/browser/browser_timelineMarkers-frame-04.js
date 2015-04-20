@@ -15,12 +15,17 @@ let TESTS = [{
     content.dispatchEvent(new content.Event("dog"));
   },
   check: function(markers) {
-    markers = markers.filter(m => m.name == "DOMEvent");
+    let domMarkers = markers.filter(m => m.name == "DOMEvent");
     // One subtlety here is that we have five events: the event we
     // inject in "setup", plus the four state transition events.  The
     // first state transition is reported synchronously and so should
     // show up as a nested marker.
-    is(markers.length, 5, "Got 5 markers");
+    is(domMarkers.length, 5, "Got 5 markers");
+
+    // We should see some Javascript markers, and they should have a
+    // cause.
+    let jsMarkers = markers.filter(m => m.name == "Javascript" && m.causeName);
+    ok(jsMarkers.length > 0, "Got some Javascript markers");
   }
 }];
 

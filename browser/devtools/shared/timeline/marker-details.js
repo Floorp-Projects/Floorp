@@ -138,6 +138,9 @@ MarkerDetails.prototype = {
       case "DOMEvent":
         this.renderDOMEventMarker(this._parent, marker);
         break;
+      case "Javascript":
+        this.renderJavascriptMarker(this._parent, marker);
+        break;
       default:
     }
 
@@ -281,6 +284,21 @@ MarkerDetails.prototype = {
       }
       let phase = this.buildNameValueLabel("timeline.markerDetail.DOMEventPhase", L10N.getStr(phaseL10NProp));
       this._parent.appendChild(phase);
+    }
+  },
+
+  /**
+   * Render details of a Javascript marker.
+   *
+   * @param nsIDOMNode parent
+   *        The parent node holding the view.
+   * @param object marker
+   *        The marker to display.
+   */
+  renderJavascriptMarker: function(parent, marker) {
+    if ("causeName" in marker) {
+      let cause = this.buildNameValueLabel("timeline.markerDetail.causeName", marker.causeName);
+      this._parent.appendChild(cause);
     }
   },
 
