@@ -440,7 +440,7 @@ ElementManager.prototype = {
     let startNode = (values.element != undefined) ?
                     this.getKnownElement(values.element, win) : win.document;
     if (this.elementStrategies.indexOf(values.using) < 0) {
-      throw new InvalidSelectorError(`No such strategy: ${values.using}`);
+      throw new InvalidSelectorError("No such strategy: " + values.using);
     }
     let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
                       this.findElement(values.using, values.value, win.document, startNode);
@@ -591,7 +591,7 @@ ElementManager.prototype = {
         element = rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
         break;
       default:
-        throw new WebDriverError("No such strategy");
+        throw new InvalidSelectorError("No such strategy: " + using);
     }
     return element;
   },
@@ -658,7 +658,7 @@ ElementManager.prototype = {
         }
         break;
       default:
-        throw new WebDriverError("No such strategy");
+        throw new InvalidSelectorError("No such strategy: " + using);
     }
     return elements;
   },
