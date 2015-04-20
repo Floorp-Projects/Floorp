@@ -1074,7 +1074,7 @@ ScrollFrameHelper::HandleScrollbarStyleSwitching()
   }
 }
 
-#if defined(MOZ_B2G) || defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_B2G) || (defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ))
 static bool IsFocused(nsIContent* aContent)
 {
   // Some content elements, like the GetContent() of a scroll frame
@@ -1099,7 +1099,7 @@ ScrollFrameHelper::WantAsyncScroll() const
   bool isHScrollable = !!(directions & nsIScrollableFrame::HORIZONTAL) &&
                        (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
 
-#if defined(MOZ_B2G) || defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_B2G) || (defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ))
   // Mobile platforms need focus to scroll.
   bool canScrollWithoutScrollbars = IsFocused(mOuter->GetContent());
 #else
