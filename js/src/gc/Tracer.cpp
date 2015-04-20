@@ -29,10 +29,17 @@ using namespace js;
 using namespace js::gc;
 using mozilla::DebugOnly;
 
+namespace js {
+template<typename T>
+void
+CheckTracedThing(JSTracer* trc, T thing);
+} // namespace js
+
 template <typename T>
 void
 DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
 {
+    CheckTracedThing(trc, *thingp);
     JSGCTraceKind kind = MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind;
     JS::AutoTracingName ctx(trc, name);
     trc->invoke((void**)thingp, kind);
