@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Camera Recording</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <video id="viewfinder" width = "200" height = "200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var suite = new CameraTestSuite();
+
+var baseConfig = {
+  mode: 'video',
+};
+
+var storage = navigator.getDeviceStorage("videos");
+
+suite.test('recording', function() {
+  storage.delete("test.3gp");
+
+  function startRecording(p) {
+    var eventPromise = new Promise(function(resolve, reject) {
+      function onEvent(evt) {
+        ok(evt.newState === 'Started', 'recorder state change event = ' + evt.newState);
+        suite.camera.removeEventListener('recorderstatechange', onEvent);
+        resolve();
+      }
+      suite.camera.addEventListener('recorderstatechange', onEvent);
+    });
+
+    var domPromise = suite.camera.startRecording({}, storage, "test.3gp");
+    return Promise.all([domPromise, eventPromise]);
+  }
+
+  function stopRecording(p) {
+    var eventPromise = new Promise(function(resolve, reject) {
+      function onEvent(evt) {
+        ok(evt.newState === 'Stopped', 'recorder state change event = ' + evt.newState);
+        suite.camera.removeEventListener('recorderstatechange', onEvent);
+        resolve();
+      }
+      suite.camera.addEventListener('recorderstatechange', onEvent);
+    });
+
+    var domPromise = new Promise(function(resolve, reject) {
+      try {
+        suite.camera.stopRecording();
+        resolve();
+      } catch(e) {
+        reject(e);
+      }
+    });
+
+    return Promise.all([domPromise, eventPromise]);
+  }
+
+  return suite.getCamera(undefined, baseConfig)
+    .then(startRecording, suite.rejectGetCamera)
+    .then(stopRecording, suite.rejectStartRecording)
+    .catch(suite.rejectStopRecording);
+});
+
+suite.setup()
+  .then(suite.run);
+
+</script>
+</body>
+
+</html>
