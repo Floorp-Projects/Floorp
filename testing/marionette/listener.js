@@ -1798,7 +1798,7 @@ function addCookie(msg) {
 
   let added = sendSyncMessage("Marionette:addCookie", {value: cookie});
   if (added[0] !== true) {
-    sendError(new UnknownError("Error setting cookie"), msg.json.command_id);
+    sendError(new UnableToSetCookieError(), msg.json.command_id);
     return;
   }
   sendOk(msg.json.command_id);
