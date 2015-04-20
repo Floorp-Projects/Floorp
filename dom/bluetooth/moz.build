@@ -18,6 +18,11 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothUuid.cpp'
     ]
 
+    if CONFIG['MOZ_B2G_RIL']:
+        SOURCES += [
+            'BluetoothRilListener.cpp'
+        ]
+
     if CONFIG['MOZ_B2G_BT_API_V2']:
         SOURCES += [
             'bluetooth2/BluetoothAdapter.cpp',
@@ -39,10 +44,6 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth2/ipc/BluetoothServiceChildProcess.cpp',
             'bluetooth2/ObexBase.cpp'
         ]
-        if CONFIG['MOZ_B2G_RIL']:
-            SOURCES += [
-                'bluetooth2/BluetoothRilListener.cpp',
-            ]
         LOCAL_INCLUDES += [
             'bluetooth2',
             'bluetooth2/ipc',
@@ -62,10 +63,6 @@ if CONFIG['MOZ_B2G_BT']:
             'bluetooth1/ipc/BluetoothServiceChildProcess.cpp',
             'bluetooth1/ObexBase.cpp'
         ]
-        if CONFIG['MOZ_B2G_RIL']:
-            SOURCES += [
-                'bluetooth1/BluetoothRilListener.cpp',
-            ]
         LOCAL_INCLUDES += [
             'bluetooth1',
             'bluetooth1/ipc',
