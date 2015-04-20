@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>The bounds calculation for border display items needs to take the border radius into account</title>
+
+<style>
+
+div {
+  margin: 10px;
+  height: 100px;
+  width: 100px;
+  box-sizing: border-box;
+  border-radius: 50px;
+}
+
+#one {
+  border-top: 30px solid blue;
+}
+
+#two {
+  border-top: 1px solid blue;
+  opacity: 0.5;
+}
+
+#three {
+  border-top: 1px solid blue;
+  mix-blend-mode: overlay;
+}
+
+</style>
+
+<div id="one"></div>
+<div id="two"></div>
+<div id="three"></div>
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", function (e) {
+  document.getElementById("one").style.borderTopWidth = "10px";
+
+  document.documentElement.removeAttribute("class");
+});
+
+</script>
