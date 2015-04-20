@@ -51,6 +51,8 @@
 // and rarely used) valloc.
 #define MOZ_REPLACE_ONLY_MEMALIGN 1
 
+#ifndef PAGE_SIZE
+#define DMD_DEFINED_PAGE_SIZE
 #ifdef XP_WIN
 #define PAGE_SIZE GetPageSize()
 static long GetPageSize()
@@ -59,12 +61,16 @@ static long GetPageSize()
   GetSystemInfo(&si);
   return si.dwPageSize;
 }
-#else
+#else // XP_WIN
 #define PAGE_SIZE sysconf(_SC_PAGESIZE)
-#endif
+#endif // XP_WIN
+#endif // PAGE_SIZE
 #include "replace_malloc.h"
 #undef MOZ_REPLACE_ONLY_MEMALIGN
+#ifdef DMD_DEFINED_PAGE_SIZE
+#undef DMD_DEFINED_PAGE_SIZE
 #undef PAGE_SIZE
+#endif // DMD_DEFINED_PAGE_SIZE
 
 #include "DMD.h"
 
