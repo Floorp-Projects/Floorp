@@ -392,14 +392,12 @@ float stream_to_mix_samplerate_ratio(cubeb_stream * stream)
   return float(stream->stream_params.rate) / stream->mix_params.rate;
 }
 
-/* Upmix function, copies a mono channel in two interleaved
- * stereo channel. |out| has to be twice as long as |in| */
+/* Upmix function, copies a mono channel into L and R */
 template<typename T>
 void
-mono_to_stereo(T * in, long insamples, T * out)
+mono_to_stereo(T * in, long insamples, T * out, int32_t out_channels)
 {
-  int j = 0;
-  for (int i = 0; i < insamples; ++i, j += 2) {
+  for (int i = 0, j = 0; i < insamples; ++i, j += out_channels) {
     out[j] = out[j + 1] = in[i];
   }
 }
@@ -408,22 +406,32 @@ template<typename T>
 void
 upmix(T * in, long inframes, T * out, int32_t in_channels, int32_t out_channels)
 {
-  XASSERT(out_channels >= in_channels);
+  XASSERT(out_channels >= in_channels && in_channels > 0);
+
+  /* Either way, if we have 2 or more channels, the first two are L and R. */
   /* If we are playing a mono stream over stereo speakers, copy the data over. */
-  if (in_channels == 1 && out_channels == 2) {
-    mono_to_stereo(in, inframes, out);
+  if (in_channels == 1 && out_channels >= 2) {
+    mono_to_stereo(in, inframes, out, out_channels);
+  } else {
+    /* Copy through. */
+    for (int i = 0, o = 0; i < inframes * in_channels'
+        i += in_channels, o += out_channels) {
+      for (int j = 0; j < in_channels; ++j) {
+        out[o + j] = in[i + j];
+      }
+    }
+  }
+
+  /* Check if more channels. */
+  if (out_channels <= 2) {
     return;
   }
-  /* Otherwise, put silence in other channels. */
-  long out_index = 0;
-  for (long i = 0; i < inframes * in_channels; i += in_channels) {
-    for (int j = 0; j < in_channels; ++j) {
-      out[out_index + j] = in[i + j];
+
+  /* Put silence in remaining channels. */
+  for (long i = 0, o = 0; i < inframes; ++i, o += out_channels) {
+    for (int j = 2; j < out_channels; ++j) {
+      out[o + j] = 0.0;
     }
-    for (int j = in_channels; j < out_channels; ++j) {
-      out[out_index + j] = 0.0;
-    }
-    out_index += out_channels;
   }
 }
 
