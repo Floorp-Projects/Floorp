@@ -155,7 +155,8 @@ ListenerProxy.prototype.__noSuchMethod__ = function*(name, args) {
 
     let okListener = () => resolve();
     let valListener = msg => resolve(msg.json.value);
-    let errListener = msg => reject(msg.objects.error);
+    let errListener = msg => reject(
+        "error" in msg.objects ? msg.objects.error : msg.json);
 
     let handleDialog = function(subject, topic) {
       listeners.remove();
@@ -2061,7 +2062,7 @@ GeckoDriver.prototype.clickElement = function(cmd, resp) {
       // listen for it and then just send an error back. The person making the
       // call should be aware something isnt right and handle accordingly
       this.addFrameCloseListener("click");
-      yield this.listener.clickElement(id);
+      yield this.listener.clickElement({id: id});
       break;
   }
 };
@@ -2085,7 +2086,7 @@ GeckoDriver.prototype.getElementAttribute = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementAttribute(id, name);
+      resp.value = yield this.listener.getElementAttribute({id: id, name: name});
       break;
   }
 };
@@ -2111,7 +2112,7 @@ GeckoDriver.prototype.getElementText = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementText(id);
+      resp.value = yield this.listener.getElementText({id: id});
       break;
   }
 };
@@ -2133,7 +2134,7 @@ GeckoDriver.prototype.getElementTagName = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementTagName(id);
+      resp.value = yield this.listener.getElementTagName({id: id});
       break;
   }
 };
@@ -2223,7 +2224,7 @@ GeckoDriver.prototype.isElementEnabled = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.isElementEnabled(id);
+      resp.value = yield this.listener.isElementEnabled({id: id});
       break;
   }
 },
@@ -2269,7 +2270,7 @@ GeckoDriver.prototype.getElementSize = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementSize(id);
+      resp.value = yield this.listener.getElementSize({id: id});
       break;
   }
 };
@@ -2291,7 +2292,7 @@ GeckoDriver.prototype.getElementRect = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      resp.value = yield this.listener.getElementRect(id);
+      resp.value = yield this.listener.getElementRect({id: id});
       break;
   }
 };
