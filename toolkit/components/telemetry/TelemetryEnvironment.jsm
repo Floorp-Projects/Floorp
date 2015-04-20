@@ -652,16 +652,18 @@ function EnvironmentCache() {
 
   this._updateSettings();
 
-#ifndef MOZ_WIDGET_ANDROID
-  this._currentEnvironment.profile = {};
-#endif
-
   // Build the remaining asynchronous parts of the environment. Don't register change listeners
   // until the initial environment has been built.
 
   this._addonBuilder = new EnvironmentAddonBuilder(this);
 
-  this._initTask = Promise.all([this._addonBuilder.init(), this._updateProfile()])
+  let p = [ this._addonBuilder.init() ];
+#ifndef MOZ_WIDGET_ANDROID
+  this._currentEnvironment.profile = {};
+  p.push(this._updateProfile());
+#endif
+
+  this._initTask = Promise.all(p)
     .then(
       () => {
         this._initTask = null;
@@ -671,7 +673,7 @@ function EnvironmentCache() {
       },
       (err) => {
         // log errors but eat them for consumers
-        this._log.error("error while initializing", err);
+        this._log.error("EnvironmentCache - error while initializing", err);
         this._initTask = null;
         this._startWatchingPrefs();
         this._addonBuilder.watchForChanges();
