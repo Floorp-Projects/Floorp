@@ -81,6 +81,7 @@
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
+#include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
 #include "prthread.h"
 #include "xpcpublic.h"

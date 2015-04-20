@@ -38,6 +38,7 @@
 #include "nsPrintfCString.h"
 #include "nsIFrame.h"
 #include "RestyleManager.h"
+#include "nsQueryObject.h"
 
 #include <inttypes.h>
 
@@ -838,12 +839,20 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   bool relevantLinkVisited = (aFlags & eIsLink) ?
     (aFlags & eIsVisitedLink) :
     (aParentContext && aParentContext->RelevantLinkVisited());
+  bool suppressLineBreak = aFlags & eSuppressLineBreak;
 
   nsRefPtr<nsStyleContext> result;
-  if (aParentContext)
+  if (aParentContext) {
+    uint32_t childFlags = 0;
+    if (relevantLinkVisited) {
+      childFlags |= nsStyleContext::eRelevantLinkVisited;
+    }
+    if (suppressLineBreak) {
+      childFlags |= nsStyleContext::eSuppressLineBreak;
+    }
     result = aParentContext->FindChildWithRules(aPseudoTag, aRuleNode,
-                                                aVisitedRuleNode,
-                                                relevantLinkVisited);
+                                                aVisitedRuleNode, childFlags);
+  }
 
 #ifdef NOISY_DEBUG
   if (result)
@@ -856,11 +865,17 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
                                 aRuleNode,
                                 aFlags & eSkipParentDisplayBasedStyleFixup);
+    if (suppressLineBreak) {
+      result->AddStyleBit(NS_STYLE_SUPPRESS_LINEBREAK);
+    }
     if (aVisitedRuleNode) {
       nsRefPtr<nsStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
                            aVisitedRuleNode,
                            aFlags & eSkipParentDisplayBasedStyleFixup);
+      if (suppressLineBreak) {
+        resultIfVisited->AddStyleBit(NS_STYLE_SUPPRESS_LINEBREAK);
+      }
       if (!parentIfVisited) {
         mRoots.AppendElement(resultIfVisited);
       }
@@ -1657,12 +1672,13 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
+nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext,
+                                      bool aSuppressLineBreak)
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
                     nsCSSAnonBoxes::mozNonElement,
                     nsCSSPseudoElements::ePseudo_AnonBox, nullptr,
-                    eNoFlags);
+                    aSuppressLineBreak ? eSuppressLineBreak : eNoFlags);
 }
 
 void

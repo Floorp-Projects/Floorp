@@ -49,7 +49,7 @@ function ObjectDefineSetter(name, setter) {
         object = ToObject(this);
 
     if (!IsCallable(setter))
-        ThrowError(JSMSG_BAD_GETTER_OR_SETTER, "setter");
+        ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "setter");
 
     var key = ToPropertyKey(name);
 
@@ -71,7 +71,7 @@ function ObjectDefineGetter(name, getter) {
         object = ToObject(this);
 
     if (!IsCallable(getter))
-        ThrowError(JSMSG_BAD_GETTER_OR_SETTER, "getter");
+        ThrowTypeError(JSMSG_BAD_GETTER_OR_SETTER, "getter");
 
     var key = ToPropertyKey(name);
 

@@ -36,7 +36,9 @@ struct TranslationParams {  // Simple translation
   float mY;
 };
 struct PathPointParams {  // Point along a path
-  Path* mPath; // NOTE: Refcounted; need to AddRef/Release.
+  // Refcounted: need to AddRef/Release.  This can't be an nsRefPtr because
+  // this struct is used inside a union so it can't have a default constructor.
+  Path* MOZ_OWNING_REF mPath;
   float mDistToPoint; // Distance from path start to the point on the path that
                       // we're interested in.
 };

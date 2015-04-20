@@ -15,6 +15,7 @@
 #include "nsEscape.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
+#include "nsQueryObject.h"
 
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/dom/URL.h"

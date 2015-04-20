@@ -12,6 +12,7 @@
 #include "nsIStringEnumerator.h"
 #include "nsISupportsArray.h"
 #include "nsJSUtils.h"
+#include "nsQueryObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsTArray.h"
 #include "GetUserMediaRequest.h"

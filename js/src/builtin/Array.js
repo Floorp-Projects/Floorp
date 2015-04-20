@@ -53,7 +53,7 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
 
 function ArrayStaticIndexOf(list, searchElement/*, fromIndex*/) {
     if (arguments.length < 1)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.indexOf');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.indexOf');
     var fromIndex = arguments.length > 2 ? arguments[2] : 0;
     return callFunction(ArrayIndexOf, list, searchElement, fromIndex);
 }
@@ -101,7 +101,7 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
 
 function ArrayStaticLastIndexOf(list, searchElement/*, fromIndex*/) {
     if (arguments.length < 1)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.lastIndexOf');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.lastIndexOf');
     var fromIndex;
     if (arguments.length > 2) {
         fromIndex = arguments[2];
@@ -147,9 +147,9 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
 
 function ArrayStaticEvery(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.every');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.every');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
     return callFunction(ArrayEvery, list, callbackfn, T);
 }
@@ -164,9 +164,9 @@ function ArraySome(callbackfn/*, thisArg*/) {
 
     /* Step 4. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.some');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.some');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
@@ -188,9 +188,9 @@ function ArraySome(callbackfn/*, thisArg*/) {
 
 function ArrayStaticSome(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.some');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.some');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
     return callFunction(ArraySome, list, callbackfn, T);
 }
@@ -205,9 +205,9 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
 
     /* Step 4. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.forEach');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.forEach');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
@@ -236,9 +236,9 @@ function ArrayMap(callbackfn/*, thisArg*/) {
 
     /* Step 4. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.map');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.map');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 5. */
     var T = arguments.length > 1 ? arguments[1] : void 0;
@@ -264,18 +264,18 @@ function ArrayMap(callbackfn/*, thisArg*/) {
 
 function ArrayStaticMap(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.map');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.map');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
     return callFunction(ArrayMap, list, callbackfn, T);
 }
 
 function ArrayStaticForEach(list, callbackfn/*, thisArg*/) {
     if (arguments.length < 2)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.forEach');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     var T = arguments.length > 2 ? arguments[2] : void 0;
     callFunction(ArrayForEach, list, callbackfn, T);
 }
@@ -290,9 +290,9 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
 
     /* Step 4. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 6. */
     var k = 0;
@@ -304,7 +304,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
     } else {
         /* Step 5. */
         if (len === 0)
-            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+            ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
         if (IsPackedArray(O)) {
             accumulator = O[k++];
         } else {
@@ -318,7 +318,7 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
                 }
             }
             if (!kPresent)
-              ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+              ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
         }
     }
 
@@ -338,9 +338,9 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
 
 function ArrayStaticReduce(list, callbackfn) {
     if (arguments.length < 2)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduce');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduce');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     if (arguments.length > 2)
         return callFunction(ArrayReduce, list, callbackfn, arguments[2]);
     else
@@ -357,9 +357,9 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
 
     /* Step 4. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.reduce');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     /* Step 6. */
     var k = len - 1;
@@ -371,7 +371,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
     } else {
         /* Step 5. */
         if (len === 0)
-            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+            ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
         if (IsPackedArray(O)) {
             accumulator = O[k--];
         } else {
@@ -385,7 +385,7 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
                 }
             }
             if (!kPresent)
-                ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+                ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
         }
     }
 
@@ -405,9 +405,9 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
 
 function ArrayStaticReduceRight(list, callbackfn) {
     if (arguments.length < 2)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduceRight');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.reduceRight');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, callbackfn));
     if (arguments.length > 2)
         return callFunction(ArrayReduceRight, list, callbackfn, arguments[2]);
     else
@@ -424,9 +424,9 @@ function ArrayFind(predicate/*, thisArg*/) {
 
     /* Step 6. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.find');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.find');
     if (!IsCallable(predicate))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
     /* Step 7. */
     var T = arguments.length > 1 ? arguments[1] : undefined;
@@ -460,9 +460,9 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
 
     /* Step 6. */
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.find');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.prototype.find');
     if (!IsCallable(predicate))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
     /* Step 7. */
     var T = arguments.length > 1 ? arguments[1] : undefined;
@@ -715,7 +715,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
     // Steps 2-3.
     var mapping = mapfn !== undefined;
     if (mapping && !IsCallable(mapfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
     var T = thisArg;
 
     // All elements defined by this algorithm have the same attrs:
@@ -742,7 +742,7 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
             // Steps 6.g.i-iii.
             var next = iterator.next();
             if (!IsObject(next))
-                ThrowError(JSMSG_NEXT_RETURNED_PRIMITIVE);
+                ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 
             // Step 6.g.iv.
             if (next.done) {

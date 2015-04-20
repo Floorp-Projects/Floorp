@@ -11,6 +11,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/MediaManager.h"
 #include "prlog.h"
+#include "nsQueryObject.h"
 
 #undef LOG
 #if defined(PR_LOGGING)
