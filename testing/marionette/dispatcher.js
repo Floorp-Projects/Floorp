@@ -124,7 +124,7 @@ Dispatcher.prototype.quitApplication = function(msg) {
   if (this.driver.appName != "Firefox") {
     this.sendError({
       "message": "In app initiated quit only supported on Firefox",
-      "status": "webdriver error",
+      "status": 500
     }, id);
     return;
   }

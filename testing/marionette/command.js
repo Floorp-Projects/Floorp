@@ -56,7 +56,7 @@ this.Response = function(cmdId, okHandler, respHandler, msg, sanitizer) {
 
   this.data = new Map([
     ["sessionId", msg.sessionId ? msg.sessionId : null],
-    ["status", msg.status ? msg.status : "success"],
+    ["status", msg.status ? msg.status : 0 /* success */],
     ["value", msg.value ? msg.value : undefined],
   ]);
 };
@@ -93,10 +93,10 @@ Response.prototype.send = function() {
 /**
  * @param {(Error|Object)} err
  *     The error to send, either an instance of the Error prototype,
- *     or an object with the properties "message", "status", and "stack".
+ *     or an object with the properties "message", "code", and "stack".
  */
 Response.prototype.sendError = function(err) {
-  this.status = "status" in err ? err.status : new UnknownError().status;
+  this.status = "code" in err ? err.code : new UnknownError().code;
   this.value = error.toJSON(err);
   this.send();
 
