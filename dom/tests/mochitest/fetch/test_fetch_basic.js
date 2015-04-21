@@ -39,6 +39,7 @@ function testSameOriginBlobURL() {
   var blob = new Blob(["english ", "sentence"], { type: "text/plain" });
   var url = URL.createObjectURL(blob);
   return fetch(url).then(function(res) {
+    URL.revokeObjectURL(url);
     ok(true, "Blob URL fetch should resolve");
     if (res.type == "error") {
       ok(false, "Blob URL fetch should not fail.");
