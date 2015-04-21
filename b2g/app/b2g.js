@@ -1124,8 +1124,5 @@ pref("dom.mozSettings.allowForceReadOnly", false);
 // RequestSync API is enabled by default on B2G.
 pref("dom.requestSync.enabled", true);
 
-// Use vsync aligned rendering
-pref("gfx.vsync.hw-vsync.enabled", true);
-pref("gfx.vsync.compositor", true);
+// Resample touch events on b2g
 pref("gfx.touch.resample", true);
-pref("gfx.vsync.refreshdriver", true);
