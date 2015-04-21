@@ -9,7 +9,7 @@
 
 #include "BluetoothCommon.h"
 #include <sys/socket.h>
-#include <mozilla/ipc/UnixSocket.h>
+#include <mozilla/ipc/UnixSocketConnector.h>
 
 BEGIN_BLUETOOTH_NAMESPACE
 
