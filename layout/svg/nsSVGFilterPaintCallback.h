@@ -6,10 +6,10 @@
 #ifndef __NS_SVGFILTERPAINTCALLBACK_H__
 #define __NS_SVGFILTERPAINTCALLBACK_H__
 
+#include "nsRect.h"
+
 class nsIFrame;
 class gfxContext;
-
-struct nsIntRect;
 
 class nsSVGFilterPaintCallback {
 public:

@@ -691,7 +691,7 @@ nsSliderFrame::CurrentPositionChanged()
 
   // avoid putting the scroll thumb at subpixel positions which cause needless invalidations
   nscoord appUnitsPerPixel = PresContext()->AppUnitsPerDevPixel();
-  nsRect snappedThumbRect = newThumbRect.ToNearestPixels(appUnitsPerPixel).ToAppUnits(appUnitsPerPixel);
+  nsRect snappedThumbRect = ToAppUnits(newThumbRect.ToNearestPixels(appUnitsPerPixel), appUnitsPerPixel);
   if (IsHorizontal()) {
     newThumbRect.x = snappedThumbRect.x;
     newThumbRect.width = snappedThumbRect.width;

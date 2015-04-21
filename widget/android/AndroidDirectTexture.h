@@ -9,8 +9,7 @@
 #include "gfxTypes.h"
 #include "mozilla/Mutex.h"
 #include "AndroidGraphicBuffer.h"
-
-struct nsIntRect;
+#include "nsRect.h"
 
 namespace mozilla {
 

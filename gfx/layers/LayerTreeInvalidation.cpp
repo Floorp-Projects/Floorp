@@ -21,8 +21,7 @@
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsHashKeys.h"                 // for nsPtrHashKey
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for IntRect
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl
 
 using namespace mozilla::gfx;
@@ -33,20 +32,20 @@ namespace layers {
 struct LayerPropertiesBase;
 UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask = false);
 
-static nsIntRect
-TransformRect(const nsIntRect& aRect, const Matrix4x4& aTransform)
+static IntRect
+TransformRect(const IntRect& aRect, const Matrix4x4& aTransform)
 {
   if (aRect.IsEmpty()) {
-    return nsIntRect();
+    return IntRect();
   }
 
   Rect rect(aRect.x, aRect.y, aRect.width, aRect.height);
   rect = aTransform.TransformBounds(rect);
   rect.RoundOut();
 
-  nsIntRect intRect;
+  IntRect intRect;
   if (!gfxUtils::GfxRectToIntRect(ThebesRect(rect), &intRect)) {
-    return nsIntRect();
+    return IntRect();
   }
 
   return intRect;
@@ -56,7 +55,7 @@ static void
 AddTransformedRegion(nsIntRegion& aDest, const nsIntRegion& aSource, const Matrix4x4& aTransform)
 {
   nsIntRegionRectIterator iter(aSource);
-  const nsIntRect *r;
+  const IntRect *r;
   while ((r = iter.Next())) {
     aDest.Or(aDest, TransformRect(*r, aTransform));
   }
@@ -127,12 +126,12 @@ struct LayerPropertiesBase : public LayerProperties
   {
     MOZ_COUNT_DTOR(LayerPropertiesBase);
   }
-  
-  virtual nsIntRegion ComputeDifferences(Layer* aRoot, 
+
+  virtual nsIntRegion ComputeDifferences(Layer* aRoot,
                                          NotifySubDocInvalidationFunc aCallback,
                                          bool* aGeometryChanged);
 
-  virtual void MoveBy(const nsIntPoint& aOffset);
+  virtual void MoveBy(const IntPoint& aOffset);
 
   nsIntRegion ComputeChange(NotifySubDocInvalidationFunc aCallback,
                             bool& aGeometryChanged)
@@ -176,12 +175,12 @@ struct LayerPropertiesBase : public LayerProperties
     return result;
   }
 
-  nsIntRect NewTransformedBounds()
+  IntRect NewTransformedBounds()
   {
     return TransformRect(mLayer->GetVisibleRegion().GetBounds(), mLayer->GetLocalTransform());
   }
 
-  nsIntRect OldTransformedBounds()
+  IntRect OldTransformedBounds()
   {
     return TransformRect(mVisibleRegion.GetBounds(), mTransform);
   }
@@ -189,7 +188,7 @@ struct LayerPropertiesBase : public LayerProperties
   virtual nsIntRegion ComputeChangeInternal(NotifySubDocInvalidationFunc aCallback,
                                             bool& aGeometryChanged)
   {
-    return nsIntRect();
+    return IntRect();
   }
 
   nsRefPtr<Layer> mLayer;
@@ -351,7 +350,7 @@ struct ColorLayerProperties : public LayerPropertiesBase
   }
 
   gfxRGBA mColor;
-  nsIntRect mBounds;
+  IntRect mBounds;
 };
 
 struct ImageLayerProperties : public LayerPropertiesBase
@@ -373,7 +372,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
     
     if (!imageLayer->GetVisibleRegion().IsEqual(mVisibleRegion)) {
       aGeometryChanged = true;
-      nsIntRect result = NewTransformedBounds();
+      IntRect result = NewTransformedBounds();
       result = result.Union(OldTransformedBounds());
       return result;
     }
@@ -389,7 +388,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
         // Mask layers have an empty visible region, so we have to
         // use the image size instead.
         IntSize size = container->GetCurrentSize();
-        nsIntRect rect(0, 0, size.width, size.height);
+        IntRect rect(0, 0, size.width, size.height);
         return TransformRect(rect, mLayer->GetLocalTransform());
 
       } else {
@@ -397,7 +396,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
       }
     }
 
-    return nsIntRect();
+    return IntRect();
   }
 
   nsRefPtr<ImageContainer> mContainer;
@@ -466,7 +465,7 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
     } else {
       ClearInvalidations(aRoot);
     }
-    nsIntRect result = TransformRect(aRoot->GetVisibleRegion().GetBounds(),
+    IntRect result = TransformRect(aRoot->GetVisibleRegion().GetBounds(),
                                      aRoot->GetLocalTransform());
     result = result.Union(OldTransformedBounds());
     if (aGeometryChanged != nullptr) {
@@ -484,7 +483,7 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
 }
 
 void
-LayerPropertiesBase::MoveBy(const nsIntPoint& aOffset)
+LayerPropertiesBase::MoveBy(const IntPoint& aOffset)
 {
   mTransform.PostTranslate(aOffset.x, aOffset.y, 0);
 }

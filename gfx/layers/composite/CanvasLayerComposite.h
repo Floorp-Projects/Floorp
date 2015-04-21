@@ -14,7 +14,6 @@
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRect.h"                     // for nsIntRect
 #include "nscore.h"                     // for nsACString
-struct nsIntPoint;
 
 namespace mozilla {
 namespace layers {

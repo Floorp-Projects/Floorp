@@ -76,6 +76,16 @@ inline IntPoint ToIntPoint(const nsIntPoint &aPoint)
   return IntPoint(aPoint.x, aPoint.y);
 }
 
+inline IntMargin ToIntMargin(const nsIntMargin& aMargin)
+{
+  return IntMargin(aMargin.top, aMargin.right, aMargin.bottom, aMargin.left);
+}
+
+inline nsIntPoint ThebesIntPoint(const IntPoint &aPoint)
+{
+  return nsIntPoint(aPoint.x, aPoint.y);
+}
+
 inline Size ToSize(const gfxSize &aSize)
 {
   return Size(Float(aSize.width), Float(aSize.height));

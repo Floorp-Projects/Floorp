@@ -6,7 +6,7 @@ include protocol PBrowser;
 
 include "mozilla/GfxMessageUtils.h";
 
-using struct nsIntRect from "nsRect.h";
+using nsIntRect from "nsRect.h";
 
 namespace mozilla {
 namespace plugins {

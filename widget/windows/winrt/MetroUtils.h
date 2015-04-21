@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsPoint.h"
 #include "WinUtils.h"
+#include "nsRect.h"
 
 #include "mozwrlbase.h"
 
@@ -40,7 +41,6 @@
 
 class nsIBrowserDOMWindow;
 class nsIDOMWindow;
-struct nsIntRect;
 
 namespace mozilla {
 namespace widget {

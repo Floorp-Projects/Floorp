@@ -15,6 +15,20 @@ static_assert((int(NS_SIDE_TOP) == 0) &&
               (int(NS_SIDE_LEFT) == 3),
               "The mozilla::css::Side sequence must match the nsMargin nscoord sequence");
 
+nsRect
+ToAppUnits(const nsIntRect& aRect, nscoord aAppUnitsPerPixel)
+{
+  return nsRect(NSIntPixelsToAppUnits(aRect.x, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.y, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.width, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aRect.height, aAppUnitsPerPixel));
+}
+
+const nsIntRect& GetMaxSizedIntRect() {
+  static const nsIntRect r(0, 0, INT32_MAX, INT32_MAX);
+  return r;
+}
+
 #ifdef DEBUG
 // Diagnostics
 

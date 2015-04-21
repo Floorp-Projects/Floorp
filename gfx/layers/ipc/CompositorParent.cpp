@@ -27,6 +27,7 @@
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/gfx/2D.h"          // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Rect.h"          // for IntSize
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
 #include "mozilla/layers/APZThreadUtils.h"  // for APZCTreeManager
@@ -48,7 +49,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsIWidget.h"                  // for nsIWidget
-#include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
@@ -606,7 +606,7 @@ CompositorParent::RecvResume()
 
 bool
 CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                   const nsIntRect& aRect)
+                                   const gfx::IntRect& aRect)
 {
   RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
   ForceComposeToTarget(target, &aRect);
@@ -977,7 +977,7 @@ CompositorParent::SetShadowProperties(Layer* aLayer)
 }
 
 void
-CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
+CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
   PROFILER_LABEL("CompositorParent", "Composite",
@@ -1072,7 +1072,7 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
 }
 
 void
-CompositorParent::ForceComposeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
+CompositorParent::ForceComposeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRect)
 {
   PROFILER_LABEL("CompositorParent", "ForceComposeToTarget",
     js::ProfileEntry::Category::GRAPHICS);
@@ -1338,7 +1338,7 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
 
   // mWidget doesn't belong to the compositor thread, so it should be set to
   // nullptr before returning from this method, to avoid accessing it elsewhere.
-  nsIntRect rect;
+  gfx::IntRect rect;
   mWidget->GetClientBounds(rect);
   InitializeLayerManager(aBackendHints);
   mWidget = nullptr;
@@ -1600,7 +1600,7 @@ public:
   virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
   virtual bool RecvAdoptChild(const uint64_t& child) override { return false; }
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                const nsIntRect& aRect) override
+                                const gfx::IntRect& aRect) override
   { return true; }
   virtual bool RecvFlushRendering() override { return true; }
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) override { return true; }

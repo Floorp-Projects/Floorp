@@ -2655,7 +2655,7 @@ RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
   mUpdateRegion = aDirtyRegion;
   if (aNewSize != mUsedSize) {
     mUsedSize = aNewSize;
-    mUpdateRegion = nsIntRect(nsIntPoint(0, 0), aNewSize);
+    mUpdateRegion = gfx::IntRect(gfx::IntPoint(0, 0), aNewSize);
   }
 
   if (mUpdateRegion.IsEmpty()) {
@@ -2698,7 +2698,7 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   }
 
   if (overwriteTexture || !CanUploadSubtextures()) {
-    updateRegion = nsIntRect(nsIntPoint(0, 0), mTextureSize);
+    updateRegion = gfx::IntRect(gfx::IntPoint(0, 0), mTextureSize);
   }
 
   RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();

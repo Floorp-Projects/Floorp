@@ -5,7 +5,6 @@
 
 #include "gfxAlphaRecovery.h"
 #include "gfxImageSurface.h"
-#include "nsRect.h"
 #include <emmintrin.h>
 
 // This file should only be compiled on x86 and x64 systems.  Additionally,
@@ -137,8 +136,8 @@ ByteAlignment(int32_t aAlignToLog2, int32_t aX, int32_t aY=0, int32_t aStride=1)
     return (aX + aStride * aY) & ((1 << aAlignToLog2) - 1);
 }
 
-/*static*/ nsIntRect
-gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
+/*static*/ mozilla::gfx::IntRect
+gfxAlphaRecovery::AlignRectForSubimageRecovery(const mozilla::gfx::IntRect& aRect,
                                                gfxImageSurface* aSurface)
 {
     NS_ASSERTION(gfxImageFormat::ARGB32 == aSurface->Format(),
@@ -229,8 +228,8 @@ gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
     return aRect;
 
 FOUND_SOLUTION:
-    nsIntRect solution = nsIntRect(x - dx, y - dy, w + dr + dx, h + dy);
-    MOZ_ASSERT(nsIntRect(0, 0, sw, surfaceSize.height).Contains(solution),
+    mozilla::gfx::IntRect solution = mozilla::gfx::IntRect(x - dx, y - dy, w + dr + dx, h + dy);
+    MOZ_ASSERT(mozilla::gfx::IntRect(0, 0, sw, surfaceSize.height).Contains(solution),
                "'Solution' extends outside surface bounds!");
     return solution;
 }

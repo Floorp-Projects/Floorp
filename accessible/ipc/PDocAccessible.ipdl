@@ -8,9 +8,9 @@ include protocol PContent;
 
 include "mozilla/GfxMessageUtils.h";
 
-using struct nsIntPoint from "nsRect.h";
-using struct nsIntRect from "nsRect.h";
+using nsIntRect from "nsRect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 
 namespace mozilla {
 namespace a11y {
@@ -135,7 +135,7 @@ child:
   prio(high) sync PasteText(uint64_t aID, int32_t aPosition)
     returns(bool aValid);
 
-  prio(high) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(nsIntPoint aRetVal);
+  prio(high) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(IntPoint aRetVal);
   prio(high) sync ImageSize(uint64_t aID) returns(IntSize aRetVal);
 
   prio(high) sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);

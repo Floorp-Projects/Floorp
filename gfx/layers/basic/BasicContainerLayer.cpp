@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "ReadbackProcessor.h"
 
@@ -78,7 +77,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
 }
 
 bool
-BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
+BasicContainerLayer::ChildrenPartitionVisibleRegion(const gfx::IntRect& aInRect)
 {
   Matrix transform;
   if (!GetEffectiveTransform().CanDraw2D(&transform) ||
@@ -86,7 +85,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
     return false;
 
   nsIntPoint offset(int32_t(transform._31), int32_t(transform._32));
-  nsIntRect rect = aInRect.Intersect(GetEffectiveVisibleRegion().GetBounds() + offset);
+  gfx::IntRect rect = aInRect.Intersect(GetEffectiveVisibleRegion().GetBounds() + offset);
   nsIntRegion covered;
 
   for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
