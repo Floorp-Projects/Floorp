@@ -630,7 +630,7 @@
 @RESPATH@/components/AppsService.manifest
 @RESPATH@/components/Push.js
 @RESPATH@/components/Push.manifest
-@RESPATH@/components/PushServiceLauncher.js
+@RESPATH@/components/PushNotificationService.js
 
 @RESPATH@/components/InterAppComm.manifest
 @RESPATH@/components/InterAppCommService.js
