@@ -6,7 +6,7 @@
 #define NfcService_h
 
 #include "mozilla/ipc/Nfc.h"
-#include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/ipc/SocketBase.h"
 #include "nsCOMPtr.h"
 #include "nsINfcService.h"
 #include "NfcMessageHandler.h"

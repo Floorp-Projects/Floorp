@@ -12,7 +12,7 @@
 #include "BluetoothHfpManagerBase.h"
 #include "BluetoothRilListener.h"
 #include "BluetoothSocketObserver.h"
-#include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/ipc/SocketBase.h"
 #include "mozilla/Hal.h"
 
 BEGIN_BLUETOOTH_NAMESPACE

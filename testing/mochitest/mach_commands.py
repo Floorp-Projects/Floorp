@@ -844,7 +844,7 @@ class MachCommands(MachCommandBase):
         elif conditions.is_emulator(self):
             return self.run_mochitest_remote(test_paths, **kwargs)
         elif conditions.is_b2g_desktop(self):
-            return self.run_b2g_desktop(test_paths, **kwargs)
+            return self.run_mochitest_b2g_desktop(test_paths, **kwargs)
         elif conditions.is_android(self):
             return self.run_mochitest_android(test_paths, **kwargs)
 
