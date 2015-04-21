@@ -3197,8 +3197,8 @@ Element::GetAnimations(nsTArray<nsRefPtr<Animation>>& aAnimations)
                             nsGkAtoms::animationsProperty };
   for (size_t propIdx = 0; propIdx < MOZ_ARRAY_LENGTH(properties);
        propIdx++) {
-    AnimationPlayerCollection* collection =
-      static_cast<AnimationPlayerCollection*>(
+    AnimationCollection* collection =
+      static_cast<AnimationCollection*>(
         GetProperty(properties[propIdx]));
     if (!collection) {
       continue;

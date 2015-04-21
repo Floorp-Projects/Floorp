@@ -325,7 +325,7 @@ KeyframeEffectReadonly::ComposeStyle(
                "incorrect last to key");
 
     if (aSetProperties.HasProperty(prop.mProperty)) {
-      // Animations are composed by AnimationPlayerCollection by iterating
+      // Animations are composed by AnimationCollection by iterating
       // from the last animation to first. For animations targetting the
       // same property, the later one wins. So if this property is already set,
       // we should not override it.
