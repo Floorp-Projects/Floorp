@@ -79,10 +79,6 @@
             android:key="passwords"
             android:persistent="false"
             android:title="@string/fxaccount_status_passwords" />
-        <CheckBoxPreference
-            android:key="reading_list"
-            android:persistent="false"
-            android:title="@string/fxaccount_status_reading_list" />
 
         <EditTextPreference
             android:singleLine="true"
@@ -127,7 +123,6 @@
         <Preference android:key="debug_dump" />
         <Preference android:key="debug_force_sync" />
         <Preference android:key="debug_invalidate_certificate" />
-        <Preference android:key="debug_forget_reading_list_oauth_token" />
         <Preference android:key="debug_forget_certificate" />
         <Preference android:key="debug_require_password" />
         <Preference android:key="debug_require_upgrade" />
