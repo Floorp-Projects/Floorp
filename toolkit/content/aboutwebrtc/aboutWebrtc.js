@@ -293,7 +293,7 @@ let AboutWebRTC = {
     let connections = document.createDocumentFragment();
 
     let reports = [...this._reports];
-    reports.sort((a, b) => a.timestamp - b.timestamp);
+    reports.sort((a, b) => b.timestamp - a.timestamp);
     for (let report of reports) {
       let peerConnection = new PeerConnection(report);
       connections.appendChild(peerConnection.render());
@@ -305,6 +305,10 @@ let AboutWebRTC = {
   renderConnectionLog: function() {
     let content = document.createElement("div");
     content.className = "log";
+
+    if (!this._log.length) {
+      return content;
+    }
 
     let elem = document.createElement("h3");
     elem.textContent = getString("log_heading");
