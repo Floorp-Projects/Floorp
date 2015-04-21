@@ -131,13 +131,6 @@ Site.prototype = {
     this._querySelector(".newtab-title").textContent = title;
     this.node.setAttribute("type", this.link.type);
 
-    if (this.link.targetedSite) {
-      this.node.setAttribute("suggested", true);
-      let targetedSite = `<strong> ${this.link.targetedName} </strong>`;
-      this._querySelector(".newtab-suggested").innerHTML =
-        `<div class='newtab-suggested-bounds'>Suggested for ${targetedSite} visitors</div>`;
-    }
-
     if (this.isPinned())
       this._updateAttributes(true);
     // Capture the page if the thumbnail is missing, which will cause page.js
@@ -184,15 +177,6 @@ Site.prototype = {
     }
   },
 
-  _ignoreHoverEvents: function(element) {
-    element.addEventListener("mouseover", () => {
-      this.cell.node.setAttribute("ignorehover", "true");
-    });
-    element.addEventListener("mouseout", () => {
-      this.cell.node.removeAttribute("ignorehover");
-    });
-  },
-
   /**
    * Adds event handlers for the site and its buttons.
    */
@@ -202,12 +186,14 @@ Site.prototype = {
     this._node.addEventListener("dragend", this, false);
     this._node.addEventListener("mouseover", this, false);
 
-    // Specially treat the sponsored icon & suggested explanation
-    // text to prevent regular hover effects
+    // Specially treat the sponsored icon to prevent regular hover effects
     let sponsored = this._querySelector(".newtab-sponsored");
-    let suggested = this._querySelector(".newtab-suggested");
-    this._ignoreHoverEvents(sponsored);
-    this._ignoreHoverEvents(suggested);
+    sponsored.addEventListener("mouseover", () => {
+      this.cell.node.setAttribute("ignorehover", "true");
+    });
+    sponsored.addEventListener("mouseout", () => {
+      this.cell.node.removeAttribute("ignorehover");
+    });
   },
 
   /**
@@ -234,30 +220,25 @@ Site.prototype = {
                       .add(aIndex);
   },
 
-  _toggleLegalText: function(buttonClass, explanationTextClass) {
-    let button = this._querySelector(buttonClass);
+  _toggleSponsored: function() {
+    let button = this._querySelector(".newtab-sponsored");
     if (button.hasAttribute("active")) {
-      let explain = this._querySelector(explanationTextClass);
+      let explain = this._querySelector(".sponsored-explain");
       explain.parentNode.removeChild(explain);
 
       button.removeAttribute("active");
     }
     else {
       let explain = document.createElementNS(HTML_NAMESPACE, "div");
-      explain.className = explanationTextClass.slice(1); // Slice off the first character, '.'
+      explain.className = "sponsored-explain";
       this.node.appendChild(explain);
 
       let link = '<a href="' + TILES_EXPLAIN_LINK + '">' +
                  newTabString("learn.link") + "</a>";
-      let type = this.node.getAttribute("suggested") ? "suggested" : this.node.getAttribute("type");
+      let type = this.node.getAttribute("type");
       let icon = '<input type="button" class="newtab-control newtab-' +
-                 (type == "enhanced" ? "customize" : "control-block") + '"/>';
-
-      if (type == "suggested") {
-        explain.innerHTML = `This site is suggested to you by Mozilla. You can remove it at any time by clicking the ${icon} button. ${link}`;
-      } else {
-        explain.innerHTML = newTabString(type + ".explain", [icon, link]);
-      }
+                 (type == "sponsored" ? "control-block" : "customize") + '"/>';
+      explain.innerHTML = newTabString(type + ".explain", [icon, link]);
 
       button.setAttribute("active", "true");
     }
@@ -285,9 +266,6 @@ Site.prototype = {
     else if (target.parentElement.classList.contains("sponsored-explain")) {
       action = "sponsored_link";
     }
-    else if (target.parentElement.classList.contains("suggested-explain")) {
-      action = "suggested_link";
-    }
     // Only handle primary clicks for the remaining targets
     else if (button == 0) {
       aEvent.preventDefault();
@@ -297,15 +275,8 @@ Site.prototype = {
       }
       else if (target.classList.contains("sponsored-explain") ||
                target.classList.contains("newtab-sponsored")) {
-        this._toggleLegalText(".newtab-sponsored", ".sponsored-explain");
+        this._toggleSponsored();
         action = "sponsored";
-      }
-      else if (target.classList.contains("suggested-explain") ||
-               target.classList.contains("newtab-suggested-bounds") ||
-               target.parentElement.classList.contains("newtab-suggested-bounds") ||
-               target.classList.contains("newtab-suggested")) {
-        this._toggleLegalText(".newtab-suggested", ".suggested-explain");
-        action = "suggested";
       }
       else if (pinned) {
         this.unpin();

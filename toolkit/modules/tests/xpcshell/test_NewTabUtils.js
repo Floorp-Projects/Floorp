@@ -6,97 +6,10 @@
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-
-const PREF_NEWTAB_ENHANCED = "browser.newtabpage.enhanced";
 
 function run_test() {
-  Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, true);
   run_next_test();
 }
-
-add_task(function validCacheMidPopulation() {
-  let expectedLinks = makeLinks(0, 3, 1);
-
-  let provider = new TestProvider(done => done(expectedLinks));
-  provider.maxNumLinks = expectedLinks.length;
-
-  NewTabUtils.initWithoutProviders();
-  NewTabUtils.links.addProvider(provider);
-  let promise = new Promise(resolve => NewTabUtils.links.populateCache(resolve));
-
-  // isTopSiteGivenProvider() and getProviderLinks() should still return results
-  // even when cache is empty or being populated.
-  do_check_false(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
-  do_check_links(NewTabUtils.getProviderLinks(provider), []);
-
-  yield promise;
-
-  // Once the cache is populated, we get the expected results
-  do_check_true(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
-  do_check_links(NewTabUtils.getProviderLinks(provider), expectedLinks);
-  NewTabUtils.links.removeProvider(provider);
-});
-
-add_task(function notifyLinkDelete() {
-  let expectedLinks = makeLinks(0, 3, 1);
-
-  let provider = new TestProvider(done => done(expectedLinks));
-  provider.maxNumLinks = expectedLinks.length;
-
-  NewTabUtils.initWithoutProviders();
-  NewTabUtils.links.addProvider(provider);
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
-
-  do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
-
-  // Remove a link.
-  let removedLink = expectedLinks[2];
-  provider.notifyLinkChanged(removedLink, 2, true);
-  let links = NewTabUtils.links._providers.get(provider);
-
-  // Check that sortedLinks is correctly updated.
-  do_check_links(NewTabUtils.links.getLinks(), expectedLinks.slice(0, 2));
-
-  // Check that linkMap is accurately updated.
-  do_check_eq(links.linkMap.size, 2);
-  do_check_true(links.linkMap.get(expectedLinks[0].url));
-  do_check_true(links.linkMap.get(expectedLinks[1].url));
-  do_check_false(links.linkMap.get(removedLink.url));
-
-  // Check that siteMap is correctly updated.
-  do_check_eq(links.siteMap.size, 2);
-  do_check_true(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[0].url)));
-  do_check_true(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[1].url)));
-  do_check_false(links.siteMap.has(NewTabUtils.extractSite(removedLink.url)));
-
-  NewTabUtils.links.removeProvider(provider);
-});
-
-add_task(function populatePromise() {
-  let count = 0;
-  let expectedLinks = makeLinks(0, 10, 2);
-
-  let getLinksFcn = Task.async(function* (callback) {
-    //Should not be calling getLinksFcn twice
-    count++;
-    do_check_eq(count, 1);
-    yield Promise.resolve();
-    callback(expectedLinks);
-  });
-
-  let provider = new TestProvider(getLinksFcn);
-
-  NewTabUtils.initWithoutProviders();
-  NewTabUtils.links.addProvider(provider);
-
-  NewTabUtils.links.populateProviderCache(provider, () => {});
-  NewTabUtils.links.populateProviderCache(provider, () => {
-    do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
-    NewTabUtils.links.removeProvider(provider);
-  });
-});
 
 add_task(function isTopSiteGivenProvider() {
   let expectedLinks = makeLinks(0, 10, 2);
@@ -109,7 +22,7 @@ add_task(function isTopSiteGivenProvider() {
 
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  NewTabUtils.links.populateCache(function () {}, false);
 
   do_check_eq(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), true);
   do_check_eq(NewTabUtils.isTopSiteGivenProvider("example1.com", provider), false);
@@ -149,7 +62,8 @@ add_task(function multipleProviders() {
   NewTabUtils.links.addProvider(evenProvider);
   NewTabUtils.links.addProvider(oddProvider);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  // This is sync since the providers' getLinks are sync.
+  NewTabUtils.links.populateCache(function () {}, false);
 
   let links = NewTabUtils.links.getLinks();
   let expectedLinks = makeLinks(NewTabUtils.links.maxNumLinks,
@@ -169,7 +83,8 @@ add_task(function changeLinks() {
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  // This is sync since the provider's getLinks is sync.
+  NewTabUtils.links.populateCache(function () {}, false);
 
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
 
@@ -209,12 +124,8 @@ add_task(function changeLinks() {
   // Notify of many links changed.
   expectedLinks = makeLinks(0, 3, 1);
   provider.notifyManyLinksChanged();
-
-  // Since _populateProviderCache() is async, we must wait until the provider's
-  // populate promise has been resolved.
-  yield NewTabUtils.links._providers.get(provider).populatePromise;
-
-  // NewTabUtils.links will now repopulate its cache
+  // NewTabUtils.links will now repopulate its cache, which is sync since
+  // the provider's getLinks is sync.
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
 
   NewTabUtils.links.removeProvider(provider);
@@ -227,14 +138,15 @@ add_task(function oneProviderAlreadyCached() {
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider1);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  // This is sync since the provider's getLinks is sync.
+  NewTabUtils.links.populateCache(function () {}, false);
   do_check_links(NewTabUtils.links.getLinks(), links1);
 
   let links2 = makeLinks(10, 20, 1);
   let provider2 = new TestProvider(done => done(links2));
   NewTabUtils.links.addProvider(provider2);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  NewTabUtils.links.populateCache(function () {}, false);
   do_check_links(NewTabUtils.links.getLinks(), links2.concat(links1));
 
   NewTabUtils.links.removeProvider(provider1);
@@ -250,7 +162,8 @@ add_task(function newLowRankedLink() {
   NewTabUtils.initWithoutProviders();
   NewTabUtils.links.addProvider(provider);
 
-  yield new Promise(resolve => NewTabUtils.links.populateCache(resolve));
+  // This is sync since the provider's getLinks is sync.
+  NewTabUtils.links.populateCache(function () {}, false);
   do_check_links(NewTabUtils.links.getLinks(), links);
 
   // Notify of a new link that's low-ranked enough not to make the list.
@@ -329,19 +242,16 @@ TestProvider.prototype = {
   addObserver: function (observer) {
     this._observers.add(observer);
   },
-  notifyLinkChanged: function (link, index=-1, deleted=false) {
-    this._notifyObservers("onLinkChanged", link, index, deleted);
+  notifyLinkChanged: function (link) {
+    this._notifyObservers("onLinkChanged", link);
   },
   notifyManyLinksChanged: function () {
     this._notifyObservers("onManyLinksChanged");
   },
-  _notifyObservers: function () {
-    let observerMethodName = arguments[0];
-    let args = Array.prototype.slice.call(arguments, 1);
-    args.unshift(this);
+  _notifyObservers: function (observerMethodName, arg) {
     for (let obs of this._observers) {
       if (obs[observerMethodName])
-        obs[observerMethodName].apply(NewTabUtils.links, args);
+        obs[observerMethodName](this, arg);
     }
   },
 };
