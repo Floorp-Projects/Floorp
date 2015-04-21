@@ -19,7 +19,7 @@ include w3c-css/received/reftest.list
 include abs-pos/reftest.list
 include position-relative/reftest.list
 
-include async-scrolling/reftest.list
+skip-if(asyncPanZoom&&winWidget) include async-scrolling/reftest.list
 
 # backgrounds/
 include backgrounds/reftest.list
