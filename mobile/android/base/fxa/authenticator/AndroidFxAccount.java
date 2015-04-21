@@ -63,13 +63,6 @@ public class AndroidFxAccount {
   public static final String ACCOUNT_KEY_TOKEN_SERVER = "tokenServerURI";       // Sync-specific.
   public static final String ACCOUNT_KEY_DESCRIPTOR = "descriptor";
 
-  // The set of authorities to sync automatically changes over time. The first
-  // new authority is the Reading List. This tracks if we've enabled syncing,
-  // and opted in (or out) of syncing automatically, for the new Reading List
-  // authority. This happens either on when the account is created or when
-  // upgrading.
-  public static final String ACCOUNT_KEY_READING_LIST_AUTHORITY_INITIALIZED = "readingListAuthorityInitialized";
-
   public static final int CURRENT_BUNDLE_VERSION = 2;
   public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
   public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
@@ -93,10 +86,6 @@ public class AndroidFxAccount {
     final HashMap<String, Boolean> m = new HashMap<String, Boolean>();
     // By default, Firefox Sync is enabled.
     m.put(BrowserContract.AUTHORITY, true);
-    if (AppConstants.MOZ_ANDROID_READING_LIST_SERVICE) {
-      // Sync the Reading List.
-      m.put(BrowserContract.READING_LIST_AUTHORITY, true);
-    }
     DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP = Collections.unmodifiableMap(m);
   }
 
@@ -430,10 +419,6 @@ public class AndroidFxAccount {
     userdata.putString(ACCOUNT_KEY_IDP_SERVER, idpServerURI);
     userdata.putString(ACCOUNT_KEY_TOKEN_SERVER, tokenServerURI);
     userdata.putString(ACCOUNT_KEY_PROFILE, profile);
-    if (DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP.containsKey(BrowserContract.READING_LIST_AUTHORITY)) {
-      // Have we initialized the Reading List authority?
-      userdata.putString(ACCOUNT_KEY_READING_LIST_AUTHORITY_INITIALIZED, "1");
-    }
 
     if (bundle == null) {
       bundle = new ExtendedJSONObject();

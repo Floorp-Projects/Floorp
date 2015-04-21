@@ -234,10 +234,10 @@ KeyframeEffectReadonly::ActiveDuration(const AnimationTiming& aTiming)
 
 // http://w3c.github.io/web-animations/#in-play
 bool
-KeyframeEffectReadonly::IsInPlay(const AnimationPlayer& aPlayer) const
+KeyframeEffectReadonly::IsInPlay(const Animation& aAnimation) const
 {
   if (IsFinishedTransition() ||
-      aPlayer.PlayState() == AnimationPlayState::Finished) {
+      aAnimation.PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -246,10 +246,10 @@ KeyframeEffectReadonly::IsInPlay(const AnimationPlayer& aPlayer) const
 
 // http://w3c.github.io/web-animations/#current
 bool
-KeyframeEffectReadonly::IsCurrent(const AnimationPlayer& aPlayer) const
+KeyframeEffectReadonly::IsCurrent(const Animation& aAnimation) const
 {
   if (IsFinishedTransition() ||
-      aPlayer.PlayState() == AnimationPlayState::Finished) {
+      aAnimation.PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -325,7 +325,7 @@ KeyframeEffectReadonly::ComposeStyle(
                "incorrect last to key");
 
     if (aSetProperties.HasProperty(prop.mProperty)) {
-      // Animations are composed by AnimationPlayerCollection by iterating
+      // Animations are composed by AnimationCollection by iterating
       // from the last animation to first. For animations targetting the
       // same property, the later one wins. So if this property is already set,
       // we should not override it.

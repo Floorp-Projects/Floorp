@@ -56,7 +56,7 @@ add_task(function test_addBookmarksAndCheckGuids() {
 
   root.containerOpen = false;
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(function test_updateBookmarksAndCheckGuids() {
@@ -85,7 +85,7 @@ add_task(function test_updateBookmarksAndCheckGuids() {
 
   root.containerOpen = false;
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(function test_addVisitAndCheckGuid() {
@@ -133,7 +133,7 @@ add_task(function test_addItemsWithInvalidGUIDsFails() {
   }
   catch(ex) { }
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(function test_addItemsWithGUIDs() {
@@ -154,7 +154,7 @@ add_task(function test_addItemsWithGUIDs() {
   do_check_eq(root.getChild(1).bookmarkGuid, SEPARATOR_GUID);
 
   root.containerOpen = false;
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(function test_emptyGUIDIgnored() {
@@ -162,7 +162,7 @@ add_task(function test_emptyGUIDIgnored() {
                                   bmsvc.DEFAULT_INDEX, "");
   do_check_valid_places_guid(PlacesUtils.getFolderContents(folder)
                                         .root.bookmarkGuid);
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });
 
 add_task(function test_usingSameGUIDFails() {
@@ -176,5 +176,5 @@ add_task(function test_usingSameGUIDFails() {
   }
   catch(ex) { }
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 });

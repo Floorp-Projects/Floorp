@@ -1523,7 +1523,6 @@ class AsmJSActivation : public Activation
     AsmJSActivation* prevAsmJS_;
     AsmJSActivation* prevAsmJSForModule_;
     void* entrySP_;
-    SPSProfiler* profiler_;
     void* resumePC_;
     uint8_t* fp_;
     AsmJSExit::Reason exitReason_;

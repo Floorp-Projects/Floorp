@@ -8,9 +8,16 @@
  * Tests that we build a working leftpane in various corruption situations.
  */
 
-function run_test() {
+// Used to store the original leftPaneFolderId getter.
+let gLeftPaneFolderIdGetter;
+let gAllBookmarksFolderIdGetter;
+// Used to store the original left Pane status as a JSON string.
+let gReferenceHierarchy;
+let gLeftPaneFolderId;
+
+add_task(function* () {
   // We want empty roots.
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 
   // Sanity check.
   Assert.ok(!!PlacesUIUtils);
@@ -21,17 +28,8 @@ function run_test() {
   gAllBookmarksFolderIdGetter = Object.getOwnPropertyDescriptor(PlacesUIUtils, "allBookmarksFolderId");
   Assert.equal(typeof(gAllBookmarksFolderIdGetter.get), "function");
 
-  run_next_test();
-}
-
-do_register_cleanup(remove_all_bookmarks);
-
-// Used to store the original leftPaneFolderId getter.
-let gLeftPaneFolderIdGetter;
-let gAllBookmarksFolderIdGetter;
-// Used to store the original left Pane status as a JSON string.
-let gReferenceHierarchy;
-let gLeftPaneFolderId;
+  do_register_cleanup(() => PlacesUtils.bookmarks.eraseEverything());
+});
 
 add_task(function* () {
   // Add a third party bogus annotated item.  Should not be removed.

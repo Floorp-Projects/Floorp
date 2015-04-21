@@ -300,14 +300,14 @@ public:
     return mIsFinishedTransition;
   }
 
-  void SetIsFinishedTransition() {
+  void SetIsFinishedTransition(bool aIsFinished) {
     MOZ_ASSERT(AsTransition(),
                "Calling SetIsFinishedTransition but it's not a transition");
-    mIsFinishedTransition = true;
+    mIsFinishedTransition = aIsFinished;
   }
 
-  bool IsInPlay(const AnimationPlayer& aPlayer) const;
-  bool IsCurrent(const AnimationPlayer& aPlayer) const;
+  bool IsInPlay(const Animation& aAnimation) const;
+  bool IsCurrent(const Animation& aAnimation) const;
   bool IsInEffect() const;
 
   const AnimationProperty*

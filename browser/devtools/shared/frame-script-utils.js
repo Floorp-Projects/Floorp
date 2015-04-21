@@ -3,11 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const Cu = Components.utils;
-
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 devtools.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
 devtools.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+            .getService(Ci.mozIJSSubScriptLoader);
+let EventUtils = {};
+loader.loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 
 addMessageListener("devtools:test:history", function ({ data }) {
   content.history[data.direction]();
@@ -187,6 +190,55 @@ addMessageListener("devtools:test:setAttribute", function(msg) {
   node.setAttribute(attributeName, attributeValue);
 
   sendAsyncMessage("devtools:test:setAttribute");
+});
+
+/**
+ * Synthesize a mouse event on an element. This handler doesn't send a message
+ * back. Consumers should listen to specific events on the inspector/highlighter
+ * to know when the event got synthesized.
+ * @param {Object} msg The msg.data part expects the following properties:
+ * - {Number} x
+ * - {Number} y
+ * - {Boolean} center If set to true, x/y will be ignored and
+ *             synthesizeMouseAtCenter will be used instead
+ * - {Object} options Other event options
+ * - {String} selector An optional selector that will be used to find the node to
+ *            synthesize the event on, if msg.objects doesn't contain the CPOW.
+ * The msg.objects part should be the element.
+ * @param {Object} data Event detail properties:
+ */
+addMessageListener("Test:SynthesizeMouse", function(msg) {
+  let {x, y, center, options, selector} = msg.data;
+  let {node} = msg.objects;
+
+  if (!node && selector) {
+    node = superQuerySelector(selector);
+  }
+
+  if (center) {
+    EventUtils.synthesizeMouseAtCenter(node, options, node.ownerDocument.defaultView);
+  } else {
+    EventUtils.synthesizeMouse(node, x, y, options, node.ownerDocument.defaultView);
+  }
+
+  // Most consumers won't need to listen to this message, unless they want to
+  // wait for the mouse event to be synthesized and don't have another event
+  // to listen to instead.
+  sendAsyncMessage("Test:SynthesizeMouse");
+});
+
+/**
+ * Synthesize a key event for an element. This handler doesn't send a message
+ * back. Consumers should listen to specific events on the inspector/highlighter
+ * to know when the event got synthesized.
+ * @param  {Object} msg The msg.data part expects the following properties:
+ * - {String} key
+ * - {Object} options
+ */
+addMessageListener("Test:SynthesizeKey", function(msg) {
+  let {key, options} = msg.data;
+
+  EventUtils.synthesizeKey(key, options, content);
 });
 
 /**

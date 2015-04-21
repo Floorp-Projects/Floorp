@@ -187,7 +187,7 @@ function run_test()
  */
 add_task(function test_add_visits_to_database()
 {
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 
   // We don't really bother on this, but we need a time to add visits.
   let timeInMicroseconds = Date.now() * 1000;
@@ -298,7 +298,7 @@ add_task(function test_redirects()
   cartProd([includeHidden_options, maxResults_options, sorting_options],
            check_results_callback);
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
 
   yield PlacesTestUtils.clearHistory();
 });
