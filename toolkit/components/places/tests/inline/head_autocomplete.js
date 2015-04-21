@@ -140,8 +140,10 @@ function ensure_results(aSearchString, aExpectedValue) {
       }
 
       // Cleanup.
-      remove_all_bookmarks();
-      PlacesTestUtils.clearHistory().then(resolve);
+      Promise.all([
+        PlacesUtils.bookmarks.eraseEverything(),
+        PlacesTestUtils.clearHistory()
+      ]).then(resolve);
     };
   });
 

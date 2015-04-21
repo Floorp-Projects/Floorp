@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for promise resolution ordering with thenables and promises</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+var t = async_test("A promise resolved first (with a thenable) should trigger its callbacks before a promise resolved second (with a promise).");
+t.step(function() {
+  var customThenCalled = false;
+  var p0 = Promise.resolve();
+  p0.then = function(resolved, rejected) {
+    customThenCalled = true;
+    Promise.prototype.then.call(this, resolved, rejected);
+  }
+  var p1 = new Promise(function(r) { r(p0); });
+  delete p0.then;
+  var p2 = new Promise(function(r) { r(p0); });
+  var resolutionOrder = "";
+  Promise.all([ p1.then(function() { resolutionOrder += "1"; }),
+                p2.then(function() { resolutionOrder += "2"; }) ])
+         .then(t.step_func_done(function() {
+           assert_true(customThenCalled, "Should have called custom then");
+           assert_equals(resolutionOrder, "12");
+         }));
+});
+</script>

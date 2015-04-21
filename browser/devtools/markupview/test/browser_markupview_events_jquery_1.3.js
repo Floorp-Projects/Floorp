@@ -17,17 +17,6 @@ const TEST_DATA = [
     selector: "html",
     expected: [
       {
-        type: "unload",
-        filename: TEST_URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function(H) {\n" +
-                 "  n(this).unbind(H, D);\n" +
-                 "  return (E || G).apply(this, arguments)\n" +
-                 "}"
-      },
-      {
         type: "load",
         filename: TEST_URL_ROOT + TEST_LIB + ":19",
         attributes: [
@@ -108,7 +97,7 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "unload",
+        type: "load",
         filename: TEST_URL_ROOT + TEST_LIB + ":19",
         attributes: [
           "Bubbling",
@@ -119,7 +108,18 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "load",
+        type: "unload",
+        filename: TEST_URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function(H) {\n" +
+                 "  n(this).unbind(H, D);\n" +
+                 "  return (E || G).apply(this, arguments)\n" +
+                 "}"
+      },
+      {
+        type: "unload",
         filename: TEST_URL_ROOT + TEST_LIB + ":19",
         attributes: [
           "Bubbling",
@@ -155,16 +155,6 @@ const TEST_DATA = [
                  "}"
       },
       {
-        type: "keydown",
-        filename: TEST_URL + ":36",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "var handler9 = function divKeyDown() {\n" +
-                 "  alert(9);\n" +
-                 "}"
-      },
-      {
         type: "click",
         filename: TEST_URL_ROOT + TEST_LIB + ":19",
         attributes: [
@@ -173,6 +163,16 @@ const TEST_DATA = [
         ],
         handler: "function() {\n" +
                  "  return typeof n !== \"undefined\" && !n.event.triggered ? n.event.handle.apply(arguments.callee.elem, arguments) : g\n" +
+                 "}"
+      },
+      {
+        type: "keydown",
+        filename: TEST_URL + ":36",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "var handler9 = function divKeyDown() {\n" +
+                 "  alert(9);\n" +
                  "}"
       },
       {

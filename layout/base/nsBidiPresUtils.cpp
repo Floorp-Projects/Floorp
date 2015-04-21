@@ -990,7 +990,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
       if (!(frame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
         nsContainerFrame* c = static_cast<nsContainerFrame*>(frame);
-        MOZ_ASSERT(c = do_QueryFrame(frame),
+        MOZ_ASSERT(c == do_QueryFrame(frame),
                    "eBidiInlineContainer must be a nsContainerFrame subclass");
         c->DrainSelfOverflowList();
       }

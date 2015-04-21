@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/Timer.jsm");
 do_get_profile();
 
 let prefs = new Preferences("readinglist.scheduler.");
+prefs.set("enabled", true);
 
 function promiseObserver(topic) {
   return new Promise(resolve => {

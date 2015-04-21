@@ -102,10 +102,6 @@ public class TabsPanel extends LinearLayout
         mActivity = (GeckoApp) context;
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
-        setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                                                      LinearLayout.LayoutParams.MATCH_PARENT));
-        setOrientation(LinearLayout.VERTICAL);
-
         mCurrentPanel = Panel.NORMAL_TABS;
 
         mPopupMenu = new GeckoPopupMenu(context);
@@ -332,11 +328,6 @@ public class TabsPanel extends LinearLayout
         public TabsPanelToolbar(Context context, AttributeSet attrs) {
             super(context, attrs);
             mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
-
-            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                                                          (int) context.getResources().getDimension(R.dimen.browser_toolbar_height)));
-
-            setOrientation(LinearLayout.HORIZONTAL);
         }
 
         @Override

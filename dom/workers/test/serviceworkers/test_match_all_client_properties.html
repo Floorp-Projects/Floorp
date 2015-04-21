@@ -25,6 +25,8 @@
   function unregister() {
     return registration.unregister().then(function(result) {
       ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
     });
   }
 
@@ -77,6 +79,7 @@
     start()
       .then(testAuxiliaryWindow)
       .then(testNestedWindow)
+      .then(unregister)
       .catch(function(e) {
         ok(false, "Some test failed with error " + e);
       }).then(SimpleTest.finish);

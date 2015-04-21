@@ -275,34 +275,37 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   let name = uri.fileName || "/";
   let query = uri.query;
   let hostPort = uri.hostPort;
+  let remoteAddress = attachment.remoteAddress;
 
   if (fuzzyUrl) {
-    ok(attachment.method.startsWith(aMethod), "The attached method is incorrect.");
-    ok(attachment.url.startsWith(aUrl), "The attached url is incorrect.");
+    ok(attachment.method.startsWith(aMethod), "The attached method is correct.");
+    ok(attachment.url.startsWith(aUrl), "The attached url is correct.");
   } else {
-    is(attachment.method, aMethod, "The attached method is incorrect.");
-    is(attachment.url, aUrl, "The attached url is incorrect.");
+    is(attachment.method, aMethod, "The attached method is correct.");
+    is(attachment.url, aUrl, "The attached url is correct.");
   }
 
   is(target.querySelector(".requests-menu-method").getAttribute("value"),
-    aMethod, "The displayed method is incorrect.");
+    aMethod, "The displayed method is correct.");
 
   if (fuzzyUrl) {
     ok(target.querySelector(".requests-menu-file").getAttribute("value").startsWith(
-      name + (query ? "?" + query : "")), "The displayed file is incorrect.");
+      name + (query ? "?" + query : "")), "The displayed file is correct.");
     ok(target.querySelector(".requests-menu-file").getAttribute("tooltiptext").startsWith(
-      name + (query ? "?" + query : "")), "The tooltip file is incorrect.");
+      name + (query ? "?" + query : "")), "The tooltip file is correct.");
   } else {
     is(target.querySelector(".requests-menu-file").getAttribute("value"),
-      name + (query ? "?" + query : ""), "The displayed file is incorrect.");
+      name + (query ? "?" + query : ""), "The displayed file is correct.");
     is(target.querySelector(".requests-menu-file").getAttribute("tooltiptext"),
-      name + (query ? "?" + query : ""), "The tooltip file is incorrect.");
+      name + (query ? "?" + query : ""), "The tooltip file is correct.");
   }
 
   is(target.querySelector(".requests-menu-domain").getAttribute("value"),
-    hostPort, "The displayed domain is incorrect.");
+    hostPort, "The displayed domain is correct.");
+
+  let domainTooltip = hostPort + (remoteAddress ? " (" + remoteAddress + ")" : "");
   is(target.querySelector(".requests-menu-domain").getAttribute("tooltiptext"),
-    hostPort, "The tooltip domain is incorrect.");
+    domainTooltip, "The tooltip domain is correct.");
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-menu-status").getAttribute("code");
@@ -311,54 +314,54 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     info("Displayed status: " + value);
     info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);
-    is(value, status, "The displayed status is incorrect.");
-    is(codeValue, status, "The displayed status code is incorrect.");
-    is(tooltip, status + " " + statusText, "The tooltip status is incorrect.");
+    is(value, status, "The displayed status is correct.");
+    is(codeValue, status, "The displayed status code is correct.");
+    is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }
   if (type !== undefined) {
     let value = target.querySelector(".requests-menu-type").getAttribute("value");
     let tooltip = target.querySelector(".requests-menu-type").getAttribute("tooltiptext");
     info("Displayed type: " + value);
     info("Tooltip type: " + tooltip);
-    is(value, type, "The displayed type is incorrect.");
-    is(tooltip, fullMimeType, "The tooltip type is incorrect.");
+    is(value, type, "The displayed type is correct.");
+    is(tooltip, fullMimeType, "The tooltip type is correct.");
   }
   if (transferred !== undefined) {
     let value = target.querySelector(".requests-menu-transferred").getAttribute("value");
     let tooltip = target.querySelector(".requests-menu-transferred").getAttribute("tooltiptext");
     info("Displayed transferred size: " + value);
     info("Tooltip transferred size: " + tooltip);
-    is(value, transferred, "The displayed transferred size is incorrect.");
-    is(tooltip, transferred, "The tooltip transferred size is incorrect.");
+    is(value, transferred, "The displayed transferred size is correct.");
+    is(tooltip, transferred, "The tooltip transferred size is correct.");
   }
   if (size !== undefined) {
     let value = target.querySelector(".requests-menu-size").getAttribute("value");
     let tooltip = target.querySelector(".requests-menu-size").getAttribute("tooltiptext");
     info("Displayed size: " + value);
     info("Tooltip size: " + tooltip);
-    is(value, size, "The displayed size is incorrect.");
-    is(tooltip, size, "The tooltip size is incorrect.");
+    is(value, size, "The displayed size is correct.");
+    is(tooltip, size, "The tooltip size is correct.");
   }
   if (time !== undefined) {
     let value = target.querySelector(".requests-menu-timings-total").getAttribute("value");
     let tooltip = target.querySelector(".requests-menu-timings-total").getAttribute("tooltiptext");
     info("Displayed time: " + value);
     info("Tooltip time: " + tooltip);
-    ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is incorrect.");
-    ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is incorrect.");
+    ok(~~(value.match(/[0-9]+/)) >= 0, "The displayed time is correct.");
+    ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is correct.");
   }
 
   if (visibleIndex != -1) {
     if (visibleIndex % 2 == 0) {
       ok(aRequestItem.target.hasAttribute("even"),
-        "Unexpected 'even' attribute for " + aRequestItem.value);
+        aRequestItem.value + " should have 'even' attribute.");
       ok(!aRequestItem.target.hasAttribute("odd"),
-        "Unexpected 'odd' attribute for " + aRequestItem.value);
+        aRequestItem.value + " shouldn't have 'odd' attribute.");
     } else {
       ok(!aRequestItem.target.hasAttribute("even"),
-        "Unexpected 'even' attribute for " + aRequestItem.value);
+        aRequestItem.value + " shouldn't have 'even' attribute.");
       ok(aRequestItem.target.hasAttribute("odd"),
-        "Unexpected 'odd' attribute for " + aRequestItem.value);
+        aRequestItem.value + " should have 'odd' attribute.");
     }
   }
 }

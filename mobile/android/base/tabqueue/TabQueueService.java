@@ -138,6 +138,7 @@ public class TabQueueService extends Service {
                 startActivity(forwardIntent);
 
                 removeView();
+                stopSelfResult(startId);
             }
         });
 

@@ -1829,6 +1829,7 @@ MarkupContainer.prototype = {
     this.hovered = false;
     this.markup.navigate(this);
     event.stopPropagation();
+    event.preventDefault();
 
     // Start dragging the container after a delay.
     this.markup._dragStartEl = target;
@@ -2145,7 +2146,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
           this.tooltipData.data = promise.resolve(res);
         });
       }, () => {
-        this.tooltipData.data = promise.reject();
+        this.tooltipData.data = promise.resolve({});
       });
     }
   },
@@ -2165,9 +2166,11 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     }
 
     return this.tooltipData.data.then(({data, size}) => {
-      tooltip.setImageContent(data, size);
-    }, () => {
-      tooltip.setBrokenImageContent();
+      if (data && size) {
+        tooltip.setImageContent(data, size);
+      } else {
+        tooltip.setBrokenImageContent();
+      }
     });
   },
 

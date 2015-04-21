@@ -672,6 +672,13 @@ AndroidGeckoEvent::ApzInputBlockId()
     return mApzInputBlockId;
 }
 
+nsEventStatus
+AndroidGeckoEvent::ApzEventStatus()
+{
+    MOZ_ASSERT(Type() == APZ_INPUT_EVENT);
+    return mApzEventStatus;
+}
+
 WidgetTouchEvent
 AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
 {

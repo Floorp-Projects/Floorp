@@ -20,18 +20,9 @@
   var iframe;
   const SCOPE = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/";
   function runTest() {
+    navigator.serviceWorker.ready.then(setupSW);
     navigator.serviceWorker.register("serviceworker_not_sharedworker.js",
-                                     {scope: SCOPE})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            e.target.onstatechange = null;
-            setupSW(registration);
-          };
-        } else {
-          setupSW(registration);
-        }
-      });
+                                     {scope: SCOPE});
   }
 
   var sw, worker;
@@ -49,6 +40,9 @@
           is(e.data.result, "sharedworker", "We should be talking to a shared worker");
           registration.unregister().then(function(success) {
             ok(success, "unregister should succeed");
+            SimpleTest.finish();
+          }, function(e) {
+            dump("Unregistering the SW failed with " + e + "\n");
             SimpleTest.finish();
           });
         };
