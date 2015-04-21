@@ -25,34 +25,34 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingAnimationTracker)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PendingAnimationTracker)
 
-  void AddPlayPending(dom::Animation& aPlayer)
+  void AddPlayPending(dom::Animation& aAnimation)
   {
-    MOZ_ASSERT(!IsWaitingToPause(aPlayer),
-               "Player is already waiting to pause");
-    AddPending(aPlayer, mPlayPendingSet);
+    MOZ_ASSERT(!IsWaitingToPause(aAnimation),
+               "Animation is already waiting to pause");
+    AddPending(aAnimation, mPlayPendingSet);
   }
-  void RemovePlayPending(dom::Animation& aPlayer)
+  void RemovePlayPending(dom::Animation& aAnimation)
   {
-    RemovePending(aPlayer, mPlayPendingSet);
+    RemovePending(aAnimation, mPlayPendingSet);
   }
-  bool IsWaitingToPlay(const dom::Animation& aPlayer) const
+  bool IsWaitingToPlay(const dom::Animation& aAnimation) const
   {
-    return IsWaiting(aPlayer, mPlayPendingSet);
+    return IsWaiting(aAnimation, mPlayPendingSet);
   }
 
-  void AddPausePending(dom::Animation& aPlayer)
+  void AddPausePending(dom::Animation& aAnimation)
   {
-    MOZ_ASSERT(!IsWaitingToPlay(aPlayer),
-               "Player is already waiting to play");
-    AddPending(aPlayer, mPausePendingSet);
+    MOZ_ASSERT(!IsWaitingToPlay(aAnimation),
+               "Animation is already waiting to play");
+    AddPending(aAnimation, mPausePendingSet);
   }
-  void RemovePausePending(dom::Animation& aPlayer)
+  void RemovePausePending(dom::Animation& aAnimation)
   {
-    RemovePending(aPlayer, mPausePendingSet);
+    RemovePending(aAnimation, mPausePendingSet);
   }
-  bool IsWaitingToPause(const dom::Animation& aPlayer) const
+  bool IsWaitingToPause(const dom::Animation& aAnimation) const
   {
-    return IsWaiting(aPlayer, mPausePendingSet);
+    return IsWaiting(aAnimation, mPausePendingSet);
   }
 
   void TriggerPendingAnimationsOnNextTick(const TimeStamp& aReadyTime);
@@ -66,18 +66,15 @@ private:
 
   void EnsurePaintIsScheduled();
 
-  typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>>
-    AnimationPlayerSet;
+  typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>> AnimationSet;
 
-  void AddPending(dom::Animation& aPlayer,
-                  AnimationPlayerSet& aSet);
-  void RemovePending(dom::Animation& aPlayer,
-                     AnimationPlayerSet& aSet);
-  bool IsWaiting(const dom::Animation& aPlayer,
-                 const AnimationPlayerSet& aSet) const;
+  void AddPending(dom::Animation& aAnimation, AnimationSet& aSet);
+  void RemovePending(dom::Animation& aAnimation, AnimationSet& aSet);
+  bool IsWaiting(const dom::Animation& aAnimation,
+                 const AnimationSet& aSet) const;
 
-  AnimationPlayerSet mPlayPendingSet;
-  AnimationPlayerSet mPausePendingSet;
+  AnimationSet mPlayPendingSet;
+  AnimationSet mPausePendingSet;
   nsCOMPtr<nsIDocument> mDocument;
 };
 
