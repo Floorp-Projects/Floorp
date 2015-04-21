@@ -97,14 +97,17 @@ protected:
 
   nsresult SetImpl(const char* aKey, const char* aValue)
   {
-    nsCString key(aKey);
+    if (!aValue || strchr(aValue, ';') || strchr(aValue, '=')) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+    nsDependentCString key(aKey);
     mParams.Put(key, new nsCString(aValue));
     return NS_OK;
   }
 
   nsresult SetImpl(const char* aKey, int aValue)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value = new nsCString();
     value->AppendInt(aValue);
     mParams.Put(key, value);
@@ -113,7 +116,7 @@ protected:
 
   nsresult SetImpl(const char* aKey, double aValue)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value = new nsCString();
     value->AppendFloat(aValue);
     mParams.Put(key, value);
@@ -122,7 +125,7 @@ protected:
 
   nsresult SetImpl(const char* aKey, float aValue)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value = new nsCString();
     value->AppendFloat(aValue);
     mParams.Put(key, value);
@@ -131,14 +134,14 @@ protected:
 
   nsresult SetImpl(const char* aKey, bool aValue)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     mParams.Put(key, new nsCString(aValue ? "true" : "false"));
     return NS_OK;
   }
 
   nsresult GetImpl(const char* aKey, const char*& aRet)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value;
     if (!mParams.Get(key, &value)) {
       aRet = nullptr;
@@ -150,7 +153,7 @@ protected:
 
   nsresult GetImpl(const char* aKey, float& aRet)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value;
     nsresult rv = NS_ERROR_FAILURE;
     if (mParams.Get(key, &value)) {
@@ -163,7 +166,7 @@ protected:
 
   nsresult GetImpl(const char* aKey, double& aRet)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value;
     nsresult rv = NS_ERROR_FAILURE;
     if (mParams.Get(key, &value)) {
@@ -176,7 +179,7 @@ protected:
 
   nsresult GetImpl(const char* aKey, int& aRet)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value;
     nsresult rv = NS_ERROR_FAILURE;
     if (mParams.Get(key, &value)) {
@@ -189,7 +192,7 @@ protected:
 
   nsresult GetImpl(const char* aKey, bool& aRet)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     nsCString* value;
     if (!mParams.Get(key, &value)) {
       aRet = false;
@@ -228,7 +231,7 @@ protected:
   nsresult
   ClearImpl(const char* aKey)
   {
-    nsCString key(aKey);
+    nsDependentCString key(aKey);
     mParams.Remove(key);
     return NS_OK;
   }

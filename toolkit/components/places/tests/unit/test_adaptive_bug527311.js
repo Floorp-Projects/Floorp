@@ -89,9 +89,10 @@ function check_results() {
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
     do_check_eq(controller.matchCount, 0);
 
-    remove_all_bookmarks();
-    cleanup();
-    do_test_finished();
+    PlacesUtils.bookmarks.eraseEverything().then(() => {
+      cleanup();
+      do_test_finished();
+    });
  };
 
   controller.startSearch(SEARCH_STRING);

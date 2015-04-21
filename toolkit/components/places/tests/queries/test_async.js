@@ -353,7 +353,7 @@ function run_test()
 add_task(function* test_async()
 {
   for (let [, test] in Iterator(tests)) {
-    remove_all_bookmarks();
+    yield PlacesUtils.bookmarks.eraseEverything();
 
     test.__proto__ = new Test();
     yield test.setup();
@@ -362,6 +362,6 @@ add_task(function* test_async()
     yield test.run();
   }
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   print("All tests done, exiting");
 });

@@ -64,7 +64,8 @@ function* dragContainer(selector, targetOffset, inspector) {
     target: container.tagLine,
     pageX: rect.x,
     pageY: rect.y,
-    stopPropagation: function() {}
+    stopPropagation: function() {},
+    preventDefault: function() {}
   });
 
   let targetX = rect.x + targetOffset.x,
