@@ -8,6 +8,7 @@
 interface nsIDOMWindow;
 interface nsIDocShell;
 interface nsIContent;
+interface nsIFrameLoader;
 interface nsIPrincipal;
 
 /**
@@ -383,10 +384,11 @@ interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
   readonly attribute nsIDocShell docShell;
 };
 
-[uuid(a9e07e89-7125-48e3-bf73-2cbae7fc5b1c)]
+[uuid(9c6bd4d7-88d2-46d6-8606-f2d57d46f051)]
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();
+  [notxpcom] void cacheFrameLoader(in nsIFrameLoader aFrameLoader);
 };
 
 [scriptable, builtinclass, uuid(d0c799a2-d5ff-4a75-acbb-b8c8347944a6)]

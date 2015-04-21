@@ -260,7 +260,7 @@ struct SavedFrame::HashPolicy
 inline void AssertObjectIsSavedFrameOrWrapper(JSContext* cx, HandleObject stack);
 
 class SavedStacks {
-    friend JSObject* SavedStacksMetadataCallback(JSContext* cx);
+    friend JSObject* SavedStacksMetadataCallback(JSContext* cx, JSObject* target);
 
   public:
     SavedStacks()
@@ -400,7 +400,7 @@ class SavedStacks {
     bool getLocation(JSContext* cx, const FrameIter& iter, MutableHandleLocationValue locationp);
 };
 
-JSObject* SavedStacksMetadataCallback(JSContext* cx);
+JSObject* SavedStacksMetadataCallback(JSContext* cx, JSObject* target);
 
 } /* namespace js */
 

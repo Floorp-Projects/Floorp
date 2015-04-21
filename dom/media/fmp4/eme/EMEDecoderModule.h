@@ -13,7 +13,6 @@
 namespace mozilla {
 
 class CDMProxy;
-class FlushableMediaTaskQueue;
 
 class EMEDecoderModule : public PlatformDecoderModule {
 private:
@@ -48,7 +47,7 @@ private:
   // Will be null if CDM has decoding capability.
   nsRefPtr<PlatformDecoderModule> mPDM;
   // We run the PDM on its own task queue.
-  nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
   bool mCDMDecodesAudio;
   bool mCDMDecodesVideo;
 

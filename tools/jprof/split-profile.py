@@ -93,7 +93,14 @@ def generate_profile(options, destfile):
     args = [jprof] + options + passthrough
     print "Generating {0}".format(destfile)
     destio = open(destfile, "w")
-    process = subprocess.Popen(args, stdout=destio)
+    # jprof expects the "jprof-map" file to be in its current working directory
+    cwd = None
+    for option in passthrough:
+        if option.find("jprof-log"):
+            cwd = os.path.dirname(option)
+    if cwd is None:
+        raise StandardError("no jprof-log option given")
+    process = subprocess.Popen(args, stdout=destio, cwd=cwd)
     process.wait()
     destio.close()
     if process.returncode != 0:

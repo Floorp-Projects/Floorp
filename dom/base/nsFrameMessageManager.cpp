@@ -995,6 +995,7 @@ public:
 
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
+                                      nsIFrameLoader* aTargetFrameLoader,
                                       const nsAString& aMessage,
                                       bool aIsSync,
                                       const StructuredCloneData* aCloneData,
@@ -1002,12 +1003,13 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       nsIPrincipal* aPrincipal,
                                       InfallibleTArray<nsString>* aJSONRetVal)
 {
-  return ReceiveMessage(aTarget, mClosed, aMessage, aIsSync,
+  return ReceiveMessage(aTarget, aTargetFrameLoader, mClosed, aMessage, aIsSync,
                         aCloneData, aCpows, aPrincipal, aJSONRetVal);
 }
 
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
+                                      nsIFrameLoader* aTargetFrameLoader,
                                       bool aTargetClosed,
                                       const nsAString& aMessage,
                                       bool aIsSync,
@@ -1114,6 +1116,16 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                 JS_DefineProperty(cx, param, "objects", cpowsv, JSPROP_ENUMERATE);
       NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
 
+      if (aTargetFrameLoader) {
+        JS::Rooted<JS::Value> targetFrameLoaderv(cx);
+        nsresult rv = nsContentUtils::WrapNative(cx, aTargetFrameLoader, &targetFrameLoaderv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        ok = JS_DefineProperty(cx, param, "targetFrameLoader", targetFrameLoaderv,
+                               JSPROP_ENUMERATE);
+        NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
+      }
+
       // message.principal == null
       if (!aPrincipal) {
         bool ok = JS_DefineProperty(cx, param, "principal",
@@ -1190,7 +1202,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
     }
   }
   nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
-  return mParentManager ? mParentManager->ReceiveMessage(aTarget, aTargetClosed, aMessage,
+  return mParentManager ? mParentManager->ReceiveMessage(aTarget, aTargetFrameLoader,
+                                                         aTargetClosed, aMessage,
                                                          aIsSync, aCloneData,
                                                          aCpows, aPrincipal,
                                                          aJSONRetVal) : NS_OK;
@@ -1769,7 +1782,7 @@ public:
   NS_IMETHOD Run()
   {
     nsFrameMessageManager* ppm = nsFrameMessageManager::GetChildProcessManager();
-    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), nullptr, ppm);
     return NS_OK;
   }
 };
@@ -1924,7 +1937,7 @@ public:
   virtual nsresult HandleMessage() override
   {
     nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
-    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), nullptr, ppm);
     return NS_OK;
   }
 };
@@ -1958,7 +1971,7 @@ public:
     if (nsFrameMessageManager::sSameProcessParentManager) {
       SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
-      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), aMessage,
+      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr, aMessage,
                           true, &aData, &cpows, aPrincipal, aJSONRetVal);
     }
     return true;
@@ -2089,6 +2102,7 @@ nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx,
 
 void
 nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
+                                              nsIFrameLoader* aTargetFrameLoader,
                                               nsFrameMessageManager* aManager)
 {
   if (aManager) {
@@ -2100,7 +2114,7 @@ nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
     SameProcessCpowHolder cpows(mRuntime, mCpows);
 
     nsRefPtr<nsFrameMessageManager> mm = aManager;
-    mm->ReceiveMessage(aTarget, mMessage, false, &data, &cpows,
+    mm->ReceiveMessage(aTarget, aTargetFrameLoader, mMessage, false, &data, &cpows,
                        mPrincipal, nullptr);
   }
 }

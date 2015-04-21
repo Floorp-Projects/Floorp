@@ -198,14 +198,16 @@ Function Properties of the `Debugger.Memory.prototype` Object
     <pre class='language-js'><code>
     {
       "timestamp": <i>timestamp</i>,
-      "frame": <i>allocationSite</i>
+      "frame": <i>allocationSite</i>,
+      "class": <i>className</i>
     }
     </code></pre>
 
-    Here <i>timestamp</i> is the [timestamp][timestamps] of the allocation event and
-    <i>allocationSite</i> is an allocation site (as a
-    [captured stack][saved-frame]).  <i>allocationSite</i> is `null` for objects
-    allocated with no JavaScript frames on the stack.
+    Here <i>timestamp</i> is the [timestamp][timestamps] of the allocation
+    event, <i>allocationSite</i> is an allocation site (as a
+    [captured stack][saved-frame]), and <i>className</i> is the string name of
+    the allocated object's internal `[[Class]]` property.  <i>allocationSite</i>
+    is `null` for objects allocated with no JavaScript frames on the stack.
 
     When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
     `Error`.
