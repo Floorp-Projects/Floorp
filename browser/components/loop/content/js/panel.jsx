@@ -163,7 +163,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="dropdown">
-          <p className="dnd-status" onClick={this.showDropdownMenu}>
+          <p className="dnd-status" onClick={this.toggleDropdownMenu} ref="menu-button">
             <span>{availabilityText}</span>
             <i className={availabilityStatus}></i>
           </p>
@@ -344,8 +344,10 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="settings-menu dropdown">
-          <a className="button-settings" onClick={this.showDropdownMenu}
-             title={mozL10n.get("settings_menu_button_tooltip")} />
+          <a className="button-settings"
+             onClick={this.toggleDropdownMenu}
+             title={mozL10n.get("settings_menu_button_tooltip")}
+             ref="menu-button" />
           <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}>
             <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_settings")}
                                    onClick={this.handleClickSettingsEntry}

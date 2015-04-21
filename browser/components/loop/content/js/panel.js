@@ -163,7 +163,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "dropdown"}, 
-          React.createElement("p", {className: "dnd-status", onClick: this.showDropdownMenu}, 
+          React.createElement("p", {className: "dnd-status", onClick: this.toggleDropdownMenu, ref: "menu-button"}, 
             React.createElement("span", null, availabilityText), 
             React.createElement("i", {className: availabilityStatus})
           ), 
@@ -344,8 +344,10 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "settings-menu dropdown"}, 
-          React.createElement("a", {className: "button-settings", onClick: this.showDropdownMenu, 
-             title: mozL10n.get("settings_menu_button_tooltip")}), 
+          React.createElement("a", {className: "button-settings", 
+             onClick: this.toggleDropdownMenu, 
+             title: mozL10n.get("settings_menu_button_tooltip"), 
+             ref: "menu-button"}), 
           React.createElement("ul", {className: cx({"dropdown-menu": true, hide: !this.state.showMenu})}, 
             React.createElement(SettingsDropdownEntry, {label: mozL10n.get("settings_menu_item_settings"), 
                                    onClick: this.handleClickSettingsEntry, 
