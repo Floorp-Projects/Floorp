@@ -19,4 +19,24 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+    <!-- The desired layout_height is 48dp. We add paddingTop so we have
+         space to dynamically draw the divider in onDraw. Preferably, we'd
+         wrap_content on the inner layout, but TwoWayView ignores wrap_content. :(
+
+         Note: the layout_height value is shared with the inner layout
+         (search_engine_bar_item at the time of this writing).
+
+         listSelector is too slow for showing pressed state
+         so we set the pressed colors on the child. -->
+    <org.mozilla.gecko.home.SearchEngineBar
+          android:id="@+id/search_engine_bar"
+          android:layout_width="match_parent"
+          android:layout_height="49dp"
+          android:paddingTop="1dp"
+          android:orientation="horizontal"
+          android:background="#fff"
+          android:choiceMode="singleChoice"
+          android:listSelector="@android:color/transparent"
+          android:cacheColorHint="@android:color/transparent"/>
+
 </LinearLayout>
