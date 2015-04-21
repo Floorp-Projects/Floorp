@@ -42,6 +42,10 @@ let testData = [
   ["VK_BACK_SPACE", "di", -1, 0],
   ["VK_BACK_SPACE", "d", -1, 0],
   ["VK_BACK_SPACE", "", -1, 0],
+  ["VK_HOME", "", -1, 0],
+  ["VK_END", "", -1, 0],
+  ["VK_PAGE_UP", "", -1, 0],
+  ["VK_PAGE_DOWN", "", -1, 0],
   ["f", "fill", 0, MAX_ENTRIES],
   ["i", "fill", 0, 4],
   ["VK_LEFT", "fill", -1, 0],
@@ -76,8 +80,8 @@ function* testCompletion([key, completion, index, total], editor, view) {
 
   let onSuggest;
 
-  if (/(left|right|back_space|escape)/ig.test(key)) {
-    info("Adding event listener for left|right|back_space|escape keys");
+  if (/(left|right|back_space|escape|home|end|page_up|page_down)/ig.test(key)) {
+    info("Adding event listener for left|right|back_space|escape|home|end|page_up|page_down keys");
     onSuggest = once(editor.input, "keypress");
   } else {
     info("Waiting for after-suggest event on the editor");
