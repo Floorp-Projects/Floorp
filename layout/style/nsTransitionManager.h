@@ -75,16 +75,15 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadonly
   double CurrentValuePortion() const;
 };
 
-class CSSTransitionPlayer final : public dom::Animation
+class CSSTransition final : public dom::Animation
 {
 public:
- explicit CSSTransitionPlayer(dom::DocumentTimeline* aTimeline)
+ explicit CSSTransition(dom::DocumentTimeline* aTimeline)
     : dom::Animation(aTimeline)
   {
   }
 
-  virtual CSSTransitionPlayer*
-  AsCSSTransitionPlayer() override { return this; }
+  virtual CSSTransition* AsCSSTransition() override { return this; }
 
   virtual dom::AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS() override;
@@ -94,7 +93,7 @@ public:
   void PlayFromStyle() { DoPlay(Animation::LimitBehavior::Continue); }
 
 protected:
-  virtual ~CSSTransitionPlayer() { }
+  virtual ~CSSTransition() { }
 
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 };

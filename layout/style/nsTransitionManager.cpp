@@ -82,25 +82,25 @@ ElementPropertyTransition::CurrentValuePortion() const
 }
 
 /*****************************************************************************
- * CSSTransitionPlayer                                                       *
+ * CSSTransition                                                             *
  *****************************************************************************/
 
 mozilla::dom::AnimationPlayState
-CSSTransitionPlayer::PlayStateFromJS() const
+CSSTransition::PlayStateFromJS() const
 {
   FlushStyle();
   return Animation::PlayStateFromJS();
 }
 
 void
-CSSTransitionPlayer::PlayFromJS()
+CSSTransition::PlayFromJS()
 {
   FlushStyle();
   Animation::PlayFromJS();
 }
 
 CommonAnimationManager*
-CSSTransitionPlayer::GetAnimationManager() const
+CSSTransition::GetAnimationManager() const
 {
   nsPresContext* context = GetPresContext();
   if (!context) {
@@ -564,7 +564,7 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  nsRefPtr<CSSTransitionPlayer> animation = new CSSTransitionPlayer(timeline);
+  nsRefPtr<CSSTransition> animation = new CSSTransition(timeline);
   // The order of the following two calls is important since PlayFromStyle
   // will add the animation to the PendingAnimationTracker of its effect's
   // document. When we come to make effect writeable (bug 1049975) we should
