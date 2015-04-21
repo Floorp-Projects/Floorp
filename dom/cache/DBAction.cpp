@@ -153,6 +153,7 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     rv = ss->OpenDatabaseWithFileURL(dbFileUrl, getter_AddRefs(conn));
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
   rv = db::InitializeConnection(conn);

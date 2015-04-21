@@ -100,6 +100,7 @@ class nsScriptObjectTracer;
 class nsStringBuffer;
 class nsStringHashKey;
 class nsTextFragment;
+class nsView;
 class nsViewportInfo;
 class nsWrapperCache;
 class nsAttrValue;
@@ -2315,6 +2316,47 @@ public:
    */
   static mozilla::UniquePtr<char[]> GetSurfaceData(mozilla::gfx::DataSourceSurface* aSurface,
                                                    size_t* aLength, int32_t* aStride);
+
+  // Helpers shared by the implementations of nsContentUtils methods and
+  // nsIDOMWindowUtils methods.
+  static mozilla::Modifiers GetWidgetModifiers(int32_t aModifiers);
+  static nsIWidget* GetWidget(nsIPresShell* aPresShell, nsPoint* aOffset);
+  static int16_t GetButtonsFlagForButton(int32_t aButton);
+  static mozilla::LayoutDeviceIntPoint ToWidgetPoint(const mozilla::CSSPoint& aPoint,
+                                                     const nsPoint& aOffset,
+                                                     nsPresContext* aPresContext);
+  static nsView* GetViewToDispatchEvent(nsPresContext* aPresContext,
+                                        nsIPresShell** aPresShell);
+
+  /**
+   * Synthesize a key event to the given widget
+   * (see nsIDOMWindowUtils.sendKeyEvent).
+   */
+  static nsresult SendKeyEvent(nsCOMPtr<nsIWidget> aWidget,
+                               const nsAString& aType,
+                               int32_t aKeyCode,
+                               int32_t aCharCode,
+                               int32_t aModifiers,
+                               uint32_t aAdditionalFlags,
+                               bool* aDefaultActionTaken);
+
+  /**
+   * Synthesize a mouse event to the given widget
+   * (see nsIDOMWindowUtils.sendMouseEvent).
+   */
+  static nsresult SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
+                                 const nsAString& aType,
+                                 float aX,
+                                 float aY,
+                                 int32_t aButton,
+                                 int32_t aClickCount,
+                                 int32_t aModifiers,
+                                 bool aIgnoreRootScrollFrame,
+                                 float aPressure,
+                                 unsigned short aInputSourceArg,
+                                 bool aToWindow,
+                                 bool *aPreventDefault,
+                                 bool aIsSynthesized);
 
 private:
   static bool InitializeEventTable();

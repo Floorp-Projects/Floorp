@@ -51,7 +51,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 nsMenuBarFrame::nsMenuBarFrame(nsStyleContext* aContext):
   nsBoxFrame(aContext),
-    mMenuBarListener(nullptr),
     mStayActive(false),
     mIsActive(false),
     mCurrentMenu(nullptr),
@@ -68,7 +67,6 @@ nsMenuBarFrame::Init(nsIContent*       aContent,
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
-  NS_ADDREF(mMenuBarListener);
 
   // Hook up the menu bar as a key listener on the whole document.  It will see every
   // key press that occurs, but after everyone else does.
@@ -420,7 +418,7 @@ nsMenuBarFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
 
-  NS_IF_RELEASE(mMenuBarListener);
+  mMenuBarListener = nullptr;
 
   nsBoxFrame::DestroyFrom(aDestructRoot);
 }

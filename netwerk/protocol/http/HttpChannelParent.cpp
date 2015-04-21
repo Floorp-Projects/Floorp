@@ -33,6 +33,7 @@
 #include "nsICachingChannel.h"
 #include "mozilla/LoadInfo.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;

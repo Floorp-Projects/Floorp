@@ -179,7 +179,7 @@ ChromeProcessController::HandleLongTap(const mozilla::CSSPoint& aPoint, Modifier
     return;
   }
 
-  mAPZEventState->ProcessLongTap(GetDOMWindowUtils(), aPoint, aModifiers, aGuid,
+  mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
       aInputBlockId, GetPresShellResolution());
 }
 

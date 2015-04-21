@@ -68,6 +68,10 @@ public:
       return true;
     }
 
+    virtual bool SupportsApzWheelInput() const override {
+      return true;
+    }
+
     bool UseAcceleratedCanvas();
 
     virtual bool UseProgressivePaint() override;

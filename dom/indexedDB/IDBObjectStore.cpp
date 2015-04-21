@@ -41,6 +41,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsCOMPtr.h"
+#include "nsQueryObject.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
 #include "WorkerPrivate.h"

@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "nsAutoPtr.h"
+#include "nsQueryObject.h"
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 #include "nsPrintSettingsX.h"
