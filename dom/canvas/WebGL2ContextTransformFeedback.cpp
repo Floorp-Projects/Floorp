@@ -205,18 +205,7 @@ WebGL2Context::TransformFeedbackVaryings(WebGLProgram* program,
     if (!ValidateObject("transformFeedbackVaryings: program", program))
         return;
 
-    GLsizei count = varyings.Length();
-    GLchar** tmpVaryings = (GLchar**) moz_xmalloc(count * sizeof(GLchar*));
-
-    for (GLsizei n = 0; n < count; n++) {
-        tmpVaryings[n] = (GLchar*) ToNewCString(varyings[n]);
-    }
-
-    GLuint progname = program->mGLName;
-    MakeContextCurrent();
-    gl->fTransformFeedbackVaryings(progname, count, tmpVaryings, bufferMode);
-
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tmpVaryings);
+    program->TransformFeedbackVaryings(varyings, bufferMode);
 }
 
 already_AddRefed<WebGLActiveInfo>
@@ -228,29 +217,5 @@ WebGL2Context::GetTransformFeedbackVarying(WebGLProgram* program, GLuint index)
     if (!ValidateObject("getTransformFeedbackVarying: program", program))
         return nullptr;
 
-    MakeContextCurrent();
-
-    GLint len = 0;
-    GLuint progname = program->mGLName;
-    gl->fGetProgramiv(progname, LOCAL_GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, &len);
-    if (!len)
-        return nullptr;
-
-    UniquePtr<char[]> name(new char[len]);
-    GLint tfsize = 0;
-    GLuint tftype = 0;
-
-    gl->fGetTransformFeedbackVarying(progname, index, len, &len, &tfsize, &tftype, name.get());
-    if (len == 0 || tfsize == 0 || tftype == 0)
-        return nullptr;
-
-    MOZ_CRASH("todo");
-    /*
-    // Reverse lookup of name
-    nsCString reverseMappedName;
-    prog->ReverveMapIdentifier(nsDependentCString(name), &reverseMappedName);
-
-    nsRefPtr<WebGLActiveInfo> result = new WebGLActiveInfo(tfsize, tftype, nsDependentCString(name.get()));
-    return result.forget();
-    */
+    return program->GetTransformFeedbackVarying(index);
 }
