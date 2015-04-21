@@ -2360,13 +2360,9 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     // This event indicates that the window position may have changed.
     // mBounds.Size() is updated in OnSizeAllocate().
 
-    // (The gtk_window_get_window_type() function is only available from
-    // version 2.20.)
     NS_ASSERTION(GTK_IS_WINDOW(aWidget),
                  "Configure event on widget that is not a GtkWindow");
-    gint type;
-    g_object_get(aWidget, "type", &type, nullptr);
-    if (type == GTK_WINDOW_POPUP) {
+    if (gtk_window_get_window_type(GTK_WINDOW(aWidget)) == GTK_WINDOW_POPUP) {
         // Override-redirect window
         //
         // These windows should not be moved by the window manager, and so any
