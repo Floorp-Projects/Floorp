@@ -256,7 +256,6 @@ WEBIDL_FILES = [
     'InputPort.webidl',
     'InputPortManager.webidl',
     'InspectorUtils.webidl',
-    'InstallEvent.webidl',
     'InterAppConnection.webidl',
     'InterAppConnectionRequest.webidl',
     'InterAppMessagePort.webidl',
