@@ -731,7 +731,7 @@ Animation::PostUpdate()
 {
   AnimationCollection* collection = GetCollection();
   if (collection) {
-    collection->NotifyPlayerUpdated();
+    collection->NotifyAnimationUpdated();
   }
 }
 
