@@ -13,6 +13,7 @@
 #include "nsError.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "nsQueryObject.h"
 #include "nsThreadUtils.h"
 #include "nsJSUtils.h"
 

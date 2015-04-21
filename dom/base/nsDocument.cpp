@@ -35,6 +35,7 @@
 #include "nsDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsCOMArray.h"
+#include "nsQueryObject.h"
 #include "nsDOMClassInfo.h"
 #include "mozilla/Services.h"
 
