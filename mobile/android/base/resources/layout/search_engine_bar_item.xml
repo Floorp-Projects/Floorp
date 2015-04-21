@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- TwoWayView doesn't let us set the margin around items (except as
+     gecko:itemMargin, but that doesn't increase the hit area) so we
+     have to surround the main View by a ViewGroup to create a pressable margin.
+
+     Note: the layout_height values are shared with the parent
+     View (browser_search at the time of this writing). -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="48dp"
+    android:layout_width="72dp"
+    android:background="@color/pressed_about_page_header_grey">
+
+    <!-- Width & height are set to make the Favicons as sharp as possible
+         based on asset size. -->
+    <org.mozilla.gecko.widget.FaviconView
+        android:id="@+id/search_engine_icon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="center"/>
+
+</FrameLayout>
