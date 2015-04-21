@@ -17,6 +17,7 @@
 %define menuStateHover :not(:-moz-any([disabled],:active))[_moz-menuactive]
 %define buttonStateActive :not([disabled]):-moz-any([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
+%define menuStateMenuActive :not([disabled])[_moz-menuactive]
 
 %include ../browser.inc
 
