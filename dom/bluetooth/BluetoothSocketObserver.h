@@ -8,7 +8,7 @@
 #define mozilla_dom_bluetooth_BluetoothSocketObserver_h
 
 #include "BluetoothCommon.h"
-#include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/ipc/SocketBase.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 

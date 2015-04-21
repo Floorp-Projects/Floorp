@@ -32,9 +32,32 @@ function frameScript() {
   });
 }
 
-function Assert_leq(a, b, msg) {
-  Assert.ok(a <= b, `${msg}: ${a} <= ${b}`);
-}
+// A variant of `Assert` that doesn't spam the logs
+// in case of success.
+let SilentAssert = {
+  equal: function(a, b, msg) {
+    if (a == b) {
+      return;
+    }
+    Assert.equal(a, b, msg);
+  },
+  notEqual: function(a, b, msg) {
+    if (a != b) {
+      return;
+    }
+    Assert.notEqual(a, b, msg);
+  },
+  ok: function(a, msg) {
+    if (a) {
+      return;
+    }
+    Assert.ok(a, msg);
+  },
+  leq: function(a, b, msg) {
+    this.ok(a <= b, `${msg}: ${a} <= ${b}`);
+  }
+};
+
 
 function monotinicity_tester(source, testName) {
   // In the background, check invariants:
@@ -54,22 +77,22 @@ function monotinicity_tester(source, testName) {
       return;
     }
     for (let k of ["name", "addonId", "isSystem"]) {
-      Assert.equal(prev[k], next[k], `Sanity check (${testName}): ${k} hasn't changed.`);
+      SilentAssert.equal(prev[k], next[k], `Sanity check (${testName}): ${k} hasn't changed.`);
     }
     for (let k of ["totalUserTime", "totalSystemTime", "totalCPOWTime", "ticks"]) {
-      Assert.equal(typeof next[k], "number", `Sanity check (${testName}): ${k} is a number.`);
-      Assert_leq(prev[k], next[k], `Sanity check (${testName}): ${k} is monotonic.`);
-      Assert_leq(0, next[k], `Sanity check (${testName}): ${k} is >= 0.`)
+      SilentAssert.equal(typeof next[k], "number", `Sanity check (${testName}): ${k} is a number.`);
+      SilentAssert.leq(prev[k], next[k], `Sanity check (${testName}): ${k} is monotonic.`);
+      SilentAssert.leq(0, next[k], `Sanity check (${testName}): ${k} is >= 0.`)
     }
-    Assert.equal(prev.durations.length, next.durations.length);
+    SilentAssert.equal(prev.durations.length, next.durations.length);
     for (let i = 0; i < next.durations.length; ++i) {
-      Assert.ok(typeof next.durations[i] == "number" && next.durations[i] >= 0,
+      SilentAssert.ok(typeof next.durations[i] == "number" && next.durations[i] >= 0,
         `Sanity check (${testName}): durations[${i}] is a non-negative number.`);
-      Assert_leq(prev.durations[i], next.durations[i],
+      SilentAssert.leq(prev.durations[i], next.durations[i],
         `Sanity check (${testName}): durations[${i}] is monotonic.`)
     }
     for (let i = 0; i < next.durations.length - 1; ++i) {
-      Assert_leq(next.durations[i + 1], next.durations[i],
+      SilentAssert.leq(next.durations[i + 1], next.durations[i],
         `Sanity check (${testName}): durations[${i}] >= durations[${i + 1}].`)
     }
   };
@@ -86,9 +109,9 @@ function monotinicity_tester(source, testName) {
 
     // Sanity check on the process data.
     sanityCheck(previous.processData, snapshot.processData);
-    Assert.equal(snapshot.processData.isSystem, true);
-    Assert.equal(snapshot.processData.name, "<process>");
-    Assert.equal(snapshot.processData.addonId, "");
+    SilentAssert.equal(snapshot.processData.isSystem, true);
+    SilentAssert.equal(snapshot.processData.name, "<process>");
+    SilentAssert.equal(snapshot.processData.addonId, "");
     previous.procesData = snapshot.processData;
 
     // Sanity check on components data.
@@ -102,17 +125,13 @@ function monotinicity_tester(source, testName) {
       previous.componentsMap.set(key, item);
 
       for (let k of ["totalUserTime", "totalSystemTime", "totalCPOWTime"]) {
-        Assert_leq(item[k], snapshot.processData[k],
+        SilentAssert.leq(item[k], snapshot.processData[k],
           `Sanity check (${testName}): component has a lower ${k} than process`);
       }
     }
-    // Check that we do not have duplicate components.
-    info(`Before deduplication, we had the following components: ${keys.sort().join(", ")}`);
-    info(`After deduplication, we have the following components: ${[...set.keys()].sort().join(", ")}`);
-
     info(`Deactivating deduplication check (Bug 1150045)`);
     if (false) {
-      Assert.equal(set.size, snapshot.componentsData.length);
+      SilentAssert.equal(set.size, snapshot.componentsData.length);
     }
   });
   let interval = window.setInterval(frameCheck, 300);

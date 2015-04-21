@@ -11,7 +11,7 @@
 #include "BluetoothProfileManagerBase.h"
 #include "BluetoothSocketObserver.h"
 #include "DeviceStorage.h"
-#include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/ipc/SocketBase.h"
 #include "nsCOMArray.h"
 
 class nsIDOMBlob;

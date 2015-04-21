@@ -21,10 +21,14 @@ let { TabActor } = require("devtools/server/actors/webbrowser");
  *        The conection to the client.
  * @param chromeGlobal
  *        The content script global holding |content| and |docShell| properties for a tab.
+ * @param prefix
+ *        the prefix used in protocol to create IDs for each actor.
+ *        Used as ID identifying this particular TabActor from the parent process.
  */
-function ContentActor(connection, chromeGlobal)
+function ContentActor(connection, chromeGlobal, prefix)
 {
   this._chromeGlobal = chromeGlobal;
+  this._prefix = prefix;
   TabActor.call(this, connection, chromeGlobal);
   this.traits.reconfigure = false;
   this._sendForm = this._sendForm.bind(this);
@@ -49,32 +53,11 @@ Object.defineProperty(ContentActor.prototype, "title", {
 });
 
 ContentActor.prototype.exit = function() {
-  this._chromeGlobal.removeMessageListener("debug:form", this._sendForm);
-  this._sendForm = null;
-  TabActor.prototype.exit.call(this);
-};
-
-// Override form just to rename this._tabActorPool to this._tabActorPool2
-// in order to prevent it to be cleaned on detach.
-// We have to keep tab actors alive as we keep the ContentActor
-// alive after detach and reuse it for multiple debug sessions.
-ContentActor.prototype.form = function () {
-  let response = {
-    "actor": this.actorID,
-    "title": this.title,
-    "url": this.url
-  };
-
-  // Walk over tab actors added by extensions and add them to a new ActorPool.
-  let actorPool = new ActorPool(this.conn);
-  this._createExtraActors(DebuggerServer.tabActorFactories, actorPool);
-  if (!actorPool.isEmpty()) {
-    this._tabActorPool2 = actorPool;
-    this.conn.addActorPool(this._tabActorPool2);
+  if (this._sendForm) {
+    this._chromeGlobal.removeMessageListener("debug:form", this._sendForm);
+    this._sendForm = null;
   }
-
-  this._appendExtraActors(response);
-  return response;
+  return TabActor.prototype.exit.call(this);
 };
 
 /**

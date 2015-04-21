@@ -246,28 +246,18 @@ BluetoothManager::DispatchAttributeEvent()
   MOZ_ASSERT(NS_IsMainThread());
   BT_API2_LOGR();
 
-  AutoJSAPI jsapi;
-  NS_ENSURE_TRUE_VOID(jsapi.Init(GetOwner()));
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JS::Value> value(cx);
-
-  nsTArray<nsString> types;
+  Sequence<nsString> types;
   BT_APPEND_ENUM_STRING(types,
                         BluetoothManagerAttribute,
                         BluetoothManagerAttribute::DefaultAdapter);
 
-  if (!ToJSValue(cx, types, &value)) {
-    JS_ClearPendingException(cx);
-    return;
-  }
-
   // Notify application of default adapter change
-  RootedDictionary<BluetoothAttributeEventInit> init(cx);
-  init.mAttrs = value;
+  BluetoothAttributeEventInit init;
+  init.mAttrs = types;
   nsRefPtr<BluetoothAttributeEvent> event =
-    BluetoothAttributeEvent::Constructor(this,
-                                         NS_LITERAL_STRING("attributechanged"),
-                                         init);
+    BluetoothAttributeEvent::Constructor(
+      this, NS_LITERAL_STRING(ATTRIBUTE_CHANGED_ID), init);
+
   DispatchTrustedEvent(event);
 }
 

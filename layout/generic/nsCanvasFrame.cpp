@@ -510,9 +510,13 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsIFrame* kid;
   for (kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
-    // Skip touch caret frame if we do not build caret.
-    if (!aBuilder->IsBuildingCaret() && kid->GetContent() == mTouchCaretElement) {
-      continue;
+    // Skip touch/selection caret frame if we do not build caret.
+    if (!aBuilder->IsBuildingCaret()) {
+      if(kid->GetContent() == mTouchCaretElement ||
+         kid->GetContent() == mSelectionCaretsStartElement||
+         kid->GetContent() == mSelectionCaretsEndElement) {
+        continue;
+      }
     }
 
     // Put our child into its own pseudo-stack.

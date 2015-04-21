@@ -206,7 +206,6 @@ function finishCheckUpdateApplied() {
   gSwitchApp = true;
   checkUpdateLogContents();
   gSwitchApp = false;
-  checkCallbackAppLog();
 
   standardInit();
 

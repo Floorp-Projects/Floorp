@@ -1,5 +1,5 @@
-fuzzy-if(cocoaWidget,1,2) fuzzy-if(d2d,47,26) == move-right-bottom.html move-right-bottom-ref.html
-fuzzy-if(cocoaWidget,1,2) == move-top-left.html move-top-left-ref.html # Bug 688545
-fuzzy-if(cocoaWidget,1,3) == move-right-bottom-table.html move-right-bottom-table-ref.html
-fuzzy-if(cocoaWidget,1,3) == move-top-left-table.html move-top-left-table-ref.html # Bug 688545
+skip-if(asyncPanZoom&&winWidget) fuzzy-if(cocoaWidget,1,2) fuzzy-if(d2d,47,26) == move-right-bottom.html move-right-bottom-ref.html
+skip-if(asyncPanZoom&&winWidget) fuzzy-if(cocoaWidget,1,2) == move-top-left.html move-top-left-ref.html # Bug 688545
+skip-if(asyncPanZoom&&winWidget) fuzzy-if(cocoaWidget,1,3) == move-right-bottom-table.html move-right-bottom-table-ref.html
+skip-if(asyncPanZoom&&winWidget) fuzzy-if(cocoaWidget,1,3) == move-top-left-table.html move-top-left-table-ref.html # Bug 688545
 == percent.html percent-ref.html

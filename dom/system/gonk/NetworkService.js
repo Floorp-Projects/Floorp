@@ -391,7 +391,8 @@ NetworkService.prototype = {
       cmd: "setDNS",
       ifname: networkInterface.name,
       domain: "mozilla." + networkInterface.name + ".doman",
-      dnses: dnses
+      dnses: dnses,
+      gateways: networkInterface.getGateways()
     };
     this.controlMessage(options, function(result) {
       callback.setDnsResult(result.success ? null : result.reason);
@@ -760,6 +761,23 @@ NetworkService.prototype = {
 
     this.controlMessage(params, function(result) {
       callback.nativeCommandResult(!result.error);
+    });
+  },
+
+  getNetId: function(interfaceName) {
+    let params = {
+      cmd: "getNetId",
+      ifname: interfaceName
+    };
+
+    return new Promise((aResolve, aReject) => {
+      this.controlMessage(params, result => {
+        if (result.error) {
+          aReject(result.reason);
+          return;
+        }
+        aResolve(result.netId);
+      });
     });
   },
 };

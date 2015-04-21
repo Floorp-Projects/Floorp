@@ -96,4 +96,6 @@ dictionary NetworkResultOptions
   long      dns1 = 0;
   long      dns2 = 0;
   long      server = 0;
+
+  DOMString netId = "";                // for "getNetId".
 };
