@@ -761,17 +761,40 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
         RelativeLink link = staticLinkData_.relativeLinks[i];
         uint8_t* patchAt = code_ + link.patchAtOffset;
         uint8_t* target = code_ + link.targetOffset;
+
+        // In the case of function-pointer tables and long-jumps on MIPS, the
+        // RelativeLink is used to patch a pointer to the function entry. If
+        // profiling is enabled (by cloning a module with profiling enabled),
+        // the target should be the profiling entry.
+        if (profilingEnabled_) {
+            const CodeRange* codeRange = lookupCodeRange(target);
+            if (codeRange && codeRange->isFunction() && link.targetOffset == codeRange->entry())
+                target = code_ + codeRange->profilingEntry();
+        }
+
         if (link.isRawPointerPatch())
             *(uint8_t**)(patchAt) = target;
         else
             Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
     }
 
-    for (size_t imm = 0; imm < AsmJSImm_Limit; imm++) {
-        const AsmJSModule::OffsetVector& offsets = staticLinkData_.absoluteLinks[imm];
-        void* target = AddressOf(AsmJSImmKind(imm), cx);
+    for (size_t immIndex = 0; immIndex < AsmJSImm_Limit; immIndex++) {
+        AsmJSImmKind imm = AsmJSImmKind(immIndex);
+        const OffsetVector& offsets = staticLinkData_.absoluteLinks[imm];
         for (size_t i = 0; i < offsets.length(); i++) {
-            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code_ + offsets[i]),
+            uint8_t* patchAt = code_ + offsets[i];
+            void* target = AddressOf(imm, cx);
+
+            // Builtin calls are another case where, when profiling is enabled,
+            // we must point to the profiling entry.
+            AsmJSExit::BuiltinKind builtin;
+            if (profilingEnabled_ && ImmKindIsBuiltin(imm, &builtin)) {
+                const CodeRange* codeRange = lookupCodeRange(patchAt);
+                if (codeRange->isFunction())
+                    target = code_ + builtinThunkOffsets_[builtin];
+            }
+
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
                                                PatchedImmPtr(target),
                                                PatchedImmPtr((void*)-1));
         }
@@ -780,7 +803,7 @@ AsmJSModule::staticallyLink(ExclusiveContext* cx)
     // Initialize global data segment
 
     for (size_t i = 0; i < exits_.length(); i++) {
-        AsmJSModule::ExitDatum& exitDatum = exitIndexToGlobalDatum(i);
+        ExitDatum& exitDatum = exitIndexToGlobalDatum(i);
         exitDatum.exit = interpExitTrampoline(exits_[i]);
         exitDatum.fun = nullptr;
         exitDatum.baselineScript = nullptr;
@@ -1752,7 +1775,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         if (codeRange->kind() != CodeRange::Function)
             continue;
 
-        uint8_t* profilingEntry = code_ + codeRange->begin();
+        uint8_t* profilingEntry = code_ + codeRange->profilingEntry();
         uint8_t* entry = code_ + codeRange->entry();
         MOZ_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
         MOZ_ASSERT_IF(!profilingEnabled_, callee == entry);
@@ -1781,7 +1804,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
         for (size_t j = 0; j < funcPtrTable.numElems(); j++) {
             void* callee = array[j];
             const CodeRange* codeRange = lookupCodeRange(callee);
-            uint8_t* profilingEntry = code_ + codeRange->begin();
+            uint8_t* profilingEntry = code_ + codeRange->profilingEntry();
             uint8_t* entry = code_ + codeRange->entry();
             MOZ_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
             MOZ_ASSERT_IF(!profilingEnabled_, callee == entry);
