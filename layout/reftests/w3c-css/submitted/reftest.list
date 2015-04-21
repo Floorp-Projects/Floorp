@@ -23,7 +23,7 @@ include conditional3/reftest.list
 include flexbox/reftest.list
 
 # Fonts Level 3
-# include fonts3/reftest.list
+include fonts3/reftest.list
 
 # Image Values and Replaced Content Level 3
 include images3/reftest.list

@@ -57,12 +57,14 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
   MOZ_ASSERT(mImageContainer);
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
+  mMimeType = aConfig.mMimeType;
   mVideoWidth  = aConfig.mDisplay.width;
   mVideoHeight = aConfig.mDisplay.height;
   mDisplayWidth = aConfig.mDisplay.width;
   mDisplayHeight = aConfig.mDisplay.height;
   mInfo.mVideo = aConfig;
 
+  mCodecSpecificData = aConfig.mCodecSpecificConfig;
   nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
   nsIntSize frameSize(mVideoWidth, mVideoHeight);
   mPicture = pictureRect;
@@ -105,9 +107,8 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   if (mLooper->start() != OK || mManagerLooper->start() != OK ) {
     return nullptr;
   }
-  mDecoder = MediaCodecProxy::CreateByType(mLooper, "video/avc", false, mVideoListener);
+  mDecoder = MediaCodecProxy::CreateByType(mLooper, mMimeType.get(), false, mVideoListener);
   mDecoder->AskMediaCodecAndWait();
-
   uint32_t capability = MediaCodecProxy::kEmptyCapability;
   if (mDecoder->getCapability(&capability) == OK && (capability &
       MediaCodecProxy::kCanExposeGraphicBuffer)) {
@@ -390,10 +391,12 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
       if (mDecoder->UpdateOutputBuffers()) {
         return Output(aStreamOffset, aOutData);
       }
+      GVDM_LOG("Fails to update output buffers!");
       return NS_ERROR_FAILURE;
     }
     case -EAGAIN:
     {
+      GVDM_LOG("Need to try again!");
       return NS_ERROR_NOT_AVAILABLE;
     }
     case android::ERROR_END_OF_STREAM:
@@ -493,7 +496,8 @@ GonkVideoDecoderManager::codecReserved()
   sp<Surface> surface;
 
   // Fixed values
-  format->setString("mime", "video/avc");
+  GVDM_LOG("Configure mime type: %s, widht:%d, height:%d", mMimeType.get(), mVideoWidth, mVideoHeight);
+  format->setString("mime", mMimeType.get());
   format->setInt32("width", mVideoWidth);
   format->setInt32("height", mVideoHeight);
   if (mNativeWindow != nullptr) {
@@ -501,6 +505,12 @@ GonkVideoDecoderManager::codecReserved()
   }
   mDecoder->configure(format, surface, nullptr, 0);
   mDecoder->Prepare();
+  status_t rv = mDecoder->Input(mCodecSpecificData->Elements(), mCodecSpecificData->Length(), 0,
+                                android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
+  if (rv != OK) {
+    GVDM_LOG("Failed to configure codec!!!!");
+    mReaderCallback->Error();
+  }
 }
 
 void

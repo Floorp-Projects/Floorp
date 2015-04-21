@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1128787
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1128787</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1128787 **/
+  SimpleTest.waitForExplicitFinish();
+
+  window.onload = function (aEvent) {
+    var blurEventFired = false;
+    var input = document.getElementsByTagName("input")[0];
+    input.addEventListener("blur", function (aEvent) {
+      input.removeEventListener("blur", arguments.callee);
+      ok(true, "input element gets blur event correctly");
+
+      var utils = SpecialPowers.getDOMWindowUtils(window);
+      is(utils.IMEStatus, utils.IME_STATUS_ENABLED, "IME should be enabled");
+
+      is(document.designMode, "on",
+         "designMode should be \"on\" when blur event caused by enabling designMode is fired");
+      document.designMode = "off";
+      is(document.designMode, "off",
+         "designMode should become \"off\" even if it's reset by the blur event handler caused by enabling designMode");
+
+      todo_is(utils.IMEStatus, utils.IME_STATUS_DISABLED, "IME should be disabled");
+      SimpleTest.finish();
+    });
+    document.designMode = "on";
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1128787">Mozilla Bug 1128787</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<input type="button"/>
+<script>
+var input = document.getElementsByTagName("input")[0];
+input.focus();
+</script>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -9,6 +9,7 @@
 #include <map>
 #include "mozilla/CheckedInt.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include <set>
@@ -23,6 +24,21 @@ class WebGLProgram;
 class WebGLUniformLocation;
 
 namespace webgl {
+
+struct UniformBlockInfo final
+    : public RefCounted<UniformBlockInfo>
+{
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(UniformBlockInfo);
+
+    const nsCString mBaseUserName;
+    const nsCString mBaseMappedName;
+
+    UniformBlockInfo(const nsACString& baseUserName,
+                     const nsACString& baseMappedName)
+        : mBaseUserName(baseUserName)
+        , mBaseMappedName(baseMappedName)
+    {}
+};
 
 struct LinkedProgramInfo final
     : public RefCounted<LinkedProgramInfo>
@@ -39,6 +55,8 @@ struct LinkedProgramInfo final
     std::map<nsCString, const WebGLActiveInfo*> attribMap;
     std::map<nsCString, const WebGLActiveInfo*> uniformMap;
     std::map<nsCString, const nsCString>* fragDataMap;
+
+    std::vector<RefPtr<UniformBlockInfo>> uniformBlocks;
 
     // Needed for draw call validation.
     std::set<GLuint> activeAttribLocs;
@@ -65,6 +83,20 @@ struct LinkedProgramInfo final
 
         *out_activeInfo = itr->second;
         return true;
+    }
+
+    bool FindUniformBlock(const nsCString& baseUserName,
+                          RefPtr<const UniformBlockInfo>* const out_info) const
+    {
+        const size_t count = uniformBlocks.size();
+        for (size_t i = 0; i < count; i++) {
+            if (baseUserName == uniformBlocks[i]->mBaseUserName) {
+                *out_info = uniformBlocks[i].get();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     bool FindFragData(const nsCString& baseUserName,
@@ -115,7 +147,16 @@ public:
     GLint GetFragDataLocation(const nsAString& name) const;
     void GetProgramInfoLog(nsAString* const out) const;
     JS::Value GetProgramParameter(GLenum pname) const;
+    GLuint GetUniformBlockIndex(const nsAString& name) const;
+    void GetActiveUniformBlockName(GLuint uniformBlockIndex, nsAString& name) const;
+    void GetActiveUniformBlockParam(GLuint uniformBlockIndex, GLenum pname,
+                                    Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval) const;
+    void GetActiveUniformBlockActiveUniforms(JSContext* cx, GLuint uniformBlockIndex,
+                                             Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
+                                             ErrorResult& rv) const;
     already_AddRefed<WebGLUniformLocation> GetUniformLocation(const nsAString& name) const;
+    void UniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) const;
+
     bool LinkProgram();
     bool UseProgram() const;
     void ValidateProgram() const;
@@ -127,6 +168,9 @@ public:
     bool FindUniformByMappedName(const nsACString& mappedName,
                                  nsCString* const out_userName,
                                  bool* const out_isArray) const;
+    bool FindUniformBlockByMappedName(const nsACString& mappedName,
+                                      nsCString* const out_userName,
+                                      bool* const out_isArray) const;
 
     bool IsLinked() const { return mMostRecentLinkInfo; }
 

@@ -31,6 +31,8 @@
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/jsipc/CpowHolder.h"
 
+class nsIFrameLoader;
+
 namespace mozilla {
 namespace dom {
 
@@ -229,7 +231,8 @@ public:
   static nsFrameMessageManager*
   NewProcessMessageManager(bool aIsRemote);
 
-  nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
+  nsresult ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
+                          const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           InfallibleTArray<nsString>* aJSONRetVal);
@@ -293,7 +296,8 @@ private:
                        JS::MutableHandle<JS::Value> aRetval,
                        bool aIsSync);
 
-  nsresult ReceiveMessage(nsISupports* aTarget, bool aTargetClosed, const nsAString& aMessage,
+  nsresult ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
+                          bool aTargetClosed, const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           InfallibleTArray<nsString>* aJSONRetVal);
@@ -369,7 +373,8 @@ public:
                                 JS::Handle<JSObject*> aCpows,
                                 nsIPrincipal* aPrincipal);
 
-  void ReceiveMessage(nsISupports* aTarget, nsFrameMessageManager* aManager);
+  void ReceiveMessage(nsISupports* aTarget, nsIFrameLoader* aTargetFrameLoader,
+                      nsFrameMessageManager* aManager);
 
 private:
   nsSameProcessAsyncMessageBase(const nsSameProcessAsyncMessageBase&);

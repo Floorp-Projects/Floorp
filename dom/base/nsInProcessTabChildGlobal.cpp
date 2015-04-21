@@ -42,7 +42,8 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
   if (mChromeMessageManager) {
     SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
     nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
-    mm->ReceiveMessage(mOwner, aMessage, true, &aData, &cpows, aPrincipal,
+    nsCOMPtr<nsIFrameLoader> fl = GetFrameLoader();
+    mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
                        aJSONRetVal);
   }
   return true;
@@ -65,7 +66,8 @@ public:
 
   virtual nsresult HandleMessage() override
   {
-    ReceiveMessage(mTabChild->mOwner, mTabChild->mChromeMessageManager);
+    nsCOMPtr<nsIFrameLoader> fl = mTabChild->GetFrameLoader();
+    ReceiveMessage(mTabChild->mOwner, fl, mTabChild->mChromeMessageManager);
     return NS_OK;
   }
   nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
@@ -174,6 +176,12 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(nsInProcessTabChildGlobal, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsInProcessTabChildGlobal, DOMEventTargetHelper)
+
+void
+nsInProcessTabChildGlobal::CacheFrameLoader(nsIFrameLoader* aFrameLoader)
+{
+  mFrameLoader = aFrameLoader;
+}
 
 NS_IMETHODIMP
 nsInProcessTabChildGlobal::GetContent(nsIDOMWindow** aContent)
@@ -335,4 +343,15 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL, bool aRunInGlo
   mLoadingScript = true;
   LoadScriptInternal(aURL, aRunInGlobalScope);
   mLoadingScript = tmp;
+}
+
+already_AddRefed<nsIFrameLoader>
+nsInProcessTabChildGlobal::GetFrameLoader()
+{
+  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
+  nsCOMPtr<nsIFrameLoader> fl = owner ? owner->GetFrameLoader() : nullptr;
+  if (!fl) {
+    fl = mFrameLoader;
+  }
+  return fl.forget();
 }

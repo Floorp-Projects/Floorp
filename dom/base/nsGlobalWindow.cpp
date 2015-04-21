@@ -8884,8 +8884,8 @@ nsGlobalWindow::IsInModalState()
   nsGlobalWindow *topWin = GetScriptableTop();
 
   if (!topWin) {
-    NS_ERROR("Uh, IsInModalState() called w/o a reachable top window?");
-
+    // IsInModalState() getting called w/o a reachable top window is a bit
+    // iffy, but valid enough not to make noise about it.  See bug 404828
     return false;
   }
 

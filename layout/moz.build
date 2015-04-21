@@ -19,6 +19,7 @@ DIRS += [
     'mathml',
     'inspector',
     'tools/recording',
+    'reftests',
 ]
 
 if CONFIG['NS_PRINTING']:
@@ -33,11 +34,4 @@ DIRS += ['build', 'media']
 if CONFIG['MOZ_DEBUG']:
     TEST_DIRS += ['tools/layout-debug']
 
-MOCHITEST_MANIFESTS += [
-    'reftests/fonts/math/mochitest.ini',
-    'reftests/fonts/mochitest.ini',
-    'reftests/fonts/mplus/mochitest.ini'
-]
-
-REFTEST_MANIFESTS += ['reftests/reftest.list']
 CRASHTEST_MANIFESTS += ['../testing/crashtest/crashtests.list']

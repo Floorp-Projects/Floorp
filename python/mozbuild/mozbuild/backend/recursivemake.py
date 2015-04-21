@@ -703,12 +703,12 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _check_blacklisted_variables(self, makefile_in, makefile_content):
         for x in MOZBUILD_VARIABLES:
-            if re.search(r'[^#]\b%s\s*[:?+]?=' % x, makefile_content, re.M):
+            if re.search(r'^[^#]*\b%s\s*[:?+]?=' % x, makefile_content, re.M):
                 raise Exception('Variable %s is defined in %s. It should '
                     'only be defined in moz.build files.' % (x, makefile_in))
 
         for x in DEPRECATED_VARIABLES:
-            if re.search(r'[^#]\b%s\s*[:?+]?=' % x, makefile_content, re.M):
+            if re.search(r'^[^#]*\b%s\s*[:?+]?=' % x, makefile_content, re.M):
                 raise Exception('Variable %s is defined in %s. This variable '
                     'has been deprecated. It does nothing. It must be removed '
                     'in order to build.' % (x, makefile_in))
