@@ -48,16 +48,9 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
   NS_ENSURE_STATE(!mData);
 
   uint64_t* jsBytes = nullptr;
-  bool success = false;
-  if (aData.isPrimitive()) {
-    success = JS_WriteStructuredClone(aCx, aData, &jsBytes, &mSize,
-                                      nullptr, nullptr,
-                                      JS::UndefinedHandleValue);
-  } else {
-    success = JS_WriteStructuredClone(aCx, aData, &jsBytes, &mSize,
-                                      nullptr, nullptr,
-                                      JS::UndefinedHandleValue);
-  }
+  bool success = JS_WriteStructuredClone(aCx, aData, &jsBytes, &mSize,
+                                           nullptr, nullptr,
+                                           JS::UndefinedHandleValue);
   NS_ENSURE_STATE(success);
   NS_ENSURE_STATE(jsBytes);
 
