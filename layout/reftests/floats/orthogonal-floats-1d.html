@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Bug 1141867 - Contiguous right-floating boxes with vertical writing mode</title>
+  <!-- based on testcases from Gérard Talbot, see https://bugzilla.mozilla.org/show_bug.cgi?id=1141867 -->
+  <meta charset="utf-8">
+  <style type="text/css">
+  @font-face {
+    font-family: Ahem;
+    src: url(../fonts/Ahem.ttf);
+  }
+  body {
+    margin: 8px;
+  }
+  p {
+    clear: both;
+  }
+  div.floated-right {
+    color: green;
+    float: right;
+    -ah-writing-mode: vertical-lr;
+    -webkit-writing-mode: vertical-lr;
+    writing-mode: tb-lr; /* IE 11 */
+    writing-mode: vertical-lr;
+    font: 20px/20px Ahem;
+  }
+  div#reference-overlapped-red {
+    background-color: red;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: -1;
+  }
+  </style>
+ </head>
+
+ <body>
+
+  <div class="floated-right">abcde</div>
+
+  <div class="floated-right">fghij</div>
+
+  <div class="floated-right">klmno</div>
+
+  <div class="floated-right">qrstu</div>
+
+  <div class="floated-right">vwxyz</div>
+
+  <div id="reference-overlapped-red"></div>
+
+  <p>Test passes if there is a filled green square and <strong>no red</strong>.</p>
+
+ </body>
+</html>

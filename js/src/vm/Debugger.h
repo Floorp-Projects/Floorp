@@ -880,7 +880,7 @@ class BreakpointSite {
  * Nothing else causes a breakpoint to be retained, so if its script or
  * debugger is collected, the breakpoint is destroyed during GC sweep phase,
  * even if the debugger compartment isn't being GC'd. This is implemented in
- * JSCompartment::sweepBreakpoints.
+ * Zone::sweepBreakpoints.
  */
 class Breakpoint {
     friend struct ::JSCompartment;

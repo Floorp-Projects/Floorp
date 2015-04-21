@@ -47,9 +47,16 @@ function doTest() {
   sendKey("DOWN");
 }
 
-SimpleTest.waitForFocus(function() {
-  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, doTest);
-});
+function prepareTest() {
+  // Start the test after we've gotten at least one rAF callback, to make sure
+  // that rAF is no longer throttled. (See bug 1145439.)
+  window.mozRequestAnimationFrame(function() {
+    SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, doTest);
+  });
+}
+
+SimpleTest.waitForFocus(prepareTest);
+
 </script>
 </pre>
 </body>

@@ -391,28 +391,6 @@ struct ParamTraits<mozilla::gfx::IntSizeTyped<T> >
   }
 };
 
-template<>
-struct ParamTraits<nsIntRect>
-{
-  typedef nsIntRect paramType;
-
-  static void Write(Message* msg, const paramType& param)
-  {
-    WriteParam(msg, param.x);
-    WriteParam(msg, param.y);
-    WriteParam(msg, param.width);
-    WriteParam(msg, param.height);
-  }
-
-  static bool Read(const Message* msg, void** iter, paramType* result)
-  {
-    return (ReadParam(msg, iter, &result->x) &&
-            ReadParam(msg, iter, &result->y) &&
-            ReadParam(msg, iter, &result->width) &&
-            ReadParam(msg, iter, &result->height));
-  }
-};
-
 template<typename Region, typename Rect, typename Iter>
 struct RegionParamTraits
 {

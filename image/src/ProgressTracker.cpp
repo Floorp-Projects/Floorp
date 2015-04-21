@@ -393,7 +393,7 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
     if (NS_FAILED(mImage->GetWidth(&rect.width)) ||
         NS_FAILED(mImage->GetHeight(&rect.height))) {
       // Either the image has no intrinsic size, or it has an error.
-      rect = nsIntRect::GetMaxSizedIntRect();
+      rect = GetMaxSizedIntRect();
     }
   }
 

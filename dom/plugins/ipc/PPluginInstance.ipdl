@@ -26,7 +26,7 @@ using gfxIntSize from "nsSize.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
-using struct nsIntRect from "nsRect.h";
+using nsIntRect from "nsRect.h";
 
 namespace mozilla {
 namespace plugins {

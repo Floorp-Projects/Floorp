@@ -555,6 +555,16 @@ js::obj_hasOwnProperty(JSContext* cx, unsigned argc, Value* vp)
     jsid id;
     if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
         JSObject* obj = &args.thisv().toObject();
+
+#ifndef RELEASE_BUILD
+        if (obj->is<RegExpObject>() && id == NameToId(cx->names().source)) {
+            if (JSScript* script = cx->currentScript()) {
+                const char* filename = script->filename();
+                cx->compartment()->addTelemetry(filename, JSCompartment::RegExpSourceProperty);
+            }
+        }
+#endif
+
         Shape* prop;
         if (obj->isNative() &&
             NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))

@@ -235,9 +235,15 @@ extern bool gBluetoothDebugFlag;
 
 /**
  * When a remote BLE device gets connected / disconnected, we'll dispatch an
- * event
+ * event.
  */
 #define GATT_CONNECTION_STATE_CHANGED_ID     "connectionstatechanged"
+
+/**
+ * When attributes of BluetoothManager, BluetoothAdapter, or BluetoothDevice
+ * are changed, we'll dispatch an event.
+ */
+#define ATTRIBUTE_CHANGED_ID                 "attributechanged"
 
 // Bluetooth address format: xx:xx:xx:xx:xx:xx (or xx_xx_xx_xx_xx_xx)
 #define BLUETOOTH_ADDRESS_LENGTH 17

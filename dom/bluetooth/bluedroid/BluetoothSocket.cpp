@@ -13,6 +13,7 @@
 #include "BluetoothSocketObserver.h"
 #include "BluetoothInterface.h"
 #include "BluetoothUtils.h"
+#include "mozilla/ipc/UnixSocketWatcher.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"

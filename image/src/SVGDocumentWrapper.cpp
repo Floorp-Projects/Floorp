@@ -85,7 +85,7 @@ SVGDocumentWrapper::UpdateViewportBounds(const nsIntSize& aViewportSize)
 
   // If the bounds have changed, we need to do a layout flush.
   if (currentBounds.Size() != aViewportSize) {
-    mViewer->SetBounds(nsIntRect(nsIntPoint(0, 0), aViewportSize));
+    mViewer->SetBounds(IntRect(IntPoint(0, 0), aViewportSize));
     FlushLayout();
   }
 
