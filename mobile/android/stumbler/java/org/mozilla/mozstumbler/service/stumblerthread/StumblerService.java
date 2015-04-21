@@ -18,7 +18,6 @@ import org.mozilla.mozstumbler.service.stumblerthread.blocklist.WifiBlockListInt
 import org.mozilla.mozstumbler.service.stumblerthread.datahandling.DataStorageManager;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.ScanManager;
 import org.mozilla.mozstumbler.service.uploadthread.UploadAlarmReceiver;
-import org.mozilla.mozstumbler.service.utils.NetworkUtils;
 import org.mozilla.mozstumbler.service.utils.PersistentIntentService;
 
 // In stand-alone service mode (a.k.a passive scanning mode), this is created from PassiveServiceReceiver (by calling startService).
@@ -118,7 +117,6 @@ public class StumblerService extends PersistentIntentService
     protected void init() {
         // Ensure Prefs is created, so internal utility code can use getInstanceWithoutContext
         Prefs.getInstance(this);
-        NetworkUtils.createGlobalInstance(this);
         DataStorageManager.createGlobalInstance(this, this);
 
         mReporter.startup(this);
