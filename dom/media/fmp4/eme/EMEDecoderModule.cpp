@@ -241,7 +241,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
                                                          mProxy,
-                                                         static_cast<MediaTaskQueue*>(AbstractThread::GetCurrent())));
+                                                         AbstractThread::GetCurrent()->AsTaskQueue()));
   return emeDecoder.forget();
 }
 
@@ -272,7 +272,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
   nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
                                                          mProxy,
-                                                         static_cast<MediaTaskQueue*>(AbstractThread::GetCurrent())));
+                                                         AbstractThread::GetCurrent()->AsTaskQueue()));
   return emeDecoder.forget();
 }
 

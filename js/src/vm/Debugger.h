@@ -255,11 +255,17 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
     {
-        AllocationSite(HandleObject frame, int64_t when) : frame(frame), when(when) {
+        AllocationSite(HandleObject frame, int64_t when, const char* className)
+            : frame(frame),
+              when(when),
+              className(className)
+        {
             MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
+
         RelocatablePtrObject frame;
         int64_t when;
+        const char* className;
     };
     typedef mozilla::LinkedList<AllocationSite> AllocationSiteList;
 
@@ -305,7 +311,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     static const size_t DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH = 5000;
 
-    bool appendAllocationSite(JSContext* cx, HandleSavedFrame frame, int64_t when);
+    bool appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
+                              int64_t when);
     void emptyAllocationsLog();
 
     /*
@@ -515,7 +522,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static JSTrapStatus slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
     static void slowPathOnNewScript(JSContext* cx, HandleScript script);
     static void slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
-    static bool slowPathOnLogAllocationSite(JSContext* cx, HandleSavedFrame frame,
+    static bool slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                             int64_t when, GlobalObject::DebuggerVector& dbgs);
     static void slowPathPromiseHook(JSContext* cx, Hook hook, HandleObject promise);
     static JSTrapStatus dispatchHook(JSContext* cx, MutableHandleValue vp, Hook which,
@@ -666,7 +673,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     static inline void onNewScript(JSContext* cx, HandleScript script);
     static inline void onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
-    static inline bool onLogAllocationSite(JSContext* cx, HandleSavedFrame frame, int64_t when);
+    static inline bool onLogAllocationSite(JSContext* cx, JSObject* obj, HandleSavedFrame frame,
+                                           int64_t when);
     static inline void onGarbageCollection(JSRuntime* rt, const gcstats::Statistics& stats);
     static JSTrapStatus onTrap(JSContext* cx, MutableHandleValue vp);
     static JSTrapStatus onSingleStep(JSContext* cx, MutableHandleValue vp);
@@ -975,12 +983,13 @@ Debugger::onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 }
 
 /* static */ bool
-Debugger::onLogAllocationSite(JSContext* cx, HandleSavedFrame frame, int64_t when)
+Debugger::onLogAllocationSite(JSContext* cx, JSObject* obj, HandleSavedFrame frame, int64_t when)
 {
     GlobalObject::DebuggerVector* dbgs = cx->global()->getDebuggers();
     if (!dbgs || dbgs->empty())
         return true;
-    return Debugger::slowPathOnLogAllocationSite(cx, frame, when, *dbgs);
+    RootedObject hobj(cx, obj);
+    return Debugger::slowPathOnLogAllocationSite(cx, hobj, frame, when, *dbgs);
 }
 
 /* static */ void

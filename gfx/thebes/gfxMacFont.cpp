@@ -254,7 +254,7 @@ gfxMacFont::InitMetrics()
         mMetrics.xHeight = ::CGFontGetXHeight(mCGFont) * cgConvFactor;
     }
 
-    if (mStyle.sizeAdjust != 0.0 && mStyle.size > 0.0 &&
+    if (mStyle.sizeAdjust > 0.0 && mStyle.size > 0.0 &&
         mMetrics.xHeight > 0.0) {
         // apply font-size-adjust, and recalculate metrics
         gfxFloat aspect = mMetrics.xHeight / mStyle.size;

@@ -5492,7 +5492,7 @@ private:
   ~WaitForTransactionsHelper()
   {
     MOZ_ASSERT(!mCallback);
-    MOZ_ASSERT(mState = State_Complete);
+    MOZ_ASSERT(mState == State_Complete);
   }
 
   void
@@ -7877,7 +7877,7 @@ private:
   {
     MOZ_ASSERT(!mQuotaClient);
     MOZ_ASSERT(!mCallback);
-    MOZ_ASSERT(mState = State_Complete);
+    MOZ_ASSERT(mState == State_Complete);
   }
 
   void

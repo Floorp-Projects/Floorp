@@ -496,7 +496,7 @@ TabChildBase::DispatchMessageManagerMessage(const nsAString& aMessageName,
     // content manipulate the frame state.
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
+    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
                        aMessageName, false, &cloneData, nullptr, nullptr, nullptr);
 }
 
@@ -2488,6 +2488,11 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
   AutoCacheNativeKeyCommands autoCache(widget);
 
   if (event.message == NS_KEY_PRESS) {
+    // If content code called preventDefault() on a keydown event, then we don't
+    // want to process any following keypress events.
+    if (mIgnoreKeyPressEvent) {
+      return true;
+    }
     if (aBindings.type() == MaybeNativeKeyBinding::TNativeKeyBinding) {
       const NativeKeyBinding& bindings = aBindings;
       autoCache.Cache(bindings.singleLineCommands(),
@@ -2496,11 +2501,6 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
     } else {
       autoCache.CacheNoCommands();
     }
-  }
-  // If content code called preventDefault() on a keydown event, then we don't
-  // want to process any following keypress events.
-  if (event.message == NS_KEY_PRESS && mIgnoreKeyPressEvent) {
-    return true;
   }
 
   WidgetKeyboardEvent localEvent(event);
@@ -2689,7 +2689,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
     CrossProcessCpowHolder cpows(Manager(), aCpows);
-    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
+    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
                        aMessage, false, &cloneData, &cpows, aPrincipal, nullptr);
   }
   return true;

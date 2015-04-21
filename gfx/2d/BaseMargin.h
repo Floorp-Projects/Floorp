@@ -89,11 +89,11 @@ struct BaseMargin {
 
   T& Side(SideT aSide) {
     // This is ugly!
-    return *(&top + T(aSide));
+    return *(&top + int(aSide));
   }
   T Side(SideT aSide) const {
     // This is ugly!
-    return *(&top + T(aSide));
+    return *(&top + int(aSide));
   }
 
   void ApplySkipSides(Sides aSkipSides)

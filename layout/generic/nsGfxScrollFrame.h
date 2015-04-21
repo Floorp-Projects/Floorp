@@ -307,7 +307,8 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState);
   bool IsLTR() const;
-  bool IsScrollbarOnRight() const;
+  enum eScrollbarSide { eScrollbarOnLeft, eScrollbarOnRight };
+  eScrollbarSide GetScrollbarSide() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
   bool IsMaybeScrollingActive() const;
   bool IsProcessingAsyncScroll() const {

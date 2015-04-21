@@ -1389,6 +1389,9 @@ nsFrameLoader::StartDestroy()
     if (mRemoteBrowser) {
       mRemoteBrowser->CacheFrameLoader(this);
     }
+    if (mChildMessageManager) {
+      mChildMessageManager->CacheFrameLoader(this);
+    }
   }
 
   // If the TabParent has installed any event listeners on the window, this is
@@ -1531,6 +1534,9 @@ nsFrameLoader::DestroyComplete()
     mOwnerContentStrong = nullptr;
     if (mRemoteBrowser) {
       mRemoteBrowser->CacheFrameLoader(nullptr);
+    }
+    if (mChildMessageManager) {
+      mChildMessageManager->CacheFrameLoader(nullptr);
     }
   }
 
@@ -2443,7 +2449,7 @@ public:
       static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
     if (tabChild && tabChild->GetInnerManager()) {
       nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(tabChild->GetGlobal());
-      ReceiveMessage(static_cast<EventTarget*>(tabChild),
+      ReceiveMessage(static_cast<EventTarget*>(tabChild), mFrameLoader,
                      tabChild->GetInnerManager());
     }
     return NS_OK;

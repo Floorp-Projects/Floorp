@@ -33,11 +33,6 @@ xul|window xul|scrollbar[orient="vertical"] {
   border: 0px solid transparent !important;
 }
 
-xul|window xul|scrollbar[orient="vertical"]:-moz-locale-dir(rtl) {
-  margin-left: 2px;
-  margin-right: -10px;
-}
-
 xul|window xul|scrollbar[orient="vertical"] xul|thumb {
   max-width: 6px !important;
   min-width: 6px !important;

@@ -10,6 +10,7 @@
 
 // Helper Classes
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPtr.h"
 
 // Interfaces Needed
 #include "nsILayoutHistoryState.h"
@@ -178,7 +179,7 @@ protected:
   ~nsSHistoryObserver() {}
 };
 
-static nsSHistoryObserver* gObserver = nullptr;
+StaticRefPtr<nsSHistoryObserver> gObserver;
 
 NS_IMPL_ISUPPORTS(nsSHistoryObserver, nsIObserver)
 
@@ -360,7 +361,6 @@ nsSHistory::Startup()
   // but keep the per SHistory cached viewer limit constant
   if (!gObserver) {
     gObserver = new nsSHistoryObserver();
-    NS_ADDREF(gObserver);
     Preferences::AddStrongObservers(gObserver, kObservedPrefs);
 
     nsCOMPtr<nsIObserverService> obsSvc =
@@ -393,7 +393,7 @@ nsSHistory::Shutdown()
       obsSvc->RemoveObserver(gObserver, "cacheservice:empty-cache");
       obsSvc->RemoveObserver(gObserver, "memory-pressure");
     }
-    NS_RELEASE(gObserver);
+    gObserver = nullptr;
   }
 }
 
@@ -540,8 +540,7 @@ nsSHistory::GetTransactionAtIndex(int32_t aIndex, nsISHTransaction ** aResult)
     if (NS_SUCCEEDED(rv) && ptr) {
       cnt++;
       if (cnt == aIndex) {
-        *aResult = ptr;
-        NS_ADDREF(*aResult);
+        ptr.forget(aResult);
         break;
       }
       else {

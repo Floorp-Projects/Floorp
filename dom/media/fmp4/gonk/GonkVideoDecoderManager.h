@@ -147,6 +147,7 @@ private:
 
   android::MediaBuffer* mVideoBuffer;
 
+  nsRefPtr<MediaByteBuffer>  mCodecSpecificData;
   MediaDataDecoderCallback*  mReaderCallback;
   MediaInfo mInfo;
   android::sp<VideoResourceListener> mVideoListener;
@@ -176,6 +177,8 @@ private:
   Vector<android::MediaBuffer*> mPendingVideoBuffers;
   // The lock protects mPendingVideoBuffers.
   Mutex mPendingVideoBuffersLock;
+
+  nsAutoCString mMimeType;
 };
 
 } // namespace mozilla

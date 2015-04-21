@@ -209,6 +209,13 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
             return false;
 
+        RootedString className(cx, Atomize(cx, allocSite->className, strlen(allocSite->className)));
+        if (!className)
+            return false;
+        RootedValue classNameValue(cx, StringValue(className));
+        if (!DefineProperty(cx, obj, cx->names().class_, classNameValue))
+            return false;
+
         result->setDenseElement(i, ObjectValue(*obj));
 
         // Pop the front queue entry, and delete it immediately, so that

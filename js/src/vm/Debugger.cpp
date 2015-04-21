@@ -1695,8 +1695,8 @@ Debugger::slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global)
 }
 
 /* static */ bool
-Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleSavedFrame frame, int64_t when,
-                                      GlobalObject::DebuggerVector& dbgs)
+Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
+                                      int64_t when, GlobalObject::DebuggerVector& dbgs)
 {
     MOZ_ASSERT(!dbgs.empty());
     mozilla::DebugOnly<Debugger**> begin = dbgs.begin();
@@ -1708,7 +1708,7 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleSavedFrame frame, int
 
         if ((*dbgp)->trackingAllocationSites &&
             (*dbgp)->enabled &&
-            !(*dbgp)->appendAllocationSite(cx, frame, when))
+            !(*dbgp)->appendAllocationSite(cx, obj, frame, when))
         {
             return false;
         }
@@ -1725,14 +1725,15 @@ Debugger::isDebuggee(const JSCompartment* compartment) const
 }
 
 bool
-Debugger::appendAllocationSite(JSContext* cx, HandleSavedFrame frame, int64_t when)
+Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
+                               int64_t when)
 {
     AutoCompartment ac(cx, object);
-    RootedObject wrapped(cx, frame);
-    if (!cx->compartment()->wrap(cx, &wrapped))
+    RootedObject wrappedFrame(cx, frame);
+    if (!cx->compartment()->wrap(cx, &wrappedFrame))
         return false;
 
-    AllocationSite* allocSite = cx->new_<AllocationSite>(wrapped, when);
+    AllocationSite* allocSite = cx->new_<AllocationSite>(wrappedFrame, when, obj->getClass()->name);
     if (!allocSite)
         return false;
 
