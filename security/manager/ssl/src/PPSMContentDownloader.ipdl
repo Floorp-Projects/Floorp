@@ -1,0 +1,28 @@
+/* vim: set sw=2 sts=2 ts=2 et tw=80 ft=cpp: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PChannelDiverter;
+
+namespace mozilla {
+namespace psm {
+
+protocol PPSMContentDownloader
+{
+  manager PContent;
+
+parent:
+  OnStartRequest(uint32_t contentLength);
+  OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
+  OnStopRequest(nsresult code);
+
+  DivertToParentUsing(PChannelDiverter diverter);
+
+child:
+  __delete__();
+};
+
+} // namespace psm
+} // namespace mozilla
