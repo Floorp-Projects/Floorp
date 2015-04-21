@@ -2563,8 +2563,8 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
-    other_values: [ "0.3", "0.5", "0.7" ],
-    invalid_values: []
+    other_values: [ "0.3", "0.5", "0.7", "0.0", "0", "3" ],
+    invalid_values: [ "-0.3", "-1" ]
   },
   "font-stretch": {
     domProp: "fontStretch",

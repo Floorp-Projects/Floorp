@@ -196,6 +196,7 @@ void
 WidgetShutdownObserver::Unregister()
 {
   if (mRegistered) {
+    mWidget = nullptr;
     nsContentUtils::UnregisterShutdownObserver(this);
     mRegistered = false;
   }

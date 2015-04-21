@@ -3440,8 +3440,8 @@ StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
       aComputedValue.SetFloatValue(*static_cast<const float*>(
         StyleDataAtOffset(styleStruct, ssOffset)));
       if (aProperty == eCSSProperty_font_size_adjust &&
-          aComputedValue.GetFloatValue() == 0.0f) {
-        // In nsStyleFont, we set mFont.sizeAdjust to 0 to represent
+          aComputedValue.GetFloatValue() == -1.0f) {
+        // In nsStyleFont, we set mFont.sizeAdjust to -1.0 to represent
         // font-size-adjust: none.  Here, we have to treat this as a keyword
         // instead of a float value, to make sure we don't end up doing
         // interpolation with it.

@@ -1853,7 +1853,7 @@ gfxPangoFontGroup::GetBaseFontSet()
         MakeFontSet(mPangoLanguage, mSizeAdjustFactor, &pattern);
 
     double size = GetPixelSize(pattern);
-    if (size != 0.0 && mStyle.sizeAdjust != 0.0) {
+    if (size != 0.0 && mStyle.sizeAdjust > 0.0) {
         gfxFcFont *font = fontSet->GetFontAt(0, GetStyle());
         if (font) {
             const gfxFont::Metrics& metrics =

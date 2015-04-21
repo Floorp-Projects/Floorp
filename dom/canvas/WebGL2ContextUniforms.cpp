@@ -11,8 +11,7 @@
 #include "WebGLVertexAttribData.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
 typedef union { GLint i; GLfloat f; GLuint u; } fi_t;
 
@@ -538,39 +537,7 @@ WebGL2Context::GetUniformBlockIndex(WebGLProgram* program,
     if (!ValidateObject("getUniformBlockIndex: program", program))
         return 0;
 
-    // Leave this unchecked for now.
-
-    const NS_LossyConvertUTF16toASCII cname(uniformBlockName);
-
-    GLuint progname = program->mGLName;
-
-    MakeContextCurrent();
-    return gl->fGetUniformBlockIndex(progname, cname.BeginReading());
-}
-
-static bool
-GetUniformBlockActiveUniforms(gl::GLContext* gl, JSContext* cx,
-                              WebGL2Context* owner, GLuint progname,
-                              GLuint uniformBlockIndex,
-                              JS::MutableHandleObject out_array)
-{
-    GLint length = 0;
-    gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex,
-                                 LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &length);
-    JS::RootedObject obj(cx, Uint32Array::Create(cx, owner, length, nullptr));
-    if (!obj)
-        return false;
-
-    Uint32Array result;
-    DebugOnly<bool> inited = result.Init(obj);
-    MOZ_ASSERT(inited);
-    result.ComputeLengthAndData();
-    gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex,
-                                 LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-                                 (GLint*) result.Data());
-
-    out_array.set(obj);
-    return true;
+    return program->GetUniformBlockIndex(uniformBlockName);
 }
 
 void
@@ -586,45 +553,24 @@ WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, WebGLProgram* progr
     if (!ValidateObject("getActiveUniformBlockParameter: program", program))
         return;
 
-    GLuint progname = program->mGLName;
-    GLint param = 0;
-
     MakeContextCurrent();
 
     switch(pname) {
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
-        gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex, pname, &param);
-        retval.SetValue().SetAsBoolean() = (param != 0);
-        return;
-
     case LOCAL_GL_UNIFORM_BLOCK_BINDING:
     case LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE:
-    case LOCAL_GL_UNIFORM_BLOCK_NAME_LENGTH:
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
-        gl->fGetActiveUniformBlockiv(progname, uniformBlockIndex, pname, &param);
-        retval.SetValue().SetAsUnsignedLong() = param;
+        program->GetActiveUniformBlockParam(uniformBlockIndex, pname, retval);
         return;
 
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
-        JS::RootedObject array(cx);
-        if (!GetUniformBlockActiveUniforms(gl, cx, this, progname, uniformBlockIndex,
-                                           &array))
-        {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-            return;
-        }
-
-        DebugOnly<bool> inited = retval.SetValue().SetAsUint32Array().Init(array);
-        MOZ_ASSERT(inited);
-
+        program->GetActiveUniformBlockActiveUniforms(cx, uniformBlockIndex, retval, rv);
         return;
     }
 
     ErrorInvalidEnumInfo("getActiveUniformBlockParameter: parameter", pname);
 }
-
-#define WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH 256
 
 void
 WebGL2Context::GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBlockIndex,
@@ -636,18 +582,8 @@ WebGL2Context::GetActiveUniformBlockName(WebGLProgram* program, GLuint uniformBl
     if (!ValidateObject("getActiveUniformBlockName: program", program))
         return;
 
-    GLuint progname = program->mGLName;
-    GLchar nameBuffer[WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH];
-    GLsizei length = 0;
-
-    MakeContextCurrent();
-    gl->fGetActiveUniformBlockName(progname, uniformBlockIndex,
-                                   WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH, &length,
-                                   nameBuffer);
-    retval.Assign(NS_ConvertASCIItoUTF16(nsDependentCString(nameBuffer)));
+    program->GetActiveUniformBlockName(uniformBlockIndex, retval);
 }
-
-#undef WEBGL_MAX_UNIFORM_BLOCK_NAME_LENGTH
 
 void
 WebGL2Context::UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockIndex,
@@ -659,8 +595,7 @@ WebGL2Context::UniformBlockBinding(WebGLProgram* program, GLuint uniformBlockInd
     if (!ValidateObject("uniformBlockBinding: program", program))
         return;
 
-    GLuint progname = program->mGLName;
-
-    MakeContextCurrent();
-    gl->fUniformBlockBinding(progname, uniformBlockIndex, uniformBlockBinding);
+    program->UniformBlockBinding(uniformBlockIndex, uniformBlockBinding);
 }
+
+} // namespace mozilla

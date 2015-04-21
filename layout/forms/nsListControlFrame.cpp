@@ -1760,7 +1760,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   return NS_ERROR_FAILURE;
 }
 
-static void
+static bool
 FireShowDropDownEvent(nsIContent* aContent)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content &&
@@ -1768,7 +1768,10 @@ FireShowDropDownEvent(nsIContent* aContent)
     nsContentUtils::DispatchChromeEvent(aContent->OwnerDoc(), aContent,
                                         NS_LITERAL_STRING("mozshowdropdown"), true,
                                         false);
+    return true;
   }
+
+  return false;
 }
 
 nsresult
@@ -1818,7 +1821,9 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
-      FireShowDropDownEvent(mContent);
+      if (FireShowDropDownEvent(mContent)) {
+        return NS_OK;
+      }
 
       if (!IgnoreMouseEventForSelection(aMouseEvent)) {
         return NS_OK;
@@ -2059,8 +2064,9 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
   if (IsInDropDownMode() && !nsComboboxControlFrame::ToolkitHasNativePopup()) {
     aKeyEvent->PreventDefault();
     if (!mComboboxFrame->IsDroppedDown()) {
-      FireShowDropDownEvent(mContent);
-      mComboboxFrame->ShowDropDown(true);
+      if (!FireShowDropDownEvent(mContent)) {
+        mComboboxFrame->ShowDropDown(true);
+      }
     } else {
       nsWeakFrame weakFrame(this);
       // mEndSelectionIndex is the last item that got selected.

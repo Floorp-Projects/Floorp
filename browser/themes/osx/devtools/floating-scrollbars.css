@@ -10,8 +10,10 @@ scrollbar {
   padding: 2px;
 }
 
+/* Scrollbar code will reset the margin to the correct side depending on
+   layout.scrollbar.side pref */
 scrollbar[orient="vertical"] {
-  -moz-margin-start: -8px;
+  margin-left: -8px;
   min-width: 8px;
   max-width: 8px;
 }

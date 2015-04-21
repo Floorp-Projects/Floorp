@@ -114,7 +114,8 @@ gfxFT2FontBase::GetHorizontalMetrics()
     if (mHasMetrics)
         return mMetrics;
 
-    if (MOZ_UNLIKELY(GetStyle()->size <= 0.0)) {
+    if (MOZ_UNLIKELY(GetStyle()->size <= 0.0) ||
+        MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0)) {
         new(&mMetrics) gfxFont::Metrics(); // zero initialize
         mSpaceGlyph = GetGlyph(' ');
     } else {

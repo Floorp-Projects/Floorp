@@ -194,7 +194,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
     CrossProcessCpowHolder cpows(this, aCpows);
-    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
   }
   return true;
@@ -221,7 +221,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
     CrossProcessCpowHolder cpows(this, aCpows);
-    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, true, &cloneData, &cpows, aPrincipal, aRetvals);
   }
   return true;
@@ -247,7 +247,7 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
     CrossProcessCpowHolder cpows(this, aCpows);
-    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr,
                         aMsg, false, &cloneData, &cpows, aPrincipal, nullptr);
   }
   return true;

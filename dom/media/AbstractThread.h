@@ -17,6 +17,7 @@
 
 namespace mozilla {
 
+class MediaTaskQueue;
 class TaskDispatcher;
 
 /*
@@ -65,6 +66,9 @@ public:
   // Returns true if this task queue requires all dispatches performed by its
   // tasks to go through the tail dispatcher.
   bool RequiresTailDispatch() const { return mRequireTailDispatch; }
+
+  virtual MediaTaskQueue* AsTaskQueue() { MOZ_CRASH("Not a task queue!"); }
+  virtual nsIThread* AsXPCOMThread() { MOZ_CRASH("Not an XPCOM thread!"); }
 
   // Convenience method for getting an AbstractThread for the main thread.
   static AbstractThread* MainThread();
