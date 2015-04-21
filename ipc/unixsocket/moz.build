@@ -9,7 +9,6 @@ EXPORTS.mozilla.ipc += [
     'ListenSocket.h',
     'SocketBase.h',
     'StreamSocket.h',
-    'UnixSocket.h',
     'UnixSocketConnector.h'
 ]
 
@@ -18,7 +17,6 @@ SOURCES += [
     'ListenSocket.cpp',
     'SocketBase.cpp',
     'StreamSocket.cpp',
-    'UnixSocket.cpp',
     'UnixSocketConnector.cpp'
 ]
 
