@@ -292,9 +292,9 @@ Animation::Tick()
     mPendingReadyTime.SetNull();
   }
 
-  if (IsPossiblyOrphanedPendingPlayer()) {
+  if (IsPossiblyOrphanedPendingAnimation()) {
     MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
-               "Orphaned pending players should have an active timeline");
+               "Orphaned pending animtaions should have an active timeline");
     FinishPendingAt(mTimeline->GetCurrentTime().Value());
   }
 
@@ -305,14 +305,15 @@ void
 Animation::TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime)
 {
   // Normally we expect the play state to be pending but it's possible that,
-  // due to the handling of possibly orphaned players in Tick(), this player got
-  // started whilst still being in another document's pending player map.
+  // due to the handling of possibly orphaned animations in Tick(), this
+  // animation got started whilst still being in another document's pending
+  // animation map.
   if (PlayState() != AnimationPlayState::Pending) {
     return;
   }
 
   // If aReadyTime.IsNull() we'll detect this in Tick() where we check for
-  // orphaned players and trigger this animation anyway
+  // orphaned animations and trigger this animation anyway
   mPendingReadyTime = aReadyTime;
 }
 
@@ -320,7 +321,7 @@ void
 Animation::TriggerNow()
 {
   MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
-             "Expected to start a pending player");
+             "Expected to start a pending animation");
   MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
              "Expected an active timeline");
 
@@ -595,13 +596,13 @@ Animation::DoPause()
 void
 Animation::ResumeAt(const TimeDuration& aReadyTime)
 {
-  // This method is only expected to be called for a player that is
+  // This method is only expected to be called for an animation that is
   // waiting to play. We can easily adapt it to handle other states
   // but it's currently not necessary.
   MOZ_ASSERT(mPendingState == PendingState::PlayPending,
-             "Expected to resume a play-pending player");
+             "Expected to resume a play-pending animation");
   MOZ_ASSERT(mHoldTime.IsNull() != mStartTime.IsNull(),
-             "A player in the play-pending state should have either a"
+             "An animation in the play-pending state should have either a"
              " resolved hold time or resolved start time (but not both)");
 
   // If we aborted a pending pause operation we will already have a start time
@@ -628,7 +629,7 @@ void
 Animation::PauseAt(const TimeDuration& aReadyTime)
 {
   MOZ_ASSERT(mPendingState == PendingState::PausePending,
-             "Expected to pause a pause-pending player");
+             "Expected to pause a pause-pending animation");
 
   if (!mStartTime.IsNull()) {
     mHoldTime.SetValue((aReadyTime - mStartTime.Value())
@@ -771,7 +772,7 @@ Animation::IsFinished() const
 }
 
 bool
-Animation::IsPossiblyOrphanedPendingPlayer() const
+Animation::IsPossiblyOrphanedPendingAnimation() const
 {
   // Check if we are pending but might never start because we are not being
   // tracked.
@@ -783,7 +784,7 @@ Animation::IsPossiblyOrphanedPendingPlayer() const
   //   (note that for the case of our effect changing we should handle
   //   that in SetEffect)
   // * We started playing but our timeline became inactive.
-  //   In this case the pending player tracker will drop us from its hashmap
+  //   In this case the pending animation tracker will drop us from its hashmap
   //   when we have been painted.
   // * When we started playing we couldn't find a PendingAnimationTracker to
   //   register with (perhaps the effect had no document) so we simply
@@ -873,13 +874,14 @@ Animation::GetCollection() const
   if (!manager) {
     return nullptr;
   }
-  MOZ_ASSERT(mEffect, "A player with an animation manager must have an effect");
+  MOZ_ASSERT(mEffect,
+             "An animation with an animation manager must have an effect");
 
   Element* targetElement;
   nsCSSPseudoElements::Type targetPseudoType;
   mEffect->GetTarget(targetElement, targetPseudoType);
   MOZ_ASSERT(targetElement,
-             "A player with an animation manager must have a target");
+             "An animation with an animation manager must have a target");
 
   return manager->GetAnimations(targetElement, targetPseudoType, false);
 }

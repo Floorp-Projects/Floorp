@@ -118,24 +118,24 @@ public:
   void Tick();
 
   /**
-   * Set the time to use for starting or pausing a pending player.
+   * Set the time to use for starting or pausing a pending animation.
    *
-   * Typically, when a player is played, it does not start immediately but is
-   * added to a table of pending players on the document of its effect.
+   * Typically, when an animation is played, it does not start immediately but
+   * is added to a table of pending animations on the document of its effect.
    * In the meantime it sets its hold time to the time from which playback
    * should begin.
    *
-   * When the document finishes painting, any pending players in its table
+   * When the document finishes painting, any pending animations in its table
    * are marked as being ready to start by calling StartOnNextTick.
    * The moment when the paint completed is also recorded, converted to a
    * timeline time, and passed to StartOnTick. This is so that when these
-   * players do start, they can be timed from the point when painting
+   * animations do start, they can be timed from the point when painting
    * completed.
    *
-   * After calling TriggerOnNextTick, players remain in the pending state until
-   * the next refresh driver tick. At that time they transition out of the
-   * pending state using the time passed to TriggerOnNextTick as the effective
-   * time at which they resumed.
+   * After calling TriggerOnNextTick, animations remain in the pending state
+   * until the next refresh driver tick. At that time they transition out of
+   * the pending state using the time passed to TriggerOnNextTick as the
+   * effective time at which they resumed.
    *
    * This approach means that any setup time required for performing the
    * initial paint of an animation such as layerization is not deducted from
@@ -145,14 +145,14 @@ public:
    *
    * Furthermore:
    *
-   * - Starting the player immediately when painting finishes is problematic
-   *   because the start time of the player will be ahead of its timeline
+   * - Starting the animation immediately when painting finishes is problematic
+   *   because the start time of the animation will be ahead of its timeline
    *   (since the timeline time is based on the refresh driver time).
-   *   That's a problem because the player is playing but its timing suggests
-   *   it starts in the future. We could update the timeline to match the start
-   *   time of the player but then we'd also have to update the timing and style
-   *   of all animations connected to that timeline or else be stuck in an
-   *   inconsistent state until the next refresh driver tick.
+   *   That's a problem because the animation is playing but its timing
+   *   suggests it starts in the future. We could update the timeline to match
+   *   the start time of the animation but then we'd also have to update the
+   *   timing and style of all animations connected to that timeline or else be
+   *   stuck in an inconsistent state until the next refresh driver tick.
    *
    * - If we simply use the refresh driver time on its next tick, the lag
    *   between triggering an animation and its effective start is unacceptably
@@ -165,19 +165,19 @@ public:
    * animations could be paused immediately, we do it asynchronously for
    * consistency and so that animations paused together end up in step.
    *
-   * Note that the caller of this method is responsible for removing the player
-   * from any PendingAnimationTracker it may have been added to.
+   * Note that the caller of this method is responsible for removing the
+   * animation from any PendingAnimationTracker it may have been added to.
    */
   void TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime);
 
-  // Testing only: Start or pause a pending player using the current timeline
+  // Testing only: Start or pause a pending animation using the current timeline
   // time. This is used to support existing tests that expect animations to
   // begin immediately. Ideally we would rewrite the those tests and get rid of
   // this method, but there are a lot of them.
   //
   // As with TriggerOnNextTick, the caller of this method is responsible for
-  // removing the player from any PendingAnimationTracker it may have been added
-  // to.
+  // removing the animation from any PendingAnimationTracker it may have been
+  // added to.
   void TriggerNow();
 
   /**
@@ -254,11 +254,11 @@ public:
   // running on the compositor).
   bool CanThrottle() const;
 
-  // Updates |aStyleRule| with the animation values of this player's effect,
+  // Updates |aStyleRule| with the animation values of this animation's effect,
   // if any.
   // Any properties already contained in |aSetProperties| are not changed. Any
   // properties that are changed are added to |aSetProperties|.
-  // |aNeedsRefreshes| will be set to true if this player expects to update
+  // |aNeedsRefreshes| will be set to true if this animation expects to update
   // the style rule on the next refresh driver tick as well (because it
   // is running and has an effect to sample).
   void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
@@ -287,7 +287,7 @@ protected:
   void FlushStyle() const;
   void PostUpdate();
   /**
-   * Remove this player from the pending player tracker and reset
+   * Remove this animation from the pending animation tracker and reset
    * mPendingState as necessary. The caller is responsible for resolving or
    * aborting the mReady promise as necessary.
    */
@@ -295,7 +295,7 @@ protected:
 
   bool IsFinished() const;
 
-  bool IsPossiblyOrphanedPendingPlayer() const;
+  bool IsPossiblyOrphanedPendingAnimation() const;
   StickyTimeDuration EffectEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
@@ -307,9 +307,9 @@ protected:
   nsRefPtr<KeyframeEffectReadonly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
-  Nullable<TimeDuration> mHoldTime;  // Player timescale
+  Nullable<TimeDuration> mHoldTime;  // Animation timescale
   Nullable<TimeDuration> mPendingReadyTime; // Timeline timescale
-  Nullable<TimeDuration> mPreviousCurrentTime; // Player timescale
+  Nullable<TimeDuration> mPreviousCurrentTime; // Animation timescale
   double mPlaybackRate;
 
   // A Promise that is replaced on each call to Play() (and in future Pause())
@@ -325,11 +325,11 @@ protected:
   // See http://w3c.github.io/web-animations/#current-finished-promise
   nsRefPtr<Promise> mFinished;
 
-  // Indicates if the player is in the pending state (and what state it is
+  // Indicates if the animation is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than
-  // checking if this player is tracked by a PendingAnimationTracker because the
-  // player will continue to be pending even after it has been removed from the
-  // PendingAnimationTracker while it is waiting for the next tick
+  // checking if this animation is tracked by a PendingAnimationTracker because
+  // the animation will continue to be pending even after it has been removed
+  // from the PendingAnimationTracker while it is waiting for the next tick
   // (see TriggerOnNextTick for details).
   enum class PendingState { NotPending, PlayPending, PausePending };
   PendingState mPendingState;
