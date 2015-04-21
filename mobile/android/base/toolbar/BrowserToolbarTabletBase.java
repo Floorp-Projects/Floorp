@@ -127,6 +127,11 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         }
     }
 
+    @Override
+    public View getDoorHangerAnchor() {
+        return backButton;
+    }
+
     protected boolean canDoBack(final Tab tab) {
         return (tab.canDoBack() && !isEditing());
     }

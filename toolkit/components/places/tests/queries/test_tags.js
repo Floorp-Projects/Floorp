@@ -554,7 +554,7 @@ function addBookmark(aURI) {
  * Asynchronous task that removes all pages from history and bookmarks.
  */
 function* task_cleanDatabase(aCallback) {
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 }
 
