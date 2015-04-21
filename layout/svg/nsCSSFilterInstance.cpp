@@ -385,14 +385,14 @@ nsCSSFilterInstance::SetBounds(FilterPrimitiveDescription& aDescr,
 {
   int32_t inputIndex = GetLastResultIndex(aPrimitiveDescrs);
   nsIntRect inputBounds = (inputIndex < 0) ?
-    mTargetBBoxInFilterSpace : ThebesIntRect(aPrimitiveDescrs[inputIndex].PrimitiveSubregion());
+    mTargetBBoxInFilterSpace : aPrimitiveDescrs[inputIndex].PrimitiveSubregion();
 
   nsTArray<nsIntRegion> inputExtents;
   inputExtents.AppendElement(inputBounds);
 
   nsIntRegion outputExtents =
     FilterSupport::PostFilterExtentsForPrimitive(aDescr, inputExtents);
-  IntRect outputBounds = ToIntRect(outputExtents.GetBounds());
+  IntRect outputBounds = outputExtents.GetBounds();
 
   aDescr.SetPrimitiveSubregion(outputBounds);
   aDescr.SetFilterSpaceBounds(outputBounds);

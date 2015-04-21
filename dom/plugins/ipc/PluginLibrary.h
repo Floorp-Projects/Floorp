@@ -15,10 +15,10 @@
 #include "nsError.h"
 #include "mozilla/EventForwards.h"
 #include "nsSize.h"
+#include "nsRect.h"
 
 class gfxContext;
 class nsCString;
-struct nsIntRect;
 class nsNPAPIPlugin;
 
 namespace mozilla {

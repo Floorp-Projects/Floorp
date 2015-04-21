@@ -770,9 +770,9 @@ void nsView::List(FILE* out, int32_t aIndent) const
     nscoord p2a = mViewManager->AppUnitsPerDevPixel();
     nsIntRect rect;
     mWindow->GetClientBounds(rect);
-    nsRect windowBounds = rect.ToAppUnits(p2a);
+    nsRect windowBounds = ToAppUnits(rect, p2a);
     mWindow->GetBounds(rect);
-    nsRect nonclientBounds = rect.ToAppUnits(p2a);
+    nsRect nonclientBounds = ToAppUnits(rect, p2a);
     nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
     mWindow.get()->Release();
     int32_t Z = mWindow->GetZIndex();

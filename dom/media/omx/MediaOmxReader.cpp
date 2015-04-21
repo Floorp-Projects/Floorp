@@ -403,7 +403,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
     aKeyframeSkip = false;
 
-    IntRect picture = ToIntRect(mPicture);
+    IntRect picture = mPicture;
     if (frame.Y.mWidth != mInitialFrame.width ||
         frame.Y.mHeight != mInitialFrame.height) {
 

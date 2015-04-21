@@ -20,6 +20,7 @@
 #include "mozilla/Preferences.h"  // for Preferences
 #include "WinUtils.h"
 #include "nsIPresShell.h"
+#include "nsPoint.h"
 
 // System headers (alphabetical)
 #include <windows.ui.core.h> // ABI::Window::UI::Core namespace

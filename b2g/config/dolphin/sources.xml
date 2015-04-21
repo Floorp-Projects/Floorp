@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="ef937d1aca7c4cf89ecb5cc43ae8c21c2000a9db">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="0645bbed4d6cbd8064652eebafe011edc3e417fd"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="15134b080b5f406e5aa36f5136c17dafb4e31f64"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f2f2f0cbee2f2517070dd194051d509c07cdacff"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="c7d4045742862a7cf3f0074902ebc7d1b339b0ee"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="f4c86a6371082db0be8087b17a31bb79d35fb1d1"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
@@ -134,8 +134,8 @@
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>
-  <project name="kernel/common" path="kernel" revision="df636d2c31ad4434a7de2565359ad982b3767118"/>
-  <project name="platform/system/core" path="system/core" revision="3747764c63d23de586c56e1cef6dca2cdd90b2ea"/>
+  <project name="kernel/common" path="kernel" revision="65d2a18bd4ab0f1ed36a76c1e3c4f9ae98f345b9"/>
+  <project name="platform/system/core" path="system/core" revision="7992618bd4ee33ce96897675a5c0a9b619122f13"/>
   <project name="u-boot" path="u-boot" revision="f1502910977ac88f43da7bf9277c3523ad4b0b2f"/>
   <project name="vendor/sprd/gps" path="vendor/sprd/gps" revision="4c59900937dc2e978b7b14b7f1ea617e3d5d550e"/>
   <project name="vendor/sprd/open-source" path="vendor/sprd/open-source" revision="e503b1d14d7fdee532b8f391407299da193c1b2d"/>

@@ -16,8 +16,8 @@ import warnings
 
 
 from marionette_driver.errors import (
-        MarionetteException, InstallGeckoError, TimeoutException, InvalidResponseException,
-        JavascriptException, NoSuchElementException, XPathLookupException, NoSuchWindowException,
+        MarionetteException, TimeoutException,
+        JavascriptException, NoSuchElementException, NoSuchWindowException,
         StaleElementException, ScriptTimeoutException, ElementNotVisibleException,
         NoSuchFrameException, InvalidElementStateException, NoAlertPresentException,
         InvalidCookieDomainException, UnableToSetCookieException, InvalidSelectorException,

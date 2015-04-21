@@ -12,6 +12,7 @@
 #include <stdint.h>                     // for uint64_t
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for override
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
@@ -21,9 +22,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #include "nsIWidget.h"
-
-struct nsIntPoint;
-struct nsIntRect;
 
 namespace mozilla {
 namespace layers {
@@ -170,7 +168,7 @@ public:
    * Begin recording a transaction to be forwarded atomically to a
    * LayerManagerComposite.
    */
-  void BeginTransaction(const nsIntRect& aTargetBounds,
+  void BeginTransaction(const gfx::IntRect& aTargetBounds,
                         ScreenRotation aRotation,
                         mozilla::dom::ScreenOrientation aOrientation);
 
@@ -258,7 +256,7 @@ public:
    * Communicate the picture rect of an image to the compositor
    */
   void UpdatePictureRect(CompositableClient* aCompositable,
-                         const nsIntRect& aRect) override;
+                         const gfx::IntRect& aRect) override;
 
   /**
    * See CompositableForwarder::UseTexture

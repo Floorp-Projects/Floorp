@@ -1499,7 +1499,7 @@ void find_first_visible_parent(QWindow* aItem, QWindow*& aVisibleItem)
 NS_IMETHODIMP
 nsWindow::GetScreenBounds(nsIntRect &aRect)
 {
-    aRect = nsIntRect(nsIntPoint(0, 0), mBounds.Size());
+    aRect = gfx::IntRect(gfx::IntPoint(0, 0), mBounds.Size());
     if (mIsTopLevel) {
         QPoint pos = mWidget->position();
         aRect.MoveTo(pos.x(), pos.y());

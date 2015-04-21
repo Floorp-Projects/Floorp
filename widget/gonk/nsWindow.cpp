@@ -161,7 +161,7 @@ nsWindow::nsWindow()
         win->query(win, NATIVE_WINDOW_HEIGHT, &screenSize.height)) {
         NS_RUNTIMEABORT("Failed to get native window size, aborting...");
     }
-    gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
+    gScreenBounds = gfx::IntRect(gfx::IntPoint(0, 0), screenSize);
 
     char propValue[PROPERTY_VALUE_MAX];
     property_get("ro.sf.hwrotation", propValue, "0");

@@ -12,6 +12,7 @@
 #include "mozilla/CheckedInt.h"
 #include "nsIThread.h"
 #include "nsSize.h"
+#include "nsRect.h"
 
 #if !(defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)) || \
     defined(MOZ_ASAN)
@@ -27,8 +28,6 @@ using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
 using mozilla::CheckedInt32;
 using mozilla::CheckedUint32;
-
-struct nsIntRect;
 
 // This file contains stuff we'd rather put elsewhere, but which is
 // dependent on other changes which we don't want to wait for. We plan to

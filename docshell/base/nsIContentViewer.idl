@@ -14,9 +14,9 @@ interface nsIPrintSettings;
 
 %{ C++
 #include "nsTArray.h"
+#include "nsRect.h"
 
 class nsIWidget;
-struct nsIntRect;
 class nsIPresShell;
 class nsPresContext;
 class nsView;

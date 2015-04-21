@@ -73,7 +73,7 @@ fuzzy(1,1) == image-orientation-generated-content.html?270&flip   image-orientat
 fuzzy(1,1) == image-orientation-background.html?from-image   image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-ref.html?0
 == image-orientation-border-image.html?from-image            image-orientation-border-image.html?0
-== image-orientation-border-image.html?90&flip               image-orientation-border-image.html?0
+skip-if(asyncPanZoom&&winWidget) == image-orientation-border-image.html?90&flip               image-orientation-border-image.html?0
 == image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?0
 == image-orientation-list-style-image.html?90&flip           image-orientation-list-style-image.html?0
 
