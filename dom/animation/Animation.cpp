@@ -12,7 +12,7 @@
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
-#include "PendingPlayerTracker.h" // For PendingPlayerTracker
+#include "PendingAnimationTracker.h" // For PendingAnimationTracker
 
 namespace mozilla {
 namespace dom {
@@ -548,7 +548,7 @@ Animation::DoPlay(LimitBehavior aLimitBehavior)
     return;
   }
 
-  PendingPlayerTracker* tracker = doc->GetOrCreatePendingPlayerTracker();
+  PendingAnimationTracker* tracker = doc->GetOrCreatePendingAnimationTracker();
   tracker->AddPlayPending(*this);
 
   // We may have updated the current time when we set the hold time above.
@@ -586,7 +586,7 @@ Animation::DoPause()
     return;
   }
 
-  PendingPlayerTracker* tracker = doc->GetOrCreatePendingPlayerTracker();
+  PendingAnimationTracker* tracker = doc->GetOrCreatePendingAnimationTracker();
   tracker->AddPausePending(*this);
 
   UpdateFinishedState();
@@ -743,7 +743,7 @@ Animation::CancelPendingTasks()
 
   nsIDocument* doc = GetRenderedDocument();
   if (doc) {
-    PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
+    PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
     if (tracker) {
       if (mPendingState == PendingState::PlayPending) {
         tracker->RemovePlayPending(*this);
@@ -785,7 +785,7 @@ Animation::IsPossiblyOrphanedPendingPlayer() const
   // * We started playing but our timeline became inactive.
   //   In this case the pending player tracker will drop us from its hashmap
   //   when we have been painted.
-  // * When we started playing we couldn't find a PendingPlayerTracker to
+  // * When we started playing we couldn't find a PendingAnimationTracker to
   //   register with (perhaps the effect had no document) so we simply
   //   set mPendingState in DoPlay and relied on this method to catch us on the
   //   next tick.
@@ -808,7 +808,7 @@ Animation::IsPossiblyOrphanedPendingPlayer() const
   }
 
   // If we have no rendered document, or we're not in our rendered document's
-  // PendingPlayerTracker then there's a good chance no one is tracking us.
+  // PendingAnimationTracker then there's a good chance no one is tracking us.
   //
   // If we're wrong and another document is tracking us then, at worst, we'll
   // simply start/pause the animation one tick too soon. That's better than
@@ -818,7 +818,7 @@ Animation::IsPossiblyOrphanedPendingPlayer() const
     return false;
   }
 
-  PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
+  PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
   return !tracker ||
          (!tracker->IsWaitingToPlay(*this) &&
           !tracker->IsWaitingToPause(*this));

@@ -56,7 +56,7 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/PendingPlayerTracker.h"
+#include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "ActiveLayerTracker.h"
@@ -1560,14 +1560,14 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 static bool
 TriggerPendingAnimationsOnSubDocuments(nsIDocument* aDocument, void* aReadyTime)
 {
-  PendingPlayerTracker* tracker = aDocument->GetPendingPlayerTracker();
+  PendingAnimationTracker* tracker = aDocument->GetPendingAnimationTracker();
   if (tracker) {
     nsIPresShell* shell = aDocument->GetShell();
     // If paint-suppression is in effect then we haven't finished painting
     // this document yet so we shouldn't start animations
     if (!shell || !shell->IsPaintingSuppressed()) {
       const TimeStamp& readyTime = *static_cast<TimeStamp*>(aReadyTime);
-      tracker->TriggerPendingPlayersOnNextTick(readyTime);
+      tracker->TriggerPendingAnimationsOnNextTick(readyTime);
     }
   }
   aDocument->EnumerateSubDocuments(TriggerPendingAnimationsOnSubDocuments,

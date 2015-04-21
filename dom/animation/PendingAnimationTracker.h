@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_PendingPlayerTracker_h
-#define mozilla_dom_PendingPlayerTracker_h
+#ifndef mozilla_dom_PendingAnimationTracker_h
+#define mozilla_dom_PendingAnimationTracker_h
 
 #include "mozilla/dom/Animation.h"
 #include "nsCycleCollectionParticipant.h"
@@ -15,15 +15,15 @@ class nsIFrame;
 
 namespace mozilla {
 
-class PendingPlayerTracker final
+class PendingAnimationTracker final
 {
 public:
-  explicit PendingPlayerTracker(nsIDocument* aDocument)
+  explicit PendingAnimationTracker(nsIDocument* aDocument)
     : mDocument(aDocument)
   { }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingPlayerTracker)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PendingPlayerTracker)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingAnimationTracker)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PendingAnimationTracker)
 
   void AddPlayPending(dom::Animation& aPlayer)
   {
@@ -55,14 +55,14 @@ public:
     return IsWaiting(aPlayer, mPausePendingSet);
   }
 
-  void TriggerPendingPlayersOnNextTick(const TimeStamp& aReadyTime);
-  void TriggerPendingPlayersNow();
-  bool HasPendingPlayers() const {
+  void TriggerPendingAnimationsOnNextTick(const TimeStamp& aReadyTime);
+  void TriggerPendingAnimationsNow();
+  bool HasPendingAnimations() const {
     return mPlayPendingSet.Count() > 0 || mPausePendingSet.Count() > 0;
   }
 
 private:
-  ~PendingPlayerTracker() { }
+  ~PendingAnimationTracker() { }
 
   void EnsurePaintIsScheduled();
 
@@ -83,4 +83,4 @@ private:
 
 } // namespace mozilla
 
-#endif // mozilla_dom_PendingPlayerTracker_h
+#endif // mozilla_dom_PendingAnimationTracker_h

@@ -19,7 +19,7 @@
 #include "nsFrameManager.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/Touch.h"
-#include "mozilla/PendingPlayerTracker.h"
+#include "mozilla/PendingAnimationTracker.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsFrame.h"
 #include "mozilla/layers/ShadowLayers.h"
@@ -2342,16 +2342,15 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
   // Before we advance the time, we should trigger any animations that are
   // waiting to start. This is because there are many tests that call this
   // which expect animations to start immediately. Ideally, we should make
-  // all these tests do an asynchronous wait on the corresponding animation
-  // player's 'ready' promise before continuing. Then we could remove the
-  // special handling here and the code path followed when testing would
-  // more closely match the code path during regular operation. Filed as
-  // bug 1112957.
+  // all these tests do an asynchronous wait on the corresponding animation's
+  // 'ready' promise before continuing. Then we could remove the special
+  // handling here and the code path followed when testing would more closely
+  // match the code path during regular operation. Filed as bug 1112957.
   nsCOMPtr<nsIDocument> doc = GetDocument();
   if (doc) {
-    PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
+    PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
     if (tracker) {
-      tracker->TriggerPendingPlayersNow();
+      tracker->TriggerPendingAnimationsNow();
     }
   }
 
