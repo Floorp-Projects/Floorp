@@ -167,11 +167,8 @@ nsScrollbarFrame::GetScrollbarMediator()
 }
 
 nsresult
-nsScrollbarFrame::GetScrollbarMargin(
-  nsMargin& aMargin,
-  mozilla::ScrollFrameHelper::eScrollbarSide aSide)
+nsScrollbarFrame::GetMargin(nsMargin& aMargin)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   aMargin.SizeTo(0,0,0,0);
 
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
@@ -186,21 +183,18 @@ nsScrollbarFrame::GetScrollbarMargin(
         aMargin.top = -presContext->DevPixelsToAppUnits(size.height);
       }
       else {
-        aMargin.left = -presContext->DevPixelsToAppUnits(size.width);
+        if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+          aMargin.right = -presContext->DevPixelsToAppUnits(size.width);
+        }
+        else {
+          aMargin.left = -presContext->DevPixelsToAppUnits(size.width);
+        }
       }
-      rv = NS_OK;
+      return NS_OK;
     }
   }
 
-  if (NS_FAILED(rv)) {
-    rv = nsBox::GetMargin(aMargin);
-  }
-
-  if (NS_SUCCEEDED(rv) && aSide == ScrollFrameHelper::eScrollbarOnLeft) {
-    Swap(aMargin.left, aMargin.right);
-  }
-
-  return rv;
+  return nsBox::GetMargin(aMargin);
 }
 
 void
