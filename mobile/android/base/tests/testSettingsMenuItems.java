@@ -207,7 +207,8 @@ public class testSettingsMenuItems extends PixelTest {
 
         // Tab Queue
         if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE) {
-            String[] tabQueue = { mStringHelper.TAB_QUEUE_LABEL, "Prevent tabs from opening immediately, but open all queued tabs the next time " + mStringHelper.BRAND_NAME + " loads." };
+            final String expected = "Queue links for later instead of switching to " + mStringHelper.BRAND_NAME + " each time";
+            String[] tabQueue = { mStringHelper.TAB_QUEUE_LABEL, expected };
             settingsMap.get(PATH_CUSTOMIZE).add(tabQueue);
         }
 
