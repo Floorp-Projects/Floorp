@@ -413,6 +413,10 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       }
     }
 
+    events.sort((a, b) => {
+      return a.type.localeCompare(b.type);
+    });
+
     return events;
   },
 
@@ -1406,6 +1410,8 @@ var WalkerActor = protocol.ActorClass({
    *    Named options, including:
    *    `sameDocument`: If true, parents will be restricted to the same
    *      document as the node.
+   *    `sameTypeRootTreeItem`: If true, this will not traverse across
+   *     different types of docshells.
    */
   parents: method(function(node, options={}) {
     if (isNodeDead(node)) {
@@ -1416,16 +1422,23 @@ var WalkerActor = protocol.ActorClass({
     let parents = [];
     let cur;
     while((cur = walker.parentNode())) {
-      if (options.sameDocument && cur.ownerDocument != node.rawNode.ownerDocument) {
+      if (options.sameDocument && nodeDocument(cur) != nodeDocument(node.rawNode)) {
         break;
       }
+
+      if (options.sameTypeRootTreeItem &&
+          nodeDocshell(cur).sameTypeRootTreeItem != nodeDocshell(node.rawNode).sameTypeRootTreeItem) {
+        break;
+      }
+
       parents.push(this._ref(cur));
     }
     return parents;
   }, {
     request: {
       node: Arg(0, "domnode"),
-      sameDocument: Option(1)
+      sameDocument: Option(1),
+      sameTypeRootTreeItem: Option(1)
     },
     response: {
       nodes: RetVal("array:domnode")
@@ -3222,7 +3235,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     let nodeType = types.getType("domnode");
     let returnNode = nodeType.read(nodeType.write(nodeActor, walkerActor), this);
     let top = returnNode;
-    let extras = walkerActor.parents(nodeActor);
+    let extras = walkerActor.parents(nodeActor, {sameTypeRootTreeItem: true});
     for (let extraActor of extras) {
       top = nodeType.read(nodeType.write(extraActor, walkerActor), this);
     }
@@ -3513,6 +3526,16 @@ function nodeDocument(node) {
     return null;
   }
   return node.ownerDocument || (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ? node : null);
+}
+
+function nodeDocshell(node) {
+  let doc = node ? nodeDocument(node) : null;
+  let win = doc ? doc.defaultView : null;
+  if (win) {
+    return win.
+           QueryInterface(Ci.nsIInterfaceRequestor).
+           getInterface(Ci.nsIDocShell);
+  }
 }
 
 function isNodeDead(node) {

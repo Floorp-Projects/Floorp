@@ -32,7 +32,7 @@ function* cleanup() {
   for (let type of ["history", "bookmark", "history.onlyTyped", "openpage"]) {
     Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
   }
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 }
 do_register_cleanup(cleanup);
