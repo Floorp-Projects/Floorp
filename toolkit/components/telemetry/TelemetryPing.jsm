@@ -604,13 +604,16 @@ let Impl = {
                     ", aOptions " + JSON.stringify(aOptions));
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
-    let archivePromise = this._archivePing(pingData)
-      .catch(e => this._log.error("addPendingPing - Failed to archive ping " + pingData.id, e));
+
+    let savePromise = TelemetryFile.savePing(pingData, aOptions.overwrite);
+    let archivePromise = this._archivePing(pingData).catch(e => {
+      this._log.error("addPendingPing - Failed to archive ping " + pingData.id, e);
+    });
 
     // Wait for both the archiving and ping persistence to complete.
     let promises = [
+      savePromise,
       archivePromise,
-      TelemetryFile.savePing(pingData, aOptions.overwrite),
     ];
     return Promise.all(promises).then(() => pingData.id);
   },
@@ -1076,7 +1079,8 @@ let Impl = {
 
     const creationDate = new Date(aPingData.creationDate);
     const filePath = getArchivedPingPath(aPingData.id, creationDate, aPingData.type);
-    yield OS.File.makeDir(OS.Path.dirname(filePath), { ignoreExisting: true });
+    yield OS.File.makeDir(OS.Path.dirname(filePath), { ignoreExisting: true,
+                                                       from: OS.Constants.Path.profileDir });
     yield TelemetryFile.savePingToFile(aPingData, filePath, true);
   }),
 

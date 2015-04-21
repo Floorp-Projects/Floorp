@@ -807,6 +807,8 @@ function LazyMapProxyHandler () {
             }
             return target.delete(key);
           };
+        case "has":
+          return key => target.has(key);
         default:
           return target[name];
       }
