@@ -156,5 +156,5 @@
   <project name="platform/hardware/qcom/sensors" path="hardware/qcom/sensors" revision="fde83fdf67e9b919f8a49008725bd595221bf33f"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="6417804bea95f6e46094a01a06025a86e28c5b0d"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="e00d716e7e3d31729f75399855b6921e90cb0b66"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="eb8b8828c412bf8d164ad42a39766becd39f9fb5"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d82e00fb6380b4f6cea7a96213913ee9eb441239"/>
 </manifest>
