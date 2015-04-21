@@ -9,7 +9,7 @@ function check(code) {
         s = exc.message;
     }
 
-    assertEq(s, `x[Symbol.iterator] is not a function`);
+    assertEq(s, "(intermediate value)(...)[Symbol.iterator] is not a function");
 }
 
 x = {};
