@@ -13,9 +13,9 @@
 #include "nsTArray.h"
 #include "nsIWidget.h"
 #include "mozilla/EventForwards.h"
+#include "nsRect.h"
 
 class nsWindow;
-struct nsIntRect;
 
 namespace mozilla {
 namespace widget {

@@ -699,7 +699,7 @@ public:
     RectIterator rgnIter(*this);
     const Rect* currentRect;
     while ((currentRect = rgnIter.Next())) {
-      nsRect appRect = currentRect->ToAppUnits(aAppUnitsPerPixel);
+      nsRect appRect = ::ToAppUnits(*currentRect, aAppUnitsPerPixel);
       result.Or(result, appRect);
     }
     return result;

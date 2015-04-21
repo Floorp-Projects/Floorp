@@ -10,8 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "GLContextTypes.h"
 #include "GLConsts.h"
-
-struct nsIntRect;
+#include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
 namespace gl {
@@ -62,8 +61,8 @@ public:
      *   - active texture (will be 0)
      *   - texture 0 binding
      */
-    void BlitTextureImage(gl::TextureImage *aSrc, const nsIntRect& aSrcRect,
-                          gl::TextureImage *aDst, const nsIntRect& aDstRect);
+    void BlitTextureImage(gl::TextureImage *aSrc, const gfx::IntRect& aSrcRect,
+                          gl::TextureImage *aDst, const gfx::IntRect& aDstRect);
 };
 
 }

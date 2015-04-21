@@ -174,7 +174,7 @@ bool AndroidMediaReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
     currentImage = bufferCallback.GetImage();
     int64_t pos = mDecoder->GetResource()->Tell();
-    IntRect picture = ToIntRect(mPicture);
+    IntRect picture = mPicture;
 
     nsRefPtr<VideoData> v;
     if (currentImage) {

@@ -8,7 +8,7 @@ include protocol PContent;
 
 include "mozilla/GfxMessageUtils.h";
 
-using struct nsIntRect from "nsRect.h";
+using nsIntRect from "nsRect.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {

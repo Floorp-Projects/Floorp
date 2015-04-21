@@ -737,14 +737,11 @@ JSRuntime::onTooMuchMalloc()
 }
 
 JS_FRIEND_API(void*)
-JSRuntime::onOutOfMemory(void* p, size_t nbytes)
+JSRuntime::onOutOfMemory(AllocFunction allocFunc, size_t nbytes, void* reallocPtr,
+                         JSContext* maybecx)
 {
-    return onOutOfMemory(p, nbytes, nullptr);
-}
+    MOZ_ASSERT_IF(allocFunc != AllocFunction::Realloc, !reallocPtr);
 
-JS_FRIEND_API(void*)
-JSRuntime::onOutOfMemory(void* p, size_t nbytes, JSContext* cx)
-{
     if (isHeapBusy())
         return nullptr;
 
@@ -753,25 +750,34 @@ JSRuntime::onOutOfMemory(void* p, size_t nbytes, JSContext* cx)
      * all the allocations and released the empty GC chunks.
      */
     gc.onOutOfMallocMemory();
-    if (!p)
+    void* p;
+    switch (allocFunc) {
+      case AllocFunction::Malloc:
         p = js_malloc(nbytes);
-    else if (p == reinterpret_cast<void*>(1))
+        break;
+      case AllocFunction::Calloc:
         p = js_calloc(nbytes);
-    else
-        p = js_realloc(p, nbytes);
+        break;
+      case AllocFunction::Realloc:
+        p = js_realloc(reallocPtr, nbytes);
+        break;
+      default:
+        MOZ_CRASH();
+    }
     if (p)
         return p;
-    if (cx)
-        ReportOutOfMemory(cx);
+
+    if (maybecx)
+        ReportOutOfMemory(maybecx);
     return nullptr;
 }
 
 void*
-JSRuntime::onOutOfMemoryCanGC(void* p, size_t bytes)
+JSRuntime::onOutOfMemoryCanGC(AllocFunction allocFunc, size_t bytes, void* reallocPtr)
 {
     if (largeAllocationFailureCallback && bytes >= LARGE_ALLOCATION)
         largeAllocationFailureCallback(largeAllocationFailureCallbackData);
-    return onOutOfMemory(p, bytes);
+    return onOutOfMemory(allocFunc, bytes, reallocPtr);
 }
 
 bool
