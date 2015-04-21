@@ -92,8 +92,8 @@ struct NS_GFX nsFont {
 
   // The aspect-value (ie., the ratio actualsize:actualxheight) that any
   // actual physical font created from this font structure must have when
-  // rendering or measuring a string. A value of 0 means no adjustment
-  // needs to be done.
+  // rendering or measuring a string. A value of -1.0 means no adjustment
+  // needs to be done; otherwise the value must be nonnegative.
   float sizeAdjust;
 
   // -- list of value tags for font-specific alternate features

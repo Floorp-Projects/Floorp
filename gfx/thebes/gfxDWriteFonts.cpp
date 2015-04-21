@@ -162,7 +162,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
         mFontFace->GetMetrics(&fontMetrics);
     }
 
-    if (mStyle.sizeAdjust != 0.0) {
+    if (mStyle.sizeAdjust >= 0.0) {
         gfxFloat aspect = (gfxFloat)fontMetrics.xHeight /
                    fontMetrics.designUnitsPerEm;
         mAdjustedSize = mStyle.GetAdjustedSize(aspect);
