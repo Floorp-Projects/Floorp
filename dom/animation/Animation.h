@@ -33,7 +33,7 @@ class nsIDocument;
 class nsPresContext;
 
 namespace mozilla {
-struct AnimationPlayerCollection;
+struct AnimationCollection;
 namespace css {
 class AnimValuesStyleRule;
 class CommonAnimationManager;
@@ -301,7 +301,7 @@ protected:
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
   virtual css::CommonAnimationManager* GetAnimationManager() const = 0;
-  AnimationPlayerCollection* GetCollection() const;
+  AnimationCollection* GetCollection() const;
 
   nsRefPtr<DocumentTimeline> mTimeline;
   nsRefPtr<KeyframeEffectReadonly> mEffect;

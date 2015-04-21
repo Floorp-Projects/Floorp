@@ -165,21 +165,20 @@ public:
   {
   }
 
-  static mozilla::AnimationPlayerCollection*
+  static mozilla::AnimationCollection*
   GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
       aContent, nsGkAtoms::animationsProperty, aProperty);
   }
 
-  void UpdateStyleAndEvents(mozilla::AnimationPlayerCollection* aEA,
+  void UpdateStyleAndEvents(mozilla::AnimationCollection* aEA,
                             mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
-  void QueueEvents(mozilla::AnimationPlayerCollection* aEA,
+  void QueueEvents(mozilla::AnimationCollection* aEA,
                    mozilla::EventArray &aEventsToDispatch);
 
-  void MaybeUpdateCascadeResults(mozilla::AnimationPlayerCollection*
-                                   aCollection);
+  void MaybeUpdateCascadeResults(mozilla::AnimationCollection* aCollection);
 
   // nsIStyleRuleProcessor (parts)
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
@@ -248,7 +247,7 @@ private:
                     float aToKey, nsStyleContext* aToContext);
 
   static void UpdateCascadeResults(nsStyleContext* aStyleContext,
-                                   mozilla::AnimationPlayerCollection*
+                                   mozilla::AnimationCollection*
                                      aElementAnimations);
 
   // The guts of DispatchEvents

@@ -183,8 +183,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     aElement = aElement->GetParent()->AsElement();
   }
 
-  AnimationPlayerCollection* collection =
-    GetAnimations(aElement, pseudoType, false);
+  AnimationCollection* collection = GetAnimations(aElement, pseudoType, false);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
@@ -384,7 +383,7 @@ nsTransitionManager::ConsiderStartingTransition(
   nsCSSProperty aProperty,
   const StyleTransition& aTransition,
   dom::Element* aElement,
-  AnimationPlayerCollection*& aElementTransitions,
+  AnimationCollection*& aElementTransitions,
   nsStyleContext* aOldStyleContext,
   nsStyleContext* aNewStyleContext,
   bool* aStartedAny,
@@ -611,10 +610,9 @@ nsTransitionManager::ConsiderStartingTransition(
 
 void
 nsTransitionManager::UpdateCascadeResultsWithTransitions(
-                       AnimationPlayerCollection* aTransitions)
+                       AnimationCollection* aTransitions)
 {
-  AnimationPlayerCollection* animations =
-    mPresContext->AnimationManager()->
+  AnimationCollection* animations = mPresContext->AnimationManager()->
       GetAnimations(aTransitions->mElement,
                     aTransitions->PseudoElementType(), false);
   UpdateCascadeResults(aTransitions, animations);
@@ -622,10 +620,9 @@ nsTransitionManager::UpdateCascadeResultsWithTransitions(
 
 void
 nsTransitionManager::UpdateCascadeResultsWithAnimations(
-                       AnimationPlayerCollection* aAnimations)
+                       AnimationCollection* aAnimations)
 {
-  AnimationPlayerCollection* transitions =
-    mPresContext->TransitionManager()->
+  AnimationCollection* transitions = mPresContext->TransitionManager()->
       GetAnimations(aAnimations->mElement,
                     aAnimations->PseudoElementType(), false);
   UpdateCascadeResults(transitions, aAnimations);
@@ -633,12 +630,12 @@ nsTransitionManager::UpdateCascadeResultsWithAnimations(
 
 void
 nsTransitionManager::UpdateCascadeResultsWithAnimationsToBeDestroyed(
-                       const AnimationPlayerCollection* aAnimations)
+                       const AnimationCollection* aAnimations)
 {
   // aAnimations is about to be destroyed.  So get transitions from it,
   // but then don't pass it to UpdateCascadeResults, since it has
   // information that may now be incorrect.
-  AnimationPlayerCollection* transitions =
+  AnimationCollection* transitions =
     mPresContext->TransitionManager()->
       GetAnimations(aAnimations->mElement,
                     aAnimations->PseudoElementType(), false);
@@ -646,9 +643,8 @@ nsTransitionManager::UpdateCascadeResultsWithAnimationsToBeDestroyed(
 }
 
 void
-nsTransitionManager::UpdateCascadeResults(
-                       AnimationPlayerCollection* aTransitions,
-                       AnimationPlayerCollection* aAnimations)
+nsTransitionManager::UpdateCascadeResults(AnimationCollection* aTransitions,
+                                          AnimationCollection* aAnimations)
 {
   if (!aTransitions) {
     // Nothing to do.
@@ -785,8 +781,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
   {
     PRCList *next = PR_LIST_HEAD(&mElementCollections);
     while (next != &mElementCollections) {
-      AnimationPlayerCollection* collection =
-        static_cast<AnimationPlayerCollection*>(next);
+      AnimationCollection* collection = static_cast<AnimationCollection*>(next);
       next = PR_NEXT_LINK(next);
 
       nsAutoAnimationMutationBatch mb(collection->mElement);
@@ -794,7 +789,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       collection->Tick();
       bool canThrottleTick = aFlags == Can_Throttle &&
         collection->CanPerformOnCompositorThread(
-          AnimationPlayerCollection::CanAnimateFlags(0)) &&
+          AnimationCollection::CanAnimateFlags(0)) &&
         collection->CanThrottleAnimation(now);
 
       MOZ_ASSERT(collection->mElement->GetCrossShadowCurrentDoc() ==
