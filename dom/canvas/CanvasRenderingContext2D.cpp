@@ -308,12 +308,12 @@ public:
     nsIntRegion strokePaintNeededRegion;
 
     FilterSupport::ComputeSourceNeededRegions(
-      ctx->CurrentState().filter, mgfx::ThebesIntRect(mPostFilterBounds),
+      ctx->CurrentState().filter, mPostFilterBounds,
       sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
-    mSourceGraphicRect = mgfx::ToIntRect(sourceGraphicNeededRegion.GetBounds());
-    mFillPaintRect = mgfx::ToIntRect(fillPaintNeededRegion.GetBounds());
-    mStrokePaintRect = mgfx::ToIntRect(strokePaintNeededRegion.GetBounds());
+    mSourceGraphicRect = sourceGraphicNeededRegion.GetBounds();
+    mFillPaintRect = fillPaintNeededRegion.GetBounds();
+    mStrokePaintRect = strokePaintNeededRegion.GetBounds();
 
     mSourceGraphicRect = mSourceGraphicRect.Intersect(aPreFilterBounds);
 
@@ -600,10 +600,10 @@ private:
     nsIntRegion strokePaintNeededRegion;
 
     FilterSupport::ComputeSourceNeededRegions(
-      ctx->CurrentState().filter, mgfx::ThebesIntRect(mgfx::RoundedToInt(aDestBounds)),
+      ctx->CurrentState().filter, mgfx::RoundedToInt(aDestBounds),
       sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
-    return mgfx::Rect(mgfx::ToIntRect(sourceGraphicNeededRegion.GetBounds()));
+    return mgfx::Rect(sourceGraphicNeededRegion.GetBounds());
   }
 
   mgfx::Rect
@@ -639,8 +639,8 @@ private:
 
     nsIntRegion extents =
       mgfx::FilterSupport::ComputePostFilterExtents(ctx->CurrentState().filter,
-                                                    mgfx::ThebesIntRect(intBounds));
-    return mgfx::Rect(mgfx::ToIntRect(extents.GetBounds()));
+                                                    intBounds);
+    return mgfx::Rect(extents.GetBounds());
   }
 
   RefPtr<DrawTarget> mTarget;

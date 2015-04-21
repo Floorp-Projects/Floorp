@@ -368,7 +368,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     gfx->Save();
     gfx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
-                  gfxMatrix::Translation(ThebesIntPoint(-neededRect.TopLeft())));
+                  gfxMatrix::Translation(-neededRect.TopLeft()));
     GeneralPattern pattern;
     if (aSource == &mFillPaint) {
       nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx, &pattern);
@@ -383,7 +383,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   }
 
   aSource->mSourceSurface = offscreenDT->Snapshot();
-  aSource->mSurfaceRect = ToIntRect(neededRect);
+  aSource->mSurfaceRect = neededRect;
 
   return NS_OK;
 }
@@ -445,13 +445,13 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   }
   nsRefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
   ctx->SetMatrix(
-    ctx->CurrentMatrix().Translate(ThebesIntPoint(-neededRect.TopLeft())).
+    ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
                          PreMultiply(deviceToFilterSpace));
 
   mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty);
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
-  mSourceGraphic.mSurfaceRect = ToIntRect(neededRect);
+  mSourceGraphic.mSurfaceRect = neededRect;
 
   return NS_OK;
 }
@@ -529,7 +529,7 @@ nsFilterInstance::OutputFilterSpaceBounds() const
     return nsIntRect();
 
   nsIntRect bounds =
-    ThebesIntRect(mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion());
+    mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion();
   bool overflow;
   gfxIntSize surfaceSize =
     nsSVGUtils::ConvertToSurfaceSize(bounds.Size(), &overflow);

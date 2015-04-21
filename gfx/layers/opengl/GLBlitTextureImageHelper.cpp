@@ -62,7 +62,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
     do {
         // calculate portion of the tile that is going to be painted to
         gfx::IntRect dstSubRect;
-        gfx::IntRect dstTextureRect = ThebesIntRect(aDst->GetTileRect());
+        gfx::IntRect dstTextureRect = aDst->GetTileRect();
         dstSubRect.IntersectRect(aDstRect, dstTextureRect);
 
         // this tile is not part of the destination rectangle aDstRect
@@ -84,7 +84,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
         do {
             // calculate portion of the source tile that is in the source rect
             gfx::IntRect srcSubRect;
-            gfx::IntRect srcTextureRect = ThebesIntRect(aSrc->GetTileRect());
+            gfx::IntRect srcTextureRect = aSrc->GetTileRect();
             srcSubRect.IntersectRect(aSrcRect, srcTextureRect);
 
             // this tile is not part of the source rect
