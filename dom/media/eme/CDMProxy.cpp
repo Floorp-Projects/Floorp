@@ -98,21 +98,10 @@ CDMProxy::gmp_Init(nsAutoPtr<InitData> aData)
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_ConvertUTF16toUTF8(mKeySystem));
 
-  // Add plugin version string to node ID so that we get the same
-  // CDM every time during a stream's playback.
-  nsresult rv =
-    mps->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                                &tags, version);
-  if (NS_FAILED(rv)) {
-    RejectPromise(aData->mPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  rv = mps->GetNodeId(aData->mOrigin,
-                      aData->mTopLevelOrigin,
-                      aData->mInPrivateBrowsing,
-                      version,
-                      mNodeId);
+  nsresult rv = mps->GetNodeId(aData->mOrigin,
+                               aData->mTopLevelOrigin,
+                               aData->mInPrivateBrowsing,
+                               mNodeId);
 
   MOZ_ASSERT(!GetNodeId().IsEmpty());
   if (NS_FAILED(rv)) {
