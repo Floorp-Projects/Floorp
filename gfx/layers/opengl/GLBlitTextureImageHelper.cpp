@@ -37,8 +37,8 @@ GLBlitTextureImageHelper::~GLBlitTextureImageHelper()
 }
 
 void
-GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
-                                           TextureImage *aDst, const nsIntRect& aDstRect)
+GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRect& aSrcRect,
+                                           TextureImage *aDst, const gfx::IntRect& aDstRect)
 {
     GLContext *gl = mCompositor->gl();
     NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
@@ -61,8 +61,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
     aDst->BeginBigImageIteration();
     do {
         // calculate portion of the tile that is going to be painted to
-        nsIntRect dstSubRect;
-        nsIntRect dstTextureRect = ThebesIntRect(aDst->GetTileRect());
+        gfx::IntRect dstSubRect;
+        gfx::IntRect dstTextureRect = aDst->GetTileRect();
         dstSubRect.IntersectRect(aDstRect, dstTextureRect);
 
         // this tile is not part of the destination rectangle aDstRect
@@ -70,7 +70,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
             continue;
 
         // (*) transform the rect of this tile into the rectangle defined by aSrcRect...
-        nsIntRect dstInSrcRect(dstSubRect);
+        gfx::IntRect dstInSrcRect(dstSubRect);
         dstInSrcRect.MoveBy(-aDstRect.TopLeft());
         // ...which might be of different size, hence scale accordingly
         dstInSrcRect.ScaleRoundOut(1.0f / blitScaleX, 1.0f / blitScaleY);
@@ -83,8 +83,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
         // now iterate over all tiles in the source Image...
         do {
             // calculate portion of the source tile that is in the source rect
-            nsIntRect srcSubRect;
-            nsIntRect srcTextureRect = ThebesIntRect(aSrc->GetTileRect());
+            gfx::IntRect srcSubRect;
+            gfx::IntRect srcTextureRect = aSrc->GetTileRect();
             srcSubRect.IntersectRect(aSrcRect, srcTextureRect);
 
             // this tile is not part of the source rect
@@ -104,7 +104,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
             // and the desired destination rectange
             // in destination space.
             // We need to transform this back into destination space, inverting the transform from (*)
-            nsIntRect srcSubInDstRect(srcSubRect);
+            gfx::IntRect srcSubInDstRect(srcSubRect);
             srcSubInDstRect.MoveBy(-aSrcRect.TopLeft());
             srcSubInDstRect.ScaleRoundOut(blitScaleX, blitScaleY);
             srcSubInDstRect.MoveBy(aDstRect.TopLeft());

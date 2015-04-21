@@ -18,6 +18,7 @@
 
 #include "base/basictypes.h"
 #include "mozilla/Hal.h"
+#include "mozilla/unused.h"
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "OrientationObserver.h"
@@ -321,6 +322,13 @@ ProcessOrientation::OnSensorChanged(const SensorData& event,
      RemainingMS(now,
                  mSwingTimestampNanos +
                  PROPOSAL_MIN_TIME_SINCE_SWING_ENDED_NANOS));
+
+  // Avoid unused-but-set compile warnings for these variables, when LOGD is
+  // a no-op, as it is by default:
+  unused << isAccelerating;
+  unused << isFlat;
+  unused << isSwinging;
+
   // Tell the listener.
   if (mProposedRotation != oldProposedRotation && mProposedRotation >= 0) {
     LOGD

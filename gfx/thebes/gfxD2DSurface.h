@@ -12,7 +12,6 @@
 #include <windows.h>
 
 struct ID3D10Texture2D;
-struct nsIntRect;
 
 class gfxD2DSurface : public gfxASurface {
 public:
@@ -32,14 +31,14 @@ public:
     virtual ~gfxD2DSurface();
 
     void Present();
-    void Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip);
+    void Scroll(const nsIntPoint &aDelta, const mozilla::gfx::IntRect &aClip);
 
-    virtual const gfxIntSize GetSize() const;
+    virtual const mozilla::gfx::IntSize GetSize() const;
 
     ID3D10Texture2D *GetTexture();
 
     HDC GetDC(bool aRetainContents);
-    void ReleaseDC(const nsIntRect *aUpdatedRect);
+    void ReleaseDC(const mozilla::gfx::IntRect *aUpdatedRect);
 };
 
 #endif /* GFX_D2DSURFACE_H */

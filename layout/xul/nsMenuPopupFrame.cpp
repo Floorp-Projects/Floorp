@@ -1499,7 +1499,7 @@ nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
     }
   }
 
-  nsRect screenRect = screenRectPixels.ToAppUnits(presContext->AppUnitsPerDevPixel());
+  nsRect screenRect = ToAppUnits(screenRectPixels, presContext->AppUnitsPerDevPixel());
   if (mInContentShell) {
     // for content shells, clip to the client area rather than the screen area
     screenRect.IntersectRect(screenRect, aRootScreenRect);

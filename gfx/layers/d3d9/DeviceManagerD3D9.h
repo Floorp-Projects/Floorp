@@ -12,8 +12,7 @@
 #include "nsTArray.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/RefPtr.h"
-
-struct nsIntRect;
+#include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
 namespace layers {
@@ -102,7 +101,7 @@ public:
    * This function will present the selected rectangle of the swap chain to
    * its associated window.
    */
-  void Present(const nsIntRect &aRect);
+  void Present(const gfx::IntRect &aRect);
   void Present();
 
 private:
