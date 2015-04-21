@@ -368,7 +368,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     gfx->Save();
     gfx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
-                  gfxMatrix::Translation(-neededRect.TopLeft()));
+                  gfxMatrix::Translation(ThebesIntPoint(-neededRect.TopLeft())));
     GeneralPattern pattern;
     if (aSource == &mFillPaint) {
       nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx, &pattern);
@@ -445,7 +445,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   }
   nsRefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
   ctx->SetMatrix(
-    ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
+    ctx->CurrentMatrix().Translate(ThebesIntPoint(-neededRect.TopLeft())).
                          PreMultiply(deviceToFilterSpace));
 
   mPaintCallback->Paint(*ctx, mTargetFrame, mPaintTransform, &dirty);

@@ -19,7 +19,6 @@ class nsIFrame;
 class nsIntRegion;
 
 struct nsRect;
-struct nsIntRect;
 
 namespace mozilla {
 namespace gfx {

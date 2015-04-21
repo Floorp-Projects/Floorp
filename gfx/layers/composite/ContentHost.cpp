@@ -327,7 +327,7 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
 
   // Select only the pixels that are still within the buffer.
   nsIntRegion finalRegion;
-  finalRegion.And(nsIntRect(nsIntPoint(), bufferSize), destRegion);
+  finalRegion.And(IntRect(IntPoint(), bufferSize), destRegion);
 
   // For each of the overlap areas (right, bottom-right, bottom), select those
   // pixels and wrap them around to the opposite edge of the buffer rect.

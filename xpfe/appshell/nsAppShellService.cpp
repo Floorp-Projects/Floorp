@@ -393,7 +393,7 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWebNavigation **aR
     NS_ERROR("Couldn't create instance of PuppetWidget");
     return NS_ERROR_FAILURE;
   }
-  widget->Create(nullptr, 0, nsIntRect(nsIntPoint(0, 0), nsIntSize(0, 0)),
+  widget->Create(nullptr, 0, gfx::IntRect(gfx::IntPoint(0, 0), gfx::IntSize(0, 0)),
                  nullptr);
   nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(navigation);
   window->InitWindow(0, widget, 0, 0, 0, 0);

@@ -300,7 +300,7 @@ nsCoreUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
     return;
 
   nsPoint point =
-    aPoint.ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
+    ToAppUnits(aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
   nsRect frameRect = aFrame->GetScreenRectInAppUnits();
   nsPoint deltaPoint(point.x - frameRect.x, point.y - frameRect.y);
 

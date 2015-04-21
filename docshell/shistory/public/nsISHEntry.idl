@@ -22,7 +22,7 @@ interface nsIStructuredCloneContainer;
 interface nsIBFCacheEntry;
 
 %{C++
-struct nsIntRect;
+#include "nsRect.h"
 class nsDocShellEditorData;
 class nsSHEntryShared;
 %}

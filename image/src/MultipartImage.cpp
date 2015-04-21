@@ -182,7 +182,7 @@ void MultipartImage::FinishTransition()
   // Finally, send all the notifications for the new current part and send a
   // FRAME_UPDATE notification so that observers know to redraw.
   mTracker->SyncNotifyProgress(newCurrentPartTracker->GetProgress(),
-                               nsIntRect::GetMaxSizedIntRect());
+                               GetMaxSizedIntRect());
 }
 
 already_AddRefed<imgIContainer>

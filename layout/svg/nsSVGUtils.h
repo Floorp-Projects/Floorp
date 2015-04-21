@@ -49,7 +49,6 @@ class gfxTextContextPaint;
 struct nsStyleSVG;
 struct nsStyleSVGPaint;
 struct nsRect;
-struct nsIntRect;
 struct nsPoint;
 
 namespace mozilla {

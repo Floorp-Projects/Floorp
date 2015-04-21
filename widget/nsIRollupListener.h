@@ -8,10 +8,10 @@
 #define __nsIRollupListener_h__
 
 #include "nsTArray.h"
+#include "nsPoint.h"
 
 class nsIContent;
 class nsIWidget;
-struct nsIntPoint;
 
 class nsIRollupListener {
  public: 

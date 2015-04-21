@@ -22,7 +22,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "mozilla/layers/GrallocTextureHost.h"
-#include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"                   // for nsIntRegion
 #include "AndroidSurfaceTexture.h"
 #include "GfxTexturesReporter.h"        // for GfxTexturesReporter
@@ -258,7 +257,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
 
     if (aDestRegion &&
         !aSrcOffset &&
-        !aDestRegion->IsEqual(nsIntRect(0, 0, size.width, size.height))) {
+        !aDestRegion->IsEqual(gfx::IntRect(0, 0, size.width, size.height))) {
       // UpdateFromDataSource will ignore our specified aDestRegion since the texture
       // hasn't been allocated with glTexImage2D yet. Call Resize() to force the
       // allocation (full size, but no upload), and then we'll only upload the pixels
@@ -292,9 +291,9 @@ TextureImageTextureSourceOGL::EnsureBuffer(const nsIntSize& aSize,
 }
 
 void
-TextureImageTextureSourceOGL::CopyTo(const nsIntRect& aSourceRect,
+TextureImageTextureSourceOGL::CopyTo(const gfx::IntRect& aSourceRect,
                                      DataTextureSource *aDest,
-                                     const nsIntRect& aDestRect)
+                                     const gfx::IntRect& aDestRect)
 {
   MOZ_ASSERT(aDest->AsSourceOGL(), "Incompatible destination type!");
   TextureImageTextureSourceOGL *dest =
@@ -341,7 +340,7 @@ TextureImageTextureSourceOGL::GetFormat() const
   return gfx::SurfaceFormat::UNKNOWN;
 }
 
-nsIntRect TextureImageTextureSourceOGL::GetTileRect()
+gfx::IntRect TextureImageTextureSourceOGL::GetTileRect()
 {
   return ThebesIntRect(mTexImage->GetTileRect());
 }

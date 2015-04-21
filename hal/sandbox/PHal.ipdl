@@ -16,7 +16,7 @@ using mozilla::hal::WakeLockControl from "mozilla/HalTypes.h";
 using mozilla::hal::SwitchState from "mozilla/HalTypes.h";
 using mozilla::hal::SwitchDevice from "mozilla/HalTypes.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
-using struct nsIntRect from "nsRect.h";
+using nsIntRect from "nsRect.h";
 using PRTime from "prtime.h";
 using mozilla::hal::FMRadioCountry from "mozilla/HalTypes.h";
 using mozilla::hal::FMRadioOperation from "mozilla/HalTypes.h";

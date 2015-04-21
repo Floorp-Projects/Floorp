@@ -475,7 +475,7 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
   // If we draw the frame counter we need to make sure we invalidate the area
   // for it to make it on screen
   if (gfxPrefs::DrawFrameCounter()) {
-    nsRect counterBounds = gfxPlatform::FrameCounterBounds().ToAppUnits(AppUnitsPerDevPixel());
+    nsRect counterBounds = ToAppUnits(gfxPlatform::FrameCounterBounds(), AppUnitsPerDevPixel());
     r = r.Or(r, counterBounds);
   }
 
@@ -570,9 +570,8 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
         nsTArray<nsIntRect> clipRects;
         childWidget->GetWindowClipRegion(&clipRects);
         for (uint32_t i = 0; i < clipRects.Length(); ++i) {
-          nsRect rr = (clipRects[i] + bounds.TopLeft()).
-            ToAppUnits(AppUnitsPerDevPixel());
-          children.Or(children, rr - aWidgetView->ViewToWidgetOffset()); 
+          nsRect rr = ToAppUnits(clipRects[i] + bounds.TopLeft(), AppUnitsPerDevPixel());
+          children.Or(children, rr - aWidgetView->ViewToWidgetOffset());
           children.SimplifyInward(20);
         }
 #endif
