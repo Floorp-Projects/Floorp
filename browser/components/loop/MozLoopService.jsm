@@ -1651,6 +1651,16 @@ this.MozLoopService = {
   }),
 
   /**
+   * Opens a URL in a new tab in the browser.
+   *
+   * @param {String} url The new url to open
+   */
+  openURL: function(url) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    win.openUILinkIn(url, "tab");
+  },
+
+  /**
    * Performs a hawk based request to the loop server.
    *
    * @param {LOOP_SESSION_TYPE} sessionType The type of session to use for the request.
