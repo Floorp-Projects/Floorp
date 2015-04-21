@@ -164,8 +164,8 @@ class ExclusiveContext : public ContextFriendFields,
         return thing->compartment() == compartment_;
     }
 
-    void* onOutOfMemory(void* p, size_t nbytes) {
-        return runtime_->onOutOfMemory(p, nbytes, maybeJSContext());
+    void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr = nullptr) {
+        return runtime_->onOutOfMemory(allocFunc, nbytes, reallocPtr, maybeJSContext());
     }
 
     /* Clear the pending exception (if any) due to OOM. */
