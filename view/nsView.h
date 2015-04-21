@@ -11,6 +11,7 @@
 #include "nsPoint.h"
 #include "nsRegion.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 #include "nsWidgetInitData.h" // for nsWindowType
 #include "nsIWidgetListener.h"
 #include "mozilla/EventForwards.h"
@@ -446,7 +447,7 @@ private:
 
   nsViewManager    *mViewManager;
   nsView           *mParent;
-  nsIWidget        *mWindow;
+  nsCOMPtr<nsIWidget> mWindow;
   nsView           *mNextSibling;
   nsView           *mFirstChild;
   nsIFrame         *mFrame;

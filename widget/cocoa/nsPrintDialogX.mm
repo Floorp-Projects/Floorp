@@ -9,6 +9,7 @@
 #include "nsIPrintSettings.h"
 #include "nsPrintSettingsX.h"
 #include "nsCOMPtr.h"
+#include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIStringBundle.h"

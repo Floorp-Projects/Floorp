@@ -44,7 +44,7 @@ function String_substring(start, end) {
 
 function String_static_substring(string, start, end) {
     if (arguments.length < 1)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'String.substring');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.substring');
     return callFunction(String_substring, string, start, end);
 }
 
@@ -83,7 +83,7 @@ function String_substr(start, length) {
 
 function String_static_substr(string, start, length) {
     if (arguments.length < 1)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'String.substr');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.substr');
     return callFunction(String_substr, string, start, length);
 }
 
@@ -120,7 +120,7 @@ function String_slice(start, end) {
 
 function String_static_slice(string, start, end) {
     if (arguments.length < 1)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'String.slice');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'String.slice');
     return callFunction(String_slice, string, start, end);
 }
 
@@ -167,10 +167,10 @@ function String_repeat(count) {
 
     // Steps 6-7.
     if (n < 0)
-        ThrowError(JSMSG_NEGATIVE_REPETITION_COUNT); // a RangeError
+        ThrowRangeError(JSMSG_NEGATIVE_REPETITION_COUNT);
 
     if (!(n * S.length < (1 << 28)))
-        ThrowError(JSMSG_RESULTING_STRING_TOO_LARGE); // a RangeError
+        ThrowRangeError(JSMSG_RESULTING_STRING_TOO_LARGE);
 
     // Communicate |n|'s possible range to the compiler.
     n = n & ((1 << 28) - 1);
@@ -290,11 +290,11 @@ function String_static_fromCodePoint(codePoints) {
 
         // Step 5d.
         if (nextCP !== ToInteger(nextCP) || Number_isNaN(nextCP))
-            ThrowError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
+            ThrowRangeError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
 
         // Step 5e.
         if (nextCP < 0 || nextCP > 0x10FFFF)
-            ThrowError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
+            ThrowRangeError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
 
         // Step 5f.
         // Inlined UTF-16 Encoding
@@ -373,7 +373,7 @@ function String_static_raw(callSite, ...substitutions) {
  */
 function String_static_localeCompare(str1, str2) {
     if (arguments.length < 1)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "String.localeCompare");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "String.localeCompare");
     var locales = arguments.length > 2 ? arguments[2] : undefined;
     var options = arguments.length > 3 ? arguments[3] : undefined;
     return callFunction(String_localeCompare, str1, str2, locales, options);

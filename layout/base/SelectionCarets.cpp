@@ -17,6 +17,7 @@
 #include "nsDOMTokenList.h"
 #include "nsFocusManager.h"
 #include "nsFrame.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
@@ -622,10 +623,16 @@ SelectionCarets::SelectWord()
     }
   } else {
     nsIContent* focusedContent = GetFocusedContent();
-    if (focusedContent && focusedContent->GetTextEditorRootContent()) {
-      nsIDOMWindow* win = mPresShell->GetDocument()->GetWindow();
-      if (win) {
-        fm->ClearFocus(win);
+    if (focusedContent) {
+      // Clear focus if content was editable element, or contentEditable.
+      nsGenericHTMLElement* focusedGeneric =
+        nsGenericHTMLElement::FromContent(focusedContent);
+      if (focusedContent->GetTextEditorRootContent() ||
+          (focusedGeneric && focusedGeneric->IsContentEditable())) {
+        nsIDOMWindow* win = mPresShell->GetDocument()->GetWindow();
+        if (win) {
+          fm->ClearFocus(win);
+        }
       }
     }
   }

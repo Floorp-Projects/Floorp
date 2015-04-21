@@ -13,6 +13,7 @@
 #include "nsError.h"                    // for NS_SUCCEEDED, NS_FAILED, etc
 #include "nsIPresShell.h"               // nsISelectionController constants
 #include "nsRange.h"                    // local var
+#include "nsQueryObject.h"              // for do_QueryObject
 
 using namespace mozilla;
 using namespace mozilla::dom;

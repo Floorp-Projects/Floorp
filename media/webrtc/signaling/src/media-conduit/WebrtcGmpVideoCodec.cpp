@@ -330,7 +330,7 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
   if (err != GMPNoErr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  GMPUnique<GMPVideoi420Frame>::Ptr frame(static_cast<GMPVideoi420Frame*>(ftmp));
+  GMPUniquePtr<GMPVideoi420Frame> frame(static_cast<GMPVideoi420Frame*>(ftmp));
 
   err = frame->CreateFrame(aInputImage->allocated_size(webrtc::kYPlane),
                            aInputImage->buffer(webrtc::kYPlane),
@@ -721,7 +721,7 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  GMPUnique<GMPVideoEncodedFrame>::Ptr frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
+  GMPUniquePtr<GMPVideoEncodedFrame> frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
   err = frame->CreateEmptyFrame(aInputImage._length);
   if (err != GMPNoErr) {
     return WEBRTC_VIDEO_CODEC_ERROR;

@@ -7,7 +7,7 @@
 #include "ImageLogging.h"
 #include "imgRequestProxy.h"
 #include "imgIOnloadBlocker.h"
-
+#include "imgLoader.h"
 #include "Image.h"
 #include "ImageOps.h"
 #include "nsError.h"
@@ -693,6 +693,11 @@ imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
                             mURI, aObserver);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  if (GetOwner() && GetOwner()->GetValidator()) {
+    clone->SetNotificationsDeferred(true);
+    GetOwner()->GetValidator()->AddProxy(clone);
   }
 
   // Assign to *aClone before calling Notify so that if the caller expects to

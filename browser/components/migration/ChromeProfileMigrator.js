@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -42,29 +43,24 @@ function chromeTimeToDate(aTime)
 /**
  * Insert bookmark items into specific folder.
  *
- * @param   aFolderId
- *          id of folder where items will be inserted
- * @param   aItems
+ * @param   parentGuid
+ *          GUID of the folder where items will be inserted
+ * @param   items
  *          bookmark items to be inserted
  */
-function insertBookmarkItems(aFolderId, aItems)
-{
-  for (let i = 0; i < aItems.length; i++) {
-    let item = aItems[i];
-
+function* insertBookmarkItems(parentGuid, items) {
+  for (let item of items) {
     try {
       if (item.type == "url") {
-        PlacesUtils.bookmarks.insertBookmark(aFolderId,
-                                             NetUtil.newURI(item.url),
-                                             PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                             item.name);
+        yield PlacesUtils.bookmarks.insert({
+          parentGuid, url: item.url, title: item.name
+        });
       } else if (item.type == "folder") {
-        let newFolderId =
-          PlacesUtils.bookmarks.createFolder(aFolderId,
-                                             item.name,
-                                             PlacesUtils.bookmarks.DEFAULT_INDEX);
+        let newFolderGuid = (yield PlacesUtils.bookmarks.insert({
+          parentGuid, type: PlacesUtils.bookmarks.TYPE_FOLDER, title: item.name
+        })).guid;
 
-        insertBookmarkItems(newFolderId, item.children);
+        yield insertBookmarkItems(newFolderGuid, item.children);
       }
     } catch (e) {
       Cu.reportError(e);
@@ -189,48 +185,51 @@ function GetBookmarksResource(aProfileFolder) {
     type: MigrationUtils.resourceTypes.BOOKMARKS,
 
     migrate: function(aCallback) {
-      NetUtil.asyncFetch2(bookmarksFile, MigrationUtils.wrapMigrateFunction(
-        function(aInputStream, aResultCode) {
-          if (!Components.isSuccessCode(aResultCode))
-            throw new Error("Could not read Bookmarks file");
-            
-          // Parse Chrome bookmark file that is JSON format
-          let bookmarkJSON = NetUtil.readInputStreamToString(
-            aInputStream, aInputStream.available(), { charset : "UTF-8" });
-          let roots = JSON.parse(bookmarkJSON).roots;
-          PlacesUtils.bookmarks.runInBatchMode({
-            runBatched: function() {
-              // Importing bookmark bar items
-              if (roots.bookmark_bar.children &&
-                  roots.bookmark_bar.children.length > 0) {
-                // Toolbar
-                let parentId = PlacesUtils.toolbarFolderId;
-                if (!MigrationUtils.isStartupMigration) { 
-                  parentId = MigrationUtils.createImportedBookmarksFolder(
-                    "Chrome", parentId);
-                }
-                insertBookmarkItems(parentId, roots.bookmark_bar.children);
-              }
+      return Task.spawn(function* () {
+        let jsonStream = yield new Promise(resolve =>
+          NetUtil.asyncFetch({ uri: NetUtil.newURI(bookmarksFile),
+                               loadUsingSystemPrincipal: true
+                             },
+                             (inputStream, resultCode) => {
+                               if (Components.isSuccessCode(resultCode)) {
+                                 resolve(inputStream);
+                               } else {
+                                 reject(new Error("Could not read Bookmarks file"));
+                               }
+                             }
+          )
+        );
 
-              // Importing bookmark menu items
-              if (roots.other.children &&
-                  roots.other.children.length > 0) {
-                // Bookmark menu
-                let parentId = PlacesUtils.bookmarksMenuFolderId;
-                if (!MigrationUtils.isStartupMigration) { 
-                  parentId = MigrationUtils.createImportedBookmarksFolder(
-                    "Chrome", parentId);
-                }
-                insertBookmarkItems(parentId, roots.other.children);
-              }
-            }
-          }, null);
-        }, aCallback),
-        null,      // aLoadingNode
-        Services.scriptSecurityManager.getSystemPrincipal(),
-        null,      // aTriggeringPrincipal
-        Ci.nsILoadInfo.SEC_NORMAL,
-        Ci.nsIContentPolicy.TYPE_OTHER);
+        // Parse Chrome bookmark file that is JSON format
+        let bookmarkJSON = NetUtil.readInputStreamToString(
+          jsonStream, jsonStream.available(), { charset : "UTF-8" });
+        let roots = JSON.parse(bookmarkJSON).roots;
+
+        // Importing bookmark bar items
+        if (roots.bookmark_bar.children &&
+            roots.bookmark_bar.children.length > 0) {
+          // Toolbar
+          let parentGuid = PlacesUtils.bookmarks.toolbarGuid;
+          if (!MigrationUtils.isStartupMigration) {
+            parentGuid =
+              yield MigrationUtils.createImportedBookmarksFolder("Chrome", parentGuid);
+          }
+          yield insertBookmarkItems(parentGuid, roots.bookmark_bar.children);
+        }
+
+        // Importing bookmark menu items
+        if (roots.other.children &&
+            roots.other.children.length > 0) {
+          // Bookmark menu
+          let parentGuid = PlacesUtils.bookmarks.menuGuid;
+          if (!MigrationUtils.isStartupMigration) {
+            parentGuid =
+              yield MigrationUtils.createImportedBookmarksFolder("Chrome", parentGuid);
+          }
+          yield insertBookmarkItems(parentGuid, roots.other.children);
+        }
+      }.bind(this)).then(() => aCallback(true),
+                          e => { Cu.reportError(e); aCallback(false) });
     }
   };
 }

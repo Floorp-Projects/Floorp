@@ -188,17 +188,6 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
 }
 
 bool
-js::intrinsic_ThrowError(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() >= 1);
-
-    uint32_t errorNumber = args[0].toInt32();
-    ThrowErrorWithType(cx, JSExnType(GetErrorMessage(nullptr, errorNumber)->exnType), args);
-    return false;
-}
-
-bool
 js::intrinsic_ThrowRangeError(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -984,7 +973,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsCallable",              intrinsic_IsCallable,              1,0),
     JS_FN("IsConstructor",           intrinsic_IsConstructor,           1,0),
     JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
-    JS_FN("ThrowError",              intrinsic_ThrowError,              4,0),
     JS_FN("ThrowRangeError",         intrinsic_ThrowRangeError,         4,0),
     JS_FN("ThrowTypeError",          intrinsic_ThrowTypeError,          4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),

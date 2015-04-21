@@ -77,10 +77,13 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  * evaluate the message argument.
  */
 #ifdef DEBUG
+inline void MOZ_PretendNoReturn()
+  MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
 #define NS_ASSERTION(expr, str)                               \
   do {                                                        \
     if (!(expr)) {                                            \
       NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
+      MOZ_PretendNoReturn();                                         \
     }                                                         \
   } while(0)
 #else
@@ -99,7 +102,10 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  */
 #ifdef DEBUG
 #define NS_NOTYETIMPLEMENTED(str)                             \
-  NS_DebugBreak(NS_DEBUG_ASSERTION, str, "NotYetImplemented", __FILE__, __LINE__)
+  do {                                                        \
+    NS_DebugBreak(NS_DEBUG_ASSERTION, str, "NotYetImplemented", __FILE__, __LINE__); \
+    MOZ_PretendNoReturn();                                    \
+  } while(0)
 #else
 #define NS_NOTYETIMPLEMENTED(str)      do { /* nothing */ } while(0)
 #endif
@@ -110,7 +116,10 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  */
 #ifdef DEBUG
 #define NS_NOTREACHED(str)                                    \
-  NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Not Reached", __FILE__, __LINE__)
+  do {                                                        \
+    NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Not Reached", __FILE__, __LINE__); \
+    MOZ_PretendNoReturn();                                    \
+  } while(0)
 #else
 #define NS_NOTREACHED(str)             do { /* nothing */ } while(0)
 #endif
@@ -120,7 +129,10 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  */
 #ifdef DEBUG
 #define NS_ERROR(str)                                         \
-  NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Error", __FILE__, __LINE__)
+  do {                                                        \
+    NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Error", __FILE__, __LINE__); \
+    MOZ_PretendNoReturn();                                    \
+  } while(0)
 #else
 #define NS_ERROR(str)                  do { /* nothing */ } while(0)
 #endif
@@ -142,7 +154,10 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  */
 #ifdef DEBUG
 #define NS_ABORT()                                            \
-  NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, __FILE__, __LINE__)
+  do {                                                        \
+    NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, __FILE__, __LINE__); \
+    MOZ_PretendNoReturn();                                    \
+  } while(0)
 #else
 #define NS_ABORT()                     do { /* nothing */ } while(0)
 #endif
@@ -152,7 +167,10 @@ inline bool NS_warn_if_impl(bool aCondition, const char* aExpr,
  */
 #ifdef DEBUG
 #define NS_BREAK()                                            \
-  NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, __FILE__, __LINE__)
+  do {                                                        \
+    NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, __FILE__, __LINE__); \
+    MOZ_PretendNoReturn();                                    \
+  } while(0)
 #else
 #define NS_BREAK()                     do { /* nothing */ } while(0)
 #endif
