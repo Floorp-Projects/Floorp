@@ -87,6 +87,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
+#include "mozilla/media/webrtc/WebrtcGlobalParent.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
 #include "nsAutoPtr.h"
@@ -2607,7 +2608,7 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
         raw->GuaranteePersistance();
 
         nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, size);
-        nsCOMPtr<imgIContainer> imageContainer(image::ImageOps::CreateFromDrawable(drawable)); 
+        nsCOMPtr<imgIContainer> imageContainer(image::ImageOps::CreateFromDrawable(drawable));
 
         nsCOMPtr<nsISupportsInterfacePointer>
           imgPtr(do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv));
@@ -4904,6 +4905,19 @@ ContentParent::DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActo
     // Reclaim the IPDL reference.
     nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
         dont_AddRef(static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(aActor));
+    return true;
+}
+
+PWebrtcGlobalParent *
+ContentParent::AllocPWebrtcGlobalParent()
+{
+    return WebrtcGlobalParent::Alloc();
+}
+
+bool
+ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent *aActor)
+{
+    WebrtcGlobalParent::Dealloc(static_cast<WebrtcGlobalParent*>(aActor));
     return true;
 }
 
