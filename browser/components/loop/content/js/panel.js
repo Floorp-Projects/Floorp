@@ -431,13 +431,43 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  var RoomEntryContextItem = React.createClass({displayName: "RoomEntryContextItem",
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired,
+      roomUrls: React.PropTypes.object
+    },
+
+    handleClick: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.props.mozLoop.openURL(event.currentTarget.href);
+    },
+
+    render: function() {
+      var roomUrl = this.props.roomUrls && this.props.roomUrls[0];
+      if (!roomUrl) {
+        return null;
+      }
+
+      return (
+        React.createElement("div", {className: "room-entry-context-item"}, 
+          React.createElement("a", {href: roomUrl.location, onClick: this.handleClick}, 
+            React.createElement("img", {title: roomUrl.description, 
+                 src: roomUrl.thumbnail})
+          )
+        )
+      );
+    }
+  });
+
   /**
    * Room list entry.
    */
   var RoomEntry = React.createClass({displayName: "RoomEntry",
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      room:       React.PropTypes.instanceOf(loop.store.Room).isRequired
+      mozLoop: React.PropTypes.object.isRequired,
+      room: React.PropTypes.instanceOf(loop.store.Room).isRequired
     },
 
     mixins: [loop.shared.mixins.WindowCloseMixin],
@@ -471,7 +501,7 @@ loop.panel = (function(_, mozL10n) {
     handleDeleteButtonClick: function(event) {
       event.stopPropagation();
       event.preventDefault();
-      navigator.mozLoop.confirm({
+      this.props.mozLoop.confirm({
         message: mozL10n.get("rooms_list_deleteConfirmation_label"),
         okButton: null,
         cancelButton: null
@@ -520,7 +550,9 @@ loop.panel = (function(_, mozL10n) {
             React.createElement("button", {className: "delete-link", 
               title: mozL10n.get("rooms_list_delete_tooltip"), 
               onClick: this.handleDeleteButtonClick})
-          )
+          ), 
+          React.createElement(RoomEntryContextItem, {mozLoop: this.props.mozLoop, 
+                                roomUrls: this.props.room.decryptedContext.urls})
         )
       );
     }
@@ -592,6 +624,7 @@ loop.panel = (function(_, mozL10n) {
                 React.createElement(RoomEntry, {
                   key: room.roomToken, 
                   dispatcher: this.props.dispatcher, 
+                  mozLoop: this.props.mozLoop, 
                   room: room}
                 )
               );
