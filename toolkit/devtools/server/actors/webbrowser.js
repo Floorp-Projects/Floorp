@@ -8,6 +8,7 @@
 
 let { Ci, Cu } = require("chrome");
 let Services = require("Services");
+let promise = require("promise");
 let { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
 let { DebuggerServer } = require("devtools/server/main");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
@@ -15,7 +16,6 @@ let { dbg_assert } = DevToolsUtils;
 let { TabSources, isHiddenSource } = require("./utils/TabSources");
 let makeDebugger = require("./utils/make-debugger");
 
-let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
