@@ -31,6 +31,8 @@ loop.roomViews = (function(mozL10n) {
     componentWillMount: function() {
       this.listenTo(this.props.roomStore, "change:activeRoom",
                     this._onActiveRoomStateChanged);
+      this.listenTo(this.props.roomStore, "change:error",
+                    this._onRoomError);
     },
 
     componentWillUnmount: function() {
@@ -46,6 +48,15 @@ loop.roomViews = (function(mozL10n) {
       }
     },
 
+    _onRoomError: function() {
+      // Only update the state if we're mounted, to avoid the problem where
+      // stopListening doesn't nuke the active listeners during a event
+      // processing.
+      if (this.isMounted()) {
+        this.setState({error: this.props.roomStore.getStoreState("error")});
+      }
+    },
+
     getInitialState: function() {
       var storeState = this.props.roomStore.getStoreState("activeRoom");
       return _.extend({
@@ -56,11 +67,12 @@ loop.roomViews = (function(mozL10n) {
   };
 
   var SocialShareDropdown = React.createClass({
-    mixins: [ActiveRoomStoreMixin],
-
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      show: React.PropTypes.bool.isRequired
+      roomUrl: React.PropTypes.string,
+      show: React.PropTypes.bool.isRequired,
+      socialShareButtonAvailable: React.PropTypes.bool,
+      socialShareProviders: React.PropTypes.array
     },
 
     handleToolbarAddButtonClick: function(event) {
@@ -79,20 +91,20 @@ loop.roomViews = (function(mozL10n) {
       event.preventDefault();
 
       var origin = event.currentTarget.dataset.provider;
-      var provider = this.state.socialShareProviders.filter(function(provider) {
+      var provider = this.props.socialShareProviders.filter(function(provider) {
         return provider.origin == origin;
       })[0];
 
       this.props.dispatcher.dispatch(new sharedActions.ShareRoomUrl({
         provider: provider,
-        roomUrl: this.state.roomUrl,
+        roomUrl: this.props.roomUrl,
         previews: []
       }));
     },
 
     render: function() {
       // Don't render a thing when no data has been fetched yet.
-      if (!this.state.socialShareProviders) {
+      if (!this.props.socialShareProviders) {
         return null;
       }
 
@@ -100,13 +112,13 @@ loop.roomViews = (function(mozL10n) {
       var shareDropdown = cx({
         "share-service-dropdown": true,
         "dropdown-menu": true,
-        "share-button-unavailable": !this.state.socialShareButtonAvailable,
+        "share-button-unavailable": !this.props.socialShareButtonAvailable,
         "hide": !this.props.show
       });
 
       // When the button is not yet available, we offer to put it in the navbar
       // for the user.
-      if (!this.state.socialShareButtonAvailable) {
+      if (!this.props.socialShareButtonAvailable) {
         return (
           <div className={shareDropdown}>
             <div className="share-panel-header">
@@ -134,9 +146,9 @@ loop.roomViews = (function(mozL10n) {
             <i className="icon icon-add-share-service"></i>
             <span>{mozL10n.get("share_add_service_button")}</span>
           </li>
-          {this.state.socialShareProviders.length ? <li className="dropdown-menu-separator"/> : null}
+          {this.props.socialShareProviders.length ? <li className="dropdown-menu-separator"/> : null}
           {
-            this.state.socialShareProviders.map(function(provider, idx) {
+            this.props.socialShareProviders.map(function(provider, idx) {
               return (
                 <li className="dropdown-menu-item"
                     key={"provider-" + idx}
@@ -157,28 +169,22 @@ loop.roomViews = (function(mozL10n) {
    * Desktop room invitation view (overlay).
    */
   var DesktopRoomInvitationView = React.createClass({
-    mixins: [ActiveRoomStoreMixin, React.addons.LinkedStateMixin,
-             sharedMixins.DropdownMenuMixin],
+    mixins: [React.addons.LinkedStateMixin, sharedMixins.DropdownMenuMixin],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      error: React.PropTypes.object,
+      // This data is supplied by the activeRoomStore.
+      roomData: React.PropTypes.object.isRequired,
+      show: React.PropTypes.bool.isRequired,
+      showContext: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function() {
       return {
         copiedUrl: false,
-        newRoomName: "",
-        error: null,
+        newRoomName: ""
       };
-    },
-
-    componentWillMount: function() {
-      this.listenTo(this.props.roomStore, "change:error",
-                    this.onRoomError);
-    },
-
-    componentWillUnmount: function() {
-      this.stopListening(this.props.roomStore);
     },
 
     handleTextareaKeyDown: function(event) {
@@ -195,7 +201,7 @@ loop.roomViews = (function(mozL10n) {
       event.preventDefault();
 
       this.props.dispatcher.dispatch(new sharedActions.RenameRoom({
-        roomToken: this.state.roomToken,
+        roomToken: this.props.roomData.roomToken,
         newRoomName: this.state.newRoomName
       }));
     },
@@ -204,14 +210,14 @@ loop.roomViews = (function(mozL10n) {
       event.preventDefault();
 
       this.props.dispatcher.dispatch(
-        new sharedActions.EmailRoomUrl({roomUrl: this.state.roomUrl}));
+        new sharedActions.EmailRoomUrl({roomUrl: this.props.roomData.roomUrl}));
     },
 
     handleCopyButtonClick: function(event) {
       event.preventDefault();
 
       this.props.dispatcher.dispatch(
-        new sharedActions.CopyRoomUrl({roomUrl: this.state.roomUrl}));
+        new sharedActions.CopyRoomUrl({roomUrl: this.props.roomData.roomUrl}));
 
       this.setState({copiedUrl: true});
     },
@@ -222,51 +228,100 @@ loop.roomViews = (function(mozL10n) {
       this.toggleDropdownMenu();
     },
 
-    onRoomError: function() {
-      // Only update the state if we're mounted, to avoid the problem where
-      // stopListening doesn't nuke the active listeners during a event
-      // processing.
-      if (this.isMounted()) {
-        this.setState({error: this.props.roomStore.getStoreState("error")});
-      }
-    },
-
     render: function() {
+      if (!this.props.show) {
+        return null;
+      }
+
       var cx = React.addons.classSet;
       return (
         <div className="room-invitation-overlay">
-          <p className={cx({"error": !!this.state.error,
-                            "error-display-area": true})}>
-            {mozL10n.get("rooms_name_change_failed_label")}
-          </p>
-          <form onSubmit={this.handleFormSubmit}>
-            <textarea rows="2" type="text" className="input-room-name"
-              valueLink={this.linkState("newRoomName")}
-              onBlur={this.handleFormSubmit}
-              onKeyDown={this.handleTextareaKeyDown}
-              placeholder={mozL10n.get("rooms_name_this_room_label")} />
-          </form>
-          <p>{mozL10n.get("invite_header_text")}</p>
-          <div className="btn-group call-action-group">
-            <button className="btn btn-info btn-email"
-                    onClick={this.handleEmailButtonClick}>
-              {mozL10n.get("email_link_button")}
-            </button>
-            <button className="btn btn-info btn-copy"
-                    onClick={this.handleCopyButtonClick}>
-              {this.state.copiedUrl ? mozL10n.get("copied_url_button") :
-                                      mozL10n.get("copy_url_button2")}
-            </button>
-            <button className="btn btn-info btn-share"
-                    ref="anchor"
-                    onClick={this.handleShareButtonClick}>
-              {mozL10n.get("share_button3")}
-            </button>
+          <div className="room-invitation-content">
+            <p className={cx({"error": !!this.props.error,
+                              "error-display-area": true})}>
+              {mozL10n.get("rooms_name_change_failed_label")}
+            </p>
+            <form onSubmit={this.handleFormSubmit}>
+              <textarea rows="2" type="text" className="input-room-name"
+                valueLink={this.linkState("newRoomName")}
+                onBlur={this.handleFormSubmit}
+                onKeyDown={this.handleTextareaKeyDown}
+                placeholder={mozL10n.get("rooms_name_this_room_label")} />
+            </form>
+            <p>{mozL10n.get("invite_header_text")}</p>
+            <div className="btn-group call-action-group">
+              <button className="btn btn-info btn-email"
+                      onClick={this.handleEmailButtonClick}>
+                {mozL10n.get("email_link_button")}
+              </button>
+              <button className="btn btn-info btn-copy"
+                      onClick={this.handleCopyButtonClick}>
+                {this.state.copiedUrl ? mozL10n.get("copied_url_button") :
+                                        mozL10n.get("copy_url_button2")}
+              </button>
+              <button className="btn btn-info btn-share"
+                      ref="anchor"
+                      onClick={this.handleShareButtonClick}>
+                {mozL10n.get("share_button3")}
+              </button>
+            </div>
+            <SocialShareDropdown dispatcher={this.props.dispatcher}
+                                 roomUrl={this.props.roomData.roomUrl}
+                                 show={this.state.showMenu}
+                                 ref="menu"/>
           </div>
-          <SocialShareDropdown dispatcher={this.props.dispatcher}
-                               roomStore={this.props.roomStore}
-                               show={this.state.showMenu}
-                               ref="menu"/>
+          <DesktopRoomContextView
+            roomData={this.props.roomData}
+            show={this.props.showContext} />
+        </div>
+      );
+    }
+  });
+
+  var DesktopRoomContextView = React.createClass({
+    propTypes: {
+      // This data is supplied by the activeRoomStore.
+      roomData: React.PropTypes.object.isRequired,
+      show: React.PropTypes.bool.isRequired
+    },
+
+    componentWillReceiveProps: function(nextProps) {
+      // When the 'show' prop is changed from outside this component, we do need
+      // to update the state.
+      if (("show" in nextProps) && nextProps.show !== this.props.show) {
+        this.setState({ show: nextProps.show });
+      }
+    },
+
+    getInitialState: function() {
+      return { show: this.props.show };
+    },
+
+    handleCloseClick: function() {
+      this.setState({ show: false });
+    },
+
+    render: function() {
+      if (!this.state.show)
+        return null;
+
+      var URL = this.props.roomData.roomContextUrls && this.props.roomData.roomContextUrls[0];
+      var thumbnail = URL && URL.thumbnail || "";
+      var URLDescription = URL && URL.description || "";
+      var location = URL && URL.location || "";
+      return (
+        <div className="room-context">
+          <img className="room-context-thumbnail" src={thumbnail}/>
+          <div className="room-context-content">
+            <div className="room-context-label">{mozL10n.get("context_inroom_label")}</div>
+            <div className="room-context-description">{URLDescription}</div>
+            <a className="room-context-url" href={location} target="_blank">{location}</a>
+            {this.props.roomData.roomDescription ?
+              <div className="room-context-comment">{this.props.roomData.roomDescription}</div> :
+              null}
+            <button className="room-context-btn-close"
+                    onClick={this.handleCloseClick}/>
+          </div>
         </div>
       );
     }
@@ -285,18 +340,8 @@ loop.roomViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
-    },
-
-    _renderInvitationOverlay: function() {
-      if (this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS) {
-        return (
-          <DesktopRoomInvitationView
-            roomStore={this.props.roomStore}
-            dispatcher={this.props.dispatcher} />
-        );
-      }
-      return null;
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      mozLoop: React.PropTypes.object.isRequired
     },
 
     componentWillUpdate: function(nextProps, nextState) {
@@ -341,6 +386,17 @@ loop.roomViews = (function(mozL10n) {
         }));
     },
 
+    _shouldRenderInvitationOverlay: function() {
+      return (this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS);
+    },
+
+    _shouldRenderContextView: function() {
+      return !!(
+        this.props.mozLoop.getLoopPref("contextInConversations.enabled") &&
+        (this.state.roomContextUrls || this.state.roomDescription)
+      );
+    },
+
     render: function() {
       if (this.state.roomName) {
         this.setTitle(this.state.roomName);
@@ -357,6 +413,10 @@ loop.roomViews = (function(mozL10n) {
         state: this.state.screenSharingState,
         visible: true
       };
+
+      var shouldRenderInvitationOverlay = this._shouldRenderInvitationOverlay();
+      var shouldRenderContextView = this._shouldRenderContextView();
+      var roomData = this.props.roomStore.getStoreState("activeRoom");
 
       switch(this.state.roomState) {
         case ROOM_STATES.FAILED:
@@ -378,7 +438,12 @@ loop.roomViews = (function(mozL10n) {
         default: {
           return (
             <div className="room-conversation-wrapper">
-              {this._renderInvitationOverlay()}
+              <DesktopRoomInvitationView
+                dispatcher={this.props.dispatcher}
+                error={this.state.error}
+                roomData={roomData}
+                show={shouldRenderInvitationOverlay}
+                showContext={shouldRenderContextView} />
               <div className="video-layout-wrapper">
                 <div className="conversation room-conversation">
                   <div className="media nested">
@@ -397,6 +462,9 @@ loop.roomViews = (function(mozL10n) {
                     screenShare={screenShareData} />
                 </div>
               </div>
+              <DesktopRoomContextView
+                roomData={roomData}
+                show={!shouldRenderInvitationOverlay && shouldRenderContextView} />
             </div>
           );
         }
@@ -407,6 +475,7 @@ loop.roomViews = (function(mozL10n) {
   return {
     ActiveRoomStoreMixin: ActiveRoomStoreMixin,
     SocialShareDropdown: SocialShareDropdown,
+    DesktopRoomContextView: DesktopRoomContextView,
     DesktopRoomConversationView: DesktopRoomConversationView,
     DesktopRoomInvitationView: DesktopRoomInvitationView
   };
