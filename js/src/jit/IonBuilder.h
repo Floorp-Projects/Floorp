@@ -891,7 +891,13 @@ class IonBuilder
                                    MObjectGroupDispatch* dispatch, MGetPropertyCache* cache,
                                    MBasicBlock** fallbackTarget);
 
-    bool atomicsMeetsPreconditions(CallInfo& callInfo, Scalar::Type* arrayElementType);
+    enum AtomicCheckResult {
+        DontCheckAtomicResult,
+        DoCheckAtomicResult
+    };
+
+    bool atomicsMeetsPreconditions(CallInfo& callInfo, Scalar::Type* arrayElementType,
+                                   AtomicCheckResult checkResult=DoCheckAtomicResult);
     void atomicsCheckBounds(CallInfo& callInfo, MInstruction** elements, MDefinition** index);
 
     bool testNeedsArgumentCheck(JSFunction* target, CallInfo& callInfo);

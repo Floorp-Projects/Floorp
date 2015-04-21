@@ -18,6 +18,7 @@
 #include "nsIURI.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsContentUtils.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla;
 

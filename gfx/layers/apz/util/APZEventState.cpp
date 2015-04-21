@@ -190,7 +190,7 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 }
 
 void
-APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
+APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
                               const CSSPoint& aPoint,
                               Modifiers aModifiers,
                               const ScrollableLayerGuid& aGuid,
@@ -211,7 +211,7 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
   // just converts them back to widget format, but that API has many callers,
   // including in JS code, so it's not trivial to change.
   bool eventHandled =
-      APZCCallbackHelper::DispatchMouseEvent(aUtils, NS_LITERAL_STRING("contextmenu"),
+      APZCCallbackHelper::DispatchMouseEvent(aPresShell, NS_LITERAL_STRING("contextmenu"),
                          APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid, aPresShellResolution),
                          2, 1, WidgetModifiersToDOMModifiers(aModifiers), true,
                          nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);

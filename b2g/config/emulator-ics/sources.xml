@@ -19,10 +19,10 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="cb41d8421da5dc4f16ea566ea2917a9b7f828154"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="a8e4f95dce9db727dda5d408b038f97fb4296557"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="f2f2f0cbee2f2517070dd194051d509c07cdacff"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="93f9ba577f68d772093987c2f1c0a4ae293e1802"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9a9797062c6001d6346504161c51187a2968466b"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="46e1877c0d88b085f7ebc5f432d5bb8f1e2d1f3b"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="adb24954bf8068f21705b570450475d183336b2d"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="34ea6163f9f0e0122fb0bb03607eccdca31ced7a"/>

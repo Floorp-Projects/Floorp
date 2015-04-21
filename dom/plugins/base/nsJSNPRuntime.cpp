@@ -664,7 +664,7 @@ ReportExceptionIfPending(JSContext *cx)
 }
 
 nsJSObjWrapper::nsJSObjWrapper(NPP npp)
-  : mJSObj(nullptr), mNpp(npp)
+  : mJSObj(nullptr), mNpp(npp), mDestroyPending(false)
 {
   MOZ_COUNT_CTOR(nsJSObjWrapper);
   OnWrapperCreated();

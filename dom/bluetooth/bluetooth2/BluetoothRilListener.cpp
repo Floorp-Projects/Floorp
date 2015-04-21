@@ -13,6 +13,7 @@
 #include "nsITelephonyService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsQueryObject.h"
 
 USING_BLUETOOTH_NAMESPACE
 

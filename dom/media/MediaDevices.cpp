@@ -11,6 +11,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPermissionManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace dom {
