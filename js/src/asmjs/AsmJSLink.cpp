@@ -60,8 +60,6 @@ CloneModule(JSContext* cx, MutableHandle<AsmJSModuleObject*> moduleObj)
     if (!moduleObj->module().clone(cx, &module))
         return false;
 
-    module->staticallyLink(cx);
-
     AsmJSModuleObject* newModuleObj = AsmJSModuleObject::create(cx, &module);
     if (!newModuleObj)
         return false;
@@ -1049,26 +1047,18 @@ LinkAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
     RootedFunction fun(cx, &args.callee().as<JSFunction>());
     Rooted<AsmJSModuleObject*> moduleObj(cx, &ModuleFunctionToModuleObject(fun));
 
-    // All ICache flushing of the module being linked has been inhibited under the
-    // assumption that the module is flushed after dynamic linking (when the last code
-    // mutation occurs).  Thus, enter an AutoFlushICache context for the entire module
-    // now.  The module range is set below.
-    AutoFlushICache afc("LinkAsmJS");
 
     // When a module is linked, it is dynamically specialized to the given
     // arguments (buffer, ffis). Thus, if the module is linked again (it is just
     // a function so it can be called multiple times), we need to clone a new
     // module.
-    if (moduleObj->module().isDynamicallyLinked()) {
-        if (!CloneModule(cx, &moduleObj))
-            return false;
-    } else {
-        // CloneModule already calls setAutoFlushICacheRange internally before patching
-        // the cloned module, so avoid calling twice.
-        moduleObj->module().setAutoFlushICacheRange();
-    }
+    if (moduleObj->module().isDynamicallyLinked() && !CloneModule(cx, &moduleObj))
+        return false;
 
     AsmJSModule& module = moduleObj->module();
+
+    AutoFlushICache afc("LinkAsmJS");
+    module.setAutoFlushICacheRange();
 
     // Link the module by performing the link-time validation checks in the
     // asm.js spec and then patching the generated module to associate it with

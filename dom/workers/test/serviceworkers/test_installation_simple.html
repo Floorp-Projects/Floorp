@@ -69,6 +69,11 @@
       var worker = wr.installing;
       ok(worker && wr.scope.match(/realworker$/) &&
          worker.scriptURL.match(/worker.js$/), "Valid worker instance should be available.");
+      return wr.unregister().then(function(success) {
+        ok(success, "The worker should be unregistered successfully");
+      }, function(e) {
+        dump("Error unregistering the worker: " + e + "\n");
+      });
     }, function(e) {
       info("Error: " + e.name);
       ok(false, "realWorker Registration should have succeeded!");
@@ -117,8 +122,12 @@
       reject = rej;
     });
 
+    var reg;
     function continueTest() {
-      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/" });
+      navigator.serviceWorker.register("worker2.js", { scope: "simpleregister/" })
+        .then(function(r) {
+          reg = r;
+        });;
     }
 
     window.onmessage = function(e) {
@@ -130,7 +139,12 @@
         // MaybeStopControlling() when this document is unloaded. At that point
         // the pref has been disabled, so the ServiceWorkerManager is not available.
         frame.setAttribute("src", new URL("about:blank").href);
-        resolve();
+        reg.unregister().then(function(success) {
+          ok(success, "The worker should be unregistered successfully");
+          resolve();
+        }, function(e) {
+          dump("Error unregistering the worker: " + e + "\n");
+        });
       } else if (e.data.type == "check") {
         ok(e.data.status, e.data.msg);
       }

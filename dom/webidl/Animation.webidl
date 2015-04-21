@@ -4,16 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/fxtf/web-animations/#idl-def-AnimationPlayer
+ * http://w3c.github.io/web-animations/#the-animation-interface
  *
- * Copyright © 2014 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
+ * Copyright © 2015 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
 enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
-interface AnimationPlayer {
+interface Animation {
   // Bug 1049975: Make 'effect' writeable
   [Pure]
   readonly attribute AnimationEffectReadonly? effect;
@@ -27,9 +27,9 @@ interface AnimationPlayer {
   [BinaryName="playStateFromJS"]
   readonly attribute AnimationPlayState playState;
   [Throws]
-  readonly attribute Promise<AnimationPlayer> ready;
+  readonly attribute Promise<Animation> ready;
   [Throws]
-  readonly attribute Promise<AnimationPlayer> finished;
+  readonly attribute Promise<Animation> finished;
   /*
   void cancel ();
   void finish ();
@@ -44,6 +44,6 @@ interface AnimationPlayer {
 };
 
 // Non-standard extensions
-partial interface AnimationPlayer {
+partial interface Animation {
   [ChromeOnly] readonly attribute boolean isRunningOnCompositor;
 };

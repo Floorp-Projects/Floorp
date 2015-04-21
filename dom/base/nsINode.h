@@ -1971,7 +1971,10 @@ protected:
 
   nsRefPtr<mozilla::dom::NodeInfo> mNodeInfo;
 
-  nsINode* mParent;
+  // mParent is an owning ref most of the time, except for the case of document
+  // nodes, so it cannot be represented by nsCOMPtr, so mark is as
+  // MOZ_OWNING_REF.
+  nsINode* MOZ_OWNING_REF mParent;
 
 private:
   // Boolean flags.

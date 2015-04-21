@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "PendingPlayerTracker.h"
+#include "PendingAnimationTracker.h"
 
 #include "mozilla/dom/DocumentTimeline.h"
 #include "nsIFrame.h"
@@ -13,19 +13,19 @@ using namespace mozilla;
 
 namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker,
+NS_IMPL_CYCLE_COLLECTION(PendingAnimationTracker,
                          mPlayPendingSet,
                          mPausePendingSet,
                          mDocument)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingPlayerTracker, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingPlayerTracker, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingAnimationTracker, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingAnimationTracker, Release)
 
 void
-PendingPlayerTracker::AddPending(dom::AnimationPlayer& aPlayer,
-                                 AnimationPlayerSet& aSet)
+PendingAnimationTracker::AddPending(dom::Animation& aAnimation,
+                                    AnimationSet& aSet)
 {
-  aSet.PutEntry(&aPlayer);
+  aSet.PutEntry(&aAnimation);
 
   // Schedule a paint. Otherwise animations that don't trigger a paint by
   // themselves (e.g. CSS animations with an empty keyframes rule) won't
@@ -34,70 +34,70 @@ PendingPlayerTracker::AddPending(dom::AnimationPlayer& aPlayer,
 }
 
 void
-PendingPlayerTracker::RemovePending(dom::AnimationPlayer& aPlayer,
-                                    AnimationPlayerSet& aSet)
+PendingAnimationTracker::RemovePending(dom::Animation& aAnimation,
+                                       AnimationSet& aSet)
 {
-  aSet.RemoveEntry(&aPlayer);
+  aSet.RemoveEntry(&aAnimation);
 }
 
 bool
-PendingPlayerTracker::IsWaiting(const dom::AnimationPlayer& aPlayer,
-                                const AnimationPlayerSet& aSet) const
+PendingAnimationTracker::IsWaiting(const dom::Animation& aAnimation,
+                                   const AnimationSet& aSet) const
 {
-  return aSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
+  return aSet.Contains(const_cast<dom::Animation*>(&aAnimation));
 }
 
 PLDHashOperator
-TriggerPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
+TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
                     void* aReadyTime)
 {
-  dom::AnimationPlayer* player = aKey->GetKey();
-  dom::DocumentTimeline* timeline = player->Timeline();
+  dom::Animation* animation = aKey->GetKey();
+  dom::DocumentTimeline* timeline = animation->Timeline();
 
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
-  // animation player will be started/paused when the refresh driver is next
-  // advanced since this will trigger a call to TriggerPendingPlayersNow.
+  // animation will be started/paused when the refresh driver is next
+  // advanced since this will trigger a call to TriggerPendingAnimationsNow.
   if (timeline->IsUnderTestControl()) {
     return PL_DHASH_NEXT;
   }
 
   Nullable<TimeDuration> readyTime =
     timeline->ToTimelineTime(*static_cast<const TimeStamp*>(aReadyTime));
-  player->TriggerOnNextTick(readyTime);
+  animation->TriggerOnNextTick(readyTime);
 
   return PL_DHASH_REMOVE;
 }
 
 void
-PendingPlayerTracker::TriggerPendingPlayersOnNextTick(const TimeStamp&
+PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(const TimeStamp&
                                                         aReadyTime)
 {
-  mPlayPendingSet.EnumerateEntries(TriggerPlayerAtTime,
+  mPlayPendingSet.EnumerateEntries(TriggerAnimationAtTime,
                                    const_cast<TimeStamp*>(&aReadyTime));
-  mPausePendingSet.EnumerateEntries(TriggerPlayerAtTime,
+  mPausePendingSet.EnumerateEntries(TriggerAnimationAtTime,
                                     const_cast<TimeStamp*>(&aReadyTime));
 }
 
 PLDHashOperator
-TriggerPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
+TriggerAnimationNow(nsRefPtrHashKey<dom::Animation>* aKey, void*)
 {
   aKey->GetKey()->TriggerNow();
   return PL_DHASH_NEXT;
 }
 
 void
-PendingPlayerTracker::TriggerPendingPlayersNow()
+PendingAnimationTracker::TriggerPendingAnimationsNow()
 {
-  mPlayPendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
+  mPlayPendingSet.EnumerateEntries(TriggerAnimationNow, nullptr);
   mPlayPendingSet.Clear();
-  mPausePendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
+  mPausePendingSet.EnumerateEntries(TriggerAnimationNow, nullptr);
   mPausePendingSet.Clear();
 }
 
 void
-PendingPlayerTracker::EnsurePaintIsScheduled()
+PendingAnimationTracker::EnsurePaintIsScheduled()
 {
   if (!mDocument) {
     return;

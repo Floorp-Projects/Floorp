@@ -10,7 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
@@ -75,26 +75,25 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadonly
   double CurrentValuePortion() const;
 };
 
-class CSSTransitionPlayer final : public dom::AnimationPlayer
+class CSSTransition final : public dom::Animation
 {
 public:
- explicit CSSTransitionPlayer(dom::DocumentTimeline* aTimeline)
-    : dom::AnimationPlayer(aTimeline)
+ explicit CSSTransition(dom::DocumentTimeline* aTimeline)
+    : dom::Animation(aTimeline)
   {
   }
 
-  virtual CSSTransitionPlayer*
-  AsCSSTransitionPlayer() override { return this; }
+  virtual CSSTransition* AsCSSTransition() override { return this; }
 
   virtual dom::AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS() override;
 
   // A variant of Play() that avoids posting style updates since this method
   // is expected to be called whilst already updating style.
-  void PlayFromStyle() { DoPlay(AnimationPlayer::LimitBehavior::Continue); }
+  void PlayFromStyle() { DoPlay(Animation::LimitBehavior::Continue); }
 
 protected:
-  virtual ~CSSTransitionPlayer() { }
+  virtual ~CSSTransition() { }
 
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 };
@@ -111,9 +110,9 @@ public:
   {
   }
 
-  typedef mozilla::AnimationPlayerCollection AnimationPlayerCollection;
+  typedef mozilla::AnimationCollection AnimationCollection;
 
-  static AnimationPlayerCollection*
+  static AnimationCollection*
   GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
@@ -138,14 +137,12 @@ public:
                            nsStyleContext *aOldStyleContext,
                            nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
-  void UpdateCascadeResultsWithTransitions(
-         AnimationPlayerCollection* aTransitions);
-  void UpdateCascadeResultsWithAnimations(
-         AnimationPlayerCollection* aAnimations);
+  void UpdateCascadeResultsWithTransitions(AnimationCollection* aTransitions);
+  void UpdateCascadeResultsWithAnimations(AnimationCollection* aAnimations);
   void UpdateCascadeResultsWithAnimationsToBeDestroyed(
-         const AnimationPlayerCollection* aAnimations);
-  void UpdateCascadeResults(AnimationPlayerCollection* aTransitions,
-                            AnimationPlayerCollection* aAnimations);
+         const AnimationCollection* aAnimations);
+  void UpdateCascadeResults(AnimationCollection* aTransitions,
+                            AnimationCollection* aAnimations);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
@@ -181,7 +178,7 @@ private:
   ConsiderStartingTransition(nsCSSProperty aProperty,
                              const mozilla::StyleTransition& aTransition,
                              mozilla::dom::Element* aElement,
-                             AnimationPlayerCollection*& aElementTransitions,
+                             AnimationCollection*& aElementTransitions,
                              nsStyleContext* aOldStyleContext,
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,

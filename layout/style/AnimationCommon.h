@@ -15,7 +15,7 @@
 #include "nsDisplayList.h" // For nsDisplayItem::Type
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsStyleStruct.h"
@@ -33,7 +33,7 @@ class nsStyleChangeList;
 namespace mozilla {
 
 class RestyleTracker;
-struct AnimationPlayerCollection;
+struct AnimationCollection;
 
 namespace css {
 
@@ -82,7 +82,7 @@ public:
   // elements.
   void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
 
-  AnimationPlayerCollection*
+  AnimationCollection*
   GetAnimations(dom::Element *aElement,
                 nsCSSPseudoElements::Type aPseudoType,
                 bool aCreateIfNeeded);
@@ -100,9 +100,9 @@ public:
     return false;
   }
 
-  // Notify this manager that one of its collections of animation players,
+  // Notify this manager that one of its collections of animations,
   // has been updated.
-  void NotifyCollectionUpdated(AnimationPlayerCollection& aCollection);
+  void NotifyCollectionUpdated(AnimationCollection& aCollection);
 
   enum FlushFlags {
     Can_Throttle,
@@ -141,9 +141,9 @@ protected:
   virtual ~CommonAnimationManager();
 
   // For ElementCollectionRemoved
-  friend struct mozilla::AnimationPlayerCollection;
+  friend struct mozilla::AnimationCollection;
 
-  void AddElementCollection(AnimationPlayerCollection* aCollection);
+  void AddElementCollection(AnimationCollection* aCollection);
   void ElementCollectionRemoved() { MaybeStartOrStopObservingRefreshDriver(); }
   void RemoveAllElementCollections();
 
@@ -162,7 +162,7 @@ protected:
     return false;
   }
 
-  static AnimationPlayerCollection*
+  static AnimationCollection*
   GetAnimationsForCompositor(nsIContent* aContent,
                              nsIAtom* aElementProperty,
                              nsCSSProperty aProperty);
@@ -223,18 +223,17 @@ private:
 
 } /* end css sub-namespace */
 
-typedef InfallibleTArray<nsRefPtr<dom::AnimationPlayer> >
-  AnimationPlayerPtrArray;
+typedef InfallibleTArray<nsRefPtr<dom::Animation>> AnimationPtrArray;
 
 enum EnsureStyleRuleFlags {
   EnsureStyleRule_IsThrottled,
   EnsureStyleRule_IsNotThrottled
 };
 
-struct AnimationPlayerCollection : public PRCList
+struct AnimationCollection : public PRCList
 {
-  AnimationPlayerCollection(dom::Element *aElement, nsIAtom *aElementProperty,
-                            mozilla::css::CommonAnimationManager *aManager)
+  AnimationCollection(dom::Element *aElement, nsIAtom *aElementProperty,
+                      mozilla::css::CommonAnimationManager *aManager)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
@@ -245,22 +244,22 @@ struct AnimationPlayerCollection : public PRCList
     , mCalledPropertyDtor(false)
 #endif
   {
-    MOZ_COUNT_CTOR(AnimationPlayerCollection);
+    MOZ_COUNT_CTOR(AnimationCollection);
     PR_INIT_CLIST(this);
   }
-  ~AnimationPlayerCollection()
+  ~AnimationCollection()
   {
     MOZ_ASSERT(mCalledPropertyDtor,
                "must call destructor through element property dtor");
-    MOZ_COUNT_DTOR(AnimationPlayerCollection);
+    MOZ_COUNT_DTOR(AnimationCollection);
     PR_REMOVE_LINK(this);
     mManager->ElementCollectionRemoved();
   }
 
   void Destroy()
   {
-    for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-      mPlayers[playerIdx]->Cancel();
+    for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+      mAnimations[animIdx]->Cancel();
     }
     // This will call our destructor.
     mElement->DeleteProperty(mElementProperty);
@@ -375,7 +374,7 @@ struct AnimationPlayerCollection : public PRCList
     }
   }
 
-  void NotifyPlayerUpdated();
+  void NotifyAnimationUpdated();
 
   static void LogAsyncAnimationFailure(nsCString& aMessage,
                                        const nsIContent* aContent = nullptr);
@@ -388,7 +387,7 @@ struct AnimationPlayerCollection : public PRCList
 
   mozilla::css::CommonAnimationManager *mManager;
 
-  mozilla::AnimationPlayerPtrArray mPlayers;
+  mozilla::AnimationPtrArray mAnimations;
 
   // This style rule contains the style data for currently animating
   // values.  It only matches when styling with animation.  When we

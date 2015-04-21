@@ -1461,15 +1461,7 @@ HTMLTextAreaElement::IsPasswordTextControl() const
 NS_IMETHODIMP_(int32_t)
 HTMLTextAreaElement::GetCols()
 {
-  const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::cols);
-  if (attr) {
-    int32_t cols = attr->Type() == nsAttrValue::eInteger ?
-                   attr->GetIntegerValue() : 0;
-    // XXX why a default of 1 char, why hide it
-    return (cols <= 0) ? 1 : cols;
-  }
-
-  return DEFAULT_COLS;
+  return Cols();
 }
 
 NS_IMETHODIMP_(int32_t)
