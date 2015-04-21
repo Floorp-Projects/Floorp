@@ -1040,7 +1040,7 @@ HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
 
   nsPresContext* presContext = mDoc->PresContext();
   nsPoint coordsInAppUnits =
-    coords.ToAppUnits(presContext->AppUnitsPerDevPixel());
+    ToAppUnits(coords, presContext->AppUnitsPerDevPixel());
 
   nsRect frameScreenRect = hyperFrame->GetScreenRectInAppUnits();
   if (!frameScreenRect.Contains(coordsInAppUnits.x, coordsInAppUnits.y))
@@ -1568,7 +1568,7 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
 
   nsPresContext* presContext = frame->PresContext();
   nsPoint coordsInAppUnits =
-    coords.ToAppUnits(presContext->AppUnitsPerDevPixel());
+    ToAppUnits(coords, presContext->AppUnitsPerDevPixel());
 
   bool initialScrolled = false;
   nsIFrame *parentFrame = frame;

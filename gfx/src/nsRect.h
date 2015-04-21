@@ -13,17 +13,17 @@
 #include "nsDebug.h"                    // for NS_WARNING
 #include "gfxCore.h"                    // for NS_GFX
 #include "mozilla/Likely.h"             // for MOZ_UNLIKELY
-#include "mozilla/gfx/BaseRect.h"       // for BaseRect
-#include "mozilla/gfx/NumericTools.h"   // for RoundUpToMultiple, RoundDownToMultiple
+#include "mozilla/gfx/Rect.h"
 #include "nsCoord.h"                    // for nscoord, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsSize.h"                     // for nsIntSize, nsSize
 #include "nscore.h"                     // for NS_BUILD_REFCNT_LOGGING
 
-struct nsIntRect;
 struct nsMargin;
 struct nsIntMargin;
+
+typedef mozilla::gfx::IntRect nsIntRect;
 
 struct NS_GFX nsRect :
   public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize, nsMargin> {
@@ -179,56 +179,6 @@ struct NS_GFX nsRect :
   }
 };
 
-struct NS_GFX nsIntRect :
-  public mozilla::gfx::BaseRect<int32_t, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> {
-  typedef mozilla::gfx::BaseRect<int32_t, nsIntRect, nsIntPoint, nsIntSize, nsIntMargin> Super;
-
-  // Constructors
-  nsIntRect() : Super()
-  {
-  }
-  nsIntRect(const nsIntRect& aRect) : Super(aRect)
-  {
-  }
-  nsIntRect(const nsIntPoint& aOrigin, const nsIntSize &aSize) : Super(aOrigin, aSize)
-  {
-  }
-  nsIntRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight) :
-      Super(aX, aY, aWidth, aHeight)
-  {
-  }
-
-  MOZ_WARN_UNUSED_RESULT inline nsRect
-  ToAppUnits(nscoord aAppUnitsPerPixel) const;
-
-  // Returns a special nsIntRect that's used in some places to signify
-  // "all available space".
-  static const nsIntRect& GetMaxSizedIntRect() {
-    static const nsIntRect r(0, 0, INT32_MAX, INT32_MAX);
-    return r;
-  }
-
-  void InflateToMultiple(const nsIntSize& aTileSize)
-  {
-    int32_t xMost = XMost();
-    int32_t yMost = YMost();
-
-    x = RoundDownToMultiple(x, aTileSize.width);
-    y = RoundDownToMultiple(y, aTileSize.height);
-    xMost = RoundUpToMultiple(xMost, aTileSize.width);
-    yMost = RoundUpToMultiple(yMost, aTileSize.height);
-
-    width = xMost - x;
-    height = yMost - y;
-  }
-
-  // This is here only to keep IPDL-generated code happy. DO NOT USE.
-  bool operator==(const nsIntRect& aRect) const
-  {
-    return IsEqualEdges(aRect);
-  }
-};
-
 /*
  * App Unit/Pixel conversions
  */
@@ -335,15 +285,11 @@ nsRect::ToInsidePixels(nscoord aAppUnitsPerPixel) const
   return ScaleToInsidePixels(1.0f, 1.0f, aAppUnitsPerPixel);
 }
 
+const nsIntRect& GetMaxSizedIntRect();
+
 // app units are integer multiples of pixels, so no rounding needed
-inline nsRect
-nsIntRect::ToAppUnits(nscoord aAppUnitsPerPixel) const
-{
-  return nsRect(NSIntPixelsToAppUnits(x, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(y, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(width, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(height, aAppUnitsPerPixel));
-}
+nsRect
+ToAppUnits(const nsIntRect& aRect, nscoord aAppUnitsPerPixel);
 
 #ifdef DEBUG
 // Diagnostics

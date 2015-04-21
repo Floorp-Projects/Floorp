@@ -13,9 +13,9 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_WARNING
-#include "nsPoint.h"                    // for nsIntPoint
+#include "nsPoint.h"                    // for IntPoint
 #include "nsPrintfCString.h"            // for nsPrintfCString
-#include "nsRect.h"                     // for nsIntRect
+#include "nsRect.h"                     // for IntRect
 #include "nsSize.h"                     // for nsIntSize
 #include "mozilla/layers/TiledContentClient.h"
 
@@ -171,7 +171,7 @@ TiledLayerBufferComposite::Upload()
 
 TileHost
 TiledLayerBufferComposite::ValidateTile(TileHost aTile,
-                                        const nsIntPoint& aTileOrigin,
+                                        const IntPoint& aTileOrigin,
                                         const nsIntRegion& aDirtyRect)
 {
   if (aTile.IsPlaceholderTile()) {
@@ -465,7 +465,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
                              const gfx::Filter& aFilter,
                              const gfx::Rect& aClipRect,
                              const nsIntRegion& aScreenRegion,
-                             const nsIntPoint& aTextureOffset,
+                             const IntPoint& aTextureOffset,
                              const nsIntSize& aTextureBounds)
 {
   if (aTile.IsPlaceholderTile()) {
@@ -477,7 +477,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   if (aBackgroundColor) {
     aEffectChain.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
     nsIntRegionRectIterator it(aScreenRegion);
-    for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
+    for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
       Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
       mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, 1.0, aTransform);
     }
@@ -507,7 +507,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   aEffectChain.mPrimaryEffect = effect;
 
   nsIntRegionRectIterator it(aScreenRegion);
-  for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
+  for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
     Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
     Rect textureRect(rect->x - aTextureOffset.x, rect->y - aTextureOffset.y,
                      rect->width, rect->height);
@@ -574,7 +574,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 
   uint32_t rowCount = 0;
   uint32_t tileX = 0;
-  nsIntRect visibleRect = aVisibleRegion.GetBounds();
+  IntRect visibleRect = aVisibleRegion.GetBounds();
   gfx::IntSize scaledTileSize = aLayerBuffer.GetScaledTileSize();
   for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
     rowCount++;
@@ -592,17 +592,17 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
       }
 
       TileHost tileTexture = aLayerBuffer.
-        GetTile(nsIntPoint(aLayerBuffer.RoundDownToTileEdge(x, scaledTileSize.width),
-                           aLayerBuffer.RoundDownToTileEdge(y, scaledTileSize.height)));
+        GetTile(IntPoint(aLayerBuffer.RoundDownToTileEdge(x, scaledTileSize.width),
+                         aLayerBuffer.RoundDownToTileEdge(y, scaledTileSize.height)));
       if (tileTexture != aLayerBuffer.GetPlaceholderTile()) {
         nsIntRegion tileDrawRegion;
-        tileDrawRegion.And(nsIntRect(x, y, w, h), aLayerBuffer.GetValidRegion());
+        tileDrawRegion.And(IntRect(x, y, w, h), aLayerBuffer.GetValidRegion());
         tileDrawRegion.And(tileDrawRegion, aVisibleRegion);
         tileDrawRegion.Sub(tileDrawRegion, maskRegion);
 
         if (!tileDrawRegion.IsEmpty()) {
           tileDrawRegion.ScaleRoundOut(resolution, resolution);
-          nsIntPoint tileOffset((x - tileStartX) * resolution,
+          IntPoint tileOffset((x - tileStartX) * resolution,
                                 (y - tileStartY) * resolution);
           gfx::IntSize tileSize = aLayerBuffer.GetTileSize();
           RenderTile(tileTexture, aBackgroundColor, aEffectChain, aOpacity, aTransform,

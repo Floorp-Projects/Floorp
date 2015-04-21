@@ -614,7 +614,7 @@ nsImageFrame::OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect)
                              ? mImage->GetImageSpaceInvalidationRect(*aRect)
                              : *aRect;
 
-  if (layerInvalidRect.IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
+  if (layerInvalidRect.IsEqualInterior(GetMaxSizedIntRect())) {
     // Invalidate our entire area.
     InvalidateSelf(nullptr, nullptr);
     return NS_OK;

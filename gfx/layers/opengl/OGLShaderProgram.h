@@ -21,7 +21,6 @@
 #include <string>
 
 struct gfxRGBA;
-struct nsIntRect;
 
 namespace mozilla {
 namespace layers {

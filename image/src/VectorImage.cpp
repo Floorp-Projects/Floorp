@@ -246,7 +246,7 @@ NS_IMPL_ISUPPORTS(SVGLoadEventListener, nsIDOMEventListener)
 class SVGDrawingCallback : public gfxDrawingCallback {
 public:
   SVGDrawingCallback(SVGDocumentWrapper* aSVGDocumentWrapper,
-                     const nsIntRect& aViewport,
+                     const IntRect& aViewport,
                      const IntSize& aSize,
                      uint32_t aImageFlags)
     : mSVGDocumentWrapper(aSVGDocumentWrapper)
@@ -260,7 +260,7 @@ public:
                           const gfxMatrix& aTransform);
 private:
   nsRefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
-  const nsIntRect              mViewport;
+  const IntRect              mViewport;
   const IntSize                mSize;
   uint32_t                     mImageFlags;
 };
@@ -539,12 +539,12 @@ VectorImage::SendInvalidationNotifications()
   if (mProgressTracker) {
     SurfaceCache::RemoveImage(ImageKey(this));
     mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
-                                         nsIntRect::GetMaxSizedIntRect());
+                                         GetMaxSizedIntRect());
   }
 }
 
-NS_IMETHODIMP_(nsIntRect)
-VectorImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+NS_IMETHODIMP_(IntRect)
+VectorImage::GetImageSpaceInvalidationRect(const IntRect& aRect)
 {
   return aRect;
 }
@@ -854,7 +854,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
 
   nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
-                           nsIntRect(nsIntPoint(0, 0), aParams.viewportSize),
+                           IntRect(IntPoint(0, 0), aParams.viewportSize),
                            aParams.size,
                            aParams.flags);
 
@@ -916,7 +916,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   // Send out an invalidation so that surfaces that are still in use get
   // re-locked. See the discussion of the UnlockSurfaces call above.
   mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
-                                       nsIntRect::GetMaxSizedIntRect());
+                                       GetMaxSizedIntRect());
 }
 
 
@@ -1177,7 +1177,7 @@ VectorImage::OnSVGDocumentLoaded()
                                          FLAG_FRAME_COMPLETE |
                                          FLAG_DECODE_COMPLETE |
                                          FLAG_ONLOAD_UNBLOCKED,
-                                         nsIntRect::GetMaxSizedIntRect());
+                                         GetMaxSizedIntRect());
   }
 
   EvaluateAnimation();

@@ -840,7 +840,7 @@ NotificationTypeToString(int32_t aType)
 }
 
 void
-imgRequestProxy::Notify(int32_t aType, const nsIntRect* aRect)
+imgRequestProxy::Notify(int32_t aType, const mozilla::gfx::IntRect* aRect)
 {
   MOZ_ASSERT(aType != imgINotificationObserver::LOAD_COMPLETE,
              "Should call OnLoadComplete");

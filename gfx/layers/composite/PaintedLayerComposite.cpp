@@ -22,9 +22,6 @@
 #include "nsRefPtr.h"                   // for nsRefPtr
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsMathUtils.h"                // for NS_lround
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
-#include "nsSize.h"                     // for nsIntSize
 #include "nsString.h"                   // for nsAutoCString
 #include "TextRenderer.h"
 #include "GeckoProfiler.h"
@@ -114,7 +111,7 @@ PaintedLayerComposite::GetRenderState()
 }
 
 void
-PaintedLayerComposite::RenderLayer(const nsIntRect& aClipRect)
+PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
 {
   if (!mBuffer || !mBuffer->IsAttached()) {
     return;

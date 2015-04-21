@@ -60,7 +60,7 @@ child:
    * application on the widgets. Used on Windows and Linux in managing
    * plugin widgets.
    */
-  async UpdatePluginConfigurations(nsIntPoint aContentOffset,
+  async UpdatePluginConfigurations(IntPoint aContentOffset,
                                    nsIntRegion aVisibleRegion,
                                    PluginWindowData[] aPlugins);
 
@@ -95,7 +95,7 @@ parent:
   //
   // NB: this message will result in animations, transforms, effects,
   // and so forth being interpolated.  That's what we want to happen.
-  sync MakeSnapshot(SurfaceDescriptor inSnapshot, nsIntRect dirtyRect);
+  sync MakeSnapshot(SurfaceDescriptor inSnapshot, IntRect dirtyRect);
 
   // Make sure any pending composites are started immediately and
   // block until they are completed.

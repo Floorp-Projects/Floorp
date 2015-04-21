@@ -58,8 +58,6 @@
 #define RECYCLE_LOG(...) do { } while (0)
 #endif
 
-struct nsIntPoint;
-
 namespace mozilla {
 namespace layers {
 

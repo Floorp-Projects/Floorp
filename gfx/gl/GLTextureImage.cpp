@@ -79,7 +79,7 @@ TextureImage::UpdateFromDataSource(gfx::DataSourceSurface *aSurface,
                                    const gfx::IntPoint* aSrcPoint)
 {
     nsIntRegion destRegion = aDestRegion ? *aDestRegion
-                                         : nsIntRect(0, 0,
+                                         : IntRect(0, 0,
                                                      aSurface->GetSize().width,
                                                      aSurface->GetSize().height);
     gfx::IntPoint srcPoint = aSrcPoint ? *aSrcPoint
@@ -120,13 +120,13 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     if (CanUploadSubTextures(mGLContext)) {
         GetUpdateRegion(aRegion);
     } else {
-        aRegion = nsIntRect(nsIntPoint(0, 0), mSize);
+        aRegion = IntRect(IntPoint(0, 0), mSize);
     }
 
     mUpdateRegion = aRegion;
 
-    nsIntRect rgnSize = mUpdateRegion.GetBounds();
-    if (!nsIntRect(nsIntPoint(0, 0), mSize).Contains(rgnSize)) {
+    IntRect rgnSize = mUpdateRegion.GetBounds();
+    if (!IntRect(IntPoint(0, 0), mSize).Contains(rgnSize)) {
         NS_ERROR("update outside of image");
         return nullptr;
     }
@@ -147,7 +147,7 @@ BasicTextureImage::GetUpdateRegion(nsIntRegion& aForRegion)
   // changed, we need to recreate our backing surface and force the
   // client to paint everything
   if (mTextureState != Valid) {
-      aForRegion = nsIntRect(nsIntPoint(0, 0), mSize);
+      aForRegion = IntRect(IntPoint(0, 0), mSize);
   }
 }
 
@@ -169,7 +169,7 @@ BasicTextureImage::EndUpdate()
                                mUpdateRegion,
                                mTexture,
                                mTextureState == Created,
-                               mUpdateOffset,
+                               ToIntPoint(mUpdateOffset),
                                relative);
     FinishedSurfaceUpload();
 
@@ -205,10 +205,10 @@ BasicTextureImage::FinishedSurfaceUpload()
 bool
 BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom /* = gfx::IntPoint(0, 0) */)
 {
-    nsIntRect bounds = aRegion.GetBounds();
+    IntRect bounds = aRegion.GetBounds();
     nsIntRegion region;
     if (mTextureState != Valid) {
-        bounds = nsIntRect(0, 0, mSize.width, mSize.height);
+        bounds = IntRect(0, 0, mSize.width, mSize.height);
         region = nsIntRegion(bounds);
     } else {
         region = aRegion;
@@ -220,7 +220,7 @@ BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
                                region,
                                mTexture,
                                mTextureState == Created,
-                               bounds.TopLeft() + nsIntPoint(aFrom.x, aFrom.y),
+                               bounds.TopLeft() + IntPoint(aFrom.x, aFrom.y),
                                false);
     mTextureState = Valid;
     return true;
@@ -345,7 +345,7 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
     nsIntRegion region;
 
     if (mTextureState != Valid) {
-        nsIntRect bounds = nsIntRect(0, 0, mSize.width, mSize.height);
+        IntRect bounds = IntRect(0, 0, mSize.width, mSize.height);
         region = nsIntRegion(bounds);
     } else {
         region = aRegion;
@@ -355,7 +355,7 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
     int oldCurrentImage = mCurrentImage;
     BeginBigImageIteration();
     do {
-        nsIntRect tileRect = ThebesIntRect(GetSrcTileRect());
+        IntRect tileRect = ThebesIntRect(GetSrcTileRect());
         int xPos = tileRect.x;
         int yPos = tileRect.y;
 
@@ -400,7 +400,7 @@ TiledTextureImage::GetUpdateRegion(nsIntRegion& aForRegion)
         // if the texture hasn't been initialized yet, or something important
         // changed, we need to recreate our backing surface and force the
         // client to paint everything
-        aForRegion = nsIntRect(nsIntPoint(0, 0), mSize);
+        aForRegion = IntRect(IntPoint(0, 0), mSize);
         return;
     }
 
@@ -411,7 +411,7 @@ TiledTextureImage::GetUpdateRegion(nsIntRegion& aForRegion)
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
-        nsIntRect imageRect = nsIntRect(nsIntPoint(xPos,yPos),
+        IntRect imageRect = IntRect(IntPoint(xPos,yPos),
                                         mImages[i]->GetSize());
 
         if (aForRegion.Intersects(imageRect)) {
@@ -446,16 +446,16 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
         // if the texture hasn't been initialized yet, or something important
         // changed, we need to recreate our backing surface and force the
         // client to paint everything
-        aRegion = nsIntRect(nsIntPoint(0, 0), mSize);
+        aRegion = IntRect(IntPoint(0, 0), mSize);
     }
 
-    nsIntRect bounds = aRegion.GetBounds();
+    IntRect bounds = aRegion.GetBounds();
 
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
         nsIntRegion imageRegion =
-          nsIntRegion(nsIntRect(nsIntPoint(xPos,yPos),
+          nsIntRegion(IntRect(IntPoint(xPos,yPos),
                                 mImages[i]->GetSize()));
 
         // a single Image can handle this update request
@@ -510,8 +510,7 @@ TiledTextureImage::EndUpdate()
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
-        nsIntRect imageRect = nsIntRect(nsIntPoint(xPos,yPos),
-                                        mImages[i]->GetSize());
+        IntRect imageRect = IntRect(IntPoint(xPos,yPos), mImages[i]->GetSize());
 
         nsIntRegion subregion;
         subregion.And(mUpdateRegion, imageRect);

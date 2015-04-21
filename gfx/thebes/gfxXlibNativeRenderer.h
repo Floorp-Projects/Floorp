@@ -8,6 +8,8 @@
 
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Point.h"
 #include <X11/Xlib.h>
 
 namespace mozilla {
@@ -18,8 +20,6 @@ namespace gfx {
 
 class gfxASurface;
 class gfxContext;
-struct nsIntRect;
-struct nsIntPoint;
 typedef struct _cairo cairo_t;
 typedef struct _cairo_surface cairo_surface_t;
 
@@ -45,8 +45,9 @@ public:
      *                     no clipping is required.
      */
     virtual nsresult DrawWithXlib(cairo_surface_t* surface,
-                                  nsIntPoint offset,
-                                  nsIntRect* clipRects, uint32_t numClipRects) = 0;
+                                  mozilla::gfx::IntPoint offset,
+                                  mozilla::gfx::IntRect* clipRects,
+                                  uint32_t numClipRects) = 0;
   
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
@@ -93,11 +94,11 @@ private:
 
     void DrawFallback(mozilla::gfx::DrawTarget* dt, gfxContext* ctx,
                       gfxASurface* aSurface, mozilla::gfx::IntSize& size,
-                      nsIntRect& drawingRect, bool canDrawOverBackground,
+                      mozilla::gfx::IntRect& drawingRect, bool canDrawOverBackground,
                       uint32_t flags, Screen* screen, Visual* visual);
 
     bool DrawOntoTempSurface(cairo_surface_t *tempXlibSurface,
-                             nsIntPoint offset);
+                             mozilla::gfx::IntPoint offset);
 
 };
 

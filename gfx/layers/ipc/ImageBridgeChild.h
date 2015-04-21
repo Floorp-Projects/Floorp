@@ -17,10 +17,9 @@
 #include "mozilla/layers/PImageBridgeChild.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRegion.h"                   // for nsIntRegion
+#include "mozilla/gfx/Rect.h"
 
 class MessageLoop;
-struct nsIntPoint;
-struct nsIntRect;
 
 namespace base {
 class Thread;
@@ -241,7 +240,7 @@ public:
    * Communicate the picture rect of a YUV image in aLayer to the compositor
    */
   virtual void UpdatePictureRect(CompositableClient* aCompositable,
-                                 const nsIntRect& aRect) override;
+                                 const gfx::IntRect& aRect) override;
 
 
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,

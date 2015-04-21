@@ -32,8 +32,6 @@
 #endif
 
 class gfxReusableSurfaceWrapper;
-struct nsIntPoint;
-struct nsIntRect;
 
 namespace mozilla {
 namespace gfx {
@@ -164,7 +162,7 @@ public:
 
 protected:
   TileHost ValidateTile(TileHost aTile,
-                        const nsIntPoint& aTileRect,
+                        const gfx::IntPoint& aTileRect,
                         const nsIntRegion& dirtyRect);
 
   // do nothing, the desctructor in the texture host takes care of releasing resources
@@ -291,7 +289,7 @@ private:
                   const gfx::Filter& aFilter,
                   const gfx::Rect& aClipRect,
                   const nsIntRegion& aScreenRegion,
-                  const nsIntPoint& aTextureOffset,
+                  const gfx::IntPoint& aTextureOffset,
                   const gfx::IntSize& aTextureBounds);
 
   void EnsureTileStore() {}

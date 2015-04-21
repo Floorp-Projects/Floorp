@@ -9,8 +9,7 @@
 
 #include "npapi.h"
 #include "mozilla/gfx/QuartzSupport.h"
-
-struct nsIntRect;
+#include "nsRect.h"
 
 namespace mozilla {
 namespace plugins {

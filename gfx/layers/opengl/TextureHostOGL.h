@@ -39,8 +39,6 @@
 
 class gfxReusableSurfaceWrapper;
 class nsIntRegion;
-struct nsIntPoint;
-struct nsIntRect;
 
 namespace mozilla {
 namespace gfx {
@@ -204,9 +202,9 @@ public:
   void EnsureBuffer(const gfx::IntSize& aSize,
                     gfxContentType aContentType);
 
-  void CopyTo(const nsIntRect& aSourceRect,
-                      DataTextureSource* aDest,
-                      const nsIntRect& aDestRect);
+  void CopyTo(const gfx::IntRect& aSourceRect,
+              DataTextureSource* aDest,
+              const gfx::IntRect& aDestRect);
 
   virtual TextureImageTextureSourceOGL* AsTextureImageTextureSource() override { return this; }
 
@@ -250,7 +248,7 @@ public:
     mIterating = false;
   }
 
-  virtual nsIntRect GetTileRect() override;
+  virtual gfx::IntRect GetTileRect() override;
 
   virtual size_t GetTileCount() override
   {
