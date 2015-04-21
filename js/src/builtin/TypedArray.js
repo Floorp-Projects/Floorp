@@ -249,9 +249,9 @@ function TypedArrayFind(predicate, thisArg = undefined) {
 
     // Step 6.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.find");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.find");
     if (!IsCallable(predicate))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
     // Step 7.
     var T = thisArg;
@@ -286,9 +286,9 @@ function TypedArrayFindIndex(predicate, thisArg = undefined) {
 
     // Step 6.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.findIndex");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.findIndex");
     if (!IsCallable(predicate))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, predicate));
 
     // Step 7.
     var T = thisArg;
@@ -321,9 +321,9 @@ function TypedArrayForEach(callbackfn, thisArg = undefined) {
 
     // Step 5.
     if (arguments.length === 0)
-	ThrowError(JSMSG_MISSING_FUN_ARG, 0, 'TypedArray.prototype.forEach');
+	ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'TypedArray.prototype.forEach');
     if (!IsCallable(callbackfn))
-	ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+	ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
     var T = thisArg;
@@ -505,9 +505,9 @@ function TypedArrayMap(callbackfn, thisArg = undefined) {
 
     // Step 5.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, '%TypedArray%.prototype.map');
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, '%TypedArray%.prototype.map');
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 6.
     var T = thisArg;
@@ -547,13 +547,13 @@ function TypedArrayReduce(callbackfn/*, initialValue*/) {
 
     // Step 6.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduce");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduce");
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 7.
     if (len === 0 && arguments.length === 1)
-        ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+        ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
 
     // Step 8.
     var k = 0;
@@ -586,13 +586,13 @@ function TypedArrayReduceRight(callbackfn/*, initialValue*/) {
 
     // Step 6.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduceRight");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.reduceRight");
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 7.
     if (len === 0 && arguments.length === 1)
-        ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
+        ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
 
     // Step 8.
     var k = len - 1;
@@ -724,9 +724,9 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
 
     // Step 6.
     if (arguments.length === 0)
-        ThrowError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.some");
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, "%TypedArray%.prototype.some");
     if (!IsCallable(callbackfn))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
     // Step 7.
     var T = thisArg;
@@ -868,14 +868,14 @@ function TypedArrayStaticFrom(source, mapfn = undefined, thisArg = undefined) {
 
     // Step 2.
     if (!IsConstructor(C))
-        ThrowError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(1, C));
+        ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(1, C));
 
     // Step 3.
     var f = mapfn;
 
     // Step 4.
     if (f !== undefined && !IsCallable(f))
-        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, f));
+        ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(1, f));
 
     // Steps 5-6.
     return TypedArrayFrom(C, undefined, source, f, thisArg);
@@ -922,7 +922,7 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
             // Steps 10.e.i-ii.
             var next = iterator.next();
             if (!IsObject(next))
-                ThrowError(JSMSG_NEXT_RETURNED_PRIMITIVE);
+                ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 
             // Steps 10.e.iii-vi.
             if (next.done)
@@ -1001,7 +1001,7 @@ function TypedArrayStaticOf(/*...items*/) {
 
     // Steps 4-5.
     if (!IsConstructor(C))
-        ThrowError(JSMSG_NOT_CONSTRUCTOR, typeof C);
+        ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, typeof C);
 
     var newObj = new C(len);
 

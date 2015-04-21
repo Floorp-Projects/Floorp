@@ -24,6 +24,7 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
+#include "nsQueryObject.h"
 #include "nsRange.h"
 
 using namespace mozilla;

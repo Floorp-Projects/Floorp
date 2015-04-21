@@ -213,7 +213,20 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
     case LOCAL_GL_INT_VEC3:
     case LOCAL_GL_INT_VEC4:
     case LOCAL_GL_SAMPLER_2D:
+    case LOCAL_GL_SAMPLER_3D:
     case LOCAL_GL_SAMPLER_CUBE:
+    case LOCAL_GL_SAMPLER_2D_SHADOW:
+    case LOCAL_GL_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
+    case LOCAL_GL_SAMPLER_CUBE_SHADOW:
+    case LOCAL_GL_INT_SAMPLER_2D:
+    case LOCAL_GL_INT_SAMPLER_3D:
+    case LOCAL_GL_INT_SAMPLER_CUBE:
+    case LOCAL_GL_INT_SAMPLER_2D_ARRAY:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_3D:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         {
             GLint buffer[kMaxElemSize] = {0};
             gl->fGetUniformiv(prog, mLoc, buffer);
@@ -260,6 +273,12 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
     case LOCAL_GL_FLOAT_MAT2:
     case LOCAL_GL_FLOAT_MAT3:
     case LOCAL_GL_FLOAT_MAT4:
+    case LOCAL_GL_FLOAT_MAT2x3:
+    case LOCAL_GL_FLOAT_MAT2x4:
+    case LOCAL_GL_FLOAT_MAT3x2:
+    case LOCAL_GL_FLOAT_MAT3x4:
+    case LOCAL_GL_FLOAT_MAT4x2:
+    case LOCAL_GL_FLOAT_MAT4x3:
         {
             GLfloat buffer[16] = {0.0f};
             gl->fGetUniformfv(prog, mLoc, buffer);
@@ -268,6 +287,25 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
                 return JS::DoubleValue(buffer[0]);
 
             JSObject* obj = dom::Float32Array::Create(js, webgl, elemSize, buffer);
+            if (!obj) {
+                webgl->ErrorOutOfMemory("getUniform: out of memory");
+                return JS::NullValue();
+            }
+            return JS::ObjectOrNullValue(obj);
+        }
+
+    case LOCAL_GL_UNSIGNED_INT:
+    case LOCAL_GL_UNSIGNED_INT_VEC2:
+    case LOCAL_GL_UNSIGNED_INT_VEC3:
+    case LOCAL_GL_UNSIGNED_INT_VEC4:
+        {
+            GLuint buffer[kMaxElemSize] = {0};
+            gl->fGetUniformuiv(prog, mLoc, buffer);
+
+            if (elemSize == 1)
+                return JS::DoubleValue(buffer[0]); // This is Double because only Int32 is special cased.
+
+            JSObject* obj = dom::Uint32Array::Create(js, webgl, elemSize, buffer);
             if (!obj) {
                 webgl->ErrorOutOfMemory("getUniform: out of memory");
                 return JS::NullValue();

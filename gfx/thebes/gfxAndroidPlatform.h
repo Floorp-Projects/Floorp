@@ -96,7 +96,7 @@ public:
     virtual bool IsInGonkEmulator() const { return mIsInGonkEmulator; }
 #endif
 
-    virtual bool SupportsApzTouchInput() override {
+    virtual bool SupportsApzTouchInput() const override {
       return true;
     }
 
