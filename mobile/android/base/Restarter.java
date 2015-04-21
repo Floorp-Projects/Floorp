@@ -29,6 +29,7 @@ public class Restarter extends Service {
 
         final Intent restartIntent = (Intent)intent.getParcelableExtra(Intent.EXTRA_INTENT);
         restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                     .putExtra("didRestart", true)
                      .setClassName(getApplicationContext(),
                                    AppConstants.BROWSER_INTENT_CLASS_NAME);
         startActivity(restartIntent);
