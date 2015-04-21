@@ -14,6 +14,7 @@
 #include "builtin/SIMD.h"
 
 #include "mozilla/IntegerTypeTraits.h"
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
@@ -822,6 +823,62 @@ CompareFunc(JSContext* cx, unsigned argc, Value* vp)
     return StoreResult<Int32x4>(cx, args, result);
 }
 
+// This struct defines whether we should throw during a conversion attempt,
+// when trying to convert a value of type from From to the type To.  This
+// happens whenever a C++ conversion would have undefined behavior (and perhaps
+// be platform-dependent).
+template<typename From, typename To>
+struct ThrowOnConvert;
+
+struct NeverThrow
+{
+    static bool value(int32_t v) {
+        return false;
+    }
+};
+
+// While int32 to float conversions can be lossy, these conversions have
+// defined behavior in C++, so we don't need to care about them here. In practice,
+// this means round to nearest, tie with even (zero bit in significand).
+template<>
+struct ThrowOnConvert<int32_t, float> : public NeverThrow {};
+
+// All int32 can be safely converted to doubles.
+template<>
+struct ThrowOnConvert<int32_t, double> : public NeverThrow {};
+
+// All floats can be safely converted to doubles.
+template<>
+struct ThrowOnConvert<float, double> : public NeverThrow {};
+
+// Double to float conversion for inputs which aren't in the float range are
+// undefined behavior in C++, but they're defined in IEEE754.
+template<>
+struct ThrowOnConvert<double, float> : public NeverThrow {};
+
+// Float to integer conversions have undefined behavior if the float value
+// is out of the representable integer range (on x86, will yield the undefined
+// value pattern, namely 0x80000000; on arm, will clamp the input value), so
+// check this here.
+template<typename From, typename IntegerType>
+struct ThrowIfNotInRange
+{
+    static_assert(mozilla::IsIntegral<IntegerType>::value, "bad destination type");
+
+    static bool value(From v) {
+        double d(v);
+        return mozilla::IsNaN(d) ||
+               d < double(mozilla::MinValue<IntegerType>::value) ||
+               d > double(mozilla::MaxValue<IntegerType>::value);
+    }
+};
+
+template<>
+struct ThrowOnConvert<double, int32_t> : public ThrowIfNotInRange<double, int32_t> {};
+
+template<>
+struct ThrowOnConvert<float, int32_t> : public ThrowIfNotInRange<float, int32_t> {};
+
 template<typename V, typename Vret>
 static bool
 FuncConvert(JSContext* cx, unsigned argc, Value* vp)
@@ -834,9 +891,20 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     Elem* val = TypedObjectMemory<Elem*>(args[0]);
+
     RetElem result[Vret::lanes];
-    for (unsigned i = 0; i < Vret::lanes; i++)
-        result[i] = i < V::lanes ? ConvertScalar<RetElem>(val[i]) : 0;
+    for (unsigned i = 0; i < Min(V::lanes, Vret::lanes); i++) {
+        if (ThrowOnConvert<Elem, RetElem>::value(val[i])) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_SIMD_FAILED_CONVERSION);
+            return false;
+        }
+        result[i] = ConvertScalar<RetElem>(val[i]);
+    }
+
+    // Fill remaining lanes with 0
+    for (unsigned i = V::lanes; i < Vret::lanes; i++)
+        result[i] = 0;
 
     return StoreResult<Vret>(cx, args, result);
 }
