@@ -132,7 +132,7 @@ SwapChainD3D9::PrepareForRendering()
 }
 
 void
-SwapChainD3D9::Present(const nsIntRect &aRect)
+SwapChainD3D9::Present(const gfx::IntRect &aRect)
 {
   RECT r;
   r.left = aRect.x;

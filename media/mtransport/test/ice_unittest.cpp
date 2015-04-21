@@ -45,6 +45,10 @@
 #include "ice_peer_ctx.h"
 #include "ice_media_stream.h"
 
+extern "C" {
+#include "r_data.h"
+}
+
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
@@ -2297,6 +2301,17 @@ TEST_F(PacketFilterTest, TestSendNonRequestStunPacket) {
   TestOutgoing(msg->buffer, msg->length, 123, 45, true);
 
   ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST(InternalsTest, TestAddBogusAttribute) {
+  nr_stun_message *req;
+  ASSERT_EQ(0, nr_stun_message_create(&req));
+  Data *data;
+  ASSERT_EQ(0, r_data_alloc(&data, 3000));
+  memset(data->data, 'A', data->len);
+  ASSERT_TRUE(nr_stun_message_add_message_integrity_attribute(req, data));
+  ASSERT_EQ(0, r_data_destroy(&data));
+  ASSERT_EQ(0, nr_stun_message_destroy(&req));
 }
 
 static std::string get_environment(const char *name) {

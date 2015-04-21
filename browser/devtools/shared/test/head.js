@@ -44,6 +44,9 @@ function promiseTab(aURL) {
 }
 
 registerCleanupFunction(function tearDown() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield gDevTools.closeToolbox(target);
+
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }

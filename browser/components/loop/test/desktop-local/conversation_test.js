@@ -137,7 +137,8 @@ describe("loop.conversation", function() {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversation.AppControllerView, {
           roomStore: roomStore,
-          dispatcher: dispatcher
+          dispatcher: dispatcher,
+          mozLoop: navigator.mozLoop
         }));
     }
 

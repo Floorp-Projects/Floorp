@@ -151,6 +151,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  DEBUG:
+#ifdef DEBUG
+  true,
+#else
+  false,
+#endif
+
   MOZ_APP_NAME: "@MOZ_APP_NAME@",
   MOZ_APP_VERSION: "@MOZ_APP_VERSION@",
   MOZ_BUILD_APP: "@MOZ_BUILD_APP@",

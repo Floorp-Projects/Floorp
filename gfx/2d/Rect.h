@@ -8,6 +8,7 @@
 
 #include "BaseRect.h"
 #include "BaseMargin.h"
+#include "NumericTools.h"
 #include "Point.h"
 #include "Tools.h"
 
@@ -105,6 +106,21 @@ struct IntRectTyped :
     {
       return IntRectTyped<units>::IsEqualEdges(aRect);
     }
+
+    void InflateToMultiple(const IntSizeTyped<units>& aTileSize)
+    {
+      int32_t yMost = this->YMost();
+      int32_t xMost = this->XMost();
+
+      this->x = mozilla::RoundDownToMultiple(this->x, aTileSize.width);
+      this->y = mozilla::RoundDownToMultiple(this->y, aTileSize.height);
+      xMost = mozilla::RoundUpToMultiple(xMost, aTileSize.width);
+      yMost = mozilla::RoundUpToMultiple(yMost, aTileSize.height);
+
+      this->width = xMost - this->x;
+      this->height = yMost - this->y;
+    }
+
 };
 typedef IntRectTyped<UnknownUnits> IntRect;
 

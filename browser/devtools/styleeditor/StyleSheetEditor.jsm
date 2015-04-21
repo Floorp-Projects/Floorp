@@ -376,7 +376,7 @@ StyleSheetEditor.prototype = {
       lineNumbers: true,
       mode: Editor.modes.css,
       readOnly: false,
-      autoCloseBrackets: "{}()[]",
+      autoCloseBrackets: "{}()",
       extraKeys: this._getKeyBindings(),
       contextMenu: "sourceEditorContextMenu",
       autocomplete: Services.prefs.getBoolPref(AUTOCOMPLETION_PREF),

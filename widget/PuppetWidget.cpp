@@ -1115,7 +1115,7 @@ PuppetWidget::GetChromeDimensions()
     NS_WARNING("PuppetWidget without Tab does not have chrome information.");
     return nsIntPoint();
   }
-  return GetOwningTabChild()->GetChromeDisplacement();
+  return LayoutDeviceIntPoint::ToUntyped(GetOwningTabChild()->GetChromeDisplacement());
 }
 
 nsIntPoint

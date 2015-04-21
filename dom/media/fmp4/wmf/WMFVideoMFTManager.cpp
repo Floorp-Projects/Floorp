@@ -28,7 +28,6 @@ PRLogModuleInfo* GetDemuxerLog();
 #define LOG(...)
 #endif
 
-using mozilla::gfx::ToIntRect;
 using mozilla::layers::Image;
 using mozilla::layers::IMFYCbCrImage;
 using mozilla::layers::LayerManager;
@@ -404,7 +403,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   VideoData::SetVideoDataToImage(image,
                                  mVideoInfo,
                                  b,
-                                 ToIntRect(mPictureRegion),
+                                 mPictureRegion,
                                  false);
 
   nsRefPtr<VideoData> v =
@@ -416,7 +415,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
                                image.forget(),
                                false,
                                -1,
-                               ToIntRect(mPictureRegion));
+                               mPictureRegion);
 
   v.forget(aOutVideoData);
   return S_OK;
@@ -453,7 +452,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
                                                      image.forget(),
                                                      false,
                                                      -1,
-                                                     ToIntRect(mPictureRegion));
+                                                     mPictureRegion);
 
   NS_ENSURE_TRUE(v, E_FAIL);
   v.forget(aOutVideoData);

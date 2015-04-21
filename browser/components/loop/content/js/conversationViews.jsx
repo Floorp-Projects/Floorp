@@ -228,7 +228,6 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     render: function() {
-      /* jshint ignore:start */
       var dropdownMenuClassesDecline = React.addons.classSet({
         "native-dropdown-menu": true,
         "conversation-window-dropdown": true,
@@ -276,7 +275,6 @@ loop.conversationViews = (function(mozL10n) {
           </div>
         </div>
       );
-      /* jshint ignore:end */
     }
   });
 
@@ -293,7 +291,6 @@ loop.conversationViews = (function(mozL10n) {
     render: function() {
       var mode = this.props.mode;
       return (
-        /* jshint ignore:start */
         <div className="btn-chevron-menu-group">
           <div className="btn-group">
             <button className="btn btn-accept"
@@ -310,7 +307,6 @@ loop.conversationViews = (function(mozL10n) {
             </div>
           </div>
         </div>
-        /* jshint ignore:end */
       );
     }
   });

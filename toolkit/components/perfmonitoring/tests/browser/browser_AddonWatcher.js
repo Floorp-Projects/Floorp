@@ -58,7 +58,9 @@ let burn_rubber = Task.async(function*({histogramName, topic, expectedReason, pr
     info("Preparing add-on watcher");
     let wait = new Promise(resolve => AddonWatcher.init((id, reason) => {
       Assert.equal(id, ADDON_ID, "The add-on watcher has detected the misbehaving addon");
-      resolve(reason);
+      if (reason == expectedReason) {
+        resolve(reason);
+      }
     }));
     let done = false;
     wait = wait.then(result => {

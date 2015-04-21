@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using struct gfxPoint from "gfxPoint.h";
-using struct nsIntRect from "nsRect.h";
 using nsIntRegion from "nsRegion.h";
 using struct mozilla::layers::MagicGrallocBufferHandle from "gfxipc/ShadowLayerUtils.h";
 using struct mozilla::layers::GrallocBufferRef from "gfxipc/ShadowLayerUtils.h";
@@ -11,6 +10,7 @@ using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using gfxImageFormat from "gfxTypes.h";
 

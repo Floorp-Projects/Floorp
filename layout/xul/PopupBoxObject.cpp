@@ -271,7 +271,7 @@ PopupBoxObject::GetOuterScreenRect()
       widget->GetScreenBounds(screenRect);
 
       int32_t pp = menuPopupFrame->PresContext()->AppUnitsPerDevPixel();
-      rect->SetLayoutRect(screenRect.ToAppUnits(pp));
+      rect->SetLayoutRect(ToAppUnits(screenRect, pp));
     }
   }
   return rect.forget();

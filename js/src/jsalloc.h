@@ -19,6 +19,12 @@
 
 namespace js {
 
+enum class AllocFunction {
+    Malloc,
+    Calloc,
+    Realloc
+};
+
 struct ContextFriendFields;
 
 /* Policy for using system memory functions and doing no error reporting. */
@@ -51,7 +57,8 @@ class TempAllocPolicy
      * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
      * code bloat.
      */
-    JS_FRIEND_API(void*) onOutOfMemory(void* p, size_t nbytes);
+    JS_FRIEND_API(void*) onOutOfMemory(AllocFunction allocFunc, size_t nbytes,
+                                       void* reallocPtr = nullptr);
 
   public:
     MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_((ContextFriendFields*) cx) {} // :(
@@ -61,7 +68,7 @@ class TempAllocPolicy
     T* pod_malloc(size_t numElems) {
         T* p = js_pod_malloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = static_cast<T*>(onOutOfMemory(nullptr, numElems * sizeof(T)));
+            p = static_cast<T*>(onOutOfMemory(AllocFunction::Malloc, numElems * sizeof(T)));
         return p;
     }
 
@@ -69,7 +76,7 @@ class TempAllocPolicy
     T* pod_calloc(size_t numElems) {
         T* p = js_pod_calloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = static_cast<T*>(onOutOfMemory(reinterpret_cast<void*>(1), numElems * sizeof(T)));
+            p = static_cast<T*>(onOutOfMemory(AllocFunction::Calloc, numElems * sizeof(T)));
         return p;
     }
 
@@ -77,7 +84,7 @@ class TempAllocPolicy
     T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
         T* p2 = js_pod_realloc<T>(prior, oldSize, newSize);
         if (MOZ_UNLIKELY(!p2))
-            p2 = static_cast<T*>(onOutOfMemory(prior, newSize * sizeof(T)));
+            p2 = static_cast<T*>(onOutOfMemory(AllocFunction::Realloc, newSize * sizeof(T), prior));
         return p2;
     }
 
