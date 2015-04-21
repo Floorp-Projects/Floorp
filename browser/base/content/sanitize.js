@@ -486,6 +486,11 @@ Sanitizer.prototype = {
                     .getService(Ci.nsISiteSecurityService);
         sss.clearAll();
 
+        // Clear all push notification subscriptions
+        var push = Cc["@mozilla.org/push/NotificationService;1"]
+                    .getService(Ci.nsIPushNotificationService);
+        push.clearAll();
+
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS");
       },
 
