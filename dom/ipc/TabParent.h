@@ -119,6 +119,7 @@ public:
     void Destroy();
 
     void RemoveWindowListeners();
+    void AddWindowListeners();
 
     virtual bool RecvMoveFocus(const bool& aForward) override;
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent) override;
