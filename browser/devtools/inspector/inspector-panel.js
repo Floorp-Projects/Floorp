@@ -833,6 +833,12 @@ InspectorPanel.prototype = {
     let button = this._paneToggleButton;
     let isVisible = !button.hasAttribute("pane-collapsed");
 
+    // Make sure the sidebar has a width attribute before collapsing because
+    // ViewHelpers needs it.
+    if (isVisible && !sidePane.hasAttribute("width")) {
+      sidePane.setAttribute("width", sidePane.getBoundingClientRect().width);
+    }
+
     ViewHelpers.togglePane({
       visible: !isVisible,
       animated: true,
