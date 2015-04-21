@@ -58,8 +58,12 @@
            new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
           [ContentMessages.simpleMoveNext,
            new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
+           [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(['slider', '0', {'string': 'slider'}])],
 
           // Simple traversal backward
+          [ContentMessages.simpleMovePrevious,
+           new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
           [ContentMessages.simpleMovePrevious,
            new ExpectedCursorChange(['Home', {'string': 'pushbutton'}])],
           [ContentMessages.simpleMovePrevious,
@@ -92,7 +96,7 @@
           // Move from an inner frame to the last element in the parent doc
           [ContentMessages.simpleMoveLast,
             new ExpectedCursorChange(
-              ['apple', {'string': 'pushbutton'}], { b2g_todo: true })],
+              ['slider', '0', {'string': 'slider'}], { b2g_todo: true })],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
@@ -146,6 +150,12 @@
           [ContentMessages.focusSelector('button#fruit', false),
            new ExpectedCursorChange(['apple', {'string': 'pushbutton'}])],
           [doc.defaultView.renameFruit, new ExpectedNameChange('banana')],
+
+          // Name and value changes inside a live-region (no cursor present)
+          [doc.defaultView.renameSlider,
+            new ExpectedNameChange('mover')],
+          [doc.defaultView.changeSliderValue,
+            new ExpectedValueChange('medium')],
 
           // Blur button and reset cursor
           [ContentMessages.focusSelector('button#fruit', true), null],
@@ -222,14 +232,14 @@
 
           // Open dialog in outer doc, while cursor is also in outer doc
           [ContentMessages.simpleMoveLast,
-           new ExpectedCursorChange(['banana', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(['mover'])],
           [doc.defaultView.showAlert,
             new ExpectedCursorChange(['This is an alert!',
               {'string': 'headingLevel', 'args': [1]},
               {'string': 'dialog'}])],
 
           [doc.defaultView.hideAlert,
-           new ExpectedCursorChange(['banana', {'string': 'pushbutton'}])],
+           new ExpectedCursorChange(['mover'])],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 

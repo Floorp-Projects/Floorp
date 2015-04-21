@@ -44,6 +44,17 @@
       document.getElementById('fruit').setAttribute('aria-label', 'banana');
     }
 
+    function renameSlider() {
+      document.getElementById('slider').setAttribute(
+        'aria-label', 'mover');
+    }
+
+    function changeSliderValue() {
+      document.getElementById('slider').setAttribute('aria-valuenow', '5');
+      document.getElementById('slider').setAttribute(
+        'aria-valuetext', 'medium');
+    }
+
   </script>
   <style>
     #windows {
@@ -89,5 +100,9 @@
   </div>
   <button id="home">Home</button>
   <button id="fruit" aria-label="apple"></button>
+  <div id="live" aria-live="polite" aria-label="live">
+    <div id="slider" role="slider" aria-label="slider" aria-valuemin="0"
+      aria-valuemax="10"  aria-valuenow="0"></div>
+  </div>
 </body>
 </html>
