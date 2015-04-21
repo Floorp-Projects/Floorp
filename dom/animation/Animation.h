@@ -166,7 +166,7 @@ public:
    * consistency and so that animations paused together end up in step.
    *
    * Note that the caller of this method is responsible for removing the player
-   * from any PendingPlayerTracker it may have been added to.
+   * from any PendingAnimationTracker it may have been added to.
    */
   void TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime);
 
@@ -176,7 +176,7 @@ public:
   // this method, but there are a lot of them.
   //
   // As with TriggerOnNextTick, the caller of this method is responsible for
-  // removing the player from any PendingPlayerTracker it may have been added
+  // removing the player from any PendingAnimationTracker it may have been added
   // to.
   void TriggerNow();
 
@@ -327,9 +327,9 @@ protected:
 
   // Indicates if the player is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than
-  // checking if this player is tracked by a PendingPlayerTracker because the
+  // checking if this player is tracked by a PendingAnimationTracker because the
   // player will continue to be pending even after it has been removed from the
-  // PendingPlayerTracker while it is waiting for the next tick
+  // PendingAnimationTracker while it is waiting for the next tick
   // (see TriggerOnNextTick for details).
   enum class PendingState { NotPending, PlayPending, PausePending };
   PendingState mPendingState;
