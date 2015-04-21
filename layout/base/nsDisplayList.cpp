@@ -348,7 +348,7 @@ ToTimingFunction(const ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
-                        AnimationPlayer* aPlayer, Layer* aLayer,
+                        dom::Animation* aPlayer, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
   MOZ_ASSERT(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
@@ -417,7 +417,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 
   // Add from first to last (since last overrides)
   for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
-    AnimationPlayer* player = aPlayers[playerIdx];
+    dom::Animation* player = aPlayers[playerIdx];
     if (!player->IsPlaying()) {
       continue;
     }

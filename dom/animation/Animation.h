@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_AnimationPlayer_h
-#define mozilla_dom_AnimationPlayer_h
+#ifndef mozilla_dom_Animation_h
+#define mozilla_dom_Animation_h
 
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
-#include "mozilla/dom/AnimationPlayerBinding.h" // for AnimationPlayState
+#include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
 #include "mozilla/dom/DocumentTimeline.h" // for DocumentTimeline
 #include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadonly
 #include "mozilla/dom/Promise.h" // for Promise
@@ -44,14 +44,15 @@ class CSSTransitionPlayer;
 
 namespace dom {
 
-class AnimationPlayer : public nsISupports,
-                        public nsWrapperCache
+class Animation
+  : public nsISupports
+  , public nsWrapperCache
 {
 protected:
-  virtual ~AnimationPlayer() {}
+  virtual ~Animation() {}
 
 public:
-  explicit AnimationPlayer(DocumentTimeline* aTimeline)
+  explicit Animation(DocumentTimeline* aTimeline)
     : mTimeline(aTimeline)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
@@ -63,7 +64,7 @@ public:
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationPlayer)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Animation)
 
   DocumentTimeline* GetParentObject() const { return mTimeline; }
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -79,7 +80,7 @@ public:
     Continue = 1
   };
 
-  // AnimationPlayer methods
+  // Animation methods
   KeyframeEffectReadonly* GetEffect() const { return mEffect; }
   DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
@@ -97,7 +98,7 @@ public:
   virtual void Pause();
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
-  // Wrapper functions for AnimationPlayer DOM methods when called
+  // Wrapper functions for Animation DOM methods when called
   // from script. We often use the same methods internally and from
   // script but when called from script we (or one of our subclasses) perform
   // extra steps such as flushing style or converting the return type.
@@ -346,4 +347,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_AnimationPlayer_h
+#endif // mozilla_dom_Animation_h
