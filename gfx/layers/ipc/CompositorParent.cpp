@@ -1579,6 +1579,8 @@ public:
   virtual bool SetTestSampleTime(LayerTransactionParent* aLayerTree,
                                  const TimeStamp& aTime) override;
   virtual void LeaveTestMode(LayerTransactionParent* aLayerTree) override;
+  virtual void ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
+               override;
   virtual void GetAPZTestData(const LayerTransactionParent* aLayerTree,
                               APZTestData* aOutData) override;
 
@@ -1958,6 +1960,22 @@ CrossProcessCompositorParent::LeaveTestMode(LayerTransactionParent* aLayerTree)
 
   MOZ_ASSERT(state->mParent);
   state->mParent->LeaveTestMode(aLayerTree);
+}
+
+void
+CrossProcessCompositorParent::ApplyAsyncProperties(
+    LayerTransactionParent* aLayerTree)
+{
+  uint64_t id = aLayerTree->GetId();
+  MOZ_ASSERT(id != 0);
+  const CompositorParent::LayerTreeState* state =
+    CompositorParent::GetIndirectShadowTree(id);
+  if (!state) {
+    return;
+  }
+
+  MOZ_ASSERT(state->mParent);
+  state->mParent->ApplyAsyncProperties(aLayerTree);
 }
 
 void
