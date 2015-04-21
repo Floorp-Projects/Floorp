@@ -479,6 +479,10 @@ describe("loop.panel", function() {
     });
 
     function mountRoomEntry(props) {
+      props = _.extend({
+        dispatcher: dispatcher,
+        mozLoop: fakeMozLoop
+      }, props);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.panel.RoomEntry, props));
     }
@@ -488,7 +492,6 @@ describe("loop.panel", function() {
 
       beforeEach(function() {
         roomEntry = mountRoomEntry({
-          dispatcher: dispatcher,
           deleteRoom: sandbox.stub(),
           room: new loop.store.Room(roomData)
         });
@@ -538,7 +541,6 @@ describe("loop.panel", function() {
 
       beforeEach(function() {
         roomEntry = mountRoomEntry({
-          dispatcher: dispatcher,
           room: new loop.store.Room(roomData)
         });
         deleteButton = roomEntry.getDOMNode().querySelector("button.delete-link");
@@ -568,6 +570,49 @@ describe("loop.panel", function() {
 
         sinon.assert.calledOnce(navigator.mozLoop.confirm);
         sinon.assert.notCalled(dispatcher.dispatch);
+      });
+    });
+
+    describe("Context Indicator", function() {
+      var roomEntry;
+
+      function mountEntryForContext() {
+        return mountRoomEntry({
+          room: new loop.store.Room(roomData)
+        });
+      }
+
+      it("should not display a context indicator if the room doesn't have any", function() {
+        roomEntry = mountEntryForContext();
+
+        expect(roomEntry.getDOMNode().querySelector(".room-entry-context-item")).eql(null);
+      });
+
+      it("should a context indicator if the room specifies context", function() {
+        roomData.decryptedContext.urls = [{
+          description: "invalid entry",
+          location: "http://invalid",
+          thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        }];
+
+        roomEntry = mountEntryForContext();
+
+        expect(roomEntry.getDOMNode().querySelector(".room-entry-context-item")).not.eql(null);
+      });
+
+      it("should call mozLoop.openURL to open a new url", function() {
+        roomData.decryptedContext.urls = [{
+          description: "invalid entry",
+          location: "http://invalid/",
+          thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        }];
+
+        roomEntry = mountEntryForContext();
+
+        TestUtils.Simulate.click(roomEntry.getDOMNode().querySelector("a"));
+
+        sinon.assert.calledOnce(fakeMozLoop.openURL);
+        sinon.assert.calledWithExactly(fakeMozLoop.openURL, "http://invalid/");
       });
     });
 
