@@ -63,7 +63,8 @@ describe("loop.panel", function() {
         on: sandbox.stub()
       },
       confirm: sandbox.stub(),
-      notifyUITour: sandbox.stub()
+      notifyUITour: sandbox.stub(),
+      openURL: sandbox.stub()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -180,6 +181,19 @@ describe("loop.panel", function() {
         }));
     }
 
+    it("should hide the account entry when FxA is not enabled", function() {
+      navigator.mozLoop.userProfile = {email: "test@example.com"};
+      navigator.mozLoop.fxAEnabled = false;
+
+      var view = TestUtils.renderIntoDocument(
+        React.createElement(loop.panel.SettingsDropdown, {
+          mozLoop: fakeMozLoop
+        }));
+
+      expect(view.getDOMNode().querySelectorAll(".icon-account"))
+        .to.have.length.of(0);
+    });
+
     describe('TabView', function() {
       var view, callTab, roomsTab, contactsTab;
 
@@ -260,18 +274,14 @@ describe("loop.panel", function() {
       });
     });
 
-    it("should hide the account entry when FxA is not enabled", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
-        navigator.mozLoop.fxAEnabled = false;
-
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
-
-        expect(view.getDOMNode().querySelectorAll(".icon-account"))
-          .to.have.length.of(0);
-      });
-
     describe("SettingsDropdown", function() {
+      function mountTestComponent() {
+        return TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.SettingsDropdown, {
+            mozLoop: fakeMozLoop
+          }));
+      }
+
       beforeEach(function() {
         navigator.mozLoop.logInToFxA = sandbox.stub();
         navigator.mozLoop.logOutFromFxA = sandbox.stub();
@@ -286,8 +296,7 @@ describe("loop.panel", function() {
         function() {
           navigator.mozLoop.loggedInToFxA = false;
 
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.SettingsDropdown));
+          var view = mountTestComponent();
 
           expect(view.getDOMNode().querySelectorAll(".icon-signout"))
             .to.have.length.of(0);
@@ -298,8 +307,7 @@ describe("loop.panel", function() {
       it("should show a signout entry when user is authenticated", function() {
         navigator.mozLoop.userProfile = {email: "test@example.com"};
 
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
+        var view = mountTestComponent();
 
         expect(view.getDOMNode().querySelectorAll(".icon-signout"))
           .to.have.length.of(1);
@@ -310,8 +318,7 @@ describe("loop.panel", function() {
       it("should show an account entry when user is authenticated", function() {
         navigator.mozLoop.userProfile = {email: "test@example.com"};
 
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
+        var view = mountTestComponent();
 
         expect(view.getDOMNode().querySelectorAll(".icon-account"))
           .to.have.length.of(1);
@@ -320,8 +327,7 @@ describe("loop.panel", function() {
       it("should open the FxA settings when the account entry is clicked", function() {
         navigator.mozLoop.userProfile = {email: "test@example.com"};
 
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
+        var view = mountTestComponent();
 
         TestUtils.Simulate.click(
           view.getDOMNode().querySelector(".icon-account"));
@@ -333,8 +339,7 @@ describe("loop.panel", function() {
         function() {
           navigator.mozLoop.loggedInToFxA = false;
 
-          var view = TestUtils.renderIntoDocument(
-            React.createElement(loop.panel.SettingsDropdown));
+          var view = mountTestComponent();
 
           expect(view.getDOMNode().querySelectorAll(".icon-account"))
             .to.have.length.of(0);
@@ -342,8 +347,7 @@ describe("loop.panel", function() {
 
       it("should sign in the user on click when unauthenticated", function() {
         navigator.mozLoop.loggedInToFxA = false;
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
+        var view = mountTestComponent();
 
         TestUtils.Simulate.click(
           view.getDOMNode().querySelector(".icon-signin"));
@@ -353,8 +357,7 @@ describe("loop.panel", function() {
 
       it("should sign out the user on click when authenticated", function() {
         navigator.mozLoop.userProfile = {email: "test@example.com"};
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
+        var view = mountTestComponent();
 
         TestUtils.Simulate.click(
           view.getDOMNode().querySelector(".icon-signout"));
@@ -364,28 +367,41 @@ describe("loop.panel", function() {
     });
 
     describe("Help", function() {
-      var supportUrl = "https://example.com";
+      var view, supportUrl;
+
+      function mountTestComponent() {
+        return TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.SettingsDropdown, {
+            mozLoop: fakeMozLoop
+          }));
+      }
 
       beforeEach(function() {
+        supportUrl = "https://example.com";
         navigator.mozLoop.getLoopPref = function(pref) {
           if (pref === "support_url")
             return supportUrl;
           return "unseen";
         };
-
-        sandbox.stub(window, "open");
-        sandbox.stub(window, "close");
       });
 
       it("should open a tab to the support page", function() {
-        var view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.SettingsDropdown));
+        view = mountTestComponent();
 
         TestUtils.Simulate
           .click(view.getDOMNode().querySelector(".icon-help"));
 
-        sinon.assert.calledOnce(window.open);
-        sinon.assert.calledWithExactly(window.open, supportUrl);
+        sinon.assert.calledOnce(fakeMozLoop.openURL);
+        sinon.assert.calledWithExactly(fakeMozLoop.openURL, supportUrl);
+      });
+
+      it("should close the panel", function() {
+        view = mountTestComponent();
+
+        TestUtils.Simulate
+          .click(view.getDOMNode().querySelector(".icon-help"));
+
+        sinon.assert.calledOnce(fakeWindow.close);
       });
     });
 
