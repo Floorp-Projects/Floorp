@@ -94,9 +94,6 @@ MaiHyperlink::MaiHyperlink(Accessible* aHyperLink) :
     mHyperlink(aHyperLink),
     mMaiAtkHyperlink(nullptr)
 {
-  if (!mHyperlink->IsLink())
-    return;
-
     mMaiAtkHyperlink =
         reinterpret_cast<AtkHyperlink *>
                         (g_object_new(mai_atk_hyperlink_get_type(), nullptr));
