@@ -23,7 +23,12 @@ import org.mozilla.gecko.util.HardwareUtils;
  * AnchoredPopup is the base class for doorhanger notifications, and is anchored to the urlbar.
  */
 public abstract class AnchoredPopup extends PopupWindow {
+    public interface OnShowListener {
+        public void onDoorHangerShow();
+    }
+
     private View mAnchor;
+    private OnShowListener mOnShowListener;
 
     protected LinearLayout mContent;
     protected boolean mInflated;
@@ -69,6 +74,10 @@ public abstract class AnchoredPopup extends PopupWindow {
         mAnchor = anchor;
     }
 
+    public void setOnShowListener(OnShowListener listener) {
+        mOnShowListener = listener;
+    }
+
     /**
      * Shows the popup with the arrow pointing to the center of the anchor view. If the anchor
      * isn't visible, the popup will just be shown at the top of the root view.
@@ -76,6 +85,10 @@ public abstract class AnchoredPopup extends PopupWindow {
     public void show() {
         if (!mInflated) {
             throw new IllegalStateException("ArrowPopup#init() must be called before ArrowPopup#show()");
+        }
+
+        if (mOnShowListener != null) {
+            mOnShowListener.onDoorHangerShow();
         }
 
         final int[] anchorLocation = new int[2];
