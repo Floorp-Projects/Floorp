@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+include "mozilla/media/webrtc/WebrtcGlobal.h";
+
+using struct mozilla::dom::RTCStatsReportInternal from "mozilla/dom/RTCStatsReportBinding.h";
+using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
+
+namespace mozilla {
+namespace dom {
+
+async protocol PWebrtcGlobal {
+  manager PContent;
+
+child: // parent -> child messages
+  GetStatsRequest(int aRequestId, nsString aPcIdFilter);
+  GetLogRequest(int aRequestId, nsCString aPattern);
+  SetAecLogging(bool aEnable);
+  SetDebugMode(int aLevel);
+
+parent: // child -> parent messages
+  GetStatsResult(int aRequestId, RTCStatsReportInternal[] aStats);
+  GetLogResult(int aRequestId, WebrtcGlobalLog aLog);
+  __delete__();
+};
+
+} // end namespace net
+} // end namespace mozilla

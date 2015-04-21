@@ -54,6 +54,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
+#include "mozilla/media/webrtc/WebrtcGlobalChild.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -1828,6 +1829,21 @@ ContentChild::DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor)
     return false;
 #endif
 }
+
+PWebrtcGlobalChild *
+ContentChild::AllocPWebrtcGlobalChild()
+{
+    WebrtcGlobalChild *child = new WebrtcGlobalChild();
+    return child;
+}
+
+bool
+ContentChild::DeallocPWebrtcGlobalChild(PWebrtcGlobalChild *aActor)
+{
+    delete static_cast<WebrtcGlobalChild*>(aActor);
+    return true;
+}
+
 
 bool
 ContentChild::RecvRegisterChrome(InfallibleTArray<ChromePackage>&& packages,
