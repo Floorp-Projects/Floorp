@@ -39,8 +39,8 @@ class AnimValuesStyleRule;
 class CommonAnimationManager;
 } // namespace css
 
-class CSSAnimationPlayer;
-class CSSTransitionPlayer;
+class CSSAnimation;
+class CSSTransition;
 
 namespace dom {
 
@@ -70,8 +70,8 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual CSSAnimationPlayer* AsCSSAnimationPlayer() { return nullptr; }
-  virtual CSSTransitionPlayer* AsCSSTransitionPlayer() { return nullptr; }
+  virtual CSSAnimation* AsCSSAnimation() { return nullptr; }
+  virtual CSSTransition* AsCSSTransition() { return nullptr; }
 
   // Flag to pass to DoPlay to indicate that it should not carry out finishing
   // behavior (reset the current time to the beginning of the active duration).
@@ -111,7 +111,7 @@ public:
   virtual void PlayFromJS() { Play(LimitBehavior::AutoRewind); }
   // PauseFromJS is currently only here for symmetry with PlayFromJS but
   // in future we will likely have to flush style in
-  // CSSAnimationPlayer::PauseFromJS so we leave it for now.
+  // CSSAnimation::PauseFromJS so we leave it for now.
   void PauseFromJS() { Pause(); }
 
   void SetEffect(KeyframeEffectReadonly* aEffect);

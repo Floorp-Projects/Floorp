@@ -52,10 +52,10 @@ struct AnimationEventInfo {
 
 typedef InfallibleTArray<AnimationEventInfo> EventArray;
 
-class CSSAnimationPlayer final : public dom::Animation
+class CSSAnimation final : public dom::Animation
 {
 public:
- explicit CSSAnimationPlayer(dom::DocumentTimeline* aTimeline)
+ explicit CSSAnimation(dom::DocumentTimeline* aTimeline)
     : dom::Animation(aTimeline)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
@@ -63,8 +63,7 @@ public:
   {
   }
 
-  virtual CSSAnimationPlayer*
-  AsCSSAnimationPlayer() override { return this; }
+  virtual CSSAnimation* AsCSSAnimation() override { return this; }
 
   virtual dom::Promise* GetReady(ErrorResult& aRv) override;
   virtual void Play(LimitBehavior aLimitBehavior) override;
@@ -88,7 +87,7 @@ public:
   bool mInEffectForCascadeResults;
 
 protected:
-  virtual ~CSSAnimationPlayer() { }
+  virtual ~CSSAnimation() { }
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
