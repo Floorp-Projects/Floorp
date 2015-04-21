@@ -2133,6 +2133,7 @@ class LazyScript : public gc::TenuredCell
     bool hasUncompiledEnclosingScript() const;
     uint32_t staticLevel(JSContext* cx) const;
 
+    friend class GCMarker;
     void traceChildren(JSTracer* trc);
     void finalize(js::FreeOp* fop);
     void fixupAfterMovingGC() {}
