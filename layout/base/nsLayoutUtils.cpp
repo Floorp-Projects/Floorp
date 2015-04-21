@@ -376,13 +376,13 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
          nsTransitionManager::GetAnimationsForCompositor(aContent, aProperty);
 }
 
-static AnimationPlayerCollection*
+static AnimationCollection*
 GetAnimationsOrTransitions(nsIContent* aContent,
                            nsIAtom* aAnimationProperty,
                            nsCSSProperty aProperty)
 {
-  AnimationPlayerCollection* collection =
-    static_cast<AnimationPlayerCollection*>(aContent->GetProperty(
+  AnimationCollection* collection =
+    static_cast<AnimationCollection*>(aContent->GetProperty(
         aAnimationProperty));
   if (collection) {
     bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
@@ -412,8 +412,8 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
   if (!aContent->MayHaveAnimations())
     return false;
 
-  AnimationPlayerCollection* collection =
-    static_cast<AnimationPlayerCollection*>(
+  AnimationCollection* collection =
+    static_cast<AnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
   return (collection && collection->HasCurrentAnimations());
 }
@@ -430,8 +430,8 @@ nsLayoutUtils::HasCurrentAnimationsForProperties(nsIContent* aContent,
                                          nsGkAtoms::animationsProperty,
                                          nullptr };
   for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
-    AnimationPlayerCollection* collection =
-      static_cast<AnimationPlayerCollection*>(aContent->GetProperty(*animProp));
+    AnimationCollection* collection =
+      static_cast<AnimationCollection*>(aContent->GetProperty(*animProp));
     if (collection &&
         collection->HasCurrentAnimationsForProperties(aProperties,
                                                       aPropertyCount)) {
@@ -496,12 +496,12 @@ GetSuitableScale(float aMaxScale, float aMinScale)
 
 static void
 GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
-                                      AnimationPlayerCollection* aPlayers,
+                                      AnimationCollection* aAnimations,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
 {
-  for (size_t playerIdx = aPlayers->mPlayers.Length(); playerIdx-- != 0; ) {
-    dom::Animation* player = aPlayers->mPlayers[playerIdx];
+  for (size_t playerIdx = aAnimations->mPlayers.Length(); playerIdx-- != 0; ) {
+    dom::Animation* player = aAnimations->mPlayers[playerIdx];
     if (!player->GetEffect() || player->GetEffect()->IsFinishedTransition()) {
       continue;
     }
@@ -537,7 +537,7 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
   gfxSize minScale(std::numeric_limits<gfxFloat>::max(),
                    std::numeric_limits<gfxFloat>::max());
 
-  AnimationPlayerCollection* animations =
+  AnimationCollection* animations =
     nsAnimationManager::GetAnimationsForCompositor(aContent,
                                                    eCSSProperty_transform);
   if (animations) {

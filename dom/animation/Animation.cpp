@@ -7,7 +7,7 @@
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/AutoRestore.h"
-#include "AnimationCommon.h" // For AnimationPlayerCollection,
+#include "AnimationCommon.h" // For AnimationCollection,
                              // CommonAnimationManager
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
@@ -729,7 +729,7 @@ Animation::FlushStyle() const
 void
 Animation::PostUpdate()
 {
-  AnimationPlayerCollection* collection = GetCollection();
+  AnimationCollection* collection = GetCollection();
   if (collection) {
     collection->NotifyPlayerUpdated();
   }
@@ -867,7 +867,7 @@ Animation::GetPresContext() const
   return shell->GetPresContext();
 }
 
-AnimationPlayerCollection*
+AnimationCollection*
 Animation::GetCollection() const
 {
   css::CommonAnimationManager* manager = GetAnimationManager();
