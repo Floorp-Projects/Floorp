@@ -4973,14 +4973,22 @@ BytecodeEmitter::emitToObject()
 bool
 BytecodeEmitter::emitIterator()
 {
-    // Convert iterable to iterator.
-    if (!emit1(JSOP_DUP))                                 // OBJ OBJ
+    // Convert iterable to iterator, consistent with GetIterator.
+    //
+    // Note that what we call VAL, the spec calls |obj|.  The value isn't
+    // necessarily an object!  |GetMethod(obj, @@iterator)| implies a ToObject
+    // call during the effective |obj[@@iterator]()|, but that object-for-real
+    // is discarded after the method lookup.  So we call the iterator function
+    // with the originally-provided value.
+    if (!emit1(JSOP_DUP))                                 // VAL VAL
         return false;
-    if (!emit2(JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator))) // OBJ OBJ @@ITERATOR
+    if (!emitToObject())                                  // VAL OBJ
         return false;
-    if (!emitElemOpBase(JSOP_CALLELEM))                   // OBJ ITERFN
+    if (!emit2(JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator))) // VAL OBJ @@ITERATOR
         return false;
-    if (!emit1(JSOP_SWAP))                                // ITERFN OBJ
+    if (!emitElemOpBase(JSOP_CALLELEM))                   // VAL ITERFN
+        return false;
+    if (!emit1(JSOP_SWAP))                                // ITERFN VAL
         return false;
     if (!emitCall(JSOP_CALL, 0))                          // ITER
         return false;
