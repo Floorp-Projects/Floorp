@@ -224,23 +224,34 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
-    if (!window) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (!doc) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    nsIPrincipal* principal;
+    if (window) {
+      doc = window->GetExtantDoc();
+      if (!doc) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+      }
+      principal = doc->NodePrincipal();
+      loadGroup = doc->GetDocumentLoadGroup();
+    } else {
+      principal = aGlobal->PrincipalOrNull();
+      if (NS_WARN_IF(!principal)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
+      }
+      nsresult rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), principal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        aRv.Throw(rv);
+        return nullptr;
+      }
     }
 
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
 
     nsRefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
-    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-    nsRefPtr<FetchDriver> fetch =
-      new FetchDriver(r, doc->NodePrincipal(), loadGroup);
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(r, principal, loadGroup);
     fetch->SetDocument(doc);
     aRv = fetch->Fetch(resolver);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -410,6 +421,23 @@ UpdateRequestReferrer(nsIGlobalObject* aGlobal, InternalRequest* aRequest)
       nsAutoString referrer;
       doc->GetReferrer(referrer);
       aRequest->SetReferrer(referrer);
+    }
+  } else if (NS_IsMainThread()) {
+    // Pull the principal from the global for non-worker scripts.
+    nsIPrincipal *principal = aGlobal->PrincipalOrNull();
+    bool isNull;
+    // Only set the referrer if the principal is present,
+    // and the principal is not null or the system principal.
+    if (principal &&
+        NS_SUCCEEDED(principal->GetIsNullPrincipal(&isNull)) && !isNull &&
+        !nsContentUtils::IsSystemPrincipal(principal)) {
+      nsCOMPtr<nsIURI> uri;
+      if (NS_SUCCEEDED(principal->GetURI(getter_AddRefs(uri))) && uri) {
+        nsAutoCString referrer;
+        if (NS_SUCCEEDED(uri->GetSpec(referrer))) {
+          aRequest->SetReferrer(NS_ConvertUTF8toUTF16(referrer));
+        }
+      }
     }
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
