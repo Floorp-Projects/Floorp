@@ -81,17 +81,20 @@ function addRoot(root, id) {
 
 // Given APZ test data for a single paint on the compositor side,
 // reconstruct the APZC tree structure from the 'parentScrollId'
-// entries that were logged.
+// entries that were logged. More specifically, the subset of the
+// APZC tree structure corresponding to the layer subtree for the
+// content process that triggered the paint, is reconstructed (as
+// the APZ test data only contains information abot this subtree).
 function buildApzcTree(paint) {
   // The APZC tree can potentially have multiple root nodes,
   // so we invent a node that is the parent of all roots.
   // This 'root' does not correspond to an APZC.
   var root = makeNode(-1);
   for (var scrollId in paint) {
-    if ("parentScrollId" in paint[scrollId]) {
-      addLink(root, scrollId, paint[scrollId]["parentScrollId"]);
-    } else {
+    if ("isRootForLayersId" in paint[scrollId]) {
       addRoot(root, scrollId);
+    } else if ("parentScrollId" in paint[scrollId]) {
+      addLink(root, scrollId, paint[scrollId]["parentScrollId"]);
     }
   }
   return root;
