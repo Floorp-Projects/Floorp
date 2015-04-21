@@ -98,6 +98,7 @@
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -107,7 +108,6 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "RestyleManager.h"
-#include "mozilla/EventDispatcher.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1827,13 +1827,6 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
                                           LayerManager* aManager)
 {
   nsIFrame* f = aItem->Frame();
-  if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
-    nsDisplayScrollLayer* scrollLayerItem =
-      static_cast<nsDisplayScrollLayer*>(aItem);
-    nsIFrame* scrolledFrame = scrollLayerItem->GetScrolledFrame();
-    return GetAnimatedGeometryRootForFrame(aBuilder, scrolledFrame,
-        aBuilder->FindReferenceFrameFor(scrolledFrame));
-  }
   if (aItem->ShouldFixToViewport(aManager)) {
     // Make its active scrolled root be the active scrolled root of
     // the enclosing viewport, since it shouldn't be scrolled by scrolled
@@ -8082,6 +8075,237 @@ nsLayoutUtils::SetCSSViewport(nsIPresShell* aPresShell, CSSSize aSize)
   nscoord height = nsPresContext::CSSPixelsToAppUnits(aSize.height);
 
   aPresShell->ResizeReflowOverride(width, height);
+}
+
+/* static */ FrameMetrics
+nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
+                                   nsIFrame* aScrollFrame,
+                                   nsIContent* aContent,
+                                   const nsIFrame* aReferenceFrame,
+                                   Layer* aLayer,
+                                   ViewID aScrollParentId,
+                                   const nsRect& aViewport,
+                                   bool aIsRoot,
+                                   const ContainerLayerParameters& aContainerParameters)
+{
+  nsPresContext* presContext = aForFrame->PresContext();
+  int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
+
+  nsIPresShell* presShell = presContext->GetPresShell();
+  FrameMetrics metrics;
+  metrics.SetViewport(CSSRect::FromAppUnits(aViewport));
+
+  ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
+  if (aContent) {
+    scrollId = nsLayoutUtils::FindOrCreateIDFor(aContent);
+    nsRect dp;
+    if (nsLayoutUtils::GetDisplayPort(aContent, &dp)) {
+      metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
+      nsLayoutUtils::LogTestDataForPaint(aLayer->Manager(), scrollId, "displayport",
+          metrics.GetDisplayPort());
+    }
+    if (nsLayoutUtils::GetCriticalDisplayPort(aContent, &dp)) {
+      metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
+    }
+    DisplayPortMarginsPropertyData* marginsData =
+        static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
+    if (marginsData) {
+      metrics.SetDisplayPortMargins(marginsData->mMargins);
+    }
+  }
+
+  nsIScrollableFrame* scrollableFrame = nullptr;
+  if (aScrollFrame)
+    scrollableFrame = aScrollFrame->GetScrollTargetFrame();
+
+  metrics.SetScrollableRect(CSSRect::FromAppUnits(
+    nsLayoutUtils::CalculateScrollableRectForFrame(scrollableFrame, aForFrame)));
+
+  if (scrollableFrame) {
+    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
+    metrics.SetScrollOffset(CSSPoint::FromAppUnits(scrollPosition));
+
+    nsPoint smoothScrollPosition = scrollableFrame->LastScrollDestination();
+    metrics.SetSmoothScrollOffset(CSSPoint::FromAppUnits(smoothScrollPosition));
+
+    // If the frame was scrolled since the last layers update, and by
+    // something other than the APZ code, we want to tell the APZ to update
+    // its scroll offset.
+    nsIAtom* lastScrollOrigin = scrollableFrame->LastScrollOrigin();
+    if (lastScrollOrigin && lastScrollOrigin != nsGkAtoms::apz) {
+      metrics.SetScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
+    }
+    nsIAtom* lastSmoothScrollOrigin = scrollableFrame->LastSmoothScrollOrigin();
+    if (lastSmoothScrollOrigin) {
+      metrics.SetSmoothScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
+    }
+
+    nsSize lineScrollAmount = scrollableFrame->GetLineScrollAmount();
+    LayoutDeviceIntSize lineScrollAmountInDevPixels =
+      LayoutDeviceIntSize::FromAppUnitsRounded(lineScrollAmount, presContext->AppUnitsPerDevPixel());
+    metrics.SetLineScrollAmount(lineScrollAmountInDevPixels);
+
+    nsSize pageScrollAmount = scrollableFrame->GetPageScrollAmount();
+    LayoutDeviceIntSize pageScrollAmountInDevPixels =
+      LayoutDeviceIntSize::FromAppUnitsRounded(pageScrollAmount, presContext->AppUnitsPerDevPixel());
+    metrics.SetPageScrollAmount(pageScrollAmountInDevPixels);
+
+    if (!aScrollFrame->GetParent() ||
+        EventStateManager::CanVerticallyScrollFrameWithWheel(aScrollFrame->GetParent()))
+    {
+      metrics.SetAllowVerticalScrollWithWheel();
+    }
+  }
+
+  metrics.SetScrollId(scrollId);
+  metrics.SetIsRoot(aIsRoot);
+  metrics.SetScrollParentId(aScrollParentId);
+
+  // Only the root scrollable frame for a given presShell should pick up
+  // the presShell's resolution. All the other frames are 1.0.
+  if (aScrollFrame == presShell->GetRootScrollFrame()) {
+    metrics.SetPresShellResolution(presShell->GetResolution());
+  } else {
+    metrics.SetPresShellResolution(1.0f);
+  }
+  // The cumulative resolution is the resolution at which the scroll frame's
+  // content is actually rendered. It includes the pres shell resolutions of
+  // all the pres shells from here up to the root, as well as any css-driven
+  // resolution. We don't need to compute it as it's already stored in the
+  // container parameters.
+  metrics.SetCumulativeResolution(aContainerParameters.Scale());
+
+  LayoutDeviceToScreenScale2D resolutionToScreen(
+      presShell->GetCumulativeResolution()
+    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame));
+  metrics.SetExtraResolution(metrics.GetCumulativeResolution() / resolutionToScreen);
+
+  metrics.SetDevPixelsPerCSSPixel(CSSToLayoutDeviceScale(
+    (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel));
+
+  // Initially, AsyncPanZoomController should render the content to the screen
+  // at the painted resolution.
+  const LayerToParentLayerScale layerToParentLayerScale(1.0f);
+  metrics.SetZoom(metrics.GetCumulativeResolution() * metrics.GetDevPixelsPerCSSPixel()
+                  * layerToParentLayerScale);
+
+  // Calculate the composition bounds as the size of the scroll frame and
+  // its origin relative to the reference frame.
+  // If aScrollFrame is null, we are in a document without a root scroll frame,
+  // so it's a xul document. In this case, use the size of the viewport frame.
+  nsIFrame* frameForCompositionBoundsCalculation = aScrollFrame ? aScrollFrame : aForFrame;
+  nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
+                           frameForCompositionBoundsCalculation->GetSize());
+  if (scrollableFrame) {
+    // If we have a scrollable frame, restrict the composition bounds to its
+    // scroll port. The scroll port excludes the frame borders and the scroll
+    // bars, which we don't want to be part of the composition bounds.
+    nsRect scrollPort = scrollableFrame->GetScrollPortRect();
+    compositionBounds = nsRect(compositionBounds.TopLeft() + scrollPort.TopLeft(),
+                               scrollPort.Size());
+  }
+  ParentLayerRect frameBounds = LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
+                              * metrics.GetCumulativeResolution()
+                              * layerToParentLayerScale;
+  metrics.mCompositionBounds = frameBounds;
+
+  // For the root scroll frame of the root content document (RCD-RSF), the above calculation
+  // will yield the size of the viewport frame as the composition bounds, which
+  // doesn't actually correspond to what is visible when
+  // nsIDOMWindowUtils::setCSSViewport has been called to modify the visible area of
+  // the prescontext that the viewport frame is reflowed into. In that case if our
+  // document has a widget then the widget's bounds will correspond to what is
+  // visible. If we don't have a widget the root view's bounds correspond to what
+  // would be visible because they don't get modified by setCSSViewport.
+  bool isRootScrollFrame = aScrollFrame == presShell->GetRootScrollFrame();
+  bool isRootContentDocRootScrollFrame = isRootScrollFrame
+                                      && presContext->IsRootContentDocument();
+  if (isRootContentDocRootScrollFrame) {
+    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+      // On Android, we need to do things a bit differently to get things
+      // right (see bug 983208, bug 988882). We use the bounds of the nearest
+      // widget, but clamp the height to the frame bounds height. This clamping
+      // is done to get correct results for a page where the page is sized to
+      // the screen and thus the dynamic toolbar never disappears. In such a
+      // case, we want the composition bounds to exclude the toolbar height,
+      // but the widget bounds includes it. We don't currently have a good way
+      // of knowing about the toolbar height, but clamping to the frame bounds
+      // height gives the correct answer in the cases we care about.
+#ifdef MOZ_WIDGET_ANDROID
+      nsIWidget* widget = rootFrame->GetNearestWidget();
+#else
+      nsView* view = rootFrame->GetView();
+      nsIWidget* widget = view ? view->GetWidget() : nullptr;
+#endif
+      if (widget) {
+        nsIntRect widgetBounds;
+        widget->GetBounds(widgetBounds);
+        widgetBounds.MoveTo(0,0);
+        metrics.mCompositionBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
+#ifdef MOZ_WIDGET_ANDROID
+        if (frameBounds.height < metrics.mCompositionBounds.height) {
+          metrics.mCompositionBounds.height = frameBounds.height;
+        }
+#endif
+      } else {
+        LayoutDeviceIntSize contentSize;
+        if (nsLayoutUtils::GetContentViewerSize(presContext, contentSize)) {
+          LayoutDeviceToParentLayerScale scale;
+          if (presContext->GetParentPresContext()) {
+            float res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
+            scale = LayoutDeviceToParentLayerScale(res);
+          }
+          metrics.mCompositionBounds.SizeTo(contentSize * scale);
+        }
+      }
+
+      // Exclude any non-overlay scroll bars from the composition bounds.
+      // This is only done for the RCD-RSF case, because otherwise the scroll
+      // port size is used and that already excludes the scroll bars.
+      if (scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+        nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
+        // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+        ParentLayerMargin boundMargins = CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f);
+        metrics.mCompositionBounds.Deflate(boundMargins);
+      }
+    }
+  }
+
+  metrics.SetRootCompositionSize(
+    nsLayoutUtils::CalculateRootCompositionSize(aScrollFrame ? aScrollFrame : aForFrame,
+                                                isRootContentDocRootScrollFrame, metrics));
+
+  if (gfxPrefs::APZPrintTree()) {
+    if (nsIContent* content = frameForCompositionBoundsCalculation->GetContent()) {
+      nsAutoString contentDescription;
+      content->Describe(contentDescription);
+      metrics.SetContentDescription(NS_LossyConvertUTF16toASCII(contentDescription));
+    }
+  }
+
+  metrics.SetPresShellId(presShell->GetPresShellId());
+
+  // If the scroll frame's content is marked 'scrollgrab', record this
+  // in the FrameMetrics so APZ knows to provide the scroll grabbing
+  // behaviour.
+  if (aScrollFrame && nsContentUtils::HasScrollgrab(aScrollFrame->GetContent())) {
+    metrics.SetHasScrollgrab(true);
+  }
+
+  // Also compute and set the background color.
+  // This is needed for APZ overscrolling support.
+  if (aScrollFrame) {
+    if (isRootScrollFrame) {
+      metrics.SetBackgroundColor(presShell->GetCanvasBackground());
+    } else {
+      nsStyleContext* backgroundStyle;
+      if (nsCSSRendering::FindBackground(aScrollFrame, &backgroundStyle)) {
+        metrics.SetBackgroundColor(backgroundStyle->StyleBackground()->mBackgroundColor);
+      }
+    }
+  }
+
+  return metrics;
 }
 
 /* static */ uint32_t

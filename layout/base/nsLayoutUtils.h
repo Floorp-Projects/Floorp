@@ -2604,6 +2604,16 @@ public:
    */
   static void SetCSSViewport(nsIPresShell* aPresShell, CSSSize aSize);
 
+  static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
+                                          nsIFrame* aScrollFrame,
+                                          nsIContent* aContent,
+                                          const nsIFrame* aReferenceFrame,
+                                          Layer* aLayer,
+                                          ViewID aScrollParentId,
+                                          const nsRect& aViewport,
+                                          bool aIsRoot,
+                                          const ContainerLayerParameters& aContainerParameters);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
