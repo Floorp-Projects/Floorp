@@ -18,7 +18,7 @@ template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
 namespace mozilla {
 namespace dom {
-class AnimationPlayer;
+class Animation;
 }
 }
 
@@ -127,9 +127,9 @@ public:
     }
   }
 
-  static void AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer);
-  static void AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer);
-  static void AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer);
+  static void AnimationAdded(mozilla::dom::Animation* aPlayer);
+  static void AnimationChanged(mozilla::dom::Animation* aPlayer);
+  static void AnimationRemoved(mozilla::dom::Animation* aPlayer);
 
   /**
    * To be called when reference count of aNode drops to zero.

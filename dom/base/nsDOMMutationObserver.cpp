@@ -14,7 +14,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsTextFragment.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
 
 nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>*
@@ -325,7 +325,7 @@ void nsMutationReceiver::NodeWillBeDestroyed(const nsINode *aNode)
 }
 
 void
-nsAnimationReceiver::RecordAnimationMutation(AnimationPlayer* aPlayer,
+nsAnimationReceiver::RecordAnimationMutation(Animation* aPlayer,
                                              AnimationMutation aMutationType)
 {
   KeyframeEffectReadonly* effect = aPlayer->GetEffect();
@@ -385,19 +385,19 @@ nsAnimationReceiver::RecordAnimationMutation(AnimationPlayer* aPlayer,
 }
 
 void
-nsAnimationReceiver::AnimationAdded(AnimationPlayer* aPlayer)
+nsAnimationReceiver::AnimationAdded(Animation* aPlayer)
 {
   RecordAnimationMutation(aPlayer, eAnimationMutation_Added);
 }
 
 void
-nsAnimationReceiver::AnimationChanged(AnimationPlayer* aPlayer)
+nsAnimationReceiver::AnimationChanged(Animation* aPlayer)
 {
   RecordAnimationMutation(aPlayer, eAnimationMutation_Changed);
 }
 
 void
-nsAnimationReceiver::AnimationRemoved(AnimationPlayer* aPlayer)
+nsAnimationReceiver::AnimationRemoved(Animation* aPlayer)
 {
   RecordAnimationMutation(aPlayer, eAnimationMutation_Removed);
 }

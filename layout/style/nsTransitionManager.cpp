@@ -33,11 +33,10 @@
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
-using mozilla::dom::AnimationPlayer;
+using mozilla::dom::Animation;
 using mozilla::dom::KeyframeEffectReadonly;
 
 using namespace mozilla;
-using namespace mozilla::layers;
 using namespace mozilla::css;
 
 const nsString&
@@ -90,14 +89,14 @@ mozilla::dom::AnimationPlayState
 CSSTransitionPlayer::PlayStateFromJS() const
 {
   FlushStyle();
-  return AnimationPlayer::PlayStateFromJS();
+  return Animation::PlayStateFromJS();
 }
 
 void
 CSSTransitionPlayer::PlayFromJS()
 {
   FlushStyle();
-  AnimationPlayer::PlayFromJS();
+  Animation::PlayFromJS();
 }
 
 CommonAnimationManager*
@@ -320,7 +319,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     StyleAnimationValue currentValue;
     do {
       --i;
-      AnimationPlayer* player = players[i];
+      Animation* player = players[i];
       dom::KeyframeEffectReadonly* effect = player->GetEffect();
       MOZ_ASSERT(effect && effect->Properties().Length() == 1,
                  "Should have one animation property for a transition");
@@ -808,7 +807,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       bool transitionStartedOrEnded = false;
       do {
         --i;
-        AnimationPlayer* player = collection->mPlayers[i];
+        Animation* player = collection->mPlayers[i];
         if (!player->GetEffect()->IsFinishedTransition()) {
           MOZ_ASSERT(player->GetEffect(),
                      "Transitions should have an effect");
