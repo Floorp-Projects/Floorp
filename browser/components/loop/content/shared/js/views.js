@@ -66,11 +66,9 @@ loop.shared.views = (function(_, l10n) {
 
     render: function() {
       return (
-        /* jshint ignore:start */
         React.createElement("button", {className: this._getClasses(), 
                 title: this._getTitle(), 
                 onClick: this.handleClick})
-        /* jshint ignore:end */
       );
     }
   });
@@ -451,7 +449,6 @@ loop.shared.views = (function(_, l10n) {
         "local-stream": true,
         "local-stream-audio": !this.state.video.enabled
       });
-      /* jshint ignore:start */
       return (
         React.createElement("div", {className: "video-layout-wrapper"}, 
           React.createElement("div", {className: "conversation in-call"}, 
@@ -468,7 +465,6 @@ loop.shared.views = (function(_, l10n) {
           )
         )
       );
-      /* jshint ignore:end */
     }
   });
 

@@ -1297,6 +1297,11 @@ void nsWindow::SetThemeRegion()
 
 void nsWindow::ConfigureAPZCTreeManager()
 {
+  // We currently only enable APZ for E10s windows.
+  if (!mozilla::BrowserTabsRemoteAutostart() || !mRequireOffMainThreadCompositing) {
+    return;
+  }
+
   nsBaseWidget::ConfigureAPZCTreeManager();
 
   // When APZ is enabled, we can actually enable raw touch events because we

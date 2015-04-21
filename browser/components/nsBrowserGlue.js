@@ -747,7 +747,9 @@ BrowserGlue.prototype = {
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
 
+#ifdef NIGHTLY_BUILD
     AddonWatcher.init(this._notifySlowAddon);
+#endif
   },
 
   _checkForOldBuildUpdates: function () {
@@ -1006,7 +1008,9 @@ BrowserGlue.prototype = {
 #endif
     webrtcUI.uninit();
     FormValidationHandler.uninit();
+#ifdef NIGHTLY_BUILD
     AddonWatcher.uninit();
+#endif
   },
 
   _initServiceDiscovery: function () {

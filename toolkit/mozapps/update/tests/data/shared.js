@@ -623,6 +623,7 @@ function logTestInfo(aText, aCaller) {
  */
 function debugDump(aText, aCaller) {
   if (DEBUG_AUS_TEST) {
-    logTestInfo(aText, aCaller);
+    let caller = aCaller ? aCaller : Components.stack.caller;
+    logTestInfo(aText, caller);
   }
 }

@@ -11,7 +11,6 @@ if CONFIG['MOZ_ENABLE_XREMOTE']:
 DIRS += [
     'aboutcache',
     'aboutmemory',
-    'aboutperformance',
     'addoncompat',
     'alerts',
     'apppicker',
@@ -36,7 +35,6 @@ DIRS += [
     'parentalcontrols',
     'passwordmgr',
     'perf',
-    'perfmonitoring',
     'places',
     'processsingleton',
     'promiseworker',
@@ -91,6 +89,12 @@ if CONFIG['MOZ_CAPTIVEDETECT']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk" and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['terminator']
+
+if CONFIG['NIGHTLY_BUILD']: # Bug 1136927 - Performance Monitoring is not ready for prime-time yet
+    DIRS += [
+      'aboutperformance',
+      'perfmonitoring',
+    ]
 
 DIRS += ['build']
 
