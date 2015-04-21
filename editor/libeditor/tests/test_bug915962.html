@@ -67,7 +67,22 @@ function startTest() {
   win.close();
   cwu.restoreNormalRefresh();
 
-  SimpleTest.finish();
+  win = window.open("file_bug915962.html", "_blank",
+                    "width=600,height=600,scrollbars=yes");
+  cwu = SpecialPowers.getDOMWindowUtils(win);
+  SimpleTest.waitForFocus(function() {
+    is(win.scrollY, 0, "Sanity check");
+    synthesizeKey(" ", {}, win);
+
+    step();
+
+    isnot(win.scrollY, 0, "Page is scrolled down without crashing");
+
+    win.close();
+    cwu.restoreNormalRefresh();
+
+    SimpleTest.finish();
+  }, win);
 }
 </script>
 </pre>
