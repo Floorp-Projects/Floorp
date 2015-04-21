@@ -608,7 +608,6 @@ js::GCMarker::markAndTraceChildren(T* thing)
         thing->traceChildren(this);
 }
 namespace js {
-template <> void GCMarker::traverse(LazyScript* thing) { markAndTraceChildren(thing); }
 template <> void GCMarker::traverse(JSScript* thing) { markAndTraceChildren(thing); }
 template <> void GCMarker::traverse(BaseShape* thing) { markAndTraceChildren(thing); }
 } // namespace js
@@ -626,9 +625,10 @@ js::GCMarker::markAndScan(T* thing)
         eagerlyMarkChildren(thing);
 }
 namespace js {
-template <> void GCMarker::traverse(Shape* thing) { markAndScan(thing); }
-template <> void GCMarker::traverse(JSString* thing) { markAndScan(thing); }
+template <> void GCMarker::traverse(LazyScript* thing) { markAndScan(thing); }
 template <> void GCMarker::traverse(JS::Symbol* thing) { markAndScan(thing); }
+template <> void GCMarker::traverse(JSString* thing) { markAndScan(thing); }
+template <> void GCMarker::traverse(Shape* thing) { markAndScan(thing); }
 } // namespace js
 
 // Object and ObjectGroup are extremely common and can contain arbitrarily
@@ -688,6 +688,57 @@ js::GCMarker::mark(T* thing)
     return gc::ParticipatesInCC<T>::value
            ? gc::TenuredCell::fromPointer(thing)->markIfUnmarked(markColor())
            : gc::TenuredCell::fromPointer(thing)->markIfUnmarked(gc::BLACK);
+}
+
+void
+LazyScript::traceChildren(JSTracer* trc)
+{
+    if (function_)
+        TraceEdge(trc, &function_, "function");
+
+    if (sourceObject_)
+        TraceEdge(trc, &sourceObject_, "sourceObject");
+
+    if (enclosingScope_)
+        TraceEdge(trc, &enclosingScope_, "enclosingScope");
+
+    if (script_)
+        TraceEdge(trc, &script_, "realScript");
+
+    // We rely on the fact that atoms are always tenured.
+    FreeVariable* freeVariables = this->freeVariables();
+    for (auto i : MakeRange(numFreeVariables())) {
+        JSAtom* atom = freeVariables[i].atom();
+        TraceManuallyBarrieredEdge(trc, &atom, "lazyScriptFreeVariable");
+    }
+
+    HeapPtrFunction* innerFunctions = this->innerFunctions();
+    for (auto i : MakeRange(numInnerFunctions()))
+        TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
+}
+inline void
+js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
+{
+    if (thing->function_)
+        traverse(thing, static_cast<JSObject*>(thing->function_));
+
+    if (thing->sourceObject_)
+        traverse(thing, static_cast<JSObject*>(thing->sourceObject_));
+
+    if (thing->enclosingScope_)
+        traverse(thing, static_cast<JSObject*>(thing->enclosingScope_));
+
+    if (thing->script_)
+        traverse(thing, static_cast<JSScript*>(thing->script_));
+
+    // We rely on the fact that atoms are always tenured.
+    LazyScript::FreeVariable* freeVariables = thing->freeVariables();
+    for (auto i : MakeRange(thing->numFreeVariables()))
+        traverse(thing, static_cast<JSString*>(freeVariables[i].atom()));
+
+    HeapPtrFunction* innerFunctions = thing->innerFunctions();
+    for (auto i : MakeRange(thing->numInnerFunctions()))
+        traverse(thing, static_cast<JSObject*>(innerFunctions[i]));
 }
 
 inline void
