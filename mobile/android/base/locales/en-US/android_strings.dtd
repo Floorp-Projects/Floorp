@@ -114,7 +114,6 @@
      to. -->
 <!ENTITY overlay_share_send_tab_btn_label "Send to another device">
 <!ENTITY overlay_share_no_url "No link found in this share">
-<!ENTITY overlay_share_retry "Try again">
 <!ENTITY overlay_share_select_device "Select device">
 <!-- Localization note (overlay_no_synced_devices) : Used when the menu option
      to send a tab to a synced device is pressed and no other synced devices

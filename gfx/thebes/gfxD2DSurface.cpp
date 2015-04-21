@@ -57,7 +57,7 @@ gfxD2DSurface::Present()
 }
 
 void
-gfxD2DSurface::Scroll(const nsIntPoint &aDelta, const nsIntRect &aClip)
+gfxD2DSurface::Scroll(const nsIntPoint &aDelta, const mozilla::gfx::IntRect &aClip)
 {
     cairo_rectangle_t rect;
     rect.x = aClip.x;
@@ -80,7 +80,7 @@ gfxD2DSurface::GetDC(bool aRetainContents)
 }
 
 void
-gfxD2DSurface::ReleaseDC(const nsIntRect *aUpdatedRect)
+gfxD2DSurface::ReleaseDC(const mozilla::gfx::IntRect *aUpdatedRect)
 {
     if (!aUpdatedRect) {
         return cairo_d2d_release_dc(CairoSurface(), nullptr);

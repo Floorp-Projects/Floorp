@@ -16,6 +16,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "gfx2DGlue.h"
 
 #include "nsCOMPtr.h"
 #include "nsFrameList.h"

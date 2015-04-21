@@ -270,7 +270,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mDPI(0)
   , mDefaultScale(0)
   , mUpdatedDimensions(false)
-  , mChromeOffset(0, 0)
   , mManager(aManager)
   , mMarkedDestroying(false)
   , mIsDestroyed(false)
@@ -338,16 +337,27 @@ TabParent::SetOwnerElement(Element* aElement)
 
   // Update to the new content, and register to listen for events from it.
   mFrameElement = aElement;
-  if (mFrameElement && mFrameElement->OwnerDoc()->GetWindow()) {
-    nsCOMPtr<nsPIDOMWindow> window = mFrameElement->OwnerDoc()->GetWindow();
-    nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
-    if (eventTarget) {
-      eventTarget->AddEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
-                                    this, false, false);
+
+  AddWindowListeners();
+  TryCacheDPIAndScale();
+}
+
+void
+TabParent::AddWindowListeners()
+{
+  if (mFrameElement && mFrameElement->OwnerDoc()) {
+    if (nsCOMPtr<nsPIDOMWindow> window = mFrameElement->OwnerDoc()->GetWindow()) {
+      nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
+      if (eventTarget) {
+        eventTarget->AddEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
+                                      this, false, false);
+      }
+    }
+    if (nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell()) {
+      mPresShellWithRefreshListener = shell;
+      shell->AddPostRefreshObserver(this);
     }
   }
-
-  TryCacheDPIAndScale();
 }
 
 void
@@ -360,6 +370,18 @@ TabParent::RemoveWindowListeners()
       eventTarget->RemoveEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
                                        this, false);
     }
+  }
+  if (mPresShellWithRefreshListener) {
+    mPresShellWithRefreshListener->RemovePostRefreshObserver(this);
+    mPresShellWithRefreshListener = nullptr;
+  }
+}
+
+void
+TabParent::DidRefresh()
+{
+  if (mChromeOffset != -GetChildProcessOffset()) {
+    UpdatePosition();
   }
 }
 
@@ -394,6 +416,8 @@ TabParent::Destroy()
   if (mIsDestroyed) {
     return;
   }
+
+  RemoveWindowListeners();
 
   // If this fails, it's most likely due to a content-process crash,
   // and auto-cleanup will kick in.  Otherwise, the child side will
@@ -904,6 +928,19 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
   return false;
 }
 
+nsresult
+TabParent::UpdatePosition()
+{
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return NS_OK;
+  }
+  nsIntRect windowDims;
+  NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims), NS_ERROR_FAILURE);
+  UpdateDimensions(windowDims, mDimensions);
+  return NS_OK;
+}
+
 void
 TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
 {
@@ -913,17 +950,18 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
   hal::ScreenConfiguration config;
   hal::GetCurrentScreenConfiguration(&config);
   ScreenOrientation orientation = config.orientation();
-  nsIntPoint chromeOffset = -LayoutDevicePixel::ToUntyped(GetChildProcessOffset());
+  LayoutDeviceIntPoint chromeOffset = -GetChildProcessOffset();
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  nsIntRect contentRect = rect;
+  if (widget) {
+    contentRect.x += widget->GetClientOffset().x;
+    contentRect.y += widget->GetClientOffset().y;
+  }
 
   if (!mUpdatedDimensions || mOrientation != orientation ||
-      mDimensions != size || !mRect.IsEqualEdges(rect) ||
+      mDimensions != size || !mRect.IsEqualEdges(contentRect) ||
       chromeOffset != mChromeOffset) {
-    nsCOMPtr<nsIWidget> widget = GetWidget();
-    nsIntRect contentRect = rect;
-    if (widget) {
-      contentRect.x += widget->GetClientOffset().x;
-      contentRect.y += widget->GetClientOffset().y;
-    }
 
     mUpdatedDimensions = true;
     mRect = contentRect;
@@ -2990,14 +3028,7 @@ TabParent::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("MozUpdateWindowPos") && !mIsDestroyed) {
     // This event is sent when the widget moved.  Therefore we only update
     // the position.
-    nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-    if (!frameLoader) {
-      return NS_OK;
-    }
-    nsIntRect windowDims;
-    NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims), NS_ERROR_FAILURE);
-    UpdateDimensions(windowDims, mDimensions);
-    return NS_OK;
+    return UpdatePosition();
   }
   return NS_OK;
 }

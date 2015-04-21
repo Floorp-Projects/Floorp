@@ -554,7 +554,7 @@ DataTextureSourceD3D9::GetTileRect(uint32_t aTileIndex) const
 nsIntRect
 DataTextureSourceD3D9::GetTileRect()
 {
-  return ThebesIntRect(GetTileRect(mCurrentTile));
+  return GetTileRect(mCurrentTile);
 }
 
 CairoTextureClientD3D9::CairoTextureClientD3D9(ISurfaceAllocator* aAllocator,

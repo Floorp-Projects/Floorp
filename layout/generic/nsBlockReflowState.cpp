@@ -642,6 +642,11 @@ nsBlockReflowState::CanPlaceFloat(nscoord aFloatISize,
       aFloatISize;
 }
 
+// Return the inline-size that the float (including margins) will take up
+// in the writing mode of the containing block. If this returns
+// NS_UNCONSTRAINEDSIZE, we're dealing with an orthogonal block that
+// has block-size:auto, and we'll need to actually reflow it to find out
+// how much inline-size it will occupy in the containing block's mode.
 static nscoord
 FloatMarginISize(const nsHTMLReflowState& aCBReflowState,
                  nscoord aFloatAvailableISize,
@@ -663,9 +668,17 @@ FloatMarginISize(const nsHTMLReflowState& aCBReflowState,
               aFloatOffsetState.ComputedLogicalPadding().Size(wm),
               nsIFrame::ComputeSizeFlags::eShrinkWrap);
 
-  return floatSize.ISize(wm) +
-         aFloatOffsetState.ComputedLogicalMargin().IStartEnd(wm) +
-         aFloatOffsetState.ComputedLogicalBorderPadding().IStartEnd(wm);
+  WritingMode cbwm = aCBReflowState.GetWritingMode();
+  nscoord floatISize = floatSize.ConvertTo(cbwm, wm).ISize(cbwm);
+  if (floatISize == NS_UNCONSTRAINEDSIZE) {
+    return NS_UNCONSTRAINEDSIZE; // reflow is needed to get the true size
+  }
+
+  return floatISize +
+         aFloatOffsetState.ComputedLogicalMargin().Size(wm).
+           ConvertTo(cbwm, wm).ISize(cbwm) +
+         aFloatOffsetState.ComputedLogicalBorderPadding().Size(wm).
+           ConvertTo(cbwm, wm).ISize(cbwm);
 }
 
 bool
@@ -721,14 +734,20 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // If it's a floating first-letter, we need to reflow it before we
   // know how wide it is (since we don't compute which letters are part
   // of the first letter until reflow!).
-  bool isLetter = aFloat->GetType() == nsGkAtoms::letterFrame;
-  if (isLetter) {
+  // We also need to do this early reflow if FloatMarginISize returned
+  // an unconstrained inline-size, which can occur if the float had an
+  // orthogonal writing mode and 'auto' block-size (in its mode).
+  bool earlyFloatReflow =
+    aFloat->GetType() == nsGkAtoms::letterFrame ||
+    floatMarginISize == NS_UNCONSTRAINEDSIZE;
+  if (earlyFloatReflow) {
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, false, reflowStatus);
     floatMarginISize = aFloat->ISize(wm) + floatMargin.IStartEnd(wm);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(reflowStatus),
-                 "letter frames shouldn't break, and if they do now, "
-                 "then they're breaking at the wrong point");
+                 "letter frames and orthogonal floats with auto block-size "
+                 "shouldn't break, and if they do now, then they're breaking "
+                 "at the wrong point");
   }
 
   // Find a place to place the float. The CSS2 spec doesn't want
@@ -853,7 +872,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   // Reflow the float after computing its vertical position so it knows
   // where to break.
-  if (!isLetter) {
+  if (!earlyFloatReflow) {
     bool pushedDown = mBCoord != saveBCoord;
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, pushedDown, reflowStatus);

@@ -8,10 +8,10 @@
 #define mozilla_image_src_ImageOps_h
 
 #include "nsCOMPtr.h"
+#include "nsRect.h"
 
 class gfxDrawable;
 class imgIContainer;
-struct nsIntRect;
 
 namespace mozilla {
 namespace image {

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>Bug 1141867 - Contiguous right-floating boxes with vertical writing mode</title>
+  <!-- based on testcases from Gérard Talbot, see https://bugzilla.mozilla.org/show_bug.cgi?id=1141867 -->
+  <meta charset="utf-8">
+  <style type="text/css">
+  body {
+    margin: 8px;
+  }
+  p {
+    clear: both;
+  }
+  div#dummy {
+    height: 100px;
+    float: right;
+  }
+  div#reference {
+    background-color: green;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    z-index: -1;
+  }
+  </style>
+ </head>
+
+ <body>
+
+  <div id="dummy"></div>
+
+  <div id="reference"></div>
+
+  <p>Test passes if there is a filled green square and <strong>no red</strong>.</p>
+
+ </body>
+</html>

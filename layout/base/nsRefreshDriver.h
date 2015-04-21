@@ -308,6 +308,8 @@ private:
   };
   typedef nsClassHashtable<nsUint32HashKey, ImageStartData> ImageStartTable;
 
+  void RunFrameRequestCallbacks(int64_t aNowEpoch, mozilla::TimeStamp aNowTime);
+
   void Tick(int64_t aNowEpoch, mozilla::TimeStamp aNowTime);
 
   enum EnsureTimerStartedFlags {
@@ -336,7 +338,7 @@ private:
 
   double GetRefreshTimerInterval() const;
   double GetRegularTimerInterval(bool *outIsDefault = nullptr) const;
-  double GetThrottledTimerInterval() const;
+  static double GetThrottledTimerInterval();
 
   bool HaveFrameRequestCallbacks() const {
     return mFrameRequestCallbackDocs.Length() != 0;
@@ -361,6 +363,11 @@ private:
   uint64_t mCompletedTransaction;
 
   uint32_t mFreezeCount;
+
+  // How long we wait between ticks for throttled (which generally means
+  // non-visible) documents registered with a non-throttled refresh driver.
+  const mozilla::TimeDuration mThrottledFrameRequestInterval;
+
   bool mThrottled;
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
@@ -379,6 +386,7 @@ private:
   mozilla::TimeStamp mMostRecentRefresh;
   mozilla::TimeStamp mMostRecentTick;
   mozilla::TimeStamp mTickStart;
+  mozilla::TimeStamp mNextThrottledFrameRequestTick;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
@@ -390,6 +398,7 @@ private:
   nsAutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
+  nsTArray<nsIDocument*> mThrottledFrameRequestCallbackDocs;
   nsTArray<nsAPostRefreshObserver*> mPostRefreshObservers;
 
   // Helper struct for processing image requests

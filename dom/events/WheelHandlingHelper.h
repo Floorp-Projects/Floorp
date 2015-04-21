@@ -11,11 +11,10 @@
 #include "mozilla/EventForwards.h"
 #include "nsCoord.h"
 #include "nsIFrame.h"
+#include "nsPoint.h"
 
 class nsIScrollableFrame;
 class nsITimer;
-
-struct nsIntPoint;
 
 namespace mozilla {
 

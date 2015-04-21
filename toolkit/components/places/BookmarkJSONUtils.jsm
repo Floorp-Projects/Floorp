@@ -461,8 +461,7 @@ BookmarkImporter.prototype = {
           this._importPromises.push(kwPromise);
         }
         if (aData.tags) {
-          // TODO (bug 967196) the tagging service should trim by itself.
-          let tags = aData.tags.split(",").map(tag => tag.trim());
+          let tags = aData.tags.split(",");
           if (tags.length)
             PlacesUtils.tagging.tagURI(NetUtil.newURI(aData.uri), tags);
         }

@@ -1645,7 +1645,7 @@ MediaCodecReader::UpdateVideoInfo()
   }
 
   // Relative picture size
-  gfx::IntRect relative_picture_rect = gfx::ToIntRect(picture_rect);
+  gfx::IntRect relative_picture_rect = picture_rect;
   if (mVideoTrack.mWidth != mVideoTrack.mFrameSize.width ||
       mVideoTrack.mHeight != mVideoTrack.mFrameSize.height) {
     // Frame size is different from what the container reports. This is legal,
