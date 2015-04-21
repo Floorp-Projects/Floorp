@@ -26,31 +26,31 @@ using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
 using mozilla::dom::KeyframeEffectReadonly;
-using mozilla::CSSAnimationPlayer;
+using mozilla::CSSAnimation;
 
 mozilla::dom::Promise*
-CSSAnimationPlayer::GetReady(ErrorResult& aRv)
+CSSAnimation::GetReady(ErrorResult& aRv)
 {
   FlushStyle();
   return Animation::GetReady(aRv);
 }
 
 void
-CSSAnimationPlayer::Play(LimitBehavior aLimitBehavior)
+CSSAnimation::Play(LimitBehavior aLimitBehavior)
 {
   mPauseShouldStick = false;
   Animation::Play(aLimitBehavior);
 }
 
 void
-CSSAnimationPlayer::Pause()
+CSSAnimation::Pause()
 {
   mPauseShouldStick = true;
   Animation::Pause();
 }
 
 mozilla::dom::AnimationPlayState
-CSSAnimationPlayer::PlayStateFromJS() const
+CSSAnimation::PlayStateFromJS() const
 {
   // Flush style to ensure that any properties controlling animation state
   // (e.g. animation-play-state) are fully updated.
@@ -59,7 +59,7 @@ CSSAnimationPlayer::PlayStateFromJS() const
 }
 
 void
-CSSAnimationPlayer::PlayFromJS()
+CSSAnimation::PlayFromJS()
 {
   // Note that flushing style below might trigger calls to
   // PlayFromStyle()/PauseFromStyle() on this object.
@@ -68,7 +68,7 @@ CSSAnimationPlayer::PlayFromJS()
 }
 
 void
-CSSAnimationPlayer::PlayFromStyle()
+CSSAnimation::PlayFromStyle()
 {
   mIsStylePaused = false;
   if (!mPauseShouldStick) {
@@ -77,7 +77,7 @@ CSSAnimationPlayer::PlayFromStyle()
 }
 
 void
-CSSAnimationPlayer::PauseFromStyle()
+CSSAnimation::PauseFromStyle()
 {
   // Check if the pause state is being overridden
   if (mIsStylePaused) {
@@ -89,7 +89,7 @@ CSSAnimationPlayer::PauseFromStyle()
 }
 
 void
-CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
+CSSAnimation::QueueEvents(EventArray& aEventsToDispatch)
 {
   if (!mEffect) {
     return;
@@ -178,7 +178,7 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
 }
 
 CommonAnimationManager*
-CSSAnimationPlayer::GetAnimationManager() const
+CSSAnimation::GetAnimationManager() const
 {
   nsPresContext* context = GetPresContext();
   if (!context) {
@@ -189,7 +189,7 @@ CSSAnimationPlayer::GetAnimationManager() const
 }
 
 /* static */ nsString
-CSSAnimationPlayer::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
+CSSAnimation::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
 {
   switch (aPseudoType) {
     case nsCSSPseudoElements::ePseudo_before:
@@ -215,8 +215,7 @@ nsAnimationManager::QueueEvents(AnimationCollection* aCollection,
                                 EventArray& aEventsToDispatch)
 {
   for (size_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
-    CSSAnimationPlayer* anim =
-      aCollection->mAnimations[animIdx]->AsCSSAnimationPlayer();
+    CSSAnimation* anim = aCollection->mAnimations[animIdx]->AsCSSAnimation();
     MOZ_ASSERT(anim, "Expected a collection of CSS Animations");
     anim->QueueEvents(aEventsToDispatch);
   }
@@ -226,9 +225,7 @@ void
 nsAnimationManager::MaybeUpdateCascadeResults(AnimationCollection* aCollection)
 {
   for (size_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
-    CSSAnimationPlayer* anim =
-      aCollection->mAnimations[animIdx]->AsCSSAnimationPlayer();
-
+    CSSAnimation* anim = aCollection->mAnimations[animIdx]->AsCSSAnimation();
     if (anim->IsInEffect() != anim->mInEffectForCascadeResults) {
       // Update our own cascade results.
       mozilla::dom::Element* element = aCollection->GetElementToRestyle();
@@ -334,13 +331,12 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         // the new list of animations with a given name than in the old
         // list, it will be the animations towards the of the beginning of
         // the list that do not match and are treated as new animations.
-        nsRefPtr<CSSAnimationPlayer> oldAnim;
+        nsRefPtr<CSSAnimation> oldAnim;
         size_t oldIdx = collection->mAnimations.Length();
         while (oldIdx-- != 0) {
-          CSSAnimationPlayer* a =
-            collection->mAnimations[oldIdx]->AsCSSAnimationPlayer();
-          MOZ_ASSERT(a, "All players in the CSS Animation collection should"
-                        " be CSSAnimationPlayer objects");
+          CSSAnimation* a = collection->mAnimations[oldIdx]->AsCSSAnimation();
+          MOZ_ASSERT(a, "All animations in the CSS Animation collection should"
+                        " be CSSAnimation objects");
           if (a->Name() == newAnim->Name()) {
             oldAnim = a;
             break;
@@ -368,11 +364,11 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         oldAnim->ClearIsRunningOnCompositor();
 
         // Handle changes in play state.
-        // CSSAnimationPlayer takes care of override behavior so that,
+        // CSSAnimation takes care of override behavior so that,
         // for example, if the author has called pause(), that will
         // override the animation-play-state.
         // (We should check newAnim->IsStylePaused() but that requires
-        //  downcasting to CSSAnimationPlayer and we happen to know that
+        //  downcasting to CSSAnimation and we happen to know that
         //  newAnim will only ever be paused by calling PauseFromStyle
         //  making IsPausedOrPausing synonymous in this case.)
         if (!oldAnim->IsStylePaused() && newAnim->IsPausedOrPausing()) {
@@ -515,7 +511,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    nsRefPtr<CSSAnimationPlayer> dest = new CSSAnimationPlayer(aTimeline);
+    nsRefPtr<CSSAnimation> dest = new CSSAnimation(aTimeline);
     aAnimations.AppendElement(dest);
 
     AnimationTiming timing;
@@ -800,8 +796,8 @@ nsAnimationManager::UpdateCascadeResults(
   bool changed = false;
   for (size_t animIdx = aElementAnimations->mAnimations.Length();
        animIdx-- != 0; ) {
-    CSSAnimationPlayer* anim =
-      aElementAnimations->mAnimations[animIdx]->AsCSSAnimationPlayer();
+    CSSAnimation* anim =
+      aElementAnimations->mAnimations[animIdx]->AsCSSAnimation();
     KeyframeEffectReadonly* effect = anim->GetEffect();
 
     anim->mInEffectForCascadeResults = anim->IsInEffect();
