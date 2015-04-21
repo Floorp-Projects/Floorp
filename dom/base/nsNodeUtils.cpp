@@ -216,9 +216,9 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 }
 
 static inline Element*
-GetTarget(Animation* aPlayer)
+GetTarget(Animation* aAnimation)
 {
-  KeyframeEffectReadonly* effect = aPlayer->GetEffect();
+  KeyframeEffectReadonly* effect = aAnimation->GetEffect();
   if (!effect) {
     return nullptr;
   }
@@ -238,44 +238,44 @@ GetTarget(Animation* aPlayer)
 }
 
 void
-nsNodeUtils::AnimationAdded(Animation* aPlayer)
+nsNodeUtils::AnimationAdded(Animation* aAnimation)
 {
-  Element* target = GetTarget(aPlayer);
+  Element* target = GetTarget(aAnimation);
   if (!target) {
     return;
   }
   nsIDocument* doc = target->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationAdded, target, (aPlayer));
+    IMPL_ANIMATION_NOTIFICATION(AnimationAdded, target, (aAnimation));
   }
 }
 
 void
-nsNodeUtils::AnimationChanged(Animation* aPlayer)
+nsNodeUtils::AnimationChanged(Animation* aAnimation)
 {
-  Element* target = GetTarget(aPlayer);
+  Element* target = GetTarget(aAnimation);
   if (!target) {
     return;
   }
   nsIDocument* doc = target->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationChanged, target, (aPlayer));
+    IMPL_ANIMATION_NOTIFICATION(AnimationChanged, target, (aAnimation));
   }
 }
 
 void
-nsNodeUtils::AnimationRemoved(Animation* aPlayer)
+nsNodeUtils::AnimationRemoved(Animation* aAnimation)
 {
-  Element* target = GetTarget(aPlayer);
+  Element* target = GetTarget(aAnimation);
   if (!target) {
     return;
   }
   nsIDocument* doc = target->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, target, (aPlayer));
+    IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, target, (aAnimation));
   }
 }
 

@@ -36,7 +36,7 @@ class nsDOMMutationRecord final : public nsISupports,
   virtual ~nsDOMMutationRecord() {}
 
 public:
-  typedef nsTArray<nsRefPtr<mozilla::dom::Animation>> AnimationPlayerArray;
+  typedef nsTArray<nsRefPtr<mozilla::dom::Animation>> AnimationArray;
 
   nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
   : mType(aType), mAttrNamespace(NullString()), mPrevValue(NullString()), mOwner(aOwner)
@@ -95,17 +95,17 @@ public:
     aRetVal.SetOwnedString(mPrevValue);
   }
 
-  void GetAddedAnimations(AnimationPlayerArray& aRetVal) const
+  void GetAddedAnimations(AnimationArray& aRetVal) const
   {
     aRetVal = mAddedAnimations;
   }
 
-  void GetRemovedAnimations(AnimationPlayerArray& aRetVal) const
+  void GetRemovedAnimations(AnimationArray& aRetVal) const
   {
     aRetVal = mRemovedAnimations;
   }
 
-  void GetChangedAnimations(AnimationPlayerArray& aRetVal) const
+  void GetChangedAnimations(AnimationArray& aRetVal) const
   {
     aRetVal = mChangedAnimations;
   }
@@ -119,9 +119,9 @@ public:
   nsRefPtr<nsSimpleContentList> mRemovedNodes;
   nsCOMPtr<nsINode>             mPreviousSibling;
   nsCOMPtr<nsINode>             mNextSibling;
-  AnimationPlayerArray          mAddedAnimations;
-  AnimationPlayerArray          mRemovedAnimations;
-  AnimationPlayerArray          mChangedAnimations;
+  AnimationArray                mAddedAnimations;
+  AnimationArray                mRemovedAnimations;
+  AnimationArray                mChangedAnimations;
 
   nsRefPtr<nsDOMMutationRecord> mNext;
   nsCOMPtr<nsISupports>         mOwner;
@@ -434,7 +434,7 @@ private:
     eAnimationMutation_Removed
   };
 
-  void RecordAnimationMutation(mozilla::dom::Animation* aPlayer,
+  void RecordAnimationMutation(mozilla::dom::Animation* aAnimation,
                                AnimationMutation aMutationType);
 };
 
@@ -756,13 +756,13 @@ public:
     return sCurrentBatch->mBatchTarget;
   }
 
-  static void AnimationAdded(mozilla::dom::Animation* aPlayer)
+  static void AnimationAdded(mozilla::dom::Animation* aAnimation)
   {
     if (!IsBatching()) {
       return;
     }
 
-    Entry* entry = sCurrentBatch->FindEntry(aPlayer);
+    Entry* entry = sCurrentBatch->FindEntry(aAnimation);
     if (entry) {
       switch (entry->mState) {
         case eState_RemainedAbsent:
@@ -777,15 +777,15 @@ public:
       }
     } else {
       entry = sCurrentBatch->mEntries.AppendElement();
-      entry->mPlayer = aPlayer;
+      entry->mAnimation = aAnimation;
       entry->mState = eState_Added;
       entry->mChanged = false;
     }
   }
 
-  static void AnimationChanged(mozilla::dom::Animation* aPlayer)
+  static void AnimationChanged(mozilla::dom::Animation* aAnimation)
   {
-    Entry* entry = sCurrentBatch->FindEntry(aPlayer);
+    Entry* entry = sCurrentBatch->FindEntry(aAnimation);
     if (entry) {
       NS_ASSERTION(entry->mState == eState_RemainedPresent ||
                    entry->mState == eState_Added,
@@ -794,15 +794,15 @@ public:
       entry->mChanged = true;
     } else {
       entry = sCurrentBatch->mEntries.AppendElement();
-      entry->mPlayer = aPlayer;
+      entry->mAnimation = aAnimation;
       entry->mState = eState_RemainedPresent;
       entry->mChanged = true;
     }
   }
 
-  static void AnimationRemoved(mozilla::dom::Animation* aPlayer)
+  static void AnimationRemoved(mozilla::dom::Animation* aAnimation)
   {
-    Entry* entry = sCurrentBatch->FindEntry(aPlayer);
+    Entry* entry = sCurrentBatch->FindEntry(aAnimation);
     if (entry) {
       switch (entry->mState) {
         case eState_RemainedPresent:
@@ -817,17 +817,17 @@ public:
       }
     } else {
       entry = sCurrentBatch->mEntries.AppendElement();
-      entry->mPlayer = aPlayer;
+      entry->mAnimation = aAnimation;
       entry->mState = eState_Removed;
       entry->mChanged = false;
     }
   }
 
 private:
-  Entry* FindEntry(mozilla::dom::Animation* aPlayer)
+  Entry* FindEntry(mozilla::dom::Animation* aAnimation)
   {
     for (Entry& e : mEntries) {
-      if (e.mPlayer == aPlayer) {
+      if (e.mAnimation == aAnimation) {
         return &e;
       }
     }
@@ -843,7 +843,7 @@ private:
 
   struct Entry
   {
-    nsRefPtr<mozilla::dom::Animation> mPlayer;
+    nsRefPtr<mozilla::dom::Animation> mAnimation;
     State mState;
     bool mChanged;
   };

@@ -127,9 +127,9 @@ public:
     }
   }
 
-  static void AnimationAdded(mozilla::dom::Animation* aPlayer);
-  static void AnimationChanged(mozilla::dom::Animation* aPlayer);
-  static void AnimationRemoved(mozilla::dom::Animation* aPlayer);
+  static void AnimationAdded(mozilla::dom::Animation* aAnimation);
+  static void AnimationChanged(mozilla::dom::Animation* aAnimation);
+  static void AnimationRemoved(mozilla::dom::Animation* aAnimation);
 
   /**
    * To be called when reference count of aNode drops to zero.
