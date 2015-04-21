@@ -1,0 +1,30 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A push message received by an `nsIPushNotificationService`, used as the
+ * subject of a `push-notification` observer notification.
+ */
+[scriptable, uuid(66a87970-6dc9-46e0-ac61-adb4a13791de)]
+interface nsIPushObserverNotification : nsISupports
+{
+  /* The URL that receives push messages from an application server. */
+  attribute string pushEndpoint;
+
+  /**
+   * The notification version sent by the application server. This is a
+   * monotonically increasing number.
+   */
+  attribute long long version;
+
+  /**
+   * The notification payload. Delivery is not guaranteed; if the browser is
+   * offline when the application server sends the push message, the payload
+   * may be discarded.
+   */
+  attribute string data;
+};
