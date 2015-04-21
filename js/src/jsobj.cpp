@@ -3002,6 +3002,15 @@ js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
         return ok;
     }
 
+#ifndef RELEASE_BUILD
+    if (obj->is<RegExpObject>() && id == NameToId(cx->names().source)) {
+        if (JSScript* script = cx->currentScript()) {
+            const char* filename = script->filename();
+            cx->compartment()->addTelemetry(filename, JSCompartment::RegExpSourceProperty);
+        }
+    }
+#endif
+
     RootedShape shape(cx);
     if (!NativeLookupOwnProperty<CanGC>(cx, obj.as<NativeObject>(), id, &shape))
         return false;
