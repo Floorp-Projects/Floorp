@@ -41,7 +41,7 @@ add_task(function* test_corrupt_database() {
   yield BookmarkHTMLUtils.exportToFile(bookmarksFile);
 
   // Import again and check for correctness.
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
   yield PlacesTestUtils.promiseAsyncUpdates();
   yield database_check();
