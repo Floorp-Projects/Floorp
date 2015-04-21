@@ -1,0 +1,274 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MOCHITEST_MANIFESTS += [
+    'fonts/math/mochitest.ini',
+    'fonts/mochitest.ini',
+    'fonts/mplus/mochitest.ini'
+]
+
+REFTEST_MANIFESTS += ['reftest.list']
+
+with Files('abs-pos/**'):
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+with Files('async-scrolling/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('backgrounds/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('bidi/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('border-image/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('border-radius/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('box/**'):
+    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+with Files('box-ordinal/**'):
+    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+with Files('box-properties/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('box-shadow/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('box-sizing/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('bugs/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('canvas/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Images')
+with Files('columns/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('counter-style/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('counters/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('css-animations/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-blending/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('css-break/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('css-calc/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-charset/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-default/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-disabled/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-display/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('css-enabled/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-gradients/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('css-grid/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('css-import/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-invalid/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-mediaqueries/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-optional/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-parsing/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-placeholder/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-required/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-ruby/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('css-selectors/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-submit-invalid/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-transitions/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-ui-invalid/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-ui-valid/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-valid/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('css-valuesandunits/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-variables/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('css-visited/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('cssom/**'):
+    BUG_COMPONENT = ('Core', 'DOM: CSS Object Model')
+with Files('datalist/**'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+with Files('dom/**'):
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
+with Files('filters.svg'):
+    BUG_COMPONENT = ('Core', 'SVG')
+with Files('first-letter/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('first-line/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('flexbox/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('floats/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Floats')
+with Files('font-face/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('font-features/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('font-inflation/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('font-loading-api/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('font-matching/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('fonts/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('forms/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Form Controls')
+with Files('generated-content/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('ib-split/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('image/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Images')
+with Files('image-element/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Images')
+with Files('image-rect/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('image-region/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Images')
+with Files('indic-shaping/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('inline/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('inline-borderpadding/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('invalidation/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('layers/**'):
+    BUG_COMPONENT = ('Core', 'Graphics: Layers')
+with Files('line-breaking/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('list-item/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('margin-collapsing/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('marquee/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('mathml/**'):
+    BUG_COMPONENT = ('Core', 'MathML')
+with Files('native-theme/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('object/**'):
+    BUG_COMPONENT = ('Core', 'DOM')
+with Files('ogg-video/**'):
+    BUG_COMPONENT = ('Core', 'Video/Audio')
+with Files('outline/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('pagination/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('percent-overflow-sizing/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('pixel-rounding/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('position-dynamic-changes/**'):
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+with Files('position-relative/**'):
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+with Files('position-sticky/**'):
+    BUG_COMPONENT = ('Core', 'Layout: R & A Pos')
+with Files('printing/**'):
+    BUG_COMPONENT = ('Core', 'Printing: Output')
+with Files('reftest-sanity/**'):
+    BUG_COMPONENT = ('Testing', 'Reftest')
+with Files('scoped-style/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('scrolling/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('selection/**'):
+    BUG_COMPONENT = ('Core', 'Selection')
+with Files('svg/**'):
+    BUG_COMPONENT = ('Core', 'SVG')
+with Files('tab-size/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('table-anonymous-boxes/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
+with Files('table-background/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
+with Files('table-bordercollapse/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
+with Files('table-dom/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
+with Files('table-overflow/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
+with Files('table-width/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Tables')
+with Files('text/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('text-decoration/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('text-indent/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('text-overflow/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('text-shadow/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('text-svgglyphs/**'):
+    BUG_COMPONENT = ('Core', 'SVG')
+with Files('text-transform/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('transform/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('transform-3d/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('unicode/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('view-source/**'):
+    BUG_COMPONENT = ('Core', 'HTML: Parser')
+with Files('w3c-css/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('w3c-css/received/css3-conditional/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('w3c-css/received/css3-namespace/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('w3c-css/submitted/conditional3/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('w3c-css/submitted/css21/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('w3c-css/submitted/flexbox/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('w3c-css/submitted/fonts3/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Text')
+with Files('w3c-css/submitted/images3/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('w3c-css/submitted/lists-3/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('w3c-css/submitted/multicol3/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('w3c-css/submitted/ruby/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('w3c-css/submitted/text-decor-3/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('w3c-css/submitted/ui3/**'):
+    BUG_COMPONENT = ('Core', 'Layout')
+with Files('w3c-css/submitted/values3/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('w3c-css/submitted/variables/**'):
+    BUG_COMPONENT = ('Core', 'CSS Parsing and Computation')
+with Files('webcomponents/**'):
+    BUG_COMPONENT = ('Core', 'DOM')
+with Files('webm-video/**'):
+    BUG_COMPONENT = ('Core', 'Video/Audio')
+with Files('writing-mode/**'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+with Files('xul/**'):
+    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+with Files('xul-document-load/**'):
+    BUG_COMPONENT = ('Core', 'XP Toolkit/Widgets: XUL')
+with Files('z-index/**'):
+    BUG_COMPONENT = ('Core', 'Layout')

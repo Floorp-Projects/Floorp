@@ -49,7 +49,7 @@ nsFont::Init()
 {
   systemFont = false;
   smoothing = NS_FONT_SMOOTHING_AUTO;
-  sizeAdjust = 0.0;
+  sizeAdjust = -1.0f;
   kerning = NS_FONT_KERNING_AUTO;
   synthesis = NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE;
 

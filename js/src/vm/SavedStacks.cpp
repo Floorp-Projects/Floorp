@@ -1180,8 +1180,10 @@ SavedStacks::chooseSamplingProbability(JSContext* cx)
 }
 
 JSObject*
-SavedStacksMetadataCallback(JSContext* cx)
+SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
 {
+    RootedObject obj(cx, target);
+
     SavedStacks& stacks = cx->compartment()->savedStacks();
     if (stacks.allocationSkipCount > 0) {
         stacks.allocationSkipCount--;
@@ -1221,7 +1223,7 @@ SavedStacksMetadataCallback(JSContext* cx)
     if (!stacks.saveCurrentStack(cx, &frame))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
-    if (!Debugger::onLogAllocationSite(cx, frame, PRMJ_Now()))
+    if (!Debugger::onLogAllocationSite(cx, obj, frame, PRMJ_Now()))
         CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
 
     return frame;

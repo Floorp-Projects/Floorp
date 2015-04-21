@@ -105,9 +105,7 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI* aURI, nsIURI** aReturn)
     uri->SetUserPass(EmptyCString());
   }
 
-  // return the fixed-up URI
-  *aReturn = uri;
-  NS_ADDREF(*aReturn);
+  uri.forget(aReturn);
   return NS_OK;
 }
 

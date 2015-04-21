@@ -345,6 +345,7 @@ bool
 MP4Reader::IsSupportedVideoMimeType(const nsACString& aMimeType)
 {
   return (aMimeType.EqualsLiteral("video/mp4") ||
+          aMimeType.EqualsLiteral("video/mp4v-es") ||
           aMimeType.EqualsLiteral("video/avc") ||
           aMimeType.EqualsLiteral("video/x-vnd.on2.vp6")) &&
          mPlatform->SupportsMimeType(aMimeType);

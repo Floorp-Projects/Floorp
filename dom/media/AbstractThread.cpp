@@ -85,6 +85,8 @@ public:
     return mTailDispatcher.ref();
   }
 
+  virtual nsIThread* AsXPCOMThread() override { return mTarget; }
+
 private:
   nsRefPtr<nsIThread> mTarget;
   Maybe<AutoTaskDispatcher> mTailDispatcher;

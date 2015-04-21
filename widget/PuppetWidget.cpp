@@ -500,9 +500,9 @@ PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                       void* aCallbackData)
 {
   // B2G doesn't have native key bindings.
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
   return false;
-#else // #ifdef MOZ_B2G
+#else // #ifdef MOZ_WIDGET_GONK
   MOZ_ASSERT(mNativeKeyCommandsValid);
 
   nsTArray<mozilla::CommandInt>& commands = mSingleLineCommands;

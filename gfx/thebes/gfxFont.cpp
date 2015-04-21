@@ -2201,6 +2201,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
         ((aBoundingBoxType == LOOSE_INK_EXTENTS &&
             !needsGlyphExtents &&
             !aTextRun->HasDetailedGlyphs()) ||
+         (MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0)) ||
          (MOZ_UNLIKELY(GetStyle()->size == 0))) ? nullptr
         : GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
     double x = 0;
@@ -3332,7 +3333,7 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
 {
     // Even if this font size is zero, this font is created with non-zero size.
     // However, for layout and others, we should return the metrics of zero size font.
-    if (mStyle.size == 0.0) {
+    if (mStyle.size == 0.0 || mStyle.sizeAdjust == 0.0) {
         memset(aMetrics, 0, sizeof(gfxFont::Metrics));
         return;
     }
@@ -3652,7 +3653,7 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
 
 gfxFontStyle::gfxFontStyle() :
     language(nsGkAtoms::x_western),
-    size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f), baselineOffset(0.0f),
+    size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(-1.0f), baselineOffset(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
     systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
@@ -3697,7 +3698,7 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
 
     if (size >= FONT_MAX_SIZE) {
         size = FONT_MAX_SIZE;
-        sizeAdjust = 0.0;
+        sizeAdjust = -1.0f;
     } else if (size < 0.0) {
         NS_WARNING("negative font size");
         size = 0.0;
