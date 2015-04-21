@@ -10,12 +10,19 @@
 #define mozilla_GuardObjects_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Types.h"
 #include "mozilla/Move.h"
+#include "mozilla/Types.h"
 
 #ifdef __cplusplus
 
 #ifdef DEBUG
+
+/**
+ * A custom define is used rather than |mozPoisonValue()| due to cascading
+ * build failures relating to how mfbt is linked on different operating
+ * systems. See bug 1160253.
+ */
+#define MOZ_POISON uintptr_t(-1)
 
 namespace mozilla {
 namespace detail {
@@ -74,9 +81,20 @@ private:
   bool* mStatementDone;
 
 public:
-  GuardObjectNotifier() : mStatementDone(nullptr) { }
+  GuardObjectNotifier()
+    : mStatementDone(reinterpret_cast<bool*>(MOZ_POISON))
+  {
+  }
 
-  ~GuardObjectNotifier() { *mStatementDone = true; }
+  ~GuardObjectNotifier()
+  {
+    // Assert that the GuardObjectNotifier has been properly initialized by
+    // using the |MOZ_GUARD_OBJECT_NOTIFIER_INIT| macro. A poison value is
+    // used rather than a null check to appease static analyzers that were
+    // (incorrectly) detecting null pointer dereferences.
+    MOZ_ASSERT(mStatementDone != reinterpret_cast<bool*>(MOZ_POISON));
+    *mStatementDone = true;
+  }
 
   void setStatementDone(bool* aStatementIsDone)
   {
@@ -109,6 +127,8 @@ public:
 
 } /* namespace detail */
 } /* namespace mozilla */
+
+#undef MOZ_POISON
 
 #endif /* DEBUG */
 
