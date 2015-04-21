@@ -63,7 +63,7 @@ class udev_lib {
     }
   }
 
-  explicit operator bool() {
+  operator bool() {
     return udev;
   }
 

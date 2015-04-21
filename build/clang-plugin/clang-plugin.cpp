@@ -84,11 +84,6 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
-  class ExplicitOperatorBoolChecker : public MatchFinder::MatchCallback {
-  public:
-    virtual void run(const MatchFinder::MatchResult &Result);
-  };
-
   ScopeChecker stackClassChecker;
   ScopeChecker globalClassChecker;
   NonHeapClassChecker nonheapClassChecker;
@@ -97,17 +92,16 @@ private:
   NaNExprChecker nanExprChecker;
   NoAddRefReleaseOnReturnChecker noAddRefReleaseOnReturnChecker;
   RefCountedInsideLambdaChecker refCountedInsideLambdaChecker;
-  ExplicitOperatorBoolChecker explicitOperatorBoolChecker;
   MatchFinder astMatcher;
 };
 
 namespace {
 
-std::string getDeclarationNamespace(const Decl *decl) {
+bool isInIgnoredNamespace(const Decl *decl) {
   const DeclContext *DC = decl->getDeclContext()->getEnclosingNamespaceContext();
   const NamespaceDecl *ND = dyn_cast<NamespaceDecl>(DC);
   if (!ND) {
-    return "";
+    return false;
   }
 
   while (const DeclContext *ParentDC = ND->getParent()) {
@@ -118,15 +112,8 @@ std::string getDeclarationNamespace(const Decl *decl) {
   }
 
   const auto& name = ND->getName();
-  return name;
-}
 
-bool isInIgnoredNamespaceForImplicitCtor(const Decl *decl) {
-  std::string name = getDeclarationNamespace(decl);
-  if (name == "") {
-    return false;
-  }
-
+  // namespace std and icu are ignored for now
   return name == "std" ||              // standard C++ lib
          name == "__gnu_cxx" ||        // gnu C++ lib
          name == "boost" ||            // boost
@@ -142,19 +129,7 @@ bool isInIgnoredNamespaceForImplicitCtor(const Decl *decl) {
          name == "testing";            // gtest
 }
 
-bool isInIgnoredNamespaceForImplicitConversion(const Decl *decl) {
-  std::string name = getDeclarationNamespace(decl);
-  if (name == "") {
-    return false;
-  }
-
-  return name == "std" ||              // standard C++ lib
-         name == "__gnu_cxx" ||        // gnu C++ lib
-         name == "google_breakpad" ||  // breakpad
-         name == "testing";            // gtest
-}
-
-bool isIgnoredPathForImplicitCtor(const Decl *decl) {
+bool isIgnoredPath(const Decl *decl) {
   decl = decl->getCanonicalDecl();
   SourceLocation Loc = decl->getLocation();
   const SourceManager &SM = decl->getASTContext().getSourceManager();
@@ -175,30 +150,9 @@ bool isIgnoredPathForImplicitCtor(const Decl *decl) {
   return false;
 }
 
-bool isIgnoredPathForImplicitConversion(const Decl *decl) {
-  decl = decl->getCanonicalDecl();
-  SourceLocation Loc = decl->getLocation();
-  const SourceManager &SM = decl->getASTContext().getSourceManager();
-  SmallString<1024> FileName = SM.getFilename(Loc);
-  llvm::sys::fs::make_absolute(FileName);
-  llvm::sys::path::reverse_iterator begin = llvm::sys::path::rbegin(FileName),
-                                    end   = llvm::sys::path::rend(FileName);
-  for (; begin != end; ++begin) {
-    if (begin->compare_lower(StringRef("graphite2")) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool isInterestingDeclForImplicitCtor(const Decl *decl) {
-  return !isInIgnoredNamespaceForImplicitCtor(decl) &&
-         !isIgnoredPathForImplicitCtor(decl);
-}
-
-bool isInterestingDeclForImplicitConversion(const Decl *decl) {
-  return !isInIgnoredNamespaceForImplicitConversion(decl) &&
-         !isIgnoredPathForImplicitConversion(decl);
+bool isInterestingDecl(const Decl *decl) {
+  return !isInIgnoredNamespace(decl) &&
+         !isIgnoredPath(decl);
 }
 
 }
@@ -278,7 +232,7 @@ public:
       }
     }
 
-    if (!d->isAbstract() && isInterestingDeclForImplicitCtor(d)) {
+    if (!d->isAbstract() && isInterestingDecl(d)) {
       for (CXXRecordDecl::ctor_iterator ctor = d->ctor_begin(),
            e = d->ctor_end(); ctor != e; ++ctor) {
         // Ignore non-converting ctors
@@ -462,16 +416,6 @@ bool isClassRefCounted(QualType T) {
   return clazz ? isClassRefCounted(clazz) : RegularClass;
 }
 
-template<class T>
-bool IsInSystemHeader(const ASTContext &AC, const T &D) {
-  auto &SourceManager = AC.getSourceManager();
-  auto ExpansionLoc = SourceManager.getExpansionLoc(D.getLocStart());
-  if (ExpansionLoc.isInvalid()) {
-    return false;
-  }
-  return SourceManager.isInSystemHeader(ExpansionLoc);
-}
-
 }
 
 namespace clang {
@@ -571,7 +515,12 @@ AST_MATCHER(QualType, isFloat) {
 /// isExpansionInSystemHeader in newer clangs, but modified in order to work
 /// with old clangs that we use on infra.
 AST_MATCHER(BinaryOperator, isInSystemHeader) {
-  return IsInSystemHeader(Finder->getASTContext(), Node);
+  auto &SourceManager = Finder->getASTContext().getSourceManager();
+  auto ExpansionLoc = SourceManager.getExpansionLoc(Node.getLocStart());
+  if (ExpansionLoc.isInvalid()) {
+    return false;
+  }
+  return SourceManager.isInSystemHeader(ExpansionLoc);
 }
 
 /// This matcher will match locations in SkScalar.h.  This header contains a
@@ -700,13 +649,6 @@ DiagnosticsMatcher::DiagnosticsMatcher()
             hasDescendant(declRefExpr(hasType(pointerType(pointee(isRefCounted())))).bind("node"))
         ),
     &refCountedInsideLambdaChecker);
-
-  // Older clang versions such as the ones used on the infra recognize these
-  // conversions as 'operator _Bool', but newer clang versions recognize these
-  // as 'operator bool'.
-  astMatcher.addMatcher(methodDecl(anyOf(hasName("operator bool"),
-                                         hasName("operator _Bool"))).bind("node"),
-    &explicitOperatorBoolChecker);
 }
 
 void DiagnosticsMatcher::ScopeChecker::run(
@@ -917,25 +859,6 @@ void DiagnosticsMatcher::RefCountedInsideLambdaChecker::run(
   Diag.Report(node->getLocStart(), errorID) << node->getFoundDecl() <<
     node->getType()->getPointeeType();
   Diag.Report(node->getLocStart(), noteID);
-}
-
-void DiagnosticsMatcher::ExplicitOperatorBoolChecker::run(
-    const MatchFinder::MatchResult &Result) {
-  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
-  unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Error, "bad implicit conversion operator for %0");
-  unsigned noteID = Diag.getDiagnosticIDs()->getCustomDiagID(
-      DiagnosticIDs::Note, "consider adding the explicit keyword to %0");
-  const CXXConversionDecl *method = Result.Nodes.getNodeAs<CXXConversionDecl>("node");
-  const CXXRecordDecl *clazz = method->getParent();
-
-  if (!method->isExplicitSpecified() &&
-      !MozChecker::hasCustomAnnotation(method, "moz_implicit") &&
-      !IsInSystemHeader(method->getASTContext(), *method) &&
-      isInterestingDeclForImplicitConversion(method)) {
-    Diag.Report(method->getLocStart(), errorID) << clazz;
-    Diag.Report(method->getLocStart(), noteID) << "'operator bool'";
-  }
 }
 
 class MozCheckAction : public PluginASTAction {

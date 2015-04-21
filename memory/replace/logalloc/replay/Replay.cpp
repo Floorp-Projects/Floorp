@@ -176,7 +176,7 @@ public:
   }
 
   /* Returns whether the buffer is empty. */
-  explicit operator bool() { return mLength; }
+  operator bool() { return mLength; }
 
   /* Returns the memory location of the buffer. */
   const char* get() { return mBuf; }

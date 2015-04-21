@@ -660,7 +660,7 @@ protected:
     void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
     void SetCanPlay(bool aCanPlay);
 
-    MOZ_IMPLICIT operator bool() const { return mValue; }
+    operator bool() const { return mValue; }
 
     WakeLockBoolWrapper& operator=(bool val);
 
