@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=915962
+-->
+<head>
+  <title>Test for Bug 915962</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=915962">Mozilla Bug 915962</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 915962 **/
+
+var smoothScrollPref = "general.smoothScroll";
+SimpleTest.waitForExplicitFinish();
+var win = window.open("file_bug915962.html", "_blank",
+                      "width=600,height=600,scrollbars=yes");
+
+// grab the timer right at the start
+var cwu = SpecialPowers.getDOMWindowUtils(win);
+function step() {
+  cwu.advanceTimeAndRefresh(100);
+}
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, startTest);
+}, win);
+function startTest() {
+  // Make sure that pressing Space when a tabindex=-1 element is focused
+  // will scroll the page.
+  var button = win.document.querySelector("button");
+  var sc = win.document.querySelector("div");
+  sc.focus();
+  is(win.scrollY, 0, "Sanity check");
+  synthesizeKey(" ", {}, win);
+
+  step();
+
+  isnot(win.scrollY, 0, "Page is scrolled down");
+  var oldY = win.scrollY;
+  synthesizeKey(" ", {shiftKey: true}, win);
+
+  step();
+
+  ok(win.scrollY < oldY, "Page is scrolled up");
+
+  // Make sure that pressing Space when a tabindex=-1 element is focused
+  // will not scroll the page, and will activate the element.
+  button.focus();
+  var clicked = false;
+  button.onclick = () => clicked = true;
+  oldY = win.scrollY;
+  synthesizeKey(" ", {}, win);
+
+  step();
+
+  ok(win.scrollY <= oldY, "Page is not scrolled down");
+  ok(clicked, "The button should be clicked");
+  synthesizeKey("VK_TAB", {}, win);
+
+  step();
+
+  oldY = win.scrollY;
+  synthesizeKey(" ", {}, win);
+
+  step()
+
+  ok(win.scrollY >= oldY, "Page is scrolled down");
+
+  win.close();
+  cwu.restoreNormalRefresh();
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>

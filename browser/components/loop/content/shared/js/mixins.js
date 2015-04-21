@@ -94,8 +94,16 @@ loop.shared.mixins = (function() {
       return {showMenu: false};
     },
 
-    _onBodyClick: function() {
-      this.setState({showMenu: false});
+    _onBodyClick: function(event) {
+      var menuButton = this.refs["menu-button"] && this.refs["menu-button"].getDOMNode();
+      if (this.refs.anchor) {
+        menuButton = this.refs.anchor.getDOMNode();
+      }
+      // If a menu button/ anchor is defined and clicked on, it will be in charge
+      // of hiding or showing the popup.
+      if (event.target !== menuButton) {
+        this.setState({ showMenu: false });
+      }
     },
 
     _correctMenuPosition: function() {

@@ -50,7 +50,7 @@ public:
 private:
   virtual void InitTags(nsTArray<nsCString>& aTags) override;
   virtual nsCString GetNodeId() override;
-  virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(MediaRawData* aSample) override;
+  virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample) override;
 
   nsRefPtr<CDMProxy> mProxy;
 };

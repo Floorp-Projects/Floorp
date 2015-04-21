@@ -4434,13 +4434,11 @@ XULDocument::CachedChromeStreamListener::CachedChromeStreamListener(XULDocument*
     : mDocument(aDocument),
       mProtoLoaded(aProtoLoaded)
 {
-    NS_ADDREF(mDocument);
 }
 
 
 XULDocument::CachedChromeStreamListener::~CachedChromeStreamListener()
 {
-    NS_RELEASE(mDocument);
 }
 
 

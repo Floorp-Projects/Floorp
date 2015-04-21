@@ -164,7 +164,8 @@ class nsStyleSet
   // contexts for such content nodes.  However, not doing any rule
   // matching for them is a first step.
   already_AddRefed<nsStyleContext>
-  ResolveStyleForNonElement(nsStyleContext* aParentContext);
+  ResolveStyleForNonElement(nsStyleContext* aParentContext,
+                            bool aSuppressLineBreak = false);
 
   // Get a style context for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the nsCSSPseudoElements::Type for the
@@ -446,7 +447,10 @@ class nsStyleSet
     // or "display: grid" but we can tell we're not going to honor that (e.g. if
     // it's the outer frame of a button widget, and we're the inline frame for
     // the button's label).
-    eSkipParentDisplayBasedStyleFixup = 1 << 3
+    eSkipParentDisplayBasedStyleFixup = 1 << 3,
+
+    // Indicates that the given context should have ShouldSuppressLineBreak set.
+    eSuppressLineBreak = 1 << 4
   };
 
   already_AddRefed<nsStyleContext>

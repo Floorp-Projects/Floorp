@@ -54,8 +54,9 @@ public:
     nsresult rv = mProfileDir->CopyToFollowingLinks(mTargetDir, mLeafName);
     if (NS_SUCCEEDED(rv))
       rv = mProfileDir->Remove(true);
-    else
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       NS_WARNING("Could not backup the root profile directory");
+    }
 
     // If we have a separate local cache profile directory, just delete it.
     // Don't return an error if this fails so that reset can proceed if it can't be deleted.

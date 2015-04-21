@@ -10,6 +10,7 @@
 #include "nsError.h"
 #include "nsCOMPtr.h"
 #include "nsSVGAttrTearoffTable.h"
+#include "nsQueryObject.h"
 #include <algorithm>
 
 // See the architecture comment in this file's header.

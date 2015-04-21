@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.10'
+version = '0.11'
 
 # dependencies
 with open('requirements.txt') as f:

@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
+#include "nsQueryObject.h"
 
 #define NS_FOO_IID \
 { 0x6f7652e0,  0xee43, 0x11d1, \
