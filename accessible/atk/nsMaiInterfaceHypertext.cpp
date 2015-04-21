@@ -27,7 +27,7 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     NS_ENSURE_TRUE(hyperText, nullptr);
 
     Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
-    if (!hyperLink) {
+    if (!hyperLink || !hyperLink->IsLink()) {
       return nullptr;
     }
 
