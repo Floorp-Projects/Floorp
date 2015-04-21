@@ -349,7 +349,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       NS_ASSERTION(!NS_SVGDisplayListPaintingEnabled() ||
                    (mState & NS_FRAME_IS_NONDISPLAY),
                    "Display lists handle dirty rect intersection test");
-      dirtyRect = aDirtyRect->ToAppUnits(appUnitsPerDevPx);
+      dirtyRect = ToAppUnits(*aDirtyRect, appUnitsPerDevPx);
       // Adjust dirtyRect to match our local coordinate system.
       nsRect rootRect =
         nsSVGUtils::TransformFrameRectToOuterSVG(mRect, aTransform,

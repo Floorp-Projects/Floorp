@@ -14,9 +14,9 @@
 #include "mozilla/TimeStamp.h"
 #include "Units.h"
 #include <windows.h>
+#include "nsPoint.h"
 
 class nsWindowBase;
-struct nsIntPoint;
 
 namespace mozilla {
 namespace widget {

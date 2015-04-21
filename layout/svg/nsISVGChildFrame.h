@@ -16,7 +16,6 @@ class SVGBBox;
 
 struct nsPoint;
 struct nsRect;
-struct nsIntRect;
 
 namespace mozilla {
 class SVGAnimatedLengthList;

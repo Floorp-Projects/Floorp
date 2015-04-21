@@ -1108,9 +1108,10 @@ function do_get_minidumpdir() {
  * Registers a directory with the profile service,
  * and return the directory as an nsILocalFile.
  *
+ * @param notifyProfileAfterChange Whether to notify for "profile-after-change".
  * @return nsILocalFile of the profile directory.
  */
-function do_get_profile() {
+function do_get_profile(notifyProfileAfterChange = false) {
   if (!runningInParent) {
     _testLogger.info("Ignoring profile creation from child process.");
     return null;
@@ -1173,6 +1174,9 @@ function do_get_profile() {
   if (!_profileInitialized) {
     obsSvc.notifyObservers(null, "profile-do-change", "xpcshell-do-get-profile");
     _profileInitialized = true;
+    if (notifyProfileAfterChange) {
+      obsSvc.notifyObservers(null, "profile-after-change", "xpcshell-do-get-profile");
+    }
   }
 
   // The methods of 'provider' will retain this scope so null out everything

@@ -22,6 +22,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsRegion.h"
+#include "nsRect.h"
 
 #include "nsIRunnable.h"
 #include "nsICryptoHash.h"
@@ -75,7 +76,6 @@ public:
 class nsWindow;
 class nsWindowBase;
 struct KeyPair;
-struct nsIntRect;
 
 namespace mozilla {
 namespace widget {

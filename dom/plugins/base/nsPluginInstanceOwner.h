@@ -24,7 +24,6 @@
 #endif
 
 class nsIInputStream;
-struct nsIntRect;
 class nsPluginDOMContextMenuListener;
 class nsPluginFrame;
 class nsDisplayListBuilder;

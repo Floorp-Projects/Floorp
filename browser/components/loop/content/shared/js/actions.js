@@ -401,6 +401,8 @@ loop.shared.actions = (function() {
      * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
      */
     SetupRoomInfo: Action.define("setupRoomInfo", {
+      // roomContextUrls: Array - Optional.
+      // roomDescription: String - Optional.
       // roomName: String - Optional.
       roomOwner: String,
       roomToken: String,
@@ -416,7 +418,7 @@ loop.shared.actions = (function() {
      * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
      */
     UpdateRoomInfo: Action.define("updateRoomInfo", {
-      // context: Object - Optional.
+      // description: String - Optional.
       // roomName: String - Optional.
       roomOwner: String,
       roomUrl: String

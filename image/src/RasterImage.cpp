@@ -122,7 +122,7 @@ class ScaleRunner : public nsRunnable
 public:
   ScaleRunner(RasterImage* aImage,
               uint32_t aImageFlags,
-              const nsIntSize& aSize,
+              const IntSize& aSize,
               RawAccessFrameRef&& aSrcRef)
     : mImage(aImage)
     , mSrcRef(Move(aSrcRef))
@@ -235,7 +235,7 @@ private:
   WeakPtr<RasterImage> mImage;
   RawAccessFrameRef    mSrcRef;
   RawAccessFrameRef    mDstRef;
-  const nsIntSize      mDstSize;
+  const IntSize      mDstSize;
   uint32_t             mImageFlags;
   ScaleState           mState;
 };
@@ -504,7 +504,7 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
 
 DrawableFrameRef
 RasterImage::LookupFrame(uint32_t aFrameNum,
-                         const nsIntSize& aSize,
+                         const IntSize& aSize,
                          uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -568,7 +568,7 @@ RasterImage::GetRequestedFrameIndex(uint32_t aWhichFrame) const
   return aWhichFrame == FRAME_FIRST ? 0 : GetCurrentFrameIndex();
 }
 
-nsIntRect
+IntRect
 RasterImage::GetFirstFrameRect()
 {
   if (mAnim) {
@@ -576,7 +576,7 @@ RasterImage::GetFirstFrameRect()
   }
 
   // Fall back to our size. This is implicitly zero-size if !mHasSize.
-  return nsIntRect(nsIntPoint(0,0), mSize);
+  return IntRect(IntPoint(0,0), mSize);
 }
 
 NS_IMETHODIMP_(bool)
@@ -702,7 +702,7 @@ RasterImage::CopyFrame(uint32_t aWhichFrame, uint32_t aFlags)
     return nullptr;
   }
 
-  nsIntRect intFrameRect = frameRef->GetRect();
+  IntRect intFrameRect = frameRef->GetRect();
   Rect rect(intFrameRect.x, intFrameRect.y,
             intFrameRect.width, intFrameRect.height);
   if (frameRef->IsSinglePixel()) {
@@ -761,7 +761,7 @@ RasterImage::GetFrameInternal(uint32_t aWhichFrame, uint32_t aFlags)
   // If this frame covers the entire image, we can just reuse its existing
   // surface.
   RefPtr<SourceSurface> frameSurf;
-  nsIntRect frameRect = frameRef->GetRect();
+  IntRect frameRect = frameRef->GetRect();
   if (frameRect.x == 0 && frameRect.y == 0 &&
       frameRect.width == mSize.width &&
       frameRect.height == mSize.height) {
@@ -905,7 +905,7 @@ class OnAddedFrameRunnable : public nsRunnable
 public:
   OnAddedFrameRunnable(RasterImage* aImage,
                        uint32_t aNewFrameCount,
-                       const nsIntRect& aNewRefreshArea)
+                       const IntRect& aNewRefreshArea)
     : mImage(aImage)
     , mNewFrameCount(aNewFrameCount)
     , mNewRefreshArea(aNewRefreshArea)
@@ -922,12 +922,12 @@ public:
 private:
   nsRefPtr<RasterImage> mImage;
   uint32_t mNewFrameCount;
-  nsIntRect mNewRefreshArea;
+  IntRect mNewRefreshArea;
 };
 
 void
 RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
-                          const nsIntRect& aNewRefreshArea)
+                          const IntRect& aNewRefreshArea)
 {
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> runnable =
@@ -1147,8 +1147,8 @@ RasterImage::SetLoopCount(int32_t aLoopCount)
   }
 }
 
-NS_IMETHODIMP_(nsIntRect)
-RasterImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+NS_IMETHODIMP_(IntRect)
+RasterImage::GetImageSpaceInvalidationRect(const IntRect& aRect)
 {
   return aRect;
 }
@@ -1333,7 +1333,7 @@ RasterImage::CanDiscard() {
 
 // Sets up a decoder for this image.
 already_AddRefed<Decoder>
-RasterImage::CreateDecoder(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
+RasterImage::CreateDecoder(const Maybe<IntSize>& aSize, uint32_t aFlags)
 {
   // Make sure we actually get size before doing a full decode.
   if (aSize) {
@@ -1472,7 +1472,7 @@ RasterImage::StartDecoding()
 }
 
 NS_IMETHODIMP
-RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
+RasterImage::RequestDecodeForSize(const IntSize& aSize, uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1487,7 +1487,7 @@ RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
 
   // Fall back to our intrinsic size if we don't support
   // downscale-during-decode.
-  nsIntSize targetSize = mDownscaleDuringDecode ? aSize : mSize;
+  IntSize targetSize = mDownscaleDuringDecode ? aSize : mSize;
 
   // Decide whether to sync decode images we can decode quickly. Here we are
   // explicitly trading off flashing for responsiveness in the case that we're
@@ -1507,7 +1507,7 @@ RasterImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
+RasterImage::Decode(const Maybe<IntSize>& aSize, uint32_t aFlags)
 {
   MOZ_ASSERT(!aSize || NS_IsMainThread());
 
@@ -1570,7 +1570,7 @@ RasterImage::Decode(const Maybe<nsIntSize>& aSize, uint32_t aFlags)
 }
 
 void
-RasterImage::RecoverFromLossOfFrames(const nsIntSize& aSize, uint32_t aFlags)
+RasterImage::RecoverFromLossOfFrames(const IntSize& aSize, uint32_t aFlags)
 {
   if (!mHasSize) {
     return;
@@ -1595,7 +1595,7 @@ RasterImage::RecoverFromLossOfFrames(const nsIntSize& aSize, uint32_t aFlags)
 
 bool
 RasterImage::CanScale(GraphicsFilter aFilter,
-                      const nsIntSize& aSize,
+                      const IntSize& aSize,
                       uint32_t aFlags)
 {
 #ifndef MOZ_ENABLE_SKIA
@@ -1655,7 +1655,7 @@ RasterImage::CanScale(GraphicsFilter aFilter,
 }
 
 bool
-RasterImage::CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags)
+RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
 {
   // Check basic requirements: downscale-during-decode is enabled for this
   // image, we have all the source data and know our size, the flags allow us to
@@ -1693,13 +1693,13 @@ RasterImage::NotifyNewScaledFrame()
 {
   // Send an invalidation so observers will repaint and can take advantage of
   // the new scaled frame if possible.
-  NotifyProgress(NoProgress, nsIntRect(0, 0, mSize.width, mSize.height));
+  NotifyProgress(NoProgress, IntRect(0, 0, mSize.width, mSize.height));
 }
 
 void
 RasterImage::RequestScale(imgFrame* aFrame,
                           uint32_t aFlags,
-                          const nsIntSize& aSize)
+                          const IntSize& aSize)
 {
   // We don't scale frames which aren't fully decoded.
   if (!aFrame->IsImageComplete()) {
@@ -1732,7 +1732,7 @@ RasterImage::RequestScale(imgFrame* aFrame,
 DrawResult
 RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
                                           gfxContext* aContext,
-                                          const nsIntSize& aSize,
+                                          const IntSize& aSize,
                                           const ImageRegion& aRegion,
                                           GraphicsFilter aFilter,
                                           uint32_t aFlags)
@@ -1798,14 +1798,14 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
  *                      in gfxGraphicsFilter aFilter,
  *                      [const] in gfxMatrix aUserSpaceToImageSpace,
  *                      [const] in gfxRect aFill,
- *                      [const] in nsIntRect aSubimage,
- *                      [const] in nsIntSize aViewportSize,
+ *                      [const] in IntRect aSubimage,
+ *                      [const] in IntSize aViewportSize,
  *                      [const] in SVGImageContext aSVGContext,
  *                      in uint32_t aWhichFrame,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP_(DrawResult)
 RasterImage::Draw(gfxContext* aContext,
-                  const nsIntSize& aSize,
+                  const IntSize& aSize,
                   const ImageRegion& aRegion,
                   uint32_t aWhichFrame,
                   GraphicsFilter aFilter,
@@ -2028,7 +2028,7 @@ RasterImage::GetFramesNotified(uint32_t* aFramesNotified)
 
 void
 RasterImage::NotifyProgress(Progress aProgress,
-                            const nsIntRect& aInvalidRect /* = nsIntRect() */,
+                            const IntRect& aInvalidRect /* = IntRect() */,
                             uint32_t aFlags /* = DECODE_FLAGS_DEFAULT */)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2111,7 +2111,7 @@ RasterImage::Unwrap()
   return self.forget();
 }
 
-nsIntSize
+IntSize
 RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
                                      GraphicsFilter aFilter, uint32_t aFlags)
 {
@@ -2120,10 +2120,10 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
              "Unexpected destination size");
 
   if (mSize.IsEmpty() || aDest.IsEmpty()) {
-    return nsIntSize(0, 0);
+    return IntSize(0, 0);
   }
 
-  nsIntSize destSize(ceil(aDest.width), ceil(aDest.height));
+  IntSize destSize(ceil(aDest.width), ceil(aDest.height));
 
   if (aFilter == GraphicsFilter::FILTER_GOOD &&
       CanDownscaleDuringDecode(destSize, aFlags)) {

@@ -5292,7 +5292,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
     // combine the area with the supplied region
     nsIntRect rrectPixels = aRegion->GetBounds();
 
-    nsRect rrect = rrectPixels.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
+    nsRect rrect = ToAppUnits(rrectPixels, nsPresContext::AppUnitsPerCSSPixel());
     area.IntersectRect(area, rrect);
 
     nsPresContext* pc = GetPresContext();
@@ -7377,9 +7377,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    NS_WARN_IF_FALSE(frame, "Nothing to handle this event!");
-    if (!frame)
+    if (!frame) {
+      NS_WARNING("Nothing to handle this event!");
       return NS_OK;
+    }
 
     nsPresContext* framePresContext = frame->PresContext();
     nsPresContext* rootPresContext = framePresContext->GetRootPresContext();
@@ -7580,11 +7581,18 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
     if (aEvent->mClass == ePointerEventClass) {
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
+        // Try to keep frame for following check, because
+        // frame can be damaged during CheckPointerCaptureState.
+        nsWeakFrame frameKeeper(frame);
         // Before any pointer events, we should check state of pointer capture,
         // Thus got/lostpointercapture events emulate asynchronous behavior.
         // Handlers of got/lostpointercapture events can change capturing state,
         // That's why we should re-check pointer capture state until stable state.
         while(CheckPointerCaptureState(pointerEvent->pointerId));
+        // Prevent application crashes, in case damaged frame.
+        if (!frameKeeper.IsAlive()) {
+          frame = nullptr;
+        }
       }
     }
 
@@ -7626,7 +7634,11 @@ PresShell::HandleEvent(nsIFrame* aFrame,
           delete event;
         }
       }
+      return NS_OK;
+    }
 
+    if (!frame) {
+      NS_WARNING("Nothing to handle this event!");
       return NS_OK;
     }
 

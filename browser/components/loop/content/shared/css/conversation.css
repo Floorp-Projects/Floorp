@@ -853,12 +853,25 @@ html, .fx-embedded, #main,
   background: rgba(0,0,0,.6);
   /* This matches .fx-embedded .conversation toolbar height */
   top: 26px;
+  height: calc(100% - 26px);
   right: 0;
-  bottom: 0;
   left: 0;
   text-align: center;
   color: #fff;
   z-index: 1010;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.room-invitation-content {
+  order: 1;
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .room-invitation-overlay .error-display-area.error,
@@ -883,8 +896,8 @@ html, .fx-embedded, #main,
   color: #d74345;
 }
 
-.room-invitation-overlay form {
-  padding: 6em 0 2em 0;
+.room-invitation-overlay .btn-group {
+  padding: 0;
 }
 
 .room-invitation-overlay textarea {
@@ -898,11 +911,6 @@ html, .fx-embedded, #main,
   margin: 0 auto;
   padding: .2em .4em;
   border-radius: .5em;
-}
-
-.room-invitation-overlay .btn-group {
-  position: absolute;
-  bottom: 10px;
 }
 
 .share-service-dropdown {
@@ -960,6 +968,112 @@ body[dir=rtl] .share-service-dropdown .share-panel-header {
 
 .dropdown-menu-item:hover:active > .icon-add-share-service {
   background-image: url("../img/icons-16x16.svg#add-active");
+}
+
+.room-context {
+  background: rgba(0,0,0,.6);
+  border-top: 2px solid #444;
+  border-bottom: 2px solid #444;
+  padding: .5rem;
+  max-height: 120px;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  font-size: .9em;
+  display: flex;
+  flex-flow: row nowrap;
+  align-content: flex-start;
+  align-items: flex-start;
+}
+
+.room-invitation-overlay .room-context {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  order: 2;
+  flex: 0 1 auto;
+}
+
+.room-context-thumbnail {
+  width: 100px;
+  max-height: 200px;
+  -moz-margin-end: 1ch;
+  margin-bottom: 1em;
+  order: 1;
+  flex: 0 1 auto;
+}
+
+body[dir=rtl] .room-context-thumbnail {
+  order: 2;
+}
+
+.room-context-thumbnail[src=""] {
+  display: none;
+}
+
+.room-context-content {
+  order: 2;
+  flex: 1 1 auto;
+  text-align: start;
+}
+
+body[dir=rtl] .room-context-content {
+  order: 1;
+}
+
+.room-context-label {
+  margin-bottom: 1em;
+}
+
+.room-context-label,
+.room-context-description {
+  color: #fff;
+}
+
+.room-context-comment {
+  color: #707070;
+}
+
+.room-context-description,
+.room-context-comment {
+  word-wrap: break-word;
+}
+
+.room-context-url {
+  color: #59A1D7;
+  font-style: italic;
+  text-decoration: none;
+  margin-bottom: 1em;
+}
+
+.room-context-url:hover {
+  text-decoration: underline;
+}
+
+.room-context-btn-close {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
+  background-image: url("../img/icons-10x10.svg#close");
+  background-size: 8px 8px;
+  background-repeat: no-repeat;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.room-context-btn-close:hover,
+.room-context-btn-close:hover:active {
+  background-image: url("../img/icons-10x10.svg#close-active");
+}
+
+body[dir=rtl] .room-context-btn-close {
+  right: auto;
+  left: 5px;
 }
 
 /* Standalone rooms */

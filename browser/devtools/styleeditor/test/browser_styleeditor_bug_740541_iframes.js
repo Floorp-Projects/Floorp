@@ -1,7 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-function test()
+// Test that sheets inside iframes are shown in the editor.
+
+add_task(function* ()
 {
 
   function makeStylesheet(selector) {
@@ -69,10 +72,8 @@ function test()
 
   const EXPECTED_STYLE_SHEET_COUNT = 12;
 
-  waitForExplicitFinish();
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
-  // Wait for events until the right number of editors has been opened.
-  addTabAndOpenStyleEditors(EXPECTED_STYLE_SHEET_COUNT, () => finish());
-
-  content.location = TESTCASE_URI;
-}
+  is(ui.editors.length, EXPECTED_STYLE_SHEET_COUNT,
+    "Got the expected number of style sheets.");
+});

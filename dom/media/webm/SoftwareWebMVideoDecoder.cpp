@@ -190,7 +190,7 @@ SoftwareWebMVideoDecoder::DecodeVideoFrame(bool &aKeyframeSkip,
       b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
 
       nsIntRect pictureRect = mReader->GetPicture();
-      IntRect picture = ToIntRect(pictureRect);
+      IntRect picture = pictureRect;
       nsIntSize initFrame = mReader->GetInitialFrame();
       if (img->d_w != static_cast<uint32_t>(initFrame.width) ||
           img->d_h != static_cast<uint32_t>(initFrame.height)) {
