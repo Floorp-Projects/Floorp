@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#visit-mdn-page {
+  display: inline-block;
+  padding: 1em 0;
+}
+
+html, body, #container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+}
+
+header, footer {
+  flex: 1;
+  padding: 0 1em;
+}
+
+#property-info {
+  flex: 10;
+  padding: 0 1em;
+  overflow: auto;
+  transition: opacity 400ms ease-in;
+}
+
+#syntax {
+  margin-top: 1em;
+}
+
+.devtools-throbber {
+  opacity: 0;
+  align-self: center;
+}
