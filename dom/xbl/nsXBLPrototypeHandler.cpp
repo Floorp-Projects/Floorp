@@ -478,7 +478,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
     }
 
     // If the focus is in an editable region, don't scroll.
-    if (focusedContent->IsEditable()) {
+    if (focusedContent && focusedContent->IsEditable()) {
       return NS_OK;
     }
 
