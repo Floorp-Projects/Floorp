@@ -58,25 +58,25 @@ error.toJSON = function(err) {
   return {
     message: err.message,
     stacktrace: err.stack || null,
-    status: err.status
+    status: err.code
   };
 };
 
 /**
- * Determines if the given status is successful.
+ * Determines if the given status code is successful.
  */
-error.isSuccess = status => status === "success";
+error.isSuccess = code => code === 0;
 
 /**
  * Old-style errors are objects that has all of the properties
- * "message", "status", and "stack".
+ * "message", "code", and "stack".
  *
  * When listener.js starts forwarding real errors by CPOW
  * we can remove this.
  */
 let isOldStyleError = function(obj) {
   return typeof obj == "object" &&
-    ["message", "status", "stack"].every(c => obj.hasOwnProperty(c));
+    ["message", "code", "stack"].every(c => obj.hasOwnProperty(c));
 }
 
 /**
@@ -146,6 +146,7 @@ this.WebDriverError = function(msg) {
   this.name = "WebDriverError";
   this.message = msg;
   this.status = "webdriver error";
+  this.code = 500;  // overridden
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
@@ -153,6 +154,7 @@ this.ElementNotAccessibleError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "ElementNotAccessibleError";
   this.status = "element not accessible";
+  this.code = 56;
 };
 ElementNotAccessibleError.prototype = Object.create(WebDriverError.prototype);
 
@@ -160,6 +162,7 @@ this.ElementNotVisibleError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "ElementNotVisibleError";
   this.status = "element not visible";
+  this.code = 11;
 };
 ElementNotVisibleError.prototype = Object.create(WebDriverError.prototype);
 
@@ -168,6 +171,7 @@ this.FrameSendFailureError = function(frame) {
   WebDriverError.call(this, this.message);
   this.name = "FrameSendFailureError";
   this.status = "frame send failure error";
+  this.code = 55;
   this.frame = frame;
   this.errMsg = `${this.message} ${this.frame}; frame not responding.`;
 };
@@ -178,6 +182,7 @@ this.FrameSendNotInitializedError = function(frame) {
   WebDriverError.call(this, this.message);
   this.name = "FrameSendNotInitializedError";
   this.status = "frame send not initialized error";
+  this.code = 54;
   this.frame = frame;
   this.errMsg = `${this.message} ${this.frame}; frame has closed.`;
 };
@@ -187,6 +192,7 @@ this.IllegalArgumentError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "IllegalArgumentError";
   this.status = "illegal argument";
+  this.code = 13;  // unknown error
 };
 IllegalArgumentError.prototype = Object.create(WebDriverError.prototype);
 
@@ -194,6 +200,7 @@ this.InvalidElementStateError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "InvalidElementStateError";
   this.status = "invalid element state";
+  this.code = 12;
 };
 InvalidElementStateError.prototype = Object.create(WebDriverError.prototype);
 
@@ -201,6 +208,7 @@ this.InvalidSelectorError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "InvalidSelectorError";
   this.status = "invalid selector";
+  this.code = 32;
 };
 InvalidSelectorError.prototype = Object.create(WebDriverError.prototype);
 
@@ -255,6 +263,7 @@ this.JavaScriptError = function(err, fnName, file, line, script) {
   WebDriverError.call(this, msg);
   this.name = "JavaScriptError";
   this.status = "javascript error";
+  this.code = 17;
   this.stack = trace;
 };
 JavaScriptError.prototype = Object.create(WebDriverError.prototype);
@@ -263,6 +272,7 @@ this.NoAlertOpenError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "NoAlertOpenError";
   this.status = "no such alert";
+  this.code = 27;
 }
 NoAlertOpenError.prototype = Object.create(WebDriverError.prototype);
 
@@ -270,6 +280,7 @@ this.NoSuchElementError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "NoSuchElementError";
   this.status = "no such element";
+  this.code = 7;
 };
 NoSuchElementError.prototype = Object.create(WebDriverError.prototype);
 
@@ -277,6 +288,7 @@ this.NoSuchFrameError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "NoSuchFrameError";
   this.status = "no such frame";
+  this.code = 8;
 };
 NoSuchFrameError.prototype = Object.create(WebDriverError.prototype);
 
@@ -284,6 +296,7 @@ this.NoSuchWindowError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "NoSuchWindowError";
   this.status = "no such window";
+  this.code = 23;
 };
 NoSuchWindowError.prototype = Object.create(WebDriverError.prototype);
 
@@ -291,6 +304,7 @@ this.ScriptTimeoutError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "ScriptTimeoutError";
   this.status = "script timeout";
+  this.code = 28;
 };
 ScriptTimeoutError.prototype = Object.create(WebDriverError.prototype);
 
@@ -298,6 +312,8 @@ this.SessionNotCreatedError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "SessionNotCreatedError";
   this.status = "session not created";
+  // should be 33 to match Selenium
+  this.code = 71;
 };
 SessionNotCreatedError.prototype = Object.create(WebDriverError.prototype);
 
@@ -305,6 +321,7 @@ this.StaleElementReferenceError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "StaleElementReferenceError";
   this.status = "stale element reference";
+  this.code = 10;
 };
 StaleElementReferenceError.prototype = Object.create(WebDriverError.prototype);
 
@@ -312,6 +329,7 @@ this.TimeoutError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "TimeoutError";
   this.status = "timeout";
+  this.code = 21;
 };
 TimeoutError.prototype = Object.create(WebDriverError.prototype);
 
@@ -319,6 +337,7 @@ this.UnknownCommandError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "UnknownCommandError";
   this.status = "unknown command";
+  this.code = 9;
 };
 UnknownCommandError.prototype = Object.create(WebDriverError.prototype);
 
@@ -326,6 +345,7 @@ this.UnknownError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "UnknownError";
   this.status = "unknown error";
+  this.code = 13;
 };
 UnknownError.prototype = Object.create(WebDriverError.prototype);
 
@@ -333,5 +353,6 @@ this.UnsupportedOperationError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "UnsupportedOperationError";
   this.status = "unsupported operation";
+  this.code = 405;
 };
 UnsupportedOperationError.prototype = Object.create(WebDriverError.prototype);
