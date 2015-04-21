@@ -3203,12 +3203,12 @@ Element::GetAnimations(nsTArray<nsRefPtr<Animation>>& aAnimations)
     if (!collection) {
       continue;
     }
-    for (size_t playerIdx = 0;
-         playerIdx < collection->mPlayers.Length();
-         playerIdx++) {
-      Animation* player = collection->mPlayers[playerIdx];
-      if (player->IsRelevant()) {
-        aAnimations.AppendElement(player);
+    for (size_t animIdx = 0;
+         animIdx < collection->mAnimations.Length();
+         animIdx++) {
+      Animation* anim = collection->mAnimations[animIdx];
+      if (anim->IsRelevant()) {
+        aAnimations.AppendElement(anim);
       }
     }
   }

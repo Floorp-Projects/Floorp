@@ -500,12 +500,12 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
 {
-  for (size_t playerIdx = aAnimations->mPlayers.Length(); playerIdx-- != 0; ) {
-    dom::Animation* player = aAnimations->mPlayers[playerIdx];
-    if (!player->GetEffect() || player->GetEffect()->IsFinishedTransition()) {
+  for (size_t animIdx = aAnimations->mAnimations.Length(); animIdx-- != 0; ) {
+    dom::Animation* anim = aAnimations->mAnimations[animIdx];
+    if (!anim->GetEffect() || anim->GetEffect()->IsFinishedTransition()) {
       continue;
     }
-    dom::KeyframeEffectReadonly* effect = player->GetEffect();
+    dom::KeyframeEffectReadonly* effect = anim->GetEffect();
     for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
       AnimationProperty& prop = effect->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
