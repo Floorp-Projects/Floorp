@@ -40,10 +40,12 @@ public class UploadAlarmReceiver extends BroadcastReceiver {
 
         public UploadAlarmService(String name) {
             super(name);
+            // makes the service START_NOT_STICKY, that is, the service is not auto-restarted
+            setIntentRedelivery(false);
         }
 
         public UploadAlarmService() {
-            super(LOG_TAG);
+            this(LOG_TAG);
         }
 
         @Override
