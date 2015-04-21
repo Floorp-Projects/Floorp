@@ -316,10 +316,25 @@ DevToolsLoader.prototype = {
    */
   lazyRequireGetter: function (obj, property, module, destructure) {
     Object.defineProperty(obj, property, {
-      get: () => destructure
-        ? this.require(module)[property]
-        : this.require(module || property),
-      configurable: true
+      get: () => {
+        // Redefine this accessor property as a data property.
+        // Delete it first, to rule out "too much recursion" in case obj is
+        // a proxy whose defineProperty handler might unwittingly trigger this
+        // getter again.
+        delete obj[property];
+        let value = destructure
+          ? this.require(module)[property]
+          : this.require(module || property);
+        Object.defineProperty(obj, property, {
+          value,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        });
+        return value;
+      },
+      configurable: true,
+      enumerable: true
     });
   },
 
