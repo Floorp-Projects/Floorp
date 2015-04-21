@@ -549,7 +549,7 @@ child:
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
     UpdateDimensions(nsIntRect rect, ScreenIntSize size, ScreenOrientation orientation,
-                     nsIntPoint chromeDisp) compress;
+                     LayoutDeviceIntPoint chromeDisp) compress;
 
     UpdateFrame(FrameMetrics frame);
 
