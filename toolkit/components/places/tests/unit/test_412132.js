@@ -33,7 +33,7 @@ add_task(function changeuri_unvisited_bookmark()
   do_print("Unvisited URI no longer bookmarked => frecency should = 0");
   do_check_eq(frecencyForUrl(TEST_URI), 0);
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 });
 
@@ -63,7 +63,7 @@ add_task(function changeuri_visited_bookmark()
   do_print("*Visited* URI no longer bookmarked => frecency should != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 });
 
@@ -94,7 +94,7 @@ add_task(function changeuri_bookmark_still_bookmarked()
   do_print("URI still bookmarked => frecency should != 0");
   do_check_neq(frecencyForUrl(TEST_URI), 0);
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 });
 
@@ -126,7 +126,7 @@ add_task(function changeuri_nonexistent_bookmark()
   PlacesUtils.bookmarks.removeItem(id);
   tryChange(id);
 
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesTestUtils.clearHistory();
 });
 

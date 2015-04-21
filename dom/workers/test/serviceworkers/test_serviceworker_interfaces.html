@@ -20,6 +20,9 @@
           ok(success, "The service worker should be unregistered successfully");
 
           SimpleTest.finish();
+        }, function(e) {
+          dump("Unregistering the SW failed with " + e + "\n");
+          SimpleTest.finish();
         });
       } else if (event.data.type == 'status') {
         ok(event.data.status, event.data.msg);
@@ -85,17 +88,8 @@
   }
 
   function runTest() {
-    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            setupSW(registration);
-            e.target.onstatechange = null;
-          };
-        } else {
-          setupSW(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(setupSW);
+    navigator.serviceWorker.register("serviceworker_wrapper.js", {scope: "."});
   }
 
   SimpleTest.waitForExplicitFinish();

@@ -19,17 +19,8 @@
 
   var iframe;
   function runTest() {
-    navigator.serviceWorker.register("close_test.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            setupSW(registration);
-            e.target.onstatechange = null;
-          };
-        } else {
-          setupSW(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(setupSW);
+    navigator.serviceWorker.register("close_test.js", {scope: "."});
 
     function setupSW(registration) {
       var worker = registration.waiting ||
@@ -47,7 +38,11 @@
         ok(e.data.result, e.data.message);
       } else if (e.data.status == "done") {
         navigator.serviceWorker.getRegistration().then(function(registration) {
-          registration.unregister().then(function() {
+          registration.unregister().then(function(result) {
+            ok(result, "Unregistering the service worker should succeed");
+            SimpleTest.finish();
+          }, function(e) {
+            dump("Unregistering the SW failed with " + e + "\n");
             SimpleTest.finish();
           });
         });

@@ -53,7 +53,7 @@ var tests = [
         addBookmarks();
 
         yield BookmarkJSONUtils.exportToFile(this.file);
-        remove_all_bookmarks();
+        yield PlacesUtils.bookmarks.eraseEverything();
         try {
           yield BookmarkJSONUtils.importFromFile(this.file, true);
         }
@@ -114,7 +114,7 @@ var tests = [
         this.file = yield promiseFile("bookmarks-test_restoreNotification.html");
         addBookmarks();
         yield BookmarkHTMLUtils.exportToFile(this.file);
-        remove_all_bookmarks();
+        yield PlacesUtils.bookmarks.eraseEverything();
         try {
           BookmarkHTMLUtils.importFromFile(this.file, false)
                            .then(null, do_report_unexpected_exception);
@@ -174,7 +174,7 @@ var tests = [
         this.file = yield promiseFile("bookmarks-test_restoreNotification.init.html");
         addBookmarks();
         yield BookmarkHTMLUtils.exportToFile(this.file);
-        remove_all_bookmarks();
+        yield PlacesUtils.bookmarks.eraseEverything();
         try {
           BookmarkHTMLUtils.importFromFile(this.file, true)
                            .then(null, do_report_unexpected_exception);
@@ -269,8 +269,7 @@ var successAndFailedObserver = {
     else
       do_check_eq(test.folderId, null);
 
-    remove_all_bookmarks();
-    do_execute_soon(doNextTest);
+    PlacesUtils.bookmarks.eraseEverything().then(doNextTest);
   }
 };
 

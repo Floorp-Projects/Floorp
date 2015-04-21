@@ -14,7 +14,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsTextFragment.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
 
 nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>*
@@ -325,10 +325,10 @@ void nsMutationReceiver::NodeWillBeDestroyed(const nsINode *aNode)
 }
 
 void
-nsAnimationReceiver::RecordAnimationMutation(AnimationPlayer* aPlayer,
+nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
                                              AnimationMutation aMutationType)
 {
-  KeyframeEffectReadonly* effect = aPlayer->GetEffect();
+  KeyframeEffectReadonly* effect = aAnimation->GetEffect();
   if (!effect) {
     return;
   }
@@ -350,13 +350,13 @@ nsAnimationReceiver::RecordAnimationMutation(AnimationPlayer* aPlayer,
 
     switch (aMutationType) {
       case eAnimationMutation_Added:
-        nsAutoAnimationMutationBatch::AnimationAdded(aPlayer);
+        nsAutoAnimationMutationBatch::AnimationAdded(aAnimation);
         break;
       case eAnimationMutation_Changed:
-        nsAutoAnimationMutationBatch::AnimationChanged(aPlayer);
+        nsAutoAnimationMutationBatch::AnimationChanged(aAnimation);
         break;
       case eAnimationMutation_Removed:
-        nsAutoAnimationMutationBatch::AnimationRemoved(aPlayer);
+        nsAutoAnimationMutationBatch::AnimationRemoved(aAnimation);
         break;
     }
 
@@ -373,33 +373,33 @@ nsAnimationReceiver::RecordAnimationMutation(AnimationPlayer* aPlayer,
 
   switch (aMutationType) {
     case eAnimationMutation_Added:
-      m->mAddedAnimations.AppendElement(aPlayer);
+      m->mAddedAnimations.AppendElement(aAnimation);
       break;
     case eAnimationMutation_Changed:
-      m->mChangedAnimations.AppendElement(aPlayer);
+      m->mChangedAnimations.AppendElement(aAnimation);
       break;
     case eAnimationMutation_Removed:
-      m->mRemovedAnimations.AppendElement(aPlayer);
+      m->mRemovedAnimations.AppendElement(aAnimation);
       break;
   }
 }
 
 void
-nsAnimationReceiver::AnimationAdded(AnimationPlayer* aPlayer)
+nsAnimationReceiver::AnimationAdded(Animation* aAnimation)
 {
-  RecordAnimationMutation(aPlayer, eAnimationMutation_Added);
+  RecordAnimationMutation(aAnimation, eAnimationMutation_Added);
 }
 
 void
-nsAnimationReceiver::AnimationChanged(AnimationPlayer* aPlayer)
+nsAnimationReceiver::AnimationChanged(Animation* aAnimation)
 {
-  RecordAnimationMutation(aPlayer, eAnimationMutation_Changed);
+  RecordAnimationMutation(aAnimation, eAnimationMutation_Changed);
 }
 
 void
-nsAnimationReceiver::AnimationRemoved(AnimationPlayer* aPlayer)
+nsAnimationReceiver::AnimationRemoved(Animation* aAnimation)
 {
-  RecordAnimationMutation(aPlayer, eAnimationMutation_Removed);
+  RecordAnimationMutation(aAnimation, eAnimationMutation_Removed);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAnimationReceiver, nsMutationReceiver,
@@ -1020,11 +1020,11 @@ nsAutoAnimationMutationBatch::Done()
 
     for (const Entry& e : mEntries) {
       if (e.mState == eState_Added) {
-        m->mAddedAnimations.AppendElement(e.mPlayer);
+        m->mAddedAnimations.AppendElement(e.mAnimation);
       } else if (e.mState == eState_Removed) {
-        m->mRemovedAnimations.AppendElement(e.mPlayer);
+        m->mRemovedAnimations.AppendElement(e.mAnimation);
       } else if (e.mState == eState_RemainedPresent && e.mChanged) {
-        m->mChangedAnimations.AppendElement(e.mPlayer);
+        m->mChangedAnimations.AppendElement(e.mAnimation);
       }
     }
 

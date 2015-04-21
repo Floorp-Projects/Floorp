@@ -286,7 +286,7 @@ add_task(function test_frecency()
   prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
   for (let [, test] in Iterator(tests)) {
-    remove_all_bookmarks();
+    yield PlacesUtils.bookmarks.eraseEverything();
     yield PlacesTestUtils.clearHistory();
 
     deferEnsureResults = Promise.defer();

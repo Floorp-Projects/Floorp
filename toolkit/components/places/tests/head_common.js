@@ -331,20 +331,6 @@ function visits_in_database(aURI)
 }
 
 /**
- * Removes all bookmarks and checks for correct cleanup
- */
-function remove_all_bookmarks() {
-  let PU = PlacesUtils;
-  // Clear all bookmarks
-  PU.bookmarks.removeFolderChildren(PU.bookmarks.bookmarksMenuFolder);
-  PU.bookmarks.removeFolderChildren(PU.bookmarks.toolbarFolder);
-  PU.bookmarks.removeFolderChildren(PU.bookmarks.unfiledBookmarksFolder);
-  // Check for correct cleanup
-  check_no_bookmarks();
-}
-
-
-/**
  * Checks that we don't have any bookmark
  */
 function check_no_bookmarks() {

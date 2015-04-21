@@ -21,7 +21,8 @@ add_task(function*() {
     target: el.tagLine,
     pageX: rect.x,
     pageY: rect.y,
-    stopPropagation: function() {}
+    stopPropagation: function() {},
+    preventDefault: function() {}
   });
 
   is(el.isDragging, false, "isDragging should not be set to true immedietly");
