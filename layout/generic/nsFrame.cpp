@@ -4925,7 +4925,7 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
         widget->GetClientBounds(screenBounds);
         nsIntRect toplevelScreenBounds;
         toplevel->GetClientBounds(toplevelScreenBounds);
-        nsIntPoint translation = gfx::ThebesIntPoint(screenBounds.TopLeft() - toplevelScreenBounds.TopLeft());
+        nsIntPoint translation = screenBounds.TopLeft() - toplevelScreenBounds.TopLeft();
 
         Matrix4x4 transformToTop;
         transformToTop._41 = translation.x;

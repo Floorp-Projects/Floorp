@@ -230,13 +230,13 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
       int32_t inputIndex = aInputIndices[i];
       bool isStandardInput = inputIndex < 0 || inputIndex == mSourceGraphicIndex;
       IntRect inputSubregion = isStandardInput ?
-        ToIntRect(mFilterSpaceBounds) :
+        mFilterSpaceBounds :
         aPrimitiveDescrs[inputIndex].PrimitiveSubregion();
 
       defaultFilterSubregion = defaultFilterSubregion.Union(inputSubregion);
     }
   } else {
-    defaultFilterSubregion = ToIntRect(mFilterSpaceBounds);
+    defaultFilterSubregion = mFilterSpaceBounds;
   }
 
   gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
@@ -368,7 +368,7 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
   // Clip previous filter's output to this filter's filter region.
   if (mSourceGraphicIndex >= 0) {
     FilterPrimitiveDescription& sourceDescr = aPrimitiveDescrs[mSourceGraphicIndex];
-    sourceDescr.SetPrimitiveSubregion(sourceDescr.PrimitiveSubregion().Intersect(ToIntRect(mFilterSpaceBounds)));
+    sourceDescr.SetPrimitiveSubregion(sourceDescr.PrimitiveSubregion().Intersect(mFilterSpaceBounds));
   }
 
   // Get the filter primitive elements.
@@ -410,7 +410,7 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       filter->GetPrimitiveDescription(this, primitiveSubregion, sourcesAreTainted, aInputImages);
 
     descr.SetIsTainted(filter->OutputIsTainted(sourcesAreTainted, principal));
-    descr.SetFilterSpaceBounds(ToIntRect(mFilterSpaceBounds));
+    descr.SetFilterSpaceBounds(mFilterSpaceBounds);
     descr.SetPrimitiveSubregion(primitiveSubregion.Intersect(descr.FilterSpaceBounds()));
 
     for (uint32_t i = 0; i < sourceIndices.Length(); i++) {

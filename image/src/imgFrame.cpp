@@ -695,7 +695,7 @@ imgFrame::ImageUpdatedInternal(const nsIntRect& aUpdateRect)
 
   // clamp to bounds, in case someone sends a bogus updateRect (I'm looking at
   // you, gif decoder)
-  nsIntRect boundsRect(gfx::ToIntPoint(mOffset), gfx::IntSize(mSize.width, mSize.height));
+  nsIntRect boundsRect(mOffset, mSize);
   mDecoded.IntersectRect(mDecoded, boundsRect);
 
   // If the image is now complete, wake up anyone who's waiting.
@@ -728,7 +728,7 @@ imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
 nsIntRect
 imgFrame::GetRect() const
 {
-  return gfx::IntRect(gfx::ToIntPoint(mOffset), gfx::IntSize(mSize.width, mSize.height));
+  return gfx::IntRect(mOffset, mSize);
 }
 
 int32_t
