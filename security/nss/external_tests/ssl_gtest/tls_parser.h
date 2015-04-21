@@ -15,23 +15,24 @@
 
 namespace nss_test {
 
-const uint8_t kTlsChangeCipherSpecType = 0x14;
-const uint8_t kTlsAlertType = 0x15;
-const uint8_t kTlsHandshakeType = 0x16;
+const uint8_t kTlsChangeCipherSpecType = 20;
+const uint8_t kTlsAlertType = 21;
+const uint8_t kTlsHandshakeType = 22;
 
-const uint8_t kTlsHandshakeClientHello = 0x01;
-const uint8_t kTlsHandshakeServerHello = 0x02;
-const uint8_t kTlsHandshakeCertificate = 0x0b;
-const uint8_t kTlsHandshakeServerKeyExchange = 0x0c;
+const uint8_t kTlsHandshakeClientHello = 1;
+const uint8_t kTlsHandshakeServerHello = 2;
+const uint8_t kTlsHandshakeCertificate = 11;
+const uint8_t kTlsHandshakeServerKeyExchange = 12;
 
 const uint8_t kTlsAlertWarning = 1;
 const uint8_t kTlsAlertFatal = 2;
 
-const uint8_t kTlsAlertHandshakeFailure = 0x28;
-const uint8_t kTlsAlertIllegalParameter = 0x2f;
-const uint8_t kTlsAlertDecodeError = 0x32;
-const uint8_t kTlsAlertUnsupportedExtension = 0x6e;
-const uint8_t kTlsAlertNoApplicationProtocol = 0x78;
+const uint8_t kTlsAlertUnexpectedMessage = 10;
+const uint8_t kTlsAlertHandshakeFailure = 40;
+const uint8_t kTlsAlertIllegalParameter = 47;
+const uint8_t kTlsAlertDecodeError = 50;
+const uint8_t kTlsAlertUnsupportedExtension = 110;
+const uint8_t kTlsAlertNoApplicationProtocol = 120;
 
 const uint8_t kTlsFakeChangeCipherSpec[] = {
     kTlsChangeCipherSpecType,        // Type

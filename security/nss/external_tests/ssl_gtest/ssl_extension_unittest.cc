@@ -268,8 +268,8 @@ class TlsExtensionTestBase : public TlsConnectTestBase {
       client_->SetPacketFilter(filter);
     }
     ConnectExpectFail();
-    ASSERT_EQ(kTlsAlertFatal, alert_recorder->level());
-    ASSERT_EQ(alert, alert_recorder->description());
+    EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
+    EXPECT_EQ(alert, alert_recorder->description());
   }
 
   void ServerHelloErrorTest(PacketFilter* filter,
@@ -280,8 +280,8 @@ class TlsExtensionTestBase : public TlsConnectTestBase {
       server_->SetPacketFilter(filter);
     }
     ConnectExpectFail();
-    ASSERT_EQ(kTlsAlertFatal, alert_recorder->level());
-    ASSERT_EQ(alert, alert_recorder->description());
+    EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
+    EXPECT_EQ(alert, alert_recorder->description());
   }
 
   static void InitSimpleSni(DataBuffer* extension) {
@@ -494,7 +494,7 @@ TEST_P(TlsExtensionTest12Plus, DISABLED_SignatureAlgorithmsSigUnsupported) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedCurvesShort) {
-  EnableSomeECDHECiphers();
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x00, 0x01, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_elliptic_curves_xtn,
@@ -502,7 +502,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesShort) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedCurvesBadLength) {
-  EnableSomeECDHECiphers();
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x09, 0x99, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_elliptic_curves_xtn,
@@ -510,7 +510,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesBadLength) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedCurvesTrailingData) {
-  EnableSomeECDHECiphers();
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x00, 0x02, 0x00, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_elliptic_curves_xtn,
@@ -518,7 +518,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesTrailingData) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedPointsEmpty) {
-  EnableSomeECDHECiphers();
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
@@ -526,7 +526,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedPointsEmpty) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedPointsBadLength) {
-  EnableSomeECDHECiphers();
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x99, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
@@ -534,7 +534,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedPointsBadLength) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedPointsTrailingData) {
-  EnableSomeECDHECiphers();
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x01, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,

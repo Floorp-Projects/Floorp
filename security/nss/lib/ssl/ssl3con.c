@@ -284,30 +284,30 @@ static const ssl3BulkCipherDef bulk_cipher_defs[] = {
     {cipher_missing,      calg_null,         0, 0, type_stream, 0, 0, 0, 0},
 };
 
-static const ssl3KEADef kea_defs[] = 
+static const ssl3KEADef kea_defs[] =
 { /* indexed by SSL3KeyExchangeAlgorithm */
-    /* kea              exchKeyType signKeyType is_limited limit  tls_keygen */
-    {kea_null,           kt_null,     sign_null, PR_FALSE,   0, PR_FALSE},
-    {kea_rsa,            kt_rsa,      sign_rsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_rsa_export,     kt_rsa,      sign_rsa,  PR_TRUE,  512, PR_FALSE},
-    {kea_rsa_export_1024,kt_rsa,      sign_rsa,  PR_TRUE, 1024, PR_FALSE},
-    {kea_dh_dss,         kt_dh,       sign_dsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_dh_dss_export,  kt_dh,       sign_dsa,  PR_TRUE,  512, PR_FALSE},
-    {kea_dh_rsa,         kt_dh,       sign_rsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_dh_rsa_export,  kt_dh,       sign_rsa,  PR_TRUE,  512, PR_FALSE},
-    {kea_dhe_dss,        kt_dh,       sign_dsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_dhe_dss_export, kt_dh,       sign_dsa,  PR_TRUE,  512, PR_FALSE},
-    {kea_dhe_rsa,        kt_dh,       sign_rsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_dhe_rsa_export, kt_dh,       sign_rsa,  PR_TRUE,  512, PR_FALSE},
-    {kea_dh_anon,        kt_dh,       sign_null, PR_FALSE,   0, PR_FALSE},
-    {kea_dh_anon_export, kt_dh,       sign_null, PR_TRUE,  512, PR_FALSE},
-    {kea_rsa_fips,       kt_rsa,      sign_rsa,  PR_FALSE,   0, PR_TRUE },
+    /* kea            exchKeyType signKeyType is_limited limit tls_keygen ephemeral */
+    {kea_null,           kt_null, sign_null,  PR_FALSE,   0, PR_FALSE, PR_FALSE},
+    {kea_rsa,            kt_rsa,  sign_rsa,   PR_FALSE,   0, PR_FALSE, PR_FALSE},
+    {kea_rsa_export,     kt_rsa,  sign_rsa,   PR_TRUE,  512, PR_FALSE, PR_TRUE},
+    {kea_rsa_export_1024,kt_rsa,  sign_rsa,   PR_TRUE, 1024, PR_FALSE, PR_TRUE},
+    {kea_dh_dss,         kt_dh,   sign_dsa,   PR_FALSE,   0, PR_FALSE, PR_FALSE},
+    {kea_dh_dss_export,  kt_dh,   sign_dsa,   PR_TRUE,  512, PR_FALSE, PR_FALSE},
+    {kea_dh_rsa,         kt_dh,   sign_rsa,   PR_FALSE,   0, PR_FALSE, PR_FALSE},
+    {kea_dh_rsa_export,  kt_dh,   sign_rsa,   PR_TRUE,  512, PR_FALSE, PR_FALSE},
+    {kea_dhe_dss,        kt_dh,   sign_dsa,   PR_FALSE,   0, PR_FALSE, PR_TRUE},
+    {kea_dhe_dss_export, kt_dh,   sign_dsa,   PR_TRUE,  512, PR_FALSE, PR_TRUE},
+    {kea_dhe_rsa,        kt_dh,   sign_rsa,   PR_FALSE,   0, PR_FALSE, PR_TRUE},
+    {kea_dhe_rsa_export, kt_dh,   sign_rsa,   PR_TRUE,  512, PR_FALSE, PR_TRUE},
+    {kea_dh_anon,        kt_dh,   sign_null,  PR_FALSE,   0, PR_FALSE, PR_TRUE},
+    {kea_dh_anon_export, kt_dh,   sign_null,  PR_TRUE,  512, PR_FALSE, PR_TRUE},
+    {kea_rsa_fips,       kt_rsa,  sign_rsa,   PR_FALSE,   0, PR_TRUE,  PR_FALSE},
 #ifndef NSS_DISABLE_ECC
-    {kea_ecdh_ecdsa,     kt_ecdh,     sign_ecdsa,  PR_FALSE, 0, PR_FALSE},
-    {kea_ecdhe_ecdsa,    kt_ecdh,     sign_ecdsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_ecdh_rsa,       kt_ecdh,     sign_rsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_ecdhe_rsa,      kt_ecdh,     sign_rsa,  PR_FALSE,   0, PR_FALSE},
-    {kea_ecdh_anon,      kt_ecdh,     sign_null,  PR_FALSE,   0, PR_FALSE},
+    {kea_ecdh_ecdsa,     kt_ecdh, sign_ecdsa, PR_FALSE,   0, PR_FALSE, PR_FALSE},
+    {kea_ecdhe_ecdsa,    kt_ecdh, sign_ecdsa, PR_FALSE,   0, PR_FALSE, PR_TRUE},
+    {kea_ecdh_rsa,       kt_ecdh, sign_rsa,   PR_FALSE,   0, PR_FALSE, PR_FALSE},
+    {kea_ecdhe_rsa,      kt_ecdh, sign_rsa,   PR_FALSE,   0, PR_FALSE, PR_TRUE},
+    {kea_ecdh_anon,      kt_ecdh, sign_null,  PR_FALSE,   0, PR_FALSE, PR_TRUE},
 #endif /* NSS_DISABLE_ECC */
 };
 
@@ -4987,23 +4987,17 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
 	    sidOK = PR_FALSE;
 	}
 
-	/* TLS 1.0 (RFC 2246) Appendix E says:
-	 *   Whenever a client already knows the highest protocol known to
-	 *   a server (for example, when resuming a session), it should
-	 *   initiate the connection in that native protocol.
-	 * So we pass sid->version to ssl3_NegotiateVersion() here, except
-	 * when renegotiating.
-	 *
-	 * Windows SChannel compares the client_version inside the RSA
-	 * EncryptedPreMasterSecret of a renegotiation with the
-	 * client_version of the initial ClientHello rather than the
-	 * ClientHello in the renegotiation. To work around this bug, we
-	 * continue to use the client_version used in the initial
-	 * ClientHello when renegotiating.
-	 */
 	if (sidOK) {
+            /* Set ss->version based on the session cache */
 	    if (ss->firstHsDone) {
 		/*
+	         * Windows SChannel compares the client_version inside the RSA
+	         * EncryptedPreMasterSecret of a renegotiation with the
+	         * client_version of the initial ClientHello rather than the
+	         * ClientHello in the renegotiation. To work around this bug, we
+	         * continue to use the client_version used in the initial
+	         * ClientHello when renegotiating.
+	         *
 		 * The client_version of the initial ClientHello is still
 		 * available in ss->clientHelloVersion. Ensure that
 		 * sid->version is bounded within
@@ -5017,10 +5011,22 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
 		    sidOK = PR_FALSE;
 		}
 	    } else {
-		if (ssl3_NegotiateVersion(ss, sid->version,
-					  PR_FALSE) != SECSuccess) {
+                /*
+                 * Check sid->version is OK first.
+                 * Previously, we would cap the version based on sid->version,
+                 * but that prevents negotiation of a higher version if the
+                 * previous session was reduced (e.g., with version fallback)
+                 */
+		if (sid->version < ss->vrange.min || 
+                    sid->version > ss->vrange.max) {
 		    sidOK = PR_FALSE;
-		}
+		} else {
+	            rv = ssl3_NegotiateVersion(ss, SSL_LIBRARY_VERSION_MAX_SUPPORTED,
+                                               PR_TRUE);
+	            if (rv != SECSuccess) {
+                        return rv;	/* error code was set */
+                    }
+	        }
 	    }
 	}
 
@@ -6575,7 +6581,16 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PORT_Memcpy(sid->u.ssl3.sessionID, sidBytes.data, sidBytes.len);
 
     ss->ssl3.hs.isResuming = PR_FALSE;
-    ss->ssl3.hs.ws         = wait_server_cert;
+    if (ss->ssl3.hs.kea_def->signKeyType != sign_null) {
+        /* All current cipher suites other than those with sign_null (i.e.,
+         * DH_anon_* suites) require a certificate, so use that signal. */
+        ss->ssl3.hs.ws = wait_server_cert;
+    } else if (ss->ssl3.hs.kea_def->ephemeral) {
+        /* Only ephemeral cipher suites use ServerKeyExchange. */
+        ss->ssl3.hs.ws = wait_server_key;
+    } else {
+        ss->ssl3.hs.ws = wait_cert_request;
+    }
     return SECSuccess;
 
 alert_loser:
@@ -6634,16 +6649,10 @@ ssl3_HandleServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
-    if (ss->ssl3.hs.ws != wait_server_key &&
-	ss->ssl3.hs.ws != wait_server_cert) {
-	errCode = SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH;
-	desc    = unexpected_message;
-	goto alert_loser;
-    }
-    if (ss->sec.peerCert == NULL) {
-	errCode = SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH;
-	desc    = unexpected_message;
-	goto alert_loser;
+    if (ss->ssl3.hs.ws != wait_server_key) {
+        errCode = SSL_ERROR_RX_UNEXPECTED_SERVER_KEY_EXCH;
+        desc = unexpected_message;
+        goto alert_loser;
     }
 
     isTLS = (PRBool)(ss->ssl3.prSpec->version > SSL_LIBRARY_VERSION_3_0);
@@ -6870,7 +6879,6 @@ no_memory:	/* no-memory error has already been set. */
     return SECFailure;
 }
 
-
 /*
  * Returns the TLS signature algorithm for the client authentication key and
  * whether it is an RSA or DSA key that may be able to sign only SHA-1 hashes.
@@ -6998,11 +7006,10 @@ ssl3_HandleCertificateRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
-    if (ss->ssl3.hs.ws != wait_cert_request &&
-    	ss->ssl3.hs.ws != wait_server_key) {
-	desc    = unexpected_message;
-	errCode = SSL_ERROR_RX_UNEXPECTED_CERT_REQUEST;
-	goto alert_loser;
+    if (ss->ssl3.hs.ws != wait_cert_request) {
+        desc = unexpected_message;
+        errCode = SSL_ERROR_RX_UNEXPECTED_CERT_REQUEST;
+        goto alert_loser;
     }
 
     PORT_Assert(ss->ssl3.clientCertChain == NULL);
@@ -7251,9 +7258,8 @@ ssl3_HandleServerHelloDone(sslSocket *ss)
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
+    /* Skipping CertificateRequest is always permitted. */
     if (ws != wait_hello_done  &&
-        ws != wait_server_cert &&
-	ws != wait_server_key  &&
 	ws != wait_cert_request) {
 	SSL3_SendAlert(ss, alert_fatal, unexpected_message);
 	PORT_SetError(SSL_ERROR_RX_UNEXPECTED_HELLO_DONE);
@@ -7589,14 +7595,11 @@ ssl3_SendServerHelloSequence(sslSocket *ss)
 	    return rv;
 #endif
 	}
-#ifndef NSS_DISABLE_ECC
-    } else if ((kea_def->kea == kea_ecdhe_rsa) ||
-	       (kea_def->kea == kea_ecdhe_ecdsa)) {
-	rv = ssl3_SendServerKeyExchange(ss);
-	if (rv != SECSuccess) {
-	    return rv;	/* err code was set. */
-	}
-#endif /* NSS_DISABLE_ECC */
+    } else if (kea_def->ephemeral) {
+        rv = ssl3_SendServerKeyExchange(ss);
+        if (rv != SECSuccess) {
+            return rv;	/* err code was set. */
+        }
     }
 
     if (ss->opt.requestCertificate) {
@@ -7648,6 +7651,21 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert( ss->ssl3.initialized );
 
+    if (!ss->sec.isServer ||
+        (ss->ssl3.hs.ws != wait_client_hello &&
+         ss->ssl3.hs.ws != idle_handshake)) {
+        desc = unexpected_message;
+        errCode = SSL_ERROR_RX_UNEXPECTED_CLIENT_HELLO;
+        goto alert_loser;
+    }
+    if (ss->ssl3.hs.ws == idle_handshake &&
+        ss->opt.enableRenegotiation == SSL_RENEGOTIATE_NEVER) {
+        desc = no_renegotiation;
+        level = alert_warning;
+        errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
+        goto alert_loser;
+    }
+
     /* Get peer name of client */
     rv = ssl_GetPeerInfo(ss);
     if (rv != SECSuccess) {
@@ -7673,20 +7691,6 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
      */
     PORT_Memset(&ss->xtnData, 0, sizeof(TLSExtensionData));
     ss->statelessResume = PR_FALSE;
-
-    if ((ss->ssl3.hs.ws != wait_client_hello) &&
-	(ss->ssl3.hs.ws != idle_handshake)) {
-	desc    = unexpected_message;
-	errCode = SSL_ERROR_RX_UNEXPECTED_CLIENT_HELLO;
-	goto alert_loser;
-    }
-    if (ss->ssl3.hs.ws == idle_handshake  &&
-        ss->opt.enableRenegotiation == SSL_RENEGOTIATE_NEVER) {
-	desc    = no_renegotiation;
-	level   = alert_warning;
-	errCode = SSL_ERROR_RENEGOTIATION_NOT_ALLOWED;
-	goto alert_loser;
-    }
 
     if (IS_DTLS(ss)) {
 	dtls_RehandshakeCleanup(ss);
@@ -9053,7 +9057,7 @@ ssl3_HandleCertificateVerify(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
     isTLS = (PRBool)(ss->ssl3.prSpec->version > SSL_LIBRARY_VERSION_3_0);
     isTLS12 = (PRBool)(ss->ssl3.prSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2);
 
-    if (ss->ssl3.hs.ws != wait_cert_verify || ss->sec.peerCert == NULL) {
+    if (ss->ssl3.hs.ws != wait_cert_verify) {
 	desc    = unexpected_message;
 	errCode = SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY;
 	goto alert_loser;
@@ -9839,11 +9843,11 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
-    if ((ss->ssl3.hs.ws != wait_server_cert) &&
-	(ss->ssl3.hs.ws != wait_client_cert)) {
-	desc    = unexpected_message;
-	errCode = SSL_ERROR_RX_UNEXPECTED_CERTIFICATE;
-	goto alert_loser;
+    if ((isServer && ss->ssl3.hs.ws != wait_client_cert) ||
+        (!isServer && ss->ssl3.hs.ws != wait_server_cert)) {
+        desc = unexpected_message;
+        errCode = SSL_ERROR_RX_UNEXPECTED_CERTIFICATE;
+        goto alert_loser;
     }
 
     if (ss->sec.peerCert != NULL) {
@@ -10082,16 +10086,11 @@ ssl3_AuthCertificate(sslSocket *ss)
 	    pubKey = NULL;
     	}
 
-	ss->ssl3.hs.ws = wait_cert_request; /* disallow server_key_exchange */
-	if (ss->ssl3.hs.kea_def->is_limited ||
-	    /* XXX OR server cert is signing only. */
-#ifndef NSS_DISABLE_ECC
-	    ss->ssl3.hs.kea_def->kea == kea_ecdhe_ecdsa ||
-	    ss->ssl3.hs.kea_def->kea == kea_ecdhe_rsa ||
-#endif /* NSS_DISABLE_ECC */
-	    ss->ssl3.hs.kea_def->exchKeyType == kt_dh) {
-	    ss->ssl3.hs.ws = wait_server_key; /* allow server_key_exchange */
-	}
+        if (ss->ssl3.hs.kea_def->ephemeral) {
+            ss->ssl3.hs.ws = wait_server_key; /* require server_key_exchange */
+        } else {
+            ss->ssl3.hs.ws = wait_cert_request; /* disallow server_key_exchange */
+        }
     } else {
 	ss->ssl3.hs.ws = wait_client_key;
     }

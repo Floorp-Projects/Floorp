@@ -1132,8 +1132,6 @@ pkix_pl_HttpDefaultClient_KeepAliveSession(
         PRPollDesc **pPollDesc,
         void *plContext)
 {
-        PKIX_PL_HttpDefaultClient *client = NULL;
-
         PKIX_ENTER
                 (HTTPDEFAULTCLIENT,
                 "pkix_pl_HttpDefaultClient_KeepAliveSession");
@@ -1144,8 +1142,6 @@ pkix_pl_HttpDefaultClient_KeepAliveSession(
                 PKIX_HTTPDEFAULTCLIENT_TYPE,
                 plContext),
                 PKIX_SESSIONNOTANHTTPDEFAULTCLIENT);
-
-        client = (PKIX_PL_HttpDefaultClient *)session;
 
         /* XXX Not implemented */
 

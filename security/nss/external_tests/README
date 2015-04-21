@@ -21,11 +21,11 @@ You should be able to run the unit tests manually as:
 
   ssl_gtest -d ${SSLGTESTDIR}
 
-Where $SSLGTESTDIR the directory created by ./all.sh or a manually
-created directory with a database containing a certificate called
-server (with its private keys)
+Where $SSLGTESTDIR is a directory with a database containing:
+ - an RSA certificate called server (with its private key)
+ - an ECDSA certificate called ecdsa (with its private key)
 
+A directory like this is created by ./all.sh and can be found
+in a directory named something like
 
-There is a very trivial set of tests that demonstrate some
-of the features.
-
+  tests_results/security/${hostname}.${NUMBER}/ssl_gtests

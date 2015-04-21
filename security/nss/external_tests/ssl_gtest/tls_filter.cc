@@ -67,7 +67,7 @@ size_t TlsRecordFilter::ApplyFilter(uint8_t content_type, uint16_t version,
       filtered.len() < 0x10000) {
     *changed = true;
     std::cerr << "record old: " << record << std::endl;
-    std::cerr << "record old: " << filtered << std::endl;
+    std::cerr << "record new: " << filtered << std::endl;
     source = &filtered;
   }
 
@@ -96,11 +96,7 @@ bool TlsHandshakeFilter::FilterRecord(uint8_t content_type, uint16_t version,
       return false; // malformed
     }
     uint32_t length;
-    if (!parser.Read(&length, 3)) {
-      return false; // malformed
-    }
-
-    if (IsDtls(version) && !CheckDtls(parser, length)) {
+    if (!ReadLength(&parser, version, &length)) {
       return false;
     }
 
@@ -125,24 +121,32 @@ bool TlsHandshakeFilter::FilterRecord(uint8_t content_type, uint16_t version,
   return changed;
 }
 
-bool TlsHandshakeFilter::CheckDtls(TlsParser& parser, size_t length) {
+bool TlsHandshakeFilter::ReadLength(TlsParser* parser, uint16_t version, uint32_t *length) {
+  if (!parser->Read(length, 3)) {
+    return false; // malformed
+  }
+
+  if (!IsDtls(version)) {
+    return true; // nothing left to do
+  }
+
   // Read and check DTLS parameters
-  if (!parser.Skip(2)) { // sequence number
+  if (!parser->Skip(2)) { // sequence number
     return false;
   }
 
   uint32_t fragment_offset;
-  if (!parser.Read(&fragment_offset, 3)) {
+  if (!parser->Read(&fragment_offset, 3)) {
     return false;
   }
 
   uint32_t fragment_length;
-  if (!parser.Read(&fragment_length, 3)) {
+  if (!parser->Read(&fragment_length, 3)) {
     return false;
   }
 
   // All current tests where we are using this code don't fragment.
-  return (fragment_offset == 0 && fragment_length == length);
+  return (fragment_offset == 0 && fragment_length == *length);
 }
 
 size_t TlsHandshakeFilter::ApplyFilter(
