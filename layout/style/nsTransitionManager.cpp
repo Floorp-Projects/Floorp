@@ -567,9 +567,9 @@ nsTransitionManager::ConsiderStartingTransition(
 
   nsRefPtr<CSSTransitionPlayer> player = new CSSTransitionPlayer(timeline);
   // The order of the following two calls is important since PlayFromStyle
-  // will add the player to the PendingPlayerTracker of its effect's document.
-  // When we come to make effect writeable (bug 1049975) we should remove this
-  // dependency.
+  // will add the player to the PendingAnimationTracker of its effect's
+  // document. When we come to make effect writeable (bug 1049975) we should
+  // remove this dependency.
   player->SetEffect(pt);
   player->PlayFromStyle();
 
