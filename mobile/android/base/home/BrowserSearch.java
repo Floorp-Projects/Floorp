@@ -65,7 +65,8 @@ import android.widget.TextView;
  * Fragment that displays frecency search results in a ListView.
  */
 public class BrowserSearch extends HomeFragment
-                           implements GeckoEventListener {
+                           implements GeckoEventListener,
+                                      SearchEngineBar.OnSearchBarClickListener {
 
     @RobocopTarget
     public interface SuggestClientFactory {
@@ -123,6 +124,9 @@ public class BrowserSearch extends HomeFragment
 
     // The list showing search results
     private HomeListView mList;
+
+    // The bar on the bottom of the screen displaying search engine options.
+    private SearchEngineBar mSearchEngineBar;
 
     // Client that performs search suggestion queries.
     // Public for testing.
@@ -268,6 +272,7 @@ public class BrowserSearch extends HomeFragment
         // If the style of the list changes, inflate it from an XML.
         mView = (LinearLayout) inflater.inflate(R.layout.browser_search, container, false);
         mList = (HomeListView) mView.findViewById(R.id.home_list_view);
+        mSearchEngineBar = (SearchEngineBar) mView.findViewById(R.id.search_engine_bar);
 
         return mView;
     }
@@ -278,6 +283,9 @@ public class BrowserSearch extends HomeFragment
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "SearchEngines:Data");
+
+        mSearchEngineBar.setAdapter(null);
+        mSearchEngineBar = null;
 
         mList.setAdapter(null);
         mList = null;
@@ -350,6 +358,12 @@ public class BrowserSearch extends HomeFragment
         registerForContextMenu(mList);
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "SearchEngines:Data");
+
+        // If the view backed by this Fragment is being recreated, we will not receive
+        // a new search engine data event so refresh the new search engine bar's data
+        // & Views with the data we have.
+        mSearchEngineBar.setSearchEngines(mSearchEngines);
+        mSearchEngineBar.setOnSearchBarClickListener(this);
     }
 
     @Override
@@ -587,6 +601,8 @@ public class BrowserSearch extends HomeFragment
                 mAdapter.notifyDataSetChanged();
             }
 
+            mSearchEngineBar.setSearchEngines(mSearchEngines);
+
             // Show suggestions opt-in prompt only if suggestions are not enabled yet,
             // user hasn't been prompted and we're not on a private browsing tab.
             if (!mSuggestionsEnabled && !suggestionsPrompted && mSuggestClient != null) {
@@ -597,6 +613,11 @@ public class BrowserSearch extends HomeFragment
         }
 
         filterSuggestions();
+    }
+
+    @Override
+    public void onSearchBarClickListener(final SearchEngine searchEngine) {
+        mSearchListener.onSearch(searchEngine, mSearchTerm);
     }
 
     private void maybeSetSuggestClient(final String suggestTemplate, final boolean isPrivate) {

@@ -340,6 +340,7 @@ gbjar.sources += [
     'home/RemoteTabsSplitPlaneFragment.java',
     'home/RemoteTabsStaticFragment.java',
     'home/SearchEngine.java',
+    'home/SearchEngineBar.java',
     'home/SearchEngineRow.java',
     'home/SearchLoader.java',
     'home/SimpleCursorLoader.java',
