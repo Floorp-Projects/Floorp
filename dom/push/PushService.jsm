@@ -33,9 +33,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
 XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
                                   "resource://gre/modules/AlarmService.jsm");
 
+#ifdef MOZ_B2G
 XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
                                    "@mozilla.org/power/powermanagerservice;1",
                                    "nsIPowerManagerService");
+#endif
 
 var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
 
@@ -217,8 +219,8 @@ this.PushDB.prototype = {
       function txnCb(aTxn, aStore) {
         aStore.clear();
       },
-      aSuccessCb(),
-      aErrorCb()
+      aSuccessCb,
+      aErrorCb
     );
   }
 };
@@ -495,18 +497,41 @@ this.PushService = {
     this._ws.sendMsg(msg);
   },
 
-  init: function() {
+  init: function(options = {}) {
     debug("init()");
     if (this._started) {
       return;
+    }
+
+    // Override the backing store for testing.
+    this._db = options.db;
+    if (!this._db) {
+      this._db = new PushDB();
+    }
+
+    // Override the default WebSocket factory function. The returned object
+    // must be null or satisfy the nsIWebSocketChannel interface. Used by
+    // the tests to provide a mock WebSocket implementation.
+    if (options.makeWebSocket) {
+      this._makeWebSocket = options.makeWebSocket;
+    }
+
+    // Override the default UDP socket factory function. The returned object
+    // must be null or satisfy the nsIUDPSocket interface. Used by the
+    // UDP tests.
+    if (options.makeUDPSocket) {
+      this._makeUDPSocket = options.makeUDPSocket;
+    }
+
+    this._networkInfo = options.networkInfo;
+    if (!this._networkInfo) {
+      this._networkInfo = PushNetworkInfo;
     }
 
     var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIFrameScriptLoader);
 
     globalMM.loadFrameScript("chrome://global/content/PushServiceChildPreload.js", true);
-
-    this._db = new PushDB();
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                  .getService(Ci.nsIMessageBroadcaster);
@@ -544,7 +569,8 @@ this.PushService = {
     // On B2G both events fire, one after the other, when the network goes
     // online, so we explicitly check for the presence of NetworkManager and
     // don't add an observer for offline-status-changed on B2G.
-    Services.obs.addObserver(this, this._getNetworkStateChangeEventName(), false);
+    this._networkStateChangeEventName = this._networkInfo.getNetworkStateChangeEventName();
+    Services.obs.addObserver(this, this._networkStateChangeEventName, false);
 
     // This is only used for testing. Different tests require connecting to
     // slightly different URLs.
@@ -583,7 +609,7 @@ this.PushService = {
     prefs.ignore("debug", this);
     prefs.ignore("connection.enabled", this);
     prefs.ignore("serverURL", this);
-    Services.obs.removeObserver(this, this._getNetworkStateChangeEventName());
+    Services.obs.removeObserver(this, this._networkStateChangeEventName);
     Services.obs.removeObserver(this, "webapps-clear-data", false);
     Services.obs.removeObserver(this, "xpcom-shutdown", false);
 
@@ -697,7 +723,7 @@ this.PushService = {
     }
 
     // Save actual state of the network
-    let ns = this._getNetworkInformation();
+    let ns = this._networkInfo.getNetworkInformation();
 
     if (ns.ip) {
       // mobile
@@ -815,27 +841,7 @@ this.PushService = {
     }
   },
 
-  _beginWSSetup: function() {
-    debug("beginWSSetup()");
-    if (this._currentState != STATE_SHUT_DOWN) {
-      debug("_beginWSSetup: Not in shutdown state! Current state " +
-            this._currentState);
-      return;
-    }
-
-    if (!prefs.get("connection.enabled")) {
-      debug("_beginWSSetup: connection.enabled is not set to true. Aborting.");
-      return;
-    }
-
-    // Stop any pending reconnects scheduled for the near future.
-    this._stopAlarm();
-
-    if (Services.io.offline) {
-      debug("Network is offline.");
-      return;
-    }
-
+  _getServerURI: function() {
     let serverURL = prefs.get("serverURL");
     if (!serverURL) {
       debug("No dom.push.serverURL found!");
@@ -850,25 +856,62 @@ this.PushService = {
             serverURL + ")");
       return;
     }
+    return uri;
+  },
 
+  _makeWebSocket: function(uri) {
+    if (!prefs.get("connection.enabled")) {
+      debug("_makeWebSocket: connection.enabled is not set to true. Aborting.");
+      return null;
+    }
+
+    if (Services.io.offline) {
+      debug("Network is offline.");
+      return null;
+    }
+
+    let socket;
     if (uri.scheme === "wss") {
-      this._ws = Cc["@mozilla.org/network/protocol;1?name=wss"]
-                   .createInstance(Ci.nsIWebSocketChannel);
+      socket = Cc["@mozilla.org/network/protocol;1?name=wss"]
+                 .createInstance(Ci.nsIWebSocketChannel);
 
-      this._ws.initLoadInfo(null, // aLoadingNode
-                            Services.scriptSecurityManager.getSystemPrincipal(),
-                            null, // aTriggeringPrincipal
-                            Ci.nsILoadInfo.SEC_NORMAL,
-                            Ci.nsIContentPolicy.TYPE_WEBSOCKET);
+      socket.initLoadInfo(null, // aLoadingNode
+                          Services.scriptSecurityManager.getSystemPrincipal(),
+                          null, // aTriggeringPrincipal
+                          Ci.nsILoadInfo.SEC_NORMAL,
+                          Ci.nsIContentPolicy.TYPE_WEBSOCKET);
     }
     else if (uri.scheme === "ws") {
       debug("Push over an insecure connection (ws://) is not allowed!");
-      return;
+      return null;
     }
     else {
       debug("Unsupported websocket scheme " + uri.scheme);
+      return null;
+    }
+    return socket;
+  },
+
+  _beginWSSetup: function() {
+    debug("beginWSSetup()");
+    if (this._currentState != STATE_SHUT_DOWN) {
+      debug("_beginWSSetup: Not in shutdown state! Current state " +
+            this._currentState);
       return;
     }
+
+    // Stop any pending reconnects scheduled for the near future.
+    this._stopAlarm();
+
+    let uri = this._getServerURI();
+    if (!uri) {
+      return;
+    }
+    let socket = this._makeWebSocket(uri);
+    if (!socket) {
+      return;
+    }
+    this._ws = socket.QueryInterface(Ci.nsIWebSocketChannel);
 
     debug("serverURL: " + uri.spec);
     this._wsListener = new PushWebSocketListener(this);
@@ -877,7 +920,7 @@ this.PushService = {
     try {
       // Grab a wakelock before we open the socket to ensure we don't go to sleep
       // before connection the is opened.
-      this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
+      this._ws.asyncOpen(uri, uri.spec, this._wsListener, null);
       this._acquireWakeLock();
       this._currentState = STATE_WAITING_FOR_WS_START;
     } catch(e) {
@@ -1012,6 +1055,8 @@ this.PushService = {
   },
 
   _acquireWakeLock: function() {
+#ifdef MOZ_B2G
+    // Disable the wake lock on non-B2G platforms to work around bug 1154492.
     if (!this._socketWakeLock) {
       debug("Acquiring Socket Wakelock");
       this._socketWakeLock = gPowerManagerService.newWakeLock("cpu");
@@ -1029,10 +1074,12 @@ this.PushService = {
                         // timers can be a little off and we don't want to go
                         // to sleep just as the socket connected.
                         this._requestTimeout + 1000,
-                        Ci.nsITimer.ONE_SHOT);
+                        Ci.nsITimer.TYPE_ONE_SHOT);
+#endif
   },
 
   _releaseWakeLock: function() {
+#ifdef MOZ_B2G
     debug("Releasing Socket WakeLock");
     if (this._socketWakeLockTimer) {
       this._socketWakeLockTimer.cancel();
@@ -1041,6 +1088,7 @@ this.PushService = {
       this._socketWakeLock.unlock();
       this._socketWakeLock = null;
     }
+#endif
   },
 
   /**
@@ -1652,7 +1700,7 @@ this.PushService = {
       this._currentState = STATE_WAITING_FOR_HELLO;
     }
 
-    this._getNetworkState((networkState) => {
+    this._networkInfo.getNetworkState((networkState) => {
       if (networkState.ip) {
         // Opening an available UDP port.
         this._listenForUDPWakeup();
@@ -1790,8 +1838,13 @@ this.PushService = {
     for (let channelID in this._pendingRequests) {
       let request = this._pendingRequests[channelID];
       delete this._pendingRequests[channelID];
-      request.deferred.reject({status: 0, error: "CancelledError"});
+      request.deferred.reject({status: 0, error: "AbortError"});
     }
+  },
+
+  _makeUDPSocket: function() {
+    return Cc["@mozilla.org/network/udp-socket;1"]
+             .createInstance(Ci.nsIUDPSocket);
   },
 
   /**
@@ -1810,9 +1863,12 @@ this.PushService = {
       return;
     }
 
-    this._udpServer = Cc["@mozilla.org/network/udp-socket;1"]
-                        .createInstance(Ci.nsIUDPSocket);
-    this._udpServer.init(-1, false);
+    let socket = this._makeUDPSocket();
+    if (!socket) {
+      return;
+    }
+    this._udpServer = socket.QueryInterface(Ci.nsIUDPSocket);
+    this._udpServer.init(-1, false, Services.scriptSecurityManager.getSystemPrincipal());
     this._udpServer.asyncListen(this);
     debug("listenForUDPWakeup listening on " + this._udpServer.port);
 
@@ -1838,12 +1894,14 @@ this.PushService = {
     debug("UDP Server socket was shutdown. Status: " + aStatus);
     this._udpServer = undefined;
     this._beginWSSetup();
-  },
+  }
+};
 
+let PushNetworkInfo = {
   /**
    * Returns information about MCC-MNC and the IP of the current connection.
    */
-  _getNetworkInformation: function() {
+  getNetworkInformation: function() {
     debug("getNetworkInformation()");
 
     try {
@@ -1894,14 +1952,14 @@ this.PushService = {
    * woken up by UDP (which currently just means having an mcc and mnc along
    * with an IP, and optionally a netid).
    */
-  _getNetworkState: function(callback) {
+  getNetworkState: function(callback) {
     debug("getNetworkState()");
 
     if (typeof callback !== 'function') {
       throw new Error("No callback method. Aborting push agent !");
     }
 
-    var networkInfo = this._getNetworkInformation();
+    var networkInfo = this.getNetworkInformation();
 
     if (networkInfo.ip) {
       this._getMobileNetworkId(networkInfo, function(netid) {
@@ -1919,7 +1977,7 @@ this.PushService = {
   },
 
   // utility function used to add/remove observers in init() and shutdown()
-  _getNetworkStateChangeEventName: function() {
+  getNetworkStateChangeEventName: function() {
     try {
       Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
       return "network-active-changed";
