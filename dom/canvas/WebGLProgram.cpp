@@ -230,7 +230,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         gl->fGetProgramiv(prog->mGLName, LOCAL_GL_ACTIVE_UNIFORM_BLOCKS,
                           (GLint*)&numActiveUniformBlocks);
 
-        for (GLuint i = 0; i < numActiveAttribs; i++) {
+        for (GLuint i = 0; i < numActiveUniformBlocks; i++) {
             nsAutoCString mappedName;
             mappedName.SetLength(maxUniformBlockLenWithNull - 1);
 
@@ -295,6 +295,7 @@ CreateProgram(gl::GLContext* gl)
 WebGLProgram::WebGLProgram(WebGLContext* webgl)
     : WebGLContextBoundObject(webgl)
     , mGLName(CreateProgram(webgl->GL()))
+    , mTransformFeedbackBufferMode(LOCAL_GL_NONE)
 {
     mContext->mPrograms.insertBack(this);
 }
@@ -432,6 +433,7 @@ already_AddRefed<WebGLActiveInfo>
 WebGLProgram::GetActiveUniform(GLuint index) const
 {
     if (!mMostRecentLinkInfo) {
+        // According to the spec, this can return null.
         nsRefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
         return ret.forget();
     }
@@ -532,9 +534,11 @@ WebGLProgram::GetProgramParameter(GLenum pname) const
         switch (pname) {
         case LOCAL_GL_ACTIVE_UNIFORM_BLOCKS:
             return JS::Int32Value(GetProgramiv(gl, mGLName, pname));
-        }
-    }
 
+        case LOCAL_GL_TRANSFORM_FEEDBACK_VARYINGS:
+            return JS::Int32Value(mTransformFeedbackVaryings.size());
+       }
+    }
 
     switch (pname) {
     case LOCAL_GL_ATTACHED_SHADERS:
@@ -819,6 +823,15 @@ WebGLProgram::LinkProgram()
         mVertShader->BindAttribLocation(mGLName, name, index);
     }
 
+    if (!mTransformFeedbackVaryings.empty()) {
+        // Bind the transform feedback varyings.
+        // This can't be done trivially, because we have to deal with mapped names too.
+        mVertShader->ApplyTransformFeedbackVaryings(mGLName,
+                                                    mTransformFeedbackVaryings,
+                                                    mTransformFeedbackBufferMode,
+                                                    &mTempMappedVaryings);
+    }
+
     if (LinkAndUpdate())
         return true;
 
@@ -896,6 +909,11 @@ WebGLProgram::LinkAndUpdate()
         mLinkLog.SetLength(0);
     }
 
+    // Post link, temporary mapped varying names for transform feedback can be discarded.
+    // The memory can only be deleted after log is queried or the link status will fail.
+    std::vector<std::string> empty;
+    empty.swap(mTempMappedVaryings);
+
     GLint ok = 0;
     gl->fGetProgramiv(mGLName, LOCAL_GL_LINK_STATUS, &ok);
     if (!ok)
@@ -932,6 +950,71 @@ WebGLProgram::FindUniformByMappedName(const nsACString& mappedName,
         return true;
 
     return false;
+}
+
+void
+WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
+                                        GLenum bufferMode)
+{
+    if (bufferMode != LOCAL_GL_INTERLEAVED_ATTRIBS &&
+        bufferMode != LOCAL_GL_SEPARATE_ATTRIBS)
+    {
+        mContext->ErrorInvalidEnum("transformFeedbackVaryings: `bufferMode` %s is "
+                                   "invalid. Must be one of gl.INTERLEAVED_ATTRIBS or "
+                                   "gl.SEPARATE_ATTRIBS.",
+                                   mContext->EnumName(bufferMode));
+        return;
+    }
+
+    size_t varyingsCount = varyings.Length();
+    if (bufferMode == LOCAL_GL_SEPARATE_ATTRIBS &&
+        varyingsCount >= mContext->mGLMaxTransformFeedbackSeparateAttribs)
+    {
+        mContext->ErrorInvalidValue("transformFeedbackVaryings: Number of `varyings` exc"
+                                    "eeds gl.MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS.");
+        return;
+    }
+
+    std::vector<nsCString> asciiVaryings;
+    for (size_t i = 0; i < varyingsCount; i++) {
+        if (!ValidateGLSLVariableName(varyings[i], mContext, "transformFeedbackVaryings"))
+            return;
+
+        NS_LossyConvertUTF16toASCII asciiName(varyings[i]);
+        asciiVaryings.push_back(asciiName);
+    }
+
+    // All validated. Translate the strings and store them until
+    // program linking.
+    mTransformFeedbackBufferMode = bufferMode;
+    mTransformFeedbackVaryings.swap(asciiVaryings);
+}
+
+already_AddRefed<WebGLActiveInfo>
+WebGLProgram::GetTransformFeedbackVarying(GLuint index)
+{
+    // No docs in the WebGL 2 spec for this function. Taking the language for
+    // getActiveAttrib, which states that the function returns null on any error.
+    if (!IsLinked()) {
+        mContext->ErrorInvalidOperation("getTransformFeedbackVarying: `program` must be "
+                                        "linked.");
+        return nullptr;
+    }
+
+    if (index >= mTransformFeedbackVaryings.size()) {
+        mContext->ErrorInvalidValue("getTransformFeedbackVarying: `index` is greater or "
+                                    "equal to TRANSFORM_FEEDBACK_VARYINGS.");
+        return nullptr;
+    }
+
+    const nsCString& varyingUserName = mTransformFeedbackVaryings[index];
+
+    WebGLActiveInfo* info;
+    LinkInfo()->FindAttrib(varyingUserName, (const WebGLActiveInfo**) &info);
+    MOZ_ASSERT(info);
+
+    nsRefPtr<WebGLActiveInfo> ret(info);
+    return ret.forget();
 }
 
 bool
