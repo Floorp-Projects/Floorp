@@ -30,7 +30,6 @@ add_task(function* init() {
 });
 
 add_task(function* test_creation() {
-
   let OLD_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.bak");
   let OLD_UPGRADE_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.bak-0000000");
 
@@ -115,6 +114,27 @@ add_task(function* test_recovery() {
   yield File.writeAtomic(Paths.recoveryBackup, SOURCE);
   yield File.writeAtomic(Paths.recovery, "<Invalid JSON>");
   is((yield SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
+  yield SessionFile.wipe();
+});
+
+add_task(function* test_recovery_inaccessible() {
+  // Can't do chmod() on non-UNIX platforms, we need that for this test.
+  if (AppConstants.platform != "macosx" && AppConstants.platform != "linux") {
+    return;
+  }
+
+  info("Making recovery file inaccessible, attempting to recover from recovery backup");
+  let SOURCE_RECOVERY = yield promiseSource("Paths.recovery");
+  let SOURCE = yield promiseSource("Paths.recoveryBackup");
+  yield File.makeDir(Paths.backups);
+  yield File.writeAtomic(Paths.recoveryBackup, SOURCE);
+
+  // Write a valid recovery file but make it inaccessible.
+  yield File.writeAtomic(Paths.recovery, SOURCE_RECOVERY);
+  yield File.setPermissions(Paths.recovery, { unixMode: 0 });
+
+  is((yield SessionFile.read()).source, SOURCE, "Recovered the correct source from the recovery file");
+  yield File.setPermissions(Paths.recovery, { unixMode: 0644 });
 });
 
 add_task(function* test_clean() {

@@ -108,74 +108,6 @@ function check_cookie_exists(aDomain, aExists)
 }
 
 /**
- * Adds a download to download history.
- *
- * @param aURIString
- *        The string of the URI to add.
- * @param aIsActive
- *        If it should be set to an active state in the database.  This does not
- *        make it show up in the list of active downloads however!
- */
-function add_download(aURIString, aIsActive)
-{
-  function makeGUID() {
-    let guid = "";
-    for (var i = 0; i < 12; i++)
-      guid += Math.floor(Math.random() * 10);
-    return guid;
-  }
-
-  check_downloaded(aURIString, false);
-  let db = Cc["@mozilla.org/download-manager;1"].
-           getService(Ci.nsIDownloadManager).
-           DBConnection;
-  let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (source, state, guid) " +
-    "VALUES (:source, :state, :guid)"
-  );
-  stmt.params.source = aURIString;
-  stmt.params.state = aIsActive ? Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING :
-                                  Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
-  stmt.params.guid = makeGUID();
-  try {
-    stmt.execute();
-  }
-  finally {
-    stmt.finalize();
-  }
-  check_downloaded(aURIString, true);
-}
-
-/**
- * Checks to ensure a URI string is in download history or not.
- *
- * @param aURIString
- *        The string of the URI to check.
- * @param aIsDownloaded
- *        True if the URI should be downloaded, false otherwise.
- */
-function check_downloaded(aURIString, aIsDownloaded)
-{
-  let db = Cc["@mozilla.org/download-manager;1"].
-           getService(Ci.nsIDownloadManager).
-           DBConnection;
-  let stmt = db.createStatement(
-    "SELECT * " +
-    "FROM moz_downloads " +
-    "WHERE source = :source"
-  );
-  stmt.params.source = aURIString;
-
-  let checker = aIsDownloaded ? do_check_true : do_check_false;
-  try {
-    checker(stmt.executeStep());
-  }
-  finally {
-    stmt.finalize();
-  }
-}
-
-/**
  * Adds a disabled host to the login manager.
  *
  * @param aHost
@@ -378,51 +310,6 @@ function test_cookie_not_cleared_with_uri_contains_domain()
   add_cookie(TEST_DOMAIN);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, true);
-}
-
-// Download Manager
-function test_download_history_cleared_with_direct_match()
-{
-  if (oldDownloadManagerDisabled()) {
-    return;
-  }
-
-  const TEST_URI = "http://mozilla.org/foo";
-  add_download(TEST_URI, false);
-  ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_downloaded(TEST_URI, false);
-}
-
-function test_download_history_cleared_with_subdomain()
-{
-  if (oldDownloadManagerDisabled()) {
-    return;
-  }
-
-  const TEST_URI = "http://www.mozilla.org/foo";
-  add_download(TEST_URI, false);
-  ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_downloaded(TEST_URI, false);
-}
-
-function test_download_history_not_cleared_with_active_direct_match()
-{
-  if (oldDownloadManagerDisabled()) {
-    return;
-  }
-
-  // Tests that downloads marked as active in the db are not deleted from the db
-  const TEST_URI = "http://mozilla.org/foo";
-  add_download(TEST_URI, true);
-  ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_downloaded(TEST_URI, true);
-
-  // Reset state
-  let db = Cc["@mozilla.org/download-manager;1"].
-           getService(Ci.nsIDownloadManager).
-           DBConnection;
-  db.executeSimpleSQL("DELETE FROM moz_downloads");
-  check_downloaded(TEST_URI, false);
 }
 
 // Login Manager
@@ -649,12 +536,6 @@ let tests = [
   test_cookie_cleared_with_direct_match,
   test_cookie_cleared_with_subdomain,
   test_cookie_not_cleared_with_uri_contains_domain,
-
-  // Download Manager
-  // Note: active downloads tested in test_removeDataFromDomain_activeDownloads.js
-  test_download_history_cleared_with_direct_match,
-  test_download_history_cleared_with_subdomain,
-  test_download_history_not_cleared_with_active_direct_match,
 
   // Login Manager
   test_login_manager_disabled_hosts_cleared_with_direct_match,

@@ -253,7 +253,9 @@ loop.conversationViews = (function(mozL10n) {
                           onClick={this._handleDecline}>
                     {mozL10n.get("incoming_call_cancel_button")}
                   </button>
-                  <div className="btn-chevron" onClick={this.toggleDropdownMenu} />
+                  <div className="btn-chevron"
+                       onClick={this.toggleDropdownMenu}
+                       ref="menu-button" />
                 </div>
 
                 <ul className={dropdownMenuClassesDecline}>

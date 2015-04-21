@@ -35,7 +35,13 @@ function checkMainPropertyList(aPropertyListRoot) {
   const PRIMITIVE = PropertyListUtils.TYPE_PRIMITIVE;
 
   checkValue(aPropertyListRoot, PropertyListUtils.TYPE_DICTIONARY);
+
+  // Check .has()
+  Assert.ok(aPropertyListRoot.has("Boolean"));
+  Assert.ok(!aPropertyListRoot.has("Nonexistent"));
+
   checkValue(aPropertyListRoot.get("Boolean"), PRIMITIVE, false);
+
   let array = aPropertyListRoot.get("Array");
   checkValue(array, PropertyListUtils.TYPE_ARRAY);
   do_check_eq(array.length, 8);

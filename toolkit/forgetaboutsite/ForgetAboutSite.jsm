@@ -99,67 +99,11 @@ this.ForgetAboutSite = {
     }
 
     // Downloads
-    let useJSTransfer = false;
-    try {
-      // This method throws an exception if the old Download Manager is disabled.
-      Services.downloads.activeDownloadCount;
-    } catch (ex) {
-      useJSTransfer = true;
-    }
-
-    if (useJSTransfer) {
-      Task.spawn(function*() {
-        let list = yield Downloads.getList(Downloads.ALL);
-        list.removeFinished(download => hasRootDomain(
-             NetUtil.newURI(download.source.url).host, aDomain));
-      }).then(null, Cu.reportError);
-    }
-    else {
-      let dm = Cc["@mozilla.org/download-manager;1"].
-               getService(Ci.nsIDownloadManager);
-      // Active downloads
-      for (let enumerator of [dm.activeDownloads, dm.activePrivateDownloads]) {
-        while (enumerator.hasMoreElements()) {
-          let dl = enumerator.getNext().QueryInterface(Ci.nsIDownload);
-          if (hasRootDomain(dl.source.host, aDomain)) {
-            dl.cancel();
-            dl.remove();
-          }
-        }
-
-        const deleteAllLike = function(db) {
-          // NOTE: This is lossy, but we feel that it is OK to be lossy here and not
-          //       invoke the cost of creating a URI for each download entry and
-          //       ensure that the hostname matches.
-          let stmt = db.createStatement(
-            "DELETE FROM moz_downloads " +
-            "WHERE source LIKE ?1 ESCAPE '/' " +
-            "AND state NOT IN (?2, ?3, ?4)"
-          );
-          let pattern = stmt.escapeStringForLIKE(aDomain, "/");
-          stmt.bindByIndex(0, "%" + pattern + "%");
-          stmt.bindByIndex(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-          stmt.bindByIndex(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
-          stmt.bindByIndex(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
-          try {
-            stmt.execute();
-          }
-          finally {
-            stmt.finalize();
-          }
-        }
-
-        // Completed downloads
-        deleteAllLike(dm.DBConnection);
-        deleteAllLike(dm.privateDBConnection);
-
-        // We want to rebuild the list if the UI is showing, so dispatch the
-        // observer topic
-        let os = Cc["@mozilla.org/observer-service;1"].
-                 getService(Ci.nsIObserverService);
-        os.notifyObservers(null, "download-manager-remove-download", null);
-      }
-    }
+    Task.spawn(function*() {
+      let list = yield Downloads.getList(Downloads.ALL);
+      list.removeFinished(download => hasRootDomain(
+           NetUtil.newURI(download.source.url).host, aDomain));
+    }).then(null, Cu.reportError);
 
     // Passwords
     let lm = Cc["@mozilla.org/login-manager;1"].

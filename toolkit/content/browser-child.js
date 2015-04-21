@@ -65,11 +65,20 @@ let WebProgressListener = {
 
   _setupJSON: function setupJSON(aWebProgress, aRequest) {
     if (aWebProgress) {
+      let domWindowID;
+      try {
+        domWindowID = aWebProgress && aWebProgress.DOMWindowID;
+      } catch (e) {
+        // If nsDocShell::Destroy has already been called, then we'll
+        // get NS_NOINTERFACE when trying to get the DOM window ID.
+        domWindowID = null;
+      }
+
       aWebProgress = {
         isTopLevel: aWebProgress.isTopLevel,
         isLoadingDocument: aWebProgress.isLoadingDocument,
         loadType: aWebProgress.loadType,
-        DOMWindowID: aWebProgress.DOMWindowID,
+        DOMWindowID: domWindowID
       };
     }
 

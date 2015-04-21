@@ -220,7 +220,13 @@ let SessionFileInternal = {
         break;
       } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
         exists = false;
+      } catch (ex if ex instanceof OS.File.Error) {
+        // The file might be inaccessible due to wrong permissions
+        // or similar failures. We'll just count it as "corrupted".
+        console.error("Could not read session file ", ex, ex.stack);
+        corrupted = true;
       } catch (ex if ex instanceof SyntaxError) {
+        console.error("Corrupt session file (invalid JSON found) ", ex, ex.stack);
         // File is corrupted, try next file
         corrupted = true;
       } finally {

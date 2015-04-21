@@ -249,7 +249,8 @@ function toLocalTimeISOString(date) {
   }
 
   let sign = (n) => n >= 0 ? "+" : "-";
-  let tzOffset = date.getTimezoneOffset();
+  // getTimezoneOffset counter-intuitively returns -60 for UTC+1.
+  let tzOffset = - date.getTimezoneOffset();
 
   // YYYY-MM-DDThh:mm:ss.sTZD (eg 1997-07-16T19:20:30.45+01:00)
   return    padNumber(date.getFullYear(), 4)
@@ -259,8 +260,8 @@ function toLocalTimeISOString(date) {
     + ":" + padNumber(date.getMinutes(), 2)
     + ":" + padNumber(date.getSeconds(), 2)
     + "." + date.getMilliseconds()
-    + sign(tzOffset) + Math.abs(Math.floor(tzOffset / 60))
-    + ":" + Math.abs(tzOffset % 60);
+    + sign(tzOffset) + padNumber(Math.floor(Math.abs(tzOffset / 60)), 2)
+    + ":" + padNumber(Math.abs(tzOffset % 60), 2);
 }
 
 /**
@@ -1703,9 +1704,8 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
       overwrite: true,
-      filePath: file.path,
     };
-    return TelemetryPing.addPendingPing(getPingType(payload), payload, options);
+    return TelemetryPing.savePing(getPingType(payload), payload, file.path, options);
   },
 
   /**
@@ -2071,7 +2071,7 @@ let Impl = {
     if (abortedExists) {
       this._log.trace("_checkAbortedSessionPing - aborted session found: " + FILE_PATH);
       yield this._abortedSessionSerializer.enqueueTask(
-        () => TelemetryPing.addPendingPing(FILE_PATH, true));
+        () => TelemetryPing.addPendingPingFromFile(FILE_PATH, true));
     }
   }),
 

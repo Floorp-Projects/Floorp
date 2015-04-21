@@ -253,7 +253,9 @@ loop.conversationViews = (function(mozL10n) {
                           onClick: this._handleDecline}, 
                     mozL10n.get("incoming_call_cancel_button")
                   ), 
-                  React.createElement("div", {className: "btn-chevron", onClick: this.toggleDropdownMenu})
+                  React.createElement("div", {className: "btn-chevron", 
+                       onClick: this.toggleDropdownMenu, 
+                       ref: "menu-button"})
                 ), 
 
                 React.createElement("ul", {className: dropdownMenuClassesDecline}, 
