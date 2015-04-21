@@ -1049,7 +1049,7 @@ public:
   /**
    * Pairing this with the GetUnderlyingFrame() pointer gives a key that
    * uniquely identifies this display item in the display item tree.
-   * XXX check ScrollLayerWrapper/nsOptionEventGrabberWrapper/nsXULEventRedirectorWrapper
+   * XXX check nsOptionEventGrabberWrapper/nsXULEventRedirectorWrapper
    */
   virtual uint32_t GetPerFrameKey() { return uint32_t(GetType()); }
   /**
@@ -3175,58 +3175,28 @@ public:
 };
 
 /**
- * This potentially creates a layer for the given list of items, whose
- * visibility is determined by the displayport for the given frame instead of
- * normal visibility computation.
- *
- * Here in content, we can use this to render more content than is actually
- * visible. Then, the compositing process can manipulate the generated layer
- * through transformations so that asynchronous scrolling can be implemented.
- *
- * Note that setting the displayport will not change any hit testing! The
- * content process will know nothing about what the user is actually seeing,
- * so it can only do hit testing for what is supposed to be the visible region.
- *
- * It is possible for scroll boxes to have content that can be both above and
- * below content outside of the scroll box. We cannot create layers for these
- * cases. This is accomplished by wrapping display items with
- * nsDisplayScrollLayers. nsDisplayScrollLayers with the same scroll frame will
- * be merged together. If more than one nsDisplayScrollLayer exists after
- * merging, all nsDisplayScrollLayers will be flattened out so that no new
- * layer is created at all.
+ * This creates an empty scrollable layer. It has no child layers.
+ * It is used to record the existence of a scrollable frame in the layer
+ * tree.
  */
-class nsDisplayScrollLayer : public nsDisplayWrapList
+class nsDisplayScrollInfoLayer : public nsDisplayWrapList
 {
 public:
-  /**
-   * @param aScrolledFrame This will determine what the displayport is. It should be
-   *                       the root content frame of the scrolled area. Note
-   *                       that nsDisplayScrollLayer will expect for
-   *                       ScrollLayerCount to be defined on aScrolledFrame.
-   * @param aScrollFrame The viewport frame you see this content through.
-   */
-  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                       nsIFrame* aForFrame, nsIFrame* aScrolledFrame,
-                       nsIFrame* aScrollFrame);
-  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-                       nsIFrame* aForFrame, nsIFrame* aScrolledFrame,
-                       nsIFrame* aScrollFrame);
-  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
-                       nsIFrame* aForFrame, nsIFrame* aScrolledFrame,
-                       nsIFrame* aScrollFrame);
-  NS_DISPLAY_DECL_NAME("ScrollLayer", TYPE_SCROLL_LAYER)
+  nsDisplayScrollInfoLayer(nsDisplayListBuilder* aBuilder,
+                           nsIFrame* aScrolledFrame, nsIFrame* aScrollFrame);
+  NS_DISPLAY_DECL_NAME("ScrollInfoLayer", TYPE_SCROLL_INFO_LAYER)
+
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayScrollLayer();
+  virtual ~nsDisplayScrollInfoLayer();
 #endif
-
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
 
-  virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override;
+  virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override
+  { return true; }
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override {
@@ -3234,92 +3204,23 @@ public:
     return nsRegion();
   }
 
-  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                 nsRegion* aVisibleRegion) override;
-
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
 
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
-                          nsDisplayItem* aItem) override;
-
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
 
-  // Get the number of nsDisplayScrollLayers for a scroll frame. Note that this
-  // number does not include nsDisplayScrollInfoLayers. If this number is not 1
-  // after merging, all the nsDisplayScrollLayers should flatten away.
-  intptr_t GetScrollLayerCount();
-
-  virtual nsIFrame* GetScrollFrame() { return mScrollFrame; }
-  virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
-
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
-
-  bool IsDisplayPortOpaque() { return mDisplayPortContentsOpaque; }
-
-  static FrameMetrics ComputeFrameMetrics(nsIFrame* aForFrame,
-                                          nsIFrame* aScrollFrame,
-                                          nsIContent* aContent,
-                                          const nsIFrame* aReferenceFrame,
-                                          Layer* aLayer,
-                                          ViewID aScrollParentId,
-                                          const nsRect& aViewport,
-                                          bool aIsRoot,
-                                          const ContainerLayerParameters& aContainerParameters);
 
   mozilla::UniquePtr<FrameMetrics> ComputeFrameMetrics(Layer* aLayer,
                                                        const ContainerLayerParameters& aContainerParameters);
 
-protected:
-  nsRect GetScrolledContentRectToDraw(nsDisplayListBuilder* aBuilder,
-                                      nsRect* aDisplayPort);
+  void MarkHoisted() { mHoisted = true; }
 
+protected:
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
   ViewID mScrollParentId;
-  bool mDisplayPortContentsOpaque;
-};
-
-/**
- * Like nsDisplayScrollLayer, but only has metadata on the scroll frame. This
- * creates a layer that has no Thebes child layer, but still allows the
- * compositor process to know of the scroll frame's existence.
- *
- * After visibility computation, nsDisplayScrollInfoLayers should only exist if
- * nsDisplayScrollLayers were all flattened away.
- *
- * Important!! Add info layers to the bottom of the list so they are only
- * considered after the others have flattened out!
- */
-class nsDisplayScrollInfoLayer : public nsDisplayScrollLayer
-{
-public:
-  nsDisplayScrollInfoLayer(nsDisplayListBuilder* aBuilder,
-                           nsIFrame* aScrolledFrame, nsIFrame* aScrollFrame);
-  NS_DISPLAY_DECL_NAME("ScrollInfoLayer", TYPE_SCROLL_INFO_LAYER)
-
-  virtual ~nsDisplayScrollInfoLayer();
-
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
-
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) override;
-
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) override;
-  virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override
-  { return true; }
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
-                          nsDisplayItem* aItem) override;
-
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
-
-  void MarkHoisted() { mHoisted = true; }
-
-private:
   bool mHoisted;
 };
 
