@@ -1348,8 +1348,10 @@ nsContextMenu.prototype = {
     let referrerURI = gContextMenuContentData.documentURIObject;
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
-      saveImageURL(this.target.toDataURL(), "canvas.png", "SaveImageTitle",
-                   true, false, referrerURI, doc);
+      this._canvasToDataURL(this.target).then(function(dataURL) {
+        saveImageURL(dataURL, "canvas.png", "SaveImageTitle",
+                     true, false, referrerURI, doc);
+      }, Cu.reportError);
     }
     else if (this.onImage) {
       urlSecurityCheck(this.mediaURL, this.principal);
