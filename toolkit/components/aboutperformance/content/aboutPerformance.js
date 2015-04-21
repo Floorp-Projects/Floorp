@@ -9,6 +9,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
+const { AddonWatcher } = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
 const { PerformanceStats } = Cu.import("resource://gre/modules/PerformanceStats.jsm", {});
 
 /**
@@ -84,8 +85,93 @@ let State = {
 
 
 function update() {
+  updateLiveData();
+  updateSlowAddons();
+}
+
+/**
+ * Update the list of slow addons
+ */
+function updateSlowAddons() {
   try {
-    let dataElt = document.getElementById("data");
+    let data = AddonWatcher.alerts;
+    if (data.size == 0) {
+      // Nothing to display.
+      return;
+    }
+    let alerts = 0;
+    for (let [addonId, details] of data) {
+      for (let k of Object.keys(details.alerts)) {
+        alerts += details.alerts[k];
+      }
+    }
+
+    if (!alerts) {
+      // Still nothing to display.
+      return;
+    }
+
+
+    let elData = document.getElementById("slowAddonsList");
+    elData.innerHTML = "";
+    let elTable = document.createElement("table");
+    elData.appendChild(elTable);
+
+    // Generate header
+    let elHeader = document.createElement("tr");
+    elTable.appendChild(elHeader);
+    for (let name of [
+      "Alerts",
+      "Jank level alerts",
+      "(highest jank)",
+      "Cross-Process alerts",
+      "(highest CPOW)"
+    ]) {
+      let elName = document.createElement("td");
+      elName.textContent = name;
+      elHeader.appendChild(elName);
+      elName.classList.add("header");
+    }
+    for (let [addonId, details] of data) {
+      let elAddon = document.createElement("tr");
+
+      // Display the number of occurrences of each alerts
+      let elTotal = document.createElement("td");
+      let total = 0;
+      for (let k of Object.keys(details.alerts)) {
+        total += details.alerts[k];
+      }
+      elTotal.textContent = total;
+      elAddon.appendChild(elTotal);
+
+      for (let filter of ["longestDuration", "totalCPOWTime"]) {
+        for (let stat of ["alerts", "peaks"]) {
+          let el = document.createElement("td");
+          el.textContent = details[stat][filter] || 0;
+          elAddon.appendChild(el);
+        }
+      }
+
+      // Display the name of the add-on
+      let elName = document.createElement("td");
+      elAddon.appendChild(elName);
+      AddonManager.getAddonByID(addonId, a => {
+        elName.textContent = a ? a.name : addonId
+      });
+
+      elTable.appendChild(elAddon);
+    }
+  } catch (ex) {
+    console.error(ex);
+  }
+}
+
+/**
+ * Update the table of live data.
+ */
+function updateLiveData() {
+  try {
+    let dataElt = document.getElementById("liveData");
     dataElt.innerHTML = "";
 
     // Generate table headers
@@ -137,7 +223,7 @@ function update() {
         let _el = el;
         let _item = item;
         AddonManager.getAddonByID(item.addonId, a => {
-          _el.textContent = a?a.name:_item.name
+          _el.textContent = a ? a.name : _item.name
         });
       } else {
         el.textContent = item.name;

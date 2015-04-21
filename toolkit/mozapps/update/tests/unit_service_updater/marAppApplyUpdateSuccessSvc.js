@@ -110,7 +110,6 @@ function finishCheckUpdateFinished() {
   checkAppBundleModTime();
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
-  checkCallbackAppLog();
 
   standardInit();
 
