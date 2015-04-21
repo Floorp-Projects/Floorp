@@ -21,7 +21,6 @@ LOCAL_INCLUDES += [
     '../feeds',
     '../find',
     '../jsdownloads/src',
-    '../perfmonitoring',
     '../protobuf',
     '../startup',
     '../statusfilter',
@@ -32,6 +31,11 @@ LOCAL_INCLUDES += [
 if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
     LOCAL_INCLUDES += [
         '../parentalcontrols',
+    ]
+
+if CONFIG['NIGHTLY_BUILD']:
+    LOCAL_INCLUDES += [
+        '../perfmonitoring',
     ]
 
 FAIL_ON_WARNINGS = True

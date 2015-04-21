@@ -1,66 +1,52 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
+// Test that inline style sheets get correct names if they are saved to disk and
+// that those names survice a reload but not navigation to another page.
 
-let gUI;
-
-const FIRST_TEST_PAGE = TEST_BASE_HTTP + "inline-1.html"
-const SECOND_TEST_PAGE = TEST_BASE_HTTP + "inline-2.html"
+const FIRST_TEST_PAGE = TEST_BASE_HTTP + "inline-1.html";
+const SECOND_TEST_PAGE = TEST_BASE_HTTP + "inline-2.html";
 const SAVE_PATH = "test.css";
 
-function test()
-{
-  waitForExplicitFinish();
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(FIRST_TEST_PAGE);
 
-  addTabAndOpenStyleEditors(2, function(panel) {
-    gUI = panel.UI;
+  loadCommonFrameScript();
+  testIndentifierGeneration(ui);
 
-    // First test that identifiers are correcly generated. If not other tests
-    // are likely to fail.
-    testIndentifierGeneration();
+  yield saveFirstInlineStyleSheet(ui);
+  yield testFriendlyNamesAfterSave(ui);
+  yield reloadPage(ui);
+  yield testFriendlyNamesAfterSave(ui);
+  yield navigateToAnotherPage(ui);
+  yield testFriendlyNamesAfterNavigation(ui);
+});
 
-    saveFirstInlineStyleSheet()
-    .then(testFriendlyNamesAfterSave)
-    .then(reloadPage)
-    .then(testFriendlyNamesAfterSave)
-    .then(navigateToAnotherPage)
-    .then(testFriendlyNamesAfterNavigation)
-    .then(finishTests);
-  });
-
-  content.location = FIRST_TEST_PAGE;
-}
-
-function testIndentifierGeneration() {
+function testIndentifierGeneration(ui) {
   let fakeStyleSheetFile = {
     "href": "http://example.com/test.css",
     "nodeHref": "http://example.com/",
     "styleSheetIndex": 1
-  }
+  };
 
   let fakeInlineStyleSheet = {
     "href": null,
     "nodeHref": "http://example.com/",
     "styleSheetIndex": 2
-  }
+  };
 
-  is(gUI.getStyleSheetIdentifier(fakeStyleSheetFile), "http://example.com/test.css",
+  is(ui.getStyleSheetIdentifier(fakeStyleSheetFile), "http://example.com/test.css",
     "URI is the identifier of style sheet file.");
 
-  is(gUI.getStyleSheetIdentifier(fakeInlineStyleSheet), "inline-2-at-http://example.com/",
+  is(ui.getStyleSheetIdentifier(fakeInlineStyleSheet), "inline-2-at-http://example.com/",
     "Inline style sheets are identified by their page and position at that page.");
 }
 
-function saveFirstInlineStyleSheet() {
+function saveFirstInlineStyleSheet(ui) {
   let deferred = promise.defer();
-  let editor = gUI.editors[0];
+  let editor = ui.editors[0];
 
   let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);
 
@@ -72,9 +58,9 @@ function saveFirstInlineStyleSheet() {
   return deferred.promise;
 }
 
-function testFriendlyNamesAfterSave() {
-  let firstEditor = gUI.editors[0];
-  let secondEditor = gUI.editors[1];
+function testFriendlyNamesAfterSave(ui) {
+  let firstEditor = ui.editors[0];
+  let secondEditor = ui.editors[1];
 
   // The friendly name of first sheet should've been remembered, the second should
   // not be the same (bug 969900).
@@ -86,31 +72,21 @@ function testFriendlyNamesAfterSave() {
   return promise.resolve(null);
 }
 
-function reloadPage() {
+function reloadPage(ui) {
   info("Reloading page.");
-  content.location.reload();
-  return waitForEditors(2);
+  executeInContent("devtools:test:reload", {}, {}, false /* no response */);
+  return ui.once("stylesheets-reset");
 }
 
-function navigateToAnotherPage() {
+function navigateToAnotherPage(ui) {
   info("Navigating to another page.");
-  let deferred = promise.defer();
-  gBrowser.removeCurrentTab();
-
-  gUI = null;
-
-  addTabAndOpenStyleEditors(2, function(panel) {
-    gUI = panel.UI;
-    deferred.resolve();
-  });
-
-  content.location = SECOND_TEST_PAGE;
-  return deferred.promise;
+  executeInContent("devtools:test:navigate", { location: SECOND_TEST_PAGE }, {}, false);
+  return ui.once("stylesheets-reset");
 }
 
-function testFriendlyNamesAfterNavigation() {
-  let firstEditor = gUI.editors[0];
-  let secondEditor = gUI.editors[1];
+function testFriendlyNamesAfterNavigation(ui) {
+  let firstEditor = ui.editors[0];
+  let secondEditor = ui.editors[1];
 
   // Inline style sheets shouldn't have the name of previously saved file as the
   // page is different.
@@ -120,36 +96,4 @@ function testFriendlyNamesAfterNavigation() {
     "The second editor doesn't have the save path as a friendly name.");
 
   return promise.resolve(null);
-}
-
-function finishTests() {
-  gUI = null;
-  finish();
-}
-
-/**
- * Waits for all editors to be added.
- *
- * @param {int} aNumberOfEditors
- *        The number of editors to wait until proceeding.
- *
- * Returns a promise that's resolved once all editors are added.
- */
-function waitForEditors(aNumberOfEditors) {
-  let deferred = promise.defer();
-  let count = 0;
-
-  info("Waiting for " + aNumberOfEditors + " editors to be added");
-  gUI.on("editor-added", function editorAdded(event, editor) {
-    if (++count == aNumberOfEditors) {
-        info("All editors added. Resolving promise.");
-        gUI.off("editor-added", editorAdded);
-        gUI.editors[0].getSourceEditor().then(deferred.resolve);
-    }
-    else {
-        info ("Editor " + count + " of " + aNumberOfEditors + " added.");
-    }
-  });
-
-  return deferred.promise;
 }
