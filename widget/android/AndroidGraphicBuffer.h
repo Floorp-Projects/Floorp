@@ -7,11 +7,10 @@
 #define AndroidGraphicBuffer_h_
 
 #include "gfxTypes.h"
+#include "nsRect.h"
 
 typedef void* EGLImageKHR;
 typedef void* EGLClientBuffer;
-
-struct nsIntRect;
 
 namespace mozilla {
 

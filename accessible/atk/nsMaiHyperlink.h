@@ -27,15 +27,13 @@ public:
   ~MaiHyperlink();
 
 public:
-  AtkHyperlink *GetAtkHyperlink(void);
+  AtkHyperlink* GetAtkHyperlink() const { return mMaiAtkHyperlink; }
   Accessible* GetAccHyperlink()
     { return mHyperlink && mHyperlink->IsLink() ? mHyperlink : nullptr; }
 
 protected:
   Accessible* mHyperlink;
   AtkHyperlink* mMaiAtkHyperlink;
-public:
-  static nsresult Initialize(AtkHyperlink *aObj, MaiHyperlink *aClass);
 };
 
 } // namespace a11y

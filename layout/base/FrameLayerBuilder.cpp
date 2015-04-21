@@ -2218,7 +2218,7 @@ ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
 
   // Scan the candidate's display items.
   nsIntRect deviceRect = aRect;
-  nsRect appUnitRect = deviceRect.ToAppUnits(mAppUnitsPerDevPixel);
+  nsRect appUnitRect = ToAppUnits(deviceRect, mAppUnitsPerDevPixel);
   appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
 
   for (auto& assignedItem : Reversed(aData->mAssignedDisplayItems)) {
@@ -4818,7 +4818,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   // we won't paint
   if (aChildren->IsOpaque() && !aChildren->NeedsTransparentSurface()) {
     bounds.ScaleRoundIn(scaleParameters.mXScale, scaleParameters.mYScale);
-    if (bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
+    if (bounds.Contains(ToAppUnits(pixBounds, appUnitsPerDevPixel))) {
       // Clear CONTENT_COMPONENT_ALPHA and add CONTENT_OPAQUE instead.
       flags &= ~Layer::CONTENT_COMPONENT_ALPHA;
       flags |= Layer::CONTENT_OPAQUE;
@@ -5066,7 +5066,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
   DrawTarget& aDrawTarget = *aRC->GetDrawTarget();
 
   int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
-  nsRect boundRect = aRect.ToAppUnits(appUnitsPerDevPixel);
+  nsRect boundRect = ToAppUnits(aRect, appUnitsPerDevPixel);
   boundRect.MoveBy(NSIntPixelsToAppUnits(aOffset.x, appUnitsPerDevPixel),
                  NSIntPixelsToAppUnits(aOffset.y, appUnitsPerDevPixel));
   boundRect.ScaleInverseRoundOut(aXScale, aYScale);

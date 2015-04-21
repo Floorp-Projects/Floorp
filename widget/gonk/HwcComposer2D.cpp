@@ -140,7 +140,7 @@ HwcComposer2D::HwcComposer2D()
     ANativeWindow *win = GetGonkDisplay()->GetNativeWindow();
     win->query(win, NATIVE_WINDOW_WIDTH, &screenSize.width);
     win->query(win, NATIVE_WINDOW_HEIGHT, &screenSize.height);
-    mScreenRect = nsIntRect(nsIntPoint(0, 0), screenSize);
+    mScreenRect = gfx::IntRect(gfx::IntPoint(0, 0), screenSize);
 
 #if ANDROID_VERSION >= 17
     int supported = 0;
