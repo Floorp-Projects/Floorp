@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AnimationPlayer.h"
+#include "Animation.h"
 #include "AnimationUtils.h"
-#include "mozilla/dom/AnimationPlayerBinding.h"
+#include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/AutoRestore.h"
 #include "AnimationCommon.h" // For AnimationPlayerCollection,
                              // CommonAnimationManager
@@ -17,23 +17,23 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mTimeline,
                                       mEffect, mReady, mFinished)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationPlayer)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationPlayer)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationPlayer)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Animation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Animation)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Animation)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 JSObject*
-AnimationPlayer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return dom::AnimationPlayerBinding::Wrap(aCx, this, aGivenProto);
+  return dom::AnimationBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-AnimationPlayer::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
+Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 {
 #if 1
   // Bug 1096776: once we support inactive/missing timelines we'll want to take
@@ -74,7 +74,7 @@ AnimationPlayer::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 }
 
 Nullable<TimeDuration>
-AnimationPlayer::GetCurrentTime() const
+Animation::GetCurrentTime() const
 {
   Nullable<TimeDuration> result;
   if (!mHoldTime.IsNull()) {
@@ -94,7 +94,7 @@ AnimationPlayer::GetCurrentTime() const
 
 // Implements http://w3c.github.io/web-animations/#silently-set-the-current-time
 void
-AnimationPlayer::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
+Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
 {
   if (!mHoldTime.IsNull() ||
       !mTimeline ||
@@ -115,7 +115,7 @@ AnimationPlayer::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
 
 // Implements http://w3c.github.io/web-animations/#set-the-current-time
 void
-AnimationPlayer::SetCurrentTime(const TimeDuration& aSeekTime)
+Animation::SetCurrentTime(const TimeDuration& aSeekTime)
 {
   SilentlySetCurrentTime(aSeekTime);
 
@@ -132,7 +132,7 @@ AnimationPlayer::SetCurrentTime(const TimeDuration& aSeekTime)
 }
 
 void
-AnimationPlayer::SetPlaybackRate(double aPlaybackRate)
+Animation::SetPlaybackRate(double aPlaybackRate)
 {
   Nullable<TimeDuration> previousTime = GetCurrentTime();
   mPlaybackRate = aPlaybackRate;
@@ -144,7 +144,7 @@ AnimationPlayer::SetPlaybackRate(double aPlaybackRate)
 }
 
 void
-AnimationPlayer::SilentlySetPlaybackRate(double aPlaybackRate)
+Animation::SilentlySetPlaybackRate(double aPlaybackRate)
 {
   Nullable<TimeDuration> previousTime = GetCurrentTime();
   mPlaybackRate = aPlaybackRate;
@@ -156,7 +156,7 @@ AnimationPlayer::SilentlySetPlaybackRate(double aPlaybackRate)
 }
 
 AnimationPlayState
-AnimationPlayer::PlayState() const
+Animation::PlayState() const
 {
   if (mPendingState != PendingState::NotPending) {
     return AnimationPlayState::Pending;
@@ -190,7 +190,7 @@ CreatePromise(DocumentTimeline* aTimeline, ErrorResult& aRv)
 }
 
 Promise*
-AnimationPlayer::GetReady(ErrorResult& aRv)
+Animation::GetReady(ErrorResult& aRv)
 {
   if (!mReady) {
     mReady = CreatePromise(mTimeline, aRv); // Lazily create on demand
@@ -204,7 +204,7 @@ AnimationPlayer::GetReady(ErrorResult& aRv)
 }
 
 Promise*
-AnimationPlayer::GetFinished(ErrorResult& aRv)
+Animation::GetFinished(ErrorResult& aRv)
 {
   if (!mFinished) {
     mFinished = CreatePromise(mTimeline, aRv); // Lazily create on demand
@@ -218,14 +218,14 @@ AnimationPlayer::GetFinished(ErrorResult& aRv)
 }
 
 void
-AnimationPlayer::Play(LimitBehavior aLimitBehavior)
+Animation::Play(LimitBehavior aLimitBehavior)
 {
   DoPlay(aLimitBehavior);
   PostUpdate();
 }
 
 void
-AnimationPlayer::Pause()
+Animation::Pause()
 {
   // TODO: The DoPause() call should not be synchronous (bug 1109390). See
   // http://w3c.github.io/web-animations/#pausing-an-animation-section
@@ -234,25 +234,25 @@ AnimationPlayer::Pause()
 }
 
 Nullable<double>
-AnimationPlayer::GetStartTimeAsDouble() const
+Animation::GetStartTimeAsDouble() const
 {
   return AnimationUtils::TimeDurationToDouble(mStartTime);
 }
 
 void
-AnimationPlayer::SetStartTimeAsDouble(const Nullable<double>& aStartTime)
+Animation::SetStartTimeAsDouble(const Nullable<double>& aStartTime)
 {
   return SetStartTime(AnimationUtils::DoubleToTimeDuration(aStartTime));
 }
-  
+
 Nullable<double>
-AnimationPlayer::GetCurrentTimeAsDouble() const
+Animation::GetCurrentTimeAsDouble() const
 {
   return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
 }
 
 void
-AnimationPlayer::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
+Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                                         ErrorResult& aRv)
 {
   if (aCurrentTime.IsNull()) {
@@ -266,7 +266,7 @@ AnimationPlayer::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 }
 
 void
-AnimationPlayer::SetEffect(KeyframeEffectReadonly* aEffect)
+Animation::SetEffect(KeyframeEffectReadonly* aEffect)
 {
   if (mEffect) {
     mEffect->SetParentTime(Nullable<TimeDuration>());
@@ -279,7 +279,7 @@ AnimationPlayer::SetEffect(KeyframeEffectReadonly* aEffect)
 }
 
 void
-AnimationPlayer::Tick()
+Animation::Tick()
 {
   // Since we are not guaranteed to get only one call per refresh driver tick,
   // it's possible that mPendingReadyTime is set to a time in the future.
@@ -302,7 +302,7 @@ AnimationPlayer::Tick()
 }
 
 void
-AnimationPlayer::TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime)
+Animation::TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime)
 {
   // Normally we expect the play state to be pending but it's possible that,
   // due to the handling of possibly orphaned players in Tick(), this player got
@@ -317,7 +317,7 @@ AnimationPlayer::TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime)
 }
 
 void
-AnimationPlayer::TriggerNow()
+Animation::TriggerNow()
 {
   MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
              "Expected to start a pending player");
@@ -328,7 +328,7 @@ AnimationPlayer::TriggerNow()
 }
 
 Nullable<TimeDuration>
-AnimationPlayer::GetCurrentOrPendingStartTime() const
+Animation::GetCurrentOrPendingStartTime() const
 {
   Nullable<TimeDuration> result;
 
@@ -349,7 +349,7 @@ AnimationPlayer::GetCurrentOrPendingStartTime() const
 }
 
 void
-AnimationPlayer::Cancel()
+Animation::Cancel()
 {
   if (mPendingState != PendingState::NotPending) {
     CancelPendingTasks();
@@ -371,7 +371,7 @@ AnimationPlayer::Cancel()
 }
 
 void
-AnimationPlayer::UpdateRelevance()
+Animation::UpdateRelevance()
 {
   bool wasRelevant = mIsRelevant;
   mIsRelevant = HasCurrentEffect() || IsInEffect();
@@ -385,7 +385,7 @@ AnimationPlayer::UpdateRelevance()
 }
 
 bool
-AnimationPlayer::CanThrottle() const
+Animation::CanThrottle() const
 {
   if (!mEffect ||
       mEffect->IsFinishedTransition() ||
@@ -410,9 +410,9 @@ AnimationPlayer::CanThrottle() const
 }
 
 void
-AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
-                              nsCSSPropertySet& aSetProperties,
-                              bool& aNeedsRefreshes)
+Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
+                        nsCSSPropertySet& aSetProperties,
+                        bool& aNeedsRefreshes)
 {
   if (!mEffect || mEffect->IsFinishedTransition()) {
     return;
@@ -493,7 +493,7 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 }
 
 void
-AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
+Animation::DoPlay(LimitBehavior aLimitBehavior)
 {
   bool abortedPause = mPendingState == PendingState::PausePending;
 
@@ -556,7 +556,7 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
 }
 
 void
-AnimationPlayer::DoPause()
+Animation::DoPause()
 {
   if (IsPausedOrPausing()) {
     return;
@@ -593,7 +593,7 @@ AnimationPlayer::DoPause()
 }
 
 void
-AnimationPlayer::ResumeAt(const TimeDuration& aReadyTime)
+Animation::ResumeAt(const TimeDuration& aReadyTime)
 {
   // This method is only expected to be called for a player that is
   // waiting to play. We can easily adapt it to handle other states
@@ -625,7 +625,7 @@ AnimationPlayer::ResumeAt(const TimeDuration& aReadyTime)
 }
 
 void
-AnimationPlayer::PauseAt(const TimeDuration& aReadyTime)
+Animation::PauseAt(const TimeDuration& aReadyTime)
 {
   MOZ_ASSERT(mPendingState == PendingState::PausePending,
              "Expected to pause a pause-pending player");
@@ -645,7 +645,7 @@ AnimationPlayer::PauseAt(const TimeDuration& aReadyTime)
 }
 
 void
-AnimationPlayer::UpdateTiming()
+Animation::UpdateTiming()
 {
   // We call UpdateFinishedState before UpdateEffect because the former
   // can change the current time, which is used by the latter.
@@ -654,7 +654,7 @@ AnimationPlayer::UpdateTiming()
 }
 
 void
-AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
+Animation::UpdateFinishedState(bool aSeekFlag)
 {
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   TimeDuration effectEnd = TimeDuration(EffectEnd());
@@ -708,7 +708,7 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
 }
 
 void
-AnimationPlayer::UpdateEffect()
+Animation::UpdateEffect()
 {
   if (mEffect) {
     mEffect->SetParentTime(GetCurrentTime());
@@ -717,7 +717,7 @@ AnimationPlayer::UpdateEffect()
 }
 
 void
-AnimationPlayer::FlushStyle() const
+Animation::FlushStyle() const
 {
   nsIDocument* doc = GetRenderedDocument();
   if (doc) {
@@ -726,7 +726,7 @@ AnimationPlayer::FlushStyle() const
 }
 
 void
-AnimationPlayer::PostUpdate()
+Animation::PostUpdate()
 {
   AnimationPlayerCollection* collection = GetCollection();
   if (collection) {
@@ -735,7 +735,7 @@ AnimationPlayer::PostUpdate()
 }
 
 void
-AnimationPlayer::CancelPendingTasks()
+Animation::CancelPendingTasks()
 {
   if (mPendingState == PendingState::NotPending) {
     return;
@@ -758,7 +758,7 @@ AnimationPlayer::CancelPendingTasks()
 }
 
 bool
-AnimationPlayer::IsFinished() const
+Animation::IsFinished() const
 {
   // Unfortunately there's some weirdness in the spec at the moment where if
   // you're finished and paused, the playState is paused. This prevents us
@@ -771,7 +771,7 @@ AnimationPlayer::IsFinished() const
 }
 
 bool
-AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
+Animation::IsPossiblyOrphanedPendingPlayer() const
 {
   // Check if we are pending but might never start because we are not being
   // tracked.
@@ -825,7 +825,7 @@ AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
 }
 
 StickyTimeDuration
-AnimationPlayer::EffectEnd() const
+Animation::EffectEnd() const
 {
   if (!mEffect) {
     return StickyTimeDuration(0);
@@ -836,7 +836,7 @@ AnimationPlayer::EffectEnd() const
 }
 
 nsIDocument*
-AnimationPlayer::GetRenderedDocument() const
+Animation::GetRenderedDocument() const
 {
   if (!mEffect) {
     return nullptr;
@@ -853,7 +853,7 @@ AnimationPlayer::GetRenderedDocument() const
 }
 
 nsPresContext*
-AnimationPlayer::GetPresContext() const
+Animation::GetPresContext() const
 {
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
@@ -867,7 +867,7 @@ AnimationPlayer::GetPresContext() const
 }
 
 AnimationPlayerCollection*
-AnimationPlayer::GetCollection() const
+Animation::GetCollection() const
 {
   css::CommonAnimationManager* manager = GetAnimationManager();
   if (!manager) {

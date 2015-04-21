@@ -234,7 +234,7 @@ KeyframeEffectReadonly::ActiveDuration(const AnimationTiming& aTiming)
 
 // http://w3c.github.io/web-animations/#in-play
 bool
-KeyframeEffectReadonly::IsInPlay(const AnimationPlayer& aPlayer) const
+KeyframeEffectReadonly::IsInPlay(const Animation& aPlayer) const
 {
   if (IsFinishedTransition() ||
       aPlayer.PlayState() == AnimationPlayState::Finished) {
@@ -246,7 +246,7 @@ KeyframeEffectReadonly::IsInPlay(const AnimationPlayer& aPlayer) const
 
 // http://w3c.github.io/web-animations/#current
 bool
-KeyframeEffectReadonly::IsCurrent(const AnimationPlayer& aPlayer) const
+KeyframeEffectReadonly::IsCurrent(const Animation& aPlayer) const
 {
   if (IsFinishedTransition() ||
       aPlayer.PlayState() == AnimationPlayState::Finished) {

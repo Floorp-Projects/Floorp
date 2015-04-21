@@ -22,7 +22,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingPlayerTracker, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingPlayerTracker, Release)
 
 void
-PendingPlayerTracker::AddPending(dom::AnimationPlayer& aPlayer,
+PendingPlayerTracker::AddPending(dom::Animation& aPlayer,
                                  AnimationPlayerSet& aSet)
 {
   aSet.PutEntry(&aPlayer);
@@ -34,24 +34,24 @@ PendingPlayerTracker::AddPending(dom::AnimationPlayer& aPlayer,
 }
 
 void
-PendingPlayerTracker::RemovePending(dom::AnimationPlayer& aPlayer,
+PendingPlayerTracker::RemovePending(dom::Animation& aPlayer,
                                     AnimationPlayerSet& aSet)
 {
   aSet.RemoveEntry(&aPlayer);
 }
 
 bool
-PendingPlayerTracker::IsWaiting(const dom::AnimationPlayer& aPlayer,
+PendingPlayerTracker::IsWaiting(const dom::Animation& aPlayer,
                                 const AnimationPlayerSet& aSet) const
 {
-  return aSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
+  return aSet.Contains(const_cast<dom::Animation*>(&aPlayer));
 }
 
 PLDHashOperator
-TriggerPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
+TriggerPlayerAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
                     void* aReadyTime)
 {
-  dom::AnimationPlayer* player = aKey->GetKey();
+  dom::Animation* player = aKey->GetKey();
   dom::DocumentTimeline* timeline = player->Timeline();
 
   // When the timeline's refresh driver is under test control, its values
@@ -81,7 +81,7 @@ PendingPlayerTracker::TriggerPendingPlayersOnNextTick(const TimeStamp&
 }
 
 PLDHashOperator
-TriggerPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
+TriggerPlayerNow(nsRefPtrHashKey<dom::Animation>* aKey, void*)
 {
   aKey->GetKey()->TriggerNow();
   return PL_DHASH_NEXT;

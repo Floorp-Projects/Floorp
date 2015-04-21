@@ -9,7 +9,7 @@
 
 namespace mozilla {
 namespace dom {
-class AnimationPlayer;
+class Animation;
 }
 }
 
@@ -22,36 +22,36 @@ class nsIAnimationObserver : public nsIMutationObserver
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IANIMATION_OBSERVER_IID)
 
-  virtual void AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer) = 0;
-  virtual void AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer) = 0;
-  virtual void AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer) = 0;
+  virtual void AnimationAdded(mozilla::dom::Animation* aPlayer) = 0;
+  virtual void AnimationChanged(mozilla::dom::Animation* aPlayer) = 0;
+  virtual void AnimationRemoved(mozilla::dom::Animation* aPlayer) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAnimationObserver, NS_IANIMATION_OBSERVER_IID)
 
 #define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONADDED                          \
-    virtual void AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer)      \
+    virtual void AnimationAdded(mozilla::dom::Animation* aPlayer)      \
       override;
 
 #define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONCHANGED                        \
-    virtual void AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer)    \
+    virtual void AnimationChanged(mozilla::dom::Animation* aPlayer)    \
       override;
 
 #define NS_DECL_NSIANIMATIONOBSERVER_ANIMATIONREMOVED                        \
-    virtual void AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer)    \
+    virtual void AnimationRemoved(mozilla::dom::Animation* aPlayer)    \
       override;
 
 #define NS_IMPL_NSIANIMATIONOBSERVER_STUB(class_)                            \
 void                                                                         \
-class_::AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer)               \
+class_::AnimationAdded(mozilla::dom::Animation* aPlayer)               \
 {                                                                            \
 }                                                                            \
 void                                                                         \
-class_::AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer)             \
+class_::AnimationChanged(mozilla::dom::Animation* aPlayer)             \
 {                                                                            \
 }                                                                            \
 void                                                                         \
-class_::AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer)             \
+class_::AnimationRemoved(mozilla::dom::Animation* aPlayer)             \
 {                                                                            \
 }                                                                            \
 NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(class_)                                \

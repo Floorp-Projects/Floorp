@@ -24,7 +24,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/dom/MutationObserverBinding.h"
 #include "nsIDocument.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "nsIAnimationObserver.h"
 
 class nsDOMMutationObserver;
@@ -36,7 +36,7 @@ class nsDOMMutationRecord final : public nsISupports,
   virtual ~nsDOMMutationRecord() {}
 
 public:
-  typedef nsTArray<nsRefPtr<mozilla::dom::AnimationPlayer>> AnimationPlayerArray;
+  typedef nsTArray<nsRefPtr<mozilla::dom::Animation>> AnimationPlayerArray;
 
   nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
   : mType(aType), mAttrNamespace(NullString()), mPrevValue(NullString()), mOwner(aOwner)
@@ -434,7 +434,7 @@ private:
     eAnimationMutation_Removed
   };
 
-  void RecordAnimationMutation(mozilla::dom::AnimationPlayer* aPlayer,
+  void RecordAnimationMutation(mozilla::dom::Animation* aPlayer,
                                AnimationMutation aMutationType);
 };
 
@@ -756,7 +756,7 @@ public:
     return sCurrentBatch->mBatchTarget;
   }
 
-  static void AnimationAdded(mozilla::dom::AnimationPlayer* aPlayer)
+  static void AnimationAdded(mozilla::dom::Animation* aPlayer)
   {
     if (!IsBatching()) {
       return;
@@ -783,7 +783,7 @@ public:
     }
   }
 
-  static void AnimationChanged(mozilla::dom::AnimationPlayer* aPlayer)
+  static void AnimationChanged(mozilla::dom::Animation* aPlayer)
   {
     Entry* entry = sCurrentBatch->FindEntry(aPlayer);
     if (entry) {
@@ -800,7 +800,7 @@ public:
     }
   }
 
-  static void AnimationRemoved(mozilla::dom::AnimationPlayer* aPlayer)
+  static void AnimationRemoved(mozilla::dom::Animation* aPlayer)
   {
     Entry* entry = sCurrentBatch->FindEntry(aPlayer);
     if (entry) {
@@ -824,7 +824,7 @@ public:
   }
 
 private:
-  Entry* FindEntry(mozilla::dom::AnimationPlayer* aPlayer)
+  Entry* FindEntry(mozilla::dom::Animation* aPlayer)
   {
     for (Entry& e : mEntries) {
       if (e.mPlayer == aPlayer) {
@@ -843,7 +843,7 @@ private:
 
   struct Entry
   {
-    nsRefPtr<mozilla::dom::AnimationPlayer> mPlayer;
+    nsRefPtr<mozilla::dom::Animation> mPlayer;
     State mState;
     bool mChanged;
   };

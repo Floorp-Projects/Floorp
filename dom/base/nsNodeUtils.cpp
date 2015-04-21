@@ -24,7 +24,7 @@
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -216,7 +216,7 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 }
 
 static inline Element*
-GetTarget(AnimationPlayer* aPlayer)
+GetTarget(Animation* aPlayer)
 {
   KeyframeEffectReadonly* effect = aPlayer->GetEffect();
   if (!effect) {
@@ -238,7 +238,7 @@ GetTarget(AnimationPlayer* aPlayer)
 }
 
 void
-nsNodeUtils::AnimationAdded(AnimationPlayer* aPlayer)
+nsNodeUtils::AnimationAdded(Animation* aPlayer)
 {
   Element* target = GetTarget(aPlayer);
   if (!target) {
@@ -252,7 +252,7 @@ nsNodeUtils::AnimationAdded(AnimationPlayer* aPlayer)
 }
 
 void
-nsNodeUtils::AnimationChanged(AnimationPlayer* aPlayer)
+nsNodeUtils::AnimationChanged(Animation* aPlayer)
 {
   Element* target = GetTarget(aPlayer);
   if (!target) {
@@ -266,7 +266,7 @@ nsNodeUtils::AnimationChanged(AnimationPlayer* aPlayer)
 }
 
 void
-nsNodeUtils::AnimationRemoved(AnimationPlayer* aPlayer)
+nsNodeUtils::AnimationRemoved(Animation* aPlayer)
 {
   Element* target = GetTarget(aPlayer);
   if (!target) {
