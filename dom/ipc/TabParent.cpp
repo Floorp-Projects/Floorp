@@ -353,6 +353,10 @@ TabParent::AddWindowListeners()
                                       this, false, false);
       }
     }
+    if (nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell()) {
+      mPresShellWithRefreshListener = shell;
+      shell->AddPostRefreshObserver(this);
+    }
   }
 }
 
@@ -366,6 +370,18 @@ TabParent::RemoveWindowListeners()
       eventTarget->RemoveEventListener(NS_LITERAL_STRING("MozUpdateWindowPos"),
                                        this, false);
     }
+  }
+  if (mPresShellWithRefreshListener) {
+    mPresShellWithRefreshListener->RemovePostRefreshObserver(this);
+    mPresShellWithRefreshListener = nullptr;
+  }
+}
+
+void
+TabParent::DidRefresh()
+{
+  if (mChromeOffset != -GetChildProcessOffset()) {
+    UpdatePosition();
   }
 }
 
@@ -400,6 +416,8 @@ TabParent::Destroy()
   if (mIsDestroyed) {
     return;
   }
+
+  RemoveWindowListeners();
 
   // If this fails, it's most likely due to a content-process crash,
   // and auto-cleanup will kick in.  Otherwise, the child side will
@@ -908,6 +926,19 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
 
   MOZ_ASSERT(false, "Unknown flags!");
   return false;
+}
+
+nsresult
+TabParent::UpdatePosition()
+{
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return NS_OK;
+  }
+  nsIntRect windowDims;
+  NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims), NS_ERROR_FAILURE);
+  UpdateDimensions(windowDims, mDimensions);
+  return NS_OK;
 }
 
 void
@@ -2997,14 +3028,7 @@ TabParent::HandleEvent(nsIDOMEvent* aEvent)
   if (eventType.EqualsLiteral("MozUpdateWindowPos") && !mIsDestroyed) {
     // This event is sent when the widget moved.  Therefore we only update
     // the position.
-    nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-    if (!frameLoader) {
-      return NS_OK;
-    }
-    nsIntRect windowDims;
-    NS_ENSURE_SUCCESS(frameLoader->GetWindowDimensions(windowDims), NS_ERROR_FAILURE);
-    UpdateDimensions(windowDims, mDimensions);
-    return NS_OK;
+    return UpdatePosition();
   }
   return NS_OK;
 }
