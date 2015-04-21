@@ -127,7 +127,7 @@ add_task(function() {
   test.validate(false);
 
   // cleanup
-  remove_all_bookmarks();
+  yield PlacesUtils.bookmarks.eraseEverything();
   // manually remove the excluded root
   PlacesUtils.bookmarks.removeItem(test._excludeRootId);
   // restore json file
