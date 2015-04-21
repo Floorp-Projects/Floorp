@@ -242,7 +242,7 @@ public:
       return mLength;
   }
 
-  explicit operator bool() { return !!mBuf; }
+  operator bool() { return !!mBuf; }
 private:
   template <size_t Size2>
   friend class Buffer;

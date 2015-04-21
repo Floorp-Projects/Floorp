@@ -7,7 +7,6 @@
 SOURCES += [
     'TestBadImplicitConversionCtor.cpp',
     'TestCustomHeap.cpp',
-    'TestExplicitOperatorBool.cpp',
     'TestGlobalClass.cpp',
     'TestMustOverride.cpp',
     'TestNANTestingExpr.cpp',

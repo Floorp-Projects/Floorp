@@ -90,9 +90,9 @@ public:
    * or not.
    */
 #if defined(MOZILLA_XPCOMRT_API)
-  explicit operator bool() const { return mBaseFile; }
+  operator bool() const { return mBaseFile; }
 #else
-  explicit operator bool() const { return mBaseFile || mBaseZip; }
+  operator bool() const { return mBaseFile || mBaseZip; }
 #endif // defined(MOZILLA_XPCOMRT_API)
 
   /**
