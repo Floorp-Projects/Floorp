@@ -14,20 +14,18 @@
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticFlags::COLOR
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
 
 namespace mozilla {
 namespace layers {
 
 void
-ColorLayerComposite::RenderLayer(const nsIntRect& aClipRect)
+ColorLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
 {
   EffectChain effects(this);
 
   GenEffectChain(effects);
 
-  nsIntRect boundRect = GetBounds();
+  gfx::IntRect boundRect = GetBounds();
 
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(GetMaskLayer(),
                                                           effects);

@@ -12,7 +12,7 @@
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
-struct nsIntRect;
+#include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
 namespace layers {
@@ -77,7 +77,7 @@ public:
    * This method can be conservative; it's OK to return false under any
    * circumstances.
    */
-  bool ChildrenPartitionVisibleRegion(const nsIntRect& aInRect);
+  bool ChildrenPartitionVisibleRegion(const gfx::IntRect& aInRect);
 
   void ForceIntermediateSurface() { mUseIntermediateSurface = true; }
 

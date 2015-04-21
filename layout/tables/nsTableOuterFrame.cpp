@@ -872,25 +872,6 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                           innerRS, aOuterRS.ComputedSize(wm).ISize(wm));
   }
 
-  // Don't do incremental reflow until we've taught tables how to do
-  // it right in paginated mode.
-  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      aPresContext->IsPaginated() &&
-      GetNextInFlow()) {
-    nsIFrame* nif = GetNextInFlow();
-    bool oc = nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER;
-    NS_MergeReflowStatusInto(&aStatus,
-        oc ? NS_FRAME_OVERFLOW_INCOMPLETE : NS_FRAME_NOT_COMPLETE);
-    nsMargin innerMargin = innerRS->ComputedPhysicalMargin();
-    nsMargin captionMargin;
-    if (mCaptionFrames.NotEmpty()) {
-      captionMargin = captionRS->ComputedPhysicalMargin();
-    }
-    UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
-    FinishAndStoreOverflow(&aDesiredSize);
-    return;
-  }
-
   // First reflow the caption.
   Maybe<nsHTMLReflowMetrics> captionMet;
   nsSize captionSize;

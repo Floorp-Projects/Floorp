@@ -890,7 +890,7 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
                                               b,
                                               isKeyframe,
                                               aPacket->granulepos,
-                                              ToIntRect(mPicture));
+                                              mPicture);
     if (!v) {
       // There may be other reasons for this error, but for
       // simplicity just assume the worst case: out of memory.

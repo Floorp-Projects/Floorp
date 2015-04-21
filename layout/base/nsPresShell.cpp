@@ -5292,7 +5292,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
     // combine the area with the supplied region
     nsIntRect rrectPixels = aRegion->GetBounds();
 
-    nsRect rrect = rrectPixels.ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
+    nsRect rrect = ToAppUnits(rrectPixels, nsPresContext::AppUnitsPerCSSPixel());
     area.IntersectRect(area, rrect);
 
     nsPresContext* pc = GetPresContext();

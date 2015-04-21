@@ -38,8 +38,6 @@
 #include "mozilla/StaticPtr.h"          // for StaticRefPtr
 #include "mozilla/layers/TextureClient.h"
 
-struct nsIntRect;
-
 namespace mozilla {
 namespace ipc {
 class Shmem;
@@ -149,7 +147,7 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
 
 void
 ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
-                                    const nsIntRect& aRect)
+                                    const gfx::IntRect& aRect)
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPDLActor());

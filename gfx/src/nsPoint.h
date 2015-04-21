@@ -10,8 +10,12 @@
 #include "mozilla/gfx/BaseSize.h"
 #include "mozilla/gfx/BasePoint.h"
 #include "nsSize.h"
+#include "mozilla/gfx/Point.h"
 
-struct nsIntPoint;
+// nsIntPoint represents a point in one of the types of pixels.
+// Uses of nsIntPoint should eventually be converted to CSSIntPoint,
+// LayoutDeviceIntPoint, etc. (see layout/base/Units.h).
+typedef mozilla::gfx::IntPoint nsIntPoint;
 
 // nsPoint represents a point in app units.
 
@@ -35,19 +39,7 @@ struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
     ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
 };
 
-// nsIntPoint represents a point in one of the types of pixels.
-// Uses of nsIntPoint should eventually be converted to CSSIntPoint,
-// LayoutDeviceIntPoint, etc. (see layout/base/Units.h).
-
-struct nsIntPoint : public mozilla::gfx::BasePoint<int32_t, nsIntPoint> {
-  typedef mozilla::gfx::BasePoint<int32_t, nsIntPoint> Super;
-
-  nsIntPoint() : Super() {}
-  nsIntPoint(const nsIntPoint& aPoint) : Super(aPoint) {}
-  nsIntPoint(int32_t aX, int32_t aY) : Super(aX, aY) {}
-
-  inline nsPoint ToAppUnits(nscoord aAppUnitsPerPixel) const;
-};
+inline nsPoint ToAppUnits(const nsIntPoint& aPoint, nscoord aAppUnitsPerPixel);
 
 inline nsIntPoint
 nsPoint::ScaleToNearestPixels(float aXScale, float aYScale,
@@ -78,10 +70,10 @@ nsPoint::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const
 
 // app units are integer multiples of pixels, so no rounding needed
 inline nsPoint
-nsIntPoint::ToAppUnits(nscoord aAppUnitsPerPixel) const
+ToAppUnits(const nsIntPoint& aPoint, nscoord aAppUnitsPerPixel)
 {
-  return nsPoint(NSIntPixelsToAppUnits(x, aAppUnitsPerPixel),
-                 NSIntPixelsToAppUnits(y, aAppUnitsPerPixel));
+  return nsPoint(NSIntPixelsToAppUnits(aPoint.x, aAppUnitsPerPixel),
+                 NSIntPixelsToAppUnits(aPoint.y, aAppUnitsPerPixel));
 }
 
 #endif /* NSPOINT_H */

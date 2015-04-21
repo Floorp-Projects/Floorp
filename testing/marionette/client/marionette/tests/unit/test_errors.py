@@ -74,7 +74,7 @@ class TestLookup(marionette_test.MarionetteTestCase):
 
 class TestAllExceptions(marionette_test.MarionetteTestCase):
     def test_properties(self):
-        for exc in errors.excs:
+        for exc in errors.es_:
             self.assertTrue(hasattr(exc, "code"),
                 "expected exception to have attribute `code'")
             self.assertTrue(hasattr(exc, "status"),

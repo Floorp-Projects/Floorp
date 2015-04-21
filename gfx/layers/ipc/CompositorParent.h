@@ -167,7 +167,7 @@ public:
   virtual bool RecvNotifyChildCreated(const uint64_t& child) override;
   virtual bool RecvAdoptChild(const uint64_t& child) override;
   virtual bool RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
-                                const nsIntRect& aRect) override;
+                                const gfx::IntRect& aRect) override;
   virtual bool RecvFlushRendering() override;
 
   virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) override;
@@ -364,8 +364,8 @@ protected:
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) override;
   virtual void ScheduleTask(CancelableTask*, int);
   void CompositeCallback(TimeStamp aScheduleTime);
-  void CompositeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
-  void ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
+  void CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
+  void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
   void SetEGLSurfaceSize(int width, int height);
 
