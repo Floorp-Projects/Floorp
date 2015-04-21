@@ -29,11 +29,11 @@ interface MutationRecord {
   [Constant]
   readonly attribute DOMString? oldValue;
   [Constant,Cached,ChromeOnly]
-  readonly attribute sequence<AnimationPlayer> addedAnimations;
+  readonly attribute sequence<Animation> addedAnimations;
   [Constant,Cached,ChromeOnly]
-  readonly attribute sequence<AnimationPlayer> changedAnimations;
+  readonly attribute sequence<Animation> changedAnimations;
   [Constant,Cached,ChromeOnly]
-  readonly attribute sequence<AnimationPlayer> removedAnimations;
+  readonly attribute sequence<Animation> removedAnimations;
 };
 
 [Constructor(MutationCallback mutationCallback)]

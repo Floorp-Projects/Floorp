@@ -340,13 +340,17 @@ GetBaselinePosition(nsTextFrame* aFrame,
                     uint8_t aDominantBaseline,
                     float aFontSizeScaleFactor)
 {
-  // use a dummy WritingMode, because nsTextFrame::GetLogicalBaseLine
-  // doesn't use it anyway
-  WritingMode writingMode;
+  WritingMode writingMode = aFrame->GetWritingMode();
+  gfxTextRun::Metrics metrics =
+    aTextRun->MeasureText(0, aTextRun->GetLength(), gfxFont::LOOSE_INK_EXTENTS,
+                          nullptr, nullptr);
+
   switch (aDominantBaseline) {
     case NS_STYLE_DOMINANT_BASELINE_HANGING:
     case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
-      return 0;
+      return writingMode.IsVerticalRL()
+             ? metrics.mAscent + metrics.mDescent : 0;
+
     case NS_STYLE_DOMINANT_BASELINE_USE_SCRIPT:
     case NS_STYLE_DOMINANT_BASELINE_NO_CHANGE:
     case NS_STYLE_DOMINANT_BASELINE_RESET_SIZE:
@@ -354,23 +358,24 @@ GetBaselinePosition(nsTextFrame* aFrame,
       // support the complex baseline model that SVG 1.1 has and which
       // css3-linebox now defines.
       // (fall through)
+
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
-      return aFrame->GetLogicalBaseline(writingMode);
+      return writingMode.IsVerticalRL()
+             ? metrics.mAscent + metrics.mDescent -
+               aFrame->GetLogicalBaseline(writingMode)
+             : aFrame->GetLogicalBaseline(writingMode);
+
     case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
       return aFrame->GetLogicalBaseline(writingMode) -
         SVGContentUtils::GetFontXHeight(aFrame) / 2.0 *
         aFrame->PresContext()->AppUnitsPerCSSPixel() * aFontSizeScaleFactor;
-  }
 
-  gfxTextRun::Metrics metrics =
-    aTextRun->MeasureText(0, aTextRun->GetLength(), gfxFont::LOOSE_INK_EXTENTS,
-                          nullptr, nullptr);
-
-  switch (aDominantBaseline) {
     case NS_STYLE_DOMINANT_BASELINE_TEXT_AFTER_EDGE:
     case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
-      return metrics.mAscent + metrics.mDescent;
+      return writingMode.IsVerticalLR()
+             ? 0 : metrics.mAscent + metrics.mDescent;
+
     case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
     case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
@@ -524,6 +529,14 @@ struct TextRenderedRun
   bool IsRightToLeft() const
   {
     return GetTextRun()->IsRightToLeft();
+  }
+
+  /**
+   * Returns whether this rendered run is vertical.
+   */
+  bool IsVertical() const
+  {
+    return GetTextRun()->IsVertical();
   }
 
   /**
@@ -746,8 +759,12 @@ struct TextRenderedRun
   /**
    * The point in user space that the text is positioned at.
    *
+   * For a horizontal run:
    * The x coordinate is the left edge of a LTR run of text or the right edge of
    * an RTL run.  The y coordinate is the baseline of the text.
+   * For a vertical run:
+   * The x coordinate is the baseline of the text.
+   * The y coordinate is the top edge of a LTR run, or bottom of RTL.
    */
   gfxPoint mPosition;
 
@@ -770,7 +787,7 @@ struct TextRenderedRun
 
   /**
    * The baseline in app units of this text run.  The measurement is from the
-   * top of the text frame.
+   * top of the text frame. (From the left edge if vertical.)
    */
   nscoord mBaseline;
 
@@ -816,10 +833,18 @@ TextRenderedRun::GetTransformFromUserSpaceForPainting(
   m.Scale(mLengthAdjustScaleFactor, 1.0);
 
   // Translation to get the text frame in the right place.
-  nsPoint t(IsRightToLeft() ?
-              -mFrame->GetRect().width + aItem.mRightEdge :
-              -aItem.mLeftEdge,
-            -mBaseline);
+  nsPoint t;
+  if (IsVertical()) {
+    t = nsPoint(-mBaseline,
+                IsRightToLeft()
+                  ? -mFrame->GetRect().height + aItem.mRightEdge
+                  : -aItem.mLeftEdge);
+  } else {
+    t = nsPoint(IsRightToLeft()
+                  ? -mFrame->GetRect().width + aItem.mRightEdge
+                  : -aItem.mLeftEdge,
+                -mBaseline);
+  }
   m.Translate(AppUnitsToGfxUnits(t, aContext));
 
   return m;
@@ -850,10 +875,18 @@ TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
   m.Scale(mLengthAdjustScaleFactor, 1.0);
 
   // Translation to get the text frame in the right place.
-  nsPoint t(IsRightToLeft() ?
-              -mFrame->GetRect().width + left + right :
-              0,
-            -mBaseline);
+  nsPoint t;
+  if (IsVertical()) {
+    t = nsPoint(-mBaseline,
+                IsRightToLeft()
+                  ? -mFrame->GetRect().height + left + right
+                  : 0);
+  } else {
+    t = nsPoint(IsRightToLeft()
+                  ? -mFrame->GetRect().width + left + right
+                  : 0,
+                -mBaseline);
+  }
   m.Translate(AppUnitsToGfxUnits(t, aContext) *
                 cssPxPerDevPx / mFontSizeScaleFactor);
 
@@ -874,8 +907,10 @@ TextRenderedRun::GetTransformFromRunUserSpaceToFrameUserSpace(
 
   // Translate by the horizontal distance into the text frame this
   // rendered run is.
-  return m.Translate(gfxPoint(gfxFloat(left) / aContext->AppUnitsPerCSSPixel(),
-                              0));
+  gfxFloat appPerCssPx = aContext->AppUnitsPerCSSPixel();
+  gfxPoint t = IsVertical() ? gfxPoint(0, left / appPerCssPx)
+                            : gfxPoint(left / appPerCssPx, 0);
+  return m.Translate(t);
 }
 
 SVGBBox
@@ -895,8 +930,10 @@ TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   // horizontally.
   nsRect self = mFrame->GetVisualOverflowRectRelativeToSelf();
   nsRect rect = mFrame->GetRect();
-  nscoord above = -self.y;
-  nscoord below = self.YMost() - rect.height;
+  bool vertical = IsVertical();
+  nscoord above = vertical ? -self.x : -self.y;
+  nscoord below = vertical ? self.XMost() - rect.width
+                           : self.YMost() - rect.height;
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
   gfxTextRun* textRun = mFrame->GetTextRun(nsTextFrame::eInflated);
@@ -932,6 +969,11 @@ TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   }
   nsRect fillInAppUnits(x, baseline - above,
                         width, metrics.mBoundingBox.height + above + below);
+  if (textRun->IsVertical()) {
+    // Swap line-relative textMetrics dimensions to physical coordinates.
+    Swap(fillInAppUnits.x, fillInAppUnits.y);
+    Swap(fillInAppUnits.width, fillInAppUnits.height);
+  }
 
   // Account for text-shadow.
   if (aFlags & eIncludeTextShadow) {
@@ -949,7 +991,9 @@ TextRenderedRun::GetRunUserSpaceRect(nsPresContext* aContext,
   // Scale the rectangle up due to any mFontSizeScaleFactor.  We scale
   // it around the text's origin.
   ScaleAround(fill,
-              gfxPoint(0.0, aContext->AppUnitsToFloatCSSPixels(baseline)),
+              textRun->IsVertical()
+                ? gfxPoint(aContext->AppUnitsToFloatCSSPixels(baseline), 0.0)
+                : gfxPoint(0.0, aContext->AppUnitsToFloatCSSPixels(baseline)),
               1.0 / mFontSizeScaleFactor);
 
   // Include the fill if requested.
@@ -1091,12 +1135,23 @@ TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
   gfxFloat ascent, descent;
   GetAscentAndDescentInAppUnits(mFrame, ascent, descent);
 
-  gfxFloat topEdge = mFrame->GetLogicalBaseline(mFrame->GetWritingMode()) - ascent;
-  gfxFloat bottomEdge = topEdge + ascent + descent;
-
-  if (p.y < aContext->AppUnitsToGfxUnits(topEdge) ||
-      p.y >= aContext->AppUnitsToGfxUnits(bottomEdge)) {
-    return -1;
+  WritingMode writingMode = mFrame->GetWritingMode();
+  if (writingMode.IsVertical()) {
+    gfxFloat leftEdge =
+      mFrame->GetLogicalBaseline(writingMode) -
+        (writingMode.IsVerticalRL() ? ascent : descent);
+    gfxFloat rightEdge = leftEdge + ascent + descent;
+    if (p.x < aContext->AppUnitsToGfxUnits(leftEdge) ||
+        p.x > aContext->AppUnitsToGfxUnits(rightEdge)) {
+      return -1;
+    }
+  } else {
+    gfxFloat topEdge = mFrame->GetLogicalBaseline(writingMode) - ascent;
+    gfxFloat bottomEdge = topEdge + ascent + descent;
+    if (p.y < aContext->AppUnitsToGfxUnits(topEdge) ||
+        p.y > aContext->AppUnitsToGfxUnits(bottomEdge)) {
+      return -1;
+    }
   }
 
   gfxSkipCharsIterator it = mFrame->EnsureTextRun(nsTextFrame::eInflated);
@@ -1111,7 +1166,8 @@ TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
     aContext->AppUnitsToGfxUnits(textRun->GetAdvanceWidth(offset, length,
                                                           nullptr));
 
-  if (p.x < 0 || p.x >= runAdvance) {
+  gfxFloat pos = writingMode.IsVertical() ? p.y : p.x;
+  if (pos < 0 || pos >= runAdvance) {
     return -1;
   }
 
@@ -1124,8 +1180,8 @@ TextRenderedRun::GetCharNumAtPosition(nsPresContext* aContext,
     gfxFloat advance =
       aContext->AppUnitsToGfxUnits(textRun->GetAdvanceWidth(offset, length,
                                                             nullptr));
-    if ((rtl && p.x < runAdvance - advance) ||
-        (!rtl && p.x >= advance)) {
+    if ((rtl && pos < runAdvance - advance) ||
+        (!rtl && pos >= advance)) {
       return i;
     }
   }
@@ -4303,9 +4359,18 @@ SVGTextFrame::GetExtentOfChar(nsIContent* aContent,
   m.Rotate(mPositions[startIndex].mAngle);
   m.Scale(1 / mFontSizeScaleFactor, 1 / mFontSizeScaleFactor);
 
-  gfxRect glyphRect
-    (x, -presContext->AppUnitsToGfxUnits(ascent) * cssPxPerDevPx,
-     advance, presContext->AppUnitsToGfxUnits(ascent + descent) * cssPxPerDevPx);
+  gfxRect glyphRect;
+  if (it.TextRun()->IsVertical()) {
+    glyphRect =
+      gfxRect(-presContext->AppUnitsToGfxUnits(descent) * cssPxPerDevPx, x,
+              presContext->AppUnitsToGfxUnits(ascent + descent) * cssPxPerDevPx,
+              advance);
+  } else {
+    glyphRect =
+      gfxRect(x, -presContext->AppUnitsToGfxUnits(ascent) * cssPxPerDevPx,
+              advance,
+              presContext->AppUnitsToGfxUnits(ascent + descent) * cssPxPerDevPx);
+  }
 
   // Transform the glyph's rect into user space.
   gfxRect r = m.TransformBounds(glyphRect);
@@ -4609,11 +4674,21 @@ SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions)
 
     // Reset the position to the new frame's position.
     position = frit.Position();
-    if (textRun->IsRightToLeft()) {
-      position.x += frame->GetRect().width;
+    if (textRun->IsVertical()) {
+      if (textRun->IsRightToLeft()) {
+        position.y += frame->GetRect().height;
+      }
+      position.x += GetBaselinePosition(frame, textRun,
+                                        frit.DominantBaseline(),
+                                        mFontSizeScaleFactor);
+    } else {
+      if (textRun->IsRightToLeft()) {
+        position.x += frame->GetRect().width;
+      }
+      position.y += GetBaselinePosition(frame, textRun,
+                                        frit.DominantBaseline(),
+                                        mFontSizeScaleFactor);
     }
-    position.y += GetBaselinePosition(frame, textRun, frit.DominantBaseline(),
-                                      mFontSizeScaleFactor);
 
     // Any characters not in a frame, e.g. when display:none.
     for (uint32_t i = 0; i < frit.UndisplayedCharacters(); i++) {
@@ -4636,7 +4711,8 @@ SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions)
             !textRun->IsClusterStart(it.GetSkippedOffset()))) {
       nscoord advance = textRun->GetAdvanceWidth(it.GetSkippedOffset(), 1,
                                                  nullptr);
-      position.x += textRun->IsRightToLeft() ? -advance : advance;
+      (textRun->IsVertical() ? position.y : position.x) +=
+        textRun->IsRightToLeft() ? -advance : advance;
       aPositions.AppendElement(lastPosition);
       it.AdvanceOriginal(1);
     }
@@ -4651,7 +4727,8 @@ SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions)
         uint32_t length = ClusterLength(textRun, it);
         nscoord advance = textRun->GetAdvanceWidth(it.GetSkippedOffset(),
                                                    length, nullptr);
-        position.x += textRun->IsRightToLeft() ? -advance : advance;
+        (textRun->IsVertical() ? position.y : position.x) +=
+          textRun->IsRightToLeft() ? -advance : advance;
         lastPosition = position;
       }
       it.AdvanceOriginal(1);
@@ -4706,13 +4783,15 @@ ShiftAnchoredChunk(nsTArray<mozilla::CharPosition>& aCharPositions,
                    uint32_t aChunkEnd,
                    gfxFloat aLeftEdge,
                    gfxFloat aRightEdge,
-                   TextAnchorSide aAnchorSide)
+                   TextAnchorSide aAnchorSide,
+                   bool aVertical)
 {
   NS_ASSERTION(aLeftEdge <= aRightEdge, "unexpected anchored chunk edges");
   NS_ASSERTION(aChunkStart < aChunkEnd, "unexpected values for aChunkStart and "
                                         "aChunkEnd");
 
-  gfxFloat shift = aCharPositions[aChunkStart].mPosition.x;
+  gfxFloat shift = aVertical ? aCharPositions[aChunkStart].mPosition.y
+                             : aCharPositions[aChunkStart].mPosition.x;
   switch (aAnchorSide) {
     case eAnchorLeft:
       shift -= aLeftEdge;
@@ -4728,8 +4807,14 @@ ShiftAnchoredChunk(nsTArray<mozilla::CharPosition>& aCharPositions,
   }
 
   if (shift != 0.0) {
-    for (uint32_t i = aChunkStart; i < aChunkEnd; i++) {
-      aCharPositions[i].mPosition.x += shift;
+    if (aVertical) {
+      for (uint32_t i = aChunkStart; i < aChunkEnd; i++) {
+        aCharPositions[i].mPosition.y += shift;
+      }
+    } else {
+      for (uint32_t i = aChunkStart; i < aChunkEnd; i++) {
+        aCharPositions[i].mPosition.x += shift;
+      }
     }
   }
 }
@@ -4781,6 +4866,9 @@ SVGTextFrame::AdjustPositionsForClusters()
       it.GetGlyphPartialAdvance(partLength, presContext) / mFontSizeScaleFactor;
     gfxPoint direction = gfxPoint(cos(angle), sin(angle)) *
                          (it.TextRun()->IsRightToLeft() ? -1.0 : 1.0);
+    if (it.TextRun()->IsVertical()) {
+      Swap(direction.x, direction.y);
+    }
     mPositions[charIndex].mPosition = mPositions[startIndex].mPosition +
                                       direction * advance;
 
@@ -4923,7 +5011,9 @@ SVGTextFrame::DoTextPathLayout()
       gfxFloat halfAdvance =
         it.GetGlyphAdvance(context) / mFontSizeScaleFactor / 2.0;
       gfxFloat sign = it.TextRun()->IsRightToLeft() ? -1.0 : 1.0;
-      gfxFloat midx = mPositions[i].mPosition.x + sign * halfAdvance + offset;
+      gfxFloat midx = (it.TextRun()->IsVertical() ? mPositions[i].mPosition.y
+                                                  : mPositions[i].mPosition.x) +
+                      sign * halfAdvance + offset;
 
       // Hide the character if it falls off the end of the path.
       mPositions[i].mHidden = midx < 0 || midx > pathLength;
@@ -4969,6 +5059,7 @@ SVGTextFrame::DoAnchoring()
     it.Next();
   }
 
+  bool vertical = GetWritingMode().IsVertical();
   uint32_t start = it.TextElementCharIndex();
   while (start < mPositions.Length()) {
     it.AdvanceToCharacter(start);
@@ -4983,12 +5074,15 @@ SVGTextFrame::DoAnchoring()
     do {
       if (!it.IsOriginalCharSkipped() && !it.IsOriginalCharTrimmed()) {
         gfxFloat advance = it.GetAdvance(presContext) / mFontSizeScaleFactor;
+        gfxFloat pos =
+          it.TextRun()->IsVertical() ? mPositions[index].mPosition.y
+                                     : mPositions[index].mPosition.x;
         if (it.TextRun()->IsRightToLeft()) {
-          left  = std::min(left,  mPositions[index].mPosition.x - advance);
-          right = std::max(right, mPositions[index].mPosition.x);
+          left  = std::min(left,  pos - advance);
+          right = std::max(right, pos);
         } else {
-          left  = std::min(left,  mPositions[index].mPosition.x);
-          right = std::max(right, mPositions[index].mPosition.x + advance);
+          left  = std::min(left,  pos);
+          right = std::max(right, pos + advance);
         }
       }
       it.Next();
@@ -5002,7 +5096,8 @@ SVGTextFrame::DoAnchoring()
         ConvertLogicalTextAnchorToPhysical(chunkFrame->StyleSVG()->mTextAnchor,
                                            isRTL);
 
-      ShiftAnchoredChunk(mPositions, start, end, left, right, anchor);
+      ShiftAnchoredChunk(mPositions, start, end, left, right, anchor,
+                         vertical);
     }
 
     start = it.TextElementCharIndex();
@@ -5073,6 +5168,7 @@ SVGTextFrame::DoGlyphPositioning()
   }
 
   nsPresContext* presContext = PresContext();
+  bool vertical = GetWritingMode().IsVertical();
 
   float cssPxPerDevPx = presContext->
     AppUnitsToFloatCSSPixels(presContext->AppUnitsPerDevPixel());
@@ -5083,9 +5179,10 @@ SVGTextFrame::DoGlyphPositioning()
   double adjustment = 0.0;
   mLengthAdjustScaleFactor = 1.0f;
   if (adjustingTextLength) {
-    nscoord frameWidth = GetFirstPrincipalChild()->GetRect().width;
+    nscoord frameLength = vertical ? GetFirstPrincipalChild()->GetRect().height
+                                   : GetFirstPrincipalChild()->GetRect().width;
     float actualTextLength =
-      static_cast<float>(presContext->AppUnitsToGfxUnits(frameWidth) * factor);
+      static_cast<float>(presContext->AppUnitsToGfxUnits(frameLength) * factor);
 
     nsRefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
     uint16_t lengthAdjust = lengthAdjustEnum->AnimVal();
@@ -5119,14 +5216,16 @@ SVGTextFrame::DoGlyphPositioning()
     mPositions[0].mPosition += deltas[0];
   }
 
+  gfxFloat xLengthAdjustFactor = vertical ? 1.0 : mLengthAdjustScaleFactor;
+  gfxFloat yLengthAdjustFactor = vertical ? mLengthAdjustScaleFactor : 1.0;
   for (uint32_t i = 1; i < mPositions.Length(); i++) {
     // Fill in unspecified x position.
     if (!mPositions[i].IsXSpecified()) {
       nscoord d = charPositions[i].x - charPositions[i - 1].x;
       mPositions[i].mPosition.x =
         mPositions[i - 1].mPosition.x +
-        presContext->AppUnitsToGfxUnits(d) * factor * mLengthAdjustScaleFactor;
-      if (!mPositions[i].mUnaddressable) {
+        presContext->AppUnitsToGfxUnits(d) * factor * xLengthAdjustFactor;
+      if (!vertical && !mPositions[i].mUnaddressable) {
         mPositions[i].mPosition.x += adjustment;
       }
     }
@@ -5135,7 +5234,10 @@ SVGTextFrame::DoGlyphPositioning()
       nscoord d = charPositions[i].y - charPositions[i - 1].y;
       mPositions[i].mPosition.y =
         mPositions[i - 1].mPosition.y +
-        presContext->AppUnitsToGfxUnits(d) * factor;
+        presContext->AppUnitsToGfxUnits(d) * factor * yLengthAdjustFactor;
+      if (vertical && !mPositions[i].mUnaddressable) {
+        mPositions[i].mPosition.y += adjustment;
+      }
     }
     // Add in dx/dy.
     if (i < deltas.Length()) {

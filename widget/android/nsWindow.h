@@ -203,6 +203,8 @@ protected:
     void FlushIMEChanges();
 
     void ConfigureAPZCTreeManager() override;
+    void ConfigureAPZControllerThread() override;
+
     already_AddRefed<GeckoContentController> CreateRootContentController() override;
 
     // Call this function when the users activity is the direct cause of an

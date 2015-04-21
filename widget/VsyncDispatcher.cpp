@@ -37,7 +37,6 @@ CompositorVsyncDispatcher::~CompositorVsyncDispatcher()
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   // We auto remove this vsync dispatcher from the vsync source in the nsBaseWidget
-  MOZ_ASSERT(NS_IsMainThread());
 }
 
 void
