@@ -66,6 +66,7 @@ EXTRA_JS_MODULES.devtools.shared.widgets += [
     'widgets/FastListWidget.js',
     'widgets/FilterWidget.js',
     'widgets/FlameGraph.js',
+    'widgets/MdnDocsWidget.js',
     'widgets/Spectrum.js',
     'widgets/TableWidget.js',
     'widgets/Tooltip.js',
