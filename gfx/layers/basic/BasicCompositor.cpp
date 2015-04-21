@@ -20,6 +20,7 @@
 #ifdef MOZ_ENABLE_SKIA
 #include "skia/SkCanvas.h"              // for SkCanvas
 #include "skia/SkBitmapDevice.h"        // for SkBitmapDevice
+#include "skia/SkShader.h"              // for SkShader
 #else
 #define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"                     // for pixman_f_transform, etc
@@ -182,7 +183,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
 
 #ifdef MOZ_ENABLE_SKIA
 static SkMatrix
-Matrix3DToSkia(const gfx3DMatrix& aMatrix)
+MatrixToSkia(const Matrix4x4& aMatrix)
 {
   SkMatrix transform;
   transform.setAll(aMatrix._11,
@@ -201,14 +202,34 @@ Matrix3DToSkia(const gfx3DMatrix& aMatrix)
 static void
 Transform(DataSourceSurface* aDest,
           DataSourceSurface* aSource,
-          const gfx3DMatrix& aTransform,
+          const Matrix4x4& aTransform,
           const Point& aDestOffset)
 {
+  // Skia does not correctly transform vertices that are behind the camera.
+  // To work around this, we clip the geometry against the view frustum
+  // clipping planes in homogenous space before passing them to Skia.
+  // A Skia bitmap shader is initialized with a transformation matrix to
+  // transform the texture contents of the polygon.
+
   if (aTransform.IsSingular()) {
     return;
   }
 
+  Matrix4x4 transform = aTransform;
+  transform.PostTranslate(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
+
+  IntSize srcSize = aSource->GetSize();
   IntSize destSize = aDest->GetSize();
+  Point verts[Matrix4x4::kTransformAndClipRectMaxVerts];
+  Rect srcRect = Rect(0, 0, srcSize.width, srcSize.height);
+  Rect destRect = Rect(0, 0, destSize.width, destSize.height);
+  size_t vertCount = transform.TransformAndClipRect(srcRect, destRect, verts);
+  if (vertCount < 3) {
+    // If we have fewer than 3 vertices, then the polygon has been completely
+    // clipped out and there is nothing to render.
+    return;
+  }
+
   SkImageInfo destInfo = SkImageInfo::Make(destSize.width,
                                            destSize.height,
                                            kBGRA_8888_SkColorType,
@@ -218,7 +239,6 @@ Transform(DataSourceSurface* aDest,
   destBitmap.setPixels((uint32_t*)aDest->GetData());
   SkCanvas destCanvas(destBitmap);
 
-  IntSize srcSize = aSource->GetSize();
   SkImageInfo srcInfo = SkImageInfo::Make(srcSize.width,
                                           srcSize.height,
                                           kBGRA_8888_SkColorType,
@@ -227,16 +247,26 @@ Transform(DataSourceSurface* aDest,
   src.setInfo(srcInfo, aSource->Stride());
   src.setPixels((uint32_t*)aSource->GetData());
 
-  gfx3DMatrix transform = aTransform;
-  transform.TranslatePost(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
-  destCanvas.setMatrix(Matrix3DToSkia(transform));
-
   SkPaint paint;
   paint.setXfermodeMode(SkXfermode::kSrc_Mode);
   paint.setAntiAlias(true);
   paint.setFilterLevel(SkPaint::kLow_FilterLevel);
-  SkRect destRect = SkRect::MakeXYWH(0, 0, srcSize.width, srcSize.height);
-  destCanvas.drawBitmapRectToRect(src, nullptr, destRect, &paint);
+  SkMatrix localMatrix = MatrixToSkia(transform);
+  SkShader* shader = SkShader::CreateBitmapShader(src,
+                                                  SkShader::kClamp_TileMode,
+                                                  SkShader::kClamp_TileMode,
+                                                  &localMatrix);
+  paint.setShader(shader);
+  shader->unref();
+
+  SkPath path;
+  path.moveTo(verts[0].x, verts[0].y);
+  for (size_t i=1; i<vertCount; i++) {
+    path.lineTo(verts[i].x, verts[i].y);
+  }
+  path.close();
+
+  destCanvas.drawPath(path, paint);
 }
 #else
 static pixman_transform
@@ -336,12 +366,24 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
   Matrix newTransform;
   Rect transformBounds;
-  gfx3DMatrix new3DTransform;
+  Matrix4x4 new3DTransform;
   IntPoint offset = mRenderTarget->GetOrigin();
 
   if (aTransform.Is2D()) {
     newTransform = aTransform.As2D();
   } else {
+    // Get the bounds post-transform.
+    new3DTransform = aTransform;
+    Rect bounds = new3DTransform.TransformBounds(aRect);
+
+    transformBounds = bounds;
+    transformBounds.RoundOut();
+
+    if (transformBounds.IsEmpty()) {
+      // The quad has been completely clipped, nothing to draw.
+      return;
+    }
+
     // Create a temporary surface for the transform.
     dest = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(RoundOut(aRect).Size(), SurfaceFormat::B8G8R8A8);
     if (!dest) {
@@ -350,20 +392,12 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
     dest->SetTransform(Matrix::Translation(-aRect.x, -aRect.y));
 
-    // Get the bounds post-transform.
-    new3DTransform = To3DMatrix(aTransform);
-    gfxRect bounds = new3DTransform.TransformBounds(ThebesRect(aRect));
-    bounds.IntersectRect(bounds, gfxRect(offset.x, offset.y, buffer->GetSize().width, buffer->GetSize().height));
-
-    transformBounds = ToRect(bounds);
-    transformBounds.RoundOut();
-
     // Propagate the coordinate offset to our 2D draw target.
     newTransform = Matrix::Translation(transformBounds.x, transformBounds.y);
 
     // When we apply the 3D transformation, we do it against a temporary
     // surface, so undo the coordinate offset.
-    new3DTransform = gfx3DMatrix::Translation(aRect.x, aRect.y, 0) * new3DTransform;
+    new3DTransform = Matrix4x4::Translation(aRect.x, aRect.y, 0) * new3DTransform;
   }
 
   newTransform.PostTranslate(-offset.x, -offset.y);
