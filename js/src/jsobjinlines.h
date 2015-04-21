@@ -246,7 +246,8 @@ SetNewObjectMetadata(ExclusiveContext* cxArg, JSObject* obj)
             // callback, and any reentering of JS via Invoke() etc.
             AutoEnterAnalysis enter(cx);
 
-            cx->compartment()->setNewObjectMetadata(cx, obj);
+            RootedObject hobj(cx, obj);
+            cx->compartment()->setNewObjectMetadata(cx, hobj);
         }
     }
 }

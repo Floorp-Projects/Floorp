@@ -25,7 +25,7 @@ class Registers
         r0 = 0,
         invalid_reg
     };
-    typedef RegisterID Code;
+    typedef uint8_t Code;
     typedef RegisterID Encoding;
     union RegisterContent {
         uintptr_t r;
@@ -39,8 +39,8 @@ class Registers
     static const char* GetName(Code) { MOZ_CRASH(); }
     static Code FromName(const char*) { MOZ_CRASH(); }
 
-    static const Code StackPointer = invalid_reg;
-    static const Code Invalid = invalid_reg;
+    static const Encoding StackPointer = invalid_reg;
+    static const Encoding Invalid = invalid_reg;
     static const uint32_t Total = 1;
     static const uint32_t TotalPhys = 0;
     static const uint32_t Allocatable = 0;

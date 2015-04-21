@@ -3784,7 +3784,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mFont.sizeAdjust = systemFont.sizeAdjust;
   } else
     SetFactor(*sizeAdjustValue, aFont->mFont.sizeAdjust,
-              aCanStoreInRuleTree, aParentFont->mFont.sizeAdjust, 0.0f,
+              aCanStoreInRuleTree, aParentFont->mFont.sizeAdjust, -1.0f,
               SETFCT_NONE | SETFCT_UNSET_INHERIT);
 }
 

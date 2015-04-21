@@ -1423,7 +1423,7 @@ DisplayName(JSContext* cx, unsigned argc, jsval* vp)
 }
 
 static JSObject*
-ShellObjectMetadataCallback(JSContext* cx)
+ShellObjectMetadataCallback(JSContext* cx, JSObject*)
 {
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
