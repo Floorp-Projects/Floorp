@@ -1167,7 +1167,7 @@ public:
     if (plugin)
       mLibrary = plugin->GetLibrary();
   }
-  explicit operator bool() { return !!mLibrary; }
+  operator bool() { return !!mLibrary; }
   PluginLibrary* operator->() { return mLibrary; }
 
 private:

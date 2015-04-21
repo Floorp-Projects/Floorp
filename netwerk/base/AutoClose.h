@@ -23,7 +23,7 @@ public:
     Close();
   }
 
-  explicit operator bool() const
+  operator bool() const
   {
     return mPtr;
   }
