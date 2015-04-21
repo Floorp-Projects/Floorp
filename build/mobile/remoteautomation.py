@@ -180,7 +180,13 @@ class RemoteAutomation(Automation):
         self.checkForANRs()
         self.checkForTombstones()
 
-        logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
+        try:
+            logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
+        except DMError:
+            print "getLogcat threw DMError; re-trying just once..."
+            time.sleep(1)
+            logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
+
         javaException = mozcrash.check_for_java_exception(logcat)
         if javaException:
             return True
