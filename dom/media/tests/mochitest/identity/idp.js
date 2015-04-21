@@ -21,12 +21,8 @@
 
   IDPJS.prototype = {
     getLogin: function() {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'https://example.com/.well-known/idp-proxy/idp.sjs?' + this.id);
-      return new Promise(resolve => {
-        xhr.onload = e => resolve(xhr.status === 200);
-        xhr.send();
-      });
+      return fetch('https://example.com/.well-known/idp-proxy/idp.sjs?' + this.id)
+        .then(response => response.status === 200);
     },
     checkLogin: function(result) {
       return this.getLogin()
