@@ -17,23 +17,17 @@
 <script class="testbody" type="text/javascript">
 
   function runTest() {
-    navigator.serviceWorker.register("empty.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            e.target.onstatechange = null;
-            done(registration);
-          };
-        } else {
-          done(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(done);
+    navigator.serviceWorker.register("empty.js", {scope: "."});
   }
 
   function done(registration) {
     ok(registration.waiting || registration.active, "registration worked");
     registration.unregister().then(function(success) {
       ok(success, "unregister worked");
+      SimpleTest.finish();
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
       SimpleTest.finish();
     });
   }

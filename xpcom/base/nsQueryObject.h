@@ -7,13 +7,15 @@
 #ifndef nsQueryObject_h
 #define nsQueryObject_h
 
+#include "mozilla/Attributes.h"
+
 #include "nsCOMPtr.h"
 #include "nsRefPtr.h"
 
 /*****************************************************************************/
 
 template<class T>
-class nsQueryObject : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryObject : public nsCOMPtr_helper
 {
 public:
   explicit nsQueryObject(T* aRawPtr)
@@ -29,11 +31,11 @@ public:
     return status;
   }
 private:
-  T* mRawPtr;
+  T* MOZ_NON_OWNING_REF mRawPtr;
 };
 
 template<class T>
-class nsQueryObjectWithError : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryObjectWithError : public nsCOMPtr_helper
 {
 public:
   nsQueryObjectWithError(T* aRawPtr, nsresult* aErrorPtr)
@@ -52,7 +54,7 @@ public:
     return status;
   }
 private:
-  T* mRawPtr;
+  T* MOZ_NON_OWNING_REF mRawPtr;
   nsresult* mErrorPtr;
 };
 
