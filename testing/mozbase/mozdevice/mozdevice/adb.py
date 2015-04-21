@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import abc
 import os
 import posixpath
 import re
@@ -12,9 +13,7 @@ import traceback
 
 
 class ADBProcess(object):
-    """ADBProcess encapsulates the data related to executing the adb process.
-
-    """
+    """ADBProcess encapsulates the data related to executing the adb process."""
     def __init__(self, args):
         #: command argument argument list.
         self.args = args
@@ -64,7 +63,6 @@ class ADBError(Exception):
     device either exited with a non-zero exitcode or when an
     unexpected error condition has occurred. Generally, ADBErrors can
     be handled and the device can continue to be used.
-
     """
     pass
 
@@ -73,7 +71,6 @@ class ADBRootError(Exception):
     root but the device does not support it. This error is fatal since
     there is no recovery possible by the script. You must either root
     your device or change your scripts to not require running as root.
-
     """
     pass
 
@@ -94,7 +91,6 @@ class ADBTimeoutError(Exception):
 
     * Rebooting the device manually.
     * Rebooting the host.
-
     """
     pass
 
@@ -117,7 +113,6 @@ class ADBCommand(object):
            adbcommand = ADBCommand()
        except NotImplementedError:
            print "ADBCommand can not be instantiated."
-
     """
 
     def __init__(self,
@@ -136,7 +131,6 @@ class ADBCommand(object):
 
         :raises: * ADBError
                  * ADBTimeoutError
-
         """
         if self.__class__ == ADBCommand:
             raise NotImplementedError
@@ -207,7 +201,6 @@ class ADBCommand(object):
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
-
         """
         args = [self._adb_path]
         if self._adb_host:
@@ -257,7 +250,6 @@ class ADBCommand(object):
 
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         adb_process = None
         try:
@@ -300,7 +292,6 @@ class ADBHost(ADBCommand):
 
        adbhost = ADBHost()
        adbhost.start_server()
-
     """
     def __init__(self,
                  adb='adb',
@@ -318,7 +309,6 @@ class ADBHost(ADBCommand):
 
         :raises: * ADBError
                  * ADBTimeoutError
-
         """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
@@ -353,7 +343,6 @@ class ADBHost(ADBCommand):
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
-
         """
         return ADBCommand.command(self, cmds, timeout=timeout)
 
@@ -372,7 +361,6 @@ class ADBHost(ADBCommand):
 
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         return ADBCommand.command_output(self, cmds, timeout=timeout)
 
@@ -404,7 +392,6 @@ class ADBHost(ADBCommand):
             while true; do
               adb -a fork-server server
             done
-
         """
         self.command_output(["start-server"], timeout=timeout)
 
@@ -418,7 +405,6 @@ class ADBHost(ADBCommand):
             specified, the value set in the ADBHost constructor is used.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         self.command_output(["kill-server"], timeout=timeout)
 
@@ -444,7 +430,6 @@ class ADBHost(ADBCommand):
 
         [{'device_serial': 'b313b945', 'state': 'device', 'product': 'd2vzw',
           'usb': '1-7', 'device': 'd2vzw', 'model': 'SCH_I535' }]
-
         """
         # b313b945               device usb:1-7 product:d2vzw model:SCH_I535 device:d2vzw
         # from Android system/core/adb/transport.c statename()
@@ -473,22 +458,12 @@ class ADBHost(ADBCommand):
 
 
 class ADBDevice(ADBCommand):
-    """ADBDevice provides methods which can be used to interact with
-    the associated Android-based device.
-
-    Android specific features such as Application management are not
-    included but are provided via the ADBAndroid interface.
-
-    ::
-
-       from mozdevice import ADBDevice
-
-       adbdevice = ADBDevice()
-       print adbdevice.list_files("/mnt/sdcard")
-       if adbdevice.process_exist("org.mozilla.fennec"):
-           print "Fennec is running"
-
+    """ADBDevice is an abstract base class which provides methods which
+    can be used to interact with the associated Android or B2G based
+    device. It must be used via one of the concrete implementations in
+    :class:`ADBAndroid` or :class:`ADBB2G`.
     """
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self,
                  device=None,
@@ -532,8 +507,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBError
                  * ADBTimeoutError
                  * ValueError
-
-
         """
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
@@ -589,6 +562,9 @@ class ADBDevice(ADBCommand):
         except ADBError:
             self._ls += " -a"
 
+        # Do we have cp?
+        self._have_cp = self.shell_bool("type cp")
+
         self._logger.debug("ADBDevice: %s" % self.__dict__)
 
     def _get_device_serial(self, device):
@@ -629,7 +605,6 @@ class ADBDevice(ADBCommand):
     def _escape_command_line(cmd):
         """Utility function to return escaped and quoted version of command
         line.
-
         """
         quoted_cmd = []
 
@@ -652,7 +627,6 @@ class ADBDevice(ADBCommand):
     def _get_exitcode(file_obj):
         """Get the exitcode from the last line of the file_obj for shell
         commands.
-
         """
         file_obj.seek(0, os.SEEK_END)
 
@@ -790,7 +764,6 @@ class ADBDevice(ADBCommand):
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
-
         """
 
         return ADBCommand.command(self, cmds,
@@ -813,7 +786,6 @@ class ADBDevice(ADBCommand):
 
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         return ADBCommand.command_output(self, cmds,
                                          device_serial=self._device_serial,
@@ -961,7 +933,6 @@ class ADBDevice(ADBCommand):
 
         It is the caller's responsibilty to clean up by closing
         the stdout and stderr temporary files.
-
         """
         if root:
             ld_library_path='LD_LIBRARY_PATH=/vendor/lib:/system/lib'
@@ -1037,7 +1008,6 @@ class ADBDevice(ADBCommand):
 
         :raises: * ADBTimeoutError
                  * ADBRootError
-
         """
         adb_process = None
         try:
@@ -1071,7 +1041,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         adb_process = None
         try:
@@ -1115,7 +1084,6 @@ class ADBDevice(ADBCommand):
             in the ADBDevice constructor is used.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         self.command_output(["logcat", "-c"], timeout=timeout)
 
@@ -1146,7 +1114,6 @@ class ADBDevice(ADBCommand):
         :returns: list of lines logcat output.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         cmds = ["logcat", "-v", format, "-d"] + filter_specs
         lines = self.command_output(cmds, timeout=timeout).split('\r')
@@ -1169,7 +1136,6 @@ class ADBDevice(ADBCommand):
         :returns: string value of property.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         output = self.shell_output('getprop %s' % prop, timeout=timeout)
         return output
@@ -1186,7 +1152,6 @@ class ADBDevice(ADBCommand):
         :returns: string value of adb get-state.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         output = self.command_output(["get-state"], timeout=timeout).strip()
         return output
@@ -1206,7 +1171,6 @@ class ADBDevice(ADBCommand):
             be found.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         ip_regexp = re.compile(r'(\w+)\s+UP\s+([1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
         data = self.shell_output('netcfg')
@@ -1260,7 +1224,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         path = posixpath.normpath(path.strip())
         self._logger.debug('chmod: path=%s, recursive=%s, mask=%s, root=%s' %
@@ -1306,7 +1269,6 @@ class ADBDevice(ADBCommand):
         :returns: boolean - True if path exists.
         :raises: * ADBTimeoutError
                  * ADBRootError
-
         """
         path = posixpath.normpath(path)
         return self.shell_bool('ls -a %s' % path, timeout=timeout, root=root)
@@ -1327,7 +1289,6 @@ class ADBDevice(ADBCommand):
             directory.
         :raises: * ADBTimeoutError
                  * ADBRootError
-
         """
         path = posixpath.normpath(path)
         return self.shell_bool('ls -a %s/' % path, timeout=timeout, root=root)
@@ -1348,7 +1309,6 @@ class ADBDevice(ADBCommand):
             file.
         :raises: * ADBTimeoutError
                  * ADBRootError
-
         """
         path = posixpath.normpath(path)
         return (
@@ -1371,7 +1331,6 @@ class ADBDevice(ADBCommand):
         :returns: list of files/directories contained in the directory.
         :raises: * ADBTimeoutError
                  * ADBRootError
-
         """
         path = posixpath.normpath(path.strip())
         data = []
@@ -1407,7 +1366,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         path = posixpath.normpath(path)
         if parents:
@@ -1449,7 +1407,6 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         self.command_output(["push", os.path.realpath(local), remote],
                             timeout=timeout)
@@ -1469,7 +1426,6 @@ class ADBDevice(ADBCommand):
             set in the ADBDevice constructor is used.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         self.command_output(["pull", remote, os.path.realpath(local)],
                             timeout=timeout)
@@ -1495,7 +1451,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         cmd = "rm"
         if recursive:
@@ -1523,7 +1478,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         self.shell_output("rmdir %s" % path, timeout=timeout, root=root)
         if self.is_dir(path, timeout=timeout, root=root):
@@ -1545,7 +1499,6 @@ class ADBDevice(ADBCommand):
             on the device.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         adb_process = None
         try:
@@ -1607,7 +1560,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         pid_list = [str(pid) for pid in pids]
         for attempt in range(attempts):
@@ -1655,7 +1607,6 @@ class ADBDevice(ADBCommand):
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         procs = self.get_process_list(timeout=timeout)
         # limit the comparion to the first 75 characters due to a
@@ -1688,7 +1639,6 @@ class ADBDevice(ADBCommand):
 
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         if not isinstance(process_name, basestring):
             raise ADBError("Process name %s is not a string" % process_name)
@@ -1718,3 +1668,204 @@ class ADBDevice(ADBCommand):
             if proc_name == app[:75]:
                 return True
         return False
+
+    def cp(self, source, destination, recursive=False, timeout=None,
+           root=False):
+        """Copies a file or directory on the device.
+
+        :param source: string containing the path of the source file or
+            directory.
+        :param destination: string containing the path of the destination file
+            or directory.
+        :param recursive: optional boolean indicating if a recursive copy is to
+            be performed. Required if the source is a directory. Defaults to
+            False. Think cp -R source destination.
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
+        """
+        source = posixpath.normpath(source)
+        destination = posixpath.normpath(destination)
+        if self._have_cp:
+            r = '-R' if recursive else ''
+            self.shell_output('cp %s %s %s' % (r, source, destination),
+                              timeout=timeout, root=root)
+            return
+
+        # Emulate cp behavior depending on if source and destination
+        # already exists and whether they are a directory or file.
+        if not self.exists(source, timeout=timeout, root=root):
+            raise ADBError("cp: can't stat '%s': No such file or directory" %
+                           source)
+
+        if self.is_file(source, timeout=timeout, root=root):
+            if self.is_dir(destination, timeout=timeout, root=root):
+                # Copy the source file into the destination directory
+                destination = posixpath.join(destination,
+                                             posixpath.basename(source))
+            self.shell_output('dd if=%s of=%s' % (source, destination),
+                              timeout=timeout, root=root)
+            return
+
+        if self.is_file(destination, timeout=timeout, root=root):
+            raise ADBError('cp: %s: Not a directory' % destination)
+
+        if not recursive:
+            raise ADBError("cp: omitting directory '%s'" % source)
+
+        if self.is_dir(destination, timeout=timeout, root=root):
+            # Copy the source directory into the destination directory.
+            destination_dir = posixpath.join(destination,
+                                             posixpath.basename(source))
+        else:
+            # Copy the contents of the source directory into the
+            # destination directory.
+            destination_dir = destination
+
+        try:
+            # Do not create parent directories since cp does not.
+            self.mkdir(destination_dir, timeout=timeout, root=root)
+        except ADBError as e:
+            if 'File exists' not in e.message:
+                raise
+
+        for i in self.list_files(source, timeout=timeout, root=root):
+            self.cp(posixpath.join(source, i),
+                    posixpath.join(destination_dir, i),
+                    recursive=recursive,
+                    timeout=timeout, root=root)
+
+    def mv(self, source, destination, timeout=None, root=False):
+        """Moves a file or directory on the device.
+
+        :param source: string containing the path of the source file or
+            directory.
+        :param destination: string containing the path of the destination file
+            or directory.
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBRootError
+                 * ADBError
+        """
+        source = posixpath.normpath(source)
+        destination = posixpath.normpath(destination)
+        self.shell_output('mv %s %s' % (source, destination), timeout=timeout,
+                          root=root)
+
+    def reboot(self, timeout=None):
+        """Reboots the device.
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBError
+
+        reboot() reboots the device, issues an adb wait-for-device in order to
+        wait for the device to complete rebooting, then calls is_device_ready()
+        to determine if the device has completed booting.
+        """
+        self.command_output(["reboot"], timeout=timeout)
+        self.command_output(["wait-for-device"], timeout=timeout)
+        return self.is_device_ready(timeout=timeout)
+
+    @abc.abstractmethod
+    def is_device_ready(self, timeout=None):
+        """Abstract class that returns True if the device is ready.
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        return
+
+    @abc.abstractmethod
+    def get_battery_percentage(self, timeout=None):
+        """Abstract class that returns the battery charge as a percentage.
+
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADBDevice constructor is used.
+        :returns: battery charge as a percentage.
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        return
+
+    def get_info(self, directive=None, timeout=None):
+        """
+        Returns a dictionary of information strings about the device.
+
+        :param directive: information you want to get. Options are:
+             - `battery` - battery charge as a percentage
+             - `disk` - total, free, available bytes on disk
+             - `id` - unique id of the device
+             - `os` - name of the os
+             - `process` - list of running processes (same as ps)
+             - `systime` - system time of the device
+             - `uptime` - uptime of the device
+
+            If `directive` is `None`, will return all available information
+        :param timeout: optional integer specifying the maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+        :raises: * ADBTimeoutError
+                 * ADBError
+        """
+        directives = ['battery', 'disk', 'id', 'os', 'process', 'systime',
+                      'uptime']
+
+        if (directive in directives):
+            directives = [directive]
+
+        info = {}
+        if 'battery' in directives:
+            info['battery'] = self.get_battery_percentage(timeout=timeout)
+        if 'disk' in directives:
+            info['disk'] = self.shell_output('df /data /system /sdcard',
+                                             timeout=timeout).splitlines()
+        if 'id' in directives:
+            info['id'] = self.command_output(['get-serialno'], timeout=timeout)
+        if 'os' in directives:
+            info['os'] = self.shell_output('getprop ro.build.display.id',
+                                           timeout=timeout)
+        if 'process' in directives:
+            ps = self.shell_output('ps', timeout=timeout)
+            info['process'] = ps.splitlines()
+        if 'systime' in directives:
+            info['systime'] = self.shell_output('date', timeout=timeout)
+        if 'uptime' in directives:
+            uptime = self.shell_output('uptime', timeout=timeout)
+            if uptime:
+                m = re.match('up time: ((\d+) days, )*(\d{2}):(\d{2}):(\d{2})',
+                             uptime)
+                if m:
+                    uptime = '%d days %d hours %d minutes %d seconds' % tuple(
+                        [int(g or 0) for g in m.groups()[1:]])
+                info['uptime'] = uptime
+        return info
