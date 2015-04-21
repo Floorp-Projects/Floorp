@@ -24,7 +24,7 @@
 #include "nsBindingManager.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -216,9 +216,9 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
 }
 
 static inline Element*
-GetTarget(AnimationPlayer* aPlayer)
+GetTarget(Animation* aAnimation)
 {
-  KeyframeEffectReadonly* effect = aPlayer->GetEffect();
+  KeyframeEffectReadonly* effect = aAnimation->GetEffect();
   if (!effect) {
     return nullptr;
   }
@@ -238,44 +238,44 @@ GetTarget(AnimationPlayer* aPlayer)
 }
 
 void
-nsNodeUtils::AnimationAdded(AnimationPlayer* aPlayer)
+nsNodeUtils::AnimationAdded(Animation* aAnimation)
 {
-  Element* target = GetTarget(aPlayer);
+  Element* target = GetTarget(aAnimation);
   if (!target) {
     return;
   }
   nsIDocument* doc = target->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationAdded, target, (aPlayer));
+    IMPL_ANIMATION_NOTIFICATION(AnimationAdded, target, (aAnimation));
   }
 }
 
 void
-nsNodeUtils::AnimationChanged(AnimationPlayer* aPlayer)
+nsNodeUtils::AnimationChanged(Animation* aAnimation)
 {
-  Element* target = GetTarget(aPlayer);
+  Element* target = GetTarget(aAnimation);
   if (!target) {
     return;
   }
   nsIDocument* doc = target->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationChanged, target, (aPlayer));
+    IMPL_ANIMATION_NOTIFICATION(AnimationChanged, target, (aAnimation));
   }
 }
 
 void
-nsNodeUtils::AnimationRemoved(AnimationPlayer* aPlayer)
+nsNodeUtils::AnimationRemoved(Animation* aAnimation)
 {
-  Element* target = GetTarget(aPlayer);
+  Element* target = GetTarget(aAnimation);
   if (!target) {
     return;
   }
   nsIDocument* doc = target->OwnerDoc();
 
   if (doc->MayHaveAnimationObservers()) {
-    IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, target, (aPlayer));
+    IMPL_ANIMATION_NOTIFICATION(AnimationRemoved, target, (aAnimation));
   }
 }
 

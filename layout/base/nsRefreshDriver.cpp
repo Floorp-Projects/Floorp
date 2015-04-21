@@ -38,7 +38,7 @@
 #include "nsIDocument.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
-#include "mozilla/PendingPlayerTracker.h"
+#include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
@@ -1408,8 +1408,8 @@ HasPendingAnimations(nsIPresShell* aShell)
     return false;
   }
 
-  PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
-  return tracker && tracker->HasPendingPlayers();
+  PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
+  return tracker && tracker->HasPendingAnimations();
 }
 
 /**

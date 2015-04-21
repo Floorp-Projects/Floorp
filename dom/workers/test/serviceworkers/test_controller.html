@@ -17,10 +17,22 @@
 
   var content;
   var iframe;
+  var registration;
 
   function simpleRegister() {
     // We use the control scope for the less specific registration. The window will register a worker on controller/
-    return navigator.serviceWorker.register("worker.js", { scope: "./control" });
+    return navigator.serviceWorker.register("worker.js", { scope: "./control" })
+      .then(function(reg) {
+        registration = reg;
+      });;
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed: " + e + "\n");
+    });
   }
 
   function testController() {
@@ -50,6 +62,7 @@
   function runTest() {
     simpleRegister()
       .then(testController)
+      .then(unregister)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

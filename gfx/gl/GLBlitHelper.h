@@ -145,18 +145,20 @@ class GLBlitHelper final
     void BindAndUploadEGLImage(EGLImage image, GLuint target);
 
 #ifdef MOZ_WIDGET_GONK
-    bool BlitGrallocImage(layers::GrallocImage* grallocImage, bool yflip);
+    bool BlitGrallocImage(layers::GrallocImage* grallocImage);
 #endif
-    bool BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage, bool yflip);
+    bool BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage);
 #ifdef MOZ_WIDGET_ANDROID
     // Blit onto the current FB.
-    bool BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage, bool yflip);
-    bool BlitEGLImageImage(layers::EGLImageImage* eglImage, bool yflip);
+    bool BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage);
+    bool BlitEGLImageImage(layers::EGLImageImage* eglImage);
 #endif
 
-public:
-
     explicit GLBlitHelper(GLContext* gl);
+
+    friend class GLContext;
+
+public:
     ~GLBlitHelper();
 
     // If you don't have |srcFormats| for the 2nd definition,
@@ -187,12 +189,9 @@ public:
                               GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                               GLenum destTarget = LOCAL_GL_TEXTURE_2D);
     bool BlitImageToFramebuffer(layers::Image* srcImage, const gfx::IntSize& destSize,
-                                GLuint destFB, bool yflip = false, GLuint xoffset = 0,
-                                GLuint yoffset = 0, GLuint width = 0, GLuint height = 0);
+                                GLuint destFB, OriginPos destOrigin);
     bool BlitImageToTexture(layers::Image* srcImage, const gfx::IntSize& destSize,
-                            GLuint destTex, GLenum destTarget, bool yflip = false,
-                            GLuint xoffset = 0, GLuint yoffset = 0, GLuint width = 0,
-                            GLuint height = 0);
+                            GLuint destTex, GLenum destTarget, OriginPos destOrigin);
 };
 
 } // namespace gl

@@ -1,21 +1,9 @@
 <!DOCTYPE html>
 <script>
-  var isDone = false;
   function done() {
-    if (!isDone) {
-      parent.callback();
-      isDone = true;
-    }
+    parent.callback();
   }
 
-  navigator.serviceWorker.register("../periodic.sjs", {scope: "."})
-    .then(function(registration) {
-      if (registration.installing) {
-        registration.installing.onstatechange = function(e) {
-          done();
-        };
-      } else {
-        done();
-      }
-    });
+  navigator.serviceWorker.ready.then(done);
+  navigator.serviceWorker.register("../periodic.sjs", {scope: "."});
 </script>

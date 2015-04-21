@@ -37,7 +37,7 @@ DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
     JS::AutoTracingName ctx(trc, name);
     trc->invoke((void**)thingp, kind);
 }
-#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type) \
+#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
     template void DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
 FOR_EACH_GC_LAYOUT(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS

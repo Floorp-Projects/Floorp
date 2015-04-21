@@ -1004,7 +1004,12 @@ MainProcessRunnable::Run()
     case eFailedToReadMetadata: {
       MOZ_ASSERT(NS_IsMainThread());
 
-      CacheMiss();
+      if (mOpenMode == eOpenForRead) {
+        CacheMiss();
+        return NS_OK;
+      }
+
+      Fail();
       return NS_OK;
     }
 

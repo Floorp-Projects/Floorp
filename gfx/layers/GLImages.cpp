@@ -57,11 +57,17 @@ GLImage::GetAsSourceSurface()
                                 LOCAL_GL_UNSIGNED_BYTE,
                                 nullptr);
 
-  ScopedFramebufferForTexture fb(sSnapshotContext, scopedTex.Texture());
+  ScopedFramebufferForTexture autoFBForTex(sSnapshotContext, scopedTex.Texture());
+  if (!autoFBForTex.IsComplete()) {
+      MOZ_CRASH("ScopedFramebufferForTexture failed.");
+  }
 
-  GLBlitHelper helper(sSnapshotContext);
+  const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
 
-  if (!helper.BlitImageToFramebuffer(this, size, fb.FB(), true)) {
+  if (!sSnapshotContext->BlitHelper()->BlitImageToFramebuffer(this, size,
+                                                              autoFBForTex.FB(),
+                                                              destOrigin))
+  {
     return nullptr;
   }
 
@@ -71,7 +77,7 @@ GLImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  ScopedBindFramebuffer bind(sSnapshotContext, fb.FB());
+  ScopedBindFramebuffer bind(sSnapshotContext, autoFBForTex.FB());
   ReadPixelsIntoDataSurface(sSnapshotContext, source);
   return source.forget();
 }

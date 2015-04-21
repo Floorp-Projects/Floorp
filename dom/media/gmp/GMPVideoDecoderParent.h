@@ -81,6 +81,7 @@ private:
 
   bool mIsOpen;
   bool mShuttingDown;
+  bool mActorDestroyed;
   nsRefPtr<GMPContentParent> mPlugin;
   GMPVideoDecoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;

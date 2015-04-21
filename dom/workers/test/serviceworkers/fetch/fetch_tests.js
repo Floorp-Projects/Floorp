@@ -110,10 +110,10 @@ fetchXHR('hello.gz', function(xhr) {
 });
 
 fetchXHR('hello-after-extracting.gz', function(xhr) {
-  my_ok(xhr.status == 200, "gzip load should be successful");
-  my_ok(xhr.responseText == expectedUncompressedResponse, "gzip load should have synthesized response.");
-  my_ok(xhr.getResponseHeader("Content-Encoding") == "gzip", "Content-Encoding should be gzip.");
-  my_ok(xhr.getResponseHeader("Content-Length") == "35", "Content-Length should be of original gzipped file.");
+  my_ok(xhr.status == 200, "gzip load after extracting should be successful");
+  my_ok(xhr.responseText == expectedUncompressedResponse, "gzip load after extracting should have synthesized response.");
+  my_ok(xhr.getResponseHeader("Content-Encoding") == "gzip", "Content-Encoding after extracting should be gzip.");
+  my_ok(xhr.getResponseHeader("Content-Length") == "35", "Content-Length after extracting should be of original gzipped file.");
   finish();
 });
 

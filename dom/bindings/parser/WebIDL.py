@@ -2776,7 +2776,7 @@ class IDLBuiltinType(IDLType):
                self._typeTag == IDLBuiltinType.Types.unrestricted_double
 
     def isSerializable(self):
-        return self.isPrimitive() or self.isDOMString() or self.isDate()
+        return self.isPrimitive() or self.isString() or self.isDate()
 
     def includesRestrictedFloat(self):
         return self.isFloat() and not self.isUnrestricted()
@@ -4163,7 +4163,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Func" or
               identifier == "AvailableIn" or
               identifier == "CheckPermissions" or
-              identifier == "BinaryName"):
+              identifier == "BinaryName" or
+              identifier == "MethodIdentityTestable"):
             # Known attributes that we don't need to do anything with here
             pass
         else:

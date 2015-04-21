@@ -4,23 +4,11 @@
     window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
   }
 
-  var isDone = false;
   function done(reg) {
-    if (!isDone) {
-      ok(reg.waiting || reg.active, "Either active or waiting worker should be available.");
-      window.parent.postMessage({status: "registrationdone"}, "*");
-      isDone = true;
-    }
+    ok(reg.active, "The active worker should be available.");
+    window.parent.postMessage({status: "registrationdone"}, "*");
   }
 
-  navigator.serviceWorker.register("context_test.js", {scope: "."})
-    .then(function(registration) {
-      if (registration.installing) {
-        registration.installing.onstatechange = function(e) {
-          done(registration);
-        };
-      } else {
-        done(registration);
-      }
-    });
+  navigator.serviceWorker.ready.then(done);
+  navigator.serviceWorker.register("context_test.js", {scope: "."});
 </script>
