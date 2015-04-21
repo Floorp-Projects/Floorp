@@ -59,6 +59,11 @@ public:
         return mTranslationSuccessful && mCompilationSuccessful;
     }
 
+    void ApplyTransformFeedbackVaryings(GLuint prog,
+                                        const std::vector<nsCString>& varyings,
+                                        GLenum bufferMode,
+                                        std::vector<std::string>* out_mappedVaryings) const;
+
     // Other funcs
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
     void Delete();
