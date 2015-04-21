@@ -169,31 +169,39 @@ Device Shell methods
 
 Informational methods
 +++++++++++++++++++++
-.. automethod:: ADBDevice.clear_logcat(self, timeout=None)
-.. automethod:: ADBDevice.get_logcat(self, filterSpecs=["dalvikvm:I", "ConnectivityService:S", "WifiMonitor:S", "WifiStateTracker:S", "wpa_supplicant:S", "NetworkStateTracker:S"], format="time", filter_out_regexps=[], timeout=None)
-.. automethod:: ADBDevice.get_prop(self, prop, timeout=None)
-.. automethod:: ADBDevice.get_state(self, timeout=None)
+.. automethod:: ADBDevice.clear_logcat
+.. automethod:: ADBDevice.get_battery_percentage
+.. automethod:: ADBDevice.get_info
+.. automethod:: ADBDevice.get_logcat
+.. automethod:: ADBDevice.get_prop
+.. automethod:: ADBDevice.get_state
+
+System control methods
+++++++++++++++++++++++
+.. automethod:: ADBDevice.is_device_ready
+.. automethod:: ADBDevice.reboot
 
 File management methods
 +++++++++++++++++++++++
-.. automethod:: ADBDevice.chmod(self, path, recursive=False, mask="777", timeout=None, root=False)
-.. automethod:: ADBDevice.exists(self, path, timeout=None, root=False)
-.. automethod:: ADBDevice.is_dir(self, path, timeout=None, root=False)
-.. automethod:: ADBDevice.is_file(self, path, timeout=None, root=False)
-.. automethod:: ADBDevice.list_files(self, path, timeout=None, root=False)
-.. automethod:: ADBDevice.mkdir(self, path, parents=False, timeout=None, root=False)
-.. automethod:: ADBDevice.push(self, local, remote, timeout=None)
-.. automethod:: ADBDevice.rm(self, path, recursive=False, force=False, timeout=None, root=False)
-.. automethod:: ADBDevice.rmdir(self, path, timeout=None, root=False)
+.. automethod:: ADBDevice.chmod
+.. automethod:: ADBDevice.cp
+.. automethod:: ADBDevice.exists
+.. automethod:: ADBDevice.is_dir
+.. automethod:: ADBDevice.is_file
+.. automethod:: ADBDevice.list_files
+.. automethod:: ADBDevice.mkdir
+.. automethod:: ADBDevice.mv
+.. automethod:: ADBDevice.push
+.. automethod:: ADBDevice.rm
+.. automethod:: ADBDevice.rmdir
 .. autoattribute:: ADBDevice.test_root
 
 Process management methods
 ++++++++++++++++++++++++++
-.. automethod:: ADBDevice.get_process_list(self, timeout=None)
-.. automethod:: ADBDevice.kill(self, pids, sig=None,   attempts=3, wait=5, timeout=None, root=False)
-.. automethod:: ADBDevice.pkill(self, appname, sig=None,   attempts=3, wait=5, timeout=None, root=False)
-.. automethod:: ADBDevice.process_exist(self, process_name, timeout=None)
-
+.. automethod:: ADBDevice.get_process_list
+.. automethod:: ADBDevice.kill
+.. automethod:: ADBDevice.pkill
+.. automethod:: ADBDevice.process_exist
 
 ADBAndroid
 ``````````
@@ -201,24 +209,32 @@ ADBAndroid
 
 Informational methods
 +++++++++++++++++++++
-.. automethod:: ADBAndroid.get_battery_percentage(self, timeout=None)
+.. automethod:: ADBAndroid.get_battery_percentage
 
 System control methods
 ++++++++++++++++++++++
-.. automethod:: ADBAndroid.is_device_ready(self, timeout=None)
-.. automethod:: ADBAndroid.power_on(self, timeout=None)
-.. automethod:: ADBAndroid.reboot(self, timeout=None)
+.. automethod:: ADBAndroid.is_device_ready
+.. automethod:: ADBAndroid.power_on
 
 Application management methods
 ++++++++++++++++++++++++++++++
-.. automethod:: ADBAndroid.install_app(self, apk_path, timeout=None)
-.. automethod:: ADBAndroid.is_app_installed(self, app_name, timeout=None)
-.. automethod:: ADBAndroid.launch_application(self, app_name, activity_name, intent, url=None, extras=None, wait=True, fail_if_running=True, timeout=None)
-.. automethod:: ADBAndroid.launch_fennec(self, app_name, intent="android.intent.action.VIEW", moz_env=None, extra_args=None, url=None, wait=True, fail_if_running=True, timeout=None)
-.. automethod:: ADBAndroid.stop_application(self, app_name, timeout=None, root=False)
-.. automethod:: ADBAndroid.uninstall_app(self, app_name, reboot=False, timeout=None)
-.. automethod:: ADBAndroid.update_app(self, apk_path, timeout=None)
+.. automethod:: ADBAndroid.install_app
+.. automethod:: ADBAndroid.is_app_installed
+.. automethod:: ADBAndroid.launch_application
+.. automethod:: ADBAndroid.launch_fennec
+.. automethod:: ADBAndroid.stop_application
+.. automethod:: ADBAndroid.uninstall_app
+.. automethod:: ADBAndroid.update_app
 
+ADBB2G
+``````
+.. autoclass:: ADBB2G
+
+Informational methods
++++++++++++++++++++++
+.. automethod:: ADBB2G.get_battery_percentage
+.. automethod:: ADBB2G.get_info
+.. automethod:: ADBB2G.get_memory_total
 
 ADBProcess
 ``````````
