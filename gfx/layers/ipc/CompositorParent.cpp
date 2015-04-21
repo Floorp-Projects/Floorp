@@ -1141,14 +1141,6 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
         mRootLayerTreeID, aPaintSequenceNumber);
   }
 
-#ifdef DEBUG
-  if (aTransactionId <= mPendingTransaction) {
-    // Logging added to help diagnose why we're triggering the assert below.
-    // See bug 1145295
-    printf_stderr("CRASH: aTransactionId %" PRIu64 " <= mPendingTransaction %" PRIu64 "\n",
-      aTransactionId, mPendingTransaction);
-  }
-#endif
   MOZ_ASSERT(aTransactionId > mPendingTransaction);
   mPendingTransaction = aTransactionId;
 
