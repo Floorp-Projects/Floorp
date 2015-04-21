@@ -237,7 +237,7 @@ private:
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
                        mozilla::dom::DocumentTimeline* aTimeline,
-                       mozilla::AnimationPlayerPtrArray& aAnimations);
+                       mozilla::AnimationPtrArray& aAnimations);
   bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,
                     nsCSSProperty aProperty,

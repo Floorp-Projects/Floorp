@@ -348,13 +348,12 @@ ToTimingFunction(const ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
-                        dom::Animation* aPlayer, Layer* aLayer,
+                        dom::Animation* aAnimation, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
   MOZ_ASSERT(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
-  MOZ_ASSERT(aPlayer->GetEffect(),
-             "Should not be adding an animation for a player without"
-             " an effect");
+  MOZ_ASSERT(aAnimation->GetEffect(),
+             "Should not be adding an animation without an effect");
   nsStyleContext* styleContext = aFrame->StyleContext();
   nsPresContext* presContext = aFrame->PresContext();
   nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
@@ -364,13 +363,13 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
     aLayer->AddAnimationForNextTransaction() :
     aLayer->AddAnimation();
 
-  const AnimationTiming& timing = aPlayer->GetEffect()->Timing();
-  Nullable<TimeDuration> startTime = aPlayer->GetCurrentOrPendingStartTime();
+  const AnimationTiming& timing = aAnimation->GetEffect()->Timing();
+  Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
   animation->startTime() = startTime.IsNull()
                            ? TimeStamp()
-                           : aPlayer->Timeline()->ToTimeStamp(
+                           : aAnimation->Timeline()->ToTimeStamp(
                               startTime.Value() + timing.mDelay);
-  animation->initialCurrentTime() = aPlayer->GetCurrentTime().Value()
+  animation->initialCurrentTime() = aAnimation->GetCurrentTime().Value()
                                     - timing.mDelay;
   animation->duration() = timing.mIterationDuration;
   animation->iterationCount() = timing.mIterationCount;
@@ -407,7 +406,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         AnimationPlayerPtrArray& aPlayers,
+                         AnimationPtrArray& aAnimations,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending)
 {
@@ -416,13 +415,13 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
              "inconsistent property flags");
 
   // Add from first to last (since last overrides)
-  for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
-    dom::Animation* player = aPlayers[playerIdx];
-    if (!player->IsPlaying()) {
+  for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
+    dom::Animation* anim = aAnimations[animIdx];
+    if (!anim->IsPlaying()) {
       continue;
     }
-    dom::KeyframeEffectReadonly* effect = player->GetEffect();
-    MOZ_ASSERT(effect, "A playing player should have an effect");
+    dom::KeyframeEffectReadonly* effect = anim->GetEffect();
+    MOZ_ASSERT(effect, "A playing animation should have an effect");
     const AnimationProperty* property =
       effect->GetAnimationOfProperty(aProperty);
     if (!property) {
@@ -450,15 +449,15 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     // Instead we leave the animation running on the main thread and the
     // next time the refresh driver is advanced it will trigger any pending
     // animations.
-    if (player->PlayState() == AnimationPlayState::Pending) {
-      nsRefreshDriver* driver = player->Timeline()->GetRefreshDriver();
+    if (anim->PlayState() == AnimationPlayState::Pending) {
+      nsRefreshDriver* driver = anim->Timeline()->GetRefreshDriver();
       if (driver && driver->IsTestControllingRefreshesEnabled()) {
         continue;
       }
     }
 
-    AddAnimationForProperty(aFrame, *property, player, aLayer, aData, aPending);
-    player->SetIsRunningOnCompositor();
+    AddAnimationForProperty(aFrame, *property, anim, aLayer, aData, aPending);
+    anim->SetIsRunningOnCompositor();
   }
 }
 
@@ -566,12 +565,12 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   // When both are running, animations override transitions.  We want
   // to add the ones that override last.
   if (transitions) {
-    AddAnimationsForProperty(aFrame, aProperty, transitions->mPlayers,
+    AddAnimationsForProperty(aFrame, aProperty, transitions->mAnimations,
                              aLayer, data, pending);
   }
 
   if (animations) {
-    AddAnimationsForProperty(aFrame, aProperty, animations->mPlayers,
+    AddAnimationsForProperty(aFrame, aProperty, animations->mAnimations,
                              aLayer, data, pending);
   }
 }

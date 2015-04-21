@@ -595,14 +595,14 @@ AnimationCollection::CanPerformOnCompositorThread(
     return false;
   }
 
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const Animation* player = mPlayers[playerIdx];
-    if (!player->IsPlaying()) {
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const Animation* anim = mAnimations[animIdx];
+    if (!anim->IsPlaying()) {
       continue;
     }
 
-    const KeyframeEffectReadonly* effect = player->GetEffect();
-    MOZ_ASSERT(effect, "A playing player should have an effect");
+    const KeyframeEffectReadonly* effect = anim->GetEffect();
+    MOZ_ASSERT(effect, "A playing animation should have an effect");
 
     for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
@@ -614,14 +614,14 @@ AnimationCollection::CanPerformOnCompositorThread(
   }
 
   bool existsProperty = false;
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const Animation* player = mPlayers[playerIdx];
-    if (!player->IsPlaying()) {
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const Animation* anim = mAnimations[animIdx];
+    if (!anim->IsPlaying()) {
       continue;
     }
 
-    const KeyframeEffectReadonly* effect = player->GetEffect();
-    MOZ_ASSERT(effect, "A playing player should have an effect");
+    const KeyframeEffectReadonly* effect = anim->GetEffect();
+    MOZ_ASSERT(effect, "A playing animation should have an effect");
 
     existsProperty = existsProperty || effect->Properties().Length() > 0;
 
@@ -649,8 +649,8 @@ void
 AnimationCollection::PostUpdateLayerAnimations()
 {
   nsCSSPropertySet propsHandled;
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const auto& properties = mPlayers[playerIdx]->GetEffect()->Properties();
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const auto& properties = mAnimations[animIdx]->GetEffect()->Properties();
     for (size_t propIdx = properties.Length(); propIdx-- != 0; ) {
       nsCSSProperty prop = properties[propIdx].mProperty;
       if (nsCSSProps::PropHasFlags(prop,
@@ -672,8 +672,8 @@ AnimationCollection::PostUpdateLayerAnimations()
 bool
 AnimationCollection::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const KeyframeEffectReadonly* effect = mPlayers[playerIdx]->GetEffect();
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const KeyframeEffectReadonly* effect = mAnimations[animIdx]->GetEffect();
     if (effect && effect->HasAnimationOfProperty(aProperty) &&
         !effect->IsFinishedTransition()) {
       return true;
@@ -709,7 +709,7 @@ AnimationCollection::GetElementToRestyle() const
 }
 
 void
-AnimationCollection::NotifyPlayerUpdated()
+AnimationCollection::NotifyAnimationUpdated()
 {
   // On the next flush, force us to update the style rule
   mNeedsRefreshes = true;
@@ -754,9 +754,9 @@ AnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
 void
 AnimationCollection::Tick()
 {
-  for (size_t playerIdx = 0, playerEnd = mPlayers.Length();
-       playerIdx != playerEnd; playerIdx++) {
-    mPlayers[playerIdx]->Tick();
+  for (size_t animIdx = 0, animEnd = mAnimations.Length();
+       animIdx != animEnd; animIdx++) {
+    mAnimations[animIdx]->Tick();
   }
 }
 
@@ -782,8 +782,8 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // mode behavior). CanThrottle returns false for any finishing animations
   // so we can force style recalculation in that case.
   if (aFlags == EnsureStyleRule_IsThrottled) {
-    for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-      if (!mPlayers[playerIdx]->CanThrottle()) {
+    for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+      if (!mAnimations[animIdx]->CanThrottle()) {
         aFlags = EnsureStyleRule_IsNotThrottled;
         break;
       }
@@ -811,8 +811,8 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // property has already been set, we don't leave it.
   nsCSSPropertySet properties;
 
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    mPlayers[playerIdx]->ComposeStyle(mStyleRule, properties, mNeedsRefreshes);
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    mAnimations[animIdx]->ComposeStyle(mStyleRule, properties, mNeedsRefreshes);
   }
 
   mManager->MaybeStartObservingRefreshDriver();
@@ -906,8 +906,8 @@ AnimationCollection::UpdateCheckGeneration(
 bool
 AnimationCollection::HasCurrentAnimations() const
 {
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    if (mPlayers[playerIdx]->HasCurrentEffect()) {
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    if (mAnimations[animIdx]->HasCurrentEffect()) {
       return true;
     }
   }
@@ -920,11 +920,11 @@ AnimationCollection::HasCurrentAnimationsForProperties(
                               const nsCSSProperty* aProperties,
                               size_t aPropertyCount) const
 {
-  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const Animation& player = *mPlayers[playerIdx];
-    const KeyframeEffectReadonly* effect = player.GetEffect();
+  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const Animation& anim = *mAnimations[animIdx];
+    const KeyframeEffectReadonly* effect = anim.GetEffect();
     if (effect &&
-        effect->IsCurrent(player) &&
+        effect->IsCurrent(anim) &&
         effect->HasAnimationOfProperties(aProperties, aPropertyCount)) {
       return true;
     }

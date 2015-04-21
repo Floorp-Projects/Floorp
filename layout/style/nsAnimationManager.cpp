@@ -214,22 +214,22 @@ void
 nsAnimationManager::QueueEvents(AnimationCollection* aCollection,
                                 EventArray& aEventsToDispatch)
 {
-  for (size_t playerIdx = aCollection->mPlayers.Length(); playerIdx-- != 0; ) {
-    CSSAnimationPlayer* player =
-      aCollection->mPlayers[playerIdx]->AsCSSAnimationPlayer();
-    MOZ_ASSERT(player, "Expected a collection of CSS Animation players");
-    player->QueueEvents(aEventsToDispatch);
+  for (size_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
+    CSSAnimationPlayer* anim =
+      aCollection->mAnimations[animIdx]->AsCSSAnimationPlayer();
+    MOZ_ASSERT(anim, "Expected a collection of CSS Animations");
+    anim->QueueEvents(aEventsToDispatch);
   }
 }
 
 void
 nsAnimationManager::MaybeUpdateCascadeResults(AnimationCollection* aCollection)
 {
-  for (size_t playerIdx = aCollection->mPlayers.Length(); playerIdx-- != 0; ) {
-    CSSAnimationPlayer* player =
-      aCollection->mPlayers[playerIdx]->AsCSSAnimationPlayer();
+  for (size_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
+    CSSAnimationPlayer* anim =
+      aCollection->mAnimations[animIdx]->AsCSSAnimationPlayer();
 
-    if (player->IsInEffect() != player->mInEffectForCascadeResults) {
+    if (anim->IsInEffect() != anim->mInEffectForCascadeResults) {
       // Update our own cascade results.
       mozilla::dom::Element* element = aCollection->GetElementToRestyle();
       if (element) {
@@ -291,12 +291,12 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   // build the animations list
   dom::DocumentTimeline* timeline = aElement->OwnerDoc()->Timeline();
-  AnimationPlayerPtrArray newPlayers;
+  AnimationPtrArray newAnimations;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
-    BuildAnimations(aStyleContext, aElement, timeline, newPlayers);
+    BuildAnimations(aStyleContext, aElement, timeline, newAnimations);
   }
 
-  if (newPlayers.IsEmpty()) {
+  if (newAnimations.IsEmpty()) {
     if (collection) {
       // There might be transitions that run now that animations don't
       // override them.
@@ -323,10 +323,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // In order to honor what the spec said, we'd copy more data over
     // (or potentially optimize BuildAnimations to avoid rebuilding it
     // in the first place).
-    if (!collection->mPlayers.IsEmpty()) {
+    if (!collection->mAnimations.IsEmpty()) {
 
-      for (size_t newIdx = newPlayers.Length(); newIdx-- != 0;) {
-        Animation* newPlayer = newPlayers[newIdx];
+      for (size_t newIdx = newAnimations.Length(); newIdx-- != 0;) {
+        Animation* newAnim = newAnimations[newIdx];
 
         // Find the matching animation with this name in the old list
         // of animations.  We iterate through both lists in a backwards
@@ -334,19 +334,19 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         // the new list of animations with a given name than in the old
         // list, it will be the animations towards the of the beginning of
         // the list that do not match and are treated as new animations.
-        nsRefPtr<CSSAnimationPlayer> oldPlayer;
-        size_t oldIdx = collection->mPlayers.Length();
+        nsRefPtr<CSSAnimationPlayer> oldAnim;
+        size_t oldIdx = collection->mAnimations.Length();
         while (oldIdx-- != 0) {
           CSSAnimationPlayer* a =
-            collection->mPlayers[oldIdx]->AsCSSAnimationPlayer();
+            collection->mAnimations[oldIdx]->AsCSSAnimationPlayer();
           MOZ_ASSERT(a, "All players in the CSS Animation collection should"
                         " be CSSAnimationPlayer objects");
-          if (a->Name() == newPlayer->Name()) {
-            oldPlayer = a;
+          if (a->Name() == newAnim->Name()) {
+            oldAnim = a;
             break;
           }
         }
-        if (!oldPlayer) {
+        if (!oldAnim) {
           continue;
         }
 
@@ -354,9 +354,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
         // Update the old from the new so we can keep the original object
         // identity (and any expando properties attached to it).
-        if (oldPlayer->GetEffect() && newPlayer->GetEffect()) {
-          KeyframeEffectReadonly* oldEffect = oldPlayer->GetEffect();
-          KeyframeEffectReadonly* newEffect = newPlayer->GetEffect();
+        if (oldAnim->GetEffect() && newAnim->GetEffect()) {
+          KeyframeEffectReadonly* oldEffect = oldAnim->GetEffect();
+          KeyframeEffectReadonly* newEffect = newAnim->GetEffect();
           animationChanged =
             oldEffect->Timing() != newEffect->Timing() ||
             oldEffect->Properties() != newEffect->Properties();
@@ -365,56 +365,56 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         }
 
         // Reset compositor state so animation will be re-synchronized.
-        oldPlayer->ClearIsRunningOnCompositor();
+        oldAnim->ClearIsRunningOnCompositor();
 
         // Handle changes in play state.
         // CSSAnimationPlayer takes care of override behavior so that,
         // for example, if the author has called pause(), that will
         // override the animation-play-state.
-        // (We should check newPlayer->IsStylePaused() but that requires
+        // (We should check newAnim->IsStylePaused() but that requires
         //  downcasting to CSSAnimationPlayer and we happen to know that
-        //  newPlayer will only ever be paused by calling PauseFromStyle
+        //  newAnim will only ever be paused by calling PauseFromStyle
         //  making IsPausedOrPausing synonymous in this case.)
-        if (!oldPlayer->IsStylePaused() && newPlayer->IsPausedOrPausing()) {
-          oldPlayer->PauseFromStyle();
+        if (!oldAnim->IsStylePaused() && newAnim->IsPausedOrPausing()) {
+          oldAnim->PauseFromStyle();
           animationChanged = true;
-        } else if (oldPlayer->IsStylePaused() &&
-                   !newPlayer->IsPausedOrPausing()) {
-          oldPlayer->PlayFromStyle();
+        } else if (oldAnim->IsStylePaused() &&
+                   !newAnim->IsPausedOrPausing()) {
+          oldAnim->PlayFromStyle();
           animationChanged = true;
         }
 
         if (animationChanged) {
-          nsNodeUtils::AnimationChanged(oldPlayer);
+          nsNodeUtils::AnimationChanged(oldAnim);
         }
 
         // Replace new animation with the (updated) old one and remove the
         // old one from the array so we don't try to match it any more.
         //
         // Although we're doing this while iterating this is safe because
-        // we're not changing the length of newPlayers and we've finished
+        // we're not changing the length of newAnimations and we've finished
         // iterating over the list of old iterations.
-        newPlayer->Cancel();
-        newPlayer = nullptr;
-        newPlayers.ReplaceElementAt(newIdx, oldPlayer);
-        collection->mPlayers.RemoveElementAt(oldIdx);
+        newAnim->Cancel();
+        newAnim = nullptr;
+        newAnimations.ReplaceElementAt(newIdx, oldAnim);
+        collection->mAnimations.RemoveElementAt(oldIdx);
 
         // We've touched the old animation's timing properties, so this
-        // could update the old player's relevance.
-        oldPlayer->UpdateRelevance();
+        // could update the old animation's relevance.
+        oldAnim->UpdateRelevance();
       }
     }
   } else {
     collection =
       GetAnimations(aElement, aStyleContext->GetPseudoType(), true);
   }
-  collection->mPlayers.SwapElements(newPlayers);
+  collection->mAnimations.SwapElements(newAnimations);
   collection->mNeedsRefreshes = true;
   collection->Tick();
 
   // Cancel removed animations
-  for (size_t newPlayerIdx = newPlayers.Length(); newPlayerIdx-- != 0; ) {
-    newPlayers[newPlayerIdx]->Cancel();
+  for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0; ) {
+    newAnimations[newAnimIdx]->Cancel();
   }
 
   UpdateCascadeResults(aStyleContext, collection);
@@ -488,9 +488,9 @@ void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::Element* aTarget,
                                     dom::DocumentTimeline* aTimeline,
-                                    AnimationPlayerPtrArray& aPlayers)
+                                    AnimationPtrArray& aAnimations)
 {
-  MOZ_ASSERT(aPlayers.IsEmpty(), "expect empty array");
+  MOZ_ASSERT(aAnimations.IsEmpty(), "expect empty array");
 
   ResolvedStyleCache resolvedStyles;
 
@@ -516,7 +516,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     }
 
     nsRefPtr<CSSAnimationPlayer> dest = new CSSAnimationPlayer(aTimeline);
-    aPlayers.AppendElement(dest);
+    aAnimations.AppendElement(dest);
 
     AnimationTiming timing;
     timing.mIterationDuration =
@@ -533,8 +533,9 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     dest->SetEffect(destEffect);
 
     // Even in the case where we call PauseFromStyle below, we still need to
-    // call PlayFromStyle first. This is because a newly-created player is idle
-    // and has no effect until it is played (or otherwise given a start time).
+    // call PlayFromStyle first. This is because a newly-created animation is
+    // idle and has no effect until it is played (or otherwise given a start
+    // time).
     dest->PlayFromStyle();
 
     if (src.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED) {
@@ -750,10 +751,10 @@ nsAnimationManager::UpdateCascadeResults(
   {
     nsCSSPropertySet propertiesToTrackAsSet;
 
-    for (size_t playerIdx = aElementAnimations->mPlayers.Length();
-         playerIdx-- != 0; ) {
-      const Animation* player = aElementAnimations->mPlayers[playerIdx];
-      const KeyframeEffectReadonly* effect = player->GetEffect();
+    for (size_t animIdx = aElementAnimations->mAnimations.Length();
+         animIdx-- != 0; ) {
+      const Animation* anim = aElementAnimations->mAnimations[animIdx];
+      const KeyframeEffectReadonly* effect = anim->GetEffect();
       if (!effect) {
         continue;
       }
@@ -797,13 +798,13 @@ nsAnimationManager::UpdateCascadeResults(
    */
 
   bool changed = false;
-  for (size_t playerIdx = aElementAnimations->mPlayers.Length();
-       playerIdx-- != 0; ) {
-    CSSAnimationPlayer* player =
-      aElementAnimations->mPlayers[playerIdx]->AsCSSAnimationPlayer();
-    KeyframeEffectReadonly* effect = player->GetEffect();
+  for (size_t animIdx = aElementAnimations->mAnimations.Length();
+       animIdx-- != 0; ) {
+    CSSAnimationPlayer* anim =
+      aElementAnimations->mAnimations[animIdx]->AsCSSAnimationPlayer();
+    KeyframeEffectReadonly* effect = anim->GetEffect();
 
-    player->mInEffectForCascadeResults = player->IsInEffect();
+    anim->mInEffectForCascadeResults = anim->IsInEffect();
 
     if (!effect) {
       continue;
@@ -823,7 +824,7 @@ nsAnimationManager::UpdateCascadeResults(
         }
         prop.mWinsInCascade = newWinsInCascade;
 
-        if (prop.mWinsInCascade && player->mInEffectForCascadeResults) {
+        if (prop.mWinsInCascade && anim->mInEffectForCascadeResults) {
           // This animation is in effect right now, so it overrides
           // earlier animations.  (For animations that aren't in effect,
           // we set mWinsInCascade as though they were, but they don't
