@@ -183,11 +183,10 @@ function EventWatcher(watchedNode, eventTypes)
 // terms used in the Web Animations specification for specific phases of an
 // animation. The terms can be found here:
 //
-//   http://w3c.github.io/web-animations/#animation-effect-phases-and-states
+//   https://w3c.github.io/web-animations/#animation-effect-phases-and-states
 //
-// Note the distinction between "player start time" and "animation start time".
-// The former is the start of the start delay. The latter is the start of the
-// active interval. (If there is no delay, they are the same.)
+// Note the distinction between the "animation start time" which occurs before
+// the start delay and the start of the active interval which occurs after it.
 
 // Called when the ready Promise's callbacks should happen
 function checkStateOnReadyPromiseResolved(animation)

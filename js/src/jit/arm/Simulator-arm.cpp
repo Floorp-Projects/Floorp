@@ -3108,6 +3108,19 @@ Simulator::decodeType3(SimInstruction* instr)
                                                           instr->bits(11, 10));
                             set_register(rd, rn_val + (rm_val & 0xFF));
                         }
+                    } else if ((instr->bit(20) == 1) && (instr->bits(9, 6) == 1)) {
+                        if (instr->bits(19, 16) == 0xF) {
+                            // Uxth.
+                            uint32_t rm_val = rotateBytes(get_register(instr->rmValue()),
+                                                          instr->bits(11, 10));
+                            set_register(rd, (rm_val & 0xFFFF));
+                        } else {
+                            // Uxtah.
+                            uint32_t rn_val = get_register(rn);
+                            uint32_t rm_val = rotateBytes(get_register(instr->rmValue()),
+                                                          instr->bits(11, 10));
+                            set_register(rd, rn_val + (rm_val & 0xFFFF));
+                        }
                     } else {
                         MOZ_CRASH();
                     }
