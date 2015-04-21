@@ -606,6 +606,10 @@ private:
 
     virtual bool DeallocPNeckoParent(PNeckoParent* necko) override;
 
+    virtual PPSMContentDownloaderParent* AllocPPSMContentDownloaderParent(
+            const uint32_t& aCertType) override;
+    virtual bool DeallocPPSMContentDownloaderParent(PPSMContentDownloaderParent* aDownloader) override;
+
     virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
             const OptionalURIParams& aUri,
             const nsCString& aMimeContentType,
