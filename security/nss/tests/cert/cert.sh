@@ -958,8 +958,23 @@ cert_ssl_gtests()
   certu -N -d "${SSLGTESTDIR}" --empty-password 2>&1
   # the ssl server used here is special: is a self-signed server
   # certificate with name server.
-  echo "$SCRIPTNAME: Creating server cert for ssl_gtests"
-  certu -S -z ${R_NOISE_FILE} -g 2048 -d ${SSLGTESTDIR} -n server -s "CN=server" -t C,C,C -x -m 1 -w -2 -v 120 -Z SHA256 -1 -2 <<CERTSCRIPT
+  echo "$SCRIPTNAME: Creating server certs for ssl_gtests"
+  certu -S -z ${R_NOISE_FILE} -g 2048 -d ${SSLGTESTDIR} -n server -s "CN=server" \
+        -t C,C,C -x -m 1 -w -2 -v 120 -Z SHA256 -1 -2 <<CERTSCRIPT
+0
+2
+9
+n
+n
+
+n
+CERTSCRIPT
+  if [ "$RET" -ne 0 ]; then
+     echo "return value is $RET"
+     Exit 6 "Fatal - failed to create RSA server cert for ssl_gtests"
+  fi
+  certu -S -z ${R_NOISE_FILE} -k ec -q nistp256 -d ${SSLGTESTDIR} -n ecdsa -s CN=ecdsa \
+        -t C,C,C -x -m 1 -w -2 -v 120 -Z SHA256 -1 -2 <<CERTSCRIPT
 0
 2
 9
@@ -971,7 +986,7 @@ CERTSCRIPT
 
   if [ "$RET" -ne 0 ]; then
      echo "return value is $RET"
-     Exit 6 "Fatal - failed to create server cert for ssl_gtests"
+     Exit 6 "Fatal - failed to create ECDSA server cert for ssl_gtests"
   fi
 }
 

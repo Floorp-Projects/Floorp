@@ -883,8 +883,8 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
   int     expOff;
   mp_int  accum1, accum2, accum[WEAVE_WORD_SIZE];
   mp_int  tmp;
-  unsigned char *powersArray;
-  unsigned char *powers;
+  unsigned char *powersArray = NULL;
+  unsigned char *powers = NULL;
 
   MP_DIGITS(&accum1) = 0;
   MP_DIGITS(&accum2) = 0;
@@ -894,15 +894,6 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
   MP_DIGITS(&accum[3]) = 0;
   MP_DIGITS(&tmp) = 0;
 
-  powersArray = (unsigned char *)malloc(num_powers*(nLen*sizeof(mp_digit)+1));
-  if (powersArray == NULL) {
-    res = MP_MEM;
-    goto CLEANUP;
-  }
-
-  /* powers[i] = base ** (i); */
-  powers = (unsigned char *)MP_ALIGN(powersArray,num_powers);
-
   /* grab the first window value. This allows us to preload accumulator1
    * and save a conversion, some squares and a multiple*/
   MP_CHECKOK( mpl_get_bits(exponent, 
@@ -911,7 +902,6 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
 
   MP_CHECKOK( mp_init_size(&accum1, 3 * nLen + 2) );
   MP_CHECKOK( mp_init_size(&accum2, 3 * nLen + 2) );
-  MP_CHECKOK( mp_init_size(&tmp, 3 * nLen + 2) );
 
   /* build the first WEAVE_WORD powers inline */
   /* if WEAVE_WORD_SIZE is not 4, this code will have to change */
@@ -925,6 +915,13 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
     MP_CHECKOK( mp_copy(montBase, &accum[1]) );
     SQR(montBase, &accum[2]);
     MUL_NOWEAVE(montBase, &accum[2], &accum[3]);
+    powersArray = (unsigned char *)malloc(num_powers*(nLen*sizeof(mp_digit)+1));
+    if (!powersArray) {
+      res = MP_MEM;
+      goto CLEANUP;
+    }
+    /* powers[i] = base ** (i); */ \
+    powers = (unsigned char *)MP_ALIGN(powersArray,num_powers); \
     MP_CHECKOK( mpi_to_weave(accum, powers, nLen, num_powers) );
     if (first_window < 4) {
       MP_CHECKOK( mp_copy(&accum[first_window], &accum1) );
@@ -946,7 +943,10 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
    * odd powers where k is the window size in the two other mp_modexpt
    * implementations in this file. We will get some of that
    * back by not needing the first 'k' squares and one multiply for the 
-   * first window */ 
+   * first window.
+   * Given the value of 4 for WEAVE_WORD_SIZE, this loop will only execute if
+   * num_powers > 2, in which case powers will have been allocated.
+   */
   for (i = WEAVE_WORD_SIZE; i < num_powers; i++) {
     int acc_index = i & (WEAVE_WORD_SIZE-1); /* i % WEAVE_WORD_SIZE */
     if ( i & 1 ) {
@@ -992,6 +992,11 @@ mp_err mp_exptmod_safe_i(const mp_int *   montBase,
   /* set accumulator to montgomery residue of 1 */
   pa1 = &accum1;
   pa2 = &accum2;
+
+  /* tmp is not used if window_bits == 1. */
+  if (window_bits != 1) {
+    MP_CHECKOK( mp_init_size(&tmp, 3 * nLen + 2) );
+  }
 
   for (expOff = bits_in_exponent - window_bits*2; expOff >= 0; expOff -= window_bits) {
     mp_size smallExp;

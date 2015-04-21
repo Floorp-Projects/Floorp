@@ -33,14 +33,16 @@ class TlsAgent : public PollTarget {
   enum Role { CLIENT, SERVER };
   enum State { INIT, CONNECTING, CONNECTED, ERROR };
 
-  TlsAgent(const std::string& name, Role role, Mode mode)
+  TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea)
       : name_(name),
         mode_(mode),
+        kea_(kea),
         pr_fd_(nullptr),
         adapter_(nullptr),
         ssl_fd_(nullptr),
         role_(role),
-        state_(INIT) {
+        state_(INIT),
+        error_code_(0) {
       memset(&info_, 0, sizeof(info_));
       memset(&csinfo_, 0, sizeof(csinfo_));
       SECStatus rv = SSL_VersionRangeGetDefault(mode_ == STREAM ?
@@ -78,10 +80,11 @@ class TlsAgent : public PollTarget {
 
   void StartConnect();
   void CheckKEAType(SSLKEAType type) const;
+  void CheckAuthType(SSLAuthType type) const;
   void CheckVersion(uint16_t version) const;
 
   void Handshake();
-  void EnableSomeECDHECiphers();
+  void EnableSomeEcdheCiphers();
   bool EnsureTlsSetup();
 
   void ConfigureSessionCache(SessionResumptionMode mode);
@@ -93,6 +96,7 @@ class TlsAgent : public PollTarget {
                  const std::string& expected);
   void EnableSrtp();
   void CheckSrtp();
+  void CheckErrorCode(int32_t expected) const;
 
   State state() const { return state_; }
 
@@ -172,6 +176,7 @@ class TlsAgent : public PollTarget {
 
   const std::string name_;
   Mode mode_;
+  SSLKEAType kea_;
   PRFileDesc* pr_fd_;
   DummyPrSocket* adapter_;
   PRFileDesc* ssl_fd_;
@@ -180,6 +185,7 @@ class TlsAgent : public PollTarget {
   SSLChannelInfo info_;
   SSLCipherSuiteInfo csinfo_;
   SSLVersionRange vrange_;
+  int32_t error_code_;
 };
 
 }  // namespace nss_test

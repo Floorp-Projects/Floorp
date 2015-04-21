@@ -186,7 +186,7 @@ struct CERTSubjectListStr {
 struct CERTCertificateStr {
     /* the arena is used to allocate any data structures that have the same
      * lifetime as the cert.  This is all stuff that hangs off of the cert
-     * structure, and is all freed at the same time.  I is used when the
+     * structure, and is all freed at the same time.  It is used when the
      * cert is decoded, destroyed, and at some times when it changes
      * state
      */
