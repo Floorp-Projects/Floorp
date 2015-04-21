@@ -9,6 +9,7 @@ MODULE = nss
 CPPSRCS = \
       ssl_loopback_unittest.cc \
       ssl_extension_unittest.cc \
+      ssl_skip_unittest.cc \
       ssl_gtest.cc \
       test_io.cc \
       tls_agent.cc \

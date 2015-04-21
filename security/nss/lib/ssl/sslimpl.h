@@ -725,9 +725,15 @@ typedef struct {
     SSL3KeyExchangeAlgorithm kea;
     SSL3KEAType              exchKeyType;
     SSL3SignType             signKeyType;
+    /* For export cipher suites:
+     * is_limited identifies a suite as having a limit on the key size.
+     * key_size_limit provides the corresponding limit. */
     PRBool                   is_limited;
     int                      key_size_limit;
     PRBool                   tls_keygen;
+    /* True if the key exchange for the suite can be ephemeral.  Or to be more
+     * precise: true if the ServerKeyExchange message is required. */
+    PRBool                   ephemeral;
 } ssl3KEADef;
 
 /*
