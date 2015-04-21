@@ -395,7 +395,7 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   aState->mShowVScrollbar = aAssumeVScroll;
   nsPoint scrollPortOrigin(aState->mComputedBorder.left,
                            aState->mComputedBorder.top);
-  if (!mHelper.IsScrollbarOnRight()) {
+  if (mHelper.GetScrollbarSide() == ScrollFrameHelper::eScrollbarOnLeft) {
     scrollPortOrigin.x += vScrollbarActualWidth;
   }
   mHelper.mScrollPort = nsRect(scrollPortOrigin, scrollPortSize);
@@ -1009,7 +1009,7 @@ ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState)
   if (mVScrollbarBox) {
     nsSize size = mVScrollbarBox->GetPrefSize(*aState);
     nsBox::AddMargin(mVScrollbarBox, size);
-    if (IsScrollbarOnRight())
+    if (GetScrollbarSide() == eScrollbarOnRight)
       result.left = size.width;
     else
       result.right = size.width;
@@ -3766,7 +3766,7 @@ ScrollFrameHelper::CreateAnonymousContent(
     nsAutoString dir;
     switch (resizeStyle) {
       case NS_STYLE_RESIZE_HORIZONTAL:
-        if (IsScrollbarOnRight()) {
+        if (GetScrollbarSide() == eScrollbarOnRight) {
           dir.AssignLiteral("right");
         }
         else {
@@ -4213,8 +4213,8 @@ ScrollFrameHelper::IsLTR() const
   return wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR();
 }
 
-bool
-ScrollFrameHelper::IsScrollbarOnRight() const
+ScrollFrameHelper::eScrollbarSide
+ScrollFrameHelper::GetScrollbarSide() const
 {
   nsPresContext *presContext = mOuter->PresContext();
 
@@ -4222,18 +4222,19 @@ ScrollFrameHelper::IsScrollbarOnRight() const
   // layout.scrollbar.side. For non-top-level elements, it depends only on the
   // directionaliy of the element (equivalent to a value of "1" for the pref).
   if (!mIsRoot)
-    return IsLTR();
+    return IsLTR() ? eScrollbarOnRight : eScrollbarOnLeft;
   switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
     default:
     case 0: // UI directionality
-      return presContext->GetCachedIntPref(kPresContext_BidiDirection)
-             == IBMBIDI_TEXTDIRECTION_LTR;
+      return (presContext->GetCachedIntPref(kPresContext_BidiDirection)
+              == IBMBIDI_TEXTDIRECTION_LTR)
+        ? eScrollbarOnRight : eScrollbarOnLeft;
     case 1: // Document / content directionality
-      return IsLTR();
+      return IsLTR() ? eScrollbarOnRight : eScrollbarOnLeft;
     case 2: // Always right
-      return true;
+      return eScrollbarOnRight;
     case 3: // Always left
-      return false;
+      return eScrollbarOnLeft;
   }
 }
 
@@ -4271,7 +4272,8 @@ ScrollFrameHelper::IsScrollingActive(nsDisplayListBuilder* aBuilder) const
 nsresult
 nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
 {
-  bool scrollbarRight = mHelper.IsScrollbarOnRight();
+  bool scrollbarRight =
+    (mHelper.GetScrollbarSide() == ScrollFrameHelper::eScrollbarOnRight);
   bool scrollbarBottom = true;
 
   // get the content rect
@@ -4738,7 +4740,7 @@ ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
                "This should have been suppressed");
 
   bool hasResizer = HasResizer();
-  bool scrollbarOnLeft = !IsScrollbarOnRight();
+  bool scrollbarOnLeft = (GetScrollbarSide() == eScrollbarOnLeft);
 
   // place the scrollcorner
   if (mScrollCornerBox || mResizerBox) {
@@ -4804,9 +4806,14 @@ ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     vRect.width = aContentArea.width - mScrollPort.width;
     vRect.x = scrollbarOnLeft ? aContentArea.x : mScrollPort.XMost();
     if (mHasVerticalScrollbar) {
-      nsMargin margin;
-      mVScrollbarBox->GetMargin(margin);
-      vRect.Deflate(margin);
+      nsScrollbarFrame* scrollbar = do_QueryFrame(mVScrollbarBox);
+      NS_ASSERTION(scrollbar, "Frame must be a scrollbar");
+
+      if (scrollbar) {
+        nsMargin margin;
+        scrollbar->GetScrollbarMargin(margin, GetScrollbarSide());
+        vRect.Deflate(margin);
+      }
     }
     AdjustScrollbarRectForResizer(mOuter, presContext, vRect, hasResizer, true);
   }
