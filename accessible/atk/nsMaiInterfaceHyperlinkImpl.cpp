@@ -16,10 +16,11 @@ static AtkHyperlink*
 getHyperlinkCB(AtkHyperlinkImpl* aImpl)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
-  if (!accWrap)
+  if (!accWrap || !GetProxy(ATK_OBJECT(aImpl)))
     return nullptr;
 
-  NS_ENSURE_TRUE(accWrap->IsLink(), nullptr);
+  if (accWrap)
+    NS_ASSERTION(accWrap->IsLink(), "why isn't it a link!");
 
   return MAI_ATK_OBJECT(aImpl)->GetAtkHyperlink();
 }
