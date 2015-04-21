@@ -41,7 +41,7 @@ if CONFIG['OS_TARGET'] == 'Linux':
         '/media/mtransport/third_party/nrappkit/src/port/linux/include',
     ]
     USE_LIBS += [
-        'static:/nsprpub/lib/libc/src/plc4',
+        'nspr',
     ]
     OS_LIBS += [
         '-lrt',
