@@ -6,6 +6,10 @@ import traceback
 import types
 
 
+class InstallGeckoError(Exception):
+    pass
+
+
 class MarionetteException(Exception):
 
     """Raised when a generic non-recoverable exception has occured."""
@@ -59,7 +63,6 @@ class InvalidArgumentException(MarionetteException):
 
 class InvalidSessionIdException(MarionetteException):
     status = "invalid session id"
-
 
 class TimeoutException(MarionetteException):
     code = (21,)
@@ -182,53 +185,15 @@ class UnsupportedOperationException(MarionetteException):
     status = "unsupported operation"
 
 
-excs = [
-  ElementNotAccessibleException,
-  ElementNotSelectableException,
-  ElementNotVisibleException,
-  FrameSendFailureError,
-  FrameSendNotInitializedError,
-  InvalidArgumentException,
-  InvalidCookieDomainException,
-  InvalidElementCoordinates,
-  InvalidElementStateException,
-  InvalidSelectorException,
-  InvalidSessionIdException,
-  JavascriptException,
-  MarionetteException,
-  MoveTargetOutOfBoundsException,
-  NoAlertPresentException,
-  NoSuchElementException,
-  NoSuchFrameException,
-  NoSuchWindowException,
-  ScriptTimeoutException,
-  SessionNotCreatedException,
-  StaleElementException,
-  TimeoutException,
-  UnableToSetCookieException,
-  UnexpectedAlertOpen,
-  UnknownCommandException,
-  UnknownException,
-  UnsupportedOperationException,
-]
+es_ = [e for e in locals().values() if type(e) == type and issubclass(e, MarionetteException)]
+by_string = {e.status: e for e in es_}
+by_number = {c: e for e in es_ for c in e.code}
 
 
 def lookup(identifier):
     """Finds error exception class by associated Selenium JSON wire
     protocol number code, or W3C WebDriver protocol string."""
-
-    by_code = lambda exc: identifier in exc.code
-    by_status = lambda exc: exc.status == identifier
-
-    rv = None
+    lookup = by_string
     if isinstance(identifier, int):
-        rv = filter(by_code, excs)
-    elif isinstance(identifier, types.StringTypes):
-        rv = filter(by_status, excs)
-
-    if not rv:
-        return MarionetteException
-    return rv[0]
-
-
-__all__ = excs + ["lookup"]
+        lookup = by_number
+    return lookup.get(identifier, MarionetteException)
