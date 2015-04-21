@@ -6,10 +6,14 @@
 #ifndef MOZILLA_GFX_NUMERICTOOLS_H_
 #define MOZILLA_GFX_NUMERICTOOLS_H_
 
+namespace mozilla {
+
+// XXX - Move these into mfbt/MathAlgorithms.h?
+
 // Returns the largest multiple of aMultiplied that's <= x.
 // Same as int32_t(floor(double(x) / aMultiplier)) * aMultiplier,
 // but faster.
-static int32_t
+inline int32_t
 RoundDownToMultiple(int32_t x, int32_t aMultiplier)
 {
   // We don't use float division + floor because that's hard for the compiler
@@ -24,7 +28,7 @@ RoundDownToMultiple(int32_t x, int32_t aMultiplier)
 // Returns the smallest multiple of aMultiplied that's >= x.
 // Same as int32_t(ceil(double(x) / aMultiplier)) * aMultiplier,
 // but faster.
-static int32_t
+inline int32_t
 RoundUpToMultiple(int32_t x, int32_t aMultiplier)
 {
   int mod = x % aMultiplier;
@@ -33,5 +37,7 @@ RoundUpToMultiple(int32_t x, int32_t aMultiplier)
   }
   return x - mod;
 }
+
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_NUMERICTOOLS_H_ */

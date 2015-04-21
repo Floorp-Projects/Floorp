@@ -112,10 +112,10 @@ struct IntRectTyped :
       int32_t yMost = this->YMost();
       int32_t xMost = this->XMost();
 
-      this->x = RoundDownToMultiple(this->x, aTileSize.width);
-      this->y = RoundDownToMultiple(this->y, aTileSize.height);
-      xMost = RoundUpToMultiple(xMost, aTileSize.width);
-      yMost = RoundUpToMultiple(yMost, aTileSize.height);
+      this->x = mozilla::RoundDownToMultiple(this->x, aTileSize.width);
+      this->y = mozilla::RoundDownToMultiple(this->y, aTileSize.height);
+      xMost = mozilla::RoundUpToMultiple(xMost, aTileSize.width);
+      yMost = mozilla::RoundUpToMultiple(yMost, aTileSize.height);
 
       this->width = xMost - this->x;
       this->height = yMost - this->y;

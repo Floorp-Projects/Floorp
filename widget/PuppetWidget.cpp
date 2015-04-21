@@ -1132,7 +1132,7 @@ PuppetWidget::GetWindowPosition()
 
 NS_METHOD
 PuppetWidget::GetScreenBounds(nsIntRect &aRect) {
-  aRect.MoveTo(gfx::ToIntPoint(LayoutDeviceIntPoint::ToUntyped(WidgetToScreenOffset())));
+  aRect.MoveTo(LayoutDeviceIntPoint::ToUntyped(WidgetToScreenOffset()));
   aRect.SizeTo(mBounds.Size());
   return NS_OK;
 }

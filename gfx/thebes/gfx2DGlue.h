@@ -38,11 +38,6 @@ inline Rect ToRect(const nsIntRect &aRect)
   return Rect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-inline IntRect ToIntRect(const nsIntRect &aRect)
-{
-  return IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
 inline Color ToColor(const gfxRGBA &aRGBA)
 {
   return Color(Float(aRGBA.r), Float(aRGBA.g),
@@ -71,19 +66,9 @@ inline Point ToPoint(const gfxPoint &aPoint)
   return Point(Float(aPoint.x), Float(aPoint.y));
 }
 
-inline IntPoint ToIntPoint(const nsIntPoint &aPoint)
-{
-  return IntPoint(aPoint.x, aPoint.y);
-}
-
 inline IntMargin ToIntMargin(const nsIntMargin& aMargin)
 {
   return IntMargin(aMargin.top, aMargin.right, aMargin.bottom, aMargin.left);
-}
-
-inline nsIntPoint ThebesIntPoint(const IntPoint &aPoint)
-{
-  return nsIntPoint(aPoint.x, aPoint.y);
 }
 
 inline Size ToSize(const gfxSize &aSize)
@@ -165,11 +150,6 @@ inline gfxSize ThebesSize(const Size &aSize)
 inline gfxRect ThebesRect(const Rect &aRect)
 {
   return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-inline nsIntRect ThebesIntRect(const IntRect &aRect)
-{
-  return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 inline gfxRGBA ThebesRGBA(const Color &aColor)

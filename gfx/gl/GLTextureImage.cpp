@@ -169,7 +169,7 @@ BasicTextureImage::EndUpdate()
                                mUpdateRegion,
                                mTexture,
                                mTextureState == Created,
-                               ToIntPoint(mUpdateOffset),
+                               mUpdateOffset,
                                relative);
     FinishedSurfaceUpload();
 
@@ -355,7 +355,7 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
     int oldCurrentImage = mCurrentImage;
     BeginBigImageIteration();
     do {
-        IntRect tileRect = ThebesIntRect(GetSrcTileRect());
+        IntRect tileRect = GetSrcTileRect();
         int xPos = tileRect.x;
         int yPos = tileRect.y;
 
