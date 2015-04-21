@@ -25,7 +25,6 @@
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
-#include "mozilla/dom/InstallEventBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -1085,13 +1084,8 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPriva
   nsRefPtr<ExtendableEvent> event;
   nsRefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
 
-  if (mEventName.EqualsASCII("install")) {
+  if (mEventName.EqualsASCII("install") || mEventName.EqualsASCII("activate")) {
     // FIXME(nsm): Bug 982787 pass previous active worker.
-    InstallEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = true;
-    event = InstallEvent::Constructor(target, mEventName, init);
-  } else if (mEventName.EqualsASCII("activate")) {
     ExtendableEventInit init;
     init.mBubbles = false;
     init.mCancelable = true;
@@ -1132,17 +1126,8 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPriva
     return false;
   }
 
-  // activateimmediately is only relevant to "install" event.
-  bool activateImmediately = false;
-  InstallEvent* installEvent = event->AsInstallEvent();
-  if (installEvent) {
-    activateImmediately = installEvent->ActivateImmediately();
-    // FIXME(nsm): Set activeWorker to the correct thing.
-    // FIXME(nsm): Install error handler for any listener errors.
-  }
-
   nsRefPtr<LifecycleEventPromiseHandler> handler =
-    new LifecycleEventPromiseHandler(mTask, activateImmediately);
+    new LifecycleEventPromiseHandler(mTask, false /* activateImmediately */);
   waitUntilPromise->AppendNativeHandler(handler);
   return true;
 }

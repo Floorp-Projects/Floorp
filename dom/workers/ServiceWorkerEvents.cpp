@@ -357,20 +357,6 @@ NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ExtendableEvent, Event, mPromise)
 
-InstallEvent::InstallEvent(EventTarget* aOwner)
-  : ExtendableEvent(aOwner)
-  , mActivateImmediately(false)
-{
-}
-
-NS_IMPL_ADDREF_INHERITED(InstallEvent, ExtendableEvent)
-NS_IMPL_RELEASE_INHERITED(InstallEvent, ExtendableEvent)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(InstallEvent)
-NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(InstallEvent, ExtendableEvent, mActiveWorker)
-
 #ifndef MOZ_SIMPLEPUSH
 
 PushMessageData::PushMessageData(const nsAString& aData)
