@@ -1837,11 +1837,13 @@ WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget,
                         0, format, type, nullptr);
     }
 
+    const gl::OriginPos destOrigin = mPixelStoreFlipY ? gl::OriginPos::BottomLeft
+                                                      : gl::OriginPos::TopLeft;
     bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(),
                                                    srcImage->GetSize(),
                                                    tex->GLName(),
                                                    texImageTarget.get(),
-                                                   mPixelStoreFlipY);
+                                                   destOrigin);
     if (ok) {
         TexInternalFormat effectiveInternalFormat =
             EffectiveInternalFormatFromInternalFormatAndType(internalFormat,

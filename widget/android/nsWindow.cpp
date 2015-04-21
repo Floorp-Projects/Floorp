@@ -46,6 +46,7 @@ using mozilla::unused;
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
@@ -837,7 +838,13 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
         }
 
-        case AndroidGeckoEvent::APZ_INPUT_EVENT:
+        case AndroidGeckoEvent::APZ_INPUT_EVENT: {
+            win->UserActivity();
+
+            WidgetTouchEvent touchEvent = ae->MakeTouchEvent(win);
+            win->ProcessUntransformedAPZEvent(&touchEvent, ae->ApzGuid(), ae->ApzInputBlockId(), ae->ApzEventStatus());
+            break;
+        }
         case AndroidGeckoEvent::MOTION_EVENT: {
             win->UserActivity();
             bool preventDefaultActions = win->OnMultitouchEvent(ae);
@@ -2511,6 +2518,12 @@ nsWindow::ConfigureAPZCTreeManager()
     if (!sApzcTreeManager) {
         sApzcTreeManager = mAPZC;
     }
+}
+
+void
+nsWindow::ConfigureAPZControllerThread()
+{
+    APZThreadUtils::SetControllerThread(nullptr);
 }
 
 already_AddRefed<GeckoContentController>

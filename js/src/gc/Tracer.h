@@ -161,6 +161,11 @@ class GCMarker : public JSTracer
     void traverse(JSObject* thing) { markAndPush(ObjectTag, thing); }
     void traverse(ObjectGroup* thing) { markAndPush(GroupTag, thing); }
     void traverse(jit::JitCode* thing) { markAndPush(JitCodeTag, thing); }
+    // Mark the given GC thing and then eagerly mark all children.
+    void traverse(Shape* thing) { markAndScan(thing); }
+    void traverse(BaseShape* thing) { markAndScan(thing); }
+    void traverse(JSString* thing) { markAndScan(thing); }
+    void traverse(JS::Symbol* thing) { markAndScan(thing); }
     // The following traverse methods traverse immediately, go out-of-line to do so.
     void traverse(JSScript* thing) { markAndTraverse(thing); }
     void traverse(LazyScript* thing) { markAndTraverse(thing); }
@@ -251,6 +256,16 @@ class GCMarker : public JSTracer
     }
 
     template <typename T>
+    void markAndScan(T* thing) {
+        if (mark(thing))
+            eagerlyMarkChildren(thing);
+    }
+    void eagerlyMarkChildren(Shape* shape);
+    void eagerlyMarkChildren(BaseShape* base);
+    void eagerlyMarkChildren(JSString* str);
+    void eagerlyMarkChildren(JS::Symbol* sym);
+
+    template <typename T>
     void markAndTraverse(T* thing) {
         if (mark(thing))
             dispatchToTraceChildren(thing);
@@ -263,11 +278,7 @@ class GCMarker : public JSTracer
     // Mark the given GC thing, but do not trace its children. Return true
     // if the thing became marked.
     template <typename T>
-    bool mark(T* thing) {
-        JS_COMPARTMENT_ASSERT(runtime(), thing);
-        MOZ_ASSERT(!IsInsideNursery(gc::TenuredCell::fromPointer(thing)));
-        return gc::TenuredCell::fromPointer(thing)->markIfUnmarked(markColor());
-    }
+    bool mark(T* thing);
 
     void pushTaggedPtr(StackTag tag, void* ptr) {
         checkZone(ptr);

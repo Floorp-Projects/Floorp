@@ -5,6 +5,8 @@
       if (success) {
         window.parent.postMessage({status: "unregistrationdone"}, "*");
       }
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
     });
   });
 </script>

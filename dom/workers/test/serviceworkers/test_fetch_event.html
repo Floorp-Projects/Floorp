@@ -16,12 +16,22 @@
 <script class="testbody" type="text/javascript">
   SimpleTest.requestCompleteLog();
 
+  var registration;
   function simpleRegister() {
     var p = navigator.serviceWorker.register("fetch_event_worker.js", { scope: "./fetch" });
     return p.then(function(swr) {
+      registration = swr;
       return new Promise(function(resolve) {
         swr.installing.onstatechange = resolve;
       });
+    });
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(success) {
+      ok(success, "Service worker should be unregistered successfully");
+    }, function(e) {
+      dump("SW unregistration error: " + e + "\n");
     });
   }
 
@@ -51,6 +61,7 @@
   function runTest() {
     simpleRegister()
       .then(testController)
+      .then(unregister)
       .then(function() {
         SimpleTest.finish();
       }).catch(function(e) {

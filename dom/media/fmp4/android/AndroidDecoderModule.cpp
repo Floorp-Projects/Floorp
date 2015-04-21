@@ -72,10 +72,14 @@ public:
   EGLImage CopySurface(layers::Image* img) {
     mGLContext->MakeCurrent();
 
-    GLuint tex = CreateTextureForOffscreen(mGLContext, mGLContext->GetGLFormats(), img->GetSize());
+    GLuint tex = CreateTextureForOffscreen(mGLContext, mGLContext->GetGLFormats(),
+                                           img->GetSize());
 
-    GLBlitHelper helper(mGLContext);
-    if (!helper.BlitImageToTexture(img, img->GetSize(), tex, LOCAL_GL_TEXTURE_2D)) {
+    auto helper = mGLContext->BlitHelper();
+    const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
+    if (!helper->BlitImageToTexture(img, img->GetSize(), tex, LOCAL_GL_TEXTURE_2D,
+                                    destOrigin))
+    {
       mGLContext->fDeleteTextures(1, &tex);
       return nullptr;
     }
@@ -134,7 +138,7 @@ public:
       data.mSync = eglSync;
       data.mOwns = true;
       data.mSize = mConfig.mDisplay;
-      data.mOriginPos = gl::OriginPos::BottomLeft;
+      data.mOriginPos = gl::OriginPos::TopLeft;
 
       layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
       typedImg->SetData(data);

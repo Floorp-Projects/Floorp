@@ -50,7 +50,13 @@
 
         my_ok(navigator.serviceWorker.controller.scriptURL.match(/worker\.js$/),
               "Controller is still worker.js");
-        finish();
+
+        e.unregister().then(function(result) {
+          my_ok(result, "Unregistering the SW should succeed");
+          finish();
+        }, function(e) {
+          dump("Error unregistering the SW: " + e + "\n");
+        });
       });
     } else {
       my_ok(false, "Should've been controlled!");

@@ -38,16 +38,7 @@ function serviceWorkerTestExec(testFile) {
       document.body.appendChild(iframe);
     }
 
-    navigator.serviceWorker.register("worker_wrapper.js", {scope: "."})
-      .then(function(registration) {
-        if (registration.installing) {
-          registration.installing.onstatechange = function(e) {
-            e.target.onstatechange = null;
-            setupSW(registration);
-          };
-        } else {
-          setupSW(registration);
-        }
-      });
+    navigator.serviceWorker.ready.then(setupSW);
+    navigator.serviceWorker.register("worker_wrapper.js", {scope: "."});
   });
 }

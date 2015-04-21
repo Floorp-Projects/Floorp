@@ -24,16 +24,17 @@
 #include "vm/NativeObject.h"
 
 #define FOR_EACH_GC_LAYOUT(D) \
-    D(Object, JSObject) \
-    D(String, JSString) \
-    D(Symbol, JS::Symbol) \
-    D(Script, JSScript) \
-    D(AccessorShape, js::AccessorShape) \
-    D(Shape, js::Shape) \
-    D(BaseShape, js::BaseShape) \
-    D(JitCode, js::jit::JitCode) \
-    D(LazyScript, js::LazyScript) \
-    D(ObjectGroup, js::ObjectGroup)
+ /* PrettyName       TypeName           AddToCCKind */ \
+    D(AccessorShape, js::AccessorShape, true) \
+    D(BaseShape,     js::BaseShape,     true) \
+    D(JitCode,       js::jit::JitCode,  true) \
+    D(LazyScript,    js::LazyScript,    true) \
+    D(Object,        JSObject,          true) \
+    D(ObjectGroup,   js::ObjectGroup,   true) \
+    D(Script,        JSScript,          true) \
+    D(Shape,         js::Shape,         true) \
+    D(String,        JSString,          false) \
+    D(Symbol,        JS::Symbol,        false)
 
 namespace js {
 
@@ -83,6 +84,12 @@ template <> struct MapTypeToFinalizeKind<JSString>          { static const Alloc
 template <> struct MapTypeToFinalizeKind<JSExternalString>  { static const AllocKind kind = AllocKind::EXTERNAL_STRING; };
 template <> struct MapTypeToFinalizeKind<JS::Symbol>        { static const AllocKind kind = AllocKind::SYMBOL; };
 template <> struct MapTypeToFinalizeKind<jit::JitCode>      { static const AllocKind kind = AllocKind::JITCODE; };
+
+template <typename T> struct ParticipatesInCC {};
+#define EXPAND_PARTICIPATES_IN_CC(_, type, addToCCKind) \
+    template <> struct ParticipatesInCC<type> { static const bool value = addToCCKind; };
+FOR_EACH_GC_LAYOUT(EXPAND_PARTICIPATES_IN_CC)
+#undef EXPAND_PARTICIPATES_IN_CC
 
 static inline bool
 IsNurseryAllocable(AllocKind kind)
