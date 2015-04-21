@@ -1000,7 +1000,14 @@ function doTestFinish() {
   if (gPassed === undefined) {
     gPassed = true;
   }
-  do_test_finished();
+  if (DEBUG_AUS_TEST) {
+    // This prevents do_print errors from being printed by the xpcshell test
+    // harness due to nsUpdateService.js logging to the console when the
+    // app.update.log preference is true.
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, false);
+    gAUS.observe(null, "nsPref:changed", PREF_APP_UPDATE_LOG);
+  }
+  do_execute_soon(do_test_finished);
 }
 
 /**
@@ -1601,8 +1608,9 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
     let updateLog = getUpdatesPatchDir();
     updateLog.append(FILE_UPDATE_LOG);
     // xpcshell tests won't display the entire contents so log each line.
-    let contents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
-    let aryLogContents = contents.split("\n");
+    let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
+    updateLogContents = replaceLogPaths(updateLogContents);
+    let aryLogContents = updateLogContents.split("\n");
     logTestInfo("contents of " + updateLog.path + ":");
     aryLogContents.forEach(function RU_LC_FE(aLine) {
       logTestInfo(aLine);
@@ -2181,8 +2189,9 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
       let updateLog = getUpdatesPatchDir();
       updateLog.append(FILE_UPDATE_LOG);
       // xpcshell tests won't display the entire contents so log each line.
-      let contents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
-      let aryLogContents = contents.split("\n");
+      let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
+      updateLogContents = replaceLogPaths(updateLogContents);
+      let aryLogContents = updateLogContents.split("\n");
       logTestInfo("contents of " + updateLog.path + ":");
       aryLogContents.forEach(function RUUS_TC_LC_FE(aLine) {
         logTestInfo(aLine);
@@ -2450,6 +2459,41 @@ function createUpdaterINI(aIsExeAsync) {
 }
 
 /**
+ * Helper function that replaces the common part of paths in the update log's
+ * contents with <test_dir_path> for paths to the the test directory and
+ * <update_dir_path> for paths to the update directory. This is needed since
+ * Assert.equal will truncate what it prints to the xpcshell log file.
+ *
+ * @param   aLogContents
+ *          The update log file's contents.
+ * @return  the log contents with the paths replaced.
+ */
+function replaceLogPaths(aLogContents) {
+  let logContents = aLogContents;
+  // Remove the majority of the path up to the test directory. This is needed
+  // since Assert.equal won't print long strings to the test logs.
+  let testDirPath = do_get_file(gTestID, false).path;
+  if (IS_WIN) {
+    // Replace \\ with \\\\ so the regexp works.
+    testDirPath = testDirPath.replace(/\\/g, "\\\\");
+  }
+  logContents = logContents.replace(new RegExp(testDirPath, "g"),
+                                    "<test_dir_path>/" + gTestID);
+  let updatesDirPath = getMockUpdRootD().path;
+  if (IS_WIN) {
+    // Replace \\ with \\\\ so the regexp works.
+    updatesDirPath = updatesDirPath.replace(/\\/g, "\\\\");
+  }
+  logContents = logContents.replace(new RegExp(updatesDirPath, "g"),
+                                    "<update_dir_path>/" + gTestID);
+  if (IS_WIN) {
+    // Replace \ with /
+    logContents = logContents.replace(/\\/g, "/");
+  }
+  return logContents;
+}
+
+/**
  * Helper function for updater binary tests for verifying the contents of the
  * update log after a successful update.
  *
@@ -2464,12 +2508,13 @@ function checkUpdateLogContents(aCompareLogFile, aExcludeDistributionDir) {
     // Sorting on Linux is different so skip checking the logs for now.
     return;
   }
+
   let updateLog = getUpdatesPatchDir();
   updateLog.append(FILE_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog);
 
   // The channel-prefs.js is defined in gTestFilesCommon which will always be
-  // located to the end of gTestFiles.
+  // located to the end of gTestFiles when it is present.
   if (gTestFiles.length > 1 &&
       gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
       !gTestFiles[gTestFiles.length - 1].originalContents) {
@@ -2515,9 +2560,7 @@ function checkUpdateLogContents(aCompareLogFile, aExcludeDistributionDir) {
   updateLogContents = updateLogContents.replace(/\n+/g, "\n");
   // Remove leading and trailing newlines
   updateLogContents = updateLogContents.replace(/^\n|\n$/g, "");
-  // The update log when running the service tests sometimes starts with data
-  // from the previous launch of the updater.
-  updateLogContents = updateLogContents.replace(/^calling QuitProgressUI\n[^\n]*\nUPDATE TYPE/g, "UPDATE TYPE");
+  updateLogContents = replaceLogPaths(updateLogContents);
 
   let compareLogContents = "";
   if (aCompareLogFile) {
@@ -2583,8 +2626,9 @@ function checkUpdateLogContains(aCheckString) {
   let updateLog = getUpdatesPatchDir();
   updateLog.append(FILE_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog);
+  updateLogContents = replaceLogPaths(updateLogContents);
   Assert.notEqual(updateLogContents.indexOf(aCheckString), -1,
-                  "the update log contents" + MSG_SHOULD_EQUAL + ", value: " +
+                  "the update log contents should contain value: " +
                   aCheckString);
 }
 
@@ -2848,6 +2892,8 @@ function checkCallbackAppLog() {
     gTimeoutRuns++;
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       logTestInfo("callback log contents are not correct");
+      // This file doesn't contain full paths so there is no need to call
+      // replaceLogPaths.
       let aryLog = logContents.split("\n");
       let aryCompare = expectedLogContents.split("\n");
       // Pushing an empty string to both arrays makes it so either array's length

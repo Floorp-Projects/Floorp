@@ -1,8 +1,5 @@
-
-
 let AddonManager = Cu.import("resource://gre/modules/AddonManager.jsm", {}).AddonManager;
 let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-let AddonWatcher = Cu.import("resource://gre/modules/AddonWatcher.jsm", {}).AddonWatcher;
 
 const ADDON_TYPE_SERVICE     = "service";
 const ID_SUFFIX              = "@services.mozilla.org";

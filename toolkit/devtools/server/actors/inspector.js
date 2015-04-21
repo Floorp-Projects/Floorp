@@ -1917,7 +1917,7 @@ var WalkerActor = protocol.ActorClass({
         sugs.classes.delete(HIDDEN_CLASS);
         for (let [className, count] of sugs.classes) {
           if (className.startsWith(completing)) {
-            result.push(["." + className, count, selectorState]);
+            result.push(["." + CSS.escape(className), count, selectorState]);
           }
         }
         break;
@@ -1934,7 +1934,7 @@ var WalkerActor = protocol.ActorClass({
         }
         for (let [id, count] of sugs.ids) {
           if (id.startsWith(completing)) {
-            result.push(["#" + id, count, selectorState]);
+            result.push(["#" + CSS.escape(id), count, selectorState]);
           }
         }
         break;

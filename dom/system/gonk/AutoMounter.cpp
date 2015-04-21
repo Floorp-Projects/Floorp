@@ -38,6 +38,7 @@
 #include "OpenFileFinder.h"
 #include "Volume.h"
 #include "VolumeManager.h"
+#include "nsIStatusReporter.h"
 
 using namespace mozilla::hal;
 USING_MTP_NAMESPACE
@@ -259,6 +260,10 @@ public:
   }
 
   void UpdateState();
+  void GetStatus(bool& umsAvail, bool& umsConfigured, bool& umsEnabled, bool& mtpAvail,
+	         bool& mtpConfigured, bool& mtpEnabled, bool& rndisConfigured);
+
+  nsresult Dump(nsACString& desc);
 
   void ConfigureUsbFunction(const char* aUsbFunc);
 
@@ -458,6 +463,21 @@ private:
 
 static StaticRefPtr<AutoMounter> sAutoMounter;
 static StaticRefPtr<MozMtpServer> sMozMtpServer;
+
+// The following is for status reporter
+enum STATE_REPORTER_STATE
+{
+  REPORTER_UNREGISTERED,
+  REPORTER_REGISTERED
+};
+
+static int status_reporter_progress = REPORTER_UNREGISTERED;
+nsresult getState(nsACString &desc)
+{
+  sAutoMounter->Dump(desc);
+  return NS_OK;
+}
+NS_STATUS_REPORTER_IMPLEMENT(AutoMounter, "AutoMounter", getState);
 
 /***************************************************************************/
 
@@ -703,56 +723,12 @@ AutoMounter::UpdateState()
   //
   // Since IsUsbCablePluggedIn returns state == CONFIGURED, it will look
   // like a cable pull and replugin.
-
-  bool umsAvail = false;
-  bool umsConfigured = false;
-  bool umsEnabled = false;
-  bool mtpAvail = false;
-  bool mtpConfigured = false;
-  bool mtpEnabled = false;
-  bool rndisConfigured = false;
+  bool umsAvail, umsConfigured, umsEnabled;
+  bool mtpAvail, mtpConfigured, mtpEnabled;
+  bool rndisConfigured;
   bool usbCablePluggedIn = IsUsbCablePluggedIn();
-
-  if (access(ICS_SYS_USB_FUNCTIONS, F_OK) == 0) {
-    char functionsStr[60];
-    if (!ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr))) {
-      ERR("Error reading file '%s': %s", ICS_SYS_USB_FUNCTIONS, strerror(errno));
-      functionsStr[0] = '\0';
-    }
-    DBG("UpdateState: USB functions: '%s'", functionsStr);
-
-    bool  usbConfigured = IsUsbConfigured();
-
-    // On the Nexus 4/5, it advertises that the UMS usb function is available,
-    // but we have a further requirement that mass_storage be in the
-    // persist.sys.usb.config property.
-    char persistSysUsbConfig[PROPERTY_VALUE_MAX];
-    property_get(PERSIST_SYS_USB_CONFIG, persistSysUsbConfig, "");
-    if (IsUsbFunctionEnabled(persistSysUsbConfig, USB_FUNC_UMS)) {
-      umsAvail = (access(ICS_SYS_UMS_DIRECTORY, F_OK) == 0);
-    }
-    if (umsAvail) {
-      umsConfigured = usbConfigured && strstr(functionsStr, USB_FUNC_UMS) != nullptr;
-      umsEnabled = (mMode == AUTOMOUNTER_ENABLE_UMS) ||
-                   ((mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && umsConfigured);
-    } else {
-      umsConfigured = false;
-      umsEnabled = false;
-    }
-
-    mtpAvail = (access(ICS_SYS_MTP_DIRECTORY, F_OK) == 0);
-    if (mtpAvail) {
-      mtpConfigured = usbConfigured && strstr(functionsStr, USB_FUNC_MTP) != nullptr;
-      mtpEnabled = (mMode == AUTOMOUNTER_ENABLE_MTP) ||
-                   ((mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && mtpConfigured);
-    } else {
-      mtpConfigured = false;
-      mtpEnabled = false;
-    }
-
-    rndisConfigured = strstr(functionsStr, USB_FUNC_RNDIS) != nullptr;
-  }
-
+  GetStatus(umsAvail, umsConfigured, umsEnabled, mtpAvail,
+            mtpConfigured, mtpEnabled, rndisConfigured);
   bool enabled = mtpEnabled || umsEnabled;
 
   if (mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) {
@@ -1139,6 +1115,167 @@ AutoMounter::UpdateState()
 
 /***************************************************************************/
 
+void AutoMounter::GetStatus(bool& umsAvail, bool& umsConfigured, bool& umsEnabled,
+                            bool& mtpAvail, bool& mtpConfigured, bool& mtpEnabled,
+                            bool& rndisConfigured)
+{
+  umsConfigured = false;
+  umsEnabled = false;
+  mtpAvail = false;
+  mtpConfigured = false;
+  mtpEnabled = false;
+  rndisConfigured = false;
+
+  if (access(ICS_SYS_USB_FUNCTIONS, F_OK) != 0) {
+    return;
+  }
+
+  char functionsStr[60];
+  if (!ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr))) {
+    ERR("Error reading file '%s': %s", ICS_SYS_USB_FUNCTIONS, strerror(errno));
+    functionsStr[0] = '\0';
+  }
+  DBG("GetStatus: USB functions: '%s'", functionsStr);
+
+  bool  usbConfigured = IsUsbConfigured();
+
+  // On the Nexus 4/5, it advertises that the UMS usb function is available,
+  // but we have a further requirement that mass_storage be in the
+  // persist.sys.usb.config property.
+  char persistSysUsbConfig[PROPERTY_VALUE_MAX];
+  property_get(PERSIST_SYS_USB_CONFIG, persistSysUsbConfig, "");
+  if (IsUsbFunctionEnabled(persistSysUsbConfig, USB_FUNC_UMS)) {
+    umsAvail = (access(ICS_SYS_UMS_DIRECTORY, F_OK) == 0);
+  }
+  if (umsAvail) {
+    umsConfigured = usbConfigured && strstr(functionsStr, USB_FUNC_UMS) != nullptr;
+    umsEnabled = (mMode == AUTOMOUNTER_ENABLE_UMS) ||
+                 ((mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && umsConfigured);
+  } else {
+    umsConfigured = false;
+    umsEnabled = false;
+  }
+
+  mtpAvail = (access(ICS_SYS_MTP_DIRECTORY, F_OK) == 0);
+  if (mtpAvail) {
+    mtpConfigured = usbConfigured && strstr(functionsStr, USB_FUNC_MTP) != nullptr;
+    mtpEnabled = (mMode == AUTOMOUNTER_ENABLE_MTP) ||
+                 ((mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) && mtpConfigured);
+  } else {
+    mtpConfigured = false;
+    mtpEnabled = false;
+  }
+
+  rndisConfigured = strstr(functionsStr, USB_FUNC_RNDIS) != nullptr;
+}
+
+
+nsresult AutoMounter::Dump(nsACString& desc)
+{
+  DBG("GetState!");
+  bool umsAvail, umsConfigured, umsEnabled;
+  bool mtpAvail, mtpConfigured, mtpEnabled;
+  bool rndisConfigured;
+  GetStatus(umsAvail, umsConfigured, umsEnabled, mtpAvail,
+            mtpConfigured, mtpEnabled, rndisConfigured);
+  if (mMode == AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED) {
+    // DISABLE_WHEN_UNPLUGGED implies already enabled.
+    if (!IsUsbCablePluggedIn()) {
+      mMode = AUTOMOUNTER_DISABLE;
+      mtpEnabled = false;
+      umsEnabled = false;
+    }
+  }
+
+  // Automounter information
+  desc += "Current Mode:";
+  desc += ModeStr(mMode);
+  desc += "|";
+
+
+  desc += "Current State:";
+  desc += StateStr(mState);
+  desc += "|";
+
+  desc += "UMS Status:";
+  if (umsAvail) {
+    desc += "Available";
+  } else {
+    desc += "UnAvailable";
+  }
+  desc += ",";
+  if (umsConfigured) {
+    desc += "Configured";
+  } else {
+    desc += "Un-Configured";
+  }
+  desc += ",";
+  if (umsEnabled) {
+    desc += "Enabled";
+  } else {
+    desc += "Disabled";
+  }
+  desc += "|";
+
+
+  desc += "MTP Status:";
+  if (mtpAvail) {
+    desc += "Available";
+  } else {
+    desc += "UnAvailable";
+  }
+  desc += ",";
+  if (mtpConfigured) {
+    desc += "Configured";
+  } else {
+    desc += "Un-Configured";
+  }
+  desc += ",";
+  if (mtpEnabled) {
+    desc += "Enabled";
+  } else {
+    desc += "Disabled";
+  }
+
+
+  // Volume information
+  VolumeArray::index_type volIndex;
+  VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
+  for (volIndex = 0; volIndex < numVolumes; volIndex++) {
+    RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
+
+    desc += "|";
+    desc += vol->NameStr();
+    desc += ":";
+    desc += vol->StateStr();
+    desc += "@";
+    desc += vol->MountPoint().get();
+
+    if (!vol->MediaPresent()) {
+      continue;
+    }
+
+    if (vol->CanBeShared()) {
+      desc += ",CanBeShared";
+    }
+    if (vol->CanBeFormatted()) {
+      desc += ",CanBeFormatted";
+    }
+    if (vol->CanBeMounted()) {
+      desc += ",CanBeMounted";
+    }
+    if (vol->IsRemovable()) {
+      desc += ",Removable";
+    }
+    if (vol->IsHotSwappable()) {
+      desc += ",HotSwappable";
+    }
+  }
+
+  return NS_OK;
+}
+
+
 static void
 InitAutoMounterIOThread()
 {
@@ -1270,6 +1407,12 @@ InitAutoMounter()
   // start it here and have it send events to the AutoMounter running
   // on the IO Thread.
   sUsbCableObserver = new UsbCableObserver();
+
+  // Register status reporter into reporter manager
+  if(status_reporter_progress == REPORTER_UNREGISTERED) {
+    NS_RegisterStatusReporter(new NS_STATUS_REPORTER_NAME(AutoMounter));
+  }
+  status_reporter_progress = REPORTER_REGISTERED;
 }
 
 int32_t
@@ -1340,6 +1483,11 @@ ShutdownAutoMounter()
   if (sAutoMounter) {
     DBG("ShutdownAutoMounter: About to StopMtpServer");
     sAutoMounter->StopMtpServer();
+    // Unregister status reporter into reporter manager
+    if(status_reporter_progress == REPORTER_REGISTERED) {
+      NS_UnregisterStatusReporter(new NS_STATUS_REPORTER_NAME(AutoMounter));
+    }
+    status_reporter_progress = REPORTER_UNREGISTERED;
   }
   sAutoMounterSetting = nullptr;
   sUsbCableObserver = nullptr;

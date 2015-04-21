@@ -51,7 +51,13 @@
 #include "nsTerminator.h"
 #endif
 
+#if defined(NIGHTLY_BUILD)
+#define MOZ_HAS_PERFSTATS
+#endif // defined(NIGHTLY_BUILD)
+
+#if defined(MOZ_HAS_PERFSTATS)
 #include "nsPerformanceStats.h"
+#endif // defined (MOZ_HAS_PERFSTATS)
 
 using namespace mozilla;
 
@@ -59,7 +65,9 @@ using namespace mozilla;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 
+#if defined(MOZ_HAS_PERFSTATS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPerformanceStatsService)
+#endif // defined (MOZ_HAS_PERFSTATS)
 
 #if defined(MOZ_HAS_TERMINATOR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTerminator)
@@ -119,7 +127,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NativeFileWatcherService, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonPathService, AddonPathService::GetInstance)
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
+#if defined(MOZ_HAS_PERFSTATS)
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_PERFORMANCESTATSSERVICE_CID);
+#endif // defined (MOZ_HAS_PERFSTATS)
+
 #if defined(MOZ_HAS_TERMINATOR)
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_TERMINATOR_CID);
 #endif
@@ -154,7 +165,9 @@ static const Module::CIDEntry kToolkitCIDs[] = {
 #if defined(MOZ_HAS_TERMINATOR)
   { &kNS_TOOLKIT_TERMINATOR_CID, false, nullptr, nsTerminatorConstructor },
 #endif
+#if defined(MOZ_HAS_PERFSTATS)
   { &kNS_TOOLKIT_PERFORMANCESTATSSERVICE_CID, false, nullptr, nsPerformanceStatsServiceConstructor },
+#endif // defined (MOZ_HAS_PERFSTATS)
   { &kNS_USERINFO_CID, false, nullptr, nsUserInfoConstructor },
   { &kNS_ALERTSSERVICE_CID, false, nullptr, nsAlertsServiceConstructor },
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
@@ -188,7 +201,9 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
 #if defined(MOZ_HAS_TERMINATOR)
   { NS_TOOLKIT_TERMINATOR_CONTRACTID, &kNS_TOOLKIT_TERMINATOR_CID },
 #endif
+#if defined(MOZ_HAS_PERFSTATS)
   { NS_TOOLKIT_PERFORMANCESTATSSERVICE_CONTRACTID, &kNS_TOOLKIT_PERFORMANCESTATSSERVICE_CID },
+#endif // defined (MOZ_HAS_PERFSTATS)
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
   { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)

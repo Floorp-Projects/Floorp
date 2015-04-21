@@ -49,14 +49,13 @@ loop.conversation = (function(mozL10n) {
         case "outgoing": {
           return (React.createElement(CallControllerView, {
             dispatcher: this.props.dispatcher, 
-            mozLoop: this.props.mozLoop}
-          ));
+            mozLoop: this.props.mozLoop}));
         }
         case "room": {
           return (React.createElement(DesktopRoomConversationView, {
             dispatcher: this.props.dispatcher, 
-            roomStore: this.props.roomStore}
-          ));
+            mozLoop: this.props.mozLoop, 
+            roomStore: this.props.roomStore}));
         }
         case "failed": {
           return React.createElement(GenericFailureView, {cancelCall: this.closeWindow});
