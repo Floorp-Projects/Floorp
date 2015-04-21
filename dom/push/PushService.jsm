@@ -135,6 +135,19 @@ this.PushDB.prototype = {
     );
   },
 
+  clearAll: function clear(aSuccessCb, aErrorCb) {
+    this.newTxn(
+      "readwrite",
+      kPUSHDB_STORE_NAME,
+      function (aTxn, aStore) {
+        debug("Going to clear all!");
+        aStore.clear();
+      },
+      aSuccessCb,
+      aErrorCb
+    );
+  },
+
   getByPushEndpoint: function(aPushEndpoint, aSuccessCb, aErrorCb) {
     debug("getByPushEndpoint()");
 
@@ -1627,6 +1640,13 @@ this.PushService = {
     );
   },
 
+  _clearAll: function _clearAll() {
+    return new Promise((resolve, reject) => {
+      this._db.clearAll(() => resolve(),
+                        () => reject("Database error"));
+    });
+  },
+  
   /**
    * Called on message from the child process
    */
