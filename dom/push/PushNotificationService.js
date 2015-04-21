@@ -50,6 +50,10 @@ PushNotificationService.prototype = {
     return PushService._registration({scope});
   },
 
+  clearAll: function clearAll() {
+    return PushService._clearAll();
+  },
+
   observe: function observe(subject, topic, data) {
     switch (topic) {
       case "app-startup":
