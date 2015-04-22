@@ -28,7 +28,6 @@ class AsmJSModule;
 class InterpreterRegs;
 class CallObject;
 class ScopeObject;
-class ClonedBlockObject;
 class ScriptFrameIter;
 class SPSProfiler;
 class InterpreterFrame;

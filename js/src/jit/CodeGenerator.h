@@ -37,7 +37,6 @@ class OutOfLineInterruptCheckImplicit;
 class OutOfLineUnboxFloatingPoint;
 class OutOfLineStoreElementHole;
 class OutOfLineTypeOfV;
-class OutOfLineLoadTypedArray;
 class OutOfLineUpdateCache;
 class OutOfLineCallPostWriteBarrier;
 class OutOfLineIsCallable;

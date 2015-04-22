@@ -30,11 +30,8 @@ namespace gc {
 
 typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
 
-struct FinalizePhase;
 class MarkingValidator;
-struct AutoPrepareForTracing;
 class AutoTraceSession;
-struct ArenasToUpdate;
 struct MovingTracer;
 
 class ChunkPool

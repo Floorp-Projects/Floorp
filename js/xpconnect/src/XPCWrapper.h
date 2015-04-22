@@ -10,8 +10,6 @@
 #include "xpcprivate.h"
 #include "jswrapper.h"
 
-class nsIScriptSecurityManager;
-
 namespace XPCNativeWrapper {
 
 // Given an XPCWrappedNative pointer and the name of the function on

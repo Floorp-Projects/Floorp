@@ -14,11 +14,6 @@
 #include "nsJSUtils.h"
 
 namespace mozilla {
-
-namespace dom {
-class CPOWManagerGetter;
-}
-
 namespace jsipc {
 
 class ObjectId {

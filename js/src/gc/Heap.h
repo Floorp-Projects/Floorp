@@ -27,8 +27,6 @@
 #include "js/HeapAPI.h"
 #include "js/TracingAPI.h"
 
-struct JSCompartment;
-
 struct JSRuntime;
 
 namespace JS {

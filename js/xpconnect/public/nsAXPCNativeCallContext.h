@@ -7,8 +7,6 @@
 #ifndef nsAXPCNativeCallContext_h__
 #define nsAXPCNativeCallContext_h__
 
-class nsIXPConnectWrappedNative;
-
 /**
 * A native call context is allocated on the stack when XPConnect calls a
 * native method. Holding a pointer to this object beyond the currently

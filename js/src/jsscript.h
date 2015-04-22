@@ -43,11 +43,11 @@ namespace jit {
 
 class BreakpointSite;
 class BindingIter;
+class Debugger;
 class LazyScript;
 class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
-class WatchpointMap;
 class NestedScopeObject;
 
 namespace frontend {

@@ -9,8 +9,6 @@
 
 #include <stddef.h>
 
-struct JSRuntime;
-
 namespace js {
 namespace gc {
 
