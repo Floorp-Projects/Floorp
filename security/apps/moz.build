@@ -34,8 +34,6 @@ headers_arrays_certs = [
     ('manifest-signing-root.inc', 'trustedAppPublicRoot', 'trusted-app-public.der'),
     ('manifest-signing-test-root.inc', 'trustedAppTestRoot', test_ssl_path + '/test_signed_manifest/trusted_ca1.der'),
     ('xpcshell.inc', 'xpcshellRoot', test_ssl_path + '/test_signed_apps/trusted_ca1.der'),
-    ('addons-public.inc', 'addonsPublicRoot', 'addons-public.crt'),
-    ('addons-stage.inc', 'addonsStageRoot', 'addons-stage.crt'),
 ]
 
 for header, array_name, cert in headers_arrays_certs:
