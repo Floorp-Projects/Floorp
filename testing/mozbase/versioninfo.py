@@ -43,9 +43,15 @@ def changelog(args):
             plus_version = None
             for line in diff.splitlines():
                 if line.startswith('-PACKAGE_VERSION'):
-                    minus_version = StrictVersion(line.split()[-1].strip('"\''))
+                    try:
+                        minus_version = StrictVersion(line.split()[-1].strip('"\''))
+                    except ValueError:
+                        pass
                 elif line.startswith('+PACKAGE_VERSION'):
-                    plus_version = StrictVersion(line.split()[-1].strip('"\''))
+                    try:
+                        plus_version = StrictVersion(line.split()[-1].strip('"\''))
+                    except ValueError:
+                        break
 
                     # make sure the change isn't a backout
                     if not minus_version or plus_version > minus_version:
@@ -54,6 +60,7 @@ def changelog(args):
 
                         if StrictVersion(v) == plus_version:
                             return rev
+
         print("Could not find %s revision for version %s." % (args.module, v or 'latest'))
         sys.exit(1)
 
