@@ -17,7 +17,6 @@
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
-#include "nsCOMArray.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
 #include "nsComponentManagerUtils.h"
@@ -7718,53 +7717,57 @@ nsHTMLEditRules::InDifferentTableElements(nsINode* aNode1, nsINode* aNode2)
 }
 
 
-nsresult 
+nsresult
 nsHTMLEditRules::RemoveEmptyNodes()
 {
-  // some general notes on the algorithm used here: the goal is to examine all the
-  // nodes in mDocChangeRange, and remove the empty ones.  We do this by using a
-  // content iterator to traverse all the nodes in the range, and placing the empty
-  // nodes into an array.  After finishing the iteration, we delete the empty nodes
-  // in the array.  (they cannot be deleted as we find them becasue that would 
-  // invalidate the iterator.)  
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  // Some general notes on the algorithm used here: the goal is to examine all
+  // the nodes in mDocChangeRange, and remove the empty ones.  We do this by
+  // using a content iterator to traverse all the nodes in the range, and
+  // placing the empty nodes into an array.  After finishing the iteration, we
+  // delete the empty nodes in the array.  (They cannot be deleted as we find
+  // them because that would invalidate the iterator.)
+  //
   // Since checking to see if a node is empty can be costly for nodes with many
-  // descendants, there are some optimizations made.  I rely on the fact that the
-  // iterator is post-order: it will visit children of a node before visiting the 
-  // parent node.  So if I find that a child node is not empty, I know that its
-  // parent is not empty without even checking.  So I put the parent on a "skipList"
-  // which is just a voidArray of nodes I can skip the empty check on.  If I 
-  // encounter a node on the skiplist, i skip the processing for that node and replace
-  // its slot in the skiplist with that node's parent.
-  // An interseting idea is to go ahead and regard parent nodes that are NOT on the
-  // skiplist as being empty (without even doing the IsEmptyNode check) on the theory
-  // that if they weren't empty, we would have encountered a non-empty child earlier
-  // and thus put this parent node on the skiplist.
-  // Unfortunately I can't use that strategy here, because the range may include 
-  // some children of a node while excluding others.  Thus I could find all the 
-  // _examined_ children empty, but still not have an empty parent.
-  
+  // descendants, there are some optimizations made.  I rely on the fact that
+  // the iterator is post-order: it will visit children of a node before
+  // visiting the parent node.  So if I find that a child node is not empty, I
+  // know that its parent is not empty without even checking.  So I put the
+  // parent on a "skipList" which is just a voidArray of nodes I can skip the
+  // empty check on.  If I encounter a node on the skiplist, i skip the
+  // processing for that node and replace its slot in the skiplist with that
+  // node's parent.
+  //
+  // An interesting idea is to go ahead and regard parent nodes that are NOT on
+  // the skiplist as being empty (without even doing the IsEmptyNode check) on
+  // the theory that if they weren't empty, we would have encountered a
+  // non-empty child earlier and thus put this parent node on the skiplist.
+  //
+  // Unfortunately I can't use that strategy here, because the range may
+  // include some children of a node while excluding others.  Thus I could find
+  // all the _examined_ children empty, but still not have an empty parent.
+
   // need an iterator
-  nsCOMPtr<nsIContentIterator> iter =
-                  do_CreateInstance("@mozilla.org/content/post-content-iterator;1");
-  NS_ENSURE_TRUE(iter, NS_ERROR_NULL_POINTER);
-  
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+
   nsresult res = iter->Init(mDocChangeRange);
   NS_ENSURE_SUCCESS(res, res);
-  
-  nsCOMArray<nsINode> arrayOfEmptyNodes, arrayOfEmptyCites;
-  nsTArray<nsCOMPtr<nsINode> > skipList;
 
-  // check for empty nodes
+  nsTArray<nsCOMPtr<nsINode>> arrayOfEmptyNodes, arrayOfEmptyCites, skipList;
+
+  // Check for empty nodes
   while (!iter->IsDone()) {
-    nsINode* node = iter->GetCurrentNode();
+    nsCOMPtr<nsINode> node = iter->GetCurrentNode();
     NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-    nsINode* parent = node->GetParentNode();
+    nsCOMPtr<nsINode> parent = node->GetParentNode();
 
     size_t idx = skipList.IndexOf(node);
     if (idx != skipList.NoIndex) {
-      // this node is on our skip list.  Skip processing for this node, 
-      // and replace its value in the skip list with the value of its parent
+      // This node is on our skip list.  Skip processing for this node, and
+      // replace its value in the skip list with the value of its parent
       skipList[idx] = parent;
     } else {
       bool bIsCandidate = false;
@@ -7772,50 +7775,46 @@ nsHTMLEditRules::RemoveEmptyNodes()
       bool bIsMailCite = false;
 
       if (node->IsElement()) {
-        dom::Element* element = node->AsElement();
-        if (element->IsHTMLElement(nsGkAtoms::body)) {
-          // don't delete the body
-        } else if ((bIsMailCite = nsHTMLEditUtils::IsMailCite(element))  ||
-                   element->IsHTMLElement(nsGkAtoms::a)                  ||
-                   nsHTMLEditUtils::IsInlineStyle(element)               ||
-                   nsHTMLEditUtils::IsList(element)                      ||
-                   element->IsHTMLElement(nsGkAtoms::div)) {
-          // only consider certain nodes to be empty for purposes of removal
+        if (node->IsHTMLElement(nsGkAtoms::body)) {
+          // Don't delete the body
+        } else if ((bIsMailCite = nsHTMLEditUtils::IsMailCite(node)) ||
+                   node->IsHTMLElement(nsGkAtoms::a) ||
+                   nsHTMLEditUtils::IsInlineStyle(node) ||
+                   nsHTMLEditUtils::IsList(node) ||
+                   node->IsHTMLElement(nsGkAtoms::div)) {
+          // Only consider certain nodes to be empty for purposes of removal
           bIsCandidate = true;
-        } else if (nsHTMLEditUtils::IsFormatNode(element) ||
-                   nsHTMLEditUtils::IsListItem(element)   ||
-                   element->IsHTMLElement(nsGkAtoms::blockquote)) {
-          // these node types are candidates if selection is not in them
-          // if it is one of these, don't delete if selection inside.
-          // this is so we can create empty headings, etc, for the
-          // user to type into.
+        } else if (nsHTMLEditUtils::IsFormatNode(node) ||
+                   nsHTMLEditUtils::IsListItem(node) ||
+                   node->IsHTMLElement(nsGkAtoms::blockquote)) {
+          // These node types are candidates if selection is not in them.  If
+          // it is one of these, don't delete if selection inside.  This is so
+          // we can create empty headings, etc., for the user to type into.
           bool bIsSelInNode;
           res = SelectionEndpointInNode(node, &bIsSelInNode);
           NS_ENSURE_SUCCESS(res, res);
-          if (!bIsSelInNode)
-          {
+          if (!bIsSelInNode) {
             bIsCandidate = true;
           }
         }
       }
-      
+
       if (bIsCandidate) {
-        // we delete mailcites even if they have a solo br in them
-        // other nodes we require to be empty
-        NS_ENSURE_STATE(mHTMLEditor);
+        // We delete mailcites even if they have a solo br in them.  Other
+        // nodes we require to be empty.
         res = mHTMLEditor->IsEmptyNode(node->AsDOMNode(), &bIsEmptyNode,
                                        bIsMailCite, true);
         NS_ENSURE_SUCCESS(res, res);
         if (bIsEmptyNode) {
           if (bIsMailCite) {
             // mailcites go on a separate list from other empty nodes
-            arrayOfEmptyCites.AppendObject(node);
+            arrayOfEmptyCites.AppendElement(node);
           } else {
-            arrayOfEmptyNodes.AppendObject(node);
+            arrayOfEmptyNodes.AppendElement(node);
           }
         }
       }
-      
+
       if (!bIsEmptyNode) {
         // put parent on skip list
         skipList.AppendElement(parent);
@@ -7824,47 +7823,34 @@ nsHTMLEditRules::RemoveEmptyNodes()
 
     iter->Next();
   }
-  
+
   // now delete the empty nodes
-  int32_t nodeCount = arrayOfEmptyNodes.Count();
-  for (int32_t j = 0; j < nodeCount; j++) {
-    nsCOMPtr<nsIDOMNode> delNode = arrayOfEmptyNodes[0]->AsDOMNode();
-    arrayOfEmptyNodes.RemoveObjectAt(0);
-    NS_ENSURE_STATE(mHTMLEditor);
+  for (auto& delNode : arrayOfEmptyNodes) {
     if (mHTMLEditor->IsModifiableNode(delNode)) {
-      NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(delNode);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
-  
-  // now delete the empty mailcites
-  // this is a separate step because we want to pull out any br's and preserve them.
-  nodeCount = arrayOfEmptyCites.Count();
-  for (int32_t j = 0; j < nodeCount; j++) {
-    nsCOMPtr<nsIDOMNode> delNode = arrayOfEmptyCites[0]->AsDOMNode();
-    arrayOfEmptyCites.RemoveObjectAt(0);
+
+  // Now delete the empty mailcites.  This is a separate step because we want
+  // to pull out any br's and preserve them.
+  for (auto& delNode : arrayOfEmptyCites) {
     bool bIsEmptyNode;
-    NS_ENSURE_STATE(mHTMLEditor);
     res = mHTMLEditor->IsEmptyNode(delNode, &bIsEmptyNode, false, true);
     NS_ENSURE_SUCCESS(res, res);
-    if (!bIsEmptyNode)
-    {
-      // we are deleting a cite that has just a br.  We want to delete cite, 
+    if (!bIsEmptyNode) {
+      // We are deleting a cite that has just a br.  We want to delete cite,
       // but preserve br.
-      nsCOMPtr<nsIDOMNode> parent, brNode;
-      int32_t offset;
-      parent = nsEditor::GetNodeLocation(delNode, &offset);
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->CreateBR(parent, offset, address_of(brNode));
-      NS_ENSURE_SUCCESS(res, res);
+      nsCOMPtr<nsINode> parent = delNode->GetParentNode();
+      int32_t offset = parent ? parent->IndexOf(delNode) : -1;
+      nsCOMPtr<Element> br = mHTMLEditor->CreateBR(parent, offset);
+      NS_ENSURE_STATE(br);
     }
-    NS_ENSURE_STATE(mHTMLEditor);
     res = mHTMLEditor->DeleteNode(delNode);
     NS_ENSURE_SUCCESS(res, res);
   }
-  
-  return res;
+
+  return NS_OK;
 }
 
 nsresult
