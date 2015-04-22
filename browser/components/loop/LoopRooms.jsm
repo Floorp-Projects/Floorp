@@ -202,10 +202,10 @@ let LoopRoomsInternal = {
    *                          information.
    */
   promiseEncryptRoomData: Task.async(function* (roomData) {
-    // For now, disable encryption/context if context is disabled, or if
-    // FxA is turned on.
-    if (!MozLoopService.getLoopPref("contextInConverations.enabled") ||
-        this.sessionType == LOOP_SESSION_TYPE.FXA) {
+    // XXX We should only return unencrypted data whilst we're still working
+    // on context. Once bug 1115340 is fixed, this function should no longer be
+    // here.
+    function getUnencryptedData() {
       var serverRoomData = extend({}, roomData);
       delete serverRoomData.decryptedContext;
 
@@ -218,6 +218,11 @@ let LoopRoomsInternal = {
       };
     }
 
+    // For now, disable encryption/context if context is disabled
+    if (!MozLoopService.getLoopPref("contextInConverations.enabled")) {
+      return getUnencryptedData();
+    }
+
     var newRoomData = extend({}, roomData);
 
     if (!newRoomData.context) {
@@ -227,7 +232,17 @@ let LoopRoomsInternal = {
     // First get the room key.
     let key = yield this.promiseGetOrCreateRoomKey(newRoomData);
 
-    newRoomData.context.wrappedKey = yield this.promiseEncryptedRoomKey(key);
+    try {
+      newRoomData.context.wrappedKey = yield this.promiseEncryptedRoomKey(key);
+    }
+    catch (ex) {
+      // XXX Bug 1153788 should remove this, then we can remove the whole
+      // try/catch.
+      if (ex.message == "FxA re-register not implemented") {
+        return getUnencryptedData();
+      }
+      return Promise.reject(ex);
+    }
 
     // Now encrypt the actual data.
     newRoomData.context.value = yield loopCrypto.encryptBytes(key,
@@ -654,8 +669,7 @@ let LoopRoomsInternal = {
       };
 
       // If we're not encrypting currently, then only send the roomName.
-      if (!Services.prefs.getBoolPref("loop.contextInConverations.enabled") ||
-          this.sessionType == LOOP_SESSION_TYPE.FXA) {
+      if (!Services.prefs.getBoolPref("loop.contextInConverations.enabled")) {
         sendData = {
           roomName: newRoomName
         };
