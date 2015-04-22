@@ -20,6 +20,14 @@ interface ChromeUtils {
   [Throws]
   static void saveHeapSnapshot(DOMString filePath,
                                optional HeapSnapshotBoundaries boundaries);
+
+  /**
+   * Deserialize a core dump into a HeapSnapshot.
+   *
+   * @param filePath          The file path to read the core dump from.
+   */
+  [Throws, NewObject]
+  static HeapSnapshot readHeapSnapshot(DOMString filePath);
 };
 
 /**
