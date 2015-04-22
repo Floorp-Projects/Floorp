@@ -713,16 +713,9 @@ protected:
   // Can only be called on the state machine thread.
   void SetPlayStartTime(const TimeStamp& aTimeStamp);
 
-private:
+public:
   // Update mAudioEndTime.
   void OnAudioEndTimeUpdate(int64_t aAudioEndTime);
-public:
-  void DispatchOnAudioEndTimeUpdate(int64_t aAudioEndTime)
-  {
-    RefPtr<nsRunnable> r =
-      NS_NewRunnableMethodWithArg<int64_t>(this, &MediaDecoderStateMachine::OnAudioEndTimeUpdate, aAudioEndTime);
-    TaskQueue()->Dispatch(r.forget());
-  }
 
 private:
   // Update mDecoder's playback offset.
