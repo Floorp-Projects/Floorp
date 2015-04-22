@@ -123,10 +123,6 @@ fails == collapsed-border-top-6.html border-top-10-ref.html
 == image-width-left-5.html image-width-5.html
 == image-width-left-6.html image-width-6.html
 
-
-pref(image.high_quality_downscaling.enabled,true) == image-high-quality-scaling-1.html image-high-quality-scaling-1-ref.html
-
-
 != offscreen-0-ref.html offscreen-10-ref.html
 == offscreen-background-color-pos-4.html offscreen-0-ref.html
 == offscreen-background-color-pos-5.html offscreen-10-ref.html
