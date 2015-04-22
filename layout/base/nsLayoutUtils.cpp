@@ -1069,7 +1069,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                                      RepaintMode aRepaintMode)
 {
   MOZ_ASSERT(aContent);
-  MOZ_ASSERT(aContent->GetCurrentDoc() == aPresShell->GetDocument());
+  MOZ_ASSERT(aContent->GetComposedDoc() == aPresShell->GetDocument());
 
   DisplayPortMarginsPropertyData* currentData =
     static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
