@@ -220,11 +220,9 @@ protected:
                             int32_t aOffset);
   nsresult AfterEditInner(EditAction action,
                           nsIEditor::EDirection aDirection);
-  nsresult RemovePartOfBlock(nsIDOMNode *aBlock, 
-                             nsIDOMNode *aStartChild, 
-                             nsIDOMNode *aEndChild,
-                             nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
-                             nsCOMPtr<nsIDOMNode> *aRightNode = 0);
+  nsresult RemovePartOfBlock(mozilla::dom::Element& aBlock,
+                             nsIContent& aStartChild,
+                             nsIContent& aEndChild);
   nsresult SplitBlock(nsIDOMNode *aBlock, 
                       nsIDOMNode *aStartChild, 
                       nsIDOMNode *aEndChild,
@@ -300,7 +298,7 @@ protected:
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   nsresult MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
                               nsTArray<bool> &inTransitionArray);
-  nsresult RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes);
+  nsresult RemoveBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
   nsresult ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsAString *aBlockTag);
   nsresult MakeBlockquote(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
   nsresult SplitAsNeeded(nsIAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
