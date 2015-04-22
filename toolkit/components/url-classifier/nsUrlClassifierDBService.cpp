@@ -188,6 +188,9 @@ TablesToResponse(const nsACString& tables)
   if (FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
     return NS_ERROR_TRACKING_URI;
   }
+  if (FindInReadable(NS_LITERAL_CSTRING("-unwanted-"), tables)) {
+    return NS_ERROR_UNWANTED_URI;
+  }
   return NS_OK;
 }
 

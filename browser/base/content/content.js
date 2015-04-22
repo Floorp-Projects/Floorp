@@ -384,9 +384,15 @@ let ClickEventHandler = {
   },
 
   onAboutBlocked: function (targetElement, ownerDoc) {
+    var reason = 'phishing';
+    if (/e=malwareBlocked/.test(ownerDoc.documentURI)) {
+      reason = 'malware';
+    } else if (/e=unwantedBlocked/.test(ownerDoc.documentURI)) {
+      reason = 'unwanted';
+    }
     sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,
-      isMalware: /e=malwareBlocked/.test(ownerDoc.documentURI),
+      reason: reason,
       elementId: targetElement.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView)
     });

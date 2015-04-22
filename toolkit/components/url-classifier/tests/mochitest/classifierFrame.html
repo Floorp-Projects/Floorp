@@ -33,8 +33,8 @@ function checkLoads() {
 <!-- Try loading from a malware javascript URI -->
 <script type="text/javascript" src="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js"></script>
 
-<!-- Try loading from a malware css URI -->
-<link rel="stylesheet" type="text/css" href="http://malware.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+<!-- Try loading from an uwanted software css URI -->
+<link rel="stylesheet" type="text/css" href="http://unwanted.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
 
 <!-- XXX How is this part of the test supposed to work (= be checked)? -->
 <!-- Try loading a marked-as-malware css through an @import from a clean URI -->
