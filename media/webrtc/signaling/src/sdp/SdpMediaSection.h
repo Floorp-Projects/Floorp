@@ -286,6 +286,11 @@ public:
   SetAddress(const std::string& address)
   {
     mAddr = address;
+    if (mAddr.find(':') != std::string::npos) {
+      mAddrType = sdp::kIPv6;
+    } else {
+      mAddrType = sdp::kIPv4;
+    }
   }
   uint8_t
   GetTtl() const

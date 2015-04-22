@@ -376,6 +376,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mPrivacyRequested(false)
   , mSTSThread(nullptr)
   , mAllowIceLoopback(false)
+  , mAllowIceLinkLocal(false)
   , mMedia(nullptr)
   , mUuidGen(MakeUnique<PCUuidGenerator>())
   , mNumAudioStreams(0)
@@ -397,6 +398,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   mAllowIceLoopback = Preferences::GetBool(
     "media.peerconnection.ice.loopback", false);
+  mAllowIceLinkLocal = Preferences::GetBool(
+    "media.peerconnection.ice.link_local", false);
 #endif
 }
 
@@ -732,7 +735,6 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   }
 
   mMedia = new PeerConnectionMedia(this);
-  mMedia->SetAllowIceLoopback(mAllowIceLoopback);
 
   // Connect ICE slots.
   mMedia->SignalIceGatheringStateChange.connect(
