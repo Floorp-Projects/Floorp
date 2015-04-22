@@ -35,8 +35,6 @@ array_names = [
   'trustedAppPublicRoot',
   'trustedAppTestRoot',
   'xpcshellRoot',
-  'addonsPublicRoot',
-  'addonsStageRoot',
 ]
 
 for n in array_names:
