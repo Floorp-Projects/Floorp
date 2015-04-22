@@ -28,7 +28,7 @@ class MOZ_STACK_CLASS ZeroCopyNSIOutputStream
   static const int BUFFER_SIZE = 8192;
 
   // The nsIOutputStream we are streaming to.
-  nsCOMPtr<nsIOutputStream> &out;
+  nsCOMPtr<nsIOutputStream>& out;
 
   // The buffer we write data to before passing it to the output stream.
   char buffer[BUFFER_SIZE];
@@ -48,7 +48,7 @@ class MOZ_STACK_CLASS ZeroCopyNSIOutputStream
   nsresult writeBuffer();
 
 public:
-  explicit ZeroCopyNSIOutputStream(nsCOMPtr<nsIOutputStream> &out);
+  explicit ZeroCopyNSIOutputStream(nsCOMPtr<nsIOutputStream>& out);
 
   nsresult flush() { return writeBuffer(); }
 
@@ -59,7 +59,7 @@ public:
 
   // ZeroCopyOutputStream Interface
   virtual ~ZeroCopyNSIOutputStream() override;
-  virtual bool Next(void **data, int *size) override;
+  virtual bool Next(void** data, int* size) override;
   virtual void BackUp(int count) override;
   virtual ::google::protobuf::int64 ByteCount() const override;
 };

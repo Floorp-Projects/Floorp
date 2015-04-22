@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace devtools {
 
-ZeroCopyNSIOutputStream::ZeroCopyNSIOutputStream(nsCOMPtr<nsIOutputStream> &out)
+ZeroCopyNSIOutputStream::ZeroCopyNSIOutputStream(nsCOMPtr<nsIOutputStream>& out)
   : out(out)
   , result_(NS_OK)
   , amountUsed(0)
@@ -57,7 +57,7 @@ ZeroCopyNSIOutputStream::writeBuffer()
 // ZeroCopyOutputStream Interface
 
 bool
-ZeroCopyNSIOutputStream::Next(void **data, int *size)
+ZeroCopyNSIOutputStream::Next(void** data, int* size)
 {
   MOZ_ASSERT(data != nullptr);
   MOZ_ASSERT(size != nullptr);

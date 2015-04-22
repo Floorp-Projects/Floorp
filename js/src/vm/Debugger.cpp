@@ -7882,17 +7882,17 @@ JS::dbg::onPromiseSettled(JSContext* cx, HandleObject promise)
 }
 
 JS_PUBLIC_API(bool)
-JS::dbg::IsDebugger(const JSObject &obj)
+JS::dbg::IsDebugger(const JSObject& obj)
 {
     return js::GetObjectClass(&obj) == &Debugger::jsclass &&
            js::Debugger::fromJSObject(&obj) != nullptr;
 }
 
 JS_PUBLIC_API(bool)
-JS::dbg::GetDebuggeeGlobals(JSContext *cx, const JSObject &dbgObj, AutoObjectVector &vector)
+JS::dbg::GetDebuggeeGlobals(JSContext* cx, const JSObject& dbgObj, AutoObjectVector& vector)
 {
     MOZ_ASSERT(IsDebugger(dbgObj));
-    js::Debugger *dbg = js::Debugger::fromJSObject(&dbgObj);
+    js::Debugger* dbg = js::Debugger::fromJSObject(&dbgObj);
 
     if (!vector.reserve(vector.length() + dbg->debuggees.count())) {
         JS_ReportOutOfMemory(cx);
