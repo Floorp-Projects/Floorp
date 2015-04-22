@@ -92,7 +92,7 @@ nsDOMIterator::~nsDOMIterator()
 }
 
 void
-nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
+nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
                           nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const
 {
   // Iterate through dom and build list
@@ -106,7 +106,7 @@ nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
 }
 
 void
-nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
+nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
                           nsCOMArray<nsIDOMNode>& arrayOfNodes) const
 {
   // iterate through dom and build list
