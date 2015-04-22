@@ -12,6 +12,7 @@
 
 #include "prtypes.h"
 #include <stdlib.h>
+#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 
@@ -83,7 +84,8 @@ XPT_SizeOfArena(XPTArena *arena, MozMallocSizeOf mallocSizeOf);
 
 #ifdef DEBUG
 XPT_PUBLIC_API(void)
-XPT_AssertFailed(const char *s, const char *file, uint32_t lineno);
+XPT_AssertFailed(const char *s, const char *file, uint32_t lineno)
+  MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS;
 #define XPT_ASSERT(_expr) \
     ((_expr)?((void)0):XPT_AssertFailed(# _expr, __FILE__, __LINE__))
 #else
