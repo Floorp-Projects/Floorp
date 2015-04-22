@@ -161,7 +161,7 @@ public:
   // true, the line should not be broken inside, which means inlines act
   // as if nowrap is set, <br> is suppressed, and blocks are inlinized.
   // This bit is propogated to all children of line partitipants. It is
-  // currenlty used by ruby to make its content frames unbreakable.
+  // currently used by ruby to make its content frames unbreakable.
   bool ShouldSuppressLineBreak() const
     { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
 
