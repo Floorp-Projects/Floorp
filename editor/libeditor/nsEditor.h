@@ -7,6 +7,7 @@
 #define __editor_h__
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
+#include "mozilla/dom/OwningNonNull.h"  // for OwningNonNull
 #include "mozilla/dom/Text.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMArray.h"                 // for nsCOMArray
@@ -830,7 +831,8 @@ protected:
   nsRefPtr<mozilla::TextComposition> mComposition;
 
   // various listeners
-  nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
+  // Listens to all low level actions on the doc
+  nsTArray<mozilla::dom::OwningNonNull<nsIEditActionListener>> mActionListeners;
   nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change
   nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
