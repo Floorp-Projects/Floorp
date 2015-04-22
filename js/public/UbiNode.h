@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jspubtd.h"
 
@@ -92,7 +93,7 @@
 // represented by a "rope", a structure that points to the two original
 // strings.
 //
-
+//
 // We intend to use ubi::Node to write tools that report memory usage, so it's
 // important that ubi::Node accurately portray how much memory nodes consume.
 // Thus, for example, when data that apparently belongs to multiple nodes is
@@ -141,10 +142,22 @@
 namespace JS {
 namespace ubi {
 
-using mozilla::Maybe;
-
 class Edge;
 class EdgeRange;
+
+}
+}
+
+namespace mozilla {
+template<>
+class DefaultDelete<JS::ubi::EdgeRange> : public JS::DeletePolicy<JS::ubi::EdgeRange> { };
+}
+
+namespace JS {
+namespace ubi {
+
+using mozilla::Maybe;
+using mozilla::UniquePtr;
 
 // The base class implemented by each ubi::Node referent type. Subclasses must
 // not add data members to this class.
@@ -188,13 +201,11 @@ class Base {
     virtual size_t size(mozilla::MallocSizeOf mallocSizeof) const { return 0; }
 
     // Return an EdgeRange that initially contains all the referent's outgoing
-    // edges. The EdgeRange should be freed with 'js_delete'. (You could use
-    // ScopedDJSeletePtr<EdgeRange> to manage it.) On OOM, report an exception
-    // on |cx| and return nullptr.
+    // edges. The caller takes ownership of the EdgeRange.
     //
     // If wantNames is true, compute names for edges. Doing so can be expensive
     // in time and memory.
-    virtual EdgeRange* edges(JSContext* cx, bool wantNames) const = 0;
+    virtual UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const = 0;
 
     // Return the Zone to which this node's referent belongs, or nullptr if the
     // referent is not of a type allocated in SpiderMonkey Zones.
@@ -341,7 +352,7 @@ class Node {
         return base()->size(mallocSizeof);
     }
 
-    EdgeRange* edges(JSContext* cx, bool wantNames = true) const {
+    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames = true) const {
         return base()->edges(cx, wantNames);
     }
 
@@ -521,7 +532,7 @@ class MOZ_STACK_CLASS RootList {
 
 template<>
 struct Concrete<RootList> : public Base {
-    EdgeRange* edges(JSContext* cx, bool wantNames) const override;
+    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
     const char16_t* typeName() const override { return concreteTypeName; }
 
   protected:
@@ -538,7 +549,7 @@ struct Concrete<RootList> : public Base {
 template<typename Referent>
 class TracerConcrete : public Base {
     const char16_t* typeName() const override { return concreteTypeName; }
-    EdgeRange* edges(JSContext*, bool wantNames) const override;
+    UniquePtr<EdgeRange> edges(JSContext*, bool wantNames) const override;
     JS::Zone* zone() const override;
 
   protected:
@@ -591,7 +602,7 @@ template<>
 class Concrete<void> : public Base {
     const char16_t* typeName() const override;
     size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
-    EdgeRange* edges(JSContext* cx, bool wantNames) const override;
+    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
     JS::Zone* zone() const override;
     JSCompartment* compartment() const override;
 
