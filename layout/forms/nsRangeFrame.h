@@ -14,7 +14,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 
-class nsBaseContentList;
 class nsDisplayRangeFocusRing;
 
 class nsRangeFrame : public nsContainerFrame,

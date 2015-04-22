@@ -27,7 +27,6 @@ class nsPresContext;
 class nsIPresShell;
 class nsIContent;
 class nsIAtom;
-class nsIScrollFrameInternal;
 class nsPresState;
 class nsIScrollPositionListener;
 struct ScrollReflowState;

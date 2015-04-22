@@ -16,7 +16,6 @@
 #include "nsDataHashtable.h"
 #include "rdfITripleVisitor.h"
 
-class nsString;
 class nsIOutputStream;
 class nsIRDFContainerUtils;
 

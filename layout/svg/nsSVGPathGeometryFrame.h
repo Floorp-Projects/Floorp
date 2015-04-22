@@ -30,7 +30,6 @@ class nsStyleContext;
 class nsSVGMarkerFrame;
 class nsSVGMarkerProperty;
 
-struct nsPoint;
 struct nsRect;
 
 typedef nsFrame nsSVGPathGeometryFrameBase;

@@ -24,10 +24,8 @@
 #include "ScrollbarStyles.h"
 
 struct nsFrameItems;
-struct nsAbsoluteItems;
 class nsStyleContext;
 struct nsStyleDisplay;
-class nsIDOMHTMLSelectElement;
 struct nsGenConInitializer;
 
 class nsContainerFrame;
@@ -38,7 +36,6 @@ struct PendingBinding;
 class nsGenericDOMDataNode;
 
 class nsFrameConstructorState;
-class nsFrameConstructorSaveState;
 
 namespace mozilla {
 

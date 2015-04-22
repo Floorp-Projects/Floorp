@@ -11,7 +11,6 @@ class nsIDocument;
 class nsStyleSet;
 class nsIPresShell;
 class nsPresContext;
-class nsIWidget;
 class nsViewManager;
 
 // {c6f255cf-cadd-4382-b57f-cd2a9874169b}

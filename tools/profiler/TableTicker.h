@@ -45,8 +45,6 @@ extern mozilla::TimeStamp sLastTracerEvent;
 extern int sFrameNumber;
 extern int sLastFrameNumber;
 
-class BreakpadSampler;
-
 class TableTicker: public Sampler {
  public:
   TableTicker(double aInterval, int aEntrySize,

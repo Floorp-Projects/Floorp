@@ -12,7 +12,6 @@
 #include "nsWrapperCache.h"
 #include "nsStringFwd.h"
 
-class nsIDOMCSSValue;
 class nsROCSSPrimitiveValue;
 namespace mozilla {
 class ErrorResult;

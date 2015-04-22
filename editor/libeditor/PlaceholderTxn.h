@@ -15,8 +15,6 @@
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
 
-class nsHTMLEditor;
-
 namespace mozilla {
 namespace dom {
 class IMETextTxn;

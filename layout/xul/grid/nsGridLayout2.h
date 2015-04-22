@@ -13,12 +13,10 @@
 #include "nsCoord.h"
 #include "nsGrid.h"
 
-class nsIPresContext;
 class nsGridRowGroupLayout;
 class nsGridRowLayout;
 class nsGridRow;
 class nsBoxLayoutState;
-class nsGridCell;
 
 /**
  * The nsBoxLayout implementation for a grid.

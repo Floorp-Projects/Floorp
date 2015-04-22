@@ -11,8 +11,6 @@
 
 class nsIChannel;
 class nsIContentViewer;
-class nsIFile;
-class nsIInputStream;
 class nsILoadGroup;
 class nsIStreamListener;
 

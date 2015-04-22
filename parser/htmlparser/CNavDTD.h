@@ -11,9 +11,6 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 
-// This class is no longer useful.
-class nsIHTMLContentSink;
-
 #ifdef _MSC_VER
 #pragma warning( disable : 4275 )
 #endif

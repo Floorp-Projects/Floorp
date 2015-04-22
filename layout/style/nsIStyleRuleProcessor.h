@@ -17,7 +17,6 @@
 #include "nsChangeHint.h"
 
 struct RuleProcessorData;
-struct ElementDependentRuleProcessorData;
 struct ElementRuleProcessorData;
 struct PseudoElementRuleProcessorData;
 struct AnonBoxRuleProcessorData;
