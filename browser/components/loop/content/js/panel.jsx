@@ -215,6 +215,8 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var ToSView = React.createClass({
+    mixins: [sharedMixins.WindowCloseMixin],
+
     getInitialState: function() {
       var getPref = navigator.mozLoop.getLoopPref.bind(navigator.mozLoop);
 
@@ -223,6 +225,16 @@ loop.panel = (function(_, mozL10n) {
         gettingStartedSeen: getPref("gettingStarted.seen"),
         showPartnerLogo: getPref("showPartnerLogo")
       };
+    },
+
+    handleLinkClick: function(event) {
+      if (!event.target || !event.target.href) {
+        return;
+      }
+
+      event.preventDefault();
+      navigator.mozLoop.openURL(event.target.href);
+      this.closeWindow();
     },
 
     renderPartnerLogo: function() {
@@ -262,7 +274,8 @@ loop.panel = (function(_, mozL10n) {
           <div id="powered-by-wrapper">
             {this.renderPartnerLogo()}
             <p className="terms-service"
-               dangerouslySetInnerHTML={{__html: tosHTML}}></p>
+               dangerouslySetInnerHTML={{__html: tosHTML}}
+               onClick={this.handleLinkClick}></p>
            </div>
         );
       } else {
@@ -305,6 +318,10 @@ loop.panel = (function(_, mozL10n) {
    * Panel settings (gear) menu.
    */
   var SettingsDropdown = React.createClass({
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
     mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.WindowCloseMixin],
 
     handleClickSettingsEntry: function() {
@@ -312,30 +329,31 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleClickAccountEntry: function() {
-      navigator.mozLoop.openFxASettings();
+      this.props.mozLoop.openFxASettings();
+      this.closeWindow();
     },
 
     handleClickAuthEntry: function() {
       if (this._isSignedIn()) {
-        navigator.mozLoop.logOutFromFxA();
+        this.props.mozLoop.logOutFromFxA();
       } else {
-        navigator.mozLoop.logInToFxA();
+        this.props.mozLoop.logInToFxA();
       }
     },
 
     handleHelpEntry: function(event) {
       event.preventDefault();
-      var helloSupportUrl = navigator.mozLoop.getLoopPref('support_url');
-      window.open(helloSupportUrl);
-      window.close();
+      var helloSupportUrl = this.props.mozLoop.getLoopPref("support_url");
+      this.props.mozLoop.openURL(helloSupportUrl);
+      this.closeWindow();
     },
 
     _isSignedIn: function() {
-      return !!navigator.mozLoop.userProfile;
+      return !!this.props.mozLoop.userProfile;
     },
 
     openGettingStartedTour: function() {
-      navigator.mozLoop.openGettingStartedTour("settings-menu");
+      this.props.mozLoop.openGettingStartedTour("settings-menu");
       this.closeWindow();
     },
 
@@ -356,7 +374,7 @@ loop.panel = (function(_, mozL10n) {
             <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_account")}
                                    onClick={this.handleClickAccountEntry}
                                    icon="account"
-                                   displayed={this._isSignedIn() && navigator.mozLoop.fxAEnabled} />
+                                   displayed={this._isSignedIn() && this.props.mozLoop.fxAEnabled} />
             <SettingsDropdownEntry icon="tour"
                                    label={mozL10n.get("tour_label")}
                                    onClick={this.openGettingStartedTour} />
@@ -364,7 +382,7 @@ loop.panel = (function(_, mozL10n) {
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin")}
                                    onClick={this.handleClickAuthEntry}
-                                   displayed={navigator.mozLoop.fxAEnabled}
+                                   displayed={this.props.mozLoop.fxAEnabled}
                                    icon={this._isSignedIn() ? "signout" : "signin"} />
             <SettingsDropdownEntry label={mozL10n.get("help_label")}
                                    onClick={this.handleHelpEntry}
@@ -413,13 +431,43 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  var RoomEntryContextItem = React.createClass({
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired,
+      roomUrls: React.PropTypes.object
+    },
+
+    handleClick: function(event) {
+      event.stopPropagation();
+      event.preventDefault();
+      this.props.mozLoop.openURL(event.currentTarget.href);
+    },
+
+    render: function() {
+      var roomUrl = this.props.roomUrls && this.props.roomUrls[0];
+      if (!roomUrl) {
+        return null;
+      }
+
+      return (
+        <div className="room-entry-context-item">
+          <a href={roomUrl.location} onClick={this.handleClick}>
+            <img title={roomUrl.description}
+                 src={roomUrl.thumbnail} />
+          </a>
+        </div>
+      );
+    }
+  });
+
   /**
    * Room list entry.
    */
   var RoomEntry = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      room:       React.PropTypes.instanceOf(loop.store.Room).isRequired
+      mozLoop: React.PropTypes.object.isRequired,
+      room: React.PropTypes.instanceOf(loop.store.Room).isRequired
     },
 
     mixins: [loop.shared.mixins.WindowCloseMixin],
@@ -453,7 +501,7 @@ loop.panel = (function(_, mozL10n) {
     handleDeleteButtonClick: function(event) {
       event.stopPropagation();
       event.preventDefault();
-      navigator.mozLoop.confirm({
+      this.props.mozLoop.confirm({
         message: mozL10n.get("rooms_list_deleteConfirmation_label"),
         okButton: null,
         cancelButton: null
@@ -503,6 +551,8 @@ loop.panel = (function(_, mozL10n) {
               title={mozL10n.get("rooms_list_delete_tooltip")}
               onClick={this.handleDeleteButtonClick} />
           </h2>
+          <RoomEntryContextItem mozLoop={this.props.mozLoop}
+                                roomUrls={this.props.room.decryptedContext.urls} />
         </div>
       );
     }
@@ -574,6 +624,7 @@ loop.panel = (function(_, mozL10n) {
                 <RoomEntry
                   key={room.roomToken}
                   dispatcher={this.props.dispatcher}
+                  mozLoop={this.props.mozLoop}
                   room={room}
                 />
               );
@@ -689,7 +740,7 @@ loop.panel = (function(_, mozL10n) {
       showTabButtons: React.PropTypes.bool,
       selectedTab: React.PropTypes.string,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object,
+      mozLoop: React.PropTypes.object.isRequired,
       roomStore:
         React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
@@ -848,7 +899,7 @@ loop.panel = (function(_, mozL10n) {
             <div className="signin-details">
               <AuthLink />
               <div className="footer-signin-separator" />
-              <SettingsDropdown />
+              <SettingsDropdown mozLoop={this.props.mozLoop}/>
             </div>
           </div>
         </div>

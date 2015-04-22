@@ -478,17 +478,10 @@ pref("media.video_stats.enabled", true);
 pref("media.audio_data.enabled", false);
 
 // Whether to use async panning and zooming
-#ifdef XP_WIN
-pref("layers.async-pan-zoom.enabled", true);
-
-// Workaround a bug where inactive scrollframes test this pref directly.
-pref("layout.event-regions.enabled", true);
-#else
 pref("layers.async-pan-zoom.enabled", false);
 
 // Whether to enable event region building during painting
 pref("layout.event-regions.enabled", false);
-#endif
 
 // APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
