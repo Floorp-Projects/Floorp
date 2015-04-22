@@ -275,7 +275,7 @@ protected:
   nsresult GetPromotedRanges(mozilla::dom::Selection* aSelection, 
                              nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
                              EditAction inOperationType);
-  nsresult PromoteRange(nsRange* inRange, EditAction inOperationType);
+  void PromoteRange(nsRange& aRange, EditAction inOperationType);
   enum class TouchContent { no, yes };
   nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRanges,
                                 nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
