@@ -99,6 +99,14 @@ DeserializedNode::DeserializedNode(NodeId id,
   , owner(&owner)
 { }
 
+DeserializedNode::DeserializedNode(NodeId id, const char16_t *typeName, uint64_t size)
+  : id(id)
+  , typeName(typeName)
+  , size(size)
+  , edges()
+  , owner(nullptr)
+{ }
+
 DeserializedNode &
 DeserializedNode::getEdgeReferent(const DeserializedEdge &edge)
 {
