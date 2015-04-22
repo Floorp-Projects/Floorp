@@ -3001,7 +3001,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (aBuilder->IsPaintingToWindow() &&
         !mShouldBuildScrollableLayer &&
         shouldBuildLayer &&
-        gfxPrefs::LayoutEventRegionsEnabled())
+        aBuilder->IsBuildingLayerEventRegions())
     {
       inactiveRegionItem = new (aBuilder) nsDisplayLayerEventRegions(aBuilder, mScrolledFrame);
       inactiveRegionItem->AddInactiveScrollPort(mScrollPort + aBuilder->ToReferenceFrame(mOuter));
