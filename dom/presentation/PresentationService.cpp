@@ -432,9 +432,12 @@ PresentationService::SendSessionMessage(const nsAString& aSessionId,
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  // TODO: Send input stream to the session.
+  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  return NS_OK;
+  return info->Send(aStream);
 }
 
 NS_IMETHODIMP
@@ -443,9 +446,12 @@ PresentationService::Terminate(const nsAString& aSessionId)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  // TODO: Terminate the session.
+  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  return NS_OK;
+  return info->Close(NS_OK);
 }
 
 NS_IMETHODIMP
@@ -505,6 +511,8 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId)
 
   nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (info) {
+    NS_WARN_IF(NS_FAILED(info->Close(NS_OK)));
+    RemoveSessionInfo(aSessionId);
     return info->SetListener(nullptr);
   }
   return NS_OK;
