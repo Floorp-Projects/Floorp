@@ -326,6 +326,24 @@ Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut)
   return NS_OK;
 }
 #endif // ANDROID_VERSION >= 19
+
+#if ANDROID_VERSION >= 21
+nsresult
+Convert(const BluetoothTransport& aIn, btgatt_transport_t& aOut)
+{
+  static const btgatt_transport_t sTransport[] = {
+    CONVERT(TRANSPORT_AUTO, GATT_TRANSPORT_AUTO),
+    CONVERT(TRANSPORT_BREDR, GATT_TRANSPORT_BREDR),
+    CONVERT(TRANSPORT_LE, GATT_TRANSPORT_LE)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sTransport)) {
+    aOut = static_cast<btgatt_transport_t>(0); // silence compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sTransport[aIn];
+  return NS_OK;
+}
+#endif
 #else
 // TODO: Support GATT
 #endif
