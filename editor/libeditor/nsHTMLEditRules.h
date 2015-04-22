@@ -312,7 +312,7 @@ protected:
   nsresult CacheInlineStyles(nsIDOMNode *aNode);
   nsresult ReapplyCachedStyles();
   void ClearCachedStyles();
-  nsresult AdjustSpecialBreaks(bool aSafeToAskFrames = false);
+  void AdjustSpecialBreaks();
   nsresult AdjustWhitespace(mozilla::dom::Selection* aSelection);
   nsresult PinSelectionToNewBlock(mozilla::dom::Selection* aSelection);
   nsresult CheckInterlinePosition(mozilla::dom::Selection* aSelection);
