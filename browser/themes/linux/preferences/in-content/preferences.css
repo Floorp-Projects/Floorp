@@ -4,10 +4,6 @@
 
 %include ../../../shared/incontentprefs/preferences.inc.css
 
-spinbuttons {
-  -moz-appearance: none;
-}
-
 .treecol-sortdirection {
   /* override the Linux only toolkit rule */
   -moz-appearance: none;

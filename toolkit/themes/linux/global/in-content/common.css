@@ -88,3 +88,7 @@ xul|*.text-link:-moz-focusring,
 xul|*.inline-link:-moz-focusring {
   border: 1px dotted -moz-DialogText;
 }
+
+xul|spinbuttons {
+  -moz-appearance: none;
+}
