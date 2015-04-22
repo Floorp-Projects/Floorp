@@ -321,7 +321,7 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
 
   void* data;
   PRFuncPtr fnptr;
-  RootedString nameStr(cx, args[0].toString());
+  JSString* nameStr = args[0].toString();
   AutoCString symbol;
   if (isFunction) {
     // Build the symbol, with mangling if necessary.
@@ -351,9 +351,6 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   RootedObject result(cx, CData::Create(cx, typeObj, obj, data, isFunction));
   if (!result)
     return false;
-
-  if (isFunction)
-    JS_SetReservedSlot(result, SLOT_FUNNAME, StringValue(nameStr));
 
   args.rval().setObject(*result);
 
