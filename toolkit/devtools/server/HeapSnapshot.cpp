@@ -46,18 +46,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HeapSnapshot)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* virtual */ JSObject *
+/* virtual */ JSObject*
 HeapSnapshot::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return dom::HeapSnapshotBinding::Wrap(aCx, this, aGivenProto);
 }
 
 /* static */ already_AddRefed<HeapSnapshot>
-HeapSnapshot::Create(JSContext *cx,
-                     dom::GlobalObject &global,
-                     const uint8_t *buffer,
+HeapSnapshot::Create(JSContext* cx,
+                     dom::GlobalObject& global,
+                     const uint8_t* buffer,
                      uint32_t size,
-                     ErrorResult &rv)
+                     ErrorResult& rv)
 {
   nsRefPtr<HeapSnapshot> snapshot = new HeapSnapshot(cx, global.GetAsSupports());
   if (!snapshot->init(buffer, size)) {
@@ -69,7 +69,7 @@ HeapSnapshot::Create(JSContext *cx,
 
 template<typename MessageType>
 static bool
-parseMessage(ZeroCopyInputStream &stream, MessageType &message)
+parseMessage(ZeroCopyInputStream& stream, MessageType& message)
 {
   // We need to create a new `CodedInputStream` for each message so that the
   // 64MB limit is applied per-message rather than to the whole stream.
@@ -96,7 +96,7 @@ parseMessage(ZeroCopyInputStream &stream, MessageType &message)
 }
 
 bool
-HeapSnapshot::saveNode(const protobuf::Node &node)
+HeapSnapshot::saveNode(const protobuf::Node& node)
 {
   UniquePtr<DeserializedNode> dn(DeserializedNode::Create(node, *this));
   if (!dn)
@@ -105,14 +105,14 @@ HeapSnapshot::saveNode(const protobuf::Node &node)
 }
 
 static inline bool
-StreamHasData(GzipInputStream &stream)
+StreamHasData(GzipInputStream& stream)
 {
   // Test for the end of the stream. The protobuf library gives no way to tell
   // the difference between an underlying read error and the stream being
   // done. All we can do is attempt to read data and extrapolate guestimations
   // from the result of that operation.
 
-  const void *buf;
+  const void* buf;
   int size;
   bool more = stream.Next(&buf, &size);
   if (!more)
@@ -128,7 +128,7 @@ StreamHasData(GzipInputStream &stream)
 }
 
 bool
-HeapSnapshot::init(const uint8_t *buffer, uint32_t size)
+HeapSnapshot::init(const uint8_t* buffer, uint32_t size)
 {
   if (!nodes.init() || !strings.init())
     return false;

@@ -26,10 +26,10 @@ using namespace testing;
 // GTest fixture class that all of our tests derive from.
 struct DevTools : public ::testing::Test {
   bool                       _initialized;
-  JSRuntime                  *rt;
-  JSContext                  *cx;
-  JSCompartment              *compartment;
-  JS::Zone                   *zone;
+  JSRuntime*                 rt;
+  JSContext*                 cx;
+  JSCompartment*             compartment;
+  JS::Zone*                  zone;
   JS::PersistentRootedObject global;
 
   DevTools()
@@ -65,7 +65,7 @@ struct DevTools : public ::testing::Test {
     return CycleCollectedJSRuntime::Get()->Runtime();
   }
 
-  static void setNativeStackQuota(JSRuntime *rt)
+  static void setNativeStackQuota(JSRuntime* rt)
   {
     const size_t MAX_STACK_SIZE =
       /* Assume we can't use more than 5e5 bytes of C stack by default. */
@@ -83,18 +83,18 @@ struct DevTools : public ::testing::Test {
     JS_SetNativeStackQuota(rt, MAX_STACK_SIZE);
   }
 
-  static void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
+  static void reportError(JSContext* cx, const char* message, JSErrorReport* report) {
     fprintf(stderr, "%s:%u:%s\n",
             report->filename ? report->filename : "<no filename>",
             (unsigned int) report->lineno,
             message);
   }
 
-  JSContext *createContext() {
+  JSContext* createContext() {
     return JS_NewContext(rt, 8192);
   }
 
-  static const JSClass *getGlobalClass() {
+  static const JSClass* getGlobalClass() {
     static const JSClass globalClass = {
       "global", JSCLASS_GLOBAL_FLAGS,
       nullptr, nullptr, nullptr, nullptr,
@@ -105,7 +105,7 @@ struct DevTools : public ::testing::Test {
     return &globalClass;
   }
 
-  JSObject *createGlobal()
+  JSObject* createGlobal()
   {
     /* Create the global object. */
     JS::RootedObject newGlobal(cx);
@@ -151,7 +151,6 @@ struct DevTools : public ::testing::Test {
 
 
 // Fake JS::ubi::Node implementation
-
 class MOZ_STACK_CLASS FakeNode
 {
 public:
@@ -212,8 +211,8 @@ const char16_t Concrete<FakeNode>::concreteTypeName[] = MOZ_UTF16("FakeNode");
 } // namespace ubi
 } // namespace JS
 
-void AddEdge(FakeNode &node, FakeNode &referent, const char16_t *edgeName = nullptr) {
-  char16_t *ownedEdgeName = nullptr;
+void AddEdge(FakeNode& node, FakeNode& referent, const char16_t* edgeName = nullptr) {
+  char16_t* ownedEdgeName = nullptr;
   if (edgeName) {
     ownedEdgeName = NS_strdup(edgeName);
     ASSERT_NE(ownedEdgeName, nullptr);
@@ -253,7 +252,7 @@ MATCHER_P3(Edge, cx, n, matcher, "") {
   int i = 0;
   for ( ; !edges->empty(); edges->popFront()) {
     if (i == n) {
-      return Matcher<const JS::ubi::Edge &>(matcher)
+      return Matcher<const JS::ubi::Edge&>(matcher)
         .MatchAndExplain(edges->front(), result_listener);
     }
 
@@ -276,11 +275,11 @@ class MockWriter : public CoreDumpWriter
 {
 public:
   virtual ~MockWriter() override { }
-  MOCK_METHOD2(writeNode, bool(const JS::ubi::Node &, CoreDumpWriter::EdgePolicy));
+  MOCK_METHOD2(writeNode, bool(const JS::ubi::Node&, CoreDumpWriter::EdgePolicy));
   MOCK_METHOD1(writeMetadata, bool(uint64_t));
 };
 
-void ExpectWriteNode(MockWriter &writer, FakeNode &node) {
+void ExpectWriteNode(MockWriter& writer, FakeNode& node) {
   EXPECT_CALL(writer, writeNode(Eq(JS::ubi::Node(&node)), _))
     .Times(1)
     .WillOnce(Return(true));
