@@ -16,7 +16,6 @@ include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
 include protocol PCrashReporter;
 include protocol PDocAccessible;
-include protocol PPSMContentDownloader;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
 include protocol PFileDescriptorSet;
@@ -389,7 +388,6 @@ prio(normal upto urgent) sync protocol PContent
     manages PDocAccessible;
     manages PDeviceStorageRequest;
     manages PFileSystemRequest;
-    manages PPSMContentDownloader;
     manages PExternalHelperApp;
     manages PFileDescriptorSet;
     manages PFMRadio;
@@ -757,8 +755,6 @@ parent:
                           bool inPrivateBrowsing);
 
     CloseAlert(nsString name, Principal principal);
-
-    PPSMContentDownloader(uint32_t aCertType);
 
     PExternalHelperApp(OptionalURIParams uri,
                        nsCString aMimeContentType,

@@ -156,7 +156,6 @@
 #include "prio.h"
 #include "private/pprio.h"
 #include "ContentProcessManager.h"
-#include "mozilla/psm/PSMContentListener.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -250,7 +249,6 @@ using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::net;
 using namespace mozilla::jsipc;
-using namespace mozilla::psm;
 using namespace mozilla::widget;
 
 #ifdef ENABLE_TESTS
@@ -3664,22 +3662,6 @@ bool
 ContentParent::DeallocPScreenManagerParent(PScreenManagerParent* aActor)
 {
     delete aActor;
-    return true;
-}
-
-PPSMContentDownloaderParent*
-ContentParent::AllocPPSMContentDownloaderParent(const uint32_t& aCertType)
-{
-    nsRefPtr<PSMContentDownloaderParent> downloader =
-        new PSMContentDownloaderParent(aCertType);
-    return downloader.forget().take();
-}
-
-bool
-ContentParent::DeallocPPSMContentDownloaderParent(PPSMContentDownloaderParent* aListener)
-{
-    auto* listener = static_cast<PSMContentDownloaderParent*>(aListener);
-    nsRefPtr<PSMContentDownloaderParent> downloader = dont_AddRef(listener);
     return true;
 }
 
