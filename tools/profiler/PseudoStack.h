@@ -75,8 +75,6 @@ class ProfilerMarkerPayload;
 template<typename T>
 class ProfilerLinkedList;
 class JSStreamWriter;
-class JSCustomArray;
-class ThreadProfile;
 class ProfilerMarker {
   friend class ProfilerLinkedList<ProfilerMarker>;
 public:

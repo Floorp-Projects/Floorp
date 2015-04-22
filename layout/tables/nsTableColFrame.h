@@ -11,8 +11,6 @@
 #include "nsContainerFrame.h"
 #include "nsTArray.h"
 
-class nsTableCellFrame;
-
 enum nsTableColType {
   eColContent            = 0, // there is real col content associated
   eColAnonymousCol       = 1, // the result of a span on a col

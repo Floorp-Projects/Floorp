@@ -15,7 +15,6 @@
 #include "nsStyleContext.h"
 #include "nsTArrayForwardDeclare.h"
 
-class nsBaseContentList;
 class nsIContent;
 class nsIFrame;
 

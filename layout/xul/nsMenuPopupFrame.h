@@ -125,7 +125,6 @@ enum FlipType {
 
 nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsViewManager;
 class nsView;
 class nsMenuPopupFrame;
 

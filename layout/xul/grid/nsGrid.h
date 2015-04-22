@@ -11,8 +11,6 @@
 #include "nsIGridPart.h"
 #include "nsCOMPtr.h"
 
-class nsGridRowGroupLayout;
-class nsGridRowLayout;
 class nsBoxLayoutState;
 class nsGridCell;
 

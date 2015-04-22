@@ -29,7 +29,6 @@
 
 class CSSRuleListImpl;
 class nsCSSRuleProcessor;
-class nsICSSRuleList;
 class nsIPrincipal;
 class nsIURI;
 class nsMediaList;

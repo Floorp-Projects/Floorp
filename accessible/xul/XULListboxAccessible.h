@@ -14,8 +14,6 @@
 #include "XULMenuAccessible.h"
 #include "XULSelectControlAccessible.h"
 
-class nsIWeakReference;
-
 namespace mozilla {
 namespace a11y {
 

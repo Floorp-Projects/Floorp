@@ -8,8 +8,6 @@
 
 #include "BaseAccessibles.h"
 
-class nsGenericHTMLElement;
-
 namespace mozilla {
 namespace a11y {
 

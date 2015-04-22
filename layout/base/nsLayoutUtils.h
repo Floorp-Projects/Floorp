@@ -34,7 +34,6 @@
 #include <limits>
 #include <algorithm>
 
-class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
 class nsIAtom;
@@ -80,7 +79,6 @@ struct RectCornerRadii;
 } // namespace gfx
 namespace layers {
 class Layer;
-class ClientLayerManager;
 }
 }
 

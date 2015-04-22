@@ -20,7 +20,6 @@
 #include "nsRect.h"
 
 class nsIFrame;
-class nsIDocShell;
 class nsIPresShell;
 
 namespace mozilla {

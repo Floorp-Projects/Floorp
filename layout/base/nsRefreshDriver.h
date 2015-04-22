@@ -28,7 +28,6 @@ class nsPresContext;
 class nsIPresShell;
 class nsIDocument;
 class imgIRequest;
-class nsIRunnable;
 
 namespace mozilla {
 class RefreshDriverTimer;

@@ -21,7 +21,6 @@
 class nsTableCellFrame;
 class nsTableCellMap;
 class nsTableColFrame;
-class nsColGroupFrame;
 class nsTableRowGroupFrame;
 class nsTableRowFrame;
 class nsTableColGroupFrame;
@@ -29,7 +28,6 @@ class nsITableLayoutStrategy;
 class nsStyleContext;
 
 struct nsTableReflowState;
-struct nsStylePosition;
 struct BCPropertyData;
 
 static inline bool IS_TABLE_CELL(nsIAtom* frameType) {

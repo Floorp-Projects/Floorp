@@ -14,7 +14,6 @@ class gfxMatrix;
 class nsIFrame;
 class SVGBBox;
 
-struct nsPoint;
 struct nsRect;
 
 namespace mozilla {

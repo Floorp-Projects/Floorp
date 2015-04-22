@@ -20,7 +20,6 @@ class nsIStyleRule;
 struct nsCSSValueList;
 class nsCSSPropertySet;
 class nsCSSValue;
-struct nsCSSRect;
 
 class nsStyleCoord;
 struct nsCSSValuePairList;

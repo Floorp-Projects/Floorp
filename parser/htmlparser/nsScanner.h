@@ -25,8 +25,6 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsScannerString.h"
 
-class nsParser;
-
 class nsReadEndCondition {
 public:
   const char16_t *mChars;
