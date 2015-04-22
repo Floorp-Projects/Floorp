@@ -191,6 +191,12 @@ IsSpaceOrBOM2(char16_t ch)
 inline char16_t
 ToUpperCase(char16_t ch)
 {
+    if (ch < 128) {
+        if (ch >= 'a' && ch <= 'z')
+            return ch - ('a' - 'A');
+        return ch;
+    }
+
     const CharacterInfo& info = CharInfo(ch);
 
     return uint16_t(ch) + info.upperCase;
@@ -199,9 +205,33 @@ ToUpperCase(char16_t ch)
 inline char16_t
 ToLowerCase(char16_t ch)
 {
+    if (ch < 128) {
+        if (ch >= 'A' && ch <= 'Z')
+            return ch + ('a' - 'A');
+        return ch;
+    }
+
     const CharacterInfo& info = CharInfo(ch);
 
     return uint16_t(ch) + info.lowerCase;
+}
+
+// Returns true iff ToUpperCase(ch) != ch.
+inline bool
+CanUpperCase(char16_t ch)
+{
+    if (ch < 128)
+        return ch >= 'a' && ch <= 'z';
+    return CharInfo(ch).upperCase != 0;
+}
+
+// Returns true iff ToLowerCase(ch) != ch.
+inline bool
+CanLowerCase(char16_t ch)
+{
+    if (ch < 128)
+        return ch >= 'A' && ch <= 'Z';
+    return CharInfo(ch).lowerCase != 0;
 }
 
 } /* namespace unicode */
