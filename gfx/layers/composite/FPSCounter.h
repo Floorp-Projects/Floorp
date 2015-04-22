@@ -16,13 +16,9 @@
 #include "prio.h"                       // for NSPR file i/o
 
 namespace mozilla {
-namespace gl {
-class GLContext;
-}
 namespace layers {
 
 class DataTextureSource;
-class ShaderProgramOGL;
 class Compositor;
 
 // Dump the FPS histogram every 10 seconds or kMaxFrameFPS

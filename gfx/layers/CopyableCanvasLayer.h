@@ -21,9 +21,12 @@
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
-namespace layers {
 
-class CanvasClientWebGL;
+namespace gl {
+class SharedSurface;
+}
+
+namespace layers {
 
 /**
  * A shared CanvasLayer implementation that supports copying

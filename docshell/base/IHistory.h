@@ -10,7 +10,6 @@
 #include "nsISupports.h"
 
 class nsIURI;
-class nsString;
 
 namespace mozilla {
 

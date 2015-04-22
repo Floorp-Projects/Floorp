@@ -9,7 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 
-class inIDOMUtils;
 class CancelableTask;
 
 namespace mozilla {

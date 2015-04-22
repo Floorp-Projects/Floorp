@@ -23,21 +23,7 @@
 #include "Units.h"
 
 extern nsIntRect gScreenBounds;
-
-namespace mozilla {
-namespace gl {
-class GLContext;
-}
-namespace layers {
-class LayersManager;
-}
-}
-
 class ANativeWindowBuffer;
-
-namespace android {
-class FramebufferNativeWindow;
-}
 
 namespace widget {
 struct InputContext;

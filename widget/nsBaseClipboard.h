@@ -10,7 +10,6 @@
 #include "nsITransferable.h"
 
 class nsITransferable;
-class nsDataObj;
 class nsIClipboardOwner;
 class nsIWidget;
 

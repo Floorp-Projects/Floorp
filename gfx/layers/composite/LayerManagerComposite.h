@@ -43,11 +43,6 @@ namespace gfx {
 class DrawTarget;
 }
 
-namespace gl {
-class GLContext;
-class TextureImage;
-}
-
 namespace layers {
 
 class CanvasLayerComposite;
@@ -60,7 +55,6 @@ class ImageLayer;
 class ImageLayerComposite;
 class LayerComposite;
 class RefLayerComposite;
-class SurfaceDescriptor;
 class PaintedLayerComposite;
 class TiledLayerComposer;
 class TextRenderer;

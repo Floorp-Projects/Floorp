@@ -19,7 +19,6 @@
 
 namespace mozilla {
 namespace dom {
-struct ConstantSpec;
 struct NativePropertyHooks;
 }
 }

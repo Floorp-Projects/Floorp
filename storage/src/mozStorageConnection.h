@@ -27,7 +27,6 @@
 
 #include "sqlite3.h"
 
-struct PRLock;
 class nsIFile;
 class nsIFileURL;
 class nsIEventTarget;

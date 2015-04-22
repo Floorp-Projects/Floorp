@@ -88,7 +88,6 @@ class nsIURIFixup;
 class nsIURILoader;
 class nsIWebBrowserFind;
 class nsIWidget;
-class ProfilerMarkerTracing;
 
 /* load commands were moved to nsIDocShell.h */
 /* load types were moved to nsDocShellLoadTypes.h */

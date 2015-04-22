@@ -61,7 +61,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 
 class gfxASurface;
 class gfxPattern;
-class nsDragService;
 class nsPluginNativeWindowGtk;
 #if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
 #  define MOZ_HAVE_SHMIMAGE

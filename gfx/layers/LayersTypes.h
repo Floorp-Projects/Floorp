@@ -26,7 +26,6 @@
 #  define MOZ_LAYERS_LOG_IF_SHADOWABLE(layer, _args)         \
   do { if (layer->AsShadowableLayer()) { PR_LOG(LayerManager::GetLog(), PR_LOG_DEBUG, _args); } } while (0)
 #else
-struct PRLogModuleInfo;
 #  define MOZ_LAYERS_LOG(_args)
 #  define MOZ_LAYERS_LOG_IF_SHADOWABLE(layer, _args)
 #endif  // if defined(DEBUG) || defined(PR_LOGGING)

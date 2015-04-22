@@ -57,11 +57,9 @@ namespace mozilla {
 class ComputedTimingFunction;
 class FrameLayerBuilder;
 class StyleAnimationValue;
-class WebGLContext;
 
 namespace gl {
 class GLContext;
-class SharedSurface;
 }
 
 namespace gfx {
@@ -78,7 +76,6 @@ class Animation;
 class AnimationData;
 class AsyncPanZoomController;
 class ClientLayerManager;
-class CommonLayerAttributes;
 class Layer;
 class LayerMetricsWrapper;
 class PaintedLayer;
@@ -95,10 +92,7 @@ class ShadowableLayer;
 class ShadowLayerForwarder;
 class LayerManagerComposite;
 class SpecificLayerAttributes;
-class SurfaceDescriptor;
 class Compositor;
-struct TextureFactoryIdentifier;
-struct EffectMask;
 
 namespace layerscope {
 class LayersPacket;

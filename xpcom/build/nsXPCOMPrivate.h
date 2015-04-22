@@ -14,7 +14,6 @@
 
 class nsStringContainer;
 class nsCStringContainer;
-class nsIComponentLoader;
 class nsPurpleBufferEntry;
 
 /**

@@ -109,9 +109,6 @@
 #endif
 
 namespace mozilla {
-
-struct unused_t;
-
 namespace dom {
 template<class T> class OwningNonNull;
 } // namespace dom
