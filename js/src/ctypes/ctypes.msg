@@ -32,6 +32,3 @@ MSG_DEF(CTYPESMSG_PROP_NONSTRING,3, JSEXN_TYPEERR, "property name {0} of {1} is 
 /* data finalizer */
 MSG_DEF(CTYPESMSG_EMPTY_FIN,     1, JSEXN_TYPEERR, "attempting to convert an empty CDataFinalizer{0}")
 MSG_DEF(CTYPESMSG_FIN_SIZE_ERROR,2, JSEXN_TYPEERR, "expected an object with the same size as argument 1 of {0}, got {1}")
-
-/* native function */
-MSG_DEF(CTYPESMSG_WRONG_ARG_LENGTH,3, JSEXN_TYPEERR, "{0} takes {1} argument{2}")
