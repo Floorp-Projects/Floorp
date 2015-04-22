@@ -23,10 +23,6 @@ EXPORTS.mozilla += [
     'PublicSSL.h',
 ]
 
-EXPORTS.mozilla.psm += [
-    'PSMContentListener.h',
-]
-
 UNIFIED_SOURCES += [
     'CryptoTask.cpp',
     'nsCertOverrideService.cpp',
@@ -76,10 +72,6 @@ UNIFIED_SOURCES += [
 # nsNSSCertificateDB.cpp needs to include nscert.h before everything else.
 SOURCES += [
     'nsNSSCertificateDB.cpp',
-]
-
-IPDL_SOURCES += [
-    'PPSMContentDownloader.ipdl',
 ]
 
 LOCAL_INCLUDES += [

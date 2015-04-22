@@ -232,10 +232,6 @@ public:
                              bool* aSuccess) override;
     virtual bool DeallocPScreenManagerChild(PScreenManagerChild*) override;
 
-    virtual PPSMContentDownloaderChild* AllocPPSMContentDownloaderChild(
-            const uint32_t& aCertType) override;
-    virtual bool DeallocPPSMContentDownloaderChild(PPSMContentDownloaderChild* aDownloader) override;
-
     virtual PExternalHelperAppChild *AllocPExternalHelperAppChild(
             const OptionalURIParams& uri,
             const nsCString& aMimeContentType,
