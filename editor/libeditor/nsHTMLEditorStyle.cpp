@@ -10,6 +10,7 @@
 #include "nsAString.h"
 #include "nsAttrName.h"
 #include "nsAutoPtr.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsCaseTreatment.h"
 #include "nsComponentManagerUtils.h"
@@ -108,20 +109,23 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
 
 
 NS_IMETHODIMP
-nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
+nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
                                 const nsAString& aAttribute,
                                 const nsAString& aValue)
 {
-  NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+  if (!aProperty) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (!mRules) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   ForceCompositionEnd();
 
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (selection->Collapsed()) {
-    // Manipulating text attributes on a collapsed selection only sets state
+    // manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
     mTypeInState->SetProp(aProperty, aAttribute, aValue);
     return NS_OK;
@@ -135,20 +139,21 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
   bool cancel, handled;
   nsTextRulesInfo ruleInfo(EditAction::setTextProperty);
   // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
   nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled) {
-    // Loop through the ranges in the selection
+    // loop thru the ranges in the selection
     uint32_t rangeCount = selection->RangeCount();
-    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; rangeIdx++) {
+    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
-      // Adjust range to include any ancestors whose children are entirely
+      // adjust range to include any ancestors whose children are entirely
       // selected
       res = PromoteInlineRange(range);
       NS_ENSURE_SUCCESS(res, res);
 
-      // Check for easy case: both range endpoints in same text node
+      // check for easy case: both range endpoints in same text node
       nsCOMPtr<nsINode> startNode = range->GetStartParent();
       nsCOMPtr<nsINode> endNode = range->GetEndParent();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
@@ -171,26 +176,31 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
       // (since doing operations on the document during iteration would perturb
       // the iterator).
 
-      OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+      nsCOMPtr<nsIContentIterator> iter =
+        do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
+      NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_TRUE(iter, NS_ERROR_FAILURE);
 
-      nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
+      nsCOMArray<nsIDOMNode> arrayOfNodes;
 
-      // Iterate range and build up array
+      // iterate range and build up array
       res = iter->Init(range);
       // Init returns an error if there are no nodes in range.  This can easily
       // happen with the subtree iterator if the selection doesn't contain any
       // *whole* nodes.
       if (NS_SUCCEEDED(res)) {
+        nsCOMPtr<nsIDOMNode> node;
         for (; !iter->IsDone(); iter->Next()) {
-          OwningNonNull<nsINode> node = *iter->GetCurrentNode();
+          node = do_QueryInterface(iter->GetCurrentNode());
+          NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
-          if (node->IsContent() && IsEditable(node)) {
-            arrayOfNodes.AppendElement(*node->AsContent());
+          if (IsEditable(node)) {
+            arrayOfNodes.AppendObject(node);
           }
         }
       }
-      // First check the start parent of the range to see if it needs to be
-      // separately handled (it does if it's a text node, due to how the
+      // first check the start parent of the range to see if it needs to
+      // be separately handled (it does if it's a text node, due to how the
       // subtree iterator works - it will not have reported it).
       if (startNode && startNode->GetAsText() && IsEditable(startNode)) {
         res = SetInlinePropertyOnTextNode(*startNode->GetAsText(),
@@ -200,14 +210,17 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
         NS_ENSURE_SUCCESS(res, res);
       }
 
-      // Then loop through the list, set the property on each node
-      for (auto& node : arrayOfNodes) {
-        res = SetInlinePropertyOnNode(*node, *aProperty, &aAttribute, aValue);
+      // then loop through the list, set the property on each node
+      int32_t listCount = arrayOfNodes.Count();
+      int32_t j;
+      for (j = 0; j < listCount; j++) {
+        res = SetInlinePropertyOnNode(arrayOfNodes[j], aProperty,
+                                      &aAttribute, &aValue);
         NS_ENSURE_SUCCESS(res, res);
       }
 
-      // Last check the end parent of the range to see if it needs to be
-      // separately handled (it does if it's a text node, due to how the
+      // last check the end parent of the range to see if it needs to
+      // be separately handled (it does if it's a text node, due to how the
       // subtree iterator works - it will not have reported it).
       if (endNode && endNode->GetAsText() && IsEditable(endNode)) {
         res = SetInlinePropertyOnTextNode(*endNode->GetAsText(), 0,
@@ -218,7 +231,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
     }
   }
   if (!cancel) {
-    // Post-process
+    // post-process
     return mRules->DidDoAction(selection, &ruleInfo, res);
   }
   return NS_OK;
@@ -363,37 +376,41 @@ nsHTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
   }
 
   // Reparent the node inside inline node with appropriate {attribute,value}
-  return SetInlinePropertyOnNode(*text, aProperty, aAttribute, aValue);
+  return SetInlinePropertyOnNode(text, &aProperty, aAttribute, &aValue);
 }
 
 
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
-                                          nsIAtom& aProperty,
+nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
+                                          nsIAtom* aProperty,
                                           const nsAString* aAttribute,
-                                          const nsAString& aValue)
+                                          const nsAString* aValue)
 {
+  MOZ_ASSERT(aNode && aProperty);
+  MOZ_ASSERT(aValue);
+
   nsCOMPtr<nsIAtom> attrAtom = aAttribute ? do_GetAtom(*aAttribute) : nullptr;
 
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
-  if (!TagCanContain(*nsGkAtoms::span, aNode)) {
-    if (aNode.HasChildren()) {
-      nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
+  if (!TagCanContain(*nsGkAtoms::span, *aNode)) {
+    if (aNode->HasChildren()) {
+      nsCOMArray<nsIContent> arrayOfNodes;
 
       // Populate the list.
-      for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
+      for (nsIContent* child = aNode->GetFirstChild();
            child;
            child = child->GetNextSibling()) {
         if (IsEditable(child) && !IsEmptyTextNode(this, child)) {
-          arrayOfNodes.AppendElement(*child);
+          arrayOfNodes.AppendObject(child);
         }
       }
 
       // Then loop through the list, set the property on each node.
-      for (auto& node : arrayOfNodes) {
-        nsresult rv = SetInlinePropertyOnNode(node, aProperty, aAttribute,
-                                              aValue);
+      int32_t listCount = arrayOfNodes.Count();
+      for (int32_t j = 0; j < listCount; ++j) {
+        nsresult rv = SetInlinePropertyOnNode(arrayOfNodes[j], aProperty,
+                                              aAttribute, aValue);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -402,36 +419,36 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
 
   // First check if there's an adjacent sibling we can put our node into.
   nsresult res;
-  nsCOMPtr<nsIContent> previousSibling = GetPriorHTMLSibling(&aNode);
-  nsCOMPtr<nsIContent> nextSibling = GetNextHTMLSibling(&aNode);
-  if (IsSimpleModifiableNode(previousSibling, &aProperty, aAttribute, &aValue)) {
-    res = MoveNode(&aNode, previousSibling, -1);
+  nsCOMPtr<nsIContent> previousSibling = GetPriorHTMLSibling(aNode);
+  nsCOMPtr<nsIContent> nextSibling = GetNextHTMLSibling(aNode);
+  if (IsSimpleModifiableNode(previousSibling, aProperty, aAttribute, aValue)) {
+    res = MoveNode(aNode, previousSibling, -1);
     NS_ENSURE_SUCCESS(res, res);
-    if (IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
+    if (IsSimpleModifiableNode(nextSibling, aProperty, aAttribute, aValue)) {
       res = JoinNodes(*previousSibling, *nextSibling);
       NS_ENSURE_SUCCESS(res, res);
     }
     return NS_OK;
   }
-  if (IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
-    res = MoveNode(&aNode, nextSibling, 0);
+  if (IsSimpleModifiableNode(nextSibling, aProperty, aAttribute, aValue)) {
+    res = MoveNode(aNode, nextSibling, 0);
     NS_ENSURE_SUCCESS(res, res);
     return NS_OK;
   }
 
-  // Don't need to do anything if property already set on node
-  if (mHTMLCSSUtils->IsCSSEditableProperty(&aNode, &aProperty, aAttribute)) {
+  // don't need to do anything if property already set on node
+  if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
     if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
-          &aNode, &aProperty, aAttribute, aValue, nsHTMLCSSUtils::eComputed)) {
+          aNode, aProperty, aAttribute, *aValue, nsHTMLCSSUtils::eComputed)) {
       return NS_OK;
     }
-  } else if (IsTextPropertySetByContent(&aNode, &aProperty,
-                                        aAttribute, &aValue)) {
+  } else if (IsTextPropertySetByContent(aNode, aProperty,
+                                        aAttribute, aValue)) {
     return NS_OK;
   }
 
   bool useCSS = (IsCSSEnabled() &&
-                 mHTMLCSSUtils->IsCSSEditableProperty(&aNode, &aProperty, aAttribute)) ||
+                 mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) ||
                 // bgcolor is always done using CSS
                 aAttribute->EqualsLiteral("bgcolor");
 
@@ -439,33 +456,33 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
     nsCOMPtr<dom::Element> tmp;
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
     // don't have one, we need to make one.
-    if (aNode.IsHTMLElement(nsGkAtoms::span) &&
-        !aNode.AsElement()->GetAttrCount()) {
-      tmp = aNode.AsElement();
+    if (aNode->IsHTMLElement(nsGkAtoms::span) &&
+        !aNode->AsElement()->GetAttrCount()) {
+      tmp = aNode->AsElement();
     } else {
-      tmp = InsertContainerAbove(&aNode, nsGkAtoms::span);
+      tmp = InsertContainerAbove(aNode, nsGkAtoms::span);
       NS_ENSURE_STATE(tmp);
     }
 
     // Add the CSS styles corresponding to the HTML style request
     int32_t count;
     res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(tmp->AsDOMNode(),
-                                                     &aProperty, aAttribute,
-                                                     &aValue, &count, false);
+                                                     aProperty, aAttribute,
+                                                     aValue, &count, false);
     NS_ENSURE_SUCCESS(res, res);
     return NS_OK;
   }
 
   // is it already the right kind of node, but with wrong attribute?
-  if (aNode.IsHTMLElement(&aProperty)) {
+  if (aNode->IsHTMLElement(aProperty)) {
     // Just set the attribute on it.
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(&aNode);
-    return SetAttribute(elem, *aAttribute, aValue);
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
+    return SetAttribute(elem, *aAttribute, *aValue);
   }
 
   // ok, chuck it in its very own container
-  nsCOMPtr<Element> tmp = InsertContainerAbove(&aNode, &aProperty, attrAtom,
-                                               &aValue);
+  nsCOMPtr<Element> tmp = InsertContainerAbove(aNode, aProperty, attrAtom,
+                                               aValue);
   NS_ENSURE_STATE(tmp);
 
   return NS_OK;
@@ -473,20 +490,42 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
 
 
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
-                                      nsIAtom& aProperty,
-                                      const nsAString* aAttribute,
-                                      const nsAString& aValue)
+nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
+                                      nsIAtom *aProperty,
+                                      const nsAString *aAttribute,
+                                      const nsAString *aValue)
 {
-  nsCOMPtr<nsIContent> previousSibling = aNode.GetPreviousSibling(),
-                       nextSibling = aNode.GetNextSibling();
-  NS_ENSURE_STATE(aNode.GetParentNode());
-  OwningNonNull<nsINode> parent = *aNode.GetParentNode();
+  // Before setting the property, we remove it if it's already set.
+  // RemoveStyleInside might remove the node we're looking at or some of its
+  // descendants, however, in which case we want to set the property on
+  // whatever wound up in its place.  We have to save the original siblings and
+  // parent to figure this out.
+  NS_ENSURE_TRUE(aNode && aProperty, NS_ERROR_NULL_POINTER);
 
-  nsresult res = RemoveStyleInside(aNode.AsDOMNode(), &aProperty, aAttribute);
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+
+  return SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
+}
+
+nsresult
+nsHTMLEditor::SetInlinePropertyOnNode(nsIContent* aNode,
+                                      nsIAtom* aProperty,
+                                      const nsAString* aAttribute,
+                                      const nsAString* aValue)
+{
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aProperty);
+
+  nsCOMPtr<nsIContent> previousSibling = aNode->GetPreviousSibling(),
+                       nextSibling = aNode->GetNextSibling();
+  nsCOMPtr<nsINode> parent = aNode->GetParentNode();
+  NS_ENSURE_STATE(parent);
+
+  nsresult res = RemoveStyleInside(aNode->AsDOMNode(), aProperty, aAttribute);
   NS_ENSURE_SUCCESS(res, res);
 
-  if (aNode.GetParentNode()) {
+  if (aNode->GetParentNode()) {
     // The node is still where it was
     return SetInlinePropertyOnNodeImpl(aNode, aProperty,
                                        aAttribute, aValue);
@@ -499,17 +538,20 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
       (nextSibling && nextSibling->GetParentNode() != parent)) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsTArray<OwningNonNull<nsIContent>> nodesToSet;
+  nsCOMArray<nsIContent> nodesToSet;
   nsCOMPtr<nsIContent> cur = previousSibling
     ? previousSibling->GetNextSibling() : parent->GetFirstChild();
-  for (; cur && cur != nextSibling; cur = cur->GetNextSibling()) {
+  while (cur && cur != nextSibling) {
     if (IsEditable(cur)) {
-      nodesToSet.AppendElement(*cur);
+      nodesToSet.AppendObject(cur);
     }
+    cur = cur->GetNextSibling();
   }
 
-  for (auto& node : nodesToSet) {
-    res = SetInlinePropertyOnNodeImpl(node, aProperty, aAttribute, aValue);
+  int32_t nodesToSetCount = nodesToSet.Count();
+  for (int32_t k = 0; k < nodesToSetCount; k++) {
+    res = SetInlinePropertyOnNodeImpl(nodesToSet[k], aProperty,
+                                      aAttribute, aValue);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -1374,8 +1416,8 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
               // "inverting" the style
               mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
             NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
-            SetInlinePropertyOnNode(*node->AsContent(), *aProperty,
-                                    aAttribute, value);
+            SetInlinePropertyOnNode(node->AsContent(), aProperty,
+                                    aAttribute, &value);
           }
         }
       }
@@ -1391,126 +1433,150 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
 
 NS_IMETHODIMP nsHTMLEditor::IncreaseFontSize()
 {
-  return RelativeFontChange(FontSize::incr);
+  return RelativeFontChange(1);
 }
 
 NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
 {
-  return RelativeFontChange(FontSize::decr);
+  return RelativeFontChange(-1);
 }
 
 nsresult
-nsHTMLEditor::RelativeFontChange(FontSize aDir)
+nsHTMLEditor::RelativeFontChange( int32_t aSizeChange)
 {
+  // Can only change font size by + or - 1
+  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
+    return NS_ERROR_ILLEGAL_VALUE;
+  
   ForceCompositionEnd();
 
-  // Get the selection
+  // Get the selection 
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-  // If selection is collapsed, set typing state
+  // Is the selection collapsed?
+  // if it's collapsed set typing state
   if (selection->Collapsed()) {
-    nsIAtom& atom = aDir == FontSize::incr ? *nsGkAtoms::big :
-                                             *nsGkAtoms::small;
+    nsCOMPtr<nsIAtom> atom;
+    if (aSizeChange == 1) {
+      atom = nsGkAtoms::big;
+    } else {
+      atom = nsGkAtoms::small;
+    }
 
     // Let's see in what kind of element the selection is
-    NS_ENSURE_TRUE(selection->RangeCount() &&
-                   selection->GetRangeAt(0)->GetStartParent(), NS_OK);
-    OwningNonNull<nsINode> selectedNode =
-      *selection->GetRangeAt(0)->GetStartParent();
-    if (IsTextNode(selectedNode)) {
-      NS_ENSURE_TRUE(selectedNode->GetParentNode(), NS_OK);
-      selectedNode = *selectedNode->GetParentNode();
+    int32_t offset;
+    nsCOMPtr<nsINode> selectedNode;
+    GetStartNodeAndOffset(selection, getter_AddRefs(selectedNode), &offset);
+    if (selectedNode && IsTextNode(selectedNode)) {
+      selectedNode = selectedNode->GetParentNode();
     }
-    if (!CanContainTag(selectedNode, atom)) {
+    NS_ENSURE_TRUE(selectedNode, NS_OK);
+    if (!CanContainTag(*selectedNode, *atom)) {
       return NS_OK;
     }
 
-    // Manipulating text attributes on a collapsed selection only sets state
-    // for the next text insertion
-    mTypeInState->SetProp(&atom, EmptyString(), EmptyString());
+    // manipulating text attributes on a collapsed selection only sets state for the next text insertion
+    mTypeInState->SetProp(atom, EmptyString(), EmptyString());
     return NS_OK;
   }
-
-  // Wrap with txn batching, rules sniffing, and selection preservation code
+  
+  // wrap with txn batching, rules sniffing, and selection preservation code
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::setTextProperty,
-                                 nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, EditAction::setTextProperty, nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
 
-  // Loop through the ranges in the selection
+  // loop thru the ranges in the selection
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
-    // Adjust range to include any ancestors with entirely selected children
+    // adjust range to include any ancestors who's children are entirely selected
     nsresult res = PromoteInlineRange(range);
     NS_ENSURE_SUCCESS(res, res);
-
-    // Check for easy case: both range endpoints in same text node
-    nsCOMPtr<nsINode> startNode = range->GetStartParent();
-    nsCOMPtr<nsINode> endNode = range->GetEndParent();
-    if (startNode == endNode && IsTextNode(startNode)) {
-      res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-          static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
-          range->StartOffset(), range->EndOffset());
+    
+    // check for easy case: both range endpoints in same text node
+    nsCOMPtr<nsIDOMNode> startNode, endNode;
+    res = range->GetStartContainer(getter_AddRefs(startNode));
+    NS_ENSURE_SUCCESS(res, res);
+    res = range->GetEndContainer(getter_AddRefs(endNode));
+    NS_ENSURE_SUCCESS(res, res);
+    if ((startNode == endNode) && IsTextNode(startNode))
+    {
+      int32_t startOffset, endOffset;
+      range->GetStartOffset(&startOffset);
+      range->GetEndOffset(&endOffset);
+      nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
+      res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, startOffset, endOffset);
       NS_ENSURE_SUCCESS(res, res);
-    } else {
-      // Not the easy case.  Range not contained in single text node.  There
-      // are up to three phases here.  There are all the nodes reported by the
-      // subtree iterator to be processed.  And there are potentially a
-      // starting textnode and an ending textnode which are only partially
-      // contained by the range.
+    }
+    else
+    {
+      // not the easy case.  range not contained in single text node. 
+      // there are up to three phases here.  There are all the nodes
+      // reported by the subtree iterator to be processed.  And there
+      // are potentially a starting textnode and an ending textnode
+      // which are only partially contained by the range.
+      
+      // lets handle the nodes reported by the iterator.  These nodes
+      // are entirely contained in the selection range.  We build up
+      // a list of them (since doing operations on the document during
+      // iteration would perturb the iterator).
 
-      // Let's handle the nodes reported by the iterator.  These nodes are
-      // entirely contained in the selection range.  We build up a list of them
-      // (since doing operations on the document during iteration would perturb
-      // the iterator).
+      nsCOMPtr<nsIContentIterator> iter =
+        do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
+      NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_TRUE(iter, NS_ERROR_FAILURE);
 
-      OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
-
-      // Iterate range and build up array
+      // iterate range and build up array
       res = iter->Init(range);
       if (NS_SUCCEEDED(res)) {
-        nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
-        for (; !iter->IsDone(); iter->Next()) {
+        nsCOMArray<nsIContent> arrayOfNodes;
+        while (!iter->IsDone()) {
           NS_ENSURE_TRUE(iter->GetCurrentNode()->IsContent(), NS_ERROR_FAILURE);
-          OwningNonNull<nsIContent> node = *iter->GetCurrentNode()->AsContent();
+          nsCOMPtr<nsIContent> node = iter->GetCurrentNode()->AsContent();
 
           if (IsEditable(node)) {
-            arrayOfNodes.AppendElement(node);
+            arrayOfNodes.AppendObject(node);
           }
-        }
 
-        // Now that we have the list, do the font size change on each node
-        for (auto& node : arrayOfNodes) {
-          res = RelativeFontChangeOnNode(aDir == FontSize::incr ? +1 : -1,
-                                         node);
+          iter->Next();
+        }
+        
+        // now that we have the list, do the font size change on each node
+        int32_t listCount = arrayOfNodes.Count();
+        for (int32_t j = 0; j < listCount; ++j) {
+          nsIContent* node = arrayOfNodes[j];
+          res = RelativeFontChangeOnNode(aSizeChange, node);
           NS_ENSURE_SUCCESS(res, res);
         }
+        arrayOfNodes.Clear();
       }
-      // Now check the start and end parents of the range to see if they need
-      // to be separately handled (they do if they are text nodes, due to how
-      // the subtree iterator works - it will not have reported them).
-      if (IsTextNode(startNode) && IsEditable(startNode)) {
-        res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-            static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
-            range->StartOffset(), startNode->Length());
+      // now check the start and end parents of the range to see if they need to 
+      // be separately handled (they do if they are text nodes, due to how the
+      // subtree iterator works - it will not have reported them).
+      if (IsTextNode(startNode) && IsEditable(startNode))
+      {
+        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
+        int32_t startOffset;
+        uint32_t textLen;
+        range->GetStartOffset(&startOffset);
+        nodeAsText->GetLength(&textLen);
+        res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, startOffset, textLen);
         NS_ENSURE_SUCCESS(res, res);
       }
-      if (IsTextNode(endNode) && IsEditable(endNode)) {
+      if (IsTextNode(endNode) && IsEditable(endNode))
+      {
         nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(endNode);
         int32_t endOffset;
         range->GetEndOffset(&endOffset);
-        res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-            static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
-            0, range->EndOffset());
+        res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, 0, endOffset);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
   }
-
-  return NS_OK;
+  
+  return NS_OK;  
 }
 
 nsresult
