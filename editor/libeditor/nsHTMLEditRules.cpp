@@ -3420,29 +3420,24 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
   nsString tString(*aBlockType);
 
   // contruct a list of nodes to act on.
-  nsTArray<nsCOMPtr<nsINode>> array;
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
   res = GetNodesFromSelection(*aSelection, EditAction::makeBasicBlock,
-                              array);
+                              arrayOfNodes);
   NS_ENSURE_SUCCESS(res, res);
 
   // Remove all non-editable nodes.  Leave them be.
-  int32_t listCount = array.Length();
+  int32_t listCount = arrayOfNodes.Length();
   int32_t i;
   for (i=listCount-1; i>=0; i--)
   {
     NS_ENSURE_STATE(mHTMLEditor);
-    if (!mHTMLEditor->IsEditable(array[i])) {
-      array.RemoveElementAt(i);
+    if (!mHTMLEditor->IsEditable(arrayOfNodes[i])) {
+      arrayOfNodes.RemoveElementAt(i);
     }
   }
 
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-  
   // reset list count
-  listCount = arrayOfNodes.Count();
+  listCount = arrayOfNodes.Length();
   
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
@@ -3500,10 +3495,9 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
     else  // we are making a block
     {   
       // consume a br, if needed
-      nsCOMPtr<nsIDOMNode> brNode;
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->GetNextHTMLNode(parent->AsDOMNode(), offset,
-                                         address_of(brNode), true);
+      nsCOMPtr<nsIContent> brNode =
+        mHTMLEditor->GetNextHTMLNode(parent, offset, true);
       NS_ENSURE_SUCCESS(res, res);
       if (brNode && nsTextEditUtils::IsBreak(brNode))
       {
@@ -3511,7 +3505,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
         res = mHTMLEditor->DeleteNode(brNode);
         NS_ENSURE_SUCCESS(res, res);
         // we don't need to act on this node any more
-        arrayOfNodes.RemoveObject(brNode);
+        arrayOfNodes.RemoveElement(brNode);
       }
       // make sure we can put a block here
       res = SplitAsNeeded(blockType, parent, offset);
@@ -3523,13 +3517,12 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
       // remember our new block for postprocessing
       mNewBlock = theBlock;
       // delete anything that was in the list of nodes
-      for (int32_t j = arrayOfNodes.Count() - 1; j >= 0; --j) 
-      {
-        nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+      while (!arrayOfNodes.IsEmpty()) {
+        nsCOMPtr<nsINode> curNode = arrayOfNodes[0];
         NS_ENSURE_STATE(mHTMLEditor);
         res = mHTMLEditor->DeleteNode(curNode);
         NS_ENSURE_SUCCESS(res, res);
-        arrayOfNodes.RemoveObjectAt(0);
+        arrayOfNodes.RemoveElementAt(0);
       }
       // put selection in new block
       res = aSelection->Collapse(theBlock,0);
@@ -3543,13 +3536,17 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
     // Ok, now go through all the nodes and make the right kind of blocks, 
     // or whatever is approriate.  Wohoo! 
     // Note: blockquote is handled a little differently
+    nsCOMArray<nsIDOMNode> arrayOfDOMNodes;
+    for (auto& node : arrayOfNodes) {
+      arrayOfDOMNodes.AppendObject(GetAsDOMNode(node));
+    }
     if (tString.EqualsLiteral("blockquote"))
-      res = MakeBlockquote(arrayOfNodes);
+      res = MakeBlockquote(arrayOfDOMNodes);
     else if (tString.EqualsLiteral("normal") ||
              tString.IsEmpty() )
-      res = RemoveBlockStyle(arrayOfNodes);
+      res = RemoveBlockStyle(arrayOfDOMNodes);
     else
-      res = ApplyBlockStyle(arrayOfNodes, aBlockType);
+      res = ApplyBlockStyle(arrayOfDOMNodes, aBlockType);
     return res;
   }
   return res;
@@ -3607,7 +3604,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  nsTArray<nsCOMPtr<nsINode>> array;
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
   
   // short circuit: detect case of collapsed selection inside an <li>.
   // just sublist that <li>.  This prevents bug 97797.
@@ -3632,7 +3629,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   
   if (liNode)
   {
-    array.AppendElement(liNode);
+    arrayOfNodes.AppendElement(liNode);
   }
   else
   {
@@ -3640,15 +3637,10 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
     // this basically just expands the range to include the immediate
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
-    res = GetNodesFromSelection(*aSelection, EditAction::indent, array);
+    res = GetNodesFromSelection(*aSelection, EditAction::indent, arrayOfNodes);
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-  
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
@@ -3669,13 +3661,12 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
     mNewBlock = theBlock->AsDOMNode();
     RelativeChangeIndentationOfElementNode(theBlock->AsDOMNode(), +1);
     // delete anything that was in the list of nodes
-    for (int32_t j = arrayOfNodes.Count() - 1; j >= 0; --j) 
-    {
-      nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+    while (!arrayOfNodes.IsEmpty()) {
+      nsCOMPtr<nsINode> curNode = arrayOfNodes[0];
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      arrayOfNodes.RemoveObjectAt(0);
+      arrayOfNodes.RemoveElementAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
@@ -3690,12 +3681,12 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   nsCOMPtr<nsINode> curParent;
   nsCOMPtr<Element> curList, curQuote;
   nsCOMPtr<nsIContent> sibling;
-  int32_t listCount = arrayOfNodes.Count();
+  int32_t listCount = arrayOfNodes.Length();
   for (i=0; i<listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsIContent> curNode = do_QueryInterface(arrayOfNodes[i]);
-    NS_ENSURE_STATE(!arrayOfNodes[i] || curNode);
+    NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
+    nsCOMPtr<nsIContent> curNode = arrayOfNodes[i]->AsContent();
 
     // Ignore all non-editable nodes.  Leave them be.
     NS_ENSURE_STATE(mHTMLEditor);
@@ -3832,15 +3823,10 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
   GetPromotedRanges(*aSelection, arrayOfRanges, EditAction::indent);
   
   // use these ranges to contruct a list of nodes to act on.
-  nsTArray<nsCOMPtr<nsINode>> array;
-  res = GetNodesForOperation(arrayOfRanges, array, EditAction::indent);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, EditAction::indent);
   NS_ENSURE_SUCCESS(res, res);                                 
                                      
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
@@ -3860,13 +3846,12 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
     // remember our new block for postprocessing
     mNewBlock = theBlock->AsDOMNode();
     // delete anything that was in the list of nodes
-    for (int32_t j = arrayOfNodes.Count() - 1; j >= 0; --j) 
-    {
-      nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+    while (!arrayOfNodes.IsEmpty()) {
+      nsCOMPtr<nsINode> curNode = arrayOfNodes[0];
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      arrayOfNodes.RemoveObjectAt(0);
+      arrayOfNodes.RemoveElementAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
@@ -3881,12 +3866,12 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
   nsCOMPtr<nsINode> curParent;
   nsCOMPtr<nsIContent> sibling;
   nsCOMPtr<Element> curList, curQuote, indentedLI;
-  int32_t listCount = arrayOfNodes.Count();
+  int32_t listCount = arrayOfNodes.Length();
   for (i=0; i<listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsIContent> curNode = do_QueryInterface(arrayOfNodes[i]);
-    NS_ENSURE_STATE(!arrayOfNodes[i] || curNode);
+    NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
+    nsCOMPtr<nsIContent> curNode = arrayOfNodes[i]->AsContent();
 
     // Ignore all non-editable nodes.  Leave them be.
     NS_ENSURE_STATE(mHTMLEditor);
@@ -8088,33 +8073,33 @@ nsHTMLEditRules::IsEmptyInline(nsIDOMNode *aNode)
 }
 
 
-bool 
-nsHTMLEditRules::ListIsEmptyLine(nsCOMArray<nsIDOMNode> &arrayOfNodes)
+bool
+nsHTMLEditRules::ListIsEmptyLine(nsTArray<nsCOMPtr<nsINode>>& aArrayOfNodes)
 {
-  // we have a list of nodes which we are candidates for being moved
-  // into a new block.  Determine if it's anything more than a blank line.
-  // Look for editable content above and beyond one single BR.
-  int32_t listCount = arrayOfNodes.Count();
-  NS_ENSURE_TRUE(listCount, true);
-  nsCOMPtr<nsIDOMNode> somenode;
-  int32_t j, brCount=0;
-  for (j = 0; j < listCount; j++)
-  {
-    somenode = arrayOfNodes[j];
-    NS_ENSURE_TRUE(mHTMLEditor, false);
-    if (somenode && mHTMLEditor->IsEditable(somenode))
-    {
-      if (nsTextEditUtils::IsBreak(somenode))
-      {
-        // first break doesn't count
-        if (brCount) return false;
-        brCount++;
+  // We have a list of nodes which we are candidates for being moved into a new
+  // block.  Determine if it's anything more than a blank line.  Look for
+  // editable content above and beyond one single BR.
+  NS_ENSURE_TRUE(aArrayOfNodes.Length(), true);
+
+  NS_ENSURE_TRUE(mHTMLEditor, false);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  int32_t brCount = 0;
+
+  for (auto& node : aArrayOfNodes) {
+    if (!node || !mHTMLEditor->IsEditable(node)) {
+      continue;
+    }
+    if (nsTextEditUtils::IsBreak(node)) {
+      // First break doesn't count
+      if (brCount) {
+        return false;
       }
-      else if (IsEmptyInline(somenode)) 
-      {
-        // empty inline, keep looking
-      }
-      else return false;
+      brCount++;
+    } else if (IsEmptyInline(GetAsDOMNode(node))) {
+      // Empty inline, keep looking
+    } else {
+      return false;
     }
   }
   return true;
@@ -8921,15 +8906,11 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
                     EditAction::setAbsolutePosition);
   
   // use these ranges to contruct a list of nodes to act on.
-  nsTArray<nsCOMPtr<nsINode>> array;
-  res = GetNodesForOperation(arrayOfRanges, array,
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
                              EditAction::setAbsolutePosition);
   NS_ENSURE_SUCCESS(res, res);                                 
                                      
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
@@ -8949,13 +8930,12 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
     // remember our new block for postprocessing
     mNewBlock = thePositionedDiv->AsDOMNode();
     // delete anything that was in the list of nodes
-    for (int32_t j = arrayOfNodes.Count() - 1; j >= 0; --j) 
-    {
-      nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+    while (!arrayOfNodes.IsEmpty()) {
+      nsCOMPtr<nsINode> curNode = arrayOfNodes[0];
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      arrayOfNodes.RemoveObjectAt(0);
+      arrayOfNodes.RemoveElementAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(thePositionedDiv,0);
@@ -8966,16 +8946,13 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
 
   // Ok, now go through all the nodes and put them in a blockquote, 
   // or whatever is appropriate.  Wohoo!
-  int32_t i;
   nsCOMPtr<nsINode> curParent;
   nsCOMPtr<nsIDOMNode> indentedLI, sibling;
   nsCOMPtr<Element> curList, curPositionedDiv;
-  int32_t listCount = arrayOfNodes.Count();
-  for (i=0; i<listCount; i++)
-  {
+  for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsIContent> curNode = do_QueryInterface(arrayOfNodes[i]);
-    NS_ENSURE_STATE(curNode);
+    NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
+    nsCOMPtr<nsIContent> curNode = arrayOfNodes[i]->AsContent();
 
     // Ignore all non-editable nodes.  Leave them be.
     NS_ENSURE_STATE(mHTMLEditor);
