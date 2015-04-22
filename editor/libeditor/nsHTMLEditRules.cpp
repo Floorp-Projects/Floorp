@@ -836,8 +836,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   else
   {
     nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-    res = GetPromotedRanges(selection, arrayOfRanges, EditAction::align);
-    NS_ENSURE_SUCCESS(res, res);
+    GetPromotedRanges(*selection, arrayOfRanges, EditAction::align);
 
     // use these ranges to construct a list of nodes to act on.
     nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
@@ -3379,8 +3378,7 @@ nsHTMLEditRules::WillRemoveList(Selection* aSelection,
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
   
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, arrayOfRanges, EditAction::makeList);
-  NS_ENSURE_SUCCESS(res, res);
+  GetPromotedRanges(*aSelection, arrayOfRanges, EditAction::makeList);
   
   // use these ranges to contruct a list of nodes to act on.
   nsCOMArray<nsIDOMNode> arrayOfNodes;
@@ -3869,8 +3867,7 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
   // whose children are all in the range
   
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, arrayOfRanges, EditAction::indent);
-  NS_ENSURE_SUCCESS(res, res);
+  GetPromotedRanges(*aSelection, arrayOfRanges, EditAction::indent);
   
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<nsCOMPtr<nsINode>> array;
@@ -5736,43 +5733,32 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// GetPromotedRanges: run all the selection range endpoint through 
+///////////////////////////////////////////////////////////////////////////////
+// GetPromotedRanges: Run all the selection range endpoint through
 //                    GetPromotedPoint()
-//                       
-nsresult 
-nsHTMLEditRules::GetPromotedRanges(Selection* inSelection, 
-                                   nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges, 
+//
+void
+nsHTMLEditRules::GetPromotedRanges(Selection& aSelection,
+                                   nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
                                    EditAction inOperationType)
 {
-  NS_ENSURE_TRUE(inSelection, NS_ERROR_NULL_POINTER);
+  uint32_t rangeCount = aSelection.RangeCount();
 
-  int32_t rangeCount;
-  nsresult res = inSelection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  int32_t i;
-  nsRefPtr<nsRange> selectionRange;
-  nsRefPtr<nsRange> opRange;
+  for (uint32_t i = 0; i < rangeCount; i++) {
+    nsRefPtr<nsRange> selectionRange = aSelection.GetRangeAt(i);
+    MOZ_ASSERT(selectionRange);
 
-  for (i = 0; i < rangeCount; i++)
-  {
-    selectionRange = inSelection->GetRangeAt(i);
-    NS_ENSURE_STATE(selectionRange);
+    // Clone range so we don't muck with actual selection ranges
+    nsRefPtr<nsRange> opRange = selectionRange->CloneRange();
 
-    // clone range so we don't muck with actual selection ranges
-    opRange = selectionRange->CloneRange();
-
-    // make a new adjusted range to represent the appropriate block content.
-    // The basic idea is to push out the range endpoints
-    // to truly enclose the blocks that we will affect.
-    // This call alters opRange.
+    // Make a new adjusted range to represent the appropriate block content.
+    // The basic idea is to push out the range endpoints to truly enclose the
+    // blocks that we will affect.  This call alters opRange.
     PromoteRange(*opRange, inOperationType);
-      
-    // stuff new opRange into array
+
+    // Stuff new opRange into array
     outArrayOfRanges.AppendElement(opRange);
   }
-  return res;
 }
 
 
@@ -6412,8 +6398,7 @@ nsHTMLEditRules::GetNodesFromSelection(Selection* selection,
   
   // promote selection ranges
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  res = GetPromotedRanges(selection, arrayOfRanges, operation);
-  NS_ENSURE_SUCCESS(res, res);
+  GetPromotedRanges(*selection, arrayOfRanges, operation);
   
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<nsCOMPtr<nsINode>> array;
@@ -9038,9 +9023,8 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
   // whose children are all in the range
   
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, arrayOfRanges,
-                          EditAction::setAbsolutePosition);
-  NS_ENSURE_SUCCESS(res, res);
+  GetPromotedRanges(*aSelection, arrayOfRanges,
+                    EditAction::setAbsolutePosition);
   
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<nsCOMPtr<nsINode>> array;
