@@ -2672,8 +2672,6 @@ this.AddonManager = {
   ERROR_CORRUPT_FILE: -3,
   // An error occured trying to write to the filesystem.
   ERROR_FILE_ACCESS: -4,
-  // The add-on must be signed and isn't.
-  ERROR_SIGNEDSTATE_REQUIRED: -5,
 
   // These must be kept in sync with AddonUpdateChecker.
   // No error was encountered.
@@ -2808,20 +2806,6 @@ this.AddonManager = {
   // an application change making an add-on compatible. Doesn't include
   // add-ons that were pending being enabled the last time the application ran.
   STARTUP_CHANGE_ENABLED: "enabled",
-
-  // Constants for Addon.signedState. Any states that should cause an add-on
-  // to be unusable in builds that require signing should have negative values.
-  // Add-on is signed but signature verification has failed.
-  SIGNEDSTATE_BROKEN: -2,
-  // Add-on may be signed but by an certificate that doesn't chain to our
-  // our trusted certificate.
-  SIGNEDSTATE_UNKNOWN: -1,
-  // Add-on is unsigned.
-  SIGNEDSTATE_MISSING: 0,
-  // Add-on is preliminarily reviewed.
-  SIGNEDSTATE_PRELIMINARY: 1,
-  // Add-on is fully reviewed.
-  SIGNEDSTATE_SIGNED: 2,
 
   // Constants for the Addon.userDisabled property
   // Indicates that the userDisabled state of this add-on is currently

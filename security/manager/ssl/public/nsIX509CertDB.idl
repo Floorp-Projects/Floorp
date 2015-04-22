@@ -311,8 +311,6 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AppXPCShellRoot = 6;
   const AppTrustedRoot TrustedHostedAppPublicRoot = 7;
   const AppTrustedRoot TrustedHostedAppTestRoot = 8;
-  const AppTrustedRoot AddonsPublicRoot = 9;
-  const AppTrustedRoot AddonsStageRoot = 10;
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
