@@ -93,21 +93,24 @@ class nrappkitTimerCallback : public nrappkitCallback,
   NS_DECL_NSITIMERCALLBACK
 
   nrappkitTimerCallback(NR_async_cb cb, void *cb_arg,
-                        const char *function, int line,
-                        nsITimer *timer)
+                        const char *function, int line)
       : nrappkitCallback(cb, cb_arg, function, line),
-        timer_(timer) {}
+      timer_(nullptr) {}
+
+  void SetTimer(already_AddRefed<nsITimer>&& timer) {
+    timer_ = timer;
+  }
 
   virtual void Cancel() override {
     AddRef();  // Cancelling the timer causes the callback it holds to
                // be released. AddRef() keeps us alive.
     timer_->Cancel();
-    timer_->Release();
+    timer_ = nullptr;
     Release(); // Will cause deletion of this object.
   }
 
  private:
-  nsITimer* timer_;
+  nsCOMPtr<nsITimer> timer_;
   virtual ~nrappkitTimerCallback() {}
 };
 
@@ -120,7 +123,7 @@ NS_IMETHODIMP nrappkitTimerCallback::Notify(nsITimer *timer) {
   cb_(0, 0, cb_arg_);
 
   // Allow the timer to go away.
-  timer->Release();
+  timer_ = nullptr;
   return NS_OK;
 }
 
@@ -201,14 +204,15 @@ static int nr_async_timer_set_nonzero(int timeout, NR_async_cb cb, void *arg,
   }
 
   nrappkitTimerCallback* callback =
-      new nrappkitTimerCallback(cb, arg, func, l, timer);
+      new nrappkitTimerCallback(cb, arg, func, l);
   rv = timer->InitWithCallback(callback, timeout, nsITimer::TYPE_ONE_SHOT);
   if (NS_FAILED(rv)) {
     return R_FAILED;
   }
 
-  // We need an AddRef here to keep the timer alive, per the spec.
-  timer->AddRef();
+  // Move the ownership of the timer to the callback object, which holds the
+  // timer alive per spec.
+  callback->SetTimer(timer.forget());
 
   *handle = callback;
 
