@@ -38,6 +38,7 @@ public:
   void Connect(int aClientIf,
                const nsAString& aBdAddr,
                bool aIsDirect, /* auto connect */
+               BluetoothTransport aTransport,
                BluetoothGattClientResultHandler* aRes);
   void Disconnect(int aClientIf,
                   const nsAString& aBdAddr,
@@ -139,6 +140,8 @@ public:
                   int aApperance,
                   uint8_t aManufacturerLen,
                   const ArrayBuffer& aManufacturerData,
+                  uint8_t aServiceDataLen, const ArrayBuffer& aServiceData,
+                  uint8_t aServiceUUIDLen, const ArrayBuffer& aServiceUUID,
                   BluetoothGattClientResultHandler* aRes);
 
 protected:
