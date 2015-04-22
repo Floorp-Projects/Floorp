@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -13,137 +13,75 @@
 //
 // implementation methods
 //
-nsEntityConverter::nsEntityConverter() :
-    mVersionList(nullptr),
-    mVersionListLength(0)
-{
-}
+nsEntityConverter::nsEntityConverter() { }
 
-nsEntityConverter::~nsEntityConverter()
-{
-    if (mVersionList)
-        delete [] mVersionList;
-}
-
-NS_IMETHODIMP 
-nsEntityConverter::LoadVersionPropertyFile()
-{
-    NS_NAMED_LITERAL_CSTRING(url, "resource://gre/res/entityTables/htmlEntityVersions.properties");
-
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        mozilla::services::GetStringBundleService();
-    if (!bundleService)
-        return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsIStringBundle> entities;
-    nsresult rv = bundleService->CreateBundle(url.get(), getter_AddRefs(entities));
-    if (NS_FAILED(rv)) return rv;
-    
-    nsresult result;
-
-    nsAutoString key;
-    nsXPIDLString value;
-    rv = entities->GetStringFromName(MOZ_UTF16("length"),
-                                     getter_Copies(value));
-    NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
-    if (NS_FAILED(rv)) return rv;
-      
-    mVersionListLength = nsAutoString(value).ToInteger(&result);
-    NS_ASSERTION(32 >= mVersionListLength,"nsEntityConverter: malformed entity table\n");
-    if (32 < mVersionListLength) return NS_ERROR_FAILURE;
-    
-    mVersionList = new nsEntityVersionList[mVersionListLength];
-    if (!mVersionList) return NS_ERROR_OUT_OF_MEMORY;
-
-    for (uint32_t i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
-        key.SetLength(0);
-        key.AppendInt(i+1, 10);
-        rv = entities->GetStringFromName(key.get(), getter_Copies(value));
-        uint32_t len = value.Length();
-        if (kVERSION_STRING_LEN < len) return NS_ERROR_UNEXPECTED;
-        
-        memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(char16_t));
-        mVersionList[i].mEntityListName[len] = 0;
-        mVersionList[i].mVersion = (1 << i);
-    }
-
-    return NS_OK;
-}
-
-already_AddRefed<nsIStringBundle>
-nsEntityConverter::LoadEntityBundle(uint32_t version)
-{
-  nsAutoCString url(NS_LITERAL_CSTRING("resource://gre/res/entityTables/"));
-  nsresult rv;
-
-  nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  
-  const char16_t *versionName = GetVersionName(version);
-  NS_ENSURE_TRUE(versionName, nullptr);
-
-  // all property file names are ASCII, like "html40Latin1" so this is safe
-  LossyAppendUTF16toASCII(versionName, url);
-  url.AppendLiteral(".properties");
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle(url.get(), getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  
-  return bundle.forget();
-}
-
-const char16_t*
-nsEntityConverter:: GetVersionName(uint32_t versionNumber)
-{
-  for (uint32_t i = 0; i < mVersionListLength; i++) {
-    if (versionNumber == mVersionList[i].mVersion)
-      return mVersionList[i].mEntityListName;
-  }
-
-  return nullptr;
-}
+nsEntityConverter::~nsEntityConverter() { }
 
 nsIStringBundle*
 nsEntityConverter:: GetVersionBundleInstance(uint32_t versionNumber)
 {
-  if (!mVersionList) {
-    // load the property file which contains available version names
-    // and generate a list of version/name pair
-    if (NS_FAILED(LoadVersionPropertyFile()))
-      return nullptr;
-  }
-
-  uint32_t i;
-  for (i = 0; i < mVersionListLength; i++) {
-    if (versionNumber == mVersionList[i].mVersion) {
-      if (!mVersionList[i].mEntities)
-      { // not loaded
-        // load the property file
-        mVersionList[i].mEntities = LoadEntityBundle(versionNumber);
-        NS_ASSERTION(mVersionList[i].mEntities, "LoadEntityBundle failed");
-      }
-      return mVersionList[i].mEntities.get();
+  switch(versionNumber){
+  case nsIEntityConverter::html40Latin1:
+    if (!mHTML40Latin1Bundle) {
+      mHTML40Latin1Bundle = LoadEntityBundle(kHTML40LATIN1);
+      MOZ_ASSERT(mHTML40Latin1Bundle, "LoadEntityBundle failed");
     }
+    return mHTML40Latin1Bundle;
+  case nsIEntityConverter::html40Symbols:
+    if (!mHTML40SymbolsBundle) {
+      mHTML40SymbolsBundle = LoadEntityBundle(kHTML40SYMBOLS);
+      MOZ_ASSERT(mHTML40SymbolsBundle, "LoadEntityBundle failed");
+    }
+    return mHTML40SymbolsBundle;
+  case nsIEntityConverter::html40Special:
+    if (!mHTML40SpecialBundle) {
+      mHTML40SpecialBundle = LoadEntityBundle(kHTML40SPECIAL);
+      MOZ_ASSERT(mHTML40SpecialBundle, "LoadEntityBundle failed");
+    }
+    return mHTML40SpecialBundle;
+  case nsIEntityConverter::mathml20:
+    if (!mMathML20Bundle) {
+      mMathML20Bundle = LoadEntityBundle(kMATHML20);
+      MOZ_ASSERT(mMathML20Bundle, "LoadEntityBundle failed");
+    }
+    return mMathML20Bundle;
+  default:
+    return nullptr;
   }
-
-  return nullptr;
 }
 
+already_AddRefed<nsIStringBundle>
+nsEntityConverter:: LoadEntityBundle(const char *fileName)
+{
+  NS_ENSURE_TRUE(fileName, nullptr);
+
+  nsAutoCString url("resource://gre/res/entityTables/");
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+  do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  url.Append(fileName);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(url.get(), getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return bundle.forget();
+}
 
 //
 // nsISupports methods
 //
 NS_IMPL_ISUPPORTS(nsEntityConverter,nsIEntityConverter)
 
-
 //
 // nsIEntityConverter
 //
 NS_IMETHODIMP
 nsEntityConverter::ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval)
-{ 
+{
   return ConvertUTF32ToEntity((uint32_t)character, entityVersion, _retval);
 }
 
@@ -151,18 +89,22 @@ NS_IMETHODIMP
 nsEntityConverter::ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersion, char **_retval)
 {
   NS_ASSERTION(_retval, "null ptr- _retval");
-  if(nullptr == _retval)
+  if (nullptr == _retval) {
     return NS_ERROR_NULL_POINTER;
+  }
   *_retval = nullptr;
 
   for (uint32_t mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
-    if (0 == (entityVersion & mask)) 
+    if (0 == (entityVersion & mask)) {
       continue;
-    nsIStringBundle* entities = GetVersionBundleInstance(entityVersion & mask);
-    NS_ASSERTION(entities, "Cannot get the property file");
+    }
 
-    if (!entities) 
+    nsIStringBundle* entities = GetVersionBundleInstance(entityVersion & mask);
+    NS_ASSERTION(entities, "Cannot get the entity");
+
+    if (!entities) {
       continue;
+    }
 
     nsAutoString key(NS_LITERAL_STRING("entity."));
     key.AppendInt(character,10);
@@ -171,13 +113,10 @@ nsEntityConverter::ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersi
     nsresult rv = entities->GetStringFromName(key.get(), getter_Copies(value));
     if (NS_SUCCEEDED(rv)) {
       *_retval = ToNewCString(value);
-      if(nullptr == *_retval)
-        return NS_ERROR_OUT_OF_MEMORY;
-      else
-        return NS_OK;
+      return NS_OK;
     }
   }
-	return NS_ERROR_ILLEGAL_VALUE;
+  return NS_ERROR_ILLEGAL_VALUE;
 }
 
 NS_IMETHODIMP
@@ -194,30 +133,28 @@ nsEntityConverter::ConvertToEntities(const char16_t *inString, uint32_t entityVe
   uint32_t len = NS_strlen(inString);
   for (uint32_t i = 0; i < len; i++) {
     nsAutoString key(NS_LITERAL_STRING("entity."));
-    if (NS_IS_HIGH_SURROGATE(inString[i]) &&
-        i + 2 < len &&
-        NS_IS_LOW_SURROGATE(inString[i + 1])) {
+    if (NS_IS_HIGH_SURROGATE(inString[i]) && i + 2 < len && NS_IS_LOW_SURROGATE(inString[i + 1])) {
       key.AppendInt(SURROGATE_TO_UCS4(inString[i], inString[i+1]), 10);
       ++i;
-    }
-    else {
+    } else {
       key.AppendInt(inString[i],10);
     }
-    
+
     nsXPIDLString value;
     const char16_t *entity = nullptr;
 
     for (uint32_t mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
-      if (0 == (entityVersion & mask)) 
-         continue;
+      if (0 == (entityVersion & mask)) {
+        continue;
+      }
       nsIStringBundle* entities = GetVersionBundleInstance(entityVersion & mask);
       NS_ASSERTION(entities, "Cannot get the property file");
 
-      if (!entities) 
-          continue;
+      if (!entities) {
+        continue;
+      }
 
-      nsresult rv = entities->GetStringFromName(key.get(),
-                                                getter_Copies(value));
+      nsresult rv = entities->GetStringFromName(key.get(), getter_Copies(value));
       if (NS_SUCCEEDED(rv)) {
         entity = value.get();
         break;
@@ -225,15 +162,12 @@ nsEntityConverter::ConvertToEntities(const char16_t *inString, uint32_t entityVe
     }
     if (entity) {
       outString.Append(entity);
-    }
-    else {
+    } else {
       outString.Append(&inString[i], 1);
     }
   }
 
   *_retval = ToNewUnicode(outString);
-  if (!*_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }

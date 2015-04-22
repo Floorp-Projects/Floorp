@@ -10,59 +10,40 @@
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 
-#define kVERSION_STRING_LEN 128
-
-class nsEntityVersionList
-{
-public:
-    nsEntityVersionList() {}
-    
-    uint32_t mVersion;
-    char16_t mEntityListName[kVERSION_STRING_LEN+1];
-    nsCOMPtr<nsIStringBundle> mEntities;
-};
-
 class nsEntityConverter: public nsIEntityConverter
 {
 public:
-	
-	//
-	// implementation methods
-	//
-	nsEntityConverter();
+    //
+    // implementation methods
+    //
+    nsEntityConverter();
 
-	//
-	// nsISupports
-	//
-	NS_DECL_ISUPPORTS
+    //
+    // nsISupports
+    //
+    NS_DECL_ISUPPORTS
 
-	//
-	// nsIEntityConverter
-	//
-	NS_IMETHOD ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersion, char **_retval) override;
-	NS_IMETHOD ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval) override;
-
-	NS_IMETHOD ConvertToEntities(const char16_t *inString, uint32_t entityVersion, char16_t **_retval) override;
+    NS_IMETHOD ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersion, char **_retval) override;
+    NS_IMETHOD ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval) override;
+    NS_IMETHOD ConvertToEntities(const char16_t *inString, uint32_t entityVersion, char16_t **_retval) override;
 
 protected:
+    // map version number to a string bundle
+    nsIStringBundle* GetVersionBundleInstance(uint32_t versionNumber);
 
-  // load a version property file and generate a version list (number/name pair)
-  NS_IMETHOD LoadVersionPropertyFile();
+    // load a string bundle file
+    already_AddRefed<nsIStringBundle> LoadEntityBundle(const char *fileName);
 
-  // map version number to version string
-  const char16_t* GetVersionName(uint32_t versionNumber);
+    const char* kHTML40LATIN1 = "html40Latin1.properties";
+    const char* kHTML40SYMBOLS = "html40Symbols.properties";
+    const char* kHTML40SPECIAL = "html40Special.properties";
+    const char* kMATHML20 = "mathml20.properties";
+    nsCOMPtr<nsIStringBundle> mHTML40Latin1Bundle;
+    nsCOMPtr<nsIStringBundle> mHTML40SymbolsBundle;
+    nsCOMPtr<nsIStringBundle> mHTML40SpecialBundle;
+    nsCOMPtr<nsIStringBundle> mMathML20Bundle;
 
-  // map version number to a string bundle
-  nsIStringBundle* GetVersionBundleInstance(uint32_t versionNumber);
-
-  // load a string bundle file
-  already_AddRefed<nsIStringBundle> LoadEntityBundle(uint32_t version);
-
-
-  nsEntityVersionList *mVersionList;            // array of version number/name pairs
-  uint32_t mVersionListLength;                  // number of supported versions
-
-  virtual ~nsEntityConverter();
+    virtual ~nsEntityConverter();
 };
 
 #endif
