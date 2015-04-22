@@ -198,7 +198,16 @@ protected:
   nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
                                   nsIDOMNode *aNode);
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
-  nsresult GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode>& outArrayOfNodes, int32_t *aIndex, bool aList = true, bool aTble = true);
+  enum class Lists { no, yes };
+  enum class Tables { no, yes };
+  nsresult GetInnerContent(nsIDOMNode* aNode,
+                           nsCOMArray<nsIDOMNode>& aOutArrayOfNodes,
+                           int32_t* aIndex, bool aLists = true,
+                           bool aTables = true);
+  void GetInnerContent(nsINode& aNode,
+                       nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
+                       int32_t* aIndex, Lists aLists = Lists::yes,
+                       Tables aTables = Tables::yes);
   already_AddRefed<nsIDOMNode> IsInListItem(nsIDOMNode* aNode);
   mozilla::dom::Element* IsInListItem(nsINode* aNode);
   nsresult ReturnInHeader(mozilla::dom::Selection* aSelection,
