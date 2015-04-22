@@ -98,6 +98,10 @@ public class SearchEngineBar extends TwoWayView
             final SearchEngine searchEngine = searchEngines.get(position);
             faviconView.updateAndScaleImage(searchEngine.getIcon(), searchEngine.getEngineIdentifier());
 
+            final View container = view.findViewById(R.id.search_engine_icon_container);
+            final String desc = getResources().getString(R.string.search_bar_item_desc, searchEngine.getEngineIdentifier());
+            container.setContentDescription(desc);
+
             return view;
         }
     }
