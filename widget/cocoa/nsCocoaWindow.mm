@@ -456,20 +456,19 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
 
   if (mWindowType == eWindowType_invisible) {
     [mWindow setLevel:kCGDesktopWindowLevelKey];
-  } else if (mWindowType == eWindowType_popup) {
-    SetPopupWindowLevel();
-    [mWindow setHasShadow:YES];
   }
 
-  [mWindow setBackgroundColor:[NSColor clearColor]];
-#ifdef MOZ_B2G
-  // In B2G, we don't create popups and we need OMTC to work (because out of
-  // process compositing depends on it). Therefore, we don't need our windows
-  // to be transparent.
-  [mWindow setOpaque:YES];
-#else
-  [mWindow setOpaque:NO];
-#endif
+  if (mWindowType == eWindowType_popup) {
+    SetPopupWindowLevel();
+    [mWindow setHasShadow:YES];
+    [mWindow setBackgroundColor:[NSColor clearColor]];
+    [mWindow setOpaque:NO];
+  } else {
+    // Make sure that regular windows are opaque from the start, so that
+    // nsChildView::ComputeShouldAccelerate returns true for them.
+    [mWindow setOpaque:YES];
+  }
+
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
 
