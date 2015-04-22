@@ -7,14 +7,42 @@
 </head>
 <body>
 
-<a id="target1" href="http://www.example.com/#q=♥â¥#hello"></a>
-<a id="target2" href="http://www.example.com/#q=%E2%99%A5%C3%A2%C2%A5"></a>
-<a id="target3" href="http://www.example.com/#/search/%23important"></a>
-<a id="target4" href='http://www.example.com/#{"a":[13, 42], "b":{"key":"value"}}'></a>
-
 <pre id="test">
 
 <script>
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [['dom.url.encode_decode_hash', false]]}, runTest);
+
+function runTest() {
+  setupTest();
+  doTestEncoded();
+  SimpleTest.finish();
+}
+
+function setupTest() {
+  var target1 = document.createElement("a");
+  target1.id =  "target1";
+  target1.href = "http://www.example.com/#q=♥â¥#hello";
+  document.body.appendChild(target1);
+
+  var target2 = document.createElement("a");
+  target2.id =  "target2";
+  target2.href = "http://www.example.com/#q=%E2%99%A5%C3%A2%C2%A5";
+  document.body.appendChild(target2);
+
+  var target3 = document.createElement("a");
+  target3.id =  "target3";
+  target3.href = "http://www.example.com/#/search/%23important";
+  document.body.appendChild(target3);
+
+  var target4 = document.createElement("a");
+  target4.id =  "target4";
+  target4.href = 'http://www.example.com/#{"a":[13, 42], "b":{"key":"value"}}';
+  document.body.appendChild(target4);
+}
+
+function doTestEncoded() {
   // Tests Link::GetHash
 
   // Check that characters aren't being encoded
@@ -32,9 +60,7 @@
   // Some JSON
   target = document.getElementById("target4");
   is(target.hash, '#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected link hash');
-</script>
 
-<script>
   // Tests URL::GetHash
 
   var url = new URL("http://www.example.com/#q=♥â¥#hello")
@@ -68,9 +94,7 @@
   is(target.hash, '#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected url hash');
   parsed = JSON.parse(target.hash.substring(1));
   is(parsed.b.key, 'value', 'JSON not parsed correctly');
-</script>
 
-<script>
   // Tests nsLocation::GetHash
 
   window.history.pushState(1, document.title, '#q=♥â¥#hello');
@@ -84,6 +108,9 @@
 
   window.history.pushState(1, document.title, '#{"a":[13, 42], "b":{"key":"value"}}');
   is(location.hash,'#{"a":[13, 42], "b":{"key":"value"}}', 'Unexpected location hash');
+
+}
+
 </script>
 
 </pre>
