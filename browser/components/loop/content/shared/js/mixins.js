@@ -241,6 +241,18 @@ loop.shared.mixins = (function() {
     },
 
     /**
+     * Resets the dimensions cache, e.g. for when the session is ended, and
+     * before a new session, so that we always ensure we see an update when a
+     * new session is started.
+     */
+    resetDimensionsCache: function() {
+      this._videoDimensionsCache = {
+        local: {},
+        remote: {}
+      };
+    },
+
+    /**
      * Whenever the dimensions change of a video stream, this function is called
      * by `updateVideoDimensions` to store the new values and notifies the callee
      * if the dimensions changed compared to the currently stored values.
