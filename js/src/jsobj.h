@@ -35,10 +35,7 @@ namespace js {
 
 class AutoPropertyDescriptorVector;
 class GCMarker;
-struct NativeIterator;
 class Nursery;
-class ObjectElements;
-struct StackShape;
 
 namespace gc {
 class RelocationOverlay;
@@ -75,11 +72,7 @@ extern const Class JSONClass;
 extern const Class MathClass;
 
 class GlobalObject;
-class MapObject;
 class NewObjectCache;
-class NormalArgumentsObject;
-class SetObject;
-class StrictArgumentsObject;
 
 // Forward declarations, required for later friend declarations.
 bool PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);

@@ -17,7 +17,6 @@ class MDefinition;
 class MBasicBlock;
 class MIRGraph;
 class MPhi;
-class MInstruction;
 class MIRGenerator;
 class MResumePoint;
 

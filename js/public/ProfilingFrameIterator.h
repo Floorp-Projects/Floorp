@@ -14,7 +14,6 @@
 
 #include "js/Utility.h"
 
-class JSAtom;
 struct JSRuntime;
 
 namespace js {

@@ -18,8 +18,6 @@
 #include "js/GCAPI.h"
 #include "js/Vector.h"
 
-struct JSCompartment;
-
 namespace js {
 
 class GCParallelTask;

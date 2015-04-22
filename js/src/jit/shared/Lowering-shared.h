@@ -16,8 +16,6 @@
 namespace js {
 namespace jit {
 
-class MBasicBlock;
-class MTableSwitch;
 class MIRGenerator;
 class MIRGraph;
 class MDefinition;

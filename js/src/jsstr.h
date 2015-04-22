@@ -19,14 +19,11 @@
 #include "vm/Unicode.h"
 
 class JSAutoByteString;
-class JSFlatString;
 class JSLinearString;
 
 namespace js {
 
 class StringBuffer;
-
-class MutatingRopeSegmentRange;
 
 template <AllowGC allowGC>
 extern JSString*

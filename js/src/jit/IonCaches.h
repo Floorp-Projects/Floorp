@@ -17,9 +17,6 @@
 #include "vm/TypedArrayCommon.h"
 
 namespace js {
-
-class LockedJSContext;
-
 namespace jit {
 
 class LInstruction;

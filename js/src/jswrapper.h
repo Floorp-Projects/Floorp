@@ -13,8 +13,6 @@
 
 namespace js {
 
-class DummyFrameGuard;
-
 /*
  * Helper for Wrapper::New default options.
  *
