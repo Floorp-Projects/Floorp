@@ -3092,15 +3092,6 @@ let SessionStoreInternal = {
   },
 
   /**
-   * Get nsIURI from string
-   * @param string
-   * @returns nsIURI
-   */
-  _getURIFromString: function ssi_getURIFromString(aString) {
-    return Services.io.newURI(aString, null, null);
-  },
-
-  /**
    * @param aState is a session state
    * @param aRecentCrashes is the number of consecutive crashes
    * @returns whether a restore page will be needed for the session state
