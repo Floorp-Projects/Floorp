@@ -187,6 +187,21 @@ class Base {
     }
     bool operator!=(const Base& rhs) const { return !(*this == rhs); }
 
+    // An identifier for this node, guaranteed to be stable and unique for as
+    // long as this ubi::Node's referent is alive and at the same address.
+    //
+    // This is probably suitable for use in serializations, as it is an integral
+    // type. It may also help save memory when constructing HashSets of
+    // ubi::Nodes: since a uintptr_t will always be smaller than a ubi::Node, a
+    // HashSet<ubi::Node::Id> will use less space per element than a
+    // HashSet<ubi::Node>.
+    //
+    // (Note that 'unique' only means 'up to equality on ubi::Node'; see the
+    // caveats about multiple objects allocated at the same address for
+    // 'ubi::Node::operator=='.)
+    typedef uintptr_t Id;
+    virtual Id identifier() const { return reinterpret_cast<Id>(ptr); }
+
     // Returns true if this node is pointing to something on the live heap, as
     // opposed to something from a deserialized core dump. Returns false,
     // otherwise.
@@ -365,20 +380,8 @@ class Node {
         return base()->edges(cx, wantNames);
     }
 
-    // An identifier for this node, guaranteed to be stable and unique for as
-    // long as this ubi::Node's referent is alive and at the same address.
-    //
-    // This is probably suitable for use in serializations, as it is an integral
-    // type. It may also help save memory when constructing HashSets of
-    // ubi::Nodes: since a uintptr_t will always be smaller than a ubi::Node, a
-    // HashSet<ubi::Node::Id> will use less space per element than a
-    // HashSet<ubi::Node>.
-    //
-    // (Note that 'unique' only means 'up to equality on ubi::Node'; see the
-    // caveats about multiple objects allocated at the same address for
-    // 'ubi::Node::operator=='.)
-    typedef uintptr_t Id;
-    Id identifier() const { return reinterpret_cast<Id>(base()->ptr); }
+    typedef Base::Id Id;
+    Id identifier() const { return base()->identifier(); }
 
     // A hash policy for ubi::Nodes.
     // This simply uses the stock PointerHasher on the ubi::Node's pointer.
