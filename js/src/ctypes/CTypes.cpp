@@ -4945,7 +4945,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
 
       // Add field name to the hash
       FieldInfo info;
-      info.mType = fieldType;
+      info.mType = nullptr; // Value of fields are not yet traceable here.
       info.mIndex = i;
       info.mOffset = fieldOffset;
       ASSERT_OK(fields->add(entryPtr, name, info));
@@ -4977,6 +4977,12 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   RootedValue sizeVal(cx);
   if (!SizeTojsval(cx, structSize, &sizeVal))
     return false;
+
+  for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+    FieldInfo& field = r.front().value();
+    MOZ_ASSERT(field.mIndex < fieldRoots.length());
+    field.mType = &fieldRoots[field.mIndex].toObject();
+  }
 
   JS_SetReservedSlot(typeObj, SLOT_FIELDINFO, PRIVATE_TO_JSVAL(fields.release()));
 
