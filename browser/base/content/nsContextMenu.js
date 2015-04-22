@@ -628,7 +628,9 @@ nsContextMenu.prototype = {
     this.inSyntheticDoc = ownerDoc.mozSyntheticDocument;
     // First, do checks for nodes that never have children.
     if (this.target.nodeType == Node.ELEMENT_NODE) {
-      // See if the user clicked on an image.
+      // See if the user clicked on an image. This check mirrors
+      // nsDocumentViewer::GetInImage. Make sure to update both if this is
+      // changed.
       if (this.target instanceof Ci.nsIImageLoadingContent &&
           this.target.currentURI) {
         this.onImage = true;
