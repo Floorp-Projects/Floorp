@@ -260,6 +260,8 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
   display: inline-block;
   font-size: .85rem;
   color: #777;
+  /* See .room-entry-context-item for the margin/size reductions. */
+  width: calc(100% - 1rem - 16px);
 }
 
 .room-list > .room-entry.room-active > h2 {
@@ -352,6 +354,19 @@ body[dir=rtl] .new-room-view > .context > .context-preview {
 .room-list > .room-entry > h2 > button,
 .room-list > .room-entry > h2 > span {
   vertical-align: middle;
+}
+
+/* Keep ".room-list > .room-entry > h2" in sync with these. */
+.room-entry-context-item {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 1rem;
+  height: 16px;
+}
+
+.room-entry-context-item > a > img {
+  height: 16px;
+  width: 16px;
 }
 
 /* Buttons */

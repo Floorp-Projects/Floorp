@@ -388,6 +388,13 @@ EXTRA_COMPONENTS += [
     'SlowScriptDebug.manifest',
 ]
 
+# Firefox for Android provides an alternate version of this component
+if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+    EXTRA_COMPONENTS += [
+        'SiteSpecificUserAgent.js',
+        'SiteSpecificUserAgent.manifest',
+    ]
+
 EXTRA_JS_MODULES += [
     'DOMRequestHelper.jsm',
     'IndexedDBHelper.jsm',

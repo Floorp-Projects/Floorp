@@ -147,9 +147,9 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       let itemURI = uri(aNode.uri);
       compare_prop_to_value("charset",
                             yield PlacesUtils.getCharsetForURI(itemURI));
-      compare_prop_to_value("keyword",
-                            PlacesUtils.bookmarks
-                                       .getKeywordForBookmark(aNode.itemId));
+
+      let entry = yield PlacesUtils.keywords.fetch({ url: aNode.uri });
+      compare_prop_to_value("keyword", entry ? entry.keyword : null);
 
       if ("title" in aItem)
         compare_prop("title");
@@ -251,7 +251,3 @@ add_task(function* () {
   do_check_eq(guidsPassedToExcludeCallback.size, 4);
   do_check_eq(placesRootWithoutTheMenu.children.length, 2);
 });
-
-function run_test() {
-  run_next_test();
-}

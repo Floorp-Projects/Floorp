@@ -453,8 +453,6 @@ Tooltip.prototype = {
     if (res && res.then) {
       return res.then(arg => {
         return arg instanceof Ci.nsIDOMNode ? arg : target;
-      }, () => {
-        return false;
       });
     } else {
       let newTarget = res instanceof Ci.nsIDOMNode ? res : target;

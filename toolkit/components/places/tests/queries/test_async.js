@@ -268,17 +268,20 @@ let DataHelper = {
   defaults: {
     bookmark: {
       parent: PlacesUtils.bookmarks.unfiledBookmarksFolder,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       uri: "http://example.com/",
       title: "test bookmark"
     },
 
     folder: {
       parent: PlacesUtils.bookmarks.unfiledBookmarksFolder,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "test folder"
     },
 
     separator: {
-      parent: PlacesUtils.bookmarks.unfiledBookmarksFolder
+      parent: PlacesUtils.bookmarks.unfiledBookmarksFolder,
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid
     }
   },
 
@@ -300,7 +303,7 @@ let DataHelper = {
         return {
           isBookmark: true,
           uri: dat.uri,
-          parentFolder: dat.parent,
+          parentGuid: dat.parentGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           title: dat.title,
           isInQuery: true
@@ -308,14 +311,14 @@ let DataHelper = {
       case "separator":
         return {
           isSeparator: true,
-          parentFolder: dat.parent,
+          parentGuid: dat.parentGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           isInQuery: true
         };
       case "folder":
         return {
           isFolder: true,
-          parentFolder: dat.parent,
+          parentGuid: dat.parentGuid,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           title: dat.title,
           isInQuery: true

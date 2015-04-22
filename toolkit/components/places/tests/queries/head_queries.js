@@ -133,7 +133,7 @@ function task_populateDB(aArray)
 
       if (qdata.isFolder) {
         yield PlacesUtils.bookmarks.insert({
-          parentGuid: (yield PlacesUtils.promiseItemGuid(qdata.parentFolder)),
+          parentGuid: qdata.parentGuid,
           type: PlacesUtils.bookmarks.TYPE_FOLDER,
           title: qdata.title,
           index: qdata.index
@@ -141,17 +141,17 @@ function task_populateDB(aArray)
       }
 
       if (qdata.isLivemark) {
-        PlacesUtils.livemarks.addLivemark({ title: qdata.title
-                                          , parentId: qdata.parentFolder
-                                          , index: qdata.index
-                                          , feedURI: uri(qdata.feedURI)
-                                          , siteURI: uri(qdata.uri)
-                                          }).then(null, do_throw);
+        yield PlacesUtils.livemarks.addLivemark({ title: qdata.title
+                                                , parentId: (yield PlacesUtils.promiseItemId(qdata.parentGuid))
+                                                , index: qdata.index
+                                                , feedURI: uri(qdata.feedURI)
+                                                , siteURI: uri(qdata.uri)
+                                                });
       }
 
       if (qdata.isBookmark) {
         let data = {
-          parentGuid: (yield PlacesUtils.promiseItemGuid(qdata.parentFolder)),
+          parentGuid: qdata.parentGuid,
           index: qdata.index,
           title: qdata.title,
           url: qdata.uri
@@ -168,8 +168,8 @@ function task_populateDB(aArray)
         let item = yield PlacesUtils.bookmarks.insert(data);
 
         if (qdata.keyword) {
-          let itemId = yield PlacesUtils.promiseItemId(item.guid);
-          PlacesUtils.bookmarks.setKeywordForBookmark(itemId, qdata.keyword);
+          yield PlacesUtils.keywords.insert({ url: qdata.uri,
+                                              keyword: qdata.keyword });
         }
       }
 
@@ -179,7 +179,7 @@ function task_populateDB(aArray)
 
       if (qdata.isSeparator) {
         yield PlacesUtils.bookmarks.insert({
-          parentGuid: (yield PlacesUtils.promiseItemGuid(qdata.parentFolder)),
+          parentGuid: qdata.parentGuid,
           type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
           index: qdata.index
         });
@@ -227,8 +227,7 @@ function queryData(obj) {
   this.isTag = obj.isTag ? obj.isTag : false;
   this.tagArray = obj.tagArray ? obj.tagArray : null;
   this.isLivemark = obj.isLivemark ? obj.isLivemark : false;
-  this.parentFolder = obj.parentFolder ? obj.parentFolder
-                                       : PlacesUtils.placesRootId;
+  this.parentGuid = obj.parentGuid || PlacesUtils.bookmarks.rootGuid;
   this.feedURI = obj.feedURI ? obj.feedURI : "";
   this.index = obj.index ? obj.index : PlacesUtils.bookmarks.DEFAULT_INDEX;
   this.isFolder = obj.isFolder ? obj.isFolder : false;
