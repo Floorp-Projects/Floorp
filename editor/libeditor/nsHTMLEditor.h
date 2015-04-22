@@ -651,14 +651,10 @@ protected:
                                        nsIAtom& aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString& aValue);
-  nsresult SetInlinePropertyOnNode( nsIDOMNode *aNode,
-                                    nsIAtom *aProperty, 
-                                    const nsAString *aAttribute,
-                                    const nsAString *aValue);
-  nsresult SetInlinePropertyOnNode(nsIContent* aNode,
-                                   nsIAtom* aProperty,
+  nsresult SetInlinePropertyOnNode(nsIContent& aNode,
+                                   nsIAtom& aProperty,
                                    const nsAString* aAttribute,
-                                   const nsAString* aValue);
+                                   const nsAString& aValue);
 
   nsresult PromoteInlineRange(nsRange* aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* aRange);
