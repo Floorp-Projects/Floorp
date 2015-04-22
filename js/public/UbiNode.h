@@ -251,8 +251,8 @@ struct Concrete {
     static void construct(void* storage, Referent* referent);
 };
 
-// A container for a Base instance; all members simply forward to the contained instance.
-// This container allows us to pass ubi::Node instances by value.
+// A container for a Base instance; all members simply forward to the contained
+// instance.  This container allows us to pass ubi::Node instances by value.
 class Node {
     // Storage in which we allocate Base subclasses.
     mozilla::AlignedStorage2<Base> storage;
@@ -355,6 +355,21 @@ class Node {
     UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames = true) const {
         return base()->edges(cx, wantNames);
     }
+
+    // An identifier for this node, guaranteed to be stable and unique for as
+    // long as this ubi::Node's referent is alive and at the same address.
+    //
+    // This is probably suitable for use in serializations, as it is an integral
+    // type. It may also help save memory when constructing HashSets of
+    // ubi::Nodes: since a uintptr_t will always be smaller than a ubi::Node, a
+    // HashSet<ubi::Node::Id> will use less space per element than a
+    // HashSet<ubi::Node>.
+    //
+    // (Note that 'unique' only means 'up to equality on ubi::Node'; see the
+    // caveats about multiple objects allocated at the same address for
+    // 'ubi::Node::operator=='.)
+    typedef uintptr_t Id;
+    Id identifier() const { return reinterpret_cast<Id>(base()->ptr); }
 
     // A hash policy for ubi::Nodes.
     // This simply uses the stock PointerHasher on the ubi::Node's pointer.
@@ -475,6 +490,33 @@ class SimpleEdge : public Edge {
 
 typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
 
+// An EdgeRange concrete class that holds a pre-existing vector of
+// SimpleEdges. A PreComputedEdgeRange does not take ownership of its
+// SimpleEdgeVector; it is up to the PreComputedEdgeRange's consumer to manage
+// that lifetime.
+class PreComputedEdgeRange : public EdgeRange {
+    SimpleEdgeVector& edges;
+    size_t            i;
+
+    void settle() {
+        front_ = i < edges.length() ? &edges[i] : nullptr;
+    }
+
+  public:
+    explicit PreComputedEdgeRange(JSContext* cx, SimpleEdgeVector& edges)
+      : edges(edges),
+        i(0)
+    {
+        settle();
+    }
+
+    void popFront() override {
+        MOZ_ASSERT(!empty());
+        i++;
+        settle();
+    }
+};
+
 
 // RootList is a class that can be pointed to by a |ubi::Node|, creating a
 // fictional root-of-roots which has edges to every GC root in the JS
@@ -520,6 +562,10 @@ class MOZ_STACK_CLASS RootList {
     bool init(ZoneSet& debuggees);
     // Find only GC roots in the given Debugger object's set of debuggee zones.
     bool init(HandleObject debuggees);
+
+    // Returns true if the RootList has been initialized successfully, false
+    // otherwise.
+    bool initialized() { return noGC.isSome(); }
 
     // Explicitly add the given Node as a root in this RootList. If wantNames is
     // true, you must pass an edgeName. The RootList does not take ownership of
