@@ -841,11 +841,11 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
     NS_ENSURE_SUCCESS(res, res);
 
     // use these ranges to construct a list of nodes to act on.
-    nsCOMArray<nsIDOMNode> arrayOfNodes;
+    nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
     res = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
-                               EditAction::align, true);
+                               EditAction::align, TouchContent::no);
     NS_ENSURE_SUCCESS(res, res);                                 
-    nodeToExamine = arrayOfNodes.SafeObjectAt(0);
+    nodeToExamine = GetAsDOMNode(arrayOfNodes.SafeElementAt(0));
   }
 
   NS_ENSURE_TRUE(nodeToExamine, NS_ERROR_NULL_POINTER);
@@ -3870,10 +3870,15 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
   
   // use these ranges to contruct a list of nodes to act on.
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, EditAction::indent);
+  nsTArray<nsCOMPtr<nsINode>> array;
+  res = GetNodesForOperation(arrayOfRanges, array, EditAction::indent);
   NS_ENSURE_SUCCESS(res, res);                                 
                                      
+  nsCOMArray<nsIDOMNode> arrayOfNodes;
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
+  }
+
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
@@ -5859,184 +5864,153 @@ nsHTMLEditRules::PromoteRange(nsRange* inRange, EditAction inOperationType)
   return res;
 } 
 
+class NodeComparator
+{
+  public:
+    bool Equals(const nsINode* node, const nsIDOMNode* domNode) const
+    {
+      return domNode == GetAsDOMNode(const_cast<nsINode*>(node));
+    }
+};
+
 class nsUniqueFunctor : public nsBoolDomIterFunctor
 {
 public:
-  explicit nsUniqueFunctor(nsCOMArray<nsIDOMNode> &aArray) : mArray(aArray)
+  explicit nsUniqueFunctor(nsTArray<nsCOMPtr<nsINode>> &aArray) : mArray(aArray)
   {
   }
   // used to build list of all nodes iterator covers
   virtual bool operator()(nsIDOMNode* aNode) const
   {
-    return mArray.IndexOf(aNode) < 0;
+    return !mArray.Contains(aNode, NodeComparator());
   }
 
 private:
-  nsCOMArray<nsIDOMNode> &mArray;
+  nsTArray<nsCOMPtr<nsINode>>& mArray;
 };
 
-///////////////////////////////////////////////////////////////////////////
-// GetNodesForOperation: run through the ranges in the array and construct 
-//                       a new array of nodes to be acted on.
-//                       
-nsresult 
-nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRanges, 
-                                      nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
-                                      EditAction inOperationType,
-                                      bool aDontTouchContent)
+///////////////////////////////////////////////////////////////////////////////
+// GetNodesForOperation: Run through the ranges in the array and construct a
+//                       new array of nodes to be acted on.
+//
+nsresult
+nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRanges,
+                                      nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
+                                      EditAction aOperationType,
+                                      TouchContent aTouchContent)
 {
-  int32_t rangeCount = inArrayOfRanges.Length();
-  
-  int32_t i;
-  nsRefPtr<nsRange> opRange;
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
-  nsresult res = NS_OK;
-  
-  // bust up any inlines that cross our range endpoints,
-  // but only if we are allowed to touch content.
-  
-  if (!aDontTouchContent)
-  {
+  int32_t rangeCount = aArrayOfRanges.Length();
+  nsresult res;
+
+  // Bust up any inlines that cross our range endpoints, but only if we are
+  // allowed to touch content.
+
+  if (aTouchContent == TouchContent::yes) {
     nsTArray<nsRefPtr<nsRangeStore>> rangeItemArray;
     rangeItemArray.AppendElements(rangeCount);
 
-    NS_ASSERTION(static_cast<uint32_t>(rangeCount) == rangeItemArray.Length(),
-                 "How did that happen?");
-
-    // first register ranges for special editor gravity
-    for (i = 0; i < rangeCount; i++)
-    {
-      opRange = inArrayOfRanges[0];
+    // First register ranges for special editor gravity
+    for (int32_t i = 0; i < rangeCount; i++) {
       rangeItemArray[i] = new nsRangeStore();
-      rangeItemArray[i]->StoreRange(opRange);
-      NS_ENSURE_STATE(mHTMLEditor);
+      rangeItemArray[i]->StoreRange(aArrayOfRanges[0]);
       mHTMLEditor->mRangeUpdater.RegisterRangeItem(rangeItemArray[i]);
-      inArrayOfRanges.RemoveElementAt(0);
-    }    
-    // now bust up inlines.  Safe to start at rangeCount-1, since we
-    // asserted we have enough items above.
-    for (i = rangeCount-1; i >= 0 && NS_SUCCEEDED(res); i--)
-    {
-      res = BustUpInlinesAtRangeEndpoints(*rangeItemArray[i]);
-    } 
-    // then unregister the ranges
-    for (i = 0; i < rangeCount; i++)
-    {
-      nsRangeStore* item = rangeItemArray[i];
-      NS_ENSURE_STATE(mHTMLEditor);
+      aArrayOfRanges.RemoveElementAt(0);
+    }
+    // Now bust up inlines.
+    for (auto& item : Reversed(rangeItemArray)) {
+      res = BustUpInlinesAtRangeEndpoints(*item);
+      if (NS_FAILED(res)) {
+        break;
+      }
+    }
+    // Then unregister the ranges
+    for (auto& item : rangeItemArray) {
       mHTMLEditor->mRangeUpdater.DropRangeItem(item);
-      opRange = item->GetRange();
-      inArrayOfRanges.AppendElement(opRange);
+      aArrayOfRanges.AppendElement(item->GetRange());
     }
     NS_ENSURE_SUCCESS(res, res);
   }
-  // gather up a list of all the nodes
-  for (i = 0; i < rangeCount; i++)
-  {
-    opRange = inArrayOfRanges[i];
-    
-    nsDOMSubtreeIterator iter(*opRange);
-    if (outArrayOfNodes.Count() == 0) {
-      nsTrivialFunctor functor;
-      iter.AppendList(functor, outArrayOfNodes);
-    }
-    else {
-      // We don't want duplicates in outArrayOfNodes, so we use an
+  // Gather up a list of all the nodes
+  for (auto& range : aArrayOfRanges) {
+    nsDOMSubtreeIterator iter(*range);
+    if (aOutArrayOfNodes.Length() == 0) {
+      iter.AppendList(nsTrivialFunctor(), aOutArrayOfNodes);
+    } else {
+      // We don't want duplicates in aOutArrayOfNodes, so we use an
       // iterator/functor that only return nodes that are not already in
-      // outArrayOfNodes.
-      nsCOMArray<nsIDOMNode> nodes;
-      nsUniqueFunctor functor(outArrayOfNodes);
-      iter.AppendList(functor, nodes);
-      if (!outArrayOfNodes.AppendObjects(nodes))
-        return NS_ERROR_OUT_OF_MEMORY;
+      // aOutArrayOfNodes.
+      nsTArray<nsCOMPtr<nsINode>> nodes;
+      iter.AppendList(nsUniqueFunctor(aOutArrayOfNodes), nodes);
+      aOutArrayOfNodes.AppendElements(nodes);
     }
-  }    
+  }
 
-  // certain operations should not act on li's and td's, but rather inside 
-  // them.  alter the list as needed
-  if (inOperationType == EditAction::makeBasicBlock) {
-    int32_t listCount = outArrayOfNodes.Count();
-    for (i=listCount-1; i>=0; i--)
-    {
-      nsCOMPtr<nsIDOMNode> node = outArrayOfNodes[i];
-      if (nsHTMLEditUtils::IsListItem(node))
-      {
-        int32_t j=i;
-        outArrayOfNodes.RemoveObjectAt(i);
-        res = GetInnerContent(node, outArrayOfNodes, &j);
-        NS_ENSURE_SUCCESS(res, res);
+  // Certain operations should not act on li's and td's, but rather inside
+  // them.  Alter the list as needed.
+  if (aOperationType == EditAction::makeBasicBlock) {
+    for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
+      nsCOMPtr<nsINode> node = aOutArrayOfNodes[i];
+      if (nsHTMLEditUtils::IsListItem(node)) {
+        int32_t j = i;
+        aOutArrayOfNodes.RemoveElementAt(i);
+        GetInnerContent(*node, aOutArrayOfNodes, &j);
+      }
+    }
+  // Indent/outdent already do something special for list items, but we still
+  // need to make sure we don't act on table elements
+  } else if (aOperationType == EditAction::outdent ||
+             aOperationType == EditAction::indent ||
+             aOperationType == EditAction::setAbsolutePosition) {
+    for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
+      nsCOMPtr<nsINode> node = aOutArrayOfNodes[i];
+      if (nsHTMLEditUtils::IsTableElementButNotTable(node)) {
+        int32_t j = i;
+        aOutArrayOfNodes.RemoveElementAt(i);
+        GetInnerContent(*node, aOutArrayOfNodes, &j);
       }
     }
   }
-  // indent/outdent already do something special for list items, but
-  // we still need to make sure we don't act on table elements
-  else if (inOperationType == EditAction::outdent ||
-           inOperationType == EditAction::indent ||
-           inOperationType == EditAction::setAbsolutePosition) {
-    int32_t listCount = outArrayOfNodes.Count();
-    for (i=listCount-1; i>=0; i--)
-    {
-      nsCOMPtr<nsIDOMNode> node = outArrayOfNodes[i];
-      if (nsHTMLEditUtils::IsTableElementButNotTable(node))
-      {
-        int32_t j=i;
-        outArrayOfNodes.RemoveObjectAt(i);
-        res = GetInnerContent(node, outArrayOfNodes, &j);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-    }
-  }
-  // outdent should look inside of divs.
-  if (inOperationType == EditAction::outdent &&
-      (!mHTMLEditor || !mHTMLEditor->IsCSSEnabled())) {
-    NS_ENSURE_STATE(mHTMLEditor);
-    int32_t listCount = outArrayOfNodes.Count();
-    for (i=listCount-1; i>=0; i--)
-    {
-      nsCOMPtr<nsIDOMNode> node = outArrayOfNodes[i];
-      if (nsHTMLEditUtils::IsDiv(node))
-      {
-        int32_t j=i;
-        outArrayOfNodes.RemoveObjectAt(i);
-        res = GetInnerContent(node, outArrayOfNodes, &j, false, false);
-        NS_ENSURE_SUCCESS(res, res);
+  // Outdent should look inside of divs.
+  if (aOperationType == EditAction::outdent &&
+      !mHTMLEditor->IsCSSEnabled()) {
+    for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
+      nsCOMPtr<nsINode> node = aOutArrayOfNodes[i];
+      if (node->IsHTMLElement(nsGkAtoms::div)) {
+        int32_t j = i;
+        aOutArrayOfNodes.RemoveElementAt(i);
+        GetInnerContent(*node, aOutArrayOfNodes, &j, Lists::no, Tables::no);
       }
     }
   }
 
 
-  // post process the list to break up inline containers that contain br's.
-  // but only for operations that might care, like making lists or para's...
-  if (inOperationType == EditAction::makeBasicBlock ||
-      inOperationType == EditAction::makeList ||
-      inOperationType == EditAction::align ||
-      inOperationType == EditAction::setAbsolutePosition ||
-      inOperationType == EditAction::indent ||
-      inOperationType == EditAction::outdent) {
-    int32_t listCount = outArrayOfNodes.Count();
-    for (i=listCount-1; i>=0; i--)
-    {
-      nsCOMPtr<nsINode> node = do_QueryInterface(outArrayOfNodes[i]);
-      NS_ENSURE_STATE(node);
-      if (!aDontTouchContent && IsInlineNode(GetAsDOMNode(node)) &&
-          (!mHTMLEditor || mHTMLEditor->IsContainer(node)) &&
-          (!mHTMLEditor || !mHTMLEditor->IsTextNode(node)))
-      {
-        NS_ENSURE_STATE(mHTMLEditor);
+  // Post-process the list to break up inline containers that contain br's, but
+  // only for operations that might care, like making lists or paragraphs
+  if (aOperationType == EditAction::makeBasicBlock ||
+      aOperationType == EditAction::makeList ||
+      aOperationType == EditAction::align ||
+      aOperationType == EditAction::setAbsolutePosition ||
+      aOperationType == EditAction::indent ||
+      aOperationType == EditAction::outdent) {
+    for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
+      nsCOMPtr<nsINode> node = aOutArrayOfNodes[i];
+      if (aTouchContent == TouchContent::yes &&
+          IsInlineNode(GetAsDOMNode(node)) && mHTMLEditor->IsContainer(node) &&
+          !mHTMLEditor->IsTextNode(node)) {
         nsTArray<nsCOMPtr<nsINode>> arrayOfInlines;
         res = BustUpInlinesAtBRs(*node, arrayOfInlines);
         NS_ENSURE_SUCCESS(res, res);
-        nsCOMArray<nsIDOMNode> arrayOfInlinesDOM;
-        for (auto& inlineNode : arrayOfInlines) {
-          arrayOfInlinesDOM.AppendObject(GetAsDOMNode(inlineNode));
-        }
-        // put these nodes in outArrayOfNodes, replacing the current node
-        outArrayOfNodes.RemoveObjectAt(i);
-        outArrayOfNodes.InsertObjectsAt(arrayOfInlinesDOM, i);
+
+        // Put these nodes in aOutArrayOfNodes, replacing the current node
+        aOutArrayOfNodes.RemoveElementAt(i);
+        aOutArrayOfNodes.InsertElementsAt(i, arrayOfInlines);
       }
     }
   }
-  return res;
+  return NS_OK;
 }
 
 
@@ -6433,7 +6407,12 @@ nsHTMLEditRules::GetNodesFromPoint(::DOMPoint point,
   arrayOfRanges.AppendElement(range);
   
   // use these ranges to contruct a list of nodes to act on.
-  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, operation, dontTouchContent); 
+  nsTArray<nsCOMPtr<nsINode>> array;
+  res = GetNodesForOperation(arrayOfRanges, array, operation, dontTouchContent
+                             ? TouchContent::no : TouchContent::yes);
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
+  }
   return res;
 }
 
@@ -6457,7 +6436,12 @@ nsHTMLEditRules::GetNodesFromSelection(Selection* selection,
   NS_ENSURE_SUCCESS(res, res);
   
   // use these ranges to contruct a list of nodes to act on.
-  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, operation, dontTouchContent); 
+  nsTArray<nsCOMPtr<nsINode>> array;
+  res = GetNodesForOperation(arrayOfRanges, array, operation, dontTouchContent
+                             ? TouchContent::no : TouchContent::yes);
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
+  }
   return res;
 }
 
@@ -9079,11 +9063,15 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
   
   // use these ranges to contruct a list of nodes to act on.
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
+  nsTArray<nsCOMPtr<nsINode>> array;
+  res = GetNodesForOperation(arrayOfRanges, array,
                              EditAction::setAbsolutePosition);
   NS_ENSURE_SUCCESS(res, res);                                 
                                      
+  nsCOMArray<nsIDOMNode> arrayOfNodes;
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
+  }
   // if nothing visible in list, make an empty block
   if (ListIsEmptyLine(arrayOfNodes))
   {
