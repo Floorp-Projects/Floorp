@@ -23,7 +23,6 @@ namespace mozilla {
 
 namespace layers {
 class ImageContainer;
-class PlanarYCbCrImage;
 }
 
 class MediaEngineDefault;

@@ -12,7 +12,6 @@
 
 namespace mozilla {
 
-class AudioAvailableEventManager;
 class AudioStream;
 class MediaDecoderStateMachine;
 

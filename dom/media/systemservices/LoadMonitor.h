@@ -16,7 +16,6 @@
 #include "nsIObserver.h"
 
 namespace mozilla {
-class LoadInfoUpdateRunner;
 class LoadInfoCollectRunner;
 
 class LoadNotificationCallback

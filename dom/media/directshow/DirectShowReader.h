@@ -15,16 +15,11 @@
 struct IGraphBuilder;
 struct IMediaControl;
 struct IMediaSeeking;
-struct IMediaEventEx;
 
 namespace mozilla {
 
 class AudioSinkFilter;
 class SourceFilter;
-
-namespace dom {
-class TimeRanges;
-}
 
 // Decoder backend for decoding MP3 using DirectShow. DirectShow operates as
 // a filter graph. The basic design of the DirectShowReader is that we have

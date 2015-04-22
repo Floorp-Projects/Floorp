@@ -28,7 +28,6 @@ namespace mozilla {
 
 class AudioTrackMetadata;
 class VideoTrackMetadata;
-class ES_Descriptor;
 class ISOControl;
 
 /**

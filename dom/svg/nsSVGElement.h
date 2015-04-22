@@ -33,13 +33,11 @@ class nsSVGIntegerPair;
 class nsSVGLength2;
 class nsSVGNumber2;
 class nsSVGNumberPair;
-class nsSVGPathGeometryElement;
 class nsSVGString;
 class nsSVGViewBox;
 
 namespace mozilla {
 namespace dom {
-class CSSValue;
 class SVGSVGElement;
 
 static const unsigned short SVG_UNIT_TYPE_UNKNOWN           = 0;

@@ -13,8 +13,6 @@
 
 namespace mozilla {
 
-class AndroidMediaReader;
-
 class AndroidMediaPluginHost {
   nsRefPtr<AndroidMediaResourceServer> mResourceServer;
   nsTArray<MPAPI::Manifest *> mPlugins;

@@ -10,7 +10,6 @@
 #include "Workers.h"
 
 class nsIInputStream;
-class nsIDOMBlob;
 
 namespace mozilla {
 class ErrorResult;

@@ -31,8 +31,6 @@
 
 #include "mozilla/dom/SpeechRecognitionError.h"
 
-class nsIDOMWindow;
-
 namespace mozilla {
 
 namespace dom {

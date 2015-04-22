@@ -28,8 +28,6 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsTObserverArray.h"
 
-class nsIScriptError;
-
 namespace mozilla {
 
 namespace ipc {
