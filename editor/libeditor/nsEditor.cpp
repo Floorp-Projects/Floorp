@@ -1882,10 +1882,8 @@ nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
-  if (mDocStateListeners.IndexOf(aListener) == -1)
-  {
-    if (!mDocStateListeners.AppendObject(aListener))
-      return NS_ERROR_FAILURE;
+  if (!mDocStateListeners.Contains(aListener)) {
+    mDocStateListeners.AppendElement(*aListener);
   }
 
   return NS_OK;
@@ -1897,8 +1895,7 @@ nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
-  if (!mDocStateListeners.RemoveObject(aListener))
-    return NS_ERROR_FAILURE;
+  mDocStateListeners.RemoveElement(aListener);
 
   return NS_OK;
 }
@@ -2454,29 +2451,28 @@ nsEditor::GetFirstEditableNode(nsINode* aRoot)
 NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
-  int32_t numListeners = mDocStateListeners.Count();
-  if (!numListeners)    // maybe there just aren't any.
+  if (!mDocStateListeners.Length()) {
+    // Maybe there just aren't any.
     return NS_OK;
+  }
  
-  nsCOMArray<nsIDocumentStateListener> listeners(mDocStateListeners);
+  nsTArray<OwningNonNull<nsIDocumentStateListener>>
+    listeners(mDocStateListeners);
   nsresult rv = NS_OK;
-  int32_t i;
 
   switch (aNotificationType)
   {
     case eDocumentCreated:
-      for (i = 0; i < numListeners;i++)
-      {
-        rv = listeners[i]->NotifyDocumentCreated();
+      for (auto& listener : listeners) {
+        rv = listener->NotifyDocumentCreated();
         if (NS_FAILED(rv))
           break;
       }
       break;
       
     case eDocumentToBeDestroyed:
-      for (i = 0; i < numListeners;i++)
-      {
-        rv = listeners[i]->NotifyDocumentWillBeDestroyed();
+      for (auto& listener : listeners) {
+        rv = listener->NotifyDocumentWillBeDestroyed();
         if (NS_FAILED(rv))
           break;
       }
@@ -2493,9 +2489,8 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
 
         mDocDirtyState = docIsDirty;
 
-        for (i = 0; i < numListeners;i++)
-        {
-          rv = listeners[i]->NotifyDocumentStateChanged(mDocDirtyState);
+        for (auto& listener : listeners) {
+          rv = listener->NotifyDocumentStateChanged(mDocDirtyState);
           if (NS_FAILED(rv))
             break;
         }
