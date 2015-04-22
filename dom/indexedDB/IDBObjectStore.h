@@ -27,21 +27,17 @@ class ErrorResult;
 namespace dom {
 
 class DOMStringList;
-class nsIContentParent;
 template <typename> class Sequence;
 
 namespace indexedDB {
 
-class FileManager;
 class IDBCursor;
-class IDBKeyRange;
 class IDBRequest;
 class IDBTransaction;
 class IndexUpdateInfo;
 class Key;
 class KeyPath;
 class ObjectStoreSpec;
-struct StructuredCloneFile;
 struct StructuredCloneReadInfo;
 
 class IDBObjectStore final

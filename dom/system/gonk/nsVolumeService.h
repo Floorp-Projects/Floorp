@@ -22,7 +22,6 @@ class VolumeInfo;
 
 namespace system {
 
-class WakeLockCallback;
 class Volume;
 
 /***************************************************************************

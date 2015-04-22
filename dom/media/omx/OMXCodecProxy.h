@@ -17,7 +17,6 @@
 
 namespace android {
 
-struct MediaBufferGroup;
 struct MetaData;
 
 class OMXCodecProxy : public MediaSource,

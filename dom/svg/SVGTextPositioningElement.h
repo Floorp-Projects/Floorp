@@ -10,8 +10,6 @@
 #include "SVGAnimatedLengthList.h"
 #include "SVGAnimatedNumberList.h"
 
-class nsSVGElement;
-
 namespace mozilla {
 class SVGAnimatedLengthList;
 class DOMSVGAnimatedLengthList;

@@ -14,7 +14,6 @@
 #include "nsString.h"
 
 class nsIPrincipal;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {

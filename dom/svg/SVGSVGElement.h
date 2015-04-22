@@ -24,7 +24,6 @@ nsresult NS_NewSVGSVGElement(nsIContent **aResult,
 class nsSMILTimeContainer;
 class nsSVGOuterSVGFrame;
 class nsSVGInnerSVGFrame;
-class nsSVGImageFrame;
 
 namespace mozilla {
 class AutoSVGRenderingState;

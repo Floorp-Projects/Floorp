@@ -22,7 +22,6 @@ class JSObject;
 
 namespace mozilla {
 
-class ErrorResult;
 template <typename T> class AsyncEventRunner;
 
 namespace dom {

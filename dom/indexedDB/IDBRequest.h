@@ -28,7 +28,6 @@ class ErrorResult;
 namespace dom {
 
 class DOMError;
-struct ErrorEventInit;
 template <typename> struct Nullable;
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
 

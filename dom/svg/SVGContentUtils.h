@@ -21,7 +21,6 @@ class gfxTextContextPaint;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
-class nsPresContext;
 class nsStyleContext;
 class nsStyleCoord;
 class nsSVGElement;
