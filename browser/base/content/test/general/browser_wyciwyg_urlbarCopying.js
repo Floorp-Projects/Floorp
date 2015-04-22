@@ -2,14 +2,17 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function testURLBarCopy(targetValue) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     info("Expecting copy of: " + targetValue);
     waitForClipboard(targetValue, function () {
       gURLBar.focus();
       gURLBar.select();
 
       goDoCommand("cmd_copy");
-    }, resolve);
+    }, resolve, () => {
+      ok(false, "Clipboard copy failed");
+      reject();
+    });
   });
 }
 
