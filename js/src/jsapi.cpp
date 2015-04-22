@@ -4462,6 +4462,12 @@ JS_New(JSContext* cx, HandleObject ctor, const JS::HandleValueArray& inputArgs)
     return obj;
 }
 
+JS_PUBLIC_API(bool)
+JS_CheckForInterrupt(JSContext* cx)
+{
+    return js::CheckForInterrupt(cx);
+}
+
 JS_PUBLIC_API(JSInterruptCallback)
 JS_SetInterruptCallback(JSRuntime* rt, JSInterruptCallback callback)
 {
