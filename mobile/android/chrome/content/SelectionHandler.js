@@ -385,12 +385,6 @@ var SelectionHandler = {
       return this.START_ERROR_NONTEXT_INPUT;
     }
 
-    const focus = Services.focus.focusedWindow;
-    if (focus) {
-      // Make sure any previous focus is cleared.
-      Services.focus.clearFocus(focus);
-    }
-
     this._initTargetInfo(aElement, this.TYPE_SELECTION);
 
     // Perform the appropriate selection method, if we can't determine method, or it fails, return
