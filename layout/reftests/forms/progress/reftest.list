@@ -24,3 +24,22 @@ skip-if(B2G||Mulet) == bar-pseudo-element-vertical.html bar-pseudo-element-verti
 == block-invalidate.html block-invalidate-ref.html
 == in-cells.html in-cells-ref.html
 == max-height.html max-height-ref.html
+
+# Tests for block and inline orientation in combination with writing-mode
+# XXX Remove default-preferences setting here after bug 1138384 makes
+#     it the default for all channels
+default-preferences pref(layout.css.vertical-text.enabled,true)
+!= progress-orient-horizontal.html progress-orient-vertical.html
+fails-if(!cocoaWidget) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
+== progress-orient-block.html progress-orient-vertical.html
+== progress-orient-inline.html progress-orient-horizontal.html
+== progress-vlr.html progress-orient-vertical.html
+== progress-vlr-orient-block.html progress-orient-horizontal.html
+== progress-vlr-orient-inline.html progress-orient-vertical.html
+== progress-vlr-orient-horizontal.html progress-orient-horizontal.html
+== progress-vlr-orient-vertical.html progress-orient-vertical.html
+== progress-vrl.html progress-orient-vertical-rtl.html
+== progress-vrl-orient-block.html progress-orient-horizontal-rtl.html
+== progress-vrl-orient-inline.html progress-orient-vertical-rtl.html
+== progress-vrl-orient-horizontal.html progress-orient-horizontal-rtl.html
+== progress-vrl-orient-vertical.html progress-orient-vertical-rtl.html
