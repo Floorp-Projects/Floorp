@@ -5899,28 +5899,15 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRange
 }
 
 
-
-///////////////////////////////////////////////////////////////////////////
-// GetChildNodesForOperation: 
-//                       
-nsresult 
-nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode, 
-                                           nsCOMArray<nsIDOMNode>& outArrayOfNodes)
+void
+nsHTMLEditRules::GetChildNodesForOperation(nsINode& aNode,
+    nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-
-  for (nsIContent* child = node->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    nsIDOMNode* childNode = child->AsDOMNode();
-    if (!outArrayOfNodes.AppendObject(childNode)) {
-      return NS_ERROR_FAILURE;
-    }
+  for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    outArrayOfNodes.AppendElement(child);
   }
-  return NS_OK;
 }
-
 
 
 nsresult
@@ -6852,10 +6839,15 @@ nsHTMLEditRules::MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes)
     {
       curBlock = 0;  // forget any previous block
       // recursion time
-      nsCOMArray<nsIDOMNode> childArray;
-      res = GetChildNodesForOperation(curNode, childArray);
-      NS_ENSURE_SUCCESS(res, res);
-      res = MakeBlockquote(childArray);
+      nsTArray<nsCOMPtr<nsINode>> childArray;
+      nsCOMPtr<nsINode> node = do_QueryInterface(curNode);
+      NS_ENSURE_STATE(node || !curNode);
+      GetChildNodesForOperation(*node, childArray);
+      nsCOMArray<nsIDOMNode> childArrayDOM;
+      for (auto& child : childArray) {
+        childArrayDOM.AppendObject(GetAsDOMNode(child));
+      }
+      res = MakeBlockquote(childArrayDOM);
       NS_ENSURE_SUCCESS(res, res);
     }
     
@@ -6950,10 +6942,13 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
         curBlock = 0;  firstNode = 0;  lastNode = 0;
       }
       // recursion time
-      nsCOMArray<nsIDOMNode> childArray;
-      res = GetChildNodesForOperation(curNode, childArray);
-      NS_ENSURE_SUCCESS(res, res);
-      res = RemoveBlockStyle(childArray);
+      nsTArray<nsCOMPtr<nsINode>> childArray;
+      GetChildNodesForOperation(*curElement, childArray);
+      nsCOMArray<nsIDOMNode> childArrayDOM;
+      for (auto& child : childArray) {
+        childArrayDOM.AppendObject(GetAsDOMNode(child));
+      }
+      res = RemoveBlockStyle(childArrayDOM);
       NS_ENSURE_SUCCESS(res, res);
     }
     else if (IsInlineNode(curNode))
@@ -7087,13 +7082,14 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
                                           nsGkAtoms::div)) {
       curBlock = 0;  // forget any previous block used for previous inline nodes
       // recursion time
-      nsCOMArray<nsIDOMNode> childArray;
-      res = GetChildNodesForOperation(GetAsDOMNode(curNode), childArray);
-      NS_ENSURE_SUCCESS(res, res);
-      int32_t childCount = childArray.Count();
-      if (childCount)
-      {
-        res = ApplyBlockStyle(childArray, aBlockTag);
+      nsTArray<nsCOMPtr<nsINode>> childArray;
+      GetChildNodesForOperation(*curNode, childArray);
+      if (childArray.Length()) {
+        nsCOMArray<nsIDOMNode> childArrayDOM;
+        for (auto& child : childArray) {
+          childArrayDOM.AppendObject(GetAsDOMNode(child));
+        }
+        res = ApplyBlockStyle(childArrayDOM, aBlockTag);
         NS_ENSURE_SUCCESS(res, res);
       }
       else
