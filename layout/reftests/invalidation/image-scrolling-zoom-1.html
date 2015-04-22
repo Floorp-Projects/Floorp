@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html class="reftest-wait" reftest-zoom="0.3">
+<head>
+  <style type="text/css">
+    #container {
+      height: 100px;
+      overflow: auto;
+    }
+    #container-background {
+      background: url(one-pixel-wide-background.png);
+    }
+    #container-background > div {
+      line-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="container-background">
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+    </div>
+  </div>
+</body>
+<script>
+  var container = document.getElementById('container');
+
+  // Start scrolled all the way to the bottom.
+  container.scrollTop = container.scrollHeight;
+
+  // When we get MozReftestInvalidate, scroll to the top. This puts us at the
+  // same scroll position as the reference.
+  function doTest() {
+    container.scrollTop = 0;
+    document.documentElement.removeAttribute('class');
+  }
+
+  document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</html>
