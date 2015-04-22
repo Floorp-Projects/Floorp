@@ -24,6 +24,12 @@ var testUpdate =
   "a:524:32:" + testData.length + "\n" +
   testData;
 
+testData = "unwanted.example.com/";
+testUpdate +=
+  "n:1000\ni:test-unwanted-simple\nad:1\n" +
+  "a:524:32:" + testData.length + "\n" +
+  testData;
+
 var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
                 .getService(Ci.nsIUrlClassifierDBService);
 
@@ -55,7 +61,7 @@ function doUpdate(update) {
     }
   };
 
-  dbService.beginUpdate(listener, "test-malware-simple", "");
+  dbService.beginUpdate(listener, "test-malware-simple,test-unwanted-simple", "");
   dbService.beginStream("", "");
   dbService.updateStream(update);
   dbService.finishStream();
@@ -63,7 +69,7 @@ function doUpdate(update) {
 }
 
 SpecialPowers.pushPrefEnv(
-  {"set" : [["urlclassifier.malwareTable", "test-malware-simple"],
+  {"set" : [["urlclassifier.malwareTable", "test-malware-simple,test-unwanted-simple"],
             ["urlclassifier.phishTable", "test-phish-simple"]]},
   function() { doUpdate(testUpdate); });
 

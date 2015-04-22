@@ -53,15 +53,18 @@ function cleanUp() {
   delFile("safebrowsing/classifier.hashkey");
   delFile("safebrowsing/test-phish-simple.sbstore");
   delFile("safebrowsing/test-malware-simple.sbstore");
+  delFile("safebrowsing/test-unwanted-simple.sbstore");
   delFile("safebrowsing/test-phish-simple.cache");
   delFile("safebrowsing/test-malware-simple.cache");
+  delFile("safebrowsing/test-unwanted-simple.cache");
   delFile("safebrowsing/test-phish-simple.pset");
   delFile("safebrowsing/test-malware-simple.pset");
+  delFile("safebrowsing/test-unwanted-simple.pset");
   delFile("testLarge.pset");
   delFile("testNoDelta.pset");
 }
 
-var allTables = "test-phish-simple,test-malware-simple";
+var allTables = "test-phish-simple,test-malware-simple,test-unwanted-simple";
 
 var dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIUrlClassifierDBService);
 var streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
@@ -114,6 +117,10 @@ function buildMalwareUpdate(chunks, hashSize) {
   return buildUpdate({"test-malware-simple" : chunks}, hashSize);
 }
 
+function buildUnwantedUpdate(chunks, hashSize) {
+  return buildUpdate({"test-unwanted-simple" : chunks}, hashSize);
+}
+
 function buildBareUpdate(chunks, hashSize) {
   return buildUpdate({"" : chunks}, hashSize);
 }
@@ -138,7 +145,7 @@ function doSimpleUpdate(updateText, success, failure) {
   };
 
   dbservice.beginUpdate(listener,
-                        "test-phish-simple,test-malware-simple");
+                        "test-phish-simple,test-malware-simple,test-unwanted-simple");
   dbservice.beginStream("", "");
   dbservice.updateStream(updateText);
   dbservice.finishStream();
@@ -180,7 +187,7 @@ function doStreamUpdate(updateText, success, failure, downloadFailure) {
     downloadFailure = failure;
   }
 
-  streamUpdater.downloadUpdates("test-phish-simple,test-malware-simple", "",
+  streamUpdater.downloadUpdates("test-phish-simple,test-malware-simple,test-unwanted-simple", "",
                                 dataUpdate, success, failure, downloadFailure);
 }
 
@@ -235,6 +242,11 @@ urlsExist: function(urls, cb)
 malwareUrlsExist: function(urls, cb)
 {
   this.checkUrls(urls, 'test-malware-simple', cb);
+},
+
+unwantedUrlsExist: function(urls, cb)
+{
+  this.checkUrls(urls, 'test-unwanted-simple', cb);
 },
 
 subsDontExist: function(urls, cb)

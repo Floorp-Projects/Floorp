@@ -242,33 +242,15 @@ function onClickContent(event) {
 
   if (/^about:blocked/.test(errorDoc.documentURI)) {
     // The event came from a button on a malware/phishing block page
-    // First check whether it's malware or phishing, so that we can
-    // use the right strings/links
-    var isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
 
     if (target == errorDoc.getElementById('getMeOutButton')) {
       // Instead of loading some safe page, just close the window
       window.close();
     } else if (target == errorDoc.getElementById('reportButton')) {
-      // This is the "Why is this site blocked" button.  For malware,
-      // we can fetch a site-specific report, for phishing, we redirect
-      // to the generic page describing phishing protection.
-
-      if (isMalware) {
-        // Get the stop badware "why is this blocked" report url,
-        // append the current url, and go there.
-        try {
-          let reportURL = Services.urlFormatter.formatURLPref("browser.safebrowsing.malware.reportURL", true);
-          reportURL += errorDoc.location.href.slice(12);
-          openURL(reportURL);
-        } catch (e) {
-          Components.utils.reportError("Couldn't get malware report URL: " + e);
-        }
-      } else {
-        // It's a phishing site, just link to the generic information page
-        let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
-        openURL(url + "phishing-malware");
-      }
+      // This is the "Why is this site blocked" button. We redirect
+      // to the generic page describing phishing/malware protection.
+      let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+      openURL(url + "phishing-malware");
     } else if (target == errorDoc.getElementById('ignoreWarningButton')) {
       // Allow users to override and continue through to the site
       gBrowser.loadURIWithFlags(content.location.href,
