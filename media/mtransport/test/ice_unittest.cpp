@@ -354,8 +354,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void UseTestStunServer() {
-    SetStunServer(TestStunServer::GetInstance()->addr(),
-                  TestStunServer::GetInstance()->port());
+    SetStunServer(TestStunServer::GetInstance(AF_INET)->addr(),
+                  TestStunServer::GetInstance(AF_INET)->port());
   }
 
   void SetTurnServer(const std::string addr, uint16_t port,
@@ -382,15 +382,15 @@ class IceTestPeer : public sigslot::has_slots<> {
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetTurnServers(servers)));
   }
 
-  void SetFakeResolver() {
+  void SetFakeResolver(const std::string& ip = g_stun_server_address,
+                       const std::string& fqdn = g_stun_server_hostname) {
     ASSERT_TRUE(NS_SUCCEEDED(dns_resolver_->Init()));
-    if (!g_stun_server_address.empty() && !g_stun_server_hostname.empty()) {
+    if (!ip.empty() && !fqdn.empty()) {
       PRNetAddr addr;
-      PRStatus status = PR_StringToNetAddr(g_stun_server_address.c_str(),
-                                            &addr);
+      PRStatus status = PR_StringToNetAddr(ip.c_str(), &addr);
       addr.inet.port = kDefaultStunServerPort;
       ASSERT_EQ(PR_SUCCESS, status);
-      fake_resolver_.SetAddr(g_stun_server_hostname, addr);
+      fake_resolver_.SetAddr(fqdn, addr);
     }
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetResolver(
         fake_resolver_.AllocateResolver())));
@@ -1098,9 +1098,16 @@ void SchedulableTrickleCandidate::Trickle() {
 class IceGatherTest : public ::testing::Test {
  public:
   void SetUp() {
-    test_utils->sts_target()->Dispatch(WrapRunnable(TestStunServer::GetInstance(),
-                                                    &TestStunServer::Reset),
-                                       NS_DISPATCH_SYNC);
+    test_utils->sts_target()->Dispatch(
+        WrapRunnable(TestStunServer::GetInstance(AF_INET),
+                     &TestStunServer::Reset),
+        NS_DISPATCH_SYNC);
+    if (TestStunServer::GetInstance(AF_INET6)) {
+      test_utils->sts_target()->Dispatch(
+          WrapRunnable(TestStunServer::GetInstance(AF_INET6),
+                       &TestStunServer::Reset),
+          NS_DISPATCH_SYNC);
+    }
   }
 
   void TearDown() {
@@ -1135,54 +1142,90 @@ class IceGatherTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(peer_->gathering_complete(), waitTime);
   }
 
-  void UseFakeStunUdpServerWithResponse(const std::string& fake_addr,
-                                        uint16_t fake_port) {
-    EnsurePeer();
-    TestStunServer::GetInstance()->SetResponseAddr(fake_addr, fake_port);
-    // Sets an additional stun server
-    peer_->SetStunServer(TestStunServer::GetInstance()->addr(),
-                         TestStunServer::GetInstance()->port(),
-                         kNrIceTransportUdp);
+  void AddStunServerWithResponse(
+      const std::string& fake_addr,
+      uint16_t fake_port,
+      const std::string& fqdn,
+      const std::string& proto,
+      std::vector<NrIceStunServer>* stun_servers) {
+    int family;
+    if (fake_addr.find(':') != std::string::npos) {
+      family = AF_INET6;
+    } else {
+      family = AF_INET;
+    }
+
+    std::string stun_addr;
+    uint16_t stun_port;
+    if (proto == kNrIceTransportUdp) {
+      TestStunServer::GetInstance(family)->SetResponseAddr(fake_addr,
+                                                           fake_port);
+      stun_addr = TestStunServer::GetInstance(family)->addr();
+      stun_port = TestStunServer::GetInstance(family)->port();
+    } else if (proto == kNrIceTransportTcp) {
+      TestStunTcpServer::GetInstance(family)->SetResponseAddr(fake_addr,
+                                                              fake_port);
+      stun_addr = TestStunTcpServer::GetInstance(family)->addr();
+      stun_port = TestStunTcpServer::GetInstance(family)->port();
+    } else {
+      MOZ_CRASH();
+    }
+
+    if (!fqdn.empty()) {
+      peer_->SetFakeResolver(stun_addr, fqdn);
+      stun_addr = fqdn;
+    }
+
+    stun_servers->push_back(*NrIceStunServer::Create(stun_addr,
+                                                     stun_port,
+                                                     proto.c_str()));
   }
 
-  void UseFakeStunTcpServerWithResponse(const std::string& fake_addr,
-                                        uint16_t fake_port) {
-    EnsurePeer();
-    TestStunTcpServer::GetInstance()->SetResponseAddr(fake_addr, fake_port);
-    // Sets an additional stun server
-    peer_->SetStunServer(TestStunTcpServer::GetInstance()->addr(),
-                         TestStunTcpServer::GetInstance()->port(),
-                         kNrIceTransportTcp);
-  }
-
-  void UseFakeStunUdpTcpServersWithResponse(const std::string& fake_udp_addr,
-                                            uint16_t fake_udp_port,
-                                            const std::string& fake_tcp_addr,
-                                            uint16_t fake_tcp_port) {
+  void UseFakeStunUdpServerWithResponse(
+      const std::string& fake_addr,
+      uint16_t fake_port,
+      const std::string& fqdn = std::string()) {
     EnsurePeer();
     std::vector<NrIceStunServer> stun_servers;
+    AddStunServerWithResponse(fake_addr, fake_port, fqdn, "udp", &stun_servers);
+    peer_->SetStunServers(stun_servers);
+  }
 
-    stun_servers.push_back(*NrIceStunServer::Create(
-        TestStunServer::GetInstance()->addr(),
-        TestStunServer::GetInstance()->port(),
-        kNrIceTransportUdp));
-    stun_servers.push_back(*NrIceStunServer::Create(
-        TestStunTcpServer::GetInstance()->addr(),
-        TestStunTcpServer::GetInstance()->port(),
-        kNrIceTransportTcp));
+  void UseFakeStunTcpServerWithResponse(
+      const std::string& fake_addr,
+      uint16_t fake_port,
+      const std::string& fqdn = std::string()) {
+    EnsurePeer();
+    std::vector<NrIceStunServer> stun_servers;
+    AddStunServerWithResponse(fake_addr, fake_port, fqdn, "tcp", &stun_servers);
+    peer_->SetStunServers(stun_servers);
+  }
 
-    TestStunServer::GetInstance()->SetResponseAddr(fake_udp_addr,
-                                                   fake_udp_port);
-    TestStunTcpServer::GetInstance()->SetResponseAddr(fake_tcp_addr,
-                                                      fake_tcp_port);
-    // Sets an additional stun server
+  void UseFakeStunUdpTcpServersWithResponse(
+      const std::string& fake_udp_addr,
+      uint16_t fake_udp_port,
+      const std::string& fake_tcp_addr,
+      uint16_t fake_tcp_port) {
+    EnsurePeer();
+    std::vector<NrIceStunServer> stun_servers;
+    AddStunServerWithResponse(fake_udp_addr,
+                              fake_udp_port,
+                              "", // no fqdn
+                              "udp",
+                              &stun_servers);
+    AddStunServerWithResponse(fake_tcp_addr,
+                              fake_tcp_port,
+                              "", // no fqdn
+                              "tcp",
+                              &stun_servers);
+
     peer_->SetStunServers(stun_servers);
   }
 
   void UseTestStunServer() {
-    TestStunServer::GetInstance()->Reset();
-    peer_->SetStunServer(TestStunServer::GetInstance()->addr(),
-                         TestStunServer::GetInstance()->port());
+    TestStunServer::GetInstance(AF_INET)->Reset();
+    peer_->SetStunServer(TestStunServer::GetInstance(AF_INET)->addr(),
+                         TestStunServer::GetInstance(AF_INET)->port());
   }
 
   // NB: Only does substring matching, watch out for stuff like "1.2.3.4"
@@ -1314,7 +1357,7 @@ class IceConnectTest : public ::testing::Test {
   }
 
   void UseTestStunServer() {
-    TestStunServer::GetInstance()->Reset();
+    TestStunServer::GetInstance(AF_INET)->Reset();
     p1_->UseTestStunServer();
     p2_->UseTestStunServer();
   }
@@ -1482,8 +1525,8 @@ class PrioritizerTest : public ::testing::Test {
     local_addr.interface.type = type;
     local_addr.interface.estimated_speed = estimated_speed;
 
-    int r = nr_ip4_str_port_to_transport_addr(str_addr.c_str(), 0,
-                                              IPPROTO_UDP, &(local_addr.addr));
+    int r = nr_str_port_to_transport_addr(str_addr.c_str(), 0,
+                                          IPPROTO_UDP, &(local_addr.addr));
     ASSERT_EQ(0, r);
     strncpy(local_addr.addr.ifname, ifname.c_str(), MAXIFNAME);
 
@@ -1791,10 +1834,46 @@ TEST_F(IceGatherTest, VerifyTestStunTcpServer) {
     " tcptype "));
 }
 
+TEST_F(IceGatherTest, VerifyTestStunServerV6) {
+  if (!TestStunServer::GetInstance(AF_INET6)) {
+    // No V6 addresses
+    return;
+  }
+  UseFakeStunUdpServerWithResponse("beef::", 3333);
+  Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " beef:: 3333 "));
+}
+
+TEST_F(IceGatherTest, VerifyTestStunServerFQDN) {
+  UseFakeStunUdpServerWithResponse("192.0.2.133", 3333, "stun.example.com");
+  Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.2.133 3333 "));
+}
+
+TEST_F(IceGatherTest, VerifyTestStunServerV6FQDN) {
+  if (!TestStunServer::GetInstance(AF_INET6)) {
+    // No V6 addresses
+    return;
+  }
+  UseFakeStunUdpServerWithResponse("beef::", 3333, "stun.example.com");
+  Gather();
+  ASSERT_TRUE(StreamHasMatchingCandidate(0, " beef:: 3333 "));
+}
+
 TEST_F(IceGatherTest, TestStunServerReturnsWildcardAddr) {
   UseFakeStunUdpServerWithResponse("0.0.0.0", 3333);
   Gather(kDefaultTimeout * 3);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 0.0.0.0 "));
+}
+
+TEST_F(IceGatherTest, TestStunServerReturnsWildcardAddrV6) {
+  if (!TestStunServer::GetInstance(AF_INET6)) {
+    // No V6 addresses
+    return;
+  }
+  UseFakeStunUdpServerWithResponse("::", 3333);
+  Gather(kDefaultTimeout * 3);
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " :: "));
 }
 
 TEST_F(IceGatherTest, TestStunServerReturnsPort0) {
@@ -1809,35 +1888,45 @@ TEST_F(IceGatherTest, TestStunServerReturnsLoopbackAddr) {
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 127.0.0.133 "));
 }
 
+TEST_F(IceGatherTest, TestStunServerReturnsLoopbackAddrV6) {
+  if (!TestStunServer::GetInstance(AF_INET6)) {
+    // No V6 addresses
+    return;
+  }
+  UseFakeStunUdpServerWithResponse("::1", 3333);
+  Gather(kDefaultTimeout * 3);
+  ASSERT_FALSE(StreamHasMatchingCandidate(0, " ::1 "));
+}
+
 TEST_F(IceGatherTest, TestStunServerTrickle) {
   UseFakeStunUdpServerWithResponse("192.0.2.1", 3333);
-  TestStunServer::GetInstance()->SetActive(false);
+  TestStunServer::GetInstance(AF_INET)->SetActive(false);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, "192.0.2.1"));
-  TestStunServer::GetInstance()->SetActive(true);
+  TestStunServer::GetInstance(AF_INET)->SetActive(true);
   WaitForGather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "192.0.2.1"));
 }
 
 TEST_F(IceGatherTest, TestStunTcpServerTrickle) {
   UseFakeStunTcpServerWithResponse("192.0.3.1", 3333);
-  TestStunTcpServer::GetInstance()->SetActive(false);
+  TestStunTcpServer::GetInstance(AF_INET)->SetActive(false);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
-  TestStunTcpServer::GetInstance()->SetActive(true);
+  TestStunTcpServer::GetInstance(AF_INET)->SetActive(true);
   WaitForGather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
 }
 
 TEST_F(IceGatherTest, TestStunTcpAndUdpServerTrickle) {
   UseFakeStunUdpTcpServersWithResponse("192.0.2.1", 3333, "192.0.3.1", 3333);
-  TestStunServer::GetInstance()->SetActive(false);
-  TestStunTcpServer::GetInstance()->SetActive(false);
+  TestStunServer::GetInstance(AF_INET)->SetActive(false);
+  TestStunTcpServer::GetInstance(AF_INET)->SetActive(false);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, "192.0.2.1", "UDP"));
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
-  TestStunServer::GetInstance()->SetActive(true);
-  TestStunTcpServer::GetInstance()->SetActive(true);
+  TestStunServer::GetInstance(AF_INET)->SetActive(true);
+  TestStunTcpServer::GetInstance(AF_INET)->SetActive(true);
   WaitForGather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "192.0.2.1", "UDP"));
   ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
@@ -2863,10 +2952,18 @@ int main(int argc, char **argv)
 
   listeners.Append(new test::RingbufferDumper(test_utils));
   test_utils->sts_target()->Dispatch(
-    WrapRunnableNM(&TestStunServer::GetInstance), NS_DISPATCH_SYNC);
+      WrapRunnableNM(&TestStunServer::GetInstance, AF_INET),
+                     NS_DISPATCH_SYNC);
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunServer::GetInstance, AF_INET6),
+                   NS_DISPATCH_SYNC);
 
   test_utils->sts_target()->Dispatch(
-    WrapRunnableNM(&TestStunTcpServer::GetInstance), NS_DISPATCH_SYNC);
+      WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
+                     NS_DISPATCH_SYNC);
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET6),
+                   NS_DISPATCH_SYNC);
 
   int rv = RUN_ALL_TESTS();
 
