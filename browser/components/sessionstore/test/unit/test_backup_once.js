@@ -79,24 +79,27 @@ function promise_check_contents(path, expect) {
   return Task.spawn(function*() {
     do_print("Checking whether " + path + " has the right contents");
     let actual = yield OS.File.read(path, { encoding: "utf-8"});
-    if (actual != expect) {
-      throw new Error("File " + path + " should contain\n\t" + expect + "\nbut contains " + actual);
-    }
+    Assert.deepEqual(JSON.parse(actual), expect, `File ${path} contains the expected data.`);
   });
+}
+
+function generateFileContents(id) {
+  let url = `http://example.com/test_backup_once#${id}_${Math.random()}`;
+  return {windows: [{tabs: [{entries: [{url}], index: 1}]}]}
 }
 
 // Write to the store, and check that it creates:
 // - $Path.recovery with the new data
 // - $Path.nextUpgradeBackup with the old data
 add_task(function* test_first_write_backup() {
-  let initial_content = "initial content " + Math.random();
-  let new_content = "test_1 " + Math.random();
+  let initial_content = generateFileContents("initial");
+  let new_content = generateFileContents("test_1");
 
   do_print("Before the first write, none of the files should exist");
   yield promise_check_exist(Paths.backups, false);
 
   yield File.makeDir(Paths.backups);
-  yield File.writeAtomic(Paths.clean, initial_content, { encoding: "utf-8" });
+  yield File.writeAtomic(Paths.clean, JSON.stringify(initial_content), { encoding: "utf-8" });
   yield SessionFile.write(new_content);
 
   do_print("After first write, a few files should have been created");
@@ -116,8 +119,9 @@ add_task(function* test_first_write_backup() {
 // - $Path.recovery contains the new data
 // - $Path.recoveryBackup contains the previous data
 add_task(function* test_second_write_no_backup() {
-  let new_content = "test_2 " + Math.random();
+  let new_content = generateFileContents("test_2");
   let previous_backup_content = yield File.read(Paths.recovery, { encoding: "utf-8" });
+  previous_backup_content = JSON.parse(previous_backup_content);
 
   yield OS.File.remove(Paths.cleanBackup);
 
@@ -136,7 +140,7 @@ add_task(function* test_second_write_no_backup() {
 // Make sure that we create $Paths.clean and remove $Paths.recovery*
 // upon shutdown
 add_task(function* test_shutdown() {
-  let output = "test_3 " + Math.random();
+  let output = generateFileContents("test_3");
 
   yield File.writeAtomic(Paths.recovery, "I should disappear");
   yield File.writeAtomic(Paths.recoveryBackup, "I should also disappear");
@@ -145,7 +149,5 @@ add_task(function* test_shutdown() {
 
   do_check_false((yield File.exists(Paths.recovery)));
   do_check_false((yield File.exists(Paths.recoveryBackup)));
-  let input = yield File.read(Paths.clean, { encoding: "utf-8"});
-  do_check_eq(input, output);
-
+  yield promise_check_contents(Paths.clean, output);
 });
