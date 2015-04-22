@@ -320,6 +320,9 @@ protected:
   virtual ~WorkerControlRunnable()
   { }
 
+  NS_IMETHOD
+  Cancel() override;
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -402,7 +405,7 @@ public:
   bool Dispatch(JSContext* aCx);
 
 private:
-  NS_IMETHOD Run() override;  
+  NS_IMETHOD Run() override;
 };
 
 END_WORKERS_NAMESPACE
