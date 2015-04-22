@@ -287,7 +287,10 @@ protected:
                                  EditAction aOperation,
                                  nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
                                  TouchContent aTouchContent = TouchContent::yes);
-  nsresult GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes, bool aEntireList, bool aDontTouchContent=false);
+  enum class EntireList { no, yes };
+  nsresult GetListActionNodes(nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
+                              EntireList aEntireList,
+                              TouchContent aTouchContent = TouchContent::yes);
   void GetDefinitionListItemTypes(mozilla::dom::Element* aElement, bool* aDT, bool* aDD);
   nsresult GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes, bool aDontTouchContent=false);
   void LookInsideDivBQandList(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
