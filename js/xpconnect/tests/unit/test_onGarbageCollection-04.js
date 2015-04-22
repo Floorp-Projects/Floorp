@@ -23,29 +23,45 @@
 // same time that we are preventing reentrancy into debuggeree's
 // onGarbageCollection hook.
 
-gczeal(0);
+function run_test() {
+  do_test_pending();
 
-const debuggeree = newGlobal();
-const debuggee = debuggeree.debuggee = newGlobal();
+  const debuggeree = newGlobal();
+  const debuggee = debuggeree.debuggee = newGlobal();
 
-debuggeree.eval(
-  `
-  const dbg = new Debugger(this.debuggee);
+  debuggeree.eval(
+    `
+    const dbg = new Debugger(this.debuggee);
+    let fired = 0;
+    dbg.memory.onGarbageCollection = _ => {
+      fired++;
+      gc(this);
+    };
+    `
+  );
+
+  const dbg = new Debugger(debuggeree);
   let fired = 0;
   dbg.memory.onGarbageCollection = _ => {
     fired++;
-    gc(this);
   };
-  `
-);
 
-const dbg = new Debugger(debuggeree);
-let fired = 0;
-dbg.memory.onGarbageCollection = _ => {
-  fired++;
-};
+  debuggee.eval(`gc(this)`);
 
-debuggee.eval(`gc(this)`);
+  // Let first onGarbageCollection runnable get run.
+  executeSoon(() => {
 
-assertEq(debuggeree.fired, 1);
-assertEq(fired, 1);
+    // Let second onGarbageCollection runnable get run.
+    executeSoon(() => {
+
+      // Even though we request GC'ing a single zone, we can't rely on that
+      // behavior and both zones could have been scheduled for gc for both
+      // gc(this) calls.
+      ok(debuggeree.fired >= 1);
+      ok(fired >= 1);
+
+      debuggeree.dbg.enabled = dbg.enabled = false;
+      do_test_finished();
+    });
+  });
+}
