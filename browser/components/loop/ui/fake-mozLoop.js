@@ -7,7 +7,12 @@ var fakeRooms = [
   {
     "roomToken": "_nxD4V4FflQ",
     "decryptedContext": {
-      "roomName": "First Room Name"
+      "roomName": "First Room Name",
+      "urls": [{
+        description: "The mozilla page",
+        location: "https://www.mozilla.org",
+        thumbnail: "https://www.mozilla.org/favicon.ico"
+      }]
     },
     "roomUrl": "http://localhost:3000/rooms/_nxD4V4FflQ",
     "roomOwner": "Alexis",

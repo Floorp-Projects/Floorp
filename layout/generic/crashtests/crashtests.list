@@ -363,7 +363,7 @@ load 496742.html
 load 499138.html
 load 499862-1.html
 load 499857-1.html
-asserts-if(winWidget,0-3) skip-if(asyncPanZoom&&winWidget) load 499885-1.xhtml
+asserts-if(winWidget,0-3) load 499885-1.xhtml
 load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
