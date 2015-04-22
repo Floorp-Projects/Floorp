@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Scoped.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jscntxt.h"
 #include "jsobj.h"
@@ -32,6 +31,7 @@
 #include "vm/Debugger-inl.h"
 
 using mozilla::Some;
+using mozilla::UniquePtr;
 using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
@@ -46,9 +46,13 @@ using JS::ubi::TracerConcreteWithCompartment;
 
 // All operations on null ubi::Nodes crash.
 const char16_t* Concrete<void>::typeName() const          { MOZ_CRASH("null ubi::Node"); }
-EdgeRange* Concrete<void>::edges(JSContext*, bool) const { MOZ_CRASH("null ubi::Node"); }
 JS::Zone* Concrete<void>::zone() const                    { MOZ_CRASH("null ubi::Node"); }
 JSCompartment* Concrete<void>::compartment() const        { MOZ_CRASH("null ubi::Node"); }
+
+UniquePtr<EdgeRange>
+Concrete<void>::edges(JSContext*, bool) const {
+    MOZ_CRASH("null ubi::Node");
+}
 
 size_t
 Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
@@ -203,16 +207,17 @@ TracerConcrete<Referent>::zone() const
 }
 
 template<typename Referent>
-EdgeRange*
+UniquePtr<EdgeRange>
 TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
-    js::ScopedJSDeletePtr<SimpleEdgeRange> r(js_new<SimpleEdgeRange>(cx));
-    if (!r)
+    UniquePtr<SimpleEdgeRange, JS::DeletePolicy<SimpleEdgeRange>> range(
+      cx->new_<SimpleEdgeRange>(cx));
+    if (!range)
         return nullptr;
 
-    if (!r->init(cx, ptr, ::js::gc::MapTypeToTraceKind<Referent>::kind, wantNames))
+    if (!range->init(cx, ptr, ::js::gc::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
-    return r.forget();
+    return UniquePtr<EdgeRange>(range.release());
 }
 
 template<typename Referent>
@@ -347,7 +352,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     MOZ_ASSERT(noGC.isSome());
     MOZ_ASSERT_IF(wantNames, edgeName);
 
-    mozilla::UniquePtr<char16_t[], JS::FreePolicy> name;
+    UniquePtr<char16_t[], JS::FreePolicy> name;
     if (edgeName) {
         name = DuplicateString(cx, edgeName);
         if (!name)
@@ -379,10 +384,10 @@ class PreComputedEdgeRange : public EdgeRange {
 
 const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("RootList");
 
-EdgeRange*
+UniquePtr<EdgeRange>
 Concrete<RootList>::edges(JSContext* cx, bool wantNames) const {
     MOZ_ASSERT_IF(wantNames, get().wantNames);
-    return js_new<PreComputedEdgeRange>(cx, get().edges);
+    return UniquePtr<EdgeRange>(cx->new_<PreComputedEdgeRange>(cx, get().edges));
 }
 
 } // namespace ubi
