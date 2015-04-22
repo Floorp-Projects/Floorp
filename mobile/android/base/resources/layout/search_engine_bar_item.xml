@@ -11,7 +11,7 @@
      View (browser_search at the time of this writing). -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="48dp"
+    android:layout_height="match_parent"
     android:layout_width="72dp"
     android:background="@color/pressed_about_page_header_grey">
 

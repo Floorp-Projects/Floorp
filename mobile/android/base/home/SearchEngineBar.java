@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.FaviconView;
@@ -33,24 +34,12 @@ public class SearchEngineBar extends TwoWayView
     private final SearchEngineAdapter adapter;
     private OnSearchBarClickListener onSearchBarClickListener;
 
-    private final Paint dividerPaint;
-
     public SearchEngineBar(final Context context, final AttributeSet attrs) {
         super(context, attrs);
 
         adapter = new SearchEngineAdapter();
         setAdapter(adapter);
         setOnItemClickListener(this);
-
-        dividerPaint = new Paint();
-        dividerPaint.setColor(getResources().getColor(R.color.divider_light));
-    }
-
-    @Override
-    public void onDraw(final Canvas canvas) {
-        super.onDraw(canvas);
-
-        canvas.drawLine(0, 0, getWidth(), 0, dividerPaint);
     }
 
     @Override
@@ -110,6 +99,35 @@ public class SearchEngineBar extends TwoWayView
             faviconView.updateAndScaleImage(searchEngine.getIcon(), searchEngine.getEngineIdentifier());
 
             return view;
+        }
+    }
+
+    /**
+     * A Container to surround the SearchEngineBar. This is necessary so we can draw
+     * a divider across the entire width of the screen, but have the inner list layout
+     * not take up the full width of the screen so it can be centered within this container
+     * if there aren't enough items that it needs to scroll.
+     *
+     * Note: a better implementation would have this View inflating an inner layout so
+     * the containing layout doesn't need two "SearchEngineBar" Views but it wasn't
+     * worth the refactor time.
+     */
+    @SuppressWarnings("unused") // via XML
+    public static class SearchEngineBarContainer extends FrameLayout {
+        private final Paint dividerPaint;
+
+        public SearchEngineBarContainer(final Context context, final AttributeSet attrs) {
+            super(context, attrs);
+
+            dividerPaint = new Paint();
+            dividerPaint.setColor(getResources().getColor(R.color.divider_light));
+        }
+
+        @Override
+        public void onDraw(final Canvas canvas) {
+            super.onDraw(canvas);
+
+            canvas.drawLine(0, 0, getWidth(), 0, dividerPaint);
         }
     }
 }
