@@ -6,6 +6,16 @@
 
 Components.utils.import("resource://gre/modules/devtools/event-emitter.js");
 
+/**
+ * TODO (Bug 1132453) The `Simulator` module is deprecated, and should be
+ * removed once all simulator addons stop using it (see bug 1132452).
+ *
+ * If you want to register, unregister, or otherwise deal with installed
+ * simulators, please use the `Simulators` module defined in:
+ *
+ *   browser/devtools/webide/modules/simulators.js
+ */
+
 const EXPORTED_SYMBOLS = ["Simulator"];
 
 const Simulator = {

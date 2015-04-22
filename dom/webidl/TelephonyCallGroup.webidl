@@ -30,9 +30,7 @@ interface TelephonyCallGroup : EventTarget {
 
   attribute EventHandler onstatechange;
   attribute EventHandler onconnected;
-  attribute EventHandler onholding;
   attribute EventHandler onheld;
-  attribute EventHandler onresuming;
   attribute EventHandler oncallschanged;
   attribute EventHandler onerror;
 };
