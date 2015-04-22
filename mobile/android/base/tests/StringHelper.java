@@ -159,7 +159,6 @@ public class StringHelper {
     public final String MY_HEALTH_REPORT_LABEL;
 
     // Developer tools
-    public final String PAINT_FLASHING_LABEL;
     public final String REMOTE_DEBUGGING_LABEL;
     public final String LEARN_MORE_LABEL;
 
@@ -336,7 +335,6 @@ public class StringHelper {
         MY_HEALTH_REPORT_LABEL = res.getString(R.string.datareporting_abouthr_title);
 
         // Developer tools
-        PAINT_FLASHING_LABEL = res.getString(R.string.pref_developer_paint_flashing);
         REMOTE_DEBUGGING_LABEL = res.getString(R.string.pref_developer_remotedebugging);
         LEARN_MORE_LABEL = res.getString(R.string.pref_learn_more);
 
