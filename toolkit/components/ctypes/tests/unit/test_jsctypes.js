@@ -1166,7 +1166,7 @@ function run_char_tests(library, t, name, size, signed, limits) {
   do_check_eq(s.constructor.length, literal.length + 1);
   s = t.array(50)(literal);
   do_check_eq(s.readString(), literal);
-  do_check_throws(function() { t.array(3)(literal); }, Error);
+  do_check_throws(function() { t.array(3)(literal); }, TypeError);
 
   do_check_throws(function() { t.ptr(literal); }, TypeError);
   let p = t.ptr(s);
@@ -1258,7 +1258,7 @@ function run_char16_tests(library, t, name, limits) {
   do_check_eq(s.constructor.length, literal.length + 1);
   s = t.array(50)(literal);
   do_check_eq(s.readString(), literal);
-  do_check_throws(function() { t.array(3)(literal); }, Error);
+  do_check_throws(function() { t.array(3)(literal); }, TypeError);
 
   do_check_throws(function() { t.ptr(literal); }, TypeError);
   let p = t.ptr(s);
@@ -1587,25 +1587,25 @@ function run_StructType_tests() {
   do_check_eq(s.b.b, s2.b.b);
 
   // Test that structs can be set from an object using 'value'.
-  do_check_throws(function() { s.value; }, Error);
+  do_check_throws(function() { s.value; }, TypeError);
   let s_init = { "a": 2, "b": { "a": 9, "b": 5 }, "c": 13 };
   s.value = s_init;
   do_check_eq(s.b.a, 9);
   do_check_eq(s.c, 13);
   do_check_throws(function() { s.value = 5; }, TypeError);
   do_check_throws(function() { s.value = ctypes.int32_t(); }, TypeError);
-  do_check_throws(function() { s.value = {}; }, Error);
-  do_check_throws(function() { s.value = { "a": 2 }; }, Error);
+  do_check_throws(function() { s.value = {}; }, TypeError);
+  do_check_throws(function() { s.value = { "a": 2 }; }, TypeError);
   do_check_throws(function() { s.value = { "a": 2, "b": 5, "c": 10 }; }, TypeError);
   do_check_throws(function() {
     s.value = { "5": 2, "b": { "a": 9, "b": 5 }, "c": 13 };
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     s.value = { "a": 2, "b": { "a": 9, "b": 5 }, "c": 13, "d": 17 };
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     s.value = { "a": 2, "b": { "a": 9, "b": 5, "e": 9 }, "c": 13 };
-  }, Error);
+  }, TypeError);
 
   // Test that structs can be constructed similarly through ExplicitConvert,
   // and that the single-field case is disambiguated correctly.
@@ -1682,7 +1682,7 @@ function run_PointerType_tests() {
 
   // Test ExplicitConvert.
   let p = p_t();
-  do_check_throws(function() { p.value; }, Error);
+  do_check_throws(function() { p.value; }, TypeError);
   do_check_eq(ptrValue(p), 0);
   do_check_throws(function() { p.contents; }, Error);
   do_check_throws(function() { p.contents = g; }, Error);
@@ -1798,10 +1798,10 @@ function run_PointerType_tests() {
         let array_type_too_large = item_type.array(number_of_items + 1);
         let array_type_too_small = item_type.array(number_of_items - 1);
 
-        do_check_throws(function() { array_type_too_large(c_arraybuffer); }, Error);
-        do_check_throws(function() { array_type_too_small(c_arraybuffer); }, Error);
-        do_check_throws(function() { array_type_too_large(view); }, Error);
-        do_check_throws(function() { array_type_too_small(view); }, Error);
+        do_check_throws(function() { array_type_too_large(c_arraybuffer); }, TypeError);
+        do_check_throws(function() { array_type_too_small(c_arraybuffer); }, TypeError);
+        do_check_throws(function() { array_type_too_large(view); }, TypeError);
+        do_check_throws(function() { array_type_too_small(view); }, TypeError);
 
         // Convert subarray of typed array to array of right size and check contents
         c_array = array_type_too_small(view.subarray(1));
@@ -1884,7 +1884,7 @@ function run_FunctionType_tests() {
 
   // Test ExplicitConvert.
   let f = fp_t();
-  do_check_throws(function() { f.value; }, Error);
+  do_check_throws(function() { f.value; }, TypeError);
   do_check_eq(ptrValue(f), 0);
   f = fp_t(5);
   do_check_eq(ptrValue(f), 5);
@@ -2067,11 +2067,11 @@ function run_ArrayType_tests() {
 
   c.value = c;
   do_check_eq(c[3], 4);
-  do_check_throws(function() { c.value; }, Error);
-  do_check_throws(function() { c.value = [1, 2, 3, 4, 5]; }, Error);
-  do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, Error);
+  do_check_throws(function() { c.value; }, TypeError);
+  do_check_throws(function() { c.value = [1, 2, 3, 4, 5]; }, TypeError);
+  do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, TypeError);
   do_check_throws(function() { c.value = [1, 2, 7.4, 4, 5, 6]; }, TypeError);
-  do_check_throws(function() { c.value = []; }, Error);
+  do_check_throws(function() { c.value = []; }, TypeError);
 }
 
 function run_type_toString_tests() {
