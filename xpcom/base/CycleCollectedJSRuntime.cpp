@@ -60,6 +60,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/DebuggerOnGCRunnable.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
@@ -466,6 +467,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal)
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
   , mJSRuntime(nullptr)
+  , mPrevGCSliceCallback(nullptr)
   , mJSHolders(256)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
@@ -482,6 +484,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
   JS_SetGCCallback(mJSRuntime, GCCallback, this);
+  mPrevGCSliceCallback = JS::SetGCSliceCallback(mJSRuntime, GCSliceCallback);
   JS::SetOutOfMemoryCallback(mJSRuntime, OutOfMemoryCallback, this);
   JS::SetLargeAllocationFailureCallback(mJSRuntime,
                                         LargeAllocationFailureCallback, this);
@@ -743,6 +746,23 @@ CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
   MOZ_ASSERT(aRuntime == self->Runtime());
 
   self->OnGC(aStatus);
+}
+
+/* static */ void
+CycleCollectedJSRuntime::GCSliceCallback(JSRuntime* aRuntime,
+                                         JS::GCProgress aProgress,
+                                         const JS::GCDescription& aDesc)
+{
+  CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(self->Runtime() == aRuntime);
+
+  if (aProgress == JS::GC_CYCLE_END) {
+    NS_WARN_IF(NS_FAILED(DebuggerOnGCRunnable::Enqueue(aRuntime, aDesc)));
+  }
+
+  if (self->mPrevGCSliceCallback) {
+    self->mPrevGCSliceCallback(aRuntime, aProgress, aDesc);
+  }
 }
 
 /* static */ void
