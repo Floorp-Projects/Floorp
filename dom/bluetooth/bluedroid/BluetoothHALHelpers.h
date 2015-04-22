@@ -905,6 +905,11 @@ Convert(const ArrayBuffer& aIn, char* aOut)
   memcpy(aOut, aIn.Data(), aIn.Length());
   return NS_OK;
 }
+
+#if ANDROID_VERSION >= 21
+nsresult
+Convert(const BluetoothTransport& aIn, btgatt_transport_t& aOut);
+#endif
 #else
 // TODO: Support GATT
 #endif
