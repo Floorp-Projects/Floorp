@@ -15,8 +15,6 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 using namespace mozilla::ipc;
 
-class BlutoothDaemonInterface;
-
 class BluetoothDaemonSocketModule
 {
 public:

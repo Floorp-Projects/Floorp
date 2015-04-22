@@ -24,7 +24,6 @@ class nsIPrincipal;
 namespace mozilla {
 namespace dom {
 
-class BlobSet;
 class InternalRequest;
 class InternalResponse;
 

@@ -11,8 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 
-class nsIRunnable;
-
 namespace mozilla {
 namespace dom {
 class ContentParent;

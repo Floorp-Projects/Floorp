@@ -13,7 +13,6 @@
 #include "nsContentUtils.h" // For NS_CONTENT_DELETE_LIST_MEMBER.
 #include "nsCycleCollectionParticipant.h"
 
-class nsIContent;
 class nsIObjectOutputStream;
 
 struct nsXBLTextWithLineNumber

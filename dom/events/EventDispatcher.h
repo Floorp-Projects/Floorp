@@ -16,7 +16,6 @@
 
 class nsIContent;
 class nsIDOMEvent;
-class nsIScriptGlobalObject;
 class nsPresContext;
 
 template<class E> class nsCOMArray;

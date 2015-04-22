@@ -15,8 +15,6 @@ class nsINode;
 class nsString;
 
 namespace mozilla {
-class ErrorResult;
-
 namespace dom {
 class Element;
 } // namespace dom

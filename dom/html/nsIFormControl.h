@@ -8,8 +8,6 @@
 #include "nsISupports.h"
 class nsIDOMHTMLFormElement;
 class nsPresState;
-class nsString;
-class nsIFormProcessor;
 class nsFormSubmission;
 
 namespace mozilla {

@@ -20,7 +20,6 @@
 
 
 struct ChromePackage;
-class nsIDOMBlob;
 class nsIObserver;
 struct ResourceMapping;
 struct OverrideMapping;
@@ -35,10 +34,6 @@ class PFileDescriptorSetChild;
 class URIParams;
 }// namespace ipc
 
-namespace jsipc {
-class JavaScriptShared;
-}
-
 namespace layers {
 class PCompositorChild;
 } // namespace layers
@@ -46,7 +41,6 @@ class PCompositorChild;
 namespace dom {
 
 class AlertObserver;
-class PrefObserver;
 class ConsoleListener;
 class PStorageChild;
 class ClonedMessageData;

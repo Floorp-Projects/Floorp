@@ -16,14 +16,11 @@
 // files.
 #include "mozilla/dom/RequestBinding.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
 namespace dom {
 
 class Headers;
 class InternalHeaders;
-class Promise;
 class RequestOrUSVString;
 
 class Request final : public nsISupports

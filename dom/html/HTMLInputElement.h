@@ -25,7 +25,6 @@
 #include "nsTextEditorState.h"
 
 class nsIRadioGroupContainer;
-class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
 
 namespace mozilla {

@@ -11,10 +11,7 @@
 #include "nsAutoPtr.h"
 #include "txNamespaceMap.h"
 
-class txPattern;
 class txStylesheet;
-class txKeyValueHashKey;
-class txExecutionState;
 
 /**
  * The definition for the XSLT document() function

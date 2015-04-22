@@ -19,8 +19,6 @@ class Promise;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothDevice;
-
 class BluetoothPairingHandle final : public nsISupports
                                    , public nsWrapperCache
 {

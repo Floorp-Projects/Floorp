@@ -21,7 +21,6 @@
 #include "js/GCAPI.h"
 #include "nsISupports.h"
 
-class nsIGlobalObject;
 struct JSContext;
 struct JSStructuredCloneWriter;
 

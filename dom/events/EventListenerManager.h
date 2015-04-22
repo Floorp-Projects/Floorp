@@ -19,7 +19,6 @@
 class nsIDocShell;
 class nsIDOMEvent;
 class nsIEventListenerInfo;
-class nsIScriptContext;
 class nsPIDOMWindow;
 class JSTracer;
 

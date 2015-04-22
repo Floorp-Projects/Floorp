@@ -14,7 +14,6 @@
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
-class nsIScriptContext;
 class nsIURI;
 
 class nsXBLProtoImplField

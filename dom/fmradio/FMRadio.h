@@ -14,7 +14,6 @@
 #include "nsWeakReference.h"
 
 class nsPIDOMWindow;
-class nsIScriptContext;
 
 BEGIN_FMRADIO_NAMESPACE
 
