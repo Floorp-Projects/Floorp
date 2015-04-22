@@ -480,6 +480,8 @@ public:
 
     virtual bool RecvUIResolutionChanged() override;
 
+    virtual bool RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
+
     /**
      * Native widget remoting protocol for use with windowed plugins with e10s.
      */
