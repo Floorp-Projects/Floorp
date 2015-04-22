@@ -368,6 +368,8 @@ Tooltip.prototype = {
    *        A function that accepts a node argument and returns true or false
    *        (or a promise that resolves or rejects) to signify if the tooltip
    *        should be shown on that node or not.
+   *        If the promise rejects, it must reject `false` as value.
+   *        Any other value is going to be logged as unexpected error.
    *        Additionally, the function receives a second argument which is the
    *        tooltip instance itself, to be used to add/modify the content of the
    *        tooltip if needed. If omitted, the tooltip will be shown everytime.
