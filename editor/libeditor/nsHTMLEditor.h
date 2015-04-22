@@ -960,10 +960,10 @@ private:
                               nsIAtom* aProperty,
                               const nsAString* aAttribute,
                               const nsAString* aValue);
-  nsresult SetInlinePropertyOnNodeImpl(nsIContent* aNode,
-                                       nsIAtom* aProperty,
+  nsresult SetInlinePropertyOnNodeImpl(nsIContent& aNode,
+                                       nsIAtom& aProperty,
                                        const nsAString* aAttribute,
-                                       const nsAString* aValue);
+                                       const nsAString& aValue);
   typedef enum { eInserted, eAppended } InsertedOrAppended;
   void DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
                          nsIContent* aChild, int32_t aIndexInContainer,
