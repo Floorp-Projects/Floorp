@@ -203,7 +203,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
 
       // Then loop through the list, set the property on each node
       for (auto& node : arrayOfNodes) {
-        res = SetInlinePropertyOnNode(node, aProperty, &aAttribute, &aValue);
+        res = SetInlinePropertyOnNode(*node, *aProperty, &aAttribute, aValue);
         NS_ENSURE_SUCCESS(res, res);
       }
 
@@ -364,7 +364,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
   }
 
   // Reparent the node inside inline node with appropriate {attribute,value}
-  return SetInlinePropertyOnNode(text, &aProperty, aAttribute, &aValue);
+  return SetInlinePropertyOnNode(*text, aProperty, aAttribute, aValue);
 }
 
 
@@ -393,8 +393,8 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
 
       // Then loop through the list, set the property on each node.
       for (auto& node : arrayOfNodes) {
-        nsresult rv = SetInlinePropertyOnNode(node, &aProperty, aAttribute,
-                                              &aValue);
+        nsresult rv = SetInlinePropertyOnNode(node, aProperty, aAttribute,
+                                              aValue);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -474,45 +474,23 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
 
 
 nsresult
-nsHTMLEditor::SetInlinePropertyOnNode(nsIDOMNode *aNode,
-                                      nsIAtom *aProperty,
-                                      const nsAString *aAttribute,
-                                      const nsAString *aValue)
-{
-  // Before setting the property, we remove it if it's already set.
-  // RemoveStyleInside might remove the node we're looking at or some of its
-  // descendants, however, in which case we want to set the property on
-  // whatever wound up in its place.  We have to save the original siblings and
-  // parent to figure this out.
-  NS_ENSURE_TRUE(aNode && aProperty, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
-  NS_ENSURE_STATE(node);
-
-  return SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
-}
-
-nsresult
-nsHTMLEditor::SetInlinePropertyOnNode(nsIContent* aNode,
-                                      nsIAtom* aProperty,
+nsHTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
+                                      nsIAtom& aProperty,
                                       const nsAString* aAttribute,
-                                      const nsAString* aValue)
+                                      const nsAString& aValue)
 {
-  MOZ_ASSERT(aNode);
-  MOZ_ASSERT(aProperty);
+  nsCOMPtr<nsIContent> previousSibling = aNode.GetPreviousSibling(),
+                       nextSibling = aNode.GetNextSibling();
+  NS_ENSURE_STATE(aNode.GetParentNode());
+  OwningNonNull<nsINode> parent = *aNode.GetParentNode();
 
-  nsCOMPtr<nsIContent> previousSibling = aNode->GetPreviousSibling(),
-                       nextSibling = aNode->GetNextSibling();
-  nsCOMPtr<nsINode> parent = aNode->GetParentNode();
-  NS_ENSURE_STATE(parent);
-
-  nsresult res = RemoveStyleInside(aNode->AsDOMNode(), aProperty, aAttribute);
+  nsresult res = RemoveStyleInside(aNode.AsDOMNode(), &aProperty, aAttribute);
   NS_ENSURE_SUCCESS(res, res);
 
-  if (aNode->GetParentNode()) {
+  if (aNode.GetParentNode()) {
     // The node is still where it was
-    return SetInlinePropertyOnNodeImpl(*aNode, *aProperty,
-                                       aAttribute, *aValue);
+    return SetInlinePropertyOnNodeImpl(aNode, aProperty,
+                                       aAttribute, aValue);
   }
 
   // It's vanished.  Use the old siblings for reference to construct a
@@ -522,20 +500,17 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIContent* aNode,
       (nextSibling && nextSibling->GetParentNode() != parent)) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsCOMArray<nsIContent> nodesToSet;
+  nsTArray<OwningNonNull<nsIContent>> nodesToSet;
   nsCOMPtr<nsIContent> cur = previousSibling
     ? previousSibling->GetNextSibling() : parent->GetFirstChild();
-  while (cur && cur != nextSibling) {
+  for (; cur && cur != nextSibling; cur = cur->GetNextSibling()) {
     if (IsEditable(cur)) {
-      nodesToSet.AppendObject(cur);
+      nodesToSet.AppendElement(*cur);
     }
-    cur = cur->GetNextSibling();
   }
 
-  int32_t nodesToSetCount = nodesToSet.Count();
-  for (int32_t k = 0; k < nodesToSetCount; k++) {
-    res = SetInlinePropertyOnNodeImpl(*nodesToSet[k], *aProperty,
-                                      aAttribute, *aValue);
+  for (auto& node : nodesToSet) {
+    res = SetInlinePropertyOnNodeImpl(node, aProperty, aAttribute, aValue);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -1400,8 +1375,8 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
               // "inverting" the style
               mHTMLCSSUtils->IsCSSInvertible(*aProperty, aAttribute)) {
             NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
-            SetInlinePropertyOnNode(node->AsContent(), aProperty,
-                                    aAttribute, &value);
+            SetInlinePropertyOnNode(*node->AsContent(), *aProperty,
+                                    aAttribute, value);
           }
         }
       }
