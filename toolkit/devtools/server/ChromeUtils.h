@@ -12,6 +12,7 @@
 
 #include "js/UbiNode.h"
 #include "js/UbiNodeTraverse.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
@@ -56,6 +57,9 @@ WriteHeapGraph(JSContext *cx,
                JS::AutoCheckCannotGC &noGC);
 
 
+class HeapSnapshot;
+
+
 class ChromeUtils
 {
 public:
@@ -64,6 +68,11 @@ public:
                                const nsAString &filePath,
                                const dom::HeapSnapshotBoundaries &boundaries,
                                ErrorResult &rv);
+
+  static already_AddRefed<HeapSnapshot> ReadHeapSnapshot(dom::GlobalObject &global,
+                                                         JSContext *cx,
+                                                         const nsAString &filePath,
+                                                         ErrorResult &rv);
 };
 
 } // namespace devtools
