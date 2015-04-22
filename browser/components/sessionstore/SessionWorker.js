@@ -106,7 +106,7 @@ let Agent = {
    * Write the session to disk, performing any necessary backup
    * along the way.
    *
-   * @param {string} stateString The state to write to disk.
+   * @param {object} state The state to write to disk.
    * @param {object} options
    *  - performShutdownCleanup If |true|, we should
    *    perform shutdown-time cleanup to ensure that private data
@@ -114,10 +114,11 @@ let Agent = {
    *  - isFinalWrite If |true|, write to Paths.clean instead of
    *    Paths.recovery
    */
-  write: function (stateString, options = {}) {
+  write: function (state, options = {}) {
     let exn;
     let telemetry = {};
 
+    let stateString = JSON.stringify(state);
     let data = Encoder.encode(stateString);
     let startWriteMs, stopWriteMs;
 
