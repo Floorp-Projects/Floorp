@@ -660,10 +660,8 @@ function getCanStageUpdates() {
   // For Gonk, the updater will remount the /system partition to move staged
   // files into place.
   if (AppConstants.platform == "gonk") {
-    if (getPref("getBoolPref", PREF_APP_UPDATE_SERVICE_ENABLED, false)) {
-      LOG("getCanStageUpdates - able to stage updates because this is gonk");
+    LOG("getCanStageUpdates - able to stage updates because this is gonk");
       return true;
-    }
   }
 
   if (!hasUpdateMutex()) {

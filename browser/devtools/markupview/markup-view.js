@@ -2162,7 +2162,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
    */
   isImagePreviewTarget: function(target, tooltip) {
     if (!this.tooltipData || this.tooltipData.target !== target) {
-      return promise.reject();
+      return promise.reject(false);
     }
 
     return this.tooltipData.data.then(({data, size}) => {

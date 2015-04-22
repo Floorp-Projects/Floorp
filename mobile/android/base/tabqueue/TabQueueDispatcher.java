@@ -40,19 +40,12 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
         // the tab queue build flag.
         if (!AppConstants.MOZ_ANDROID_TAB_QUEUE) {
             loadNormally(intent.getUnsafe());
-            finish();
+            return;
         }
 
         // The URL is usually hiding somewhere in the extra text. Extract it.
         final String dataString = intent.getDataString();
         if (TextUtils.isEmpty(dataString)) {
-            abortDueToNoURL(dataString);
-            return;
-        }
-
-        // TODO: This code is shared with ShareDialog - we should extract this to a helper class.
-        final String pageUrl = new WebURLFinder(dataString).bestWebURL();
-        if (TextUtils.isEmpty(pageUrl)) {
             abortDueToNoURL(dataString);
             return;
         }
