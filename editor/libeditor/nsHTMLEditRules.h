@@ -294,7 +294,7 @@ protected:
   nsresult GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes, bool aEntireList, bool aDontTouchContent=false);
   void GetDefinitionListItemTypes(mozilla::dom::Element* aElement, bool* aDT, bool* aDD);
   nsresult GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes, bool aDontTouchContent=false);
-  nsresult LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray);
+  void LookInsideDivBQandList(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
   nsresult BustUpInlinesAtBRs(nsINode& aNode,
                               nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes);
