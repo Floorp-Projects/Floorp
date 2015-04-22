@@ -135,20 +135,14 @@ _InstanceClassChrome##Constructor(nsISupports *aOuter, REFNSIID aIID,         \
 {                                                                             \
     nsresult rv;                                                              \
                                                                               \
-    *aResult = nullptr;                                                       \
-    if (nullptr != aOuter) {                                                  \
+    *aResult = nullptr;                                                          \
+    if (nullptr != aOuter) {                                                     \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
-    if (!NS_IS_PROCESS_DEFAULT &&                                             \
-        ensureOperator == nssEnsureChromeOrContent) {                         \
-        if (!EnsureNSSInitializedChromeOrContent()) {                         \
-            return NS_ERROR_FAILURE;                                          \
-        }                                                                     \
-    } else if (!EnsureNSSInitialized(ensureOperator)) {                       \
+    if (!EnsureNSSInitialized(ensureOperator))                                \
         return NS_ERROR_FAILURE;                                              \
-    }                                                                         \
                                                                               \
     if (NS_IS_PROCESS_DEFAULT)                                                \
         NS_NSS_INSTANTIATE_INIT(ensureOperator,                               \
@@ -188,7 +182,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsTLSSocketProvider)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsSecretDecoderRing)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPK11TokenDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPKCS11ModuleDB)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PSMContentListener, init)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, PSMContentListener, init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_BYPROCESS(nssEnsureOnChromeOnly,
                                              nsNSSCertificate,
                                              nsNSSCertificateFakeTransport)
