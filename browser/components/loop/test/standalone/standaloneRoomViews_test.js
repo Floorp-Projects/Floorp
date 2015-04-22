@@ -45,7 +45,10 @@ describe("loop.standaloneRoomViews", function() {
     });
 
     function mountTestComponent(extraProps) {
-      var props = _.extend({ receivingScreenShare: false }, extraProps);
+      var props = _.extend({
+        dispatcher: dispatcher,
+        receivingScreenShare: false
+      }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(
           loop.standaloneRoomViews.StandaloneRoomContextView, props));
@@ -97,6 +100,48 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       expect(view.getDOMNode().querySelector(".standalone-context-url")).eql(null);
+    });
+
+    it("should dispatch a RecordClick action when the link is clicked", function() {
+      var view = mountTestComponent({
+        roomName: "Mark's room",
+        roomContextUrls: [{
+          description: "Mark's super page",
+          location: "http://invalid.com",
+          thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        }]
+      });
+
+      TestUtils.Simulate.click(view.getDOMNode()
+        .querySelector(".standalone-context-url-description-wrapper > a"));
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: "Shared URL"
+        }));
+    });
+  });
+
+  describe("StandaloneRoomHeader", function() {
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneRoomHeader, {
+            dispatcher: dispatcher
+          }));
+    }
+
+    it("should dispatch a RecordClick action when the support link is clicked", function() {
+      var view = mountTestComponent();
+
+      TestUtils.Simulate.click(view.getDOMNode().querySelector("a"));
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: "Support link click"
+        }));
     });
   });
 
