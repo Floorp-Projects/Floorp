@@ -8,3 +8,7 @@ EXTRA_COMPONENTS += [
     'SelfSupportService.js',
     'SelfSupportService.manifest',
 ]
+
+BROWSER_CHROME_MANIFESTS += [
+    'test/browser.ini',
+]
