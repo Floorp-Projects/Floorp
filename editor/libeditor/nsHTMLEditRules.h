@@ -276,10 +276,11 @@ protected:
                              nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
                              EditAction inOperationType);
   nsresult PromoteRange(nsRange* inRange, EditAction inOperationType);
-  nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRanges, 
-                                nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
-                                EditAction inOperationType,
-                                bool aDontTouchContent=false);
+  enum class TouchContent { no, yes };
+  nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRanges,
+                                nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
+                                EditAction aOperationType,
+                                TouchContent aTouchContent = TouchContent::yes);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMArray<nsIDOMNode>& outArrayOfNodes);
   nsresult GetNodesFromPoint(::DOMPoint point,
