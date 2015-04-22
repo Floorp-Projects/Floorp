@@ -127,6 +127,11 @@ struct nsTraceRefcntStats
     mCreates = 0;
     mDestroys = 0;
   }
+
+  int64_t NumLeaked() const
+  {
+    return (int64_t)(mCreates - mDestroys);
+  }
 };
 
 #ifdef DEBUG
@@ -321,9 +326,7 @@ public:
     aTotal->mAllStats.mDestroys += mNewStats.mDestroys + mAllStats.mDestroys;
     uint64_t count = (mNewStats.mCreates + mAllStats.mCreates);
     aTotal->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
-    aTotal->mTotalLeaked += (uint64_t)(mClassSize *
-                                       ((mNewStats.mCreates + mAllStats.mCreates)
-                                        - (mNewStats.mDestroys + mAllStats.mDestroys)));
+    aTotal->mTotalLeaked += mClassSize * (mNewStats.NumLeaked() + mAllStats.NumLeaked());
   }
 
   void DumpTotal(FILE* aOut)
@@ -362,21 +365,19 @@ public:
     }
 
     if (stats->HaveLeaks() || stats->mCreates != 0) {
-      fprintf(aOut, "%4d |%-38.38s| %8d %8" PRIu64 "|%8" PRIu64 " %8" PRIu64"|\n",
+      fprintf(aOut, "%4d |%-38.38s| %8d %8" PRId64 "|%8" PRIu64 " %8" PRId64"|\n",
               aIndex + 1, mClassName,
-              (int32_t)mClassSize,
-              (nsCRT::strcmp(mClassName, "TOTAL"))
-                ? (uint64_t)((stats->mCreates - stats->mDestroys) * mClassSize)
-                : mTotalLeaked,
+              GetClassSize(),
+              nsCRT::strcmp(mClassName, "TOTAL") ? (stats->NumLeaked() * GetClassSize()) : mTotalLeaked,
               stats->mCreates,
-              (stats->mCreates - stats->mDestroys));
+              stats->NumLeaked());
     }
   }
 
 protected:
   char*         mClassName;
   double        mClassSize;     // this is stored as a double because of the way we compute the avg class size for total bloat
-  uint64_t      mTotalLeaked; // used only for TOTAL entry
+  int64_t       mTotalLeaked; // used only for TOTAL entry
   nsTraceRefcntStats mNewStats;
   nsTraceRefcntStats mAllStats;
 };
