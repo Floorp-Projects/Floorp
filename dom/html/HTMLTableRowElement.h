@@ -8,7 +8,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
-class nsIDOMHTMLTableElement;
 class nsContentList;
 
 namespace mozilla {

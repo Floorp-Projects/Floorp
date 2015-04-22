@@ -14,7 +14,6 @@
 
 template <class, class> class nsDataHashtable;
 class nsIDHashKey;
-class nsIDOMBlob;
 class nsIEventTarget;
 class nsIRemoteBlob;
 template <class> class nsRevocableEventPtr;

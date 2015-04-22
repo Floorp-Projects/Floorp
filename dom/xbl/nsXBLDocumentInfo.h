@@ -13,7 +13,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsXBLPrototypeBinding;
-class nsXBLDocGlobalObject;
 
 class nsXBLDocumentInfo final : public nsSupportsWeakReference
 {

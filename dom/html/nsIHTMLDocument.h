@@ -9,12 +9,9 @@
 #include "nsISupports.h"
 #include "nsCompatibility.h"
 
-class nsIDOMHTMLFormElement;
 class nsIContent;
-class nsIScriptElement;
 class nsIEditor;
 class nsContentList;
-class nsWrapperCache;
 
 #define NS_IHTMLDOCUMENT_IID \
 { 0xcf814492, 0x303c, 0x4718, \

@@ -12,8 +12,6 @@
 #include "nsIAtom.h"
 #include "nsIDOMDocument.h"
 
-class nsIXULTemplateBuilder;
-
 /**
  * The nsContentTestNode is always the top node in a query's rule network. It
  * exists so that Constrain can filter out resources that aren't part of a

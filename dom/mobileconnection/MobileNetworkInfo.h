@@ -15,8 +15,6 @@
 namespace mozilla {
 namespace dom {
 
-class GlobalObject;
-
 class MobileNetworkInfo final : public nsIMobileNetworkInfo
                               , public nsWrapperCache
 {

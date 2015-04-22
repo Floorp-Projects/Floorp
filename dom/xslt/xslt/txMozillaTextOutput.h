@@ -11,7 +11,6 @@
 #include "nsWeakPtr.h"
 #include "txOutputFormat.h"
 
-class nsIDOMCharacterData;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsITransformObserver;

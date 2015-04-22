@@ -20,7 +20,6 @@
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
-class nsIOutputStream;
 class nsIGlobalObject;
 
 namespace mozilla {
