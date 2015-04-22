@@ -107,7 +107,8 @@ IsStyleCachePreservingAction(EditAction action)
 class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 {
   public:
-    virtual bool operator()(nsIDOMNode* aNode)  // used to build list of all li's, td's & th's iterator covers
+    // Used to build list of all li's, td's & th's iterator covers
+    virtual bool operator()(nsIDOMNode* aNode) const
     {
       if (nsHTMLEditUtils::IsTableCell(aNode)) return true;
       if (nsHTMLEditUtils::IsListItem(aNode)) return true;
@@ -118,7 +119,7 @@ class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 class nsBRNodeFunctor : public nsBoolDomIterFunctor
 {
   public:
-    virtual bool operator()(nsIDOMNode* aNode)  
+    virtual bool operator()(nsIDOMNode* aNode) const
     {
       if (nsTextEditUtils::IsBreak(aNode)) return true;
       return false;
@@ -129,7 +130,7 @@ class nsEmptyEditableFunctor : public nsBoolDomIterFunctor
 {
   public:
     explicit nsEmptyEditableFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
-    virtual bool operator()(nsIDOMNode* aNode)  
+    virtual bool operator()(nsIDOMNode* aNode) const
     {
       if (mHTMLEditor->IsEditable(aNode) &&
         (nsHTMLEditUtils::IsListItem(aNode) ||
@@ -151,7 +152,7 @@ class nsEditableTextFunctor : public nsBoolDomIterFunctor
 {
   public:
     explicit nsEditableTextFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
-    virtual bool operator()(nsIDOMNode* aNode)  
+    virtual bool operator()(nsIDOMNode* aNode) const
     {
       if (nsEditor::IsTextNode(aNode) && mHTMLEditor->IsEditable(aNode)) 
       {
@@ -5864,7 +5865,8 @@ public:
   explicit nsUniqueFunctor(nsCOMArray<nsIDOMNode> &aArray) : mArray(aArray)
   {
   }
-  virtual bool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
+  // used to build list of all nodes iterator covers
+  virtual bool operator()(nsIDOMNode* aNode) const
   {
     return mArray.IndexOf(aNode) < 0;
   }
