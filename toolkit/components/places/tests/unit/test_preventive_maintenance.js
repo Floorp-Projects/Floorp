@@ -1166,30 +1166,32 @@ tests.push({
     ]);
   },
 
-  asyncCheck: function(aCallback) {
-    let stmt = mDBConn.createAsyncStatement(
-      "SELECT h.url FROM moz_places h WHERE h.hidden = 1"
-    );
-    stmt.executeAsync({
-      _count: 0,
-      handleResult: function(aResultSet) {
-        for (let row; (row = aResultSet.getNextRow());) {
-          let url = row.getResultByIndex(0);
-          do_check_true(/redirecting/.test(url));
-          this._count++;
+  check: function () {
+    return new Promise(resolve => {
+      let stmt = mDBConn.createAsyncStatement(
+        "SELECT h.url FROM moz_places h WHERE h.hidden = 1"
+      );
+      stmt.executeAsync({
+        _count: 0,
+        handleResult: function(aResultSet) {
+          for (let row; (row = aResultSet.getNextRow());) {
+            let url = row.getResultByIndex(0);
+            do_check_true(/redirecting/.test(url));
+            this._count++;
+          }
+        },
+        handleError: function(aError) {
+        },
+        handleCompletion: function(aReason) {
+          dump_table("moz_places");
+          dump_table("moz_historyvisits");
+          do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+          do_check_eq(this._count, 2);
+          resolve();
         }
-      },
-      handleError: function(aError) {
-      },
-      handleCompletion: function(aReason) {
-        dump_table("moz_places");
-        dump_table("moz_historyvisits");
-        do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
-        do_check_eq(this._count, 2);
-        aCallback();
-      }
+      });
+      stmt.finalize();
     });
-    stmt.finalize();
   }
 });
 
@@ -1205,7 +1207,7 @@ tests.push({
   _bookmarkId: null,
   _separatorId: null,
 
-  setup: function() {
+  setup: function* () {
     // use valid api calls to create a bunch of items
     yield PlacesTestUtils.addVisits([
       { uri: this._uri1 },
@@ -1224,36 +1226,35 @@ tests.push({
     ts.tagURI(this._uri1, ["testtag"]);
     fs.setAndFetchFaviconForPage(this._uri2, SMALLPNG_DATA_URI, false,
                                  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE);
-    bs.setKeywordForBookmark(this._bookmarkId, "testkeyword");
+    yield PlacesUtils.keywords.insert({ url: this._uri1.spec, keyword: "testkeyword" });
     as.setPageAnnotation(this._uri2, "anno", "anno", 0, as.EXPIRE_NEVER);
     as.setItemAnnotation(this._bookmarkId, "anno", "anno", 0, as.EXPIRE_NEVER);
   },
 
-  asyncCheck: function (aCallback) {
+  check: Task.async(function* () {
     // Check that all items are correct
-    PlacesUtils.asyncHistory.isURIVisited(this._uri1, function(aURI, aIsVisited) {
-      do_check_true(aIsVisited);
-      PlacesUtils.asyncHistory.isURIVisited(this._uri2, function(aURI, aIsVisited) {
-        do_check_true(aIsVisited);
+    let isVisited = yield promiseIsURIVisited(this._uri1);
+    do_check_true(isVisited);
+    isVisited = yield promiseIsURIVisited(this._uri2);
+    do_check_true(isVisited);
 
-        do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
-        do_check_eq(bs.getItemIndex(this._folderId), 0);
+    do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
+    do_check_eq(bs.getItemIndex(this._folderId), 0);
+    do_check_eq(bs.getItemType(this._folderId), bs.TYPE_FOLDER);
+    do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
 
-        do_check_eq(bs.getItemType(this._folderId), bs.TYPE_FOLDER);
-        do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
+    do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
+    do_check_eq((yield PlacesUtils.keywords.fetch({ url: this._uri1.spec })).keyword, "testkeyword");
+    do_check_eq(as.getPageAnnotation(this._uri2, "anno"), "anno");
+    do_check_eq(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
 
-        do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
-        do_check_eq(bs.getKeywordForBookmark(this._bookmarkId), "testkeyword");
-        do_check_eq(as.getPageAnnotation(this._uri2, "anno"), "anno");
-        do_check_eq(as.getItemAnnotation(this._bookmarkId, "anno"), "anno");
-
-        fs.getFaviconURLForPage(this._uri2, function (aFaviconURI) {
-          do_check_true(aFaviconURI.equals(SMALLPNG_DATA_URI));
-          aCallback();
-        });
-      }.bind(this));
-    }.bind(this));
-  }
+    yield new Promise(resolve => {
+      fs.getFaviconURLForPage(this._uri2, aFaviconURI => {
+        do_check_true(aFaviconURI.equals(SMALLPNG_DATA_URI));
+        resolve();
+      });
+    });
+  })
 });
 
 //------------------------------------------------------------------------------
@@ -1290,13 +1291,7 @@ add_task(function test_preventive_maintenance()
     // Check the lastMaintenance time has been saved.
     do_check_neq(Services.prefs.getIntPref("places.database.lastMaintenance"), null);
 
-    if (test.asyncCheck) {
-      let deferred = Promise.defer();
-      test.asyncCheck(deferred.resolve);
-      yield deferred.promise;
-    } else {
-      test.check();
-    }
+    yield test.check();
 
     cleanDatabase();
   }
