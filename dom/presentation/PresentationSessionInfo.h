@@ -145,6 +145,8 @@ private:
 
   void Shutdown(nsresult aReason) override;
 
+  nsresult GetAddress(nsACString& aAddress);
+
   nsCOMPtr<nsIServerSocket> mServerSocket;
 };
 
