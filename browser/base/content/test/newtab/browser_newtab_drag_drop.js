@@ -9,6 +9,7 @@
  */
 function runTests() {
   requestLongerTimeout(2);
+  yield addNewTabPageTab();
 
   // test a simple drag-and-drop scenario
   yield setLinks("0,1,2,3,4,5,6,7,8");
@@ -59,8 +60,8 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("0,1,2,3,4,5,6,7p,8p");
 
-  yield simulateDrop(2, 8);
-  checkGrid("0,1,3,4,5,6,7p,8p,2p");
+  yield simulateDrop(2, 5);
+  checkGrid("0,1,3,4,5,2p,6,7p,8p");
 
   // make sure that pinned sites are re-positioned correctly
   yield setLinks("0,1,2,3,4,5,6,7,8");

@@ -6,6 +6,8 @@
  * dragging them around.
  */
 function runTests() {
+  yield addNewTabPageTab();
+
   // the first three sites are pinned - make sure they're re-arranged correctly
   yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("0,1,2,,,5");

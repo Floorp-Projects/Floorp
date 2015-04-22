@@ -159,7 +159,7 @@ input[type=button] {
 .newtab-cell {
   display: -moz-box;
   height: 180px;
-  margin: 20px 10px;
+  margin: 20px 10px 68px;
   width: 290px;
 }
 
@@ -193,20 +193,45 @@ input[type=button] {
 
 /* TITLES */
 .newtab-sponsored,
-.newtab-title {
-  bottom: -26px;
+.newtab-title,
+.newtab-suggested {
   overflow: hidden;
   position: absolute;
   right: 0;
   text-align: center;
+}
+
+.newtab-sponsored,
+.newtab-title {
+  bottom: -26px;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.newtab-suggested {
+  border: 1px solid #dcdcdc;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  height: 17px;
+  line-height: 17px;
+  margin-bottom: -1px;
+  padding: 2px 8px;
+  display: none;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  top: 215px;
+}
+
+.newtab-suggested-bounds {
+  max-height: 34px; /* 34 / 17 = 2 lines maximum */
 }
 
 .newtab-title {
-  font-size: 13px;
   left: 0;
   padding-top: 14px;
-  text-overflow: ellipsis;
 }
 
 .newtab-sponsored {
@@ -237,12 +262,19 @@ input[type=button] {
   display: block;
 }
 
+.newtab-site[suggested] .newtab-suggested {
+  display: table;
+}
+
 .sponsored-explain,
-.sponsored-explain a {
+.sponsored-explain a,
+.suggested-explain,
+.suggested-explain a {
   color: white;
 }
 
-.sponsored-explain {
+.sponsored-explain,
+.suggested-explain {
   background-color: rgba(51, 51, 51, 0.95);
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
@@ -254,7 +286,8 @@ input[type=button] {
 }
 
 #newtab-intro-panel input,
-.sponsored-explain input {
+.sponsored-explain input,
+.suggested-explain input {
   background-size: 18px;
   height: 18px;
   opacity: 1;
@@ -462,7 +495,7 @@ input[type=button] {
 .newtab-customize-panel-item,
 .newtab-search-panel-engine,
 #newtab-search-manage {
-  padding: 4px 24px;
+  padding: 10px 10px 10px 25px;
 }
 
 .newtab-customize-panel-item:not(:last-child),
@@ -482,6 +515,10 @@ input[type=button] {
 #newtab-search-manage > label {
   padding: 0;
   margin: 0;
+}
+
+.newtab-customize-panel-item:not([selected]) {
+  color: #919191;
 }
 
 .newtab-customize-panel-item[selected],
