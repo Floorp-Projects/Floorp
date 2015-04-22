@@ -19,7 +19,6 @@ class nsIAtom;
 class nsIContentIterator;
 class nsIDOMDocument;
 class nsRange;
-template <class E> class nsCOMArray;
 namespace mozilla {
 namespace dom {
 template <class T> class OwningNonNull;
@@ -168,11 +167,7 @@ class MOZ_STACK_CLASS nsAutoUpdateViewBatch
 class nsBoolDomIterFunctor 
 {
   public:
-    virtual bool operator()(nsIDOMNode* aNode) const = 0;
-    bool operator()(nsINode* aNode) const
-    {
-      return operator()(GetAsDOMNode(aNode));
-    }
+    virtual bool operator()(nsINode* aNode) const = 0;
 };
 
 class MOZ_STACK_CLASS nsDOMIterator
@@ -184,8 +179,6 @@ class MOZ_STACK_CLASS nsDOMIterator
 
     void AppendList(const nsBoolDomIterFunctor& functor,
                     nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes) const;
-    void AppendList(const nsBoolDomIterFunctor& functor,
-                    nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
 
@@ -204,7 +197,7 @@ class nsTrivialFunctor : public nsBoolDomIterFunctor
 {
   public:
     // Used to build list of all nodes iterator covers
-    virtual bool operator()(nsIDOMNode* aNode) const
+    virtual bool operator()(nsINode* aNode) const
     {
       return true;
     }

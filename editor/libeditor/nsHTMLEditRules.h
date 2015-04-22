@@ -37,7 +37,6 @@ class Selection;
 }  // namespace dom
 }  // namespace mozilla
 struct DOMPoint;
-template <class E> class nsCOMArray;
 
 struct StyleCache : public PropItem
 {
