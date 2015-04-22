@@ -10,6 +10,19 @@ let annosvc = PlacesUtils.annotations;
 let txnManager = PlacesUtils.transactionManager;
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
+function* promiseKeyword(keyword, href, postData) {
+  while (true) {
+    let entry = yield PlacesUtils.keywords.fetch(keyword);
+    if (href == null && !entry)
+      break;
+    if (entry && entry.url.href == href && entry.postData == postData) {
+      break;
+    }
+
+    yield new Promise(resolve => do_timeout(100, resolve));
+  }
+}
+
 // create and add bookmarks observer
 let observer = {
 
@@ -97,16 +110,14 @@ let bmStartIndex = 0;
 // get bookmarks root id
 let root = PlacesUtils.bookmarksMenuFolderId;
 
-function run_test() {
+add_task(function* init() {
   bmsvc.addObserver(observer, false);
   do_register_cleanup(function () {
     bmsvc.removeObserver(observer);
   });
+});
 
-  run_next_test();
-}
-
-add_test(function test_create_folder_with_description() {
+add_task(function* test_create_folder_with_description() {
   const TEST_FOLDERNAME = "Test creating a folder with a description";
   const TEST_DESCRIPTION = "this is my test description";
 
@@ -145,11 +156,9 @@ add_test(function test_create_folder_with_description() {
   do_check_eq(observer._itemRemovedId, folderId);
   do_check_eq(observer._itemRemovedFolder, root);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
-
-  run_next_test();
 });
 
-add_test(function test_create_item() {
+add_task(function* test_create_item() {
   let testURI = NetUtil.newURI("http://test_create_item.com");
 
   let txn = new PlacesCreateBookmarkTransaction(testURI, root, bmStartIndex,
@@ -177,11 +186,9 @@ add_test(function test_create_item() {
   do_check_eq(observer._itemRemovedId, newId);
   do_check_eq(observer._itemRemovedFolder, root);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
-
-  run_next_test();
 });
 
-add_test(function test_create_item_to_folder() {
+add_task(function* test_create_item_to_folder() {
   const TEST_FOLDERNAME = "Test creating item to a folder";
   let testURI = NetUtil.newURI("http://test_create_item_to_folder.com");
   let folderId = bmsvc.createFolder(root, TEST_FOLDERNAME, bmsvc.DEFAULT_INDEX);
@@ -208,11 +215,9 @@ add_test(function test_create_item_to_folder() {
   do_check_eq(observer._itemRemovedId, newBkmId);
   do_check_eq(observer._itemRemovedFolder, folderId);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
-
-  run_next_test();
 });
 
-add_test(function test_move_items_to_folder() {
+add_task(function* test_move_items_to_folder() {
   let testFolderId = bmsvc.createFolder(root, "Test move items", bmsvc.DEFAULT_INDEX);
   let testURI = NetUtil.newURI("http://test_move_items.com");
   let testBkmId = bmsvc.insertBookmark(testFolderId, testURI, bmsvc.DEFAULT_INDEX, "1: Test move items");
@@ -282,11 +287,9 @@ add_test(function test_move_items_to_folder() {
   do_check_eq(observer._itemMovedOldIndex, 0);
   do_check_eq(observer._itemMovedNewParent, testFolderId);
   do_check_eq(observer._itemMovedNewIndex, 0);
-
-  run_next_test();
 });
 
-add_test(function test_remove_folder() {
+add_task(function* test_remove_folder() {
   let testFolder = bmsvc.createFolder(root, "Test Removing a Folder", bmsvc.DEFAULT_INDEX);
   let folderId = bmsvc.createFolder(testFolder, "Removed Folder", bmsvc.DEFAULT_INDEX);
 
@@ -311,25 +314,22 @@ add_test(function test_remove_folder() {
   do_check_eq(observer._itemAddedId, folderId);
   do_check_eq(observer._itemAddedParent, testFolder);
   do_check_eq(observer._itemAddedIndex, 0);
-
-  run_next_test();
 });
 
-add_test(function test_remove_item_with_keyword_and_tag() {
+add_task(function* test_remove_item_with_tag() {
   // Notice in this case the tag persists since other bookmarks have same uri.
-  let testFolder = bmsvc.createFolder(root, "Test removing an item with a keyword and a tag",
+  let testFolder = bmsvc.createFolder(root, "Test removing an item with a tag",
                                       bmsvc.DEFAULT_INDEX);
 
-  const KEYWORD = "test: test removing an item with a keyword and a tag";
-  const TAG_NAME = "tag-test_remove_item_with_keyword_and_tag";
-  let testURI = NetUtil.newURI("http://test_remove_item_with_keyword_and_tag.com");
+  const KEYWORD = "test: test removing an item with a tag";
+  const TAG_NAME = "tag-test_remove_item_with_tag";
+  let testURI = NetUtil.newURI("http://test_remove_item_with_tag.com");
   let testBkmId = bmsvc.insertBookmark(testFolder, testURI, bmsvc.DEFAULT_INDEX, "test-item1");
 
   // create bookmark for not removing tag.
   bmsvc.insertBookmark(testFolder, testURI, bmsvc.DEFAULT_INDEX, "test-item2");
 
-  // set tag & keyword
-  bmsvc.setKeywordForBookmark(testBkmId, KEYWORD);
+  // set tag
   tagssvc.tagURI(testURI, [TAG_NAME]);
 
   let txn = new PlacesRemoveItemTransaction(testBkmId);
@@ -338,57 +338,65 @@ add_test(function test_remove_item_with_keyword_and_tag() {
   do_check_eq(observer._itemRemovedId, testBkmId);
   do_check_eq(observer._itemRemovedFolder, testFolder);
   do_check_eq(observer._itemRemovedIndex, 0);
-  do_check_eq(bmsvc.getKeywordForBookmark(testBkmId), null);
-  do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
+  do_check_eq(tagssvc.getTagsForURI(testURI), TAG_NAME);
 
   txn.undoTransaction();
   let newbkmk2Id = observer._itemAddedId;
   do_check_eq(observer._itemAddedParent, testFolder);
   do_check_eq(observer._itemAddedIndex, 0);
-  do_check_eq(bmsvc.getKeywordForBookmark(newbkmk2Id), KEYWORD);
   do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
 
   txn.redoTransaction();
   do_check_eq(observer._itemRemovedId, newbkmk2Id);
   do_check_eq(observer._itemRemovedFolder, testFolder);
   do_check_eq(observer._itemRemovedIndex, 0);
-  do_check_eq(bmsvc.getKeywordForBookmark(newbkmk2Id), null);
   do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
 
   txn.undoTransaction();
   do_check_eq(observer._itemAddedParent, testFolder);
   do_check_eq(observer._itemAddedIndex, 0);
   do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
-
-  run_next_test();
 });
 
-add_test(function test_remove_item_with_tag() {
-  const TAG_NAME = "tag-test_remove_item_with_tag";
-  let testURI = NetUtil.newURI("http://test_remove_item_with_tag.com/");
-  let itemId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test removing an item with a tag");
-  tagssvc.tagURI(testURI, [TAG_NAME]);
+add_task(function* test_remove_item_with_keyword() {
+  // Notice in this case the tag persists since other bookmarks have same uri.
+  let testFolder = bmsvc.createFolder(root, "Test removing an item with a keyword",
+                                      bmsvc.DEFAULT_INDEX);
 
-  let txn = new PlacesRemoveItemTransaction(itemId);
+  const KEYWORD = "test: test removing an item with a keyword";
+  const TAG_NAME = "tag-test_remove_item_with_keyword";
+  let testURI = NetUtil.newURI("http://test_remove_item_with_keyword.com");
+  let testBkmId = bmsvc.insertBookmark(testFolder, testURI, bmsvc.DEFAULT_INDEX, "test-item1");
+
+  // set keyword
+  yield PlacesUtils.keywords.insert({ url: testURI.spec, keyword: KEYWORD});
+
+  let txn = new PlacesRemoveItemTransaction(testBkmId);
 
   txn.doTransaction();
-  do_check_true(tagssvc.getTagsForURI(testURI).length == 0);
+  do_check_eq(observer._itemRemovedId, testBkmId);
+  do_check_eq(observer._itemRemovedFolder, testFolder);
+  do_check_eq(observer._itemRemovedIndex, 0);
+  yield promiseKeyword(KEYWORD, null);
 
   txn.undoTransaction();
-  do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
+  let newbkmk2Id = observer._itemAddedId;
+  do_check_eq(observer._itemAddedParent, testFolder);
+  do_check_eq(observer._itemAddedIndex, 0);
+  yield promiseKeyword(KEYWORD, testURI.spec);
 
   txn.redoTransaction();
-  do_check_true(tagssvc.getTagsForURI(testURI).length == 0);
+  do_check_eq(observer._itemRemovedId, newbkmk2Id);
+  do_check_eq(observer._itemRemovedFolder, testFolder);
+  do_check_eq(observer._itemRemovedIndex, 0);
+  yield promiseKeyword(KEYWORD, null);
 
   txn.undoTransaction();
-  do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
-
-  txn.redoTransaction();
-
-  run_next_test();
+  do_check_eq(observer._itemAddedParent, testFolder);
+  do_check_eq(observer._itemAddedIndex, 0);
 });
 
-add_test(function test_creating_separator() {
+add_task(function* test_creating_separator() {
   let testFolder = bmsvc.createFolder(root, "Test creating a separator", bmsvc.DEFAULT_INDEX);
 
   let txn = new PlacesCreateSeparatorTransaction(testFolder, 0);
@@ -412,11 +420,9 @@ add_test(function test_creating_separator() {
   do_check_eq(observer._itemRemovedId, newSepId);
   do_check_eq(observer._itemRemovedFolder, testFolder);
   do_check_eq(observer._itemRemovedIndex, 0);
-
-  run_next_test();
 });
 
-add_test(function test_removing_separator() {
+add_task(function* test_removing_separator() {
   let testFolder = bmsvc.createFolder(root, "Test removing a separator", bmsvc.DEFAULT_INDEX);
 
   let sepId = bmsvc.insertSeparator(testFolder, 0);
@@ -441,11 +447,9 @@ add_test(function test_removing_separator() {
   do_check_eq(observer._itemAddedId, sepId); //New separator created
   do_check_eq(observer._itemAddedParent, testFolder);
   do_check_eq(observer._itemAddedIndex, 0);
-
-  run_next_test();
 });
 
-add_test(function test_editing_item_title() {
+add_task(function* test_editing_item_title() {
   const TITLE = "Test editing item title";
   const MOD_TITLE = "Mod: Test editing item title";
   let testURI = NetUtil.newURI("http://www.test_editing_item_title.com");
@@ -472,11 +476,9 @@ add_test(function test_editing_item_title() {
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "title");
   do_check_eq(observer._itemChangedValue, TITLE);
-
-  run_next_test();
 });
 
-add_test(function test_editing_item_uri() {
+add_task(function* test_editing_item_uri() {
   const OLD_TEST_URI = NetUtil.newURI("http://old.test_editing_item_uri.com/");
   const NEW_TEST_URI = NetUtil.newURI("http://new.test_editing_item_uri.com/");
   let testBkmId = bmsvc.insertBookmark(root, OLD_TEST_URI, bmsvc.DEFAULT_INDEX,
@@ -512,11 +514,9 @@ add_test(function test_editing_item_uri() {
   do_check_eq(observer._itemChangedValue, OLD_TEST_URI.spec);
   do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
   do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
-
-  run_next_test();
 });
 
-add_test(function test_edit_description_transaction() {
+add_task(function* test_edit_description_transaction() {
   let testURI = NetUtil.newURI("http://test_edit_description_transaction.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test edit description transaction");
 
@@ -532,11 +532,9 @@ add_test(function test_edit_description_transaction() {
   txn.doTransaction();
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, DESCRIPTION_ANNO);
-
-  run_next_test();
 });
 
-add_test(function test_edit_keyword() {
+add_task(function* test_edit_keyword() {
   const KEYWORD = "keyword-test_edit_keyword";
 
   let testURI = NetUtil.newURI("http://test_edit_keyword.com");
@@ -553,11 +551,9 @@ add_test(function test_edit_keyword() {
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "keyword");
   do_check_eq(observer._itemChangedValue, "");
-
-  run_next_test();
 });
 
-add_test(function test_LoadInSidebar_transaction() {
+add_task(function* test_LoadInSidebar_transaction() {
   let testURI = NetUtil.newURI("http://test_LoadInSidebar_transaction.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test LoadInSidebar transaction");
 
@@ -578,11 +574,9 @@ add_test(function test_LoadInSidebar_transaction() {
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-
-  run_next_test();
 });
 
-add_test(function test_generic_item_annotation() {
+add_task(function* test_generic_item_annotation() {
   let testURI = NetUtil.newURI("http://test_generic_item_annotation.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test generic item annotation");
 
@@ -607,11 +601,9 @@ add_test(function test_generic_item_annotation() {
   do_check_eq(observer._itemChangedId, testBkmId);
   do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
   do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-
-  run_next_test();
 });
 
-add_test(function test_editing_item_date_added() {
+add_task(function* test_editing_item_date_added() {
   let testURI = NetUtil.newURI("http://test_editing_item_date_added.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX,
                                        "Test editing item date added");
@@ -625,11 +617,9 @@ add_test(function test_editing_item_date_added() {
 
   txn.undoTransaction();
   do_check_eq(oldAdded, bmsvc.getItemDateAdded(testBkmId));
-
-  run_next_test();
 });
 
-add_test(function test_edit_item_last_modified() {
+add_task(function* test_edit_item_last_modified() {
   let testURI = NetUtil.newURI("http://test_edit_item_last_modified.com");
   let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX,
                                        "Test editing item last modified");
@@ -643,11 +633,9 @@ add_test(function test_edit_item_last_modified() {
 
   txn.undoTransaction();
   do_check_eq(oldModified, bmsvc.getItemLastModified(testBkmId));
-
-  run_next_test();
 });
 
-add_test(function test_generic_page_annotation() {
+add_task(function* test_generic_page_annotation() {
   const TEST_ANNO = "testAnno/testInt";
   let testURI = NetUtil.newURI("http://www.mozilla.org/");
   PlacesTestUtils.addVisits(testURI).then(function () {
@@ -666,12 +654,10 @@ add_test(function test_generic_page_annotation() {
 
     txn.redoTransaction();
     do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
-
-    run_next_test();
   });
 });
 
-add_test(function test_sort_folder_by_name() {
+add_task(function* test_sort_folder_by_name() {
   let testFolder = bmsvc.createFolder(root, "Test PlacesSortFolderByNameTransaction",
                                       bmsvc.DEFAULT_INDEX);
   let testURI = NetUtil.newURI("http://test_sort_folder_by_name.com");
@@ -712,52 +698,37 @@ add_test(function test_sort_folder_by_name() {
   do_check_eq(0, bmsvc.getItemIndex(b1));
   do_check_eq(1, bmsvc.getItemIndex(b2));
   do_check_eq(2, bmsvc.getItemIndex(b3));
-
-  run_next_test();
 });
 
-add_test(function test_edit_postData() {
-  function* promiseKeyword(keyword, href, postData) {
-    while (true) {
-      let entry = yield PlacesUtils.keywords.fetch(keyword);
-      if (entry && entry.url.href == href && entry.postData == postData) {
-        break;
-      }
+add_task(function* test_edit_postData() {
+  let postData = "post-test_edit_postData";
+  let testURI = NetUtil.newURI("http://test_edit_postData.com");
 
-      yield new Promise(resolve => do_timeout(100, resolve));
-    }
-  }
+  let testBkm = yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: "http://test_edit_postData.com",
+    title: "Test edit Post Data"
+  });
 
-  Task.spawn(function* () {
-    let postData = "post-test_edit_postData";
-    let testURI = NetUtil.newURI("http://test_edit_postData.com");
+  yield PlacesUtils.keywords.insert({
+    keyword: "kw",
+    url: "http://test_edit_postData.com"
+  });
 
-    let testBkm = yield PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.menuGuid,
-      url: "http://test_edit_postData.com",
-      title: "Test edit Post Data"
-    });
+  let testBkmId = yield PlacesUtils.promiseItemId(testBkm.guid);
+  let txn = new PlacesEditBookmarkPostDataTransaction(testBkmId, postData);
 
-    yield PlacesUtils.keywords.insert({
-      keyword: "kw",
-      url: "http://test_edit_postData.com"
-    });
+  txn.doTransaction();
+  yield promiseKeyword("kw", testURI.spec, postData);
 
-    let testBkmId = yield PlacesUtils.promiseItemId(testBkm.guid);
-    let txn = new PlacesEditBookmarkPostDataTransaction(testBkmId, postData);
-
-    txn.doTransaction();
-    yield promiseKeyword("kw", testURI.spec, postData);
-
-    txn.undoTransaction();
-    entry = yield PlacesUtils.keywords.fetch("kw");
-    Assert.equal(entry.url.href, testURI.spec);
-    // We don't allow anymore to set a null post data.
-    //Assert.equal(null, post_data);
-  }).then(run_next_test);
+  txn.undoTransaction();
+  entry = yield PlacesUtils.keywords.fetch("kw");
+  Assert.equal(entry.url.href, testURI.spec);
+  // We don't allow anymore to set a null post data.
+  //Assert.equal(null, post_data);
 });
 
-add_test(function test_tagURI_untagURI() {
+add_task(function* test_tagURI_untagURI() {
   const TAG_1 = "tag-test_tagURI_untagURI-bar";
   const TAG_2 = "tag-test_tagURI_untagURI-foo";
   let tagURI = NetUtil.newURI("http://test_tagURI_untagURI.com");
@@ -785,11 +756,9 @@ add_test(function test_tagURI_untagURI() {
 
   untagTxn.redoTransaction();
   do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));
-
-  run_next_test();
 });
 
-add_test(function test_aggregate_removeItem_Txn() {
+add_task(function* test_aggregate_removeItem_Txn() {
   let testFolder = bmsvc.createFolder(root, "Test aggregate removeItem transaction", bmsvc.DEFAULT_INDEX);
 
   const TEST_URL = "http://test_aggregate_removeitem_txn.com/";
@@ -877,11 +846,9 @@ add_test(function test_aggregate_removeItem_Txn() {
   // Check last added back item id.
   // Notice items are restored in reverse order.
   do_check_eq(observer._itemAddedId, newBkmk1Id);
-
-  run_next_test();
 });
 
-add_test(function test_create_item_with_childTxn() {
+add_task(function* test_create_item_with_childTxn() {
   let testFolder = bmsvc.createFolder(root, "Test creating an item with childTxns", bmsvc.DEFAULT_INDEX);
 
   const BOOKMARK_TITLE = "parent item";
@@ -931,11 +898,9 @@ add_test(function test_create_item_with_childTxn() {
   catch (ex) {
     do_throw("Setting a child transaction in a createItem transaction did throw: " + ex);
   }
-
-  run_next_test();
 });
 
-add_test(function test_create_folder_with_child_itemTxn() {
+add_task(function* test_create_folder_with_child_itemTxn() {
   let childURI = NetUtil.newURI("http://test_create_folder_with_child_itemTxn.com");
   let childItemTxn = new PlacesCreateBookmarkTransaction(childURI, root,
                                                          bmStartIndex, "childItem");
@@ -963,6 +928,4 @@ add_test(function test_create_folder_with_child_itemTxn() {
   catch (ex) {
     do_throw("Setting a child item transaction in a createFolder transaction did throw: " + ex);
   }
-
-  run_next_test();
 });
