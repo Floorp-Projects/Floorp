@@ -84,7 +84,7 @@ public class TabQueueService extends Service {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        toastLayout = layoutInflater.inflate(R.layout.button_toast, null);
+        toastLayout = layoutInflater.inflate(R.layout.tab_queue_toast, null);
 
         final Resources resources = getResources();
 
@@ -95,7 +95,7 @@ public class TabQueueService extends Service {
         openNowButton.setText(resources.getText(R.string.tab_queue_toast_action));
 
         toastLayoutParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
