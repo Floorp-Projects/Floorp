@@ -188,7 +188,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend class SavedStacks;
     friend class mozilla::LinkedListElement<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext* cx, JS::HandleObject obj);
-    friend bool (::JS::dbg::IsDebugger)(JS::Value val);
+    friend bool (::JS::dbg::IsDebugger)(const JSObject&);
+    friend bool (::JS::dbg::GetDebuggeeGlobals)(JSContext*, const JSObject&, AutoObjectVector&);
     friend JSObject* SavedStacksMetadataCallback(JSContext* cx);
     friend void JS::dbg::onNewPromise(JSContext* cx, HandleObject promise);
     friend void JS::dbg::onPromiseSettled(JSContext* cx, HandleObject promise);
@@ -597,7 +598,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool init(JSContext* cx);
     inline const js::HeapPtrNativeObject& toJSObject() const;
     inline js::HeapPtrNativeObject& toJSObjectRef();
-    static inline Debugger* fromJSObject(JSObject* obj);
+    static inline Debugger* fromJSObject(const JSObject* obj);
     static Debugger* fromChildJSObject(JSObject* obj);
 
     bool hasMemory() const;

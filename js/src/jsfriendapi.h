@@ -473,6 +473,9 @@ IsSystemZone(JS::Zone* zone);
 extern JS_FRIEND_API(bool)
 IsAtomsCompartment(JSCompartment* comp);
 
+extern JS_FRIEND_API(bool)
+IsAtomsZone(JS::Zone *zone);
+
 /*
  * Returns whether we're in a non-strict property set (in that we're in a
  * non-strict script and the bytecode we're on is a property set).  The return
