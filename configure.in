@@ -9188,6 +9188,7 @@ export STLPORT_LIBS
 export JS_STANDALONE=no
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
+export MOZ_MEMORY
 
 if ! test -e js; then
     mkdir js

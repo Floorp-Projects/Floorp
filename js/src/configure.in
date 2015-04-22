@@ -2956,10 +2956,18 @@ fi
 dnl ========================================================
 dnl = Enable jemalloc
 dnl ========================================================
-MOZ_MEMORY=1
+
+LOCAL_MOZ_MEMORY=1
 MOZ_ARG_DISABLE_BOOL(jemalloc,
 [  --disable-jemalloc       Don't replace memory allocator with jemalloc],
-    MOZ_MEMORY=)
+    LOCAL_MOZ_MEMORY=)
+
+dnl Consult the command-line arguments in stand alone-builds only. In
+dnl non-stand-alone builds, we always use the value of MOZ_MEMORY inherited from
+dnl the top-level configure script.
+if test "$JS_STANDALONE"; then
+    MOZ_MEMORY=$LOCAL_MOZ_MEMORY
+fi
 
 case "${OS_TARGET}" in
 Android|WINNT|Darwin)
