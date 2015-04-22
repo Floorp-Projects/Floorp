@@ -546,6 +546,7 @@ BluetoothGattManager::Connect(const nsAString& aAppUuid,
     sBluetoothGattClientInterface->Connect(client->mClientIf,
                                            aDeviceAddr,
                                            true, // direct connect
+                                           TRANSPORT_AUTO,
                                            new ConnectResultHandler(client));
   } else {
     BluetoothUuid uuid;
@@ -1256,6 +1257,7 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
   if (client->mConnectRunnable) {
     sBluetoothGattClientInterface->Connect(
       aClientIf, client->mDeviceAddr, true /* direct connect */,
+      TRANSPORT_AUTO,
       new ConnectResultHandler(client));
   }
 }
