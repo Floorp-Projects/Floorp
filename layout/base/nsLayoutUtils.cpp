@@ -5831,11 +5831,12 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 
   // Avoid unnecessarily large offsets.
   bool doTile = !aDest.Contains(aFill);
-  nsRect dest = doTile ? TileNearRect(aDest, aFill.Intersect(aDirty)) : aDest;
-  nsPoint anchor = aAnchor + (dest.TopLeft() - aDest.TopLeft());
+  nsRect appUnitDest = doTile ? TileNearRect(aDest, aFill.Intersect(aDirty))
+                              : aDest;
+  nsPoint anchor = aAnchor + (appUnitDest.TopLeft() - aDest.TopLeft());
 
   gfxRect devPixelDest =
-    nsLayoutUtils::RectToGfxRect(dest, aAppUnitsPerDevPixel);
+    nsLayoutUtils::RectToGfxRect(appUnitDest, aAppUnitsPerDevPixel);
   gfxRect devPixelFill =
     nsLayoutUtils::RectToGfxRect(aFill, aAppUnitsPerDevPixel);
   gfxRect devPixelDirty =
@@ -5843,52 +5844,57 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 
   gfxMatrix currentMatrix = aCtx->CurrentMatrix();
   gfxRect fill = devPixelFill;
+  gfxRect dest = devPixelDest;
   bool didSnap;
   // Snap even if we have a scale in the context. But don't snap if
   // we have something that's not translation+scale, or if the scale flips in
   // the X or Y direction, because snapped image drawing can't handle that yet.
   if (!currentMatrix.HasNonAxisAlignedTransform() &&
       currentMatrix._11 > 0.0 && currentMatrix._22 > 0.0 &&
-      aCtx->UserToDevicePixelSnapped(fill, true)) {
+      aCtx->UserToDevicePixelSnapped(fill, true) &&
+      aCtx->UserToDevicePixelSnapped(dest, true)) {
+    // We snapped. On this code path, |fill| and |dest| take into account
+    // currentMatrix's transform.
     didSnap = true;
-    if (fill.IsEmpty()) {
-      return SnappedImageDrawingParameters();
-    }
   } else {
+    // We didn't snap. On this code path, |fill| and |dest| do not take into
+    // account currentMatrix's transform.
     didSnap = false;
     fill = devPixelFill;
+    dest = devPixelDest;
   }
 
-  // Apply the context's scale to the dest rect.
-  gfxSize destScale = didSnap ? gfxSize(currentMatrix._11, currentMatrix._22)
-                              : currentMatrix.ScaleFactors(true);
-  gfxSize appUnitScaledDest(dest.width * destScale.width,
-                            dest.height * destScale.height);
-  gfxSize scaledDest = appUnitScaledDest / aAppUnitsPerDevPixel;
-  if (scaledDest.IsEmpty()) {
+  // If we snapped above, |dest| already takes into account |currentMatrix|'s scale
+  // and has integer coordinates. If not, we need these properties to compute
+  // the optimal drawn image size, so compute |snappedDestSize| here.
+  gfxSize snappedDestSize = dest.Size();
+  if (!didSnap) {
+    gfxSize scaleFactors = currentMatrix.ScaleFactors(true);
+    snappedDestSize.Scale(scaleFactors.width, scaleFactors.height);
+    snappedDestSize.width = NS_round(snappedDestSize.width);
+    snappedDestSize.height = NS_round(snappedDestSize.height);
+  }
+
+  // We need to be sure that this is at least one pixel in width and height,
+  // or we'll end up drawing nothing even if we have a nonempty fill.
+  snappedDestSize.width = std::max(snappedDestSize.width, 1.0);
+  snappedDestSize.height = std::max(snappedDestSize.height, 1.0);
+
+  // Bail if we're not going to end up drawing anything.
+  if (fill.IsEmpty() || snappedDestSize.IsEmpty()) {
     return SnappedImageDrawingParameters();
   }
 
-  // Compute a snapped version of the scaled dest rect, which we'll use to
-  // determine the optimal image size to draw with. We need to be sure that
-  // this rect is at least one pixel in width and height, or we'll end up
-  // drawing nothing even if we have a nonempty fill.
-  gfxSize snappedScaledDest =
-    gfxSize(NSAppUnitsToIntPixels(appUnitScaledDest.width, aAppUnitsPerDevPixel),
-            NSAppUnitsToIntPixels(appUnitScaledDest.height, aAppUnitsPerDevPixel));
-  snappedScaledDest.width = std::max(snappedScaledDest.width, 1.0);
-  snappedScaledDest.height = std::max(snappedScaledDest.height, 1.0);
-
   nsIntSize intImageSize =
-    aImage->OptimalImageSizeForDest(snappedScaledDest,
+    aImage->OptimalImageSizeForDest(snappedDestSize,
                                     imgIContainer::FRAME_CURRENT,
                                     aGraphicsFilter, aImageFlags);
   gfxSize imageSize(intImageSize.width, intImageSize.height);
 
+  // XXX(seth): May be buggy; see bug 1151016.
   CSSIntSize svgViewportSize = currentMatrix.IsIdentity()
     ? CSSIntSize(intImageSize.width, intImageSize.height)
-    : CSSIntSize(NSAppUnitsToIntPixels(dest.width, aAppUnitsPerDevPixel), //XXX BUG!
-                 NSAppUnitsToIntPixels(dest.height, aAppUnitsPerDevPixel)); //XXX BUG!
+    : CSSIntSize(devPixelDest.width, devPixelDest.height);
 
   // Compute the set of pixels that would be sampled by an ideal rendering
   gfxPoint subimageTopLeft =
@@ -5904,8 +5910,9 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   gfxMatrix transform;
   gfxMatrix invTransform;
 
-  bool anchorAtUpperLeft = anchor.x == dest.x && anchor.y == dest.y;
-  bool exactlyOneImageCopy = aFill.IsEqualEdges(dest);
+  bool anchorAtUpperLeft = anchor.x == appUnitDest.x &&
+                           anchor.y == appUnitDest.y;
+  bool exactlyOneImageCopy = aFill.IsEqualEdges(appUnitDest);
   if (anchorAtUpperLeft && exactlyOneImageCopy) {
     // The simple case: we can ignore the anchor point and compute the
     // transformation from the sampled region (the subimage) to the fill rect.
@@ -5933,7 +5940,14 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
       anchorPoint = StableRound(anchorPoint);
     }
 
-    gfxRect anchoredDestRect(anchorPoint, scaledDest);
+    // Compute an unsnapped version of the dest rect's size. We continue to
+    // follow the pattern that we take |currentMatrix| into account only if
+    // |didSnap| is true.
+    gfxSize unsnappedDestSize
+      = didSnap ? devPixelDest.Size() * currentMatrix.ScaleFactors(true)
+                : devPixelDest.Size();
+
+    gfxRect anchoredDestRect(anchorPoint, unsnappedDestSize);
     gfxRect anchoredImageRect(imageSpaceAnchorPoint, imageSize);
 
     // Calculate anchoredDestRect with snapped fill rect when the devPixelFill rect
