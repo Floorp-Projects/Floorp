@@ -27,10 +27,17 @@ Please choose the version of Firefox you want to build:
 Your choice:
 '''
 
-APPLICATIONS = [
+APPLICATIONS_LIST=[
     ('Firefox for Desktop', 'browser'),
-    ('Firefox for Android', 'mobile_android'),
+    ('Firefox for Android', 'mobile_android')
 ]
+
+# This is a workaround for the fact that we must support python2.6 (which has
+# no OrderedDict)
+APPLICATIONS = dict(
+    desktop=APPLICATIONS_LIST[0],
+    android=APPLICATIONS_LIST[1],
+)
 
 FINISHED = '''
 Your system should be ready to build %s! If you have not already,
@@ -47,11 +54,12 @@ Or, if you prefer Git:
 class Bootstrapper(object):
     """Main class that performs system bootstrap."""
 
-    def __init__(self, finished=FINISHED):
+    def __init__(self, finished=FINISHED, choice=None, no_interactive=False):
         self.instance = None
         self.finished = finished
+        self.choice = choice
         cls = None
-        args = {}
+        args = {'no_interactive': no_interactive}
 
         if sys.platform.startswith('linux'):
             distro, version, dist_id = platform.linux_distribution()
@@ -109,11 +117,16 @@ class Bootstrapper(object):
         self.instance = cls(**args)
 
     def bootstrap(self):
-        # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
-        labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS)]
-        prompt = APPLICATION_CHOICE % '\n'.join(labels)
-        choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
-        name, application = APPLICATIONS[choice-1]
+        if self.choice is None:
+            # Like ['1. Firefox for Desktop', '2. Firefox for Android'].
+            labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
+            prompt = APPLICATION_CHOICE % '\n'.join(labels)
+            prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
+            name, application = APPLICATIONS_LIST[prompt_choice-1]
+        elif self.choice not in APPLICATIONS.keys():
+            raise Exception('Please pick a valid application choice: (%s)' % '/'.join(APPLICATIONS.keys()))
+        else:
+            name, application = APPLICATIONS[self.choice]
 
         self.instance.install_system_packages()
 

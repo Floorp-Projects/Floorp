@@ -9,8 +9,8 @@ from mozboot.base import BaseBootstrapper
 
 
 class CentOSBootstrapper(BaseBootstrapper):
-    def __init__(self, version, dist_id):
-        BaseBootstrapper.__init__(self)
+    def __init__(self, version, dist_id, **kwargs):
+        BaseBootstrapper.__init__(self, **kwargs)
 
         self.version = version
         self.dist_id = dist_id

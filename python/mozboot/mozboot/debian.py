@@ -65,8 +65,8 @@ class DebianBootstrapper(BaseBootstrapper):
     # Subclasses can add packages to this variable to have them installed.
     MOBILE_ANDROID_DISTRO_PACKAGES = []
 
-    def __init__(self, version, dist_id):
-        BaseBootstrapper.__init__(self)
+    def __init__(self, version, dist_id, **kwargs):
+        BaseBootstrapper.__init__(self, **kwargs)
 
         self.version = version
         self.dist_id = dist_id
@@ -74,6 +74,7 @@ class DebianBootstrapper(BaseBootstrapper):
         self.packages = self.COMMON_PACKAGES + self.DISTRO_PACKAGES
         self.browser_packages = self.BROWSER_COMMON_PACKAGES + self.BROWSER_DISTRO_PACKAGES
         self.mobile_android_packages = self.MOBILE_ANDROID_COMMON_PACKAGES + self.MOBILE_ANDROID_DISTRO_PACKAGES
+
 
     def install_system_packages(self):
         self.apt_install(*self.packages)
@@ -96,7 +97,7 @@ class DebianBootstrapper(BaseBootstrapper):
         # http://developer.android.com/sdk/installing/index.html?pkg=tools.
         self.run_as_root(['dpkg', '--add-architecture', 'i386'])
         # After adding a new arch, the list of packages has to be updated
-        self.run_as_root(['apt-get', 'update'])
+        self.apt_update()
         self.apt_install(*self.mobile_android_packages)
 
         # 2. The user may have an external Android SDK (in which case we save
@@ -129,4 +130,4 @@ class DebianBootstrapper(BaseBootstrapper):
                                   ndk_path=self.ndk_path)
 
     def _update_package_manager(self):
-        self.run_as_root(['apt-get', 'update'])
+        self.apt_update()
