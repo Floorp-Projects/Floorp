@@ -119,19 +119,17 @@ public class TabQueueHelper {
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-        String title, text;
+        final String text;
         final Resources resources = context.getResources();
         if (tabsQueued == 1) {
-            title = resources.getString(R.string.tab_queue_notification_title_singular);
             text = resources.getString(R.string.tab_queue_notification_text_singular);
         } else {
-            title = resources.getString(R.string.tab_queue_notification_title_plural);
             text = resources.getString(R.string.tab_queue_notification_text_plural, tabsQueued);
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                                                      .setSmallIcon(R.drawable.ic_status_logo)
-                                                     .setContentTitle(title)
+                                                     .setContentTitle(resources.getString(R.string.tab_queue_notification_title))
                                                      .setContentText(text)
                                                      .setContentIntent(pendingIntent);
 
