@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom += [
     'PresentationService.h',
     'PresentationSession.h',
     'PresentationSessionInfo.h',
+    'PresentationSessionTransport.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -32,6 +33,7 @@ UNIFIED_SOURCES += [
     'PresentationSession.cpp',
     'PresentationSessionInfo.cpp',
     'PresentationSessionRequest.cpp',
+    'PresentationSessionTransport.cpp',
 ]
 
 EXTRA_COMPONENTS += [

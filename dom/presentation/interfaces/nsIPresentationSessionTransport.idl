@@ -10,9 +10,6 @@ interface nsIPresentationChannelDescription;
 interface nsISocketTransport;
 
 %{C++
-#define PRESENTATION_SESSION_TRANSPORT_CID \
-  { 0xc9d023f4, 0x6228, 0x4c07, \
-    { 0x8b, 0x1d, 0x9c, 0x19, 0x57, 0x3f, 0xaa, 0x27 } }
 #define PRESENTATION_SESSION_TRANSPORT_CONTRACTID \
   "@mozilla.org/presentation/presentationsessiontransport;1"
 %}
