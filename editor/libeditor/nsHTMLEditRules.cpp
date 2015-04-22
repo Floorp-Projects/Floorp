@@ -6014,18 +6014,23 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRang
     int32_t listCount = outArrayOfNodes.Count();
     for (i=listCount-1; i>=0; i--)
     {
-      nsCOMPtr<nsIDOMNode> node = outArrayOfNodes[i];
-      if (!aDontTouchContent && IsInlineNode(node) &&
+      nsCOMPtr<nsINode> node = do_QueryInterface(outArrayOfNodes[i]);
+      NS_ENSURE_STATE(node);
+      if (!aDontTouchContent && IsInlineNode(GetAsDOMNode(node)) &&
           (!mHTMLEditor || mHTMLEditor->IsContainer(node)) &&
           (!mHTMLEditor || !mHTMLEditor->IsTextNode(node)))
       {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsCOMArray<nsIDOMNode> arrayOfInlines;
-        res = BustUpInlinesAtBRs(node, arrayOfInlines);
+        nsTArray<nsCOMPtr<nsINode>> arrayOfInlines;
+        res = BustUpInlinesAtBRs(*node, arrayOfInlines);
         NS_ENSURE_SUCCESS(res, res);
+        nsCOMArray<nsIDOMNode> arrayOfInlinesDOM;
+        for (auto& inlineNode : arrayOfInlines) {
+          arrayOfInlinesDOM.AppendObject(GetAsDOMNode(inlineNode));
+        }
         // put these nodes in outArrayOfNodes, replacing the current node
         outArrayOfNodes.RemoveObjectAt(i);
-        outArrayOfNodes.InsertObjectsAt(arrayOfInlines, i);
+        outArrayOfNodes.InsertObjectsAt(arrayOfInlinesDOM, i);
       }
     }
   }
@@ -6320,76 +6325,65 @@ nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
 
 
 
-///////////////////////////////////////////////////////////////////////////
-// BustUpInlinesAtBRs: 
-//                       
-nsresult 
-nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode, 
-                                    nsCOMArray<nsIDOMNode>& outArrayOfNodes)
+nsresult
+nsHTMLEditRules::BustUpInlinesAtBRs(nsINode& aNode,
+                                    nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
-  // first step is to build up a list of all the break nodes inside 
-  // the inline container.
-  nsCOMArray<nsIDOMNode> arrayOfBreaks;
+  // First build up a list of all the break nodes inside the inline container.
+  nsTArray<nsCOMPtr<nsINode>> arrayOfBreaks;
   nsBRNodeFunctor functor;
-  nsDOMIterator iter(*inNode);
+  nsDOMIterator iter(*GetAsDOMNode(&aNode));
   iter.AppendList(functor, arrayOfBreaks);
-  
-  // if there aren't any breaks, just put inNode itself in the array
-  int32_t listCount = arrayOfBreaks.Count();
-  if (!listCount)
-  {
-    if (!outArrayOfNodes.AppendObject(inNode))
-      return NS_ERROR_FAILURE;
+
+  // If there aren't any breaks, just put inNode itself in the array
+  if (arrayOfBreaks.IsEmpty()) {
+    aOutArrayOfNodes.AppendElement(&aNode);
+    return NS_OK;
   }
-  else
-  {
-    // else we need to bust up inNode along all the breaks
-    nsCOMPtr<Element> breakNode;
-    nsCOMPtr<nsINode> inlineParentNode = node->GetParentNode();
-    nsCOMPtr<nsIDOMNode> leftNode;
-    nsCOMPtr<nsIDOMNode> rightNode;
-    nsCOMPtr<nsIDOMNode> splitDeepNode = inNode;
-    nsCOMPtr<nsIDOMNode> splitParentNode;
-    int32_t splitOffset, resultOffset, i;
-    
-    for (i=0; i< listCount; i++)
-    {
-      breakNode = do_QueryInterface(arrayOfBreaks[i]);
-      NS_ENSURE_TRUE(breakNode, NS_ERROR_NULL_POINTER);
-      NS_ENSURE_TRUE(splitDeepNode, NS_ERROR_NULL_POINTER);
-      splitParentNode = GetAsDOMNode(nsEditor::GetNodeLocation(breakNode,
-                                                               &splitOffset));
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsresult res = mHTMLEditor->SplitNodeDeep(splitDeepNode, splitParentNode, splitOffset,
-                          &resultOffset, false, address_of(leftNode), address_of(rightNode));
-      NS_ENSURE_SUCCESS(res, res);
-      // put left node in node list
-      if (leftNode)
-      {
-        // might not be a left node.  a break might have been at the very
-        // beginning of inline container, in which case splitnodedeep
-        // would not actually split anything
-        if (!outArrayOfNodes.AppendObject(leftNode))
-          return NS_ERROR_FAILURE;
-      }
-      // move break outside of container and also put in node list
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->MoveNode(breakNode, inlineParentNode, resultOffset);
-      NS_ENSURE_SUCCESS(res, res);
-      if (!outArrayOfNodes.AppendObject(GetAsDOMNode(breakNode)))
-        return  NS_ERROR_FAILURE;
-      // now rightNode becomes the new node to split
-      splitDeepNode = rightNode;
+
+  // Else we need to bust up inNode along all the breaks
+  nsCOMPtr<nsINode> inlineParentNode = aNode.GetParentNode();
+  nsCOMPtr<nsIDOMNode> splitDeepNode = GetAsDOMNode(&aNode);
+  nsCOMPtr<nsIDOMNode> leftDOMNode, rightDOMNode;
+
+  for (uint32_t i = 0; i < arrayOfBreaks.Length(); i++) {
+    nsCOMPtr<Element> breakNode = arrayOfBreaks[i]->AsElement();
+    NS_ENSURE_TRUE(splitDeepNode, NS_ERROR_NULL_POINTER);
+    nsCOMPtr<nsINode> splitParentNode = breakNode->GetParentNode();
+    int32_t splitOffset = splitParentNode ?
+      splitParentNode->IndexOf(breakNode) : -1;
+
+    int32_t resultOffset;
+    nsresult res = mHTMLEditor->SplitNodeDeep(splitDeepNode,
+        GetAsDOMNode(splitParentNode), splitOffset, &resultOffset, false,
+        address_of(leftDOMNode), address_of(rightDOMNode));
+    NS_ENSURE_SUCCESS(res, res);
+
+    // Put left node in node list
+    if (leftDOMNode) {
+      // Might not be a left node.  A break might have been at the very
+      // beginning of inline container, in which case SplitNodeDeep would not
+      // actually split anything
+      nsCOMPtr<nsINode> leftNode = do_QueryInterface(leftDOMNode);
+      NS_ENSURE_STATE(leftNode);
+      aOutArrayOfNodes.AppendElement(leftNode);
     }
-    // now tack on remaining rightNode, if any, to the list
-    if (rightNode)
-    {
-      if (!outArrayOfNodes.AppendObject(rightNode))
-        return NS_ERROR_FAILURE;
-    }
+    // Move break outside of container and also put in node list
+    res = mHTMLEditor->MoveNode(breakNode, inlineParentNode, resultOffset);
+    NS_ENSURE_SUCCESS(res, res);
+    aOutArrayOfNodes.AppendElement(breakNode);
+
+    // Now rightNode becomes the new node to split
+    splitDeepNode = rightDOMNode;
+  }
+  // Now tack on remaining rightNode, if any, to the list
+  if (rightDOMNode) {
+    nsCOMPtr<nsINode> rightNode = do_QueryInterface(rightDOMNode);
+    NS_ENSURE_STATE(rightNode);
+    aOutArrayOfNodes.AppendElement(rightNode);
   }
   return NS_OK;
 }
