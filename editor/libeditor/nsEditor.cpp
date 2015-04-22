@@ -1733,10 +1733,8 @@ nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
   NS_ENSURE_TRUE(aObserver, NS_ERROR_NULL_POINTER);
 
   // Make sure the listener isn't already on the list
-  if (mEditorObservers.IndexOf(aObserver) == -1) 
-  {
-    if (!mEditorObservers.AppendObject(aObserver))
-      return NS_ERROR_FAILURE;
+  if (!mEditorObservers.Contains(aObserver)) {
+    mEditorObservers.AppendElement(*aObserver);
   }
 
   return NS_OK;
@@ -1748,8 +1746,7 @@ nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
 {
   NS_ENSURE_TRUE(aObserver, NS_ERROR_FAILURE);
 
-  if (!mEditorObservers.RemoveObject(aObserver))
-    return NS_ERROR_FAILURE;
+  mEditorObservers.RemoveElement(aObserver);
 
   return NS_OK;
 }
@@ -1809,8 +1806,8 @@ nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
   switch (aNotification) {
     case eNotifyEditorObserversOfEnd:
       mIsInEditAction = false;
-      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-        mEditorObservers[i]->EditAction();
+      for (auto& observer : mEditorObservers) {
+        observer->EditAction();
       }
 
       if (!mDispatchInputEvent) {
@@ -1821,14 +1818,14 @@ nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       break;
     case eNotifyEditorObserversOfBefore:
       mIsInEditAction = true;
-      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-        mEditorObservers[i]->BeforeEditAction();
+      for (auto& observer : mEditorObservers) {
+        observer->BeforeEditAction();
       }
       break;
     case eNotifyEditorObserversOfCancel:
       mIsInEditAction = false;
-      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-        mEditorObservers[i]->CancelEditAction();
+      for (auto& observer : mEditorObservers) {
+        observer->CancelEditAction();
       }
       break;
     default:
