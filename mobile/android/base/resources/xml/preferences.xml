@@ -72,7 +72,7 @@
         </intent>
     </PreferenceScreen>
     <PreferenceScreen android:title="@string/pref_category_devtools"
-                      android:summary="@string/pref_category_devtools_summary" >
+                      android:summary="@string/pref_developer_remotedebugging" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
