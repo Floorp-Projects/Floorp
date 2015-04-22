@@ -10,8 +10,6 @@
 #include "nscore.h"
 
 class nsIContent;
-class nsIDocument;
-class nsINode;
 class nsAString;
 class nsAttrValue;
 class nsTextNode;

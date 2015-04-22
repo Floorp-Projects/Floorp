@@ -29,10 +29,8 @@
 #include "nsWrapperCache.h"
 #include "nsWeakReference.h"
 
-class nsDOMMultipartFile;
 class nsIFile;
 class nsIInputStream;
-class nsIClassInfo;
 
 #define FILEIMPL_IID \
   { 0xbccb3275, 0x6778, 0x4ac5, \

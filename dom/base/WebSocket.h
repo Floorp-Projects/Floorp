@@ -28,10 +28,6 @@ class nsIInputStream;
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-class WorkerPrivate;
-}
-
 class File;
 
 class WebSocketImpl;

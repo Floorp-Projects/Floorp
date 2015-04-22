@@ -12,15 +12,11 @@
 #include "nsIDOMEventListener.h"
 #include "nsITransferable.h"
 
-class nsIDOMNode;
 class nsPIDOMWindow;
-class nsIDOMDragEvent;
 class nsISelection;
 class nsITransferable;
 class nsIContent;
-class nsIURI;
 class nsIFile;
-class nsISimpleEnumerator;
 
 namespace mozilla {
 namespace dom {
