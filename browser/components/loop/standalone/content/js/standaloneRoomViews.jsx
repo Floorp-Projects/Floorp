@@ -160,11 +160,23 @@ loop.standaloneRoomViews = (function(mozL10n) {
   });
 
   var StandaloneRoomHeader = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    recordClick: function() {
+      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+        linkInfo: "Support link click"
+      }));
+    },
+
     render: function() {
       return (
         <header>
           <h1>{mozL10n.get("clientShortname2")}</h1>
-          <a target="_blank" href={loop.config.generalSupportUrl}>
+          <a href={loop.config.generalSupportUrl}
+             onClick={this.recordClick}
+             target="_blank">
             <i className="icon icon-help"></i>
           </a>
         </header>
@@ -173,7 +185,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
   });
 
   var StandaloneRoomFooter = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
     _getContent: function() {
+      // We use this technique of static markup as it means we get
+      // just one overall string for L10n to define the structure of
+      // the whole item.
       return mozL10n.get("legal_text_and_links", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use_url": React.renderToStaticMarkup(
@@ -189,10 +208,21 @@ loop.standaloneRoomViews = (function(mozL10n) {
       });
     },
 
+    recordClick: function(event) {
+      // Check for valid href, as this is clicking on the paragraph -
+      // so the user may be clicking on the text rather than the link.
+      if (event.target && event.target.href) {
+        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+          linkInfo: event.target.href
+        }))
+      }
+    },
+
     render: function() {
       return (
         <footer>
-          <p dangerouslySetInnerHTML={{__html: this._getContent()}}></p>
+          <p dangerouslySetInnerHTML={{__html: this._getContent()}}
+             onClick={this.recordClick}></p>
           <div className="footer-logo" />
         </footer>
       );
@@ -201,8 +231,15 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var StandaloneRoomContextItem = React.createClass({
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       receivingScreenShare: React.PropTypes.bool,
       roomContextUrl: React.PropTypes.object
+    },
+
+    recordClick: function() {
+      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+        linkInfo: "Shared URL"
+      }));
     },
 
     render: function() {
@@ -225,7 +262,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
             <img src={this.props.roomContextUrl.thumbnail} />
           <div className="standalone-context-url-description-wrapper">
             {this.props.roomContextUrl.description}
-            <br /><a href={location}>{location}</a>
+            <br /><a href={location}
+                     onClick={this.recordClick}
+                     target="_blank">{location}</a>
           </div>
         </div>
       );
@@ -234,6 +273,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var StandaloneRoomContextView = React.createClass({
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       receivingScreenShare: React.PropTypes.bool.isRequired,
       roomContextUrls: React.PropTypes.array,
       roomName: React.PropTypes.string,
@@ -259,6 +299,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         <div className="standalone-room-info">
           <h2 className="room-name">{this.props.roomName}</h2>
           <StandaloneRoomContextItem
+            dispatcher={this.props.dispatcher}
             receivingScreenShare={this.props.receivingScreenShare}
             roomContextUrl={roomContextUrl} />
         </div>
@@ -517,7 +558,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         <div className="room-conversation-wrapper">
           <div className="beta-logo" />
-          <StandaloneRoomHeader />
+          <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
           <StandaloneRoomInfoArea roomState={this.state.roomState}
                                   failureReason={this.state.failureReason}
                                   joinRoom={this.joinRoom}
@@ -527,6 +568,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           <div className="video-layout-wrapper">
             <div className="conversation room-conversation">
               <StandaloneRoomContextView
+                dispatcher={this.props.dispatcher}
                 receivingScreenShare={this.state.receivingScreenShare}
                 roomContextUrls={this.state.roomContextUrls}
                 roomName={this.state.roomName}
@@ -556,7 +598,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           <loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView
             marketplaceSrc={this.state.marketplaceSrc}
             onMarketplaceMessage={this.state.onMarketplaceMessage} />
-          <StandaloneRoomFooter />
+          <StandaloneRoomFooter dispatcher={this.props.dispatcher} />
         </div>
       );
     }
@@ -564,6 +606,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   return {
     StandaloneRoomContextView: StandaloneRoomContextView,
+    StandaloneRoomFooter: StandaloneRoomFooter,
+    StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomView: StandaloneRoomView
   };
 })(navigator.mozL10n);
