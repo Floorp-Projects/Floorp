@@ -38,6 +38,8 @@ IsPukCardLockType(IccLockType aLockType)
     case IccLockType::SpckPuk:
     case IccLockType::RcckPuk:
     case IccLockType::RspckPuk:
+    case IccLockType::NsckPuk:
+    case IccLockType::PckPuk:
       return true;
     default:
       return false;
