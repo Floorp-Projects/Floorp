@@ -45,8 +45,6 @@
 namespace mozilla {
 namespace dom {
 struct MediaStreamConstraints;
-class NavigatorUserMediaSuccessCallback;
-class NavigatorUserMediaErrorCallback;
 struct MediaTrackConstraintSet;
 }
 

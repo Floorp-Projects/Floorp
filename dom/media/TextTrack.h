@@ -19,7 +19,6 @@ namespace dom {
 class TextTrackList;
 class TextTrackCue;
 class TextTrackCueList;
-class TextTrackRegion;
 class HTMLTrackElement;
 
 enum TextTrackSource {

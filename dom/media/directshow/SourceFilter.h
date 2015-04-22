@@ -19,7 +19,6 @@
 namespace mozilla {
 
 class MediaResource;
-class ReadRequest;
 class OutputPin;
 
 

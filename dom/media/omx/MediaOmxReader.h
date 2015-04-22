@@ -22,10 +22,6 @@ class MOZ_EXPORT MediaExtractor;
 
 namespace mozilla {
 
-namespace dom {
-  class TimeRanges;
-}
-
 class AbstractMediaDecoder;
 
 class MediaOmxReader : public MediaOmxCommonReader

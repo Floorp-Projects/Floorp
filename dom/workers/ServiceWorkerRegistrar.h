@@ -23,7 +23,6 @@
 
 
 class nsIFile;
-class nsRunnable;
 
 namespace mozilla {
 namespace dom {

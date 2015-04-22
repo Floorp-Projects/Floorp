@@ -13,7 +13,6 @@
 #include "nsWrapperCache.h"
 
 class nsIContent;
-class nsSVGElement;
 
 namespace mozilla {
 namespace dom {

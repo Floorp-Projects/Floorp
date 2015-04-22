@@ -14,9 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-class Promise;
-struct MediaStreamConstraints;
-
 #define MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID \
 {0x25091870, 0x84d6, 0x4acf, {0xaf, 0x97, 0x6e, 0xd5, 0x5b, 0xe0, 0x47, 0xb2}}
 

@@ -6,16 +6,12 @@
 #define mozilla_dom_indexeddb_actorsparent_h__
 
 template <class> struct already_AddRefed;
-class nsCString;
-struct nsID;
 class nsIPrincipal;
-class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
 
 class Element;
-class TabParent;
 
 namespace quota {
 

@@ -16,12 +16,10 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 
-class nsPIDOMWindow;
 struct PRLogModuleInfo;
 
 namespace mozilla {
 
-class DOMEventTargetHelper;
 class EventChainPostVisitor;
 
 namespace dom {

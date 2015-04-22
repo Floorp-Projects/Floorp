@@ -12,8 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-class AudioTrackList;
-
 class AudioTrack : public MediaTrack
 {
 public:

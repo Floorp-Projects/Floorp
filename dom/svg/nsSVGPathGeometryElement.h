@@ -9,8 +9,6 @@
 #include "mozilla/gfx/2D.h"
 #include "SVGGraphicsElement.h"
 
-class gfxMatrix;
-
 struct nsSVGMark {
   enum Type {
     eStart,
