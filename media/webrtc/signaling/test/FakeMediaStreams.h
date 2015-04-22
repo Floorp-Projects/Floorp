@@ -30,6 +30,7 @@ class nsIDOMWindow;
 
 namespace mozilla {
    class MediaStreamGraph;
+   class MediaStreamGraphImpl;
    class MediaSegment;
 };
 
@@ -103,6 +104,7 @@ class Fake_MediaStream {
 
   virtual Fake_SourceMediaStream *AsSourceStream() { return nullptr; }
 
+  virtual mozilla::MediaStreamGraphImpl *GraphImpl() { return nullptr; }
   virtual nsresult Start() { return NS_OK; }
   virtual nsresult Stop() { return NS_OK; }
   virtual void StopStream() {}
