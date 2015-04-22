@@ -21,7 +21,7 @@ The flow of our rendering engine is as follows:
 
 The implementation is broken into the following sections and will reference this figure. Note that **Objects** are bold fonts while *Threads* are italicized.
 
-<img src="architecture.png" width="900px" height="630px" />
+<img src="silkArchitecture.png" width="900px" height="630px" />
 
 #Hardware Vsync
 Hardware vsync events from (1), occur on a specific **Display** Object.
