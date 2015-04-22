@@ -1,7 +1,9 @@
 // This test is used to check copy and paste in editable areas to ensure that non-text
 // types (html and images) are copied to and pasted from the clipboard properly.
 
-let testPage = "<div id='main' contenteditable='true'>Test <b>Bold</b> After Text</div>";
+let testPage = "<body style='margin: 0'><img id='img' tabindex='1' src='http://example.org/browser/browser/base/content/test/general/moz.png'>" +
+               "  <div id='main' contenteditable='true'>Test <b>Bold</b> After Text</div>" +
+               "</body>";
 
 add_task(function*() {
   let tab = gBrowser.addTab();
@@ -12,7 +14,12 @@ add_task(function*() {
   yield promiseTabLoadEvent(tab, "data:text/html," + escape(testPage));
   yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
 
-  let results = yield ContentTask.spawn(browser, {}, function* () {
+  const modifier = (content.navigator.platform.indexOf("Mac") >= 0) ?
+                   Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
+                   Components.interfaces.nsIDOMWindowUtils.MODIFIER_CONTROL;
+
+  let results = yield ContentTask.spawn(browser, { modifier: modifier },
+                                        function* (arg) {
     var doc = content.document;
     var main = doc.getElementById("main");
     main.focus();
@@ -20,10 +27,7 @@ add_task(function*() {
     const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
 
-    const modifier = (content.navigator.platform.indexOf("Mac") >= 0) ?
-                     Components.interfaces.nsIDOMWindowUtils.MODIFIER_META :
-                     Components.interfaces.nsIDOMWindowUtils.MODIFIER_CONTROL;
-
+    const modifier = arg.modifier;
     function sendKey(key)
     {
      if (utils.sendKeyEvent("keydown", key, 0, modifier)) {
@@ -46,7 +50,7 @@ add_task(function*() {
     selection.modify("extend", "right", "word");
     selection.modify("extend", "right", "word");
 
-    yield new content.Promise((resolve, reject) => {
+    yield new Promise((resolve, reject) => {
       addEventListener("copy", function copyEvent(event) {
         removeEventListener("copy", copyEvent, true);
         // The data is empty as the selection is copied during the event default phase.
@@ -59,7 +63,7 @@ add_task(function*() {
 
     selection.modify("move", "right", "line");
 
-    yield new content.Promise((resolve, reject) => {
+    yield new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
         let clipboardData = event.clipboardData; 
@@ -80,7 +84,7 @@ add_task(function*() {
     selection.modify("extend", "left", "word");
     selection.modify("extend", "left", "character");
 
-    yield new content.Promise((resolve, reject) => {
+    yield new Promise((resolve, reject) => {
       addEventListener("cut", function copyEvent(event) {
         removeEventListener("cut", copyEvent, true);
         event.clipboardData.setData("text/plain", "Some text");
@@ -94,7 +98,7 @@ add_task(function*() {
 
     selection.modify("move", "left", "line");
 
-    yield new content.Promise((resolve, reject) => {
+    yield new Promise((resolve, reject) => {
       addEventListener("paste", function copyEvent(event) {
         removeEventListener("paste", copyEvent, true);
         let clipboardData = event.clipboardData; 
@@ -110,6 +114,7 @@ add_task(function*() {
     });
 
     is(main.innerHTML, "<i>Italic</i> Test <b>Bold</b> After<b></b>", "Copy and paste html 2");
+
     return results;
   });
 
@@ -117,6 +122,61 @@ add_task(function*() {
   for (var t = 0; t < results.length; t++) {
     ok(results[t].startsWith("PASSED"), results[t]);
   }
+
+  // Next, check that the Copy Image command works.
+
+  // The context menu needs to be opened to properly initialize for the copy
+  // image command to run.
+  let contextMenu = document.getElementById("contentAreaContextMenu");
+  let contextMenuShown = promisePopupShown(contextMenu);
+  BrowserTestUtils.synthesizeMouseAtCenter("#img", { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+  yield contextMenuShown;
+
+  document.getElementById("context-copyimage-contents").doCommand();
+
+  contextMenu.hidePopup();
+  yield promisePopupHidden(contextMenu);
+
+  // Focus the content again
+  yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW);
+
+  let expectedContent = yield ContentTask.spawn(browser, { modifier: modifier },
+                                                function* (arg) {
+    var doc = content.document;
+    var main = doc.getElementById("main");
+    main.focus();
+
+    yield new Promise((resolve, reject) => {
+      addEventListener("paste", function copyEvent(event) {
+        removeEventListener("paste", copyEvent, true);
+        let clipboardData = event.clipboardData;
+
+        // DataTransfer doesn't support the image types yet, so only text/html
+        // will be present.
+        if (clipboardData.getData("text/html") !=
+            '<img id="img" tabindex="1" src="http://example.org/browser/browser/base/content/test/general/moz.png">') {
+          reject();
+        }
+        resolve();
+      }, true)
+
+      const utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+      const modifier = arg.modifier;
+      if (utils.sendKeyEvent("keydown", "v", 0, modifier)) {
+        utils.sendKeyEvent("keypress", "v", "v".charCodeAt(0), modifier);
+      }
+      utils.sendKeyEvent("keyup", "v", 0, modifier);
+    });
+
+    // Return the new content which should now include an image.
+    return main.innerHTML;
+  });
+
+  is(expectedContent, '<i>Italic</i> <img id="img" tabindex="1" ' +
+                      'src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
+                      'Test <b>Bold</b> After<b></b>', "Paste after copy image");
 
   gBrowser.removeCurrentTab();
 });
