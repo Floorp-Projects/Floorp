@@ -38,6 +38,14 @@ public:
       return link;
     }
 
+  ProxyAccessible* Proxy() const
+  {
+    if (!(mHyperlink & IS_PROXY))
+      return nullptr;
+
+    return reinterpret_cast<ProxyAccessible*>(mHyperlink & ~IS_PROXY);
+  }
+
 protected:
   uintptr_t mHyperlink;
   AtkHyperlink* mMaiAtkHyperlink;
