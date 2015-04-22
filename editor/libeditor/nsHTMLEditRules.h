@@ -296,8 +296,8 @@ protected:
   nsresult BustUpInlinesAtBRs(nsINode& aNode,
                               nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes);
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
-  nsresult MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
-                              nsTArray<bool> &inTransitionArray);
+  void MakeTransitionList(nsTArray<nsCOMPtr<nsINode>>& aNodeArray,
+                          nsTArray<bool>& aTransitionArray);
   nsresult RemoveBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
   nsresult ApplyBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray,
                            nsIAtom& aBlockTag);
