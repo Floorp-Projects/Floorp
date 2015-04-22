@@ -716,6 +716,39 @@ DataChannelWrapper.prototype = {
 
 
 /**
+ * This class provides helpers around analysing the audio content in a stream
+ * using WebAudio AnalyserNodes.
+ *
+ * @constructor
+ * @param {object} stream
+ *                 A MediaStream object whose audio track we shall analyse.
+ */
+function AudioStreamAnalyser(stream) {
+  if (stream.getAudioTracks().length === 0) {
+    throw new Error("No audio track in stream");
+  }
+  this.stream = stream;
+  this.audioContext = new AudioContext();
+  this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+  this.analyser = this.audioContext.createAnalyser();
+  this.sourceNode.connect(this.analyser);
+  this.data = new Uint8Array(this.analyser.frequencyBinCount);
+}
+
+AudioStreamAnalyser.prototype = {
+  /**
+   * Get an array of frequency domain data for our stream's audio track.
+   *
+   * @returns {array} A Uint8Array containing the frequency domain data.
+   */
+  getByteFrequencyData: function() {
+    this.analyser.getByteFrequencyData(this.data);
+    return this.data;
+  }
+};
+
+
+/**
  * This class acts as a wrapper around a PeerConnection instance.
  *
  * @constructor
@@ -1494,6 +1527,58 @@ PeerConnectionWrapper.prototype = {
    */
   checkMediaFlowPresent : function() {
     return Promise.all(this.mediaCheckers.map(checker => checker.waitForMediaFlow()));
+  },
+
+  /**
+   * Check that correct audio (typically a flat tone) is flowing to this
+   * PeerConnection. Uses WebAudio AnalyserNodes to compare input and output
+   * audio data in the frequency domain.
+   *
+   * @param {object} from
+   *        A PeerConnectionWrapper whose audio RTPSender we use as source for
+   *        the audio flow check.
+   * @returns {Promise}
+   *        A promise that resolves when we're receiving the tone from |from|.
+   */
+  checkReceivingToneFrom : function(from) {
+    var inputElem = from.localMediaElements[0];
+
+    // As input we use the stream of |from|'s first available audio sender.
+    var inputSenderTracks = from._pc.getSenders().map(sn => sn.track);
+    var inputAudioStream = from._pc.getLocalStreams()
+      .find(s => s.getAudioTracks().some(t => inputSenderTracks.includes(t)));
+    var inputAnalyser = new AudioStreamAnalyser(inputAudioStream);
+
+    // It would have been nice to have a working getReceivers() here, but until
+    // we do, let's use what remote streams we have.
+    var outputAudioStream = this._pc.getRemoteStreams()
+      .find(s => s.getAudioTracks().length > 0);
+    var outputAnalyser = new AudioStreamAnalyser(outputAudioStream);
+
+    var maxWithIndex = (a, b, i) => (b >= a.value) ? { value: b, index: i } : a;
+    var initial = { value: -1, index: -1 };
+
+    return new Promise((resolve, reject) => inputElem.ontimeupdate = () => {
+      var inputData = inputAnalyser.getByteFrequencyData();
+      var outputData = outputAnalyser.getByteFrequencyData();
+
+      var inputMax = inputData.reduce(maxWithIndex, initial);
+      var outputMax = outputData.reduce(maxWithIndex, initial);
+      info("Comparing maxima; input[" + inputMax.index + "] = " + inputMax.value +
+           ", output[" + outputMax.index + "] = " + outputMax.value);
+      if (!inputMax.value || !outputMax.value) {
+        return;
+      }
+
+      // When the input and output maxima are within reasonable distance
+      // from each other, we can be sure that the input tone has made it
+      // through the peer connection.
+      if (Math.abs(inputMax.index - outputMax.index) < 10) {
+        ok(true, "input and output audio data matches");
+        inputElem.ontimeupdate = null;
+        resolve();
+      }
+    });
   },
 
   /**
