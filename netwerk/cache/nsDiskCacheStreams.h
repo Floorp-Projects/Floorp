@@ -18,7 +18,6 @@
 
 #include "mozilla/Atomics.h"
 
-class nsDiskCacheInputStream;
 class nsDiskCacheDevice;
 
 class nsDiskCacheStreamIO : public nsIOutputStream {

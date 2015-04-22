@@ -16,8 +16,6 @@
 #include "nsITimer.h"
 #include "nsTArray.h"
 
-class nsIDOMDocument;
-
 namespace mozilla {
 namespace dom {
 

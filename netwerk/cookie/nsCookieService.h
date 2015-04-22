@@ -42,7 +42,6 @@ class ReadCookieDBListener;
 
 struct nsCookieAttributes;
 struct nsListIter;
-struct nsEnumerationData;
 
 namespace mozilla {
 namespace net {

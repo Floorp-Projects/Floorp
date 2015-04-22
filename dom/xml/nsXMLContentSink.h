@@ -22,7 +22,6 @@ class nsIDocument;
 class nsIURI;
 class nsIContent;
 class nsIParser;
-class nsViewManager;
 
 namespace mozilla {
 namespace dom {

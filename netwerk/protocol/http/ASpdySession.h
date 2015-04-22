@@ -15,8 +15,6 @@ class nsISocketTransport;
 
 namespace mozilla { namespace net {
 
-class nsHttpConnectionInfo;
-
 class ASpdySession : public nsAHttpTransaction
 {
 public:

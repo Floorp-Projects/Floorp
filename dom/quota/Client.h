@@ -20,7 +20,6 @@ class nsIRunnable;
 
 BEGIN_QUOTA_NAMESPACE
 
-class OriginOrPatternString;
 class UsageInfo;
 
 // An abstract interface for quota manager clients.

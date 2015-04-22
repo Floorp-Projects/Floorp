@@ -15,9 +15,6 @@
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
 
-class nsIObjectInputStream;
-class nsIObjectOutputStream;
-
 class nsBasePrincipal : public nsJSPrincipals
 {
 public:

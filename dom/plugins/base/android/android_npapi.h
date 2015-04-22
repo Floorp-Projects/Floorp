@@ -87,7 +87,6 @@ struct ANPCanvas;
 struct ANPMatrix;
 struct ANPPaint;
 struct ANPPath;
-struct ANPRegion;
 struct ANPTypeface;
 
 enum ANPMatrixFlags {

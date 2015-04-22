@@ -33,7 +33,6 @@ PRTimeToSeconds(PRTime t_usec)
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
-class nsIStorageStream;
 class nsIOutputStream;
 class nsIURI;
 class nsIThread;
@@ -43,7 +42,6 @@ namespace net {
 
 class CacheStorageService;
 class CacheStorage;
-class CacheFileOutputStream;
 class CacheOutputCloseListener;
 class CacheEntryHandle;
 

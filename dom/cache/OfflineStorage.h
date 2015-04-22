@@ -13,8 +13,6 @@
 #include "nsIOfflineStorage.h"
 #include "nsTArray.h"
 
-class nsIThread;
-
 namespace mozilla {
 namespace dom {
 namespace cache {

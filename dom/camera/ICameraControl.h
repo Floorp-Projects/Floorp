@@ -13,8 +13,6 @@
 
 struct DeviceStorageFileDescriptor;
 
-class nsIFile;
-
 namespace mozilla {
 
 class CameraControlListener;
