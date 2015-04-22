@@ -40,7 +40,8 @@ nsHTTPCompressConv::nsHTTPCompressConv()
 {
     if (NS_IsMainThread()) {
         mFailUncleanStops =
-            Preferences::GetBool("network.http.enforce-framing.http", false);
+            (Preferences::GetBool("network.http.enforce-framing.soft", false) ||
+             Preferences::GetBool("network.http.enforce-framing.http", false));
     } else {
         mFailUncleanStops = false;
     }
