@@ -3541,11 +3541,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
     } else if (tString.EqualsLiteral("normal") || tString.IsEmpty()) {
       res = RemoveBlockStyle(arrayOfNodes);
     } else {
-      nsCOMArray<nsIDOMNode> arrayOfDOMNodes;
-      for (auto& node : arrayOfNodes) {
-        arrayOfDOMNodes.AppendObject(GetAsDOMNode(node));
-      }
-      res = ApplyBlockStyle(arrayOfDOMNodes, aBlockType);
+      res = ApplyBlockStyle(arrayOfNodes, *blockType);
     }
     return res;
   }
@@ -6948,175 +6944,134 @@ nsHTMLEditRules::RemoveBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// ApplyBlockStyle:  do whatever it takes to make the list of nodes into 
-//                   one or more blocks of type blockTag.  
-//                       
-nsresult 
-nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsAString *aBlockTag)
+///////////////////////////////////////////////////////////////////////////////
+// ApplyBlockStyle: Do whatever it takes to make the list of nodes into one or
+//                  more blocks of type aBlockTag.
+nsresult
+nsHTMLEditRules::ApplyBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray,
+                                 nsIAtom& aBlockTag)
 {
-  // intent of this routine is to be used for converting to/from
-  // headers, paragraphs, pre, and address.  Those blocks
-  // that pretty much just contain inline things...
-  
-  NS_ENSURE_TRUE(aBlockTag, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIAtom> blockTag = do_GetAtom(*aBlockTag);
-  nsresult res = NS_OK;
-  
-  nsCOMPtr<nsINode> curParent;
-  nsCOMPtr<nsIDOMNode> newBlock;
-  int32_t offset;
-  int32_t listCount = arrayOfNodes.Count();
-  nsString tString(*aBlockTag);////MJUDGE SCC NEED HELP
+  // Intent of this routine is to be used for converting to/from headers,
+  // paragraphs, pre, and address.  Those blocks that pretty much just contain
+  // inline things...
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  nsresult res;
 
   // Remove all non-editable nodes.  Leave them be.
-  int32_t j;
-  for (j=listCount-1; j>=0; j--)
-  {
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (!mHTMLEditor->IsEditable(arrayOfNodes[j]))
-    {
-      arrayOfNodes.RemoveObjectAt(j);
+  for (int32_t i = aNodeArray.Length() - 1; i >= 0; i--) {
+    if (!mHTMLEditor->IsEditable(aNodeArray[i])) {
+      aNodeArray.RemoveElementAt(i);
     }
   }
-  
-  // reset list count
-  listCount = arrayOfNodes.Count();
-  
+
+  nsCOMPtr<Element> newBlock;
+
   nsCOMPtr<Element> curBlock;
-  int32_t i;
-  for (i=0; i<listCount; i++)
-  {
-    // get the node to act on, and its location
-    nsCOMPtr<nsIContent> curNode = do_QueryInterface(arrayOfNodes[i]);
-    NS_ENSURE_STATE(curNode);
-    curParent = curNode->GetParentNode();
-    offset = curParent ? curParent->IndexOf(curNode) : -1;
-    nsAutoString curNodeTag;
-    curNode->NodeInfo()->NameAtom()->ToString(curNodeTag);
-    ToLowerCase(curNodeTag);
- 
-    // is it already the right kind of block?
-    if (curNodeTag == *aBlockTag)
-    {
-      curBlock = 0;  // forget any previous block used for previous inline nodes
-      continue;  // do nothing to this block
+  for (auto& curNode : aNodeArray) {
+    nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
+    int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
+
+    // Is it already the right kind of block?
+    if (curNode->IsHTMLElement(&aBlockTag)) {
+      // Forget any previous block used for previous inline nodes
+      curBlock = nullptr;
+      // Do nothing to this block
+      continue;
     }
-        
-    // if curNode is a address, p, header, address, or pre, replace 
-    // it with a new block of correct type.
-    // xxx floppy moose: pre can't hold everything the others can
-    if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
-        nsHTMLEditUtils::IsFormatNode(curNode))
-    {
-      curBlock = 0;  // forget any previous block used for previous inline nodes
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsCOMPtr<Element> element = curNode->AsElement();
-      newBlock = dont_AddRef(GetAsDOMNode(
-        mHTMLEditor->ReplaceContainer(element, blockTag, nullptr, nullptr,
-                                      nsEditor::eCloneAttributes).take()));
+
+    // If curNode is a address, p, header, address, or pre, replace it with a
+    // new block of correct type.
+    // XXX: pre can't hold everything the others can
+    if (nsHTMLEditUtils::IsMozDiv(curNode) ||
+        nsHTMLEditUtils::IsFormatNode(curNode)) {
+      // Forget any previous block used for previous inline nodes
+      curBlock = nullptr;
+      newBlock = mHTMLEditor->ReplaceContainer(curNode->AsElement(),
+                                               &aBlockTag, nullptr, nullptr,
+                                               nsEditor::eCloneAttributes);
       NS_ENSURE_STATE(newBlock);
-    }
-    else if (nsHTMLEditUtils::IsTable(curNode)                    || 
-             (curNodeTag.EqualsLiteral("tbody"))      ||
-             (curNodeTag.EqualsLiteral("tr"))         ||
-             (curNodeTag.EqualsLiteral("td"))         ||
-             nsHTMLEditUtils::IsList(curNode)                     ||
-             (curNodeTag.EqualsLiteral("li"))         ||
-             curNode->IsAnyOfHTMLElements(nsGkAtoms::blockquote,
-                                          nsGkAtoms::div)) {
-      curBlock = 0;  // forget any previous block used for previous inline nodes
-      // recursion time
+    } else if (nsHTMLEditUtils::IsTable(curNode) ||
+               nsHTMLEditUtils::IsList(curNode) ||
+               curNode->IsAnyOfHTMLElements(nsGkAtoms::tbody,
+                                            nsGkAtoms::tr,
+                                            nsGkAtoms::td,
+                                            nsGkAtoms::li,
+                                            nsGkAtoms::blockquote,
+                                            nsGkAtoms::div)) {
+      // Forget any previous block used for previous inline nodes
+      curBlock = nullptr;
+      // Recursion time
       nsTArray<nsCOMPtr<nsINode>> childArray;
       GetChildNodesForOperation(*curNode, childArray);
       if (childArray.Length()) {
-        nsCOMArray<nsIDOMNode> childArrayDOM;
-        for (auto& child : childArray) {
-          childArrayDOM.AppendObject(GetAsDOMNode(child));
-        }
-        res = ApplyBlockStyle(childArrayDOM, aBlockTag);
+        res = ApplyBlockStyle(childArray, aBlockTag);
         NS_ENSURE_SUCCESS(res, res);
-      }
-      else
-      {
-        // make sure we can put a block here
-        res = SplitAsNeeded(*blockTag, curParent, offset);
+      } else {
+        // Make sure we can put a block here
+        res = SplitAsNeeded(aBlockTag, curParent, offset);
         NS_ENSURE_SUCCESS(res, res);
-        NS_ENSURE_STATE(mHTMLEditor);
         nsCOMPtr<Element> theBlock =
-          mHTMLEditor->CreateNode(blockTag, curParent, offset);
+          mHTMLEditor->CreateNode(&aBlockTag, curParent, offset);
         NS_ENSURE_STATE(theBlock);
-        // remember our new block for postprocessing
+        // Remember our new block for postprocessing
         mNewBlock = theBlock->AsDOMNode();
       }
-    }
-    
-    // if the node is a break, we honor it by putting further nodes in a new parent
-    else if (curNodeTag.EqualsLiteral("br"))
-    {
-      if (curBlock)
-      {
-        curBlock = 0;  // forget any previous block used for previous inline nodes
-        NS_ENSURE_STATE(mHTMLEditor);
+    } else if (curNode->IsHTMLElement(nsGkAtoms::br)) {
+      // If the node is a break, we honor it by putting further nodes in a new
+      // parent
+      if (curBlock) {
+        // Forget any previous block used for previous inline nodes
+        curBlock = nullptr;
         res = mHTMLEditor->DeleteNode(curNode);
         NS_ENSURE_SUCCESS(res, res);
-      }
-      else
-      {
-        // the break is the first (or even only) node we encountered.  Create a
+      } else {
+        // The break is the first (or even only) node we encountered.  Create a
         // block for it.
-        res = SplitAsNeeded(*blockTag, curParent, offset);
+        res = SplitAsNeeded(aBlockTag, curParent, offset);
         NS_ENSURE_SUCCESS(res, res);
-        NS_ENSURE_STATE(mHTMLEditor);
-        curBlock = mHTMLEditor->CreateNode(blockTag, curParent, offset);
+        curBlock = mHTMLEditor->CreateNode(&aBlockTag, curParent, offset);
         NS_ENSURE_STATE(curBlock);
-        // remember our new block for postprocessing
+        // Remember our new block for postprocessing
         mNewBlock = curBlock->AsDOMNode();
-        // note: doesn't matter if we set mNewBlock multiple times.
-        NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->MoveNode(curNode, curBlock, -1);
+        // Note: doesn't matter if we set mNewBlock multiple times.
+        res = mHTMLEditor->MoveNode(curNode->AsContent(), curBlock, -1);
         NS_ENSURE_SUCCESS(res, res);
       }
-        
-    
-    // if curNode is inline, pull it into curBlock
-    // note: it's assumed that consecutive inline nodes in the 
-    // arrayOfNodes are actually members of the same block parent.
-    // this happens to be true now as a side effect of how
-    // arrayOfNodes is contructed, but some additional logic should
-    // be added here if that should change
-    
     } else if (IsInlineNode(GetAsDOMNode(curNode))) {
-      // if curNode is a non editable, drop it if we are going to <pre>
-      NS_ENSURE_STATE(mHTMLEditor);
-      if (tString.LowerCaseEqualsLiteral("pre") 
-        && (!mHTMLEditor->IsEditable(curNode)))
-        continue; // do nothing to this block
-      
-      // if no curBlock, make one
-      if (!curBlock)
-      {
-        res = SplitAsNeeded(*blockTag, curParent, offset);
-        NS_ENSURE_SUCCESS(res, res);
-        NS_ENSURE_STATE(mHTMLEditor);
-        curBlock = mHTMLEditor->CreateNode(blockTag, curParent, offset);
-        NS_ENSURE_STATE(curBlock);
-        // remember our new block for postprocessing
-        mNewBlock = curBlock->AsDOMNode();
-        // note: doesn't matter if we set mNewBlock multiple times.
+      // If curNode is inline, pull it into curBlock.  Note: it's assumed that
+      // consecutive inline nodes in aNodeArray are actually members of the
+      // same block parent.  This happens to be true now as a side effect of
+      // how aNodeArray is contructed, but some additional logic should be
+      // added here if that should change
+      //
+      // If curNode is a non editable, drop it if we are going to <pre>.
+      if (&aBlockTag == nsGkAtoms::pre && !mHTMLEditor->IsEditable(curNode)) {
+        // Do nothing to this block
+        continue;
       }
-      
-      // if curNode is a Break, replace it with a return if we are going to <pre>
-      // xxx floppy moose
- 
-      // this is a continuation of some inline nodes that belong together in
-      // the same block item.  use curBlock
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->MoveNode(curNode, curBlock, -1);
+
+      // If no curBlock, make one
+      if (!curBlock) {
+        res = SplitAsNeeded(aBlockTag, curParent, offset);
+        NS_ENSURE_SUCCESS(res, res);
+        curBlock = mHTMLEditor->CreateNode(&aBlockTag, curParent, offset);
+        NS_ENSURE_STATE(curBlock);
+        // Remember our new block for postprocessing
+        mNewBlock = curBlock->AsDOMNode();
+        // Note: doesn't matter if we set mNewBlock multiple times.
+      }
+
+      // XXX If curNode is a br, replace it with a return if going to <pre>
+
+      // This is a continuation of some inline nodes that belong together in
+      // the same block item.  Use curBlock.
+      res = mHTMLEditor->MoveNode(curNode->AsContent(), curBlock, -1);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
-  return res;
+  return NS_OK;
 }
 
 

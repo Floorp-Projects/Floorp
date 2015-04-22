@@ -299,7 +299,8 @@ protected:
   nsresult MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
                               nsTArray<bool> &inTransitionArray);
   nsresult RemoveBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
-  nsresult ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsAString *aBlockTag);
+  nsresult ApplyBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray,
+                           nsIAtom& aBlockTag);
   nsresult MakeBlockquote(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
   nsresult SplitAsNeeded(nsIAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
                          int32_t& inOutOffset);
