@@ -16,8 +16,8 @@
 == placeholder-3.html placeholder-overridden-ref.html
 == placeholder-4.html placeholder-overridden-ref.html
 == placeholder-5.html placeholder-visible-ref.html
-skip-if(asyncPanZoom&&winWidget) == placeholder-6.html placeholder-overflow-ref.html
-skip-if(B2G||Mulet) skip-if(asyncPanZoom&&winWidget) == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(winWidget,160,7) == placeholder-6.html placeholder-overflow-ref.html
+skip-if(B2G||Mulet) == placeholder-6-textarea.html placeholder-overflow-textarea-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 # needs-focus == placeholder-7.html placeholder-focus-ref.html
 # needs-focus == placeholder-8.html placeholder-focus-ref.html
 # needs-focus == placeholder-9.html placeholder-focus-ref.html

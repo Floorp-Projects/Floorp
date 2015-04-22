@@ -42,7 +42,7 @@ add_task(function test_execute()
                                                     PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                     "moz test");
   PlacesUtils.tagging.tagURI(uri, ["tag"]);
-  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
+  yield PlacesUtils.keywords.insert({ url: uri.spec, keyword: "keyword"});
 
   // Set a large annotation.
   let content = "";

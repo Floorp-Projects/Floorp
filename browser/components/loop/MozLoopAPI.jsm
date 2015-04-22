@@ -708,6 +708,19 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Opens a URL in a new tab in the browser.
+     *
+     * @param {String} url The new url to open
+     */
+    openURL: {
+      enumerable: true,
+      writable: true,
+      value: function(url) {
+        return MozLoopService.openURL(url);
+      }
+    },
+
+    /**
      * Copies passed string onto the system clipboard.
      *
      * @param {String} str The string to copy
