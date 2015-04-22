@@ -47,7 +47,7 @@ load 478219-1.xhtml
 load 513113-1.html
 load 538062-1.xhtml
 load 570624-1.html
-skip-if(B2G) skip-if(asyncPanZoom&&winWidget) load 498698-1.html # bug 833371
+skip-if(B2G) load 498698-1.html # bug 833371
 asserts(1) load 578604-1.html # bug 584564
 asserts(4-7) load 590302-1.xhtml # bug 584564
 load 626014.xhtml

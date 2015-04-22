@@ -15,7 +15,7 @@ skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.s
 skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html?ref # see bug 1041833 # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html?ref # see bug 1041833 # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
 skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html?ref # see bug 1041833 # MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Android) skip-if(asyncPanZoom&&winWidget) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833
+skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html?ref # see bug 1041833
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-9.html scroll-behavior-9.html?ref # see bug 1041833
@@ -27,11 +27,11 @@ skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion<15,251,722) fuzzy-if(d2d,1,
 HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2-ref.html
-skip-if(B2G||Mulet) skip-if(asyncPanZoom&&winWidget) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == huge-horizontal-overflow.html huge-horizontal-overflow-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == huge-vertical-overflow.html huge-vertical-overflow-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == iframe-scrolling-attr-1.html iframe-scrolling-attr-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == iframe-scrolling-attr-2.html iframe-scrolling-attr-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(asyncPanZoom&&winWidget) == frame-scrolling-attr-1.html frame-scrolling-attr-ref.html
-skip-if(asyncPanZoom&&winWidget) == frame-scrolling-attr-2.html frame-scrolling-attr-ref.html
+== frame-scrolling-attr-1.html frame-scrolling-attr-ref.html
+== frame-scrolling-attr-2.html frame-scrolling-attr-ref.html
 == move-item.html move-item-ref.html # bug 1125750
