@@ -167,6 +167,10 @@ public:
     BT_WARNING("Unable to get value for '" BLUETOOTH_ENABLED_SETTING "'");
     return NS_OK;
   }
+
+private:
+  ~StartupTask()
+  { }
 };
 
 NS_IMPL_ISUPPORTS(BluetoothService::StartupTask, nsISettingsServiceCallback);
