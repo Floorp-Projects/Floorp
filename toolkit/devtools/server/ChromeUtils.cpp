@@ -21,6 +21,7 @@
 #include "prtypes.h"
 
 #include "js/Debug.h"
+#include "js/TypeDecls.h"
 #include "js/UbiNodeTraverse.h"
 
 namespace mozilla {
@@ -170,8 +171,8 @@ EstablishBoundaries(JSContext *cx,
 }
 
 
-// A `CoreDumpWriter` that serializes nodes to protobufs and writes them to
-// the given `CodedOutputStream`.
+// A `CoreDumpWriter` that serializes nodes to protobufs and writes them to the
+// given `ZeroCopyOutputStream`.
 class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
 {
   JSContext *cx;
@@ -382,5 +383,50 @@ ChromeUtils::SaveHeapSnapshot(GlobalObject &global,
     }
 }
 
+/* static */ already_AddRefed<HeapSnapshot>
+ChromeUtils::ReadHeapSnapshot(GlobalObject &global,
+                              JSContext *cx,
+                              const nsAString &filePath,
+                              ErrorResult &rv)
+{
+  UniquePtr<char[]> path(ToNewCString(filePath));
+  if (!path) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  PRFileInfo fileInfo;
+  if (PR_GetFileInfo(path.get(), &fileInfo) != PR_SUCCESS) {
+    rv.Throw(NS_ERROR_FILE_NOT_FOUND);
+    return nullptr;
+  }
+
+  uint32_t size = fileInfo.size;
+  ScopedFreePtr<uint8_t> buffer(static_cast<uint8_t *>(malloc(size)));
+  if (!buffer) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  PRFileDesc *fd = PR_Open(path.get(), PR_RDONLY, 0);
+  if (!fd) {
+    rv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  uint32_t bytesRead = 0;
+  while (bytesRead < size) {
+    uint32_t bytesLeft = size - bytesRead;
+    int32_t bytesReadThisTime = PR_Read(fd, buffer.get() + bytesRead, bytesLeft);
+    if (bytesReadThisTime < 1) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    bytesRead += bytesReadThisTime;
+  }
+
+  return HeapSnapshot::Create(cx, global, buffer.get(), size, rv);
 }
-}
+
+} // namespace devtools
+} // namespace mozilla
