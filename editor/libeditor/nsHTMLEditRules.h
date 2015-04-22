@@ -200,10 +200,6 @@ protected:
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
   enum class Lists { no, yes };
   enum class Tables { no, yes };
-  nsresult GetInnerContent(nsIDOMNode* aNode,
-                           nsCOMArray<nsIDOMNode>& aOutArrayOfNodes,
-                           int32_t* aIndex, bool aLists = true,
-                           bool aTables = true);
   void GetInnerContent(nsINode& aNode,
                        nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
                        int32_t* aIndex, Lists aLists = Lists::yes,
@@ -287,10 +283,10 @@ protected:
                              EditAction operation,
                              nsCOMArray<nsIDOMNode>& arrayOfNodes,
                              bool dontTouchContent);
-  nsresult GetNodesFromSelection(mozilla::dom::Selection* selection,
-                                 EditAction operation,
-                                 nsCOMArray<nsIDOMNode>& arrayOfNodes,
-                                 bool aDontTouchContent=false);
+  nsresult GetNodesFromSelection(mozilla::dom::Selection& aSelection,
+                                 EditAction aOperation,
+                                 nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
+                                 TouchContent aTouchContent = TouchContent::yes);
   nsresult GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes, bool aEntireList, bool aDontTouchContent=false);
   void GetDefinitionListItemTypes(mozilla::dom::Element* aElement, bool* aDT, bool* aDD);
   nsresult GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes, bool aDontTouchContent=false);
