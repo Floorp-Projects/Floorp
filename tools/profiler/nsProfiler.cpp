@@ -248,3 +248,13 @@ nsProfiler::GetFeatures(uint32_t *aCount, char ***aFeatures)
   *aCount = len;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsProfiler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration)
+{
+  MOZ_ASSERT(aCurrentPosition);
+  MOZ_ASSERT(aTotalSize);
+  MOZ_ASSERT(aGeneration);
+  profiler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
+  return NS_OK;
+}
