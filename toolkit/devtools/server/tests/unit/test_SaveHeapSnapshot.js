@@ -3,9 +3,10 @@
 
 // Test the ChromeUtils interface.
 
-const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
-var Debugger;
-addDebuggerToGlobal(this);
+if (typeof Debugger != "function") {
+  const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
+  addDebuggerToGlobal(this);
+}
 
 function run_test() {
   ok(ChromeUtils, "Should be able to get the ChromeUtils interface");
