@@ -4,7 +4,7 @@
 const PRELOAD_PREF = "browser.newtab.preload";
 
 gDirectorySource = "data:application/json," + JSON.stringify({
-  "en-US": [{
+  "directory": [{
     url: "http://example.com/organic",
     type: "organic"
   }, {

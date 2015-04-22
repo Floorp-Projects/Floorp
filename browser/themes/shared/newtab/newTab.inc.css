@@ -122,7 +122,7 @@
   transition: opacity 100ms ease-out;
 }
 
-.newtab-site:hover .newtab-thumbnail.enhanced-content {
+.newtab-cell:not([ignorehover]) .newtab-site:hover .newtab-thumbnail.enhanced-content {
   opacity: 0;
 }
 
@@ -137,8 +137,24 @@
 /* TITLES */
 #newtab-intro-what,
 .newtab-sponsored,
-.newtab-title {
+.newtab-title,
+.newtab-suggested  {
   color: #5c5c5c;
+}
+
+.newtab-suggested:hover {
+  color: #588FE4;
+  border: 1px solid #588FE4;
+}
+
+.newtab-suggested[active] {
+  background-color: rgba(51, 51, 51, 0.95);
+  border: 0;
+  color: white;
+}
+
+.newtab-suggested {
+  background-color: white;
 }
 
 .newtab-site:hover .newtab-title {
