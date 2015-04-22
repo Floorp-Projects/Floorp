@@ -10,7 +10,6 @@
 #include "nsWeakReference.h"
 
 class nsIInterfaceRequestor;
-class nsIEventTarget;
 class nsITransport;
 class nsILoadGroupConnectionInfo;
 

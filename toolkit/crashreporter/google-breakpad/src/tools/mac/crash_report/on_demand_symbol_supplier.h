@@ -41,7 +41,6 @@ namespace google_breakpad {
 
 using std::map;
 using std::string;
-class MinidumpModule;
 
 class OnDemandSymbolSupplier : public SymbolSupplier {
  public:

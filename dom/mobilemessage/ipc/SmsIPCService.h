@@ -16,8 +16,6 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-class PSmsChild;
-
 class SmsIPCService final : public nsISmsService
                           , public nsIMmsService
                           , public nsIMobileMessageDatabaseService

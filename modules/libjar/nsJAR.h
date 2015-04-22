@@ -30,7 +30,6 @@
 #include "mozilla/Attributes.h"
 
 class nsIX509Cert;
-class nsIInputStream;
 class nsJARManifestItem;
 class nsZipReaderCache;
 

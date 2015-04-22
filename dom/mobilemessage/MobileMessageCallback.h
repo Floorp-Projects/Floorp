@@ -10,8 +10,6 @@
 #include "nsCOMPtr.h"
 #include "DOMRequest.h"
 
-class nsIDOMMozMmsMessage;
-
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {

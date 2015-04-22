@@ -23,7 +23,6 @@
 #include "TimingStruct.h"
 #include "AutoClose.h"
 
-class nsIPrincipal;
 class nsDNSPrefetch;
 class nsICancelable;
 class nsIHttpChannelAuthProvider;

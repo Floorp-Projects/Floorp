@@ -57,7 +57,6 @@ class NestedLoopTimer;
 static const int kNestedLoopDetectorIntervalMs = 90;
 #endif
 
-class PluginScriptableObjectChild;
 class PluginInstanceChild;
 
 class PluginModuleChild : public PPluginModuleChild

@@ -39,7 +39,6 @@
 #endif
 
 class nsIInputStream;
-class nsIThreadPool;
 class nsIRequest;
 
 #define NS_RASTERIMAGE_CID \
@@ -123,7 +122,6 @@ class nsIRequest;
 namespace mozilla {
 
 namespace layers {
-class LayerManager;
 class ImageContainer;
 class Image;
 }

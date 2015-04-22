@@ -174,7 +174,6 @@ class SocketTransportShim;
 class InputStreamShim;
 class OutputStreamShim;
 class nsHttpConnection;
-class ASpdySession;
 
 class SpdyConnectTransaction final : public NullHttpTransaction
 {
