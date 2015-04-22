@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Bug 1150253 - Sanity test for the SpiderMonkey Debugger API's onGarbageCollection hook</title>
+    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+    </script>
+  </head>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1150253"
+       target="_blank">Mozilla Bug 1150253</a>
+
+    <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    const Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/devtools/Loader.jsm");
+    const require = devtools.require;
+
+    const { gc } = Cu.getJSTestingFunctions();
+
+    const Debugger = require("Debugger");
+    const dbg = new Debugger(this);
+
+    dbg.memory.onGarbageCollection = function (data) {
+      // Don't keep calling this hook after we finish.
+      dbg.enabled = false;
+
+      ok(data, "The onGarbageCollection hook was fired.");
+      SimpleTest.finish();
+    };
+
+    gc();
+    </script>
+  </body>
+</html>
