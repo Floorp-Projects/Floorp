@@ -9,16 +9,19 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/PresentationSessionBinding.h"
+#include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
 
 class PresentationSession final : public DOMEventTargetHelper
+                                , public nsIPresentationSessionListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationSession,
                                            DOMEventTargetHelper)
+  NS_DECL_NSIPRESENTATIONSESSIONLISTENER
 
   static already_AddRefed<PresentationSession>
     Create(nsPIDOMWindow* aWindow,
@@ -44,6 +47,8 @@ private:
 
   bool Init();
   void Shutdown();
+  nsresult DispatchStateChangeEvent();
+  nsresult DispatchMessageEvent(JS::Handle<JS::Value> aData);
 
   nsString mId;
   PresentationSessionState mState;
