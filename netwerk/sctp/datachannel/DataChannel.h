@@ -48,7 +48,6 @@ extern "C" {
 
 namespace mozilla {
 
-class DTLSConnection;
 class DataChannelConnection;
 class DataChannel;
 class DataChannelOnMessageAvailable;

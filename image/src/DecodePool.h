@@ -23,7 +23,6 @@ namespace mozilla {
 namespace image {
 
 class Decoder;
-class RasterImage;
 
 /**
  * DecodePool is a singleton class that manages decoding of raster images. It

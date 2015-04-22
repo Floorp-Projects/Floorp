@@ -17,7 +17,6 @@
 #include "nsWeakReference.h"
 #include "nsSize.h"
 
-class nsIAtom;
 class nsIPresShell;
 class nsIRequest;
 class nsILoadGroup;

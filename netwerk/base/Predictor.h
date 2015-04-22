@@ -26,7 +26,6 @@ class nsICacheStorage;
 class nsIDNSService;
 class nsIIOService;
 class nsINetworkPredictorVerifier;
-class nsIThread;
 class nsITimer;
 
 namespace mozilla {

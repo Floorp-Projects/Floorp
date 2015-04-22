@@ -10,7 +10,6 @@
 #include "SerializedLoadContext.h"
 
 class nsCookieService;
-class nsIIOService;
 
 namespace mozilla {
 namespace net {

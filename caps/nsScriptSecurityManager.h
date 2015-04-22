@@ -17,13 +17,10 @@
 
 #include <stdint.h>
 
-class nsIDocShell;
 class nsCString;
-class nsIClassInfo;
 class nsIIOService;
 class nsIStringBundle;
 class nsSystemPrincipal;
-class ClassInfoData;
 
 /////////////////////////////
 // nsScriptSecurityManager //

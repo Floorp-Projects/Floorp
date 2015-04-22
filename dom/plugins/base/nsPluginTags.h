@@ -15,7 +15,6 @@
 #include "nsITimer.h"
 #include "nsString.h"
 
-class nsPluginHost;
 struct PRLibrary;
 struct nsPluginInfo;
 class nsNPAPIPlugin;
