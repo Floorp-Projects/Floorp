@@ -26,7 +26,6 @@ public:
   static BluetoothGattManager* Get();
   static void InitGattInterface(BluetoothProfileResultHandler* aRes);
   static void DeinitGattInterface(BluetoothProfileResultHandler* aRes);
-  virtual ~BluetoothGattManager();
 
   void Connect(const nsAString& aAppUuid,
                const nsAString& aDeviceAddr,
@@ -86,6 +85,8 @@ public:
     BluetoothReplyRunnable* aRunnable);
 
 private:
+  ~BluetoothGattManager();
+
   class CleanupResultHandler;
   class CleanupResultHandlerRunnable;
   class InitGattResultHandler;

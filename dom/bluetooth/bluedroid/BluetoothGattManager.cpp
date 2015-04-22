@@ -139,21 +139,6 @@ public:
   , mConnId(0)
   { }
 
-  ~BluetoothGattClient()
-  {
-    mConnectRunnable = nullptr;
-    mDisconnectRunnable = nullptr;
-    mDiscoverRunnable = nullptr;
-    mUnregisterClientRunnable = nullptr;
-    mReadRemoteRssiRunnable = nullptr;
-    mRegisterNotificationsRunnable = nullptr;
-    mDeregisterNotificationsRunnable = nullptr;
-    mReadCharacteristicState.Reset();
-    mWriteCharacteristicState.Reset();
-    mReadDescriptorState.Reset();
-    mWriteDescriptorState.Reset();
-  }
-
   void NotifyDiscoverCompleted(bool aSuccess)
   {
     MOZ_ASSERT(!mAppUuid.IsEmpty());
@@ -209,6 +194,10 @@ public:
   nsTArray<BluetoothGattServiceId> mIncludedServices;
   nsTArray<BluetoothGattCharAttribute> mCharacteristics;
   nsTArray<BluetoothGattId> mDescriptors;
+
+private:
+  ~BluetoothGattClient()
+  { }
 };
 
 NS_IMPL_ISUPPORTS0(BluetoothGattClient)
