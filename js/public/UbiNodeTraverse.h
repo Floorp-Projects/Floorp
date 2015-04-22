@@ -126,7 +126,7 @@ struct BreadthFirst {
             pending.popFront();
 
             // Get a range containing all origin's outgoing edges.
-            js::ScopedJSDeletePtr<EdgeRange> range(origin.edges(cx, wantNames));
+            auto range = origin.edges(cx, wantNames);
             if (!range)
                 return false;
 
