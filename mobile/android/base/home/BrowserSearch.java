@@ -617,6 +617,9 @@ public class BrowserSearch extends HomeFragment
 
     @Override
     public void onSearchBarClickListener(final SearchEngine searchEngine) {
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM,
+                "searchenginebar");
+
         mSearchListener.onSearch(searchEngine, mSearchTerm);
     }
 
