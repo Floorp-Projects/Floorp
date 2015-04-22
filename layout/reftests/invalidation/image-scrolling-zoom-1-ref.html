@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html reftest-zoom="0.3">
+<head>
+  <style type="text/css">
+    #container {
+      height: 100px;
+      overflow: auto;
+    }
+    #container-background {
+      background: url(one-pixel-wide-background.png);
+    }
+    #container-background > div {
+      line-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="container-background">
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+      <div>Item</div>
+    </div>
+  </div>
+</body>
+</html>
