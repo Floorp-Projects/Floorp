@@ -2197,11 +2197,10 @@ nsresult nsHTMLEditor::CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
 
   // now use a subtree iterator over the range to create a list of nodes
   nsTrivialFunctor functor;
-  nsDOMSubtreeIterator iter;
-  rv = iter.Init(docFragRange);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsDOMSubtreeIterator iter(*docFragRange);
+  iter.AppendList(functor, outNodeList);
 
-  return iter.AppendList(functor, outNodeList);
+  return NS_OK;
 }
 
 nsresult
