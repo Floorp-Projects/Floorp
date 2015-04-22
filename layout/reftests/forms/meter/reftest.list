@@ -25,3 +25,22 @@ include default-style/reftest.list
 == block-invalidate.html block-invalidate-ref.html
 == in-cells.html in-cells-ref.html
 == max-height.html max-height-ref.html
+
+# Tests for block and inline orientation in combination with writing-mode
+# XXX Remove default-preferences setting here after bug 1138384 makes
+#     it the default for all channels
+default-preferences pref(layout.css.vertical-text.enabled,true)
+!= meter-orient-vertical.html meter-orient-horizontal.html
+!= meter-orient-horizontal.html meter-orient-horizontal-rtl.html
+== meter-orient-block.html meter-orient-vertical.html
+== meter-orient-inline.html meter-orient-horizontal.html
+== meter-vlr.html meter-orient-vertical.html
+== meter-vlr-orient-block.html meter-orient-horizontal.html
+== meter-vlr-orient-inline.html meter-orient-vertical.html
+== meter-vlr-orient-horizontal.html meter-orient-horizontal.html
+== meter-vlr-orient-vertical.html meter-orient-vertical.html
+== meter-vrl.html meter-orient-vertical-rtl.html
+== meter-vrl-orient-block.html meter-orient-horizontal-rtl.html
+== meter-vrl-orient-inline.html meter-orient-vertical-rtl.html
+== meter-vrl-orient-horizontal.html meter-orient-horizontal-rtl.html
+== meter-vrl-orient-vertical.html meter-orient-vertical-rtl.html
