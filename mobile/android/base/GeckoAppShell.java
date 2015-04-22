@@ -24,11 +24,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Queue;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
@@ -195,7 +193,6 @@ public class GeckoAppShell
         return CRASH_HANDLER;
     }
 
-    private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
     private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
 
     private static volatile boolean locationHighAccuracyEnabled;
@@ -388,15 +385,6 @@ public class GeckoAppShell
         Looper.myQueue().removeIdleHandler(idleHandler);
     }
 
-    static void sendPendingEventsToGecko() {
-        try {
-            while (!PENDING_EVENTS.isEmpty()) {
-                final GeckoEvent e = PENDING_EVENTS.poll();
-                notifyGeckoOfEvent(e);
-            }
-        } catch (NoSuchElementException e) {}
-    }
-
     /**
      * If the Gecko thread is running, immediately dispatches the event to
      * Gecko.
@@ -420,13 +408,13 @@ public class GeckoAppShell
 
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
-            // Gecko will copy the event data into a normal C++ object. We can recycle the event now.
+            // Gecko will copy the event data into a normal C++ object.
+            // We can recycle the event now.
             e.recycle();
             return;
         }
 
-        // Throws if unable to add the event due to capacity restrictions.
-        PENDING_EVENTS.add(e);
+        GeckoThread.addPendingEvent(e);
     }
 
     /**
