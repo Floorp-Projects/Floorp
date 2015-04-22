@@ -117,9 +117,16 @@ DebuggerMemory::checkThis(JSContext* cx, CallArgs& args, const char* fnName)
  */
 #define THIS_DEBUGGER_MEMORY(cx, argc, vp, fnName, args, memory)        \
     CallArgs args = CallArgsFromVp(argc, vp);                           \
-    Rooted<DebuggerMemory*> memory(cx, checkThis(cx, args, fnName));   \
+    Rooted<DebuggerMemory*> memory(cx, checkThis(cx, args, fnName));    \
     if (!memory)                                                        \
         return false
+
+static bool
+undefined(CallArgs& args)
+{
+    args.rval().setUndefined();
+    return true;
+}
 
 /* static */ bool
 DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc, Value* vp)
@@ -131,37 +138,24 @@ DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc, Value* 
     Debugger* dbg = memory->getDebugger();
     bool enabling = ToBoolean(args[0]);
 
-    if (enabling == dbg->trackingAllocationSites) {
-        // Nothing to do here...
-        args.rval().setUndefined();
-        return true;
-    }
-
-    if (enabling) {
-        for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
-            JSCompartment* compartment = r.front()->compartment();
-            if (compartment->hasObjectMetadataCallback()) {
-                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                     JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
-                return false;
-            }
-        }
-    }
-
-    for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
-        if (enabling) {
-            r.front()->compartment()->setObjectMetadataCallback(SavedStacksMetadataCallback);
-        } else {
-            r.front()->compartment()->forgetObjectMetadataCallback();
-        }
-    }
-
-    if (!enabling)
-        dbg->emptyAllocationsLog();
+    if (enabling == dbg->trackingAllocationSites)
+        return undefined(args);
 
     dbg->trackingAllocationSites = enabling;
-    args.rval().setUndefined();
-    return true;
+
+    if (!dbg->enabled)
+        return undefined(args);
+
+    if (enabling) {
+        if (!dbg->addAllocationsTrackingForAllDebuggees(cx)) {
+            dbg->trackingAllocationSites = false;
+            return false;
+        }
+    } else {
+        dbg->removeAllocationsTrackingForAllDebuggees();
+    }
+
+    return undefined(args);
 }
 
 /* static */ bool

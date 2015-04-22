@@ -435,6 +435,7 @@ struct JSCompartment
     void fixupGlobal();
 
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
+    js::ObjectMetadataCallback getObjectMetadataCallback() const { return objectMetadataCallback; }
     void setObjectMetadataCallback(js::ObjectMetadataCallback callback);
     void forgetObjectMetadataCallback() {
         objectMetadataCallback = nullptr;

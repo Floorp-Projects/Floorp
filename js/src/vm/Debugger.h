@@ -189,7 +189,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend class mozilla::LinkedListElement<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext* cx, JS::HandleObject obj);
     friend bool (::JS::dbg::IsDebugger)(JS::Value val);
-    friend JSObject* SavedStacksMetadataCallback(JSContext* cx);
     friend void JS::dbg::onNewPromise(JSContext* cx, HandleObject promise);
     friend void JS::dbg::onPromiseSettled(JSContext* cx, HandleObject promise);
     friend bool JS::dbg::FireOnGarbageCollectionHook(JSContext* cx,
@@ -303,6 +302,39 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                               int64_t when);
     void emptyAllocationsLog();
+
+    /*
+     * Return true if there is an existing object metadata callback for the
+     * given global's compartment that will prevent our instrumentation of
+     * allocations.
+     */
+    static bool cannotTrackAllocations(const GlobalObject& global);
+
+    /*
+     * Return true if the given global is being observed by at least one
+     * Debugger that is tracking allocations.
+     */
+    static bool isObservedByDebuggerTrackingAllocations(const GlobalObject& global);
+
+    /*
+     * Add allocations tracking for objects allocated within the given
+     * debuggee's compartment. The given debuggee global must be observed by at
+     * least one Debugger that is enabled and tracking allocations.
+     */
+    static bool addAllocationsTracking(JSContext* cx, GlobalObject& debuggee);
+
+    /*
+     * Remove allocations tracking for objects allocated within the given
+     * global's compartment. This is a no-op if there are still Debuggers
+     * observing this global and who are tracking allocations.
+     */
+    static void removeAllocationsTracking(GlobalObject& global);
+
+    /*
+     * Add or remove allocations tracking for all debuggees.
+     */
+    bool addAllocationsTrackingForAllDebuggees(JSContext* cx);
+    void removeAllocationsTrackingForAllDebuggees();
 
     /*
      * If this Debugger is enabled, and has a onNewGlobalObject handler, then
