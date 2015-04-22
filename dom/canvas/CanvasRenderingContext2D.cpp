@@ -1334,7 +1334,8 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
 
    // Check that the dimensions are sane
   IntSize size(mWidth, mHeight);
-  if (size.width <= 0xFFFF && size.height <= 0xFFFF &&
+  if (size.width <= gfxPrefs::MaxCanvasSize() &&
+      size.height <= gfxPrefs::MaxCanvasSize() &&
       size.width >= 0 && size.height >= 0) {
     SurfaceFormat format = GetSurfaceFormat();
     nsIDocument* ownerDoc = nullptr;
