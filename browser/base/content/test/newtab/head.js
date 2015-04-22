@@ -296,8 +296,7 @@ function setPinnedLinks(aLinks) {
     links = aLinks.split(/\s*,\s*/).map(function (id) {
       if (id)
         return {url: "http://example" + (id != "-1" ? id : "") + ".com/",
-                title: "site#" + id,
-                type: "history"};
+                title: "site#" + id};
     });
   }
 

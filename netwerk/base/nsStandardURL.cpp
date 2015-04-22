@@ -2507,9 +2507,11 @@ nsStandardURL::SetRef(const nsACString &input)
         mRef.mLen = 0;
     }
 
+    // If precent encoding is necessary, `ref` will point to `buf`'s content.
+    // `buf` needs to outlive any use of the `ref` pointer.
+    nsAutoCString buf;
     if (nsContentUtils::EncodeDecodeURLHash()) {
         // encode ref if necessary
-        nsAutoCString buf;
         bool encoded;
         GET_SEGMENT_ENCODER(encoder);
         encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,
