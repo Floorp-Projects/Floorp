@@ -131,6 +131,7 @@ function testMultipleTables() {
   var add1Urls = [ "foo-multiple.com/a", "bar-multiple.com/c" ];
   var add2Urls = [ "foo-multiple.com/b" ];
   var add3Urls = [ "bar-multiple.com/d" ];
+  var add4Urls = [ "bar-multiple.com/e" ];
 
   var update = "n:1000\n";
   update += "i:test-phish-simple\n";
@@ -152,10 +153,17 @@ function testMultipleTables() {
        "urls" : add3Urls }]);
   update += "u:data:," + encodeURIComponent(update3) + "\n";
 
+  update += "i:test-unwanted-simple\n";
+  var update4 = buildBareUpdate(
+    [{ "chunkNum" : 4,
+       "urls" : add4Urls }]);
+  update += "u:data:," + encodeURIComponent(update4) + "\n";
+
   var assertions = {
-    "tableData" : "test-malware-simple;a:3\ntest-phish-simple;a:1-2",
+    "tableData" : "test-malware-simple;a:3\ntest-phish-simple;a:1-2\ntest-unwanted-simple;a:4",
     "urlsExist" : add1Urls.concat(add2Urls),
-    "malwareUrlsExist" : add3Urls
+    "malwareUrlsExist" : add3Urls,
+    "unwantedUrlsExist" : add4Urls
   };
 
   doTest([update], assertions, false);
