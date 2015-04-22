@@ -18,7 +18,8 @@ public:
     : key_(),
       is_vpn_(-1),
       estimated_speed_(-1),
-      type_preference_(-1) {}
+      type_preference_(-1),
+      ip_version_(-1) {}
 
   bool Init(const nr_local_addr& local_addr) {
     char buf[MAXIFNAME + 41];
@@ -31,6 +32,7 @@ public:
     is_vpn_ = (local_addr.interface.type & NR_INTERFACE_TYPE_VPN) != 0 ? 1 : 0;
     estimated_speed_ = local_addr.interface.estimated_speed;
     type_preference_ = GetNetworkTypePreference(local_addr.interface.type);
+    ip_version_ = local_addr.addr.ip_version;
     return true;
   }
 
@@ -52,6 +54,11 @@ public:
     // Compare estimated speed.
     if (estimated_speed_ != rhs.estimated_speed_) {
       return estimated_speed_ > rhs.estimated_speed_;
+    }
+
+    // Prefer IPV6 over IPV4
+    if (ip_version_ != rhs.ip_version_) {
+      return ip_version_ > rhs.ip_version_;
     }
 
     // All things above are the same, we can at least sort with key.
@@ -82,6 +89,7 @@ private:
   int is_vpn_;
   int estimated_speed_;
   int type_preference_;
+  int ip_version_;
 };
 
 class InterfacePrioritizer {

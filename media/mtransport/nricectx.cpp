@@ -380,7 +380,8 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool offerer,
                                   bool set_interface_priorities,
                                   bool allow_loopback,
-                                  bool tcp_enabled) {
+                                  bool tcp_enabled,
+                                  bool allow_link_local) {
 
   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer);
 
@@ -471,6 +472,10 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
     if (allow_loopback) {
       NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, 1);
+    }
+
+    if (allow_link_local) {
+      NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LINK_LOCAL_ADDRS, 1);
     }
   }
 

@@ -112,7 +112,7 @@ class MultiTcpSocketTest : public ::testing::Test {
 
     r = 1;
     for (int tries=10; tries && r; --tries) {
-      r = nr_ip4_str_port_to_transport_addr(
+      r = nr_str_port_to_transport_addr(
         (char *)"127.0.0.1", EnsureEphemeral(port_s++), IPPROTO_TCP, &local);
       ASSERT_EQ(0, r);
 

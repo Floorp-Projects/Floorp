@@ -150,6 +150,7 @@ int NrIceResolver::resolve(nr_resolver_resource *resource,
   MOZ_ASSERT(allocated_resolvers_ > 0);
   ASSERT_ON_THREAD(sts_thread_);
   nsRefPtr<PendingResolution> pr;
+  uint32_t resolve_flags = 0;
 
   if (resource->transport_protocol != IPPROTO_UDP &&
       resource->transport_protocol != IPPROTO_TCP) {
@@ -162,8 +163,20 @@ int NrIceResolver::resolve(nr_resolver_resource *resource,
                              resource->transport_protocol :
                              IPPROTO_UDP,
                              cb, cb_arg);
+
+  switch(resource->address_family) {
+    case AF_INET:
+      resolve_flags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
+      break;
+    case AF_INET6:
+      resolve_flags |= nsIDNSService::RESOLVE_DISABLE_IPV4;
+      break;
+    default:
+      ABORT(R_BAD_ARGS);
+  }
+
   if (NS_FAILED(dns_->AsyncResolve(nsAutoCString(resource->domain_name),
-                                   nsIDNSService::RESOLVE_DISABLE_IPV6, pr,
+                                   resolve_flags, pr,
                                    sts_thread_, getter_AddRefs(pr->request_)))) {
     MOZ_MTLOG(ML_ERROR, "AsyncResolve failed.");
     ABORT(R_NOT_FOUND);
