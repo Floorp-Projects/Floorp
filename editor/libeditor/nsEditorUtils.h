@@ -22,6 +22,7 @@ class nsRange;
 template <class E> class nsCOMArray;
 namespace mozilla {
 namespace dom {
+template <class T> class OwningNonNull;
 class Selection;
 }
 }
@@ -181,6 +182,8 @@ class MOZ_STACK_CLASS nsDOMIterator
     explicit nsDOMIterator(nsINode& aNode);
     virtual ~nsDOMIterator();
 
+    void AppendList(const nsBoolDomIterFunctor& functor,
+                    nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes) const;
     void AppendList(const nsBoolDomIterFunctor& functor,
                     nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
     void AppendList(const nsBoolDomIterFunctor& functor,
