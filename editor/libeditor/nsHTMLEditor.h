@@ -760,7 +760,7 @@ protected:
 // Data members
 protected:
 
-  nsCOMArray<nsIContentFilter> mContentFilters;
+  nsTArray<mozilla::dom::OwningNonNull<nsIContentFilter>> mContentFilters;
 
   nsRefPtr<TypeInState>        mTypeInState;
 

@@ -694,26 +694,25 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   return mRules->DidDoAction(selection, &ruleInfo, rv);
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLEditor::AddInsertionListener(nsIContentFilter *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
   // don't let a listener be added more than once
-  if (mContentFilters.IndexOfObject(aListener) == -1)
-  {
-    NS_ENSURE_TRUE(mContentFilters.AppendObject(aListener), NS_ERROR_FAILURE);
+  if (!mContentFilters.Contains(aListener)) {
+    mContentFilters.AppendElement(*aListener);
   }
 
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLEditor::RemoveInsertionListener(nsIContentFilter *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
 
-  NS_ENSURE_TRUE(mContentFilters.RemoveObject(aListener), NS_ERROR_FAILURE);
+  mContentFilters.RemoveElement(aListener);
 
   return NS_OK;
 }
@@ -733,17 +732,15 @@ nsHTMLEditor::DoContentFilterCallback(const nsAString &aFlavor,
 {
   *aDoContinue = true;
 
-  int32_t i;
-  nsIContentFilter *listener;
-  for (i=0; i < mContentFilters.Count() && *aDoContinue; i++)
-  {
-    listener = (nsIContentFilter *)mContentFilters[i];
-    if (listener)
-      listener->NotifyOfInsertion(aFlavor, nullptr, sourceDoc,
-                                  aWillDeleteSelection, aFragmentAsNode,
-                                  aFragStartNode, aFragStartOffset, 
-                                  aFragEndNode, aFragEndOffset,
-                                  aTargetNode, aTargetOffset, aDoContinue);
+  for (auto& listener : mContentFilters) {
+    if (!*aDoContinue) {
+      break;
+    }
+    listener->NotifyOfInsertion(aFlavor, nullptr, sourceDoc,
+                                aWillDeleteSelection, aFragmentAsNode,
+                                aFragStartNode, aFragStartOffset,
+                                aFragEndNode, aFragEndOffset, aTargetNode,
+                                aTargetOffset, aDoContinue);
   }
 
   return NS_OK;
