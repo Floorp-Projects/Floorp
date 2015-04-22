@@ -66,13 +66,13 @@ if (typeof assertNoWarning === 'undefined') {
     };
 }
 
-if (typeof assertTypeErrorMessage === 'undefined') {
-    var assertTypeErrorMessage = function assertTypeErrorMessage(f, test) {
+if (typeof assertErrorMessage === 'undefined') {
+    var assertErrorMessage = function assertErrorMessage(f, ctor, test) {
         try {
             f();
         } catch (e) {
-            if (!(e instanceof TypeError))
-                throw new Error("Assertion failed: expected exception TypeError, got " + e);
+            if (!(e instanceof ctor))
+                throw new Error("Assertion failed: expected exception " + ctor.name + ", got " + e);
             if (typeof test == "string") {
                 if (test != e.message)
                     throw new Error("Assertion failed: expeceted " + test + ", got " + e.message);
@@ -82,6 +82,18 @@ if (typeof assertTypeErrorMessage === 'undefined') {
             }
             return;
         }
-        throw new Error("Assertion failed: expected exception TypeError, no exception thrown");
+        throw new Error("Assertion failed: expected exception " + ctor.name + ", no exception thrown");
+    };
+}
+
+if (typeof assertTypeErrorMessage === 'undefined') {
+    var assertTypeErrorMessage = function assertTypeErrorMessage(f, test) {
+      assertErrorMessage(f, TypeError, test);
+    };
+}
+
+if (typeof assertRangeErrorMessage === 'undefined') {
+    var assertRangeErrorMessage = function assertRangeErrorMessage(f, test) {
+      assertErrorMessage(f, RangeError, test);
     };
 }
