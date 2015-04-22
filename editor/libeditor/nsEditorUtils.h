@@ -19,9 +19,9 @@ class nsIAtom;
 class nsIContentIterator;
 class nsIDOMDocument;
 class nsRange;
+template <class E> class nsCOMArray;
 namespace mozilla {
 namespace dom {
-template <class T> class OwningNonNull;
 class Selection;
 }
 }
@@ -167,37 +167,42 @@ class MOZ_STACK_CLASS nsAutoUpdateViewBatch
 class nsBoolDomIterFunctor 
 {
   public:
-    virtual bool operator()(nsINode* aNode) const = 0;
+    virtual bool operator()(nsIDOMNode* aNode)=0;
+    bool operator()(nsINode* aNode)
+    {
+      return operator()(GetAsDOMNode(aNode));
+    }
 };
 
 class MOZ_STACK_CLASS nsDOMIterator
 {
   public:
-    explicit nsDOMIterator(nsRange& aRange);
-    explicit nsDOMIterator(nsINode& aNode);
+    nsDOMIterator();
     virtual ~nsDOMIterator();
-
-    void AppendList(const nsBoolDomIterFunctor& functor,
-                    nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes) const;
+    
+    nsresult Init(nsRange* aRange);
+    nsresult Init(nsIDOMNode* aNode);
+    nsresult AppendList(nsBoolDomIterFunctor& functor,
+                        nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
+    nsresult AppendList(nsBoolDomIterFunctor& functor,
+                        nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
-
-    // For nsDOMSubtreeIterator
-    nsDOMIterator();
 };
 
 class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
 {
   public:
-    explicit nsDOMSubtreeIterator(nsRange& aRange);
+    nsDOMSubtreeIterator();
     virtual ~nsDOMSubtreeIterator();
+
+    nsresult Init(nsRange* aRange);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor
 {
   public:
-    // Used to build list of all nodes iterator covers
-    virtual bool operator()(nsINode* aNode) const
+    virtual bool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
     {
       return true;
     }
