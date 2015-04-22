@@ -44,6 +44,7 @@ using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::UniquePtr;
 
 
 /*** Forward declarations ************************************************************************/
@@ -358,9 +359,8 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
   : object(dbg),
     uncaughtExceptionHook(nullptr),
     enabled(true),
+    observedGCs(cx),
     allowUnobservedAsmJS(false),
-    debuggeeWasCollected(false),
-    inOnGCHook(false),
     trackingAllocationSites(false),
     allocationSamplingProbability(1.0),
     allocationsLogLength(0),
@@ -408,6 +408,7 @@ Debugger::init(JSContext* cx)
               scripts.init() &&
               sources.init() &&
               objects.init() &&
+              observedGCs.init() &&
               environments.init();
     if (!ok)
         ReportOutOfMemory(cx);
@@ -878,71 +879,6 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
     return true;
 }
 
-JSObject*
-Debugger::translateGCStatistics(JSContext* cx, const gcstats::Statistics& stats)
-{
-    // If this functions triggers a GC then the statistics object will change
-    // underneath us.
-    gc::AutoSuppressGC suppressGC(cx);
-
-    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!obj)
-        return nullptr;
-
-    const char* nonincrementalReason = stats.nonincrementalReason();
-    RootedValue nonincrementalReasonValue(cx, NullValue());
-    if (nonincrementalReason) {
-        JSAtom* atomized = Atomize(cx, nonincrementalReason, strlen(nonincrementalReason));
-        if (!atomized)
-            return nullptr;
-        nonincrementalReasonValue.setString(atomized);
-    }
-
-    if (!DefineProperty(cx, obj, cx->names().nonincrementalReason, nonincrementalReasonValue))
-        return nullptr;
-
-    RootedArrayObject slicesArray(cx, NewDenseEmptyArray(cx));
-    if (!slicesArray)
-        return nullptr;
-
-    size_t idx = 0;
-    for (auto range = stats.sliceRange(); !range.empty(); range.popFront()) {
-        if (idx == 0) {
-            // There is only one GC reason for the whole cycle, but for legacy
-            // reasons, this data is stored and replicated on each slice.
-            const char* reason = gcstats::ExplainReason(range.front().reason);
-            JSAtom* atomized = Atomize(cx, reason, strlen(reason));
-            if (!atomized)
-                return nullptr;
-            RootedValue reasonVal(cx, StringValue(atomized));
-            if (!DefineProperty(cx, obj, cx->names().reason, reasonVal))
-                return nullptr;
-        }
-
-        RootedPlainObject collectionObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
-        if (!collectionObj)
-            return nullptr;
-
-        RootedValue start(cx, NumberValue(range.front().start));
-        RootedValue end(cx, NumberValue(range.front().end));
-        if (!DefineProperty(cx, collectionObj, cx->names().startTimestamp, start) ||
-            !DefineProperty(cx, collectionObj, cx->names().endTimestamp, end))
-        {
-            return nullptr;
-        }
-
-        RootedValue collectionVal(cx, ObjectValue(*collectionObj));
-        if (!DefineElement(cx, slicesArray, idx++, collectionVal))
-            return nullptr;
-    }
-
-    RootedValue slicesValue(cx, ObjectValue(*slicesArray));
-    if (!DefineProperty(cx, obj, cx->names().collections, slicesValue))
-        return nullptr;
-
-    return obj.get();
-}
-
 bool
 Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
 {
@@ -1334,18 +1270,11 @@ Debugger::fireNewScript(JSContext* cx, HandleScript script)
 }
 
 void
-Debugger::fireOnGarbageCollectionHook(JSRuntime* rt, const gcstats::Statistics& stats)
+Debugger::fireOnGarbageCollectionHook(JSContext* cx,
+                                      const JS::dbg::GarbageCollectionEvent::Ptr& gcData)
 {
-    if (inOnGCHook)
-        return;
-
-    AutoOnGCHookReentrancyGuard guard(*this);
-
-    MOZ_ASSERT(debuggeeWasCollected);
-    debuggeeWasCollected = false;
-
-    JSContext* cx = DefaultJSContext(rt);
-    MOZ_ASSERT(cx);
+    MOZ_ASSERT(observedGC(gcData->majorGCNumber()));
+    observedGCs.remove(gcData->majorGCNumber());
 
     RootedObject hook(cx, getHook(OnGarbageCollection));
     MOZ_ASSERT(hook);
@@ -1354,15 +1283,15 @@ Debugger::fireOnGarbageCollectionHook(JSRuntime* rt, const gcstats::Statistics& 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, object);
 
-    JSObject* statsObj = translateGCStatistics(cx, stats);
-    if (!statsObj) {
+    JSObject* dataObj = gcData->toJSObject(cx);
+    if (!dataObj) {
         handleUncaughtException(ac, false);
         return;
     }
 
-    RootedValue statsVal(cx, ObjectValue(*statsObj));
+    RootedValue dataVal(cx, ObjectValue(*dataObj));
     RootedValue rv(cx);
-    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, statsVal.address(), &rv))
+    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, dataVal.address(), &rv))
         handleUncaughtException(ac, true);
 }
 
@@ -7865,3 +7794,129 @@ JS::dbg::IsDebugger(JS::Value val)
 
     return js::Debugger::fromJSObject(&obj) != nullptr;
 }
+
+
+/*** JS::dbg::GarbageCollectionEvent **************************************************************/
+
+namespace JS {
+namespace dbg {
+
+/* static */ GarbageCollectionEvent::Ptr
+GarbageCollectionEvent::Create(JSRuntime* rt, ::js::gcstats::Statistics& stats, uint64_t gcNumber)
+{
+    auto data = rt->make_unique<GarbageCollectionEvent>(gcNumber);
+    if (!data)
+        return nullptr;
+
+    data->nonincrementalReason = stats.nonincrementalReason();
+
+    for (auto range = stats.sliceRange(); !range.empty(); range.popFront()) {
+        if (!data->reason) {
+            // There is only one GC reason for the whole cycle, but for legacy
+            // reasons this data is stored and replicated on each slice. Each
+            // slice used to have its own GCReason, but now they are all the
+            // same.
+            data->reason = gcstats::ExplainReason(range.front().reason);
+            MOZ_ASSERT(data->reason);
+        }
+
+        if (!data->collections.growBy(1))
+            return nullptr;
+
+        data->collections.back().startTimestamp = range.front().start;
+        data->collections.back().endTimestamp = range.front().end;
+    }
+
+
+    return data;
+}
+
+static bool
+DefineStringProperty(JSContext* cx, HandleObject obj, PropertyName* propName, const char* strVal)
+{
+    RootedValue val(cx, UndefinedValue());
+    if (strVal) {
+        JSAtom* atomized = Atomize(cx, strVal, strlen(strVal));
+        if (!atomized)
+            return false;
+        val = StringValue(atomized);
+    }
+    return DefineProperty(cx, obj, propName, val);
+}
+
+JSObject*
+GarbageCollectionEvent::toJSObject(JSContext* cx) const
+{
+    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!obj ||
+        !DefineStringProperty(cx, obj, cx->names().nonincrementalReason, nonincrementalReason) ||
+        !DefineStringProperty(cx, obj, cx->names().reason, reason))
+    {
+        return nullptr;
+    }
+
+    RootedArrayObject slicesArray(cx, NewDenseEmptyArray(cx));
+    if (!slicesArray)
+        return nullptr;
+
+    size_t idx = 0;
+    for (auto range = collections.all(); !range.empty(); range.popFront()) {
+        RootedPlainObject collectionObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+        if (!collectionObj)
+            return nullptr;
+
+        RootedValue start(cx, NumberValue(range.front().startTimestamp));
+        RootedValue end(cx, NumberValue(range.front().endTimestamp));
+        if (!DefineProperty(cx, collectionObj, cx->names().startTimestamp, start) ||
+            !DefineProperty(cx, collectionObj, cx->names().endTimestamp, end))
+        {
+            return nullptr;
+        }
+
+        RootedValue collectionVal(cx, ObjectValue(*collectionObj));
+        if (!DefineElement(cx, slicesArray, idx++, collectionVal))
+            return nullptr;
+    }
+
+    RootedValue slicesValue(cx, ObjectValue(*slicesArray));
+    if (!DefineProperty(cx, obj, cx->names().collections, slicesValue))
+        return nullptr;
+
+    return obj;
+}
+
+JS_PUBLIC_API(bool)
+FireOnGarbageCollectionHook(JSContext* cx, JS::dbg::GarbageCollectionEvent::Ptr&& data)
+{
+    AutoObjectVector triggered(cx);
+
+    {
+        // We had better not GC (and potentially get a dangling Debugger
+        // pointer) while finding all Debuggers observing a debuggee that
+        // participated in this GC.
+        AutoCheckCannotGC noGC;
+
+        for (Debugger* dbg = cx->runtime()->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
+            if (dbg->enabled &&
+                dbg->observedGC(data->majorGCNumber()) &&
+                dbg->getHook(Debugger::OnGarbageCollection))
+            {
+                if (!triggered.append(dbg->object)) {
+                    JS_ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
+        }
+    }
+
+    for ( ; !triggered.empty(); triggered.popBack()) {
+        Debugger* dbg = Debugger::fromJSObject(triggered.back());
+        dbg->fireOnGarbageCollectionHook(cx, data);
+        MOZ_ASSERT(!cx->isExceptionPending());
+    }
+
+    return true;
+}
+
+} // namespace dbg
+} // namespace JS
