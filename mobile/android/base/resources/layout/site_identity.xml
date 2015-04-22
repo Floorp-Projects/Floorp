@@ -34,47 +34,42 @@
 
                 <TextView android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:textSize="14sp"
-                          android:textColor="@color/placeholder_active_grey"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"
                           android:text="@string/identity_connected_to"/>
 
                 <TextView android:id="@+id/host"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:textSize="20sp"
-                          android:textColor="@color/placeholder_active_grey"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
                           android:textStyle="bold"/>
 
                 <TextView android:id="@+id/owner_label"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:textSize="14sp"
-                          android:textColor="@color/placeholder_active_grey"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"
                           android:text="@string/identity_run_by"
-                          android:paddingTop="12dip"/>
+                          android:paddingTop="@dimen/doorhanger_section_padding_small"/>
 
                 <TextView android:id="@+id/owner"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:textColor="@color/placeholder_active_grey"
-                          android:textSize="16sp"
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
                           android:textStyle="bold"/>
 
                 <TextView android:id="@+id/verifier"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:textSize="14sp"
-                          android:textColor="@color/placeholder_active_grey"
-                          android:paddingTop="12dip"/>
+                          android:textAppearance="@style/TextAppearance.DoorHanger.Medium.Light"
+                          android:paddingTop="@dimen/doorhanger_section_padding_small"/>
 
             </LinearLayout>
             <TextView android:id="@+id/site_settings_link"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:textAppearance="@style/TextAppearance.DoorHanger.Small"
+                      android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
                       android:textColor="@color/link_blue"
-                      android:paddingTop="@dimen/doorhanger_section_padding_small"
-                      android:paddingBottom="@dimen/doorhanger_section_padding_small"
+                      android:paddingTop="@dimen/doorhanger_section_padding_large"
+                      android:paddingBottom="@dimen/doorhanger_padding"
                       android:text="@string/contextmenu_site_settings"/>
          </LinearLayout>
     </LinearLayout>
