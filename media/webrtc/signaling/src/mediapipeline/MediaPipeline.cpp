@@ -860,7 +860,7 @@ UnsetTrackId(MediaStreamGraphImpl* graph) {
 #ifndef USE_FAKE_MEDIA_STREAMS
   class Message : public ControlMessage {
   public:
-    Message(PipelineListener* listener) :
+    explicit Message(PipelineListener* listener) :
       ControlMessage(nullptr), listener_(listener) {}
     virtual void Run() override
     {
