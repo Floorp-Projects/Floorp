@@ -187,6 +187,11 @@ class Base {
     }
     bool operator!=(const Base& rhs) const { return !(*this == rhs); }
 
+    // Returns true if this node is pointing to something on the live heap, as
+    // opposed to something from a deserialized core dump. Returns false,
+    // otherwise.
+    virtual bool isLive() const { return true; };
+
     // Return a human-readable name for the referent's type. The result should
     // be statically allocated. (You can use MOZ_UTF16("strings") for this.)
     //
@@ -321,6 +326,8 @@ class Node {
         return base()->ptr != nullptr;
     }
 
+    bool isLive() const { return base()->isLive(); }
+
     template<typename T>
     bool is() const {
         return base()->typeName() == Concrete<T>::concreteTypeName;
@@ -328,12 +335,14 @@ class Node {
 
     template<typename T>
     T* as() const {
+        MOZ_ASSERT(isLive());
         MOZ_ASSERT(is<T>());
         return static_cast<T*>(base()->ptr);
     }
 
     template<typename T>
     T* asOrNull() const {
+        MOZ_ASSERT(isLive());
         return is<T>() ? static_cast<T*>(base()->ptr) : nullptr;
     }
 
