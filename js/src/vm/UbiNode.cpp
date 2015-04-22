@@ -319,8 +319,8 @@ RootList::init(ZoneSet& debuggees)
 bool
 RootList::init(HandleObject debuggees)
 {
-    MOZ_ASSERT(debuggees && JS::dbg::IsDebugger(ObjectValue(*debuggees)));
-    js::Debugger* dbg = js::Debugger::fromJSObject(debuggees);
+    MOZ_ASSERT(debuggees && JS::dbg::IsDebugger(*debuggees));
+    js::Debugger* dbg = js::Debugger::fromJSObject(debuggees.get());
 
     ZoneSet debuggeeZones;
     if (!debuggeeZones.init())
@@ -361,26 +361,6 @@ RootList::addRoot(Node node, const char16_t* edgeName)
 
     return edges.append(mozilla::Move(SimpleEdge(name.release(), node)));
 }
-
-// An EdgeRange concrete class that holds a pre-existing vector of SimpleEdges.
-class PreComputedEdgeRange : public EdgeRange {
-    SimpleEdgeVector& edges;
-    size_t           i;
-
-    void settle() {
-        front_ = i < edges.length() ? &edges[i] : nullptr;
-    }
-
-  public:
-    explicit PreComputedEdgeRange(JSContext* cx, SimpleEdgeVector& edges)
-      : edges(edges),
-        i(0)
-    {
-        settle();
-    }
-
-    void popFront() override { i++; settle(); }
-};
 
 const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("RootList");
 

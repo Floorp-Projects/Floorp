@@ -7882,16 +7882,27 @@ JS::dbg::onPromiseSettled(JSContext* cx, HandleObject promise)
 }
 
 JS_PUBLIC_API(bool)
-JS::dbg::IsDebugger(JS::Value val)
+JS::dbg::IsDebugger(const JSObject &obj)
 {
-    if (!val.isObject())
-        return false;
+    return js::GetObjectClass(&obj) == &Debugger::jsclass &&
+           js::Debugger::fromJSObject(&obj) != nullptr;
+}
 
-    JSObject& obj = val.toObject();
-    if (obj.getClass() != &Debugger::jsclass)
-        return false;
+JS_PUBLIC_API(bool)
+JS::dbg::GetDebuggeeGlobals(JSContext *cx, const JSObject &dbgObj, AutoObjectVector &vector)
+{
+    MOZ_ASSERT(IsDebugger(dbgObj));
+    js::Debugger *dbg = js::Debugger::fromJSObject(&dbgObj);
 
-    return js::Debugger::fromJSObject(&obj) != nullptr;
+    if (!vector.reserve(vector.length() + dbg->debuggees.count())) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    for (WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront())
+        vector.infallibleAppend(static_cast<JSObject*>(r.front()));
+
+    return true;
 }
 
 
