@@ -6,6 +6,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"
 #include "XRemoteClient.h"
 #include "prmem.h"
 #include "prprf.h"
@@ -48,8 +49,6 @@
 #endif
 #endif
 
-#define ARRAY_LENGTH(array_) (sizeof(array_)/sizeof(array_[0]))
-
 static PRLogModuleInfo *sRemoteLm = nullptr;
 
 static int (*sOldHandler)(Display *, XErrorEvent *);
@@ -88,7 +87,7 @@ static const char *XAtomNames[] = {
   MOZILLA_PROGRAM_PROP,
   MOZILLA_COMMANDLINE_PROP
 };
-static Atom XAtoms[ARRAY_LENGTH(XAtomNames)];
+static Atom XAtoms[MOZ_ARRAY_LENGTH(XAtomNames)];
 
 nsresult
 XRemoteClient::Init()
@@ -105,7 +104,7 @@ XRemoteClient::Init()
 
   // get our atoms
   XInternAtoms(mDisplay, const_cast<char**>(XAtomNames),
-               ARRAY_LENGTH(XAtomNames), False, XAtoms);
+               MOZ_ARRAY_LENGTH(XAtomNames), False, XAtoms);
 
   int i = 0;
   mMozVersionAtom  = XAtoms[i++];
