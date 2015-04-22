@@ -965,23 +965,17 @@ nsHTMLEditRules::GetIndentState(bool *aCanIndent, bool *aCanOutdent)
   OwningNonNull<Selection> selection = *mHTMLEditor->GetSelection();
 
   // contruct a list of nodes to act on.
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsresult res = GetNodesFromSelection(selection, EditAction::indent,
-                                       arrayOfNodes, true);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  nsresult res = GetNodesFromSelection(*selection, EditAction::indent,
+                                       arrayOfNodes, TouchContent::no);
   NS_ENSURE_SUCCESS(res, res);
 
   // examine nodes in selection for blockquotes or list elements;
   // these we can outdent.  Note that we return true for canOutdent
   // if *any* of the selection is outdentable, rather than all of it.
-  int32_t listCount = arrayOfNodes.Count();
-  int32_t i;
   NS_ENSURE_STATE(mHTMLEditor);
   bool useCSS = mHTMLEditor->IsCSSEnabled();
-  for (i=listCount-1; i>=0; i--)
-  {
-    nsCOMPtr<nsINode> curNode = do_QueryInterface(arrayOfNodes[i]);
-    NS_ENSURE_STATE(curNode || !arrayOfNodes[i]);
-    
+  for (auto& curNode : Reversed(arrayOfNodes)) {
     if (nsHTMLEditUtils::IsNodeThatCanOutdent(GetAsDOMNode(curNode))) {
       *aCanOutdent = true;
       break;
@@ -3468,21 +3462,25 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
   nsString tString(*aBlockType);
 
   // contruct a list of nodes to act on.
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  res = GetNodesFromSelection(aSelection, EditAction::makeBasicBlock,
-                              arrayOfNodes);
+  nsTArray<nsCOMPtr<nsINode>> array;
+  res = GetNodesFromSelection(*aSelection, EditAction::makeBasicBlock,
+                              array);
   NS_ENSURE_SUCCESS(res, res);
 
   // Remove all non-editable nodes.  Leave them be.
-  int32_t listCount = arrayOfNodes.Count();
+  int32_t listCount = array.Length();
   int32_t i;
   for (i=listCount-1; i>=0; i--)
   {
     NS_ENSURE_STATE(mHTMLEditor);
-    if (!mHTMLEditor->IsEditable(arrayOfNodes[i]))
-    {
-      arrayOfNodes.RemoveObjectAt(i);
+    if (!mHTMLEditor->IsEditable(array[i])) {
+      array.RemoveElementAt(i);
     }
+  }
+
+  nsCOMArray<nsIDOMNode> arrayOfNodes;
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
   }
   
   // reset list count
@@ -3651,20 +3649,21 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
+  nsTArray<nsCOMPtr<nsINode>> array;
   
   // short circuit: detect case of collapsed selection inside an <li>.
   // just sublist that <li>.  This prevents bug 97797.
   
-  nsCOMPtr<nsIDOMNode> liNode;
+  nsCOMPtr<Element> liNode;
   if (aSelection->Collapsed()) {
-    nsCOMPtr<nsIDOMNode> node, block;
+    nsCOMPtr<nsINode> node;
+    nsCOMPtr<Element> block;
     int32_t offset;
     NS_ENSURE_STATE(mHTMLEditor);
     nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
     NS_ENSURE_SUCCESS(res, res);
-    if (IsBlockNode(node)) {
-      block = node;
+    if (IsBlockNode(GetAsDOMNode(node))) {
+      block = node->AsElement();
     } else {
       NS_ENSURE_STATE(mHTMLEditor);
       block = mHTMLEditor->GetBlockNodeParent(node);
@@ -3675,7 +3674,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   
   if (liNode)
   {
-    arrayOfNodes.AppendObject(liNode);
+    array.AppendElement(liNode);
   }
   else
   {
@@ -3683,8 +3682,13 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
     // this basically just expands the range to include the immediate
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
-    res = GetNodesFromSelection(aSelection, EditAction::indent, arrayOfNodes);
+    res = GetNodesFromSelection(*aSelection, EditAction::indent, array);
     NS_ENSURE_SUCCESS(res, res);
+  }
+
+  nsCOMArray<nsIDOMNode> arrayOfNodes;
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
   }
   
   // if nothing visible in list, make an empty block
@@ -4105,8 +4109,8 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
     // this basically just expands the range to include the immediate
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
-    nsCOMArray<nsIDOMNode> arrayOfNodes;
-    res = GetNodesFromSelection(aSelection, EditAction::outdent,
+    nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+    res = GetNodesFromSelection(*aSelection, EditAction::outdent,
                                 arrayOfNodes);
     NS_ENSURE_SUCCESS(res, res);
 
@@ -4115,20 +4119,13 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
 
     nsCOMPtr<nsIDOMNode> curBlockQuote, firstBQChild, lastBQChild;
     bool curBlockQuoteIsIndentedWithCSS = false;
-    int32_t listCount = arrayOfNodes.Count();
-    int32_t i;
-    for (i=0; i<listCount; i++)
-    {
+    for (auto& curNode : arrayOfNodes) {
       // here's where we actually figure out what to do
-      nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
-      nsCOMPtr<nsINode> curNode_ = do_QueryInterface(curNode);
-      NS_ENSURE_STATE(curNode_);
-      nsCOMPtr<nsINode> curParent = curNode_->GetParentNode();
-      int32_t offset = curParent ? curParent->IndexOf(curNode_) : -1;
+      nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
+      int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
       
       // is it a blockquote?
-      if (nsHTMLEditUtils::IsBlockquote(curNode)) 
-      {
+      if (curNode->IsHTMLElement(nsGkAtoms::blockquote)) {
         // if it is a blockquote, remove it.
         // So we need to finish up dealng with any curBlockQuote first.
         if (curBlockQuote)
@@ -4142,18 +4139,19 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
           curBlockQuoteIsIndentedWithCSS = false;
         }
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->RemoveBlockContainer(curNode);
+        res = mHTMLEditor->RemoveBlockContainer(GetAsDOMNode(curNode));
         NS_ENSURE_SUCCESS(res, res);
         continue;
       }
       // is it a block with a 'margin' property?
-      if (useCSS && IsBlockNode(curNode))
-      {
+      if (useCSS && IsBlockNode(GetAsDOMNode(curNode))) {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
+        nsIAtom* marginProperty =
+          MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
+                                      GetAsDOMNode(curNode));
         nsAutoString value;
         NS_ENSURE_STATE(mHTMLEditor);
-        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*curNode_,
+        mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*curNode,
                                                          *marginProperty,
                                                          value);
         float f;
@@ -4162,7 +4160,7 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
         mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
         if (f > 0)
         {
-          RelativeChangeIndentationOfElementNode(curNode, -1);
+          RelativeChangeIndentationOfElementNode(GetAsDOMNode(curNode), -1);
           continue;
         }
       }
@@ -4183,7 +4181,7 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
           curBlockQuoteIsIndentedWithCSS = false;
         }
         bool bOutOfList;
-        res = PopListItem(curNode, &bOutOfList);
+        res = PopListItem(GetAsDOMNode(curNode), &bOutOfList);
         NS_ENSURE_SUCCESS(res, res);
         continue;
       }
@@ -4191,9 +4189,9 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
       if (curBlockQuote)
       {
         // if so, is this node a descendant?
-        if (nsEditorUtils::IsDescendantOf(curNode, curBlockQuote))
-        {
-          lastBQChild = curNode;
+        if (nsEditorUtils::IsDescendantOf(GetAsDOMNode(curNode),
+                                          curBlockQuote)) {
+          lastBQChild = GetAsDOMNode(curNode);
           continue;  // then we don't need to do anything different for this node
         }
         else
@@ -4213,7 +4211,7 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
       }
       
       // are we inside a blockquote?
-      nsCOMPtr<nsINode> n = curNode_;
+      nsCOMPtr<nsINode> n = curNode;
       curBlockQuoteIsIndentedWithCSS = false;
       // keep looking up the hierarchy as long as we don't hit the body or the
       // active editing host or a table element (other than an entire table)
@@ -4228,14 +4226,16 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
         if (n->IsHTMLElement(nsGkAtoms::blockquote)) {
           // if so, remember it, and remember first node we are taking out of it.
           curBlockQuote = GetAsDOMNode(n);
-          firstBQChild  = curNode;
-          lastBQChild   = curNode;
+          firstBQChild  = GetAsDOMNode(curNode);
+          lastBQChild   = GetAsDOMNode(curNode);
           break;
         }
         else if (useCSS)
         {
           NS_ENSURE_STATE(mHTMLEditor);
-          nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
+          nsIAtom* marginProperty =
+            MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils,
+                                        GetAsDOMNode(curNode));
           nsAutoString value;
           NS_ENSURE_STATE(mHTMLEditor);
           mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(*n, *marginProperty,
@@ -4247,8 +4247,8 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
           if (f > 0 && !(nsHTMLEditUtils::IsList(curParent) && nsHTMLEditUtils::IsList(curNode)))
           {
             curBlockQuote = GetAsDOMNode(n);
-            firstBQChild  = curNode;
-            lastBQChild   = curNode;
+            firstBQChild  = GetAsDOMNode(curNode);
+            lastBQChild   = GetAsDOMNode(curNode);
             curBlockQuoteIsIndentedWithCSS = true;
             break;
           }
@@ -4263,17 +4263,14 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
           if (nsHTMLEditUtils::IsList(curNode))  // just unwrap this sublist
           {
             NS_ENSURE_STATE(mHTMLEditor);
-            res = mHTMLEditor->RemoveBlockContainer(curNode);
+            res = mHTMLEditor->RemoveBlockContainer(GetAsDOMNode(curNode));
             NS_ENSURE_SUCCESS(res, res);
           }
           // handled list item case above
         }
         else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, but parent is non-list: move list items out
         {
-          nsCOMPtr<nsIDOMNode> childDOM;
-          curNode->GetLastChild(getter_AddRefs(childDOM));
-          nsCOMPtr<nsIContent> child = do_QueryInterface(childDOM);
-          NS_ENSURE_STATE(!childDOM || child);
+          nsCOMPtr<nsIContent> child = curNode->GetLastChild();
           while (child)
           {
             if (nsHTMLEditUtils::IsListItem(child))
@@ -4300,13 +4297,11 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
               res = mHTMLEditor->DeleteNode(child);
               NS_ENSURE_SUCCESS(res, res);
             }
-            curNode->GetLastChild(getter_AddRefs(childDOM));
-            child = do_QueryInterface(childDOM);
-            NS_ENSURE_STATE(!childDOM || child);
+            child = curNode->GetLastChild();
           }
           // delete the now-empty list
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->RemoveBlockContainer(curNode);
+          res = mHTMLEditor->RemoveBlockContainer(GetAsDOMNode(curNode));
           NS_ENSURE_SUCCESS(res, res);
         }
         else if (useCSS) {
@@ -4709,21 +4704,20 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   *aHandled = true;
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  res = GetNodesFromSelection(aSelection, EditAction::align, arrayOfNodes);
+  nsTArray<nsCOMPtr<nsINode>> array;
+  res = GetNodesFromSelection(*aSelection, EditAction::align, array);
   NS_ENSURE_SUCCESS(res, res);
 
   // if we don't have any nodes, or we have only a single br, then we are
   // creating an empty alignment div.  We have to do some different things for these.
   bool emptyDiv = false;
-  int32_t listCount = arrayOfNodes.Count();
+  int32_t listCount = array.Length();
   if (!listCount) emptyDiv = true;
   if (listCount == 1)
   {
-    nsCOMPtr<nsIDOMNode> theNode = arrayOfNodes[0];
+    nsCOMPtr<nsINode> theNode = array[0];
 
-    if (nsHTMLEditUtils::SupportsAlignAttr(theNode))
-    {
+    if (nsHTMLEditUtils::SupportsAlignAttr(GetAsDOMNode(theNode))) {
       // the node is a table element, an horiz rule, a paragraph, a div
       // or a section header; in HTML 4, it can directly carry the ALIGN
       // attribute and we don't need to make a div! If we are in CSS mode,
@@ -4813,6 +4807,11 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
 
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
+
+  nsCOMArray<nsIDOMNode> arrayOfNodes;
+  for (auto& node : array) {
+    arrayOfNodes.AppendObject(GetAsDOMNode(node));
+  }
 
   nsTArray<bool> transitionList;
   res = MakeTransitionList(arrayOfNodes, transitionList);
@@ -5160,39 +5159,13 @@ nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// GetInnerContent: aList and aTbl allow the caller to specify what kind of
-//                  content to "look inside".  If aTbl is true, look inside any
-//                  table content, and insert the inner content into the
-//                  supplied issupportsarray at offset aIndex.  Similarly with
-//                  aList and list content.  aIndex is updated to point past
-//                  inserted elements.
+// GetInnerContent: aLists and aTables allow the caller to specify what kind of
+//                  content to "look inside".  If aTables is Tables::yes, look
+//                  inside any table content, and insert the inner content into
+//                  the supplied issupportsarray at offset aIndex.  Similarly
+//                  with aLists and list content.  aIndex is updated to point
+//                  past inserted elements.
 //
-nsresult
-nsHTMLEditRules::GetInnerContent(nsIDOMNode* aNode,
-                                 nsCOMArray<nsIDOMNode>& aOutArrayOfDOMNodes,
-                                 int32_t* aIndex, bool aLists, bool aTables)
-{
-  // To be removed in a subsequent patch
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_STATE(node);
-  nsTArray<nsCOMPtr<nsINode>> aOutArrayOfNodes;
-  for (int32_t i = 0; i < aOutArrayOfDOMNodes.Count(); i++) {
-    nsCOMPtr<nsINode> newNode = do_QueryInterface(aOutArrayOfDOMNodes[i]);
-    if (newNode) {
-      aOutArrayOfNodes.AppendElement(newNode);
-    }
-  }
-  GetInnerContent(*node, aOutArrayOfNodes, aIndex,
-                  aLists ? Lists::yes : Lists::no,
-                  aTables ? Tables::yes : Tables::no);
-  aOutArrayOfDOMNodes.Clear();
-  for (auto& node : aOutArrayOfNodes) {
-    aOutArrayOfDOMNodes.AppendElement(GetAsDOMNode(node));
-  }
-
-  return NS_OK;
-}
-
 void
 nsHTMLEditRules::GetInnerContent(nsINode& aNode,
                                  nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
@@ -6046,29 +6019,38 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
     if (outArrayOfNodes.Count()) return NS_OK;
   }
 
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  for (int32_t i = 0; i < outArrayOfNodes.Count(); i++) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(outArrayOfNodes[i]);
+    NS_ENSURE_STATE(node || !outArrayOfNodes[i]);
+    arrayOfNodes.AppendElement(node);
+  }
+
   {
     // We don't like other people messing with our selection!
     NS_ENSURE_STATE(mHTMLEditor);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
 
     // contruct a list of nodes to act on.
-    res = GetNodesFromSelection(selection, EditAction::makeList,
-                                outArrayOfNodes, aDontTouchContent);
+    res = GetNodesFromSelection(*selection, EditAction::makeList,
+                                arrayOfNodes, aDontTouchContent ?
+                                TouchContent::no : TouchContent::yes);
     NS_ENSURE_SUCCESS(res, res);
   }
 
   // pre process our list of nodes...
-  int32_t listCount = outArrayOfNodes.Count();
+  int32_t listCount = arrayOfNodes.Length();
   int32_t i;
   for (i=listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsIDOMNode> testNode = outArrayOfNodes[i];
+    nsCOMPtr<nsINode> testNode = arrayOfNodes[i];
 
     // Remove all non-editable nodes.  Leave them be.
     NS_ENSURE_STATE(mHTMLEditor);
     if (!mHTMLEditor->IsEditable(testNode))
     {
-      outArrayOfNodes.RemoveObjectAt(i);
+      arrayOfNodes.RemoveElementAt(i);
+      continue;
     }
 
     // scan for table elements and divs.  If we find table elements other than table,
@@ -6076,20 +6058,13 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
     if (nsHTMLEditUtils::IsTableElementButNotTable(testNode))
     {
       int32_t j=i;
-      outArrayOfNodes.RemoveObjectAt(i);
-      res = GetInnerContent(testNode, outArrayOfNodes, &j, false);
-      NS_ENSURE_SUCCESS(res, res);
+      arrayOfNodes.RemoveElementAt(i);
+      GetInnerContent(*testNode, arrayOfNodes, &j, Lists::no);
     }
   }
 
   // if there is only one node in the array, and it is a list, div, or blockquote,
   // then look inside of it until we find inner list or content.
-  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
-  for (int32_t i = 0; i < outArrayOfNodes.Count(); i++) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(outArrayOfNodes[i]);
-    NS_ENSURE_STATE(node);
-    arrayOfNodes.AppendElement(node);
-  }
   LookInsideDivBQandList(arrayOfNodes);
   outArrayOfNodes.Clear();
   for (auto& node : arrayOfNodes) {
@@ -6180,26 +6155,29 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes
                                          bool aDontTouchContent)
 {  
   NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
   nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
   // contruct a list of nodes to act on.
-  nsresult res = GetNodesFromSelection(selection, EditAction::makeBasicBlock,
-                                       outArrayOfNodes, aDontTouchContent);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  nsresult res = GetNodesFromSelection(*selection, EditAction::makeBasicBlock,
+                                       arrayOfNodes, aDontTouchContent ?
+                                       TouchContent::no : TouchContent::yes);
   NS_ENSURE_SUCCESS(res, res);
 
   // pre process our list of nodes...                      
-  int32_t listCount = outArrayOfNodes.Count();
+  int32_t listCount = arrayOfNodes.Length();
   int32_t i;
   for (i=listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsIDOMNode> testNode = outArrayOfNodes[i];
+    nsCOMPtr<nsINode> testNode = arrayOfNodes[i];
 
     // Remove all non-editable nodes.  Leave them be.
-    NS_ENSURE_STATE(mHTMLEditor);
     if (!mHTMLEditor->IsEditable(testNode))
     {
-      outArrayOfNodes.RemoveObjectAt(i);
+      arrayOfNodes.RemoveElementAt(i);
     }
     
     // scan for table elements.  If we find table elements other than table,
@@ -6209,10 +6187,12 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes
         nsHTMLEditUtils::IsListItem(testNode) )
     {
       int32_t j=i;
-      outArrayOfNodes.RemoveObjectAt(i);
-      res = GetInnerContent(testNode, outArrayOfNodes, &j);
-      NS_ENSURE_SUCCESS(res, res);
+      arrayOfNodes.RemoveElementAt(i);
+      GetInnerContent(*testNode, arrayOfNodes, &j);
     }
+  }
+  for (auto& node : arrayOfNodes) {
+    outArrayOfNodes.AppendObject(GetAsDOMNode(node));
   }
   return res;
 }
@@ -6383,31 +6363,26 @@ nsHTMLEditRules::GetNodesFromPoint(::DOMPoint point,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// GetNodesFromSelection: given a particular operation, construct a list  
-//                     of nodes from the selection that will be operated on. 
-//                       
-nsresult 
-nsHTMLEditRules::GetNodesFromSelection(Selection* selection,
-                                       EditAction operation,
-                                       nsCOMArray<nsIDOMNode>& arrayOfNodes,
-                                       bool dontTouchContent)
+///////////////////////////////////////////////////////////////////////////////
+// GetNodesFromSelection: Given a particular operation, construct a list of
+//                        nodes from the selection that will be operated on.
+//
+nsresult
+nsHTMLEditRules::GetNodesFromSelection(Selection& aSelection,
+                                       EditAction aOperation,
+                                       nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
+                                       TouchContent aTouchContent)
 {
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsresult res;
-  
-  // promote selection ranges
+  // Promote selection ranges
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(*selection, arrayOfRanges, operation);
-  
-  // use these ranges to contruct a list of nodes to act on.
-  nsTArray<nsCOMPtr<nsINode>> array;
-  res = GetNodesForOperation(arrayOfRanges, array, operation, dontTouchContent
-                             ? TouchContent::no : TouchContent::yes);
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-  return res;
+  GetPromotedRanges(aSelection, arrayOfRanges, aOperation);
+
+  // Use these ranges to contruct a list of nodes to act on.
+  nsresult res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes,
+                                      aOperation, aTouchContent);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 
