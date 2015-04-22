@@ -505,6 +505,16 @@ public:
         return event;
     }
 
+    bool IsInputEvent() const {
+        return mType == AndroidGeckoEvent::MOTION_EVENT ||
+            mType == AndroidGeckoEvent::NATIVE_GESTURE_EVENT ||
+            mType == AndroidGeckoEvent::LONG_PRESS ||
+            mType == AndroidGeckoEvent::KEY_EVENT ||
+            mType == AndroidGeckoEvent::IME_EVENT ||
+            mType == AndroidGeckoEvent::IME_KEY_EVENT ||
+            mType == AndroidGeckoEvent::APZ_INPUT_EVENT;
+    }
+
     int Action() { return mAction; }
     int Type() { return mType; }
     bool AckNeeded() { return mAckNeeded; }
