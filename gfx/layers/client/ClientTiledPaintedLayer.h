@@ -12,8 +12,6 @@
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsRegion.h"                   // for nsIntRegion
 
-class gfxContext;
-
 namespace mozilla {
 namespace layers {
 

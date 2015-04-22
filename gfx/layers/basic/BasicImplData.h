@@ -15,7 +15,6 @@ namespace mozilla {
 namespace layers {
 
 class ReadbackProcessor;
-class SurfaceDescriptor;
 
 /**
  * This is the ImplData for all Basic layers. It also exposes methods

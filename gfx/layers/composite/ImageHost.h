@@ -31,7 +31,6 @@ class Matrix4x4;
 namespace layers {
 
 class Compositor;
-class ISurfaceAllocator;
 struct EffectChain;
 
 /**

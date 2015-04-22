@@ -26,7 +26,6 @@ struct TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
 class ThebesBufferData;
-class ClientTiledLayerBuffer;
 class PTextureChild;
 
 /**

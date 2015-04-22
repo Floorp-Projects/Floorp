@@ -18,8 +18,6 @@
 #include "SurfaceTexture.h"
 #include "AndroidNativeWindow.h"
 
-class gfxASurface;
-
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;

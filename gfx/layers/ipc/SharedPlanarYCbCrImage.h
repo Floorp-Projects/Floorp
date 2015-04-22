@@ -20,8 +20,6 @@ namespace layers {
 
 class BufferTextureClient;
 class ImageClient;
-class ISurfaceAllocator;
-class SurfaceDescriptor;
 class TextureClient;
 
 class SharedPlanarYCbCrImage : public PlanarYCbCrImage

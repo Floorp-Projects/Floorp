@@ -18,7 +18,6 @@ namespace mozilla {
 namespace layers {
 
 class CompositableHost;
-class PTextureChild;
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 

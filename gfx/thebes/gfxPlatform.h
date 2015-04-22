@@ -38,11 +38,9 @@ class nsIURI;
 class nsIAtom;
 class nsIObserver;
 class SRGBOverrideObserver;
-struct gfxRGBA;
 
 namespace mozilla {
 namespace gl {
-class GLContext;
 class SkiaGLGlue;
 }
 namespace gfx {

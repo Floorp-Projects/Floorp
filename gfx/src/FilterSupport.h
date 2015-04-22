@@ -158,7 +158,6 @@ enum AttributeName {
 
 class DrawTarget;
 class SourceSurface;
-class FilterNode;
 struct FilterAttribute;
 
 enum class AttributeType {

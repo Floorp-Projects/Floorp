@@ -10,8 +10,6 @@
 #include "nsIMemoryInfoDumper.h"
 #include <stdio.h>
 
-class nsACString;
-
 /**
  * This class facilitates dumping information about our memory usage to disk.
  *

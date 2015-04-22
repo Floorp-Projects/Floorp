@@ -18,7 +18,6 @@ namespace layers {
 
 class ContainerLayer;
 class Layer;
-class LayerManager;
 
 class CanvasLayerComposite;
 class ColorLayerComposite;

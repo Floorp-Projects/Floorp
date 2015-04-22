@@ -11,8 +11,6 @@
 #include "nsAutoPtr.h"
 #include "nsSize.h"
 
-class gfxASurface;
-
 namespace mozilla {
 namespace gl {
 

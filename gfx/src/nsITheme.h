@@ -15,13 +15,11 @@
 #include "Units.h"
 
 struct nsRect;
-struct nsFont;
 struct nsIntMargin;
 class nsPresContext;
 class nsRenderingContext;
 class nsDeviceContext;
 class nsIFrame;
-class nsIContent;
 class nsIAtom;
 class nsIWidget;
 

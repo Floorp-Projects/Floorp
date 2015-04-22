@@ -24,8 +24,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 
-class gfxASurface;
-
 namespace mozilla {
 
 namespace dom {

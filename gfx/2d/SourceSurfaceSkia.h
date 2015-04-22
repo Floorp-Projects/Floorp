@@ -11,8 +11,6 @@
 #include "skia/SkCanvas.h"
 #include "skia/SkBitmap.h"
 
-class GrContext;
-
 namespace mozilla {
 
 namespace gfx {
