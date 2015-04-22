@@ -14,8 +14,13 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'jsinspector'
 
+EXPORTS.mozilla.devtools += [
+    'ZeroCopyNSIOutputStream.h',
+]
+
 SOURCES += [
     'nsJSInspector.cpp',
+    'ZeroCopyNSIOutputStream.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
