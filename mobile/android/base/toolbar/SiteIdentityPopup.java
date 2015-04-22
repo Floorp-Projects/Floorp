@@ -169,7 +169,6 @@ public class SiteIdentityPopup extends AnchoredPopup {
         mMixedContentNotification = DoorHanger.Get(mContext, config);
         mMixedContentNotification.setIcon(icon);
 
-
         mContent.addView(mMixedContentNotification);
         mDivider.setVisibility(View.VISIBLE);
     }

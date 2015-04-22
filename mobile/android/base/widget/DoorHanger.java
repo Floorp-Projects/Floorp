@@ -100,11 +100,6 @@ public abstract class DoorHanger extends LinearLayout {
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
         mMessage = (TextView) findViewById(R.id.doorhanger_message);
 
-        // TODO: Bug 1149359 - split this into DoorHanger subclasses.
-        if (type == Type.TRACKING || type == Type.MIXED_CONTENT) {
-            mMessage.setTextAppearance(getContext(), R.style.TextAppearance_DoorHanger_Small);
-        }
-
         mType = type;
 
         mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
