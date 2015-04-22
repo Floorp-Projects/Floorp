@@ -692,33 +692,30 @@ nsHTMLEditRules::GetListState(bool *aMixed, bool *aOL, bool *aUL, bool *aDL)
   *aDL = false;
   bool bNonList = false;
   
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsresult res = GetListActionNodes(arrayOfNodes, false, true);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  nsresult res = GetListActionNodes(arrayOfNodes, EntireList::no,
+                                    TouchContent::no);
   NS_ENSURE_SUCCESS(res, res);
 
   // Examine list type for nodes in selection.
-  int32_t listCount = arrayOfNodes.Count();
-  for (int32_t i = listCount - 1; i >= 0; --i) {
-    nsIDOMNode* curDOMNode = arrayOfNodes[i];
-    nsCOMPtr<dom::Element> curElement = do_QueryInterface(curDOMNode);
-
-    if (!curElement) {
+  for (const auto& curNode : arrayOfNodes) {
+    if (!curNode->IsElement()) {
       bNonList = true;
-    } else if (curElement->IsHTMLElement(nsGkAtoms::ul)) {
+    } else if (curNode->IsHTMLElement(nsGkAtoms::ul)) {
       *aUL = true;
-    } else if (curElement->IsHTMLElement(nsGkAtoms::ol)) {
+    } else if (curNode->IsHTMLElement(nsGkAtoms::ol)) {
       *aOL = true;
-    } else if (curElement->IsHTMLElement(nsGkAtoms::li)) {
-      if (dom::Element* parent = curElement->GetParentElement()) {
+    } else if (curNode->IsHTMLElement(nsGkAtoms::li)) {
+      if (dom::Element* parent = curNode->GetParentElement()) {
         if (parent->IsHTMLElement(nsGkAtoms::ul)) {
           *aUL = true;
         } else if (parent->IsHTMLElement(nsGkAtoms::ol)) {
           *aOL = true;
         }
       }
-    } else if (curElement->IsAnyOfHTMLElements(nsGkAtoms::dl,
-                                               nsGkAtoms::dt,
-                                               nsGkAtoms::dd)) {
+    } else if (curNode->IsAnyOfHTMLElements(nsGkAtoms::dl,
+                                            nsGkAtoms::dt,
+                                            nsGkAtoms::dd)) {
       *aDL = true;
     } else {
       bNonList = true;
@@ -743,29 +740,27 @@ nsHTMLEditRules::GetListItemState(bool *aMixed, bool *aLI, bool *aDT, bool *aDD)
   *aDD = false;
   bool bNonList = false;
   
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsresult res = GetListActionNodes(arrayOfNodes, false, true);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  nsresult res = GetListActionNodes(arrayOfNodes, EntireList::no,
+                                    TouchContent::no);
   NS_ENSURE_SUCCESS(res, res);
 
   // examine list type for nodes in selection
-  int32_t listCount = arrayOfNodes.Count();
-  for (int32_t i = listCount - 1; i >= 0; --i) {
-    nsIDOMNode* curNode = arrayOfNodes[i];
-    nsCOMPtr<dom::Element> element = do_QueryInterface(curNode);
-    if (!element) {
+  for (const auto& node : arrayOfNodes) {
+    if (!node->IsElement()) {
       bNonList = true;
-    } else if (element->IsAnyOfHTMLElements(nsGkAtoms::ul,
-                                            nsGkAtoms::ol,
-                                            nsGkAtoms::li)) {
+    } else if (node->IsAnyOfHTMLElements(nsGkAtoms::ul,
+                                         nsGkAtoms::ol,
+                                         nsGkAtoms::li)) {
       *aLI = true;
-    } else if (element->IsHTMLElement(nsGkAtoms::dt)) {
+    } else if (node->IsHTMLElement(nsGkAtoms::dt)) {
       *aDT = true;
-    } else if (element->IsHTMLElement(nsGkAtoms::dd)) {
+    } else if (node->IsHTMLElement(nsGkAtoms::dd)) {
       *aDD = true;
-    } else if (element->IsHTMLElement(nsGkAtoms::dl)) {
+    } else if (node->IsHTMLElement(nsGkAtoms::dl)) {
       // need to look inside dl and see which types of items it has
       bool bDT, bDD;
-      GetDefinitionListItemTypes(element, &bDT, &bDD);
+      GetDefinitionListItemTypes(node->AsElement(), &bDT, &bDD);
       *aDT |= bDT;
       *aDD |= bDD;
     } else {
@@ -3085,18 +3080,17 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
 
-  nsCOMArray<nsIDOMNode> arrayOfDOMNodes;
-  res = GetListActionNodes(arrayOfDOMNodes, aEntireList);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  res = GetListActionNodes(arrayOfNodes,
+                           aEntireList ? EntireList::yes : EntireList::no);
   NS_ENSURE_SUCCESS(res, res);
-
-  int32_t listCount = arrayOfDOMNodes.Count();
 
   // check if all our nodes are <br>s, or empty inlines
   bool bOnlyBreaks = true;
-  for (int32_t j = 0; j < listCount; j++) {
-    nsIDOMNode* curNode = arrayOfDOMNodes[j];
+  for (auto& curNode : arrayOfNodes) {
     // if curNode is not a Break or empty inline, we're done
-    if (!nsTextEditUtils::IsBreak(curNode) && !IsEmptyInline(curNode)) {
+    if (!nsTextEditUtils::IsBreak(curNode) &&
+        !IsEmptyInline(GetAsDOMNode(curNode))) {
       bOnlyBreaks = false;
       break;
     }
@@ -3104,12 +3098,12 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
 
   // if no nodes, we make empty list.  Ditto if the user tried to make a list
   // of some # of breaks.
-  if (!listCount || bOnlyBreaks) {
+  if (!arrayOfNodes.Length() || bOnlyBreaks) {
     // if only breaks, delete them
     if (bOnlyBreaks) {
-      for (int32_t j = 0; j < (int32_t)listCount; j++) {
+      for (auto& node : arrayOfNodes) {
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->DeleteNode(arrayOfDOMNodes[j]);
+        res = mHTMLEditor->DeleteNode(node);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -3151,22 +3145,16 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   // if there is only one node in the array, and it is a list, div, or
   // blockquote, then look inside of it until we find inner list or content.
 
-  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
-  for (int32_t i = 0; i < arrayOfDOMNodes.Count(); i++) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(arrayOfDOMNodes[i]);
-    NS_ENSURE_STATE(node);
-    arrayOfNodes.AppendElement(node);
-  }
   LookInsideDivBQandList(arrayOfNodes);
 
   // Ok, now go through all the nodes and put then in the list,
   // or whatever is approriate.  Wohoo!
 
-  listCount = arrayOfNodes.Length();
+  uint32_t listCount = arrayOfNodes.Length();
   nsCOMPtr<nsINode> curParent;
   nsCOMPtr<Element> curList, prevListItem;
 
-  for (int32_t i = 0; i < listCount; i++) {
+  for (uint32_t i = 0; i < listCount; i++) {
     // here's where we actually figure out what to do
     nsCOMPtr<nsIDOMNode> newBlock;
     NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
@@ -3375,47 +3363,41 @@ nsHTMLEditRules::WillRemoveList(Selection* aSelection,
   GetPromotedRanges(*aSelection, arrayOfRanges, EditAction::makeList);
   
   // use these ranges to contruct a list of nodes to act on.
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  res = GetListActionNodes(arrayOfNodes, false);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  res = GetListActionNodes(arrayOfNodes, EntireList::no);
   NS_ENSURE_SUCCESS(res, res);                                 
                                      
   // Remove all non-editable nodes.  Leave them be.
-  int32_t listCount = arrayOfNodes.Count();
+  int32_t listCount = arrayOfNodes.Length();
   int32_t i;
   for (i=listCount-1; i>=0; i--)
   {
-    nsIDOMNode* testNode = arrayOfNodes[i];
+    nsCOMPtr<nsINode>& testNode = arrayOfNodes[i];
     NS_ENSURE_STATE(mHTMLEditor);
     if (!mHTMLEditor->IsEditable(testNode))
     {
-      arrayOfNodes.RemoveObjectAt(i);
+      arrayOfNodes.RemoveElementAt(i);
     }
   }
   
   // reset list count
-  listCount = arrayOfNodes.Count();
+  listCount = arrayOfNodes.Length();
   
   // Only act on lists or list items in the array
-  nsCOMPtr<nsIDOMNode> curParent;
-  for (i=0; i<listCount; i++)
-  {
+  for (auto& curNode : arrayOfNodes) {
     // here's where we actually figure out what to do
-    nsIDOMNode* curNode = arrayOfNodes[i];
-    int32_t offset;
-    curParent = nsEditor::GetNodeLocation(curNode, &offset);
-    
     if (nsHTMLEditUtils::IsListItem(curNode))  // unlist this listitem
     {
       bool bOutOfList;
       do
       {
-        res = PopListItem(curNode, &bOutOfList);
+        res = PopListItem(GetAsDOMNode(curNode), &bOutOfList);
         NS_ENSURE_SUCCESS(res, res);
       } while (!bOutOfList); // keep popping it out until it's not in a list anymore
     }
     else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, move list items out
     {
-      res = RemoveListStructure(curNode);
+      res = RemoveListStructure(GetAsDOMNode(curNode));
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -5981,95 +5963,70 @@ nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode,
 
 
 nsresult
-nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
-                                    bool aEntireList,
-                                    bool aDontTouchContent)
+nsHTMLEditRules::GetListActionNodes(nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
+                                    EntireList aEntireList,
+                                    TouchContent aTouchContent)
 {
-  nsresult res = NS_OK;
-
   NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
   nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-  // added this in so that ui code can ask to change an entire list, even if selection
-  // is only in part of it.  used by list item dialog.
-  if (aEntireList)
-  {
+
+  // Added this in so that ui code can ask to change an entire list, even if
+  // selection is only in part of it.  used by list item dialog.
+  if (aEntireList == EntireList::yes) {
     uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-      nsCOMPtr<nsIDOMNode> commonParent, parent, tmp;
-      range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
-      if (commonParent)
-      {
-        parent = commonParent;
-        while (parent)
-        {
-          if (nsHTMLEditUtils::IsList(parent))
-          {
-            outArrayOfNodes.AppendObject(parent);
-            break;
-          }
-          parent->GetParentNode(getter_AddRefs(tmp));
-          parent = tmp;
+      for (nsCOMPtr<nsINode> parent = range->GetCommonAncestor();
+           parent; parent = parent->GetParentNode()) {
+        if (nsHTMLEditUtils::IsList(parent)) {
+          aOutArrayOfNodes.AppendElement(parent);
+          break;
         }
       }
     }
-    // if we didn't find any nodes this way, then try the normal way.  perhaps the
-    // selection spans multiple lists but with no common list parent.
-    if (outArrayOfNodes.Count()) return NS_OK;
-  }
-
-  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
-  for (int32_t i = 0; i < outArrayOfNodes.Count(); i++) {
-    nsCOMPtr<nsINode> node = do_QueryInterface(outArrayOfNodes[i]);
-    NS_ENSURE_STATE(node || !outArrayOfNodes[i]);
-    arrayOfNodes.AppendElement(node);
+    // If we didn't find any nodes this way, then try the normal way.  Perhaps
+    // the selection spans multiple lists but with no common list parent.
+    if (aOutArrayOfNodes.Length()) {
+      return NS_OK;
+    }
   }
 
   {
     // We don't like other people messing with our selection!
-    NS_ENSURE_STATE(mHTMLEditor);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
 
     // contruct a list of nodes to act on.
-    res = GetNodesFromSelection(*selection, EditAction::makeList,
-                                arrayOfNodes, aDontTouchContent ?
-                                TouchContent::no : TouchContent::yes);
+    nsresult res = GetNodesFromSelection(*selection, EditAction::makeList,
+                                         aOutArrayOfNodes, aTouchContent);
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  // pre process our list of nodes...
-  int32_t listCount = arrayOfNodes.Length();
-  int32_t i;
-  for (i=listCount-1; i>=0; i--)
-  {
-    nsCOMPtr<nsINode> testNode = arrayOfNodes[i];
+  // Pre-process our list of nodes
+  for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
+    nsCOMPtr<nsINode> testNode = aOutArrayOfNodes[i];
 
     // Remove all non-editable nodes.  Leave them be.
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (!mHTMLEditor->IsEditable(testNode))
-    {
-      arrayOfNodes.RemoveElementAt(i);
+    if (!mHTMLEditor->IsEditable(testNode)) {
+      aOutArrayOfNodes.RemoveElementAt(i);
       continue;
     }
 
-    // scan for table elements and divs.  If we find table elements other than table,
-    // replace it with a list of any editable non-table content.
-    if (nsHTMLEditUtils::IsTableElementButNotTable(testNode))
-    {
-      int32_t j=i;
-      arrayOfNodes.RemoveElementAt(i);
-      GetInnerContent(*testNode, arrayOfNodes, &j, Lists::no);
+    // Scan for table elements and divs.  If we find table elements other than
+    // table, replace it with a list of any editable non-table content.
+    if (nsHTMLEditUtils::IsTableElementButNotTable(testNode)) {
+      int32_t j = i;
+      aOutArrayOfNodes.RemoveElementAt(i);
+      GetInnerContent(*testNode, aOutArrayOfNodes, &j, Lists::no);
     }
   }
 
-  // if there is only one node in the array, and it is a list, div, or blockquote,
-  // then look inside of it until we find inner list or content.
-  LookInsideDivBQandList(arrayOfNodes);
-  outArrayOfNodes.Clear();
-  for (auto& node : arrayOfNodes) {
-    outArrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
+  // If there is only one node in the array, and it is a list, div, or
+  // blockquote, then look inside of it until we find inner list or content.
+  LookInsideDivBQandList(aOutArrayOfNodes);
+
   return NS_OK;
 }
 
