@@ -1768,6 +1768,46 @@
         "url": "/html/rendering/bindings/the-select-element-0/option-label.html"
       },
       {
+        "path": "html/rendering/bindings/the-textarea-element-0/cols-default.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/cols-default.html"
+      },
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/cols-zero.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/cols-zero.html"
+      },
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/rows-default.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/rows-default.html"
+      },
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/rows-zero.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/rows-zero.html"
+      },
+      {
         "path": "html/rendering/non-replaced-elements/flow-content-0/figure.html",
         "references": [
           [
@@ -10910,6 +10950,10 @@
       {
         "path": "encoding/api-basics.html",
         "url": "/encoding/api-basics.html"
+      },
+      {
+        "path": "encoding/api-invalid-label.html",
+        "url": "/encoding/api-invalid-label.html"
       },
       {
         "path": "encoding/api-replacement-encodings.html",
@@ -21008,6 +21052,54 @@
         "url": "/html/rendering/bindings/the-select-element-0/option-label.html"
       }
     ],
+    "html/rendering/bindings/the-textarea-element-0/cols-default.html": [
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/cols-default.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/cols-default.html"
+      }
+    ],
+    "html/rendering/bindings/the-textarea-element-0/cols-zero.html": [
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/cols-zero.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/cols-zero.html"
+      }
+    ],
+    "html/rendering/bindings/the-textarea-element-0/rows-default.html": [
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/rows-default.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/rows-default.html"
+      }
+    ],
+    "html/rendering/bindings/the-textarea-element-0/rows-zero.html": [
+      {
+        "path": "html/rendering/bindings/the-textarea-element-0/rows-zero.html",
+        "references": [
+          [
+            "/html/rendering/bindings/the-textarea-element-0/textarea-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/bindings/the-textarea-element-0/rows-zero.html"
+      }
+    ],
     "html/rendering/non-replaced-elements/flow-content-0/figure.html": [
       {
         "path": "html/rendering/non-replaced-elements/flow-content-0/figure.html",
@@ -24729,7 +24821,7 @@
       }
     ]
   },
-  "rev": "89b6e2bc460316c7f273712d22f0b2d3a3d0c5be",
+  "rev": "20aef05e164be1ccbbd8f66192f01e778b5e5c18",
   "url_base": "/",
   "version": 2
 }
