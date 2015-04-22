@@ -4636,18 +4636,18 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   *aHandled = true;
-  nsTArray<nsCOMPtr<nsINode>> array;
-  res = GetNodesFromSelection(*aSelection, EditAction::align, array);
+  nsTArray<nsCOMPtr<nsINode>> nodeArray;
+  res = GetNodesFromSelection(*aSelection, EditAction::align, nodeArray);
   NS_ENSURE_SUCCESS(res, res);
 
   // if we don't have any nodes, or we have only a single br, then we are
   // creating an empty alignment div.  We have to do some different things for these.
   bool emptyDiv = false;
-  int32_t listCount = array.Length();
+  int32_t listCount = nodeArray.Length();
   if (!listCount) emptyDiv = true;
   if (listCount == 1)
   {
-    nsCOMPtr<nsINode> theNode = array[0];
+    nsCOMPtr<nsINode> theNode = nodeArray[0];
 
     if (nsHTMLEditUtils::SupportsAlignAttr(GetAsDOMNode(theNode))) {
       // the node is a table element, an horiz rule, a paragraph, a div
@@ -4670,9 +4670,9 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
       //
       // XXX: It seems a little error prone for the emptyDiv special
       //      case code to assume that the start node of the selection
-      //      is the parent of the single node in the arrayOfNodes, as
+      //      is the parent of the single node in the nodeArray, as
       //      the paragraph above points out. Do we rely on the selection
-      //      start node because of the fact that arrayOfNodes can be empty?
+      //      start node because of the fact that nodeArray can be empty?
       //      We should probably revisit this issue. - kin
 
       nsCOMPtr<nsIDOMNode> parent;
@@ -4740,14 +4740,8 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
 
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-
   nsTArray<bool> transitionList;
-  res = MakeTransitionList(arrayOfNodes, transitionList);
-  NS_ENSURE_SUCCESS(res, res);                                 
+  MakeTransitionList(nodeArray, transitionList);
 
   // Ok, now go through all the nodes and give them an align attrib or put them in a div, 
   // or whatever is appropriate.  Wohoo!
@@ -4757,7 +4751,7 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
   bool useCSS = mHTMLEditor->IsCSSEnabled();
   for (int32_t i = 0; i < listCount; ++i) {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+    nsCOMPtr<nsIDOMNode> curNode = nodeArray[i]->AsDOMNode();
     nsCOMPtr<nsIContent> curContent = do_QueryInterface(curNode);
     NS_ENSURE_STATE(curContent);
 
@@ -6266,38 +6260,27 @@ nsHTMLEditRules::GetNodesFromSelection(Selection& aSelection,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// MakeTransitionList: detect all the transitions in the array, where a 
-//                     transition means that adjacent nodes in the array 
-//                     don't have the same parent.
-//                       
-nsresult 
-nsHTMLEditRules::MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
-                                    nsTArray<bool> &inTransitionArray)
+///////////////////////////////////////////////////////////////////////////////
+// MakeTransitionList: Detect all the transitions in the array, where a
+//                     transition means that adjacent nodes in the array don't
+//                     have the same parent.
+void
+nsHTMLEditRules::MakeTransitionList(nsTArray<nsCOMPtr<nsINode>>& aNodeArray,
+                                    nsTArray<bool>& aTransitionArray)
 {
-  uint32_t listCount = inArrayOfNodes.Count();
-  inTransitionArray.EnsureLengthAtLeast(listCount);
-  uint32_t i;
-  nsCOMPtr<nsIDOMNode> prevElementParent;
-  nsCOMPtr<nsIDOMNode> curElementParent;
-  
-  for (i=0; i<listCount; i++)
-  {
-    nsIDOMNode* transNode = inArrayOfNodes[i];
-    transNode->GetParentNode(getter_AddRefs(curElementParent));
-    if (curElementParent != prevElementParent)
-    {
-      // different parents, or separated by <br>: transition point
-      inTransitionArray[i] = true;
+  nsCOMPtr<nsINode> prevParent;
+
+  aTransitionArray.EnsureLengthAtLeast(aNodeArray.Length());
+  for (uint32_t i = 0; i < aNodeArray.Length(); i++) {
+    if (aNodeArray[i]->GetParentNode() != prevParent) {
+      // Different parents: transition point
+      aTransitionArray[i] = true;
+    } else {
+      // Same parents: these nodes grew up together
+      aTransitionArray[i] = false;
     }
-    else
-    {
-      // same parents: these nodes grew up together
-      inTransitionArray[i] = false;
-    }
-    prevElementParent = curElementParent;
+    prevParent = aNodeArray[i]->GetParentNode();
   }
-  return NS_OK;
 }
 
 
