@@ -65,6 +65,9 @@ extern "C" {
 
 const char** mozilla_sampler_get_features();
 
+void mozilla_sampler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
+                                     uint32_t *aGeneration);
+
 void mozilla_sampler_init(void* stackTop);
 
 void mozilla_sampler_shutdown();

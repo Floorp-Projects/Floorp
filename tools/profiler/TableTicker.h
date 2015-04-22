@@ -210,6 +210,8 @@ class TableTicker: public Sampler {
   bool DisplayListDump() const { return mDisplayListDump; }
   bool ProfileRestyle() const { return mProfileRestyle; }
 
+  void GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration);
+
 protected:
   // Called within a signal. This function must be reentrant
   virtual void InplaceTick(TickSample* sample);
