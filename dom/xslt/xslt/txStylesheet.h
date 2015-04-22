@@ -13,7 +13,6 @@
 #include "nsISupportsImpl.h"
 
 class txInstruction;
-class txToplevelItem;
 class txTemplateItem;
 class txVariableItem;
 class txStripSpaceItem;

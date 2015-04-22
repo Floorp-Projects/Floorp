@@ -24,7 +24,6 @@
 */
 
 class nsIAtom;
-class txIParseContext;
 class txIMatchContext;
 class txIEvalContext;
 class txNodeSet;

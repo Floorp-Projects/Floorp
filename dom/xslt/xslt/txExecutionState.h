@@ -21,7 +21,6 @@
 class txAOutputHandlerFactory;
 class txAXMLEventHandler;
 class txInstruction;
-class txIOutputHandlerFactory;
 
 class txLoadedDocumentEntry : public nsStringHashKey
 {

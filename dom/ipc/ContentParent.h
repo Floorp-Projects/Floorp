@@ -30,9 +30,7 @@
 class mozIApplication;
 class nsConsoleService;
 class nsICycleCollectorLogSink;
-class nsIDOMBlob;
 class nsIDumpGCAndCCLogsCallback;
-class nsIMemoryReporter;
 class nsITimer;
 class ParentIdleListener;
 class nsIWidget;
@@ -48,7 +46,6 @@ class TestShellParent;
 } // namespace ipc
 
 namespace jsipc {
-class JavaScriptShared;
 class PJavaScriptParent;
 }
 

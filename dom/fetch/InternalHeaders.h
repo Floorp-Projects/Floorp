@@ -14,8 +14,6 @@
 #include "nsClassHashtable.h"
 #include "nsWrapperCache.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
 
 class ErrorResult;
@@ -23,7 +21,6 @@ class ErrorResult;
 namespace dom {
 
 template<typename T> class MozMap;
-class HeadersOrByteStringSequenceSequenceOrByteStringMozMap;
 
 class InternalHeaders final
 {

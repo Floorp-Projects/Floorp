@@ -13,7 +13,6 @@ class nsIContent;
 class nsIDOMMouseEvent;
 class nsIEditor;
 class nsINode;
-class nsPIDOMWindow;
 class nsPresContext;
 class nsISelection;
 

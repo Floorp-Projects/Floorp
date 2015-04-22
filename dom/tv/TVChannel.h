@@ -18,7 +18,6 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-class TVProgram;
 class TVSource;
 
 class TVChannel final : public DOMEventTargetHelper

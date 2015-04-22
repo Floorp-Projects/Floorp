@@ -20,7 +20,6 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothGattCharacteristic;
 class BluetoothSignal;
-class BluetoothValue;
 
 class BluetoothGattDescriptor final : public nsISupports
                                     , public nsWrapperCache

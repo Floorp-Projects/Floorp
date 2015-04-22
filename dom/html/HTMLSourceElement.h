@@ -17,7 +17,6 @@ class nsMediaList;
 namespace mozilla {
 namespace dom {
 
-class ResponsiveImageSelector;
 class HTMLSourceElement final : public nsGenericHTMLElement,
                                 public nsIDOMHTMLSourceElement
 {

@@ -16,7 +16,6 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
-class AttributeValueTemplate;
 class Expr;
 class txExprLexer;
 class FunctionCall;
@@ -26,7 +25,6 @@ class PredicateList;
 class Token;
 class txIParseContext;
 class txNodeTest;
-class txNodeTypeTest;
 
 class txExprParser
 {

@@ -21,9 +21,6 @@ class nsIContent;
 class nsINode;
 
 namespace mozilla {
-
-class ErrorResult;
-
 namespace dom {
 
 class OwningNodeOrHTMLCollection;

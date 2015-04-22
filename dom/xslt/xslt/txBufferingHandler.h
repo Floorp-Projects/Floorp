@@ -12,7 +12,6 @@
 #include "nsAutoPtr.h"
 
 class txOutputTransaction;
-class txCharacterTransaction;
 
 class txResultBuffer
 {

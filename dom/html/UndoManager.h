@@ -16,7 +16,6 @@
 #include "mozilla/dom/Nullable.h"
 
 class nsITransactionManager;
-class nsIMutationObserver;
 
 namespace mozilla {
 class ErrorResult;

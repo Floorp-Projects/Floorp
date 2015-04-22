@@ -34,7 +34,6 @@ extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
 class nsIContent;
-class nsIRDFCompositeDataSource;
 class nsXULTemplateResultRDF;
 
 /**
