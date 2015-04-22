@@ -49,13 +49,10 @@ function startTest(test, token)
   );
 
   var gotEncrypted = false;
-  var gotPlaying = false;
 
   v.addEventListener("encrypted", function(ev) {
     gotEncrypted = true;
   });
-
-  v.addEventListener("playing", function () { gotPlaying = true; });
 
   v.addEventListener("loadedmetadata", function() {
     ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
@@ -67,7 +64,6 @@ function startTest(test, token)
     ok(true, TimeStamp(token) + " got ended event");
 
     ok(gotEncrypted, TimeStamp(token) + " encrypted event should have fired");
-    ok(gotPlaying, TimeStamp(token) + " playing event should have fired");
 
     ok(Math.abs(test.duration - v.duration) < 0.1,
        TimeStamp(token) + " Duration of video should be corrrect");
