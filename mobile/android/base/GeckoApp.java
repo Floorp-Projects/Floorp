@@ -1197,7 +1197,23 @@ public abstract class GeckoApp
             return;
         }
 
-        // Register for events
+        if (GeckoThread.isLaunched()) {
+            // This happens when the GeckoApp activity is destroyed by Android
+            // without killing the entire application (see Bug 769269).
+            mIsRestoringActivity = true;
+            Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
+
+        } else {
+            final String uri = getURIFromIntent(intent);
+
+            GeckoThread.ensureInit(args, action,
+                    TextUtils.isEmpty(uri) ? null : uri,
+                    /* debugging */ ACTION_DEBUG.equals(action));
+        }
+
+        // GeckoThread has to register for "Gecko:Ready" first, so GeckoApp registers
+        // for events after initializing GeckoThread but before launching it.
+
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
             "Gecko:Ready",
             "Gecko:DelayedStartup",
@@ -1231,36 +1247,7 @@ public abstract class GeckoApp
             mWebappEventListener.registerEvents();
         }
 
-        if (GeckoThread.isCreated()) {
-            // This happens when the GeckoApp activity is destroyed by Android
-            // without killing the entire application (see Bug 769269).
-            mIsRestoringActivity = true;
-            Telemetry.addToHistogram("FENNEC_RESTORING_ACTIVITY", 1);
-
-        } else {
-            final String uri = getURIFromIntent(intent);
-
-            GeckoThread.setArgs(args);
-            GeckoThread.setAction(action);
-            GeckoThread.setUri(TextUtils.isEmpty(uri) ? null : uri);
-        }
-
-        if (!ACTION_DEBUG.equals(action) &&
-                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
-                                                   GeckoThread.LaunchState.Launched)) {
-            GeckoThread.createAndStart();
-
-        } else if (ACTION_DEBUG.equals(action) &&
-                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
-                                                   GeckoThread.LaunchState.WaitForDebugger)) {
-            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launched);
-                    GeckoThread.createAndStart();
-                }
-            }, 1000 * 5 /* 5 seconds */);
-        }
+        GeckoThread.launch();
 
         Bundle stateBundle = ContextUtils.getBundleExtra(getIntent(), EXTRA_STATE_BUNDLE);
         if (stateBundle != null) {
@@ -1588,12 +1575,16 @@ public abstract class GeckoApp
         }, 50);
 
         if (mIsRestoringActivity) {
-            GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
             Tab selectedTab = Tabs.getInstance().getSelectedTab();
-            if (selectedTab != null)
+            if (selectedTab != null) {
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
-            geckoConnected();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+            }
+
+            if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+                geckoConnected();
+                GeckoAppShell.sendEventToGecko(
+                        GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+            }
         }
 
         if (ACTION_ALERT_CALLBACK.equals(action)) {
