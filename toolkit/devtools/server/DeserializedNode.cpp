@@ -15,13 +15,13 @@ DeserializedEdge::DeserializedEdge()
   , name(nullptr)
 { }
 
-DeserializedEdge::DeserializedEdge(DeserializedEdge &&rhs)
+DeserializedEdge::DeserializedEdge(DeserializedEdge&& rhs)
 {
   referent = rhs.referent;
   name = rhs.name;
 }
 
-DeserializedEdge &DeserializedEdge::operator=(DeserializedEdge &&rhs)
+DeserializedEdge& DeserializedEdge::operator=(DeserializedEdge&& rhs)
 {
   MOZ_ASSERT(&rhs != this);
   this->~DeserializedEdge();
@@ -30,7 +30,7 @@ DeserializedEdge &DeserializedEdge::operator=(DeserializedEdge &&rhs)
 }
 
 bool
-DeserializedEdge::init(const protobuf::Edge &edge, HeapSnapshot &owner)
+DeserializedEdge::init(const protobuf::Edge& edge, HeapSnapshot& owner)
 {
   // Although the referent property is optional in the protobuf format for
   // future compatibility, we can't semantically have an edge to nowhere and
@@ -50,7 +50,7 @@ DeserializedEdge::init(const protobuf::Edge &edge, HeapSnapshot &owner)
 }
 
 /* static */ UniquePtr<DeserializedNode>
-DeserializedNode::Create(const protobuf::Node &node, HeapSnapshot &owner)
+DeserializedNode::Create(const protobuf::Node& node, HeapSnapshot& owner)
 {
   if (!node.has_id())
     return nullptr;
@@ -88,10 +88,10 @@ DeserializedNode::Create(const protobuf::Node &node, HeapSnapshot &owner)
 }
 
 DeserializedNode::DeserializedNode(NodeId id,
-                                   const char16_t *typeName,
+                                   const char16_t* typeName,
                                    uint64_t size,
-                                   EdgeVector &&edges,
-                                   HeapSnapshot &owner)
+                                   EdgeVector&& edges,
+                                   HeapSnapshot& owner)
   : id(id)
   , typeName(typeName)
   , size(size)
@@ -99,7 +99,7 @@ DeserializedNode::DeserializedNode(NodeId id,
   , owner(&owner)
 { }
 
-DeserializedNode::DeserializedNode(NodeId id, const char16_t *typeName, uint64_t size)
+DeserializedNode::DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
   : id(id)
   , typeName(typeName)
   , size(size)
@@ -107,8 +107,8 @@ DeserializedNode::DeserializedNode(NodeId id, const char16_t *typeName, uint64_t
   , owner(nullptr)
 { }
 
-DeserializedNode &
-DeserializedNode::getEdgeReferent(const DeserializedEdge &edge)
+DeserializedNode&
+DeserializedNode::getEdgeReferent(const DeserializedEdge& edge)
 {
   auto ptr = owner->nodes.lookup(edge.referent);
   MOZ_ASSERT(ptr);
@@ -126,7 +126,7 @@ using mozilla::devtools::DeserializedEdge;
 const char16_t Concrete<DeserializedNode>::concreteTypeName[] =
   MOZ_UTF16("mozilla::devtools::DeserializedNode");
 
-const char16_t *
+const char16_t*
 Concrete<DeserializedNode>::typeName() const
 {
   return get().typeName;
@@ -155,23 +155,23 @@ public:
     settle();
   }
 
-  bool init(DeserializedNode &node)
+  bool init(DeserializedNode& node)
   {
     if (!edges.reserve(node.edges.length()))
       return false;
 
-    for (DeserializedEdge *edgep = node.edges.begin();
+    for (DeserializedEdge* edgep = node.edges.begin();
          edgep != node.edges.end();
          edgep++)
     {
-      char16_t *name = nullptr;
+      char16_t* name = nullptr;
       if (edgep->name) {
         name = NS_strdup(edgep->name);
         if (!name)
           return false;
       }
 
-      DeserializedNode &referent = node.getEdgeReferent(*edgep);
+      DeserializedNode& referent = node.getEdgeReferent(*edgep);
       edges.infallibleAppend(mozilla::Move(SimpleEdge(name, Node(&referent))));
     }
 

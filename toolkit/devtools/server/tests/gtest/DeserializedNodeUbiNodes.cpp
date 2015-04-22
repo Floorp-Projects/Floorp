@@ -17,19 +17,19 @@ using testing::ReturnRef;
 // A mock DeserializedNode for testing.
 struct MockDeserializedNode : public DeserializedNode
 {
-  MockDeserializedNode(NodeId id, const char16_t *typeName, uint64_t size)
+  MockDeserializedNode(NodeId id, const char16_t* typeName, uint64_t size)
     : DeserializedNode(id, typeName, size)
   { }
 
-  bool addEdge(DeserializedEdge &&edge)
+  bool addEdge(DeserializedEdge&& edge)
   {
     return edges.append(Move(edge));
   }
 
-  MOCK_METHOD1(getEdgeReferent, DeserializedNode &(const DeserializedEdge &));
+  MOCK_METHOD1(getEdgeReferent, DeserializedNode&(const DeserializedEdge&));
 };
 
-size_t fakeMallocSizeOf(const void *) {
+size_t fakeMallocSizeOf(const void*) {
   EXPECT_TRUE(false);
   MOZ_ASSERT_UNREACHABLE("fakeMallocSizeOf should never be called because "
                          "DeserializedNodes report the deserialized size.");
@@ -37,13 +37,13 @@ size_t fakeMallocSizeOf(const void *) {
 }
 
 DEF_TEST(DeserializedNodeUbiNodes, {
-    const char16_t *typeName = MOZ_UTF16("TestTypeName");
+    const char16_t* typeName = MOZ_UTF16("TestTypeName");
 
     NodeId id = 1L << 33;
     uint64_t size = 1L << 60;
     MockDeserializedNode mocked(id, typeName, size);
 
-    DeserializedNode &deserialized = mocked;
+    DeserializedNode& deserialized = mocked;
     JS::ubi::Node ubi(&deserialized);
 
     // Test the ubi::Node accessors.

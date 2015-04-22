@@ -326,7 +326,7 @@ JS::dbg::SetDebuggerMallocSizeOf(JSRuntime* rt, mozilla::MallocSizeOf mallocSize
 }
 
 JS_PUBLIC_API(mozilla::MallocSizeOf)
-JS::dbg::GetDebuggerMallocSizeOf(JSRuntime *rt)
+JS::dbg::GetDebuggerMallocSizeOf(JSRuntime* rt)
 {
     return rt->debuggerMallocSizeOf;
 }

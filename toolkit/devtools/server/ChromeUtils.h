@@ -39,7 +39,7 @@ public:
   // Write the given `JS::ubi::Node` to the core dump. The given `EdgePolicy`
   // dictates whether its outgoing edges should also be written to the core
   // dump, or excluded.
-  virtual bool writeNode(const JS::ubi::Node &node,
+  virtual bool writeNode(const JS::ubi::Node& node,
                          EdgePolicy includeEdges) = 0;
 };
 
@@ -49,12 +49,12 @@ public:
 // non-null, only capture the sub-graph within the zone set, otherwise capture
 // the whole heap graph. Returns false on failure.
 bool
-WriteHeapGraph(JSContext *cx,
-               const JS::ubi::Node &node,
-               CoreDumpWriter &writer,
+WriteHeapGraph(JSContext* cx,
+               const JS::ubi::Node& node,
+               CoreDumpWriter& writer,
                bool wantNames,
-               JS::ZoneSet *zones,
-               JS::AutoCheckCannotGC &noGC);
+               JS::ZoneSet* zones,
+               JS::AutoCheckCannotGC& noGC);
 
 
 class HeapSnapshot;
@@ -63,16 +63,16 @@ class HeapSnapshot;
 class ChromeUtils
 {
 public:
-  static void SaveHeapSnapshot(dom::GlobalObject &global,
-                               JSContext *cx,
-                               const nsAString &filePath,
-                               const dom::HeapSnapshotBoundaries &boundaries,
-                               ErrorResult &rv);
+  static void SaveHeapSnapshot(dom::GlobalObject& global,
+                               JSContext* cx,
+                               const nsAString& filePath,
+                               const dom::HeapSnapshotBoundaries& boundaries,
+                               ErrorResult& rv);
 
-  static already_AddRefed<HeapSnapshot> ReadHeapSnapshot(dom::GlobalObject &global,
-                                                         JSContext *cx,
-                                                         const nsAString &filePath,
-                                                         ErrorResult &rv);
+  static already_AddRefed<HeapSnapshot> ReadHeapSnapshot(dom::GlobalObject& global,
+                                                         JSContext* cx,
+                                                         const nsAString& filePath,
+                                                         ErrorResult& rv);
 };
 
 } // namespace devtools

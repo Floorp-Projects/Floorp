@@ -14,7 +14,7 @@ DEF_TEST(DoesntCrossZoneBoundaries, {
                                                       nullptr,
                                                       JS::FireOnNewGlobalHook));
     ASSERT_TRUE(newGlobal);
-    JS::Zone *newZone = nullptr;
+    JS::Zone* newZone = nullptr;
     {
       JSAutoCompartment ac(cx, newGlobal);
       ASSERT_TRUE(JS_InitStandardClasses(cx, newGlobal));

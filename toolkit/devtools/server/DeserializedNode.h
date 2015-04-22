@@ -37,18 +37,18 @@ using NodeId = uint64_t;
 struct DeserializedEdge {
   NodeId         referent;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
-  const char16_t *name;
+  const char16_t* name;
 
   explicit DeserializedEdge();
-  DeserializedEdge(DeserializedEdge &&rhs);
-  DeserializedEdge &operator=(DeserializedEdge &&rhs);
+  DeserializedEdge(DeserializedEdge&& rhs);
+  DeserializedEdge& operator=(DeserializedEdge&& rhs);
 
   // Initialize this `DeserializedEdge` from the given `protobuf::Edge` message.
-  bool init(const protobuf::Edge &edge, HeapSnapshot &owner);
+  bool init(const protobuf::Edge& edge, HeapSnapshot& owner);
 
 private:
-  DeserializedEdge(const DeserializedEdge &) = delete;
-  DeserializedEdge& operator=(const DeserializedEdge &) = delete;
+  DeserializedEdge(const DeserializedEdge&) = delete;
+  DeserializedEdge& operator=(const DeserializedEdge&) = delete;
 };
 
 // A `DeserializedNode` is a node in the heap graph that we deserialized from a
@@ -59,35 +59,35 @@ struct DeserializedNode {
 
   NodeId         id;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
-  const char16_t *typeName;
+  const char16_t* typeName;
   uint64_t       size;
   EdgeVector     edges;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
-  HeapSnapshot   *owner;
+  HeapSnapshot*  owner;
 
   // Create a new `DeserializedNode` from the given `protobuf::Node` message.
-  static UniquePtr<DeserializedNode> Create(const protobuf::Node &node,
-                                            HeapSnapshot &owner);
+  static UniquePtr<DeserializedNode> Create(const protobuf::Node& node,
+                                            HeapSnapshot& owner);
 
   DeserializedNode(NodeId id,
-                   const char16_t *typeName,
+                   const char16_t* typeName,
                    uint64_t size,
-                   EdgeVector &&edges,
-                   HeapSnapshot &owner);
+                   EdgeVector&& edges,
+                   HeapSnapshot& owner);
   virtual ~DeserializedNode() { }
 
   // Get a borrowed reference to the given edge's referent. This method is
   // virtual to provide a hook for gmock and gtest.
-  virtual DeserializedNode &getEdgeReferent(const DeserializedEdge &edge);
+  virtual DeserializedNode& getEdgeReferent(const DeserializedEdge& edge);
 
 protected:
   // This is only for use with `MockDeserializedNode` in testing.
-  DeserializedNode(NodeId id, const char16_t *typeName, uint64_t size);
+  DeserializedNode(NodeId id, const char16_t* typeName, uint64_t size);
 
 private:
-  DeserializedNode(const DeserializedNode &) = delete;
-  DeserializedNode &operator=(const DeserializedNode &) = delete;
+  DeserializedNode(const DeserializedNode&) = delete;
+  DeserializedNode& operator=(const DeserializedNode&) = delete;
 };
 
 } // namespace devtools
@@ -103,21 +103,21 @@ template<>
 struct Concrete<DeserializedNode> : public Base
 {
 protected:
-  explicit Concrete(DeserializedNode *ptr) : Base(ptr) { }
-  DeserializedNode &get() const {
-    return *static_cast<DeserializedNode *>(ptr);
+  explicit Concrete(DeserializedNode* ptr) : Base(ptr) { }
+  DeserializedNode& get() const {
+    return *static_cast<DeserializedNode*>(ptr);
   }
 
 public:
   static const char16_t concreteTypeName[];
 
-  static void construct(void *storage, DeserializedNode *ptr) {
+  static void construct(void* storage, DeserializedNode* ptr) {
     new (storage) Concrete(ptr);
   }
 
   Id identifier() const override { return get().id; }
   bool isLive() const override { return false; }
-  const char16_t *typeName() const override;
+  const char16_t* typeName() const override;
   size_t size(mozilla::MallocSizeOf mallocSizeof) const override;
 
   // We ignore the `bool wantNames` parameter because we can't control whether
