@@ -14,8 +14,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
 
-class mozIApplication;
-
 namespace mozilla {
 
 /**

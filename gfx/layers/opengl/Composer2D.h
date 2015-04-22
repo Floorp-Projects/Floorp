@@ -27,11 +27,6 @@
  */
 
 namespace mozilla {
-
-namespace gfx {
-class Matrix;
-}
-
 namespace layers {
 
 class Layer;

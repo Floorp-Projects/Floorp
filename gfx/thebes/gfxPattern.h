@@ -17,8 +17,6 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 
-class gfxContext;
-class gfxASurface;
 struct gfxRGBA;
 typedef struct _cairo_pattern cairo_pattern_t;
 

@@ -51,10 +51,6 @@
 #include "gfx2DGlue.h"
 #include "GeckoProfiler.h"
 
-class nsIntRegion;
-class nsIRunnable;
-class nsIThread;
-
 namespace android {
     class GraphicBuffer;
 }

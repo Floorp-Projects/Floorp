@@ -36,8 +36,6 @@
 // #define DEBUG_ANDROID_EVENTS
 // #define DEBUG_ANDROID_WIDGET
 
-class nsWindow;
-class nsIDOMMozSmsMessage;
 class nsIObserver;
 class Task;
 
@@ -61,10 +59,6 @@ namespace mobilemessage {
 struct SmsFilterData;
 } // namespace mobilemessage
 } // namespace dom
-
-namespace layers {
-class CompositorParent;
-} // namespace layers
 
 // The order and number of the members in this structure must correspond
 // to the attrsAppearance array in GeckoAppShell.getSystemColors()

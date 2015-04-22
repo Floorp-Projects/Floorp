@@ -13,8 +13,6 @@
 #include "nsIFile.h"
 #include "nsZipArchive.h"
 
-class nsIURI;
-
 namespace mozilla {
 
 class Omnijar

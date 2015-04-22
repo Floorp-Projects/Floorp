@@ -44,7 +44,6 @@ struct ID2D1Device;
 struct IDWriteRenderingParams;
 
 class GrContext;
-struct GrGLInterface;
 
 struct CGContext;
 typedef struct CGContext *CGContextRef;

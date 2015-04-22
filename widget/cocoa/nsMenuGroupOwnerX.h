@@ -16,12 +16,10 @@
 #include "nsString.h"
 
 
-class nsMenuX;
 class nsMenuItemX;
 class nsChangeObserver;
 class nsIWidget;
 class nsIContent;
-class nsIDocument;
 
 class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver
 {

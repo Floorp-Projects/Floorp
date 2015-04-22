@@ -31,8 +31,6 @@
 #include <ui/Fence.h>
 #endif
 
-class gfxReusableSurfaceWrapper;
-
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;

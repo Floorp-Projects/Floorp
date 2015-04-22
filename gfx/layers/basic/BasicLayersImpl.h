@@ -25,7 +25,6 @@ class DrawTarget;
 namespace layers {
 
 class AutoMoz2DMaskData;
-class BasicContainerLayer;
 class Layer;
 
 class AutoSetOperator {

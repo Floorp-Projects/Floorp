@@ -21,10 +21,6 @@
 
 namespace mozilla {
 
-namespace layers {
-class Layer;
-}
-
 typedef void * EGLDisplay;
 typedef void * EGLSurface;
 

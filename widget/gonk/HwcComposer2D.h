@@ -38,7 +38,6 @@ namespace gl {
 
 namespace layers {
 class CompositorParent;
-class ContainerLayer;
 class Layer;
 }
 

@@ -18,14 +18,6 @@
 
 namespace mozilla {
 namespace gfx {
-class DrawTarget;
-class SourceSurface;
-class ScaledFont;
-}
-}
-
-namespace mozilla {
-namespace gfx {
 
 inline Rect ToRect(const gfxRect &aRect)
 {

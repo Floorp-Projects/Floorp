@@ -59,7 +59,6 @@ extern PRLogModuleInfo *gWidgetDrawLog;
 
 #endif /* MOZ_LOGGING */
 
-class nsIdleService;
 class QCloseEvent;
 class QFocusEvent;
 class QHideEvent;

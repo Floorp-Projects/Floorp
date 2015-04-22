@@ -30,8 +30,6 @@
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/gfx/Rect.h"
 
-class gfxReusableSurfaceWrapper;
-
 namespace mozilla {
 namespace gl {
 class SharedSurface;
@@ -43,7 +41,6 @@ class Shmem;
 namespace layers {
 
 class Compositor;
-class CompositableHost;
 class CompositableParentManager;
 class SurfaceDescriptor;
 class SharedSurfaceDescriptor;
