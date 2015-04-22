@@ -246,9 +246,6 @@ let SessionSaverInternal = {
    * Write the given state object to disk.
    */
   _writeState: function (state) {
-    // Inform observers
-    notify(null, "sessionstore-state-write");
-
     stopWatchStart("WRITE_STATE_LONGEST_OP_MS");
 
     // We update the time stamp before writing so that we don't write again
