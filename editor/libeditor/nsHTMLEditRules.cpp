@@ -1061,22 +1061,19 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
   // using "x" as an uninitialized value, since "" is meaningful
   nsAutoString formatStr(NS_LITERAL_STRING("x")); 
   
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsresult res = GetParagraphFormatNodes(arrayOfNodes, true);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  nsresult res = GetParagraphFormatNodes(arrayOfNodes, TouchContent::no);
   NS_ENSURE_SUCCESS(res, res);
 
   // post process list.  We need to replace any block nodes that are not format
   // nodes with their content.  This is so we only have to look "up" the hierarchy
   // to find format nodes, instead of both up and down.
-  int32_t listCount = arrayOfNodes.Count();
-  int32_t i;
-  for (i=listCount-1; i>=0; i--)
-  {
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+  for (int32_t i = arrayOfNodes.Length() - 1; i >= 0; i--) {
+    auto& curNode = arrayOfNodes[i];
     nsAutoString format;
     // if it is a known format node we have it easy
-    if (IsBlockNode(curNode) && !nsHTMLEditUtils::IsFormatNode(curNode))
-    {
+    if (IsBlockNode(GetAsDOMNode(curNode)) &&
+        !nsHTMLEditUtils::IsFormatNode(curNode)) {
       // arrayOfNodes.RemoveObject(curNode);
       res = AppendInnerFormatNodes(arrayOfNodes, curNode);
       NS_ENSURE_SUCCESS(res, res);
@@ -1085,10 +1082,8 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
   
   // we might have an empty node list.  if so, find selection parent
   // and put that on the list
-  listCount = arrayOfNodes.Count();
-  if (!listCount)
-  {
-    nsCOMPtr<nsIDOMNode> selNode;
+  if (!arrayOfNodes.Length()) {
+    nsCOMPtr<nsINode> selNode;
     int32_t selOffset;
     NS_ENSURE_STATE(mHTMLEditor);
     nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
@@ -1097,8 +1092,7 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
     res = mHTMLEditor->GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(selNode, NS_ERROR_NULL_POINTER);
-    arrayOfNodes.AppendObject(selNode);
-    listCount = 1;
+    arrayOfNodes.AppendElement(selNode);
   }
 
   // remember root node
@@ -1107,15 +1101,12 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
   NS_ENSURE_TRUE(rootElem, NS_ERROR_NULL_POINTER);
 
   // loop through the nodes in selection and examine their paragraph format
-  for (i=listCount-1; i>=0; i--)
-  {
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+  for (auto& curNode : Reversed(arrayOfNodes)) {
     nsAutoString format;
     // if it is a known format node we have it easy
-    if (nsHTMLEditUtils::IsFormatNode(curNode))
-      GetFormatString(curNode, format);
-    else if (IsBlockNode(curNode))
-    {
+    if (nsHTMLEditUtils::IsFormatNode(curNode)) {
+      GetFormatString(GetAsDOMNode(curNode), format);
+    } else if (IsBlockNode(GetAsDOMNode(curNode))) {
       // this is a div or some other non-format block.
       // we should ignore it.  Its children were appended to this list
       // by AppendInnerFormatNodes() call above.  We will get needed
@@ -1124,7 +1115,7 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
     }
     else
     {
-      nsCOMPtr<nsIDOMNode> node, tmp = curNode;
+      nsCOMPtr<nsIDOMNode> node, tmp = GetAsDOMNode(curNode);
       tmp->GetParentNode(getter_AddRefs(node));
       while (node)
       {
@@ -1161,17 +1152,7 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
 }
 
 nsresult
-nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
-                                        nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
-
-  return AppendInnerFormatNodes(aArray, node);
-}
-
-nsresult
-nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
+nsHTMLEditRules::AppendInnerFormatNodes(nsTArray<nsCOMPtr<nsINode>>& aArray,
                                         nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -1190,11 +1171,11 @@ nsHTMLEditRules::AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
       // if it's a div, etc, recurse
       AppendInnerFormatNodes(aArray, child);
     } else if (isFormat) {
-      aArray.AppendObject(child->AsDOMNode());
+      aArray.AppendElement(child);
     } else if (!foundInline) {
       // if this is the first inline we've found, use it
       foundInline = true;      
-      aArray.AppendObject(child->AsDOMNode());
+      aArray.AppendElement(child);
     }
   }
   return NS_OK;
@@ -6104,54 +6085,42 @@ nsHTMLEditRules::GetDefinitionListItemTypes(dom::Element* aElement, bool* aDT, b
   }
 }
 
-///////////////////////////////////////////////////////////////////////////
-// GetParagraphFormatNodes: 
-//                       
-nsresult 
-nsHTMLEditRules::GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes,
-                                         bool aDontTouchContent)
-{  
+nsresult
+nsHTMLEditRules::GetParagraphFormatNodes(nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
+                                         TouchContent aTouchContent)
+{
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
   nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  // contruct a list of nodes to act on.
-  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  // Contruct a list of nodes to act on.
   nsresult res = GetNodesFromSelection(*selection, EditAction::makeBasicBlock,
-                                       arrayOfNodes, aDontTouchContent ?
-                                       TouchContent::no : TouchContent::yes);
+                                       outArrayOfNodes, aTouchContent);
   NS_ENSURE_SUCCESS(res, res);
 
-  // pre process our list of nodes...                      
-  int32_t listCount = arrayOfNodes.Length();
-  int32_t i;
-  for (i=listCount-1; i>=0; i--)
-  {
-    nsCOMPtr<nsINode> testNode = arrayOfNodes[i];
+  // Pre-process our list of nodes
+  for (int32_t i = outArrayOfNodes.Length() - 1; i >= 0; i--) {
+    nsCOMPtr<nsINode> testNode = outArrayOfNodes[i];
 
     // Remove all non-editable nodes.  Leave them be.
-    if (!mHTMLEditor->IsEditable(testNode))
-    {
-      arrayOfNodes.RemoveElementAt(i);
+    if (!mHTMLEditor->IsEditable(testNode)) {
+      outArrayOfNodes.RemoveElementAt(i);
     }
-    
-    // scan for table elements.  If we find table elements other than table,
-    // replace it with a list of any editable non-table content.  Ditto for list elements.
+
+    // Scan for table elements.  If we find table elements other than table,
+    // replace it with a list of any editable non-table content.  Ditto for
+    // list elements.
     if (nsHTMLEditUtils::IsTableElement(testNode) ||
-        nsHTMLEditUtils::IsList(testNode) || 
-        nsHTMLEditUtils::IsListItem(testNode) )
-    {
-      int32_t j=i;
-      arrayOfNodes.RemoveElementAt(i);
-      GetInnerContent(*testNode, arrayOfNodes, &j);
+        nsHTMLEditUtils::IsList(testNode) ||
+        nsHTMLEditUtils::IsListItem(testNode)) {
+      int32_t j = i;
+      outArrayOfNodes.RemoveElementAt(i);
+      GetInnerContent(*testNode, outArrayOfNodes, &j);
     }
   }
-  for (auto& node : arrayOfNodes) {
-    outArrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-  return res;
+  return NS_OK;
 }
 
 
