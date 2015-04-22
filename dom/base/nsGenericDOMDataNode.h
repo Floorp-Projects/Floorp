@@ -23,12 +23,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 
 class nsIDocument;
-class nsIDOMAttr;
-class nsIDOMEventListener;
-class nsIDOMNodeList;
-class nsIFrame;
 class nsIDOMText;
-class nsURI;
 
 #define DATA_NODE_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 

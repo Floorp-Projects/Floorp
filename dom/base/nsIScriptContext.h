@@ -14,16 +14,6 @@
 #include "js/GCAPI.h"
 
 class nsIScriptGlobalObject;
-class nsIScriptSecurityManager;
-class nsIPrincipal;
-class nsIAtom;
-class nsIArray;
-class nsIVariant;
-class nsIObjectInputStream;
-class nsIObjectOutputStream;
-class nsIScriptObjectPrincipal;
-class nsIDOMWindow;
-class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
 { 0x901f0d5e, 0x217a, 0x45fa, \
