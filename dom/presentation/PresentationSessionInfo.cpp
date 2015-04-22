@@ -40,20 +40,16 @@ PresentationSessionInfo::Shutdown(nsresult aReason)
 {
   // Close the control channel if any.
   if (mControlChannel) {
-    mControlChannel->SetListener(nullptr);
     NS_WARN_IF(NS_FAILED(mControlChannel->Close(aReason)));
-    mControlChannel = nullptr;
   }
 
   // Close the data transport channel if any.
   if (mTransport) {
-    mTransport->SetCallback(nullptr);
+    // |mIsTransportReady| will be unset once |NotifyTransportClosed| is called.
     NS_WARN_IF(NS_FAILED(mTransport->Close(aReason)));
-    mTransport = nullptr;
   }
 
   mIsResponderReady = false;
-  mIsTransportReady = false;
 }
 
 nsresult
@@ -76,14 +72,29 @@ PresentationSessionInfo::SetListener(nsIPresentationSessionListener* aListener)
 nsresult
 PresentationSessionInfo::Send(nsIInputStream* aData)
 {
-  // TODO Send data to |mTransport|.
-  return NS_OK;
+  if (NS_WARN_IF(!IsSessionReady())) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  if (NS_WARN_IF(!mTransport)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mTransport->Send(aData);
 }
 
 nsresult
 PresentationSessionInfo::Close(nsresult aReason)
 {
-  // TODO Close |mTransport|.
+  // The session is disconnected and it's a normal close. Simply change the
+  // state to TERMINATED.
+  if (!IsSessionReady() && NS_SUCCEEDED(aReason) && mListener) {
+    nsresult rv = mListener->NotifyStateChange(mSessionId,
+                                               nsIPresentationSessionListener::STATE_TERMINATED);
+    NS_WARN_IF(NS_FAILED(rv));
+  }
+
+  Shutdown(aReason);
   return NS_OK;
 }
 
@@ -150,12 +161,18 @@ PresentationSessionInfo::NotifyTransportClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Nullify |mTransport| here so it won't try to re-close |mTransport| in
+  // potential subsequent |Shutdown| calls.
+  mTransport->SetCallback(nullptr);
   mTransport = nullptr;
 
   if (!IsSessionReady()) {
     // It happens before the session is ready. Reply the callback.
     return ReplyError(aReason);
   }
+
+  // Unset |mIsTransportReady| here so it won't affect |IsSessionReady()| above.
+  mIsTransportReady = false;
 
   Shutdown(aReason);
 
@@ -175,9 +192,15 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // TODO Notify the listener.
+  if (NS_WARN_IF(!IsSessionReady())) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
-  return NS_OK;
+  if (NS_WARN_IF(!mListener)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return mListener->NotifyMessage(mSessionId, aData);
 }
 
 /*
@@ -266,9 +289,18 @@ PresentationRequesterInfo::NotifyClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Unset control channel here so it won't try to re-close it in potential
+  // subsequent |Shutdown| calls.
   SetControlChannel(nullptr);
 
   if (NS_WARN_IF(NS_FAILED(aReason))) {
+    if (mListener) {
+      // The presentation session instance at receiver side may already exist.
+      // Change the state to TERMINATED since it never succeeds.
+      return mListener->NotifyStateChange(mSessionId,
+                                          nsIPresentationSessionListener::STATE_TERMINATED);
+    }
+
     // Reply error for an abnormal close.
     return ReplyError(aReason);
   }
@@ -461,9 +493,18 @@ PresentationResponderInfo::NotifyClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Unset control channel here so it won't try to re-close it in potential
+  // subsequent |Shutdown| calls.
   SetControlChannel(nullptr);
 
   if (NS_WARN_IF(NS_FAILED(aReason))) {
+    if (mListener) {
+      // The presentation session instance at receiver side may already exist.
+      // Change the state to TERMINATED since it never succeeds.
+      return mListener->NotifyStateChange(mSessionId,
+                                          nsIPresentationSessionListener::STATE_TERMINATED);
+    }
+
     // Reply error for an abnormal close.
     return ReplyError(aReason);
   }
