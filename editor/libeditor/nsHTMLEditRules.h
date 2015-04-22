@@ -191,7 +191,7 @@ protected:
   nsresult DidMakeBasicBlock(mozilla::dom::Selection* aSelection,
                              nsRulesInfo* aInfo, nsresult aResult);
   nsresult DidAbsolutePosition();
-  nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
+  nsresult AlignInnerBlocks(nsINode& aNode, const nsAString* alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType);
   nsresult AppendInnerFormatNodes(nsTArray<nsCOMPtr<nsINode>>& aArray,
                                   nsINode* aNode);

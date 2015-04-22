@@ -4806,7 +4806,7 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
       else if (nsHTMLEditUtils::IsList(curParent)) {
         // if we don't use CSS, add a contraint to list element : they have
         // to be inside another list, ie >= second level of nesting
-        res = AlignInnerBlocks(curNode, alignType);
+        res = AlignInnerBlocks(*curContent, alignType);
         NS_ENSURE_SUCCESS(res, res);
         curDiv = 0;
         continue;
@@ -4849,34 +4849,27 @@ nsHTMLEditRules::WillAlign(Selection* aSelection,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// AlignInnerBlocks: align inside table cells or list items
-//       
+///////////////////////////////////////////////////////////////////////////////
+// AlignInnerBlocks: Align inside table cells or list items
+//
 nsresult
-nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType)
+nsHTMLEditRules::AlignInnerBlocks(nsINode& aNode, const nsAString* alignType)
 {
-  NS_ENSURE_TRUE(aNode && alignType, NS_ERROR_NULL_POINTER);
-  nsresult res;
-  
-  // gather list of table cells or list items
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsTableCellAndListItemFunctor functor;
-  nsDOMIterator iter(*aNode);
-  iter.AppendList(functor, arrayOfNodes);
-  
-  // now that we have the list, align their contents as requested
-  int32_t listCount = arrayOfNodes.Count();
-  int32_t j;
+  NS_ENSURE_TRUE(alignType, NS_ERROR_NULL_POINTER);
 
-  for (j = 0; j < listCount; j++)
-  {
-    nsIDOMNode* node = arrayOfNodes[0];
-    res = AlignBlockContents(node, alignType);
+  // Gather list of table cells or list items
+  nsTArray<nsCOMPtr<nsINode>> nodeArray;
+  nsTableCellAndListItemFunctor functor;
+  nsDOMIterator iter(aNode);
+  iter.AppendList(functor, nodeArray);
+
+  // Now that we have the list, align their contents as requested
+  for (auto& node : nodeArray) {
+    nsresult res = AlignBlockContents(node->AsDOMNode(), alignType);
     NS_ENSURE_SUCCESS(res, res);
-    arrayOfNodes.RemoveObjectAt(0);
   }
 
-  return res;  
+  return NS_OK;
 }
 
 
@@ -6134,7 +6127,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsINode& aNode,
   // First build up a list of all the break nodes inside the inline container.
   nsTArray<nsCOMPtr<nsINode>> arrayOfBreaks;
   nsBRNodeFunctor functor;
-  nsDOMIterator iter(*GetAsDOMNode(&aNode));
+  nsDOMIterator iter(aNode);
   iter.AppendList(functor, arrayOfBreaks);
 
   // If there aren't any breaks, just put inNode itself in the array

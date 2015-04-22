@@ -74,12 +74,10 @@ nsDOMIterator::nsDOMIterator(nsRange& aRange)
   MOZ_ASSERT(NS_SUCCEEDED(res));
 }
 
-nsDOMIterator::nsDOMIterator(nsIDOMNode& aNode)
+nsDOMIterator::nsDOMIterator(nsINode& aNode)
 {
   mIter = NS_NewContentIterator();
-  nsCOMPtr<nsINode> node = do_QueryInterface(&aNode);
-  NS_ENSURE_TRUE(node, );
-  DebugOnly<nsresult> res = mIter->Init(node);
+  DebugOnly<nsresult> res = mIter->Init(&aNode);
   MOZ_ASSERT(NS_SUCCEEDED(res));
 }
 
