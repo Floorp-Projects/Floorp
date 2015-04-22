@@ -4767,6 +4767,8 @@ class MToInt32
     }
 
     bool congruentTo(const MDefinition* ins) const override {
+        if (!ins->isToInt32() || ins->toToInt32()->conversion() != conversion())
+            return false;
         return congruentIfOperandsEqual(ins);
     }
 
