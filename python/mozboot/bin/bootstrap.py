@@ -49,6 +49,7 @@ REPOSITORY_PATHS = [
 
 TEMPDIR = None
 
+
 def setup_proxy():
     # Some Linux environments define ALL_PROXY, which is a SOCKS proxy
     # intended for all protocols. Python doesn't currently automatically
@@ -57,6 +58,7 @@ def setup_proxy():
         os.environ['https_proxy'] = os.environ['ALL_PROXY']
     if 'ALL_PROXY' in os.environ and 'http_proxy' not in os.environ:
         os.environ['http_proxy'] = os.environ['ALL_PROXY']
+
 
 def fetch_files(repo_url, repo_type):
     setup_proxy()
@@ -74,6 +76,7 @@ def fetch_files(repo_url, repo_type):
         raise NotImplementedError('Not sure how to handle repo type.', repo_type)
 
     return files
+
 
 def ensure_environment(repo_url=None, repo_type=None):
     """Ensure we can load the Python modules necessary to perform bootstrap."""
@@ -118,17 +121,23 @@ def ensure_environment(repo_url=None, repo_type=None):
             from mozboot.bootstrap import Bootstrapper
             return Bootstrapper
 
+
 def main(args):
     parser = OptionParser()
     parser.add_option('-r', '--repo-url', dest='repo_url',
-        default='https://hg.mozilla.org/mozilla-central/',
-        help='Base URL of source control repository where bootstrap files can '
-             'be downloaded.')
-
+                      default='https://hg.mozilla.org/mozilla-central/',
+                      help='Base URL of source control repository where bootstrap files can '
+                      'be downloaded.')
     parser.add_option('--repo-type', dest='repo_type',
-        default='hgweb',
-        help='The type of the repository. This defines how we fetch file '
-             'content. Like --repo, you should not need to set this.')
+                      default='hgweb',
+                      help='The type of the repository. This defines how we fetch file '
+                      'content. Like --repo, you should not need to set this.')
+
+    parser.add_option('--application-choice', dest='application_choice',
+                      help='Pass in an application choice (desktop/android) instead of using the '
+                      'default interactive prompt.')
+    parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
+                      help='Answer yes to any (Y/n) interactive prompts.')
 
     options, leftover = parser.parse_args(args)
 
@@ -141,8 +150,7 @@ def main(args):
             print('\n')
             print(e)
             return 1
-
-        dasboot = cls()
+        dasboot = cls(choice=options.application_choice, no_interactive=options.no_interactive)
         dasboot.bootstrap()
 
         return 0
