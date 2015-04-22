@@ -15,7 +15,6 @@
 #include "nsAutoPtr.h"
 
 class nsIURI;
-class nsCycleCollectionCallback;
 
 /**
  * Class to track what element is referenced by a given ID.

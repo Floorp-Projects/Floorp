@@ -14,10 +14,6 @@
 { 0x2a50e17c, 0x46ff, 0x4150, \
   { 0xbb, 0x46, 0xd8, 0x07, 0xb3, 0x36, 0xde, 0xab } }
 
-class nsIScriptContext;
-class nsIScriptGlobalObject;
-class nsIDOMEventListener;
-
 typedef nsXPCClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
   (const char* aName);
 

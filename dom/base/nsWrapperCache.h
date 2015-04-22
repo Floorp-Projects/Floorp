@@ -23,7 +23,6 @@ class ProcessGlobal;
 class SandboxPrivate;
 class nsInProcessTabChildGlobal;
 class nsWindowRoot;
-class XPCWrappedNativeScope;
 
 #define NS_WRAPPERCACHE_IID \
 { 0x6f3179a1, 0x36f7, 0x4a5c, \
