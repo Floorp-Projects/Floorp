@@ -41,6 +41,7 @@ namespace js {
 struct MatchPair;
 class MatchPairs;
 class RegExpShared;
+class RegExpStatics;
 
 namespace frontend { class TokenStream; }
 

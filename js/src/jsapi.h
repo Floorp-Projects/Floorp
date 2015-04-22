@@ -37,7 +37,6 @@
 
 namespace JS {
 
-class Latin1CharsZ;
 class TwoByteChars;
 
 #ifdef JS_DEBUG

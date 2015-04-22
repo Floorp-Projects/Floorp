@@ -110,7 +110,6 @@
 namespace js {
 
 class Bindings;
-class Debugger;
 class Nursery;
 class StaticBlockObject;
 

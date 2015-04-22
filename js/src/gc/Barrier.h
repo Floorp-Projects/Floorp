@@ -173,7 +173,6 @@ class GlobalObject;
 class LazyScript;
 class NativeObject;
 class NestedScopeObject;
-class Nursery;
 class PlainObject;
 class PropertyName;
 class SavedFrame;

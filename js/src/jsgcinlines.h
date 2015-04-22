@@ -13,9 +13,6 @@
 #include "gc/Zone.h"
 
 namespace js {
-
-class Shape;
-
 namespace gc {
 
 static inline AllocKind

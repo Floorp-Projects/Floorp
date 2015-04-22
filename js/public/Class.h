@@ -31,7 +31,6 @@ namespace js {
 
 struct Class;
 class FreeOp;
-class PropertyName;
 class Shape;
 
 // This is equal to JSFunction::class_.  Use it in places where you don't want
