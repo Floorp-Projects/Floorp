@@ -22,8 +22,10 @@
 #include "mozilla/UniquePtr.h"
 
 struct CascadeEnumData;
+struct ElementDependentRuleProcessorData;
 struct nsCSSSelector;
 struct nsCSSSelectorList;
+struct nsFontFaceRuleContainer;
 struct RuleCascadeData;
 struct TreeMatchContext;
 class nsCSSKeyframesRule;

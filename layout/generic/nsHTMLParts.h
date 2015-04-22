@@ -14,14 +14,12 @@
 class nsIAtom;
 class nsNodeInfoManager;
 class nsIContent;
-class nsIContentIterator;
 class nsIDocument;
 class nsIFrame;
 class nsIHTMLContentSink;
 class nsIFragmentContentSink;
 class nsStyleContext;
 class nsIURI;
-class nsString;
 class nsIPresShell;
 class nsIChannel;
 class nsTableColFrame;

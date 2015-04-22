@@ -10,10 +10,6 @@ class nsIDocument;
 class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMNode;
-class nsIDOMWindow;
-class nsIFrame;
-class nsIPresShell;
-class nsISupports;
 
 namespace mozilla {
 class EventStateManager;

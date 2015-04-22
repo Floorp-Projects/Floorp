@@ -50,8 +50,6 @@ public:
   bool mIsInfinite;
 };
 
-struct NewLayerEntry;
-
 struct ContainerLayerParameters {
   ContainerLayerParameters()
     : mXScale(1)

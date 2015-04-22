@@ -14,7 +14,6 @@
 #include "mozilla/dom/Text.h"
 
 class nsHTMLEditor;
-class nsIDOMDocument;
 class nsIDOMNode;
 struct DOMPoint;
 

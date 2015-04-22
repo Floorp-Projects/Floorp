@@ -10,7 +10,6 @@
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 
-class nsITableLayout;
 class nsITableCellLayout;
 
 namespace mozilla {

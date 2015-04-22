@@ -25,8 +25,6 @@
 
 class nsACString;
 class nsCString;
-class nsString;
-class nsIURI;
 
 nsresult
 rdf_MakeRelativeRef(const nsCSubstring& aBaseURI, nsCString& aURI);

@@ -25,13 +25,11 @@
 // Classes
 class nsPagePrintTimer;
 class nsIDocShell;
-class nsDeviceContext;
 class nsIDocument;
 class nsIDocumentViewerPrint;
 class nsPrintObject;
 class nsIDocShell;
 class nsIPageSequenceFrame;
-class nsIWeakReference;
 
 //------------------------------------------------------------------------
 // nsPrintEngine Class

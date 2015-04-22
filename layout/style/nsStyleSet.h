@@ -26,13 +26,14 @@
 #include "nsCSSPseudoElements.h"
 
 class gfxFontFeatureValueSet;
-class nsCSSFontFaceRule;
 class nsCSSKeyframesRule;
 class nsCSSFontFeatureValuesRule;
 class nsCSSPageRule;
 class nsCSSCounterStyleRule;
+class nsICSSPseudoComparator;
 class nsRuleWalker;
 struct ElementDependentRuleProcessorData;
+struct nsFontFaceRuleContainer;
 struct TreeMatchContext;
 
 namespace mozilla {

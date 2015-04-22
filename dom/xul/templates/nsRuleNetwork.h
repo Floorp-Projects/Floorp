@@ -38,7 +38,6 @@
 #include "nsIRDFNode.h"
 
 class nsXULTemplateResultSetRDF;
-class nsXULTemplateQueryProcessorRDF;
 
 //----------------------------------------------------------------------
 

@@ -18,8 +18,6 @@
 #include "nsITimer.h"
 #include "nsRepeatService.h"
 
-class nsSliderFrame;
-
 class nsScrollbarButtonFrame : public nsButtonBoxFrame
 {
 public:

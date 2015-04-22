@@ -28,15 +28,12 @@
 #include <algorithm>
 
 class gfxContext;
-class gfxPattern;
 class nsFrameList;
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
 class nsPresContext;
 class nsStyleContext;
-class nsStyleCoord;
-class nsSVGClipPathFrame;
 class nsSVGDisplayContainerFrame;
 class nsSVGElement;
 class nsSVGEnum;
@@ -49,11 +46,8 @@ class gfxTextContextPaint;
 struct nsStyleSVG;
 struct nsStyleSVGPaint;
 struct nsRect;
-struct nsPoint;
 
 namespace mozilla {
-class SVGAnimatedPreserveAspectRatio;
-class SVGPreserveAspectRatio;
 namespace dom {
 class Element;
 class UserSpaceMetrics;
@@ -61,7 +55,6 @@ class UserSpaceMetrics;
 namespace gfx {
 class DrawTarget;
 class GeneralPattern;
-class SourceSurface;
 }
 } // namespace mozilla
 

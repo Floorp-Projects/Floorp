@@ -38,7 +38,6 @@
 #include "mozilla/MemoryReporting.h"
 
 class nsRange;
-class nsIDragService;
 
 struct RangePaintInfo;
 struct nsCallbackEventRequest;

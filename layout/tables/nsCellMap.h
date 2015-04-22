@@ -17,7 +17,6 @@
 
 #undef DEBUG_TABLE_CELLMAP
 
-class nsTableColFrame;
 class nsTableCellFrame;
 class nsTableRowFrame;
 class nsTableRowGroupFrame;

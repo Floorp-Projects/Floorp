@@ -26,7 +26,6 @@ class Element;
 }  // namespace mozilla
 
 class nsHTMLEditor;
-class nsIDOMWindow;
 
 typedef void (*nsProcessValueFunc)(const nsAString * aInputString, nsAString & aOutputString,
                                    const char * aDefaultValueString,
