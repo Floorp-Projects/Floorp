@@ -2742,6 +2742,8 @@ extern JS_FRIEND_API(bool)
 DefineOwnProperty(JSContext* cx, JSObject* objArg, jsid idArg,
                   JS::Handle<JSPropertyDescriptor> descriptor, JS::ObjectOpResult& result);
 
+extern JS_FRIEND_API(bool)
+CheckForInterrupt(JSContext* cx);
 } /* namespace js */
 
 extern JS_FRIEND_API(void)
