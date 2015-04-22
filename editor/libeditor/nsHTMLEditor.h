@@ -634,7 +634,8 @@ protected:
   nsresult InsertBasicBlock(const nsAString & aBlockType);
   
   /* increase/decrease the font size of selection */
-  nsresult RelativeFontChange( int32_t aSizeChange);
+  enum class FontSize { incr, decr };
+  nsresult RelativeFontChange(FontSize aDir);
   
   /* helper routines for font size changing */
   nsresult RelativeFontChangeOnTextNode( int32_t aSizeChange, 
