@@ -1221,7 +1221,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
                                                                principal,
                                                                true);
 
-  rv = cors->Init(channel, true);
+  rv = cors->Init(channel, DataURIHandling::Allow);
   NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<nsINetworkInterceptController> interceptController = do_QueryInterface(docShell);
