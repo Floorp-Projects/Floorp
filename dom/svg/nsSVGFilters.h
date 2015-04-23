@@ -16,7 +16,6 @@
 #include "FilterSupport.h"
 
 class nsSVGFilterInstance;
-class nsSVGFilterResource;
 class nsSVGNumberPair;
 
 struct nsSVGStringInfo {

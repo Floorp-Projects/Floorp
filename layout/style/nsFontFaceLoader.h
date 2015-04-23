@@ -18,7 +18,6 @@
 #include "nsTHashtable.h"
 #include "nsCSSRules.h"
 
-class nsPresContext;
 class nsIPrincipal;
 
 class nsFontFaceLoader : public nsIStreamLoaderObserver

@@ -3438,6 +3438,7 @@ public:
         , addonId(cx)
         , writeToGlobalPrototype(false)
         , sameZoneAs(cx)
+        , freshZone(false)
         , invisibleToDebugger(false)
         , discardSource(false)
         , metadata(cx)
@@ -3453,6 +3454,7 @@ public:
     JS::RootedString addonId;
     bool writeToGlobalPrototype;
     JS::RootedObject sameZoneAs;
+    bool freshZone;
     bool invisibleToDebugger;
     bool discardSource;
     GlobalProperties globalProperties;

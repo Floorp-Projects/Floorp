@@ -14,9 +14,6 @@
 #include "js/StructuredClone.h"
 
 namespace mozilla {
-
-struct SerializedStructuredCloneBuffer;
-
 namespace dom {
 
 struct

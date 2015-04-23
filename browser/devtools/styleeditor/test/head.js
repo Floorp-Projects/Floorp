@@ -12,7 +12,6 @@ let TargetFactory = devtools.TargetFactory;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
-let gPanelWindow;
 
 
 // Import the GCLI test helper
@@ -64,7 +63,6 @@ function navigateTo(url) {
 
 function* cleanup()
 {
-  gPanelWindow = null;
   while (gBrowser.tabs.length > 1) {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     yield gDevTools.closeToolbox(target);
@@ -86,56 +84,6 @@ let openStyleEditorForURL = Task.async(function* (url, win) {
 
   return { tab, toolbox, panel, ui };
 });
-
-function addTabAndOpenStyleEditors(count, callback, uri) {
-  let deferred = promise.defer();
-  let currentCount = 0;
-  let panel;
-  addTabAndCheckOnStyleEditorAdded(p => panel = p, function (editor) {
-    currentCount++;
-    info(currentCount + " of " + count + " editors opened: "
-         + editor.styleSheet.href);
-    if (currentCount == count) {
-      if (callback) {
-        callback(panel);
-      }
-      deferred.resolve(panel);
-    }
-  });
-
-  if (uri) {
-    content.location = uri;
-  }
-  return deferred.promise;
-}
-
-function addTabAndCheckOnStyleEditorAdded(callbackOnce, callbackOnAdded) {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-    openStyleEditorInWindow(window, function (panel) {
-      // Execute the individual callback with the panel argument.
-      callbackOnce(panel);
-      // Report editors that already opened while loading.
-      for (let editor of panel.UI.editors) {
-        callbackOnAdded(editor);
-      }
-      // Report new editors added afterwards.
-      panel.UI.on("editor-added", (event, editor) => callbackOnAdded(editor));
-    });
-  }, true);
-}
-
-function openStyleEditorInWindow(win, callback) {
-  let target = TargetFactory.forTab(win.gBrowser.selectedTab);
-  win.gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-    let panel = toolbox.getCurrentPanel();
-    gPanelWindow = panel._panelWin;
-
-    panel.UI._alwaysDisableAnimations = true;
-    callback(panel);
-  });
-}
 
 /**
  * Loads shared/frame-script-utils.js in the specified tab.

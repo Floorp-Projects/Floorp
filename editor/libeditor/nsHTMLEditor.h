@@ -43,11 +43,9 @@
 
 class nsIDOMKeyEvent;
 class nsITransferable;
-class nsIDocumentEncoder;
 class nsIClipboard;
 class TypeInState;
 class nsIContentFilter;
-class nsIURL;
 class nsILinkHandler;
 class nsTableOuterFrame;
 class nsIDOMRange;

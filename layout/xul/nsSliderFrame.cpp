@@ -322,6 +322,43 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
     if (crect.width < thumbRect.width || crect.height < thumbRect.height)
       return;
+
+    // If this scrollbar is the scrollbar of an actively scrolled scroll frame,
+    // layerize the scrollbar thumb, wrap it in its own ContainerLayer and
+    // attach scrolling information to it.
+    // We do this here and not in the thumb's nsBoxFrame::BuildDisplayList so
+    // that the event region that gets created for the thumb is included in
+    // the nsDisplayOwnLayer contents.
+
+    uint32_t flags = 0;
+    mozilla::layers::FrameMetrics::ViewID scrollTargetId =
+      mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
+    float scrollbarThumbRatio = 0.0f;
+    aBuilder->GetScrollbarInfo(&scrollTargetId, &flags);
+    bool thumbGetsLayer = (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
+    nsLayoutUtils::SetScrollbarThumbLayerization(thumb, thumbGetsLayer);
+
+    if (thumbGetsLayer) {
+      nsDisplayListCollection tempLists;
+      nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, tempLists);
+
+      // This is a bit of a hack. Collect up all descendant display items
+      // and merge them into a single Content() list.
+      nsDisplayList masterList;
+      masterList.AppendToTop(tempLists.BorderBackground());
+      masterList.AppendToTop(tempLists.BlockBorderBackgrounds());
+      masterList.AppendToTop(tempLists.Floats());
+      masterList.AppendToTop(tempLists.Content());
+      masterList.AppendToTop(tempLists.PositionedDescendants());
+      masterList.AppendToTop(tempLists.Outlines());
+
+      // Wrap the list to make it its own layer.
+      aLists.Content()->AppendNewToTop(new (aBuilder)
+        nsDisplayOwnLayer(aBuilder, this, &masterList, flags, scrollTargetId,
+                          scrollbarThumbRatio));
+
+      return;
+    }
   }
   
   nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);

@@ -26,7 +26,7 @@
 #include "nsINetworkLinkService.h"
 #include "nsCategoryManagerUtils.h"
 
-#include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
@@ -244,6 +244,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         if (!curEvent && mayWait) {
             PROFILER_LABEL("nsAppShell", "ProcessNextNativeEvent::Wait",
                 js::ProfileEntry::Category::EVENTS);
+            mozilla::HangMonitor::Suspend();
 
             // hmm, should we really hardcode this 10s?
 #if defined(DEBUG_ANDROID_EVENTS)
@@ -264,7 +265,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     if (!curEvent)
         return false;
 
-    mozilla::BackgroundHangMonitor().NotifyActivity();
+    mozilla::HangMonitor::NotifyActivity(curEvent->IsInputEvent() ?
+            mozilla::HangMonitor::kUIActivity :
+            mozilla::HangMonitor::kGeneralActivity);
 
     EVLOG("nsAppShell: event %p %d", (void*)curEvent.get(), curEvent->Type());
 

@@ -13,8 +13,6 @@
 namespace mozilla {
 namespace dom {
 
-class PBrowserParent;
-
 class TCPServerSocketParent : public mozilla::net::PTCPServerSocketParent
                             , public nsITCPServerSocketParent
 {

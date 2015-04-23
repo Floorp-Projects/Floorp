@@ -18,11 +18,8 @@
 #undef GetClassName
 #endif
 
-class nsContentList;
-class nsDocument;
 struct nsGlobalNameStruct;
 class nsGlobalWindow;
-class nsIScriptSecurityManager;
 
 struct nsDOMClassInfoData;
 

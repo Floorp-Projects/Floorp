@@ -863,11 +863,6 @@ pref("reader.toolbar.vertical", false);
 // Whether or not to display buttons related to reading list in reader view.
 pref("browser.readinglist.enabled", true);
 
-// Use software vsync to schedule rendering
-pref("gfx.vsync.hw-vsync.enabled", true);
-pref("gfx.vsync.compositor", true);
-pref("gfx.vsync.refreshdriver", true);
-
 // Selection carets never fall-back to internal LongTap detector.
 pref("selectioncaret.detects.longtap", false);
 

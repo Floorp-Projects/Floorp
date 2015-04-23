@@ -9,8 +9,6 @@
 
 #include "../TestJSImplGenBinding.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
 namespace dom {
 

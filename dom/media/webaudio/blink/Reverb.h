@@ -41,9 +41,6 @@ class ThreadSharedFloatArrayBufferList;
 
 namespace WebCore {
 
-class DirectConvolver;
-class FFTConvolver;
-
 // Multi-channel convolution reverb with channel matrixing - one or more ReverbConvolver objects are used internally.
 
 class Reverb {

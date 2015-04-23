@@ -32,7 +32,6 @@ class Shmem;
 
 namespace layers {
 
-class ClientTiledLayerBuffer;
 class AsyncTransactionTracker;
 class ImageClient;
 class ImageContainer;

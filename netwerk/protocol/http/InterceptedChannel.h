@@ -13,7 +13,6 @@
 
 class nsICacheEntry;
 class nsInputStreamPump;
-class nsIStorageStream;
 class nsIStreamListener;
 
 namespace mozilla {

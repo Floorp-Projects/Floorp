@@ -27,7 +27,6 @@
 //#define FORCE_ALOG 1
 
 class nsIAndroidDisplayport;
-class nsIAndroidViewport;
 class nsIWidget;
 
 namespace mozilla {
@@ -503,6 +502,16 @@ public:
         event->mApzInputBlockId = aInputBlockId;
         event->mApzEventStatus = aEventStatus;
         return event;
+    }
+
+    bool IsInputEvent() const {
+        return mType == AndroidGeckoEvent::MOTION_EVENT ||
+            mType == AndroidGeckoEvent::NATIVE_GESTURE_EVENT ||
+            mType == AndroidGeckoEvent::LONG_PRESS ||
+            mType == AndroidGeckoEvent::KEY_EVENT ||
+            mType == AndroidGeckoEvent::IME_EVENT ||
+            mType == AndroidGeckoEvent::IME_KEY_EVENT ||
+            mType == AndroidGeckoEvent::APZ_INPUT_EVENT;
     }
 
     int Action() { return mAction; }

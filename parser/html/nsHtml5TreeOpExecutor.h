@@ -25,8 +25,6 @@
 #include "mozilla/net/ReferrerPolicy.h"
 
 class nsHtml5Parser;
-class nsHtml5TreeBuilder;
-class nsHtml5Tokenizer;
 class nsHtml5StreamParser;
 class nsIContent;
 class nsIDocument;

@@ -10,6 +10,9 @@ add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel} = yield openAnimationInspector();
 
+  info("Select the non-animated test node");
+  yield selectNode(".still", inspector);
+
   ok(!panel.toggleAllButtonEl.classList.contains("paused"),
     "The toggle button is in its running state by default");
 

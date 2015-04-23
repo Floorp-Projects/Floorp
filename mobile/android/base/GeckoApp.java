@@ -1197,7 +1197,7 @@ public abstract class GeckoApp
             return;
         }
 
-        if (GeckoThread.isCreated()) {
+        if (GeckoThread.isLaunched()) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
             mIsRestoringActivity = true;
@@ -1206,27 +1206,48 @@ public abstract class GeckoApp
         } else {
             final String uri = getURIFromIntent(intent);
 
-            GeckoThread.setArgs(args);
-            GeckoThread.setAction(action);
-            GeckoThread.setUri(TextUtils.isEmpty(uri) ? null : uri);
+            GeckoThread.ensureInit(args, action,
+                    TextUtils.isEmpty(uri) ? null : uri,
+                    /* debugging */ ACTION_DEBUG.equals(action));
         }
 
-        if (!ACTION_DEBUG.equals(action) &&
-                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
-                                                   GeckoThread.LaunchState.Launched)) {
-            GeckoThread.createAndStart();
+        // GeckoThread has to register for "Gecko:Ready" first, so GeckoApp registers
+        // for events after initializing GeckoThread but before launching it.
 
-        } else if (ACTION_DEBUG.equals(action) &&
-                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
-                                                   GeckoThread.LaunchState.WaitForDebugger)) {
-            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launched);
-                    GeckoThread.createAndStart();
-                }
-            }, 1000 * 5 /* 5 seconds */);
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
+            "Gecko:Ready",
+            "Gecko:DelayedStartup",
+            "Gecko:Exited",
+            "Accessibility:Event",
+            "NativeApp:IsDebuggable");
+
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
+            "Accessibility:Ready",
+            "Bookmark:Insert",
+            "Contact:Add",
+            "DOMFullScreen:Start",
+            "DOMFullScreen:Stop",
+            "Image:SetAs",
+            "Locale:Set",
+            "Permissions:Data",
+            "PrivateBrowsing:Data",
+            "Session:StatePurged",
+            "Share:Text",
+            "SystemUI:Visibility",
+            "Toast:Show",
+            "ToggleChrome:Focus",
+            "ToggleChrome:Hide",
+            "ToggleChrome:Show",
+            "Update:Check",
+            "Update:Download",
+            "Update:Install");
+
+        if (mWebappEventListener == null) {
+            mWebappEventListener = new EventListener();
+            mWebappEventListener.registerEvents();
         }
+
+        GeckoThread.launch();
 
         Bundle stateBundle = ContextUtils.getBundleExtra(getIntent(), EXTRA_STATE_BUNDLE);
         if (stateBundle != null) {
@@ -1516,40 +1537,6 @@ public abstract class GeckoApp
         //app state callbacks
         mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
 
-        //register for events
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener)this,
-            "Gecko:Ready",
-            "Gecko:DelayedStartup",
-            "Gecko:Exited",
-            "Accessibility:Event",
-            "NativeApp:IsDebuggable");
-
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this,
-            "Accessibility:Ready",
-            "Bookmark:Insert",
-            "Contact:Add",
-            "DOMFullScreen:Start",
-            "DOMFullScreen:Stop",
-            "Image:SetAs",
-            "Locale:Set",
-            "Permissions:Data",
-            "PrivateBrowsing:Data",
-            "Session:StatePurged",
-            "Share:Text",
-            "SystemUI:Visibility",
-            "Toast:Show",
-            "ToggleChrome:Focus",
-            "ToggleChrome:Hide",
-            "ToggleChrome:Show",
-            "Update:Check",
-            "Update:Download",
-            "Update:Install");
-
-        if (mWebappEventListener == null) {
-            mWebappEventListener = new EventListener();
-            mWebappEventListener.registerEvents();
-        }
-
         if (SmsManager.isEnabled()) {
             SmsManager.getInstance().start();
         }
@@ -1588,12 +1575,16 @@ public abstract class GeckoApp
         }, 50);
 
         if (mIsRestoringActivity) {
-            GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
             Tab selectedTab = Tabs.getInstance().getSelectedTab();
-            if (selectedTab != null)
+            if (selectedTab != null) {
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
-            geckoConnected();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+            }
+
+            if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+                geckoConnected();
+                GeckoAppShell.sendEventToGecko(
+                        GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+            }
         }
 
         if (ACTION_ALERT_CALLBACK.equals(action)) {

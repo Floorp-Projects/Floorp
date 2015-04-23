@@ -28,7 +28,6 @@ namespace android {
 
 class Rect;
 class String8;
-class HWComposer;
 
 #if ANDROID_VERSION >= 21
 typedef IGraphicBufferConsumer StreamConsumer;

@@ -54,7 +54,6 @@
 #include "nsWeakReference.h"
 
 class nsIDTD;
-class nsScanner;
 class nsIRunnable;
 
 #ifdef _MSC_VER

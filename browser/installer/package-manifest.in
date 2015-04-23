@@ -218,6 +218,7 @@
 @RESPATH@/components/dom_offline.xpt
 @RESPATH@/components/dom_json.xpt
 @RESPATH@/components/dom_power.xpt
+@RESPATH@/components/dom_push.xpt
 @RESPATH@/components/dom_quota.xpt
 @RESPATH@/components/dom_range.xpt
 @RESPATH@/components/dom_security.xpt
@@ -558,7 +559,7 @@
 @RESPATH@/components/AlarmsManager.manifest
 @RESPATH@/components/Push.js
 @RESPATH@/components/Push.manifest
-@RESPATH@/components/PushServiceLauncher.js
+@RESPATH@/components/PushNotificationService.js
 
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js

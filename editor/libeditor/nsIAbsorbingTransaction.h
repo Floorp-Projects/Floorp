@@ -20,7 +20,6 @@ Transaction interface to outside world
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 class nsSelectionState;
-class nsIEditor;
 class nsIAtom;
 
 /**

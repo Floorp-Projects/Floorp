@@ -35,7 +35,6 @@ class DOMMediaStream;
 class ErrorResult;
 class MediaStream;
 class MediaStreamGraph;
-class AudioNodeEngine;
 class AudioNodeStream;
 
 namespace dom {

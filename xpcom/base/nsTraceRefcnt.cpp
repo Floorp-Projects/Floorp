@@ -247,6 +247,7 @@ public:
   BloatEntry(const char* aClassName, uint32_t aClassSize)
     : mClassSize(aClassSize)
   {
+    NS_ASSERTION(strlen(aClassName) > 0, "BloatEntry name must be non-empty");
     mClassName = PL_strdup(aClassName);
     Clear(&mNewStats);
     Clear(&mAllStats);
@@ -345,7 +346,7 @@ public:
     fprintf(aOut,
             "\n" \
             "     |<----------------Class--------------->|<-----Bytes------>|<----Objects---->|\n" \
-            "                                              Per-Inst   Leaked    Total      Rem\n");
+            "     |                                      | Per-Inst   Leaked|   Total      Rem|\n");
 
     this->DumpTotal(aOut);
 
@@ -362,7 +363,7 @@ public:
 
     if ((stats->mCreates - stats->mDestroys) != 0 ||
         stats->mCreates != 0) {
-      fprintf(aOut, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 "\n",
+      fprintf(aOut, "%4d |%-38.38s| %8d %8" PRIu64 "|%8" PRIu64 " %8" PRIu64"|\n",
               aIndex + 1, mClassName,
               (int32_t)mClassSize,
               (nsCRT::strcmp(mClassName, "TOTAL"))

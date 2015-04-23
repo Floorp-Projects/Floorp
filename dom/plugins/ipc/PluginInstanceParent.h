@@ -24,9 +24,6 @@
 #include "nsRect.h"
 #include "PluginDataResolver.h"
 
-#ifdef MOZ_X11
-class gfxXlibSurface;
-#endif
 #include "mozilla/unused.h"
 
 class gfxASurface;

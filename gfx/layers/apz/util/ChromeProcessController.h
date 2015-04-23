@@ -22,7 +22,6 @@ namespace mozilla {
 namespace layers {
 
 class APZEventState;
-class CompositorParent;
 
 // A ChromeProcessController is attached to the root of a compositor's layer
 // tree.

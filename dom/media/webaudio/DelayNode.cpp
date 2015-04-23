@@ -137,9 +137,12 @@ public:
       // If this DelayNode is in a cycle, make sure the delay value is at least
       // one block.
       StreamTime tick = mSource->GetCurrentPosition();
+      float values[WEBAUDIO_BLOCK_SIZE];
+      mDelay.GetValuesAtTime(tick, values,WEBAUDIO_BLOCK_SIZE);
+
       double computedDelay[WEBAUDIO_BLOCK_SIZE];
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        double delayAtTick = mDelay.GetValueAtTime(tick, counter) * sampleRate;
+        double delayAtTick = values[counter] * sampleRate;
         double delayAtTickClamped =
           std::max(minDelay, std::min(delayAtTick, maxDelay));
         computedDelay[counter] = delayAtTickClamped;

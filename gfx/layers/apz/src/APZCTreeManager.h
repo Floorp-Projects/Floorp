@@ -41,7 +41,6 @@ enum AllowedTouchBehavior {
 class Layer;
 class AsyncPanZoomController;
 class CompositorParent;
-class APZPaintLogHelper;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
 class LayerMetricsWrapper;

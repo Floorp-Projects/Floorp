@@ -18,7 +18,6 @@ namespace dom {
 
 class Promise;
 class DataStore;
-class DataStoreImpl;
 class StringOrUnsignedLong;
 class OwningStringOrUnsignedLong;
 

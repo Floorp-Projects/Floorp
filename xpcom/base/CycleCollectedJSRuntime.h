@@ -194,6 +194,8 @@ private:
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
+  static void GCSliceCallback(JSRuntime* aRuntime, JS::GCProgress aProgress,
+                              const JS::GCDescription& aDesc);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
   static void LargeAllocationFailureCallback(void* aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
@@ -307,6 +309,8 @@ private:
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
   JSRuntime* mJSRuntime;
+
+  JS::GCSliceCallback mPrevGCSliceCallback;
 
   nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
 

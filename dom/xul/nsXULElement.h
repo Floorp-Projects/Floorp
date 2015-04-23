@@ -38,7 +38,6 @@
 
 class nsIDocument;
 class nsString;
-class nsIDocShell;
 class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;
@@ -364,8 +363,6 @@ enum {
 ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
 
 #undef XUL_ELEMENT_FLAG_BIT
-
-class nsScriptEventHandlerOwnerTearoff;
 
 class nsXULElement final : public nsStyledElement,
                            public nsIDOMXULElement

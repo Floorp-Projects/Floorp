@@ -13,7 +13,6 @@
 
 class nsAString;
 class nsString;
-class nsCString;
 
 // A color is a 32 bit unsigned integer with four components: R, G, B
 // and A.

@@ -44,13 +44,26 @@ public:
     return BaseClass::HasSimpleValue() && !mStream;
   }
 
+  template<class TimeType>
+  float GetValueAtTime(TimeType aTime)
+  {
+    return GetValueAtTime(aTime, 0);
+  }
+
   // Get the value of the AudioParam at time aTime + aCounter.
   // aCounter here is an offset to aTime if we try to get the value in ticks,
   // otherwise it should always be zero.  aCounter is meant to be used when
+  template<class TimeType>
+  float GetValueAtTime(TimeType aTime, size_t aCounter);
+
+  // Get the values of the AudioParam at time aTime + (0 to aSize).
+  // aBuffer must have the correct aSize.
+  // aSize here is an offset to aTime if we try to get the value in ticks,
+  // otherwise it should always be zero.  aSize is meant to be used when
   // getting the value of an a-rate AudioParam for each tick inside an
   // AudioNodeEngine implementation.
   template<class TimeType>
-  float GetValueAtTime(TimeType aTime, size_t aCounter = 0);
+  void GetValuesAtTime(TimeType aTime, float* aBuffer, const size_t aSize);
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
@@ -81,7 +94,6 @@ AudioParamTimeline::GetValueAtTime(double aTime, size_t aCounter)
   return BaseClass::GetValueAtTime(aTime);
 }
 
-
 template<> inline float
 AudioParamTimeline::GetValueAtTime(int64_t aTime, size_t aCounter)
 {
@@ -93,8 +105,36 @@ AudioParamTimeline::GetValueAtTime(int64_t aTime, size_t aCounter)
     (mStream ? AudioNodeInputValue(aCounter) : 0.0f);
 }
 
+template<> inline void
+AudioParamTimeline::GetValuesAtTime(double aTime, float* aBuffer,
+                                    const size_t aSize)
+{
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aSize == 1);
+
+  // Getting an AudioParam value on an AudioNode does not consider input from
+  // other AudioNodes, which is managed only on the graph thread.
+  *aBuffer = BaseClass::GetValueAtTime(aTime);
+}
+
+template<> inline void
+AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
+                                    const size_t aSize)
+{
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aSize <= WEBAUDIO_BLOCK_SIZE);
+  MOZ_ASSERT(aSize == 1 || !HasSimpleValue());
+
+  // Mix the value of the AudioParam itself with that of the AudioNode inputs.
+  BaseClass::GetValuesAtTime(aTime, aBuffer, aSize);
+  if (mStream) {
+    for (size_t i = 0; i < aSize; ++i) {
+      aBuffer[i] += AudioNodeInputValue(i);
+    }
+  }
+}
+
 }
 }
 
 #endif
-

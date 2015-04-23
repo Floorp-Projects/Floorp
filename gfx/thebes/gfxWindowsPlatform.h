@@ -57,8 +57,6 @@ struct IDirect3DDevice9;
 struct ID3D11Device;
 struct IDXGIAdapter1;
 
-class nsIMemoryReporter;
-
 /**
  * Utility to get a Windows HDC from a Moz2D DrawTarget.  If the DrawTarget is
  * not backed by a HDC this will get the HDC for the screen device context

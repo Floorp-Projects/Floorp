@@ -8,62 +8,133 @@
 <script type="application/javascript;version=1.8">
   createHTML({
     bug: "1032839",
-    title: "Replace video track",
+    title: "Replace video and audio (with WebAudio) tracks",
     visible: true
   });
 
-  function isSenderOfTrack(sender) {
-    return sender.track == this;
+  function allLocalStreamsHaveSender(pc) {
+    return pc.getLocalStreams()
+      .every(s => s.getTracks()        // Every local stream,
+        .some(t => pc.getSenders()     // should have some track,
+          .some(sn => sn.track == t))) // that's being sent over |pc|.
+  }
+
+  function replacetest(wrapper) {
+    var pc = wrapper._pc;
+    var oldSenderCount = pc.getSenders().length;
+    var sender = pc.getSenders().find(sn => sn.track.kind == "video");
+    var oldTrack = sender.track;
+    ok(sender, "We have a sender for video");
+    ok(allLocalStreamsHaveSender(pc),
+       "Shouldn't have any streams without a corresponding sender");
+
+    var newTrack;
+    var audiotrack;
+    return navigator.mediaDevices.getUserMedia({video:true, audio:true, fake:true})
+      .then(newStream => {
+        newTrack = newStream.getVideoTracks()[0];
+        audiotrack = newStream.getAudioTracks()[0];
+        isnot(newTrack, sender.track, "replacing with a different track");
+        ok(!pc.getLocalStreams().includes(newStream), "from a different stream");
+        return sender.replaceTrack(newTrack);
+      })
+      .then(() => {
+        is(pc.getSenders().length, oldSenderCount, "same sender count");
+        is(sender.track, newTrack, "sender.track has been replaced");
+        ok(!pc.getSenders().map(sn => sn.track).includes(oldTrack),
+           "old track not among senders");
+        ok(pc.getLocalStreams().some(s => s.getTracks().includes(sender.track)),
+           "track exists among pc's local streams");
+        return sender.replaceTrack(audiotrack)
+          .then(() => ok(false, "replacing with different kind should fail"),
+                e => is(e.name, "IncompatibleMediaStreamTrackError",
+                        "replacing with different kind should fail"));
+      });
   }
 
   runNetworkTest(function () {
     test = new PeerConnectionTest();
-    test.setMediaConstraints([{video: true}], [{video: true}]);
+    test.audioCtx = new AudioContext();
+    test.setMediaConstraints([{video: true, audio: true}], [{video: true}]);
     test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
-    var flowtest = test.chain.remove("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
-    test.chain.append(flowtest);
 
-    var replacetest = [ function PC_LOCAL_REPLACE_VIDEOTRACK(test) {
-      var oldstream = test.pcLocal._pc.getLocalStreams()[0];
-      var oldtrack = oldstream.getVideoTracks()[0];
-      var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, oldtrack);
-      ok(sender, "track has a sender");
-      var newtrack;
-      var audiotrack;
-      return navigator.mediaDevices.getUserMedia({video:true, audio:true, fake:true})
-        .then(newstream => {
-          newtrack = newstream.getVideoTracks()[0];
-          audiotrack = newstream.getAudioTracks()[0];
-          isnot(newtrack, oldtrack, "replacing with a different track");
-          isnot(newstream, oldstream, "from a different stream");
-          return sender.replaceTrack(newtrack);
-        })
-        .then(() => {
-          is(sender.track, newtrack, "sender.track has been replaced");
-          var stream = test.pcLocal._pc.getLocalStreams()[0];
-          var track = stream.getVideoTracks()[0];
-          is(track, newtrack, "track has been replaced in stream");
-          return sender.replaceTrack(audiotrack)
-            .then(() => ok(false, "replacing with different kind should fail"),
-                  e => is(e.name, "IncompatibleMediaStreamTrackError",
-                          "replacing with different kind should fail"));
-        });
-    } ];
-    // Do it twice to make sure it still works (does audio twice too, but hey)
-    test.chain.append(replacetest);
-    test.chain.append(flowtest);
-    test.chain.append(replacetest);
-    test.chain.append(flowtest);
+    // Test replaceTrack on pcRemote separately since it's video only.
     test.chain.append([
-      function PC_LOCAL_REPLACE_VIDEOTRACK_WITHSAME(test) {
-        var oldstream = test.pcLocal._pc.getLocalStreams()[0];
-        var oldtrack = oldstream.getVideoTracks()[0];
-        var sender = test.pcLocal._pc.getSenders().find(isSenderOfTrack, oldtrack);
-        return sender.replaceTrack(oldtrack) // same track
-          .then(() => ok(true, "replacing with itself should succeed"));
+      function PC_REMOTE_VIDEOONLY_REPLACE_VIDEOTRACK(test) {
+        return replacetest(test.pcRemote);
+      },
+      function PC_LOCAL_NEW_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT(test) {
+        return test.pcLocal.checkMediaFlowPresent();
       }
     ]);
-    test.chain.append(flowtest);
+
+    // Replace video twice on pcLocal to make sure it still works
+    // (does audio twice too, but hey)
+    test.chain.append([
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_1(test) {
+        return replacetest(test.pcLocal);
+      },
+      function PC_REMOTE_NEW_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT_1(test) {
+        return test.pcRemote.checkMediaFlowPresent();
+      },
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_2(test) {
+        return replacetest(test.pcLocal);
+      },
+      function PC_REMOTE_NEW_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT_2(test) {
+        return test.pcRemote.checkMediaFlowPresent();
+      }
+    ]);
+
+    test.chain.append([
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_VIDEOTRACK_WITHSAME(test) {
+        var pc = test.pcLocal._pc;
+        var sender = pc.getSenders().find(sn => sn.track.kind == "video");
+        ok(sender, "should still have a sender of video");
+        return sender.replaceTrack(sender.track)
+          .then(() => ok(true, "replacing with itself should succeed"));
+      },
+      function PC_REMOTE_NEW_SAME_VIDEOTRACK_CHECK_MEDIA_FLOW_PRESENT(test) {
+        return test.pcRemote.checkMediaFlowPresent();
+      }
+    ]);
+
+    // Replace the gUM audio track on pcLocal with a WebAudio track.
+    test.chain.append([
+      function PC_LOCAL_AUDIOVIDEO_REPLACE_AUDIOTRACK_WEBAUDIO(test) {
+        var pc = test.pcLocal._pc;
+        var sender = pc.getSenders().find(sn => sn.track.kind == "audio");
+        ok(sender, "track has a sender");
+        var oldSenderCount = pc.getSenders().length;
+        var oldTrack = sender.track;
+
+        var sourceNode = test.audioCtx.createOscillator();
+        sourceNode.type = 'sine';
+        // We need a frequency not too close to the fake audio track (1kHz).
+        sourceNode.frequency.value = 2000;
+        sourceNode.start();
+
+        var destNode = test.audioCtx.createMediaStreamDestination();
+        sourceNode.connect(destNode);
+        var newTrack = destNode.stream.getAudioTracks()[0];
+
+        return sender.replaceTrack(newTrack)
+          .then(() => {
+            is(pc.getSenders().length, oldSenderCount, "same sender count");
+            ok(!pc.getSenders().some(sn => sn.track == oldTrack),
+               "Replaced track should be removed from senders");
+            ok(allLocalStreamsHaveSender(pc),
+               "Shouldn't have any streams without a corresponding sender");
+            is(sender.track, newTrack, "sender.track has been replaced");
+            ok(pc.getLocalStreams().some(s => s.getTracks().includes(sender.track)),
+               "track exists among pc's local streams");
+          });
+      }
+    ]);
+    test.chain.append([
+      function PC_LOCAL_CHECK_WEBAUDIO_FLOW_PRESENT(test) {
+        return test.pcRemote.checkReceivingToneFrom(test.pcLocal);
+      }
+    ]);
     test.chain.append([
       function PC_LOCAL_INVALID_ADD_VIDEOTRACKS(test) {
         var stream = test.pcLocal._pc.getLocalStreams()[0];
