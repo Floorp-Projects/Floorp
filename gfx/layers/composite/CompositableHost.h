@@ -37,9 +37,7 @@ class DataSourceSurface;
 namespace layers {
 
 class Layer;
-class SurfaceDescriptor;
 class Compositor;
-class ISurfaceAllocator;
 class ThebesBufferData;
 class TiledLayerComposer;
 class CompositableParentManager;

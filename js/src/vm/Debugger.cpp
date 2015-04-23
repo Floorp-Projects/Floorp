@@ -44,6 +44,7 @@ using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::UniquePtr;
 
 
 /*** Forward declarations ************************************************************************/
@@ -358,9 +359,8 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
   : object(dbg),
     uncaughtExceptionHook(nullptr),
     enabled(true),
+    observedGCs(cx),
     allowUnobservedAsmJS(false),
-    debuggeeWasCollected(false),
-    inOnGCHook(false),
     trackingAllocationSites(false),
     allocationSamplingProbability(1.0),
     allocationsLogLength(0),
@@ -408,6 +408,7 @@ Debugger::init(JSContext* cx)
               scripts.init() &&
               sources.init() &&
               objects.init() &&
+              observedGCs.init() &&
               environments.init();
     if (!ok)
         ReportOutOfMemory(cx);
@@ -878,71 +879,6 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
     return true;
 }
 
-JSObject*
-Debugger::translateGCStatistics(JSContext* cx, const gcstats::Statistics& stats)
-{
-    // If this functions triggers a GC then the statistics object will change
-    // underneath us.
-    gc::AutoSuppressGC suppressGC(cx);
-
-    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!obj)
-        return nullptr;
-
-    const char* nonincrementalReason = stats.nonincrementalReason();
-    RootedValue nonincrementalReasonValue(cx, NullValue());
-    if (nonincrementalReason) {
-        JSAtom* atomized = Atomize(cx, nonincrementalReason, strlen(nonincrementalReason));
-        if (!atomized)
-            return nullptr;
-        nonincrementalReasonValue.setString(atomized);
-    }
-
-    if (!DefineProperty(cx, obj, cx->names().nonincrementalReason, nonincrementalReasonValue))
-        return nullptr;
-
-    RootedArrayObject slicesArray(cx, NewDenseEmptyArray(cx));
-    if (!slicesArray)
-        return nullptr;
-
-    size_t idx = 0;
-    for (auto range = stats.sliceRange(); !range.empty(); range.popFront()) {
-        if (idx == 0) {
-            // There is only one GC reason for the whole cycle, but for legacy
-            // reasons, this data is stored and replicated on each slice.
-            const char* reason = gcstats::ExplainReason(range.front().reason);
-            JSAtom* atomized = Atomize(cx, reason, strlen(reason));
-            if (!atomized)
-                return nullptr;
-            RootedValue reasonVal(cx, StringValue(atomized));
-            if (!DefineProperty(cx, obj, cx->names().reason, reasonVal))
-                return nullptr;
-        }
-
-        RootedPlainObject collectionObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
-        if (!collectionObj)
-            return nullptr;
-
-        RootedValue start(cx, NumberValue(range.front().start));
-        RootedValue end(cx, NumberValue(range.front().end));
-        if (!DefineProperty(cx, collectionObj, cx->names().startTimestamp, start) ||
-            !DefineProperty(cx, collectionObj, cx->names().endTimestamp, end))
-        {
-            return nullptr;
-        }
-
-        RootedValue collectionVal(cx, ObjectValue(*collectionObj));
-        if (!DefineElement(cx, slicesArray, idx++, collectionVal))
-            return nullptr;
-    }
-
-    RootedValue slicesValue(cx, ObjectValue(*slicesArray));
-    if (!DefineProperty(cx, obj, cx->names().collections, slicesValue))
-        return nullptr;
-
-    return obj.get();
-}
-
 bool
 Debugger::unwrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
 {
@@ -1016,20 +952,22 @@ Debugger::unwrapPropertyDescriptor(JSContext* cx, HandleObject obj,
 
     if (desc.hasGetterObject()) {
         RootedObject get(cx, desc.getterObject());
-        if (!unwrapDebuggeeObject(cx, &get) ||
-            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
-        {
-            return false;
+        if (get) {
+            if (!unwrapDebuggeeObject(cx, &get))
+                return false;
+            if (!CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
+                return false;
         }
         desc.setGetterObject(get);
     }
 
     if (desc.hasSetterObject()) {
         RootedObject set(cx, desc.setterObject());
-        if (!unwrapDebuggeeObject(cx, &set) ||
-            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
-        {
-            return false;
+        if (set) {
+            if (!unwrapDebuggeeObject(cx, &set))
+                return false;
+            if (!CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
+                return false;
         }
         desc.setSetterObject(set);
     }
@@ -1332,18 +1270,11 @@ Debugger::fireNewScript(JSContext* cx, HandleScript script)
 }
 
 void
-Debugger::fireOnGarbageCollectionHook(JSRuntime* rt, const gcstats::Statistics& stats)
+Debugger::fireOnGarbageCollectionHook(JSContext* cx,
+                                      const JS::dbg::GarbageCollectionEvent::Ptr& gcData)
 {
-    if (inOnGCHook)
-        return;
-
-    AutoOnGCHookReentrancyGuard guard(*this);
-
-    MOZ_ASSERT(debuggeeWasCollected);
-    debuggeeWasCollected = false;
-
-    JSContext* cx = DefaultJSContext(rt);
-    MOZ_ASSERT(cx);
+    MOZ_ASSERT(observedGC(gcData->majorGCNumber()));
+    observedGCs.remove(gcData->majorGCNumber());
 
     RootedObject hook(cx, getHook(OnGarbageCollection));
     MOZ_ASSERT(hook);
@@ -1352,15 +1283,15 @@ Debugger::fireOnGarbageCollectionHook(JSRuntime* rt, const gcstats::Statistics& 
     Maybe<AutoCompartment> ac;
     ac.emplace(cx, object);
 
-    JSObject* statsObj = translateGCStatistics(cx, stats);
-    if (!statsObj) {
+    JSObject* dataObj = gcData->toJSObject(cx);
+    if (!dataObj) {
         handleUncaughtException(ac, false);
         return;
     }
 
-    RootedValue statsVal(cx, ObjectValue(*statsObj));
+    RootedValue dataVal(cx, ObjectValue(*dataObj));
     RootedValue rv(cx);
-    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, statsVal.address(), &rv))
+    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, dataVal.address(), &rv))
         handleUncaughtException(ac, true);
 }
 
@@ -1728,6 +1659,8 @@ bool
 Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                int64_t when)
 {
+    MOZ_ASSERT(trackingAllocationSites);
+
     AutoCompartment ac(cx, object);
     RootedObject wrappedFrame(cx, frame);
     if (!cx->compartment()->wrap(cx, &wrappedFrame))
@@ -2198,6 +2131,96 @@ Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
 
 
 
+/*** Allocations Tracking *************************************************************************/
+
+/* static */ bool
+Debugger::cannotTrackAllocations(const GlobalObject& global)
+{
+    auto existingCallback = global.compartment()->getObjectMetadataCallback();
+    return existingCallback && existingCallback != SavedStacksMetadataCallback;
+}
+
+/* static */ bool
+Debugger::isObservedByDebuggerTrackingAllocations(const GlobalObject& debuggee)
+{
+    if (auto* v = debuggee.getDebuggers()) {
+        Debugger** p;
+        for (p = v->begin(); p != v->end(); p++) {
+            if ((*p)->trackingAllocationSites) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/* static */ bool
+Debugger::addAllocationsTracking(JSContext* cx, GlobalObject& debuggee)
+{
+    // Precondition: the given global object is being observed by at least one
+    // Debugger that is tracking allocations.
+    MOZ_ASSERT(isObservedByDebuggerTrackingAllocations(debuggee));
+
+    if (Debugger::cannotTrackAllocations(debuggee)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
+        return false;
+    }
+
+    debuggee.compartment()->setObjectMetadataCallback(SavedStacksMetadataCallback);
+    return true;
+}
+
+/* static */ void
+Debugger::removeAllocationsTracking(GlobalObject& global)
+{
+    // If there are still Debuggers that are observing allocations, we cannot
+    // remove the metadata callback yet.
+    if (isObservedByDebuggerTrackingAllocations(global))
+        return;
+
+    global.compartment()->forgetObjectMetadataCallback();
+}
+
+bool
+Debugger::addAllocationsTrackingForAllDebuggees(JSContext* cx)
+{
+    MOZ_ASSERT(trackingAllocationSites);
+
+    // We don't want to end up in a state where we added allocations
+    // tracking to some of our debuggees, but failed to do so for
+    // others. Before attempting to start tracking allocations in *any* of
+    // our debuggees, ensure that we will be able to track allocations for
+    // *all* of our debuggees.
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        if (Debugger::cannotTrackAllocations(*r.front().get())) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
+            return false;
+        }
+    }
+
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        // This should always succeed, since we already checked for the
+        // error case above.
+        MOZ_ALWAYS_TRUE(Debugger::addAllocationsTracking(cx, *r.front().get()));
+    }
+
+    return true;
+}
+
+void
+Debugger::removeAllocationsTrackingForAllDebuggees()
+{
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        Debugger::removeAllocationsTracking(*r.front().get());
+    }
+    emptyAllocationsLog();
+}
+
+
+
 /*** Debugger JSObjects **************************************************************************/
 
 void
@@ -2534,6 +2557,17 @@ Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp)
     dbg->enabled = ToBoolean(args[0]);
 
     if (wasEnabled != dbg->enabled) {
+        if (dbg->trackingAllocationSites) {
+            if (wasEnabled) {
+                dbg->removeAllocationsTrackingForAllDebuggees();
+            } else {
+                if (!dbg->addAllocationsTrackingForAllDebuggees(cx)) {
+                    dbg->enabled = false;
+                    return false;
+                }
+            }
+        }
+
         for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
             if (!wasEnabled)
                 bp->site->inc(cx->runtime()->defaultFreeOp());
@@ -3122,27 +3156,13 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     /*
-     * If we are tracking allocation sites, we need to add the object metadata
-     * callback to this debuggee compartment.
-     */
-    bool setMetadataCallback = false;
-    if (trackingAllocationSites) {
-        if (debuggeeCompartment->hasObjectMetadataCallback()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
-            return false;
-        }
-
-        debuggeeCompartment->setObjectMetadataCallback(SavedStacksMetadataCallback);
-        setMetadataCallback = true;
-    }
-
-    /*
      * For global to become this js::Debugger's debuggee:
      * - global must be in this->debuggees,
      * - this js::Debugger must be in global->getDebuggers(), and
      * - JSCompartment::isDebuggee()'s bit must be set.
-     * All three indications must be kept consistent.
+     * - If we are tracking allocations, the SavedStacksMetadataCallback must be
+     *   installed for this compartment.
+     * All four indications must be kept consistent.
      */
     AutoCompartment ac(cx, global);
     GlobalObject::DebuggerVector* v = GlobalObject::getOrCreateDebuggers(cx, global);
@@ -3152,12 +3172,14 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
         if (!debuggees.put(global)) {
             ReportOutOfMemory(cx);
         } else {
-            debuggeeCompartment->setIsDebuggee();
-            debuggeeCompartment->updateDebuggerObservesAsmJS();
-            if (!observesAllExecution())
-                return true;
-            if (ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
-                return true;
+            if (!trackingAllocationSites || Debugger::addAllocationsTracking(cx, *global)) {
+                debuggeeCompartment->setIsDebuggee();
+                debuggeeCompartment->updateDebuggerObservesAsmJS();
+                if (!observesAllExecution())
+                    return true;
+                if (ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
+                    return true;
+            }
 
             /* Maintain consistency on error. */
             debuggees.remove(global);
@@ -3166,10 +3188,6 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
         MOZ_ASSERT(v->back() == this);
         v->popBack();
     }
-
-    /* Don't leave the object metadata hook set if we OOM'd. */
-    if (setMetadataCallback)
-        debuggeeCompartment->forgetObjectMetadataCallback();
 
     return false;
 }
@@ -3237,10 +3255,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
      * metadata callback from this global's compartment.
      */
     if (trackingAllocationSites)
-        global->compartment()->forgetObjectMetadataCallback();
-
-    // Clear out all object metadata in the compartment.
-    global->compartment()->clearObjectMetadata();
+        Debugger::removeAllocationsTracking(*global);
 
     if (global->getDebuggers()->empty()) {
         global->compartment()->unsetIsDebuggee();
@@ -3249,6 +3264,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
         global->compartment()->updateDebuggerObservesAsmJS();
     }
 }
+
 
 static inline ScriptSourceObject* GetSourceReferent(JSObject* obj);
 
@@ -6757,14 +6773,28 @@ DebuggerObject_getGlobal(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+null(CallArgs& args)
+{
+    args.rval().setNull();
+    return true;
+}
+
+static bool
 DebuggerObject_getAllocationSite(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get allocationSite", args, obj);
 
     RootedObject metadata(cx, GetObjectMetadata(obj));
+    if (!metadata)
+        return null(args);
+
+    metadata = CheckedUnwrap(metadata);
+    if (!metadata || !SavedFrame::isSavedFrameAndNotProto(*metadata))
+        return null(args);
+
     if (!cx->compartment()->wrap(cx, &metadata))
         return false;
-    args.rval().setObjectOrNull(metadata);
+    args.rval().setObject(*metadata);
     return true;
 }
 
@@ -7852,14 +7882,151 @@ JS::dbg::onPromiseSettled(JSContext* cx, HandleObject promise)
 }
 
 JS_PUBLIC_API(bool)
-JS::dbg::IsDebugger(JS::Value val)
+JS::dbg::IsDebugger(const JSObject& obj)
 {
-    if (!val.isObject())
-        return false;
-
-    JSObject& obj = val.toObject();
-    if (obj.getClass() != &Debugger::jsclass)
-        return false;
-
-    return js::Debugger::fromJSObject(&obj) != nullptr;
+    return js::GetObjectClass(&obj) == &Debugger::jsclass &&
+           js::Debugger::fromJSObject(&obj) != nullptr;
 }
+
+JS_PUBLIC_API(bool)
+JS::dbg::GetDebuggeeGlobals(JSContext* cx, const JSObject& dbgObj, AutoObjectVector& vector)
+{
+    MOZ_ASSERT(IsDebugger(dbgObj));
+    js::Debugger* dbg = js::Debugger::fromJSObject(&dbgObj);
+
+    if (!vector.reserve(vector.length() + dbg->debuggees.count())) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    for (WeakGlobalObjectSet::Range r = dbg->allDebuggees(); !r.empty(); r.popFront())
+        vector.infallibleAppend(static_cast<JSObject*>(r.front()));
+
+    return true;
+}
+
+
+/*** JS::dbg::GarbageCollectionEvent **************************************************************/
+
+namespace JS {
+namespace dbg {
+
+/* static */ GarbageCollectionEvent::Ptr
+GarbageCollectionEvent::Create(JSRuntime* rt, ::js::gcstats::Statistics& stats, uint64_t gcNumber)
+{
+    auto data = rt->make_unique<GarbageCollectionEvent>(gcNumber);
+    if (!data)
+        return nullptr;
+
+    data->nonincrementalReason = stats.nonincrementalReason();
+
+    for (auto range = stats.sliceRange(); !range.empty(); range.popFront()) {
+        if (!data->reason) {
+            // There is only one GC reason for the whole cycle, but for legacy
+            // reasons this data is stored and replicated on each slice. Each
+            // slice used to have its own GCReason, but now they are all the
+            // same.
+            data->reason = gcstats::ExplainReason(range.front().reason);
+            MOZ_ASSERT(data->reason);
+        }
+
+        if (!data->collections.growBy(1))
+            return nullptr;
+
+        data->collections.back().startTimestamp = range.front().start;
+        data->collections.back().endTimestamp = range.front().end;
+    }
+
+
+    return data;
+}
+
+static bool
+DefineStringProperty(JSContext* cx, HandleObject obj, PropertyName* propName, const char* strVal)
+{
+    RootedValue val(cx, UndefinedValue());
+    if (strVal) {
+        JSAtom* atomized = Atomize(cx, strVal, strlen(strVal));
+        if (!atomized)
+            return false;
+        val = StringValue(atomized);
+    }
+    return DefineProperty(cx, obj, propName, val);
+}
+
+JSObject*
+GarbageCollectionEvent::toJSObject(JSContext* cx) const
+{
+    RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!obj ||
+        !DefineStringProperty(cx, obj, cx->names().nonincrementalReason, nonincrementalReason) ||
+        !DefineStringProperty(cx, obj, cx->names().reason, reason))
+    {
+        return nullptr;
+    }
+
+    RootedArrayObject slicesArray(cx, NewDenseEmptyArray(cx));
+    if (!slicesArray)
+        return nullptr;
+
+    size_t idx = 0;
+    for (auto range = collections.all(); !range.empty(); range.popFront()) {
+        RootedPlainObject collectionObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+        if (!collectionObj)
+            return nullptr;
+
+        RootedValue start(cx, NumberValue(range.front().startTimestamp));
+        RootedValue end(cx, NumberValue(range.front().endTimestamp));
+        if (!DefineProperty(cx, collectionObj, cx->names().startTimestamp, start) ||
+            !DefineProperty(cx, collectionObj, cx->names().endTimestamp, end))
+        {
+            return nullptr;
+        }
+
+        RootedValue collectionVal(cx, ObjectValue(*collectionObj));
+        if (!DefineElement(cx, slicesArray, idx++, collectionVal))
+            return nullptr;
+    }
+
+    RootedValue slicesValue(cx, ObjectValue(*slicesArray));
+    if (!DefineProperty(cx, obj, cx->names().collections, slicesValue))
+        return nullptr;
+
+    return obj;
+}
+
+JS_PUBLIC_API(bool)
+FireOnGarbageCollectionHook(JSContext* cx, JS::dbg::GarbageCollectionEvent::Ptr&& data)
+{
+    AutoObjectVector triggered(cx);
+
+    {
+        // We had better not GC (and potentially get a dangling Debugger
+        // pointer) while finding all Debuggers observing a debuggee that
+        // participated in this GC.
+        AutoCheckCannotGC noGC;
+
+        for (Debugger* dbg = cx->runtime()->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
+            if (dbg->enabled &&
+                dbg->observedGC(data->majorGCNumber()) &&
+                dbg->getHook(Debugger::OnGarbageCollection))
+            {
+                if (!triggered.append(dbg->object)) {
+                    JS_ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
+        }
+    }
+
+    for ( ; !triggered.empty(); triggered.popBack()) {
+        Debugger* dbg = Debugger::fromJSObject(triggered.back());
+        dbg->fireOnGarbageCollectionHook(cx, data);
+        MOZ_ASSERT(!cx->isExceptionPending());
+    }
+
+    return true;
+}
+
+} // namespace dbg
+} // namespace JS

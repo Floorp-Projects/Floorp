@@ -17,7 +17,6 @@
 #define FONTTABLEURI_SCHEME "moz-fonttable"
 #define RTSPURI_SCHEME "rtsp"
 
-class nsIDOMBlob;
 class nsIPrincipal;
 
 namespace mozilla {

@@ -310,23 +310,11 @@ ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame)
       return true;
     }
   }
-  nsIContent* content = aFrame->GetContent();
-  if (content) {
-    static const nsCSSProperty properties[] = {
-      eCSSProperty_left,
-      eCSSProperty_top,
-      eCSSProperty_right,
-      eCSSProperty_bottom,
-      eCSSProperty_margin_left,
-      eCSSProperty_margin_top,
-      eCSSProperty_margin_right,
-      eCSSProperty_margin_bottom
-    };
-    if (nsLayoutUtils::HasCurrentAnimationsForProperties(
-          content, properties, MOZ_ARRAY_LENGTH(properties))) {
-      return true;
-    }
-  }
+  // We should also check for running CSS animations of these properties once
+  // bug 1009693 is fixed. Until that happens, layerization isn't useful for
+  // animations of these properties because we'll invalidate the layer contents
+  // on every change anyway.
+  // See bug 1151346 for a patch that adds a check for CSS animations.
   return false;
 }
 

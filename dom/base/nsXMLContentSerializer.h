@@ -23,7 +23,6 @@
 #define kEndTag NS_LITERAL_STRING("</")
 
 class nsIAtom;
-class nsIDOMNode;
 class nsINode;
 
 class nsXMLContentSerializer : public nsIContentSerializer {

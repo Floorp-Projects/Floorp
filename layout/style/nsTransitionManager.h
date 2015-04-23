@@ -18,7 +18,6 @@
 class nsStyleContext;
 class nsPresContext;
 class nsCSSPropertySet;
-struct ElementDependentRuleProcessorData;
 
 namespace mozilla {
 struct StyleTransition;

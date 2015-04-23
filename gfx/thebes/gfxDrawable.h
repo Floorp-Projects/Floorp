@@ -12,7 +12,6 @@
 #include "GraphicsFilter.h"
 #include "mozilla/gfx/2D.h"
 
-class gfxASurface;
 class gfxContext;
 class gfxPattern;
 

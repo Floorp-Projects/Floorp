@@ -10,7 +10,6 @@
 #include "nsCoord.h"
 
 class nsScrollbarFrame;
-class nsIDOMEventTarget;
 class nsIFrame;
 
 class nsIScrollbarMediator : public nsQueryFrame

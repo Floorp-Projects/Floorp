@@ -37,7 +37,6 @@
 #endif
 
 class TableTicker;
-class JSCustomObject;
 
 namespace mozilla {
 class TimeStamp;
@@ -166,6 +165,13 @@ static inline
 const char** profiler_get_features()
 {
   return mozilla_sampler_get_features();
+}
+
+static inline
+void profiler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
+                              uint32_t *aGeneration)
+{
+  return mozilla_sampler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
 }
 
 static inline

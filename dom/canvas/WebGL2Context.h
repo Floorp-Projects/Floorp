@@ -44,8 +44,9 @@ public:
 
     void CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
                            GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
-    void GetBufferSubData(GLenum target, GLintptr offset, const dom::ArrayBuffer& returnedData);
-    void GetBufferSubData(GLenum target, GLintptr offset, const dom::ArrayBufferView& returnedData);
+    void GetBufferSubData(GLenum target, GLintptr offset,
+                          const dom::Nullable<dom::ArrayBuffer>& maybeData);
+
 
     // -------------------------------------------------------------------------
     // Framebuffer objects - WebGL2ContextFramebuffers.cpp
@@ -355,6 +356,8 @@ private:
 
     JS::Value GetTexParameterInternal(const TexTarget& target, GLenum pname) override;
 
+    void UpdateBoundQuery(GLenum target, WebGLQuery* query);
+
     bool ValidateSizedInternalFormat(GLenum internalFormat, const char* info);
     bool ValidateTexStorage(GLenum target, GLsizei levels, GLenum internalformat,
                                 GLsizei width, GLsizei height, GLsizei depth,
@@ -365,7 +368,7 @@ private:
     virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) override;
     virtual bool ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer, const char* info) override;
     virtual bool ValidateBufferUsageEnum(GLenum usage, const char* info) override;
-
+    virtual bool ValidateQueryTarget(GLenum target, const char* info) override;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 

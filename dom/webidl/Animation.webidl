@@ -32,8 +32,9 @@ interface Animation {
   readonly attribute Promise<Animation> finished;
   /*
   void cancel ();
-  void finish ();
   */
+  [Throws]
+  void finish ();
   [BinaryName="playFromJS"]
   void play ();
   [BinaryName="pauseFromJS"]

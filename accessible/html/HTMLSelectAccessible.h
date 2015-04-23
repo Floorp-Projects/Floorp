@@ -8,8 +8,6 @@
 
 #include "HTMLFormControlAccessible.h"
 
-class nsIMutableArray;
-
 namespace mozilla {
 namespace a11y {
 

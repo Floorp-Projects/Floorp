@@ -18,8 +18,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/layers/PLayerTransaction.h" // for PaintedLayerAttributes
 
-class gfxContext;
-
 namespace mozilla {
 namespace layers {
 

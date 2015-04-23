@@ -27,7 +27,6 @@ class BluetoothGatt;
 class BluetoothNamedValue;
 class BluetoothValue;
 class BluetoothSignal;
-class BluetoothSocket;
 
 class BluetoothDevice final : public DOMEventTargetHelper
                             , public BluetoothSignalObserver

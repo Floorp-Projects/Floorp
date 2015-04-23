@@ -12,7 +12,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsBoxFrame.h"
-#include "nsGfxScrollFrame.h"
 
 class nsIScrollbarMediator;
 
@@ -82,8 +81,7 @@ public:
    */
   virtual bool DoesClipChildren() override { return true; }
 
-  nsresult GetScrollbarMargin(nsMargin& aMargin,
-                              mozilla::ScrollFrameHelper::eScrollbarSide aSide);
+  virtual nsresult GetMargin(nsMargin& aMargin) override;
 
   /**
    * The following three methods set the value of mIncrement when a

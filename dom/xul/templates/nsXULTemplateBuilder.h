@@ -33,7 +33,6 @@ extern PRLogModuleInfo* gXULTemplateLog;
 class nsIContent;
 class nsIObserverService;
 class nsIRDFCompositeDataSource;
-class nsIXULDocument;
 
 /**
  * An object that translates an RDF graph into a presentation using a

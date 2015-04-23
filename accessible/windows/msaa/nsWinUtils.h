@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
 
-class nsIArray;
 class nsIContent;
 
 namespace mozilla {

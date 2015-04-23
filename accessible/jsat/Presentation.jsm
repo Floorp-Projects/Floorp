@@ -523,18 +523,19 @@ B2GPresenter.prototype.pivotChanged =
   };
 
 B2GPresenter.prototype.nameChanged =
-  function B2GPresenter_nameChanged(aAccessible) {
+  function B2GPresenter_nameChanged(aAccessible, aIsPolite = true) {
     return {
       type: this.type,
       details: {
         eventType: 'name-change',
-        data: aAccessible.name
+        data: aAccessible.name,
+        options: {enqueue: aIsPolite}
       }
     };
   };
 
 B2GPresenter.prototype.valueChanged =
-  function B2GPresenter_valueChanged(aAccessible) {
+  function B2GPresenter_valueChanged(aAccessible, aIsPolite = true) {
 
     // the editable value changes are handled in the text changed presenter
     if (Utils.getState(aAccessible).contains(States.EDITABLE)) {
@@ -545,7 +546,8 @@ B2GPresenter.prototype.valueChanged =
       type: this.type,
       details: {
         eventType: 'value-change',
-        data: aAccessible.value
+        data: aAccessible.value,
+        options: {enqueue: aIsPolite}
       }
     };
   };

@@ -24,7 +24,6 @@
 #include "js/ProfilingFrameIterator.h"
 
 class JSAtom;
-struct JSContext;
 
 namespace js {
 

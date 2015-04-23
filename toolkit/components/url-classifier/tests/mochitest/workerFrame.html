@@ -29,11 +29,27 @@ function startEvilWorker() {
 
   worker.onmessage = function(event) {
     window.parent.postMessage("failure:failed to block evilWorker.js", "*");
-    startCleanWorker();
+    startUnwantedWorker();
   };
 
   worker.onerror = function(event) {
     window.parent.postMessage("success:blocked evilWorker.js", "*");
+    startUnwantedWorker();
+  };
+
+  worker.postMessage("");
+}
+
+function startUnwantedWorker() {
+  var worker = new Worker("unwantedWorker.js");
+
+  worker.onmessage = function(event) {
+    window.parent.postMessage("failure:failed to block unwantedWorker.js", "*");
+    startCleanWorker();
+  };
+
+  worker.onerror = function(event) {
+    window.parent.postMessage("success:blocked unwantedWorker.js", "*");
     startCleanWorker();
   };
 

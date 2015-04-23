@@ -21,10 +21,6 @@
 #include "nsPrintProgress.h"
 #include "nsIWebProgressListener.h"
 
-
-class nsIDOMWindow;
-class nsIDialogParamBlock;
-
 class nsPrintingPromptService: public nsIPrintingPromptService,
                                public nsIWebProgressListener
 {

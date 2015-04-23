@@ -14,8 +14,6 @@
 #include "nsDataObj.h"
 #include "mozilla/Attributes.h"
 
-class CEnumFormatEtc;
-
 #define MULTI_MIME "Mozilla/IDataObjectCollectionFormat"
 
 EXTERN_C const IID IID_IDataObjCollection;

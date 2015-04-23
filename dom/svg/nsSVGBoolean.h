@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"
 
 class nsIAtom;
-class nsISupports;
 class nsSMILValue;
 class nsSVGElement;
 

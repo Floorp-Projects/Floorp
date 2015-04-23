@@ -42,7 +42,6 @@ class Compositor;
 class ThebesBufferData;
 class TiledLayerComposer;
 struct EffectChain;
-class TextureImageTextureSourceOGL;
 
 struct TexturedEffect;
 

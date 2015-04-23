@@ -12,8 +12,6 @@
 #include "nsIChannelEventSink.h"
 #include "nsIRedirectResultListener.h"
 
-class nsIParentChannel;
-
 namespace mozilla {
 namespace net {
 

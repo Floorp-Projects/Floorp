@@ -1,9 +1,9 @@
 importScripts("/resources/testharness.js");
 
-test(function() {
+test(function(t) {
     var i = 0;
     addEventListener("message", function listener(evt) {
-        this.step(function() {
+        t.step(function() {
             ++i;
             removeEventListener("message", listener, true);
         });

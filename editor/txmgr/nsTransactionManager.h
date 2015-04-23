@@ -18,7 +18,6 @@
 
 class nsITransaction;
 class nsITransactionListener;
-class nsTransactionItem;
 
 /** implementation of a transaction manager object.
  *

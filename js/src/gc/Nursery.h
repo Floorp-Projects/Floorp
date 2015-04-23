@@ -27,7 +27,6 @@ struct Zone;
 
 namespace js {
 
-class TypedArrayObject;
 class ObjectElements;
 class NativeObject;
 class HeapSlot;
@@ -37,15 +36,11 @@ void SetGCZeal(JSRuntime*, uint8_t, uint32_t);
 
 namespace gc {
 struct Cell;
-class Collector;
 class MinorCollectionTracer;
 } /* namespace gc */
 
 namespace jit {
-class CodeGenerator;
 class MacroAssembler;
-class ICStubCompiler;
-class BaselineCompiler;
 }
 
 class Nursery
