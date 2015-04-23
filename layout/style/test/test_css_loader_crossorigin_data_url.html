@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for handling of 'crossorigin' attribute on CSS link with data: URL</title>
+<link id="testlink" crossorigin rel="stylesheet" href="data:text/css,%23someuniqueidhere{display:none}">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<div id="someuniqueidhere"></div>
+<script>
+  var t = async_test("link@crossorigin with data: href");
+  window.addEventListener("load", t.step_func_done(function() {
+    assert_equals(getComputedStyle(document.getElementById("someuniqueidhere")).display,
+                  "none", "sheet should be applied");
+    assert_equals(document.getElementById("testlink").sheet.cssRules[0].style.display,
+                  "none", "should be able to read data from the sheet");
+  }));
+</script>

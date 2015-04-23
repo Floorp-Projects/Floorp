@@ -471,7 +471,7 @@ nsCORSListenerProxy::~nsCORSListenerProxy()
 }
 
 nsresult
-nsCORSListenerProxy::Init(nsIChannel* aChannel, bool aAllowDataURI)
+nsCORSListenerProxy::Init(nsIChannel* aChannel, DataURIHandling aAllowDataURI)
 {
   aChannel->GetNotificationCallbacks(getter_AddRefs(mOuterNotificationCallbacks));
   aChannel->SetNotificationCallbacks(this);
@@ -798,7 +798,7 @@ nsCORSListenerProxy::OnRedirectVerifyCallback(nsresult result)
   NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
 
   if (NS_SUCCEEDED(result)) {
-      nsresult rv = UpdateChannel(mNewRedirectChannel);
+    nsresult rv = UpdateChannel(mNewRedirectChannel, DataURIHandling::Disallow);
       if (NS_FAILED(rv)) {
           NS_WARNING("nsCORSListenerProxy::OnRedirectVerifyCallback: "
                      "UpdateChannel() returned failure");
@@ -818,7 +818,8 @@ nsCORSListenerProxy::OnRedirectVerifyCallback(nsresult result)
 }
 
 nsresult
-nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
+nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
+                                   DataURIHandling aAllowDataURI)
 {
   nsCOMPtr<nsIURI> uri, originalURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
@@ -827,7 +828,7 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // exempt data URIs from the same origin check.
-  if (aAllowDataURI && originalURI == uri) {
+  if (aAllowDataURI == DataURIHandling::Allow && originalURI == uri) {
     bool dataScheme = false;
     rv = uri->SchemeIs("data", &dataScheme);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1240,7 +1241,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
     new nsCORSListenerProxy(preflightListener, aPrincipal,
                             aWithCredentials, method,
                             aUnsafeHeaders);
-  rv = corsListener->Init(preflightChannel);
+  rv = corsListener->Init(preflightChannel, DataURIHandling::Disallow);
   NS_ENSURE_SUCCESS(rv, rv);
   preflightListener = corsListener;
 

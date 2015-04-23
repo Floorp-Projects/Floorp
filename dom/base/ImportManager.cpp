@@ -504,7 +504,7 @@ ImportLoader::Open()
   nsRefPtr<nsCORSListenerProxy> corsListener =
     new nsCORSListenerProxy(this, principal,
                             /* aWithCredentials */ false);
-  rv = corsListener->Init(channel, true);
+  rv = corsListener->Init(channel, DataURIHandling::Allow);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   rv = channel->AsyncOpen(corsListener, nullptr);

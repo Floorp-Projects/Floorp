@@ -118,6 +118,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     static const size_t ARRAY_BUFFER_ALIGNMENT = 8;
 
+    static_assert(FLAGS_SLOT == JS_ARRAYBUFFER_FLAGS_SLOT,
+                  "self-hosted code with burned-in constants must get the "
+                  "right flags slot");
+
   public:
 
     enum OwnsState {
@@ -163,6 +167,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         TYPED_OBJECT_VIEWS  = 0x20
     };
 
+    static_assert(JS_ARRAYBUFFER_NEUTERED_FLAG == NEUTERED,
+                  "self-hosted code with burned-in constants must use the "
+                  "correct NEUTERED bit value");
   public:
 
     class BufferContents {

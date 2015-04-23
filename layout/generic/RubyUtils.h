@@ -53,13 +53,28 @@ namespace mozilla {
 class RubyUtils
 {
 public:
+  static inline bool IsRubyContentBox(nsIAtom* aFrameType)
+  {
+    return aFrameType == nsGkAtoms::rubyBaseFrame ||
+           aFrameType == nsGkAtoms::rubyTextFrame;
+  }
+
+  static inline bool IsRubyContainerBox(nsIAtom* aFrameType)
+  {
+    return aFrameType == nsGkAtoms::rubyBaseContainerFrame ||
+           aFrameType == nsGkAtoms::rubyTextContainerFrame;
+  }
+
+  static inline bool IsRubyBox(nsIAtom* aFrameType)
+  {
+    return aFrameType == nsGkAtoms::rubyFrame ||
+      IsRubyContentBox(aFrameType) || IsRubyContainerBox(aFrameType);
+  }
+
   static inline bool IsExpandableRubyBox(nsIFrame* aFrame)
   {
     nsIAtom* type = aFrame->GetType();
-    return type == nsGkAtoms::rubyBaseFrame ||
-           type == nsGkAtoms::rubyTextFrame ||
-           type == nsGkAtoms::rubyBaseContainerFrame ||
-           type == nsGkAtoms::rubyTextContainerFrame;
+    return IsRubyContentBox(type) || IsRubyContainerBox(type);
   }
 
   static void SetReservedISize(nsIFrame* aFrame, nscoord aISize);

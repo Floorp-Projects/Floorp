@@ -96,9 +96,13 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   aMetrics.SetBlockStartAscent(0);
 
   // Only when the BR is operating in a line-layout situation will it
-  // behave like a BR. BR is suppressed when it is inside ruby frames.
+  // behave like a BR. Additionally, we suppress breaks from BR inside
+  // of ruby frames. To determine if we're inside ruby, we have to rely
+  // on the *parent's* ShouldSuppressLineBreak() method, instead of our
+  // own, because we may have custom "display" value that makes our
+  // ShouldSuppressLineBreak() return false.
   nsLineLayout* ll = aReflowState.mLineLayout;
-  if (ll && !StyleContext()->ShouldSuppressLineBreak()) {
+  if (ll && !GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
     // Note that the compatibility mode check excludes AlmostStandards
     // mode, since this is the inline box model.  See bug 161691.
     if ( ll->LineIsEmpty() ||
@@ -165,7 +169,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 BRFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                            nsIFrame::InlineMinISizeData *aData)
 {
-  if (!StyleContext()->ShouldSuppressLineBreak()) {
+  if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
     aData->ForceBreak(aRenderingContext);
   }
 }
@@ -174,7 +178,7 @@ BRFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
 BRFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                             nsIFrame::InlinePrefISizeData *aData)
 {
-  if (!StyleContext()->ShouldSuppressLineBreak()) {
+  if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
     aData->ForceBreak(aRenderingContext);
   }
 }

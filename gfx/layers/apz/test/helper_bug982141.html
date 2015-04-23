@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 982141, helper page</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript">
 
     // -------------------------------------------------------------------
@@ -27,103 +28,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       // MozAfterPaint listener and run the test logic.
       window.removeEventListener("MozAfterPaint", afterPaint, false);
       testBug982141();
-    }
-
-    // ----------------------------------------------------------------------
-    // Functions that convert the APZ test data into a more usable form.
-    // Every place we have a WebIDL sequence whose elements are dictionaries
-    // with two elements, a key, and a value, we convert this into a JS
-    // object with a property for each key/value pair. (This is the structure
-    // we really want, but we can't express in directly in WebIDL.)
-    // ----------------------------------------------------------------------
-
-    function convertEntries(entries) {
-      var result = {};
-      for (var i = 0; i < entries.length; ++i) {
-        result[entries[i].key] = entries[i].value;
-      }
-      return result;
-    }
-
-    function convertScrollFrameData(scrollFrames) {
-      var result = {};
-      for (var i = 0; i < scrollFrames.length; ++i) {
-        result[scrollFrames[i].scrollId] = convertEntries(scrollFrames[i].entries);
-      }
-      return result;
-    }
-
-    function convertBuckets(buckets) {
-      var result = {};
-      for (var i = 0; i < buckets.length; ++i) {
-        result[buckets[i].sequenceNumber] = convertScrollFrameData(buckets[i].scrollFrames);
-      }
-      return result;
-    }
-
-    function convertTestData(testData) {
-      var result = {};
-      result.paints = convertBuckets(testData.paints);
-      result.repaintRequests = convertBuckets(testData.repaintRequests);
-      return result;
-    }
-
-    // ----------------------------------------------------------------
-    // Utilities for reconstructing the structure of the APZC tree from
-    // 'parentScrollId' entries in the APZ test data.
-    // ----------------------------------------------------------------
-
-    // Create a node with scroll id 'id' in the APZC tree.
-    function makeNode(id) {
-      return {scrollId: id, children: []};
-    }
-
-    // Find a node with scroll id 'id' in the APZC tree rooted at 'root'.
-    function findNode(root, id) {
-      if (root.scrollId == id) {
-        return root;
-      }
-      for (var i = 0; i < root.children.length; ++i) {
-        var subtreeResult = findNode(root.children[i], id);
-        if (subtreeResult != null) {
-          return subtreeResult;
-        }
-      }
-      return null;
-    }
-
-    // Add a child -> parent link to the APZC tree rooted at 'root'.
-    function addLink(root, child, parent) {
-      var parentNode = findNode(root, parent);
-      if (parentNode == null) {
-        parentNode = makeNode(parent);
-        root.children.push(parentNode);
-      }
-      parentNode.children.push(makeNode(child));
-    }
-
-    // Add a root node to the APZC tree. It will become a direct
-    // child of 'root'.
-    function addRoot(root, id) {
-      root.children.push(makeNode(id));
-    }
-
-    // Given APZ test data for a single paint on the compositor side,
-    // reconstruct the APZC tree structure from the 'parentScrollId'
-    // entries that were logged.
-    function buildApzcTree(paint) {
-      // The APZC tree can potentially have multiple root nodes,
-      // so we invent a node that is the parent of all roots.
-      // This 'root' does not correspond to an APZC.
-      var root = makeNode(-1);
-      for (var scrollId in paint) {
-        if ("parentScrollId" in paint[scrollId]) {
-          addLink(root, scrollId, paint[scrollId]["parentScrollId"]);
-        } else {
-          addRoot(root, scrollId);
-        }
-      }
-      return root;
     }
 
     // --------------------------------------------------------------------
