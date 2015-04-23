@@ -17,19 +17,29 @@ var index = GamepadService.addGamepad("test gamepad", // id
                                       SpecialPowers.Ci.nsIGamepadServiceTest.STANDARD_MAPPING,
                                       4, // buttons
                                       2);// axes
-// Press a button
 GamepadService.newButtonEvent(index, 0, true);
 function connecthandler(e) {
   ok(e.gamepad.timestamp <= performance.now());
+  is(e.gamepad.index, 0, "correct gamepad index");
   is(e.gamepad.id, "test gamepad", "correct gamepad name");
   is(e.gamepad.mapping, "standard", "standard mapping");
   is(e.gamepad.buttons.length, 4, "correct number of buttons");
   is(e.gamepad.axes.length, 2, "correct number of axes");
+  // Press a button
+  GamepadService.newButtonEvent(index, 0, true);
+  gamepads = navigator.getGamepads();
+  is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed")
+  GamepadService.newButtonValueEvent(index, 1, true, 0.5);
+  gamepads = navigator.getGamepads();
+  is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed")
+  is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5")
+
   SimpleTest.executeSoon(function() {
     GamepadService.removeGamepad(index);
     SimpleTest.finish();
   });
 }
+
 </script>
 </body>
 </html>
