@@ -1,0 +1,13 @@
+Index: src/google/protobuf/io/zero_copy_stream_impl_lite.cc
+===================================================================
+--- src/google/protobuf/io/zero_copy_stream_impl_lite.cc	(revision 511)
++++ src/google/protobuf/io/zero_copy_stream_impl_lite.cc	(revision 512)
+@@ -36,6 +36,8 @@
+ #include <google/protobuf/stubs/common.h>
+ #include <google/protobuf/stubs/stl_util.h>
+ 
++#include <algorithm>
++
+ namespace google {
+ namespace protobuf {
+ namespace io {

@@ -117,16 +117,9 @@ DebuggerMemory::checkThis(JSContext* cx, CallArgs& args, const char* fnName)
  */
 #define THIS_DEBUGGER_MEMORY(cx, argc, vp, fnName, args, memory)        \
     CallArgs args = CallArgsFromVp(argc, vp);                           \
-    Rooted<DebuggerMemory*> memory(cx, checkThis(cx, args, fnName));    \
+    Rooted<DebuggerMemory*> memory(cx, checkThis(cx, args, fnName));   \
     if (!memory)                                                        \
         return false
-
-static bool
-undefined(CallArgs& args)
-{
-    args.rval().setUndefined();
-    return true;
-}
 
 /* static */ bool
 DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc, Value* vp)
@@ -138,24 +131,37 @@ DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc, Value* 
     Debugger* dbg = memory->getDebugger();
     bool enabling = ToBoolean(args[0]);
 
-    if (enabling == dbg->trackingAllocationSites)
-        return undefined(args);
-
-    dbg->trackingAllocationSites = enabling;
-
-    if (!dbg->enabled)
-        return undefined(args);
-
-    if (enabling) {
-        if (!dbg->addAllocationsTrackingForAllDebuggees(cx)) {
-            dbg->trackingAllocationSites = false;
-            return false;
-        }
-    } else {
-        dbg->removeAllocationsTrackingForAllDebuggees();
+    if (enabling == dbg->trackingAllocationSites) {
+        // Nothing to do here...
+        args.rval().setUndefined();
+        return true;
     }
 
-    return undefined(args);
+    if (enabling) {
+        for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+            JSCompartment* compartment = r.front()->compartment();
+            if (compartment->hasObjectMetadataCallback()) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                     JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
+                return false;
+            }
+        }
+    }
+
+    for (WeakGlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
+        if (enabling) {
+            r.front()->compartment()->setObjectMetadataCallback(SavedStacksMetadataCallback);
+        } else {
+            r.front()->compartment()->forgetObjectMetadataCallback();
+        }
+    }
+
+    if (!enabling)
+        dbg->emptyAllocationsLog();
+
+    dbg->trackingAllocationSites = enabling;
+    args.rval().setUndefined();
+    return true;
 }
 
 /* static */ bool
@@ -319,16 +325,9 @@ DebuggerMemory::setOnGarbageCollection(JSContext* cx, unsigned argc, Value* vp)
 
 /* Debugger.Memory.prototype.takeCensus */
 
-JS_PUBLIC_API(void)
-JS::dbg::SetDebuggerMallocSizeOf(JSRuntime* rt, mozilla::MallocSizeOf mallocSizeOf)
-{
+void
+JS::dbg::SetDebuggerMallocSizeOf(JSRuntime* rt, mozilla::MallocSizeOf mallocSizeOf) {
     rt->debuggerMallocSizeOf = mallocSizeOf;
-}
-
-JS_PUBLIC_API(mozilla::MallocSizeOf)
-JS::dbg::GetDebuggerMallocSizeOf(JSRuntime* rt)
-{
-    return rt->debuggerMallocSizeOf;
 }
 
 namespace js {
