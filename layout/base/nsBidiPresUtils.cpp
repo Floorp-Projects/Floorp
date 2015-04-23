@@ -1410,11 +1410,7 @@ nsBidiPresUtils::RepositionRubyFrame(
   const LogicalMargin& aBorderPadding)
 {
   nsIAtom* frameType = aFrame->GetType();
-  MOZ_ASSERT(frameType == nsGkAtoms::rubyFrame ||
-             frameType == nsGkAtoms::rubyBaseFrame ||
-             frameType == nsGkAtoms::rubyTextFrame ||
-             frameType == nsGkAtoms::rubyBaseContainerFrame ||
-             frameType == nsGkAtoms::rubyTextContainerFrame);
+  MOZ_ASSERT(RubyUtils::IsRubyBox(frameType));
 
   nscoord icoord = 0;
   WritingMode frameWM = aFrame->GetWritingMode();
@@ -1551,7 +1547,7 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
     }
     icoord += reverseDir ?
       borderPadding.IStart(frameWM) : borderPadding.IEnd(frameWM);
-  } else if (aFrame->StyleDisplay()->IsRubyDisplayType()) {
+  } else if (RubyUtils::IsRubyBox(aFrame->GetType())) {
     icoord += RepositionRubyFrame(aFrame, aContinuationStates,
                                   aContainerWM, borderPadding);
   } else {
@@ -1593,8 +1589,7 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
   state->mFirstVisualFrame = nullptr;
   state->mFrameCount = 0;
 
-  if (!IsBidiLeaf(aFrame) ||
-      aFrame->StyleDisplay()->IsRubyDisplayType()) {
+  if (!IsBidiLeaf(aFrame) || RubyUtils::IsRubyBox(aFrame->GetType())) {
     // Continue for child frames
     nsIFrame* frame;
     for (frame = aFrame->GetFirstPrincipalChild();
