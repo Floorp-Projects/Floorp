@@ -934,11 +934,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void convertFloat32x4ToInt32x4(FloatRegister src, FloatRegister dest) {
-        // TODO: Note that if the conversion failed (because the converted
+        // Note that if the conversion failed (because the converted
         // result is larger than the maximum signed int32, or less than the
         // least signed int32, or NaN), this will return the undefined integer
-        // value (0x8000000). Spec should define what to do in such cases. See
-        // also bug 1068020.
+        // value (0x8000000).
         vcvttps2dq(src, dest);
     }
     void convertInt32x4ToFloat32x4(FloatRegister src, FloatRegister dest) {

@@ -2175,7 +2175,58 @@ CodeGeneratorX86Shared::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins)
 {
     FloatRegister in = ToFloatRegister(ins->input());
     FloatRegister out = ToFloatRegister(ins->output());
+    Register temp = ToRegister(ins->temp());
+
     masm.convertFloat32x4ToInt32x4(in, out);
+
+    OutOfLineSimdFloatToIntCheck *ool = new(alloc()) OutOfLineSimdFloatToIntCheck(temp, in, ins);
+    addOutOfLineCode(ool, ins->mir());
+
+    static const SimdConstant InvalidResult = SimdConstant::SplatX4(int32_t(-2147483648));
+
+    masm.loadConstantInt32x4(InvalidResult, ScratchSimdReg);
+    masm.packedEqualInt32x4(Operand(out), ScratchSimdReg);
+    // TODO (bug 1156228): If we have SSE4.1, we can use PTEST here instead of
+    // the two following instructions.
+    masm.vmovmskps(ScratchSimdReg, temp);
+    masm.cmp32(temp, Imm32(0));
+    masm.j(Assembler::NotEqual, ool->entry());
+
+    masm.bind(ool->rejoin());
+}
+
+void
+CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIntCheck *ool)
+{
+    static const SimdConstant Int32MaxX4 = SimdConstant::SplatX4(2147483647.f);
+    static const SimdConstant Int32MinX4 = SimdConstant::SplatX4(-2147483648.f);
+
+    Label bail;
+    Label* onConversionError = gen->conversionErrorLabel();
+    if (!onConversionError)
+        onConversionError = &bail;
+
+    FloatRegister input = ool->input();
+    Register temp = ool->temp();
+
+    masm.loadConstantFloat32x4(Int32MinX4, ScratchSimdReg);
+    masm.vcmpleps(Operand(input), ScratchSimdReg, ScratchSimdReg);
+    masm.vmovmskps(ScratchSimdReg, temp);
+    masm.cmp32(temp, Imm32(15));
+    masm.j(Assembler::NotEqual, onConversionError);
+
+    masm.loadConstantFloat32x4(Int32MaxX4, ScratchSimdReg);
+    masm.vcmpleps(Operand(input), ScratchSimdReg, ScratchSimdReg);
+    masm.vmovmskps(ScratchSimdReg, temp);
+    masm.cmp32(temp, Imm32(0));
+    masm.j(Assembler::NotEqual, onConversionError);
+
+    masm.jump(ool->rejoin());
+
+    if (bail.used()) {
+        masm.bind(&bail);
+        bailout(ool->ins()->snapshot());
+    }
 }
 
 void
