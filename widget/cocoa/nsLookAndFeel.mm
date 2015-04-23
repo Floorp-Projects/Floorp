@@ -12,7 +12,6 @@
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/widget/WidgetMessageUtils.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -29,12 +28,7 @@ typedef NSInteger mozNSScrollerStyle;
 + (mozNSScrollerStyle)preferredScrollerStyle;
 @end
 
-nsLookAndFeel::nsLookAndFeel()
- : nsXPLookAndFeel()
- , mUseOverlayScrollbars(-1)
- , mUseOverlayScrollbarsCached(false)
- , mAllowOverlayScrollbarsOverlap(-1)
- , mAllowOverlayScrollbarsOverlapCached(false)
+nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
 }
 
@@ -365,18 +359,10 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = eScrollThumbStyle_Proportional;
       break;
     case eIntID_UseOverlayScrollbars:
-      if (!mUseOverlayScrollbarsCached) {
-        mUseOverlayScrollbars = SystemWantsOverlayScrollbars() ? 1 : 0;
-        mUseOverlayScrollbarsCached = true;
-      }
-      aResult = mUseOverlayScrollbars;
+      aResult = SystemWantsOverlayScrollbars() ? 1 : 0;
       break;
     case eIntID_AllowOverlayScrollbarsOverlap:
-      if (!mAllowOverlayScrollbarsOverlapCached) {
-        mAllowOverlayScrollbarsOverlap = AllowOverlayScrollbarsOverlap() ? 1 : 0;
-        mAllowOverlayScrollbarsOverlapCached = true;
-      }
-      aResult = mAllowOverlayScrollbarsOverlap;
+      aResult = AllowOverlayScrollbarsOverlap() ? 1 : 0;
       break;
     case eIntID_ScrollbarDisplayOnMouseMove:
       aResult = 0;
@@ -646,52 +632,4 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString &aFontName,
     return true;
 
     NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
-}
-
-nsTArray<LookAndFeelInt>
-nsLookAndFeel::GetIntCacheImpl()
-{
-  nsTArray<LookAndFeelInt> lookAndFeelIntCache =
-    nsXPLookAndFeel::GetIntCacheImpl();
-
-  LookAndFeelInt useOverlayScrollbars;
-  useOverlayScrollbars.id = eIntID_UseOverlayScrollbars;
-  useOverlayScrollbars.value = GetInt(eIntID_UseOverlayScrollbars);
-  lookAndFeelIntCache.AppendElement(useOverlayScrollbars);
-
-  LookAndFeelInt allowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.id = eIntID_AllowOverlayScrollbarsOverlap;
-  allowOverlayScrollbarsOverlap.value = GetInt(eIntID_AllowOverlayScrollbarsOverlap);
-  lookAndFeelIntCache.AppendElement(allowOverlayScrollbarsOverlap);
-
-  return lookAndFeelIntCache;
-}
-
-void
-nsLookAndFeel::SetIntCacheImpl(const nsTArray<LookAndFeelInt>& lookAndFeelIntCache)
-{
-  for (auto entry : lookAndFeelIntCache) {
-    switch(entry.id) {
-      case eIntID_UseOverlayScrollbars:
-        mUseOverlayScrollbars = entry.value;
-        mUseOverlayScrollbarsCached = true;
-        break;
-      case eIntID_AllowOverlayScrollbarsOverlap:
-        mAllowOverlayScrollbarsOverlap = entry.value;
-        mAllowOverlayScrollbarsOverlapCached = true;
-        break;
-    }
-  }
-}
-
-void
-nsLookAndFeel::RefreshImpl()
-{
-  // We should only clear the cache if we're in the main browser process.
-  // Otherwise, we should wait for the parent to inform us of new values
-  // to cache via LookAndFeel::SetIntCache.
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    mUseOverlayScrollbarsCached = false;
-    mAllowOverlayScrollbarsOverlapCached = false;
-  }
 }
