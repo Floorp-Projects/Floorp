@@ -8,13 +8,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <fnmatch.h>
-#ifndef ANDROID
-#include <fts.h>
-#endif
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/mman.h>
 #define _DARWIN_USE_64_BIT_INODE // Use 64-bit inode data structures
 #include <sys/stat.h>
@@ -53,7 +50,7 @@ bool AbsolutePath(FilePath* path) {
 // which works both with and without the recursive flag.  I'm not sure we need
 // that functionality. If not, remove from file_util_win.cc, otherwise add it
 // here.
-bool Delete(const FilePath& path, bool recursive) {
+bool Delete(const FilePath& path) {
   const char* path_str = path.value().c_str();
   struct stat file_info;
   int test = stat(path_str, &file_info);
@@ -64,174 +61,8 @@ bool Delete(const FilePath& path, bool recursive) {
   }
   if (!S_ISDIR(file_info.st_mode))
     return (unlink(path_str) == 0);
-  if (!recursive)
-    return (rmdir(path_str) == 0);
 
-#ifdef ANDROID
-  // XXX Need ftsless impl for bionic
-  return false;
-#else
-  bool success = true;
-  int ftsflags = FTS_PHYSICAL | FTS_NOSTAT;
-  char top_dir[PATH_MAX];
-  if (base::strlcpy(top_dir, path_str,
-                    arraysize(top_dir)) >= arraysize(top_dir)) {
-    return false;
-  }
-  char* dir_list[2] = { top_dir, NULL };
-  FTS* fts = fts_open(dir_list, ftsflags, NULL);
-  if (fts) {
-    FTSENT* fts_ent = fts_read(fts);
-    while (success && fts_ent != NULL) {
-      switch (fts_ent->fts_info) {
-        case FTS_DNR:
-        case FTS_ERR:
-          // log error
-          success = false;
-          continue;
-          break;
-        case FTS_DP:
-          success = (rmdir(fts_ent->fts_accpath) == 0);
-          break;
-        case FTS_D:
-          break;
-        case FTS_NSOK:
-        case FTS_F:
-        case FTS_SL:
-        case FTS_SLNONE:
-          success = (unlink(fts_ent->fts_accpath) == 0);
-          break;
-        default:
-          DCHECK(false);
-          break;
-      }
-      fts_ent = fts_read(fts);
-    }
-    fts_close(fts);
-  }
-  return success;
-#endif
-}
-
-bool Move(const FilePath& from_path, const FilePath& to_path) {
-  if (rename(from_path.value().c_str(), to_path.value().c_str()) == 0)
-    return true;
-
-  if (!CopyDirectory(from_path, to_path, true))
-    return false;
-
-  Delete(from_path, true);
-  return true;
-}
-
-bool CopyDirectory(const FilePath& from_path,
-                   const FilePath& to_path,
-                   bool recursive) {
-  // Some old callers of CopyDirectory want it to support wildcards.
-  // After some discussion, we decided to fix those callers.
-  // Break loudly here if anyone tries to do this.
-  // TODO(evanm): remove this once we're sure it's ok.
-  DCHECK(to_path.value().find('*') == std::string::npos);
-  DCHECK(from_path.value().find('*') == std::string::npos);
-
-  char top_dir[PATH_MAX];
-  if (base::strlcpy(top_dir, from_path.value().c_str(),
-                    arraysize(top_dir)) >= arraysize(top_dir)) {
-    return false;
-  }
-
-#ifdef ANDROID
-  // XXX Need ftsless impl for bionic
-  return false;
-#else
-  char* dir_list[] = { top_dir, NULL };
-  FTS* fts = fts_open(dir_list, FTS_PHYSICAL | FTS_NOSTAT, NULL);
-  if (!fts) {
-    CHROMIUM_LOG(ERROR) << "fts_open failed: " << strerror(errno);
-    return false;
-  }
-
-  int error = 0;
-  FTSENT* ent;
-  while (!error && (ent = fts_read(fts)) != NULL) {
-    // ent->fts_path is the source path, including from_path, so paste
-    // the suffix after from_path onto to_path to create the target_path.
-    std::string suffix(&ent->fts_path[from_path.value().size()]);
-    // Strip the leading '/' (if any).
-    if (!suffix.empty()) {
-      DCHECK_EQ('/', suffix[0]);
-      suffix.erase(0, 1);
-    }
-    const FilePath target_path = to_path.Append(suffix);
-    switch (ent->fts_info) {
-      case FTS_D:  // Preorder directory.
-        // If we encounter a subdirectory in a non-recursive copy, prune it
-        // from the traversal.
-        if (!recursive && ent->fts_level > 0) {
-          if (fts_set(fts, ent, FTS_SKIP) != 0)
-            error = errno;
-          continue;
-        }
-
-        // Try creating the target dir, continuing on it if it exists already.
-        // Rely on the user's umask to produce correct permissions.
-        if (mkdir(target_path.value().c_str(), 0777) != 0) {
-          if (errno != EEXIST)
-            error = errno;
-        }
-        break;
-      case FTS_F:     // Regular file.
-      case FTS_NSOK:  // File, no stat info requested.
-        errno = 0;
-        if (!CopyFile(FilePath(ent->fts_path), target_path))
-          error = errno ? errno : EINVAL;
-        break;
-      case FTS_DP:   // Postorder directory.
-      case FTS_DOT:  // "." or ".."
-        // Skip it.
-        continue;
-      case FTS_DC:   // Directory causing a cycle.
-        // Skip this branch.
-        if (fts_set(fts, ent, FTS_SKIP) != 0)
-          error = errno;
-        break;
-      case FTS_DNR:  // Directory cannot be read.
-      case FTS_ERR:  // Error.
-      case FTS_NS:   // Stat failed.
-        // Abort with the error.
-        error = ent->fts_errno;
-        break;
-      case FTS_SL:      // Symlink.
-      case FTS_SLNONE:  // Symlink with broken target.
-        CHROMIUM_LOG(WARNING) << "CopyDirectory() skipping symbolic link: " <<
-            ent->fts_path;
-        continue;
-      case FTS_DEFAULT:  // Some other sort of file.
-        CHROMIUM_LOG(WARNING) << "CopyDirectory() skipping file of unknown type: " <<
-            ent->fts_path;
-        continue;
-      default:
-        NOTREACHED();
-        continue;  // Hope for the best!
-    }
-  }
-  // fts_read may have returned NULL and set errno to indicate an error.
-  if (!error && errno != 0)
-    error = errno;
-
-  if (!fts_close(fts)) {
-    // If we already have an error, let's use that error instead of the error
-    // fts_close set.
-    if (!error)
-      error = errno;
-  }
-
-  if (error) {
-    CHROMIUM_LOG(ERROR) << "CopyDirectory(): " << strerror(error);
-    return false;
-  }
-  return true;
-#endif
+  return (rmdir(path_str) == 0);
 }
 
 bool PathExists(const FilePath& path) {

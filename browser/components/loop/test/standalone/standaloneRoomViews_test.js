@@ -214,6 +214,19 @@ describe("loop.standaloneRoomViews", function() {
 
           sinon.assert.calledOnce(view.updateVideoContainer);
       });
+
+      it("should reset the video dimensions cache when the gather state is entered", function() {
+        activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+
+        var view = mountTestComponent();
+
+        activeRoomStore.setStoreState({roomState: ROOM_STATES.GATHER});
+
+        expect(view._videoDimensionsCache).eql({
+          local: {},
+          remote: {}
+        });
+      })
     });
 
     describe("#publishStream", function() {
