@@ -79,6 +79,7 @@ BuiltinProvider.prototype = {
         // corresponding addition to the SrcdirProvider mapping below as well.
         "": "resource://gre/modules/commonjs/",
         "main": "resource:///modules/devtools/main.js",
+        "definitions": "resource:///modules/devtools/definitions.js",
         "devtools": "resource:///modules/devtools",
         "devtools/toolkit": "resource://gre/modules/devtools",
         "devtools/server": "resource://gre/modules/devtools/server",
@@ -135,6 +136,7 @@ SrcdirProvider.prototype = {
     let devtoolsDir = OS.Path.join(srcdir, "browser", "devtools");
     let toolkitDir = OS.Path.join(srcdir, "toolkit", "devtools");
     let mainURI = this.fileURI(OS.Path.join(devtoolsDir, "main.js"));
+    let definitionsURI = this.fileURI(OS.Path.join(devtoolsDir, "definitions.js"));
     let devtoolsURI = this.fileURI(devtoolsDir);
     let toolkitURI = this.fileURI(toolkitDir);
     let serverURI = this.fileURI(OS.Path.join(toolkitDir, "server"));
@@ -161,6 +163,7 @@ SrcdirProvider.prototype = {
       paths: {
         "": "resource://gre/modules/commonjs/",
         "main": mainURI,
+        "definitions": definitionsURI,
         "devtools": devtoolsURI,
         "devtools/toolkit": toolkitURI,
         "devtools/server": serverURI,

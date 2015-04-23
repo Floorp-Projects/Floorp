@@ -70,10 +70,10 @@ exports.items = [
       }
       else {
         options = {
-          isNode: (typeof(process) !== 'undefined' && process.title === 'node'),
+          isNode: (typeof(process) !== 'undefined' &&
+                   process.title.indexOf('node') != -1),
           isFirefox: false,
           isPhantomjs: false,
-          isNoDom: true,
           requisition: new Requisition(context.system)
         };
         options.automator = createRequisitionAutomator(options.requisition);

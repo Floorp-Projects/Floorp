@@ -15,54 +15,18 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var exports = {};
-
-var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testExec.js</p>";
+const exports = {};
 
 function test() {
-  return Task.spawn(function() {
-    let options = yield helpers.openTab(TEST_URI);
-    yield helpers.openToolbar(options);
-    gcli.addItems(mockCommands.items);
-
-    yield helpers.runTests(options, exports);
-
-    gcli.removeItems(mockCommands.items);
-    yield helpers.closeToolbar(options);
-    yield helpers.closeTab(options);
-  }).then(finish, helpers.handleError);
+  helpers.runTestModule(exports, "browser_gcli_exec.js");
 }
-
-// <INJECTED SOURCE:END>
 
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
-var nodetype = require('gcli/types/node');
-
-var mockBody = {
-  style: {}
-};
-
-var mockEmptyNodeList = {
-  length: 0,
-  item: function() { return null; }
-};
-
-var mockRootNodeList = {
-  length: 1,
-  item: function(i) { return mockBody; }
-};
-
-var mockDoc = {
-  querySelectorAll: function(css) {
-    return (css === ':root') ? mockRootNodeList : mockEmptyNodeList;
-  }
-};
 
 exports.testParamGroup = function(options) {
   var tsg = options.requisition.system.commands.get('tsg');
@@ -121,7 +85,7 @@ exports.testWithHelpers = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsv optionType=string, optionValue=10'
+        output: 'Exec: tsv optionType=option1 optionValue=10'
       }
     },
     {
@@ -151,7 +115,7 @@ exports.testWithHelpers = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsv optionType=number, optionValue=10'
+        output: 'Exec: tsv optionType=option2 optionValue=10'
       }
     },
     // Delegated remote types can't transfer value types so we only test for
@@ -163,7 +127,7 @@ exports.testWithHelpers = function(options) {
         args: { optionValue: { value: '10' } }
       },
       exec: {
-        output: 'Exec: tsv optionType=string, optionValue=10'
+        output: 'Exec: tsv optionType=option1 optionValue=10'
       }
     },
     {
@@ -173,7 +137,7 @@ exports.testWithHelpers = function(options) {
         args: { optionValue: { value: 10 } }
       },
       exec: {
-        output: 'Exec: tsv optionType=number, optionValue=10'
+        output: 'Exec: tsv optionType=option2 optionValue=10'
       }
     }
   ]);
@@ -228,7 +192,7 @@ exports.testExecText = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsr text=fred bloggs'
+        output: 'Exec: tsr text=fred\\ bloggs'
       }
     },
     {
@@ -253,7 +217,7 @@ exports.testExecText = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsr text=fred bloggs'
+        output: 'Exec: tsr text=fred\\ bloggs'
       }
     },
     {
@@ -278,7 +242,7 @@ exports.testExecText = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsr text=fred bloggs'
+        output: 'Exec: tsr text=fred\\ bloggs'
       }
     }
   ]);
@@ -403,7 +367,6 @@ exports.testExecScript = function(options) {
         args: {
           command: { name: 'tsj' },
           javascript: {
-            value: '1 + 1',
             arg: ' { 1 + 1 }',
             status: 'VALID',
             message: ''
@@ -418,12 +381,9 @@ exports.testExecScript = function(options) {
 };
 
 exports.testExecNode = function(options) {
-  var origDoc = nodetype.getDocument();
-  nodetype.setDocument(mockDoc);
-
   return helpers.audit(options, [
     {
-      skipIf: options.isNoDom,
+      skipIf: options.isRemote,
       setup:    'tse :root',
       check: {
         input:  'tse :root',
@@ -437,19 +397,16 @@ exports.testExecNode = function(options) {
         args: {
           command: { name: 'tse' },
           node: {
-            value: mockBody,
             arg: ' :root',
             status: 'VALID',
             message: ''
           },
           nodes: {
-            value: mockEmptyNodeList,
             arg: '',
             status: 'VALID',
             message: ''
           },
           nodes2: {
-            value: mockEmptyNodeList,
             arg: '',
             status: 'VALID',
             message: ''
@@ -459,8 +416,10 @@ exports.testExecNode = function(options) {
       exec: {
         output: /^Exec: tse/
       },
-      post: function() {
-        nodetype.setDocument(origDoc);
+      post: function(output) {
+        assert.is(output.data.args.node, ':root', 'node should be :root');
+        assert.is(output.data.args.nodes, 'Error', 'nodes should be Error');
+        assert.is(output.data.args.nodes2, 'Error', 'nodes2 should be Error');
       }
     }
   ]);
@@ -552,7 +511,7 @@ exports.testExecArray = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tselarr num=1, arr='
+        output: 'Exec: tselarr num=1 arr='
       }
     },
     {
@@ -573,7 +532,7 @@ exports.testExecArray = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tselarr num=1, arr=a'
+        output: 'Exec: tselarr num=1 arr=a'
       }
     },
     {
@@ -594,7 +553,7 @@ exports.testExecArray = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tselarr num=1, arr=a,b'
+        output: 'Exec: tselarr num=1 arr=a b'
       }
     }
   ]);
@@ -621,7 +580,7 @@ exports.testExecMultiple = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsm abc=a, txt=10, num=10'
+        output: 'Exec: tsm abc=a txt=10 num=10'
       }
     }
   ]);
@@ -651,9 +610,47 @@ exports.testExecDefaults = function(options) {
         }
       },
       exec: {
-        output: 'Exec: tsg solo=aaa, txt1=null, bool=false, txt2=d, num=42'
+        output: 'Exec: tsg solo=aaa txt1= bool=false txt2=d num=42'
       }
     }
   ]);
+};
 
+exports.testNested = function(options) {
+  var commands = options.requisition.system.commands;
+  commands.add({
+    name: 'nestorama',
+    exec: function(args, context) {
+      return context.updateExec('tsb').then(function(tsbOutput) {
+        return context.updateExec('tsu 6').then(function(tsuOutput) {
+          return JSON.stringify({
+            tsb: tsbOutput.data,
+            tsu: tsuOutput.data
+          });
+        });
+      });
+    }
+  });
+
+  return helpers.audit(options, [
+    {
+      setup: 'nestorama',
+      exec: {
+        output:
+          '{' +
+            '"tsb":{' +
+              '"name":"tsb",' +
+              '"args":{"toggle":"false"}' +
+            '},' +
+            '"tsu":{' +
+              '"name":"tsu",' +
+              '"args":{"num":"6"}' +
+            '}' +
+          '}'
+      },
+      post: function() {
+        commands.remove('nestorama');
+      }
+    }
+  ]);
 };

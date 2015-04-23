@@ -256,16 +256,16 @@ function getHighlightingProxy(item, match, document) {
 }
 
 /**
- * @return The current choice index
+ * @return {int} current choice index
  */
 Menu.prototype.getChoiceIndex = function() {
   return this._choice == null ? 0 : this._choice;
 };
 
 /**
- * Highlight the next option
+ * Highlight the next (for by=1) or previous (for by=-1) option
  */
-Menu.prototype.incrementChoice = function() {
+Menu.prototype.nudgeChoice = function(by) {
   if (this._choice == null) {
     this._choice = 0;
   }
@@ -273,20 +273,7 @@ Menu.prototype.incrementChoice = function() {
   // There's an annoying up is down thing here, the menu is presented
   // with the zeroth index at the top working down, so the UP arrow needs
   // pick the choice below because we're working down
-  this._choice--;
-  this._updateHighlight();
-};
-
-/**
- * Highlight the previous option
- */
-Menu.prototype.decrementChoice = function() {
-  if (this._choice == null) {
-    this._choice = 0;
-  }
-
-  // See incrementChoice
-  this._choice++;
+  this._choice -= by;
   this._updateHighlight();
 };
 

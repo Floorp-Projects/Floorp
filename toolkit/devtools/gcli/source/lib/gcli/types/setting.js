@@ -25,12 +25,15 @@ exports.items = [
     cacheable: true,
     lookup: function(context) {
       var settings = context.system.settings;
+
+      // Lazily add a settings.onChange listener to clear the cache
       if (!this._registeredListener) {
         settings.onChange.add(function(ev) {
           this.clearCache();
         }, this);
         this._registeredListener = true;
       }
+
       return settings.getAll().map(function(setting) {
         return { name: setting.name, value: setting };
       });

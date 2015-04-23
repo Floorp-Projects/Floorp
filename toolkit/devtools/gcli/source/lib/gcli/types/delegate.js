@@ -19,6 +19,7 @@
 var Promise = require('../util/promise').Promise;
 var Conversion = require('./types').Conversion;
 var Status = require('./types').Status;
+var BlankArgument = require('./types').BlankArgument;
 
 /**
  * The types we expose for registration
@@ -28,14 +29,6 @@ exports.items = [
   {
     item: 'type',
     name: 'delegate',
-
-    constructor: function() {
-      if (typeof this.delegateType !== 'function' &&
-          typeof this.delegateType !== 'string') {
-        throw new Error('Instances of DelegateType need typeSpec.delegateType' +
-                        ' to be a function that returns a type');
-      }
-    },
 
     getSpec: function(commandName, paramName) {
       return {
@@ -47,9 +40,7 @@ exports.items = [
     // Child types should implement this method to return an instance of the type
     // that should be used. If no type is available, or some sort of temporary
     // placeholder is required, BlankType can be used.
-    delegateType: function(context) {
-      throw new Error('Not implemented');
-    },
+    delegateType: undefined,
 
     stringify: function(value, context) {
       return this.getType(context).then(function(delegated) {
@@ -63,23 +54,19 @@ exports.items = [
       }.bind(this));
     },
 
-    decrement: function(value, context) {
+    nudge: function(value, by, context) {
       return this.getType(context).then(function(delegated) {
-        return delegated.decrement ?
-               delegated.decrement(value, context) :
-               undefined;
-      }.bind(this));
-    },
-
-    increment: function(value, context) {
-      return this.getType(context).then(function(delegated) {
-        return delegated.increment ?
-               delegated.increment(value, context) :
+        return delegated.nudge ?
+               delegated.nudge(value, by, context) :
                undefined;
       }.bind(this));
     },
 
     getType: function(context) {
+      if (this.delegateType === undefined) {
+        return Promise.resolve(this.types.createType('blank'));
+      }
+
       var type = this.delegateType(context);
       if (typeof type.parse !== 'function') {
         type = this.types.createType(type);
@@ -87,8 +74,8 @@ exports.items = [
       return Promise.resolve(type);
     },
 
-    // DelegateType is designed to be inherited from, so DelegateField needs a way
-    // to check if something works like a delegate without using 'name'
+    // DelegateType is designed to be inherited from, so DelegateField needs a
+    // way to check if something works like a delegate without using 'name'
     isDelegate: true,
 
     // Technically we perhaps should proxy this, except that properties are
@@ -99,12 +86,36 @@ exports.items = [
   {
     item: 'type',
     name: 'remote',
-    param: undefined,
+    paramName: undefined,
+    blankIsValid: false,
+
+    getSpec: function(commandName, paramName) {
+      return {
+        name: 'remote',
+        commandName: commandName,
+        paramName: paramName,
+        blankIsValid: this.blankIsValid
+      };
+    },
+
+    getBlank: function(context) {
+      if (this.blankIsValid) {
+        return new Conversion({ stringified: '' },
+                              new BlankArgument(), Status.VALID);
+      }
+      else {
+        return new Conversion(undefined, new BlankArgument(),
+                              Status.INCOMPLETE, '');
+      }
+    },
 
     stringify: function(value, context) {
+      if (value == null) {
+        return '';
+      }
       // remote types are client only, and we don't attempt to transfer value
       // objects to the client (we can't be sure the are jsonable) so it is a
-      // but strange to be asked to stringify a value object, however since
+      // bit strange to be asked to stringify a value object, however since
       // parse creates a Conversion with a (fake) value object we might be
       // asked to stringify that. We can stringify fake value objects.
       if (typeof value.stringified === 'string') {
@@ -114,26 +125,16 @@ exports.items = [
     },
 
     parse: function(arg, context) {
-      var args = { typed: context.typed, param: this.param };
-      return this.connection.call('typeparse', args).then(function(json) {
+      return this.front.parseType(context.typed, this.paramName).then(function(json) {
         var status = Status.fromString(json.status);
-        var val = { stringified: arg.text };
-        return new Conversion(val, arg, status, json.message, json.predictions);
-      });
+        return new Conversion(undefined, arg, status, json.message, json.predictions);
+      }.bind(this));
     },
 
-    decrement: function(value, context) {
-      var args = { typed: context.typed, param: this.param };
-      return this.connection.call('typedecrement', args).then(function(json) {
+    nudge: function(value, by, context) {
+      return this.front.nudgeType(context.typed, by, this.paramName).then(function(json) {
         return { stringified: json.arg };
-      });
-    },
-
-    increment: function(value, context) {
-      var args = { typed: context.typed, param: this.param };
-      return this.connection.call('typeincrement', args).then(function(json) {
-        return { stringified: json.arg };
-      });
+      }.bind(this));
     }
   },
   // 'blank' is a type for use with DelegateType when we don't know yet.

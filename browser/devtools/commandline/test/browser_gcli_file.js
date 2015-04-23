@@ -15,30 +15,15 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var exports = {};
-
-var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testFile.js</p>";
+const exports = {};
 
 function test() {
-  return Task.spawn(function() {
-    let options = yield helpers.openTab(TEST_URI);
-    yield helpers.openToolbar(options);
-    gcli.addItems(mockCommands.items);
-
-    yield helpers.runTests(options, exports);
-
-    gcli.removeItems(mockCommands.items);
-    yield helpers.closeToolbar(options);
-    yield helpers.closeTab(options);
-  }).then(finish, helpers.handleError);
+  helpers.runTestModule(exports, "browser_gcli_file.js");
 }
-
-// <INJECTED SOURCE:END>
 
 // var helpers = require('./helpers');
 
@@ -47,10 +32,7 @@ var local = false;
 exports.testBasic = function(options) {
   return helpers.audit(options, [
     {
-      // These tests require us to be using node directly or to be in
-      // PhantomJS connected to an execute enabled node server or to be in
-      // firefox.
-      skipRemainingIf: options.isPhantomjs || options.isFirefox,
+      skipRemainingIf: options.isFirefox, // No file implementation in Firefox
       setup:    'tsfile open /',
       check: {
         input:  'tsfile open /',

@@ -19,11 +19,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
-'do not use strict';
-
-// WARNING: do not 'use strict' without reading the notes in envEval();
-// Also don't remove the 'do not use strict' marker. The orion build uses these
-// markers to know where to insert AMD headers.
+'use strict';
 
 /**
  * For full documentation, see:
@@ -69,9 +65,9 @@ var template = function(node, data, options) {
   processNode(state, node, data);
 };
 
-//
-//
-//
+if (typeof exports !== 'undefined') {
+  exports.template = template;
+}
 
 /**
  * Helper for the places where we need to act asynchronously and keep track of
@@ -182,6 +178,7 @@ function processNode(state, node, data) {
               replacement = envEval(state, value.slice(2, -1), data, value);
               if (replacement && typeof replacement.then === 'function') {
                 node.setAttribute(name, '');
+                /* jshint loopfunc:true */
                 replacement.then(function(newValue) {
                   node.setAttribute(name, newValue);
                 }).then(null, console.error);
@@ -361,15 +358,16 @@ function processForEachMember(state, member, templNode, siblingNode, data, param
       });
       newData[paramName] = reply;
       if (node.parentNode != null) {
+        var clone;
         if (templNode.nodeName.toLowerCase() === 'loop') {
           for (var i = 0; i < templNode.childNodes.length; i++) {
-            var clone = templNode.childNodes[i].cloneNode(true);
+            clone = templNode.childNodes[i].cloneNode(true);
             node.parentNode.insertBefore(clone, node);
             processNode(cState, clone, newData);
           }
         }
         else {
-          var clone = templNode.cloneNode(true);
+          clone = templNode.cloneNode(true);
           clone.removeAttribute('foreach');
           node.parentNode.insertBefore(clone, node);
           processNode(cState, clone, newData);
@@ -543,10 +541,6 @@ function property(state, path, data, newValue) {
 /**
  * Like eval, but that creates a context of the variables in <tt>env</tt> in
  * which the script is evaluated.
- * WARNING: This script uses 'with' which is generally regarded to be evil.
- * The alternative is to create a Function at runtime that takes X parameters
- * according to the X keys in the env object, and then call that function using
- * the values in the env object. This is likely to be slow, but workable.
  * @param script The string to be evaluated.
  * @param data The environment in which to eval the script.
  * @param frame Optional debugging string in case of failure.
@@ -566,9 +560,26 @@ function envEval(state, script, data, frame) {
             ' can not be resolved using a simple property path.');
         return '${' + script + '}';
       }
-      with (data) {
-        return eval(script);
-      }
+
+      // What we're looking to do is basically:
+      //   with(data) { return eval(script); }
+      // except in strict mode where 'with' is banned.
+      // So we create a function which has a parameter list the same as the
+      // keys in 'data' and with 'script' as its function body.
+      // We then call this function with the values in 'data'
+      var keys = allKeys(data);
+      var func = Function.apply(null, keys.concat("return " + script));
+
+      var values = keys.map(function(key) { return data[key]; });
+      return func.apply(null, values);
+
+      // TODO: The 'with' method is different from the code above in the value
+      // of 'this' when calling functions. For example:
+      //   envEval(state, 'foo()', { foo: function() { return this; } }, ...);
+      // The global for 'foo' when using 'with' is the data object. However the
+      // code above, the global is null. (Using 'func.apply(data, values)'
+      // changes 'this' in the 'foo()' frame, but not in the inside the body
+      // of 'foo', so that wouldn't help)
     }
   }
   catch (ex) {
@@ -578,6 +589,15 @@ function envEval(state, script, data, frame) {
   finally {
     state.stack.pop();
   }
+}
+
+/**
+ * Object.keys() that respects the prototype chain
+ */
+function allKeys(data) {
+  var keys = [];
+  for (var key in data) { keys.push(key); }
+  return keys;
 }
 
 /**
@@ -599,5 +619,5 @@ function handleError(state, message, ex) {
  * @param message the error message to report.
  */
 function logError(message) {
-  console.log(message);
+  console.error(message);
 }

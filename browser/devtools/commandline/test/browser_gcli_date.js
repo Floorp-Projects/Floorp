@@ -15,30 +15,15 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var exports = {};
-
-var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testDate.js</p>";
+const exports = {};
 
 function test() {
-  return Task.spawn(function() {
-    let options = yield helpers.openTab(TEST_URI);
-    yield helpers.openToolbar(options);
-    gcli.addItems(mockCommands.items);
-
-    yield helpers.runTests(options, exports);
-
-    gcli.removeItems(mockCommands.items);
-    yield helpers.closeToolbar(options);
-    yield helpers.closeTab(options);
-  }).then(finish, helpers.handleError);
+  helpers.runTestModule(exports, "browser_gcli_date.js");
 }
-
-// <INJECTED SOURCE:END>
 
 // var assert = require('../testharness/assert');
 // var helpers = require('./helpers');
@@ -66,15 +51,15 @@ exports.testMaxMin = function(options) {
   var date = types.createType({ name: 'date', max: max, min: min });
   assert.is(date.getMax(), max, 'max setup');
 
-  var incremented = date.increment(min);
+  var incremented = date.nudge(min, 1);
   assert.is(incremented, max, 'incremented');
 };
 
 exports.testIncrement = function(options) {
   var date = options.requisition.system.types.createType('date');
   return date.parseString('now').then(function(conversion) {
-    var plusOne = date.increment(conversion.value);
-    var minusOne = date.decrement(plusOne);
+    var plusOne = date.nudge(conversion.value, 1);
+    var minusOne = date.nudge(plusOne, -1);
 
     // See comments in testParse
     var gap = new Date().getTime() - minusOne.getTime();
@@ -126,7 +111,7 @@ exports.testInput = function(options) {
       },
       exec: {
         output: [ /^Exec: tsdate/, /2001/, /1980/ ],
-        type: 'string',
+        type: 'testCommandOutput',
         error: false
       }
     },
@@ -172,7 +157,7 @@ exports.testInput = function(options) {
       },
       exec: {
         output: [ /^Exec: tsdate/, /2001/, /1980/ ],
-        type: 'string',
+        type: 'testCommandOutput',
         error: false
       }
     },
@@ -213,7 +198,7 @@ exports.testInput = function(options) {
       },
       exec: {
         output: [ /^Exec: tsdate/, new Date().getFullYear() ],
-        type: 'string',
+        type: 'testCommandOutput',
         error: false
       }
     },
@@ -253,7 +238,7 @@ exports.testInput = function(options) {
       },
       exec: {
         output: [ /^Exec: tsdate/, new Date().getFullYear() ],
-        type: 'string',
+        type: 'testCommandOutput',
         error: false
       }
     }
@@ -264,7 +249,7 @@ exports.testIncrDecr = function(options) {
   return helpers.audit(options, [
     {
       // createRequisitionAutomator doesn't fake UP/DOWN well enough
-      skipRemainingIf: options.isNoDom,
+      skipRemainingIf: options.isNode,
       setup:    'tsdate 2001-01-01<UP>',
       check: {
         input:  'tsdate 2001-01-02',

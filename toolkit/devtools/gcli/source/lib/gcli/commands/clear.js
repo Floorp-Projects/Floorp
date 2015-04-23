@@ -22,6 +22,7 @@ exports.items = [
   {
     // A command to clear the output area
     item: 'command',
+    runAt: 'client',
     name: 'clear',
     description: l10n.lookup('clearDesc'),
     returnType: 'clearoutput',

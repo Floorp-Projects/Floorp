@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DevToolsLoader",
   "resource://gre/modules/devtools/Loader.jsm");
@@ -34,9 +34,11 @@ XPCOMUtils.defineLazyGetter(this, "debuggerServer", () => {
 
 exports.items = [
   {
+    item: "command",
+    runAt: "client",
     name: "listen",
-    description: gcli.lookup("listenDesc"),
-    manual: gcli.lookupFormat("listenManual2", [ BRAND_SHORT_NAME ]),
+    description: l10n.lookup("listenDesc"),
+    manual: l10n.lookupFormat("listenManual2", [ BRAND_SHORT_NAME ]),
     params: [
       {
         name: "port",
@@ -44,23 +46,23 @@ exports.items = [
         get defaultValue() {
           return Services.prefs.getIntPref("devtools.debugger.chrome-debugging-port");
         },
-        description: gcli.lookup("listenPortDesc"),
+        description: l10n.lookup("listenPortDesc"),
       }
     ],
     exec: function(args, context) {
       var listener = debuggerServer.createListener();
       if (!listener) {
-        throw new Error(gcli.lookup("listenDisabledOutput"));
+        throw new Error(l10n.lookup("listenDisabledOutput"));
       }
 
       listener.portOrPath = args.port;
       listener.open();
 
       if (debuggerServer.initialized) {
-        return gcli.lookupFormat("listenInitOutput", [ "" + args.port ]);
+        return l10n.lookupFormat("listenInitOutput", [ "" + args.port ]);
       }
 
-      return gcli.lookup("listenNoInitOutput");
+      return l10n.lookup("listenNoInitOutput");
     },
   }
 ];

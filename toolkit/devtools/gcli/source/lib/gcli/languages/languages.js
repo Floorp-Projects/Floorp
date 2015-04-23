@@ -51,8 +51,9 @@ var baseLanguage = {
   },
 
   handleTab: function() {
-    this.terminal.unsetChoice();
-    return RESOLVED;
+    return this.terminal.unsetChoice().then(function() {
+      return RESOLVED;
+    }, util.errorHandler);
   },
 
   handleInput: function(input) {
@@ -62,8 +63,9 @@ var baseLanguage = {
       }.bind(this));
     }
 
-    this.terminal.unsetChoice();
-    return RESOLVED;
+    return this.terminal.unsetChoice().then(function() {
+      return RESOLVED;
+    }, util.errorHandler);
   },
 
   handleReturn: function(input) {
@@ -80,7 +82,7 @@ var baseLanguage = {
 
       this.focusManager.outputted();
 
-      this.terminal.unsetChoice();
+      this.terminal.unsetChoice().catch(util.errorHandler);
       this.terminal.inputElement.value = '';
     }.bind(this));
   },

@@ -18,11 +18,12 @@
 
 var l10n = require('../util/l10n');
 var cli = require('../cli');
+var GcliFront = require('../connectors/remoted').GcliFront;
 
 /**
  * A lookup of the current connection
  */
-var connections = {};
+var fronts = {};
 
 /**
  * 'connection' type
@@ -32,8 +33,8 @@ var connection = {
   name: 'connection',
   parent: 'selection',
   lookup: function() {
-    return Object.keys(connections).map(function(prefix) {
-      return { name: prefix, value: connections[prefix] };
+    return Object.keys(fronts).map(function(prefix) {
+      return { name: prefix, value: fronts[prefix] };
     });
   }
 };
@@ -87,19 +88,19 @@ var connect = {
   returnType: 'string',
 
   exec: function(args, context) {
-    if (connections[args.prefix] != null) {
+    if (fronts[args.prefix] != null) {
       throw new Error(l10n.lookupFormat('connectDupReply', [ args.prefix ]));
     }
 
-    var connector = args.method || context.system.connectors.get('xhr');
+    args.method = args.method || context.system.connectors.get('xhr');
 
-    return connector.connect(args.url).then(function(connection) {
-      // Nasty: stash the prefix on the connection to help us tidy up
-      connection.prefix = args.prefix;
-      connections[args.prefix] = connection;
+    return GcliFront.create(args.method, args.url).then(function(front) {
+      // Nasty: stash the prefix on the front to help us tidy up
+      front.prefix = args.prefix;
+      fronts[args.prefix] = front;
 
-      return connection.call('specs').then(function(specs) {
-        var remoter = this.createRemoter(args.prefix, connection);
+      return front.specs().then(function(specs) {
+        var remoter = this.createRemoter(args.prefix, front);
         var commands = cli.getMapping(context).requisition.system.commands;
         commands.addProxyCommands(specs, remoter, args.prefix, args.url);
 
@@ -116,7 +117,7 @@ var connect = {
    * When we register a set of remote commands, we need to provide a proxy
    * executor. This is that executor.
    */
-  createRemoter: function(prefix, connection) {
+  createRemoter: function(prefix, front) {
     return function(cmdArgs, context) {
       var typed = context.typed;
 
@@ -126,12 +127,7 @@ var connect = {
         typed = typed.substring(prefix.length).replace(/^ */, '');
       }
 
-      var data = {
-        typed: typed,
-        args: cmdArgs
-      };
-
-      return connection.call('execute', data).then(function(reply) {
+      return front.execute(typed).then(function(reply) {
         var typedData = context.typedData(reply.type, reply.data);
         if (!reply.error) {
           return typedData;
@@ -162,11 +158,11 @@ var disconnect = {
   returnType: 'string',
 
   exec: function(args, context) {
-    var connection = args.prefix;
-    return connection.disconnect().then(function() {
+    var front = args.prefix;
+    return front.connection.disconnect().then(function() {
       var commands = cli.getMapping(context).requisition.system.commands;
-      var removed = commands.removeProxyCommands(connection.prefix);
-      delete connections[connection.prefix];
+      var removed = commands.removeProxyCommands(front.prefix);
+      delete fronts[front.prefix];
       return l10n.lookupFormat('disconnectReply', [ removed.length ]);
     });
   }

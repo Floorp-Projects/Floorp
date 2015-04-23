@@ -11,6 +11,7 @@ const { Promise: promise } = require("resource://gre/modules/Promise.jsm");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const { TextEncoder, TextDecoder } = Cu.import('resource://gre/modules/commonjs/toolkit/loader.js', {});
 const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 loader.lazyGetter(this, "prefBranch", function() {
   let prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
@@ -127,11 +128,13 @@ exports.items = [
     get hidden() {
       return !prefBranch.prefHasUserValue(PREF_DIR);
     },
-    description: gcli.lookup("cmdDesc")
+    description: l10n.lookup("cmdDesc")
   },
   {
+    item: "command",
+    runAt: "client",
     name: "cmd refresh",
-    description: gcli.lookup("cmdRefreshDesc"),
+    description: l10n.lookup("cmdRefreshDesc"),
     get hidden() {
       return !prefBranch.prefHasUserValue(PREF_DIR);
     },
@@ -140,17 +143,19 @@ exports.items = [
 
       let dirName = prefBranch.getComplexValue(PREF_DIR,
                                               Ci.nsISupportsString).data.trim();
-      return gcli.lookupFormat("cmdStatus3", [ dirName ]);
+      return l10n.lookupFormat("cmdStatus3", [ dirName ]);
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "cmd setdir",
-    description: gcli.lookup("cmdSetdirDesc"),
-    manual: gcli.lookup("cmdSetdirManual2"),
+    description: l10n.lookup("cmdSetdirDesc"),
+    manual: l10n.lookup("cmdSetdirManual2"),
     params: [
       {
         name: "directory",
-        description: gcli.lookup("cmdSetdirDirectoryDesc"),
+        description: l10n.lookup("cmdSetdirDirectoryDesc"),
         type: {
           name: "file",
           filetype: "directory",
@@ -169,7 +174,7 @@ exports.items = [
 
       gcli.load();
 
-      return gcli.lookupFormat("cmdStatus3", [ args.directory ]);
+      return l10n.lookupFormat("cmdStatus3", [ args.directory ]);
     }
   }
 ];

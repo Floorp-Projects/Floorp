@@ -25,42 +25,13 @@ var Conversion = require('./types').Conversion;
 var BlankArgument = require('./types').BlankArgument;
 
 /**
- * The object against which we complete, which is usually 'window' if it exists
- * but could be something else in non-web-content environments.
- */
-var doc;
-if (typeof document !== 'undefined') {
-  doc = document;
-}
-
-/**
- * Setter for the document that contains the nodes we're matching
- */
-exports.setDocument = function(document) {
-  doc = document;
-};
-
-/**
- * Undo the effects of setDocument()
- */
-exports.unsetDocument = function() {
-  doc = undefined;
-};
-
-/**
- * Getter for the document that contains the nodes we're matching
- * Most for changing things back to how they were for unit testing
- */
-exports.getDocument = function() {
-  return doc;
-};
-
-/**
  * Helper functions to be attached to the prototypes of NodeType and
  * NodeListType to allow terminal to tell us which nodes should be highlighted
  */
 function onEnter(assignment) {
-  assignment.highlighter = new Highlighter(doc);
+  // TODO: GCLI doesn't support passing a context to notifications of cursor
+  // position, so onEnter/onLeave/onChange are disabled below until we fix this
+  assignment.highlighter = new Highlighter(context.environment.window.document);
   assignment.highlighter.nodelist = assignment.conversion.matches;
 }
 
@@ -94,8 +65,12 @@ exports.items = [
     item: 'type',
     name: 'node',
 
-    getSpec: function() {
-      return 'node';
+    getSpec: function(commandName, paramName) {
+      return {
+        name: 'remote',
+        commandName: commandName,
+        paramName: paramName
+      };
     },
 
     stringify: function(value, context) {
@@ -110,12 +85,11 @@ exports.items = [
 
       if (arg.text === '') {
         reply = new Conversion(undefined, arg, Status.INCOMPLETE);
-        reply.matches = util.createEmptyNodeList(doc);
       }
       else {
         var nodes;
         try {
-          nodes = doc.querySelectorAll(arg.text);
+          nodes = context.environment.window.document.querySelectorAll(arg.text);
           if (nodes.length === 0) {
             reply = new Conversion(undefined, arg, Status.INCOMPLETE,
                                    l10n.lookup('nodeParseNone'));
@@ -142,9 +116,9 @@ exports.items = [
       return Promise.resolve(reply);
     },
 
-    onEnter: onEnter,
-    onLeave: onLeave,
-    onChange: onChange
+    // onEnter: onEnter,
+    // onLeave: onLeave,
+    // onChange: onChange
   },
   {
     // The 'nodelist' type is a CSS expression that refers to a node list
@@ -167,14 +141,21 @@ exports.items = [
       }
     },
 
-    getSpec: function() {
-      return this.allowEmpty ?
-             { name: 'nodelist', allowEmpty: true } :
-             'nodelist';
+    getSpec: function(commandName, paramName) {
+      return {
+        name: 'remote',
+        commandName: commandName,
+        paramName: paramName,
+        blankIsValid: true
+      };
     },
 
     getBlank: function(context) {
-      var emptyNodeList = (doc == null ? [] : util.createEmptyNodeList(doc));
+      var emptyNodeList = [];
+      if (context != null && context.environment.window != null) {
+        var doc = context.environment.window.document;
+        emptyNodeList = util.createEmptyNodeList(doc);
+      }
       return new Conversion(emptyNodeList, new BlankArgument(), Status.VALID);
     },
 
@@ -190,16 +171,16 @@ exports.items = [
       try {
         if (arg.text === '') {
           reply = new Conversion(undefined, arg, Status.INCOMPLETE);
-          reply.matches = util.createEmptyNodeList(doc);
         }
         else {
-          var nodes = doc.querySelectorAll(arg.text);
+          var nodes = context.environment.window.document.querySelectorAll(arg.text);
 
           if (nodes.length === 0 && !this.allowEmpty) {
             reply = new Conversion(undefined, arg, Status.INCOMPLETE,
                                    l10n.lookup('nodeParseNone'));
           }
           else {
+            nodes.__gcliQuery = arg.text;
             reply = new Conversion(nodes, arg, Status.VALID, '');
           }
 
@@ -209,14 +190,13 @@ exports.items = [
       catch (ex) {
         reply = new Conversion(undefined, arg, Status.ERROR,
                                l10n.lookup('nodeParseSyntax'));
-        reply.matches = util.createEmptyNodeList(doc);
       }
 
       return Promise.resolve(reply);
     },
 
-    onEnter: onEnter,
-    onLeave: onLeave,
-    onChange: onChange
+    // onEnter: onEnter,
+    // onLeave: onLeave,
+    // onChange: onChange
   }
 ];

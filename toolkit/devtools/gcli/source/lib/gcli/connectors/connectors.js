@@ -138,14 +138,21 @@ Connectors.prototype.getAll = function() {
   }.bind(this));
 };
 
+var defaultConnectorName;
+
 /**
- * Get access to a connector by name. If name is undefined then use the first
- * registered connector as a default.
+ * Get access to a connector by name. If name is undefined then first try to
+ * use the same connector that we used last time, and if there was no last
+ * time, then just use the first registered connector as a default.
  */
 Connectors.prototype.get = function(name) {
   if (name == null) {
-    name = Object.keys(this._registered)[0];
+    name = (defaultConnectorName == null) ?
+        Object.keys(this._registered)[0] :
+        defaultConnectorName;
   }
+
+  defaultConnectorName = name;
   return this._registered[name];
 };
 

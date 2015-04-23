@@ -219,7 +219,7 @@ exports.script.useTarget = function(tgt) {
 /**
  * Execute some JavaScript
  */
-exports.script.eval = function(javascript) {
+exports.script.evaluate = function(javascript) {
   return new Promise(function(resolve, reject) {
     var onResult = function(response) {
       var output = response.result;

@@ -23,38 +23,6 @@ exports.clearResourceCache = function() {
 };
 
 /**
- * The object against which we complete, which is usually 'window' if it exists
- * but could be something else in non-web-content environments.
- */
-var doc;
-if (typeof document !== 'undefined') {
-  doc = document;
-}
-
-/**
- * Setter for the document that contains the nodes we're matching
- */
-exports.setDocument = function(document) {
-  doc = document;
-};
-
-/**
- * Undo the effects of setDocument()
- */
-exports.unsetDocument = function() {
-  ResourceCache.clear();
-  doc = undefined;
-};
-
-/**
- * Getter for the document that contains the nodes we're matching
- * Most for changing things back to how they were for unit testing
- */
-exports.getDocument = function() {
-  return doc;
-};
-
-/**
  * Resources are bits of CSS and JavaScript that the page either includes
  * directly or as a result of reading some remote resource.
  * Resource should not be used directly, but instead through a sub-class like
@@ -85,7 +53,7 @@ Resource.TYPE_CSS = 'text/css';
 function CssResource(domSheet) {
   this.name = domSheet.href;
   if (!this.name) {
-    this.name = domSheet.ownerNode.id ?
+    this.name = domSheet.ownerNode && domSheet.ownerNode.id ?
             'css#' + domSheet.ownerNode.id :
             'inline-css';
   }
@@ -103,12 +71,13 @@ CssResource.prototype.loadContents = function() {
   }.bind(this));
 };
 
-CssResource._getAllStyles = function() {
+CssResource._getAllStyles = function(context) {
   var resources = [];
-  if (doc == null) {
+  if (context.environment.window == null) {
     return resources;
   }
 
+  var doc = context.environment.window.document;
   Array.prototype.forEach.call(doc.styleSheets, function(domSheet) {
     CssResource._getStyle(domSheet, resources);
   });
@@ -182,11 +151,12 @@ ScriptResource.prototype.loadContents = function() {
   }.bind(this));
 };
 
-ScriptResource._getAllScripts = function() {
-  if (doc == null) {
+ScriptResource._getAllScripts = function(context) {
+  if (context.environment.window == null) {
     return [];
   }
 
+  var doc = context.environment.window.document;
   var scriptNodes = doc.querySelectorAll('script');
   var resources = Array.prototype.map.call(scriptNodes, function(scriptNode) {
     var resource = ResourceCache.get(scriptNode);
@@ -283,20 +253,20 @@ exports.items = [
       }
     },
 
-    lookup: function() {
+    lookup: function(context) {
       var resources = [];
       if (this.include !== Resource.TYPE_SCRIPT) {
-        Array.prototype.push.apply(resources, CssResource._getAllStyles());
+        Array.prototype.push.apply(resources,
+                                   CssResource._getAllStyles(context));
       }
       if (this.include !== Resource.TYPE_CSS) {
-        Array.prototype.push.apply(resources, ScriptResource._getAllScripts());
+        Array.prototype.push.apply(resources,
+                                   ScriptResource._getAllScripts(context));
       }
 
-      return new Promise(function(resolve, reject) {
-        resolve(resources.map(function(resource) {
-          return { name: resource.name, value: resource };
-        }));
-      }.bind(this));
+      return Promise.resolve(resources.map(function(resource) {
+        return { name: resource.name, value: resource };
+      }));
     }
   }
 ];

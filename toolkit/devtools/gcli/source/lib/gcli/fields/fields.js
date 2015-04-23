@@ -199,6 +199,13 @@ Fields.prototype.get = function(type, options) {
   return new FieldConstructor(type, options);
 };
 
+/**
+ * Get all the registered fields. Most for debugging
+ */
+Fields.prototype.getAll = function() {
+  return this._fieldCtors.slice();
+};
+
 exports.Fields = Fields;
 
 /**

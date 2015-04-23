@@ -39,6 +39,7 @@ exports.items = [
   {
     // A command to switch JS globals
     item: 'command',
+    runAt: 'client',
     name: 'global',
     description: l10n.lookup('globalDesc'),
     params: [
