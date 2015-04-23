@@ -72,8 +72,7 @@ public:
   ConnectionOrientedSocketIO* GetIO() override;
 
 private:
-  void ReceiveSocketData(
-    nsAutoPtr<UnixSocketRawData>& aBuffer) override;
+  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
 
   void OnConnectSuccess() override;
   void OnConnectError() override;
