@@ -14,7 +14,6 @@ const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion"
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerformance.url";
-const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
 
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
@@ -1454,9 +1453,6 @@ Services.prefs.setCharPref("extensions.hotfix.id", "");
 Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0");
 Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, "0");
 
-// Disable signature checks for most tests
-Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
-
 // Register a temporary directory for the tests.
 const gTmpD = gProfD.clone();
 gTmpD.append("temp");
@@ -1532,6 +1528,9 @@ do_register_cleanup(function addon_cleanup() {
   pathShouldntExist(testDir);
 
   testDir.leafName = "staged";
+  pathShouldntExist(testDir);
+
+  testDir.leafName = "staged-xpis";
   pathShouldntExist(testDir);
 
   shutdownManager();
