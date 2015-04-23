@@ -88,15 +88,6 @@ blockquote {
   -moz-padding-start: 16px;
 }
 
-.light blockquote,
-.sepia blockquote {
-  -moz-border-start: 2px solid #333333;
-}
-
-.dark blockquote {
-  -moz-border-start: 2px solid #eeeeee;
-}
-
 ul,
 ol {
   padding: 0;
