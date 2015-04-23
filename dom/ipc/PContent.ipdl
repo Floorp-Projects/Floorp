@@ -58,6 +58,7 @@ include URIParams;
 include PluginTypes;
 include ProtocolTypes;
 include PContentPermission;
+include BrowserConfiguration;
 
 // Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
 // are put into different UnifiedProtocolsXX.cpp files.
@@ -1027,6 +1028,12 @@ parent:
      */
     PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
                               TabId tabId);
+
+    /**
+     * Send ServiceWorkerRegistrationData to child process.
+     */
+    sync GetBrowserConfiguration(nsCString aUri)
+        returns (BrowserConfiguration aConfig);
 
     /*
      * Tells the parent to start the gamepad listening service if it hasn't already.
