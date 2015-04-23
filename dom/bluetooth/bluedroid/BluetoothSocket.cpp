@@ -86,9 +86,9 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void Send(UnixSocketRawData* aData)
+  void Send(UnixSocketIOBuffer* aBuffer)
   {
-    EnqueueData(aData);
+    EnqueueData(aBuffer);
     AddWatchers(WRITE_WATCHER, false);
   }
 
@@ -656,30 +656,25 @@ BluetoothSocket::CloseSocket()
   NotifyDisconnect();
 }
 
-bool
-BluetoothSocket::SendSocketData(UnixSocketRawData* aData)
+void
+BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_TRUE(mImpl, false);
-
+  MOZ_ASSERT(mImpl);
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
 
   XRE_GetIOMessageLoop()->PostTask(
     FROM_HERE,
-    new SocketIOSendTask<DroidSocketImpl, UnixSocketRawData>(mImpl, aData));
-
-  return true;
+    new SocketIOSendTask<DroidSocketImpl, UnixSocketIOBuffer>(mImpl, aBuffer));
 }
 
 void
-BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
+BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
 
-  nsAutoPtr<mozilla::ipc::UnixSocketBuffer> buffer(aMessage.forget());
-
-  mObserver->ReceiveSocketData(this, buffer);
+  mObserver->ReceiveSocketData(this, aBuffer);
 }
 
 void

@@ -27,7 +27,7 @@ private:
   RilConsumer(unsigned long aClientId,
               mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
-  void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) override;
+  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
 
   void OnConnectSuccess() override;
   void OnConnectError() override;
