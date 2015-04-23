@@ -39,14 +39,12 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function () {
 
 const Telemetry = require("devtools/shared/telemetry");
 
-// This lazy getter is needed to prevent a require loop
-XPCOMUtils.defineLazyGetter(this, "gcli", () => {
+XPCOMUtils.defineLazyGetter(this, "gcliInit", function() {
   try {
-    require("devtools/commandline/commands-index");
-    return require("gcli/index");
+    return require("devtools/commandline/commands-index");
   }
   catch (ex) {
-    console.error(ex);
+    console.log(ex);
   }
 });
 
@@ -62,7 +60,7 @@ Object.defineProperty(this, "ConsoleServiceListener", {
   enumerable: true
 });
 
-const promise = Cu.import('resource://gre/modules/Promise.jsm', {}).Promise;
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 /**
  * A collection of utilities to help working with commands
@@ -71,10 +69,19 @@ let CommandUtils = {
   /**
    * Utility to ensure that things are loaded in the correct order
    */
-  createRequisition: function(environment) {
-    return gcli.load().then(() => {
-      return gcli.createRequisition({ environment: environment });
+  createRequisition: function(target, options) {
+    return gcliInit.getSystem(target).then(system => {
+      var Requisition = require("gcli/cli").Requisition;
+      return new Requisition(system, options);
     });
+  },
+
+  /**
+   * Destroy the remote side of the requisition as well as the local side
+   */
+  destroyRequisition: function(requisition, target) {
+    requisition.destroy();
+    gcliInit.releaseSystem(target);
   },
 
   /**
@@ -103,12 +110,6 @@ let CommandUtils = {
         let command = requisition.commandAssignment.value;
         if (command == null) {
           throw new Error("No command '" + typed + "'");
-        }
-
-        // Do not build a button for a non-remote safe command in a non-local target.
-        if (!target.isLocalTab && !command.isRemoteSafe) {
-          requisition.clear();
-          return;
         }
 
         if (command.buttonId != null) {
@@ -192,17 +193,17 @@ let CommandUtils = {
    * @param targetContainer An object containing a 'target' property which
    * reflects the current debug target
    */
-  createEnvironment: function(container, targetProperty='target') {
+  createEnvironment: function(container, targetProperty="target") {
     if (!container[targetProperty].toString ||
         !/TabTarget/.test(container[targetProperty].toString())) {
-      throw new Error('Missing target');
+      throw new Error("Missing target");
     }
 
     return {
       get target() {
         if (!container[targetProperty].toString ||
             !/TabTarget/.test(container[targetProperty].toString())) {
-          throw new Error('Removed target');
+          throw new Error("Removed target");
         }
 
         return container[targetProperty];
@@ -213,15 +214,17 @@ let CommandUtils = {
       },
 
       get chromeDocument() {
-        return this.chromeWindow.document;
+        return this.target.tab.ownerDocument.defaultView.document;
       },
 
       get window() {
-        return this.chromeWindow.gBrowser.selectedBrowser.contentWindow;
+        // throw new Error("environment.window is not available in runAt:client commands");
+        return this.chromeWindow.gBrowser.contentWindowAsCPOW;
       },
 
       get document() {
-        return this.window.document;
+        // throw new Error("environment.document is not available in runAt:client commands");
+        return this.chromeWindow.gBrowser.contentDocumentAsCPOW;
       }
     };
   },
@@ -254,6 +257,8 @@ XPCOMUtils.defineLazyGetter(this, "OS", function() {
 this.DeveloperToolbar = function DeveloperToolbar(aChromeWindow, aToolbarElement)
 {
   this._chromeWindow = aChromeWindow;
+
+  this.target = null; // Will be setup when show() is called
 
   this._element = aToolbarElement;
   this._element.hidden = true;
@@ -292,20 +297,10 @@ const NOTIFICATIONS = {
 DeveloperToolbar.prototype.NOTIFICATIONS = NOTIFICATIONS;
 
 /**
- * target is dynamic because the selectedTab changes
- */
-Object.defineProperty(DeveloperToolbar.prototype, "target", {
-  get: function() {
-    return TargetFactory.forTab(this._chromeWindow.gBrowser.selectedTab);
-  },
-  enumerable: true
-});
-
-/**
  * Is the toolbar open?
  */
-Object.defineProperty(DeveloperToolbar.prototype, 'visible', {
-  get: function DT_visible() {
+Object.defineProperty(DeveloperToolbar.prototype, "visible", {
+  get: function() {
     return !this._element.hidden;
   },
   enumerable: true
@@ -316,8 +311,8 @@ let _gSequenceId = 0;
 /**
  * Getter for a unique ID.
  */
-Object.defineProperty(DeveloperToolbar.prototype, 'sequenceId', {
-  get: function DT_visible() {
+Object.defineProperty(DeveloperToolbar.prototype, "sequenceId", {
+  get: function() {
     return _gSequenceId++;
   },
   enumerable: true
@@ -408,57 +403,84 @@ DeveloperToolbar.prototype.show = function(focus) {
 
       this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "true");
 
-      return gcli.load().then(() => {
-        this.display = gcli.createDisplay({
-          contentDocument: this._chromeWindow.gBrowser.contentDocumentAsCPOW,
-          chromeDocument: this._doc,
-          chromeWindow: this._chromeWindow,
-          hintElement: this.tooltipPanel.hintElement,
-          inputElement: this._input,
-          completeElement: this._doc.querySelector(".gclitoolbar-complete-node"),
-          backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
-          outputDocument: this.outputPanel.document,
-          environment: CommandUtils.createEnvironment(this, "target"),
-          tooltipClass: "gcliterm-tooltip",
-          eval: null,
-          scratchpad: null
+      this.target = TargetFactory.forTab(this._chromeWindow.gBrowser.selectedTab);
+      const options = {
+        environment: CommandUtils.createEnvironment(this, "target"),
+        document: this.outputPanel.document,
+      };
+      return CommandUtils.createRequisition(this.target, options).then(requisition => {
+        this.requisition = requisition;
+
+        return this.requisition.update(this._input.value).then(() => {
+          const Inputter = require('gcli/mozui/inputter').Inputter;
+          const Completer = require('gcli/mozui/completer').Completer;
+          const Tooltip = require('gcli/mozui/tooltip').Tooltip;
+          const FocusManager = require('gcli/ui/focus').FocusManager;
+
+          this.onOutput = this.requisition.commandOutputManager.onOutput;
+
+          this.focusManager = new FocusManager(this._doc, requisition.system.settings);
+
+          this.inputter = new Inputter({
+            requisition: this.requisition,
+            focusManager: this.focusManager,
+            element: this._input,
+          });
+
+          this.completer = new Completer({
+            requisition: this.requisition,
+            inputter: this.inputter,
+            backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
+            element: this._doc.querySelector(".gclitoolbar-complete-node"),
+          });
+
+          this.tooltip = new Tooltip({
+            requisition: this.requisition,
+            focusManager: this.focusManager,
+            inputter: this.inputter,
+            element: this.tooltipPanel.hintElement,
+          });
+
+          this.inputter.tooltip = this.tooltip;
+
+          this.focusManager.addMonitoredElement(this.outputPanel._frame);
+          this.focusManager.addMonitoredElement(this._element);
+
+          this.focusManager.onVisibilityChange.add(this.outputPanel._visibilityChanged,
+                                                   this.outputPanel);
+          this.focusManager.onVisibilityChange.add(this.tooltipPanel._visibilityChanged,
+                                                   this.tooltipPanel);
+          this.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
+
+          let tabbrowser = this._chromeWindow.gBrowser;
+          tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
+          tabbrowser.tabContainer.addEventListener("TabClose", this, false);
+          tabbrowser.addEventListener("load", this, true);
+          tabbrowser.addEventListener("beforeunload", this, true);
+
+          this._initErrorsCount(tabbrowser.selectedTab);
+          this._devtoolsUnloaded = this._devtoolsUnloaded.bind(this);
+          this._devtoolsLoaded = this._devtoolsLoaded.bind(this);
+          Services.obs.addObserver(this._devtoolsUnloaded, "devtools-unloaded", false);
+          Services.obs.addObserver(this._devtoolsLoaded, "devtools-loaded", false);
+
+          this._element.hidden = false;
+
+          if (focus) {
+            this._input.focus();
+          }
+
+          this._notify(NOTIFICATIONS.SHOW);
+
+          if (!DeveloperToolbar.introShownThisSession) {
+            let intro = require("gcli/ui/intro");
+            intro.maybeShowIntro(this.requisition.commandOutputManager,
+                                 this.requisition.conversionContext);
+            DeveloperToolbar.introShownThisSession = true;
+          }
+
+          this._showPromise = null;
         });
-
-        this.display.focusManager.addMonitoredElement(this.outputPanel._frame);
-        this.display.focusManager.addMonitoredElement(this._element);
-
-        this.display.onVisibilityChange.add(this.outputPanel._visibilityChanged,
-                                            this.outputPanel);
-        this.display.onVisibilityChange.add(this.tooltipPanel._visibilityChanged,
-                                            this.tooltipPanel);
-        this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
-
-        let tabbrowser = this._chromeWindow.gBrowser;
-        tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
-        tabbrowser.tabContainer.addEventListener("TabClose", this, false);
-        tabbrowser.addEventListener("load", this, true);
-        tabbrowser.addEventListener("beforeunload", this, true);
-
-        this._initErrorsCount(tabbrowser.selectedTab);
-        this._devtoolsUnloaded = this._devtoolsUnloaded.bind(this);
-        this._devtoolsLoaded = this._devtoolsLoaded.bind(this);
-        Services.obs.addObserver(this._devtoolsUnloaded, "devtools-unloaded", false);
-        Services.obs.addObserver(this._devtoolsLoaded, "devtools-loaded", false);
-
-        this._element.hidden = false;
-
-        if (focus) {
-          this._input.focus();
-        }
-
-        this._notify(NOTIFICATIONS.SHOW);
-
-        if (!DeveloperToolbar.introShownThisSession) {
-          this.display.maybeShowIntro();
-          DeveloperToolbar.introShownThisSession = true;
-        }
-
-        this._showPromise = null;
       });
     });
   });
@@ -585,26 +607,26 @@ DeveloperToolbar.prototype.destroy = function() {
   Services.obs.removeObserver(this._devtoolsLoaded, "devtools-loaded");
   Array.prototype.forEach.call(tabbrowser.tabs, this._stopErrorsCount, this);
 
-  this.display.focusManager.removeMonitoredElement(this.outputPanel._frame);
-  this.display.focusManager.removeMonitoredElement(this._element);
+  this.focusManager.removeMonitoredElement(this.outputPanel._frame);
+  this.focusManager.removeMonitoredElement(this._element);
 
-  this.display.onVisibilityChange.remove(this.outputPanel._visibilityChanged, this.outputPanel);
-  this.display.onVisibilityChange.remove(this.tooltipPanel._visibilityChanged, this.tooltipPanel);
-  this.display.onOutput.remove(this.outputPanel._outputChanged, this.outputPanel);
-  this.display.destroy();
+  this.focusManager.onVisibilityChange.remove(this.outputPanel._visibilityChanged,
+                                              this.outputPanel);
+  this.focusManager.onVisibilityChange.remove(this.tooltipPanel._visibilityChanged,
+                                              this.tooltipPanel);
+  this.onOutput.remove(this.outputPanel._outputChanged, this.outputPanel);
+
+  this.tooltip.destroy();
+  this.completer.destroy();
+  this.inputter.destroy();
+  this.focusManager.destroy();
+
   this.outputPanel.destroy();
   this.tooltipPanel.destroy();
   delete this._input;
 
-  // We could "delete this.display" etc if we have hard-to-track-down memory
-  // leaks as a belt-and-braces approach, however this prevents our DOM node
-  // hunter from looking in all the nooks and crannies, so it's better if we
-  // can be leak-free without
-  /*
-  delete this.display;
-  delete this.outputPanel;
-  delete this.tooltipPanel;
-  */
+  CommandUtils.destroyRequisition(this.requisition, this.target);
+  this.target = undefined;
 };
 
 /**
@@ -623,8 +645,9 @@ DeveloperToolbar.prototype._notify = function(topic) {
 DeveloperToolbar.prototype.handleEvent = function(ev) {
   if (ev.type == "TabSelect" || ev.type == "load") {
     if (this.visible) {
-      this.display.reattach({
-        contentDocument: this._chromeWindow.gBrowser.contentDocumentAsCPOW
+      this.target = TargetFactory.forTab(this._chromeWindow.gBrowser.selectedTab);
+      gcliInit.getSystem(this.target).then(system => {
+        this.requisition.system = system;
       });
 
       if (ev.type == "TabSelect") {
@@ -751,7 +774,7 @@ DeveloperToolbar.prototype.resetErrorsCount = function(tab) {
  * Creating a OutputPanel is asynchronous
  */
 function OutputPanel() {
-  throw new Error('Use OutputPanel.create()');
+  throw new Error("Use OutputPanel.create()");
 }
 
 /**
@@ -838,8 +861,8 @@ OutputPanel.prototype._init = function(devtoolbar) {
     this._copyTheme();
 
     this._div = this.document.getElementById("gcli-output-root");
-    this._div.classList.add('gcli-row-out');
-    this._div.setAttribute('aria-live', 'assertive');
+    this._div.classList.add("gcli-row-out");
+    this._div.setAttribute("aria-live", "assertive");
 
     let styles = this._toolbar.ownerDocument.defaultView
                     .getComputedStyle(this._toolbar);
@@ -992,8 +1015,8 @@ OutputPanel.prototype._update = function() {
   }
 
   if (this.displayedOutput.data != null) {
-    let context = this._devtoolbar.display.requisition.conversionContext;
-    this.displayedOutput.convert('dom', context).then(node => {
+    let context = this._devtoolbar.requisition.conversionContext;
+    this.displayedOutput.convert("dom", context).then(node => {
       if (node == null) {
         return;
       }
@@ -1002,9 +1025,9 @@ OutputPanel.prototype._update = function() {
         this._div.removeChild(this._div.firstChild);
       }
 
-      var links = node.querySelectorAll('*[href]');
+      var links = node.querySelectorAll("*[href]");
       for (var i = 0; i < links.length; i++) {
-        links[i].setAttribute('target', '_blank');
+        links[i].setAttribute("target", "_blank");
       }
 
       this._div.appendChild(node);
@@ -1071,7 +1094,7 @@ OutputPanel.prototype._visibilityChanged = function(ev) {
  * Creating a TooltipPanel is asynchronous
  */
 function TooltipPanel() {
-  throw new Error('Use TooltipPanel.create()');
+  throw new Error("Use TooltipPanel.create()");
 }
 
 /**

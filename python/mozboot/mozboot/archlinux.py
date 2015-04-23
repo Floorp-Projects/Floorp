@@ -62,9 +62,9 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
         'https://aur.archlinux.org/packages/uu/uuid/uuid.tar.gz',
     ]
 
-    def __init__(self, version, dist_id):
+    def __init__(self, version, dist_id, **kwargs):
         print 'Using an experimental bootstrapper for Archlinux.'
-        BaseBootstrapper.__init__(self)
+        BaseBootstrapper.__init__(self, **kwargs)
 
     def install_system_packages(self):
         self.pacman_install(*self.SYSTEM_PACKAGES)

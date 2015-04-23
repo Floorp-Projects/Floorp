@@ -75,8 +75,8 @@
         });
 
         // Init panel.
-        itemId = yield PlacesUtils.promiseItemId(bm.guid);
-        gEditItemOverlay.initPanel(itemId);
+        let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
+        gEditItemOverlay.initPanel({ node });
 
         // Add a tag.
         PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
@@ -104,11 +104,10 @@
           url: TEST_URI2.spec
         });
 
-        // Init panel with multiple bookmarks.
-        itemId2 = yield PlacesUtils.promiseItemId(bm2.guid);
-        gEditItemOverlay.initPanel([itemId, itemId2]);
+        // Init panel with multiple uris.
+        gEditItemOverlay.initPanel({ uris: [TEST_URI, TEST_URI2] });
 
-        // Add a tag to the first bookmark.
+        // Add a tag to the first uri.
         PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
         is(PlacesUtils.tagging.getTagsForURI(TEST_URI)[0], TEST_TAG,
            "Correctly added a tag to the first bookmark.");
@@ -116,7 +115,7 @@
            "Editing multiple bookmarks without matching tags should not show any tag.");
         checkTagsSelector([TEST_TAG], []);
 
-        // Add a tag to the second bookmark.
+        // Add a tag to the second uri.
         PlacesUtils.tagging.tagURI(TEST_URI2, [TEST_TAG]);
         is(PlacesUtils.tagging.getTagsForURI(TEST_URI2)[0], TEST_TAG,
            "Correctly added a tag to the second bookmark.");
@@ -141,7 +140,7 @@
         checkTagsSelector([], []);
 
         // Init panel with a nsIURI entry.
-        gEditItemOverlay.initPanel(TEST_URI);
+        gEditItemOverlay.initPanel({ uris: [TEST_URI] });
 
         // Add a tag.
         PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
@@ -160,7 +159,7 @@
         checkTagsSelector([], []);
 
         // Init panel with multiple nsIURI entries.
-        gEditItemOverlay.initPanel([TEST_URI, TEST_URI2]);
+        gEditItemOverlay.initPanel({ uris: [TEST_URI, TEST_URI2] });
 
         // Add a tag to the first entry.
         PlacesUtils.tagging.tagURI(TEST_URI, [TEST_TAG]);
