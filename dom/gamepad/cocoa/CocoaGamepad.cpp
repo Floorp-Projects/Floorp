@@ -6,7 +6,8 @@
 // mostly derived from the Allegro source code at:
 // http://alleg.svn.sourceforge.net/viewvc/alleg/allegro/branches/4.9/src/macosx/hidjoy.m?revision=13760&view=markup
 
-#include "mozilla/dom/GamepadService.h"
+#include "mozilla/dom/GamepadFunctions.h"
+#include "mozilla/ArrayUtils.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDBase.h>
 #include <IOKit/hid/IOHIDKeys.h>
@@ -17,8 +18,8 @@
 
 namespace {
 
-using mozilla::dom::GamepadService;
-
+using namespace mozilla;
+using namespace mozilla::dom::GamepadFunctions;
 using std::vector;
 
 struct Button {
@@ -248,20 +249,18 @@ DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
                      sizeof(product_name), kCFStringEncodingASCII);
   char buffer[256];
   sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
-  nsRefPtr<GamepadService> service(GamepadService::GetService());
-  mGamepads[slot].mSuperIndex = service->AddGamepad(buffer,
-                                                    mozilla::dom::GamepadMappingType::_empty,
-                                                    (int)mGamepads[slot].numButtons(),
-                                                    (int)mGamepads[slot].numAxes());
+  mGamepads[slot].mSuperIndex = AddGamepad(buffer,
+                                           mozilla::dom::GamepadMappingType::_empty,
+                                           (int)mGamepads[slot].numButtons(),
+                                           (int)mGamepads[slot].numAxes());
 }
 
 void
 DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device)
 {
-  nsRefPtr<GamepadService> service(GamepadService::GetService());
   for (size_t i = 0; i < mGamepads.size(); i++) {
     if (mGamepads[i] == device) {
-      service->RemoveGamepad(mGamepads[i].mSuperIndex);
+      RemoveGamepad(mGamepads[i].mSuperIndex);
       mGamepads[i].clear();
       return;
     }
@@ -316,7 +315,6 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
     // massive (30+ byte) values and crash IOHIDValueGetIntegerValue
     return;
   }
-  nsRefPtr<GamepadService> service(GamepadService::GetService());
   IOHIDElementRef element = IOHIDValueGetElement(value);
   IOHIDDeviceRef device = IOHIDElementGetDevice(element);
   for (unsigned i = 0; i < mGamepads.size(); i++) {
@@ -332,7 +330,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         const int numButtons = gamepad.numButtons();
         for (unsigned b = 0; b < ArrayLength(newState); b++) {
           if (newState[b] != oldState[b]) {
-            service->NewButtonEvent(i, numButtons - 4 + b, newState[b]);
+            NewButtonEvent(i, numButtons - 4 + b, newState[b]);
           }
         }
         gamepad.setDpadState(newState);
@@ -340,7 +338,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         double d = IOHIDValueGetIntegerValue(value);
         double v = 2.0f * (d - axis->min) /
           (double)(axis->max - axis->min) - 1.0f;
-        service->NewAxisMoveEvent(i, axis->id, v);
+        NewAxisMoveEvent(i, axis->id, v);
       } else if (const Button* button = gamepad.lookupButton(element)) {
         int iv = IOHIDValueGetIntegerValue(value);
         bool pressed = iv != 0;
@@ -351,7 +349,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         } else {
           v = pressed ? 1.0 : 0.0;
         }
-        service->NewButtonEvent(i, button->id, pressed, v);
+        NewButtonEvent(i, button->id, pressed, v);
       }
       return;
     }
@@ -495,28 +493,30 @@ void DarwinGamepadService::Shutdown()
 } // namespace
 
 namespace mozilla {
-namespace hal_impl {
+namespace dom {
 
 DarwinGamepadService* gService = nullptr;
 
-void StartMonitoringGamepadStatus()
+void StartGamepadMonitoring()
 {
-  if (gService)
+  if (gService) {
     return;
+  }
 
   gService = new DarwinGamepadService();
   gService->Startup();
 }
 
-void StopMonitoringGamepadStatus()
+void StopGamepadMonitoring()
 {
-  if (!gService)
+  if (!gService) {
     return;
+  }
 
   gService->Shutdown();
   delete gService;
   gService = nullptr;
 }
 
-} // namespace hal_impl
+} // namespace dom
 } // namespace mozilla

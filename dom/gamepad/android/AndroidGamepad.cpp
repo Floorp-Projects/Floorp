@@ -3,25 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Hal.h"
 #include "AndroidBridge.h"
 
-using namespace mozilla::hal;
-
 namespace mozilla {
-namespace hal_impl {
+namespace dom {
 
-void
-StartMonitoringGamepadStatus()
+void StartGamepadMonitoring()
 {
   widget::GeckoAppShell::StartMonitoringGamepad();
 }
 
-void
-StopMonitoringGamepadStatus()
+void StopGamepadMonitoring()
 {
   widget::GeckoAppShell::StopMonitoringGamepad();
 }
 
-} // hal_impl
-} // mozilla
+} // namespace dom
+} // namespace mozilla
