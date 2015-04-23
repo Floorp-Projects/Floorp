@@ -548,6 +548,21 @@ ShouldSuppressLineBreak(const nsStyleDisplay* aStyleDisplay,
   // the level containers themselves are breakable. We have to check
   // the container display type against all ruby display type here
   // because any of the ruby boxes could be anonymous.
+  // Note that, when certain HTML tags, e.g. form controls, have ruby
+  // level container display type, they could also escape from this flag
+  // while they shouldn't. However, it is generally fine since they
+  // won't usually break the assertion that there is no line break
+  // inside ruby, because:
+  // 1. their display types, the ruby level container types, are inline-
+  //    outside, which means they won't cause any forced line break; and
+  // 2. they never start an inline span, which means their children, if
+  //    any, won't be able to break the line its ruby ancestor lays; and
+  // 3. their parent frame is always a ruby content frame (due to
+  //    anonymous ruby box generation), which makes line layout suppress
+  //    any optional line break around this frame.
+  // However, there is one special case which is BR tag, because it
+  // directly affects the line layout. This case is handled by the BR
+  // frame which checks the flag of its parent frame instead of itself.
   if ((aContainerDisplay->IsRubyDisplayType() &&
        aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER &&
        aStyleDisplay->mDisplay != NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
