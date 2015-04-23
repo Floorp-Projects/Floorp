@@ -160,6 +160,9 @@ class GCMarker : public JSTracer
     // Mark the given GC thing and traverse its children at some point.
     template <typename T> void traverse(T* thing);
 
+    // Calls traverse on target after making additional assertions.
+    template <typename T> void traverse(JSObject* source, T* target);
+
     /*
      * Care must be taken changing the mark color from gray to black. The cycle
      * collector depends on the invariant that there are no black to gray edges
@@ -284,9 +287,6 @@ class GCMarker : public JSTracer
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
     void processMarkStackOther(uintptr_t tag, uintptr_t addr);
-
-    void markAndScanString(JSObject* source, JSString* str);
-    void markAndScanSymbol(JSObject* source, JS::Symbol* sym);
 
     /* The color is only applied to objects and functions. */
     uint32_t color;
