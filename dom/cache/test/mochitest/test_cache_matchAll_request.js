@@ -78,6 +78,11 @@ function testRequest(request1, request2, request3, unknownRequest,
     return c.matchAll(new Request(request1, {method: "HEAD"}));
   }).then(function(r) {
     is(r.length, 1, "Should only find 1 item");
+    return checkResponse(r[0], response1, "");
+  }).then(function() {
+    return c.matchAll(new Request(request1, {method: "HEAD"}), {ignoreMethod: true});
+  }).then(function(r) {
+    is(r.length, 1, "Should only find 1 item");
     return checkResponse(r[0], response1, response1Text);
   }).then(function() {
     return Promise.all(
