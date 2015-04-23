@@ -3017,7 +3017,6 @@ then
     esac
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
     AC_SUBST(MOZ_USE_PTHREADS)
-    MOZ_CHECK_HEADERS(pthread.h)
 fi
 
 

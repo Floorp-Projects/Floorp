@@ -31,12 +31,6 @@ allocated, if:
 - <code><i>dbg</i>.memory.[trackingAllocationSites][tracking-allocs]</code> is
   set to `true`.
 
-- A [Bernoulli trial][bernoulli-trial] succeeds, with probability equal to the
-  maximum of
-  [`d.memory.allocationSamplingProbability`][alloc-sampling-probability] of all
-  `Debugger` instances `d` that are observing the global that this object is
-  allocated within the scope of.
-
 Given a [`Debugger.Object`][object] instance <i>dobj</i> referring to some
 object, <code><i>dobj</i>.[allocationSite][allocation-site]</code> returns a
 [saved call stack][saved-frame] indicating where <i>dobj</i>'s referent was
@@ -85,18 +79,6 @@ following accessor properties from its prototype:
     You can retrieve the allocation site for a given object with the
     [`Debugger.Object.prototype.allocationSite`][allocation-site] accessor
     property.
-
-<code id='alloc-sampling-probability'>allocationSamplingProbability</code>
-:   A number between 0 and 1 that indicates the probability with which each new
-    allocation should be entered into the allocations log. 0 is equivalent to
-    "never", 1 is "always", and .05 would be "one out of twenty".
-
-    The default is 1, or logging every allocation.
-
-    Note that in the presence of multiple <code>Debugger</code> instances
-    observing the same allocations within a global's scope, the maximum
-    <code>allocationSamplingProbability</code> of all the
-    <code>Debugger</code>s is used.
 
 <code id='max-alloc-log'>maxAllocationsLogLength</code>
 :   The maximum number of allocation sites to accumulate in the allocations log
