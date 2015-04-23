@@ -3422,18 +3422,18 @@ class ICInNativeStub : public ICStub
     HeapPtrPropertyName name_;
 
   protected:
-    ICInNativeStub(ICStub::Kind kind, JitCode *stubCode, HandleShape shape,
+    ICInNativeStub(ICStub::Kind kind, JitCode* stubCode, HandleShape shape,
                    HandlePropertyName name);
 
   public:
-    HeapPtrShape &shape() {
+    HeapPtrShape& shape() {
         return shape_;
     }
     static size_t offsetOfShape() {
         return offsetof(ICInNativeStub, shape_);
     }
 
-    HeapPtrPropertyName &name() {
+    HeapPtrPropertyName& name() {
         return name_;
     }
     static size_t offsetOfName() {
@@ -3446,7 +3446,7 @@ class ICIn_Native : public ICInNativeStub
 {
     friend class ICStubSpace;
 
-    ICIn_Native(JitCode *stubCode, HandleShape shape, HandlePropertyName name)
+    ICIn_Native(JitCode* stubCode, HandleShape shape, HandlePropertyName name)
       : ICInNativeStub(In_Native, stubCode, shape, name)
     {}
 };
@@ -3461,14 +3461,14 @@ class ICIn_NativePrototype : public ICInNativeStub
     HeapPtrObject holder_;
     HeapPtrShape holderShape_;
 
-    ICIn_NativePrototype(JitCode *stubCode, HandleShape shape, HandlePropertyName name,
+    ICIn_NativePrototype(JitCode* stubCode, HandleShape shape, HandlePropertyName name,
                          HandleObject holder, HandleShape holderShape);
 
   public:
-    HeapPtrObject &holder() {
+    HeapPtrObject& holder() {
         return holder_;
     }
-    HeapPtrShape &holderShape() {
+    HeapPtrShape& holderShape() {
         return holderShape_;
     }
     static size_t offsetOfHolder() {
@@ -3486,10 +3486,10 @@ class ICInNativeCompiler : public ICStubCompiler
     RootedObject holder_;
     RootedPropertyName name_;
 
-    bool generateStubCode(MacroAssembler &masm);
+    bool generateStubCode(MacroAssembler& masm);
 
   public:
-    ICInNativeCompiler(JSContext *cx, ICStub::Kind kind, HandleObject obj, HandleObject holder,
+    ICInNativeCompiler(JSContext* cx, ICStub::Kind kind, HandleObject obj, HandleObject holder,
                        HandlePropertyName name)
       : ICStubCompiler(cx, kind),
         obj_(cx, obj),
@@ -3497,7 +3497,7 @@ class ICInNativeCompiler : public ICStubCompiler
         name_(cx, name)
     {}
 
-    ICStub *getStub(ICStubSpace *space) {
+    ICStub* getStub(ICStubSpace* space) {
         RootedShape shape(cx, obj_->as<NativeObject>().lastProperty());
         if (kind == ICStub::In_Native) {
             MOZ_ASSERT(obj_ == holder_);
@@ -3524,7 +3524,7 @@ class ICIn_NativeDoesNotExist : public ICStub
     static const size_t MAX_PROTO_CHAIN_DEPTH = 8;
 
   protected:
-    ICIn_NativeDoesNotExist(JitCode *stubCode, size_t protoChainDepth,
+    ICIn_NativeDoesNotExist(JitCode* stubCode, size_t protoChainDepth,
                             HandlePropertyName name);
 
   public:
@@ -3532,14 +3532,14 @@ class ICIn_NativeDoesNotExist : public ICStub
         MOZ_ASSERT(extra_ <= MAX_PROTO_CHAIN_DEPTH);
         return extra_;
     }
-    HeapPtrPropertyName &name() {
+    HeapPtrPropertyName& name() {
         return name_;
     }
 
     template <size_t ProtoChainDepth>
-    ICIn_NativeDoesNotExistImpl<ProtoChainDepth> *toImpl() {
+    ICIn_NativeDoesNotExistImpl<ProtoChainDepth>* toImpl() {
         MOZ_ASSERT(ProtoChainDepth == protoChainDepth());
-        return static_cast<ICIn_NativeDoesNotExistImpl<ProtoChainDepth> *>(this);
+        return static_cast<ICIn_NativeDoesNotExistImpl<ProtoChainDepth>*>(this);
     }
 
     static size_t offsetOfShape(size_t idx);
@@ -3560,11 +3560,11 @@ class ICIn_NativeDoesNotExistImpl : public ICIn_NativeDoesNotExist
   private:
     mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
-    ICIn_NativeDoesNotExistImpl(JitCode *stubCode, const AutoShapeVector *shapes,
+    ICIn_NativeDoesNotExistImpl(JitCode* stubCode, const AutoShapeVector* shapes,
                                 HandlePropertyName name);
 
   public:
-    void traceShapes(JSTracer *trc) {
+    void traceShapes(JSTracer* trc) {
         for (size_t i = 0; i < NumShapes; i++)
             TraceEdge(trc, &shapes_[i], "baseline-innativedoesnotexist-stub-shape");
     }
@@ -3585,19 +3585,19 @@ class ICInNativeDoesNotExistCompiler : public ICStubCompiler
         return static_cast<int32_t>(kind) | (static_cast<int32_t>(protoChainDepth_) << 16);
     }
 
-    bool generateStubCode(MacroAssembler &masm);
+    bool generateStubCode(MacroAssembler& masm);
 
   public:
-    ICInNativeDoesNotExistCompiler(JSContext *cx, HandleObject obj, HandlePropertyName name,
+    ICInNativeDoesNotExistCompiler(JSContext* cx, HandleObject obj, HandlePropertyName name,
                                    size_t protoChainDepth);
 
     template <size_t ProtoChainDepth>
-    ICStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes) {
+    ICStub* getStubSpecific(ICStubSpace* space, const AutoShapeVector* shapes) {
         return ICStub::New<ICIn_NativeDoesNotExistImpl<ProtoChainDepth>>(space, getStubCode(),
                                                                          shapes, name_);
     }
 
-    ICStub *getStub(ICStubSpace *space);
+    ICStub* getStub(ICStubSpace* space);
 };
 
 class ICIn_Dense : public ICStub
@@ -3606,10 +3606,10 @@ class ICIn_Dense : public ICStub
 
     HeapPtrShape shape_;
 
-    ICIn_Dense(JitCode *stubCode, HandleShape shape);
+    ICIn_Dense(JitCode* stubCode, HandleShape shape);
 
   public:
-    HeapPtrShape &shape() {
+    HeapPtrShape& shape() {
         return shape_;
     }
     static size_t offsetOfShape() {
@@ -3620,15 +3620,15 @@ class ICIn_Dense : public ICStub
       RootedShape shape_;
 
       protected:
-        bool generateStubCode(MacroAssembler &masm);
+        bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext *cx, Shape *shape)
+        Compiler(JSContext* cx, Shape* shape)
           : ICStubCompiler(cx, ICStub::In_Dense),
             shape_(cx, shape)
         {}
 
-        ICStub *getStub(ICStubSpace *space) {
+        ICStub* getStub(ICStubSpace* space) {
             return ICStub::New<ICIn_Dense>(space, getStubCode(), shape_);
         }
     };

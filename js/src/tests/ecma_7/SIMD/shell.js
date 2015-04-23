@@ -1,3 +1,34 @@
+function makeFloat(sign, exp, mantissa) {
+    assertEq(sign, sign & 0x1);
+    assertEq(exp, exp & 0xFF);
+    assertEq(mantissa, mantissa & 0x7FFFFF);
+
+    var i32 = new Int32Array(1);
+    var f32 = new Float32Array(i32.buffer);
+
+    i32[0] = (sign << 31) | (exp << 23) | mantissa;
+    return f32[0];
+}
+
+function makeDouble(sign, exp, mantissa) {
+    assertEq(sign, sign & 0x1);
+    assertEq(exp, exp & 0x7FF);
+
+    // Can't use bitwise operations on mantissa, as it might be a double
+    assertEq(mantissa <= 0xfffffffffffff, true);
+    var highBits = (mantissa / Math.pow(2, 32)) | 0;
+    var lowBits = mantissa - highBits * Math.pow(2, 32);
+
+    var i32 = new Int32Array(2);
+    var f64 = new Float64Array(i32.buffer);
+
+    // Note that this assumes little-endian order, which is the case on tier-1
+    // platforms.
+    i32[0] = lowBits;
+    i32[1] = (sign << 31) | (exp << 20) | highBits;
+    return f64[0];
+}
+
 function assertEqX2(v, arr) {
     try {
         assertEq(v.x, arr[0]);

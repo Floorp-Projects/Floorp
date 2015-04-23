@@ -219,7 +219,7 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
 class AutoTracingName
 {
     CallbackTracer* trc_;
-    const char *prior_;
+    const char* prior_;
 
   public:
     AutoTracingName(CallbackTracer* trc, const char* name) : trc_(trc), prior_(trc->contextName_) {
@@ -290,7 +290,7 @@ class AutoTracingDetails
 class AutoOriginalTraceLocation
 {
 #ifdef JS_GC_ZEAL
-    CallbackTracer *trc_;
+    CallbackTracer* trc_;
 
   public:
     template <typename T>

@@ -4,18 +4,20 @@
 
 "use strict";
 
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 exports.items = [{
+  item: "command",
+  runAt: "server",
   name: "inspect",
-  description: gcli.lookup("inspectDesc"),
-  manual: gcli.lookup("inspectManual"),
+  description: l10n.lookup("inspectDesc"),
+  manual: l10n.lookup("inspectManual"),
   params: [
     {
       name: "selector",
       type: "node",
-      description: gcli.lookup("inspectNodeDesc"),
-      manual: gcli.lookup("inspectNodeManual")
+      description: l10n.lookup("inspectNodeDesc"),
+      manual: l10n.lookup("inspectNodeManual")
     }
   ],
   exec: function(args, context) {

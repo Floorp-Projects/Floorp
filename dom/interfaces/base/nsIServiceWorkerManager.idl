@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(c05b3b45-7f39-458c-8097-afafc7d69b01)]
+[scriptable, builtinclass, uuid(ff6e13ae-ae34-4941-a81e-a82f3e0e7b6b)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -76,10 +76,6 @@ interface nsIServiceWorkerManager : nsISupports
   void dispatchFetchEvent(in nsIDocument aDoc, in nsIInterceptedChannel aChannel,
                           in boolean aIsReload);
 
-  // aTarget MUST be a ServiceWorkerRegistration.
-  [noscript] void AddRegistrationEventListener(in DOMString aScope, in nsIDOMEventTarget aTarget);
-  [noscript] void RemoveRegistrationEventListener(in DOMString aScope, in nsIDOMEventTarget aTarget);
-
   /**
    * Call this to request that document `aDoc` be controlled by a ServiceWorker
    * if a registration exists for it's scope.
@@ -111,9 +107,9 @@ interface nsIServiceWorkerManager : nsISupports
   [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow);
 
   /*
-   * This implements the update algorithm.
+   * This implements the soft update algorithm.
    */
-  void update(in DOMString aScope);
+  void softUpdate(in DOMString aScope);
 
   // Testing
   DOMString getScopeForUrl(in DOMString path);

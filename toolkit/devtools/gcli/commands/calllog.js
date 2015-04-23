@@ -6,6 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const TargetFactory = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.TargetFactory;
+const l10n = require("gcli/l10n");
 const gcli = require("gcli/index");
 
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
@@ -24,11 +25,13 @@ let sandboxes = [];
 exports.items = [
   {
     name: "calllog",
-    description: gcli.lookup("calllogDesc")
+    description: l10n.lookup("calllogDesc")
   },
   {
+    item: "command",
+    runAt: "client",
     name: "calllog start",
-    description: gcli.lookup("calllogStartDesc"),
+    description: l10n.lookup("calllogStartDesc"),
 
     exec: function(args, context) {
       let contentWindow = context.environment.window;
@@ -45,7 +48,7 @@ exports.items = [
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       gDevTools.showToolbox(target, "webconsole");
 
-      return gcli.lookup("calllogStartReply");
+      return l10n.lookup("calllogStartReply");
     },
 
     callDescription: function(frame) {
@@ -72,13 +75,15 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "calllog stop",
-    description: gcli.lookup("calllogStopDesc"),
+    description: l10n.lookup("calllogStopDesc"),
 
     exec: function(args, context) {
       let numDebuggers = debuggers.length;
       if (numDebuggers == 0) {
-        return gcli.lookup("calllogStopNoLogging");
+        return l10n.lookup("calllogStopNoLogging");
       }
 
       for (let dbg of debuggers) {
@@ -86,12 +91,14 @@ exports.items = [
       }
       debuggers = [];
 
-      return gcli.lookupFormat("calllogStopReply", [ numDebuggers ]);
+      return l10n.lookupFormat("calllogStopReply", [ numDebuggers ]);
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "calllog chromestart",
-    description: gcli.lookup("calllogChromeStartDesc"),
+    description: l10n.lookup("calllogChromeStartDesc"),
     get hidden() gcli.hiddenByChromePref(),
     params: [
       {
@@ -104,8 +111,8 @@ exports.items = [
       {
         name: "source",
         type: "string",
-        description: gcli.lookup("calllogChromeSourceTypeDesc"),
-        manual: gcli.lookup("calllogChromeSourceTypeManual"),
+        description: l10n.lookup("calllogChromeSourceTypeDesc"),
+        manual: l10n.lookup("calllogChromeSourceTypeManual"),
       }
     ],
     exec: function(args, context) {
@@ -117,20 +124,20 @@ exports.items = [
           globalObj = Cu.import(args.source);
         }
         catch (e) {
-          return gcli.lookup("callLogChromeInvalidJSM");
+          return l10n.lookup("callLogChromeInvalidJSM");
         }
       } else if (args.sourceType == "content-variable") {
         if (args.source in contentWindow) {
           globalObj = Cu.getGlobalForObject(contentWindow[args.source]);
         } else {
-          throw new Error(gcli.lookup("callLogChromeVarNotFoundContent"));
+          throw new Error(l10n.lookup("callLogChromeVarNotFoundContent"));
         }
       } else if (args.sourceType == "chrome-variable") {
         let chromeWin = context.environment.chromeDocument.defaultView;
         if (args.source in chromeWin) {
           globalObj = Cu.getGlobalForObject(chromeWin[args.source]);
         } else {
-          return gcli.lookup("callLogChromeVarNotFoundChrome");
+          return l10n.lookup("callLogChromeVarNotFoundChrome");
         }
       } else {
         let chromeWin = context.environment.chromeDocument.defaultView;
@@ -147,13 +154,13 @@ exports.items = [
         } catch(e) {
           // We need to save the message before cleaning up else e contains a dead
           // object.
-          let msg = gcli.lookup("callLogChromeEvalException") + ": " + e;
+          let msg = l10n.lookup("callLogChromeEvalException") + ": " + e;
           Cu.nukeSandbox(sandbox);
           return msg;
         }
 
         if (typeof returnVal == "undefined") {
-          return gcli.lookup("callLogChromeEvalNeedsObject");
+          return l10n.lookup("callLogChromeEvalNeedsObject");
         }
 
         globalObj = Cu.getGlobalForObject(returnVal);
@@ -164,7 +171,7 @@ exports.items = [
 
       dbg.onEnterFrame = function(frame) {
         // BUG 773652 -  Make the output from the GCLI calllog command nicer
-        contentWindow.console.log(gcli.lookup("callLogChromeMethodCall") +
+        contentWindow.console.log(l10n.lookup("callLogChromeMethodCall") +
                                   ": " + this.callDescription(frame));
       }.bind(this);
 
@@ -172,7 +179,7 @@ exports.items = [
       let target = TargetFactory.forTab(gBrowser.selectedTab);
       gDevTools.showToolbox(target, "webconsole");
 
-      return gcli.lookup("calllogChromeStartReply");
+      return l10n.lookup("calllogChromeStartReply");
     },
 
     valueToString: function(value) {
@@ -182,19 +189,21 @@ exports.items = [
     },
 
     callDescription: function(frame) {
-      let name = frame.callee.name || gcli.lookup("callLogChromeAnonFunction");
+      let name = frame.callee.name || l10n.lookup("callLogChromeAnonFunction");
       let args = frame.arguments.map(this.valueToString).join(", ");
       return name + "(" + args + ")";
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "calllog chromestop",
-    description: gcli.lookup("calllogChromeStopDesc"),
+    description: l10n.lookup("calllogChromeStopDesc"),
     get hidden() gcli.hiddenByChromePref(),
     exec: function(args, context) {
       let numDebuggers = chromeDebuggers.length;
       if (numDebuggers == 0) {
-        return gcli.lookup("calllogChromeStopNoLogging");
+        return l10n.lookup("calllogChromeStopNoLogging");
       }
 
       for (let dbg of chromeDebuggers) {
@@ -207,7 +216,7 @@ exports.items = [
       chromeDebuggers = [];
       sandboxes = [];
 
-      return gcli.lookupFormat("calllogChromeStopReply", [ numDebuggers ]);
+      return l10n.lookupFormat("calllogChromeStopReply", [ numDebuggers ]);
     }
   }
 ];

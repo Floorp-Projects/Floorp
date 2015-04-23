@@ -101,16 +101,6 @@ var removeMapping = function(requisition) {
 };
 
 /**
- * Some manual intervention is needed in parsing the { command.
- */
-function getEvalCommand(commands) {
-  if (getEvalCommand._cmd == null) {
-    getEvalCommand._cmd = commands.get(evalCmd.name);
-  }
-  return getEvalCommand._cmd;
-}
-
-/**
  * Assignment is a link between a parameter and the data for that parameter.
  * The data for the parameter is available as in the preferred type and as
  * an Argument for the CLI.
@@ -318,7 +308,7 @@ var evalCmd = {
     var reply = customEval(args.javascript);
     return context.typedData(typeof reply, reply);
   },
-  isCommandRegexp: /^\s*{\s*/
+  isCommandRegexp: /^\s*\{\s*/
 };
 
 exports.items = [ evalCmd ];
@@ -585,11 +575,12 @@ Object.defineProperty(Requisition.prototype, 'executionContext', {
         enumerable: true
       });
 
+      this._executionContext.updateExec = this._contextUpdateExec.bind(this);
+
       if (legacy) {
         this._executionContext.createView = view.createView;
         this._executionContext.exec = this.exec.bind(this);
         this._executionContext.update = this._contextUpdate.bind(this);
-        this._executionContext.updateExec = this._contextUpdateExec.bind(this);
 
         Object.defineProperty(this._executionContext, 'document', {
           get: function() { return requisition.document; },
@@ -669,7 +660,7 @@ Requisition.prototype.getParameterNames = function() {
  * this is still an error status.
  */
 Object.defineProperty(Requisition.prototype, 'status', {
-  get : function() {
+  get: function() {
     var status = Status.VALID;
     if (this._unassigned.length !== 0) {
       var isAllIncomplete = true;
@@ -704,7 +695,8 @@ Object.defineProperty(Requisition.prototype, 'status', {
  */
 Requisition.prototype.getStatusMessage = function() {
   if (this.commandAssignment.getStatus() !== Status.VALID) {
-    return l10n.lookup('cliUnknownCommand');
+    return l10n.lookupFormat('cliUnknownCommand2',
+                             [ this.commandAssignment.arg.text ]);
   }
 
   var assignments = this.getAssignments();
@@ -1455,26 +1447,9 @@ Requisition.prototype.complete = function(cursor, rank) {
 /**
  * Replace the current value with the lower value if such a concept exists.
  */
-Requisition.prototype.decrement = function(assignment) {
+Requisition.prototype.nudge = function(assignment, by) {
   var ctx = this.executionContext;
-  var val = assignment.param.type.decrement(assignment.value, ctx);
-  return Promise.resolve(val).then(function(replacement) {
-    if (replacement != null) {
-      var val = assignment.param.type.stringify(replacement, ctx);
-      return Promise.resolve(val).then(function(str) {
-        var arg = assignment.arg.beget({ text: str });
-        return this.setAssignment(assignment, arg);
-      }.bind(this));
-    }
-  }.bind(this));
-};
-
-/**
- * Replace the current value with the higher value if such a concept exists.
- */
-Requisition.prototype.increment = function(assignment) {
-  var ctx = this.executionContext;
-  var val = assignment.param.type.increment(assignment.value, ctx);
+  var val = assignment.param.type.nudge(assignment.value, by, ctx);
   return Promise.resolve(val).then(function(replacement) {
     if (replacement != null) {
       var val = assignment.param.type.stringify(replacement, ctx);
@@ -1786,8 +1761,8 @@ Requisition.prototype._split = function(args) {
   if (args[0].type === 'ScriptArgument') {
     // Special case: if the user enters { console.log('foo'); } then we need to
     // use the hidden 'eval' command
-    conversion = new Conversion(getEvalCommand(this.system.commands),
-                                new ScriptArgument());
+    var command = this.system.commands.get(evalCmd.name);
+    conversion = new Conversion(command, new ScriptArgument());
     this._setAssignmentInternal(this.commandAssignment, conversion);
     return;
   }
@@ -2045,7 +2020,7 @@ Requisition.prototype.exec = function(options) {
     typed = typed.replace(/\s*}\s*$/, '');
   }
 
-  var output = new Output(this.conversionContext, {
+  var output = new Output({
     command: command,
     args: args,
     typed: typed,
@@ -2115,10 +2090,15 @@ Requisition.prototype.exec = function(options) {
  * unexpected change to the current command.
  */
 Requisition.prototype._contextUpdateExec = function(typed, options) {
-  return this.updateExec(typed, options).then(function(reply) {
-    this.onExternalUpdate({ typed: typed });
+  var reqOpts = {
+    document: this.document,
+    environment: this.environment
+  };
+  var child = new Requisition(this.system, reqOpts);
+  return child.updateExec(typed, options).then(function(reply) {
+    child.destroy();
     return reply;
-  }.bind(this));
+  }.bind(child));
 };
 
 /**
@@ -2138,14 +2118,13 @@ exports.Requisition = Requisition;
 /**
  * A simple object to hold information about the output of a command
  */
-function Output(context, options) {
+function Output(options) {
   options = options || {};
   this.command = options.command || '';
   this.args = options.args || {};
   this.typed = options.typed || '';
   this.canonical = options.canonical || '';
   this.hidden = options.hidden === true ? true : false;
-  this.converters = context.system.converters;
 
   this.type = undefined;
   this.data = undefined;
@@ -2190,15 +2169,28 @@ Output.prototype.complete = function(data, error) {
  * Call converters.convert using the data in this Output object
  */
 Output.prototype.convert = function(type, conversionContext) {
-  return this.converters.convert(this.data, this.type, type, conversionContext);
+  var converters = conversionContext.system.converters;
+  return converters.convert(this.data, this.type, type, conversionContext);
 };
 
 Output.prototype.toJson = function() {
+  // Exceptions don't stringify, so we try a bit harder
+  var data = this.data;
+  if (this.error && JSON.stringify(this.data) === '{}') {
+    data = {
+      columnNumber: data.columnNumber,
+      fileName: data.fileName,
+      lineNumber: data.lineNumber,
+      message: data.message,
+      stack: data.stack
+    };
+  }
+
   return {
     typed: this.typed,
     type: this.type,
-    data: this.data,
-    error: this.error
+    data: data,
+    isError: this.error
   };
 };
 

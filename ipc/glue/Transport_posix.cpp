@@ -25,10 +25,7 @@ bool
 CreateTransport(base::ProcessId /*unused*/,
                 TransportDescriptor* aOne, TransportDescriptor* aTwo)
 {
-  // Gecko doesn't care about this random ID, and the argument to this
-  // function isn't really necessary, it can be just any random
-  // pointer value
-  wstring id = ChildProcessInfo::GenerateRandomChannelID(aOne);
+  wstring id = IPC::Channel::GenerateVerifiedChannelID(std::wstring());
   // Use MODE_SERVER to force creation of the socketpair
   Transport t(id, Transport::MODE_SERVER, nullptr);
   int fd1 = t.GetFileDescriptor();

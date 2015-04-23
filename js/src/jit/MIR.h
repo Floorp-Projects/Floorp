@@ -1531,9 +1531,14 @@ class MSimdConvert
       : MUnaryInstruction(obj)
     {
         MOZ_ASSERT(IsSimdType(toType));
-        setMovable();
         setResultType(toType);
         specialization_ = fromType; // expects fromType as input
+
+        setMovable();
+        if (IsFloatingPointSimdType(fromType) && IsIntegerSimdType(toType)) {
+            // Does the extra range check => do not remove
+            setGuard();
+        }
     }
 
   public:
@@ -2271,7 +2276,7 @@ class MSimdBinaryBitwise
 
 class MSimdShift
   : public MBinaryInstruction,
-    public NoTypePolicy::Data
+    public MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdScalarPolicy<1> >::Data
 {
   public:
     enum Operation {
@@ -2286,7 +2291,6 @@ class MSimdShift
     MSimdShift(MDefinition* left, MDefinition* right, Operation op)
       : MBinaryInstruction(left, right), operation_(op)
     {
-        MOZ_ASSERT(left->type() == MIRType_Int32x4 && right->type() == MIRType_Int32);
         setResultType(MIRType_Int32x4);
         setMovable();
     }
@@ -2296,6 +2300,14 @@ class MSimdShift
     static MSimdShift* NewAsmJS(TempAllocator& alloc, MDefinition* left,
                                 MDefinition* right, Operation op)
     {
+        MOZ_ASSERT(left->type() == MIRType_Int32x4 && right->type() == MIRType_Int32);
+        return new(alloc) MSimdShift(left, right, op);
+    }
+
+    static MSimdShift* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
+                           Operation op, MIRType type)
+    {
+        MOZ_ASSERT(type == MIRType_Int32x4);
         return new(alloc) MSimdShift(left, right, op);
     }
 
@@ -2304,6 +2316,17 @@ class MSimdShift
     }
 
     Operation operation() const { return operation_; }
+
+    static const char* OperationName(Operation op) {
+        switch (op) {
+          case lsh:  return "lsh";
+          case rsh:  return "rsh-arithmetic";
+          case ursh: return "rhs-logical";
+        }
+        MOZ_CRASH("unexpected operation");
+    }
+
+    void printOpcode(FILE* fp) const override;
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!binaryCongruentTo(ins))
@@ -8090,7 +8113,7 @@ class MNot
             cacheOperandMightEmulateUndefined(constraints);
     }
 
-    void cacheOperandMightEmulateUndefined(CompilerConstraintList *constraints);
+    void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
   public:
     static MNot* New(TempAllocator& alloc, MDefinition* elements,

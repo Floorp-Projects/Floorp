@@ -291,8 +291,8 @@ IsTypedArrayIndex(jsid id, uint64_t* indexp)
  * when the property key is a TypedArray index.
  */
 bool
-DefineTypedArrayElement(JSContext *cx, HandleObject arr, uint64_t index,
-                        Handle<PropertyDescriptor> desc, ObjectOpResult &result);
+DefineTypedArrayElement(JSContext* cx, HandleObject arr, uint64_t index,
+                        Handle<PropertyDescriptor> desc, ObjectOpResult& result);
 
 static inline unsigned
 TypedArrayShift(Scalar::Type viewType)
