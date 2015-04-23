@@ -111,14 +111,16 @@ BluetoothGatt::Connect(ErrorResult& aRv)
 
   BT_ENSURE_TRUE_REJECT(
     mConnectionState == BluetoothConnectionState::Disconnected,
+    promise,
     NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   if (mAppUuid.IsEmpty()) {
     GenerateUuid(mAppUuid);
     BT_ENSURE_TRUE_REJECT(!mAppUuid.IsEmpty(),
+                          promise,
                           NS_ERROR_DOM_OPERATION_ERR);
     bs->RegisterBluetoothSignalHandler(mAppUuid, this);
   }
@@ -149,10 +151,11 @@ BluetoothGatt::Disconnect(ErrorResult& aRv)
 
   BT_ENSURE_TRUE_REJECT(
     mConnectionState == BluetoothConnectionState::Connected,
+    promise,
     NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   UpdateConnectionState(BluetoothConnectionState::Disconnecting);
   nsRefPtr<BluetoothReplyRunnable> result =
@@ -201,10 +204,11 @@ BluetoothGatt::ReadRemoteRssi(ErrorResult& aRv)
 
   BT_ENSURE_TRUE_REJECT(
     mConnectionState == BluetoothConnectionState::Connected,
+    promise,
     NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new ReadRemoteRssiTask(promise);
@@ -228,10 +232,11 @@ BluetoothGatt::DiscoverServices(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(
     mConnectionState == BluetoothConnectionState::Connected &&
     !mDiscoveringServices,
+    promise,
     NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   mDiscoveringServices = true;
   nsRefPtr<BluetoothReplyRunnable> result =
