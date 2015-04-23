@@ -329,8 +329,6 @@ ConvertToBase(T* thingp)
 template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name);
 template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
-static bool ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell);
-static bool ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val);
 
 template <typename T>
 void
@@ -583,6 +581,15 @@ template <> void GCMarker::traverse(JSObject* thing) { markAndPush(ObjectTag, th
 template <> void GCMarker::traverse(ObjectGroup* thing) { markAndPush(GroupTag, thing); }
 template <> void GCMarker::traverse(jit::JitCode* thing) { markAndPush(JitCodeTag, thing); }
 } // namespace js
+
+template <typename T>
+void
+GCMarker::traverse(JSObject* source, T* target)
+{
+    MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target),
+                  runtime()->isAtomsZone(target->zone()) || target->zone() == source->zone());
+    traverse(target);
+}
 
 template <typename T>
 bool
@@ -1430,28 +1437,6 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
     }
 }
 
-MOZ_ALWAYS_INLINE void
-GCMarker::markAndScanString(JSObject* source, JSString* str)
-{
-    if (!str->isPermanentAtom()) {
-        JS_COMPARTMENT_ASSERT(runtime(), str);
-        MOZ_ASSERT(runtime()->isAtomsZone(str->zone()) || str->zone() == source->zone());
-        if (str->markIfUnmarked())
-            eagerlyMarkChildren(str);
-    }
-}
-
-MOZ_ALWAYS_INLINE void
-GCMarker::markAndScanSymbol(JSObject* source, JS::Symbol* sym)
-{
-    if (!sym->isWellKnownSymbol()) {
-        JS_COMPARTMENT_ASSERT(runtime(), sym);
-        MOZ_ASSERT(runtime()->isAtomsZone(sym->zone()) || sym->zone() == source->zone());
-        if (sym->markIfUnmarked())
-            eagerlyMarkChildren(sym);
-    }
-}
-
 inline void
 GCMarker::processMarkStackTop(SliceBudget& budget)
 {
@@ -1504,7 +1489,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
 
         const Value& v = *vp++;
         if (v.isString()) {
-            markAndScanString(obj, v.toString());
+            traverse(obj, v.toString());
         } else if (v.isObject()) {
             JSObject* obj2 = &v.toObject();
             MOZ_ASSERT(obj->compartment() == obj2->compartment());
@@ -1515,7 +1500,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                 goto scan_obj;
             }
         } else if (v.isSymbol()) {
-            markAndScanSymbol(obj, v.toSymbol());
+            traverse(obj, v.toSymbol());
         }
     }
     return;
@@ -1524,7 +1509,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     {
         while (*unboxedTraceList != -1) {
             JSString* str = *reinterpret_cast<JSString**>(unboxedMemory + *unboxedTraceList);
-            markAndScanString(obj, str);
+            traverse(obj, str);
             unboxedTraceList++;
         }
         unboxedTraceList++;
@@ -1539,14 +1524,14 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         while (*unboxedTraceList != -1) {
             const Value& v = *reinterpret_cast<Value*>(unboxedMemory + *unboxedTraceList);
             if (v.isString()) {
-                markAndScanString(obj, v.toString());
+                traverse(obj, v.toString());
             } else if (v.isObject()) {
                 JSObject* obj2 = &v.toObject();
                 MOZ_ASSERT(obj->compartment() == obj2->compartment());
                 if (mark(obj2))
                     repush(obj2);
             } else if (v.isSymbol()) {
-                markAndScanSymbol(obj, v.toSymbol());
+                traverse(obj, v.toSymbol());
             }
             unboxedTraceList++;
         }
