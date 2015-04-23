@@ -147,7 +147,7 @@ private:
     void OnConnectError() override;
     void OnDisconnect() override;
 
-    void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) override;
+    void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
 
     // ConnectionOrientedSocket
     //

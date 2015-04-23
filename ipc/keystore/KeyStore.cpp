@@ -810,12 +810,9 @@ KeyStore::StreamSocket::OnDisconnect()
 }
 
 void
-KeyStore::StreamSocket::ReceiveSocketData(
-  nsAutoPtr<UnixSocketRawData>& aMessage)
+KeyStore::StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
-  nsAutoPtr<UnixSocketBuffer> buffer(aMessage.forget());
-
-  mKeyStore->ReceiveSocketData(buffer);
+  mKeyStore->ReceiveSocketData(aBuffer);
 }
 
 ConnectionOrientedSocketIO*

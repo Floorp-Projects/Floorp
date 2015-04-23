@@ -369,11 +369,11 @@ RilConsumer::Shutdown()
 }
 
 void
-RilConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
+RilConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(mClientId, aMessage.forget()));
+  nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(mClientId, aBuffer.forget()));
   mDispatcher->PostTask(dre);
 }
 
