@@ -26,6 +26,7 @@
 #include <hardware/power.h>
 #include <suspend/autosuspend.h>
 
+#include "FramebufferSurface.h"
 #if ANDROID_VERSION == 17
 #include "GraphicBufferAlloc.h"
 #endif
@@ -119,11 +120,11 @@ GonkDisplayJB::GonkDisplayJB()
     sp<BufferQueue> consumer = new BufferQueue(true, mAlloc);
 #endif
 
-    mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, consumer);
+    mDispSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, consumer);
 
 #if ANDROID_VERSION == 17
     sp<SurfaceTextureClient> stc = new SurfaceTextureClient(
-        static_cast<sp<ISurfaceTexture> >(mFBSurface->getBufferQueue()));
+        static_cast<sp<ISurfaceTexture> >(mDispSurface->getBufferQueue()));
 #else
     sp<Surface> stc = new Surface(producer);
 #endif
@@ -223,9 +224,9 @@ GonkDisplayJB::GetHWCDevice()
 }
 
 void*
-GonkDisplayJB::GetFBSurface()
+GonkDisplayJB::GetDispSurface()
 {
-    return mFBSurface.get();
+    return mDispSurface.get();
 }
 
 bool
@@ -238,7 +239,7 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     if (mFBDevice && mFBDevice->compositionComplete) {
         mFBDevice->compositionComplete(mFBDevice);
     }
-    return Post(mFBSurface->lastHandle, mFBSurface->GetPrevFBAcquireFd());
+    return Post(mDispSurface->lastHandle, mDispSurface->GetPrevDispAcquireFd());
 }
 
 bool
@@ -297,7 +298,7 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
 #endif
     mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
-    mFBSurface->setReleaseFenceFd(mList->hwLayers[1].releaseFenceFd);
+    mDispSurface->setReleaseFenceFd(mList->hwLayers[1].releaseFenceFd);
     if (mList->retireFenceFd >= 0)
         close(mList->retireFenceFd);
     return !err;
@@ -321,21 +322,21 @@ GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
 }
 
 void
-GonkDisplayJB::UpdateFBSurface(EGLDisplay dpy, EGLSurface sur)
+GonkDisplayJB::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
     eglSwapBuffers(dpy, sur);
 }
 
 void
-GonkDisplayJB::SetFBReleaseFd(int fd)
+GonkDisplayJB::SetDispReleaseFd(int fd)
 {
-    mFBSurface->setReleaseFenceFd(fd);
+    mDispSurface->setReleaseFenceFd(fd);
 }
 
 int
-GonkDisplayJB::GetPrevFBAcquireFd()
+GonkDisplayJB::GetPrevDispAcquireFd()
 {
-    return mFBSurface->GetPrevFBAcquireFd();
+    return mDispSurface->GetPrevDispAcquireFd();
 }
 
 __attribute__ ((visibility ("default")))

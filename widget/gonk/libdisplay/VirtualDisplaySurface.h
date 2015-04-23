@@ -17,7 +17,6 @@
 #ifndef ANDROID_SF_VIRTUAL_DISPLAY_SURFACE_H
 #define ANDROID_SF_VIRTUAL_DISPLAY_SURFACE_H
 
-#include <gui/ConsumerBase.h>
 #include <gui/IGraphicBufferProducer.h>
 
 #include "DisplaySurface.h"
@@ -69,13 +68,12 @@ class IProducerListener;
  * is released and the output buffer is queued to the sink.
  */
 class VirtualDisplaySurface : public DisplaySurface,
-                              public BnGraphicBufferProducer,
-                              private ConsumerBase {
+                              public BnGraphicBufferProducer {
 public:
-    VirtualDisplaySurface(HWComposer& hwc, int32_t dispId,
+    VirtualDisplaySurface(int32_t dispId,
             const sp<IGraphicBufferProducer>& sink,
             const sp<IGraphicBufferProducer>& bqProducer,
-            const sp<IGraphicBufferConsumer>& bqConsumer,
+            const sp<StreamConsumer>& bqConsumer,
             const String8& name);
 
     //
@@ -88,6 +86,9 @@ public:
     virtual void onFrameCommitted();
     virtual void dump(String8& result) const;
     virtual void resizeBuffers(const uint32_t w, const uint32_t h);
+
+    virtual status_t setReleaseFenceFd(int fenceFd) { return INVALID_OPERATION; }
+    virtual int GetPrevDispAcquireFd() { return -1; };
 
 private:
     enum Source {SOURCE_SINK = 0, SOURCE_SCRATCH = 1};
@@ -109,10 +110,17 @@ private:
             const QueueBufferInput& input, QueueBufferOutput* output);
     virtual void cancelBuffer(int pslot, const sp<Fence>& fence);
     virtual int query(int what, int* value);
+#if ANDROID_VERSION >= 21
     virtual status_t connect(const sp<IProducerListener>& listener,
             int api, bool producerControlledByApp, QueueBufferOutput* output);
+#else
+    virtual status_t connect(const sp<IBinder>& token,
+            int api, bool producerControlledByApp, QueueBufferOutput* output);
+#endif
     virtual status_t disconnect(int api);
+#if ANDROID_VERSION >= 21
     virtual status_t setSidebandStream(const sp<NativeHandle>& stream);
+#endif
     virtual void allocateBuffers(bool async, uint32_t width, uint32_t height,
             uint32_t format, uint32_t usage);
 
@@ -138,7 +146,6 @@ private:
     //
     // Immutable after construction
     //
-    HWComposer& mHwc;
     const int32_t mDisplayId;
     const String8 mDisplayName;
     sp<IGraphicBufferProducer> mSource[2]; // indexed by SOURCE_*
