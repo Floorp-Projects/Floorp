@@ -1109,9 +1109,11 @@ SimpleTest.monitorConsole = function (continuation, msgs, forbidUnexpectedMsgs) 
   }
 
   var counter = 0;
+  var assertionLabel = msgs.toSource();
   function listener(msg) {
     if (msg.message === "SENTINEL" && !msg.isScriptError) {
-      is(counter, msgs.length, "monitorConsole | number of messages");
+      is(counter, msgs.length,
+         "monitorConsole | number of messages " + assertionLabel);
       SimpleTest.executeSoon(continuation);
       return;
     }
