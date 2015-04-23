@@ -586,7 +586,7 @@ class WorkerListener final : public ServiceWorkerRegistrationListener
   ServiceWorkerRegistrationWorkerThread* mRegistration;
 
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerListener)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WorkerListener, override)
 
   WorkerListener(WorkerPrivate* aWorkerPrivate,
                  ServiceWorkerRegistrationWorkerThread* aReg)
