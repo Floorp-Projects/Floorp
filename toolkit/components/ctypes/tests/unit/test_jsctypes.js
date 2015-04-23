@@ -331,9 +331,9 @@ function run_Int64_tests() {
   do_check_eq(i.toString(), "0");
   for (let radix = 2; radix <= 36; ++radix)
     do_check_eq(i.toString(radix), "0");
-  do_check_throws(function() { i.toString(0); }, Error);
-  do_check_throws(function() { i.toString(1); }, Error);
-  do_check_throws(function() { i.toString(37); }, Error);
+  do_check_throws(function() { i.toString(0); }, RangeError);
+  do_check_throws(function() { i.toString(1); }, RangeError);
+  do_check_throws(function() { i.toString(37); }, RangeError);
   do_check_throws(function() { i.toString(10, 2); }, TypeError);
 
   // Test Int64.toSource().
@@ -445,18 +445,18 @@ function run_Int64_tests() {
   do_check_eq(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-5)), 0);
   do_check_eq(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-4)), -1);
   do_check_eq(ctypes.Int64.compare(ctypes.Int64(-4), ctypes.Int64(-5)), 1);
-  do_check_throws(function() { ctypes.Int64.compare(ctypes.Int64(4), ctypes.UInt64(4)); }, Error);
-  do_check_throws(function() { ctypes.Int64.compare(4, 5); }, Error);
+  do_check_throws(function() { ctypes.Int64.compare(ctypes.Int64(4), ctypes.UInt64(4)); }, TypeError);
+  do_check_throws(function() { ctypes.Int64.compare(4, 5); }, TypeError);
 
   // Test ctypes.Int64.{lo,hi}.
   do_check_eq(ctypes.Int64.lo(ctypes.Int64(0x28590a1c921de000)), 0x921de000);
   do_check_eq(ctypes.Int64.hi(ctypes.Int64(0x28590a1c921de000)), 0x28590a1c);
   do_check_eq(ctypes.Int64.lo(ctypes.Int64(-0x28590a1c921de000)), 0x6de22000);
   do_check_eq(ctypes.Int64.hi(ctypes.Int64(-0x28590a1c921de000)), -0x28590a1d);
-  do_check_throws(function() { ctypes.Int64.lo(ctypes.UInt64(0)); }, Error);
-  do_check_throws(function() { ctypes.Int64.hi(ctypes.UInt64(0)); }, Error);
-  do_check_throws(function() { ctypes.Int64.lo(0); }, Error);
-  do_check_throws(function() { ctypes.Int64.hi(0); }, Error);
+  do_check_throws(function() { ctypes.Int64.lo(ctypes.UInt64(0)); }, TypeError);
+  do_check_throws(function() { ctypes.Int64.hi(ctypes.UInt64(0)); }, TypeError);
+  do_check_throws(function() { ctypes.Int64.lo(0); }, TypeError);
+  do_check_throws(function() { ctypes.Int64.hi(0); }, TypeError);
 
   // Test ctypes.Int64.join.
   do_check_eq(ctypes.Int64.join(0, 0).toString(), "0");
@@ -502,9 +502,9 @@ function run_UInt64_tests() {
   do_check_eq(i.toString(), "0");
   for (let radix = 2; radix <= 36; ++radix)
     do_check_eq(i.toString(radix), "0");
-  do_check_throws(function() { i.toString(0); }, Error);
-  do_check_throws(function() { i.toString(1); }, Error);
-  do_check_throws(function() { i.toString(37); }, Error);
+  do_check_throws(function() { i.toString(0); }, RangeError);
+  do_check_throws(function() { i.toString(1); }, RangeError);
+  do_check_throws(function() { i.toString(37); }, RangeError);
   do_check_throws(function() { i.toString(10, 2); }, TypeError);
 
   // Test UInt64.toSource().
@@ -592,18 +592,18 @@ function run_UInt64_tests() {
   do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(5)), 0);
   do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(4)), 1);
   do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.UInt64(5)), -1);
-  do_check_throws(function() { ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.Int64(4)); }, Error);
-  do_check_throws(function() { ctypes.UInt64.compare(4, 5); }, Error);
+  do_check_throws(function() { ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.Int64(4)); }, TypeError);
+  do_check_throws(function() { ctypes.UInt64.compare(4, 5); }, TypeError);
 
   // Test ctypes.UInt64.{lo,hi}.
   do_check_eq(ctypes.UInt64.lo(ctypes.UInt64(0x28590a1c921de000)), 0x921de000);
   do_check_eq(ctypes.UInt64.hi(ctypes.UInt64(0x28590a1c921de000)), 0x28590a1c);
   do_check_eq(ctypes.UInt64.lo(ctypes.UInt64(0xa8590a1c921de000)), 0x921de000);
   do_check_eq(ctypes.UInt64.hi(ctypes.UInt64(0xa8590a1c921de000)), 0xa8590a1c);
-  do_check_throws(function() { ctypes.UInt64.lo(ctypes.Int64(0)); }, Error);
-  do_check_throws(function() { ctypes.UInt64.hi(ctypes.Int64(0)); }, Error);
-  do_check_throws(function() { ctypes.UInt64.lo(0); }, Error);
-  do_check_throws(function() { ctypes.UInt64.hi(0); }, Error);
+  do_check_throws(function() { ctypes.UInt64.lo(ctypes.Int64(0)); }, TypeError);
+  do_check_throws(function() { ctypes.UInt64.hi(ctypes.Int64(0)); }, TypeError);
+  do_check_throws(function() { ctypes.UInt64.lo(0); }, TypeError);
+  do_check_throws(function() { ctypes.UInt64.hi(0); }, TypeError);
 
   // Test ctypes.UInt64.join.
   do_check_eq(ctypes.UInt64.join(0, 0).toString(), "0");
@@ -1374,8 +1374,8 @@ function run_StructType_tests() {
 
   do_check_throws(function() { ctypes.StructType(); }, TypeError);
   do_check_throws(function() { ctypes.StructType("a", [], 5); }, TypeError);
-  do_check_throws(function() { ctypes.StructType(null, []); }, Error);
-  do_check_throws(function() { ctypes.StructType("a", null); }, Error);
+  do_check_throws(function() { ctypes.StructType(null, []); }, TypeError);
+  do_check_throws(function() { ctypes.StructType("a", null); }, TypeError);
 
   // Check that malformed descriptors are an error.
   do_check_throws(function() {
@@ -1659,9 +1659,9 @@ function run_PointerType_tests() {
 
   do_check_throws(function() { ctypes.PointerType(); }, TypeError);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t, 5); }, TypeError);
-  do_check_throws(function() { ctypes.PointerType(null); }, Error);
-  do_check_throws(function() { ctypes.PointerType(ctypes.int32_t()); }, Error);
-  do_check_throws(function() { ctypes.PointerType("void"); }, Error);
+  do_check_throws(function() { ctypes.PointerType(null); }, TypeError);
+  do_check_throws(function() { ctypes.PointerType(ctypes.int32_t()); }, TypeError);
+  do_check_throws(function() { ctypes.PointerType("void"); }, TypeError);
 
   let name = "g_t";
   let g_t = ctypes.StructType(name, [{ a: ctypes.int32_t }, { b: ctypes.double }]);
@@ -1844,10 +1844,10 @@ function run_FunctionType_tests() {
   }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, ctypes.void_t);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, null);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t());
   }, Error);
@@ -1961,9 +1961,9 @@ function run_ArrayType_tests() {
     [ "elementType", "length" ], [], [ "length" ], [ "addressOfElement" ]);
 
   do_check_throws(function() { ctypes.ArrayType(); }, TypeError);
-  do_check_throws(function() { ctypes.ArrayType(null); }, Error);
+  do_check_throws(function() { ctypes.ArrayType(null); }, TypeError);
   do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, 1, 5); }, TypeError);
-  do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, -1); }, Error);
+  do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, -1); }, TypeError);
 
   let name = "g_t";
   let g_t = ctypes.StructType(name, [{ a: ctypes.int32_t }, { b: ctypes.double }]);
@@ -2025,7 +2025,7 @@ function run_ArrayType_tests() {
   if (ctypes.size_t.size == 4) {
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int8_t, 0x100000000);
-    }, Error);
+    }, TypeError);
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int16_t, 0x80000000);
     }, Error);
@@ -2036,7 +2036,7 @@ function run_ArrayType_tests() {
   } else {
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int8_t, ctypes.UInt64("0xffffffffffffffff"));
-    }, Error);
+    }, TypeError);
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int16_t, ctypes.UInt64("0x8000000000000000"));
     }, Error);
