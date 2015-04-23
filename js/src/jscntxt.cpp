@@ -764,9 +764,9 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
 }
 
 static bool
-ExpandErrorArguments(ExclusiveContext *cx, JSErrorCallback callback,
-                     void *userRef, const unsigned errorNumber,
-                     char **messagep, JSErrorReport *reportp,
+ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
+                     void* userRef, const unsigned errorNumber,
+                     char** messagep, JSErrorReport* reportp,
                      ErrorArgumentsType argumentsType, ...)
 {
     va_list ap;

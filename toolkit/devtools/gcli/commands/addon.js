@@ -4,9 +4,33 @@
 
 "use strict";
 
+/**
+ * You can't require the AddonManager in a child process, but GCLI wants to
+ * check for 'items' in all processes, so we return empty array if the
+ * AddonManager is not available
+ */
+function getAddonManager() {
+  try {
+    return {
+      AddonManager: require("resource://gre/modules/AddonManager.jsm").AddonManager,
+      addonManagerActive: true
+    };
+  }
+  catch (ex) {
+    // Fake up an AddonManager just enough to let the file load
+    return {
+      AddonManager: {
+        getAllAddons() {},
+        getAddonsByTypes() {}
+      },
+      addonManagerActive: false
+    };
+  }
+}
+
 const { Cc, Ci, Cu } = require("chrome");
-const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-const gcli = require("gcli/index");
+const { AddonManager, addonManagerActive } = getAddonManager();
+const l10n = require("gcli/l10n");
 const { Promise: promise } = require("resource://gre/modules/Promise.jsm");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
@@ -49,7 +73,7 @@ function pendingOperations(addon) {
   }, []);
 }
 
-exports.items = [
+var items = [
   {
     item: "type",
     name: "addon",
@@ -76,11 +100,11 @@ exports.items = [
   },
   {
     name: "addon",
-    description: gcli.lookup("addonDesc")
+    description: l10n.lookup("addonDesc")
   },
   {
     name: "addon list",
-    description: gcli.lookup("addonListDesc"),
+    description: l10n.lookup("addonListDesc"),
     returnType: "addonsInfo",
     params: [{
       name: "type",
@@ -89,7 +113,7 @@ exports.items = [
         data: [ "dictionary", "extension", "locale", "plugin", "theme", "all" ]
       },
       defaultValue: "all",
-      description: gcli.lookup("addonListTypeDesc")
+      description: l10n.lookup("addonListTypeDesc")
     }],
     exec: function(args, context) {
       let types = (args.type === "all") ? null : [ args.type ];
@@ -114,7 +138,7 @@ exports.items = [
       if (!addonsInfo.addons.length) {
         return context.createView({
           html: "<p>${message}</p>",
-          data: { message: gcli.lookup("addonNoneOfType") }
+          data: { message: l10n.lookup("addonNoneOfType") }
         });
       }
 
@@ -126,7 +150,7 @@ exports.items = [
         "theme": "addonListThemeHeading",
         "all": "addonListAllHeading"
       };
-      let header = gcli.lookup(headerLookups[addonsInfo.type] ||
+      let header = l10n.lookup(headerLookups[addonsInfo.type] ||
                                "addonListUnknownHeading");
 
       let operationLookups = {
@@ -138,7 +162,7 @@ exports.items = [
       };
       function lookupOperation(opName) {
         let lookupName = operationLookups[opName];
-        return lookupName ? gcli.lookup(lookupName) : opName;
+        return lookupName ? l10n.lookup(lookupName) : opName;
       }
 
       function arrangeAddons(addons) {
@@ -193,14 +217,14 @@ exports.items = [
               status: addon.isActive ? "enabled" : "disabled",
               version: addon.version,
               pendingOperations: addon.pendingOperations.length ?
-                (" (" + gcli.lookup("addonPending") + ": "
+                (" (" + l10n.lookup("addonPending") + ": "
                  + addon.pendingOperations.map(lookupOperation).join(", ")
                  + ")") :
                 "",
               toggleActionName: isActiveForToggle(addon) ? "disable": "enable",
               toggleActionMessage: isActiveForToggle(addon) ?
-                gcli.lookup("addonListOutDisable") :
-                gcli.lookup("addonListOutEnable")
+                l10n.lookup("addonListOutDisable") :
+                l10n.lookup("addonListOutEnable")
             };
           }),
           onclick: context.update,
@@ -210,33 +234,37 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "addon enable",
-    description: gcli.lookup("addonEnableDesc"),
+    description: l10n.lookup("addonEnableDesc"),
     params: [
       {
         name: "addon",
         type: "addon",
-        description: gcli.lookup("addonNameDesc")
+        description: l10n.lookup("addonNameDesc")
       }
     ],
     exec: function(args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.userDisabled) {
         args.addon.userDisabled = false;
-        return gcli.lookupFormat("addonEnabled", [ name ]);
+        return l10n.lookupFormat("addonEnabled", [ name ]);
       }
 
-      return gcli.lookupFormat("addonAlreadyEnabled", [ name ]);
+      return l10n.lookupFormat("addonAlreadyEnabled", [ name ]);
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "addon disable",
-    description: gcli.lookup("addonDisableDesc"),
+    description: l10n.lookup("addonDisableDesc"),
     params: [
       {
         name: "addon",
         type: "addon",
-        description: gcli.lookup("addonNameDesc")
+        description: l10n.lookup("addonNameDesc")
       }
     ],
     exec: function(args, context) {
@@ -247,10 +275,12 @@ exports.items = [
       if (!args.addon.userDisabled ||
           args.addon.userDisabled === AddonManager.STATE_ASK_TO_ACTIVATE) {
         args.addon.userDisabled = true;
-        return gcli.lookupFormat("addonDisabled", [ name ]);
+        return l10n.lookupFormat("addonDisabled", [ name ]);
       }
 
-      return gcli.lookupFormat("addonAlreadyDisabled", [ name ]);
+      return l10n.lookupFormat("addonAlreadyDisabled", [ name ]);
     }
   }
 ];
+
+exports.items = addonManagerActive ? items : [];

@@ -38,7 +38,9 @@ class MIRGenerator
     MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
                  TempAllocator* alloc, MIRGraph* graph,
                  CompileInfo* info, const OptimizationInfo* optimizationInfo,
-                 Label* outOfBoundsLabel = nullptr, bool usesSignalHandlersForAsmJSOOB = false);
+                 Label* outOfBoundsLabel = nullptr,
+                 Label* conversionErrorLabel = nullptr,
+                 bool usesSignalHandlersForAsmJSOOB = false);
 
     TempAllocator& alloc() {
         return *alloc_;
@@ -202,6 +204,10 @@ class MIRGenerator
     void addAbortedPreliminaryGroup(ObjectGroup* group);
 
     Label* outOfBoundsLabel_;
+    // Label where we should jump in asm.js mode, in the case where we have an
+    // invalid conversion or a loss of precision (when converting from a
+    // floating point SIMD type into an integer SIMD type).
+    Label* conversionErrorLabel_;
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     bool usesSignalHandlersForAsmJSOOB_;
 #endif
@@ -229,7 +235,12 @@ class MIRGenerator
         return nurseryObjects_;
     }
 
+    Label* conversionErrorLabel() const {
+        MOZ_ASSERT((conversionErrorLabel_ != nullptr) == compilingAsmJS());
+        return conversionErrorLabel_;
+    }
     Label* outOfBoundsLabel() const {
+        MOZ_ASSERT(compilingAsmJS());
         return outOfBoundsLabel_;
     }
     bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const;

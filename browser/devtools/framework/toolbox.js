@@ -713,10 +713,13 @@ Toolbox.prototype = {
       this._buildPickerButton();
     }
 
-    let spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
-    let environment = CommandUtils.createEnvironment(this, '_target');
-    return CommandUtils.createRequisition(environment).then(requisition => {
+    const options = {
+      environment: CommandUtils.createEnvironment(this, '_target')
+    };
+    return CommandUtils.createRequisition(this.target, options).then(requisition => {
       this._requisition = requisition;
+
+      const spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
       return CommandUtils.createButtons(spec, this.target, this.doc,
                                         requisition).then(buttons => {
         let container = this.doc.getElementById("toolbox-buttons");
@@ -1752,7 +1755,7 @@ Toolbox.prototype = {
     let win = this.frame.ownerGlobal;
 
     if (this._requisition) {
-      this._requisition.destroy();
+      CommandUtils.destroyRequisition(this._requisition, this.target);
     }
     this._telemetry.toolClosed("toolbox");
     this._telemetry.destroy();

@@ -899,8 +899,7 @@ IonBuilder::build()
     if (!processIterators())
         return false;
 
-    if (!abortedPreliminaryGroups().empty()) {
-        MOZ_ASSERT(!info().isAnalysis());
+    if (!info().isAnalysis() && !abortedPreliminaryGroups().empty()) {
         abortReason_ = AbortReason_PreliminaryObjects;
         return false;
     }
@@ -1057,8 +1056,7 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
     // Discard unreferenced & pre-allocated resume points.
     replaceMaybeFallbackFunctionGetter(nullptr);
 
-    if (!abortedPreliminaryGroups().empty()) {
-        MOZ_ASSERT(!info().isAnalysis());
+    if (!info().isAnalysis() && !abortedPreliminaryGroups().empty()) {
         abortReason_ = AbortReason_PreliminaryObjects;
         return false;
     }
@@ -6583,7 +6581,7 @@ IonBuilder::jsop_initelem_array()
     // intializer, and that arrays are marked as non-packed when writing holes
     // to them during initialization.
     bool needStub = false;
-    if (obj->isUnknownValue()) {
+    if (obj->isUnknownValue() || shouldAbortOnPreliminaryGroups(obj)) {
         needStub = true;
     } else {
         TypeSet::ObjectKey* initializer = obj->resultTypeSet()->getObject(0);
@@ -7104,18 +7102,8 @@ ObjectHasExtraOwnProperty(CompileCompartment* comp, TypeSet::ObjectKey* object, 
         return name == comp->runtime()->names().length;
 
     // Resolve hooks can install new properties on objects on demand.
-    if (!clasp->resolve)
-        return false;
-
-    if (clasp->resolve == str_resolve) {
-        // str_resolve only resolves integers, not names.
-        return false;
-    }
-
-    if (clasp->resolve == fun_resolve)
-        return FunctionHasResolveHook(comp->runtime()->names(), NameToId(name));
-
-    return true;
+    JSObject* singleton = object->isSingleton() ? object->singleton() : nullptr;
+    return ClassMayResolveId(comp->runtime()->names(), clasp, NameToId(name), singleton);
 }
 
 void
@@ -7710,7 +7698,7 @@ IonBuilder::jsop_getelem()
 
     // Always use a call if we are performing analysis and not actually
     // emitting code, to simplify later analysis.
-    if (info().isAnalysis()) {
+    if (info().isAnalysis() || shouldAbortOnPreliminaryGroups(obj)) {
         MInstruction* ins = MCallGetElement::New(alloc(), obj, index);
 
         current->add(ins);
@@ -8761,6 +8749,13 @@ IonBuilder::jsop_setelem()
     trackTypeInfo(TrackedTypeSite::Index, index->type(), index->resultTypeSet());
     trackTypeInfo(TrackedTypeSite::Value, value->type(), value->resultTypeSet());
 
+    if (shouldAbortOnPreliminaryGroups(object)) {
+        MInstruction* ins = MCallSetElement::New(alloc(), object, index, value, IsStrictSetPC(pc));
+        current->add(ins);
+        current->push(value);
+        return resumeAfter(ins);
+    }
+
     trackOptimizationAttempt(TrackedStrategy::SetElem_TypedObject);
     if (!setElemTryTypedObject(&emitted, object, index, value) || emitted)
         return emitted;
@@ -9448,37 +9443,6 @@ IonBuilder::getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_
         return UINT32_MAX;
     }
 
-    // Watch for groups which still have preliminary object information and
-    // have not had the new script properties other analyses performed on their
-    // preliminary objects. Normally this is done after a small number of the
-    // objects have been created, but if only a few have been created we can
-    // still perform the analysis with a smaller object population. The
-    // analysis can have side effects so abort the builder and retry later.
-    //
-    // We always check this, so that even if we aren't able to find a common
-    // slot we ensure that the new script analysis is performed on all accessed
-    // objects. Later, this will let us elide baseline IC stubs for preliminary
-    // objects, which often have a different number of fixed slots from
-    // subsequent objects.
-    for (size_t i = 0; i < types->getObjectCount(); i++) {
-        TypeSet::ObjectKey* key = types->getObject(i);
-        if (!key)
-            continue;
-
-        if (ObjectGroup* group = key->maybeGroup()) {
-            if (group->newScript() && !group->newScript()->analyzed()) {
-                addAbortedPreliminaryGroup(group);
-                trackOptimizationOutcome(TrackedOutcome::NoAnalysisInfo);
-                return UINT32_MAX;
-            }
-            if (group->maybePreliminaryObjects()) {
-                addAbortedPreliminaryGroup(group);
-                trackOptimizationOutcome(TrackedOutcome::NoAnalysisInfo);
-                return UINT32_MAX;
-            }
-        }
-    }
-
     uint32_t slot = UINT32_MAX;
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
@@ -9949,6 +9913,37 @@ IonBuilder::storeSlot(MDefinition* obj, Shape* shape, MDefinition* value, bool n
 }
 
 bool
+IonBuilder::shouldAbortOnPreliminaryGroups(MDefinition *obj)
+{
+    // Watch for groups which still have preliminary object information and
+    // have not had the new script properties or unboxed layout analyses
+    // performed. Normally this is done after a small number of the objects
+    // have been created, but if only a few have been created we can still
+    // perform the analysis with a smaller object population. The analysis can
+    // have side effects so we will end up aborting compilation after building
+    // finishes and retrying later.
+    TemporaryTypeSet *types = obj->resultTypeSet();
+    if (!types || types->unknownObject())
+        return false;
+
+    bool preliminary = false;
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        TypeSet::ObjectKey* key = types->getObject(i);
+        if (!key)
+            continue;
+
+        if (ObjectGroup* group = key->maybeGroup()) {
+            if (group->hasUnanalyzedPreliminaryObjects()) {
+                addAbortedPreliminaryGroup(group);
+                preliminary = true;
+            }
+        }
+    }
+
+    return preliminary;
+}
+
+bool
 IonBuilder::jsop_getprop(PropertyName* name)
 {
     bool emitted = false;
@@ -9989,7 +9984,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
     // not actually emitting code, to simplify later analysis. Also skip deeper
     // analysis if there are no known types for this operation, as it will
     // always invalidate when executing.
-    if (info().isAnalysis() || types->empty()) {
+    if (info().isAnalysis() || types->empty() || shouldAbortOnPreliminaryGroups(obj)) {
         if (types->empty()) {
             // Since no further optimizations will be tried, use the IC
             // strategy, which would have been the last one to be tried, as a
@@ -11096,7 +11091,7 @@ IonBuilder::jsop_setprop(PropertyName* name)
 
     // Always use a call if we are doing the definite properties analysis and
     // not actually emitting code, to simplify later analysis.
-    if (info().isAnalysis()) {
+    if (info().isAnalysis() || shouldAbortOnPreliminaryGroups(obj)) {
         bool strict = IsStrictSetPC(pc);
         MInstruction* ins = MCallSetProperty::New(alloc(), obj, value, name, strict);
         current->add(ins);
@@ -12235,7 +12230,8 @@ IonBuilder::jsop_in()
     MDefinition* obj = current->peek(-1);
     MDefinition* id = current->peek(-2);
 
-    if (ElementAccessIsDenseNative(constraints(), obj, id) &&
+    if (!shouldAbortOnPreliminaryGroups(obj) &&
+        ElementAccessIsDenseNative(constraints(), obj, id) &&
         !ElementAccessHasExtraIndexedProperty(constraints(), obj))
     {
         return jsop_in_dense();
@@ -12883,7 +12879,7 @@ IonBuilder::constant(const Value& v)
     MOZ_ASSERT(!v.isString() || v.toString()->isAtom(),
                "To handle non-atomized strings, you should use constantMaybeAtomize instead of constant.");
     if (v.isString() && MOZ_UNLIKELY(!v.toString()->isAtom())) {
-        MConstant *cst = constantMaybeAtomize(v);
+        MConstant* cst = constantMaybeAtomize(v);
         if (!cst)
             js::CrashAtUnhandlableOOM("Use constantMaybeAtomize.");
         return cst;

@@ -310,7 +310,7 @@ Shape::fixupAfterMovingGC()
 }
 
 void
-Shape::fixupGetterSetterForBarrier(JSTracer *trc)
+Shape::fixupGetterSetterForBarrier(JSTracer* trc)
 {
     // Relocating the getterObj or setterObj will change our location in our
     // parent's KidsHash, so remove ourself first if we're going to get moved.

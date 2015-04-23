@@ -768,7 +768,7 @@ LayerManagerComposite::Render()
       js::ProfileEntry::Category::GRAPHICS);
 
     mCompositor->EndFrame();
-    mCompositor->SetFBAcquireFence(mRoot);
+    mCompositor->SetDispAcquireFence(mRoot);
   }
 
   if (composer2D) {
@@ -945,7 +945,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   RootLayer()->RenderLayer(clipRect);
 
   mCompositor->EndFrame();
-  mCompositor->SetFBAcquireFence(mRoot);
+  mCompositor->SetDispAcquireFence(mRoot);
 }
 #endif
 

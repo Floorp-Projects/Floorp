@@ -4,12 +4,30 @@
 
 "use strict";
 
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
+/**
+ * The `edit` command opens the toolbox to the style editor, with a given
+ * stylesheet open.
+ *
+ * This command is tricky. The 'edit' command uses the toolbox, so it's
+ * clearly runAt:client, but it uses the 'resource' type which accesses the
+ * DOM, so it must also be runAt:server.
+ *
+ * Our solution is to have the command technically be runAt:server, but to not
+ * actually do anything other than basically `return args;`, and have the
+ * converter (all converters are runAt:client) do the actual work of opening
+ * a toolbox.
+ *
+ * For alternative solutions that we considered, see the comment on commit
+ * 2645af7.
+ */
 exports.items = [{
+  item: "command",
+  runAt: "server",
   name: "edit",
-  description: gcli.lookup("editDesc"),
-  manual: gcli.lookup("editManual2"),
+  description: l10n.lookup("editDesc"),
+  manual: l10n.lookup("editManual2"),
   params: [
      {
        name: 'resource',
@@ -17,7 +35,7 @@ exports.items = [{
          name: 'resource',
          include: 'text/css'
        },
-       description: gcli.lookup("editResourceDesc")
+       description: l10n.lookup("editResourceDesc")
      },
      {
        name: "line",
@@ -27,15 +45,23 @@ exports.items = [{
          min: 1,
          step: 10
        },
-       description: gcli.lookup("editLineToJumpToDesc")
+       description: l10n.lookup("editLineToJumpToDesc")
      }
    ],
+   returnType: "editArgs",
+   exec: args => {
+     return { href: args.resource.name, line: args.line };
+   }
+}, {
+  item: "converter",
+  from: "editArgs",
+  to: "dom",
    exec: function(args, context) {
      let target = context.environment.target;
      let gDevTools = require("resource:///modules/devtools/gDevTools.jsm").gDevTools;
      return gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
        let styleEditor = toolbox.getCurrentPanel();
-       styleEditor.selectStyleSheet(args.resource.element, args.line);
+       styleEditor.selectStyleSheet(args.href, args.line);
        return null;
      });
    }

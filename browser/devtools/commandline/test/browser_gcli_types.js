@@ -15,49 +15,25 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var exports = {};
-
-var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testTypes.js</p>";
+const exports = {};
 
 function test() {
-  return Task.spawn(function() {
-    let options = yield helpers.openTab(TEST_URI);
-    yield helpers.openToolbar(options);
-    gcli.addItems(mockCommands.items);
-
-    yield helpers.runTests(options, exports);
-
-    gcli.removeItems(mockCommands.items);
-    yield helpers.closeToolbar(options);
-    yield helpers.closeTab(options);
-  }).then(finish, helpers.handleError);
+  helpers.runTestModule(exports, "browser_gcli_types.js");
 }
-
-// <INJECTED SOURCE:END>
 
 // var assert = require('../testharness/assert');
 var util = require('gcli/util/util');
 var Promise = require('gcli/util/promise').Promise;
-var nodetype = require('gcli/types/node');
 
-exports.setup = function(options) {
-  if (options.window) {
-    nodetype.setDocument(options.window.document);
-  }
-};
-
-exports.shutdown = function(options) {
-  nodetype.unsetDocument();
-};
-
-function forEachType(options, typeSpec, callback) {
+function forEachType(options, templateTypeSpec, callback) {
   var types = options.requisition.system.types;
   return util.promiseEach(types.getTypeNames(), function(name) {
+    var typeSpec = {};
+    util.copyProperties(templateTypeSpec, typeSpec);
     typeSpec.name = name;
     typeSpec.requisition = options.requisition;
 
@@ -79,29 +55,19 @@ function forEachType(options, typeSpec, callback) {
     else if (name === 'union') {
       typeSpec.alternatives = [{ name: 'string' }];
     }
+    else if (options.isRemote) {
+      if (name === 'node' || name === 'nodelist') {
+        return;
+      }
+    }
 
     var type = types.createType(typeSpec);
     var reply = callback(type);
-    return Promise.resolve(reply).then(function(value) {
-      // Clean up
-      delete typeSpec.name;
-      delete typeSpec.requisition;
-      delete typeSpec.data;
-      delete typeSpec.delegateType;
-      delete typeSpec.subtype;
-      delete typeSpec.alternatives;
-
-      return value;
-    });
+    return Promise.resolve(reply);
   });
 }
 
 exports.testDefault = function(options) {
-  if (options.isNoDom) {
-    assert.log('Skipping tests due to issues with resource type.');
-    return;
-  }
-
   return forEachType(options, {}, function(type) {
     var context = options.requisition.executionContext;
     var blank = type.getBlank(context).value;

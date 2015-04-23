@@ -239,7 +239,7 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
  * Wait until session restore has finished collecting its data and is
  * has written that data ("sessionstore-state-write-complete").
  *
- * @param {function} aCallback If sessionstore-state-write is sent
+ * @param {function} aCallback If sessionstore-state-write-complete is sent
  * within buffering interval + 100 ms, the callback is passed |true|,
  * otherwise, it is passed |false|.
  */
