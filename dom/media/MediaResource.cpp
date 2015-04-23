@@ -619,7 +619,7 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
                                 element->NodePrincipal(),
                                 false);
       NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
-      rv = crossSiteListener->Init(mChannel);
+      rv = crossSiteListener->Init(mChannel, true);
       NS_ENSURE_SUCCESS(rv, rv);
       listener = crossSiteListener;
     } else {

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for handling of 'crossorigin' attribute on script with data: URL</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+  // We're going to mess with window.onerror.
+  setup({ allow_uncaught_exception: true });
+</script>
+<!-- First check that data: scripts with @crossorigin run at all -->
+<script>
+  var ran = false;
+</script>
+<script crossorigin src="data:application/javascript,ran = true"></script>
+<script>
+test(function() {
+  assert_true(ran);
+}, "script@crossorigin with data: src should have run");
+</script>
+<!-- Then check that their syntax errors are not sanitized -->
+<script>
+var errorFired = false;
+ran = false;
+window.onerror = function(message, uri, line) {
+  errorFired = true;
+  test(function() {
+    assert_equals(line, 3);
+  }, "Should have a useful line number for exception in script@crossorigin with data: src");
+}
+</script>
+<script crossorigin src="data:application/javascript,var%20a;%0aran=true%0anoSuchFunctionHere()"></script>
+<script>
+  test(function() {
+    assert_true(ran, "Script with error should have run");
+    assert_true(errorFired, "Script with error should have fired onerror");
+  }, "Should run and correctly fire onerror");
+</script>
