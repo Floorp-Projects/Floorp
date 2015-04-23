@@ -904,7 +904,7 @@ TypeSet::intersectSets(TemporaryTypeSet* a, TemporaryTypeSet* b, LifoAlloc* allo
 
     if (b->unknownObject()) {
         for (size_t i = 0; i < a->getObjectCount(); i++) {
-            if (b->getObject(i))
+            if (a->getObject(i))
                 res->addType(ObjectType(a->getObject(i)), alloc);
         }
         return res;
