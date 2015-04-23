@@ -323,7 +323,7 @@ class MOZ_STACK_CLASS TryNoteIter
 };
 
 bool
-HandleClosingGeneratorReturn(JSContext *cx, AbstractFramePtr frame, bool ok);
+HandleClosingGeneratorReturn(JSContext* cx, AbstractFramePtr frame, bool ok);
 
 /************************************************************************/
 

@@ -1041,9 +1041,16 @@ AddCSSValueAngle(double aCoeff1, const nsCSSValue &aValue1,
                  double aCoeff2, const nsCSSValue &aValue2,
                  nsCSSValue &aResult)
 {
-  aResult.SetFloatValue(aCoeff1 * aValue1.GetAngleValueInRadians() +
-                        aCoeff2 * aValue2.GetAngleValueInRadians(),
-                        eCSSUnit_Radian);
+  if (aValue1.GetUnit() == aValue2.GetUnit()) {
+    // To avoid floating point error, if the units match, maintain the unit.
+    aResult.SetFloatValue(aCoeff1 * aValue1.GetFloatValue() +
+                          aCoeff2 * aValue2.GetFloatValue(),
+                          aValue1.GetUnit());
+  } else {
+    aResult.SetFloatValue(aCoeff1 * aValue1.GetAngleValueInRadians() +
+                          aCoeff2 * aValue2.GetAngleValueInRadians(),
+                          eCSSUnit_Radian);
+  }
 }
 
 static bool

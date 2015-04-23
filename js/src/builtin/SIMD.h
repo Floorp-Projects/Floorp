@@ -157,7 +157,7 @@
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2)                                        \
   V(sub, (BinaryFunc<Int32x4, Sub, Int32x4>), 2)                                      \
   V(shiftLeftByScalar, (Int32x4BinaryScalar<ShiftLeft>), 2)                           \
-  V(shiftRightArithmeticByScalar, (Int32x4BinaryScalar<ShiftRight>), 2)               \
+  V(shiftRightArithmeticByScalar, (Int32x4BinaryScalar<ShiftRightArithmetic>), 2)     \
   V(shiftRightLogicalByScalar, (Int32x4BinaryScalar<ShiftRightLogical>), 2)           \
   V(store,    (Store<Int32x4, 4>), 3)                                                 \
   V(storeXYZ, (Store<Int32x4, 3>), 3)                                                 \
