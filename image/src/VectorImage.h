@@ -14,10 +14,6 @@ class nsIRequest;
 class gfxDrawable;
 
 namespace mozilla {
-namespace layers {
-class LayerManager;
-class ImageContainer;
-}
 namespace image {
 
 struct SVGDrawingParameters;

@@ -10,7 +10,6 @@
 #include "mozilla/Scoped.h"
 
 struct DBusConnection;
-struct DBusError;
 struct DBusMessage;
 
 namespace mozilla {

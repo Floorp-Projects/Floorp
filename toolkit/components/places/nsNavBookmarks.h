@@ -18,7 +18,6 @@
 #include "prtime.h"
 
 class nsNavBookmarks;
-class nsIOutputStream;
 
 namespace mozilla {
 namespace places {

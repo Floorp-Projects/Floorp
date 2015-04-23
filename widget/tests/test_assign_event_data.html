@@ -29,6 +29,31 @@
         margin-left: 0;
       }
     }
+    #pointer-target {
+      border: 1px dashed red;
+      background: yellow;
+      margin: 0px 10px;
+      padding: 0px 10px;
+    }
+    #scrollable-div {
+      background: green;
+      overflow: auto;
+      width: 30px;
+      height: 30px;
+    }
+    #scrolled-div {
+      background: magenta;
+      width: 10px;
+      height: 10px;
+    }
+    #form {
+      background: silver;
+      padding: 0px 10px;
+    }
+    #animated-div {
+      background: cyan;
+      padding: 0px 10px;
+    }
   </style>
 </head>
 <body>
@@ -36,9 +61,10 @@
   <input id="input-text">
   <button id="button">button</button>
   <a id="a" href="about:blank">hyper link</a>
-  <div id="scrollable-div" style="overflow: auto; width: 30px; height: 30px;"><div id="scrolled-div" style="width: 10px; height: 10px;"></div></div>
-  <form id="form"></form>
-  <div id="animated-div"></div>
+  <span id="pointer-target">span</span>
+  <div id="scrollable-div"><div id="scrolled-div"></div></div>
+  <form id="form">form</form>
+  <div id="animated-div">&nbsp;</div>
 </div>
 <div id="content" style="display: none">
 </div>
@@ -48,7 +74,7 @@
 <script class="testbody" type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.expectAssertions(0, 32);
+SimpleTest.expectAssertions(0, 34);
 
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
@@ -566,6 +592,32 @@ const kTests = [
     },
     todoMismatch: [],
   },
+  { description: "PointerEvent (pointerdown)",
+    targetID: "pointer-target", eventType: "pointerdown",
+    dispatchEvent: function () {
+      var elem = document.getElementById(this.targetID);
+      var rect = elem.getBoundingClientRect();
+      synthesizePointer(elem, rect.width/2, rect.height/2,
+                        { type: this.eventType, button: 1, clickCount: 1, inputSource: 2, pressure: 0.25, isPrimary: true });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
+  { description: "PointerEvent (pointerup)",
+    targetID: "pointer-target", eventType: "pointerup",
+    dispatchEvent: function () {
+      var elem = document.getElementById(this.targetID);
+      var rect = elem.getBoundingClientRect();
+      synthesizePointer(elem, rect.width/2, rect.height/2,
+                        { type: this.eventType, button: -1, ctrlKey: true, shiftKey: true, altKey: true, isSynthesized: false });
+    },
+    canRun: function () {
+      return true;
+    },
+    todoMismatch: [],
+  },
 ];
 
 function doTest(aTest)
@@ -638,7 +690,7 @@ function runNextTest()
 function init()
 {
   SpecialPowers.pushPrefEnv({"set":[["middlemouse.contentLoadURL", false],
-  			            ["middlemouse.paste", false],
+                                    ["middlemouse.paste", false],
                                     ["general.autoScroll", false],
                                     ["mousewheel.default.action", 0],
                                     ["mousewheel.default.action.override_x", -1],

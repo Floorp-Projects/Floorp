@@ -12,8 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
-class nsIMemoryReporter;
-
 namespace mozilla {
     namespace dom {
         class FontListEntry;

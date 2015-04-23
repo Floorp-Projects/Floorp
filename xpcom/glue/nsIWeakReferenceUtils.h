@@ -30,7 +30,7 @@ CallQueryReferent(T* aSource, DestinationType** aDestination)
 }
 
 
-class MOZ_STACK_CLASS nsQueryReferent : public nsCOMPtr_helper
+class MOZ_STACK_CLASS nsQueryReferent final : public nsCOMPtr_helper
 {
 public:
   nsQueryReferent(nsIWeakReference* aWeakPtr, nsresult* aError)

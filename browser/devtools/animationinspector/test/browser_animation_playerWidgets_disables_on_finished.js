@@ -10,15 +10,17 @@ add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
   let {inspector, panel, controller} = yield openAnimationInspector();
 
-  info("Apply 2 finite animations to the test node");
+  info("Select the test node");
+  yield selectNode(".still", inspector);
+
+  info("Apply 2 finite animations to the test node and wait for the widgets to appear");
+  let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
   yield executeInContent("devtools:test:setAttribute", {
     selector: ".still",
     attributeName: "class",
     attributeValue: "ball still multi-finite"
   });
-
-  info("Select the test node");
-  yield selectNode(".still", inspector);
+  yield onUiUpdated;
 
   is(controller.animationPlayers.length, 2, "2 animation players exist");
 

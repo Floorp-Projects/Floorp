@@ -10,11 +10,8 @@
 #include <windows.h>
 #include <shlobj.h>
 
-struct IDropSource;
 struct IDataObject;
-class  nsNativeDragTarget;
 class  nsDataObjCollection;
-class  nsString;
 
 /**
  * Native Win32 DragService wrapper

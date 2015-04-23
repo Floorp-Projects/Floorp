@@ -27,7 +27,6 @@ class nsPresContext;
 class nsIPresShell;
 class nsIContent;
 class nsIAtom;
-class nsIScrollFrameInternal;
 class nsPresState;
 class nsIScrollPositionListener;
 struct ScrollReflowState;
@@ -307,8 +306,7 @@ public:
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState);
   bool IsLTR() const;
-  enum eScrollbarSide { eScrollbarOnLeft, eScrollbarOnRight };
-  eScrollbarSide GetScrollbarSide() const;
+  bool IsScrollbarOnRight() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
   bool IsMaybeScrollingActive() const;
   bool IsProcessingAsyncScroll() const {

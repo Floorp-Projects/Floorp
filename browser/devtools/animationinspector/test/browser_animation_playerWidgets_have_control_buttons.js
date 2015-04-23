@@ -31,7 +31,8 @@ add_task(function*() {
   info("Faking an older server version by setting " +
     "AnimationsController.hasSetCurrentTime to false");
 
-  yield selectNode("body", inspector);
+  // Selecting <div.still> to make sure no widgets are displayed in the panel.
+  yield selectNode(".still", inspector);
   controller.hasSetCurrentTime = false;
 
   info("Selecting the animated node again");
@@ -46,13 +47,12 @@ add_task(function*() {
   ok(container.children[0].classList.contains("toggle"),
     "The first button is the play/pause button");
 
-  yield selectNode("body", inspector);
+  yield selectNode(".still", inspector);
   controller.hasSetCurrentTime = true;
 
   info("Faking an older server version by setting " +
     "AnimationsController.hasSetPlaybackRate to false");
 
-  yield selectNode("body", inspector);
   controller.hasSetPlaybackRate = false;
 
   info("Selecting the animated node again");
@@ -65,6 +65,6 @@ add_task(function*() {
   ok(!container.querySelector("select"),
     "The playback rate select does not exist");
 
-  yield selectNode("body", inspector);
+  yield selectNode(".still", inspector);
   controller.hasSetPlaybackRate = true;
 });

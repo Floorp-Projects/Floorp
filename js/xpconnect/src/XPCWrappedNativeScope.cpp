@@ -197,9 +197,16 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
     RootedObject global(aCx, GetGlobalJSObject());
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
 
+    // The global Components property is non-configurable if it's a full
+    // nsXPCComponents object. That way, if it's an nsXPCComponentsBase,
+    // enableUniversalXPConnect can upgrade it later.
+    unsigned attrs = JSPROP_READONLY;
+    nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
+    if (c)
+        attrs |= JSPROP_PERMANENT;
+
     RootedId id(aCx, XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
-    return JS_DefinePropertyById(aCx, global, id, components,
-                                 JSPROP_PERMANENT | JSPROP_READONLY);
+    return JS_DefinePropertyById(aCx, global, id, components, attrs);
 }
 
 static bool

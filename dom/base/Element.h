@@ -37,16 +37,11 @@
 #include "mozilla/dom/ElementBinding.h"
 #include "Units.h"
 
-class nsIDOMEventListener;
 class nsIFrame;
 class nsIDOMMozNamedAttrMap;
-class nsIDOMCSSStyleDeclaration;
 class nsIURI;
-class nsIControllers;
-class nsEventChainVisitor;
 class nsIScrollableFrame;
 class nsAttrValueOrString;
-class ContentUnbinder;
 class nsContentList;
 class nsDOMSettableTokenList;
 class nsDOMTokenList;

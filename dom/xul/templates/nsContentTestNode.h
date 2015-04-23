@@ -12,7 +12,7 @@
 #include "nsIAtom.h"
 #include "nsIDOMDocument.h"
 
-class nsIXULTemplateBuilder;
+class nsXULTemplateQueryProcessorRDF;
 
 /**
  * The nsContentTestNode is always the top node in a query's rule network. It

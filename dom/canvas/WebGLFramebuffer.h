@@ -14,7 +14,6 @@
 
 namespace mozilla {
 
-class WebGLFramebufferAttachable;
 class WebGLRenderbuffer;
 class WebGLTexture;
 

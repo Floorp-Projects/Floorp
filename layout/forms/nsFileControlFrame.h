@@ -13,7 +13,6 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
 
-class nsTextControlFrame;
 class nsIDOMDataTransfer;
 
 class nsFileControlFrame : public nsBlockFrame,

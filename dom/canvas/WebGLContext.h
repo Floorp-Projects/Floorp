@@ -68,7 +68,6 @@ class nsIDocShell;
 namespace mozilla {
 
 class WebGLActiveInfo;
-class WebGLContextBoundObject;
 class WebGLContextLossHandler;
 class WebGLBuffer;
 class WebGLExtensionBase;
@@ -84,7 +83,6 @@ class WebGLTexture;
 class WebGLTransformFeedback;
 class WebGLUniformLocation;
 class WebGLVertexArray;
-struct WebGLVertexAttribData;
 
 namespace dom {
 class Element;
@@ -936,7 +934,7 @@ protected:
 // -----------------------------------------------------------------------------
 // Queries (WebGL2ContextQueries.cpp)
 protected:
-    WebGLRefPtr<WebGLQuery>* GetQueryTargetSlot(GLenum target);
+    WebGLRefPtr<WebGLQuery>& GetQuerySlotByTarget(GLenum target);
 
     WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
     WebGLRefPtr<WebGLQuery> mActiveTransformFeedbackQuery;
@@ -1389,6 +1387,7 @@ private:
     virtual bool ValidateBufferIndexedTarget(GLenum target, const char* info) = 0;
     virtual bool ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer, const char* info) = 0;
     virtual bool ValidateBufferUsageEnum(GLenum usage, const char* info) = 0;
+    virtual bool ValidateQueryTarget(GLenum usage, const char* info) = 0;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) = 0;
 
 protected:

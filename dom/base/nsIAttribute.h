@@ -9,7 +9,6 @@
 #include "nsINode.h"
 
 class nsDOMAttributeMap;
-class nsIContent;
 
 #define NS_IATTRIBUTE_IID  \
 { 0x233a9c4d, 0xb27f, 0x4662, \

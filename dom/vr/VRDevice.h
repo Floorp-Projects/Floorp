@@ -24,8 +24,6 @@
 namespace mozilla {
 namespace dom {
 
-class Element;
-
 class VRFieldOfViewReadOnly : public nsWrapperCache
 {
 public:

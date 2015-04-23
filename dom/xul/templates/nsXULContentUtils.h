@@ -17,10 +17,7 @@
 class nsIAtom;
 class nsIContent;
 class nsIDocument;
-class nsIDOMNodeList;
 class nsIRDFNode;
-class nsCString;
-class nsString;
 class nsIRDFResource;
 class nsIRDFLiteral;
 class nsIRDFService;

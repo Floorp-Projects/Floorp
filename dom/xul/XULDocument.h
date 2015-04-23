@@ -35,7 +35,6 @@ class nsPIWindowRoot;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
-class nsIXULPrototypeScript;
 #else
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

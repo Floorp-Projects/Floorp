@@ -10,7 +10,6 @@
 #include "BluetoothCommon.h"
 #include "BluetoothReplyRunnable.h"
 
-class nsIDOMDOMRequest;
 class nsPIDOMWindow;
 
 namespace mozilla {

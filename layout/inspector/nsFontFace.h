@@ -10,7 +10,6 @@
 
 class gfxFontEntry;
 class gfxFontGroup;
-class nsCSSFontFaceRule;
 
 class nsFontFace : public nsIDOMFontFace
 {
