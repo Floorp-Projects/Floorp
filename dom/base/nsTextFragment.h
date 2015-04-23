@@ -19,7 +19,6 @@
 #include "nsISupportsImpl.h"
 
 class nsString;
-class nsCString;
 
 // XXX should this normalize the code to keep a \u0000 at the end?
 

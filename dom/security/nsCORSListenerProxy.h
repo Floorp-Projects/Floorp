@@ -18,7 +18,6 @@
 #include "mozilla/Attributes.h"
 
 class nsIURI;
-class nsIParser;
 class nsIPrincipal;
 class nsINetworkInterceptController;
 

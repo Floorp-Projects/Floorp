@@ -12,7 +12,6 @@
 #include "nsStyleConsts.h"
 
 class gfxContext;
-class nsDisplayItem;
 class nsPresContext;
 class nsRegion;
 

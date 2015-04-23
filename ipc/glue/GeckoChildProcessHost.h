@@ -23,8 +23,6 @@
 #include "sandboxBroker.h"
 #endif
 
-class nsIFile;
-
 namespace mozilla {
 namespace ipc {
 

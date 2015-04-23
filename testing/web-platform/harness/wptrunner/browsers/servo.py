@@ -26,8 +26,7 @@ def check_args(**kwargs):
 
 def browser_kwargs(**kwargs):
     return {"binary": kwargs["binary"],
-            "debug_info": kwargs["debug_info"],
-            "interactive": kwargs["interactive"]}
+            "debug_info": kwargs["debug_info"]}
 
 
 def executor_kwargs(test_type, server_config, cache_manager, **kwargs):
@@ -44,13 +43,11 @@ def env_options():
 
 
 class ServoBrowser(NullBrowser):
-    def __init__(self, logger, binary, debug_info=None, interactive=False):
+    def __init__(self, logger, binary, debug_info=None):
         NullBrowser.__init__(self, logger)
         self.binary = binary
         self.debug_info = debug_info
-        self.interactive = interactive
 
     def executor_browser(self):
         return ExecutorBrowser, {"binary": self.binary,
-                                 "debug_info": self.debug_info,
-                                 "interactive": self.interactive}
+                                 "debug_info": self.debug_info}

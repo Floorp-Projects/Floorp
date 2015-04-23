@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsPIDOMWindow;
-class nsIScriptContext;
 
 namespace mozilla {
 

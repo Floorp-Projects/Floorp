@@ -29,7 +29,6 @@
 class nsPresContext;
 class nsRootPresContext;
 class nsDisplayPlugin;
-class nsIOSurface;
 class PluginBackgroundSink;
 class nsPluginInstanceOwner;
 

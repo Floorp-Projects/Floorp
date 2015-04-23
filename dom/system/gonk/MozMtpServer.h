@@ -16,12 +16,6 @@
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 
-namespace mozilla {
-namespace system {
-  class Volume;
-}
-}
-
 BEGIN_MTP_NAMESPACE
 using namespace android;
 

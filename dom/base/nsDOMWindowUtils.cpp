@@ -2354,12 +2354,15 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
     }
   }
 
-  nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
-  driver->AdvanceTimeAndRefresh(aMilliseconds);
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    nsRefreshDriver* driver = presContext->RefreshDriver();
+    driver->AdvanceTimeAndRefresh(aMilliseconds);
 
-  RefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
-  if (transaction && transaction->IPCOpen()) {
-    transaction->SendSetTestSampleTime(driver->MostRecentRefresh());
+    RefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
+    if (transaction && transaction->IPCOpen()) {
+      transaction->SendSetTestSampleTime(driver->MostRecentRefresh());
+    }
   }
 
   return NS_OK;

@@ -10,7 +10,6 @@
 #include "mozilla/Atomics.h"
 #include "nsIObserver.h"
 
-class nsGlobalWindow;
 class nsITabChild;
 
 class MessageLoop;
@@ -26,7 +25,6 @@ class ContentParent;
 }
 
 class PProcessHangMonitorParent;
-class PProcessHangMonitorChild;
 
 class ProcessHangMonitor final
   : public nsIObserver

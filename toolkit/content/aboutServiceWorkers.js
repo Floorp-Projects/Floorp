@@ -9,6 +9,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "PushNotificationService",
+  "@mozilla.org/push/NotificationService;1",
+  "nsIPushNotificationService"
+);
+
 const bundle = Services.strings.createBundle(
   "chrome://global/locale/aboutServiceWorkers.properties");
 
@@ -100,6 +107,15 @@ function display(info) {
   createItem(bundle.GetStringFromName('currentWorkerURL'), info.currentWorkerURL, true);
   createItem(bundle.GetStringFromName('activeCacheName'), info.activeCacheName);
   createItem(bundle.GetStringFromName('waitingCacheName'), info.waitingCacheName);
+
+  PushNotificationService.registration(info.scope).then(
+    pushRecord => {
+      createItem(bundle.GetStringFromName('pushEndpoint'), JSON.stringify(pushRecord));
+    },
+    error => {
+      dump("about:serviceworkers - push registration failed\n");
+    }
+  );
 
   let updateButton = document.createElement("button");
   updateButton.appendChild(document.createTextNode(bundle.GetStringFromName('update')));

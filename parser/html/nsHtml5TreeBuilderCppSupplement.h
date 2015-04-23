@@ -10,8 +10,6 @@
 #include "nsIFrame.h"
 #include "mozilla/Likely.h"
 
-class nsPresContext;
-
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
   : scriptingEnabled(false)
   , fragment(false)

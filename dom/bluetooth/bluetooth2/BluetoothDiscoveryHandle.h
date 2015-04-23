@@ -16,7 +16,6 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothDevice;
-class BluetoothValue;
 
 class BluetoothDiscoveryHandle final : public DOMEventTargetHelper
 {

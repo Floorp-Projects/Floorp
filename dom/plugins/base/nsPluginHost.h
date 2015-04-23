@@ -41,7 +41,6 @@ class PluginTag;
 } // namespace plugins
 
 class nsNPAPIPlugin;
-class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
 class nsPluginNativeWindow;

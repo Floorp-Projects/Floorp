@@ -46,8 +46,6 @@ enum nsDTDMode {
 };
 
 
-class nsIParser;
-class nsIURI;
 class nsIContentSink;
 class CParserContext;
 

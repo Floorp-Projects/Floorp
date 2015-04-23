@@ -13,7 +13,6 @@
 #include "nsSVGNumberPair.h"
 #include "nsTArray.h"
 
-class nsIFrame;
 class nsSVGFilterFrame;
 struct nsStyleFilter;
 

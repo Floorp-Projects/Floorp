@@ -43,7 +43,6 @@ public:
   nsTArray<nsTArray<T> > mBuffers;
 };
 
-class AudioStream;
 class AudioMixer;
 
 /**

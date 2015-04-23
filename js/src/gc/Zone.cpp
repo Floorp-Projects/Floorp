@@ -264,7 +264,8 @@ void
 Zone::notifyObservingDebuggers()
 {
     for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
-        RootedGlobalObject global(runtimeFromAnyThread(), comps->maybeGlobal());
+        JSRuntime* rt = runtimeFromAnyThread();
+        RootedGlobalObject global(rt, comps->maybeGlobal());
         if (!global)
             continue;
 
@@ -272,8 +273,16 @@ Zone::notifyObservingDebuggers()
         if (!dbgs)
             continue;
 
-        for (GlobalObject::DebuggerVector::Range r = dbgs->all(); !r.empty(); r.popFront())
-            r.front()->debuggeeIsBeingCollected();
+        for (GlobalObject::DebuggerVector::Range r = dbgs->all(); !r.empty(); r.popFront()) {
+            if (!r.front()->debuggeeIsBeingCollected(rt->gc.majorGCCount())) {
+#ifdef DEBUG
+                fprintf(stderr,
+                        "OOM while notifying observing Debuggers of a GC: The onGarbageCollection\n"
+                        "hook will not be fired for this GC for some Debuggers!\n");
+#endif
+                return;
+            }
+        }
     }
 }
 

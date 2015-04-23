@@ -37,7 +37,6 @@
 #endif
 #endif
 
-class gfxReusableSurfaceWrapper;
 class nsIntRegion;
 
 namespace mozilla {
@@ -54,7 +53,6 @@ namespace layers {
 class Compositor;
 class CompositorOGL;
 class TextureImageTextureSourceOGL;
-class TextureSharedDataGonkOGL;
 class GLTextureSource;
 
 inline void ApplyFilterToBoundTexture(gl::GLContext* aGL,

@@ -40,11 +40,6 @@
 class gfxASurface;
 
 namespace mozilla {
-
-namespace layers {
-struct RemoteImageData;
-}
-
 namespace plugins {
 
 class PBrowserStreamChild;

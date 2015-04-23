@@ -23,7 +23,6 @@
 #include "nsIFile.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 
-class nsILineInputStream;
 class nsIThread;
 
 #ifdef MOZ_CRASHREPORTER

@@ -19,7 +19,6 @@
 namespace mozilla {
 
 class MediaDecoder;
-class StateMachineThread;
 
 // The MediaShutdownManager manages shutting down the MediaDecoder
 // infrastructure in response to an xpcom-shutdown notification. This happens

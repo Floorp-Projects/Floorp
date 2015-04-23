@@ -14,9 +14,6 @@
 #include "nsCOMPtr.h"
 #include "ICOFileHeaders.h"
 
-class nsBMPEncoder;
-class nsPNGEncoder;
-
 #define NS_ICOENCODER_CID \
 { /*92AE3AB2-8968-41B1-8709-B6123BCEAF21 */          \
      0x92ae3ab2,                                     \

@@ -11,8 +11,6 @@
 #include "mozilla/dom/ImageCaptureBinding.h"
 #include "prlog.h"
 
-class nsIDOMBlob;
-
 namespace mozilla {
 
 #ifdef PR_LOGGING

@@ -77,7 +77,7 @@ async_test(function(t) {
 
   animation.currentTime = ANIM_DURATION;
 
-  animation.finished.then(function() {
+  animation.finished.then(t.step_func(function() {
     previousFinishedPromise = animation.finished;
     animation.playbackRate = -1;
     assert_not_equals(animation.finished, previousFinishedPromise,
@@ -85,7 +85,7 @@ async_test(function(t) {
                       'finished promise');
     animation.currentTime = 0;
     return animation.finished;
-  }).then(t.step_func(function() {
+  })).then(t.step_func(function() {
     previousFinishedPromise = animation.finished;
     animation.play();
     assert_not_equals(animation.finished, previousFinishedPromise,

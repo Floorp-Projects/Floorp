@@ -21,7 +21,7 @@ from .base import (ExecutorException,
                    testharness_result_converter,
                    reftest_result_converter)
 from .process import ProcessTestExecutor
-from ..executors.base import browser_command
+from ..browsers.base import browser_command
 
 hosts_text = """127.0.0.1 web-platform.test
 127.0.0.1 www.web-platform.test
@@ -75,29 +75,35 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
         env = os.environ.copy()
         env["HOST_FILE"] = self.hosts_path
 
-        self.proc = ProcessHandler(self.command,
-                                   processOutputLine=[self.on_output],
-                                   onFinish=self.on_finish,
-                                   env=env)
+
+
+        if not self.interactive:
+            self.proc = ProcessHandler(self.command,
+                                       processOutputLine=[self.on_output],
+                                       onFinish=self.on_finish,
+                                       env=env,
+                                       storeOutput=False)
+            self.proc.run()
+        else:
+            self.proc = subprocess.Popen(self.command, env=env)
 
         try:
-            self.proc.run()
-
             timeout = test.timeout * self.timeout_multiplier
 
             # Now wait to get the output we expect, or until we reach the timeout
-            if self.debug_info is None and not self.pause_after_test:
+            if not self.interactive and not self.pause_after_test:
                 wait_timeout = timeout + 5
+                self.result_flag.wait(wait_timeout)
             else:
                 wait_timeout = None
-            self.result_flag.wait(wait_timeout)
+                self.proc.wait()
 
             proc_is_running = True
             if self.result_flag.is_set() and self.result_data is not None:
                 self.result_data["test"] = test.url
                 result = self.convert_result(test, self.result_data)
             else:
-                if self.proc.proc.poll() is not None:
+                if self.proc.poll() is not None:
                     result = (test.result_cls("CRASH", None), [])
                     proc_is_running = False
                 else:

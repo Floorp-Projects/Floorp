@@ -11,8 +11,6 @@
 #include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
 
-class nsIDOMDocument;
-
 namespace mozilla {
 namespace dom {
 

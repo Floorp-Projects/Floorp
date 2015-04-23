@@ -13,7 +13,6 @@
 #include "nsIStyleRule.h"
 #include "nsIDOMCSSRule.h"
 
-class nsIStyleSheet;
 class nsIDocument;
 struct nsRuleData;
 template<class T> struct already_AddRefed;

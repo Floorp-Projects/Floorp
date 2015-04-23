@@ -49,14 +49,12 @@
 
 class nsNativeDragTarget;
 class nsIRollupListener;
-class nsIFile;
 class nsIntRegion;
 class imgIContainer;
 
 namespace mozilla {
 namespace widget {
 class NativeKey;
-class ModifierKeyState;
 struct MSGResult;
 } // namespace widget
 } // namespacw mozilla;

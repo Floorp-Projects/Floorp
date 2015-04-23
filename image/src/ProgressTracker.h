@@ -15,7 +15,6 @@
 #include "nsRect.h"
 #include "IProgressObserver.h"
 
-class imgIContainer;
 class nsIRunnable;
 
 namespace mozilla {
