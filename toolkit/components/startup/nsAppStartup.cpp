@@ -234,7 +234,7 @@ NS_IMPL_ISUPPORTS(nsAppStartup,
 NS_IMETHODIMP
 nsAppStartup::CreateHiddenWindow()
 {
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#ifdef MOZ_WIDGET_GONK
   return NS_OK;
 #else
   nsCOMPtr<nsIAppShellService> appShellService
@@ -249,7 +249,7 @@ nsAppStartup::CreateHiddenWindow()
 NS_IMETHODIMP
 nsAppStartup::DestroyHiddenWindow()
 {
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#ifdef MOZ_WIDGET_GONK
   return NS_OK;
 #else
   nsCOMPtr<nsIAppShellService> appShellService
