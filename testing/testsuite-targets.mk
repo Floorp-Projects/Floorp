@@ -422,11 +422,10 @@ package-tests:
 ifndef UNIVERSAL_BINARY
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 endif
-	find -L $(PKG_STAGE) -name '*.pyc' -exec rm {} \;
 	$(MKDIR) -p $(abspath $(DIST))/$(PKG_PATH) && \
 	cd $(PKG_STAGE) && \
 	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
-	  * -x \*/.mkdir.done
+	  * -x \*/.mkdir.done \*.pyc
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 package-tests: stage-android
