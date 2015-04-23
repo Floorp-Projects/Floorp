@@ -77,6 +77,12 @@ public:
     return mInternalResponse->Headers();
   }
 
+  const nsCString&
+  GetSecurityInfo() const
+  {
+    return mInternalResponse->GetSecurityInfo();
+  }
+
   Headers* Headers_();
 
   void
