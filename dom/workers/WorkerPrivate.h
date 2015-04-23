@@ -37,6 +37,7 @@ class nsIDocument;
 class nsIEventTarget;
 class nsIPrincipal;
 class nsIScriptContext;
+class nsISerializable;
 class nsIThread;
 class nsIThreadInternal;
 class nsITimer;
@@ -490,6 +491,25 @@ public:
     AssertIsOnMainThread();
     return mLoadInfo.mServiceWorkerCacheName;
   }
+
+  const nsCString&
+  GetSecurityInfo() const
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    return mLoadInfo.mSecurityInfo;
+  }
+
+  void
+  SetSecurityInfo(const nsCString& aSecurityInfo)
+  {
+    MOZ_ASSERT(IsServiceWorker());
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mLoadInfo.mSecurityInfo.IsEmpty());
+    mLoadInfo.mSecurityInfo = aSecurityInfo;
+  }
+
+  void
+  SetSecurityInfo(nsISerializable* aSerializable);
 
   // This is used to handle importScripts(). When the worker is first loaded
   // and executed, it happens in a sync loop. At this point it sets
