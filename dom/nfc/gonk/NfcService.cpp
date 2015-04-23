@@ -222,7 +222,7 @@ private:
 class NfcEventRunnable : public nsRunnable
 {
 public:
-  NfcEventRunnable(NfcMessageHandler* aHandler, UnixSocketRawData* aData)
+  NfcEventRunnable(NfcMessageHandler* aHandler, UnixSocketBuffer* aData)
     : mHandler(aHandler), mData(aData)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -255,7 +255,7 @@ public:
 
 private:
   NfcMessageHandler* mHandler;
-  nsAutoPtr<UnixSocketRawData> mData;
+  nsAutoPtr<UnixSocketBuffer> mData;
 };
 
 NfcService::NfcService()
@@ -383,10 +383,11 @@ NfcService::DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions)
 }
 
 void
-NfcService::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData)
+NfcService::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(mHandler);
-  nsCOMPtr<nsIRunnable> runnable = new NfcEventRunnable(mHandler, aData.forget());
+  nsCOMPtr<nsIRunnable> runnable =
+    new NfcEventRunnable(mHandler, aBuffer.forget());
   mThread->Dispatch(runnable, nsIEventTarget::DISPATCH_NORMAL);
 }
 

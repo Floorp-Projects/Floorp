@@ -188,12 +188,13 @@ NfcConsumer::PostToNfcDaemon(const uint8_t* aData, size_t aSize)
 }
 
 void
-NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData)
+NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mListener) {
-    mListener->ReceiveSocketData(aData);
+    nsAutoPtr<mozilla::ipc::UnixSocketBuffer> buffer(aBuffer.forget());
+    mListener->ReceiveSocketData(buffer);
   }
 }
 
