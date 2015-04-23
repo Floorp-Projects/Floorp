@@ -72,13 +72,6 @@ IsThingPoisoned(T* thing)
 }
 #endif
 
-static GCMarker*
-AsGCMarker(JSTracer* trc)
-{
-    MOZ_ASSERT(trc->isMarkingTracer());
-    return static_cast<GCMarker*>(trc);
-}
-
 template <typename T> bool ThingIsPermanentAtomOrWellKnownSymbol(T* thing) { return false; }
 template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSString>(JSString* str) {
     return str->isPermanentAtom();
@@ -192,6 +185,56 @@ CheckTracedThing<jsid>(JSTracer* trc, jsid id)
 FOR_EACH_GC_LAYOUT(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
 } // namespace js
+
+static bool
+ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
+{
+    if (!trc->isMarkingTracer())
+        return true;
+
+    uint32_t color = static_cast<GCMarker*>(trc)->markColor();
+    MOZ_ASSERT(color == BLACK || color == GRAY);
+
+    if (!cell->isTenured()) {
+        MOZ_ASSERT(color == BLACK);
+        return false;
+    }
+    TenuredCell& tenured = cell->asTenured();
+
+    JS::Zone* zone = tenured.zone();
+    if (color == BLACK) {
+        /*
+         * Having black->gray edges violates our promise to the cycle
+         * collector. This can happen if we're collecting a compartment and it
+         * has an edge to an uncollected compartment: it's possible that the
+         * source and destination of the cross-compartment edge should be gray,
+         * but the source was marked black by the conservative scanner.
+         */
+        if (tenured.isMarked(GRAY)) {
+            MOZ_ASSERT(!zone->isCollecting());
+            trc->runtime()->gc.setFoundBlackGrayEdges();
+        }
+        return zone->isGCMarking();
+    } else {
+        if (zone->isGCMarkingBlack()) {
+            /*
+             * The destination compartment is being not being marked gray now,
+             * but it will be later, so record the cell so it can be marked gray
+             * at the appropriate time.
+             */
+            if (!tenured.isMarked())
+                DelayCrossCompartmentGrayMarking(src);
+            return false;
+        }
+        return zone->isGCMarkingGray();
+    }
+}
+
+static bool
+ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
+{
+    return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell*)val.toGCThing());
+}
 
 #define JS_ROOT_MARKING_ASSERT(trc) \
     MOZ_ASSERT_IF(trc->isMarkingTracer(), \
@@ -831,56 +874,6 @@ gc::MarkObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t n
             DispatchToTracer(trc, slot.unsafeGet(), "object slot");
         ++index;
     }
-}
-
-static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
-{
-    if (!trc->isMarkingTracer())
-        return true;
-
-    uint32_t color = AsGCMarker(trc)->markColor();
-    MOZ_ASSERT(color == BLACK || color == GRAY);
-
-    if (IsInsideNursery(cell)) {
-        MOZ_ASSERT(color == BLACK);
-        return false;
-    }
-    TenuredCell& tenured = cell->asTenured();
-
-    JS::Zone* zone = tenured.zone();
-    if (color == BLACK) {
-        /*
-         * Having black->gray edges violates our promise to the cycle
-         * collector. This can happen if we're collecting a compartment and it
-         * has an edge to an uncollected compartment: it's possible that the
-         * source and destination of the cross-compartment edge should be gray,
-         * but the source was marked black by the conservative scanner.
-         */
-        if (tenured.isMarked(GRAY)) {
-            MOZ_ASSERT(!zone->isCollecting());
-            trc->runtime()->gc.setFoundBlackGrayEdges();
-        }
-        return zone->isGCMarking();
-    } else {
-        if (zone->isGCMarkingBlack()) {
-            /*
-             * The destination compartment is being not being marked gray now,
-             * but it will be later, so record the cell so it can be marked gray
-             * at the appropriate time.
-             */
-            if (!tenured.isMarked())
-                DelayCrossCompartmentGrayMarking(src);
-            return false;
-        }
-        return zone->isGCMarkingGray();
-    }
-}
-
-static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
-{
-    return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell*)val.toGCThing());
 }
 
 /*** Special Marking ***/
