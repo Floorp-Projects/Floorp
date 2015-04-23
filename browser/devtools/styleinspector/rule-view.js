@@ -2895,7 +2895,7 @@ TextPropertyEditor.prototype = {
       let outputParser = this.ruleEditor.ruleView._outputParser;
       let frag = outputParser.parseCssProperty(
         computed.name, computed.value, {
-          colorSwatchClass: "ruleview-colorswatch",
+          colorSwatchClass: "ruleview-swatch ruleview-colorswatch",
           urlClass: "theme-link",
           baseURI: this.sheetURI
         }
