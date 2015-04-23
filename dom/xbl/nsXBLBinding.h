@@ -21,7 +21,6 @@ class nsXBLPrototypeBinding;
 class nsIContent;
 class nsIAtom;
 class nsIDocument;
-class nsIScriptContext;
 
 namespace mozilla {
 namespace dom {

@@ -9,9 +9,9 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ExtendableEventBinding.h"
 #include "mozilla/dom/FetchEventBinding.h"
-#include "mozilla/dom/InstallEventBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/workers/bindings/ServiceWorker.h"
 
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushEventBinding.h"
@@ -31,7 +31,6 @@ namespace dom {
 
 BEGIN_WORKERS_NAMESPACE
 
-class ServiceWorker;
 class ServiceWorkerClient;
 
 class FetchEvent final : public Event
@@ -149,74 +148,6 @@ public:
   }
 
   virtual ExtendableEvent* AsExtendableEvent() override
-  {
-    return this;
-  }
-};
-
-class InstallEvent final : public ExtendableEvent
-{
-  // FIXME(nsm): Bug 982787 will allow actually populating this.
-  nsRefPtr<ServiceWorker> mActiveWorker;
-  bool mActivateImmediately;
-
-protected:
-  explicit InstallEvent(mozilla::dom::EventTarget* aOwner);
-  ~InstallEvent() {}
-
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InstallEvent, ExtendableEvent)
-  NS_FORWARD_TO_EVENT
-
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return mozilla::dom::InstallEventBinding::Wrap(aCx, this, aGivenProto);
-  }
-
-  static already_AddRefed<InstallEvent>
-  Constructor(mozilla::dom::EventTarget* aOwner,
-              const nsAString& aType,
-              const InstallEventInit& aOptions)
-  {
-    nsRefPtr<InstallEvent> e = new InstallEvent(aOwner);
-    bool trusted = e->Init(aOwner);
-    e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
-    e->SetTrusted(trusted);
-    e->mActiveWorker = aOptions.mActiveWorker;
-    return e.forget();
-  }
-
-  static already_AddRefed<InstallEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const InstallEventInit& aOptions,
-              ErrorResult& aRv)
-  {
-    nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
-    return Constructor(owner, aType, aOptions);
-  }
-
-  already_AddRefed<ServiceWorker>
-  GetActiveWorker() const
-  {
-    nsRefPtr<ServiceWorker> sw = mActiveWorker;
-    return sw.forget();
-  }
-
-  void
-  Replace()
-  {
-    mActivateImmediately = true;
-  };
-
-  bool
-  ActivateImmediately() const
-  {
-    return mActivateImmediately;
-  }
-
-  InstallEvent* AsInstallEvent() override
   {
     return this;
   }

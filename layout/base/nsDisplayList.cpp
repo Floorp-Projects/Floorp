@@ -3097,6 +3097,14 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
   mCaret->PaintCaret(aBuilder, *aCtx->GetDrawTarget(), mFrame, ToReferenceFrame());
 }
 
+nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+  : nsDisplayItem(aBuilder, aFrame)
+{
+  MOZ_COUNT_CTOR(nsDisplayBorder);
+
+  mBounds = CalculateBounds(*mFrame->StyleBorder());
+}
+
 bool
 nsDisplayBorder::IsInvisibleInRect(const nsRect& aRect)
 {
@@ -3155,7 +3163,7 @@ nsRect
 nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   *aSnap = true;
-  return CalculateBounds(*mFrame->StyleBorder());
+  return mBounds;
 }
 
 nsRect

@@ -28,9 +28,6 @@
 #include "Units.h"
 
 // forward declarations
-class   nsFontMetrics;
-class   nsDeviceContext;
-struct  nsFont;
 class   nsIRollupListener;
 class   imgIContainer;
 class   nsIContent;

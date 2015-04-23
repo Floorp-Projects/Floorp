@@ -12,7 +12,6 @@
 #include <windows.h>
 
 class nsITransferable;
-class nsIClipboardOwner;
 class nsIWidget;
 class nsIFile;
 struct IDataObject;

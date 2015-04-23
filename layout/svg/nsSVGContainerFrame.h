@@ -21,7 +21,6 @@ class nsIContent;
 class nsIPresShell;
 class nsStyleContext;
 
-struct nsPoint;
 struct nsRect;
 
 typedef nsContainerFrame nsSVGContainerFrameBase;

@@ -9,8 +9,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 
-class nsIDOMHTMLTableRowElement;
-
 namespace mozilla {
 namespace dom {
 

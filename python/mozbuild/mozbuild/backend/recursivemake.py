@@ -702,6 +702,10 @@ class RecursiveMakeBackend(CommonBackend):
             rule.add_dependencies(['$(CURDIR)/%: %'])
 
     def _check_blacklisted_variables(self, makefile_in, makefile_content):
+        if b'EXTERNALLY_MANAGED_MAKE_FILE' in makefile_content:
+            # Bypass the variable restrictions for externally managed makefiles.
+            return
+
         for x in MOZBUILD_VARIABLES:
             if re.search(r'^[^#]*\b%s\s*[:?+]?=' % x, makefile_content, re.M):
                 raise Exception('Variable %s is defined in %s. It should '

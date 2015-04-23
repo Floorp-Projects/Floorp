@@ -15,7 +15,6 @@
 
 class nsTableFrame;
 class nsTableRowFrame;
-class nsTableCellFrame;
 
 struct nsRowGroupReflowState {
   const nsHTMLReflowState& reflowState;  // Our reflow state

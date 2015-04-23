@@ -64,3 +64,5 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtk2Widget) == 
 != layer-splitting-5.html about:blank
 != layer-splitting-6.html about:blank
 != layer-splitting-7.html about:blank
+fuzzy-if(gtk2Widget,2,4) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
+!= image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html

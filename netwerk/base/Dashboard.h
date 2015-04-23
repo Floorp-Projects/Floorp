@@ -15,8 +15,6 @@
 #include "nsITransport.h"
 
 class nsIDNSService;
-class nsISocketTransport;
-class nsIThread;
 
 namespace mozilla {
 namespace net {

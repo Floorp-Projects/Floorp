@@ -13,8 +13,6 @@
 #endif // !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/FileLocation.h"
 
-class nsIFile;
-
 void ParseManifest(NSLocationType aType, mozilla::FileLocation& aFile,
                    char* aBuf, bool aChromeOnly, bool aXPTOnly = false);
 

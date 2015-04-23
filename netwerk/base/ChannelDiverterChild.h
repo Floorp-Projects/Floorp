@@ -9,12 +9,8 @@
 
 #include "mozilla/net/PChannelDiverterChild.h"
 
-class nsIDivertableChannel;
-
 namespace mozilla {
 namespace net {
-
-class ChannelDiverterArgs;
 
 class ChannelDiverterChild :
   public PChannelDiverterChild

@@ -8,12 +8,6 @@
 
 #include "nscore.h"
 
-namespace mozilla {
-namespace dom {
-class Element;
-} // namespace dom
-} // namespace mozilla
-
 class nsIDOMNode;
 class nsINode;
 class nsPlaintextEditor;

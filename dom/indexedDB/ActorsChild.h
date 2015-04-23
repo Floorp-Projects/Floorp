@@ -42,7 +42,6 @@ class IDBMutableFile;
 class IDBOpenDBRequest;
 class IDBRequest;
 class Key;
-class PBackgroundIDBFileChild;
 class PermissionRequestChild;
 class PermissionRequestParent;
 class SerializedStructuredCloneReadInfo;

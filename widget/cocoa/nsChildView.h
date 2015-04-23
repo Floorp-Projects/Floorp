@@ -33,7 +33,6 @@
 #import <Cocoa/Cocoa.h>
 #import <AppKit/NSOpenGL.h>
 
-class gfxASurface;
 class nsChildView;
 class nsCocoaWindow;
 

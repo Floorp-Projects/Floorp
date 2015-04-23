@@ -92,16 +92,11 @@ hardware (via AudioStream).
 #include "mozilla/RollingMean.h"
 #include "MediaTimer.h"
 
-class nsITimer;
-
 namespace mozilla {
 
 class AudioSegment;
-class VideoSegment;
 class MediaTaskQueue;
-class SharedThreadPool;
 class AudioSink;
-class MediaDecoderStateMachineScheduler;
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaDecoderStateMachine::GetCurrentTime

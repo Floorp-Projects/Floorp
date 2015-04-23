@@ -13,8 +13,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/URLSearchParams.h"
 
-class nsIPrincipal;
-
 namespace mozilla {
 namespace dom {
 class File;

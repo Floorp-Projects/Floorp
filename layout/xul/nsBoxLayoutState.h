@@ -18,11 +18,7 @@
 #include "nsIPresShell.h"
 
 class nsRenderingContext;
-class nsCalculatedBoxInfo;
-class nsHTMLReflowMetrics;
 struct nsHTMLReflowState;
-class nsString;
-class nsHTMLReflowCommand;
 
 class MOZ_STACK_CLASS nsBoxLayoutState
 {

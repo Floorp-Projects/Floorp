@@ -95,7 +95,6 @@ typedef void* HANDLE;
 
 namespace mozilla {
 
-class CrossProcessMutex;
 
 namespace layers {
 
@@ -103,8 +102,6 @@ class ImageClient;
 class SharedPlanarYCbCrImage;
 class TextureClient;
 class CompositableClient;
-class CompositableForwarder;
-class SurfaceDescriptor;
 class GrallocImage;
 
 struct ImageBackendData

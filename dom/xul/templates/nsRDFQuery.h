@@ -15,6 +15,8 @@
   {0x8929ff60, 0x1c9c, 0x4d87, \
     { 0xac, 0x02, 0x09, 0x14, 0x15, 0x3b, 0x48, 0xc4 }}
 
+class nsXULTemplateQueryProcessorRDF;
+
 /**
  * A compiled query in the RDF query processor. This interface should not be
  * used directly outside of the RDF query processor.

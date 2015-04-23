@@ -17,8 +17,6 @@ namespace js {
 namespace jit {
 
 class BacktrackingAllocator;
-class MDefinition;
-class MInstruction;
 class MBasicBlock;
 class MIRGraph;
 class LNode;

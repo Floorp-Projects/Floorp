@@ -13,7 +13,6 @@ class nsIContent;
 class nsIDocShell;
 class nsIInputStream;
 class nsIRequest;
-class nsString;
 
 // Interface ID for nsILinkHandler
 #define NS_ILINKHANDLER_IID \

@@ -341,20 +341,15 @@ let Content = {
       }
     } else if (/^about:blocked/.test(errorDoc.documentURI)) {
       // The event came from a button on a malware/phishing block page
-      // First check whether it's malware or phishing, so that we can
-      // use the right strings/links.
-      let isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
     
       if (ot == errorDoc.getElementById("getMeOutButton")) {
         sendAsyncMessage("Browser:BlockedSite",
                          { url: errorDoc.location.href, action: "leave" });
       } else if (ot == errorDoc.getElementById("reportButton")) {
-        // This is the "Why is this site blocked" button.  For malware,
-        // we can fetch a site-specific report, for phishing, we redirect
-        // to the generic page describing phishing protection.
-        let action = isMalware ? "report-malware" : "report-phishing";
+        // This is the "Why is this site blocked" button. We redirect
+        // to the generic page describing phishing/malware protection.
         sendAsyncMessage("Browser:BlockedSite",
-                         { url: errorDoc.location.href, action: action });
+                         { url: errorDoc.location.href, action: "report-phishing" });
       } else if (ot == errorDoc.getElementById("ignoreWarningButton")) {
         // Allow users to override and continue through to the site,
         // but add a notify bar as a reminder, so that they don't lose

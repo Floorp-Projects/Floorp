@@ -12,10 +12,6 @@
 
 namespace mozilla {
 
-namespace dom {
-class TimeRanges;
-}
-
 // Stores a stream byte offset and the scaled timecode of the block at
 // that offset.
 struct WebMTimeDataOffset

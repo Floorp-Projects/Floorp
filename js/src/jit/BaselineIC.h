@@ -22,9 +22,6 @@
 #include "vm/UnboxedObject.h"
 
 namespace js {
-
-class TypedArrayLayout;
-
 namespace jit {
 
 //

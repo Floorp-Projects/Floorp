@@ -97,7 +97,6 @@
 //----------------------------------------------------------------------
 
 struct nsBoxLayoutMetrics;
-class nsDisplayBackgroundImage;
 struct nsRect;
 
 /**

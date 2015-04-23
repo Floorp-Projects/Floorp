@@ -39,7 +39,6 @@
 
 class CancelableTask;
 class MessageLoop;
-class gfxContext;
 class nsIWidget;
 
 namespace mozilla {

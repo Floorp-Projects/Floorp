@@ -9,8 +9,6 @@
 #include "jsapi.h"
 #include "nsIPrincipal.h"
 
-class nsCString;
-
 struct nsJSPrincipals : nsIPrincipal, JSPrincipals
 {
   static bool Subsume(JSPrincipals *jsprin, JSPrincipals *other);

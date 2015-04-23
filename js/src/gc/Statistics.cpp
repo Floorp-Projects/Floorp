@@ -974,9 +974,6 @@ Statistics::endGC()
     if (fp)
         printStats();
 
-    if (!aborted)
-        Debugger::onGarbageCollection(runtime, *this);
-
     // Clear the timers at the end of a GC because we accumulate time in
     // between GCs for some (which come before PHASE_GC_BEGIN in the list.)
     PodZero(&phaseStartTimes[PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);

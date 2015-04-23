@@ -11,8 +11,6 @@
 #include "txExpr.h"
 #include "txXMLUtils.h"
 
-class ProcessorState;
-
 class txPattern
 {
 public:

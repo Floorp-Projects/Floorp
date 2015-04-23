@@ -6,7 +6,9 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(AF13EA3A-D488-4308-B843-526E055AB943)]
+interface nsIDOMNode;
+
+[scriptable, uuid(35BE2D7E-F29B-48EC-BF7E-80A30A724DE3)]
 interface nsIContentViewerEdit : nsISupports
 {
 	void clearSelection();
@@ -27,4 +29,8 @@ interface nsIContentViewerEdit : nsISupports
 
 	AString getContents(in string aMimeType, in boolean aSelectionOnly);
 	readonly attribute boolean canGetContents;
+
+	// Set the node that will be the subject of the editing commands above.
+	// Usually this will be the node that was context-clicked.
+	void setCommandNode(in nsIDOMNode aNode);
 };

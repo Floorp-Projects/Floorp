@@ -16,7 +16,6 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 
-class nsIRunnable;
 class nsITimer;
 class nsPIDOMWindow;
 

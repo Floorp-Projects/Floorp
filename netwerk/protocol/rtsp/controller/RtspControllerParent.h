@@ -15,8 +15,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-class nsIAuthPromptProvider;
-
 namespace mozilla {
 namespace net {
 

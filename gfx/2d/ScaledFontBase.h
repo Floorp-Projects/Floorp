@@ -21,8 +21,6 @@
 #include "cairo.h"
 #endif
 
-class gfxFont;
-
 namespace mozilla {
 namespace gfx {
 

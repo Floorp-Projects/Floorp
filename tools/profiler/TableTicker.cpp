@@ -1079,3 +1079,11 @@ SyncProfile* TableTicker::GetBacktrace()
 
   return profile;
 }
+
+void
+TableTicker::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration)
+{
+  *aCurrentPosition = mBuffer->mWritePos;
+  *aTotalSize = mBuffer->mEntrySize;
+  *aGeneration = mBuffer->mGeneration;
+}

@@ -76,17 +76,12 @@
 
 
 class nsDOMStyleSheetSetList;
-class nsIOutputStream;
 class nsDocument;
-class nsIDTD;
 class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
-class nsChildContentList;
-class nsHTMLStyleSheet;
-class nsHTMLCSSStyleSheet;
 class nsDOMNavigationTiming;
 class nsWindowSizes;
 class nsHtml5TreeOpExecutor;
