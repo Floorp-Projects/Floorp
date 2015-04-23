@@ -585,6 +585,7 @@ bool MediaDecoder::IsInfinite()
 }
 
 MediaDecoder::MediaDecoder() :
+  mReadyStateWatchTarget("MediaDecoder::mReadyStateWatchTarget"),
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
@@ -595,7 +596,7 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
-  mPlayState(PLAY_STATE_LOADING),
+  mPlayState(PLAY_STATE_LOADING, "MediaDecoder::mPlayState"),
   mNextState(PLAY_STATE_PAUSED),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
@@ -622,8 +623,11 @@ MediaDecoder::MediaDecoder() :
   if (!gMediaDecoderLog) {
     gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   }
+  EnsureStateWatchingLog();
 #endif
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
+
+  mReadyStateWatchTarget->Watch(mPlayState);
 }
 
 bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
@@ -1140,7 +1144,6 @@ void MediaDecoder::NotifySuspendedStatusChanged()
   if (mResource && mOwner) {
     bool suspended = mResource->IsSuspendedByCache();
     mOwner->NotifySuspendedByCache(suspended);
-    UpdateReadyStateForData();
   }
 }
 
@@ -1704,8 +1707,8 @@ void MediaDecoder::UnpinForSeek()
 bool MediaDecoder::CanPlayThrough()
 {
   Statistics stats = GetStatistics();
+  NS_ENSURE_TRUE(mDecoderStateMachine, false);
 
-  NS_ASSERTION(mDecoderStateMachine, "CanPlayThrough should have state machine!");
   if (mDecoderStateMachine->IsRealTime() ||
       (stats.mTotalBytes < 0 && stats.mDownloadRateReliable) ||
       (stats.mTotalBytes >= 0 && stats.mTotalBytes == stats.mDownloadPosition)) {

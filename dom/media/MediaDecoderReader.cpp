@@ -35,12 +35,21 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 
 
 PRLogModuleInfo* gMediaPromiseLog;
+PRLogModuleInfo* gStateWatchingLog;
 
 void
 EnsureMediaPromiseLog()
 {
   if (!gMediaPromiseLog) {
     gMediaPromiseLog = PR_NewLogModule("MediaPromise");
+  }
+}
+
+void
+EnsureStateWatchingLog()
+{
+  if (!gStateWatchingLog) {
+    gStateWatchingLog = PR_NewLogModule("StateWatching");
   }
 }
 
@@ -88,6 +97,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   EnsureMediaPromiseLog();
+  EnsureStateWatchingLog();
 }
 
 MediaDecoderReader::~MediaDecoderReader()

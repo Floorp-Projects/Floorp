@@ -68,7 +68,12 @@ public:
     return in;
   }
 
-  void FireTailDispatcher() { MOZ_ASSERT(mTailDispatcher.isSome()); mTailDispatcher.reset(); }
+  void FireTailDispatcher()
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mTailDispatcher.isSome());
+    mTailDispatcher.ref().DrainDirectTasks();
+    mTailDispatcher.reset();
+  }
 
   virtual TaskDispatcher& TailDispatcher() override
   {
