@@ -19,7 +19,7 @@ CPOWTimer::~CPOWTimer()
     if (!js::IsStopwatchActive(runtime))
         return;
 
-    js::PerformanceData *performance = js::GetPerformanceData(runtime);
+    js::PerformanceData* performance = js::GetPerformanceData(runtime);
     uint64_t duration = PR_IntervalToMicroseconds(PR_IntervalNow() - startInterval);
     performance->totalCPOWTime += duration;
 }

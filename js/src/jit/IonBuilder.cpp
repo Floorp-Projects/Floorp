@@ -12883,7 +12883,7 @@ IonBuilder::constant(const Value& v)
     MOZ_ASSERT(!v.isString() || v.toString()->isAtom(),
                "To handle non-atomized strings, you should use constantMaybeAtomize instead of constant.");
     if (v.isString() && MOZ_UNLIKELY(!v.toString()->isAtom())) {
-        MConstant *cst = constantMaybeAtomize(v);
+        MConstant* cst = constantMaybeAtomize(v);
         if (!cst)
             js::CrashAtUnhandlableOOM("Use constantMaybeAtomize.");
         return cst;

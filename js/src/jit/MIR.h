@@ -8090,7 +8090,7 @@ class MNot
             cacheOperandMightEmulateUndefined(constraints);
     }
 
-    void cacheOperandMightEmulateUndefined(CompilerConstraintList *constraints);
+    void cacheOperandMightEmulateUndefined(CompilerConstraintList* constraints);
 
   public:
     static MNot* New(TempAllocator& alloc, MDefinition* elements,
