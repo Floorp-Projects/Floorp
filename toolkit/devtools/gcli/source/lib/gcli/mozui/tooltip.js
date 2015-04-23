@@ -33,9 +33,6 @@ var tooltipHtml =
 /**
  * A widget to display an inline dialog which allows the user to fill out
  * the arguments to a command.
- * @param options Object containing user customization properties, including:
- * - tooltipClass (default='gcli-tooltip'): Custom class name when generating
- *   the top level element which allows different layout systems
  * @param components Object that links to other UI components. GCLI provided:
  * - requisition: The Requisition to fill out
  * - inputter: An instance of Inputter
@@ -43,13 +40,13 @@ var tooltipHtml =
  * - panelElement (optional): The element to show/hide on visibility events
  * - element: The root element to populate
  */
-function Tooltip(options, components) {
+function Tooltip(components) {
   this.inputter = components.inputter;
   this.requisition = components.requisition;
   this.focusManager = components.focusManager;
 
   this.element = components.element;
-  this.element.classList.add(options.tooltipClass || 'gcli-tooltip');
+  this.element.classList.add('gcliterm-tooltip');
   this.document = this.element.ownerDocument;
 
   this.panelElement = components.panelElement;
@@ -176,7 +173,7 @@ Tooltip.prototype.choiceChanged = function(ev) {
     conversion.constrainPredictionIndex(context, ev.choice).then(function(choice) {
       this.field.menu._choice = choice;
       this.field.menu._updateHighlight();
-    }.bind(this)).then(null, util.errorHandler);
+    }.bind(this)).catch(util.errorHandler);
   }
 };
 

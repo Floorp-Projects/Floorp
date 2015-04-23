@@ -14,21 +14,13 @@
 #if ANDROID_VERSION >= 18
 #include <hardware/bt_rc.h>
 #endif
-#ifdef MOZ_B2G_BT_API_V2
 #if ANDROID_VERSION >= 19
 #include <hardware/bt_gatt.h>
-#endif
-#else
-// Support GATT
 #endif
 #include "BluetoothCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#ifdef MOZ_B2G_BT_API_V2
 #include "mozilla/dom/TypedArray.h"
-#else
-// Support GATT
-#endif
 #include "nsThreadUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -154,12 +146,8 @@ Convert(const uint8_t aIn[16], bt_uuid_t& aOut);
 nsresult
 Convert(const bt_uuid_t& aIn, BluetoothUuid& aOut);
 
-#ifdef MOZ_B2G_BT_API_V2
 nsresult
 Convert(const BluetoothUuid& aIn, bt_uuid_t& aOut);
-#else
-// TODO: Support GATT
-#endif
 
 nsresult
 Convert(const nsAString& aIn, bt_pin_code_t& aOut);
@@ -779,7 +767,6 @@ Convert(btrc_remote_features_t aIn, unsigned long& aOut)
 }
 #endif // ANDROID_VERSION >= 19
 
-#ifdef MOZ_B2G_BT_API_V2
 inline nsresult
 Convert(int aIn, BluetoothGattStatus& aOut)
 {
@@ -875,6 +862,14 @@ Convert(BluetoothGattWriteType aIn, int& aOut)
   return NS_OK;
 }
 
+inline nsresult
+Convert(const ArrayBuffer& aIn, char* aOut)
+{
+  aIn.ComputeLengthAndData();
+  memcpy(aOut, aIn.Data(), aIn.Length());
+  return NS_OK;
+}
+
 #if ANDROID_VERSION >= 19
 nsresult
 Convert(const BluetoothGattId& aIn, btgatt_gatt_id_t& aOut);
@@ -898,23 +893,10 @@ nsresult
 Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut);
 #endif // ANDROID_VERSION >= 19
 
-inline nsresult
-Convert(const ArrayBuffer& aIn, char* aOut)
-{
-  aIn.ComputeLengthAndData();
-  memcpy(aOut, aIn.Data(), aIn.Length());
-  return NS_OK;
-}
-
 #if ANDROID_VERSION >= 21
 nsresult
 Convert(const BluetoothTransport& aIn, btgatt_transport_t& aOut);
-#endif
-#else
-// TODO: Support GATT
-#endif
 
-#if ANDROID_VERSION >= 21
 inline nsresult
 Convert(BluetoothTransport aIn, int& aOut)
 {

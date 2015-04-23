@@ -56,6 +56,17 @@ exports.items = [
   },
   {
     item: 'converter',
+    from: 'json',
+    to: 'view',
+    exec: function(json, context) {
+      var html = JSON.stringify(json, null, '&#160;').replace(/\n/g, '<br/>');
+      return {
+        html: '<pre>' + html + '</pre>'
+      };
+    }
+  },
+  {
+    item: 'converter',
     from: 'number',
     to: 'string',
     exec: function(data) { return '' + data; }
@@ -71,5 +82,13 @@ exports.items = [
     from: 'undefined',
     to: 'string',
     exec: function(data) { return ''; }
+  },
+  {
+    item: 'converter',
+    from: 'json',
+    to: 'string',
+    exec: function(json, conversionContext) {
+      return JSON.stringify(json, null, '  ');
+    }
   }
 ];

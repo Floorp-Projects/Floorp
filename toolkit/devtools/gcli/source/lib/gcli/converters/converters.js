@@ -99,7 +99,7 @@ var errorDomConverter = {
   exec: function(ex, conversionContext) {
     var node = util.createElement(conversionContext.document, 'p');
     node.className = 'gcli-error';
-    node.textContent = ex;
+    node.textContent = errorStringConverter.exec(ex, conversionContext);
     return node;
   }
 };
@@ -112,6 +112,15 @@ var errorStringConverter = {
   from: 'error',
   to: 'string',
   exec: function(ex, conversionContext) {
+    if (typeof ex === 'string') {
+      return ex;
+    }
+    if (ex instanceof Error) {
+      return '' + ex;
+    }
+    if (typeof ex.message === 'string') {
+      return ex.message;
+    }
     return '' + ex;
   }
 };
@@ -206,6 +215,15 @@ Converters.prototype.get = function(from, to) {
     return this._getFallbackConverter(from, to);
   }
   return converter;
+};
+
+/**
+ * Get all the registered converters. Most for debugging
+ */
+Converters.prototype.getAll = function() {
+  return Object.keys(this._registered.from).map(function(name) {
+    return this._registered.from[name];
+  }.bind(this));
 };
 
 /**

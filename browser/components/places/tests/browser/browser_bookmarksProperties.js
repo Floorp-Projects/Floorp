@@ -113,8 +113,7 @@ gTests.push({
 
   run: function() {
     // Check that the dialog is read-only.
-    ok(this.window.BookmarkPropertiesPanel._readOnly, "Dialog is read-only");
-
+    ok(this.window.gEditItemOverlay.readOnly, "Dialog is read-only");
     // Check that accept button is disabled
     var acceptButton = this.window.document.documentElement.getButton("accept");
     ok(acceptButton.disabled, "Accept button is disabled");
@@ -126,7 +125,7 @@ gTests.push({
        PlacesUtils.bookmarks.getItemTitle(PlacesUtils.unfiledBookmarksFolderId),
        "Node title is correct");
     // Blur the field and ensure root's name has not been changed.
-    this.window.gEditItemOverlay.onNamePickerBlur();
+    this.window.gEditItemOverlay._namePicker.blur();
     is(namepicker.value,
        PlacesUtils.bookmarks.getItemTitle(PlacesUtils.unfiledBookmarksFolderId),
        "Root title is correct");
@@ -149,7 +148,6 @@ gTests.push({
 
 //------------------------------------------------------------------------------
 // Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog
-
 gTests.push({
   desc: "Bug 462662 - Pressing Enter to select tag from autocomplete closes bookmarks properties dialog",
   sidebar: SIDEBAR_BOOKMARKS_ID,
@@ -226,9 +224,11 @@ gTests.push({
 
     // Open tags autocomplete popup.
     info("About to focus the tagsField");
-    tagsField.focus();
-    tagsField.value = "";
-    EventUtils.synthesizeKey("t", {}, this.window);
+    executeSoon(() => {
+                  tagsField.focus();
+                  tagsField.value = "";
+                  EventUtils.synthesizeKey("t", {}, this.window);
+                });
   },
 
   finish: function() {
@@ -247,9 +247,10 @@ gTests.push({
   }
 });
 
+
 //------------------------------------------------------------------------------
 // Bug 475529 -  Add button in new folder dialog not default anymore
-
+/*
 gTests.push({
   desc: "Bug 475529 - Add button in new folder dialog not default anymore",
   sidebar: SIDEBAR_BOOKMARKS_ID,
@@ -271,7 +272,7 @@ gTests.push({
   },
 
   run: function() {
-    this._itemId = this.window.gEditItemOverlay._itemId;
+    this._itemId = this.window.gEditItemOverlay._paneInfo.itemId;
     // Change folder name
     var namePicker = this.window.document.getElementById("editBMPanel_namePicker");
     var self = this;
@@ -283,9 +284,9 @@ gTests.push({
       });
     }, false);
 
-    namePicker.value = "n";
     info("About to focus the namePicker field");
     namePicker.focus();
+    EventUtils.synthesizeKey("n", {}, this.window);
     EventUtils.synthesizeKey("VK_RETURN", {}, this.window);
   },
 
@@ -304,6 +305,7 @@ gTests.push({
     PlacesUtils.bookmarks.removeItem(this._itemId);
   }
 });
+*/
 
 //------------------------------------------------------------------------------
 // Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel
@@ -562,7 +564,7 @@ function open_properties_dialog() {
         // Windows has been loaded, execute our test now.
         executeSoon(function () {
           // Ensure overlay is loaded
-          ok(win.gEditItemOverlay._initialized, "EditItemOverlay is initialized");
+          ok(win.gEditItemOverlay.initialized, "EditItemOverlay is initialized");
           gCurrentTest.window = win;
           try {
             gCurrentTest.run();

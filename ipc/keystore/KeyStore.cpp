@@ -810,10 +810,9 @@ KeyStore::StreamSocket::OnDisconnect()
 }
 
 void
-KeyStore::StreamSocket::ReceiveSocketData(
-  nsAutoPtr<UnixSocketRawData>& aMessage)
+KeyStore::StreamSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
-  mKeyStore->ReceiveSocketData(aMessage);
+  mKeyStore->ReceiveSocketData(aBuffer);
 }
 
 ConnectionOrientedSocketIO*
@@ -901,13 +900,13 @@ KeyStore::ResetHandlerInfo()
 }
 
 bool
-KeyStore::CheckSize(UnixSocketRawData *aMessage, size_t aExpectSize)
+KeyStore::CheckSize(UnixSocketBuffer *aMessage, size_t aExpectSize)
 {
   return (aMessage->GetSize() >= aExpectSize);
 }
 
 ResponseCode
-KeyStore::ReadCommand(UnixSocketRawData *aMessage)
+KeyStore::ReadCommand(UnixSocketBuffer *aMessage)
 {
   if (mHandlerInfo.state != STATE_IDLE) {
     NS_WARNING("Wrong state in ReadCommand()!");
@@ -946,7 +945,7 @@ KeyStore::ReadCommand(UnixSocketRawData *aMessage)
 }
 
 ResponseCode
-KeyStore::ReadLength(UnixSocketRawData *aMessage)
+KeyStore::ReadLength(UnixSocketBuffer *aMessage)
 {
   if (mHandlerInfo.state != STATE_READ_PARAM_LEN) {
     NS_WARNING("Wrong state in ReadLength()!");
@@ -971,7 +970,7 @@ KeyStore::ReadLength(UnixSocketRawData *aMessage)
 }
 
 ResponseCode
-KeyStore::ReadData(UnixSocketRawData *aMessage)
+KeyStore::ReadData(UnixSocketBuffer *aMessage)
 {
   if (mHandlerInfo.state != STATE_READ_PARAM_DATA) {
     NS_WARNING("Wrong state in ReadData()!");
@@ -1029,7 +1028,7 @@ KeyStore::SendData(const uint8_t *aData, int aLength)
 }
 
 void
-KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
+KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

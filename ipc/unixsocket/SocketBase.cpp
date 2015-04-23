@@ -18,10 +18,10 @@ namespace ipc {
 // UnixSocketIOBuffer
 //
 
-UnixSocketIOBuffer::UnixSocketIOBuffer(const void* aData, size_t aSize)
-: mSize(aSize)
-, mOffset(0)
-, mAvailableSpace(aSize)
+UnixSocketBuffer::UnixSocketBuffer(const void* aData, size_t aSize)
+  : mSize(aSize)
+  , mOffset(0)
+  , mAvailableSpace(aSize)
 {
   MOZ_ASSERT(aData || !mSize);
 
@@ -29,19 +29,19 @@ UnixSocketIOBuffer::UnixSocketIOBuffer(const void* aData, size_t aSize)
   memcpy(mData, aData, mSize);
 }
 
-UnixSocketIOBuffer::UnixSocketIOBuffer(size_t aAvailableSpace)
-: mSize(0)
-, mOffset(0)
-, mAvailableSpace(aAvailableSpace)
+UnixSocketBuffer::UnixSocketBuffer(size_t aAvailableSpace)
+  : mSize(0)
+  , mOffset(0)
+  , mAvailableSpace(aAvailableSpace)
 {
   mData = new uint8_t[mAvailableSpace];
 }
 
-UnixSocketIOBuffer::~UnixSocketIOBuffer()
+UnixSocketBuffer::~UnixSocketBuffer()
 { }
 
 const uint8_t*
-UnixSocketIOBuffer::Consume(size_t aLen)
+UnixSocketBuffer::Consume(size_t aLen)
 {
   if (NS_WARN_IF(GetSize() < aLen)) {
     return nullptr;
@@ -52,7 +52,7 @@ UnixSocketIOBuffer::Consume(size_t aLen)
 }
 
 nsresult
-UnixSocketIOBuffer::Read(void* aValue, size_t aLen)
+UnixSocketBuffer::Read(void* aValue, size_t aLen)
 {
   const uint8_t* data = Consume(aLen);
   if (!data) {
@@ -63,7 +63,7 @@ UnixSocketIOBuffer::Read(void* aValue, size_t aLen)
 }
 
 uint8_t*
-UnixSocketIOBuffer::Append(size_t aLen)
+UnixSocketBuffer::Append(size_t aLen)
 {
   if (((mAvailableSpace - mSize) < aLen)) {
     size_t availableSpace = mAvailableSpace + std::max(mAvailableSpace, aLen);
@@ -78,7 +78,7 @@ UnixSocketIOBuffer::Append(size_t aLen)
 }
 
 nsresult
-UnixSocketIOBuffer::Write(const void* aValue, size_t aLen)
+UnixSocketBuffer::Write(const void* aValue, size_t aLen)
 {
   uint8_t* data = Append(aLen);
   if (!data) {
@@ -89,7 +89,7 @@ UnixSocketIOBuffer::Write(const void* aValue, size_t aLen)
 }
 
 void
-UnixSocketIOBuffer::CleanupLeadingSpace()
+UnixSocketBuffer::CleanupLeadingSpace()
 {
   if (GetLeadingSpace()) {
     if (GetSize() <= GetLeadingSpace()) {
@@ -100,6 +100,21 @@ UnixSocketIOBuffer::CleanupLeadingSpace()
     mOffset = 0;
   }
 }
+
+//
+// UnixSocketIOBuffer
+//
+
+UnixSocketIOBuffer::UnixSocketIOBuffer(const void* aData, size_t aSize)
+  : UnixSocketBuffer(aData, aSize)
+{ }
+
+UnixSocketIOBuffer::UnixSocketIOBuffer(size_t aAvailableSpace)
+  : UnixSocketBuffer(aAvailableSpace)
+{ }
+
+UnixSocketIOBuffer::~UnixSocketIOBuffer()
+{ }
 
 //
 // UnixSocketRawData
@@ -268,13 +283,13 @@ SocketIOBase::~SocketIOBase()
 { }
 
 void
-SocketIOBase::EnqueueData(UnixSocketRawData* aData)
+SocketIOBase::EnqueueData(UnixSocketIOBuffer* aBuffer)
 {
-  if (!aData->GetSize()) {
-    delete aData; // delete empty data immediately
+  if (!aBuffer->GetSize()) {
+    delete aBuffer; // delete empty data immediately
     return;
   }
-  mOutgoingQ.AppendElement(aData);
+  mOutgoingQ.AppendElement(aBuffer);
 }
 
 bool

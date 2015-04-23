@@ -55,19 +55,19 @@
 
         // Init panel
         ok(gEditItemOverlay, "gEditItemOverlay is in context");
-        let itemId = yield PlacesUtils.promiseItemId(bm.guid);
-        gEditItemOverlay.initPanel(itemId);
+        let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
+        gEditItemOverlay.initPanel({ node });
 
         // add a tag
         document.getElementById("editBMPanel_tagsField").value = testTag;
-        gEditItemOverlay.onTagsFieldBlur();
+        gEditItemOverlay.onTagsFieldChange();
 
         // test that the tag has been added in the backend
         is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTag, "tags match");
 
         // change the tag
         document.getElementById("editBMPanel_tagsField").value = testTagUpper;
-        gEditItemOverlay.onTagsFieldBlur();
+        gEditItemOverlay.onTagsFieldChange();
 
         // test that the tag has been added in the backend
         is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTagUpper, "tags match");

@@ -6,13 +6,15 @@
 
 const { Services } = require("resource://gre/modules/Services.jsm");
 const { listenOnce } = require("devtools/async-utils");
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 exports.items = [
   {
+    item: "command",
+    runAt: "server",
     name: "inject",
-    description: gcli.lookup("injectDesc"),
-    manual: gcli.lookup("injectManual2"),
+    description: l10n.lookup("injectDesc"),
+    manual: l10n.lookup("injectManual2"),
     params: [{
       name: "library",
       type: {
@@ -49,7 +51,7 @@ exports.items = [
           }
         ]
       },
-      description: gcli.lookup("injectLibraryDesc")
+      description: l10n.lookup("injectLibraryDesc")
     }],
     exec: function*(args, context) {
       let document = context.environment.document;
@@ -67,7 +69,7 @@ exports.items = [
         // Check if URI is valid
         Services.io.newURI(src, null, null);
       } catch(e) {
-        return gcli.lookupFormat("injectFailed", [name]);
+        return l10n.lookupFormat("injectFailed", [name]);
       }
 
       let newSource = document.createElement("script");
@@ -78,7 +80,7 @@ exports.items = [
 
       yield loadPromise;
 
-      return gcli.lookupFormat("injectLoaded", [name]);
+      return l10n.lookupFormat("injectLoaded", [name]);
     }
   }
 ];

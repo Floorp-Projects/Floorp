@@ -88,15 +88,25 @@ let Agent = {
    * @param {string} origin Which of sessionstore.js or its backups
    *   was used. One of the `STATE_*` constants defined above.
    * @param {object} paths The paths at which to find the various files.
-   * @param {number} maxUpgradeBackups The number of old upgrade backups that should be kept.
+   * @param {object} prefs The preferences the worker needs to known.
    */
-  init: function (origin, paths, maxUpgradeBackups) {
+  init(origin, paths, prefs = {}) {
     if (!(origin in paths || origin == STATE_EMPTY)) {
       throw new TypeError("Invalid origin: " + origin);
     }
+
+    // Check that all required preference values were passed.
+    for (let pref of ["maxUpgradeBackups", "maxSerializeBack", "maxSerializeForward"]) {
+      if (!prefs.hasOwnProperty(pref)) {
+        throw new TypeError(`Missing preference value for ${pref}`);
+      }
+    }
+
     this.state = origin;
     this.Paths = paths;
-    this.maxUpgradeBackups = maxUpgradeBackups || 3;
+    this.maxUpgradeBackups = prefs.maxUpgradeBackups;
+    this.maxSerializeBack = prefs.maxSerializeBack;
+    this.maxSerializeForward = prefs.maxSerializeForward;
     this.upgradeBackupNeeded = paths.nextUpgradeBackup != paths.upgradeBackup;
     return {result: true};
   },
@@ -106,7 +116,7 @@ let Agent = {
    * Write the session to disk, performing any necessary backup
    * along the way.
    *
-   * @param {string} stateString The state to write to disk.
+   * @param {object} state The state to write to disk.
    * @param {object} options
    *  - performShutdownCleanup If |true|, we should
    *    perform shutdown-time cleanup to ensure that private data
@@ -114,10 +124,31 @@ let Agent = {
    *  - isFinalWrite If |true|, write to Paths.clean instead of
    *    Paths.recovery
    */
-  write: function (stateString, options = {}) {
+  write: function (state, options = {}) {
     let exn;
     let telemetry = {};
 
+    // Cap the number of backward and forward shistory entries on shutdown.
+    if (options.isFinalWrite) {
+      for (let window of state.windows) {
+        for (let tab of window.tabs) {
+          let lower = 0;
+          let upper = tab.entries.length;
+
+          if (this.maxSerializeBack > -1) {
+            lower = Math.max(lower, tab.index - this.maxSerializeBack - 1);
+          }
+          if (this.maxSerializeForward > -1) {
+            upper = Math.min(upper, tab.index + this.maxSerializeForward);
+          }
+
+          tab.entries = tab.entries.slice(lower, upper);
+          tab.index -= lower;
+        }
+      }
+    }
+
+    let stateString = JSON.stringify(state);
     let data = Encoder.encode(stateString);
     let startWriteMs, stopWriteMs;
 
