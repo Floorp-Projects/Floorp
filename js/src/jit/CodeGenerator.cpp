@@ -4975,6 +4975,22 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements* lir)
 }
 
 void
+CodeGenerator::visitSetDisjointTypedElements(LSetDisjointTypedElements* lir)
+{
+    Register target = ToRegister(lir->target());
+    Register targetOffset = ToRegister(lir->targetOffset());
+    Register source = ToRegister(lir->source());
+
+    Register temp = ToRegister(lir->temp());
+
+    masm.setupUnalignedABICall(3, temp);
+    masm.passABIArg(target);
+    masm.passABIArg(targetOffset);
+    masm.passABIArg(source);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::SetDisjointTypedElements));
+}
+
+void
 CodeGenerator::visitTypedObjectDescr(LTypedObjectDescr* lir)
 {
     Register obj = ToRegister(lir->object());

@@ -134,7 +134,7 @@ function params(request, response) {
  */
 function oauth_authorization(request, response) {
   response.setStatusLine(request.httpVersion, 302, "Found");
-  response.setHeader("Location", "browser_fxa_oauth.html");
+  response.setHeader("Location", "browser_fxa_oauth_with_keys.html");
 }
 
 /**

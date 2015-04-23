@@ -93,7 +93,7 @@ bool SharedMemory::Delete(const std::wstring& name) {
 
   FilePath path(WideToUTF8(mem_filename));
   if (file_util::PathExists(path)) {
-    return file_util::Delete(path, false);
+    return file_util::Delete(path);
   }
 
   // Doesn't exist, so success.
@@ -170,7 +170,7 @@ bool SharedMemory::CreateOrOpen(const std::wstring &name,
     // Deleting the file prevents anyone else from mapping it in
     // (making it private), and prevents the need for cleanup (once
     // the last fd is closed, it is truly freed).
-    file_util::Delete(path, false);
+    file_util::Delete(path);
   } else {
     std::wstring mem_filename;
     if (FilenameForMemoryName(name, &mem_filename) == false)

@@ -50,7 +50,6 @@ UNIFIED_SOURCES += [
     'src/base/pickle.cc',
     'src/base/rand_util.cc',
     'src/base/revocable_store.cc',
-    'src/base/scoped_temp_dir.cc',
     'src/base/string_piece.cc',
     'src/base/string_util.cc',
     'src/base/thread.cc',

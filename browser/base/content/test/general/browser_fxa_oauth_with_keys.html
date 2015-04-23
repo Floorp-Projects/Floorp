@@ -16,7 +16,9 @@
             state: "state",
             code: "code1",
             closeWindow: "signin",
-            keys: { kAr: 'kAr', kBr: 'kBr' },
+            // Keys normally contain more information, but this is enough
+            // to keep Loop's tests happy.
+            keys: { kAr: { k: 'kAr' }, kBr: { k: 'kBr' }},
           },
         },
       },

@@ -7944,6 +7944,49 @@ class MTypedArrayElements
     ALLOW_CLONE(MTypedArrayElements)
 };
 
+class MSetDisjointTypedElements
+  : public MTernaryInstruction,
+    public NoTypePolicy::Data
+{
+    explicit MSetDisjointTypedElements(MDefinition* target, MDefinition* targetOffset,
+                                       MDefinition* source)
+      : MTernaryInstruction(target, targetOffset, source)
+    {
+        MOZ_ASSERT(target->type() == MIRType_Object);
+        MOZ_ASSERT(targetOffset->type() == MIRType_Int32);
+        MOZ_ASSERT(source->type() == MIRType_Object);
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SetDisjointTypedElements)
+
+    static MSetDisjointTypedElements*
+    New(TempAllocator& alloc, MDefinition* target, MDefinition* targetOffset,
+        MDefinition* source)
+    {
+        return new(alloc) MSetDisjointTypedElements(target, targetOffset, source);
+    }
+
+    MDefinition* target() const {
+        return getOperand(0);
+    }
+
+    MDefinition* targetOffset() const {
+        return getOperand(1);
+    }
+
+    MDefinition* source() const {
+        return getOperand(2);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Store(AliasSet::UnboxedElement);
+    }
+
+    ALLOW_CLONE(MSetDisjointTypedElements)
+};
+
 // Load a binary data object's "elements", which is just its opaque
 // binary data space. Eventually this should probably be
 // unified with `MTypedArrayElements`.
@@ -12611,32 +12654,9 @@ class MAsmJSHeapAccess
     bool needsBoundsCheck() const { return needsBoundsCheck_; }
     void removeBoundsCheck() { needsBoundsCheck_ = false; }
     unsigned numSimdElems() const { MOZ_ASSERT(Scalar::isSimdType(accessType_)); return numSimdElems_; }
-
-    bool tryAddDisplacement(int32_t o) {
-        // Compute the new offset. Check for overflow and negative. In theory it
-        // ought to be possible to support negative offsets, but it'd require
-        // more elaborate bounds checking mechanisms than we currently have.
-        MOZ_ASSERT(offset_ >= 0);
-        int32_t newOffset = uint32_t(offset_) + o;
-        if (newOffset < 0)
-            return false;
-
-        // Compute the new offset to the end of the access. Check for overflow
-        // and negative here also.
-        int32_t newEnd = uint32_t(newOffset) + byteSize();
-        if (newEnd < 0)
-            return false;
-        MOZ_ASSERT(uint32_t(newEnd) >= uint32_t(newOffset));
-
-        // If we need bounds checking, keep it within the more restrictive
-        // AsmJSCheckedImmediateRange. Otherwise, just keep it within what
-        // the instruction set can support.
-        size_t range = needsBoundsCheck() ? AsmJSCheckedImmediateRange : AsmJSImmediateRange;
-        if (size_t(newEnd) > range)
-            return false;
-
-        offset_ = newOffset;
-        return true;
+    void setOffset(int32_t o) {
+        MOZ_ASSERT(o >= 0);
+        offset_ = o;
     }
 };
 

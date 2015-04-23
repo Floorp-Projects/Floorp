@@ -101,8 +101,38 @@ AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 }
 
 template<typename MAsmJSHeapAccessType>
-static void
-AnalyzeAsmHeapAccess(MAsmJSHeapAccessType* ins, MIRGraph& graph)
+bool
+EffectiveAddressAnalysis::tryAddDisplacement(MAsmJSHeapAccessType *ins, int32_t o)
+{
+    // Compute the new offset. Check for overflow and negative. In theory it
+    // ought to be possible to support negative offsets, but it'd require
+    // more elaborate bounds checking mechanisms than we currently have.
+    MOZ_ASSERT(ins->offset() >= 0);
+    int32_t newOffset = uint32_t(ins->offset()) + o;
+    if (newOffset < 0)
+        return false;
+
+    // Compute the new offset to the end of the access. Check for overflow
+    // and negative here also.
+    int32_t newEnd = uint32_t(newOffset) + ins->byteSize();
+    if (newEnd < 0)
+        return false;
+    MOZ_ASSERT(uint32_t(newEnd) >= uint32_t(newOffset));
+
+    // Determine the range of valid offsets which can be folded into this
+    // instruction and check whether our computed offset is within that range.
+    size_t range = mir_->foldableOffsetRange(ins);
+    if (size_t(newEnd) > range)
+        return false;
+
+    // Everything checks out. This is the new offset.
+    ins->setOffset(newOffset);
+    return true;
+}
+
+template<typename MAsmJSHeapAccessType>
+void
+EffectiveAddressAnalysis::analyzeAsmHeapAccess(MAsmJSHeapAccessType* ins)
 {
     MDefinition* ptr = ins->ptr();
 
@@ -113,8 +143,8 @@ AnalyzeAsmHeapAccess(MAsmJSHeapAccessType* ins, MIRGraph& graph)
         // a situation where the sum of a constant pointer value and a non-zero
         // offset doesn't actually fit into the address mode immediate.
         int32_t imm = ptr->constantValue().toInt32();
-        if (imm != 0 && ins->tryAddDisplacement(imm)) {
-            MInstruction* zero = MConstant::New(graph.alloc(), Int32Value(0));
+        if (imm != 0 && tryAddDisplacement(ins, imm)) {
+            MInstruction* zero = MConstant::New(graph_.alloc(), Int32Value(0));
             ins->block()->insertBefore(ins, zero);
             ins->replacePtr(zero);
         }
@@ -128,7 +158,7 @@ AnalyzeAsmHeapAccess(MAsmJSHeapAccessType* ins, MIRGraph& graph)
             mozilla::Swap(op0, op1);
         if (op1->isConstantValue()) {
             int32_t imm = op1->constantValue().toInt32();
-            if (ins->tryAddDisplacement(imm))
+            if (tryAddDisplacement(ins, imm))
                 ins->replacePtr(op0);
         }
     }
@@ -159,9 +189,9 @@ EffectiveAddressAnalysis::analyze()
             if (i->isLsh())
                 AnalyzeLsh(graph_.alloc(), i->toLsh());
             else if (i->isAsmJSLoadHeap())
-                AnalyzeAsmHeapAccess(i->toAsmJSLoadHeap(), graph_);
+                analyzeAsmHeapAccess(i->toAsmJSLoadHeap());
             else if (i->isAsmJSStoreHeap())
-                AnalyzeAsmHeapAccess(i->toAsmJSStoreHeap(), graph_);
+                analyzeAsmHeapAccess(i->toAsmJSStoreHeap());
         }
     }
     return true;

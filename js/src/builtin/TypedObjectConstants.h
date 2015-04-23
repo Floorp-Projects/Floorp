@@ -10,6 +10,27 @@
 #define builtin_TypedObjectConstants_h
 
 ///////////////////////////////////////////////////////////////////////////
+// Values to be returned by SetFromTypedArrayApproach
+
+#define JS_SETTYPEDARRAY_SAME_TYPE 0
+#define JS_SETTYPEDARRAY_OVERLAPPING 1
+#define JS_SETTYPEDARRAY_DISJOINT 2
+
+///////////////////////////////////////////////////////////////////////////
+// Slots for objects using the typed array layout
+
+#define JS_TYPEDARRAYLAYOUT_BUFFER_SLOT 0
+#define JS_TYPEDARRAYLAYOUT_LENGTH_SLOT 1
+#define JS_TYPEDARRAYLAYOUT_BYTEOFFSET_SLOT 2
+
+///////////////////////////////////////////////////////////////////////////
+// Slots and flags for ArrayBuffer objects
+
+#define JS_ARRAYBUFFER_FLAGS_SLOT            3
+
+#define JS_ARRAYBUFFER_NEUTERED_FLAG 0x4
+
+///////////////////////////////////////////////////////////////////////////
 // Slots for typed prototypes
 
 #define JS_TYPROTO_SLOTS                 0

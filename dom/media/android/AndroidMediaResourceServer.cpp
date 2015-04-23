@@ -421,7 +421,12 @@ already_AddRefed<AndroidMediaResourceServer>
 AndroidMediaResourceServer::Start()
 {
   nsRefPtr<AndroidMediaResourceServer> server = new AndroidMediaResourceServer();
-  NS_DispatchToMainThread(server, NS_DISPATCH_SYNC);
+  // We should fix this up - see bug 1157476.
+  if (NS_IsMainThread()) {
+    server->Run();
+  } else {
+    NS_DispatchToMainThread(server, NS_DISPATCH_SYNC);
+  }
   return server.forget();
 }
 

@@ -139,12 +139,6 @@ void AppendToPath(std::wstring* path, const std::wstring& new_ending) {
     path->push_back(FilePath::kSeparators[0]);
   path->append(new_ending);
 }
-bool CopyDirectory(const std::wstring& from_path, const std::wstring& to_path,
-                   bool recursive) {
-  return CopyDirectory(FilePath::FromWStringHack(from_path),
-                       FilePath::FromWStringHack(to_path),
-                       recursive);
-}
 bool CopyFile(const std::wstring& from_path, const std::wstring& to_path) {
   return CopyFile(FilePath::FromWStringHack(from_path),
                   FilePath::FromWStringHack(to_path));
@@ -172,8 +166,8 @@ bool CreateTemporaryFileName(std::wstring* temp_file) {
   *temp_file = temp_file_path.ToWStringHack();
   return true;
 }
-bool Delete(const std::wstring& path, bool recursive) {
-  return Delete(FilePath::FromWStringHack(path), recursive);
+bool Delete(const std::wstring& path) {
+  return Delete(FilePath::FromWStringHack(path));
 }
 bool DirectoryExists(const std::wstring& path) {
   return DirectoryExists(FilePath::FromWStringHack(path));

@@ -31,7 +31,7 @@ is(CSS.escape(false), 'false', "escapingFailed Character : false(bool)");
 is(CSS.escape(null), 'null', "escapingFailed Character : null");
 is(CSS.escape(''), '', "escapingFailed Character : '' ");
 
-is(CSS.escape('\x01\x02\x1E\x1F'), '\\1 \\2 \\1E \\1F ',"escapingFailed Char: \\x01\\x02\\x1E\\x1F");
+is(CSS.escape('\x01\x02\x1E\x1F'), '\\1 \\2 \\1e \\1f ',"escapingFailed Char: \\x01\\x02\\x1E\\x1F");
 
 is(CSS.escape('0a'), '\\30 a', "escapingFailed Char: 0a");
 is(CSS.escape('1a'), '\\31 a', "escapingFailed Char: 1a");

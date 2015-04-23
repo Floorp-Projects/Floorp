@@ -189,7 +189,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     if (aLoaderPrincipal) {
         nsRefPtr<nsCORSListenerProxy> corsListener =
           new nsCORSListenerProxy(listener, aLoaderPrincipal, false);
-        rv = corsListener->Init(mChannel);
+        rv = corsListener->Init(mChannel, DataURIHandling::Disallow);
         NS_ENSURE_SUCCESS(rv, rv);
         listener = corsListener;
     }

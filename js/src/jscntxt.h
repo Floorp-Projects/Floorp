@@ -840,13 +840,19 @@ bool intrinsic_IsSuspendedStarGenerator(JSContext* cx, unsigned argc, Value* vp)
 bool intrinsic_IsArrayIterator(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_IsStringIterator(JSContext* cx, unsigned argc, Value* vp);
 
+bool intrinsic_IsArrayBuffer(JSContext* cx, unsigned argc, Value* vp);
+
 bool intrinsic_IsTypedArray(JSContext* cx, unsigned argc, Value* vp);
+bool intrinsic_IsPossiblyWrappedTypedArray(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_TypedArrayBuffer(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_TypedArrayByteOffset(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_TypedArrayElementShift(JSContext* cx, unsigned argc, Value* vp);
 bool intrinsic_TypedArrayLength(JSContext* cx, unsigned argc, Value* vp);
 
 bool intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp);
+bool intrinsic_SetFromTypedArrayApproach(JSContext* cx, unsigned argc, Value* vp);
+bool intrinsic_SetDisjointTypedElements(JSContext* cx, unsigned argc, Value* vp);
+bool intrinsic_SetOverlappingTypedElements(JSContext* cx, unsigned argc, Value* vp);
 
 class AutoLockForExclusiveAccess
 {

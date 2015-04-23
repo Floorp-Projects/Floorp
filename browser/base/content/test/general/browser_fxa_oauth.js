@@ -147,8 +147,8 @@ let gTests = [
           Assert.ok(tabOpened);
           Assert.equal(tokenData.code, "code1");
           Assert.equal(tokenData.state, "state");
-          Assert.equal(keys.kAr, "kAr");
-          Assert.equal(keys.kBr, "kBr");
+          Assert.deepEqual(keys.kAr, {k: "kAr"});
+          Assert.deepEqual(keys.kBr, {k: "kBr"});
           resolve();
         };
 
