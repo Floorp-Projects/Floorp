@@ -156,7 +156,7 @@ IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
 bool
 IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
 {
-  nsAutoRef<NesteggPacketHolder> holder(mReader->NextPacket(WebMReader::VIDEO));
+  nsRefPtr<NesteggPacketHolder> holder(mReader->NextPacket(WebMReader::VIDEO));
   if (!holder) {
     return false;
   }
@@ -185,13 +185,13 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
   // end of the resource, use the file's duration as the end time of this
   // video frame.
   uint64_t next_tstamp = 0;
-  nsAutoRef<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
+  nsRefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
   if (next_holder) {
     r = nestegg_packet_tstamp(next_holder->mPacket, &next_tstamp);
     if (r == -1) {
       return false;
     }
-    mReader->PushVideoPacket(next_holder.disown());
+    mReader->PushVideoPacket(next_holder.forget());
   } else {
     next_tstamp = tstamp;
     next_tstamp += tstamp - mReader->GetLastVideoFrameTime();
