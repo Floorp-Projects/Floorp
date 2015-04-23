@@ -1023,7 +1023,7 @@ RegExpPairsVectorStartOffset(size_t inputOutputDataStartOffset)
 }
 
 static Address
-RegExpPairCountAddress(MacroAssembler &masm, size_t inputOutputDataStartOffset)
+RegExpPairCountAddress(MacroAssembler& masm, size_t inputOutputDataStartOffset)
 {
     return Address(masm.getStackPointer(), inputOutputDataStartOffset
                                            + sizeof(irregexp::InputOutputData)

@@ -74,7 +74,7 @@ ChildProcessHost::~ChildProcessHost() {
 }
 
 bool ChildProcessHost::CreateChannel() {
-  channel_id_ = GenerateRandomChannelID(this);
+  channel_id_ = IPC::Channel::GenerateVerifiedChannelID(std::wstring());
   channel_.reset(new IPC::Channel(
       channel_id_, IPC::Channel::MODE_SERVER, &listener_));
   if (!channel_->Connect())

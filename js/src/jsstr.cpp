@@ -394,8 +394,15 @@ str_enumerate(JSContext* cx, HandleObject obj)
     return true;
 }
 
-bool
-js::str_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
+static bool
+str_mayResolve(const JSAtomState&, jsid id, JSObject*)
+{
+    // str_resolve ignores non-integer ids.
+    return JSID_IS_INT(id);
+}
+
+static bool
+str_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 {
     if (!JSID_IS_INT(id))
         return true;
@@ -424,7 +431,8 @@ const Class StringObject::class_ = {
     nullptr, /* getProperty */
     nullptr, /* setProperty */
     str_enumerate,
-    str_resolve
+    str_resolve,
+    str_mayResolve
 };
 
 /*

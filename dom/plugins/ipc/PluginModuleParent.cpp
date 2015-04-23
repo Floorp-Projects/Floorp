@@ -1112,24 +1112,17 @@ PluginModuleChromeParent::AnnotateHang(mozilla::HangMonitor::HangAnnotations& aA
     }
 }
 
-#ifdef MOZ_CRASHREPORTER_INJECTOR
+#ifdef MOZ_CRASHREPORTER
 static bool
-CreateFlashMinidump(DWORD processId, ThreadId childThread,
-                    nsIFile* parentMinidump, const nsACString& name)
+CreatePluginMinidump(base::ProcessId processId, ThreadId childThread,
+                     nsIFile* parentMinidump, const nsACString& name)
 {
-  if (processId == 0) {
+  mozilla::ipc::ScopedProcessHandle handle;
+  if (processId == 0 ||
+      !base::OpenPrivilegedProcessHandle(processId, &handle.rwget())) {
     return false;
   }
-
-  base::ProcessHandle handle;
-  if (!base::OpenPrivilegedProcessHandle(processId, &handle)) {
-    return false;
-  }
-
-  bool res = CreateAdditionalChildMinidump(handle, 0, parentMinidump, name);
-  base::CloseProcessHandle(handle);
-
-  return res;
+  return CreateAdditionalChildMinidump(handle, 0, parentMinidump, name);
 }
 #endif
 
@@ -1201,32 +1194,37 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop)
         }
     }
 #endif // XP_WIN
+    // Generate base report, includes plugin and browser process minidumps.
     if (crashReporter->GeneratePairedMinidump(this)) {
         mPluginDumpID = crashReporter->ChildDumpID();
         PLUGIN_LOG_DEBUG(
                 ("generated paired browser/plugin minidumps: %s)",
                  NS_ConvertUTF16toUTF8(mPluginDumpID).get()));
-
         nsAutoCString additionalDumps("browser");
-
-#ifdef MOZ_CRASHREPORTER_INJECTOR
         nsCOMPtr<nsIFile> pluginDumpFile;
-
         if (GetMinidumpForID(mPluginDumpID, getter_AddRefs(pluginDumpFile)) &&
             pluginDumpFile) {
-          nsCOMPtr<nsIFile> childDumpFile;
-
-          if (CreateFlashMinidump(mFlashProcess1, 0, pluginDumpFile,
-                                  NS_LITERAL_CSTRING("flash1"))) {
-            additionalDumps.AppendLiteral(",flash1");
-          }
-          if (CreateFlashMinidump(mFlashProcess2, 0, pluginDumpFile,
-                                  NS_LITERAL_CSTRING("flash2"))) {
-            additionalDumps.AppendLiteral(",flash2");
-          }
-        }
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+            // If we have handles to the flash sandbox processes on Windows,
+            // include those minidumps as well.
+            if (CreatePluginMinidump(mFlashProcess1, 0, pluginDumpFile,
+                                     NS_LITERAL_CSTRING("flash1"))) {
+                additionalDumps.AppendLiteral(",flash1");
+            }
+            if (CreatePluginMinidump(mFlashProcess2, 0, pluginDumpFile,
+                                     NS_LITERAL_CSTRING("flash2"))) {
+                additionalDumps.AppendLiteral(",flash2");
+            }
 #endif
-
+            if (mContentParent) {
+                // Include the content process minidump
+                if (CreatePluginMinidump(mContentParent->OtherPid(), 0,
+                                         pluginDumpFile,
+                                         NS_LITERAL_CSTRING("content"))) {
+                    additionalDumps.AppendLiteral(",content");
+                }
+            }
+        }
         crashReporter->AnnotateCrashReport(
             NS_LITERAL_CSTRING("additional_minidumps"),
             additionalDumps);

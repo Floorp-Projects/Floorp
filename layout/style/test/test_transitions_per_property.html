@@ -643,21 +643,21 @@ var filterTests = [
     expected: ["contrast", 0.375] },
   // hue-rotate with different angle values
   { start: "hue-rotate(0deg)", end: "hue-rotate(720deg)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", "180deg"] },
   { start: "hue-rotate(0rad)", end: "hue-rotate("+4*Math.PI+"rad)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", Math.PI.toFixed(5)+"rad"] },
   { start: "hue-rotate(0grad)", end: "hue-rotate(800grad)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", "200grad"] },
   { start: "hue-rotate(0turn)", end: "hue-rotate(2turn)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", "0.5turn"] },
   { start: "hue-rotate(0deg)", end: "hue-rotate("+4*Math.PI+"rad)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", Math.PI.toFixed(5)+"rad"] },
   { start: "hue-rotate(0turn)", end: "hue-rotate(800grad)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", Math.PI.toFixed(5)+"rad"] },
   { start: "hue-rotate(0grad)", end: "hue-rotate("+4*Math.PI+"rad)",
-    expected: ["hue-rotate", Math.PI.toFixed(5)] },
+    expected: ["hue-rotate", Math.PI.toFixed(5)+"rad"] },
   { start: "hue-rotate(0grad)", end: "hue-rotate(0turn)",
-    expected: ["hue-rotate", 0] },
+    expected: ["hue-rotate", "0rad"] },
   // multiple matching functions, same length
   { start: "contrast(25%) brightness(0.25) blur(25px) sepia(75%)",
     end: "contrast(75%) brightness(0.75) blur(75px) sepia(25%)",
@@ -1215,12 +1215,8 @@ function filter_function_list_equals(computedValStr, expectedList)
       }
       functionValue = functionValue.substring(0, functionValue.length - 2);
     } else if (functionName == "hue-rotate") {
-      // Last two characters must be "rad".
-      if (functionValue.search("rad") != functionValue.length - 3) {
-        return false;
-      }
-      tolerance = 0.001;
-      functionValue = functionValue.substring(0, functionValue.length - 3);
+      // Just check for string equality.
+      return functionValue == expected;
     } else if (functionName == "drop-shadow" || functionName == "url") {
       if (functionValue != expected) {
         return false;

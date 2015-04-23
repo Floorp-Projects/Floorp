@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <gui/ConsumerBase.h>
+#include "DisplaySurface.h"
 
 // ---------------------------------------------------------------------------
 namespace android {
@@ -29,24 +29,24 @@ namespace android {
 class Rect;
 class String8;
 
-#if ANDROID_VERSION >= 21
-typedef IGraphicBufferConsumer StreamConsumer;
-#else
-typedef BufferQueue StreamConsumer;
-#endif
-
 // ---------------------------------------------------------------------------
 
-class FramebufferSurface : public ConsumerBase {
+class FramebufferSurface : public DisplaySurface {
 public:
     FramebufferSurface(int disp, uint32_t width, uint32_t height, uint32_t format, const sp<StreamConsumer>& sc);
 
-    bool isUpdateOnDemand() const { return false; }
-    status_t setUpdateRectangle(const Rect& updateRect);
-    status_t compositionComplete();
-
-    virtual void dump(String8& result);
-    virtual void dump(String8& result, const char* prefix);
+    // From DisplaySurface
+    virtual status_t beginFrame(bool mustRecompose);
+    virtual status_t prepareFrame(CompositionType compositionType);
+    virtual status_t compositionComplete();
+    virtual status_t advanceFrame();
+    virtual void onFrameCommitted();
+    // Implementation of DisplaySurface::dump(). Note that ConsumerBase also
+    // has a non-virtual dump() with the same signature.
+    virtual void dump(String8& result) const;
+    // Cannot resize a buffers in a FramebufferSurface. Only works with virtual
+    // displays.
+    virtual void resizeBuffers(const uint32_t /*w*/, const uint32_t /*h*/) { };
 
     // setReleaseFenceFd stores a fence file descriptor that will signal when the
     // current buffer is no longer being read. This fence will be returned to
@@ -56,9 +56,8 @@ public:
     // when finished with it.
     status_t setReleaseFenceFd(int fenceFd);
 
-    virtual int GetPrevFBAcquireFd();
+    virtual int GetPrevDispAcquireFd();
 
-    buffer_handle_t lastHandle;
 private:
     virtual ~FramebufferSurface() { }; // this class cannot be overloaded
 

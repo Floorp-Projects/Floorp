@@ -267,6 +267,12 @@ Layer::ClearAnimationsForNextTransaction()
   mPendingAnimations->Clear();
 }
 
+static inline void
+SetCSSAngle(const CSSAngle& aAngle, nsCSSValue& aValue)
+{
+  aValue.SetFloatValue(aAngle.value(), nsCSSUnit(aAngle.unit()));
+}
+
 static nsCSSValueSharedList*
 CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 {
@@ -277,34 +283,34 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
     switch (aFunctions[i].type()) {
       case TransformFunction::TRotationX:
       {
-        float theta = aFunctions[i].get_RotationX().radians();
+        const CSSAngle& angle = aFunctions[i].get_RotationX().angle();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_rotatex,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        SetCSSAngle(angle, arr->Item(1));
         break;
       }
       case TransformFunction::TRotationY:
       {
-        float theta = aFunctions[i].get_RotationY().radians();
+        const CSSAngle& angle = aFunctions[i].get_RotationY().angle();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_rotatey,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        SetCSSAngle(angle, arr->Item(1));
         break;
       }
       case TransformFunction::TRotationZ:
       {
-        float theta = aFunctions[i].get_RotationZ().radians();
+        const CSSAngle& angle = aFunctions[i].get_RotationZ().angle();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_rotatez,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        SetCSSAngle(angle, arr->Item(1));
         break;
       }
       case TransformFunction::TRotation:
       {
-        float theta = aFunctions[i].get_Rotation().radians();
+        const CSSAngle& angle = aFunctions[i].get_Rotation().angle();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_rotate,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(theta, eCSSUnit_Radian);
+        SetCSSAngle(angle, arr->Item(1));
         break;
       }
       case TransformFunction::TRotation3D:
@@ -312,14 +318,14 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         float x = aFunctions[i].get_Rotation3D().x();
         float y = aFunctions[i].get_Rotation3D().y();
         float z = aFunctions[i].get_Rotation3D().z();
-        float theta = aFunctions[i].get_Rotation3D().radians();
+        const CSSAngle& angle = aFunctions[i].get_Rotation3D().angle();
         arr =
           StyleAnimationValue::AppendTransformFunction(eCSSKeyword_rotate3d,
                                                        resultTail);
         arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
         arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
         arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
-        arr->Item(4).SetFloatValue(theta, eCSSUnit_Radian);
+        SetCSSAngle(angle, arr->Item(4));
         break;
       }
       case TransformFunction::TScale:
@@ -344,26 +350,28 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
       }
       case TransformFunction::TSkewX:
       {
-        float x = aFunctions[i].get_SkewX().x();
+        const CSSAngle& x = aFunctions[i].get_SkewX().x();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_skewx,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(x, eCSSUnit_Radian);
+        SetCSSAngle(x, arr->Item(1));
         break;
       }
       case TransformFunction::TSkewY:
       {
-        float y = aFunctions[i].get_SkewY().y();
+        const CSSAngle& y = aFunctions[i].get_SkewY().y();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_skewy,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(y, eCSSUnit_Radian);
+        SetCSSAngle(y, arr->Item(1));
         break;
       }
       case TransformFunction::TSkew:
       {
+        const CSSAngle& x = aFunctions[i].get_Skew().x();
+        const CSSAngle& y = aFunctions[i].get_Skew().y();
         arr = StyleAnimationValue::AppendTransformFunction(eCSSKeyword_skew,
                                                            resultTail);
-        arr->Item(1).SetFloatValue(aFunctions[i].get_Skew().x(), eCSSUnit_Radian);
-        arr->Item(2).SetFloatValue(aFunctions[i].get_Skew().y(), eCSSUnit_Radian);
+        SetCSSAngle(x, arr->Item(1));
+        SetCSSAngle(y, arr->Item(2));
         break;
       }
       case TransformFunction::TTransformMatrix:

@@ -173,12 +173,6 @@ GonkDisplayICS::GetHWCDevice()
     return mHwc;
 }
 
-void*
-GonkDisplayICS::GetFBSurface()
-{
-    return mFBSurface.get();
-}
-
 bool
 GonkDisplayICS::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 {
@@ -211,13 +205,13 @@ GonkDisplayICS::QueueBuffer(ANativeWindowBuffer *buf)
 }
 
 void
-GonkDisplayICS::UpdateFBSurface(EGLDisplay dpy, EGLSurface sur)
+GonkDisplayICS::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
     eglSwapBuffers(dpy, sur);
 }
 
 void
-GonkDisplayICS::SetFBReleaseFd(int fd)
+GonkDisplayICS::SetDispReleaseFd(int fd)
 {
 }
 

@@ -230,7 +230,7 @@ class JSAPITest
             "global", JSCLASS_GLOBAL_FLAGS,
             nullptr, nullptr, nullptr, nullptr,
             nullptr, nullptr, nullptr, nullptr,
-            nullptr, nullptr, nullptr,
+            nullptr, nullptr, nullptr, nullptr,
             JS_GlobalObjectTraceHook
         };
         return &c;

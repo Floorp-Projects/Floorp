@@ -35,7 +35,7 @@
 #include "VsyncSource.h"
 
 #if ANDROID_VERSION >= 17
-#include "libdisplay/FramebufferSurface.h"
+#include "libdisplay/DisplaySurface.h"
 #include "gfxPrefs.h"
 #include "nsThreadUtils.h"
 #endif
@@ -674,10 +674,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 bool
 HwcComposer2D::TryHwComposition()
 {
-    FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());
+    DisplaySurface* dispSurface = (DisplaySurface*)(GetGonkDisplay()->GetDispSurface());
 
-    if (!(fbsurface && fbsurface->lastHandle)) {
-        LOGD("H/W Composition failed. FBSurface not initialized.");
+    if (!(dispSurface && dispSurface->lastHandle)) {
+        LOGD("H/W Composition failed. DispSurface not initialized.");
         return false;
     }
 
@@ -690,7 +690,7 @@ HwcComposer2D::TryHwComposition()
         }
     }
 
-    Prepare(fbsurface->lastHandle, -1);
+    Prepare(dispSurface->lastHandle, -1);
 
     /* Possible composition paths, after hwc prepare:
     1. GPU Composition
@@ -744,22 +744,22 @@ HwcComposer2D::TryHwComposition()
             // GPU or partial OVERLAY Composition
             return false;
         } else if (blitComposite) {
-            // BLIT Composition, flip FB target
-            GetGonkDisplay()->UpdateFBSurface(mDpy, mSur);
-            FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());
-            if (!fbsurface) {
-                LOGE("H/W Composition failed. NULL FBSurface.");
+            // BLIT Composition, flip DispSurface target
+            GetGonkDisplay()->UpdateDispSurface(mDpy, mSur);
+            DisplaySurface* dispSurface = (DisplaySurface*)(GetGonkDisplay()->GetDispSurface());
+            if (!dispSurface) {
+                LOGE("H/W Composition failed. NULL DispSurface.");
                 return false;
             }
-            mList->hwLayers[idx].handle = fbsurface->lastHandle;
-            mList->hwLayers[idx].acquireFenceFd = fbsurface->GetPrevFBAcquireFd();
+            mList->hwLayers[idx].handle = dispSurface->lastHandle;
+            mList->hwLayers[idx].acquireFenceFd = dispSurface->GetPrevDispAcquireFd();
         }
     }
 
     // BLIT or full OVERLAY Composition
     Commit();
 
-    GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[idx].releaseFenceFd);
+    GetGonkDisplay()->SetDispReleaseFd(mList->hwLayers[idx].releaseFenceFd);
     mList->hwLayers[idx].releaseFenceFd = -1;
     return true;
 }
@@ -772,16 +772,16 @@ HwcComposer2D::Render()
         return GetGonkDisplay()->SwapBuffers(mDpy, mSur);
     }
 
-    FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());
-    if (!fbsurface) {
-        LOGE("H/W Composition failed. FBSurface not initialized.");
+    DisplaySurface* dispSurface = (DisplaySurface*)(GetGonkDisplay()->GetDispSurface());
+    if (!dispSurface) {
+        LOGE("H/W Composition failed. DispSurface not initialized.");
         return false;
     }
 
     if (mPrepared) {
         // No mHwc prepare, if already prepared in current draw cycle
-        mList->hwLayers[mList->numHwLayers - 1].handle = fbsurface->lastHandle;
-        mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = fbsurface->GetPrevFBAcquireFd();
+        mList->hwLayers[mList->numHwLayers - 1].handle = dispSurface->lastHandle;
+        mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = dispSurface->GetPrevDispAcquireFd();
     } else {
         mList->flags = HWC_GEOMETRY_CHANGED;
         mList->numHwLayers = 2;
@@ -792,19 +792,19 @@ HwcComposer2D::Render()
         mList->hwLayers[0].acquireFenceFd = -1;
         mList->hwLayers[0].releaseFenceFd = -1;
         mList->hwLayers[0].displayFrame = {0, 0, mScreenRect.width, mScreenRect.height};
-        Prepare(fbsurface->lastHandle, fbsurface->GetPrevFBAcquireFd());
+        Prepare(dispSurface->lastHandle, dispSurface->GetPrevDispAcquireFd());
     }
 
     // GPU or partial HWC Composition
     Commit();
 
-    GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
+    GetGonkDisplay()->SetDispReleaseFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
     mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd = -1;
     return true;
 }
 
 void
-HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
+HwcComposer2D::Prepare(buffer_handle_t dispHandle, int fence)
 {
     int idx = mList->numHwLayers - 1;
     const hwc_rect_t r = {0, 0, mScreenRect.width, mScreenRect.height};
@@ -818,7 +818,7 @@ HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
     mList->hwLayers[idx].hints = 0;
     mList->hwLayers[idx].flags = 0;
     mList->hwLayers[idx].transform = 0;
-    mList->hwLayers[idx].handle = fbHandle;
+    mList->hwLayers[idx].handle = dispHandle;
     mList->hwLayers[idx].blending = HWC_BLENDING_PREMULT;
     mList->hwLayers[idx].compositionType = HWC_FRAMEBUFFER_TARGET;
     setCrop(&mList->hwLayers[idx], r);

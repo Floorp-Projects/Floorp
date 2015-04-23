@@ -545,7 +545,19 @@ static inline bool
 IsSimdType(MIRType type)
 {
     return type == MIRType_Int32x4 || type == MIRType_Float32x4;
-};
+}
+
+static inline bool
+IsFloatingPointSimdType(MIRType type)
+{
+    return type == MIRType_Float32x4;
+}
+
+static inline bool
+IsIntegerSimdType(MIRType type)
+{
+    return type == MIRType_Int32x4;
+}
 
 static inline bool
 IsMagicType(MIRType type)

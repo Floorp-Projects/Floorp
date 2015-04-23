@@ -12,7 +12,7 @@
 // https://github.com/slightlyoff/ServiceWorker/issues/189
 [Func="mozilla::dom::workers::ServiceWorkerVisible",
  // FIXME(nsm): Bug 1113522. This is exposed to satisfy webidl constraints, but it won't actually work.
- Exposed=(ServiceWorker,Window)]
+ Exposed=(Worker,Window)]
 interface ServiceWorker : EventTarget {
   readonly attribute USVString scriptURL;
   readonly attribute ServiceWorkerState state;

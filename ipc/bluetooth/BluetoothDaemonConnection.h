@@ -68,8 +68,8 @@ public:
   void GetHeader(uint8_t& aService, uint8_t& aOpcode,
                  uint16_t& aPayloadSize);
 
-  ssize_t Send(int aFd);
-  ssize_t Receive(int aFd);
+  ssize_t Send(int aFd) override;
+  ssize_t Receive(int aFd) override;
 
   int AcquireFd();
 
