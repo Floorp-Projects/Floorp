@@ -611,7 +611,10 @@ BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
-  mObserver->ReceiveSocketData(this, aMessage);
+
+  nsAutoPtr<UnixSocketBuffer> buffer(aMessage.forget());
+
+  mObserver->ReceiveSocketData(this, buffer);
 }
 
 void
