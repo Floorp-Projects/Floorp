@@ -9,6 +9,7 @@ const eventEmitter = new EventEmitter();
 const events = require("sdk/event/core");
 
 const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 require("devtools/server/actors/inspector");
 const { RulersHighlighter } = require("devtools/server/actors/highlighter");
 
@@ -17,11 +18,11 @@ const highlighters = new WeakMap();
 exports.items = [
   {
     name: "rulers",
-    description: gcli.lookup("rulersDesc"),
-    manual: gcli.lookup("rulersManual"),
+    description: l10n.lookup("rulersDesc"),
+    manual: l10n.lookup("rulersManual"),
     buttonId: "command-button-rulers",
     buttonClass: "command-button command-button-invertable",
-    tooltipText: gcli.lookup("rulersTooltip"),
+    tooltipText: l10n.lookup("rulersTooltip"),
     state: {
       isChecked: function(aTarget) {
         if (aTarget.isLocalTab) {

@@ -11,7 +11,7 @@ function test() {
   return Task.spawn(spawnTest).then(finish, helpers.handleError);
 }
 
-function spawnTest() {
+function* spawnTest() {
   let lines = [
     'Manifest has a character encoding of ISO-8859-1. Manifests must have the ' +
       'utf-8 character encoding.',

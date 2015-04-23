@@ -161,8 +161,11 @@ function Command(types, commandSpec) {
 
 /**
  * JSON serializer that avoids non-serializable data
+ * @param customProps Array of strings containing additional properties which,
+ * if specified in the command spec, will be included in the JSON. Normally we
+ * transfer only the properties required for GCLI to function.
  */
-Command.prototype.toJson = function() {
+Command.prototype.toJson = function(customProps) {
   var json = {
     item: 'command',
     name: this.name,
@@ -170,6 +173,7 @@ Command.prototype.toJson = function() {
     returnType: this.returnType,
     isParent: (this.exec == null)
   };
+
   if (this.description !==  l10n.lookup('canonDescNone')) {
     json.description = this.description;
   }
@@ -179,7 +183,29 @@ Command.prototype.toJson = function() {
   if (this.hidden != null) {
     json.hidden = this.hidden;
   }
+
+  if (Array.isArray(customProps)) {
+    customProps.forEach(function(prop) {
+      if (this[prop] != null) {
+        json[prop] = this[prop];
+      }
+    }.bind(this));
+  }
+
   return json;
+};
+
+/**
+ * Easy way to lookup parameters by full name
+ */
+Command.prototype.getParameterByName = function(name) {
+  var reply;
+  this.params.forEach(function(param) {
+    if (param.name === name) {
+      reply = param;
+    }
+  });
+  return reply;
 };
 
 /**
@@ -251,9 +277,17 @@ function Parameter(types, paramSpec, command, groupName) {
                     ': Missing defaultValue for optional parameter.');
   }
 
-  this.defaultValue = (this.paramSpec.defaultValue !== undefined) ?
-                      this.paramSpec.defaultValue :
-                      this.type.getBlank().value;
+  if (this.paramSpec.defaultValue !== undefined) {
+    this.defaultValue = this.paramSpec.defaultValue;
+  }
+  else {
+    Object.defineProperty(this, 'defaultValue', {
+      get: function() {
+        return this.type.getBlank().value;
+      },
+      enumerable: true
+    });
+  }
 
   // Resolve the documentation
   this.manual = lookup(this.paramSpec.manual);
@@ -261,6 +295,9 @@ function Parameter(types, paramSpec, command, groupName) {
 
   // Is the user required to enter data for this parameter? (i.e. has
   // defaultValue been set to something other than undefined)
+  // TODO: When the defaultValue comes from type.getBlank().value (see above)
+  // then perhaps we should set using something like
+  //   isDataRequired = (type.getBlank().status !== VALID)
   this.isDataRequired = (this.defaultValue === undefined);
 
   // Are we allowed to assign data to this parameter using positional
@@ -327,9 +364,14 @@ exports.Parameter = Parameter;
 
 /**
  * A store for a list of commands
+ * @param types Each command uses a set of Types to parse its parameters so the
+ * Commands container needs access to the list of available types.
+ * @param location String that, if set will force all commands to have a
+ * matching runAt property to be accepted
  */
-function Commands(types) {
+function Commands(types, location) {
   this.types = types;
+  this.location = location;
 
   // A lookup hash of our registered commands
   this._commands = {};
@@ -344,12 +386,16 @@ function Commands(types) {
 
 /**
  * Add a command to the list of known commands.
- * This function is exposed to the outside world (via gcli/index). It is
- * documented in docs/index.md for all the world to see.
  * @param commandSpec The command and its metadata.
- * @return The new command
+ * @return The new command, or null if a location property has been set and the
+ * commandSpec doesn't have a matching runAt property.
  */
 Commands.prototype.add = function(commandSpec) {
+  if (this.location != null && commandSpec.runAt != null &&
+      commandSpec.runAt !== this.location) {
+    return;
+  }
+
   if (this._commands[commandSpec.name] != null) {
     // Roughly commands.remove() without the event call, which we do later
     delete this._commands[commandSpec.name];
@@ -416,14 +462,17 @@ Commands.prototype.getAll = function() {
 /**
  * Get access to the stored commandMetaDatas (i.e. before they were made into
  * instances of Command/Parameters) so we can remote them.
+ * @param customProps Array of strings containing additional properties which,
+ * if specified in the command spec, will be included in the JSON. Normally we
+ * transfer only the properties required for GCLI to function.
  */
-Commands.prototype.getCommandSpecs = function() {
+Commands.prototype.getCommandSpecs = function(customProps) {
   var commandSpecs = [];
 
   Object.keys(this._commands).forEach(function(name) {
     var command = this._commands[name];
     if (!command.noRemote) {
-      commandSpecs.push(command.toJson());
+      commandSpecs.push(command.toJson(customProps));
     }
   }.bind(this));
 

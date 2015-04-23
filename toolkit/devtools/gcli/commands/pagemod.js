@@ -5,58 +5,60 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 exports.items = [
   {
     name: "pagemod",
-    description: gcli.lookup("pagemodDesc"),
+    description: l10n.lookup("pagemodDesc"),
   },
   {
+    item: "command",
+    runAt: "server",
     name: "pagemod replace",
-    description: gcli.lookup("pagemodReplaceDesc"),
+    description: l10n.lookup("pagemodReplaceDesc"),
     params: [
       {
         name: "search",
         type: "string",
-        description: gcli.lookup("pagemodReplaceSearchDesc"),
+        description: l10n.lookup("pagemodReplaceSearchDesc"),
       },
       {
         name: "replace",
         type: "string",
-        description: gcli.lookup("pagemodReplaceReplaceDesc"),
+        description: l10n.lookup("pagemodReplaceReplaceDesc"),
       },
       {
         name: "ignoreCase",
         type: "boolean",
-        description: gcli.lookup("pagemodReplaceIgnoreCaseDesc"),
+        description: l10n.lookup("pagemodReplaceIgnoreCaseDesc"),
       },
       {
         name: "selector",
         type: "string",
-        description: gcli.lookup("pagemodReplaceSelectorDesc"),
+        description: l10n.lookup("pagemodReplaceSelectorDesc"),
         defaultValue: "*:not(script):not(style):not(embed):not(object):not(frame):not(iframe):not(frameset)",
       },
       {
         name: "root",
         type: "node",
-        description: gcli.lookup("pagemodReplaceRootDesc"),
+        description: l10n.lookup("pagemodReplaceRootDesc"),
         defaultValue: null,
       },
       {
         name: "attrOnly",
         type: "boolean",
-        description: gcli.lookup("pagemodReplaceAttrOnlyDesc"),
+        description: l10n.lookup("pagemodReplaceAttrOnlyDesc"),
       },
       {
         name: "contentOnly",
         type: "boolean",
-        description: gcli.lookup("pagemodReplaceContentOnlyDesc"),
+        description: l10n.lookup("pagemodReplaceContentOnlyDesc"),
       },
       {
         name: "attributes",
         type: "string",
-        description: gcli.lookup("pagemodReplaceAttributesDesc"),
+        description: l10n.lookup("pagemodReplaceAttributesDesc"),
         defaultValue: null,
       },
     ],
@@ -114,39 +116,41 @@ exports.items = [
         }
       }
 
-      return gcli.lookupFormat("pagemodReplaceResult",
+      return l10n.lookupFormat("pagemodReplaceResult",
                               [elements.length, replacedTextNodes,
                                 replacedAttributes]);
     }
   },
   {
     name: "pagemod remove",
-    description: gcli.lookup("pagemodRemoveDesc"),
+    description: l10n.lookup("pagemodRemoveDesc"),
   },
   {
+    item: "command",
+    runAt: "server",
     name: "pagemod remove element",
-    description: gcli.lookup("pagemodRemoveElementDesc"),
+    description: l10n.lookup("pagemodRemoveElementDesc"),
     params: [
       {
         name: "search",
         type: "string",
-        description: gcli.lookup("pagemodRemoveElementSearchDesc"),
+        description: l10n.lookup("pagemodRemoveElementSearchDesc"),
       },
       {
         name: "root",
         type: "node",
-        description: gcli.lookup("pagemodRemoveElementRootDesc"),
+        description: l10n.lookup("pagemodRemoveElementRootDesc"),
         defaultValue: null,
       },
       {
         name: "stripOnly",
         type: "boolean",
-        description: gcli.lookup("pagemodRemoveElementStripOnlyDesc"),
+        description: l10n.lookup("pagemodRemoveElementStripOnlyDesc"),
       },
       {
         name: "ifEmptyOnly",
         type: "boolean",
-        description: gcli.lookup("pagemodRemoveElementIfEmptyOnlyDesc"),
+        description: l10n.lookup("pagemodRemoveElementIfEmptyOnlyDesc"),
       },
     ],
     exec: function(args, context) {
@@ -171,34 +175,36 @@ exports.items = [
         }
       }
 
-      return gcli.lookupFormat("pagemodRemoveElementResultMatchedAndRemovedElements",
+      return l10n.lookupFormat("pagemodRemoveElementResultMatchedAndRemovedElements",
                               [elements.length, removed]);
     }
   },
   {
+    item: "command",
+    runAt: "server",
     name: "pagemod remove attribute",
-    description: gcli.lookup("pagemodRemoveAttributeDesc"),
+    description: l10n.lookup("pagemodRemoveAttributeDesc"),
     params: [
       {
         name: "searchAttributes",
         type: "string",
-        description: gcli.lookup("pagemodRemoveAttributeSearchAttributesDesc"),
+        description: l10n.lookup("pagemodRemoveAttributeSearchAttributesDesc"),
       },
       {
         name: "searchElements",
         type: "string",
-        description: gcli.lookup("pagemodRemoveAttributeSearchElementsDesc"),
+        description: l10n.lookup("pagemodRemoveAttributeSearchElementsDesc"),
       },
       {
         name: "root",
         type: "node",
-        description: gcli.lookup("pagemodRemoveAttributeRootDesc"),
+        description: l10n.lookup("pagemodRemoveAttributeRootDesc"),
         defaultValue: null,
       },
       {
         name: "ignoreCase",
         type: "boolean",
-        description: gcli.lookup("pagemodRemoveAttributeIgnoreCaseDesc"),
+        description: l10n.lookup("pagemodRemoveAttributeIgnoreCaseDesc"),
       },
     ],
     exec: function(args, context) {
@@ -225,18 +231,20 @@ exports.items = [
         }
       }
 
-      return gcli.lookupFormat("pagemodRemoveAttributeResult",
+      return l10n.lookupFormat("pagemodRemoveAttributeResult",
                               [elements.length, removed]);
     }
   },
   // This command allows the user to export the page to HTML after DOM changes
   {
     name: "export",
-    description: gcli.lookup("exportDesc"),
+    description: l10n.lookup("exportDesc"),
   },
   {
+    item: "command",
+    runAt: "server",
     name: "export html",
-    description: gcli.lookup("exportHtmlDesc"),
+    description: l10n.lookup("exportHtmlDesc"),
     params: [
       {
         name: "destination",

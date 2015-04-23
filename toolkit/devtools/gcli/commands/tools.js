@@ -9,6 +9,7 @@ const Services = require("Services");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const { devtools } = require("resource://gre/modules/devtools/Loader.jsm");
 const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)
@@ -18,14 +19,16 @@ const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
 exports.items = [
   {
     name: "tools",
-    description: gcli.lookupFormat("toolsDesc2", [ BRAND_SHORT_NAME ]),
-    manual: gcli.lookupFormat("toolsManual2", [ BRAND_SHORT_NAME ]),
+    description: l10n.lookupFormat("toolsDesc2", [ BRAND_SHORT_NAME ]),
+    manual: l10n.lookupFormat("toolsManual2", [ BRAND_SHORT_NAME ]),
     get hidden() gcli.hiddenByChromePref(),
   },
   {
+    item: "command",
+    runAt: "client",
     name: "tools srcdir",
-    description: gcli.lookup("toolsSrcdirDesc"),
-    manual: gcli.lookupFormat("toolsSrcdirManual2", [ BRAND_SHORT_NAME ]),
+    description: l10n.lookup("toolsSrcdirDesc"),
+    manual: l10n.lookupFormat("toolsSrcdirManual2", [ BRAND_SHORT_NAME ]),
     get hidden() gcli.hiddenByChromePref(),
     params: [
       {
@@ -35,7 +38,7 @@ exports.items = [
           filetype: "directory",
           existing: "yes"
         } */,
-        description: gcli.lookup("toolsSrcdirDir")
+        description: l10n.lookup("toolsSrcdirDir")
       }
     ],
     returnType: "string",
@@ -50,29 +53,33 @@ exports.items = [
                                          Ci.nsISupportsString, str);
           devtools.reload();
 
-          let msg = gcli.lookupFormat("toolsSrcdirReloaded", [ args.srcdir ]);
+          let msg = l10n.lookupFormat("toolsSrcdirReloaded", [ args.srcdir ]);
           throw new Error(msg);
         }
 
-        return gcli.lookupFormat("toolsSrcdirNotFound", [ args.srcdir ]);
+        return l10n.lookupFormat("toolsSrcdirNotFound", [ args.srcdir ]);
       });
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "tools builtin",
-    description: gcli.lookup("toolsBuiltinDesc"),
-    manual: gcli.lookup("toolsBuiltinManual"),
+    description: l10n.lookup("toolsBuiltinDesc"),
+    manual: l10n.lookup("toolsBuiltinManual"),
     get hidden() gcli.hiddenByChromePref(),
     returnType: "string",
     exec: function(args, context) {
       Services.prefs.clearUserPref("devtools.loader.srcdir");
       devtools.reload();
-      return gcli.lookup("toolsBuiltinReloaded");
+      return l10n.lookup("toolsBuiltinReloaded");
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "tools reload",
-    description: gcli.lookup("toolsReloadDesc"),
+    description: l10n.lookup("toolsReloadDesc"),
     get hidden() {
       return gcli.hiddenByChromePref() ||
              !Services.prefs.prefHasUserValue("devtools.loader.srcdir");
@@ -81,7 +88,7 @@ exports.items = [
     returnType: "string",
     exec: function(args, context) {
       devtools.reload();
-      return gcli.lookup("toolsReloaded2");
+      return l10n.lookup("toolsReloaded2");
     }
   }
 ];

@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 
@@ -67,8 +67,8 @@ function getAllSources(dbg) {
  */
 exports.items.push({
   name: "break",
-  description: gcli.lookup("breakDesc"),
-  manual: gcli.lookup("breakManual")
+  description: l10n.lookup("breakDesc"),
+  manual: l10n.lookup("breakManual")
 });
 
 /**
@@ -76,7 +76,9 @@ exports.items.push({
  */
 exports.items.push({
   name: "break list",
-  description: gcli.lookup("breaklistDesc"),
+  item: "command",
+  runAt: "client",
+  description: l10n.lookup("breaklistDesc"),
   returnType: "breakpoints",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger", { ensureOpened: true });
@@ -102,7 +104,7 @@ exports.items.push({
     } else {
       return context.createView({
         html: "<p>${message}</p>",
-        data: { message: gcli.lookup("breaklistNone") }
+        data: { message: l10n.lookup("breaklistNone") }
       });
     }
   }
@@ -126,7 +128,7 @@ var breakListHtml = "" +
       "            data-command='break del ${breakpoint.label}'" +
       "            onclick='${onclick}'" +
       "            ondblclick='${ondblclick}'>" +
-      "        " + gcli.lookup("breaklistOutRemove") + "</span>" +
+      "        " + l10n.lookup("breaklistOutRemove") + "</span>" +
       "    </td>" +
       "  </tr>" +
       " </tbody>" +
@@ -141,16 +143,18 @@ var MAX_LABEL_LENGTH = 20;
  */
 exports.items.push({
   name: "break add",
-  description: gcli.lookup("breakaddDesc"),
-  manual: gcli.lookup("breakaddManual")
+  description: l10n.lookup("breakaddDesc"),
+  manual: l10n.lookup("breakaddManual")
 });
 
 /**
  * 'break add line' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "break add line",
-  description: gcli.lookup("breakaddlineDesc"),
+  description: l10n.lookup("breakaddlineDesc"),
   params: [
     {
       name: "file",
@@ -160,19 +164,19 @@ exports.items.push({
           return getAllSources(getPanel(context, "jsdebugger"));
         }
       },
-      description: gcli.lookup("breakaddlineFileDesc")
+      description: l10n.lookup("breakaddlineFileDesc")
     },
     {
       name: "line",
       type: { name: "number", min: 1, step: 10 },
-      description: gcli.lookup("breakaddlineLineDesc")
+      description: l10n.lookup("breakaddlineLineDesc")
     }
   ],
   returnType: "string",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let deferred = context.defer();
@@ -182,9 +186,9 @@ exports.items.push({
     let position = { actor: item.value, line: args.line };
 
     dbg.addBreakpoint(position).then(() => {
-      deferred.resolve(gcli.lookup("breakaddAdded"));
+      deferred.resolve(l10n.lookup("breakaddAdded"));
     }, aError => {
-      deferred.resolve(gcli.lookupFormat("breakaddFailed", [aError]));
+      deferred.resolve(l10n.lookupFormat("breakaddFailed", [aError]));
     });
 
     return deferred.promise;
@@ -195,8 +199,10 @@ exports.items.push({
  * 'break del' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "break del",
-  description: gcli.lookup("breakdelDesc"),
+  description: l10n.lookup("breakdelDesc"),
   params: [
     {
       name: "breakpoint",
@@ -214,14 +220,14 @@ exports.items.push({
           }));
         }
       },
-      description: gcli.lookup("breakdelBreakidDesc")
+      description: l10n.lookup("breakdelBreakidDesc")
     }
   ],
   returnType: "string",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let source = dbg._view.Sources.getItemForAttachment(a => {
@@ -233,9 +239,9 @@ exports.items.push({
                      line: args.breakpoint.lineNumber };
 
     dbg.removeBreakpoint(position).then(() => {
-      deferred.resolve(gcli.lookup("breakdelRemoved"));
+      deferred.resolve(l10n.lookup("breakdelRemoved"));
     }, () => {
-      deferred.resolve(gcli.lookup("breakNotFound"));
+      deferred.resolve(l10n.lookup("breakNotFound"));
     });
 
     return deferred.promise;
@@ -247,16 +253,18 @@ exports.items.push({
  */
 exports.items.push({
   name: "dbg",
-  description: gcli.lookup("dbgDesc"),
-  manual: gcli.lookup("dbgManual")
+  description: l10n.lookup("dbgDesc"),
+  manual: l10n.lookup("dbgManual")
 });
 
 /**
  * 'dbg open' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg open",
-  description: gcli.lookup("dbgOpen"),
+  description: l10n.lookup("dbgOpen"),
   params: [],
   exec: function(args, context) {
     let target = context.environment.target;
@@ -268,8 +276,10 @@ exports.items.push({
  * 'dbg close' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg close",
-  description: gcli.lookup("dbgClose"),
+  description: l10n.lookup("dbgClose"),
   params: [],
   exec: function(args, context) {
     if (!getPanel(context, "jsdebugger")) {
@@ -284,13 +294,15 @@ exports.items.push({
  * 'dbg interrupt' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg interrupt",
-  description: gcli.lookup("dbgInterrupt"),
+  description: l10n.lookup("dbgInterrupt"),
   params: [],
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let controller = dbg._controller;
@@ -305,13 +317,15 @@ exports.items.push({
  * 'dbg continue' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg continue",
-  description: gcli.lookup("dbgContinue"),
+  description: l10n.lookup("dbgContinue"),
   params: [],
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let controller = dbg._controller;
@@ -326,22 +340,26 @@ exports.items.push({
  * 'dbg step' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg step",
-  description: gcli.lookup("dbgStepDesc"),
-  manual: gcli.lookup("dbgStepManual")
+  description: l10n.lookup("dbgStepDesc"),
+  manual: l10n.lookup("dbgStepManual")
 });
 
 /**
  * 'dbg step over' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg step over",
-  description: gcli.lookup("dbgStepOverDesc"),
+  description: l10n.lookup("dbgStepOverDesc"),
   params: [],
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let controller = dbg._controller;
@@ -356,13 +374,15 @@ exports.items.push({
  * 'dbg step in' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: 'dbg step in',
-  description: gcli.lookup("dbgStepInDesc"),
+  description: l10n.lookup("dbgStepInDesc"),
   params: [],
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let controller = dbg._controller;
@@ -377,13 +397,15 @@ exports.items.push({
  * 'dbg step over' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: 'dbg step out',
-  description: gcli.lookup("dbgStepOutDesc"),
+  description: l10n.lookup("dbgStepOutDesc"),
   params: [],
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerStopped");
+      return l10n.lookup("debuggerStopped");
     }
 
     let controller = dbg._controller;
@@ -398,14 +420,16 @@ exports.items.push({
  * 'dbg list' command
  */
 exports.items.push({
+  item: "command",
+  runAt: "client",
   name: "dbg list",
-  description: gcli.lookup("dbgListSourcesDesc"),
+  description: l10n.lookup("dbgListSourcesDesc"),
   params: [],
   returnType: "dom",
   exec: function(args, context) {
     let dbg = getPanel(context, "jsdebugger");
     if (!dbg) {
-      return gcli.lookup("debuggerClosed");
+      return l10n.lookup("debuggerClosed");
     }
 
     let sources = getAllSources(dbg);
@@ -440,10 +464,12 @@ exports.items.push({
   }
 ].forEach(function(cmd) {
   const lookup = function(id) {
-    return gcli.lookup(cmd.l10nPrefix + id);
+    return l10n.lookup(cmd.l10nPrefix + id);
   };
 
   exports.items.push({
+    item: "command",
+    runAt: "client",
     name: "dbg " + cmd.name,
     description: lookup("Desc"),
     params: [
@@ -475,7 +501,7 @@ exports.items.push({
       const dbg = getPanel(context, "jsdebugger");
       const doc = context.environment.chromeDocument;
       if (!dbg) {
-        throw new Error(gcli.lookup("debuggerClosed"));
+        throw new Error(l10n.lookup("debuggerClosed"));
       }
 
       const { promise, resolve, reject } = context.defer();

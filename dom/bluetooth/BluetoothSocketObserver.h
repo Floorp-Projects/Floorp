@@ -19,7 +19,7 @@ class BluetoothSocketObserver
 public:
   virtual void ReceiveSocketData(
     BluetoothSocket* aSocket,
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) = 0;
+    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) = 0;
 
    /**
     * A callback function which would be called when a socket connection

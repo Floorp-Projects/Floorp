@@ -227,35 +227,22 @@ exports.items = [
       return Promise.resolve(new Conversion(value, arg));
     },
 
-    decrement: function(value, context) {
+    nudge: function(value, by, context) {
       if (!isDate(value)) {
         return new Date();
       }
 
       var newValue = new Date(value);
-      newValue.setDate(value.getDate() - this.step);
+      newValue.setDate(value.getDate() + (by * this.step));
 
-      if (newValue >= this.getMin(context)) {
-        return newValue;
-      }
-      else {
+      if (newValue < this.getMin(context)) {
         return this.getMin(context);
       }
-    },
-
-    increment: function(value, context) {
-      if (!isDate(value)) {
-        return new Date();
-      }
-
-      var newValue = new Date(value);
-      newValue.setDate(value.getDate() + this.step);
-
-      if (newValue <= this.getMax(context)) {
-        return newValue;
+      else if (newValue > this.getMax(context)) {
+        return this.getMax();
       }
       else {
-        return this.getMax();
+        return newValue;
       }
     }
   }

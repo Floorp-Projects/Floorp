@@ -15,44 +15,17 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var exports = {};
-
-var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testCli2.js</p>";
+const exports = {};
 
 function test() {
-  return Task.spawn(function() {
-    let options = yield helpers.openTab(TEST_URI);
-    yield helpers.openToolbar(options);
-    gcli.addItems(mockCommands.items);
-
-    yield helpers.runTests(options, exports);
-
-    gcli.removeItems(mockCommands.items);
-    yield helpers.closeToolbar(options);
-    yield helpers.closeTab(options);
-  }).then(finish, helpers.handleError);
+  helpers.runTestModule(exports, "browser_gcli_cli2.js");
 }
 
-// <INJECTED SOURCE:END>
-
 // var helpers = require('./helpers');
-
-var nodetype = require('gcli/types/node');
-
-exports.setup = function(options) {
-  if (options.window) {
-    nodetype.setDocument(options.window.document);
-  }
-};
-
-exports.shutdown = function(options) {
-  nodetype.unsetDocument();
-};
 
 exports.testSingleString = function(options) {
   return helpers.audit(options, [
@@ -376,7 +349,6 @@ exports.testSingleFloat = function(options) {
       }
     },
     {
-      skipRemainingIf: options.isNoDom,
       name: 'tsf x (cursor=4)',
       setup: function() {
         return helpers.setInput(options, 'tsf x', 4);
@@ -406,21 +378,14 @@ exports.testSingleFloat = function(options) {
 };
 
 exports.testElementWeb = function(options) {
-  var inputElement = options.isNoDom ?
-      null :
-      options.window.document.getElementById('gcli-input');
-
   return helpers.audit(options, [
     {
-      skipIf: function gcliInputElementExists() {
-        return inputElement == null;
-      },
-      setup:    'tse #gcli-input',
+      setup:    'tse #gcli-root',
       check: {
-        input:  'tse #gcli-input',
+        input:  'tse #gcli-root',
         hints:                 ' [options]',
-        markup: 'VVVVVVVVVVVVVVV',
-        cursor: 15,
+        markup: 'VVVVVVVVVVVVVV',
+        cursor: 14,
         current: 'node',
         status: 'VALID',
         predictions: [ ],
@@ -428,8 +393,7 @@ exports.testElementWeb = function(options) {
         args: {
           command: { name: 'tse' },
           node: {
-            value: inputElement,
-            arg: ' #gcli-input',
+            arg: ' #gcli-root',
             status: 'VALID',
             message: ''
           },
@@ -444,7 +408,6 @@ exports.testElementWeb = function(options) {
 exports.testElement = function(options) {
   return helpers.audit(options, [
     {
-      skipRemainingIf: options.isNoDom,
       setup:    'tse',
       check: {
         input:  'tse',
@@ -457,7 +420,7 @@ exports.testElement = function(options) {
         unassigned: [ ],
         args: {
           command: { name: 'tse' },
-          node: { value: undefined, arg: '', status: 'INCOMPLETE' },
+          node: { arg: '', status: 'INCOMPLETE' },
           nodes: { arg: '', status: 'VALID', message: '' },
           nodes2: { arg: '', status: 'VALID', message: '' },
         }
@@ -605,7 +568,7 @@ exports.testNestedCommand = function(options) {
       }
     },
     {
-      skipIf: options.isPhantomjs,
+      skipIf: options.isPhantomjs, // PhantomJS gets predictions wrong
       setup:    'tsn x',
       check: {
         input:  'tsn x',

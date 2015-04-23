@@ -24,7 +24,7 @@ public:
     STREAM_SOCKET
   };
 
-  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData) = 0;
+  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aData) = 0;
 
   virtual void OnConnectSuccess(enum SocketType aSocketType) = 0;
   virtual void OnConnectError(enum SocketType aSocketType) = 0;
@@ -72,8 +72,7 @@ public:
   ConnectionOrientedSocketIO* GetIO() override;
 
 private:
-  void ReceiveSocketData(
-    nsAutoPtr<UnixSocketRawData>& aData) override;
+  void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) override;
 
   void OnConnectSuccess() override;
   void OnConnectError() override;

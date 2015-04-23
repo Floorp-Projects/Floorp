@@ -4027,14 +4027,6 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to JSON serialize session data (ms)"
   },
-  "FX_SESSION_RESTORE_SERIALIZE_DATA_LONGEST_OP_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "30000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Duration of the longest uninterruptible operation while serializing session data (ms)"
-  },
   "FX_SESSION_RESTORE_READ_FILE_MS": {
     "expires_in_version": "default",
     "kind": "exponential",
@@ -4042,14 +4034,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Session restore: Time to read the session data from the file on disk (ms)"
-  },
-  "FX_SESSION_RESTORE_SEND_SERIALIZED_STATE_LONGEST_OP_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Time spent on the main thread sending the session data off the main thread for writing (ms)"
   },
   "FX_SESSION_RESTORE_WRITE_STATE_LONGEST_OP_MS": {
     "expires_in_version": "40",

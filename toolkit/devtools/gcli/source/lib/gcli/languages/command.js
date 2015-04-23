@@ -123,7 +123,6 @@ var commandLanguage = exports.commandLanguage = {
     this.commandDom = undefined;
   },
 
-  // From the requisition.textChanged event
   textChanged: function() {
     if (this.terminal == null) {
       return; // This can happen post-destroy()
@@ -184,7 +183,7 @@ var commandLanguage = exports.commandLanguage = {
       var isNew = (this.assignment !== newAssignment);
 
       this.assignment = newAssignment;
-      this.terminal.updateCompletion();
+      this.terminal.updateCompletion().catch(util.errorHandler);
 
       if (isNew) {
         this.updateHints();
@@ -251,7 +250,7 @@ var commandLanguage = exports.commandLanguage = {
     // If the user is on a valid value, then we increment the value, but if
     // they've typed something that's not right we page through predictions
     if (this.assignment.getStatus() === Status.VALID) {
-      return this.requisition.increment(this.assignment).then(function() {
+      return this.requisition.nudge(this.assignment, 1).then(function() {
         this.textChanged();
         this.focusManager.onInputChange();
         return true;
@@ -266,7 +265,7 @@ var commandLanguage = exports.commandLanguage = {
    */
   handleDownArrow: function() {
     if (this.assignment.getStatus() === Status.VALID) {
-      return this.requisition.decrement(this.assignment).then(function() {
+      return this.requisition.nudge(this.assignment, -1).then(function() {
         this.textChanged();
         this.focusManager.onInputChange();
         return true;
@@ -286,7 +285,10 @@ var commandLanguage = exports.commandLanguage = {
     }
 
     this.terminal.history.add(input);
-    this.terminal.unsetChoice();
+    this.terminal.unsetChoice().catch(util.errorHandler);
+
+    this.terminal._previousValue = this.terminal.inputElement.value;
+    this.terminal.inputElement.value = '';
 
     return this.requisition.exec().then(function() {
       this.textChanged();
@@ -496,7 +498,7 @@ var commandLanguage = exports.commandLanguage = {
         this.terminal.scrollToBottom();
         data.throbEle.style.display = ev.output.completed ? 'none' : 'block';
       }.bind(this));
-    }.bind(this)).then(null, console.error);
+    }.bind(this)).catch(console.error);
 
     this.terminal.addElement(data.rowinEle);
     this.terminal.addElement(data.rowoutEle);

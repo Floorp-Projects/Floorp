@@ -67,7 +67,7 @@ public:
    */
   void Connect();
 
-  void Send(UnixSocketRawData* aData);
+  void Send(UnixSocketIOBuffer* aBuffer);
 
   // I/O callback methods
   //
@@ -301,9 +301,9 @@ BluetoothSocket::BluetoothSocketIO::Connect()
 }
 
 void
-BluetoothSocket::BluetoothSocketIO::Send(UnixSocketRawData* aData)
+BluetoothSocket::BluetoothSocketIO::Send(UnixSocketIOBuffer* aBuffer)
 {
-  EnqueueData(aData);
+  EnqueueData(aBuffer);
   AddWatchers(WRITE_WATCHER, false);
 }
 
@@ -607,11 +607,12 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 }
 
 void
-BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
+BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
-  mObserver->ReceiveSocketData(this, aMessage);
+
+  mObserver->ReceiveSocketData(this, aBuffer);
 }
 
 void
@@ -638,20 +639,16 @@ BluetoothSocket::OnDisconnect()
   mObserver->OnSocketDisconnect(this);
 }
 
-bool
-BluetoothSocket::SendSocketData(UnixSocketRawData* aData)
+void
+BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mIO) {
-    return false;
-  }
-
+  MOZ_ASSERT(mIO);
   MOZ_ASSERT(!mIO->IsShutdownOnMainThread());
+
   XRE_GetIOMessageLoop()->PostTask(
     FROM_HERE,
-    new SocketIOSendTask<BluetoothSocketIO, UnixSocketRawData>(mIO, aData));
-
-  return true;
+    new SocketIOSendTask<BluetoothSocketIO, UnixSocketIOBuffer>(mIO, aBuffer));
 }
 
 bool
@@ -661,14 +658,7 @@ BluetoothSocket::SendSocketData(const nsACString& aStr)
     return false;
   }
 
-  nsAutoPtr<UnixSocketRawData> data(
-    new UnixSocketRawData(aStr.BeginReading(), aStr.Length()));
-
-  if (!SendSocketData(data)) {
-    return false;
-  }
-
-  unused << data.forget();
+  SendSocketData(new UnixSocketRawData(aStr.BeginReading(), aStr.Length()));
 
   return true;
 }

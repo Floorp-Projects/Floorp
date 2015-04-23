@@ -132,26 +132,28 @@ exports.items = [
       return Promise.resolve(new Conversion(value, arg));
     },
 
-    decrement: function(value, context) {
+    nudge: function(value, by, context) {
       if (typeof value !== 'number' || isNaN(value)) {
-        return this.getMax(context) || 1;
+        if (by < 0) {
+          return this.getMax(context) || 1;
+        }
+        else {
+          var min = this.getMin(context);
+          return min != null ? min : 0;
+        }
       }
-      var newValue = value - this.step;
-      // Snap to the nearest incremental of the step
-      newValue = Math.ceil(newValue / this.step) * this.step;
-      return this._boundsCheck(newValue, context);
-    },
 
-    increment: function(value, context) {
-      if (typeof value !== 'number' || isNaN(value)) {
-        var min = this.getMin(context);
-        return min != null ? min : 0;
-      }
-      var newValue = value + this.step;
+      var newValue = value + (by * this.step);
+
       // Snap to the nearest incremental of the step
-      newValue = Math.floor(newValue / this.step) * this.step;
-      if (this.getMax(context) == null) {
-        return newValue;
+      if (by < 0) {
+        newValue = Math.ceil(newValue / this.step) * this.step;
+      }
+      else {
+        newValue = Math.floor(newValue / this.step) * this.step;
+        if (this.getMax(context) == null) {
+          return newValue;
+        }
       }
       return this._boundsCheck(newValue, context);
     },

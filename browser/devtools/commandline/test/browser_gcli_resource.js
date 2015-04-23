@@ -15,31 +15,17 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
-var exports = {};
-
-var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testResource.js</p>";
+const exports = {};
 
 function test() {
-  return Task.spawn(function() {
-    let options = yield helpers.openTab(TEST_URI);
-    yield helpers.openToolbar(options);
-    gcli.addItems(mockCommands.items);
-
-    yield helpers.runTests(options, exports);
-
-    gcli.removeItems(mockCommands.items);
-    yield helpers.closeToolbar(options);
-    yield helpers.closeTab(options);
-  }).then(finish, helpers.handleError);
+  helpers.runTestModule(exports, "browser_gcli_resource.js");
 }
 
-// <INJECTED SOURCE:END>
-
+// var helpers = require('./helpers');
 // var assert = require('../testharness/assert');
 
 var Promise = require('gcli/util/promise').Promise;
@@ -47,84 +33,85 @@ var util = require('gcli/util/util');
 var resource = require('gcli/types/resource');
 var Status = require('gcli/types/types').Status;
 
-
-var tempDocument;
-
-exports.setup = function(options) {
-  tempDocument = resource.getDocument();
-  if (options.window) {
-    resource.setDocument(options.window.document);
-  }
-};
-
-exports.shutdown = function(options) {
-  resource.setDocument(tempDocument);
-  tempDocument = undefined;
+exports.testCommand = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tsres ',
+      check: {
+        predictionsContains: [ 'inline-css' ],
+      }
+    }
+  ]);
 };
 
 exports.testAllPredictions1 = function(options) {
-  if (options.isFirefox || options.isNoDom) {
-    assert.log('Skipping checks due to firefox document.stylsheets support.');
+  if (options.isRemote) {
+    assert.log('Can\'t directly test remote types locally.');
     return;
   }
 
+  var context = options.requisition.conversionContext;
   var resource = options.requisition.system.types.createType('resource');
-  return resource.getLookup().then(function(opts) {
+  return resource.getLookup(context).then(function(opts) {
     assert.ok(opts.length > 1, 'have all resources');
 
     return util.promiseEach(opts, function(prediction) {
-      return checkPrediction(resource, prediction);
+      return checkPrediction(resource, prediction, context);
     });
   });
 };
 
 exports.testScriptPredictions = function(options) {
-  if (options.isFirefox || options.isNoDom) {
-    assert.log('Skipping checks due to firefox document.stylsheets support.');
+  if (options.isRemote || options.isNode) {
+    assert.log('Can\'t directly test remote types locally.');
     return;
   }
 
+  var context = options.requisition.conversionContext;
   var types = options.requisition.system.types;
   var resource = types.createType({ name: 'resource', include: 'text/javascript' });
-  return resource.getLookup().then(function(opts) {
+  return resource.getLookup(context).then(function(opts) {
     assert.ok(opts.length > 1, 'have js resources');
 
     return util.promiseEach(opts, function(prediction) {
-      return checkPrediction(resource, prediction);
+      return checkPrediction(resource, prediction, context);
     });
   });
 };
 
 exports.testStylePredictions = function(options) {
-  if (options.isFirefox || options.isNoDom) {
-    assert.log('Skipping checks due to firefox document.stylsheets support.');
+  if (options.isRemote) {
+    assert.log('Can\'t directly test remote types locally.');
     return;
   }
 
+  var context = options.requisition.conversionContext;
   var types = options.requisition.system.types;
   var resource = types.createType({ name: 'resource', include: 'text/css' });
-  return resource.getLookup().then(function(opts) {
+  return resource.getLookup(context).then(function(opts) {
     assert.ok(opts.length >= 1, 'have css resources');
 
     return util.promiseEach(opts, function(prediction) {
-      return checkPrediction(resource, prediction);
+      return checkPrediction(resource, prediction, context);
     });
   });
 };
 
 exports.testAllPredictions2 = function(options) {
-  if (options.isNoDom) {
-    assert.log('Skipping checks due to nodom document.stylsheets support.');
+  if (options.isRemote) {
+    assert.log('Can\'t directly test remote types locally.');
     return;
   }
+
+  var context = options.requisition.conversionContext;
   var types = options.requisition.system.types;
 
   var scriptRes = types.createType({ name: 'resource', include: 'text/javascript' });
-  return scriptRes.getLookup().then(function(scriptOptions) {
+  return scriptRes.getLookup(context).then(function(scriptOptions) {
     var styleRes = types.createType({ name: 'resource', include: 'text/css' });
-    return styleRes.getLookup().then(function(styleOptions) {
+    return styleRes.getLookup(context).then(function(styleOptions) {
       var allRes = types.createType({ name: 'resource' });
-      return allRes.getLookup().then(function(allOptions) {
+      return allRes.getLookup(context).then(function(allOptions) {
         assert.is(scriptOptions.length + styleOptions.length,
                   allOptions.length,
                   'split');
@@ -134,27 +121,26 @@ exports.testAllPredictions2 = function(options) {
 };
 
 exports.testAllPredictions3 = function(options) {
-  if (options.isNoDom) {
-    assert.log('Skipping checks due to nodom document.stylsheets support.');
+  if (options.isRemote) {
+    assert.log('Can\'t directly test remote types locally.');
     return;
   }
 
+  var context = options.requisition.conversionContext;
   var types = options.requisition.system.types;
   var res1 = types.createType({ name: 'resource' });
-  return res1.getLookup().then(function(options1) {
+  return res1.getLookup(context).then(function(options1) {
     var res2 = types.createType('resource');
-    return res2.getLookup().then(function(options2) {
+    return res2.getLookup(context).then(function(options2) {
       assert.is(options1.length, options2.length, 'type spec');
     });
   });
 };
 
-function checkPrediction(res, prediction) {
+function checkPrediction(res, prediction, context) {
   var name = prediction.name;
   var value = prediction.value;
 
-  // resources don't need context so cheat and pass in null
-  var context = null;
   return res.parseString(name, context).then(function(conversion) {
     assert.is(conversion.getStatus(), Status.VALID, 'status VALID for ' + name);
     assert.is(conversion.value, value, 'value for ' + name);

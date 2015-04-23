@@ -78,8 +78,7 @@ SelectionType.prototype.getSpec = function(commandName, paramName) {
   if (typeof this.lookup === 'function' || typeof this.data === 'function') {
     spec.commandName = commandName;
     spec.paramName = paramName;
-    spec.remoteLookup = (typeof this.lookup === 'function');
-    spec.remoteData = (typeof this.data === 'function');
+    spec.remoteLookup = true;
   }
   return spec;
 };
@@ -126,20 +125,8 @@ SelectionType.prototype.getLookup = function(context) {
   var reply;
 
   if (this.remoteLookup) {
-    reply = this.connection.call('selectioninfo', {
-      action: 'lookup',
-      commandName: this.commandName,
-      paramName: this.paramName
-    });
+    reply = this.front.getSelectionLookup(this.commandName, this.paramName);
     reply = resolve(reply, context);
-  }
-  else if (this.remoteData) {
-    reply = this.connection.call('selectioninfo', {
-      action: 'data',
-      commandName: this.commandName,
-      paramName: this.paramName
-    });
-    reply = resolve(reply, context).then(this._dataToLookup);
   }
   else if (typeof this.lookup === 'function') {
     reply = resolve(this.lookup.bind(this), context);
@@ -227,7 +214,7 @@ exports.findPredictions = function(arg, lookup) {
   }
 
   // Exact hidden matches. If 'hidden: true' then we only allow exact matches
-  // All the tests after here check that !option.value.hidden
+  // All the tests after here check that !isHidden(option)
   for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
     option = lookup[i];
     if (option.name === arg.text) {
@@ -238,7 +225,7 @@ exports.findPredictions = function(arg, lookup) {
   // Start with prefix matching
   for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
     option = lookup[i];
-    if (option._gcliLowerName.indexOf(match) === 0 && !option.value.hidden) {
+    if (option._gcliLowerName.indexOf(match) === 0 && !isHidden(option)) {
       if (predictions.indexOf(option) === -1) {
         predictions.push(option);
       }
@@ -249,7 +236,7 @@ exports.findPredictions = function(arg, lookup) {
   if (predictions.length < (maxPredictions / 2)) {
     for (i = 0; i < lookup.length && predictions.length < maxPredictions; i++) {
       option = lookup[i];
-      if (option._gcliLowerName.indexOf(match) !== -1 && !option.value.hidden) {
+      if (option._gcliLowerName.indexOf(match) !== -1 && !isHidden(option)) {
         if (predictions.indexOf(option) === -1) {
           predictions.push(option);
         }
@@ -261,7 +248,7 @@ exports.findPredictions = function(arg, lookup) {
   if (predictions.length === 0) {
     var names = [];
     lookup.forEach(function(opt) {
-      if (!opt.value.hidden) {
+      if (!isHidden(opt)) {
         names.push(opt.name);
       }
     });
@@ -306,11 +293,21 @@ exports.convertPredictions = function(arg, predictions) {
                         Promise.resolve(predictions));
 };
 
+/**
+ * Checking that an option is hidden involves messing in properties on the
+ * value right now (which isn't a good idea really) we really should be marking
+ * that on the option, so this encapsulates the problem
+ */
+function isHidden(option) {
+  return option.hidden === true ||
+         (option.value != null && option.value.hidden);
+}
+
 SelectionType.prototype.getBlank = function(context) {
   var predictFunc = function(context2) {
     return Promise.resolve(this.getLookup(context2)).then(function(lookup) {
       return lookup.filter(function(option) {
-        return !option.value.hidden;
+        return !isHidden(option);
       }).slice(0, Conversion.maxPredictions - 1);
     });
   }.bind(this);
@@ -320,41 +317,42 @@ SelectionType.prototype.getBlank = function(context) {
 };
 
 /**
- * For selections, up is down and black is white. It's like this, given a list
- * [ a, b, c, d ], it's natural to think that it starts at the top and that
- * going up the list, moves towards 'a'. However 'a' has the lowest index, so
- * for SelectionType, up is down and down is up.
- * Sorry.
+ * Increment and decrement are confusing for selections. +1 is -1 and -1 is +1.
+ * Given an array e.g. [ 'a', 'b', 'c' ] with the current selection on 'b',
+ * displayed to the user in the natural way, i.e.:
+ *
+ *   'a'
+ *   'b' <- highlighted as current value
+ *   'c'
+ *
+ * Pressing the UP arrow should take us to 'a', which decrements this index
+ * (compare pressing UP on a number which would increment the number)
+ *
+ * So for selections, we treat +1 as -1 and -1 as +1.
  */
-SelectionType.prototype.decrement = function(value, context) {
+SelectionType.prototype.nudge = function(value, by, context) {
   return this.getLookup(context).then(function(lookup) {
     var index = this._findValue(lookup, value);
     if (index === -1) {
-      index = 0;
+      if (by < 0) {
+        // We're supposed to be doing a decrement (which means +1), but the
+        // value isn't found, so we reset the index to the top of the list
+        // which is index 0
+        index = 0;
+      }
+      else {
+        // For an increment operation when there is nothing to start from, we
+        // want to start from the top, i.e. index 0, so the value before we
+        // 'increment' (see note above) must be 1.
+        index = 1;
+      }
     }
-    index++;
+
+    // This is where we invert the sense of up/down (see doc comment)
+    index -= by;
+
     if (index >= lookup.length) {
       index = 0;
-    }
-    return lookup[index].value;
-  }.bind(this));
-};
-
-/**
- * See note on SelectionType.decrement()
- */
-SelectionType.prototype.increment = function(value, context) {
-  return this.getLookup(context).then(function(lookup) {
-    var index = this._findValue(lookup, value);
-    if (index === -1) {
-      // For an increment operation when there is nothing to start from, we
-      // want to start from the top, i.e. index 0, so the value before we
-      // 'increment' (see note above) must be 1.
-      index = 1;
-    }
-    index--;
-    if (index < 0) {
-      index = lookup.length - 1;
     }
     return lookup[index].value;
   }.bind(this));

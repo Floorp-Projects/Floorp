@@ -946,9 +946,9 @@ function Type() {
 }
 
 /**
- * Get a JSONable data structure that entirely describes this type
- * @param commandName/paramName The names of the command and parameter which we
- * are remoting to help the server get back to the remoted action.
+ * Get a JSONable data structure that entirely describes this type.
+ * commandName and paramName are the names of the command and parameter which
+ * we are remoting to help the server get back to the remoted action.
  */
 Type.prototype.getSpec = function(commandName, paramName) {
   throw new Error('Not implemented');
@@ -995,18 +995,12 @@ Type.prototype.parseString = function(str, context) {
 Type.prototype.name = undefined;
 
 /**
- * If there is some concept of a higher value, return it,
+ * If there is some concept of a lower or higher value, return it,
  * otherwise return undefined.
+ * @param by number indicating how much to nudge by, usually +1 or -1 which is
+ * caused by the user pressing the UP/DOWN keys with the cursor in this type
  */
-Type.prototype.increment = function(value, context) {
-  return undefined;
-};
-
-/**
- * If there is some concept of a lower value, return it,
- * otherwise return undefined.
- */
-Type.prototype.decrement = function(value, context) {
+Type.prototype.nudge = function(value, by, context) {
   return undefined;
 };
 
