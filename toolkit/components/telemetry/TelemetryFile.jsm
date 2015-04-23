@@ -135,7 +135,7 @@ this.TelemetryFile = {
     // Pings in the saved ping directory need to have the ping id or slug (old format) as
     // the file name. We load the ping content, check that it is valid, and use it to save
     // the ping file with the correct file name.
-    return loadPingFile(aPingPath).then(ping => {
+    return this.loadPingFile(aPingPath).then(ping => {
         // Append the ping to the pending list.
         pendingPings.push(ping);
         // Since we read a ping successfully, update the related histogram.
@@ -276,7 +276,26 @@ this.TelemetryFile = {
   testLoadHistograms: function(file) {
     pingsLoaded = 0;
     return this.loadHistograms(file.path);
-  }
+  },
+
+  /**
+   * Loads a ping file.
+   * @param {String} aFilePath The path of the ping file.
+   * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
+   *                           ping contains invalid data.
+   */
+  loadPingFile: Task.async(function* (aFilePath) {
+    let array = yield OS.File.read(aFilePath);
+    let decoder = new TextDecoder();
+    let string = decoder.decode(array);
+
+    let ping = JSON.parse(string);
+    // The ping's payload used to be stringified JSON.  Deal with that.
+    if (typeof(ping.payload) == "string") {
+      ping.payload = JSON.parse(ping.payload);
+    }
+    return ping;
+  }),
 };
 
 ///// Utility functions
@@ -299,32 +318,13 @@ function getPingDirectory() {
   });
 }
 
-/**
- * Loads a ping file.
- * @param {String} aFilePath The path of the ping file.
- * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
- *                           ping contains invalid data.
- */
-let loadPingFile = Task.async(function* (aFilePath) {
-  let array = yield OS.File.read(aFilePath);
-  let decoder = new TextDecoder();
-  let string = decoder.decode(array);
-
-  let ping = JSON.parse(string);
-  // The ping's payload used to be stringified JSON.  Deal with that.
-  if (typeof(ping.payload) == "string") {
-    ping.payload = JSON.parse(ping.payload);
-  }
-  return ping;
-});
-
 function addToPendingPings(file) {
   function onLoad(success) {
     let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
     success_histogram.add(success);
   }
 
-  return loadPingFile(file).then(ping => {
+  return TelemetryFile.loadPingFile(file).then(ping => {
       pendingPings.push(ping);
       onLoad(true);
     },
