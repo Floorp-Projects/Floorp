@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 const Services = require("Services");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
@@ -27,13 +27,15 @@ const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
  */
 exports.items = [
   {
+    item: "command",
+    runAt: "client",
     name: "restart",
-    description: gcli.lookupFormat("restartBrowserDesc", [ BRAND_SHORT_NAME ]),
+    description: l10n.lookupFormat("restartBrowserDesc", [ BRAND_SHORT_NAME ]),
     params: [
       {
         name: "nocache",
         type: "boolean",
-        description: gcli.lookup("restartBrowserNocacheDesc")
+        description: l10n.lookup("restartBrowserNocacheDesc")
       }
     ],
     returnType: "string",
@@ -42,7 +44,7 @@ exports.items = [
                       .createInstance(Ci.nsISupportsPRBool);
       Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
       if (canceled.data) {
-        return gcli.lookup("restartBrowserRequestCancelled");
+        return l10n.lookup("restartBrowserRequestCancelled");
       }
 
       // disable loading content from cache.
@@ -54,7 +56,7 @@ exports.items = [
       Cc["@mozilla.org/toolkit/app-startup;1"]
           .getService(Ci.nsIAppStartup)
           .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-      return gcli.lookupFormat("restartBrowserRestarting", [ BRAND_SHORT_NAME ]);
+      return l10n.lookupFormat("restartBrowserRestarting", [ BRAND_SHORT_NAME ]);
     }
   }
 ];

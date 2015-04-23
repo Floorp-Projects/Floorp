@@ -6,7 +6,8 @@
 
 const { Cc, Ci } = require("chrome");
 
-const { gDevTools } = require("resource:///modules/devtools/gDevTools.jsm");
+loader.lazyGetter(this, "gDevTools", () => require("resource:///modules/devtools/gDevTools.jsm").gDevTools);
+
 const promise = require("resource://gre/modules/Promise.jsm").Promise;
 
 const domtemplate = require("gcli/util/domtemplate");
@@ -27,6 +28,8 @@ exports.items = [
     description: l10n.lookup("csscoverageDesc"),
   },
   {
+    item: "command",
+    runAt: "client",
     name: "csscoverage start",
     hidden: true,
     description: l10n.lookup("csscoverageStartDesc2"),
@@ -48,6 +51,8 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "csscoverage stop",
     hidden: true,
     description: l10n.lookup("csscoverageStopDesc2"),
@@ -62,6 +67,8 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "csscoverage oneshot",
     hidden: true,
     description: l10n.lookup("csscoverageOneShotDesc2"),
@@ -76,6 +83,8 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "csscoverage toggle",
     hidden: true,
     description: l10n.lookup("csscoverageToggleDesc2"),
@@ -110,6 +119,8 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "csscoverage report",
     hidden: true,
     description: l10n.lookup("csscoverageReportDesc2"),

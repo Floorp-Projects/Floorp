@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu, CC } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 const dirService = Cc["@mozilla.org/file/directory_service;1"]
                       .getService(Ci.nsIProperties);
 
@@ -19,29 +19,31 @@ function showFolder(aPath) {
 
     if (file.exists()) {
       file.reveal();
-      return gcli.lookupFormat("folderOpenDirResult", [aPath]);
+      return l10n.lookupFormat("folderOpenDirResult", [aPath]);
     } else {
-      return gcli.lookup("folderInvalidPath");
+      return l10n.lookup("folderInvalidPath");
     }
   } catch (e) {
-    return gcli.lookup("folderInvalidPath");
+    return l10n.lookup("folderInvalidPath");
   }
 }
 
 exports.items = [
   {
     name: "folder",
-    description: gcli.lookup("folderDesc")
+    description: l10n.lookup("folderDesc")
   },
   {
+    item: "command",
+    runAt: "client",
     name: "folder open",
-    description: gcli.lookup("folderOpenDesc"),
+    description: l10n.lookup("folderOpenDesc"),
     params: [
       {
         name: "path",
         type: { name: "string", allowBlank: true },
         defaultValue: "~",
-        description: gcli.lookup("folderOpenDir")
+        description: l10n.lookup("folderOpenDir")
       }
     ],
     returnType: "string",
@@ -60,8 +62,10 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "folder openprofile",
-    description: gcli.lookup("folderOpenProfileDesc"),
+    description: l10n.lookup("folderOpenProfileDesc"),
     returnType: "string",
     exec: function(args, context) {
       // Get the profile directory.
