@@ -2111,8 +2111,8 @@ js::StringIsTypedArrayIndex(const Latin1Char* s, size_t length, uint64_t* indexp
 
 /* ES6 draft rev 34 (2015 Feb 20) 9.4.5.3 [[DefineOwnProperty]] step 3.c. */
 bool
-js::DefineTypedArrayElement(JSContext *cx, HandleObject obj, uint64_t index,
-                            Handle<PropertyDescriptor> desc, ObjectOpResult &result)
+js::DefineTypedArrayElement(JSContext* cx, HandleObject obj, uint64_t index,
+                            Handle<PropertyDescriptor> desc, ObjectOpResult& result)
 {
     MOZ_ASSERT(IsAnyTypedArray(obj));
 
