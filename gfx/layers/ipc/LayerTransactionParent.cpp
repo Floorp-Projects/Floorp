@@ -720,9 +720,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
         Point3D(NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
                 NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)),
                 0.0f);
-      double cssPerDev =
-        double(nsDeviceContext::AppUnitsPerCSSPixel()) / double(scale);
-      transformOrigin = data.transformOrigin() * cssPerDev;
+      transformOrigin = data.transformOrigin();
       break;
     }
   }
