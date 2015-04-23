@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 1117227 - text-overflow on vertical text</title>
+  <style>
+    @font-face {
+      font-family: DejaVuSansMono;
+      src: url(../fonts/DejaVuSansMono.woff);
+    }
+    body {
+      font: 16px DejaVuSansMono;
+      text-orientation: sideways-right;
+      white-space: nowrap;
+    }
+    .c {
+      block-size: 3em; inline-size: 4em;
+      overflow: hidden;
+    }
+    .vlr { writing-mode: vertical-lr; }
+    .vrl { writing-mode: vertical-rl; }
+    .t { margin-inline-start: -1em; }
+    m { display: inline-block; }
+
+    #tests { position: relative; }
+    #tests > div { position: absolute; }
+    .r1 { top: 0em; }
+    .r2 { top: 4.5em; }
+    .c1 { left: 0em; }
+    .c2 { left: 4em; }
+    .c3 { left: 8em; }
+    .c4 { left: 12em; }
+    .c5 { left: 16em; }
+    .c6 { left: 20em; }
+  </style>
+</head>
+<body>
+  <p style="font-family: sans-serif">Test for text-overflow in vertical mode:</p>
+
+  <div id="tests">
+    <div class="r1 c1"><div class="c vrl"><span class="t">&nbsp;123456<m>&hellip;</m></span></div></div>
+    <div class="r1 c2"><div class="c vlr"><span class="t">&nbsp;123456<m>&hellip;</m></span></div></div>
+    <div class="r1 c3"><div class="c vrl"><span class="t">&nbsp;&nbsp;<m>&hellip;</m>3456<m>&hellip;</m></span></div></div>
+    <div class="r1 c4"><div class="c vlr"><span class="t">&nbsp;&nbsp;<m>&hellip;</m>3456<m>&hellip;</m></span></div></div>
+    <div class="r1 c5"><div class="c vrl"><span class="t">&nbsp;&nbsp;<m>&hellip;</m>345678&nbsp;</span></div></div>
+    <div class="r1 c6"><div class="c vlr"><span class="t">&nbsp;&nbsp;<m>&hellip;</m>345678&nbsp;</span></div></div>
+
+    <div class="r2 c1"><div class="c vrl"><span class="t">&nbsp;123456<m>$</m></span></div></div>
+    <div class="r2 c2"><div class="c vlr"><span class="t">&nbsp;123456<m>$</m></span></div></div>
+    <div class="r2 c3"><div class="c vrl"><span class="t">&nbsp;&nbsp;<m>^</m>3456<m>$</m></span></div></div>
+    <div class="r2 c4"><div class="c vlr"><span class="t">&nbsp;&nbsp;<m>^</m>3456<m>$</m></span></div></div>
+    <div class="r2 c5"><div class="c vrl"><span class="t">&nbsp;&nbsp;<m>^</m>3456<m>&hellip;</m></span></div></div>
+    <div class="r2 c6"><div class="c vlr"><span class="t">&nbsp;&nbsp;<m>^</m>3456<m>&hellip;</m></span></div></div>
+  </div>
+</body>
+</html>

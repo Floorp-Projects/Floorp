@@ -36,6 +36,7 @@ fails == 1102175-1a.html 1102175-1-ref.html
 == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
 fuzzy(116,64) HTTP(..) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
+== 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
 == 1122366-1-margin-collapse.html 1122366-1-margin-collapse-ref.html
 == 1124636-1-fieldset-max-height.html 1124636-1-fieldset-max-height-ref.html
 == 1124636-2-fieldset-min-height.html 1124636-2-fieldset-min-height-ref.html
