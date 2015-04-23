@@ -19,6 +19,7 @@
 var cli = require('../cli');
 var mockCommands = require('../test/mockCommands');
 var mockSettings = require('../test/mockSettings');
+var mockDocument = require('../test/mockDocument');
 
 exports.items = [
   {
@@ -46,11 +47,13 @@ exports.items = [
     on: function(requisition) {
       mockCommands.setup(requisition);
       mockSettings.setup(requisition.system);
+      mockDocument.setup(requisition);
     },
 
     off: function(requisition) {
       mockCommands.shutdown(requisition);
       mockSettings.shutdown(requisition.system);
+      mockDocument.shutdown(requisition);
     }
   }
 ];

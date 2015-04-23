@@ -1542,7 +1542,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook
     };
 

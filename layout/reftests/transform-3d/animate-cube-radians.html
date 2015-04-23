@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html reftest-zoom="1.5">
+<html>
 <title>Reftest, bug 1156456</title>
 <style>
 
@@ -18,10 +18,7 @@ div, div::before, div::after {
 
 @keyframes HoldTransform {
   from, to {
-    /* FIXME: use radians rather than degrees for now to avoid the rounding
-       issue described in
-       https://bugzilla.mozilla.org/show_bug.cgi?id=1156456#c19 */
-    /* transform: rotateY(-120deg) rotateX(60deg); */
+    /* approximately rotateY(-120deg) rotateX(60deg); */
     transform: rotateY(-2.0944rad) rotateX(1.0472rad);
   }
 }

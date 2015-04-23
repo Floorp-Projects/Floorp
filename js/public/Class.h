@@ -24,6 +24,7 @@
  * object behavior and, e.g., allows custom slow layout.
  */
 
+struct JSAtomState;
 struct JSFreeOp;
 struct JSFunctionSpec;
 
@@ -281,6 +282,18 @@ typedef bool
 (* JSResolveOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                 bool* resolvedp);
 
+// A class with a resolve hook can optionally have a mayResolve hook. This hook
+// must have no side effects and must return true for a given id if the resolve
+// hook may resolve this id. This is useful when we're doing a "pure" lookup: if
+// mayResolve returns false, we know we don't have to call the effectful resolve
+// hook.
+//
+// maybeObj, if non-null, is the object on which we're doing the lookup. This
+// can be nullptr: during JIT compilation we sometimes know the Class but not
+// the object.
+typedef bool
+(* JSMayResolveOp)(const JSAtomState& names, jsid id, JSObject* maybeObj);
+
 // Convert obj to the given type, returning true with the resulting value in
 // *vp on success, and returning false on error or exception.
 typedef bool
@@ -420,6 +433,7 @@ typedef void
     JSSetterOp          setProperty;                                          \
     JSEnumerateOp       enumerate;                                            \
     JSResolveOp         resolve;                                              \
+    JSMayResolveOp      mayResolve;                                           \
     JSConvertOp         convert;                                              \
     FinalizeOpType      finalize;                                             \
     JSNative            call;                                                 \
@@ -687,6 +701,8 @@ static_assert(offsetof(JSClass, setProperty) == offsetof(Class, setProperty),
 static_assert(offsetof(JSClass, enumerate) == offsetof(Class, enumerate),
               "Class and JSClass must be consistent");
 static_assert(offsetof(JSClass, resolve) == offsetof(Class, resolve),
+              "Class and JSClass must be consistent");
+static_assert(offsetof(JSClass, mayResolve) == offsetof(Class, mayResolve),
               "Class and JSClass must be consistent");
 static_assert(offsetof(JSClass, convert) == offsetof(Class, convert),
               "Class and JSClass must be consistent");

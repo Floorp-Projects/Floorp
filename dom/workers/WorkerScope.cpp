@@ -39,6 +39,7 @@
 #include "WorkerRunnable.h"
 #include "Performance.h"
 #include "ServiceWorkerClients.h"
+#include "ServiceWorkerRegistration.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -430,7 +431,7 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope,
-                                   mClients)
+                                   mClients, mRegistration)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope)
 NS_INTERFACE_MAP_END_INHERITING(WorkerGlobalScope)
 
@@ -471,6 +472,17 @@ ServiceWorkerGlobalScope::Clients()
   }
 
   return mClients;
+}
+
+ServiceWorkerRegistrationWorkerThread*
+ServiceWorkerGlobalScope::Registration()
+{
+  if (!mRegistration) {
+    mRegistration =
+      new ServiceWorkerRegistrationWorkerThread(mWorkerPrivate, mScope);
+  }
+
+  return mRegistration;
 }
 
 WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
@@ -599,6 +611,7 @@ const js::Class workerdebuggersandbox_class = {
     nullptr,
     workerdebuggersandbox_enumerate,
     workerdebuggersandbox_resolve,
+    nullptr, /* mayResolve */
     workerdebuggersandbox_convert,
     workerdebuggersandbox_finalize,
     nullptr,
@@ -781,237 +794,6 @@ GetterOnlyJSNative(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS_ReportErrorNumber(aCx, js::GetErrorMessage, nullptr, JSMSG_GETTER_ONLY);
   return false;
-}
-
-namespace {
-
-class WorkerScopeUnregisterRunnable;
-class UnregisterResultRunnable final : public WorkerRunnable
-{
-public:
-  enum State { Succeeded, Failed };
-
-  UnregisterResultRunnable(WorkerPrivate* aWorkerPrivate,
-                           WorkerScopeUnregisterRunnable* aRunnable,
-                           State aState, bool aValue)
-    : WorkerRunnable(aWorkerPrivate,
-                     WorkerThreadUnchangedBusyCount)
-    , mRunnable(aRunnable), mState(aState), mValue(aValue)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mRunnable);
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
-
-private:
-  nsRefPtr<WorkerScopeUnregisterRunnable> mRunnable;
-  State mState;
-  bool mValue;
-};
-
-class WorkerScopeUnregisterRunnable final : public nsRunnable
-                                          , public nsIServiceWorkerUnregisterCallback
-                                          , public WorkerFeature
-{
-  WorkerPrivate* mWorkerPrivate;
-  nsString mScope;
-
-  // Worker thread only.
-  nsRefPtr<Promise> mWorkerPromise;
-  bool mCleanedUp;
-
-  ~WorkerScopeUnregisterRunnable()
-  {
-    MOZ_ASSERT(mCleanedUp);
-  }
-
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  WorkerScopeUnregisterRunnable(WorkerPrivate* aWorkerPrivate,
-                                Promise* aWorkerPromise,
-                                const nsAString& aScope)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mScope(aScope)
-    , mWorkerPromise(aWorkerPromise)
-    , mCleanedUp(false)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-    aWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(aWorkerPromise);
-
-    if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(), this)) {
-      MOZ_ASSERT(false, "cannot add the worker feature!");
-      mWorkerPromise = nullptr;
-      mCleanedUp = true;
-      return;
-    }
-  }
-
-  Promise*
-  WorkerPromise() const
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(!mCleanedUp);
-    return mWorkerPromise;
-  }
-
-  NS_IMETHODIMP
-  UnregisterSucceeded(bool aState) override
-  {
-    AssertIsOnMainThread();
-
-    nsRefPtr<UnregisterResultRunnable> runnable =
-      new UnregisterResultRunnable(mWorkerPrivate, this,
-                                   UnregisterResultRunnable::Succeeded, aState);
-    runnable->Dispatch(nullptr);
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  UnregisterFailed() override
-  {
-    AssertIsOnMainThread();
-
-    nsRefPtr<UnregisterResultRunnable> runnable =
-      new UnregisterResultRunnable(mWorkerPrivate, this,
-                                   UnregisterResultRunnable::Failed, false);
-    runnable->Dispatch(nullptr);
-    return NS_OK;
-  }
-
-  void
-  CleanUp(JSContext* aCx)
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-
-    if (mCleanedUp) {
-      return;
-    }
-
-    mWorkerPrivate->RemoveFeature(aCx, this);
-    mWorkerPromise = nullptr;
-    mCleanedUp = true;
-  }
-
-  NS_IMETHODIMP
-  Run() override
-  {
-    AssertIsOnMainThread();
-
-    nsresult rv;
-    nsCOMPtr<nsIServiceWorkerManager> swm =
-      do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      UnregisterFailed();
-      return NS_OK;
-    }
-
-    // We don't need to check if the principal can load this mScope because a
-    // ServiceWorkerGlobalScope can always unregister itself.
-
-    rv = swm->Unregister(mWorkerPrivate->GetPrincipal(), this, mScope);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      UnregisterFailed();
-      return NS_OK;
-    }
-
-    return NS_OK;
-  }
-
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
-  {
-    mWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(aStatus > workers::Running);
-    CleanUp(aCx);
-    return true;
-  }
-};
-
-NS_IMPL_ISUPPORTS_INHERITED(WorkerScopeUnregisterRunnable, nsRunnable,
-                            nsIServiceWorkerUnregisterCallback)
-
-bool
-UnregisterResultRunnable::WorkerRun(JSContext* aCx,
-                                    WorkerPrivate* aWorkerPrivate)
-{
-  if (mState == Failed) {
-    mRunnable->WorkerPromise()->MaybeReject(aCx, JS::UndefinedHandleValue);
-  } else {
-    mRunnable->WorkerPromise()->MaybeResolve(mValue);
-  }
-
-  mRunnable->CleanUp(aCx);
-  return true;
-}
-
-} // anonymous namespace
-
-already_AddRefed<Promise>
-ServiceWorkerGlobalScope::Unregister(ErrorResult& aRv)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-
-  nsRefPtr<Promise> promise = Promise::Create(this, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  nsRefPtr<WorkerScopeUnregisterRunnable> runnable =
-    new WorkerScopeUnregisterRunnable(mWorkerPrivate, promise, mScope);
-
-  // Ensure the AddFeature succeeded before dispatching.
-  // Otherwise we let the promise remain pending since script is going to stop
-  // soon anyway.
-  if (runnable->WorkerPromise()) {
-    NS_DispatchToMainThread(runnable);
-  }
-
-  return promise.forget();
-}
-
-namespace {
-
-class UpdateRunnable final : public nsRunnable
-{
-  nsString mScope;
-
-public:
-  explicit UpdateRunnable(const nsAString& aScope)
-    : mScope(aScope)
-  { }
-
-  NS_IMETHODIMP
-  Run()
-  {
-    AssertIsOnMainThread();
-
-    nsresult rv;
-    nsCOMPtr<nsIServiceWorkerManager> swm =
-      do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return NS_OK;
-    }
-
-    swm->Update(mScope);
-    return NS_OK;
-  }
-};
-
-} //anonymous namespace
-
-void
-ServiceWorkerGlobalScope::Update()
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
-
-  nsRefPtr<UpdateRunnable> runnable =
-    new UpdateRunnable(mScope);
-  NS_DispatchToMainThread(runnable);
 }
 
 END_WORKERS_NAMESPACE

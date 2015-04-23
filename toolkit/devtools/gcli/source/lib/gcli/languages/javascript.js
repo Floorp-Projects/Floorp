@@ -42,8 +42,7 @@ exports.items = [
     },
 
     exec: function(input) {
-      return this.eval(input).then(function(response) {
-        // console.log('javascript.exec', response);
+      return this.evaluate(input).then(function(response) {
         var output = (response.exception != null) ?
                       response.exception.class :
                       response.output;
@@ -80,8 +79,8 @@ exports.items = [
       }.bind(this));
     },
 
-    eval: function(input) {
-      return host.script.eval(input);
+    evaluate: function(input) {
+      return host.script.evaluate(input);
     }
   }
 ];

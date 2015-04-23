@@ -20,7 +20,9 @@ using mozilla::Swap;
 MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
                            TempAllocator* alloc, MIRGraph* graph, CompileInfo* info,
                            const OptimizationInfo* optimizationInfo,
-                           Label* outOfBoundsLabel, bool usesSignalHandlersForAsmJSOOB)
+                           Label* outOfBoundsLabel,
+                           Label* conversionErrorLabel,
+                           bool usesSignalHandlersForAsmJSOOB)
   : compartment(compartment),
     info_(info),
     optimizationInfo_(optimizationInfo),
@@ -42,6 +44,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     instrumentedProfilingIsCached_(false),
     nurseryObjects_(*alloc),
     outOfBoundsLabel_(outOfBoundsLabel),
+    conversionErrorLabel_(conversionErrorLabel),
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     usesSignalHandlersForAsmJSOOB_(usesSignalHandlersForAsmJSOOB),
 #endif

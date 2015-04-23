@@ -41,5 +41,6 @@ EXTRA_COMPONENTS += [
 JAR_MANIFESTS += ['jar.mn']
 
 EXTRA_JS_MODULES.devtools += [
+    'definitions.js',
     'main.js',
 ]
