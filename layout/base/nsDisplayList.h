@@ -347,7 +347,9 @@ public:
   bool IsBuildingLayerEventRegions()
   {
     if (mMode == PAINTING) {
-      return (gfxPrefs::LayoutEventRegionsEnabled() ||
+      // Note: this is the only place that gets to query LayoutEventRegionsEnabled
+      // 'directly' - other code should call this function.
+      return (gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
               gfxPrefs::AsyncPanZoomEnabled());
     }
     return false;
