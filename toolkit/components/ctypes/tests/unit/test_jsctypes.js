@@ -300,7 +300,7 @@ function run_abstract_class_tests()
 }
 
 function run_Int64_tests() {
-  do_check_throws(function() { ctypes.Int64(); }, Error);
+  do_check_throws(function() { ctypes.Int64(); }, TypeError);
 
   // Test that classes and prototypes are set up correctly.
   do_check_class(ctypes.Int64, "Function");
@@ -334,11 +334,11 @@ function run_Int64_tests() {
   do_check_throws(function() { i.toString(0); }, Error);
   do_check_throws(function() { i.toString(1); }, Error);
   do_check_throws(function() { i.toString(37); }, Error);
-  do_check_throws(function() { i.toString(10, 2); }, Error);
+  do_check_throws(function() { i.toString(10, 2); }, TypeError);
 
   // Test Int64.toSource().
   do_check_eq(i.toSource(), "ctypes.Int64(\"0\")");
-  do_check_throws(function() { i.toSource(10); }, Error);
+  do_check_throws(function() { i.toSource(10); }, TypeError);
 
   i = ctypes.Int64("0x28590a1c921def71");
   do_check_eq(i.toString(), i.toString(10));
@@ -471,7 +471,7 @@ function run_Int64_tests() {
 }
 
 function run_UInt64_tests() {
-  do_check_throws(function() { ctypes.UInt64(); }, Error);
+  do_check_throws(function() { ctypes.UInt64(); }, TypeError);
 
   // Test that classes and prototypes are set up correctly.
   do_check_class(ctypes.UInt64, "Function");
@@ -505,11 +505,11 @@ function run_UInt64_tests() {
   do_check_throws(function() { i.toString(0); }, Error);
   do_check_throws(function() { i.toString(1); }, Error);
   do_check_throws(function() { i.toString(37); }, Error);
-  do_check_throws(function() { i.toString(10, 2); }, Error);
+  do_check_throws(function() { i.toString(10, 2); }, TypeError);
 
   // Test UInt64.toSource().
   do_check_eq(i.toSource(), "ctypes.UInt64(\"0\")");
-  do_check_throws(function() { i.toSource(10); }, Error);
+  do_check_throws(function() { i.toSource(10); }, TypeError);
 
   i = ctypes.UInt64("0x28590a1c921def71");
   do_check_eq(i.toString(), i.toString(10));
@@ -1372,8 +1372,8 @@ function run_StructType_tests() {
     ctypes.StructType("t", [{"c": ctypes.int32_t}, {"d": ctypes.int64_t}]),
     [ "fields" ], [ "define" ], [], [ "addressOfField" ], [ "a", "b" ]);
 
-  do_check_throws(function() { ctypes.StructType(); }, Error);
-  do_check_throws(function() { ctypes.StructType("a", [], 5); }, Error);
+  do_check_throws(function() { ctypes.StructType(); }, TypeError);
+  do_check_throws(function() { ctypes.StructType("a", [], 5); }, TypeError);
   do_check_throws(function() { ctypes.StructType(null, []); }, Error);
   do_check_throws(function() { ctypes.StructType("a", null); }, Error);
 
@@ -1424,8 +1424,8 @@ function run_StructType_tests() {
   }, TypeError);
 
   // Check that 'define' works.
-  do_check_throws(function() { opaque_t.define(); }, Error);
-  do_check_throws(function() { opaque_t.define([], 0); }, Error);
+  do_check_throws(function() { opaque_t.define(); }, TypeError);
+  do_check_throws(function() { opaque_t.define([], 0); }, TypeError);
   do_check_throws(function() { opaque_t.define([{}]); }, Error);
   do_check_throws(function() { opaque_t.define([{ a: 0 }]); }, Error);
   do_check_throws(function() {
@@ -1551,7 +1551,7 @@ function run_StructType_tests() {
   do_check_eq(g.a, 1);
   do_check_eq(g.b, 2);
   do_check_throws(function() { g_t(1); }, TypeError);
-  do_check_throws(function() { g_t(1, 2, 3); }, Error);
+  do_check_throws(function() { g_t(1, 2, 3); }, TypeError);
 
   for (let field in g)
     do_check_true(field == "a" || field == "b");
@@ -1576,9 +1576,9 @@ function run_StructType_tests() {
   g_a = s.addressOfField("b");
   do_check_true(g_a.constructor === g_t.ptr);
   do_check_eq(g_a.contents.a, s.b.a);
-  do_check_throws(function() { s.addressOfField(); }, Error);
+  do_check_throws(function() { s.addressOfField(); }, TypeError);
   do_check_throws(function() { s.addressOfField("d"); }, Error);
-  do_check_throws(function() { s.addressOfField("a", 2); }, Error);
+  do_check_throws(function() { s.addressOfField("a", 2); }, TypeError);
 
   do_check_eq(s.toSource(), "s_t(4, {\"a\": 7, \"b\": 2}, 10)");
   do_check_eq(s.toSource(), s.toString());
@@ -1657,8 +1657,8 @@ function run_PointerType_tests() {
     ctypes.PointerType(ctypes.int32_t), ctypes.PointerType(ctypes.int64_t),
     [ "targetType" ], [], [ "contents" ], [ "isNull", "increment", "decrement" ], []);
 
-  do_check_throws(function() { ctypes.PointerType(); }, Error);
-  do_check_throws(function() { ctypes.PointerType(ctypes.int32_t, 5); }, Error);
+  do_check_throws(function() { ctypes.PointerType(); }, TypeError);
+  do_check_throws(function() { ctypes.PointerType(ctypes.int32_t, 5); }, TypeError);
   do_check_throws(function() { ctypes.PointerType(null); }, Error);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t()); }, Error);
   do_check_throws(function() { ctypes.PointerType("void"); }, Error);
@@ -1835,13 +1835,13 @@ function run_FunctionType_tests() {
     [ "abi", "returnType", "argTypes", "isVariadic" ],
     undefined, undefined, undefined, undefined);
 
-  do_check_throws(function() { ctypes.FunctionType(); }, Error);
+  do_check_throws(function() { ctypes.FunctionType(); }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.void_t ]);
   }, Error);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, [ ctypes.void_t ], 5);
-  }, Error);
+  }, TypeError);
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, ctypes.void_t);
   }, Error);
@@ -1960,9 +1960,9 @@ function run_ArrayType_tests() {
     ctypes.ArrayType(ctypes.int32_t, 10), ctypes.ArrayType(ctypes.int64_t),
     [ "elementType", "length" ], [], [ "length" ], [ "addressOfElement" ]);
 
-  do_check_throws(function() { ctypes.ArrayType(); }, Error);
+  do_check_throws(function() { ctypes.ArrayType(); }, TypeError);
   do_check_throws(function() { ctypes.ArrayType(null); }, Error);
-  do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, 1, 5); }, Error);
+  do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, 1, 5); }, TypeError);
   do_check_throws(function() { ctypes.ArrayType(ctypes.int32_t, -1); }, Error);
 
   let name = "g_t";
@@ -2011,7 +2011,7 @@ function run_ArrayType_tests() {
   do_check_eq(a2.constructor.length, 5);
   do_check_eq(a2.length, 5);
   do_check_eq(a2.constructor.size, g_t.size * 5);
-  do_check_throws(function() { new a2_t(); }, Error);
+  do_check_throws(function() { new a2_t(); }, TypeError);
   do_check_throws(function() { ctypes.ArrayType(ctypes.ArrayType(g_t)); }, Error);
   do_check_throws(function() { ctypes.ArrayType(ctypes.ArrayType(g_t), 5); }, Error);
 
