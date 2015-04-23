@@ -26,4 +26,9 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   attribute EventHandler onmessage;
 };
 
+// These are from w3c.github.io/push-api/
+partial interface ServiceWorkerGlobalScope {
+  attribute EventHandler onpush;
+  attribute EventHandler onpushsubscriptionchange;
+};
 
