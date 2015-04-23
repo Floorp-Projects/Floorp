@@ -504,7 +504,7 @@ FMRadio::EnableAudioChannelAgent()
 NS_IMETHODIMP
 FMRadio::CanPlayChanged(int32_t aCanPlay)
 {
-  SetCanPlay(aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+  SetCanPlay(!(aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_MUTED));
   return NS_OK;
 }
 
