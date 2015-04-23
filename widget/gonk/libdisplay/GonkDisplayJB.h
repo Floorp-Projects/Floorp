@@ -16,8 +16,8 @@
 #ifndef GONKDISPLAYJB_H
 #define GONKDISPLAYJB_H
 
+#include "DisplaySurface.h"
 #include "GonkDisplay.h"
-#include "FramebufferSurface.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/power.h"
 #include "ui/Fence.h"
@@ -38,7 +38,7 @@ public:
 
     virtual void* GetHWCDevice();
 
-    virtual void* GetFBSurface();
+    virtual void* GetDispSurface();
 
     virtual bool SwapBuffers(EGLDisplay dpy, EGLSurface sur);
 
@@ -46,11 +46,11 @@ public:
 
     virtual bool QueueBuffer(ANativeWindowBuffer* buf);
 
-    virtual void UpdateFBSurface(EGLDisplay dpy, EGLSurface sur);
+    virtual void UpdateDispSurface(EGLDisplay dpy, EGLSurface sur);
 
-    virtual void SetFBReleaseFd(int fd);
+    virtual void SetDispReleaseFd(int fd);
 
-    virtual int GetPrevFBAcquireFd();
+    virtual int GetPrevDispAcquireFd();
 
     bool Post(buffer_handle_t buf, int fence);
 
@@ -60,7 +60,7 @@ private:
     hwc_composer_device_1_t*  mHwc;
     framebuffer_device_t*     mFBDevice;
     power_module_t*           mPowerModule;
-    android::sp<android::FramebufferSurface> mFBSurface;
+    android::sp<android::DisplaySurface> mDispSurface;
     android::sp<ANativeWindow> mSTClient;
     android::sp<android::IGraphicBufferAlloc> mAlloc;
     int mFence;
