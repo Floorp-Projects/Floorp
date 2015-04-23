@@ -118,6 +118,10 @@ function test() {
           todo(false, "Front for " + actor + " still held in pool!");
           continue;
         }
+        // gcliActor is for the commandline which is separate to the toolbox
+        if (actor.contains("gcliActor")) {
+          continue;
+        }
         ok(false, "Front for " + actor + " still held in pool!");
       }
     }

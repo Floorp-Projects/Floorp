@@ -6,8 +6,8 @@ from mozboot.base import BaseBootstrapper
 
 
 class OpenBSDBootstrapper(BaseBootstrapper):
-    def __init__(self, version):
-        BaseBootstrapper.__init__(self)
+    def __init__(self, version, **kwargs):
+        BaseBootstrapper.__init__(self, **kwargs)
 
         self.packages = [
             'mercurial',
