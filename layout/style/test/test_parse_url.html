@@ -166,15 +166,15 @@ div.style.listStyleImage = 'url(\u00ff)';
 is(div.style.listStyleImage, 'url("\u00ff")', "U+A0-U+FF allowed in unquoted URL");
 
 div.style.listStyleImage = 'url(\\f good)';
-is(div.style.listStyleImage, 'url("\\F good")', "URL allowed");
+is(div.style.listStyleImage, 'url("\\f good")', "URL allowed");
 div.style.listStyleImage = 'url( \\f good)';
-is(div.style.listStyleImage, 'url("\\F good")', "URL allowed");
+is(div.style.listStyleImage, 'url("\\f good")', "URL allowed");
 div.style.listStyleImage = 'url(f\\f good)';
-is(div.style.listStyleImage, 'url("f\\F good")', "URL allowed");
+is(div.style.listStyleImage, 'url("f\\f good")', "URL allowed");
 div.style.listStyleImage = 'url(go\\od)';
 is(div.style.listStyleImage, 'url("good")', "URL allowed");
 div.style.listStyleImage = 'url(goo\\d)';
-is(div.style.listStyleImage, 'url("goo\\D ")', "URL allowed");
+is(div.style.listStyleImage, 'url("goo\\d ")', "URL allowed");
 div.style.listStyleImage = 'url(go\\o)';
 is(div.style.listStyleImage, 'url("goo")', "URL allowed");
 
