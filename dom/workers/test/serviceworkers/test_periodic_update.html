@@ -25,7 +25,7 @@
       // Verify that the service worker has been correctly updated.
       testFrame("periodic/frame.html").then(function(body) {
         newSWVersion = parseInt(body);
-        todo_is(newSWVersion, "2", "Expected correct new version");
+        is(newSWVersion, 2, "Expected correct new version");
         ok(newSWVersion > oldSWVersion,
            "The SW should be successfully updated, old: " + oldSWVersion +
            ", new: " + newSWVersion);
@@ -38,7 +38,7 @@
     registerSW().then(function() {
       return testFrame("periodic/frame.html").then(function(body) {
         oldSWVersion = parseInt(body);
-        todo_is(oldSWVersion, "1", "Expected correct old version");
+        is(oldSWVersion, 1, "Expected correct old version");
       });
     }).then(function() {
       return navigator.serviceWorker.getRegistration("periodic/foo");
