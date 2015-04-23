@@ -233,13 +233,13 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
     color: ButtonText;
   }
 
-  .subviewbutton@menuStateHover@,
+  .subviewbutton@menuStateMenuActive@,
   menuitem.panel-subview-footer@menuStateHover@,
   .subviewbutton.panel-subview-footer@buttonStateHover@,
   .subviewbutton.panel-subview-footer@buttonStateActive@,
   .subviewbutton@menuStateHover@ > .menu-accel-container,
   .PanelUI-subView .subviewbutton[shortcut]@buttonStateHover@::after,
-  #BMB_bookmarksPopup .panel-subview-footer@menuStateHover@ > .menu-text {
+  #BMB_bookmarksPopup .panel-subview-footer@menuStateMenuActive@ > .menu-text {
     background-color: Highlight;
     color: highlighttext !important;
   }
