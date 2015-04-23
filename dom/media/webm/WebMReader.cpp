@@ -582,19 +582,19 @@ bool WebMReader::InitOpusDecoder()
   return r == OPUS_OK;
 }
 
-bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
+bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
 {
   MOZ_ASSERT(OnTaskQueue());
 
   int r = 0;
   unsigned int count = 0;
-  r = nestegg_packet_count(aPacket, &count);
+  r = nestegg_packet_count(aHolder->Packet(), &count);
   if (r == -1) {
     return false;
   }
 
   uint64_t tstamp = 0;
-  r = nestegg_packet_tstamp(aPacket, &tstamp);
+  r = nestegg_packet_tstamp(aHolder->Packet(), &tstamp);
   if (r == -1) {
     return false;
   }
@@ -638,16 +638,16 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
   for (uint32_t i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
-    r = nestegg_packet_data(aPacket, i, &data, &length);
+    r = nestegg_packet_data(aHolder->Packet(), i, &data, &length);
     if (r == -1) {
       return false;
     }
     if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-      if (!DecodeVorbis(data, length, aOffset, tstamp_usecs, &total_frames)) {
+      if (!DecodeVorbis(data, length, aHolder->Offset(), tstamp_usecs, &total_frames)) {
         return false;
       }
     } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-      if (!DecodeOpus(data, length, aOffset, tstamp_usecs, aPacket)) {
+      if (!DecodeOpus(data, length, aHolder->Offset(), tstamp_usecs, aHolder->Packet())) {
         return false;
       }
     }
@@ -906,7 +906,10 @@ already_AddRefed<NesteggPacketHolder> WebMReader::NextPacket(TrackType aTrackTyp
         return nullptr;
       }
       int64_t offset = mDecoder->GetResource()->Tell();
-      holder = new NesteggPacketHolder(packet, offset);
+      holder = new NesteggPacketHolder();
+      if (!holder->Init(packet, offset)) {
+        return nullptr;
+      }
 
       unsigned int track = 0;
       r = nestegg_packet_track(packet, &track);
@@ -939,7 +942,7 @@ bool WebMReader::DecodeAudioData()
     return false;
   }
 
-  return DecodeAudioPacket(holder->mPacket, holder->mOffset);
+  return DecodeAudioPacket(holder);
 }
 
 bool WebMReader::FilterPacketByTime(int64_t aEndTime, WebMPacketQueue& aOutput)
@@ -952,7 +955,7 @@ bool WebMReader::FilterPacketByTime(int64_t aEndTime, WebMPacketQueue& aOutput)
       break;
     }
     uint64_t tstamp = 0;
-    int r = nestegg_packet_tstamp(holder->mPacket, &tstamp);
+    int r = nestegg_packet_tstamp(holder->Packet(), &tstamp);
     if (r == -1) {
       break;
     }
@@ -989,12 +992,12 @@ int64_t WebMReader::GetNextKeyframeTime(int64_t aTimeThreshold)
       break;
     }
     unsigned int count = 0;
-    int r = nestegg_packet_count(holder->mPacket, &count);
+    int r = nestegg_packet_count(holder->Packet(), &count);
     if (r == -1) {
       break;
     }
     uint64_t tstamp = 0;
-    r = nestegg_packet_tstamp(holder->mPacket, &tstamp);
+    r = nestegg_packet_tstamp(holder->Packet(), &tstamp);
     if (r == -1) {
       break;
     }
@@ -1003,7 +1006,7 @@ int64_t WebMReader::GetNextKeyframeTime(int64_t aTimeThreshold)
     for (uint32_t i = 0; i < count; ++i) {
       unsigned char* data;
       size_t length;
-      r = nestegg_packet_data(holder->mPacket, i, &data, &length);
+      r = nestegg_packet_data(holder->Packet(), i, &data, &length);
       if (r == -1) {
         foundKeyframe = true;
         break;

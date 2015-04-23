@@ -161,7 +161,7 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
     return false;
   }
 
-  nestegg_packet* packet = holder->mPacket;
+  nestegg_packet* packet = holder->Packet();
   unsigned int track = 0;
   int r = nestegg_packet_track(packet, &track);
   if (r == -1) {
@@ -187,7 +187,7 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
   uint64_t next_tstamp = 0;
   nsRefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
   if (next_holder) {
-    r = nestegg_packet_tstamp(next_holder->mPacket, &next_tstamp);
+    r = nestegg_packet_tstamp(next_holder->Packet(), &next_tstamp);
     if (r == -1) {
       return false;
     }
