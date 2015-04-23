@@ -216,6 +216,8 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var ToSView = React.createClass({displayName: "ToSView",
+    mixins: [sharedMixins.WindowCloseMixin],
+
     getInitialState: function() {
       var getPref = navigator.mozLoop.getLoopPref.bind(navigator.mozLoop);
 
@@ -224,6 +226,16 @@ loop.panel = (function(_, mozL10n) {
         gettingStartedSeen: getPref("gettingStarted.seen"),
         showPartnerLogo: getPref("showPartnerLogo")
       };
+    },
+
+    handleLinkClick: function(event) {
+      if (!event.target || !event.target.href) {
+        return;
+      }
+
+      event.preventDefault();
+      navigator.mozLoop.openURL(event.target.href);
+      this.closeWindow();
     },
 
     renderPartnerLogo: function() {
@@ -262,7 +274,8 @@ loop.panel = (function(_, mozL10n) {
         return React.createElement("div", {id: "powered-by-wrapper"}, 
           this.renderPartnerLogo(), 
           React.createElement("p", {className: "terms-service", 
-             dangerouslySetInnerHTML: {__html: tosHTML}})
+             dangerouslySetInnerHTML: {__html: tosHTML}, 
+             onClick: this.handleLinkClick})
          );
       } else {
         return React.createElement("div", null);
@@ -304,6 +317,10 @@ loop.panel = (function(_, mozL10n) {
    * Panel settings (gear) menu.
    */
   var SettingsDropdown = React.createClass({displayName: "SettingsDropdown",
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired
+    },
+
     mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.WindowCloseMixin],
 
     handleClickSettingsEntry: function() {
@@ -311,30 +328,31 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleClickAccountEntry: function() {
-      navigator.mozLoop.openFxASettings();
+      this.props.mozLoop.openFxASettings();
+      this.closeWindow();
     },
 
     handleClickAuthEntry: function() {
       if (this._isSignedIn()) {
-        navigator.mozLoop.logOutFromFxA();
+        this.props.mozLoop.logOutFromFxA();
       } else {
-        navigator.mozLoop.logInToFxA();
+        this.props.mozLoop.logInToFxA();
       }
     },
 
     handleHelpEntry: function(event) {
       event.preventDefault();
-      var helloSupportUrl = navigator.mozLoop.getLoopPref('support_url');
-      window.open(helloSupportUrl);
-      window.close();
+      var helloSupportUrl = this.props.mozLoop.getLoopPref("support_url");
+      this.props.mozLoop.openURL(helloSupportUrl);
+      this.closeWindow();
     },
 
     _isSignedIn: function() {
-      return !!navigator.mozLoop.userProfile;
+      return !!this.props.mozLoop.userProfile;
     },
 
     openGettingStartedTour: function() {
-      navigator.mozLoop.openGettingStartedTour("settings-menu");
+      this.props.mozLoop.openGettingStartedTour("settings-menu");
       this.closeWindow();
     },
 
@@ -354,7 +372,7 @@ loop.panel = (function(_, mozL10n) {
             React.createElement(SettingsDropdownEntry, {label: mozL10n.get("settings_menu_item_account"), 
                                    onClick: this.handleClickAccountEntry, 
                                    icon: "account", 
-                                   displayed: this._isSignedIn() && navigator.mozLoop.fxAEnabled}), 
+                                   displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled}), 
             React.createElement(SettingsDropdownEntry, {icon: "tour", 
                                    label: mozL10n.get("tour_label"), 
                                    onClick: this.openGettingStartedTour}), 
@@ -362,7 +380,7 @@ loop.panel = (function(_, mozL10n) {
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin"), 
                                    onClick: this.handleClickAuthEntry, 
-                                   displayed: navigator.mozLoop.fxAEnabled, 
+                                   displayed: this.props.mozLoop.fxAEnabled, 
                                    icon: this._isSignedIn() ? "signout" : "signin"}), 
             React.createElement(SettingsDropdownEntry, {label: mozL10n.get("help_label"), 
                                    onClick: this.handleHelpEntry, 
@@ -690,7 +708,7 @@ loop.panel = (function(_, mozL10n) {
       showTabButtons: React.PropTypes.bool,
       selectedTab: React.PropTypes.string,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object,
+      mozLoop: React.PropTypes.object.isRequired,
       roomStore:
         React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
@@ -848,7 +866,7 @@ loop.panel = (function(_, mozL10n) {
             React.createElement("div", {className: "signin-details"}, 
               React.createElement(AuthLink, null), 
               React.createElement("div", {className: "footer-signin-separator"}), 
-              React.createElement(SettingsDropdown, null)
+              React.createElement(SettingsDropdown, {mozLoop: this.props.mozLoop})
             )
           )
         )

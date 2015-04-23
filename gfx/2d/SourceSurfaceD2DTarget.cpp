@@ -282,9 +282,9 @@ DataSourceSurfaceD2DTarget::Map(MapType aMapType, MappedSurface *aMappedSurface)
 
   aMappedSurface->mData = (uint8_t*)map.pData;
   aMappedSurface->mStride = map.RowPitch;
-  mIsMapped = true;
+  mIsMapped = !!aMappedSurface->mData;
 
-  return true;
+  return mIsMapped;
 }
 
 void

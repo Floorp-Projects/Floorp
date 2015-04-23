@@ -11,6 +11,8 @@ var loop = loop || {};
 loop.contacts = (function(_, mozL10n) {
   "use strict";
 
+  var sharedMixins = loop.shared.mixins;
+
   const Button = loop.shared.views.Button;
   const ButtonGroup = loop.shared.views.ButtonGroup;
   const CALL_TYPES = loop.shared.utils.CALL_TYPES;
@@ -82,6 +84,8 @@ loop.contacts = (function(_, mozL10n) {
   };
 
   const GravatarPromo = React.createClass({displayName: "GravatarPromo",
+    mixins: [sharedMixins.WindowCloseMixin],
+
     propTypes: {
       handleUse: React.PropTypes.func.isRequired
     },
@@ -96,6 +100,16 @@ loop.contacts = (function(_, mozL10n) {
     handleCloseButtonClick: function() {
       navigator.mozLoop.setLoopPref("contacts.gravatars.promo", false);
       this.setState({ showMe: false });
+    },
+
+    handleLinkClick: function(event) {
+      if (!event.target || !event.target.href) {
+        return;
+      }
+
+      event.preventDefault();
+      navigator.mozLoop.openURL(event.target.href);
+      this.closeWindow();
     },
 
     handleUseButtonClick: function() {
@@ -121,7 +135,8 @@ loop.contacts = (function(_, mozL10n) {
       return (
         React.createElement("div", {className: "contacts-gravatar-promo"}, 
           React.createElement(Button, {additionalClass: "button-close", onClick: this.handleCloseButtonClick}), 
-          React.createElement("p", {dangerouslySetInnerHTML: {__html: message}}), 
+          React.createElement("p", {dangerouslySetInnerHTML: {__html: message}, 
+             onClick: this.handleLinkClick}), 
           React.createElement(ButtonGroup, null, 
             React.createElement(Button, {caption: mozL10n.get("gravatars_promo_button_nothanks"), 
                     onClick: this.handleCloseButtonClick}), 
