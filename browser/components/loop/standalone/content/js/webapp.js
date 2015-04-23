@@ -1087,8 +1087,16 @@ loop.webapp = (function($, _, OT, mozL10n) {
     var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
       feedbackClient: feedbackClient
     });
+    var standaloneMetricsStore = new loop.store.StandaloneMetricsStore(dispatcher, {
+      activeRoomStore: activeRoomStore
+    });
 
-    loop.store.StoreMixin.register({feedbackStore: feedbackStore});
+    loop.store.StoreMixin.register({
+      feedbackStore: feedbackStore,
+      // This isn't used in any views, but is saved here to ensure it
+      // is kept alive.
+      standaloneMetricsStore: standaloneMetricsStore
+    });
 
     window.addEventListener("unload", function() {
       dispatcher.dispatch(new sharedActions.WindowUnload());

@@ -469,6 +469,17 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to record a link click for metrics purposes.
+     */
+    RecordClick: Action.define("recordClick", {
+      // Note: for ToS and Privacy links, this should be the link, for
+      // other links this should be a generic description so that we don't
+      // record what users are clicking, just the information about the fact
+      // they clicked the link in that spot (e.g. "Shared URL").
+      linkInfo: String
+    }),
+
+    /**
      * Requires detailed information on sad feedback.
      */
     RequireFeedbackDetails: Action.define("requireFeedbackDetails", {

@@ -43,7 +43,6 @@
 // Fired when the connection has gone, nothing will work from now on.
 #define TOPIC_PLACES_CONNECTION_CLOSED "places-connection-closed"
 
-class nsIStringBundle;
 class nsIRunnable;
 
 namespace mozilla {

@@ -11,8 +11,6 @@
 #include "nsIDOMXMLDocument.h"
 #include "nsIScriptContext.h"
 
-class nsIParser;
-class nsIDOMNode;
 class nsIURI;
 class nsIChannel;
 

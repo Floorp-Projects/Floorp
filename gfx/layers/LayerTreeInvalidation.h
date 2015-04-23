@@ -10,8 +10,6 @@
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "mozilla/gfx/Point.h"
 
-class nsPresContext;
-
 namespace mozilla {
 namespace layers {
 

@@ -19,7 +19,6 @@
 
 class nsIAtom;
 class nsHTMLStyleSheet;
-class nsRuleWalker;
 
 class nsMappedAttributes final : public nsIStyleRule
 {

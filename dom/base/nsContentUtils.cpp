@@ -7303,24 +7303,25 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
             RefPtr<mozilla::gfx::SourceSurface> surface =
               image->GetFrame(imgIContainer::FRAME_CURRENT,
                               imgIContainer::FLAG_SYNC_DECODE);
+            if (surface) {
+              mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+                surface->GetDataSurface();
+              size_t length;
+              int32_t stride;
+              mozilla::UniquePtr<char[]> surfaceData =
+                nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
+              
+              IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+              item->flavor() = nsCString(flavorStr);
+              item->data() = nsCString(surfaceData.get(), length);
 
-            mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
-              surface->GetDataSurface();
-            size_t length;
-            int32_t stride;
-            mozilla::UniquePtr<char[]> surfaceData =
-              nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
-            
-            IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
-            item->flavor() = nsCString(flavorStr);
-            item->data() = nsCString(surfaceData.get(), length);
-
-            IPCDataTransferImage& imageDetails = item->imageDetails();
-            mozilla::gfx::IntSize size = dataSurface->GetSize();
-            imageDetails.width() = size.width;
-            imageDetails.height() = size.height;
-            imageDetails.stride() = stride;
-            imageDetails.format() = static_cast<uint8_t>(dataSurface->GetFormat());
+              IPCDataTransferImage& imageDetails = item->imageDetails();
+              mozilla::gfx::IntSize size = dataSurface->GetSize();
+              imageDetails.width() = size.width;
+              imageDetails.height() = size.height;
+              imageDetails.stride() = stride;
+              imageDetails.format() = static_cast<uint8_t>(dataSurface->GetFormat());
+            }
 
             continue;
           }

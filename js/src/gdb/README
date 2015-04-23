@@ -137,11 +137,11 @@ Running the unit tests
 
 These extensions have unit tests, invoked as follows:
 
-$ python run-tests.py [OPTIONS] LIBDIR [TESTS...]
+$ python run-tests.py [OPTIONS] OBJDIR [TESTS...]
 
-where LIBDIR is a directory containing a compiled SpiderMonkey library,
-libmozjs.so; TESTS are names of selected tests to run (if omitted, we run
-them all); and OPTIONS are drawn from the list below.
+where OBJDIR is a directory containing a standalone SpiderMonkey build; TESTS
+are names of selected tests to run (if omitted, we run them all); and OPTIONS
+are drawn from the list below.
 
 --gdb=EXECUTABLE
   Instead of running whatever 'gdb' we find in our search path, use

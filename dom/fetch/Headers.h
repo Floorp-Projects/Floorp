@@ -14,8 +14,6 @@
 
 #include "InternalHeaders.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
 
 class ErrorResult;

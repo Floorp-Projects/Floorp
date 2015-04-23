@@ -12,8 +12,6 @@
 #include "mozilla/Attributes.h"
 
 class nsIURI;
-class nsIChannel;
-class nsIDOMWindow;
 
 class ThirdPartyUtil final : public mozIThirdPartyUtil
 {

@@ -20,8 +20,6 @@
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "nsWeakReference.h"
 
-class nsIObserver;
-
 namespace mozilla {
 
 namespace dom {

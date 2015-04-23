@@ -15,8 +15,6 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
-class Promise;
-
 namespace workers {
 
 class ServiceWorkerInfo;

@@ -120,7 +120,6 @@ namespace layers {
 struct Effect;
 struct EffectChain;
 class Image;
-class ISurfaceAllocator;
 class Layer;
 class TextureSource;
 class DataTextureSource;

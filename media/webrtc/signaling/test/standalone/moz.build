@@ -25,7 +25,7 @@ for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API'):
 
 if CONFIG['OS_TARGET'] == 'Linux':
     USE_LIBS += [
-        'static:/nsprpub/lib/libc/src/plc4',
+        'nspr',
     ]
     OS_LIBS += [
         '-lrt',

@@ -12,7 +12,7 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(42d1e0e3-303a-424f-89ea-4f15c699d767)]
+[scriptable, uuid(edd65f3f-c2a2-4217-a2e2-40347ba4a2b3)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -30,6 +30,9 @@ interface nsIProfiler : nsISupports
   jsval getProfileData();
   boolean IsActive();
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
+
+  void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
+                     out uint32_t aGeneration);
 
   /**
    * Returns a JSON string of an array of shared library objects.

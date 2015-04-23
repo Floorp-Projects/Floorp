@@ -14,7 +14,6 @@
 #include "nsITimer.h"
 #include "nsIDOMEventListener.h"
 
-class nsString;
 class nsITimer;
 class nsSliderFrame;
 

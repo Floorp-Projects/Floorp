@@ -39,11 +39,12 @@ markdown Debugger.Source.md Debugger-API/Debugger.Source
   label 'source'                                "Debugger.Source"
 
 markdown Debugger.Memory.md Debugger-API/Debugger.Memory
-  label 'memory'                                "Debugger.Memory"
-  label 'tracking-allocs' '#trackingallocationsites' "Debugger.Memory: trackingAllocationSites"
-  label 'drain-alloc-log' '#drain-alloc-log'    "Debugger.Memory: drainAllocationsLog"
-  label 'max-alloc-log' '#max-alloc-log'        "Debugger.Memory: maxAllocationsLogLength"
-  label 'take-census'   '#take-census'          "Debugger.Memory: takeCensus"
+  label 'memory'                                                   "Debugger.Memory"
+  label 'tracking-allocs'            '#trackingallocationsites'    "Debugger.Memory: trackingAllocationSites"
+  label 'drain-alloc-log'            '#drain-alloc-log'            "Debugger.Memory: drainAllocationsLog"
+  label 'max-alloc-log'              '#max-alloc-log'              "Debugger.Memory: maxAllocationsLogLength"
+  label 'alloc-sampling-probability' '#alloc-sampling-probability' "Debugger.Memory: allocationSamplingProbability"
+  label 'take-census'                '#take-census'                "Debugger.Memory: takeCensus"
 
 markdown Tutorial-Debugger-Statement.md Debugger-API/Tutorial-Debugger-Statement
   label 'tut debugger'                          "Tutorial: the debugger; statement"
@@ -62,3 +63,4 @@ resource 'img-alloc-plot'         alloc-plot-console.png             $RBASE/8461
 # External links:
 absolute-label 'protocol' https://wiki.mozilla.org/Remote_Debugging_Protocol "Remote Debugging Protocol"
 absolute-label 'saved-frame' https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/SavedFrame "SavedFrame"
+absolute-label 'bernoulli-trial' https://en.wikipedia.org/wiki/Bernoulli_trial "Bernoulli Trial"

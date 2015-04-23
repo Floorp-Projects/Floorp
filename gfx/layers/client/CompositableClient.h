@@ -27,7 +27,6 @@ class BufferTextureClient;
 class ImageBridgeChild;
 class CompositableForwarder;
 class CompositableChild;
-class SurfaceDescriptor;
 class PCompositableChild;
 
 /**

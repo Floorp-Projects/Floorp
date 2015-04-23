@@ -13,7 +13,6 @@
 #include "mozilla/gfx/Types.h"
 #include "nsColor.h"
 
-class nsIFrame;
 struct nsStyleFilter;
 template<class T> class nsTArray;
 

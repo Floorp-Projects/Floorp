@@ -11,6 +11,7 @@
 #include "nsPackageKitService.h"
 #include "nsStringAPI.h"
 #include "prlink.h"
+#include "mozilla/unused.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -157,7 +158,7 @@ InstallPackagesProxyCallCallback(GObject *aSourceObject,
   }
 
   g_object_unref(proxy);
-  observer->Release();
+  unused << observer.forget().take();
 }
 
 static void

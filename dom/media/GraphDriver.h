@@ -60,7 +60,6 @@ static const int VIDEO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
     SCHEDULE_SAFETY_MARGIN_MS;
 
 class MediaStreamGraphImpl;
-class MessageBlock;
 
 /**
  * Microseconds relative to the start of the graph timeline.

@@ -6,13 +6,17 @@
 EXTRA_COMPONENTS += [
     'Push.js',
     'Push.manifest',
-    'PushServiceLauncher.js',
+    'PushNotificationService.js',
 ]
 
-EXTRA_JS_MODULES += [
+EXTRA_PP_JS_MODULES += [
     'PushService.jsm',
 ]
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',
+]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/xpcshell/xpcshell.ini',
 ]

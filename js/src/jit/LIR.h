@@ -32,9 +32,7 @@ class LStackSlot;
 class LArgument;
 class LConstantIndex;
 class MBasicBlock;
-class MTableSwitch;
 class MIRGenerator;
-class MSnapshot;
 
 static const uint32_t VREG_INCREMENT = 1;
 

@@ -20,8 +20,6 @@ namespace mozilla {
 
 namespace layers {
 
-class CompositableForwarder;
-
 class EGLImageTextureClient : public TextureClient
 {
 public:

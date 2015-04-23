@@ -95,7 +95,7 @@ class IncludeManifest(ManifestItem):
             for manifest, data in test_manifests.iteritems():
                 rel_path = os.path.relpath(maybe_path, data["tests_path"])
                 if ".." not in rel_path.split(os.sep):
-                    url = "/" + rel_path.replace(os.path.sep, "/") + variant
+                    url = data["url_base"] + rel_path.replace(os.path.sep, "/") + variant
                     break
 
         assert direction in ("include", "exclude")

@@ -17,7 +17,6 @@ class Expr;
 class nsIDocument;
 class nsINode;
 class txResultRecycler;
-class txXPathNode;
 
 namespace mozilla {
 namespace dom {

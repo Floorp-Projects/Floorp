@@ -20,7 +20,6 @@
 #include "nsTArray.h"
 
 class nsIURI;
-class nsICacheEntryOpenCallback;
 class nsICacheEntryDoomCallback;
 class nsICacheStorageVisitor;
 class nsIRunnable;
@@ -34,7 +33,6 @@ class CacheStorageService;
 class CacheStorage;
 class CacheEntry;
 class CacheEntryHandle;
-class CacheEntryTable;
 
 class CacheMemoryConsumer
 {

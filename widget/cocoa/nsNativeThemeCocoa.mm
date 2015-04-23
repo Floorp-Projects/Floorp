@@ -2672,7 +2672,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         }
       }
       DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
-                   aFrame->StyleDisplay()->mOrient != NS_STYLE_ORIENT_VERTICAL,
+                   !IsVerticalProgress(aFrame),
                    value, maxValue, aFrame);
       break;
     }

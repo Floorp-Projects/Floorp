@@ -3,51 +3,32 @@
 
 const middleMousePastePref = "middlemouse.contentLoadURL";
 const autoScrollPref = "general.autoScroll";
-function test() {
-  waitForExplicitFinish();
 
-  Services.prefs.setBoolPref(middleMousePastePref, true);
-  Services.prefs.setBoolPref(autoScrollPref, false);
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+add_task(function* () {
+  yield pushPrefs([middleMousePastePref, true], [autoScrollPref, false]);
 
-  registerCleanupFunction(function () {
-    Services.prefs.clearUserPref(middleMousePastePref);
-    Services.prefs.clearUserPref(autoScrollPref);
-    gBrowser.removeTab(tab);
-  });
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-  addPageShowListener(function () {
-    let pagePrincipal = gBrowser.contentPrincipal;
-
-    // copy javascript URI to the clipboard
-    let url = "javascript:http://www.example.com/";
-    waitForClipboard(url,
-      function() {
-        Components.classes["@mozilla.org/widget/clipboardhelper;1"]
-                  .getService(Components.interfaces.nsIClipboardHelper)
-                  .copyString(url, document);
-      },
-      function () {
-        // Middle click on the content area
-        info("Middle clicking");
-        EventUtils.sendMouseEvent({type: "click", button: 1}, gBrowser);
-      },
-      function() {
-        ok(false, "Failed to copy URL to the clipboard");
-        finish();
-      }
-    );
-
-    addPageShowListener(function () {
-      is(gBrowser.currentURI.spec, url.replace(/^javascript:/, ""), "url loaded by middle click doesn't include JS");
-      finish();
+  let url = "javascript:http://www.example.com/";
+  yield new Promise((resolve, reject) => {
+    SimpleTest.waitForClipboard(url, () => {
+      Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                .getService(Components.interfaces.nsIClipboardHelper)
+                .copyString(url, document);
+    }, resolve, () => {
+      ok(false, "Clipboard copy failed");
+      reject();
     });
   });
-}
 
-function addPageShowListener(func) {
-  gBrowser.selectedBrowser.addEventListener("pageshow", function loadListener() {
-    gBrowser.selectedBrowser.removeEventListener("pageshow", loadListener, false);
-    func();
-  });
-}
+  let middlePagePromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  // Middle click on the content area
+  info("Middle clicking");
+  yield BrowserTestUtils.synthesizeMouse(null, 10, 10, {button: 1}, gBrowser.selectedBrowser);
+  yield middlePagePromise;
+
+  is(gBrowser.currentURI.spec, url.replace(/^javascript:/, ""), "url loaded by middle click doesn't include JS");
+
+  gBrowser.removeTab(tab);
+});

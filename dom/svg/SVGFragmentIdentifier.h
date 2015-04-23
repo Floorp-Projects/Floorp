@@ -9,7 +9,6 @@
 #include "nsString.h"
 
 class nsIDocument;
-class nsSVGViewElement;
 
 namespace mozilla {
 

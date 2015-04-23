@@ -23,6 +23,8 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GeckoThread extends Thread implements GeckoEventListener {
@@ -31,7 +33,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @RobocopTarget
     public enum LaunchState {
         Launching,
-        WaitForDebugger,
         Launched,
         GeckoRunning,
         GeckoExiting,
@@ -40,52 +41,49 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     private static final AtomicReference<LaunchState> sLaunchState =
                                             new AtomicReference<LaunchState>(LaunchState.Launching);
+    private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
 
     private static GeckoThread sGeckoThread;
 
     private final String mArgs;
     private final String mAction;
     private final String mUri;
+    private final boolean mDebugging;
 
-    public static boolean ensureInit() {
-        ThreadUtils.assertOnUiThread();
-        if (isCreated())
-            return false;
-        sGeckoThread = new GeckoThread(sArgs, sAction, sUri);
-        return true;
-    }
-
-    public static String sArgs;
-    public static String sAction;
-    public static String sUri;
-
-    public static void setArgs(String args) {
-        sArgs = args;
-    }
-
-    public static void setAction(String action) {
-        sAction = action;
-    }
-
-    public static void setUri(String uri) {
-        sUri = uri;
-    }
-
-    GeckoThread(String args, String action, String uri) {
+    GeckoThread(String args, String action, String uri, boolean debugging) {
         mArgs = args;
         mAction = action;
         mUri = uri;
+        mDebugging = debugging;
+
         setName("Gecko");
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "Gecko:Ready");
     }
 
-    public static boolean isCreated() {
-        return sGeckoThread != null;
+    public static boolean ensureInit(String args, String action, String uri) {
+        return ensureInit(args, action, uri, /* debugging */ false);
     }
 
-    public static void createAndStart() {
-        if (ensureInit())
+    public static boolean ensureInit(String args, String action, String uri, boolean debugging) {
+        ThreadUtils.assertOnUiThread();
+        if (checkLaunchState(LaunchState.Launching) && sGeckoThread == null) {
+            sGeckoThread = new GeckoThread(args, action, uri, debugging);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean launch() {
+        ThreadUtils.assertOnUiThread();
+        if (checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
             sGeckoThread.start();
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isLaunched() {
+        return !checkLaunchState(LaunchState.Launching);
     }
 
     private String initGeckoEnvironment() {
@@ -160,6 +158,13 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         ThreadUtils.sGeckoHandler = new Handler();
         ThreadUtils.sGeckoQueue = Looper.myQueue();
 
+        if (mDebugging) {
+            try {
+                Thread.sleep(5 * 1000 /* 5 seconds */);
+            } catch (final InterruptedException e) {
+            }
+        }
+
         String path = initGeckoEnvironment();
 
         // This can only happen after the call to initGeckoEnvironment
@@ -193,12 +198,34 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         }
     }
 
+    public static void addPendingEvent(final GeckoEvent e) {
+        synchronized (PENDING_EVENTS) {
+            if (checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+                // We may just have switched to running state.
+                GeckoAppShell.notifyGeckoOfEvent(e);
+                e.recycle();
+            } else {
+                // Throws if unable to add the event due to capacity restrictions.
+                PENDING_EVENTS.add(e);
+            }
+        }
+    }
+
     @Override
     public void handleMessage(String event, JSONObject message) {
         if ("Gecko:Ready".equals(event)) {
             EventDispatcher.getInstance().unregisterGeckoThreadListener(this, event);
-            setLaunchState(LaunchState.GeckoRunning);
-            GeckoAppShell.sendPendingEventsToGecko();
+
+            // Synchronize with addPendingEvent, so that all pending events are sent,
+            // in order, before we switch to running state.
+            synchronized (PENDING_EVENTS) {
+                GeckoEvent e;
+                while ((e = PENDING_EVENTS.poll()) != null) {
+                    GeckoAppShell.notifyGeckoOfEvent(e);
+                    e.recycle();
+                }
+                setLaunchState(LaunchState.GeckoRunning);
+            }
         }
     }
 

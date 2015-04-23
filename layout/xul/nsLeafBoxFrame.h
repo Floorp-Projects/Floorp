@@ -9,8 +9,6 @@
 #include "nsLeafFrame.h"
 #include "nsBox.h"
 
-class nsAccessKeyInfo;
-
 class nsLeafBoxFrame : public nsLeafFrame
 {
 public:

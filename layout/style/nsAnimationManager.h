@@ -13,7 +13,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 
-class nsCSSKeyframesRule;
 class nsStyleContext;
 
 namespace mozilla {

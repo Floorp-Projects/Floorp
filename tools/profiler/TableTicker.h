@@ -45,8 +45,6 @@ extern mozilla::TimeStamp sLastTracerEvent;
 extern int sFrameNumber;
 extern int sLastFrameNumber;
 
-class BreakpadSampler;
-
 class TableTicker: public Sampler {
  public:
   TableTicker(double aInterval, int aEntrySize,
@@ -211,6 +209,8 @@ class TableTicker: public Sampler {
   bool LayersDump() const { return mLayersDump; }
   bool DisplayListDump() const { return mDisplayListDump; }
   bool ProfileRestyle() const { return mProfileRestyle; }
+
+  void GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration);
 
 protected:
   // Called within a signal. This function must be reentrant

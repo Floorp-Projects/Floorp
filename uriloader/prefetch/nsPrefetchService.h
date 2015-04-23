@@ -20,7 +20,6 @@
 #include "mozilla/Attributes.h"
 
 class nsPrefetchService;
-class nsPrefetchListener;
 class nsPrefetchNode;
 
 //-----------------------------------------------------------------------------
