@@ -218,6 +218,8 @@ function handler4(metadata, response)
 function completeTest4(request, data, ctx)
 {
   do_check_eq(request.status, Components.results.NS_OK);
+
+  prefs.setBoolPref("network.http.enforce-framing.http1", true);
   run_gzip_test(99);
 }
 
