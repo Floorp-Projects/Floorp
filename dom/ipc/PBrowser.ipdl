@@ -17,7 +17,7 @@ include protocol PPluginWidget;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
-include ServiceWorkerRegistrarTypes;
+include BrowserConfiguration;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
@@ -68,11 +68,6 @@ struct NativeKeyBinding
   CommandInt[] singleLineCommands;
   CommandInt[] multiLineCommands;
   CommandInt[] richTextCommands;
-};
-
-struct BrowserConfiguration
-{
-  ServiceWorkerRegistrationData[] serviceWorkerRegistrations;
 };
 
 union MaybeNativeKeyBinding

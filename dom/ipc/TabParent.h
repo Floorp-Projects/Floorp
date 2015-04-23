@@ -454,7 +454,7 @@ protected:
 
     bool SendCompositionChangeEvent(mozilla::WidgetCompositionEvent& event);
 
-    bool InitBrowserConfiguration(nsIURI* aURI,
+    bool InitBrowserConfiguration(const nsCString& aURI,
                                   BrowserConfiguration& aConfiguration);
 
     // IME
