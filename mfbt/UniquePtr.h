@@ -635,10 +635,6 @@ struct UniqueSelector<T[N]>
  * ably serves this function.)
  */
 
-// We don't have variadic template support everywhere, so just hard-code arities
-// 0-8 for now.  If you need more arguments, feel free to add the extra
-// overloads (and deletions for the T = E[N] case).
-
 template<typename T, typename... Args>
 typename detail::UniqueSelector<T>::SingleObject
 MakeUnique(Args&&... aArgs)
