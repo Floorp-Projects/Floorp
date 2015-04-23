@@ -329,6 +329,10 @@ class ObjectGroup : public gc::TenuredCell
         setAddendum(Addendum_None, nullptr);
     }
 
+    bool hasUnanalyzedPreliminaryObjects() {
+        return (newScript() && !newScript()->analyzed()) || maybePreliminaryObjects();
+    }
+
     UnboxedLayout* maybeUnboxedLayout() {
         maybeSweep(nullptr);
         return maybeUnboxedLayoutDontCheckGeneration();
