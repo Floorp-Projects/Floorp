@@ -791,10 +791,12 @@ class Marionette(object):
         with self.using_context('content'):
             perm = self.execute_script("""
                 let allow = arguments[0];
-                if (allow)
+                if (allow) {
                   allow = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
-                else
+                }
+                else {
                   allow = Components.interfaces.nsIPermissionManager.DENY_ACTION;
+                }
                 let perm_type = arguments[1];
 
                 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -826,7 +828,7 @@ class Marionette(object):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let principal = secMan.getAppCodebasePrincipal(Services.io.newURI(perm.url, null, null), 
+                let principal = secMan.getAppCodebasePrincipal(Services.io.newURI(perm.url, null, null),
                                 perm.appId, perm.isInBrowserElement);
                 let testPerm = Services.perms.testPermissionFromPrincipal(principal, perm.type, perm.action);
                 if (testPerm == perm.action) {
@@ -1349,7 +1351,7 @@ class Marionette(object):
     def execute_js_script(self, script, script_args=None, async=True,
                           new_sandbox=True, special_powers=False,
                           script_timeout=None, inactivity_timeout=None,
-                          filename=None):
+                          filename=None, sandbox='default'):
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
@@ -1367,7 +1369,7 @@ class Marionette(object):
         return self.unwrapValue(response)
 
     def execute_script(self, script, script_args=None, new_sandbox=True,
-                       special_powers=False, script_timeout=None):
+                       special_powers=False, sandbox='default', script_timeout=None):
         '''
         Executes a synchronous JavaScript script, and returns the result (or None if the script does return a value).
 
@@ -1382,6 +1384,10 @@ class Marionette(object):
          be used, since you already have access to chrome-level commands if you
          set context to chrome and do an execute_script. This method was added
          only to help us run existing Mochitests.
+        :param sandbox: A tag referring to the sandbox you wish to use; if
+         you specify a new tag, a new sandbox will be created.  If you use the
+         special tag 'system', the sandbox will be created using the system
+         principal which has elevated privileges.
         :param new_sandbox: If False, preserve global variables from the last
          execute_*script call. This is True by default, in which case no
          globals are preserved.
@@ -1439,13 +1445,16 @@ class Marionette(object):
                                       script=script,
                                       args=args,
                                       newSandbox=new_sandbox,
+                                      sandbox=sandbox,
                                       specialPowers=special_powers,
                                       scriptTimeout=script_timeout,
                                       line=int(frame[1]),
                                       filename=os.path.basename(frame[0]))
         return self.unwrapValue(response)
 
-    def execute_async_script(self, script, script_args=None, new_sandbox=True, special_powers=False, script_timeout=None, debug_script=False):
+    def execute_async_script(self, script, script_args=None, new_sandbox=True,
+                             sandbox='default', script_timeout=None,
+                             special_powers=False, debug_script=False):
         '''
         Executes an asynchronous JavaScript script, and returns the result (or None if the script does return a value).
 
@@ -1460,6 +1469,10 @@ class Marionette(object):
          be used, since you already have access to chrome-level commands if you
          set context to chrome and do an execute_script. This method was added
          only to help us run existing Mochitests.
+        :param sandbox: A tag referring to the sandbox you wish to use; if
+         you specify a new tag, a new sandbox will be created.  If you use the
+         special tag 'system', the sandbox will be created using the system
+         principal which has elevated privileges.
         :param new_sandbox: If False, preserve global variables from the last
          execute_*script call. This is True by default, in which case no
          globals are preserved.
@@ -1489,6 +1502,7 @@ class Marionette(object):
                                       script=script,
                                       args=args,
                                       newSandbox=new_sandbox,
+                                      sandbox=sandbox,
                                       specialPowers=special_powers,
                                       scriptTimeout=script_timeout,
                                       line=int(frame[1]),
