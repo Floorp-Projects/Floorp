@@ -1211,6 +1211,155 @@ this.PlacesUIUtils = {
     let cloudSyncEnabled = CloudSync && CloudSync.ready && CloudSync().tabsReady && CloudSync().tabs.hasRemoteTabs();
     return weaveEnabled || cloudSyncEnabled;
   },
+
+  /**
+   * WARNING TO ADDON AUTHORS: DO NOT USE THIS METHOD. IT'S LIKELY TO BE REMOVED IN A
+   * FUTURE RELEASE.
+   *
+   * Checks if a place: href represents a folder shortcut.
+   *
+   * @param queryString
+   *        the query string to check (a place: href)
+   * @return whether or not queryString represents a folder shortcut.
+   * @throws if queryString is malformed.
+   */
+  isFolderShortcutQueryString(queryString) {
+    // Based on GetSimpleBookmarksQueryFolder in nsNavHistory.cpp.
+
+    let queriesParam = { }, optionsParam = { };
+    PlacesUtils.history.queryStringToQueries(queryString,
+                                             queriesParam,
+                                             { },
+                                             optionsParam);
+    let queries = queries.value;
+    if (queries.length == 0)
+      throw new Error(`Invalid place: uri: ${queryString}`);
+    return queries.length == 1 &&
+           queries[0].folderCount == 1 &&
+           !queries[0].hasBeginTime &&
+           !queries[0].hasEndTime &&
+           !queries[0].hasDomain &&
+           !queries[0].hasURI &&
+           !queries[0].hasSearchTerms &&
+           !queries[0].tags.length == 0 &&
+           optionsParam.value.maxResults == 0;
+  },
+
+  /**
+   * WARNING TO ADDON AUTHORS: DO NOT USE THIS METHOD. IT"S LIKELY TO BE REMOVED IN A
+   * FUTURE RELEASE.
+   *
+   * Helpers for consumers of editBookmarkOverlay which don't have a node as their input.
+   * Given a partial node-like object, having at least the itemId property set, this
+   * method completes the rest of the properties necessary for initialising the edit
+   * overlay with it.
+   *
+   * @param aNodeLike
+   *        an object having at least the itemId nsINavHistoryResultNode property set,
+   *        along with any other properties available.
+   */
+  completeNodeLikeObjectForItemId(aNodeLike) {
+    if (this.useAsyncTransactions) {
+      // When async-transactions are enabled, node-likes must have
+      // bookmarkGuid set, and we cannot set it synchronously.
+      throw new Error("completeNodeLikeObjectForItemId cannot be used when " +
+                      "async transactions are enabled");
+    }
+    if (!("itemId" in aNodeLike))
+      throw new Error("itemId missing in aNodeLike");
+
+    let itemId = aNodeLike.itemId;
+    let defGetter = XPCOMUtils.defineLazyGetter.bind(XPCOMUtils, aNodeLike);
+
+    if (!("title" in aNodeLike))
+      defGetter("title", () => PlacesUtils.bookmarks.getItemTitle(itemId));
+
+    if (!("uri" in aNodeLike)) {
+      defGetter("uri", () => {
+        let uri = null;
+        try {
+          uri = PlacesUtils.bookmarks.getBookmarkURI(itemId);
+        }
+        catch(ex) { }
+        return uri ? uri.spec : "";
+      });
+    }
+
+    if (!("type" in aNodeLike)) {
+      defGetter("type", () => {
+        if (aNodeLike.uri.length > 0) {
+          if (/^place:/.test(aNodeLike.uri)) {
+            if (this.isFolderShortcutQueryString(aNodeLike.uri))
+              return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
+
+            return Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
+          }
+
+          return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
+        }
+
+        let itemType = PlacesUtils.bookmarks.getItemType(itemId);
+        if (itemType == PlacesUtils.bookmarks.TYPE_FOLDER)
+          return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
+
+        throw new Error("Unexpected item type");
+      });
+    }
+  },
+
+  /**
+   * Helpers for consumers of editBookmarkOverlay which don't have a node as their input.
+   *
+   * Given a bookmark object for either a url bookmark or a folder, returned by
+   * Bookmarks.fetch (see Bookmark.jsm), this creates a node-like object suitable for
+   * initialising the edit overlay with it.
+   *
+   * @param aFetchInfo
+   *        a bookmark object returned by Bookmarks.fetch.
+   * @return a node-like object suitable for initialising editBookmarkOverlay.
+   * @throws if aFetchInfo is representing a separator.
+   */
+  promiseNodeLikeFromFetchInfo: Task.async(function* (aFetchInfo) {
+    if (aFetchInfo.itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR)
+      throw new Error("promiseNodeLike doesn't support separators");
+
+    return Object.freeze({
+      itemId: yield PlacesUtils.promiseItemId(aFetchInfo.guid),
+      bookmarkGuid: aFetchInfo.guid,
+      title: aFetchInfo.title,
+      uri: aFetchInfo.url !== undefined ? aFetchInfo.url.href : "",
+
+      get type() {
+        if (aFetchInfo.itemType == PlacesUtils.bookmarks.TYPE_FOLDER)
+          return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
+
+        if (this.uri.length == 0)
+          throw new Error("Unexpected item type");
+
+        if (/^place:/.test(this.uri)) {
+          if (this.isFolderShortcutQueryString(this.uri))
+            return Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
+
+          return Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
+        }
+
+        return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
+      }
+    });
+  }),
+
+  /**
+   * Shortcut for calling promiseNodeLikeFromFetchInfo on the result of
+   * Bookmarks.fetch for the given guid/info object.
+   *
+   * @see promiseNodeLikeFromFetchInfo above and Bookmarks.fetch in Bookmarks.jsm.
+   */
+  fetchNodeLike: Task.async(function* (aGuidOrInfo) {
+    let info = yield PlacesUtils.bookmarks.fetch(aGuidOrInfo);
+    if (!info)
+      return null;
+    return (yield this.promiseNodeLikeFromFetchInfo(info));
+  })
 };
 
 
