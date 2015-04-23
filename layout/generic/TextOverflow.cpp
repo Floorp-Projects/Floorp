@@ -223,10 +223,21 @@ void
 nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                                                 nsPoint aOffsetFromRect)
 {
-  gfxFloat y = nsLayoutUtils::GetSnappedBaselineY(mFrame, aCtx->ThebesContext(),
-                                                  mRect.y, mAscent);
-  nsPoint baselinePt(mRect.x, NSToCoordFloor(y));
-  nsPoint pt = baselinePt + aOffsetFromRect;
+  WritingMode wm = mFrame->GetWritingMode();
+  nsPoint pt(mRect.x, mRect.y);
+  if (wm.IsVertical()) {
+    if (wm.IsVerticalLR()) {
+      pt.x = NSToCoordFloor(nsLayoutUtils::GetSnappedBaselineX(
+        mFrame, aCtx->ThebesContext(), pt.x, mAscent));
+    } else {
+      pt.x = NSToCoordFloor(nsLayoutUtils::GetSnappedBaselineX(
+        mFrame, aCtx->ThebesContext(), pt.x + mRect.width, -mAscent));
+    }
+  } else {
+    pt.y = NSToCoordFloor(nsLayoutUtils::GetSnappedBaselineY(
+      mFrame, aCtx->ThebesContext(), pt.y, mAscent));
+  }
+  pt += aOffsetFromRect;
 
   if (mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
     gfxTextRun* textRun = GetEllipsisTextRun(mFrame);
