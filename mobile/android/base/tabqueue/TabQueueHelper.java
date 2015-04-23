@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -102,6 +103,45 @@ public class TabQueueHelper {
         profile.writeFile(filename, jsonArray.toString());
 
         return jsonArray.length();
+    }
+
+    /**
+     * Remove a url from the file, if it exists.
+     * If the url exists multiple times, all instances of it will be removed.
+     * This should not be run on the UI thread.
+     *
+     * @param context
+     * @param urlToRemove URL to remove
+     * @param filename    filename to remove URL from
+     * @return the number of queued urls
+     */
+    public static int removeURLFromFile(final Context context, final String urlToRemove, final String filename) {
+        ThreadUtils.assertNotOnUiThread();
+
+        final GeckoProfile profile = GeckoProfile.get(context);
+
+        JSONArray jsonArray = profile.readJSONArrayFromFile(filename);
+        JSONArray newArray = new JSONArray();
+        String url;
+
+        // Since JSONArray.remove was only added in API 19, we have to use two arrays in order to remove.
+        for (int i = 0; i < jsonArray.length(); i++) {
+            try {
+                url = jsonArray.getString(i);
+            } catch (JSONException e) {
+                url = "";
+            }
+            if(!TextUtils.isEmpty(url) && !urlToRemove.equals(url)) {
+                newArray.put(url);
+            }
+        }
+
+        profile.writeFile(filename, newArray.toString());
+
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+        prefs.edit().putInt(PREF_TAB_QUEUE_COUNT, newArray.length()).apply();
+
+        return newArray.length();
     }
 
     /**
