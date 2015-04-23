@@ -970,7 +970,7 @@ class Shape : public gc::TenuredCell
     inline Shape* searchLinear(jsid id);
 
     void fixupAfterMovingGC();
-    void fixupGetterSetterForBarrier(JSTracer *trc);
+    void fixupGetterSetterForBarrier(JSTracer* trc);
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
@@ -1252,14 +1252,14 @@ GetterSetterWriteBarrierPost(AccessorShape* shape)
 {
     MOZ_ASSERT(shape);
     if (shape->hasGetterObject()) {
-        gc::StoreBuffer *sb = reinterpret_cast<gc::Cell*>(shape->getterObject())->storeBuffer();
+        gc::StoreBuffer* sb = reinterpret_cast<gc::Cell*>(shape->getterObject())->storeBuffer();
         if (sb) {
             sb->putGeneric(ShapeGetterSetterRef(shape));
             return;
         }
     }
     if (shape->hasSetterObject()) {
-        gc::StoreBuffer *sb = reinterpret_cast<gc::Cell*>(shape->setterObject())->storeBuffer();
+        gc::StoreBuffer* sb = reinterpret_cast<gc::Cell*>(shape->setterObject())->storeBuffer();
         if (sb) {
             sb->putGeneric(ShapeGetterSetterRef(shape));
             return;

@@ -123,12 +123,11 @@ class HTMLElement(object):
 
     @property
     def size(self):
-        '''
-        A dictionary with the size of the element.
-        '''
+        """A dictionary with the size of the element."""
         warnings.warn("The size property has been deprecated and will be removed in a future version. \
             Please use HTMLElement#rect", DeprecationWarning)
-        return self.marionette._send_message('getElementSize', 'value', id=self.id)
+        rect = self.rect
+        return {"width": rect["width"], "height": rect["height"]}
 
     @property
     def tag_name(self):
@@ -150,18 +149,20 @@ class HTMLElement(object):
         """
         warnings.warn("The location property has been deprecated and will be removed in a future version. \
             Please use HTMLElement#rect", DeprecationWarning)
-        return self.marionette._send_message("getElementLocation", "value", id=self.id)
+        rect = self.rect
+        return {"x": rect["x"], "y": rect["y"]}
 
     @property
     def rect(self):
+        """Gets the element's bounding rectangle.
+        
+        This will return a dictionary with the following:
+
+          * x and y represent the top left coordinates of the ``HTMLElement``
+            relative to top left corner of the document.
+          * height and the width will contain the height and the width
+            of the DOMRect of the ``HTMLElement``.
         """
-            this will return a dictionary with the following:
-
-            * x and y represent the top left coordinates of the WebElement relative to top left corner of the document.
-            * height and the width will contain the height and the width of the DOMRect of the WebElement.
-
-        """
-
         return self.marionette._send_message("getElementRect", "value", id=self.id)
 
     def value_of_css_property(self, property_name):

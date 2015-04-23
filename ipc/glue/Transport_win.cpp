@@ -22,9 +22,7 @@ bool
 CreateTransport(base::ProcessId aProcIdOne,
                 TransportDescriptor* aOne, TransportDescriptor* aTwo)
 {
-  // This id is used to name the IPC pipe.  The pointer passed to this
-  // function isn't significant.
-  wstring id = ChildProcessInfo::GenerateRandomChannelID(aOne);
+  wstring id = IPC::Channel::GenerateVerifiedChannelID(std::wstring());
   // Use MODE_SERVER to force creation of the pipe
   Transport t(id, Transport::MODE_SERVER, nullptr);
   HANDLE serverPipe = t.GetServerPipeHandle();

@@ -540,6 +540,7 @@ const Class DynamicWithObject::class_ = {
     nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* resolve */
+    nullptr, /* mayResolve */
     nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */
@@ -977,6 +978,7 @@ const Class UninitializedLexicalObject::class_ = {
     nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* resolve */
+    nullptr, /* mayResolve */
     nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */

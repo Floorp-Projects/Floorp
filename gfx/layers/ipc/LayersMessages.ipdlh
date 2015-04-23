@@ -94,26 +94,33 @@ union TimingFunction {
   StepFunction;
 };
 
+// Send the angle with units rather than sending all angles in radians
+// to avoid having floating point error introduced by unit switching.
+struct CSSAngle {
+  float value;
+  int unit; // an nsCSSUnit that is valid for angles
+};
+
 struct LayerColor { gfxRGBA value; };
 struct Perspective { float value; };
-struct RotationX { float radians; };
-struct RotationY { float radians; };
-struct RotationZ { float radians; };
-struct Rotation { float radians; };
+struct RotationX { CSSAngle angle; };
+struct RotationY { CSSAngle angle; };
+struct RotationZ { CSSAngle angle; };
+struct Rotation { CSSAngle angle; };
 struct Rotation3D {
   float x;
   float y;
   float z;
-  float radians;
+  CSSAngle angle;
 };
 struct Scale {
   float x;
   float y;
   float z;
 };
-struct Skew { float x; float y; };
-struct SkewX { float x; };
-struct SkewY { float y; };
+struct Skew { CSSAngle x; CSSAngle y; };
+struct SkewX { CSSAngle x; };
+struct SkewY { CSSAngle y; };
 struct TransformMatrix { Matrix4x4 value; };
 struct Translation {
   float x;
