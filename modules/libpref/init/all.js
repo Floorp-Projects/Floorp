@@ -4175,11 +4175,19 @@ pref("dom.mozContacts.enabled", false);
 pref("dom.mozAlarms.enabled", false);
 
 // Push
+
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+// Desktop prefs
 #ifdef RELEASE_BUILD
 pref("dom.push.enabled", false);
 #else
 pref("dom.push.enabled", true);
 #endif
+#else
+// Mobile prefs
+pref("dom.push.enabled", false);
+#endif
+
 pref("dom.push.debug", false);
 pref("dom.push.serverURL", "wss://push.services.mozilla.com/");
 pref("dom.push.userAgentID", "");
