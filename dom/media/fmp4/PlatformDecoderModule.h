@@ -13,14 +13,11 @@
 #include "mozilla/RefPtr.h"
 #include <queue>
 
-class nsIThreadPool;
-
 namespace mozilla {
 class TrackInfo;
 class AudioInfo;
 class VideoInfo;
 class MediaRawData;
-class MediaByteBuffer;
 
 namespace layers {
 class ImageContainer;
@@ -28,7 +25,6 @@ class ImageContainer;
 
 class MediaDataDecoder;
 class MediaDataDecoderCallback;
-class MediaInputQueue;
 class FlushableMediaTaskQueue;
 class CDMProxy;
 typedef int64_t Microseconds;

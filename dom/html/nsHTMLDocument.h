@@ -22,7 +22,6 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 
 class nsIEditor;
-class nsIParser;
 class nsIURI;
 class nsIDocShell;
 class nsICachingChannel;

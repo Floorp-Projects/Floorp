@@ -40,7 +40,6 @@
 class nsIWidget;
 
 namespace mozilla {
-class TimeStamp;
 
 namespace gfx {
 class Matrix4x4;

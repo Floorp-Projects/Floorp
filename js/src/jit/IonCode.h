@@ -22,13 +22,9 @@
 #include "vm/TypeInference.h"
 
 namespace js {
-
-class AsmJSModule;
-
 namespace jit {
 
 class MacroAssembler;
-class CodeOffsetLabel;
 class PatchableBackedge;
 class IonBuilder;
 
@@ -727,9 +723,6 @@ struct IonScriptCounts
 };
 
 struct VMFunction;
-
-class JitCompartment;
-class JitRuntime;
 
 struct AutoFlushICache
 {

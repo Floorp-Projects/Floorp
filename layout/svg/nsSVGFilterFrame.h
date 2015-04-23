@@ -17,7 +17,6 @@ class nsIContent;
 class nsIFrame;
 class nsIPresShell;
 class nsStyleContext;
-class nsSVGIntegerPair;
 class nsSVGLength2;
 
 struct nsRect;

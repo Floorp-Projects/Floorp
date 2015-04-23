@@ -19,8 +19,6 @@
 namespace mozilla {
 namespace dom {
 
-class PBrowserParent;
-
 class TCPSocketParentBase : public nsITCPSocketParent
                           , public mozilla::net::DisconnectableParent
 {

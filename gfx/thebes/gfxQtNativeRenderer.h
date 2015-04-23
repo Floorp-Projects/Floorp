@@ -11,8 +11,6 @@
 #include "gfxXlibSurface.h"
 #include "mozilla/gfx/Rect.h"
 
-class QRect;
-
 /**
  * This class lets us take code that draws into an Xlib surface drawable and lets us
  * use it to draw into any Thebes context. The user should subclass this class,

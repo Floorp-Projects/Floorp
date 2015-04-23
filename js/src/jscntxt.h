@@ -25,7 +25,6 @@ namespace js {
 
 namespace jit {
 class JitContext;
-class CompileCompartment;
 class DebugModeOSRVolatileJitFrameIterator;
 }
 
@@ -62,8 +61,6 @@ extern void
 TraceCycleDetectionSet(JSTracer* trc, ObjectSet& set);
 
 struct AutoResolving;
-class DtoaCache;
-class RegExpStatics;
 
 namespace frontend { struct CompileError; }
 

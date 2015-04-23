@@ -26,8 +26,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
 
-class nsIDOMWindow;
-
 namespace mozilla {
 namespace dom {
 class DOMStringList;

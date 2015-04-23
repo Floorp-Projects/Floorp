@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(f7259bf4-1f2b-4e9e-8983-1978cc076fa1)]
+[scriptable, uuid(56e190a0-2802-4fc4-b09f-bcda357035c3)]
 
 interface nsISecurityUITelemetry : nsISupports {
 
@@ -141,6 +141,17 @@ const uint32_t WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE = 84;
 const uint32_t WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED = 1;
 const uint32_t WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN = 2;
 const uint32_t WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME = 4;
-// This uses up buckets till 91 (including)
+
+// Another Safe Browsing list (like malware & phishing above)
+const uint32_t WARNING_UNWANTED_PAGE_TOP = 92;
+const uint32_t WARNING_UNWANTED_PAGE_TOP_WHY_BLOCKED = 93;
+const uint32_t WARNING_UNWANTED_PAGE_TOP_GET_ME_OUT_OF_HERE = 94;
+const uint32_t WARNING_UNWANTED_PAGE_TOP_IGNORE_WARNING = 95;
+const uint32_t WARNING_UNWANTED_PAGE_FRAME = 96;
+const uint32_t WARNING_UNWANTED_PAGE_FRAME_WHY_BLOCKED = 97;
+const uint32_t WARNING_UNWANTED_PAGE_FRAME_GET_ME_OUT_OF_HERE = 98;
+const uint32_t WARNING_UNWANTED_PAGE_FRAME_IGNORE_WARNING = 99;
+
+// This uses up buckets till 99 (including)
 // We only have buckets up to 100.
 };

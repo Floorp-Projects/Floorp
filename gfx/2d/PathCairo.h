@@ -13,7 +13,6 @@
 namespace mozilla {
 namespace gfx {
 
-class DrawTargetCairo;
 class PathCairo;
 
 class PathBuilderCairo : public PathBuilder

@@ -19,12 +19,6 @@ namespace mozilla {
 
 class ErrorResult;
 
-namespace dom {
-
-template <typename T>
-class Sequence;
-
-} // namespace dom
 } // namespace mozilla
 
 BEGIN_WORKERS_NAMESPACE

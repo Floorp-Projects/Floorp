@@ -18,7 +18,6 @@ namespace mozilla {
 namespace layers {
 
 class DeviceManagerD3D9;
-class LayerD3D9;
 class Nv3DVUtils;
 class Layer;
 class TextureSourceD3D9;

@@ -24,7 +24,6 @@
 #undef KeyPress
 #endif
 
-class nsIDOMMouseEventListener;
 class mozInlineSpellWordUtil;
 class mozInlineSpellChecker;
 class mozInlineSpellResume;

@@ -15,8 +15,6 @@
 #include "nsDebug.h"
 #include "StackArena.h"
 
-class nsIPresShell;
-
 /**
  * The SpanningCellSorter is responsible for accumulating lists of cells
  * with colspans so that those cells can later be enumerated, sorted

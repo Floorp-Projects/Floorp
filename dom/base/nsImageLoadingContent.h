@@ -27,8 +27,6 @@
 
 class nsIURI;
 class nsIDocument;
-class imgILoader;
-class nsIIOService;
 class nsPresContext;
 class nsIContent;
 class imgRequestProxy;

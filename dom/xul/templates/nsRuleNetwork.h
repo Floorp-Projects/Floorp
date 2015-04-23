@@ -37,9 +37,7 @@
 #include "pldhash.h"
 #include "nsIRDFNode.h"
 
-class nsIRDFResource;
 class nsXULTemplateResultSetRDF;
-class nsXULTemplateQueryProcessorRDF;
 
 //----------------------------------------------------------------------
 

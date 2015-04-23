@@ -10,8 +10,6 @@
 
 #include "prinrval.h"
 
-class JSObject;
-
 /**
  * A stopwatch measuring the duration of a CPOW call.
  *

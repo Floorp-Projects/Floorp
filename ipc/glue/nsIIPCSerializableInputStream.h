@@ -8,7 +8,6 @@
 #include "nsISupports.h"
 #include "mozilla/Attributes.h"
 
-struct nsTArrayDefaultAllocator;
 template <class> class nsTArray;
 
 namespace mozilla {

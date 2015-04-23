@@ -9,7 +9,6 @@
 
 #include "nsString.h"
 
-class nsIURI;
 namespace mozilla {
 namespace scache {
 class StartupCache;

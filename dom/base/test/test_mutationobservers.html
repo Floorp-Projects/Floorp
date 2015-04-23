@@ -20,6 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=641821
 
 /** Test for Bug 641821 **/
 
+SimpleTest.requestFlakyTimeout("requestFlakyTimeout is silly. (But make sure marquee has time to initialize itself.)");
+
 var div = document.createElement("div");
 
 var M;
@@ -580,7 +582,7 @@ function testExpandos() {
   var m2 = new M(function(records, observer) {
     is(observer.expandoProperty, true);
     observer.disconnect();
-    then(testStyleCreate);
+    then(testOutsideShadowDOM);
   });
   m2.expandoProperty = true;
   m2.observe(div, { attributes: true });
@@ -594,6 +596,74 @@ function testExpandos() {
     SpecialPowers.gc();
   }
   div.setAttribute("foo", "bar2");
+}
+
+function testOutsideShadowDOM() {
+  var m = new M(function(records, observer) {
+    is(records.length, 1);
+    is(records[0].type, "attributes", "Should have got attributes");
+    observer.disconnect();
+    then(testInsideShadowDOM);
+  });
+  m.observe(div, {
+      attributes: true,
+      childList: true,
+      characterData: true,
+      subtree: true
+    })
+  var sr = div.createShadowRoot();
+  sr.innerHTML = "<div" + ">text</" + "div>";
+  sr.firstChild.setAttribute("foo", "bar");
+  sr.firstChild.firstChild.data = "text2";
+  sr.firstChild.appendChild(document.createElement("div"));
+  div.setAttribute("foo", "bar");
+}
+
+function testInsideShadowDOM() {
+  var m = new M(function(records, observer) {
+    is(records.length, 4);
+    is(records[0].type, "childList");
+    is(records[1].type, "attributes");
+    is(records[2].type, "characterData");
+    is(records[3].type, "childList");
+    observer.disconnect();
+    then(testMarquee);
+  });
+  var sr = div.createShadowRoot();
+  m.observe(sr, {
+      attributes: true,
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+
+  sr.innerHTML = "<div" + ">text</" + "div>";
+  sr.firstChild.setAttribute("foo", "bar");
+  sr.firstChild.firstChild.data = "text2";
+  sr.firstChild.appendChild(document.createElement("div"));
+  div.setAttribute("foo", "bar2");
+
+}
+
+function testMarquee() {
+  var m = new M(function(records, observer) {
+    is(records.length, 1);
+    is(records[0].type, "attributes");
+    is(records[0].attributeName, "ok");
+    is(records[0].oldValue, null);
+    observer.disconnect();
+    then(testStyleCreate);
+  });
+  var marquee = document.createElement("marquee");
+  m.observe(marquee, {
+    attributes: true,
+    attributeOldValue: true,
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+  document.body.appendChild(marquee);
+  setTimeout(function() {marquee.setAttribute("ok", "ok")}, 500);
 }
 
 function testStyleCreate() {

@@ -650,6 +650,23 @@ const char** mozilla_sampler_get_features()
   return features;
 }
 
+void mozilla_sampler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
+                                     uint32_t *aGeneration)
+{
+  *aCurrentPosition = 0;
+  *aTotalSize = 0;
+  *aGeneration = 0;
+
+  if (!stack_key_initialized)
+    return;
+
+  TableTicker *t = tlsTicker.get();
+  if (!t)
+    return;
+
+  t->GetBufferInfo(aCurrentPosition, aTotalSize, aGeneration);
+}
+
 // Values are only honored on the first start
 void mozilla_sampler_start(int aProfileEntries, double aInterval,
                            const char** aFeatures, uint32_t aFeatureCount,

@@ -22,7 +22,6 @@ namespace layers {
 
 class MaybeMagicGrallocBufferHandle;
 class SurfaceDescriptor;
-class TextureHost;
 
 struct GrallocBufferRef {
   base::ProcessId mOwner;

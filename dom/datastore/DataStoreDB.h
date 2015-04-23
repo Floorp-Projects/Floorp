@@ -21,7 +21,6 @@ namespace dom {
 namespace indexedDB {
 class IDBDatabase;
 class IDBFactory;
-class IDBObjectStore;
 class IDBOpenDBRequest;
 class IDBTransaction;
 }

@@ -13,7 +13,6 @@
 
 class nsISupports;
 class nsIEventTarget;
-class nsIThread;
 
 namespace mozilla {
 namespace net {
@@ -32,8 +31,6 @@ class ChannelEvent
 // event loop (ex: IPDL rpc) could cause listener->OnDataAvailable (for
 // instance) to be dispatched and called before mListener->OnStartRequest has
 // completed.
-
-class AutoEventEnqueuerBase;
 
 class ChannelEventQueue final
 {

@@ -26,33 +26,16 @@
 namespace mozilla {
 namespace layers {
 
-class ClientTiledLayerBuffer;
-class CanvasClient;
-class CanvasLayerComposite;
-class CanvasSurface;
-class ColorLayerComposite;
-class CompositableChild;
-class ContainerLayerComposite;
-class ContentClient;
-class ContentClientRemote;
 class EditReply;
-class ImageClient;
-class ImageLayerComposite;
 class Layer;
-class OptionalThebesBuffer;
 class PLayerChild;
 class PLayerTransactionChild;
-class PLayerTransactionParent;
 class LayerTransactionChild;
-class RefLayerComposite;
 class ShadowableLayer;
-class ShmemTextureClient;
 class SurfaceDescriptor;
 class TextureClient;
-class PaintedLayerComposite;
 class ThebesBuffer;
 class ThebesBufferData;
-class TiledLayerComposer;
 class Transaction;
 
 

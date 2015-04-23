@@ -19,9 +19,6 @@
 #include "nsServiceManagerUtils.h"
 #endif
 
-class nsIDocument;
-class nsPIDOMWindow;
-
 namespace mozilla {
 namespace dom {
 
@@ -84,7 +81,6 @@ namespace dom {
  * TODO: Split TYPE_OBJECT into TYPE_EMBED and TYPE_OBJECT
  */
 
-class FetchBodyStream;
 class Request;
 
 #define kFETCH_CLIENT_REFERRER_STR "about:client"

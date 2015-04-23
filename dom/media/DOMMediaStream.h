@@ -15,8 +15,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/CORSMode.h"
 
-class nsXPCClassInfo;
-
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with NS_DECL_NSIDOMMEDIASTREAM, containing
 // currentTime getter.

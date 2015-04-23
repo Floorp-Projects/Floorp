@@ -15,7 +15,6 @@
 class nsIContent;
 class nsIScrollbarMediator;
 class nsITimer;
-class nsIAtom;
 
 namespace mozilla {
 namespace layout {

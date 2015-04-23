@@ -12,7 +12,6 @@
 #include "mozilla/Mutex.h"
 
 struct PRFileDesc;
-class nsIDOMBlob;
 
 namespace mozilla {
 
@@ -20,7 +19,6 @@ namespace dom {
 class File;
 }
 
-class ReentrantMonitor;
 /**
  * Data is moved into a temporary file when it grows beyond
  * the maximal size passed in the Init function.
