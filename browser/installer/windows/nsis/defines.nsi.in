@@ -74,10 +74,6 @@
 !define MOZ_MAINTENANCE_SERVICE
 #endif
 
-#ifdef MOZ_METRO
-!define MOZ_METRO
-#endif
-
 # File details shared by both the installer and uninstaller
 VIProductVersion "1.0.0.0"
 VIAddVersionKey "ProductName"     "${BrandShortName}"

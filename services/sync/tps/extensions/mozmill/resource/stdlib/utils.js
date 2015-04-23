@@ -19,8 +19,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const applicationIdMap = {
-  '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'Firefox',
-  '{99bceaaa-e3c6-48c1-b981-ef9b46b67d60}': 'MetroFirefox'
+  '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}': 'Firefox'
 }
 const applicationName = applicationIdMap[Services.appinfo.ID] || Services.appinfo.name;
 
@@ -49,13 +48,7 @@ function Copy (obj) {
  * @returns {Object} The browser element
  */
 function getBrowserObject(aWindow) {
-  switch(applicationName) {
-    case "MetroFirefox":
-      return aWindow.Browser;
-    case "Firefox":
-    default:
-      return aWindow.gBrowser;
-  }
+  return aWindow.gBrowser;
 }
 
 function getChromeWindow(aWindow) {

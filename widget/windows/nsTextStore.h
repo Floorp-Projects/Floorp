@@ -293,7 +293,7 @@ protected:
   // application.  Otherwise, this does nothing.
   void     CreateNativeCaret();
 
-  // Holds the pointer to our current win32 or metro widget
+  // Holds the pointer to our current win32 widget
   nsRefPtr<nsWindowBase>       mWidget;
   // Document manager for the currently focused editor
   nsRefPtr<ITfDocumentMgr>     mDocumentMgr;

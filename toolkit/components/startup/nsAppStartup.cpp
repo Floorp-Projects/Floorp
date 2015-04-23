@@ -143,7 +143,6 @@ nsAppStartup::nsAppStartup() :
   mInterrupted(false),
   mIsSafeModeNecessary(false),
   mStartupCrashTrackingEnded(false),
-  mRestartTouchEnvironment(false),
   mRestartNotSameProfile(false)
 { }
 
@@ -284,9 +283,7 @@ nsAppStartup::Run(void)
   }
 
   nsresult retval = NS_OK;
-  if (mRestartTouchEnvironment) {
-    retval = NS_SUCCESS_RESTART_METRO_APP;
-  } else if (mRestart) {
+  if (mRestart) {
     retval = NS_SUCCESS_RESTART_APP;
   } else if (mRestartNotSameProfile) {
     retval = NS_SUCCESS_RESTART_APP_NOT_SAME_PROFILE;
@@ -384,17 +381,12 @@ nsAppStartup::Quit(uint32_t aMode)
       gRestartMode = (aMode & 0xF0);
     }
 
-    if (!mRestartTouchEnvironment) {
-      mRestartTouchEnvironment = (aMode & eRestartTouchEnvironment) != 0;
-      gRestartMode = (aMode & 0xF0);
-    }
-
     if (!mRestartNotSameProfile) {
       mRestartNotSameProfile = (aMode & eRestartNotSameProfile) != 0;
       gRestartMode = (aMode & 0xF0);
     }
 
-    if (mRestart || mRestartTouchEnvironment || mRestartNotSameProfile) {
+    if (mRestart || mRestartNotSameProfile) {
       // Mark the next startup as a restart.
       PR_SetEnv("MOZ_APP_RESTART=1");
 
@@ -464,7 +456,7 @@ nsAppStartup::Quit(uint32_t aMode)
       NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
       NS_NAMED_LITERAL_STRING(restartStr, "restart");
       obsService->NotifyObservers(nullptr, "quit-application",
-        (mRestart || mRestartTouchEnvironment || mRestartNotSameProfile) ?
+        (mRestart || mRestartNotSameProfile) ?
          restartStr.get() : shutdownStr.get());
     }
 
@@ -587,14 +579,6 @@ nsAppStartup::GetWasRestarted(bool *aResult)
    * thus we have to check if the variable is present and not empty. */
   *aResult = mozAppRestart && (strcmp(mozAppRestart, "") != 0);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAppStartup::GetRestartingTouchEnvironment(bool *aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mRestartTouchEnvironment;
   return NS_OK;
 }
 

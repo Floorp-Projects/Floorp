@@ -406,9 +406,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     else if (!strcmp(aProperty, NS_APP_PREFS_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("prefs.js"));
     }
-    else if (!strcmp(aProperty, NS_METRO_APP_PREFS_50_FILE)) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING("metro-prefs.js"));
-    }
     else if (!strcmp(aProperty, NS_LOCALSTORE_UNSAFE_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
     }
@@ -1100,8 +1097,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   // Get the local app data directory and if a vendor name exists append it.
   // If only a product name exists, append it.  If neither exist fallback to
   // old handling.  We don't use the product name on purpose because we want a
-  // shared update directory for different apps run from the same path (like
-  // Metro & Desktop).
+  // shared update directory for different apps run from the same path.
   nsCOMPtr<nsIFile> localDir;
   if (pathHashResult && (hasVendor || gAppData->name) &&
       NS_SUCCEEDED(GetUserDataDirectoryHome(getter_AddRefs(localDir), true)) &&

@@ -28,13 +28,6 @@ def Libxul(name):
         'winspool.drv'
     ]
 
-    if CONFIG['MOZ_METRO']:
-        DELAYLOAD_DLLS += [
-            'API-MS-WIN-CORE-WINRT-L' + CONFIG['CRTEXPDLLVERSION'] + '.DLL',
-            'API-MS-WIN-CORE-WINRT-STRING-L' + CONFIG['CRTEXPDLLVERSION'] + '.DLL',
-            'uiautomationcore.dll'
-        ]
-
     if CONFIG['ACCESSIBILITY']:
         DELAYLOAD_DLLS += ['oleacc.dll']
 
@@ -354,11 +347,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     if CONFIG['ACCESSIBILITY']:
         OS_LIBS += [
             'oleacc',
-        ]
-    if CONFIG['MOZ_METRO']:
-        OS_LIBS += [
-            'uiautomationcore',
-            'runtimeobject',
         ]
 
 if CONFIG['MOZ_ENABLE_QT']:
