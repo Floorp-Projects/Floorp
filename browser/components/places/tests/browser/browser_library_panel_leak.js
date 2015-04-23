@@ -25,7 +25,7 @@ function test() {
     isnot(organizer.PlacesOrganizer, null, "Sanity check: PlacesOrganizer should exist");
     isnot(organizer.gEditItemOverlay, null, "Sanity check: gEditItemOverlay should exist");
 
-    ok(organizer.gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
+    ok(organizer.gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
     isnot(organizer.gEditItemOverlay.itemId, -1, "Editing a bookmark");
 
     // Select History in the left pane.
