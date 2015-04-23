@@ -750,7 +750,7 @@ BluetoothHfpManager::ParseAtCommand(const nsACString& aAtCommand,
 // Virtual function of class SocketConsumer
 void
 BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
-                                       nsAutoPtr<UnixSocketRawData>& aMessage)
+                                       nsAutoPtr<UnixSocketBuffer>& aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSocket);
