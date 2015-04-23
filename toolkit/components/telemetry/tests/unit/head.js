@@ -172,5 +172,8 @@ function promiseRejects(promise) {
 Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
 TelemetryPing.initLogging();
 
+// Telemetry archiving should be on.
+Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);
+
 // Avoid timers interrupting test behavior.
 fakeSchedulerTimer(() => {}, () => {});
