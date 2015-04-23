@@ -347,7 +347,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(listener, mDocument->NodePrincipal(),
                               withCredentials);
-    rv = corsListener->Init(channel);
+    rv = corsListener->Init(channel, true);
     NS_ENSURE_SUCCESS(rv, rv);
     listener = corsListener;
   }

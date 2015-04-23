@@ -1670,7 +1670,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(streamLoader, aLoadData->mLoaderPrincipal,
 			      withCredentials);
-    rv = corsListener->Init(channel);
+    rv = corsListener->Init(channel, true);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
       mSyncCallback = false;
