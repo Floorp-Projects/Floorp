@@ -36,7 +36,6 @@ runWithMSE(function (ms, v) {
     });
 
     v.addEventListener("seeked", function () {
-      ok(v.readyState >= v.HAVE_FUTURE_DATA, "readyState is >= FUTURE_DATA");
       SimpleTest.finish();
     });
   });

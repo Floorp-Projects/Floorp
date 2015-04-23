@@ -134,6 +134,7 @@ private:
   };
   EventloopNestingState mEventloopNestingState;
   nsTArray<SyncSection> mSyncSections;
+  bool mRunningSyncSections;
   bool mRunning;
   bool mExiting;
   /**
