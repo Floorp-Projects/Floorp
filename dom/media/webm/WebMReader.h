@@ -25,6 +25,10 @@
 
 #include "OpusParser.h"
 
+namespace mozilla {
+static const unsigned NS_PER_USEC = 1000;
+static const double NS_PER_S = 1e9;
+
 // Holds a nestegg_packet, and its file offset. This is needed so we
 // know the offset in the file we've played up to, in order to calculate
 // whether it's likely we can play through to the end without needing
@@ -32,27 +36,51 @@
 class NesteggPacketHolder {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NesteggPacketHolder)
-  NesteggPacketHolder(nestegg_packet* aPacket, int64_t aOffset)
-    : mPacket(aPacket), mOffset(aOffset) {}
+  NesteggPacketHolder() : mPacket(nullptr), mOffset(-1), mTimestamp(-1) {}
+
+  bool Init(nestegg_packet* aPacket, int64_t aOffset)
+  {
+    uint64_t timestamp_ns;
+    if (nestegg_packet_tstamp(aPacket, &timestamp_ns) == -1) {
+      return false;
+    }
+
+    // We store the timestamp as signed microseconds so that it's easily
+    // comparable to other timestamps we have in the system.
+    mTimestamp = timestamp_ns / 1000;
+    mPacket = aPacket;
+    mOffset = aOffset;
+
+    return true;
+  }
+
+  nestegg_packet* Packet() { MOZ_ASSERT(IsInitialized()); return mPacket; }
+  int64_t Offset() { MOZ_ASSERT(IsInitialized()); return mOffset; }
+  int64_t Timestamp() { MOZ_ASSERT(IsInitialized()); return mTimestamp; }
+
+private:
+  ~NesteggPacketHolder()
+  {
+    nestegg_free_packet(mPacket);
+  }
+
+  bool IsInitialized() { return mOffset >= 0; }
 
   nestegg_packet* mPacket;
+
   // Offset in bytes. This is the offset of the end of the Block
   // which contains the packet.
   int64_t mOffset;
-private:
-  ~NesteggPacketHolder() {
-    nestegg_free_packet(mPacket);
-  }
+
+  // Packet presentation timestamp in microseconds.
+  int64_t mTimestamp;
 
   // Copy constructor and assignment operator not implemented. Don't use them!
   NesteggPacketHolder(const NesteggPacketHolder &aOther);
   NesteggPacketHolder& operator= (NesteggPacketHolder const& aOther);
 };
 
-namespace mozilla {
 class WebMBufferedState;
-static const unsigned NS_PER_USEC = 1000;
-static const double NS_PER_S = 1e9;
 
 // Queue for holding nestegg packets.
 class WebMPacketQueue {
@@ -174,7 +202,7 @@ protected:
   // or an un-recoverable read error has occured. The reader's monitor
   // must be held during this call. The caller is responsible for freeing
   // aPacket.
-  bool DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset);
+  bool DecodeAudioPacket(NesteggPacketHolder* aHolder);
   bool DecodeVorbis(const unsigned char* aData, size_t aLength,
                     int64_t aOffset, uint64_t aTstampUsecs,
                     int32_t* aTotalFrames);
