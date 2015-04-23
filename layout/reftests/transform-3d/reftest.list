@@ -60,6 +60,6 @@ fails-if(!layersGPUAccelerated) == 1035611-1.html 1035611-1-ref.html # Bug 10728
 == animate-cube-radians.html animate-cube-radians-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) fuzzy-if(Mulet,16,9) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
 != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
-random == animate-cube-degrees.html animate-cube-degrees-ref.html # Bug 1157455
-random == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html # Bug 1157455
+== animate-cube-degrees.html animate-cube-degrees-ref.html
+== animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
