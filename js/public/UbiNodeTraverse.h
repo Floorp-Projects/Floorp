@@ -120,13 +120,13 @@ struct BreadthFirst {
         MOZ_ASSERT(!traversalBegun);
         traversalBegun = true;
 
-        // While there are pending nodes, visit them.
+        // While there are pending nodes, visit them, until we've found a path to the target.
         while (!pending.empty()) {
             Node origin = pending.front();
             pending.popFront();
 
             // Get a range containing all origin's outgoing edges.
-            auto range = origin.edges(cx, wantNames);
+            js::ScopedJSDeletePtr<EdgeRange> range(origin.edges(cx, wantNames));
             if (!range)
                 return false;
 
