@@ -1,15 +1,11 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
 # A script to generate toolkit/components/downloads/csd.pb.{cc,h} for use in
 # nsIApplicationReputationQuery. This script assumes you have downloaded and
 # installed the protocol buffer compiler.
 # As of June 26 2014, csd.proto contains many protobufs that are currently
 # unused by ApplicationReputation. You may want to strip csd.proto of these
 # before running the protocol compiler on it.
-
-set -e
-
-if [ "${PROTOC_PATH:+set}" != "set" ]; then
+if [ -n $PROTOC_PATH ]; then
   PROTOC_PATH=/usr/local/bin/protoc
 fi
 
@@ -21,14 +17,9 @@ if [ ! -e $PROTOC_PATH ]; then
   exit 1
 fi
 
-if [ ! -f nsDownloadManager.cpp ]; then
-    echo "You must run this script in the toolkit/components/downloads" >&2
-    echo "directory of the source tree." >&2
-    exit 1
-fi
-
 # Get the protocol buffer and compile it
-CSD_PROTO_URL="https://chromium.googlesource.com/playground/chromium-blink-merge/+/master/chrome/common/safe_browsing/csd.proto?format=TEXT"
+CMD='wget http://src.chromium.org/chrome/trunk/src/chrome/common/safe_browsing/csd.proto -O csd.proto'
+OUTPUT_PATH=toolkit/components/downloads
 
-curl $CSD_PROTO_URL | base64 --decode > csd.proto
-$PROTOC_PATH csd.proto --cpp_out=.
+$CMD
+$PROTOC_PATH csd.proto --cpp_out=$OUTPUT_PATH
