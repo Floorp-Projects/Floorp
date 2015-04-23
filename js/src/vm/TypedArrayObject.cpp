@@ -784,7 +784,11 @@ TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp)
 /* static */ const JSFunctionSpec
 TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("subarray", "TypedArraySubarray", 2, 0),
+#if 0 /* disabled until perf-testing is completed */
+    JS_SELF_HOSTED_FN("set", "TypedArraySet", 2, 0),
+#else
     JS_FN("set", TypedArrayObject::set, 2, 0),
+#endif
     JS_SELF_HOSTED_FN("copyWithin", "TypedArrayCopyWithin", 3, 0),
     JS_SELF_HOSTED_FN("every", "TypedArrayEvery", 2, 0),
     JS_SELF_HOSTED_FN("fill", "TypedArrayFill", 3, 0),
