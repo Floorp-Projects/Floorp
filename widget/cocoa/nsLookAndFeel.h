@@ -26,10 +26,6 @@ public:
 
   static bool UseOverlayScrollbars();
 
-  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
-  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& lookAndFeelIntCache);
-
-  virtual void RefreshImpl();
 protected:
 
   // Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
@@ -38,13 +34,6 @@ protected:
 
   static bool SystemWantsOverlayScrollbars();
   static bool AllowOverlayScrollbarsOverlap();
-
-private:
-  int32_t mUseOverlayScrollbars;
-  bool mUseOverlayScrollbarsCached;
-
-  int32_t mAllowOverlayScrollbarsOverlap;
-  bool mAllowOverlayScrollbarsOverlapCached;
 };
 
 #endif // nsLookAndFeel_h_
