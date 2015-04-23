@@ -7,10 +7,11 @@
 "use strict";
 
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
-Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
+Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
@@ -44,7 +45,7 @@ add_task(function* test_archivedPings() {
   for (let data of PINGS) {
     fakeNow(data.dateCreated);
     data.id = yield TelemetryPing.send(data.type, data.payload);
-    let list = yield TelemetryPing.promiseArchivedPingList();
+    let list = yield TelemetryArchive.promiseArchivedPingList();
 
     expectedPingList.push({
       id: data.id,
@@ -58,7 +59,7 @@ add_task(function* test_archivedPings() {
   let ids = [for (p of PINGS) p.id];
   let checkLoadingPings = Task.async(function*() {
     for (let data of PINGS) {
-      let ping = yield TelemetryPing.promiseArchivedPingById(data.id);
+      let ping = yield TelemetryArchive.promiseArchivedPingById(data.id);
       Assert.equal(ping.id, data.id, "Archived ping should have matching id");
       Assert.equal(ping.type, data.type, "Archived ping should have matching type");
       Assert.equal(ping.creationDate, data.dateCreated.toISOString(),
@@ -71,7 +72,7 @@ add_task(function* test_archivedPings() {
   // Check that we find the archived pings again by scanning after a restart.
   yield TelemetryPing.setup();
 
-  let pingList = yield TelemetryPing.promiseArchivedPingList();
+  let pingList = yield TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList,
                    "Should have submitted pings in archive list after restart");
   yield checkLoadingPings();
@@ -111,17 +112,18 @@ add_task(function* test_archivedPings() {
   });
   expectedPingList.sort((a, b) => a.timestampCreated - b.timestampCreated);
 
-  // Trigger scanning the ping dir.
-  yield TelemetryPing.setup();
+  // Reset the TelemetryArchive so we scan the archived dir again.
+  yield TelemetryArchive._testReset();
 
   // Check that we are still picking up the valid archived pings on disk,
   // plus the valid ones above.
-  pingList = yield TelemetryPing.promiseArchivedPingList();
+  pingList = yield TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList, "Should have picked up valid archived pings");
   yield checkLoadingPings();
 
   // Now check that we fail to load the two invalid pings from above.
-  let rejects = (promise) => promise.then(() => false, () => true);
-  Assert.ok((yield rejects(TelemetryPing.promiseArchivedPingById(FAKE_ID1))), "Should not have scanned invalid ping");
-  Assert.ok((yield rejects(TelemetryPing.promiseArchivedPingById(FAKE_ID2))), "Should not have scanned invalid ping");
+  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID1))),
+            "Should have rejected invalid ping");
+  Assert.ok((yield promiseRejects(TelemetryArchive.promiseArchivedPingById(FAKE_ID2))),
+            "Should have rejected invalid ping");
 });
