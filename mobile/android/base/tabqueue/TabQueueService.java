@@ -5,6 +5,13 @@
 
 package org.mozilla.gecko.tabqueue;
 
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.mozglue.ContextUtils;
+import org.mozilla.gecko.preferences.GeckoPreferences;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +21,7 @@ import android.graphics.PixelFormat;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,12 +29,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.mozglue.ContextUtils;
-
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,6 +58,7 @@ public class TabQueueService extends Service {
     private static final String LOGTAG = "Gecko" + TabQueueService.class.getSimpleName();
 
     private static final long TOAST_TIMEOUT = 3000;
+    private static final long TOAST_DOUBLE_TAP_TIMEOUT_MILLIS = 6000;
 
     private WindowManager windowManager;
     private View toastLayout;
@@ -84,7 +87,7 @@ public class TabQueueService extends Service {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         LayoutInflater layoutInflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        toastLayout = layoutInflater.inflate(R.layout.button_toast, null);
+        toastLayout = layoutInflater.inflate(R.layout.tab_queue_toast, null);
 
         final Resources resources = getResources();
 
@@ -95,7 +98,7 @@ public class TabQueueService extends Service {
         openNowButton.setText(resources.getText(R.string.tab_queue_toast_action));
 
         toastLayoutParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
@@ -108,6 +111,50 @@ public class TabQueueService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
+        // If this is a redelivery then lets bypass the entire double tap to open now code as that's a big can of worms,
+        // we also don't expect redeliveries because of the short time window associated with this feature.
+        if (flags != START_FLAG_REDELIVERY) {
+            final Context applicationContext = getApplicationContext();
+            final SharedPreferences sharedPreferences = GeckoSharedPrefs.forApp(applicationContext);
+
+            final String lastUrl = sharedPreferences.getString(GeckoPreferences.PREFS_TAB_QUEUE_LAST_SITE, "");
+
+            final ContextUtils.SafeIntent safeIntent = new ContextUtils.SafeIntent(intent);
+            final String intentUrl = safeIntent.getDataString();
+
+            final long lastRunTime = sharedPreferences.getLong(GeckoPreferences.PREFS_TAB_QUEUE_LAST_TIME, 0);
+            final boolean isWithinDoubleTapTimeLimit = System.currentTimeMillis() - lastRunTime < TOAST_DOUBLE_TAP_TIMEOUT_MILLIS;
+
+            if (!TextUtils.isEmpty(lastUrl) && lastUrl.equals(intentUrl) && isWithinDoubleTapTimeLimit) {
+                // Background thread because we could do some file IO if we have to remove a url from the list.
+                tabQueueHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // If there is a runnable around, that means that the previous process hasn't yet completed, so
+                        // we will need to prevent it from running and remove the view from the window manager.
+                        // If there is no runnable around then the url has already been added to the list, so we'll
+                        // need to remove it before proceeding or that url will open multiple times.
+                        if (stopServiceRunnable != null) {
+                            tabQueueHandler.removeCallbacks(stopServiceRunnable);
+                            stopSelfResult(stopServiceRunnable.getStartId());
+                            stopServiceRunnable = null;
+                            removeView();
+                        } else {
+                            TabQueueHelper.removeURLFromFile(applicationContext, intentUrl, TabQueueHelper.FILE_NAME);
+                        }
+                        openNow(safeIntent.getUnsafe());
+                        stopSelfResult(startId);
+                    }
+                });
+
+                return START_REDELIVER_INTENT;
+            }
+
+            sharedPreferences.edit().putString(GeckoPreferences.PREFS_TAB_QUEUE_LAST_SITE, intentUrl)
+                                    .putLong(GeckoPreferences.PREFS_TAB_QUEUE_LAST_TIME, System.currentTimeMillis())
+                                    .apply();
+        }
+
         if (stopServiceRunnable != null) {
             // If we're already displaying a toast, keep displaying it but store the previous url.
             // The open button will refer to the most recently opened link.
@@ -130,14 +177,8 @@ public class TabQueueService extends Service {
             public void onClick(final View view) {
                 tabQueueHandler.removeCallbacks(stopServiceRunnable);
                 stopServiceRunnable = null;
-
-
-                Intent forwardIntent = new Intent(intent);
-                forwardIntent.setClass(getApplicationContext(), BrowserApp.class);
-                forwardIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(forwardIntent);
-
                 removeView();
+                openNow(intent);
                 stopSelfResult(startId);
             }
         });
@@ -145,6 +186,17 @@ public class TabQueueService extends Service {
         tabQueueHandler.postDelayed(stopServiceRunnable, TOAST_TIMEOUT);
 
         return START_REDELIVER_INTENT;
+    }
+
+    private void openNow(Intent intent) {
+        Intent forwardIntent = new Intent(intent);
+        forwardIntent.setClass(getApplicationContext(), BrowserApp.class);
+        forwardIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(forwardIntent);
+
+        GeckoSharedPrefs.forApp(getApplicationContext()).edit().remove(GeckoPreferences.PREFS_TAB_QUEUE_LAST_SITE)
+                                                               .remove(GeckoPreferences.PREFS_TAB_QUEUE_LAST_TIME)
+                                                               .apply();
     }
 
     private void removeView() {
@@ -198,18 +250,22 @@ public class TabQueueService extends Service {
             this.startId = startId;
         }
 
-        public void run(final boolean shouldStopService) {
+        public void run() {
+            run(true);
+        }
+
+        public void run(final boolean shouldRemoveView) {
             onRun();
 
-            if (shouldStopService) {
+            if (shouldRemoveView) {
                 removeView();
             }
 
             stopSelfResult(startId);
         }
 
-        public void run() {
-            run(true);
+        public int getStartId() {
+            return startId;
         }
 
         public abstract void onRun();
