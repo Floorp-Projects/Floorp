@@ -9,6 +9,9 @@
 
 #include "base/compiler_specific.h"
 #include "base/logging.h"
+#include "base/process_util.h"
+#include "base/rand_util.h"
+#include "base/string_util.h"
 #include "base/non_thread_safe.h"
 #include "base/win_util.h"
 #include "chrome/common/ipc_message_utils.h"
@@ -33,7 +36,9 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
                               Listener* listener)
     : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
-      ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)) {
+      ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)),
+      shared_secret_(0),
+      waiting_for_shared_secret_(false) {
   Init(mode, listener);
 
   if (!CreatePipe(channel_id, mode)) {
@@ -48,7 +53,9 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id,
                                   Mode mode, Listener* listener)
     : ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)),
-      ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)) {
+      ALLOW_THIS_IN_INITIALIZER_LIST(factory_(this)),
+      shared_secret_(0),
+      waiting_for_shared_secret_(false) {
   Init(mode, listener);
 
   if (mode == MODE_SERVER) {
@@ -153,18 +160,31 @@ bool Channel::ChannelImpl::Send(Message* message) {
 }
 
 const std::wstring Channel::ChannelImpl::PipeName(
-    const std::wstring& channel_id) const {
+    const std::wstring& channel_id, int32_t* secret) const {
+  MOZ_ASSERT(secret);
+
   std::wostringstream ss;
-  // XXX(darin): get application name from somewhere else
-  ss << L"\\\\.\\pipe\\chrome." << channel_id;
+  ss << L"\\\\.\\pipe\\chrome.";
+
+  // Prevent the shared secret from ending up in the pipe name.
+  size_t index = channel_id.find_first_of(L'\\');
+  if (index != std::string::npos) {
+    StringToInt(channel_id.substr(index + 1), secret);
+    ss << channel_id.substr(0, index - 1);
+  } else {
+    // This case is here to support predictable named pipes in tests.
+    *secret = 0;
+    ss << channel_id;
+  }
   return ss.str();
 }
 
 bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
                                       Mode mode) {
   DCHECK(pipe_ == INVALID_HANDLE_VALUE);
-  const std::wstring pipe_name = PipeName(channel_id);
+  const std::wstring pipe_name = PipeName(channel_id, &shared_secret_);
   if (mode == MODE_SERVER) {
+    waiting_for_shared_secret_ = !!shared_secret_;
     pipe_ = CreateNamedPipeW(pipe_name.c_str(),
                              PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
                                 FILE_FLAG_FIRST_PIPE_INSTANCE,
@@ -200,7 +220,15 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
   mozilla::UniquePtr<Message> m = mozilla::MakeUnique<Message>(MSG_ROUTING_NONE,
                                                                HELLO_MESSAGE_TYPE,
                                                                IPC::Message::PRIORITY_NORMAL);
-  if (!m->WriteInt(GetCurrentProcessId())) {
+
+  // If we're waiting for our shared secret from the other end's hello message
+  // then don't give the game away by sending it in ours.
+  int32_t secret = waiting_for_shared_secret_ ? 0 : shared_secret_;
+
+  // Also, don't send if the value is zero (for IPC backwards compatability).
+  if (!m->WriteInt(GetCurrentProcessId()) ||
+      (secret && !m->WriteUInt32(secret)))
+  {
     CloseHandle(pipe_);
     pipe_ = INVALID_HANDLE_VALUE;
     return false;
@@ -338,8 +366,19 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 #endif
         if (m.routing_id() == MSG_ROUTING_NONE &&
             m.type() == HELLO_MESSAGE_TYPE) {
-          // The Hello message contains only the process id.
-          listener_->OnChannelConnected(MessageIterator(m).NextInt());
+          // The Hello message contains the process id and must include the
+          // shared secret, if we are waiting for it.
+          MessageIterator it = MessageIterator(m);
+          int32_t claimed_pid = it.NextInt();
+          if (waiting_for_shared_secret_ && (it.NextInt() != shared_secret_)) {
+            NOTREACHED();
+            // Something went wrong. Abort connection.
+            Close();
+            listener_->OnChannelError();
+            return false;
+          }
+          waiting_for_shared_secret_ = false;
+          listener_->OnChannelConnected(claimed_pid);
         } else {
           listener_->OnMessageReceived(m);
         }
@@ -500,6 +539,23 @@ bool Channel::Unsound_IsClosed() const {
 
 uint32_t Channel::Unsound_NumQueuedMessages() const {
   return channel_impl_->Unsound_NumQueuedMessages();
+}
+
+// static
+std::wstring Channel::GenerateVerifiedChannelID(const std::wstring& prefix) {
+  // Windows pipes can be enumerated by low-privileged processes. So, we
+  // append a strong random value after the \ character. This value is not
+  // included in the pipe name, but sent as part of the client hello, to
+  // prevent hijacking the pipe name to spoof the client.
+  std::wstring id = prefix;
+  if (!id.empty())
+    id.append(L".");
+  int secret;
+  do {  // Guarantee we get a non-zero value.
+    secret = base::RandInt(0, std::numeric_limits<int>::max());
+  } while (secret == 0);
+  id.append(GenerateUniqueRandomChannelID());
+  return id.append(StringPrintf(L"\\%d", secret));
 }
 
 }  // namespace IPC
