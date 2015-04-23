@@ -1,6 +1,6 @@
 load(libdir + 'simd.js');
 
-setJitCompilerOption("ion.warmup.trigger", 50);
+setJitCompilerOption("ion.warmup.trigger", 30);
 
 var cast = (function() {
     var i32 = new Int32Array(1);
@@ -19,6 +19,7 @@ var cast = (function() {
 })();
 
 function f() {
+    // No bailout here.
     var f4 = SIMD.float32x4(1, 2, 3, 4);
     var i4 = SIMD.int32x4(1, 2, 3, 4);
     var BitOrZero = (x) => x | 0;
@@ -30,5 +31,40 @@ function f() {
     }
 }
 
+function uglyDuckling(val) {
+    // We bail out when i == 149 because the conversion will return
+    // 0x80000000 and the input actually wasn't in bounds.
+    print('entering uglyDuckling');
+    val = Math.fround(val);
+    for (var i = 0; i < 150; i++) {
+        var caught = false;
+        try {
+            var v = SIMD.float32x4(i < 149 ? 0 : val, 0, 0, 0)
+            SIMD.int32x4.fromFloat32x4(v);
+        } catch(e) {
+            assertEq(e instanceof RangeError, true);
+            assertEq(i, 149);
+            caught = true;
+        }
+        assertEq(i < 149 || caught, true);
+    }
+}
+
+function dontBail() {
+    print('entering dontbail');
+    // On x86, the conversion will return 0x80000000, which will imply that we
+    // check the input values. However, we shouldn't bail out in this case.
+    for (var i = 0; i < 150; i++) {
+        var v = SIMD.float32x4(i < 149 ? 0 : -Math.pow(2, 31), 0, 0, 0)
+        SIMD.int32x4.fromFloat32x4(v);
+    }
+}
+
 f();
 
+dontBail();
+dontBail();
+
+uglyDuckling(Math.pow(2, 31));
+uglyDuckling(NaN);
+uglyDuckling(-Math.pow(2, 32));
