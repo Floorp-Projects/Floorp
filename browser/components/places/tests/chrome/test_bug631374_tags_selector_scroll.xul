@@ -73,9 +73,9 @@
 
         // Init panel.
         ok(gEditItemOverlay, "gEditItemOverlay is in context");
-        let id1 = yield PlacesUtils.promiseItemId(bm1.guid);
-        gEditItemOverlay.initPanel(id1);
-        ok(gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
+        let node1 = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm1);
+        gEditItemOverlay.initPanel({ node: node1 });
+        ok(gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
 
         yield openTagSelector();
         let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
