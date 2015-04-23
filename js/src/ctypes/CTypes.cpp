@@ -533,7 +533,7 @@ static const JSClass sCABIClass = {
 static const JSClass sCTypeProtoClass = {
   "CType",
   JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
   ConstructAbstract, nullptr, ConstructAbstract
 };
@@ -548,7 +548,7 @@ static const JSClass sCDataProtoClass = {
 static const JSClass sCTypeClass = {
   "CType",
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, CType::Finalize,
   CType::ConstructData, CType::HasInstance, CType::ConstructData,
   CType::Trace
@@ -558,14 +558,14 @@ static const JSClass sCDataClass = {
   "CData",
   JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS),
   nullptr, nullptr, ArrayType::Getter, ArrayType::Setter,
-  nullptr, nullptr, nullptr, CData::Finalize,
+  nullptr, nullptr, nullptr, nullptr, CData::Finalize,
   FunctionType::Call, nullptr, FunctionType::Call
 };
 
 static const JSClass sCClosureClass = {
   "CClosure",
   JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, CClosure::Finalize,
   nullptr, nullptr, nullptr, CClosure::Trace
 };
@@ -587,7 +587,7 @@ static const JSClass sCDataFinalizerProtoClass = {
 static const JSClass sCDataFinalizerClass = {
   "CDataFinalizer",
   JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, CDataFinalizer::Finalize
 };
 
@@ -773,14 +773,14 @@ static const JSClass sUInt64ProtoClass = {
 static const JSClass sInt64Class = {
   "Int64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, Int64Base::Finalize
 };
 
 static const JSClass sUInt64Class = {
   "UInt64",
   JSCLASS_HAS_RESERVED_SLOTS(INT64_SLOTS),
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, Int64Base::Finalize
 };
 
@@ -4029,6 +4029,18 @@ CType::Finalize(JSFreeOp* fop, JSObject* obj)
 }
 
 void
+TraceFieldInfoHash(JSTracer* trc, FieldInfoHash* fields)
+{
+  for (FieldInfoHash::Enum e(*fields); !e.empty(); e.popFront()) {
+    JSString* key = e.front().key();
+    JS_CallUnbarrieredStringTracer(trc, &key, "fieldName");
+    if (key != e.front().key())
+      e.rekeyFront(JS_ASSERT_STRING_IS_FLAT(key));
+    JS_CallObjectTracer(trc, &e.front().value().mType, "fieldType");
+  }
+}
+
+void
 CType::Trace(JSTracer* trc, JSObject* obj)
 {
   // Make sure our TypeCode slot is legit. If it's not, bail.
@@ -4044,14 +4056,7 @@ CType::Trace(JSTracer* trc, JSObject* obj)
       return;
 
     FieldInfoHash* fields = static_cast<FieldInfoHash*>(slot.toPrivate());
-    for (FieldInfoHash::Enum e(*fields); !e.empty(); e.popFront()) {
-      JSString* key = e.front().key();
-      JS_CallUnbarrieredStringTracer(trc, &key, "fieldName");
-      if (key != e.front().key())
-          e.rekeyFront(JS_ASSERT_STRING_IS_FLAT(key));
-      JS_CallObjectTracer(trc, &e.front().value().mType, "fieldType");
-    }
-
+    TraceFieldInfoHash(trc, fields);
     break;
   }
   case TYPE_function: {
@@ -5457,6 +5462,31 @@ PostBarrierCallback(JSTracer* trc, JSString* key, void* data)
     table->rekeyIfMoved(JS_ASSERT_STRING_IS_FLAT(prior), JS_ASSERT_STRING_IS_FLAT(key));
 }
 
+// Holds a pointer to a FieldInfoHash while it is being constructed, tracing it
+// on GC and destroying it when it dies unless release() has been called first.
+class FieldInfoHolder : public JS::CustomAutoRooter
+{
+  public:
+    FieldInfoHolder(JSContext* cx, FieldInfoHash* fields)
+      : CustomAutoRooter(cx), fields_(fields) {}
+    ~FieldInfoHolder() {
+      delete fields_;
+    }
+    virtual void trace(JSTracer* trc) override {
+      if (fields_)
+        TraceFieldInfoHash(trc, fields_);
+    }
+    FieldInfoHash* operator->() { return fields_; }
+    operator FieldInfoHash*() { return fields_; }
+    FieldInfoHash* release() {
+      FieldInfoHash* result = fields_;
+      fields_ = nullptr;
+      return result;
+    }
+  private:
+    FieldInfoHash* fields_;
+};
+
 bool
 StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsObj_)
 {
@@ -5487,13 +5517,8 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   // its constituents. (We cannot simply stash the hash in a reserved slot now
   // to get GC safety for free, since if anything in this function fails we
   // do not want to mutate 'typeObj'.)
-  auto fields = cx->make_unique<FieldInfoHash>();
+  FieldInfoHolder fields(cx, cx->new_<FieldInfoHash>());
   if (!fields || !fields->init(len)) {
-    JS_ReportOutOfMemory(cx);
-    return false;
-  }
-  JS::AutoValueVector fieldRoots(cx);
-  if (!fieldRoots.resize(len)) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
@@ -5513,7 +5538,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       Rooted<JSFlatString*> name(cx, ExtractStructField(cx, item, &fieldType));
       if (!name)
         return false;
-      fieldRoots[i].setObject(*fieldType);
 
       // Make sure each field name is unique
       FieldInfoHash::AddPtr entryPtr = fields->lookupForAdd(name);
@@ -5563,11 +5587,11 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
 
       // Add field name to the hash
       FieldInfo info;
-      info.mType = nullptr; // Value of fields are not yet traceable here.
+      info.mType = fieldType;
       info.mIndex = i;
       info.mOffset = fieldOffset;
       ASSERT_OK(fields->add(entryPtr, name, info));
-      JS_StoreStringPostBarrierCallback(cx, PostBarrierCallback, name, fields.get());
+      JS_StoreStringPostBarrierCallback(cx, PostBarrierCallback, name, fields);
 
       structSize = fieldOffset + fieldSize;
 
@@ -5595,12 +5619,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
   RootedValue sizeVal(cx);
   if (!SizeTojsval(cx, structSize, &sizeVal))
     return false;
-
-  for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
-    FieldInfo& field = r.front().value();
-    MOZ_ASSERT(field.mIndex < fieldRoots.length());
-    field.mType = &fieldRoots[field.mIndex].toObject();
-  }
 
   JS_SetReservedSlot(typeObj, SLOT_FIELDINFO, PRIVATE_TO_JSVAL(fields.release()));
 

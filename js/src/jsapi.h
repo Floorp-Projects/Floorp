@@ -984,7 +984,7 @@ extern JS_PUBLIC_API(JSString*)
 JS_ValueToSource(JSContext* cx, JS::Handle<JS::Value> v);
 
 extern JS_PUBLIC_API(bool)
-JS_DoubleIsInt32(double d, int32_t *ip);
+JS_DoubleIsInt32(double d, int32_t* ip);
 
 extern JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext* cx, JS::Handle<JS::Value> v);
@@ -1505,6 +1505,9 @@ JS_InitStandardClasses(JSContext* cx, JS::Handle<JSObject*> obj);
  */
 extern JS_PUBLIC_API(bool)
 JS_ResolveStandardClass(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolved);
+
+extern JS_PUBLIC_API(bool)
+JS_MayResolveStandardClass(const JSAtomState& names, jsid id, JSObject* maybeObj);
 
 extern JS_PUBLIC_API(bool)
 JS_EnumerateStandardClasses(JSContext* cx, JS::HandleObject obj);
@@ -5430,14 +5433,14 @@ struct PerformanceGroup {
 
     // Mark that an instance of `AutoStopwatch` is monitoring
     // the performance of this group for a given iteration.
-    void acquireStopwatch(uint64_t iteration, const AutoStopwatch *stopwatch) {
+    void acquireStopwatch(uint64_t iteration, const AutoStopwatch* stopwatch) {
         iteration_ = iteration;
         stopwatch_ = stopwatch;
     }
 
     // Mark that no `AutoStopwatch` is monitoring the
     // performance of this group for the iteration.
-    void releaseStopwatch(uint64_t iteration, const AutoStopwatch *stopwatch) {
+    void releaseStopwatch(uint64_t iteration, const AutoStopwatch* stopwatch) {
         if (iteration_ != iteration)
             return;
 
@@ -5460,7 +5463,7 @@ struct PerformanceGroup {
 
     // The stopwatch currently monitoring the group,
     // or `nullptr` if none. Used ony for comparison.
-    const AutoStopwatch *stopwatch_;
+    const AutoStopwatch* stopwatch_;
 
     // The current iteration of the event loop. If necessary,
     // may safely overflow.
@@ -5490,7 +5493,7 @@ struct PerformanceGroupHolder {
     // Get the group.
     // On first call, this causes a single Hashtable lookup.
     // Successive calls do not require further lookups.
-    js::PerformanceGroup *getGroup();
+    js::PerformanceGroup* getGroup();
 
     // `true` if the this holder is currently associated to a
     // PerformanceGroup, `false` otherwise. Use this method to avoid
@@ -5505,7 +5508,7 @@ struct PerformanceGroupHolder {
     // (new values of `isSystem()`, `principals()` or `addonId`).
     void unlink();
 
-    PerformanceGroupHolder(JSRuntime *runtime, JSCompartment *compartment)
+    PerformanceGroupHolder(JSRuntime* runtime, JSCompartment* compartment)
       : runtime_(runtime)
       , compartment_(compartment)
       , group_(nullptr)
@@ -5517,13 +5520,13 @@ private:
     // Do not deallocate the key.
     void* getHashKey();
 
-    JSRuntime *runtime_;
-    JSCompartment *compartment_;
+    JSRuntime* runtime_;
+    JSCompartment* compartment_;
 
     // The PerformanceGroup held by this object.
     // Initially set to `nullptr` until the first cal to `getGroup`.
     // May be reset to `nullptr` by a call to `unlink`.
-    js::PerformanceGroup *group_;
+    js::PerformanceGroup* group_;
 };
 
 /**
@@ -5560,7 +5563,7 @@ struct PerformanceStats {
      * If this group represents an add-on, the ID of the addon,
      * otherwise `nullptr`.
      */
-    JSAddonId *addonId;
+    JSAddonId* addonId;
 
     /**
      * If this group represents a webpage, the process itself or a special
@@ -5598,7 +5601,7 @@ typedef js::Vector<PerformanceStats, 0, js::SystemAllocPolicy> PerformanceStatsV
  * representing the entire process.
  */
 extern JS_PUBLIC_API(bool)
-GetPerformanceStats(JSRuntime *rt, js::PerformanceStatsVector &stats, js::PerformanceStats &global);
+GetPerformanceStats(JSRuntime* rt, js::PerformanceStatsVector& stats, js::PerformanceStats& global);
 
 } /* namespace js */
 

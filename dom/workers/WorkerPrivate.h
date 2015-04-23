@@ -1195,6 +1195,13 @@ public:
   }
 
   bool
+  ServiceWorkersEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_SERVICEWORKERS];
+  }
+
+  bool
   OnLine() const
   {
     AssertIsOnWorkerThread();

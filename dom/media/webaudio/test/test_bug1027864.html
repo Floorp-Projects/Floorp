@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 1027864</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+Components.utils.import('resource://gre/modules/Services.jsm');
+SimpleTest.waitForExplicitFinish();
+
+function observer(subject, topic, data) {
+  var id = parseInt(data);
+  var index = ids.indexOf(id);
+  if (index != -1) {
+    ok(true, "Dropping id " + id + " at index " + index);
+    ids.splice(index, 1);
+    if (ids.length == 0) {
+      SimpleTest.executeSoon(function() {
+        SimpleTest.finish();
+      });
+    }
+  }
+}
+
+Services.obs.addObserver(observer, "webaudio-node-demise", false);
+
+SimpleTest.registerCleanupFunction(function() {
+  Services.obs.removeObserver(observer, "webaudio-node-demise");
+});
+
+var ac = new AudioContext();
+var ids;
+
+(function() {
+  var delay = ac.createDelay();
+  delay.delayTime.value = 0.03;
+
+  var gain = ac.createGain();
+  gain.gain.value = 0.6;
+
+  delay.connect(gain);
+  gain.connect(delay);
+
+  gain.connect(ac.destination);
+
+  var source = ac.createOscillator();
+
+  source.connect(gain);
+  source.start(ac.currentTime);
+  source.stop(ac.currentTime + 0.1);
+
+  ids = [ delay.id, gain.id, source.id ];
+})();
+
+setInterval(function() {
+  forceCC();
+}, 200);
+
+function forceCC() {
+  SpecialPowers.DOMWindowUtils.cycleCollect();
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+}
+
+</script>
+</pre>
+</body>
+</html>
