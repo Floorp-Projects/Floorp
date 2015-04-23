@@ -25,7 +25,7 @@ BEGIN_TEST(testRedefineGlobalEval)
         "global", JSCLASS_GLOBAL_FLAGS,
         nullptr, nullptr, nullptr, nullptr,
         GlobalEnumerate, GlobalResolve, nullptr,
-        nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook
     };
 

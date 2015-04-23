@@ -20125,6 +20125,7 @@ const JSClass CreateIndexOp::ThreadLocalJSRuntime::kGlobalClass = {
   /* setProperty */ nullptr,
   /* enumerate */ nullptr,
   /* resolve */ nullptr,
+  /* mayResolve */ nullptr,
   /* convert */ nullptr,
   /* finalize */ nullptr,
   /* call */ nullptr,
