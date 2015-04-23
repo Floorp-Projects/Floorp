@@ -161,6 +161,24 @@ exports.createEvent = function(name) {
   };
 
   /**
+   * Fire an event just once using a promise.
+   */
+  event.once = function() {
+    if (arguments.length !== 0) {
+      throw new Error('event.once uses promise return values');
+    }
+
+    return new Promise(function(resolve, reject) {
+      var handler = function(arg) {
+        event.remove(handler);
+        resolve(arg);
+      };
+
+      event.add(handler);
+    });
+  },
+
+  /**
    * Temporarily prevent this event from firing.
    * @see resumeFire(ev)
    */
@@ -255,30 +273,20 @@ exports.promiseEach = function(array, action, scope) {
     return Promise.resolve([]);
   }
 
-  return new Promise(function(resolve, reject) {
-    var replies = [];
+  var allReply = [];
+  var promise = Promise.resolve();
 
-    var callNext = function(index) {
-      var onSuccess = function(reply) {
-        replies[index] = reply;
+  array.forEach(function(member, i) {
+    promise = promise.then(function() {
+      var reply = action.call(scope, member, i, array);
+      return Promise.resolve(reply).then(function(data) {
+        allReply[i] = data;
+      });
+    });
+  });
 
-        if (index + 1 >= array.length) {
-          resolve(replies);
-        }
-        else {
-          callNext(index + 1);
-        }
-      };
-
-      var onFailure = function(ex) {
-        reject(ex);
-      };
-
-      var reply = action.call(scope, array[index], index, array);
-      Promise.resolve(reply).then(onSuccess).then(null, onFailure);
-    };
-
-    callNext(0);
+  return promise.then(function() {
+    return allReply;
   });
 };
 

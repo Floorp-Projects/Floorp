@@ -26,8 +26,7 @@
 
 /* Toolbars */
 .devtools-toolbar,
-.devtools-sidebar-tabs tabs,
-.devtools-sidebar-alltabs {
+.devtools-sidebar-tabs tabs {
   -moz-appearance: none;
   padding: 0;
   border-width: 0;
@@ -509,13 +508,17 @@
 }
 
 .devtools-sidebar-alltabs {
+  -moz-appearance: none;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 4px;
   margin: 0;
   border-width: 0 0 1px 0;
   -moz-border-start-width: 1px;
   border-style: solid;
 }
 
-.devtools-sidebar-alltabs dropmarker {
+.devtools-sidebar-alltabs .toolbarbutton-icon {
   display: none;
 }
 
