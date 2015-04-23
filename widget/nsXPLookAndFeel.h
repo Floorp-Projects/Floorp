@@ -7,7 +7,6 @@
 #define __nsXPLookAndFeel
 
 #include "mozilla/LookAndFeel.h"
-#include "nsTArray.h"
 
 class nsLookAndFeel;
 
@@ -79,9 +78,6 @@ public:
   {
     return 600;
   }
-
-  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl();
-  virtual void SetIntCacheImpl(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {}
 
 protected:
   nsXPLookAndFeel();
