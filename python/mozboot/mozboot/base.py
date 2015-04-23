@@ -83,8 +83,9 @@ MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
 class BaseBootstrapper(object):
     """Base class for system bootstrappers."""
 
-    def __init__(self):
+    def __init__(self, no_interactive=False):
         self.package_manager_updated = False
+        self.no_interactive = no_interactive
 
     def install_system_packages(self):
         '''
@@ -159,6 +160,8 @@ class BaseBootstrapper(object):
 
     def yum_install(self, *packages):
         command = ['yum', 'install']
+        if self.no_interactive:
+            command.append('-y')
         command.extend(packages)
 
         self.run_as_root(command)
@@ -171,18 +174,24 @@ class BaseBootstrapper(object):
 
     def yum_update(self, *packages):
         command = ['yum', 'update']
+        if self.no_interactive:
+            command.append('-y')
         command.extend(packages)
 
         self.run_as_root(command)
 
     def apt_install(self, *packages):
         command = ['apt-get', 'install']
+        if self.no_interactive:
+            command.append('-y')
         command.extend(packages)
 
         self.run_as_root(command)
 
     def apt_update(self):
         command = ['apt-get', 'update']
+        if self.no_interactive:
+            command.append('-y')
 
         self.run_as_root(command)
 

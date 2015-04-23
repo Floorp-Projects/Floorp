@@ -239,7 +239,11 @@ StyleEditorUI.prototype = {
     this._clear();
 
     for (let sheet of styleSheets) {
-      yield this._addStyleSheet(sheet);
+      try {
+        yield this._addStyleSheet(sheet);
+      } catch (e) {
+        this.emit("error", { key: LOAD_ERROR });
+      }
     }
 
     this._root.classList.remove("loading");

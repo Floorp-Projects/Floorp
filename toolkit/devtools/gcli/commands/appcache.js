@@ -4,19 +4,22 @@
 
 "use strict";
 
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 loader.lazyImporter(this, "AppCacheUtils", "resource:///modules/devtools/AppCacheUtils.jsm");
 
 exports.items = [
   {
+    item: "command",
     name: "appcache",
-    description: gcli.lookup("appCacheDesc")
+    description: l10n.lookup("appCacheDesc")
   },
   {
+    item: "command",
+    runAt: "server",
     name: "appcache validate",
-    description: gcli.lookup("appCacheValidateDesc"),
-    manual: gcli.lookup("appCacheValidateManual"),
+    description: l10n.lookup("appCacheValidateDesc"),
+    manual: l10n.lookup("appCacheValidateManual"),
     returnType: "appcacheerrors",
     params: [{
       group: "options",
@@ -24,7 +27,7 @@ exports.items = [
         {
           type: "string",
           name: "uri",
-          description: gcli.lookup("appCacheValidateUriDesc"),
+          description: l10n.lookup("appCacheValidateUriDesc"),
           defaultValue: null,
         }
       ]
@@ -53,7 +56,7 @@ exports.items = [
     exec: function([errors, manifestURI], context) {
       if (errors.length == 0) {
         return context.createView({
-          html: "<span>" + gcli.lookup("appCacheValidatedSuccessfully") + "</span>"
+          html: "<span>" + l10n.lookup("appCacheValidatedSuccessfully") + "</span>"
         });
       }
 
@@ -73,20 +76,24 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "server",
     name: "appcache clear",
-    description: gcli.lookup("appCacheClearDesc"),
-    manual: gcli.lookup("appCacheClearManual"),
+    description: l10n.lookup("appCacheClearDesc"),
+    manual: l10n.lookup("appCacheClearManual"),
     exec: function(args, context) {
       let utils = new AppCacheUtils(args.uri);
       utils.clearAll();
 
-      return gcli.lookup("appCacheClearCleared");
+      return l10n.lookup("appCacheClearCleared");
     }
   },
   {
+    item: "command",
+    runAt: "server",
     name: "appcache list",
-    description: gcli.lookup("appCacheListDesc"),
-    manual: gcli.lookup("appCacheListManual"),
+    description: l10n.lookup("appCacheListDesc"),
+    manual: l10n.lookup("appCacheListManual"),
     returnType: "appcacheentries",
     params: [{
       group: "options",
@@ -94,7 +101,7 @@ exports.items = [
         {
           type: "string",
           name: "search",
-          description: gcli.lookup("appCacheListSearchDesc"),
+          description: l10n.lookup("appCacheListSearchDesc"),
           defaultValue: null,
         },
       ]
@@ -115,35 +122,35 @@ exports.items = [
           "  <li foreach='entry in ${entries}'>" +
           "    <table class='gcli-appcache-detail'>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListKey") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListKey") + "</td>" +
           "        <td>${entry.key}</td>" +
           "      </tr>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListFetchCount") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListFetchCount") + "</td>" +
           "        <td>${entry.fetchCount}</td>" +
           "      </tr>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListLastFetched") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListLastFetched") + "</td>" +
           "        <td>${entry.lastFetched}</td>" +
           "      </tr>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListLastModified") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListLastModified") + "</td>" +
           "        <td>${entry.lastModified}</td>" +
           "      </tr>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListExpirationTime") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListExpirationTime") + "</td>" +
           "        <td>${entry.expirationTime}</td>" +
           "      </tr>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListDataSize") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListDataSize") + "</td>" +
           "        <td>${entry.dataSize}</td>" +
           "      </tr>" +
           "      <tr>" +
-          "        <td>" + gcli.lookup("appCacheListDeviceID") + "</td>" +
+          "        <td>" + l10n.lookup("appCacheListDeviceID") + "</td>" +
           "        <td>${entry.deviceID} <span class='gcli-out-shortcut' " +
           "onclick='${onclick}' ondblclick='${ondblclick}' " +
           "data-command='appcache viewentry ${entry.key}'" +
-          ">" + gcli.lookup("appCacheListViewEntry") + "</span>" +
+          ">" + l10n.lookup("appCacheListViewEntry") + "</span>" +
           "        </td>" +
           "      </tr>" +
           "    </table>" +
@@ -158,14 +165,16 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "server",
     name: "appcache viewentry",
-    description: gcli.lookup("appCacheViewEntryDesc"),
-    manual: gcli.lookup("appCacheViewEntryManual"),
+    description: l10n.lookup("appCacheViewEntryDesc"),
+    manual: l10n.lookup("appCacheViewEntryManual"),
     params: [
       {
         type: "string",
         name: "key",
-        description: gcli.lookup("appCacheViewEntryKey"),
+        description: l10n.lookup("appCacheViewEntryKey"),
         defaultValue: null,
       }
     ],

@@ -305,7 +305,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               if (this.hasAttribute("actiontype")) {
                 this.handleRevert();
                 let prevTab = gBrowser.selectedTab;
-                if (switchToTabHavingURI(url) &&
+                if (switchToTabHavingURI(action.params.originalUrl || url) &&
                     isTabEmpty(prevTab))
                   gBrowser.removeTab(prevTab);
                 return;
@@ -716,9 +716,24 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></getter>
         <setter>
           <![CDATA[
+          let uri;
           try {
-            val = losslessDecodeURI(makeURI(val));
-          } catch (ex) { }
+            uri = makeURI(val);
+          } catch (ex) {}
+
+          if (uri) {
+            let action = this._parseActionUrl(val);
+            if (action) {
+              if (action.params.url) {
+                // Store the original URL in the action URL.
+                action.params.originalUrl = action.params.url;
+                action.params.url = losslessDecodeURI(makeURI(action.params.url));
+                val = "moz-action:" + action.type + "," + JSON.stringify(action.params);
+              }
+            } else {
+              val = losslessDecodeURI(uri);
+            }
+          }
 
           // Trim popup selected values, but never trim results coming from
           // autofill.
@@ -758,6 +773,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           try {
             action.params = JSON.parse(params);
+            if (action.params.input) {
+              action.params.input = decodeURIComponent(action.params.input);
+            }
+            if (action.params.searchQuery) {
+              action.params.searchQuery = decodeURIComponent(action.params.searchQuery);
+            }
           } catch (e) {
             // If this failed, we assume that params is not a JSON object, and
             // is instead just a flat string. This will happen when

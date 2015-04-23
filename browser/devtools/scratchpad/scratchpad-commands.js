@@ -4,13 +4,15 @@
 
 "use strict";
 
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 exports.items = [{
+  item: "command",
+  runAt: "client",
   name: "scratchpad",
   buttonId: "command-button-scratchpad",
   buttonClass: "command-button command-button-invertable",
-  tooltipText: gcli.lookup("scratchpadOpenTooltip"),
+  tooltipText: l10n.lookup("scratchpadOpenTooltip"),
   hidden: true,
   exec: function(args, context) {
     let Scratchpad = context.environment.chromeWindow.Scratchpad;

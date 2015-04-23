@@ -61,9 +61,9 @@ StyleEditorPanel.prototype = {
 
     // Initialize the UI
     this.UI = new StyleEditorUI(this._debuggee, this.target, this._panelDoc);
+    this.UI.on("error", this._showError);
     yield this.UI.initialize();
 
-    this.UI.on("error", this._showError);
     this.isReady = true;
 
     return this;

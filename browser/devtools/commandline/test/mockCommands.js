@@ -15,16 +15,21 @@
  */
 
 'use strict';
-// <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
-// DO NOT EDIT IT DIRECTLY
-
-// <INJECTED SOURCE:END>
-
+// PLEASE TALK TO SOMEONE IN DEVELOPER TOOLS BEFORE EDITING IT
 
 var Promise = require('gcli/util/promise').Promise;
-var mockCommands = {};
+
+var mockCommands;
+if (typeof exports !== 'undefined') {
+  // If we're being loaded via require();
+  mockCommands = exports;
+}
+else {
+  // If we're being loaded via loadScript in mochitest
+  mockCommands = {};
+}
 
 // We use an alias for exports here because this module is used in Firefox
 // mochitests where we don't have define/require
@@ -41,32 +46,70 @@ mockCommands.shutdown = function(requisition) {
 };
 
 function createExec(name) {
-  return function(args, executionContext) {
-    var argsOut = Object.keys(args).map(function(key) {
-      return key + '=' + args[key];
-    }).join(', ');
-    return 'Exec: ' + name + ' ' + argsOut;
+  return function(args, context) {
+    var promises = [];
+
+    Object.keys(args).map(function(argName) {
+      var value = args[argName];
+      var type = this.getParameterByName(argName).type;
+      var promise = Promise.resolve(type.stringify(value, context));
+      promises.push(promise.then(function(str) {
+        return { name: argName, value: str };
+      }.bind(this)));
+    }.bind(this));
+
+    return Promise.all(promises).then(function(data) {
+      var argValues = {};
+      data.forEach(function(entry) { argValues[entry.name] = entry.value; });
+
+      return context.typedData('testCommandOutput', {
+        name: name,
+        args: argValues
+      });
+    }.bind(this));
   };
 }
 
 mockCommands.items = [
   {
     item: 'converter',
-    from: 'json',
-    to: 'string',
-    exec: function(json, context) {
-      return JSON.stringify(json, null, '  ');
+    from: 'testCommandOutput',
+    to: 'dom',
+    exec: function(testCommandOutput, context) {
+      var view = context.createView({
+        data: testCommandOutput,
+        html: '' +
+          '<table>' +
+            '<thead>' +
+              '<tr>' +
+                '<th colspan="3">Exec: ${name}</th>' +
+              '</tr>' +
+            '</thead>' +
+            '<tbody>' +
+              '<tr foreach="key in ${args}">' +
+                '<td> ${key}</td>' +
+                '<td>=</td>' +
+                '<td>${args[key]}</td>' +
+              '</tr>' +
+            '</tbody>' +
+          '</table>',
+        options: {
+          allowEval: true
+        }
+      });
+
+      return view.toDom(context.document);
     }
   },
   {
     item: 'converter',
-    from: 'json',
-    to: 'view',
-    exec: function(json, context) {
-      var html = JSON.stringify(json, null, '&#160;').replace(/\n/g, '<br/>');
-      return {
-        html: '<pre>' + html + '</pre>'
-      };
+    from: 'testCommandOutput',
+    to: 'string',
+    exec: function(testCommandOutput, context) {
+      var argsOut = Object.keys(testCommandOutput.args).map(function(key) {
+        return key + '=' + testCommandOutput.args[key];
+      }).join(' ');
+      return 'Exec: ' + testCommandOutput.name + ' ' + argsOut;
     }
   },
   {
@@ -508,7 +551,7 @@ mockCommands.items = [
     exec: function(args, context) {
       if (args.method === 'reject') {
         return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+          context.environment.window.setTimeout(function() {
             reject('rejected promise');
           }, 10);
         });
@@ -516,7 +559,7 @@ mockCommands.items = [
 
       if (args.method === 'rejecttyped') {
         return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+          context.environment.window.setTimeout(function() {
             reject(context.typedData('number', 54));
           }, 10);
         });
@@ -524,7 +567,7 @@ mockCommands.items = [
 
       if (args.method === 'throwinpromise') {
         return new Promise(function(resolve, reject) {
-          setTimeout(function() {
+          context.environment.window.setTimeout(function() {
             resolve('should be lost');
           }, 10);
         }).then(function() {
@@ -655,7 +698,7 @@ mockCommands.items = [
           name: 'selection',
           data: function(context) {
             return new Promise(function(resolve, reject) {
-              setTimeout(function() {
+              context.environment.window.setTimeout(function() {
                 resolve([
                   'Shalom', 'Namasté', 'Hallo', 'Dydd-da',
                   'Chào', 'Hej', 'Saluton', 'Sawubona'
@@ -738,5 +781,16 @@ mockCommands.items = [
     exec: function(args, context) {
       return args;
     }
+  },
+  {
+    item: 'command',
+    name: 'tsres',
+    params: [
+      {
+        name: 'resource',
+        type: 'resource'
+      }
+    ],
+    exec: createExec('tsres'),
   }
 ];
