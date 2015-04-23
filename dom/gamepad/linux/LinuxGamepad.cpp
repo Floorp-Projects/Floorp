@@ -16,14 +16,13 @@
 #include <stdint.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-
 #include "nscore.h"
-#include "mozilla/dom/GamepadService.h"
+#include "mozilla/dom/GamepadFunctions.h"
 #include "udev.h"
 
 namespace {
 
-using mozilla::dom::GamepadService;
+using namespace mozilla::dom::GamepadFunctions;
 using mozilla::udev_lib;
 using mozilla::udev_device;
 using mozilla::udev_list_entry;
@@ -138,11 +137,10 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
   ioctl(fd, JSIOCGBUTTONS, &numButtons);
   gamepad.numButtons = numButtons;
 
-  nsRefPtr<GamepadService> service(GamepadService::GetService());
-  gamepad.index = service->AddGamepad(gamepad.idstring,
-                                      mozilla::dom::GamepadMappingType::_empty,
-                                      gamepad.numButtons,
-                                      gamepad.numAxes);
+  gamepad.index = AddGamepad(gamepad.idstring,
+                             mozilla::dom::GamepadMappingType::_empty,
+                             gamepad.numButtons,
+                             gamepad.numAxes);
 
   gamepad.source_id =
     g_io_add_watch(channel,
@@ -162,11 +160,10 @@ LinuxGamepadService::RemoveDevice(struct udev_device* dev)
     return;
   }
 
-  nsRefPtr<GamepadService> service(GamepadService::GetService());
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
     if (strcmp(mGamepads[i].devpath, devpath) == 0) {
       g_source_remove(mGamepads[i].source_id);
-      service->RemoveGamepad(mGamepads[i].index);
+      RemoveGamepad(mGamepads[i].index);
       mGamepads.RemoveElementAt(i);
       break;
     }
@@ -319,14 +316,13 @@ LinuxGamepadService::OnGamepadData(GIOChannel* source,
       continue;
     }
 
-    nsRefPtr<GamepadService> service(GamepadService::GetService());
     switch (event.type) {
     case JS_EVENT_BUTTON:
-      service->NewButtonEvent(index, event.number, !!event.value);
+      NewButtonEvent(index, event.number, !!event.value);
       break;
     case JS_EVENT_AXIS:
-      service->NewAxisMoveEvent(index, event.number,
-                                ((float)event.value) / kMaxAxisValue);
+      NewAxisMoveEvent(index, event.number,
+                       ((float)event.value) / kMaxAxisValue);
       break;
     }
   }
@@ -350,24 +346,26 @@ LinuxGamepadService::OnUdevMonitor(GIOChannel* source,
 } // namespace
 
 namespace mozilla {
-namespace hal_impl {
+namespace dom {
 
-void StartMonitoringGamepadStatus()
-{
-  if (!gService) {
-    gService = new LinuxGamepadService();
-    gService->Startup();
-  }
-}
-
-void StopMonitoringGamepadStatus()
+void StartGamepadMonitoring()
 {
   if (gService) {
-    gService->Shutdown();
-    delete gService;
-    gService = nullptr;
+    return;
   }
+  gService = new LinuxGamepadService();
+  gService->Startup();
 }
 
-} // namespace hal_impl
+void StopGamepadMonitoring()
+{
+  if (!gService) {
+    return;
+  }
+  gService->Shutdown();
+  delete gService;
+  gService = nullptr;
+}
+
+} // namespace dom
 } // namespace mozilla
