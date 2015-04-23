@@ -108,6 +108,7 @@ const Class ArrayBufferObject::class_ = {
     nullptr,                 /* setProperty */
     nullptr,                 /* enumerate */
     nullptr,                 /* resolve */
+    nullptr,                 /* mayResolve */
     nullptr,                 /* convert */
     ArrayBufferObject::finalize,
     nullptr,        /* call        */
