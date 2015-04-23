@@ -231,23 +231,6 @@ public class BrowserSearch extends HomeFragment
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-
-        // Adjusting the window size when showing the keyboard results in the underlying
-        // activity being painted when the keyboard is hidden (bug 933422). This can be
-        // prevented by not resizing the window.
-        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
 
