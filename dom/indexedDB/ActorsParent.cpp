@@ -6627,9 +6627,6 @@ private:
   EnsureDatabaseActorIsAlive();
 
   void
-  CleanupBackgroundThreadObjects(bool aInvalidate);
-
-  void
   MetadataToSpec(DatabaseSpec& aSpec);
 
   void
@@ -17119,10 +17116,6 @@ OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy)
 
   FactoryOp::ActorDestroy(aWhy);
 
-  if (aWhy != Deletion) {
-    CleanupBackgroundThreadObjects(/* aInvalidate */ true);
-  }
-
   if (mVersionChangeOp) {
     mVersionChangeOp->NoteActorDestroyed();
   }
@@ -17907,7 +17900,25 @@ OpenDatabaseOp::SendResults()
       PBackgroundIDBFactoryRequestParent::Send__delete__(this, response);
   }
 
-  CleanupBackgroundThreadObjects(NS_FAILED(mResultCode));
+  if (mDatabase) {
+    MOZ_ASSERT(!mOfflineStorage);
+
+    if (NS_FAILED(mResultCode)) {
+      mDatabase->Invalidate();
+    }
+
+    // Make sure to release the database on this thread.
+    mDatabase = nullptr;
+  } else if (mOfflineStorage) {
+    mOfflineStorage->CloseOnOwningThread();
+
+    nsCOMPtr<nsIRunnable> callback =
+      NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
+
+    nsRefPtr<WaitForTransactionsHelper> helper =
+      new WaitForTransactionsHelper(mDatabaseId, callback);
+    helper->WaitForTransactions();
+  }
 
   FinishSendResults();
 }
@@ -17997,33 +18008,6 @@ OpenDatabaseOp::EnsureDatabaseActorIsAlive()
   }
 
   return NS_OK;
-}
-
-void
-OpenDatabaseOp::CleanupBackgroundThreadObjects(bool aInvalidate)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(IsActorDestroyed());
-
-  if (mDatabase) {
-    MOZ_ASSERT(!mOfflineStorage);
-
-    if (aInvalidate) {
-      mDatabase->Invalidate();
-    }
-
-    // Make sure to release the database on this thread.
-    mDatabase = nullptr;
-  } else if (mOfflineStorage) {
-    mOfflineStorage->CloseOnOwningThread();
-
-    nsCOMPtr<nsIRunnable> callback =
-      NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
-
-    nsRefPtr<WaitForTransactionsHelper> helper =
-      new WaitForTransactionsHelper(mDatabaseId, callback);
-    helper->WaitForTransactions();
-  }
 }
 
 void
