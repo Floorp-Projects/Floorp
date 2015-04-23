@@ -29,8 +29,7 @@
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.name.accesskey;"
                  control="editBMPanel_namePicker"/>
-          <textbox id="editBMPanel_namePicker"
-                   onchange="gEditItemOverlay.onNamePickerChange();"/>
+          <textbox id="editBMPanel_namePicker"/>
         </row>
 
         <row align="center" id="editBMPanel_locationRow">
@@ -39,8 +38,25 @@
                  accesskey="&editBookmarkOverlay.location.accesskey;"
                  control="editBMPanel_locationField"/>
           <textbox id="editBMPanel_locationField"
-                   class="uri-element"
-                   onchange="gEditItemOverlay.onLocationFieldChange();"/>
+                   class="uri-element"/>
+        </row>
+
+        <row align="center" id="editBMPanel_feedLocationRow">
+          <label value="&editBookmarkOverlay.feedLocation.label;"
+                 class="editBMPanel_rowLabel"
+                 accesskey="&editBookmarkOverlay.feedLocation.accesskey;"
+                 control="editBMPanel_feedLocationField"/>
+          <textbox id="editBMPanel_feedLocationField"
+                   class="uri-element"/>
+        </row>
+
+        <row align="center" id="editBMPanel_siteLocationRow">
+          <label value="&editBookmarkOverlay.siteLocation.label;"
+                 class="editBMPanel_rowLabel"
+                 accesskey="&editBookmarkOverlay.siteLocation.accesskey;"
+                 control="editBMPanel_siteLocationField"/>
+          <textbox id="editBMPanel_siteLocationField"
+                   class="uri-element"/>
         </row>
 
         <row align="center" id="editBMPanel_folderRow">
@@ -98,7 +114,7 @@
               <button label="&editBookmarkOverlay.newFolderButton.label;"
                       id="editBMPanel_newFolderButton"
                       accesskey="&editBookmarkOverlay.newFolderButton.accesskey;"
-                      oncommand="gEditItemOverlay.newFolder().catch(Components.utils.reportError);"/>
+                      oncommand="gEditItemOverlay.newFolder();"/>
             </hbox>
           </vbox>
         </row>
@@ -117,8 +133,7 @@
                      completedefaultindex="true"
                      tabscrolling="true"
                      showcommentcolumn="true"
-                     placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
-                     onchange="gEditItemOverlay.onTagsFieldChange();"/>
+                     placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"/>
             <button id="editBMPanel_tagsSelectorExpander"
                     class="expander-down"
                     tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
@@ -142,8 +157,7 @@
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.keyword.accesskey;"
                  control="editBMPanel_keywordField"/>
-          <textbox id="editBMPanel_keywordField"
-                   onchange="gEditItemOverlay.onKeywordFieldChange();"/>
+          <textbox id="editBMPanel_keywordField"/>
         </row>
 
         <row id="editBMPanel_descriptionRow">
@@ -154,8 +168,7 @@
                  control="editBMPanel_descriptionField"/>
           <textbox id="editBMPanel_descriptionField"
                    multiline="true"
-                   rows="4"
-                   onchange="gEditItemOverlay.onDescriptionFieldChange();"/>
+                   rows="4"/>
         </row>
       </rows>
     </grid>
