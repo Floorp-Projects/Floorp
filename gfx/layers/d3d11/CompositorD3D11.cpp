@@ -355,47 +355,6 @@ CompositorD3D11::Initialize()
   mDevice->QueryInterface(dxgiDevice.StartAssignment());
   dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter));
 
-#ifdef MOZ_METRO
-  if (IsRunningInWindowsMetro()) {
-    nsRefPtr<IDXGIFactory2> dxgiFactory;
-    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
-
-    nsIntRect rect;
-    mWidget->GetClientBounds(rect);
-
-    DXGI_SWAP_CHAIN_DESC1 swapDesc = { 0 };
-    // Automatically detect the width and the height from the winrt CoreWindow
-    swapDesc.Width = rect.width;
-    swapDesc.Height = rect.height;
-    // This is the most common swapchain format
-    swapDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    swapDesc.Stereo = false;
-    // Don't use multi-sampling
-    swapDesc.SampleDesc.Count = 1;
-    swapDesc.SampleDesc.Quality = 0;
-    swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    // Use double buffering to enable flip
-    swapDesc.BufferCount = 2;
-    swapDesc.Scaling = DXGI_SCALING_NONE;
-    // All Metro style apps must use this SwapEffect
-    swapDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-    swapDesc.Flags = 0;
-
-    /**
-     * Create a swap chain, this swap chain will contain the backbuffer for
-     * the window we draw to. The front buffer is the full screen front
-     * buffer.
-    */
-    nsRefPtr<IDXGISwapChain1> swapChain1;
-    hr = dxgiFactory->CreateSwapChainForCoreWindow(
-           dxgiDevice, (IUnknown *)mWidget->GetNativeData(NS_NATIVE_ICOREWINDOW),
-           &swapDesc, nullptr, getter_AddRefs(swapChain1));
-    if (FAILED(hr)) {
-        return false;
-    }
-    mSwapChain = swapChain1;
-  } else
-#endif
   {
     nsRefPtr<IDXGIFactory> dxgiFactory;
     dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
@@ -1236,16 +1195,9 @@ CompositorD3D11::VerifyBufferSize()
     mDefaultRT = nullptr;
   }
 
-  if (IsRunningInWindowsMetro()) {
-    hr = mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
-                                   DXGI_FORMAT_B8G8R8A8_UNORM,
-                                   0);
-    mDisableSequenceForNextFrame = true;
-  } else {
-    hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
-                                   DXGI_FORMAT_B8G8R8A8_UNORM,
-                                   0);
-  }
+  hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+                                 DXGI_FORMAT_B8G8R8A8_UNORM,
+                                 0);
 
   return Succeeded(hr);
 }

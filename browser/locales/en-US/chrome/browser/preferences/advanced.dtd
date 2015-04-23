@@ -74,13 +74,8 @@
 <!ENTITY updateTab.label                 "Update">
 
 <!ENTITY updateApp.label                 "&brandShortName; updates:">
-<!-- Note either updateAuto1 is used or (updateAutoMetro and updateAutoDesktop),
-     so re-using accesss key in updateAuto1 is OK. updateAutoDesktop can be found
-     in preferences.properties -->
 <!ENTITY updateAuto1.label               "Automatically install updates (recommended: improved security)">
 <!ENTITY updateAuto1.accesskey           "A">
-<!ENTITY updateAutoMetro.label           "Automatically update from desktop and Windows 8 style &brandShortName;">
-<!ENTITY updateAutoMetro.accesskey       "s">
 <!ENTITY updateCheck.label               "Check for updates, but let me choose whether to install them">
 <!ENTITY updateCheck.accesskey           "C">
 <!ENTITY updateManual.label              "Never check for updates (not recommended: security risk)">
@@ -88,8 +83,6 @@
 
 <!ENTITY updateAutoAddonWarn.label       "Warn me if this will disable any of my add-ons">
 <!ENTITY updateAutoAddonWarn.accesskey   "W">
-
-<!ENTITY updateAutoMetroWarn.label       "(Windows 8 style &brandShortName; does not check add-on compatibility)">
 
 <!ENTITY updateHistory.label             "Show Update History">
 <!ENTITY updateHistory.accesskey         "p">

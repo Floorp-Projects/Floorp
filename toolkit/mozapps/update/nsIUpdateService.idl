@@ -443,9 +443,8 @@ interface nsIApplicationUpdateService : nsISupports
   /**
    * Whether or not a different instance is handling updates of this
    * installation.  This currently only ever returns true on Windows
-   * when 2 instances of an application are open or when both the Metro
-   * and Desktop browsers are open.  Only one of the instances will actually
-   * handle updates for the installation.
+   * when 2 instances of an application are open. Only one of the instances
+   * will actually handle updates for the installation.
    */
   readonly attribute boolean isOtherInstanceHandlingUpdates;
 
