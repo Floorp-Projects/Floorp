@@ -87,7 +87,6 @@ using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using gfxIntSize from "nsSize.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
-using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 
 union ChromeRegistryItem
 {
@@ -690,8 +689,6 @@ parent:
 
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
         returns (bool isSecureURI);
-
-    sync GetLookAndFeelCache(LookAndFeelInt[] lookAndFeelIntCache);
 
     PHal();
 

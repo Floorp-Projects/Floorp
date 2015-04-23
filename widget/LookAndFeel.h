@@ -15,12 +15,6 @@
 
 struct gfxFontStyle;
 
-struct LookAndFeelInt
-{
-  int32_t id;
-  int32_t value;
-};
-
 namespace mozilla {
 
 class LookAndFeel
@@ -589,13 +583,6 @@ public:
    * cached data would be released.
    */
   static void Refresh();
-
-  /**
-   * If the implementation is caching values, these accessors allow the
-   * cache to be exported and imported.
-   */
-  static nsTArray<LookAndFeelInt> GetIntCache();
-  static void SetIntCache(const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache);
 };
 
 } // namespace mozilla
