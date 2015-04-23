@@ -413,9 +413,11 @@ SampleValue(float aPortion, Animation& aAnimation, StyleAnimationValue& aStart,
   Point3D transformOrigin = data.transformOrigin();
   transformOrigin.x = transformOrigin.x * cssPerDev;
   transformOrigin.y = transformOrigin.y * cssPerDev;
+  transformOrigin.z = transformOrigin.z * cssPerDev;
   Point3D perspectiveOrigin = data.perspectiveOrigin();
   perspectiveOrigin.x = perspectiveOrigin.x * cssPerDev;
   perspectiveOrigin.y = perspectiveOrigin.y * cssPerDev;
+  perspectiveOrigin.z = perspectiveOrigin.z * cssPerDev;
   nsDisplayTransform::FrameTransformProperties props(interpolatedList,
                                                      transformOrigin,
                                                      perspectiveOrigin,
