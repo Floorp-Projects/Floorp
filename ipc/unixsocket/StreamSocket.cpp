@@ -7,7 +7,6 @@
 #include "StreamSocket.h"
 #include <fcntl.h>
 #include "mozilla/RefPtr.h"
-#include "mozilla/unused.h"
 #include "nsXULAppAPI.h"
 #include "UnixSocketConnector.h"
 
@@ -73,7 +72,7 @@ public:
    */
   void Connect();
 
-  void Send(UnixSocketRawData* aData);
+  void Send(UnixSocketIOBuffer* aBuffer);
 
   // I/O callback methods
   //
@@ -327,7 +326,7 @@ StreamSocketIO::Connect()
 }
 
 void
-StreamSocketIO::Send(UnixSocketRawData* aData)
+StreamSocketIO::Send(UnixSocketIOBuffer* aData)
 {
   EnqueueData(aData);
   AddWatchers(WRITE_WATCHER, false);
@@ -558,20 +557,16 @@ StreamSocket::~StreamSocket()
   MOZ_ASSERT(!mIO);
 }
 
-bool
-StreamSocket::SendSocketData(UnixSocketRawData* aData)
+void
+StreamSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mIO) {
-    return false;
-  }
+  MOZ_ASSERT(mIO);
 
   MOZ_ASSERT(!mIO->IsShutdownOnMainThread());
   XRE_GetIOMessageLoop()->PostTask(
     FROM_HERE,
-    new SocketIOSendTask<StreamSocketIO, UnixSocketRawData>(mIO, aData));
-
-  return true;
+    new SocketIOSendTask<StreamSocketIO, UnixSocketIOBuffer>(mIO, aBuffer));
 }
 
 bool
@@ -581,14 +576,7 @@ StreamSocket::SendSocketData(const nsACString& aStr)
     return false;
   }
 
-  nsAutoPtr<UnixSocketRawData> data(
-    new UnixSocketRawData(aStr.BeginReading(), aStr.Length()));
-
-  if (!SendSocketData(data)) {
-    return false;
-  }
-
-  unused << data.forget();
+  SendSocketData(new UnixSocketRawData(aStr.BeginReading(), aStr.Length()));
 
   return true;
 }

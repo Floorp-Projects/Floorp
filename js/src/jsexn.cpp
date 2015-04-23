@@ -77,6 +77,7 @@ static const JSFunctionSpec exception_methods[] = {
         nullptr,                 /* setProperty */ \
         nullptr,                 /* enumerate */ \
         nullptr,                 /* resolve */ \
+        nullptr,                 /* mayResolve */ \
         nullptr,                 /* convert */ \
         exn_finalize, \
         nullptr,                 /* call        */ \
@@ -108,6 +109,7 @@ ErrorObject::classes[JSEXN_LIMIT] = {
         nullptr,                 /* setProperty */
         nullptr,                 /* enumerate */
         nullptr,                 /* resolve */
+        nullptr,                 /* mayResolve */
         nullptr,                 /* convert */
         exn_finalize,
         nullptr,                 /* call        */

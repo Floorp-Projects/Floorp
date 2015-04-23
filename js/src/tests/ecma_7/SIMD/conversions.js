@@ -19,6 +19,48 @@ function testFloat32x4FromFloat64x2() {
   for (var v of vals) {
     assertEqX4(float32x4.fromFloat64x2(float64x2(...v)), expected(v));
   }
+
+  // Test rounding to nearest, break tie with even
+  var f1 = makeFloat(0, 127, 0);
+  assertEq(f1, 1);
+
+  var f2 = makeFloat(0, 127, 1);
+  var d = makeDouble(0, 1023, 0x0000020000000);
+  assertEq(f2, d);
+
+  var mid = makeDouble(0, 1023, 0x0000010000000);
+  assertEq((1 + d) / 2, mid);
+
+  var nextMid = makeDouble(0, 1023, 0x0000010000001);
+
+  // mid is halfway between f1 and f2 => tie to even, which is f1
+  var v = float64x2(mid, nextMid);
+  assertEqX4(float32x4.fromFloat64x2(v), [f1, f2, 0, 0]);
+
+  var f3 = makeFloat(0, 127, 2);
+  var d = makeDouble(0, 1023, 0x0000040000000);
+  assertEq(f3, d);
+
+  mid = makeDouble(0, 1023, 0x0000030000000);
+  assertEq((f2 + f3) / 2, mid);
+
+  // same here. tie to even, which is f3 here
+  nextMid = makeDouble(0, 1023, 0x0000030000001);
+  var v = float64x2(mid, nextMid);
+  assertEqX4(float32x4.fromFloat64x2(v), [f3, f3, 0, 0]);
+
+  // Test boundaries
+  var biggestFloat = makeFloat(0, 127 + 127, 0x7fffff);
+  assertEq(makeDouble(0, 1023 + 127, 0xfffffe0000000), biggestFloat);
+
+  var lowestFloat = makeFloat(1, 127 + 127, 0x7fffff);
+  assertEq(makeDouble(1, 1023 + 127, 0xfffffe0000000), lowestFloat);
+
+  var v = float64x2(lowestFloat, biggestFloat);
+  assertEqX4(float32x4.fromFloat64x2(v), [lowestFloat, biggestFloat, 0, 0]);
+
+  var v = float64x2(makeDouble(0, 1023 + 127, 0xfffffe0000001), makeDouble(0, 1023 + 127, 0xffffff0000000));
+  assertEqX4(float32x4.fromFloat64x2(v), [biggestFloat, Infinity, 0, 0]);
 }
 
 function testFloat32x4FromFloat64x2Bits() {
@@ -44,6 +86,45 @@ function testFloat32x4FromInt32x4() {
 
   for (var v of vals) {
     assertEqX4(float32x4.fromInt32x4(int32x4(...v)), expected(v));
+  }
+
+  // Check that rounding to nearest, even is applied.
+  {
+      var num = makeFloat(0, 150 + 2, 0);
+      var next = makeFloat(0, 150 + 2, 1);
+      assertEq(num + 4, next);
+
+      v = float32x4.fromInt32x4(int32x4(num, num + 1, num + 2, num + 3));
+      assertEqX4(v, [num, num, /* even */ num, next]);
+  }
+
+  {
+      var num = makeFloat(0, 150 + 2, 1);
+      var next = makeFloat(0, 150 + 2, 2);
+      assertEq(num + 4, next);
+
+      v = float32x4.fromInt32x4(int32x4(num, num + 1, num + 2, num + 3));
+      assertEqX4(v, [num, num, /* even */ next, next]);
+  }
+
+  {
+      var last = makeFloat(0, 157, 0x7fffff);
+
+      assertEq(last, Math.fround(last), "float");
+      assertEq(last < Math.pow(2, 31), true, "less than 2**31");
+      assertEq(last | 0, last, "it should be an integer, as exponent >= 150");
+
+      var diff = (Math.pow(2, 31) - 1) - last;
+      v = float32x4.fromInt32x4(int32x4(Math.pow(2, 31) - 1,
+                                        Math.pow(2, 30) + 1,
+                                        last + (diff / 2) | 0,      // nearest is last
+                                        last + (diff / 2) + 1 | 0   // nearest is Math.pow(2, 31)
+                                ));
+      assertEqX4(v, [Math.pow(2, 31),
+                     Math.pow(2, 30),
+                     last,
+                     Math.pow(2, 31)
+                    ]);
   }
 }
 
@@ -113,14 +194,35 @@ function testFloat64x2FromInt32x4Bits() {
 }
 
 function testInt32x4FromFloat32x4() {
-  var valsExp = [
-    [[1.1, 2.2, 3.3, 4.6], [1, 2, 3, 4]],
-    [[NaN, -0, Infinity, -Infinity], [0, 0, 0, 0]]
-  ];
+  var d = float32x4(1.1, 2.2, 3.3, 4.6);
+  assertEqX4(int32x4.fromFloat32x4(d), [1, 2, 3, 4]);
 
-  for (var [v,w] of valsExp) {
-    assertEqX4(int32x4.fromFloat32x4(float32x4(...v)), w);
-  }
+  var d = float32x4(NaN, 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+
+  var d = float32x4(Infinity, 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+
+  var d = float32x4(-Infinity, 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+
+  // Test high boundaries: float(0, 157, 0x7fffff) < INT32_MAX < float(0, 158, 0)
+  var d = float32x4(makeFloat(0, 127 + 31, 0), 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
+
+  var lastFloat = makeFloat(0, 127 + 30, 0x7FFFFF);
+  var d = float32x4(lastFloat, 0, 0, 0);
+  var e = SIMD.int32x4.fromFloat32x4(d);
+  assertEqX4(e, [lastFloat, 0, 0, 0]);
+
+  // Test low boundaries
+  assertEq(makeFloat(1, 127 + 31, 0), INT32_MIN);
+  var d = float32x4(makeFloat(1, 127 + 31, 0), 0, 0, 0);
+  var e = SIMD.int32x4.fromFloat32x4(d);
+  assertEqX4(e, [INT32_MIN, 0, 0, 0]);
+
+  var d = float32x4(makeFloat(1, 127 + 31, 1), 0, 0, 0);
+  assertThrowsInstanceOf(() => SIMD.int32x4.fromFloat32x4(d), RangeError);
 }
 
 function testInt32x4FromFloat32x4Bits() {
@@ -135,16 +237,39 @@ function testInt32x4FromFloat32x4Bits() {
 }
 
 function testInt32x4FromFloat64x2() {
-  var valsExp = [
-    [[1, 2.2], [1, 2, 0, 0]],
-    [[NaN, -0], [0, 0, 0, 0]],
-    [[Infinity, -Infinity], [0, 0, 0, 0]],
-    [[Math.pow(2, 31), -Math.pow(2, 31) - 1], [INT32_MIN, INT32_MAX, 0, 0]]
-  ];
+  assertEqX4(int32x4.fromFloat64x2(float64x2(1, 2.2)), [1, 2, 0, 0]);
 
-  for (var [v,w] of valsExp) {
-    assertEqX4(int32x4.fromFloat64x2(float64x2(...v)), w);
-  }
+  var g = float64x2(Infinity, 0);
+  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+
+  var g = float64x2(-Infinity, 0);
+  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+
+  var g = float64x2(NaN, 0);
+  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+
+  // Testing high boundaries
+  // double(0, 1023 + 30, 0) < INT32_MAX < double(0, 1023 + 31, 0), so the
+  // lowest exactly representable quantity at this scale is 2**(-52 + 30) ==
+  // 2**-22.
+  assertEq(makeDouble(0, 1023 + 30, 0) + Math.pow(2, -22), makeDouble(0, 1023 + 30, 1));
+  assertEq(makeDouble(0, 1023 + 30, 0) + Math.pow(2, -23), makeDouble(0, 1023 + 30, 0));
+
+  var g = float64x2(INT32_MAX, 0);
+  assertEqX4(int32x4.fromFloat64x2(g), [INT32_MAX, 0, 0, 0]);
+
+  var g = float64x2(INT32_MAX + Math.pow(2, -22), 0);
+  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+
+  // Testing low boundaries
+  assertEq(makeDouble(1, 1023 + 31, 0), INT32_MIN);
+
+  var g = float64x2(makeDouble(1, 1023 + 31, 0), 0);
+  assertEqX4(int32x4.fromFloat64x2(g), [INT32_MIN, 0, 0, 0]);
+
+  var g = float64x2(makeDouble(1, 1023 + 31, 1), 0);
+  assertThrowsInstanceOf(() => int32x4.fromFloat64x2(g), RangeError);
+
 }
 
 function testInt32x4FromFloat64x2Bits() {

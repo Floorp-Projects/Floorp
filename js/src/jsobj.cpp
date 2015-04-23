@@ -2784,19 +2784,10 @@ js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** 
                 return true;
             }
 
-            // Fail if there's a resolve hook. We allow the JSFunction resolve hook
-            // if we know it will never add a property with this name or str_resolve
-            // with a non-integer property.
-            do {
-                const Class* clasp = obj->getClass();
-                if (!clasp->resolve)
-                    break;
-                if (clasp->resolve == fun_resolve && !FunctionHasResolveHook(cx->names(), id))
-                    break;
-                if (clasp->resolve == str_resolve && !JSID_IS_INT(id))
-                    break;
+            // Fail if there's a resolve hook, unless the mayResolve hook tells
+            // us the resolve hook won't define a property with this id.
+            if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj))
                 return false;
-            } while (0);
         } else if (obj->is<UnboxedPlainObject>()) {
             if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
                 *objp = obj;
@@ -4041,17 +4032,17 @@ JSObject::sizeOfIncludingThisInNursery() const
 
     MOZ_ASSERT(!isTenured());
 
-    const Nursery &nursery = compartment()->runtimeFromAnyThread()->gc.nursery;
+    const Nursery& nursery = compartment()->runtimeFromAnyThread()->gc.nursery;
     size_t size = Arena::thingSize(allocKindForTenure(nursery));
 
     if (is<NativeObject>()) {
-        const NativeObject &native = as<NativeObject>();
+        const NativeObject& native = as<NativeObject>();
 
         size += native.numFixedSlots() * sizeof(Value);
         size += native.numDynamicSlots() * sizeof(Value);
 
         if (native.hasDynamicElements()) {
-            js::ObjectElements &elements = *native.getElementsHeader();
+            js::ObjectElements& elements = *native.getElementsHeader();
             if (!elements.isCopyOnWrite() || elements.ownerObject() == this)
                 size += elements.capacity * sizeof(HeapSlot);
         }
@@ -4063,7 +4054,7 @@ JSObject::sizeOfIncludingThisInNursery() const
 size_t
 JS::ubi::Concrete<JSObject>::size(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    JSObject &obj = get();
+    JSObject& obj = get();
 
     if (!obj.isTenured())
         return obj.sizeOfIncludingThisInNursery();

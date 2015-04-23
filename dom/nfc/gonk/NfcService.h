@@ -30,7 +30,7 @@ public:
   void DispatchNfcEvent(const mozilla::dom::NfcEventOptions& aOptions);
 
   virtual void ReceiveSocketData(
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aData) override;
+    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
 
   virtual void OnConnectSuccess(enum SocketType aSocketType) override;
   virtual void OnConnectError(enum SocketType aSocketType) override;

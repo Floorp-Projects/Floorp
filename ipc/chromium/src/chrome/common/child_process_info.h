@@ -78,10 +78,6 @@ class ChildProcessInfo {
     return process_.handle() == rhs.process_.handle();
   }
 
-  // Generates a unique channel name for a child renderer/plugin process.
-  // The "instance" pointer value is baked into the channel id.
-  static std::wstring GenerateRandomChannelID(void* instance);
-
  protected:
   void set_type(ProcessType type) { type_ = type; }
   void set_name(const std::wstring& name) { name_ = name; }

@@ -27,6 +27,7 @@ static const js::Class TenuredClass = {
     nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* resolve */
+    nullptr, /* mayResolve */
     nullptr, /* ??? */
     _finalize,
     nullptr, /* call */
@@ -47,6 +48,7 @@ static const js::Class NurseryClass = {
     nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* resolve */
+    nullptr, /* mayResolve */
     nullptr, /* ??? */
     _finalize,
     nullptr, /* call */
