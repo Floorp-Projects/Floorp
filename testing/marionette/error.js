@@ -55,9 +55,27 @@ const XPCOM_EXCEPTIONS = [];
 
 this.error = {};
 
+/**
+ * Marshals an error object into a WebDriver protocol error.  The given
+ * error can be a prototypal Error or an object, as long as it has the
+ * properties message, stack, and status.
+ *
+ * If err is a native JavaScript error, the returned object's message
+ * property will be changed to include the error's name.
+ *
+ * @param {Object} err
+ *     Object with the properties message, stack, and status.
+ *
+ * @return {Object}
+ *     Object with the properties message, stacktrace, and status.
+ */
 error.toJSON = function(err) {
+  let msg = err.message;
+  if (!error.isWebDriverError(err) && "name" in error) {
+    msg = `${err.name}: ${msg}`;
+  }
   return {
-    message: err.message,
+    message: msg,
     stacktrace: err.stack || null,
     status: err.status
   };
