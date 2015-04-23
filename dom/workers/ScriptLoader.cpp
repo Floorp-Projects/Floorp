@@ -458,7 +458,8 @@ private:
 
 class ScriptLoaderRunnable final : public WorkerFeature,
                                    public nsIRunnable,
-                                   public nsIStreamLoaderObserver
+                                   public nsIStreamLoaderObserver,
+                                   public nsIRequestObserver
 {
   friend class ScriptExecutorRunnable;
   friend class CachePromiseHandler;
@@ -468,6 +469,7 @@ class ScriptLoaderRunnable final : public WorkerFeature,
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   nsTArray<ScriptLoadInfo> mLoadInfos;
   nsRefPtr<CacheCreator> mCacheCreator;
+  nsCOMPtr<nsIInputStream> mReader;
   bool mIsMainScript;
   WorkerScriptType mWorkerScriptType;
   bool mCanceled;
@@ -558,6 +560,79 @@ private:
     nsresult rv = OnStreamCompleteInternal(aLoader, aContext, aStatus,
                                            aStringLen, aString, loadInfo);
     LoadingFinished(index, rv);
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+  {
+    AssertIsOnMainThread();
+
+    nsCOMPtr<nsISupportsPRUint32> indexSupports(do_QueryInterface(aContext));
+    MOZ_ASSERT(indexSupports, "This should never fail!");
+
+    uint32_t index = UINT32_MAX;
+    if (NS_FAILED(indexSupports->GetData(&index)) ||
+        index >= mLoadInfos.Length()) {
+      MOZ_CRASH("Bad index!");
+    }
+
+    ScriptLoadInfo& loadInfo = mLoadInfos[index];
+
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    MOZ_ASSERT(channel == loadInfo.mChannel);
+
+    // We synthesize the result code, but its never exposed to content.
+    nsRefPtr<InternalResponse> ir =
+      new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+    ir->SetBody(mReader);
+
+    // Set the security info of the channel on the response so that it's
+    // saved in the cache.
+    nsCOMPtr<nsISupports> infoObj;
+    channel->GetSecurityInfo(getter_AddRefs(infoObj));
+    if (infoObj) {
+      nsCOMPtr<nsISerializable> serializable = do_QueryInterface(infoObj);
+      if (serializable) {
+        ir->SetSecurityInfo(serializable);
+        MOZ_ASSERT(!ir->GetSecurityInfo().IsEmpty());
+      } else {
+        NS_WARNING("A non-serializable object was obtained from nsIChannel::GetSecurityInfo()!");
+      }
+    }
+
+    nsRefPtr<Response> response = new Response(mCacheCreator->Global(), ir);
+
+    RequestOrUSVString request;
+
+    MOZ_ASSERT(!loadInfo.mFullURL.IsEmpty());
+    request.SetAsUSVString().Rebind(loadInfo.mFullURL.Data(),
+                                    loadInfo.mFullURL.Length());
+
+    ErrorResult error;
+    nsRefPtr<Promise> cachePromise =
+      mCacheCreator->Cache_()->Put(request, *response, error);
+    if (NS_WARN_IF(error.Failed())) {
+      nsresult rv = error.StealNSResult();
+      channel->Cancel(rv);
+      return rv;
+    }
+
+    nsRefPtr<CachePromiseHandler> promiseHandler =
+      new CachePromiseHandler(this, loadInfo, index);
+    cachePromise->AppendNativeHandler(promiseHandler);
+
+    loadInfo.mCachePromise.swap(cachePromise);
+    loadInfo.mCacheStatus = ScriptLoadInfo::WritingToCache;
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                nsresult aStatusCode)
+  {
+    // Nothing to do here!
     return NS_OK;
   }
 
@@ -774,59 +849,29 @@ private:
         return rv;
       }
     } else {
-      nsCOMPtr<nsIInputStream> reader;
       nsCOMPtr<nsIOutputStream> writer;
 
       // In case we return early.
       loadInfo.mCacheStatus = ScriptLoadInfo::Cancel;
 
-      rv = NS_NewPipe(getter_AddRefs(reader), getter_AddRefs(writer), 0,
+      rv = NS_NewPipe(getter_AddRefs(mReader), getter_AddRefs(writer), 0,
                       UINT32_MAX, // unlimited size to avoid writer WOULD_BLOCK case
                       true, false); // non-blocking reader, blocking writer
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      // We synthesize the result code, but its never exposed to content.
-      nsRefPtr<InternalResponse> ir =
-        new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-      ir->SetBody(reader);
-
       nsCOMPtr<nsIStreamListenerTee> tee =
         do_CreateInstance(NS_STREAMLISTENERTEE_CONTRACTID);
-      rv = tee->Init(loader, writer, nullptr);
+      rv = tee->Init(loader, writer, this);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      rv = channel->AsyncOpen(tee, indexSupports);
+      nsresult rv = channel->AsyncOpen(tee, indexSupports);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-
-      nsRefPtr<Response> response = new Response(mCacheCreator->Global(), ir);
-
-      RequestOrUSVString request;
-
-      MOZ_ASSERT(!loadInfo.mFullURL.IsEmpty());
-      request.SetAsUSVString().Rebind(loadInfo.mFullURL.Data(),
-                                      loadInfo.mFullURL.Length());
-
-      ErrorResult error;
-      nsRefPtr<Promise> cachePromise =
-        mCacheCreator->Cache_()->Put(request, *response, error);
-      if (NS_WARN_IF(error.Failed())) {
-        nsresult rv = error.StealNSResult();
-        channel->Cancel(rv);
-        return rv;
-      }
-
-      nsRefPtr<CachePromiseHandler> promiseHandler =
-        new CachePromiseHandler(this, loadInfo, aIndex);
-      cachePromise->AppendNativeHandler(promiseHandler);
-
-      loadInfo.mCachePromise.swap(cachePromise);
-      loadInfo.mCacheStatus = ScriptLoadInfo::WritingToCache;
     }
 
     loadInfo.mChannel.swap(channel);
@@ -1116,7 +1161,9 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable,
+                                        nsIStreamLoaderObserver,
+                                        nsIRequestObserver)
 
 void
 CachePromiseHandler::ResolvedCallback(JSContext* aCx,
