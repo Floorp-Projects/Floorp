@@ -39,7 +39,7 @@ interface nsIVerifySignedManifestCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(8b01c2af-3a44-44d3-8ea5-51c2455e6c4b)]
+[scriptable, uuid(560bc9ac-3e71-472e-9b08-2270d0c71878)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -311,6 +311,8 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AppXPCShellRoot = 6;
   const AppTrustedRoot TrustedHostedAppPublicRoot = 7;
   const AppTrustedRoot TrustedHostedAppTestRoot = 8;
+  const AppTrustedRoot AddonsPublicRoot = 9;
+  const AppTrustedRoot AddonsStageRoot = 10;
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);

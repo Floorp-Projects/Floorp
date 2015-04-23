@@ -383,6 +383,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
         this.updateVideoContainer();
       }
 
+      if (nextState.roomState === ROOM_STATES.INIT ||
+          nextState.roomState === ROOM_STATES.GATHER ||
+          nextState.roomState === ROOM_STATES.READY) {
+        this.resetDimensionsCache();
+      }
+
       // When screen sharing stops.
       if (this.state.receivingScreenShare && !nextState.receivingScreenShare) {
         // Remove the custom screenshare styles on the remote camera.
