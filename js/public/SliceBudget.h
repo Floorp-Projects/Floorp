@@ -33,6 +33,12 @@ struct JS_PUBLIC_API(WorkBudget)
  */
 struct JS_PUBLIC_API(SliceBudget)
 {
+    // Memory of the originally requested budget. If isUnlimited, neither of
+    // these are in use. If deadline==0, then workBudget is valid. Otherwise
+    // timeBudget is valid.
+    TimeBudget timeBudget;
+    WorkBudget workBudget;
+
     int64_t deadline; /* in microseconds */
     intptr_t counter;
 
@@ -64,9 +70,11 @@ struct JS_PUBLIC_API(SliceBudget)
         return checkOverBudget();
     }
 
-    bool isUnlimited() {
+    bool isUnlimited() const {
         return deadline == unlimitedDeadline;
     }
+
+    int describe(char* buffer, size_t maxlen) const;
 
   private:
     bool checkOverBudget();

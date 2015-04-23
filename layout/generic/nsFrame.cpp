@@ -57,6 +57,7 @@
 #include "FrameLayerBuilder.h"
 
 #include "nsBidiPresUtils.h"
+#include "RubyUtils.h"
 
 // For triple-click pref
 #include "imgIContainer.h"
@@ -481,10 +482,11 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
   }
 
   nsIContent *content = aFrame->GetContent();
+  nsIAtom* frameType = aFrame->GetType();
   bool isInline = (aFrame->GetDisplay() == NS_STYLE_DISPLAY_INLINE ||
-                   aFrame->StyleDisplay()->IsRubyDisplayType() ||
+                   RubyUtils::IsRubyBox(frameType) ||
                    (aFrame->IsFloating() &&
-                    aFrame->GetType() == nsGkAtoms::letterFrame) ||
+                    frameType == nsGkAtoms::letterFrame) ||
                    // Given multiple frames for the same node, only the
                    // outer one should be considered a container.
                    // (Important, e.g., for nsSelectsAreaFrame.)
