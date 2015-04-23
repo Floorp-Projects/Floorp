@@ -117,8 +117,8 @@ js::CheckTracedThing(JSTracer* trc, T thing)
                   !IsForwarded(thing));
 
     /*
-     * Permanent atoms are not associated with this runtime, but will be ignored
-     * during marking.
+     * Permanent atoms are not associated with this runtime, but will be
+     * ignored during marking.
      */
     if (ThingIsPermanentAtomOrWellKnownSymbol(thing))
         return;
@@ -167,31 +167,24 @@ js::CheckTracedThing(JSTracer* trc, T thing)
 #endif
 }
 
+template <typename S>
+struct CheckTracedFunctor : public VoidDefaultAdaptor<S> {
+    template <typename T> void operator()(T* t, JSTracer* trc) { CheckTracedThing(trc, t); }
+};
+
 namespace js {
 template<>
 void
 CheckTracedThing<Value>(JSTracer* trc, Value val)
 {
-#ifdef DEBUG
-    if (val.isString())
-        CheckTracedThing(trc, val.toString());
-    else if (val.isObject())
-        CheckTracedThing(trc, &val.toObject());
-    else if (val.isSymbol())
-        CheckTracedThing(trc, val.toSymbol());
-#endif
+    DispatchValueTyped(CheckTracedFunctor<Value>(), val, trc);
 }
 
 template <>
 void
 CheckTracedThing<jsid>(JSTracer* trc, jsid id)
 {
-#ifdef DEBUG
-    if (JSID_IS_STRING(id))
-        CheckTracedThing(trc, JSID_TO_STRING(id));
-    else if (JSID_IS_SYMBOL(id))
-        CheckTracedThing(trc, JSID_TO_SYMBOL(id));
-#endif
+    DispatchIdTyped(CheckTracedFunctor<jsid>(), id, trc);
 }
 
 #define IMPL_CHECK_TRACED_THING(_, type, __) \
@@ -291,7 +284,7 @@ ConvertToBase(T* thingp)
 }
 
 template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name);
-template <typename T> void DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
+template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
 static bool ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell);
 static bool ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val);
@@ -414,7 +407,7 @@ DispatchToTracer(JSTracer* trc, T* thingp, const char* name)
 #undef IS_SAME_TYPE_OR
     if (trc->isMarkingTracer())
         return DoMarking(static_cast<GCMarker*>(trc), *thingp);
-    return DoCallback(trc->asCallbackTracer(), thingp, name);
+    DoCallback(trc->asCallbackTracer(), thingp, name);
 }
 
 template <typename T>
@@ -478,26 +471,23 @@ DoMarking(GCMarker* gcmarker, T thing)
     SetMaybeAliveFlag(thing);
 }
 
+template <typename S>
+struct DoMarkingFunctor : public VoidDefaultAdaptor<S> {
+    template <typename T> void operator()(T* t, GCMarker* gcmarker) { DoMarking(gcmarker, t); }
+};
+
 template <>
 void
 DoMarking<Value>(GCMarker* gcmarker, Value val)
 {
-    if (val.isString())
-        DoMarking(gcmarker, val.toString());
-    else if (val.isObject())
-        DoMarking(gcmarker, &val.toObject());
-    else if (val.isSymbol())
-        DoMarking(gcmarker, val.toSymbol());
+    DispatchValueTyped(DoMarkingFunctor<Value>(), val, gcmarker);
 }
 
 template <>
 void
 DoMarking<jsid>(GCMarker* gcmarker, jsid id)
 {
-    if (JSID_IS_STRING(id))
-        DoMarking(gcmarker, JSID_TO_STRING(id));
-    else if (JSID_IS_SYMBOL(id))
-        DoMarking(gcmarker, JSID_TO_SYMBOL(id));
+    DispatchIdTyped(DoMarkingFunctor<jsid>(), id, gcmarker);
 }
 
 // The default traversal calls out to the fully generic traceChildren function
@@ -603,24 +593,20 @@ IsMarkedInternal(T* thingp)
     return (*thingp)->asTenured().isMarked();
 }
 
+template <typename S>
+struct IsMarkedFunctor : public IdentityDefaultAdaptor<S> {
+    template <typename T> S operator()(T* t, bool* rv) {
+        *rv = IsMarkedInternal(&t);
+        return js::gc::RewrapValueOrId<S, T*>::wrap(t);
+    }
+};
+
 template <>
 bool
 IsMarkedInternal<Value>(Value* valuep)
 {
-    bool rv = true;  // Non-markable types are always live.
-    if (valuep->isString()) {
-        JSString* str = valuep->toString();
-        rv = IsMarkedInternal(&str);
-        valuep->setString(str);
-    } else if (valuep->isObject()) {
-        JSObject* obj = &valuep->toObject();
-        rv = IsMarkedInternal(&obj);
-        valuep->setObject(*obj);
-    } else if (valuep->isSymbol()) {
-        JS::Symbol* sym = valuep->toSymbol();
-        rv = IsMarkedInternal(&sym);
-        valuep->setSymbol(sym);
-    }
+    bool rv = true;
+    *valuep = DispatchValueTyped(IsMarkedFunctor<Value>(), *valuep, &rv);
     return rv;
 }
 
@@ -628,16 +614,8 @@ template <>
 bool
 IsMarkedInternal<jsid>(jsid* idp)
 {
-    bool rv = true;  // Non-markable types are always live.
-    if (JSID_IS_STRING(*idp)) {
-        JSString* str = JSID_TO_STRING(*idp);
-        rv = IsMarkedInternal(&str);
-        *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
-    } else if (JSID_IS_SYMBOL(*idp)) {
-        JS::Symbol* sym = JSID_TO_SYMBOL(*idp);
-        rv = IsMarkedInternal(&sym);
-        *idp = SYMBOL_TO_JSID(sym);
-    }
+    bool rv = true;
+    *idp = DispatchIdTyped(IsMarkedFunctor<jsid>(), *idp, &rv);
     return rv;
 }
 
@@ -675,24 +653,20 @@ IsAboutToBeFinalizedInternal(T* thingp)
     return false;
 }
 
+template <typename S>
+struct IsAboutToBeFinalizedFunctor : public IdentityDefaultAdaptor<S> {
+    template <typename T> S operator()(T* t, bool* rv) {
+        *rv = IsAboutToBeFinalizedInternal(&t);
+        return js::gc::RewrapValueOrId<S, T*>::wrap(t);
+    }
+};
+
 template <>
 bool
 IsAboutToBeFinalizedInternal<Value>(Value* valuep)
 {
-    bool rv = false;  // Non-markable types are always live.
-    if (valuep->isString()) {
-        JSString* str = (JSString*)valuep->toGCThing();
-        rv = IsAboutToBeFinalizedInternal(&str);
-        valuep->setString(str);
-    } else if (valuep->isObject()) {
-        JSObject* obj = (JSObject*)valuep->toGCThing();
-        rv = IsAboutToBeFinalizedInternal(&obj);
-        valuep->setObject(*obj);
-    } else if (valuep->isSymbol()) {
-        JS::Symbol* sym = valuep->toSymbol();
-        rv = IsAboutToBeFinalizedInternal(&sym);
-        valuep->setSymbol(sym);
-    }
+    bool rv = false;
+    *valuep = DispatchValueTyped(IsAboutToBeFinalizedFunctor<Value>(), *valuep, &rv);
     return rv;
 }
 
@@ -700,16 +674,8 @@ template <>
 bool
 IsAboutToBeFinalizedInternal<jsid>(jsid* idp)
 {
-    bool rv = false;  // Non-markable types are always live.
-    if (JSID_IS_STRING(*idp)) {
-        JSString* str = JSID_TO_STRING(*idp);
-        rv = IsAboutToBeFinalizedInternal(&str);
-        *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
-    } else if (JSID_IS_SYMBOL(*idp)) {
-        JS::Symbol* sym = JSID_TO_SYMBOL(*idp);
-        rv = IsAboutToBeFinalizedInternal(&sym);
-        *idp = SYMBOL_TO_JSID(sym);
-    }
+    bool rv = false;
+    *idp = DispatchIdTyped(IsAboutToBeFinalizedFunctor<jsid>(), *idp, &rv);
     return rv;
 }
 
