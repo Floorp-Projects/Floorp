@@ -79,11 +79,7 @@ struct nsGlobalNameStruct
   mozilla::dom::ConstructorEnabled* mConstructorEnabled;
 };
 
-
-class nsIScriptContext;
 class nsICategoryManager;
-class GlobalNameMapEntry;
-
 
 class nsScriptNameSpaceManager : public nsIObserver,
                                  public nsSupportsWeakReference,

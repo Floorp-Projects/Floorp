@@ -203,7 +203,7 @@ ScriptedIndirectProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, 
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue fval(cx), value(cx);
     return GetFundamentalTrap(cx, handler, cx->names().defineProperty, &fval) &&
-           FromPropertyDescriptor(cx, desc, &value) &&
+           FromPropertyDescriptorToObject(cx, desc, &value) &&
            Trap2(cx, handler, fval, id, value, &value) &&
            result.succeed();
 }
@@ -407,7 +407,6 @@ ScriptedIndirectProxyHandler::derivedSet(JSContext* cx, HandleObject proxy, Hand
     if (!receiver.isObject())
         return result.fail(JSMSG_SET_NON_OBJECT_RECEIVER);
     RootedObject receiverObj(cx, &receiver.toObject());
-    desc.object().set(receiverObj);
     return DefineProperty(cx, receiverObj, id, desc, result);
 }
 

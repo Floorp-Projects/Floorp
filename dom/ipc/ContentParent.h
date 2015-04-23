@@ -30,9 +30,7 @@
 class mozIApplication;
 class nsConsoleService;
 class nsICycleCollectorLogSink;
-class nsIDOMBlob;
 class nsIDumpGCAndCCLogsCallback;
-class nsIMemoryReporter;
 class nsITimer;
 class ParentIdleListener;
 class nsIWidget;
@@ -48,7 +46,6 @@ class TestShellParent;
 } // namespace ipc
 
 namespace jsipc {
-class JavaScriptShared;
 class PJavaScriptParent;
 }
 
@@ -608,6 +605,10 @@ private:
     virtual bool DeallocPMobileConnectionParent(PMobileConnectionParent* aActor) override;
 
     virtual bool DeallocPNeckoParent(PNeckoParent* necko) override;
+
+    virtual PPSMContentDownloaderParent* AllocPPSMContentDownloaderParent(
+            const uint32_t& aCertType) override;
+    virtual bool DeallocPPSMContentDownloaderParent(PPSMContentDownloaderParent* aDownloader) override;
 
     virtual PExternalHelperAppParent* AllocPExternalHelperAppParent(
             const OptionalURIParams& aUri,

@@ -22,7 +22,6 @@
 class nsINode;
 class nsIDOMNode;
 class nsIURI;
-class nsIXMLContentSink;
 class txStylesheet;
 class txResultRecycler;
 class txIGlobalParameter;

@@ -27,7 +27,6 @@
 //#define FORCE_ALOG 1
 
 class nsIAndroidDisplayport;
-class nsIAndroidViewport;
 class nsIWidget;
 
 namespace mozilla {

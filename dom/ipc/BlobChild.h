@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsID.h"
 
-class nsIDOMBlob;
 class nsIEventTarget;
 class nsIRemoteBlob;
 class nsString;

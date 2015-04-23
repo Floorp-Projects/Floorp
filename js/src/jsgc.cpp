@@ -7029,6 +7029,12 @@ JS::GCDescription::formatMessage(JSRuntime* rt) const
     return rt->gc.stats.formatMessage();
 }
 
+JS::dbg::GarbageCollectionEvent::Ptr
+JS::GCDescription::toGCEvent(JSRuntime* rt) const
+{
+    return JS::dbg::GarbageCollectionEvent::Create(rt, rt->gc.stats, rt->gc.majorGCCount());
+}
+
 char16_t*
 JS::GCDescription::formatJSON(JSRuntime* rt, uint64_t timestamp) const
 {

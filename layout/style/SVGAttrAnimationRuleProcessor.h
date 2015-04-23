@@ -14,7 +14,6 @@
 
 #include "nsIStyleRuleProcessor.h"
 
-class nsIDocument;
 class nsRuleWalker;
 
 namespace mozilla {

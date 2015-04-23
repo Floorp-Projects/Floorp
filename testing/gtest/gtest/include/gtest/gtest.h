@@ -151,7 +151,6 @@ class AssertHelper;
 class DefaultGlobalTestPartResultReporter;
 class ExecDeathTest;
 class NoExecDeathTest;
-class FinalSuccessChecker;
 class GTestFlagSaver;
 class TestResultAccessor;
 class TestEventListenersAccessor;

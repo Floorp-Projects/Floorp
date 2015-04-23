@@ -125,13 +125,10 @@ typedef HashMap<CrossCompartmentKey, ReadBarrieredValue,
 
 } /* namespace js */
 
-namespace JS {
-struct TypeInferenceSizes;
-}
-
 namespace js {
 class DebugScopes;
 class ObjectWeakMap;
+class WatchpointMap;
 class WeakMapBase;
 }
 
@@ -438,6 +435,7 @@ struct JSCompartment
     void fixupGlobal();
 
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
+    js::ObjectMetadataCallback getObjectMetadataCallback() const { return objectMetadataCallback; }
     void setObjectMetadataCallback(js::ObjectMetadataCallback callback);
     void forgetObjectMetadataCallback() {
         objectMetadataCallback = nullptr;

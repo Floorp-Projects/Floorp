@@ -18,16 +18,11 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/WeakPtr.h"
 
-class nsCanvasFrame;
 class nsDocShell;
 class nsFrameSelection;
 class nsIContent;
-class nsIDocument;
-class nsIFrame;
 class nsIPresShell;
 class nsITimer;
-class nsIWidget;
-class nsPresContext;
 
 namespace mozilla {
 

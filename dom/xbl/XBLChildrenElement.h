@@ -17,8 +17,6 @@ class nsAnonymousContentList;
 namespace mozilla {
 namespace dom {
 
-class ExplicitChildIterator;
-
 class XBLChildrenElement : public nsXMLElement
 {
 public:

@@ -12,10 +12,11 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jspubtd.h"
 
+#include "js/GCAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
@@ -24,6 +25,9 @@ class Debugger;
 }
 
 namespace JS {
+
+using mozilla::UniquePtr;
+
 namespace dbg {
 
 // Helping embedding code build objects for Debugger
@@ -258,7 +262,31 @@ class BuilderOrigin : public Builder {
 
 // Tell Debuggers in |runtime| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
-void SetDebuggerMallocSizeOf(JSRuntime* runtime, mozilla::MallocSizeOf mallocSizeOf);
+JS_PUBLIC_API(void)
+SetDebuggerMallocSizeOf(JSRuntime* runtime, mozilla::MallocSizeOf mallocSizeOf);
+
+// Get the MallocSizeOf function that the given runtime is using to find the
+// size of malloc'd blocks.
+JS_PUBLIC_API(mozilla::MallocSizeOf)
+GetDebuggerMallocSizeOf(JSRuntime* runtime);
+
+
+
+// Debugger and Garbage Collection Events
+// --------------------------------------
+//
+// The Debugger wants to report about its debuggees' GC cycles, however entering
+// JS after a GC is troublesome since SpiderMonkey will often do something like
+// force a GC and then rely on the nursery being empty. If we call into some
+// Debugger's hook after the GC, then JS runs and the nursery won't be
+// empty. Instead, we rely on embedders to call back into SpiderMonkey after a
+// GC and notify Debuggers to call their onGarbageCollection hook.
+
+
+// For each Debugger that observed a debuggee involved in the given GC event,
+// call its `onGarbageCollection` hook.
+JS_PUBLIC_API(bool)
+FireOnGarbageCollectionHook(JSContext* cx, GarbageCollectionEvent::Ptr&& data);
 
 
 
@@ -294,7 +322,12 @@ onPromiseSettled(JSContext* cx, HandleObject promise);
 
 // Return true if the given value is a Debugger object, false otherwise.
 JS_PUBLIC_API(bool)
-IsDebugger(JS::Value val);
+IsDebugger(const JSObject& obj);
+
+// Append each of the debuggee global objects observed by the Debugger object
+// |dbgObj| to |vector|. Returns true on success, false on failure.
+JS_PUBLIC_API(bool)
+GetDebuggeeGlobals(JSContext* cx, const JSObject& dbgObj, AutoObjectVector& vector);
 
 } // namespace dbg
 } // namespace JS

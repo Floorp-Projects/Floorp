@@ -12,10 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsSVGPaintServerFrame.h"
 
-class gfxASurface;
-class gfxContext;
 class nsIFrame;
-class nsSVGElement;
 class nsSVGLength2;
 class nsSVGPathGeometryFrame;
 class nsSVGViewBox;

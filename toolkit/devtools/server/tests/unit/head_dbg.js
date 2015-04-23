@@ -6,6 +6,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
+const CC = Components.Constructor;
 
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { worker } = Cu.import("resource://gre/modules/devtools/worker-loader.js", {})
@@ -349,7 +350,7 @@ function getFileUrl(aName, aAllowMissing=false) {
  * Returns the full path of the file with the specified name in a
  * platform-independent and URL-like form.
  */
-function getFilePath(aName, aAllowMissing=false)
+function getFilePath(aName, aAllowMissing=false, aUsePlatformPathSeparator=false)
 {
   let file = do_get_file(aName, aAllowMissing);
   let path = Services.io.newFileURI(file).spec;
@@ -358,7 +359,14 @@ function getFilePath(aName, aAllowMissing=false)
       file instanceof Ci.nsILocalFileWin) {
     filePrePath += "/";
   }
-  return path.slice(filePrePath.length);
+
+  path = path.slice(filePrePath.length);
+
+  if (aUsePlatformPathSeparator && path.match(/^\w:/)) {
+    path = path.replace(/\//g, "\\");
+  }
+
+  return path;
 }
 
 Cu.import("resource://gre/modules/NetUtil.jsm");

@@ -11,7 +11,6 @@
 
 #include "mozilla/StaticPtr.h"
 
-class nsIAtom;
 class nsAString;
 
 class nsNameSpaceKey : public PLDHashEntryHdr

@@ -20,8 +20,6 @@
 class nsIDragService;
 class nsIWidget;
 
-struct IDataObject;
-
 /*
  * nsNativeDragTarget implements the IDropTarget interface and gets most of its
  * behavior from the associated adapter (m_dragDrop).

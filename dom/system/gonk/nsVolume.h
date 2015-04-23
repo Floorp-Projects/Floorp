@@ -14,7 +14,6 @@ namespace mozilla {
 namespace system {
 
 class Volume;
-class VolumeMountLock;
 
 class nsVolume : public nsIVolume
 {

@@ -22,16 +22,6 @@ for (let test of [a,b]) {
     assertDeepEq(prototype, desiredPrototype);
 }
 
-try {
-    eval(\`class a {
-            constructor() { };
-            static [\"prototype\"]() { };
-          }\`);
-} catch (e if e instanceof TypeError) {
-    throw new Error("Congrats on making initprop respect non-writable " +
-                    "non-configurable properties. Uncomment the test below " +
-                    "for bonus points.");
-/*
 // As such, it should by a TypeError to try and overwrite "prototype" with a
 // static member. The only way to try is with a computed property name; the rest
 // are early errors.
@@ -72,8 +62,6 @@ assertThrowsInstanceOf(() => eval(\`(
                                     static set ["prototype"](x) { }
                                   }
                                   )\`), TypeError);
-*/
-}
 `;
 
 if (classesEnabled())

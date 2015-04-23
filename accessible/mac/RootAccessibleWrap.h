@@ -15,8 +15,6 @@
 namespace mozilla {
 namespace a11y {
 
-struct objc_class;
-
 class RootAccessibleWrap : public RootAccessible
 {
 public:
