@@ -518,6 +518,10 @@ PresentationRequesterInfo::OnStopListening(nsIServerSocket* aServerSocket,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (aStatus == NS_BINDING_ABORTED) { // The server socket was manually closed.
+    return NS_OK;
+  }
+
   Shutdown(aStatus);
 
   if (!IsSessionReady()) {
@@ -795,7 +799,7 @@ PresentationResponderInfo::RejectedCallback(JSContext* aCx,
                                             JS::Handle<JS::Value> aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_WARNING("The receiver page fails to become ready before timeout.");
+  NS_WARNING("Launching the receiver page has been rejected.");
 
   if (mTimer) {
     mTimer->Cancel();
