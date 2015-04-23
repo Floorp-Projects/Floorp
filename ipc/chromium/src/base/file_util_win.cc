@@ -27,14 +27,14 @@ bool AbsolutePath(FilePath* path) {
   return true;
 }
 
-bool Delete(const FilePath& path, bool recursive) {
+bool Delete(const FilePath& path) {
   if (path.value().length() >= MAX_PATH)
     return false;
 
-  // If we're not recursing use DeleteFile; it should be faster. DeleteFile
+  // Use DeleteFile; it should be faster. DeleteFile
   // fails if passed a directory though, which is why we fall through on
   // failure to the SHFileOperation.
-  if (!recursive && DeleteFile(path.value().c_str()) != 0)
+  if (DeleteFile(path.value().c_str()) != 0)
     return true;
 
   // SHFILEOPSTRUCT wants the path to be terminated with two NULLs,
@@ -48,8 +48,7 @@ bool Delete(const FilePath& path, bool recursive) {
   file_operation.wFunc = FO_DELETE;
   file_operation.pFrom = double_terminated_path;
   file_operation.fFlags = FOF_NOERRORUI | FOF_SILENT | FOF_NOCONFIRMATION;
-  if (!recursive)
-    file_operation.fFlags |= FOF_NORECURSION | FOF_FILESONLY;
+  file_operation.fFlags |= FOF_NORECURSION | FOF_FILESONLY;
   int err = SHFileOperation(&file_operation);
   // Some versions of Windows return ERROR_FILE_NOT_FOUND when
   // deleting an empty directory.
@@ -96,26 +95,6 @@ bool ShellCopy(const FilePath& from_path, const FilePath& to_path,
     file_operation.fFlags |= FOF_NORECURSION | FOF_FILESONLY;
 
   return (SHFileOperation(&file_operation) == 0);
-}
-
-bool CopyDirectory(const FilePath& from_path, const FilePath& to_path,
-                   bool recursive) {
-  if (recursive)
-    return ShellCopy(from_path, to_path, true);
-
-  // Instead of creating a new directory, we copy the old one to include the
-  // security information of the folder as part of the copy.
-  if (!PathExists(to_path)) {
-    // Except that Vista fails to do that, and instead do a recursive copy if
-    // the target directory doesn't exist.
-    if (win_util::GetWinVersion() >= win_util::WINVERSION_VISTA)
-      CreateDirectory(to_path);
-    else
-      ShellCopy(from_path, to_path, false);
-  }
-
-  FilePath directory = from_path.Append(L"*.*");
-  return ShellCopy(directory, to_path, false);
 }
 
 bool PathExists(const FilePath& path) {

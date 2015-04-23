@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 #elif defined(OS_POSIX) 
 #include <sys/types.h>
-#include <fts.h>
 #include <sys/stat.h>
 #endif
 
@@ -87,33 +86,16 @@ void ReplaceExtension(std::wstring* file_name, const std::wstring& extension);
 
 // Deletes the given path, whether it's a file or a directory.
 // If it's a directory, it's perfectly happy to delete all of the
-// directory's contents.  Passing true to recursive deletes
-// subdirectories and their contents as well.
+// directory's contents.
 // Returns true if successful, false otherwise.
-//
-// WARNING: USING THIS WITH recursive==true IS EQUIVALENT
-//          TO "rm -rf", SO USE WITH CAUTION.
-bool Delete(const FilePath& path, bool recursive);
+bool Delete(const FilePath& path);
 // Deprecated temporary compatibility function.
-bool Delete(const std::wstring& path, bool recursive);
+bool Delete(const std::wstring& path);
 
 // Copies a single file. Use CopyDirectory to copy directories.
 bool CopyFile(const FilePath& from_path, const FilePath& to_path);
 // Deprecated temporary compatibility function.
 bool CopyFile(const std::wstring& from_path, const std::wstring& to_path);
-
-// Copies the given path, and optionally all subdirectories and their contents
-// as well.
-// If there are files existing under to_path, always overwrite.
-// Returns true if successful, false otherwise.
-// Dont't use wildcards on the names, it may stop working without notice.
-//
-// If you only need to copy a file use CopyFile, it's faster.
-bool CopyDirectory(const FilePath& from_path, const FilePath& to_path,
-                   bool recursive);
-// Deprecated temporary compatibility function.
-bool CopyDirectory(const std::wstring& from_path, const std::wstring& to_path,
-                   bool recursive);
 
 // Returns true if the given path exists on the local filesystem,
 // false otherwise.
