@@ -98,6 +98,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid/BluetoothDaemonInterface.cpp',
                 'bluedroid/BluetoothDaemonSetupInterface.cpp',
                 'bluedroid/BluetoothDaemonSocketInterface.cpp',
+                'bluedroid/BluetoothGattHALInterface.cpp',
                 'bluedroid/BluetoothHALHelpers.cpp',
                 'bluedroid/BluetoothHALInterface.cpp',
                 'bluedroid/BluetoothHandsfreeHALInterface.cpp',
@@ -127,7 +128,6 @@ if CONFIG['MOZ_B2G_BT']:
                 ]
             if CONFIG['MOZ_B2G_BT_API_V2']:
                 SOURCES += [
-                    'bluedroid/BluetoothGattHALInterface.cpp',
                     'bluedroid/BluetoothGattManager.cpp',
                 ]
 

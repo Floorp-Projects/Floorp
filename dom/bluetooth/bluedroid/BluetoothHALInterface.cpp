@@ -8,11 +8,7 @@
 #include "BluetoothHALHelpers.h"
 #include "BluetoothA2dpHALInterface.h"
 #include "BluetoothAvrcpHALInterface.h"
-#ifdef MOZ_B2G_BT_API_V2
 #include "BluetoothGattHALInterface.h"
-#else
-// TODO: Support GATT
-#endif
 #include "BluetoothHandsfreeHALInterface.h"
 #include "BluetoothSocketHALInterface.h"
 
@@ -68,7 +64,6 @@ struct interface_traits<BluetoothAvrcpHALInterface>
 };
 #endif
 
-#ifdef MOZ_B2G_BT_API_V2
 #if ANDROID_VERSION >= 19
 template<>
 struct interface_traits<BluetoothGattHALInterface>
@@ -80,9 +75,6 @@ struct interface_traits<BluetoothGattHALInterface>
     return BT_PROFILE_GATT_ID;
   }
 };
-#endif
-#else
-// TODO: Support GATT
 #endif
 
 typedef
@@ -1020,7 +1012,6 @@ BluetoothHALInterface::CreateProfileInterface<BluetoothAvrcpHALInterface>()
 }
 #endif
 
-#ifdef MOZ_B2G_BT_API_V2
 #if ANDROID_VERSION < 19
 /*
  * Versions that we don't support GATT will call this function
@@ -1035,9 +1026,6 @@ BluetoothHALInterface::CreateProfileInterface<BluetoothGattHALInterface>()
 
   return new BluetoothGattHALInterface();
 }
-#endif
-#else
-// TODO: Support GATT
 #endif
 
 template <class T>
@@ -1082,12 +1070,7 @@ BluetoothHALInterface::GetBluetoothAvrcpInterface()
 BluetoothGattInterface*
 BluetoothHALInterface::GetBluetoothGattInterface()
 {
-#ifdef MOZ_B2G_BT_API_V2
   return GetProfileInterface<BluetoothGattHALInterface>();
-#else
-  // TODO: Support GATT
-  return nullptr;
-#endif
 }
 
 END_BLUETOOTH_NAMESPACE
