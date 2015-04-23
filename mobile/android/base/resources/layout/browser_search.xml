@@ -19,10 +19,15 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+    <!-- The window background is set to our desired color, #fff, so
+         reduce overdraw by not drawing the background.
+
+         Note: this needs to be transparent and not null because we
+         draw a divider in onDraw. -->
     <view class="org.mozilla.gecko.home.SearchEngineBar$SearchEngineBarContainer"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:background="#fff">
+          android:background="@android:color/transparent">
 
         <!-- We add a marginTop so the outer container can draw a divider.
 
