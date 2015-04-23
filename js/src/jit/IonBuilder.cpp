@@ -7102,18 +7102,8 @@ ObjectHasExtraOwnProperty(CompileCompartment* comp, TypeSet::ObjectKey* object, 
         return name == comp->runtime()->names().length;
 
     // Resolve hooks can install new properties on objects on demand.
-    if (!clasp->resolve)
-        return false;
-
-    if (clasp->resolve == str_resolve) {
-        // str_resolve only resolves integers, not names.
-        return false;
-    }
-
-    if (clasp->resolve == fun_resolve)
-        return FunctionHasResolveHook(comp->runtime()->names(), NameToId(name));
-
-    return true;
+    JSObject* singleton = object->isSingleton() ? object->singleton() : nullptr;
+    return ClassMayResolveId(comp->runtime()->names(), clasp, NameToId(name), singleton);
 }
 
 void
