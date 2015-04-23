@@ -409,12 +409,15 @@ public:
    */
   virtual int32_t Stride() = 0;
 
+  /**
+   * The caller is responsible for ensuring aMappedSurface is not null.
+   */
   virtual bool Map(MapType, MappedSurface *aMappedSurface)
   {
     aMappedSurface->mData = GetData();
     aMappedSurface->mStride = Stride();
-    mIsMapped = true;
-    return true;
+    mIsMapped = !!aMappedSurface->mData;
+    return mIsMapped;
   }
 
   virtual void Unmap()

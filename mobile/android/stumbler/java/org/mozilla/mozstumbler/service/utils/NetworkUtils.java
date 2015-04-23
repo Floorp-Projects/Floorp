@@ -14,18 +14,9 @@ public final class NetworkUtils {
     private static final String LOG_TAG = AppGlobals.makeLogTag(NetworkUtils.class.getSimpleName());
 
     ConnectivityManager mConnectivityManager;
-    static NetworkUtils sInstance;
 
-    /* Created at startup by app, or service, using a context. */
-    static public void createGlobalInstance(Context context) {
-        sInstance = new NetworkUtils();
-        sInstance.mConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    }
-
-    /* If accessed before singleton instantiation will abort. */
-    public static NetworkUtils getInstance() {
-        assert(sInstance != null);
-        return sInstance;
+    public NetworkUtils(Context context) {
+        mConnectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     public synchronized boolean isWifiAvailable() {
