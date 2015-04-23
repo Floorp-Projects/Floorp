@@ -24,6 +24,7 @@
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SipccSdp.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
+#include "mozilla/net/DataChannelProtocol.h"
 
 namespace mozilla {
 
@@ -2420,7 +2421,7 @@ JsepSessionImpl::SetupDefaultCodecs()
   mCodecs.push_back(new JsepApplicationCodecDescription(
       "5000",
       "webrtc-datachannel",
-      16
+      WEBRTC_DATACHANNEL_STREAMS_DEFAULT
       ));
 }
 
