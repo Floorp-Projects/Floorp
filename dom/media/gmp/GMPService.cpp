@@ -888,9 +888,17 @@ GeckoMediaPluginService::SelectPluginForAPI(const nsACString& aNodeId,
         return gmp;
       }
 
-      // This GMP has the correct type but has the wrong nodeId; hold on to it
-      // in case we need to clone it.
-      gmpToClone = gmp;
+      if (!gmpToClone ||
+          (gmpToClone->IsMarkedForDeletion() && !gmp->IsMarkedForDeletion())) {
+        // This GMP has the correct type but has the wrong nodeId; hold on to it
+        // in case we need to clone it.
+        // Prefer GMPs in-use for the case where an upgraded plugin version is
+        // waiting for the old one to die. If the old plugin is in use, we
+        // should continue using it so that any persistent state remains
+        // consistent. Otherwise, just check that the plugin isn't scheduled
+        // for deletion.
+        gmpToClone = gmp;
+      }
       // Loop around and try the next plugin; it may be usable from aNodeId.
       index++;
     }
@@ -1213,7 +1221,6 @@ NS_IMETHODIMP
 GeckoMediaPluginService::GetNodeId(const nsAString& aOrigin,
                                    const nsAString& aTopLevelOrigin,
                                    bool aInPrivateBrowsing,
-                                   const nsACString& aVersion,
                                    nsACString& aOutId)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
@@ -1247,8 +1254,7 @@ GeckoMediaPluginService::GetNodeId(const nsAString& aOrigin,
   }
 
   const uint32_t hash = AddToHash(HashString(aOrigin),
-                                  HashString(aTopLevelOrigin),
-                                  HashString(aVersion));
+                                  HashString(aTopLevelOrigin));
 
   if (aInPrivateBrowsing) {
     // For PB mode, we store the node id, indexed by the origin pair,

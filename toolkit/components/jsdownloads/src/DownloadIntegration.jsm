@@ -645,10 +645,15 @@ this.DownloadIntegration = {
           Services.prefs.getBoolPref("browser.helperApps.deleteTempFileOnExit"));
         // Permanently downloaded files are made accessible by other users on
         // this system, while temporary downloads are marked as read-only.
-        let unixMode = isTemporaryDownload ? 0o400 : 0o666;
-        // On Unix, the umask of the process is respected.  This call has no
-        // effect on Windows.
-        yield OS.File.setPermissions(aDownload.target.path, { unixMode });
+        let options = {};
+        if (isTemporaryDownload) {
+          options.unixMode = 0o400;
+          options.winAttributes = {readOnly: true};
+        } else {
+          options.unixMode = 0o666;
+        }
+        // On Unix, the umask of the process is respected.
+        yield OS.File.setPermissions(aDownload.target.path, options);
       } catch (ex) {
         // We should report errors with making the permissions less restrictive
         // or marking the file as read-only on Unix and Mac, but this should not

@@ -144,25 +144,6 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
     }
   }
 
-#ifdef XP_WIN
-  // Adjust file attributes so that by default, new files are indexed by
-  // desktop search services. Skip off those that land in the temp folder.
-  nsCOMPtr<nsIFile> tempDir, fileDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-  aTarget->GetParent(getter_AddRefs(fileDir));
-
-  bool isTemp = false;
-  if (fileDir) {
-    fileDir->Equals(tempDir, &isTemp);
-  }
-
-  nsCOMPtr<nsILocalFileWin> localFileWin(do_QueryInterface(aTarget));
-  if (!isTemp && localFileWin) {
-    localFileWin->SetFileAttributesWin(nsILocalFileWin::WFA_SEARCH_INDEXED);
-  }
-#endif
-
 #endif
 
   return NS_OK;
