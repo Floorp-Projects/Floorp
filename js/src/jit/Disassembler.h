@@ -97,13 +97,21 @@ class ComplexAddress {
         return disp_;
     }
 
+    bool hasBase() const {
+        return base_ != Registers::Invalid;
+    }
+
     Register::Encoding base() const {
-        MOZ_ASSERT(base_ != Registers::Invalid);
+        MOZ_ASSERT(hasBase());
         return base_;
     }
 
+    bool hasIndex() const {
+        return index_ != Registers::Invalid;
+    }
+
     Register::Encoding index() const {
-        MOZ_ASSERT(index_ != Registers::Invalid);
+        MOZ_ASSERT(hasIndex());
         return index_;
     }
 
