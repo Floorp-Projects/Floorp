@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
-Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
+Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -155,9 +155,9 @@ add_task(function* asyncSetup() {
 // Ensure that not overwriting an existing file fails silently
 add_task(function* test_overwritePing() {
   let ping = {id: "foo"}
-  yield TelemetryFile.savePing(ping, true);
-  yield TelemetryFile.savePing(ping, false);
-  yield TelemetryFile.cleanupPingFile(ping);
+  yield TelemetryStorage.savePing(ping, true);
+  yield TelemetryStorage.savePing(ping, false);
+  yield TelemetryStorage.cleanupPingFile(ping);
 });
 
 // Sends a ping to a non existing server.

@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["TelemetryFile"];
+this.EXPORTED_SYMBOLS = ["TelemetryStorage"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -51,7 +51,7 @@ let pendingPings = [];
 
 let isPingDirectoryCreated = false;
 
-this.TelemetryFile = {
+this.TelemetryStorage = {
 
   get MAX_PING_FILE_AGE() {
     return MAX_PING_FILE_AGE;
@@ -165,7 +165,7 @@ this.TelemetryFile = {
    */
   loadSavedPings: function() {
     return Task.spawn(function*() {
-      let directory = TelemetryFile.pingDirectoryPath;
+      let directory = TelemetryStorage.pingDirectoryPath;
       let iter = new OS.File.DirectoryIterator(directory);
       let exists = yield iter.exists();
 
@@ -302,12 +302,12 @@ this.TelemetryFile = {
 function pingFilePath(ping) {
   // Support legacy ping formats, who don't have an "id" field, but a "slug" field.
   let pingIdentifier = (ping.slug) ? ping.slug : ping.id;
-  return OS.Path.join(TelemetryFile.pingDirectoryPath, pingIdentifier);
+  return OS.Path.join(TelemetryStorage.pingDirectoryPath, pingIdentifier);
 }
 
 function getPingDirectory() {
   return Task.spawn(function*() {
-    let directory = TelemetryFile.pingDirectoryPath;
+    let directory = TelemetryStorage.pingDirectoryPath;
 
     if (!isPingDirectoryCreated) {
       yield OS.File.makeDir(directory, { unixMode: OS.Constants.S_IRWXU });
@@ -324,7 +324,7 @@ function addToPendingPings(file) {
     success_histogram.add(success);
   }
 
-  return TelemetryFile.loadPingFile(file).then(ping => {
+  return TelemetryStorage.loadPingFile(file).then(ping => {
       pendingPings.push(ping);
       onLoad(true);
     },
