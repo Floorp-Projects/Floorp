@@ -240,13 +240,19 @@ this.ReaderMode = {
   },
 
   _shouldCheckUri: function (uri) {
-    if ((uri.prePath + "/") === uri.spec) {
-      this.log("Not parsing home page: " + uri.spec);
+    if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
+      this.log("Not parsing URI scheme: " + uri.scheme);
       return false;
     }
 
-    if (!(uri.schemeIs("http") || uri.schemeIs("https") || uri.schemeIs("file"))) {
-      this.log("Not parsing URI scheme: " + uri.scheme);
+    try {
+      uri.QueryInterface(Ci.nsIURL);
+    } catch (ex) {
+      // If this doesn't work, presumably the URL is not well-formed or something
+      return false;
+    }
+    if (!uri.filePath || uri.filePath == "/") {
+      this.log("Not parsing home page: " + uri.spec);
       return false;
     }
 
