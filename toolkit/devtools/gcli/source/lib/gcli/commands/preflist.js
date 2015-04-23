@@ -22,7 +22,7 @@ var Promise = require('../util/promise').Promise;
 /**
  * Format a list of settings for display
  */
-var prefsData = {
+var prefsViewConverter = {
   item: 'converter',
   from: 'prefsData',
   to: 'view',
@@ -98,6 +98,22 @@ var prefsData = {
 };
 
 /**
+ * Format a list of settings for display
+ */
+var prefsStringConverter = {
+  item: 'converter',
+  from: 'prefsData',
+  to: 'string',
+  exec: function(prefsData, conversionContext) {
+    var reply = '';
+    prefsData.settings.forEach(function(setting) {
+      reply += setting.name + ' -> ' + setting.value + '\n';
+    });
+    return reply;
+  }
+};
+
+/**
  * 'pref list' command
  */
 var prefList = {
@@ -136,6 +152,8 @@ function PrefList(prefsData, conversionContext) {
   this.search = prefsData.search;
   this.settings = prefsData.settings;
   this.conversionContext = conversionContext;
+
+  this.onLoad = this.onLoad.bind(this);
 }
 
 /**
@@ -194,4 +212,4 @@ PrefList.prototype.onSetClick = function(ev) {
   this.conversionContext.update(typed);
 };
 
-exports.items = [ prefsData, prefList ];
+exports.items = [ prefsViewConverter, prefsStringConverter, prefList ];

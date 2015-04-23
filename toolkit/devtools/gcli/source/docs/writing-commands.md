@@ -89,7 +89,8 @@ depends on what context you are writing your command for.
 GCLI supports Mozilla style localization. To add a command that will only ever
 be used embedded in Firefox, this is the way to go. Your strings should be
 stored in ``browser/locales/en-US/chrome/browser/devtools/gclicommands.properties``,
-And you should access them using ``gcli.lookup(...)`` or ``gcli.lookupFormat()``
+And you should access them using ``let l10n = require("gcli/l10n")`` and then
+``l10n.lookup(...)`` or ``l10n.lookupFormat()``
 
 For examples of existing commands, take a look in
 ``browser/devtools/webconsole/GcliCommands.jsm``, which contains most of the

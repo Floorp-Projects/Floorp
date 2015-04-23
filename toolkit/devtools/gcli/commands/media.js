@@ -4,21 +4,23 @@
 
 "use strict";
 
-const gcli = require("gcli/index");
+const l10n = require("gcli/l10n");
 
 exports.items = [
   {
     name: "media",
-    description: gcli.lookup("mediaDesc")
+    description: l10n.lookup("mediaDesc")
   },
   {
+    item: "command",
+    runAt: "client",
     name: "media emulate",
-    description: gcli.lookup("mediaEmulateDesc"),
-    manual: gcli.lookup("mediaEmulateManual"),
+    description: l10n.lookup("mediaEmulateDesc"),
+    manual: l10n.lookup("mediaEmulateManual"),
     params: [
       {
         name: "type",
-        description: gcli.lookup("mediaEmulateType"),
+        description: l10n.lookup("mediaEmulateType"),
         type: {
            name: "selection",
            data: [
@@ -35,8 +37,10 @@ exports.items = [
     }
   },
   {
+    item: "command",
+    runAt: "client",
     name: "media reset",
-    description: gcli.lookup("mediaResetDesc"),
+    description: l10n.lookup("mediaResetDesc"),
     exec: function(args, context) {
       let markupDocumentViewer = context.environment.chromeWindow
                                         .gBrowser.markupDocumentViewer;

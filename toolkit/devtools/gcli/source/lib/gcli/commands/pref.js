@@ -30,6 +30,7 @@ exports.items = [
     // 'pref show' command
     item: 'command',
     name: 'pref show',
+    runAt: 'client',
     description: l10n.lookup('prefShowDesc'),
     manual: l10n.lookup('prefShowManual'),
     params: [
@@ -49,6 +50,7 @@ exports.items = [
     // 'pref set' command
     item: 'command',
     name: 'pref set',
+    runAt: 'client',
     description: l10n.lookup('prefSetDesc'),
     manual: l10n.lookup('prefSetManual'),
     params: [
@@ -73,6 +75,7 @@ exports.items = [
     // 'pref reset' command
     item: 'command',
     name: 'pref reset',
+    runAt: 'client',
     description: l10n.lookup('prefResetDesc'),
     manual: l10n.lookup('prefResetManual'),
     params: [
