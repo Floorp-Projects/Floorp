@@ -565,7 +565,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (length == size_t(-1)) {
             return false;
         }
-        char* buffer = static_cast<char *>(moz_xmalloc(length + 1));
+        char* buffer = static_cast<char*>(moz_xmalloc(length + 1));
         if (!buffer) {
             return false;
         }
@@ -1721,7 +1721,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                 len = count;
 
             uint32_t alloc_len = (len + 1) * sizeof(char);
-            char* buffer = static_cast<char *>(moz_xmalloc(alloc_len));
+            char* buffer = static_cast<char*>(moz_xmalloc(alloc_len));
             if (!buffer) {
                 return false;
             }
