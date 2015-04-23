@@ -23,7 +23,6 @@
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleChild.h"
 #endif
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
@@ -54,7 +53,6 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
-#include "mozilla/widget/WidgetMessageUtils.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)

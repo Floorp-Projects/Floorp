@@ -76,7 +76,6 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
@@ -2888,7 +2887,6 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     InfallibleTArray<nsString> unusedDictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-
     RecvGetXPCOMProcessAttributes(&isOffline, &isLangRTL, &unusedDictionaries,
                                   &clipboardCaps, &domainPolicy);
     mozilla::unused << content->SendSetOffline(isOffline);
@@ -4036,13 +4034,6 @@ ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
 
     unused << SendSystemMemoryAvailable(aGetterId, memoryTotal);
 
-    return true;
-}
-
-bool
-ContentParent::RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
-{
-    aLookAndFeelIntCache = LookAndFeel::GetIntCache();
     return true;
 }
 
