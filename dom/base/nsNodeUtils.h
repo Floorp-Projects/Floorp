@@ -12,8 +12,6 @@
 #include "nsCOMArray.h"
 
 struct CharacterDataChangeInfo;
-class nsIVariant;
-class nsIDOMNode;
 template<class E> class nsCOMArray;
 class nsCycleCollectionTraversalCallback;
 namespace mozilla {

@@ -14,7 +14,6 @@
 #include "nsWeakPtr.h"
 
 class nsString;
-class nsDataObj;
 
 //
 // DataStruct

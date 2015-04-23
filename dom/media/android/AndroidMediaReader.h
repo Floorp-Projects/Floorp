@@ -25,10 +25,6 @@ namespace layers {
 class ImageContainer;
 }
 
-namespace dom {
-class TimeRanges;
-}
- 
 class AndroidMediaReader : public MediaDecoderReader
 {
   nsCString mType;

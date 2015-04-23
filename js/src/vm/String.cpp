@@ -809,14 +809,14 @@ StaticStrings::trace(JSTracer* trc)
     /* These strings never change, so barriers are not needed. */
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++)
-        MarkPermanentAtom(trc, unitStaticTable[i], "unit-static-string");
+        TraceProcessGlobalRoot(trc, unitStaticTable[i], "unit-static-string");
 
     for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++)
-        MarkPermanentAtom(trc, length2StaticTable[i], "length2-static-string");
+        TraceProcessGlobalRoot(trc, length2StaticTable[i], "length2-static-string");
 
     /* This may mark some strings more than once, but so be it. */
     for (uint32_t i = 0; i < INT_STATIC_LIMIT; i++)
-        MarkPermanentAtom(trc, intStaticTable[i], "int-static-string");
+        TraceProcessGlobalRoot(trc, intStaticTable[i], "int-static-string");
 }
 
 template <typename CharT>

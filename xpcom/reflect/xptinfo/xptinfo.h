@@ -11,8 +11,6 @@
 #include "nscore.h"
 #include "xpt_struct.h"
 
-class nsIInterfaceInfoManager;
-
 // Flyweight wrapper classes for xpt_struct.h structs. 
 // Everything here is dependent upon - and sensitive to changes in -
 // xpcom/typelib/xpt/xpt_struct.h!

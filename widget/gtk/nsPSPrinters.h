@@ -10,8 +10,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-class nsCUPSShim;
-
 class nsPSPrinterList {
     public:
         nsPSPrinterList();

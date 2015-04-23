@@ -17,7 +17,6 @@
 
 class nsMenuX;
 class nsMenuBarX;
-class nsMenuItemX;
 class nsIWidget;
 class nsIContent;
 

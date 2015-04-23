@@ -30,12 +30,6 @@
 #define MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 #endif
 
-class gfxSharedImageSurface;
-
-namespace base {
-class Thread;
-}
-
 namespace mozilla {
 namespace ipc {
 class Shmem;
@@ -47,8 +41,6 @@ class DataSourceSurface;
 namespace layers {
 
 class MaybeMagicGrallocBufferHandle;
-class MemoryTextureClient;
-class MemoryTextureHost;
 
 enum BufferCapabilities {
   DEFAULT_BUFFER_CAPS = 0,

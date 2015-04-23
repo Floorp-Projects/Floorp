@@ -157,7 +157,7 @@ class Test(TaskPool.Task):
                 '-nw',          # Don't create a window (unnecessary?)
                 '-nx',          # Don't read .gdbinit.
                 '--ex', 'add-auto-load-safe-path %s' % (OPTIONS.builddir,),
-                '--ex', 'set env LD_LIBRARY_PATH %s' % (OPTIONS.libdir,),
+                '--ex', 'set env LD_LIBRARY_PATH %s' % os.path.join(OPTIONS.objdir, 'js', 'src'),
                 '--ex', 'file %s' % (os.path.join(OPTIONS.builddir, 'gdb-tests'),),
                 '--eval-command', 'python testlibdir=%r' % (testlibdir,),
                 '--eval-command', 'python testscript=%r' % (self.test_path,),
@@ -230,13 +230,13 @@ def main(argv):
     script_path = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_path)
 
-    # LIBDIR is the directory in which we find the SpiderMonkey shared
-    # library, to link against.
+    # OBJDIR is a standalone SpiderMonkey build directory. This is where we
+    # find the SpiderMonkey shared library to link against.
     #
     # The [TESTS] optional arguments are paths of test files relative
     # to the jit-test/tests directory.
     from optparse import OptionParser
-    op = OptionParser(usage='%prog [options] LIBDIR [TESTS...]')
+    op = OptionParser(usage='%prog [options] OBJDIR [TESTS...]')
     op.add_option('-s', '--show-cmd', dest='show_cmd', action='store_true',
                   help='show GDB shell command run')
     op.add_option('-o', '--show-output', dest='show_output', action='store_true',
@@ -269,16 +269,17 @@ def main(argv):
                   help='Build test executable in [BUILDDIR].')
     (OPTIONS, args) = op.parse_args(argv)
     if len(args) < 1:
-        op.error('missing LIBDIR argument')
-    OPTIONS.libdir = os.path.abspath(args[0])
+        op.error('missing OBJDIR argument')
+    OPTIONS.objdir = os.path.abspath(args[0])
+
     test_args = args[1:]
 
     if not OPTIONS.workercount:
         OPTIONS.workercount = get_cpu_count()
 
-    # Compute default for OPTIONS.builddir now, since we've computed OPTIONS.libdir.
+    # Compute default for OPTIONS.builddir now, since we've computed OPTIONS.objdir.
     if not OPTIONS.builddir:
-        OPTIONS.builddir = os.path.join(OPTIONS.libdir, 'gdb')
+        OPTIONS.builddir = os.path.join(OPTIONS.objdir, 'js', 'src', 'gdb')
 
     test_set = set()
 

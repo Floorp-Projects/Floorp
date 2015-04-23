@@ -23,7 +23,6 @@ class nsIFile;
 class nsITimer;
 class nsIDirectoryEnumerator;
 class nsILoadContextInfo;
-class nsICacheStorageVisitor;
 
 namespace mozilla {
 namespace net {
@@ -174,7 +173,6 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 class OpenFileEvent;
-class CloseFileEvent;
 class ReadEvent;
 class WriteEvent;
 class MetadataWriteScheduleEvent;

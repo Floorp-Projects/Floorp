@@ -20,11 +20,7 @@ class Accessible;
 } // namespace a11y
 } // namespace mozilla
 
-class nsINode;
-class nsIContent;
-class nsIFrame;
 class nsIPresShell;
-class nsPluginFrame;
 
 // 0e7e6879-854b-4260-bc6e-525b5fb5cf34
 #define NS_IACCESSIBILITYSERVICE_IID \

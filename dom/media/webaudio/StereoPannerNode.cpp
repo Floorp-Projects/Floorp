@@ -145,15 +145,17 @@ public:
       float computedGain[2][WEBAUDIO_BLOCK_SIZE];
       bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
+      float values[WEBAUDIO_BLOCK_SIZE];
+      StreamTime tick = aStream->GetCurrentPosition();
+      mPan.GetValuesAtTime(tick, values, WEBAUDIO_BLOCK_SIZE);
+
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        StreamTime tick = aStream->GetCurrentPosition();
         float left, right;
-        float panning = mPan.GetValueAtTime(tick, counter);
-        GetGainValuesForPanning(panning, monoToStereo, left, right);
+        GetGainValuesForPanning(values[counter], monoToStereo, left, right);
 
         computedGain[0][counter] = left * aInput.mVolume;
         computedGain[1][counter] = right * aInput.mVolume;
-        onLeft[counter] = panning <= 0;
+        onLeft[counter] = values[counter] <= 0;
       }
 
       // Apply the gain to the output buffer

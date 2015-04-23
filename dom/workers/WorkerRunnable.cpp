@@ -305,7 +305,12 @@ WorkerRunnable::Run()
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
   nsRefPtr<WorkerPrivate> kungFuDeathGrip;
   if (targetIsWorkerThread) {
-    JSObject* global = JS::CurrentGlobalOrNull(GetCurrentThreadJSContext());
+    JSContext* cx = GetCurrentThreadJSContext();
+    if (NS_WARN_IF(!cx)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    JSObject* global = JS::CurrentGlobalOrNull(cx);
     if (global) {
       globalObject = GetGlobalObjectForGlobal(global);
     } else {
@@ -498,6 +503,16 @@ WorkerControlRunnable::WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
              "WorkerControlRunnables should not modify the busy count");
 }
 #endif
+
+NS_IMETHODIMP
+WorkerControlRunnable::Cancel()
+{
+  if (NS_FAILED(Run())) {
+    NS_WARNING("WorkerControlRunnable::Run() failed.");
+  }
+
+  return WorkerRunnable::Cancel();
+}
 
 bool
 WorkerControlRunnable::DispatchInternal()

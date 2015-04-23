@@ -80,6 +80,9 @@
           case "phishingBlocked" :
             initPage_phishing();
             break;
+          case "unwantedBlocked" :
+            initPage_unwanted();
+            break;
         }
       }        
       
@@ -88,14 +91,20 @@
        */
       function initPage_malware()
       {
-        // Remove phishing strings
+        // Remove phishing/unwanted strings
         var el = document.getElementById("errorTitleText_phishing");
+        el.parentNode.removeChild(el);
+        el = document.getElementById("errorTitleText_unwanted");
         el.parentNode.removeChild(el);
 
         el = document.getElementById("errorShortDescText_phishing");
         el.parentNode.removeChild(el);
+        el = document.getElementById("errorShortDescText_unwanted");
+        el.parentNode.removeChild(el);
 
         el = document.getElementById("errorLongDescText_phishing");
+        el.parentNode.removeChild(el);
+        el = document.getElementById("errorLongDescText_unwanted");
         el.parentNode.removeChild(el);
 
         // Set sitename
@@ -109,17 +118,51 @@
        */
       function initPage_phishing()
       {
-        // Remove malware strings
+        // Remove malware/unwanted strings
         var el = document.getElementById("errorTitleText_malware");
+        el.parentNode.removeChild(el);
+        el = document.getElementById("errorTitleText_unwanted");
         el.parentNode.removeChild(el);
 
         el = document.getElementById("errorShortDescText_malware");
         el.parentNode.removeChild(el);
+        el = document.getElementById("errorShortDescText_unwanted");
+        el.parentNode.removeChild(el);
 
         el = document.getElementById("errorLongDescText_malware");
         el.parentNode.removeChild(el);
+        el = document.getElementById("errorLongDescText_unwanted");
+        el.parentNode.removeChild(el);
 
         document.title = document.getElementById("errorTitleText_phishing")
+                                 .innerHTML;
+      }
+
+      /**
+       * Initialize custom strings and functionality for blocked unwanted
+       * software case
+       */
+      function initPage_unwanted()
+      {
+        // Remove malware/phishing strings
+        var el = document.getElementById("errorTitleText_malware");
+        el.parentNode.removeChild(el);
+        el = document.getElementById("errorTitleText_phishing");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorShortDescText_malware");
+        el.parentNode.removeChild(el);
+        el = document.getElementById("errorShortDescText_phishing");
+        el.parentNode.removeChild(el);
+
+        el = document.getElementById("errorLongDescText_malware");
+        el.parentNode.removeChild(el);
+        el = document.getElementById("errorLongDescText_phishing");
+        el.parentNode.removeChild(el);
+
+        // Set sitename
+        document.getElementById("unwanted_sitename").textContent = getHostString();
+        document.title = document.getElementById("errorTitleText_unwanted")
                                  .innerHTML;
       }
     ]]></script>
@@ -133,6 +176,7 @@
       <div id="errorTitle">
         <h1 id="errorTitleText_phishing" class="errorTitleText">&safeb.blocked.phishingPage.title2;</h1>
         <h1 id="errorTitleText_malware" class="errorTitleText">&safeb.blocked.malwarePage.title;</h1>
+        <h1 id="errorTitleText_unwanted" class="errorTitleText">&safeb.blocked.unwantedPage.title;</h1>
       </div>
 
       <div id="errorLongContent">
@@ -141,12 +185,14 @@
         <div id="errorShortDesc">
           <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc2;</p>
           <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
+          <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc;</p>
         </div>
 
         <!-- Long Description -->
         <div id="errorLongDesc">
           <p id="errorLongDescText_phishing">&safeb.blocked.phishingPage.longDesc2;</p>
           <p id="errorLongDescText_malware">&safeb.blocked.malwarePage.longDesc;</p>
+          <p id="errorLongDescText_unwanted">&safeb.blocked.unwantedPage.longDesc;</p>
         </div>
         
         <!-- Action buttons -->

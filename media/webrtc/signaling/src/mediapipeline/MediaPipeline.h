@@ -466,6 +466,12 @@ public:
       }
     }
 
+    // Dispatches setting the internal TrackID to TRACK_INVALID to the media
+    // graph thread to keep it in sync with other MediaStreamGraph operations
+    // like RemoveListener() and AddListener(). The TrackID will be updated on
+    // the next NewData() callback.
+    void UnsetTrackId(MediaStreamGraphImpl* graph);
+
     void SetActive(bool active) { active_ = active; }
     void SetEnabled(bool enabled) { enabled_ = enabled; }
     TrackID trackid() {
@@ -487,6 +493,11 @@ public:
                                     const MediaSegment& media) override;
 
    private:
+    void UnsetTrackIdImpl() {
+      MutexAutoLock lock(mMutex);
+      track_id_ = track_id_external_ = TRACK_INVALID;
+    }
+
     void NewData(MediaStreamGraph* graph, TrackID tid,
                  StreamTime offset,
                  uint32_t events,

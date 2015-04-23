@@ -15,7 +15,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "OfflineObserver.h"
 
-class nsFtpChannel;
 class nsILoadContext;
 
 namespace mozilla {

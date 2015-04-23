@@ -40,7 +40,6 @@ class ContentParent;
 
 BEGIN_QUOTA_NAMESPACE
 
-class AcquireListener;
 class AsyncUsageRunnable;
 class CollectOriginsHelper;
 class FinalizeOriginEvictionRunnable;

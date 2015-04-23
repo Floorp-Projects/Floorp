@@ -9,8 +9,6 @@
 #include "nsAString.h"
 
 class nsIFormControl;
-class nsISimpleEnumerator;
-class nsIURI;
 
 #define NS_FORM_METHOD_GET  0
 #define NS_FORM_METHOD_POST 1

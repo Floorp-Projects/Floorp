@@ -23,7 +23,6 @@ namespace layers
 class MediaResource;
 class ReentrantMonitor;
 class VideoFrameContainer;
-class TimedMetadata;
 class MediaDecoderOwner;
 #ifdef MOZ_EME
 class CDMProxy;

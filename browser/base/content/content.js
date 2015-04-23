@@ -123,6 +123,13 @@ let handleContentContextMenu = function (event) {
         InlineSpellCheckerContent.initContextMenu(event, editFlags, this);
     }
 
+    // Set the event target first as the copy image command needs it to
+    // determine what was context-clicked on. Then, update the state of the
+    // commands on the context menu.
+    docShell.contentViewer.QueryInterface(Ci.nsIContentViewerEdit)
+            .setCommandNode(event.target);
+    event.target.ownerDocument.defaultView.updateCommands("contentcontextmenu");
+
     let customMenuItems = PageMenuChild.build(event.target);
     let principal = doc.nodePrincipal;
     sendSyncMessage("contextmenu",
@@ -377,9 +384,15 @@ let ClickEventHandler = {
   },
 
   onAboutBlocked: function (targetElement, ownerDoc) {
+    var reason = 'phishing';
+    if (/e=malwareBlocked/.test(ownerDoc.documentURI)) {
+      reason = 'malware';
+    } else if (/e=unwantedBlocked/.test(ownerDoc.documentURI)) {
+      reason = 'unwanted';
+    }
     sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,
-      isMalware: /e=malwareBlocked/.test(ownerDoc.documentURI),
+      reason: reason,
       elementId: targetElement.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView)
     });

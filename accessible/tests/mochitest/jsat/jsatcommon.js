@@ -629,7 +629,7 @@ ExpectedNameChange.prototype = Object.create(ExpectedPresent.prototype);
 function ExpectedValueChange(aValue, aOptions) {
   ExpectedPresent.call(this, {
     eventType: 'value-change',
-    data: [aValue]
+    data: aValue
   }, null, aOptions);
 }
 

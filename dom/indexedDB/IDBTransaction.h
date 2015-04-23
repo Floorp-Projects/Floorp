@@ -27,7 +27,6 @@ namespace dom {
 
 class DOMError;
 class DOMStringList;
-class PBlobChild;
 
 namespace indexedDB {
 
@@ -42,7 +41,6 @@ class IDBRequest;
 class IndexMetadata;
 class ObjectStoreSpec;
 class OpenCursorParams;
-class PBackgroundIDBDatabaseFileChild;
 class RequestParams;
 
 class IDBTransaction final

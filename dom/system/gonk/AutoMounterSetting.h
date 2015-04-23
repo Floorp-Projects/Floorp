@@ -10,8 +10,6 @@
 namespace mozilla {
 namespace system {
 
-class ResultListener;
-
 class AutoMounterSetting : public nsIObserver
 {
 public:

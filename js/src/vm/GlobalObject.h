@@ -690,7 +690,7 @@ class GlobalObject : public NativeObject
      * The collection of Debugger objects debugging this global. If this global
      * is not a debuggee, this returns either nullptr or an empty vector.
      */
-    DebuggerVector* getDebuggers();
+    DebuggerVector* getDebuggers() const;
 
     /*
      * The same, but create the empty vector if one does not already

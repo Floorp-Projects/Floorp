@@ -12,7 +12,6 @@
 
 namespace mozilla {
 
-class WebGLBuffer;
 class WebGLContext;
 
 /* Each WebGL object class WebGLFoo wants to:

@@ -19,9 +19,7 @@
 #include "xpcpublic.h"
 
 class nsICycleCollectorListener;
-class nsIXPConnectJSObjectHolder;
 class nsScriptNameSpaceManager;
-class nsCycleCollectionNoteRootCallback;
 
 namespace JS {
 class AutoValueVector;
@@ -173,8 +171,6 @@ private:
   static bool DOMOperationCallback(JSContext *cx);
 };
 
-class nsIJSRuntimeService;
-class nsIPrincipal;
 class nsPIDOMWindow;
 
 namespace mozilla {

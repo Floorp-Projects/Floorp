@@ -514,7 +514,9 @@ void
 BluetoothGattClientHALInterface::Scan(
   int aClientIf, bool aStart, BluetoothGattClientResultHandler* aRes)
 {
-#if ANDROID_VERSION >= 19
+#if ANDROID_VERSION >= 21
+  int status = mInterface->scan(aStart);
+#elif ANDROID_VERSION >= 19
   int status = mInterface->scan(aClientIf, aStart);
 #else
   int status = BT_STATUS_UNSUPPORTED;
@@ -530,10 +532,21 @@ BluetoothGattClientHALInterface::Scan(
 void
 BluetoothGattClientHALInterface::Connect(
   int aClientIf, const nsAString& aBdAddr,
-  bool aIsDirect, BluetoothGattClientResultHandler* aRes)
+  bool aIsDirect, BluetoothTransport aTransport,
+  BluetoothGattClientResultHandler* aRes)
 {
   bt_status_t status;
-#if ANDROID_VERSION >= 19
+#if ANDROID_VERSION >= 21
+  bt_bdaddr_t bdAddr;
+  btgatt_transport_t transport;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) ||
+      NS_SUCCEEDED(Convert(aTransport, transport))) {
+    status = mInterface->connect(aClientIf, &bdAddr, aIsDirect, transport);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#elif ANDROID_VERSION >= 19
   bt_bdaddr_t bdAddr;
 
   if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
@@ -1019,10 +1032,34 @@ BluetoothGattClientHALInterface::SetAdvData(
   int aServerIf, bool aIsScanRsp, bool aIsNameIncluded,
   bool aIsTxPowerIncluded, int aMinInterval, int aMaxInterval, int aApperance,
   uint8_t aManufacturerLen, const ArrayBuffer& aManufacturerData,
+  uint8_t aServiceDataLen, const ArrayBuffer& aServiceData,
+  uint8_t aServiceUUIDLen, const ArrayBuffer& aServiceUUID,
   BluetoothGattClientResultHandler* aRes)
 {
+  /* FIXME: This method allocates a large amount of memory on the
+   * stack. It should be rewritten to prevent the pending stack
+   * overflow. Additionally |ArrayBuffer| seems like the wrong data
+   * type here. Why not use plain pointers instead?
+   */
+
   bt_status_t status;
-#if ANDROID_VERSION >= 19
+#if ANDROID_VERSION >= 21
+  char manufacturerData[aManufacturerLen + 1];
+  char serviceData[aServiceDataLen + 1];
+  char serviceUUID[aServiceUUIDLen + 1];
+
+  if (NS_SUCCEEDED(Convert(aManufacturerData, manufacturerData)) ||
+      NS_SUCCEEDED(Convert(aServiceData, serviceData)) ||
+      NS_SUCCEEDED(Convert(aServiceUUID, serviceUUID))) {
+    status = mInterface->set_adv_data(
+      aServerIf, aIsScanRsp, aIsNameIncluded, aIsTxPowerIncluded,
+      aMinInterval, aMaxInterval, aApperance,
+      aManufacturerLen, manufacturerData,
+      aServiceDataLen, serviceData, aServiceUUIDLen, serviceUUID);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+#elif ANDROID_VERSION >= 19
   char value[aManufacturerLen + 1];
 
   if (NS_SUCCEEDED(Convert(aManufacturerData, value))) {

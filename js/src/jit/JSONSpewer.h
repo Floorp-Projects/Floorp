@@ -16,8 +16,6 @@ namespace jit {
 
 class BacktrackingAllocator;
 class MDefinition;
-class MInstruction;
-class MBasicBlock;
 class MIRGraph;
 class MResumePoint;
 class LNode;

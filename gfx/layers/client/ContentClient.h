@@ -28,8 +28,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray
 
-class gfxContext;
-
 namespace mozilla {
 namespace gfx {
 class DrawTarget;
@@ -37,7 +35,6 @@ class DrawTarget;
 
 namespace layers {
 
-class BasicLayerManager;
 class PaintedLayer;
 
 /**

@@ -9,8 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsPIDOMWindow;
-
 namespace mozilla {
 
 class ErrorResult;

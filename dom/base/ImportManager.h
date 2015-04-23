@@ -49,7 +49,6 @@
 #include "nsURIHashKey.h"
 
 class nsIDocument;
-class nsIChannel;
 class nsIPrincipal;
 class nsINode;
 class AutoError;

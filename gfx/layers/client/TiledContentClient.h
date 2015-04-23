@@ -41,7 +41,6 @@
 namespace mozilla {
 namespace layers {
 
-class BasicTileDescriptor;
 class ClientTiledPaintedLayer;
 class ClientLayerManager;
 

@@ -497,7 +497,6 @@ GetNodeId(const nsAString& aOrigin,
   nsresult rv = service->GetNodeId(aOrigin,
                                    aTopLevelOrigin,
                                    aInPBMode,
-                                   NS_LITERAL_CSTRING(""),
                                    Move(callback));
   EXPECT_TRUE(NS_SUCCEEDED(rv) && NS_SUCCEEDED(result));
   return nodeId;

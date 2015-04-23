@@ -557,15 +557,28 @@ nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
 bool
 nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
 {
-  return aFrame &&
-         aFrame->StyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
+  if (!aFrame) {
+    return false;
+  }
+  return IsVerticalMeter(aFrame);
 }
 
 bool
 nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "You have to pass a non-null aFrame");
-  return aFrame->StyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
+  switch (aFrame->StyleDisplay()->mOrient) {
+    case NS_STYLE_ORIENT_HORIZONTAL:
+      return false;
+    case NS_STYLE_ORIENT_VERTICAL:
+      return true;
+    case NS_STYLE_ORIENT_INLINE:
+      return aFrame->GetWritingMode().IsVertical();
+    case NS_STYLE_ORIENT_BLOCK:
+      return !aFrame->GetWritingMode().IsVertical();
+  }
+  NS_NOTREACHED("unexpected -moz-orient value");
+  return false;
 }
 
 // menupopup:
