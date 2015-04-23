@@ -29,7 +29,6 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_BRANCH_LOG = PREF_BRANCH + "log.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
-const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 const PREF_LOG_LEVEL = PREF_BRANCH_LOG + "level";
 const PREF_LOG_DUMP = PREF_BRANCH_LOG + "dump";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
@@ -57,8 +56,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
                                   "resource://gre/modules/TelemetryStorage.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
-                                  "resource://gre/modules/TelemetryLog.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
                                   "resource://gre/modules/ThirdPartyCookieProbe.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
@@ -67,13 +64,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionRecorder",
                                   "resource://gre/modules/SessionRecorder.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
-
-// Compute the path of the pings archive on the first use.
-const DATAREPORTING_DIR = "datareporting";
-const PINGS_ARCHIVE_DIR = "archived";
-XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR, PINGS_ARCHIVE_DIR);
-});
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive",
+                                  "resource://gre/modules/TelemetryArchive.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -121,25 +113,6 @@ function isNewPingFormat(aPing) {
   return ("id" in aPing) && ("application" in aPing) &&
          ("version" in aPing) && (aPing.version >= 2);
 }
-
-/**
- * Build the path to the archived ping.
- * @param {String} aPingId The ping id.
- * @param {Object} aDate The ping creation date.
- * @param {String} aType The ping type.
- * @return {String} The full path to the archived ping.
- */
-function getArchivedPingPath(aPingId, aDate, aType) {
-  // Helper to pad the month to 2 digits, if needed (e.g. "1" -> "01").
-  let addLeftPadding = value => (value < 10) ? ("0" + value) : value;
-  // Get the ping creation date and generate the archive directory to hold it. Note
-  // that getMonth returns a 0-based month, so we need to add an offset.
-  let archivedPingDir = OS.Path.join(gPingsArchivePath,
-    aDate.getFullYear() + '-' + addLeftPadding(aDate.getMonth() + 1));
-  // Generate the archived ping file path as YYYY-MM/<TIMESTAMP>.UUID.type.json
-  let fileName = [aDate.getTime(), aPingId, aType, "json"].join(".");
-  return OS.Path.join(archivedPingDir, fileName);
-};
 
 /**
  * This is a policy object used to override behavior for testing.
@@ -353,31 +326,6 @@ this.TelemetryPing = Object.freeze({
   promiseInitialized: function() {
     return Impl.promiseInitialized();
   },
-
-  /**
-   * Get a list of the archived pings, sorted by the creation date.
-   * Note that scanning the archived pings on disk is delayed on startup,
-   * use promizeInitialized() to access this after scanning.
-   *
-   * @return {Promise<sequence<Object>>}
-   *                    A list of the archived ping info in the form:
-   *                    { id: <string>,
-   *                      timestampCreated: <number>,
-   *                      type: <string> }
-   */
-  promiseArchivedPingList: function() {
-    return Impl.promiseArchivedPingList();
-  },
-
-  /**
-   * Load an archived ping from disk by id, asynchronously.
-   *
-   * @param id {String} The pings UUID.
-   * @return {Promise<PingData>} A promise resolved with the pings data on success.
-   */
-  promiseArchivedPingById: function(id) {
-    return Impl.promiseArchivedPingById(id);
-  },
 });
 
 let Impl = {
@@ -406,10 +354,6 @@ let Impl = {
 
   // This tracks all pending ping requests to the server.
   _pendingPingRequests: new Map(),
-
-  // This tracks the archived pings in a Map of (id -> {timestampCreated, type}).
-  // We use this to cache info on archived pings to avoid scanning the disk more than once.
-  _archivedPings: null,
 
   /**
    * Get the data for the "application" section of the ping.
@@ -556,7 +500,7 @@ let Impl = {
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
     // Always persist the pings if we are allowed to.
-    let archivePromise = this._archivePing(pingData)
+    let archivePromise = TelemetryArchive.promiseArchivePing(pingData)
       .catch(e => this._log.error("send - Failed to archive ping " + pingData.id, e));
 
     // Once ping is assembled, send it along with the persisted pings in the backlog.
@@ -644,7 +588,7 @@ let Impl = {
     let pingData = this.assemblePing(aType, aPayload, aOptions);
 
     let savePromise = TelemetryStorage.savePing(pingData, aOptions.overwrite);
-    let archivePromise = this._archivePing(pingData).catch(e => {
+    let archivePromise = TelemetryArchive.promiseArchivePing(pingData).catch(e => {
       this._log.error("addPendingPing - Failed to archive ping " + pingData.id, e);
     });
 
@@ -936,9 +880,6 @@ let Impl = {
       return Promise.resolve();
     }
 
-    // Initialize some members that may need resetting for restart tests.
-    this._archivedPings = new Map();
-
     // For very short session durations, we may never load the client
     // id from disk.
     // We try to cache it in prefs to avoid this, even though this may
@@ -968,20 +909,6 @@ let Impl = {
         // Load the ClientID and update the cache.
         this._clientID = yield ClientID.getClientID();
         Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
-
-        // If pings should be archived, make sure the archive directory exists.
-        if (this._shouldArchivePings()) {
-          const DATAREPORTING_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
-          let reportError =
-            e => this._log.error("setupTelemetry - Unable to create the directory", e);
-          // Don't bail out if we can't create the archive folder, we might still be
-          // able to send telemetry pings to the servers.
-          yield OS.File.makeDir(DATAREPORTING_PATH, {ignoreExisting: true}).catch(reportError);
-          yield OS.File.makeDir(gPingsArchivePath, {ignoreExisting: true}).catch(reportError);
-
-          yield this._scanArchivedPingDirectory()
-                    .catch((e) => this._log.error("setupTelemetry - failure scanning archived ping directory", e));
-        }
 
         Telemetry.asyncFetchTelemetryData(function () {});
         this._delayedInitTaskDeferred.resolve();
@@ -1102,37 +1029,6 @@ let Impl = {
   },
 
   /**
-   * Checks if pings can be archived. Some products (e.g. Thunderbird) might not want
-   * to do that.
-   * @return {Boolean} True if pings should be archived, false otherwise.
-   */
-  _shouldArchivePings: function() {
-    return Preferences.get(PREF_ARCHIVE_ENABLED, true);
-  },
-
-  /**
-   * Save a ping to the pings archive. Note that any error should be handled by the caller.
-   * @param {Object} aPingData The content of the ping.
-   * @return {Promise} A promise resolved when the ping is saved to the archive.
-   */
-  _archivePing: Task.async(function*(aPingData) {
-    if (!this._shouldArchivePings()) {
-      return;
-    }
-
-    const creationDate = new Date(aPingData.creationDate);
-    const filePath = getArchivedPingPath(aPingData.id, creationDate, aPingData.type);
-    yield OS.File.makeDir(OS.Path.dirname(filePath), { ignoreExisting: true,
-                                                       from: OS.Constants.Path.profileDir });
-    yield TelemetryStorage.savePingToFile(aPingData, filePath, true);
-
-    this._archivedPings.set(aPingData.id, {
-      timestampCreated: creationDate.getTime(),
-      type: aPingData.type,
-    });
-  }),
-
-  /**
    * Get an object describing the current state of this module for AsyncShutdown diagnostics.
    */
   _getState: function() {
@@ -1146,44 +1042,6 @@ let Impl = {
   },
 
   /**
-   * Get a list of the archived pings, sorted by the creation date.
-   * @return sequence<Object>>
-   *                    A list of the archived ping info in the form:
-   *                    { id: <string>,
-   *                      timestampCreated: <number>,
-   *                      type: <string> }
-   */
-  promiseArchivedPingList: function() {
-    this._log.trace("getArchivedPingList");
-
-    let list = [for (p of this._archivedPings) {
-      id: p[0],
-      timestampCreated: p[1].timestampCreated,
-      type: p[1].type,
-    }];
-    list.sort((a, b) => a.timestampCreated - b.timestampCreated);
-
-    return list;
-  },
-
-  /**
-   * Load an archived ping from disk by id, asynchronously.
-   * @return {Promise<Object>} Promise that is resolved with the ping data.
-   */
-  promiseArchivedPingById: function(id) {
-    this._log.trace("getArchivedPingById - id: " + id);
-    const data = this._archivedPings.get(id);
-    if (!data) {
-      this._log.trace("getArchivedPingById - no ping with id: " + id);
-      return Promise.reject(new Error("TelemetryPing.getArchivedPingById - no ping with id " + id));
-    }
-
-    const path = getArchivedPingPath(id, new Date(data.timestampCreated), data.type);
-    this._log.trace("getArchivedPingById - loading ping from: " + path);
-    return TelemetryStorage.loadPingFile(path);
-  },
-
-  /**
    * Allows waiting for TelemetryPings delayed initialization to complete.
    * This will complete before TelemetryPing is shutting down.
    * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
@@ -1191,105 +1049,4 @@ let Impl = {
   promiseInitialized: function() {
     return this._delayedInitTaskDeferred.promise;
   },
-
-  /**
-   * Archived pings are saved with file names of the form:
-   * "<timestamp>.<uuid>.<type>.json"
-   * This helper extracts that data from a given filename.
-   *
-   * @param fileName {String} The filename.
-   * @return {Object} Null if the filename didn't match the expected form.
-   *                  Otherwise an object with the extracted data in the form:
-   *                  { timestamp: <number>,
-   *                    id: <string>,
-   *                    type: <string> }
-   */
-  _getArchivedPingDataFromFileName: function(fileName) {
-    // Extract the parts.
-    let parts = fileName.split(".");
-    if (parts.length != 4) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have 4 parts");
-      return null;
-    }
-
-    let [timestamp, uuid, type, extension] = parts;
-    if (extension != "json") {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a 'json' extension");
-      return null;
-    }
-
-    // Check for a valid timestamp.
-    timestamp = parseInt(timestamp);
-    if (Number.isNaN(timestamp)) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a valid timestamp");
-      return null;
-    }
-
-    // Check for a valid UUID.
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(uuid)) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a valid id");
-      return null;
-    }
-
-    // Check for a valid type string.
-    const typeRegex = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i;
-    if (!typeRegex.test(type)) {
-      this._log.trace("_getArchivedPingDataFromFileName - should have a valid type");
-      return null;
-    }
-
-    return {
-      timestamp: timestamp,
-      id: uuid,
-      type: type,
-    };
-  },
-
-  /**
-   * Scan the archived pings directory and cache the info on the pings found.
-   */
-  _scanArchivedPingDirectory: Task.async(function*() {
-    this._log.trace("_scanArchivedPingDirectory");
-
-    let dirIterator = new OS.File.DirectoryIterator(gPingsArchivePath);
-    let subdirs = (yield dirIterator.nextBatch()).filter(e => e.isDir);
-
-    // Walk through the monthly subdirs of the form <YYYY-MM>/
-    for (let dir of subdirs) {
-      const dirRegEx = /^[0-9]{4}-[0-9]{2}$/;
-      if (!dirRegEx.test(dir.name)) {
-        this._log.warn("_scanArchivedPingDirectory - skipping invalidly named subdirectory " + dir.path);
-        continue;
-      }
-
-      this._log.trace("_scanArchivedPingDirectory - checking in subdir: " + dir.path);
-      let pingIterator = new OS.File.DirectoryIterator(dir.path);
-      let pings = (yield pingIterator.nextBatch()).filter(e => !e.isDir);
-
-      // Now process any ping files of the form "<timestamp>.<uuid>.<type>.json"
-      for (let p of pings) {
-        // data may be null if the filename doesn't match the above format.
-        let data = this._getArchivedPingDataFromFileName(p.name);
-        if (!data) {
-          continue;
-        }
-
-        // In case of conflicts, overwrite only with newer pings.
-        if (this._archivedPings.has(data.id)) {
-          const overwrite = data.timestamp > this._archivedPings.get(data.id).timestampCreated;
-          this._log.warn("_scanArchivedPingDirectory - have seen this id before: " + data.id +
-                         ", overwrite: " + overwrite);
-          if (!overwrite) {
-            continue;
-          }
-        }
-
-        this._archivedPings.set(data.id, {
-          timestampCreated: data.timestamp,
-          type: data.type,
-        });
-      }
-    }
-  }),
 };
