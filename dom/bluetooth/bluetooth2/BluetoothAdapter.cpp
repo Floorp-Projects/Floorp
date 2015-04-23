@@ -404,11 +404,12 @@ BluetoothAdapter::StartDiscovery(ErrorResult& aRv)
    * - adapter is already enabled, and
    * - BluetoothService is available
    */
-  BT_ENSURE_TRUE_REJECT(!mDiscovering, NS_ERROR_DOM_INVALID_STATE_ERR);
+  BT_ENSURE_TRUE_REJECT(!mDiscovering, promise, NS_ERROR_DOM_INVALID_STATE_ERR);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   BT_API2_LOGR();
 
@@ -423,6 +424,7 @@ BluetoothAdapter::StartDiscovery(ErrorResult& aRv)
   nsRefPtr<BluetoothReplyRunnable> result =
     new StartDiscoveryTask(this, promise);
   BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(bs->StartDiscoveryInternal(result)),
+                        promise,
                         NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
@@ -446,11 +448,12 @@ BluetoothAdapter::StopDiscovery(ErrorResult& aRv)
    * - adapter is already enabled, and
    * - BluetoothService is available
    */
-  BT_ENSURE_TRUE_RESOLVE(mDiscovering, JS::UndefinedHandleValue);
+  BT_ENSURE_TRUE_RESOLVE(mDiscovering, promise, JS::UndefinedHandleValue);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   BT_API2_LOGR();
 
@@ -459,6 +462,7 @@ BluetoothAdapter::StopDiscovery(ErrorResult& aRv)
                                    promise,
                                    NS_LITERAL_STRING("StopDiscovery"));
   BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(bs->StopDiscoveryInternal(result)),
+                        promise,
                         NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
@@ -482,11 +486,14 @@ BluetoothAdapter::SetName(const nsAString& aName, ErrorResult& aRv)
    * - adapter is already enabled, and
    * - BluetoothService is available
    */
-  BT_ENSURE_TRUE_RESOLVE(!mName.Equals(aName), JS::UndefinedHandleValue);
+  BT_ENSURE_TRUE_RESOLVE(!mName.Equals(aName),
+                         promise,
+                         JS::UndefinedHandleValue);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   // Wrap property to set and runnable to handle result
   nsString name(aName);
@@ -499,6 +506,7 @@ BluetoothAdapter::SetName(const nsAString& aName, ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER,
                                  property, result)),
+    promise,
     NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
@@ -523,11 +531,13 @@ BluetoothAdapter::SetDiscoverable(bool aDiscoverable, ErrorResult& aRv)
    * - BluetoothService is available
    */
   BT_ENSURE_TRUE_RESOLVE(mDiscoverable != aDiscoverable,
+                         promise,
                          JS::UndefinedHandleValue);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   // Wrap property to set and runnable to handle result
   BluetoothNamedValue property(NS_LITERAL_STRING("Discoverable"),
@@ -539,6 +549,7 @@ BluetoothAdapter::SetDiscoverable(bool aDiscoverable, ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER,
                                  property, result)),
+    promise,
     NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
@@ -603,11 +614,13 @@ BluetoothAdapter::PairUnpair(bool aPair, const nsAString& aDeviceAddress,
    * - BluetoothService is available.
    */
   BT_ENSURE_TRUE_REJECT(!aDeviceAddress.IsEmpty(),
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsresult rv;
   if (aPair) {
@@ -625,7 +638,7 @@ BluetoothAdapter::PairUnpair(bool aPair, const nsAString& aDeviceAddress,
                                      NS_LITERAL_STRING("Unpair"));
     rv = bs->RemoveDeviceInternal(aDeviceAddress, result);
   }
-  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), NS_ERROR_DOM_OPERATION_ERR);
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
 }
@@ -660,9 +673,10 @@ BluetoothAdapter::Enable(ErrorResult& aRv)
    * - BluetoothService is available.
    */
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Disabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   // Set adapter state "Enabling"
   SetAdapterState(BluetoothAdapterState::Enabling);
@@ -700,9 +714,10 @@ BluetoothAdapter::Disable(ErrorResult& aRv)
    * - BluetoothService is available.
    */
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   // Set adapter state "Disabling"
   SetAdapterState(BluetoothAdapterState::Disabling);
