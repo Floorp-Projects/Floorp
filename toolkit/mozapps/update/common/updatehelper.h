@@ -32,8 +32,3 @@ BOOL IsUnpromptedElevation(BOOL &isUnpromptedElevation);
 #define TEST_ONLY_FALLBACK_KEY_PATH \
   BASE_SERVICE_REG_KEY L"\\3932ecacee736d366d6436db0f55bce4"
 
-#ifdef MOZ_METRO
-  bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer, long aCharLength);
-  HRESULT LaunchDefaultMetroBrowser();
-#endif
-

@@ -2,17 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_METRO
-// Needed for COM calls to launch Metro applications
-#undef WINVER
-#undef _WIN32_WINNT
-#define WINVER 0x602
-#define _WIN32_WINNT 0x602
-#include <objbase.h>
-#include <shobjidl.h>
-#pragma comment(lib, "ole32.lib")
-#endif
-
 #include <windows.h>
 
 // Needed for CreateToolhelp32Snapshot
@@ -760,71 +749,3 @@ IsUnpromptedElevation(BOOL &isUnpromptedElevation)
   RegCloseKey(baseKey);
   return success;
 }
-
-#ifdef MOZ_METRO
-  /*
-  * Retrieve the app model id of the firefox metro browser.
-  *
-  * @aPathBuffer Buffer to fill
-  * @aCharLength Length of buffer to fill in characters
-  */
-  bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer, long aCharLength)
-  {
-    if (!aIDBuffer || aCharLength <= 0)
-      return false;
-
-    memset(aIDBuffer, 0, (sizeof(WCHAR)*aCharLength));
-    static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
-
-    HKEY key;
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, kDefaultMetroBrowserIDPathKey,
-                      0, KEY_READ, &key) != ERROR_SUCCESS) {
-      return false;
-    }
-    DWORD len = aCharLength * sizeof(WCHAR);
-    memset(aIDBuffer, 0, len);
-    if (RegQueryValueExW(key, L"AppUserModelID", nullptr, nullptr,
-                         (LPBYTE)aIDBuffer, &len) != ERROR_SUCCESS || !len) {
-      RegCloseKey(key);
-      return false;
-    }
-    RegCloseKey(key);
-    return true;
-  }
-
-  HRESULT
-  LaunchDefaultMetroBrowser()
-  {
-    CoInitialize(nullptr);
-    HRESULT hr = E_FAIL;
-    // The interface that allows us to activate the browser
-    IApplicationActivationManager *activateMgr;
-    if (FAILED(hr = CoCreateInstance(CLSID_ApplicationActivationManager,
-                                     nullptr, CLSCTX_LOCAL_SERVER,
-                                     IID_IApplicationActivationManager,
-                                     (void**)&activateMgr))) {
-      CoUninitialize();
-      return hr;
-    }
-
-    // Activation is based on the browser's registered app model id
-    WCHAR appModelID[256];
-    if (!GetDefaultBrowserAppModelID(appModelID, (sizeof(appModelID)/sizeof(WCHAR)))) {
-      activateMgr->Release();
-      CoUninitialize();
-      return hr;
-    }
-
-    // Hand off focus rights to the out-of-process activation server. Without
-    // this the metro interface won't launch.
-    CoAllowSetForegroundWindow(activateMgr, nullptr);
-
-    // Launch default browser in Metro
-    DWORD processID;
-    hr = activateMgr->ActivateApplication(appModelID, L"", AO_NOERRORUI,
-                                          &processID);
-    activateMgr->Release();
-    CoUninitialize();
-    return hr;
-  }
-#endif

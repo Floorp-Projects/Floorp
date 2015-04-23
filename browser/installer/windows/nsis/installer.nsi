@@ -100,9 +100,6 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
-!ifdef MOZ_METRO
-!insertmacro RemoveDEHRegistrationIfMatching
-!endif
 !insertmacro RemovePrecompleteEntries
 !insertmacro SetAppLSPCategories
 !insertmacro SetBrandNameVars
@@ -340,9 +337,6 @@ Section "-Application" APP_IDX
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
-!ifdef MOZ_METRO
-  ${ResetWin8PromptKeys} "HKCU" ""
-!endif
   ${UpdateProtocolHandlers}
 
   ClearErrors
@@ -428,24 +422,12 @@ Section "-Application" APP_IDX
     ${Else}
       WriteRegDWORD HKCU "$0" "IconsVisible" 0
     ${EndIf}
-!ifdef MOZ_METRO
-    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
-                                        "FirefoxURL" \
-                                        "FirefoxHTML"
-    ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
-                                    "$INSTDIR\CommandExecuteHandler.exe" \
-                                    $AppUserModelID \
-                                    "FirefoxURL" \
-                                    "FirefoxHTML"
-!else
-  ; The metro browser is not enabled by the mozconfig.
   ${If} ${AtLeastWin8}
     ${RemoveDEHRegistration} ${DELEGATE_EXECUTE_HANDLER_ID} \
                              $AppUserModelID \
                              "FirefoxURL" \
                              "FirefoxHTML"
   ${EndIf}
-!endif
   ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE
@@ -815,21 +797,7 @@ Function LaunchApp
   ${If} ${Errors}
     StrCpy $1 "0"
     StrCpy $2 "0"
-!ifdef MOZ_METRO
-    ; Check to see if this install location is currently set as the
-    ; default browser.
-    AppAssocReg::QueryAppIsDefaultAll "${AppRegName}" "effective"
-    Pop $1
-    ; Check for a last run type to see if metro was the last browser
-    ; front end in use.
-    ReadRegDWORD $2 HKCU "Software\Mozilla\Firefox" "MetroLastAHE"
-!endif
     ${If} $1 == "1"
-    ${AndIf} $2 == "1" ; 1 equals AHE_IMMERSIVE
-      ; Launch into metro
-      Exec "$\"$INSTDIR\CommandExecuteHandler.exe$\" --launchmetro"
-    ${Else}
-      ; Launch into desktop
       Exec "$\"$INSTDIR\${FileMainEXE}$\""
     ${EndIf}
   ${Else}
@@ -850,20 +818,7 @@ Function LaunchAppFromElevatedProcess
   SetOutPath "$1"
   StrCpy $2 "0"
   StrCpy $3 "0"
-!ifdef MOZ_METRO
-  ; Check to see if this install location is currently set as the
-  ; default browser.
-  AppAssocReg::QueryAppIsDefaultAll "${AppRegName}" "effective"
-  Pop $2
-  ; Check for a last run type to see if metro was the last browser
-  ; front end in use.
-  ReadRegDWORD $3 HKCU "Software\Mozilla\Firefox" "MetroLastAHE"
-!endif
   ${If} $2 == "1"
-  ${AndIf} $3 == "1" ; 1 equals AHE_IMMERSIVE
-    ; Launch into metro
-    Exec "$\"$1\CommandExecuteHandler.exe$\" --launchmetro"
-  ${Else}
     ; Launch into desktop
     Exec "$\"$0$\""
   ${EndIf}
@@ -950,15 +905,7 @@ Function leaveShortcuts
     Abort
   ${EndIf}
   ${MUI_INSTALLOPTIONS_READ} $AddDesktopSC "shortcuts.ini" "Field 2" "State"
-
-  ; If we have a Metro browser and are Win8, then we don't have a Field 3
-!ifdef MOZ_METRO
-  ${Unless} ${AtLeastWin8}
-!endif
-    ${MUI_INSTALLOPTIONS_READ} $AddStartMenuSC "shortcuts.ini" "Field 3" "State"
-!ifdef MOZ_METRO
-  ${EndIf}
-!endif
+  ${MUI_INSTALLOPTIONS_READ} $AddStartMenuSC "shortcuts.ini" "Field 3" "State"
 
   ; Don't install the quick launch shortcut on Windows 7
   ${Unless} ${AtLeastWin7}
@@ -1237,21 +1184,13 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" State  "1"
   WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 2" Flags  "GROUP"
 
-  ; Don't offer to install the start menu shortcut on Windows 8
-  ; for Metro builds.
-!ifdef MOZ_METRO
-  ${Unless} ${AtLeastWin8}
-!endif
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Text   "$(ICONS_STARTMENU)"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Left   "0"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Top    "40"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Bottom "50"
-    WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" State  "1"
-!ifdef MOZ_METRO
-  ${EndIf}
-!endif
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Type   "checkbox"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Text   "$(ICONS_STARTMENU)"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Left   "0"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Top    "40"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" Bottom "50"
+  WriteINIStr "$PLUGINSDIR\shortcuts.ini" "Field 3" State  "1"
 
   ; Don't offer to install the quick launch shortcut on Windows 7
   ${Unless} ${AtLeastWin7}

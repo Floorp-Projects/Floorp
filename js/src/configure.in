@@ -295,14 +295,6 @@ MOZ_CHECK_COMPILER_WRAPPER
 dnl Special win32 checks
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(metro,
-[  --enable-metro           Enable Windows Metro build targets],
-    MOZ_METRO=1,
-    MOZ_METRO=)
-if test -n "$MOZ_METRO"; then
-    AC_DEFINE(MOZ_METRO)
-fi
-
 # Target the Windows 8.1 SDK by default
 WINSDK_TARGETVER=603
 WINVER=502
@@ -3740,7 +3732,6 @@ AC_SUBST(OS_COMPILE_CXXFLAGS)
 AC_SUBST(OS_LDFLAGS)
 AC_SUBST(OS_LIBS)
 AC_SUBST(CROSS_COMPILE)
-AC_SUBST(MOZ_METRO)
 
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CXX)

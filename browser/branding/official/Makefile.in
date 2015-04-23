@@ -4,8 +4,7 @@
 
 include $(topsrcdir)/config/config.mk
 
-# On Windows only do this step for browser, skip for metro.
-ifeq ($(MOZ_WIDGET_TOOLKIT) $(DIST_SUBDIR),windows browser)
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 BRANDING_FILES := \
 	firefox.ico \
 	document.ico \
@@ -47,10 +46,3 @@ endif
 BRANDING_DEST := $(DIST)/branding
 BRANDING_TARGET := export
 INSTALL_TARGETS += BRANDING
-
-ifeq ($(MOZ_WIDGET_TOOLKIT) $(DIST_SUBDIR),windows metro)
-VISUALMANIFEST := VisualElementsManifest.xml
-VISUALMANIFEST_FLAGS := -Fsubstitution -DMOZ_APP_DISPLAYNAME=${MOZ_APP_DISPLAYNAME}
-VISUALMANIFEST_PATH := $(DIST)/bin
-PP_TARGETS += VISUALMANIFEST
-endif

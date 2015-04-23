@@ -79,9 +79,6 @@ extern const wchar_t* kPropNameTabContent;
 namespace mozilla {
 namespace widget {
 extern UINT sAppShellGeckoMsgId;
-#ifdef MOZ_METRO
-extern UINT sDefaultBrowserMsgId;
-#endif
 }
 }
 
@@ -416,11 +413,6 @@ ProcessOrDeferMessage(HWND hwnd,
       if (uMsg && uMsg == mozilla::widget::sAppShellGeckoMsgId) {
         // Widget's registered native event callback
         deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
-#ifdef MOZ_METRO
-      } else if (uMsg && uMsg == mozilla::widget::sDefaultBrowserMsgId) {
-        // Metro widget's system shutdown message
-        deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
-#endif
       }
     }
   }
@@ -497,13 +489,6 @@ WindowIsDeferredWindow(HWND hWnd)
       className.EqualsLiteral("nsAppShell:EventWindowClass")) {
     return true;
   }
-
-#ifdef MOZ_METRO
-  // immersive UI ICoreWindow
-  if (className.EqualsLiteral("Windows.UI.Core.CoreWindow")) {
-    return true;
-  }
-#endif
 
   // Plugin windows that can trigger ipc calls in child:
   // 'ShockwaveFlashFullScreen' - flash fullscreen window

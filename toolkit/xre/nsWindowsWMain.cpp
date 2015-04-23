@@ -16,7 +16,7 @@
 #include "nsSetDllDirectory.h"
 #endif
 
-#if defined(MOZ_METRO) || defined(__GNUC__)
+#if defined(__GNUC__)
 #define XRE_DONT_SUPPORT_XPSP2
 #endif
 

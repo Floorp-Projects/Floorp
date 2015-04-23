@@ -448,20 +448,6 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(metro,
-[  --enable-metro           Enable Windows Metro build targets],
-    MOZ_METRO=1,
-    MOZ_METRO=)
-if test -n "$MOZ_METRO"; then
-    AC_DEFINE(MOZ_METRO)
-    # toolkit/library/makefile.in needs these, see nsDllMain.
-    CRTDLLVERSION=110
-    CRTEXPDLLVERSION=1-1-0
-fi
-
-AC_SUBST(CRTDLLVERSION)
-AC_SUBST(CRTEXPDLLVERSION)
-
 # Target the Windows 8.1 SDK by default
 WINSDK_TARGETVER=603
 WINVER=502
@@ -572,16 +558,6 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
             AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
-        fi
-
-        dnl Confirm we have the pri tools on win8 builds
-        if test -n "$MOZ_METRO"; then
-          AC_MSG_CHECKING([for makepri])
-          AC_CHECK_PROGS(MAKEPRI, makepri, "")
-          if test -z "MAKEPRI" ; then
-              AC_MSG_ERROR([makepri.exe is required for generating metro browser install components. It should be in the Win8 SDK.])
-          fi
-          AC_SUBST(MAKEPRI)
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -8465,8 +8441,6 @@ AC_SUBST(MOZ_D3DCOMPILER_VISTA_DLL_PATH)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
-
-AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
