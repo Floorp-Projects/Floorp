@@ -43,7 +43,8 @@ public:
   void Init(XineramaScreenInfo *aScreenInfo);
 #endif /* MOZ_X11 */
 
-  static double GetDPIScale();
+  static gint    GetGtkMonitorScaleFactor();
+  static double  GetDPIScale();
 
 private:
   uint32_t mScreenNum;
