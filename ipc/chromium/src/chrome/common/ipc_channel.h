@@ -5,6 +5,8 @@
 #ifndef CHROME_COMMON_IPC_CHANNEL_H_
 #define CHROME_COMMON_IPC_CHANNEL_H_
 
+#include <string>
+
 #include <queue>
 #include "chrome/common/ipc_message.h"
 
@@ -130,6 +132,15 @@ class Channel : public Message::Sender {
   // Return the server pipe handle.
   void* GetServerPipeHandle() const;
 #endif  // defined(OS_POSIX)
+
+  // Generates a channel ID that's non-predictable and unique.
+  static std::wstring GenerateUniqueRandomChannelID();
+
+  // Generates a channel ID that, if passed to the client as a shared secret,
+  // will validate that the client's authenticity. On platforms that do not
+  // require additional validation this is simply calls GenerateUniqueRandomChannelID().
+  // For portability the prefix should not include the \ character.
+  static std::wstring GenerateVerifiedChannelID(const std::wstring& prefix);
 
  private:
   // PIMPL to which all channel calls are delegated.
