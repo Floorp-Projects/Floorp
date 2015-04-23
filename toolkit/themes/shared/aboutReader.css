@@ -33,6 +33,14 @@ body.loaded {
   background-color: #333333;
 }
 
+.dark *::-moz-selection {
+  background-color: #FFFFFF;
+  color: #0095DD;
+}
+.dark a::-moz-selection {
+  color: #DD4800;
+}
+
 .sepia,
 .sepia-button {
   color: #333333;
@@ -138,134 +146,6 @@ body.loaded {
   margin: 0 0 30px 0;
   padding: 0;
   font-style: italic;
-}
-
-/* Content */
-
-#moz-reader-content {
-  display: none;
-  font-size: 1em;
-  line-height: 1.6em;
-}
-
-.content h1,
-.content h2,
-.content h3 {
-  font-weight: bold;
-}
-
-#moz-reader-content h1 {
-  font-size: 1.33em;
-  line-height: 1.25em;
-}
-
-#moz-reader-content h2 {
-  font-size: 1.1em;
-  line-height: 1.51em;
-}
-
-#moz-reader-content h3 {
-  font-size: 1em;
-  line-height: 1.66em;
-}
-
-.content a {
-  text-decoration: underline;
-  font-weight: normal;
-}
-
-.content a,
-.content a:visited,
-.content a:hover,
-.content a:active {
-  color: #0095dd;
-}
-
-.content * {
-  max-width: 100%;
-  height: auto;
-}
-
-.content p,
-.content code,
-.content pre,
-.content blockquote,
-.content ul,
-.content ol,
-.content li,
-.content figure,
-.content .wp-caption {
-  margin: 0 0 30px 0;
-}
-
-.content p > img:only-child,
-.content p > a:only-child > img:only-child,
-.content .wp-caption img,
-.content figure img {
-  display: block;
-}
-
-.content img[moz-reader-center] {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#moz-reader-content .caption,
-#moz-reader-content .wp-caption-text,
-#moz-reader-content figcaption {
-  font-size: 0.9em;
-  line-height: 1.48em;
-  font-style: italic;
-}
-
-.content code,
-.content pre {
-  white-space: pre-wrap;
-}
-
-.content blockquote {
-  padding: 0;
-  -moz-padding-start: 16px;
-}
-
-.light > .container > .content blockquote,
-.sepia > .container > .content blockquote {
-  -moz-border-start: 2px solid #333333;
-}
-
-.dark > .container > .content blockquote {
-  -moz-border-start: 2px solid #eeeeee;
-}
-.dark *::-moz-selection {
-  background-color: #FFFFFF;
-  color: #0095DD;
-}
-.dark a::-moz-selection {
-  color: #DD4800;
-}
-
-.content ul,
-.content ol {
-  padding: 0;
-}
-
-.content ul {
-  -moz-padding-start: 30px;
-  list-style: disc;
-}
-
-.content ol {
-  -moz-padding-start: 30px;
-  list-style: decimal;
-}
-
-/* Hide elements with common "hidden" class names */
-#moz-reader-content .visually-hidden,
-#moz-reader-content .visuallyhidden,
-#moz-reader-content .hidden,
-#moz-reader-content .invisible,
-#moz-reader-content .sr-only {
-  display: none;
 }
 
 /*======= Controls toolbar =======*/
