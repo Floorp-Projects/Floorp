@@ -49,7 +49,9 @@ GetEllipsisTextRun(nsIFrame* aFrame)
     nsLayoutUtils::FontSizeInflationFor(aFrame));
   LazyReferenceRenderingContextGetterFromFrame lazyRefContextGetter(aFrame);
   return fm->GetThebesFontGroup()->GetEllipsisTextRun(
-      aFrame->PresContext()->AppUnitsPerDevPixel(), lazyRefContextGetter);
+    aFrame->PresContext()->AppUnitsPerDevPixel(),
+    nsLayoutUtils::GetTextRunOrientFlagsForStyle(aFrame->StyleContext()),
+    lazyRefContextGetter);
 }
 
 static nsIFrame*
