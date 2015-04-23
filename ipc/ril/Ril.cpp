@@ -163,16 +163,16 @@ ConnectWorkerToRIL::RunTask(JSContext* aCx)
 class DispatchRILEvent final : public WorkerTask
 {
 public:
-  DispatchRILEvent(unsigned long aClient, UnixSocketRawData* aMessage)
+  DispatchRILEvent(unsigned long aClient, UnixSocketBuffer* aBuffer)
     : mClientId(aClient)
-    , mMessage(aMessage)
+    , mBuffer(aBuffer)
   { }
 
   bool RunTask(JSContext* aCx) override;
 
 private:
   unsigned long mClientId;
-  nsAutoPtr<UnixSocketRawData> mMessage;
+  nsAutoPtr<UnixSocketBuffer> mBuffer;
 };
 
 bool
@@ -181,14 +181,14 @@ DispatchRILEvent::RunTask(JSContext* aCx)
   JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
 
   JS::Rooted<JSObject*> array(aCx,
-                              JS_NewUint8Array(aCx, mMessage->GetSize()));
+                              JS_NewUint8Array(aCx, mBuffer->GetSize()));
   if (!array) {
     return false;
   }
   {
     JS::AutoCheckCannotGC nogc;
     memcpy(JS_GetArrayBufferViewData(array, nogc),
-           mMessage->GetData(), mMessage->GetSize());
+           mBuffer->GetData(), mBuffer->GetSize());
   }
 
   JS::AutoValueArray<2> args(aCx);
