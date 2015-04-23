@@ -440,13 +440,14 @@ MSG_DEF(JSMSG_UNTERM_CLASS,            0, JSEXN_SYNTAXERR, "unterminated charact
 MSG_DEF(JSMSG_DEFAULT_LOCALE_ERROR,    0, JSEXN_ERR, "internal error getting the default locale")
 MSG_DEF(JSMSG_NO_SUCH_SELF_HOSTED_PROP,1, JSEXN_ERR, "No such property on self-hosted object: {0}")
 
-// Typed object
+// Typed object / SIMD
 MSG_DEF(JSMSG_INVALID_PROTOTYPE,       0, JSEXN_TYPEERR, "prototype field is not an object")
 MSG_DEF(JSMSG_TYPEDOBJECT_BAD_ARGS,    0, JSEXN_TYPEERR, "invalid arguments")
 MSG_DEF(JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX, 0, JSEXN_RANGEERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED, 0, JSEXN_TYPEERR, "handle unattached")
 MSG_DEF(JSMSG_TYPEDOBJECT_STRUCTTYPE_BAD_ARGS, 0, JSEXN_RANGEERR, "invalid field descriptor")
 MSG_DEF(JSMSG_TYPEDOBJECT_TOO_BIG,     0, JSEXN_ERR, "Type is too large to allocate")
+MSG_DEF(JSMSG_SIMD_FAILED_CONVERSION,  0, JSEXN_RANGEERR, "SIMD conversion loses precision")
 
 // Typed array
 MSG_DEF(JSMSG_BAD_INDEX,               0, JSEXN_RANGEERR, "invalid or out-of-range index")

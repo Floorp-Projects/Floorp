@@ -38,7 +38,10 @@ public:
 
     virtual void* GetHWCDevice();
 
-    virtual void* GetFBSurface();
+    virtual void* GetDispSurface()
+    {
+        return nullptr;
+    }
 
     virtual bool SwapBuffers(EGLDisplay dpy, EGLSurface sur);
 
@@ -46,11 +49,11 @@ public:
 
     virtual bool QueueBuffer(ANativeWindowBuffer* handle);
 
-    virtual void UpdateFBSurface(EGLDisplay dpy, EGLSurface sur);
+    virtual void UpdateDispSurface(EGLDisplay dpy, EGLSurface sur);
 
-    virtual void SetFBReleaseFd(int fd);
+    virtual void SetDispReleaseFd(int fd);
 
-    virtual int GetPrevFBAcquireFd()
+    virtual int GetPrevDispAcquireFd()
     {
         return -1;
     }

@@ -13,6 +13,7 @@
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
 #endif
+#include <float.h>
 
 namespace mozilla {
 
@@ -128,6 +129,25 @@ struct AudioChunk {
     mVolume = 1.0f;
     mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
+
+  bool IsSilentOrSubnormal() const
+  {
+    if (!mBuffer) {
+      return true;
+    }
+
+    for (uint32_t i = 0, length = mChannelData.Length(); i < length; ++i) {
+      const float* channel = static_cast<const float*>(mChannelData[i]);
+      for (StreamTime frame = 0; frame < mDuration; ++frame) {
+        if (fabs(channel[frame]) >= FLT_MIN) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   int ChannelCount() const { return mChannelData.Length(); }
 
   bool IsMuted() const { return mVolume == 0.0f; }

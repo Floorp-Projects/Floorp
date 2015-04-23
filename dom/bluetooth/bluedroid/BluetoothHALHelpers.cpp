@@ -122,7 +122,6 @@ Convert(const bt_uuid_t& aIn, BluetoothUuid& aOut)
   return NS_OK;
 }
 
-#ifdef MOZ_B2G_BT_API_V2
 nsresult
 Convert(const BluetoothUuid& aIn, bt_uuid_t& aOut)
 {
@@ -134,9 +133,6 @@ Convert(const BluetoothUuid& aIn, bt_uuid_t& aOut)
 
   return NS_OK;
 }
-#else
-// TODO: Support GATT
-#endif
 
 nsresult
 Convert(const nsAString& aIn, bt_pin_code_t& aOut)
@@ -202,6 +198,13 @@ Convert(const bt_service_record_t& aIn, BluetoothServiceRecord& aOut)
   return NS_OK;
 }
 
+nsresult
+Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut)
+{
+  memcpy(aOut.mAdvData, aIn, sizeof(aOut.mAdvData));
+  return NS_OK;
+}
+
 #if ANDROID_VERSION >= 18
 nsresult
 Convert(const BluetoothAvrcpElementAttribute& aIn, btrc_element_attr_val_t& aOut)
@@ -226,14 +229,6 @@ Convert(const btrc_player_settings_t& aIn, BluetoothAvrcpPlayerSettings& aOut)
   return NS_OK;
 }
 #endif // ANDROID_VERSION >= 18
-
-#ifdef MOZ_B2G_BT_API_V2
-nsresult
-Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut)
-{
-  memcpy(aOut.mAdvData, aIn, sizeof(aOut.mAdvData));
-  return NS_OK;
-}
 
 #if ANDROID_VERSION >= 19
 nsresult
@@ -343,12 +338,7 @@ Convert(const BluetoothTransport& aIn, btgatt_transport_t& aOut)
   aOut = sTransport[aIn];
   return NS_OK;
 }
-#endif
-#else
-// TODO: Support GATT
-#endif
 
-#if ANDROID_VERSION >= 21
 nsresult
 Convert(const bt_activity_energy_info& aIn, BluetoothActivityEnergyInfo& aOut)
 {

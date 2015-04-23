@@ -419,18 +419,18 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleObject obj)
     return proto;
 }
 
-bool
-js::FunctionHasResolveHook(const JSAtomState& atomState, jsid id)
+static bool
+fun_mayResolve(const JSAtomState& names, jsid id, JSObject*)
 {
     if (!JSID_IS_ATOM(id))
         return false;
 
     JSAtom* atom = JSID_TO_ATOM(id);
-    return atom == atomState.prototype || atom == atomState.length || atom == atomState.name;
+    return atom == names.prototype || atom == names.length || atom == names.name;
 }
 
-bool
-js::fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
+static bool
+fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 {
     if (!JSID_IS_ATOM(id))
         return true;
@@ -891,7 +891,8 @@ const Class JSFunction::class_ = {
     nullptr,                 /* getProperty */
     nullptr,                 /* setProperty */
     fun_enumerate,
-    js::fun_resolve,
+    fun_resolve,
+    fun_mayResolve,
     nullptr,                 /* convert     */
     nullptr,                 /* finalize    */
     nullptr,                 /* call        */

@@ -45,7 +45,7 @@ public:
   virtual void OnConnectError() override;
   virtual void OnDisconnect() override;
   virtual void ReceiveSocketData(
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) override;
+    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
 
   inline void GetAddress(nsAString& aDeviceAddress)
   {
@@ -56,11 +56,9 @@ public:
    * Queue data to be sent to the socket on the IO thread. Can only be called on
    * originating thread.
    *
-   * @param aMessage Data to be sent to socket
-   *
-   * @return true if data is queued, false otherwise (i.e. not connected)
+   * @param aBuffer Data to be sent to socket
    */
-  bool SendSocketData(mozilla::ipc::UnixSocketRawData* aMessage);
+  void SendSocketData(mozilla::ipc::UnixSocketIOBuffer* aBuffer) override;
 
   /**
    * Convenience function for sending strings to the socket (common in bluetooth
@@ -101,7 +99,7 @@ public:
    * Queues the internal representation of socket for deletion. Can be called
    * from main thread.
    */
-  void CloseSocket();
+  void CloseSocket() override;
 
   /**
    * Get the current sockaddr for the socket

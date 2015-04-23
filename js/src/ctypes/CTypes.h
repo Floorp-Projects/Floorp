@@ -281,6 +281,9 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*>
 
 typedef HashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy> FieldInfoHash;
 
+void
+TraceFieldInfoHash(JSTracer* trc, FieldInfoHash* fields);
+
 // Descriptor of ABI, return type, argument types, and variadicity for a
 // FunctionType.
 struct FunctionInfo

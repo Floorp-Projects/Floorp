@@ -163,6 +163,43 @@ class BlobURLsReporter final : public nsIMemoryReporter
     return PL_DHASH_NEXT;
   }
 
+  static void BuildPath(nsAutoCString& path,
+                        nsCStringHashKey::KeyType aKey,
+                        DataInfo* aInfo,
+                        bool anonymize)
+  {
+    nsCOMPtr<nsIURI> principalURI;
+    nsAutoCString url, owner;
+    if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI))) &&
+        principalURI != nullptr &&
+        NS_SUCCEEDED(principalURI->GetSpec(owner)) &&
+        !owner.IsEmpty()) {
+      owner.ReplaceChar('/', '\\');
+      path += "owner(";
+      if (anonymize) {
+        path += "<anonymized>";
+      } else {
+        path += owner;
+      }
+      path += ")";
+    } else {
+      path += "owner unknown";
+    }
+    path += "/";
+    if (anonymize) {
+      path += "<anonymized-stack>";
+    } else {
+      path += aInfo->mStack;
+    }
+    url = aKey;
+    url.ReplaceChar('/', '\\');
+    if (anonymize) {
+      path += "<anonymized-url>";
+    } else {
+      path += url;
+    }
+  }
+
   static PLDHashOperator ReportCallback(nsCStringHashKey::KeyType aKey,
                                         DataInfo* aInfo,
                                         void* aUserArg)
@@ -195,34 +232,8 @@ class BlobURLsReporter final : public nsIMemoryReporter
       }
 
       path = isMemoryFile ? "memory-blob-urls/" : "file-blob-urls/";
-      if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI))) &&
-          principalURI != nullptr &&
-          NS_SUCCEEDED(principalURI->GetSpec(owner)) &&
-          !owner.IsEmpty()) {
-        owner.ReplaceChar('/', '\\');
-        path += "owner(";
-        if (envp->mAnonymize) {
-          path += "<anonymized>";
-        } else {
-          path += owner;
-        }
-        path += ")";
-      } else {
-        path += "owner unknown";
-      }
-      path += "/";
-      if (envp->mAnonymize) {
-        path += "<anonymized-stack>";
-      } else {
-        path += aInfo->mStack;
-      }
-      url = aKey;
-      url.ReplaceChar('/', '\\');
-      if (envp->mAnonymize) {
-        path += "<anonymized-url>";
-      } else {
-        path += url;
-      }
+      BuildPath(path, aKey, aInfo, envp->mAnonymize);
+
       if (refCount > 1) {
         nsAutoCString addrStr;
 
@@ -268,7 +279,27 @@ class BlobURLsReporter final : public nsIMemoryReporter
             descString,
             envp->mData);
       }
+    } else {
+      // Just report the path for the DOMMediaStream or MediaSource.
+      nsCOMPtr<mozilla::dom::MediaSource> ms(do_QueryInterface(aInfo->mObject));
+      nsAutoCString path;
+      path = ms ? "media-source-urls/" : "dom-media-stream-urls/";
+      BuildPath(path, aKey, aInfo, envp->mAnonymize);
+
+      NS_NAMED_LITERAL_CSTRING
+        (desc, "An object URL allocated with URL.createObjectURL; the referenced "
+               "data cannot be freed until all URLs for it have been explicitly "
+               "invalidated with URL.revokeObjectURL.");
+
+      envp->mCallback->Callback(EmptyCString(),
+          path,
+          KIND_OTHER,
+          UNITS_COUNT,
+          1,
+          desc,
+          envp->mData);
     }
+
     return PL_DHASH_NEXT;
   }
 };

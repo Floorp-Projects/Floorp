@@ -36,6 +36,7 @@
 #include "nptest_utils.h"
 #include "nptest_platform.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/IntentionalCrash.h"
 
 #include <stdlib.h>
@@ -61,7 +62,6 @@
 using namespace std;
 
 #define PLUGIN_VERSION     "1.0.0.0"
-#define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
 
 extern const char *sPluginName;
 extern const char *sPluginDescription;
@@ -235,7 +235,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "queryContentsScaleFactor",
   "echoString",
 };
-static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
+static NPIdentifier sPluginMethodIdentifiers[MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
   npnEvaluateTest,
   npnInvokeTest,
@@ -303,15 +303,15 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   echoString,
 };
 
-static_assert(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
-              ARRAY_LENGTH(sPluginMethodFunctions),
+static_assert(MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
+              MOZ_ARRAY_LENGTH(sPluginMethodFunctions),
               "Arrays should have the same size");
 
 static const NPUTF8* sPluginPropertyIdentifierNames[] = {
   "propertyAndMethod"
 };
-static NPIdentifier sPluginPropertyIdentifiers[ARRAY_LENGTH(sPluginPropertyIdentifierNames)];
-static NPVariant sPluginPropertyValues[ARRAY_LENGTH(sPluginPropertyIdentifierNames)];
+static NPIdentifier sPluginPropertyIdentifiers[MOZ_ARRAY_LENGTH(sPluginPropertyIdentifierNames)];
+static NPVariant sPluginPropertyValues[MOZ_ARRAY_LENGTH(sPluginPropertyIdentifierNames)];
 
 struct URLNotifyData
 {
@@ -388,9 +388,9 @@ static void initializeIdentifiers()
 {
   if (!sIdentifiersInitialized) {
     NPN_GetStringIdentifiers(sPluginMethodIdentifierNames,
-        ARRAY_LENGTH(sPluginMethodIdentifierNames), sPluginMethodIdentifiers);
+        MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames), sPluginMethodIdentifiers);
     NPN_GetStringIdentifiers(sPluginPropertyIdentifierNames,
-        ARRAY_LENGTH(sPluginPropertyIdentifierNames), sPluginPropertyIdentifiers);
+        MOZ_ARRAY_LENGTH(sPluginPropertyIdentifierNames), sPluginPropertyIdentifiers);
 
     sIdentifiersInitialized = true;
 
@@ -404,9 +404,9 @@ static void initializeIdentifiers()
 static void clearIdentifiers()
 {
   memset(sPluginMethodIdentifiers, 0,
-      ARRAY_LENGTH(sPluginMethodIdentifiers) * sizeof(NPIdentifier));
+      MOZ_ARRAY_LENGTH(sPluginMethodIdentifiers) * sizeof(NPIdentifier));
   memset(sPluginPropertyIdentifiers, 0,
-      ARRAY_LENGTH(sPluginPropertyIdentifiers) * sizeof(NPIdentifier));
+      MOZ_ARRAY_LENGTH(sPluginPropertyIdentifiers) * sizeof(NPIdentifier));
 
   sIdentifiersInitialized = false;
 }
@@ -685,7 +685,7 @@ NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs)
 
   initializeIdentifiers();
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(sPluginPropertyValues); i++) {
+  for (unsigned int i = 0; i < MOZ_ARRAY_LENGTH(sPluginPropertyValues); i++) {
     VOID_TO_NPVARIANT(sPluginPropertyValues[i]);
   }
 
@@ -736,7 +736,7 @@ NPError OSCALL NP_Shutdown()
 {
   clearIdentifiers();
 
-  for (unsigned int i = 0; i < ARRAY_LENGTH(sPluginPropertyValues); i++) {
+  for (unsigned int i = 0; i < MOZ_ARRAY_LENGTH(sPluginPropertyValues); i++) {
     NPN_ReleaseVariantValue(&sPluginPropertyValues[i]);
   }
 
@@ -1851,7 +1851,7 @@ scriptableInvalidate(NPObject* npobj)
 bool
 scriptableHasMethod(NPObject* npobj, NPIdentifier name)
 {
-  for (int i = 0; i < int(ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
+  for (int i = 0; i < int(MOZ_ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
     if (name == sPluginMethodIdentifiers[i])
       return true;
   }
@@ -1877,7 +1877,7 @@ scriptableInvoke(NPObject* npobj, NPIdentifier name, const NPVariant* args, uint
     return false;
   }
 
-  for (int i = 0; i < int(ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
+  for (int i = 0; i < int(MOZ_ARRAY_LENGTH(sPluginMethodIdentifiers)); i++) {
     if (name == sPluginMethodIdentifiers[i])
       return sPluginMethodFunctions[i](npobj, args, argCount, result);
   }
@@ -1946,7 +1946,7 @@ scriptableHasProperty(NPObject* npobj, NPIdentifier name)
       Crash();
     }
   }
-  for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
+  for (int i = 0; i < int(MOZ_ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i]) {
       return true;
     }
@@ -1957,7 +1957,7 @@ scriptableHasProperty(NPObject* npobj, NPIdentifier name)
 bool
 scriptableGetProperty(NPObject* npobj, NPIdentifier name, NPVariant* result)
 {
-  for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
+  for (int i = 0; i < int(MOZ_ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i]) {
       DuplicateNPVariant(*result, sPluginPropertyValues[i]);
       return true;
@@ -1969,7 +1969,7 @@ scriptableGetProperty(NPObject* npobj, NPIdentifier name, NPVariant* result)
 bool
 scriptableSetProperty(NPObject* npobj, NPIdentifier name, const NPVariant* value)
 {
-  for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
+  for (int i = 0; i < int(MOZ_ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i]) {
       NPN_ReleaseVariantValue(&sPluginPropertyValues[i]);
       DuplicateNPVariant(sPluginPropertyValues[i], *value);
@@ -1982,7 +1982,7 @@ scriptableSetProperty(NPObject* npobj, NPIdentifier name, const NPVariant* value
 bool
 scriptableRemoveProperty(NPObject* npobj, NPIdentifier name)
 {
-  for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
+  for (int i = 0; i < int(MOZ_ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
     if (name == sPluginPropertyIdentifiers[i]) {
       NPN_ReleaseVariantValue(&sPluginPropertyValues[i]);
 
@@ -1998,14 +1998,14 @@ scriptableRemoveProperty(NPObject* npobj, NPIdentifier name)
 bool
 scriptableEnumerate(NPObject* npobj, NPIdentifier** identifier, uint32_t* count)
 {
-  const int bufsize = sizeof(NPIdentifier) * ARRAY_LENGTH(sPluginMethodIdentifierNames);
+  const int bufsize = sizeof(NPIdentifier) * MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames);
   NPIdentifier* ids = (NPIdentifier*) NPN_MemAlloc(bufsize);
   if (!ids)
     return false;
 
   memcpy(ids, sPluginMethodIdentifiers, bufsize);
   *identifier = ids;
-  *count = ARRAY_LENGTH(sPluginMethodIdentifierNames);
+  *count = MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames);
   return true;
 }
 

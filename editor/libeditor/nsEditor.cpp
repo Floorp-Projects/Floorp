@@ -2597,23 +2597,42 @@ nsEditor::CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode)
 
 // BEGIN nsEditor public helper methods
 
+struct SavedRange {
+  nsRefPtr<Selection> mSelection;
+  nsCOMPtr<nsINode> mStartNode;
+  nsCOMPtr<nsINode> mEndNode;
+  int32_t mStartOffset;
+  int32_t mEndOffset;
+};
+
 nsresult
 nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
                         int32_t aOffset,
                         nsIContent& aNewLeftNode)
 {
-  // Get selection
-  nsRefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  // Remember all selection points.
+  nsAutoTArray<SavedRange, 10> savedRanges;
+  for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
+    SelectionType type(1 << i);
+    SavedRange range;
+    range.mSelection = GetSelection(type);
+    if (type == nsISelectionController::SELECTION_NORMAL) {
+      NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
+    } else if (!range.mSelection) {
+      // For non-normal selections, skip over the non-existing ones.
+      continue;
+    }
 
-  // Remember some selection points, if selection is set
-  nsCOMPtr<nsINode> selStartNode, selEndNode;
-  int32_t selStartOffset = 0, selEndOffset = 0;
-  if (selection->GetRangeAt(0)) {
-    selStartNode = selection->GetRangeAt(0)->GetStartParent();
-    selStartOffset = selection->GetRangeAt(0)->StartOffset();
-    selEndNode = selection->GetRangeAt(0)->GetEndParent();
-    selEndOffset = selection->GetRangeAt(0)->EndOffset();
+    for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
+      nsRefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
+      MOZ_ASSERT(r->IsPositioned());
+      range.mStartNode = r->GetStartParent();
+      range.mStartOffset = r->StartOffset();
+      range.mEndNode = r->GetEndParent();
+      range.mEndOffset = r->EndOffset();
+
+      savedRanges.AppendElement(range);
+    }
   }
 
   nsCOMPtr<nsINode> parent = aExistingRightNode.GetParentNode();
@@ -2664,40 +2683,63 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
     ps->FlushPendingNotifications(Flush_Frames);
   }
 
-  if (GetShouldTxnSetSelection()) {
-    // Editor wants us to set selection at split point
+  bool shouldSetSelection = GetShouldTxnSetSelection();
+
+  nsRefPtr<Selection> previousSelection;
+  for (size_t i = 0; i < savedRanges.Length(); ++i) {
+    // Adjust the selection if needed.
+    SavedRange& range = savedRanges[i];
+
+    // If we have not seen the selection yet, clear all of its ranges.
+    if (range.mSelection != previousSelection) {
+      nsresult rv = range.mSelection->RemoveAllRanges();
+      NS_ENSURE_SUCCESS(rv, rv);
+      previousSelection = range.mSelection;
+    }
+
+    if (shouldSetSelection &&
+        range.mSelection->Type() ==
+          nsISelectionController::SELECTION_NORMAL) {
+      // If the editor should adjust the selection, don't bother restoring
+      // the ranges for the normal selection here.
+      continue;
+    }
+
+    // Split the selection into existing node and new node.
+    if (range.mStartNode == &aExistingRightNode) {
+      if (range.mStartOffset < aOffset) {
+        range.mStartNode = &aNewLeftNode;
+      } else {
+        range.mStartOffset -= aOffset;
+      }
+    }
+
+    if (range.mEndNode == &aExistingRightNode) {
+      if (range.mEndOffset < aOffset) {
+        range.mEndNode = &aNewLeftNode;
+      } else {
+        range.mEndOffset -= aOffset;
+      }
+    }
+
+    nsRefPtr<nsRange> newRange;
+    nsresult rv = nsRange::CreateRange(range.mStartNode, range.mStartOffset,
+                                       range.mEndNode, range.mEndOffset,
+                                       getter_AddRefs(newRange));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = range.mSelection->AddRange(newRange);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (shouldSetSelection) {
+    // Editor wants us to set selection at split point.
+    nsRefPtr<Selection> selection = GetSelection();
+    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     selection->Collapse(&aNewLeftNode, aOffset);
-  } else if (selStartNode) {
-    // Else adjust the selection if needed.  If selStartNode is null, then
-    // there was no selection.
-    if (selStartNode == &aExistingRightNode) {
-      if (selStartOffset < aOffset) {
-        selStartNode = &aNewLeftNode;
-      } else {
-        selStartOffset -= aOffset;
-      }
-    }
-    if (selEndNode == &aExistingRightNode) {
-      if (selEndOffset < aOffset) {
-        selEndNode = &aNewLeftNode;
-      } else {
-        selEndOffset -= aOffset;
-      }
-    }
-    selection->Collapse(selStartNode, selStartOffset);
-    selection->Extend(selEndNode, selEndOffset);
   }
 
   return NS_OK;
 }
-
-struct SavedRange {
-  nsRefPtr<Selection> mSelection;
-  nsCOMPtr<nsINode> mStartNode;
-  nsCOMPtr<nsINode> mEndNode;
-  int32_t mStartOffset;
-  int32_t mEndOffset;
-};
 
 nsresult
 nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
@@ -2730,9 +2772,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
 
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
       nsRefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
-      if (!r->IsPositioned()) {
-        continue;
-      }
+      MOZ_ASSERT(r->IsPositioned());
       range.mStartNode = r->GetStartParent();
       range.mStartOffset = r->StartOffset();
       range.mEndNode = r->GetEndParent();

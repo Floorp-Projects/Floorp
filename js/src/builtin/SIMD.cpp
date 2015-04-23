@@ -14,6 +14,7 @@
 #include "builtin/SIMD.h"
 
 #include "mozilla/IntegerTypeTraits.h"
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
@@ -180,6 +181,7 @@ const Class SimdTypeDescr::class_ = {
     nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* resolve */
+    nullptr, /* mayResolve */
     nullptr, /* convert */
     TypeDescr::finalize,
     call
@@ -488,126 +490,135 @@ namespace js {
 // Unary SIMD operators
 template<typename T>
 struct Identity {
-    static inline T apply(T x) { return x; }
+    static T apply(T x) { return x; }
 };
 template<typename T>
 struct Abs {
-    static inline T apply(T x) { return mozilla::Abs(x); }
+    static T apply(T x) { return mozilla::Abs(x); }
 };
 template<typename T>
 struct Neg {
-    static inline T apply(T x) { return -1 * x; }
+    static T apply(T x) { return -1 * x; }
 };
 template<typename T>
 struct Not {
-    static inline T apply(T x) { return ~x; }
+    static T apply(T x) { return ~x; }
 };
 template<typename T>
 struct RecApprox {
-    static inline T apply(T x) { return 1 / x; }
+    static T apply(T x) { return 1 / x; }
 };
 template<typename T>
 struct RecSqrtApprox {
-    static inline T apply(T x) { return 1 / sqrt(x); }
+    static T apply(T x) { return 1 / sqrt(x); }
 };
 template<typename T>
 struct Sqrt {
-    static inline T apply(T x) { return sqrt(x); }
+    static T apply(T x) { return sqrt(x); }
 };
 
 // Binary SIMD operators
 template<typename T>
 struct Add {
-    static inline T apply(T l, T r) { return l + r; }
+    static T apply(T l, T r) { return l + r; }
 };
 template<typename T>
 struct Sub {
-    static inline T apply(T l, T r) { return l - r; }
+    static T apply(T l, T r) { return l - r; }
 };
 template<typename T>
 struct Div {
-    static inline T apply(T l, T r) { return l / r; }
+    static T apply(T l, T r) { return l / r; }
 };
 template<typename T>
 struct Mul {
-    static inline T apply(T l, T r) { return l * r; }
+    static T apply(T l, T r) { return l * r; }
 };
 template<typename T>
 struct Minimum {
-    static inline T apply(T l, T r) { return math_min_impl(l, r); }
+    static T apply(T l, T r) { return math_min_impl(l, r); }
 };
 template<typename T>
 struct MinNum {
-    static inline T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_min_impl(l, r)); }
+    static T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_min_impl(l, r)); }
 };
 template<typename T>
 struct Maximum {
-    static inline T apply(T l, T r) { return math_max_impl(l, r); }
+    static T apply(T l, T r) { return math_max_impl(l, r); }
 };
 template<typename T>
 struct MaxNum {
-    static inline T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_max_impl(l, r)); }
+    static T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_max_impl(l, r)); }
 };
 template<typename T>
 struct LessThan {
-    static inline int32_t apply(T l, T r) { return l < r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l < r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct LessThanOrEqual {
-    static inline int32_t apply(T l, T r) { return l <= r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l <= r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct GreaterThan {
-    static inline int32_t apply(T l, T r) { return l > r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l > r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct GreaterThanOrEqual {
-    static inline int32_t apply(T l, T r) { return l >= r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l >= r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct Equal {
-    static inline int32_t apply(T l, T r) { return l == r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l == r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct NotEqual {
-    static inline int32_t apply(T l, T r) { return l != r ? 0xFFFFFFFF : 0x0; }
+    static int32_t apply(T l, T r) { return l != r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T>
 struct Xor {
-    static inline T apply(T l, T r) { return l ^ r; }
+    static T apply(T l, T r) { return l ^ r; }
 };
 template<typename T>
 struct And {
-    static inline T apply(T l, T r) { return l & r; }
+    static T apply(T l, T r) { return l & r; }
 };
 template<typename T>
 struct Or {
-    static inline T apply(T l, T r) { return l | r; }
+    static T apply(T l, T r) { return l | r; }
 };
 template<typename T>
 struct WithX {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
 };
 template<typename T>
 struct WithY {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 1 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 1 ? scalar : x; }
 };
 template<typename T>
 struct WithZ {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 2 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 2 ? scalar : x; }
 };
 template<typename T>
 struct WithW {
-    static inline T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
+    static T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
 };
+// For the following three operators, if the value v we're trying to shift is
+// such that v << bits can't fit in the int32 range, then we have undefined
+// behavior, according to C++11 [expr.shift]p2.
 struct ShiftLeft {
-    static inline int32_t apply(int32_t v, int32_t bits) { return v << bits; }
+    static int32_t apply(int32_t v, int32_t bits) {
+        return uint32_t(bits) >= 32 ? 0 : v << bits;
+    }
 };
-struct ShiftRight {
-    static inline int32_t apply(int32_t v, int32_t bits) { return v >> bits; }
+struct ShiftRightArithmetic {
+    static int32_t apply(int32_t v, int32_t bits) {
+        return v >> (uint32_t(bits) >= 32 ? 31 : bits);
+    }
 };
 struct ShiftRightLogical {
-    static inline int32_t apply(int32_t v, int32_t bits) { return uint32_t(v) >> (bits & 31); }
+    static int32_t apply(int32_t v, int32_t bits) {
+        return uint32_t(bits) >= 32 ? 0 : uint32_t(v) >> bits;
+    }
 };
 }
 
@@ -812,6 +823,62 @@ CompareFunc(JSContext* cx, unsigned argc, Value* vp)
     return StoreResult<Int32x4>(cx, args, result);
 }
 
+// This struct defines whether we should throw during a conversion attempt,
+// when trying to convert a value of type from From to the type To.  This
+// happens whenever a C++ conversion would have undefined behavior (and perhaps
+// be platform-dependent).
+template<typename From, typename To>
+struct ThrowOnConvert;
+
+struct NeverThrow
+{
+    static bool value(int32_t v) {
+        return false;
+    }
+};
+
+// While int32 to float conversions can be lossy, these conversions have
+// defined behavior in C++, so we don't need to care about them here. In practice,
+// this means round to nearest, tie with even (zero bit in significand).
+template<>
+struct ThrowOnConvert<int32_t, float> : public NeverThrow {};
+
+// All int32 can be safely converted to doubles.
+template<>
+struct ThrowOnConvert<int32_t, double> : public NeverThrow {};
+
+// All floats can be safely converted to doubles.
+template<>
+struct ThrowOnConvert<float, double> : public NeverThrow {};
+
+// Double to float conversion for inputs which aren't in the float range are
+// undefined behavior in C++, but they're defined in IEEE754.
+template<>
+struct ThrowOnConvert<double, float> : public NeverThrow {};
+
+// Float to integer conversions have undefined behavior if the float value
+// is out of the representable integer range (on x86, will yield the undefined
+// value pattern, namely 0x80000000; on arm, will clamp the input value), so
+// check this here.
+template<typename From, typename IntegerType>
+struct ThrowIfNotInRange
+{
+    static_assert(mozilla::IsIntegral<IntegerType>::value, "bad destination type");
+
+    static bool value(From v) {
+        double d(v);
+        return mozilla::IsNaN(d) ||
+               d < double(mozilla::MinValue<IntegerType>::value) ||
+               d > double(mozilla::MaxValue<IntegerType>::value);
+    }
+};
+
+template<>
+struct ThrowOnConvert<double, int32_t> : public ThrowIfNotInRange<double, int32_t> {};
+
+template<>
+struct ThrowOnConvert<float, int32_t> : public ThrowIfNotInRange<float, int32_t> {};
+
 template<typename V, typename Vret>
 static bool
 FuncConvert(JSContext* cx, unsigned argc, Value* vp)
@@ -824,9 +891,20 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     Elem* val = TypedObjectMemory<Elem*>(args[0]);
+
     RetElem result[Vret::lanes];
-    for (unsigned i = 0; i < Vret::lanes; i++)
-        result[i] = i < V::lanes ? ConvertScalar<RetElem>(val[i]) : 0;
+    for (unsigned i = 0; i < Min(V::lanes, Vret::lanes); i++) {
+        if (ThrowOnConvert<Elem, RetElem>::value(val[i])) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_SIMD_FAILED_CONVERSION);
+            return false;
+        }
+        result[i] = ConvertScalar<RetElem>(val[i]);
+    }
+
+    // Fill remaining lanes with 0
+    for (unsigned i = V::lanes; i < Vret::lanes; i++)
+        result[i] = 0;
 
     return StoreResult<Vret>(cx, args, result);
 }

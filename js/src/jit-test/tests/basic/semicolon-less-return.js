@@ -1,6 +1,8 @@
 // Warning should be shown for expression-like statement after semicolon-less
 // return (bug 1005110).
 
+load(libdir + "class.js");
+
 if (options().indexOf("werror") == -1)
   options("werror");
 
@@ -239,12 +241,14 @@ function* f() {
 `, 4, 4);
 
 // TOK_CLASS
-testWarn(`
+if (classesEnabled()) {
+  testWarn(`
 function f() {
   return
     class A { constructor() {} };
 }
 `, 4, 4);
+}
 
 // TOK_ADD
 testWarn(`

@@ -23,7 +23,7 @@ static const JSClass myClass = {
     "MyClass",
     0,
     nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, my_convert
+    nullptr, nullptr, nullptr, my_convert
 };
 
 static bool

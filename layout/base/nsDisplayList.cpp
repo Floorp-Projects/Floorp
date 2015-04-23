@@ -106,6 +106,12 @@ GetTransformRootFrame(nsIFrame* aFrame)
   return nsLayoutUtils::GetTransformRootFrame(aFrame);
 }
 
+static inline CSSAngle
+MakeCSSAngle(const nsCSSValue& aValue)
+{
+  return CSSAngle(aValue.GetAngleValue(), aValue.GetUnit());
+}
+
 static void AddTransformFunctions(nsCSSValueList* aList,
                                   nsStyleContext* aContext,
                                   nsPresContext* aPresContext,
@@ -125,25 +131,25 @@ static void AddTransformFunctions(nsCSSValueList* aList,
     switch (nsStyleTransformMatrix::TransformFunctionOf(array)) {
       case eCSSKeyword_rotatex:
       {
-        double theta = array->Item(1).GetAngleValueInRadians();
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(RotationX(theta));
         break;
       }
       case eCSSKeyword_rotatey:
       {
-        double theta = array->Item(1).GetAngleValueInRadians();
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(RotationY(theta));
         break;
       }
       case eCSSKeyword_rotatez:
       {
-        double theta = array->Item(1).GetAngleValueInRadians();
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(RotationZ(theta));
         break;
       }
       case eCSSKeyword_rotate:
       {
-        double theta = array->Item(1).GetAngleValueInRadians();
+        CSSAngle theta = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(Rotation(theta));
         break;
       }
@@ -152,7 +158,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
         double x = array->Item(1).GetFloatValue();
         double y = array->Item(2).GetFloatValue();
         double z = array->Item(3).GetFloatValue();
-        double theta = array->Item(4).GetAngleValueInRadians();
+        CSSAngle theta = MakeCSSAngle(array->Item(4));
         aFunctions.AppendElement(Rotation3D(x, y, z, theta));
         break;
       }
@@ -246,23 +252,23 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       }
       case eCSSKeyword_skewx:
       {
-        double x = array->Item(1).GetAngleValueInRadians();
+        CSSAngle x = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(SkewX(x));
         break;
       }
       case eCSSKeyword_skewy:
       {
-        double y = array->Item(1).GetAngleValueInRadians();
+        CSSAngle y = MakeCSSAngle(array->Item(1));
         aFunctions.AppendElement(SkewY(y));
         break;
       }
       case eCSSKeyword_skew:
       {
-        double x = array->Item(1).GetAngleValueInRadians();
+        CSSAngle x = MakeCSSAngle(array->Item(1));
         // skew(x) is shorthand for skew(x, 0)
-        double y = 0;
+        CSSAngle y(0.0f, eCSSUnit_Degree);
         if (array->Count() == 3) {
-          y = array->Item(2).GetAngleValueInRadians();
+          y = MakeCSSAngle(array->Item(2));
         }
         aFunctions.AppendElement(Skew(x, y));
         break;
