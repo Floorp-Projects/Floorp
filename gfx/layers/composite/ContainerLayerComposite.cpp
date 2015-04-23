@@ -266,6 +266,8 @@ ContainerPrepare(ContainerT* aContainer,
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect);
 
+    // We don't want to skip container layers because otherwise their mPrepared
+    // may be null which is not allowed.
     if (!layerToRender->GetLayer()->AsContainerLayer()) {
       if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
         CULLING_LOG("Sublayer %p has no effective visible region\n", layerToRender->GetLayer());
