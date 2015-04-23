@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jscntxt.h"
 #include "jsobj.h"
@@ -31,7 +32,6 @@
 #include "vm/Debugger-inl.h"
 
 using mozilla::Some;
-using mozilla::UniquePtr;
 using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
@@ -46,13 +46,9 @@ using JS::ubi::TracerConcreteWithCompartment;
 
 // All operations on null ubi::Nodes crash.
 const char16_t* Concrete<void>::typeName() const          { MOZ_CRASH("null ubi::Node"); }
+EdgeRange* Concrete<void>::edges(JSContext*, bool) const { MOZ_CRASH("null ubi::Node"); }
 JS::Zone* Concrete<void>::zone() const                    { MOZ_CRASH("null ubi::Node"); }
 JSCompartment* Concrete<void>::compartment() const        { MOZ_CRASH("null ubi::Node"); }
-
-UniquePtr<EdgeRange>
-Concrete<void>::edges(JSContext*, bool) const {
-    MOZ_CRASH("null ubi::Node");
-}
 
 size_t
 Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
@@ -207,17 +203,16 @@ TracerConcrete<Referent>::zone() const
 }
 
 template<typename Referent>
-UniquePtr<EdgeRange>
+EdgeRange*
 TracerConcrete<Referent>::edges(JSContext* cx, bool wantNames) const {
-    UniquePtr<SimpleEdgeRange, JS::DeletePolicy<SimpleEdgeRange>> range(
-      cx->new_<SimpleEdgeRange>(cx));
-    if (!range)
+    js::ScopedJSDeletePtr<SimpleEdgeRange> r(js_new<SimpleEdgeRange>(cx));
+    if (!r)
         return nullptr;
 
-    if (!range->init(cx, ptr, ::js::gc::MapTypeToTraceKind<Referent>::kind, wantNames))
+    if (!r->init(cx, ptr, ::js::gc::MapTypeToTraceKind<Referent>::kind, wantNames))
         return nullptr;
 
-    return UniquePtr<EdgeRange>(range.release());
+    return r.forget();
 }
 
 template<typename Referent>
@@ -319,8 +314,8 @@ RootList::init(ZoneSet& debuggees)
 bool
 RootList::init(HandleObject debuggees)
 {
-    MOZ_ASSERT(debuggees && JS::dbg::IsDebugger(*debuggees));
-    js::Debugger* dbg = js::Debugger::fromJSObject(debuggees.get());
+    MOZ_ASSERT(debuggees && JS::dbg::IsDebugger(ObjectValue(*debuggees)));
+    js::Debugger* dbg = js::Debugger::fromJSObject(debuggees);
 
     ZoneSet debuggeeZones;
     if (!debuggeeZones.init())
@@ -352,7 +347,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     MOZ_ASSERT(noGC.isSome());
     MOZ_ASSERT_IF(wantNames, edgeName);
 
-    UniquePtr<char16_t[], JS::FreePolicy> name;
+    mozilla::UniquePtr<char16_t[], JS::FreePolicy> name;
     if (edgeName) {
         name = DuplicateString(cx, edgeName);
         if (!name)
@@ -362,12 +357,32 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     return edges.append(mozilla::Move(SimpleEdge(name.release(), node)));
 }
 
+// An EdgeRange concrete class that holds a pre-existing vector of SimpleEdges.
+class PreComputedEdgeRange : public EdgeRange {
+    SimpleEdgeVector& edges;
+    size_t           i;
+
+    void settle() {
+        front_ = i < edges.length() ? &edges[i] : nullptr;
+    }
+
+  public:
+    explicit PreComputedEdgeRange(JSContext* cx, SimpleEdgeVector& edges)
+      : edges(edges),
+        i(0)
+    {
+        settle();
+    }
+
+    void popFront() override { i++; settle(); }
+};
+
 const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("RootList");
 
-UniquePtr<EdgeRange>
+EdgeRange*
 Concrete<RootList>::edges(JSContext* cx, bool wantNames) const {
     MOZ_ASSERT_IF(wantNames, get().wantNames);
-    return UniquePtr<EdgeRange>(cx->new_<PreComputedEdgeRange>(cx, get().edges));
+    return js_new<PreComputedEdgeRange>(cx, get().edges);
 }
 
 } // namespace ubi

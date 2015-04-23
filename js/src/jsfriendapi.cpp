@@ -296,12 +296,6 @@ js::IsAtomsCompartment(JSCompartment* comp)
 }
 
 JS_FRIEND_API(bool)
-js::IsAtomsZone(JS::Zone* zone)
-{
-    return zone->runtimeFromAnyThread()->isAtomsZone(zone);
-}
-
-JS_FRIEND_API(bool)
 js::IsInNonStrictPropertySet(JSContext* cx)
 {
     jsbytecode* pc;
