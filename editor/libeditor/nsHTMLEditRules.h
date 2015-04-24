@@ -275,8 +275,8 @@ protected:
                                 nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
                                 EditAction aOperationType,
                                 TouchContent aTouchContent = TouchContent::yes);
-  nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
-                                     nsCOMArray<nsIDOMNode>& outArrayOfNodes);
+  void GetChildNodesForOperation(nsINode& aNode,
+      nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes);
   nsresult GetNodesFromPoint(::DOMPoint aPoint,
                              EditAction aOperation,
                              nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
