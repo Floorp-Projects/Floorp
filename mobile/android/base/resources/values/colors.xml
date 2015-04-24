@@ -32,6 +32,7 @@
   <!-- Synced w/ toolbar_grey -->
   <color name="background_normal_lwt">#DDEBEBF0</color>
 
+  <color name="background_tabs">#FF363B40</color>
   <color name="highlight">#33000000</color>
   <color name="highlight_focused">#1A000000</color>
   <color name="highlight_dark">#33FFFFFF</color>
