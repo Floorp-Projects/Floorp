@@ -2,26 +2,38 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+
 let content = "line 1\nline 2\nline 3";
-let runningPlainText = false;
 
-function test() {
-  waitForExplicitFinish();
+add_task(function*() {
+  // First test with text with the text/html mimetype.
+  let win = yield loadViewSourceWindow("data:text/html," + encodeURIComponent(content));
+  yield checkViewSource(win);
+  yield BrowserTestUtils.closeWindow(win);
 
-  testViewSourceWindow("data:text/html," + encodeURIComponent(content), checkViewSource, function() {
-    testViewSourceWindow("data:text/plain," + encodeURIComponent(content), checkViewSource, finish);
-  });
-}
+  win = yield loadViewSourceWindow("data:text/plain," + encodeURIComponent(content));
+  yield checkViewSource(win);
+  yield BrowserTestUtils.closeWindow(win);
+});
 
-function checkViewSource(aWindow) {
+let checkViewSource = Task.async(function* (aWindow) {
   is(aWindow.gBrowser.contentDocument.body.textContent, content, "Correct content loaded");
-
   let selection = aWindow.gBrowser.contentWindow.getSelection();
   let statusPanel = aWindow.document.getElementById("statusbar-line-col");
   is(statusPanel.getAttribute("label"), "", "Correct status bar text");
+
   for (let i = 1; i <= 3; i++) {
-    aWindow.goToLine(i);
-    is(selection.toString(), "line " + i, "Correct text selected");
-    is(statusPanel.getAttribute("label"), "Line " + i + ", Col 1", "Correct status bar text");
+    aWindow.ViewSourceChrome.goToLine(i);
+    let result = yield ContentTask.spawn(aWindow.gBrowser, i, function*(i) {
+      let selection = content.getSelection();
+      return (selection.toString() == "line " + i);
+    });
+
+    ok(result, "Correct text selected");
+
+    yield ContentTaskUtils.waitForCondition(() => {
+      return (statusPanel.getAttribute("label") == "Line " + i + ", Col 1");
+    }, "Correct status bar text");
   }
-}
+});
