@@ -79,7 +79,7 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
 
   if (nullPrincipal) {
     NS_WARNING("CacheStorage not supported on null principal.");
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
@@ -91,7 +91,7 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
   aPrincipal->GetUnknownAppId(&unknownAppId);
   if (unknownAppId) {
     NS_WARNING("CacheStorage not supported on principal with unknown appId.");
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
@@ -126,7 +126,7 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   const PrincipalInfo& principalInfo = aWorkerPrivate->GetPrincipalInfo();
   if (principalInfo.type() == PrincipalInfo::TNullPrincipalInfo) {
     NS_WARNING("CacheStorage not supported on null principal.");
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
@@ -134,7 +134,7 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
       principalInfo.get_ContentPrincipalInfo().appId() ==
       nsIScriptSecurityManager::UNKNOWN_APP_ID) {
     NS_WARNING("CacheStorage not supported on principal with unknown appId.");
-    aRv.Throw(NS_ERROR_FAILURE);
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
