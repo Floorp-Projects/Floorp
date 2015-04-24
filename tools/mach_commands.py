@@ -210,7 +210,7 @@ class PastebinProvider(object):
         description='Command line interface to pastebin.mozilla.org.')
     @CommandArgument('--language', default=None,
                      help='Language to use for syntax highlighting')
-    @CommandArgument('--poster', default=None,
+    @CommandArgument('--poster', default='',
                      help='Specify your name for use with pastebin.mozilla.org')
     @CommandArgument('--duration', default='day',
                      choices=['d', 'day', 'm', 'month', 'f', 'forever'],
