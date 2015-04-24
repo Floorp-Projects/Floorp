@@ -12,7 +12,7 @@ function usage() {
 
 clean=1
 platform=""
-TIMEOUT=7200
+TIMEOUT=10800
 while [ $# -gt 1 ]; do
     case "$1" in
         --dep)
@@ -137,7 +137,7 @@ fi
 RUN_JSTESTS=true
 
 PARENT=$$
-sh -c "sleep $TIMEOUT; kill $PARENT" <&- >&- 2>&- &
+sh -c "sleep $TIMEOUT; echo 'TEST-UNEXPECTED-FAIL | autospider.sh $TIMEOUT second timeout | ignore later failures' >&2; kill $PARENT" &
 KILLER=$!
 disown %1
 trap "kill $KILLER" EXIT
