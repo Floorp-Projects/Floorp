@@ -7,16 +7,24 @@
 #define mozilla_dom_HTMLBRElement_h
 
 #include "mozilla/Attributes.h"
+#include "nsIDOMHTMLBRElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 
 namespace mozilla {
 namespace dom {
 
-class HTMLBRElement final : public nsGenericHTMLElement
+class HTMLBRElement final : public nsGenericHTMLElement,
+                            public nsIDOMHTMLBRElement
 {
 public:
   explicit HTMLBRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMHTMLBRElement
+  NS_DECL_NSIDOMHTMLBRELEMENT
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
@@ -33,10 +41,6 @@ public:
   void SetClear(const nsAString& aClear, ErrorResult& aError)
   {
     return SetHTMLAttr(nsGkAtoms::clear, aClear, aError);
-  }
-  void GetClear(DOMString& aClear) const
-  {
-    return GetHTMLAttr(nsGkAtoms::clear, aClear);
   }
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;

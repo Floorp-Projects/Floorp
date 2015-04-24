@@ -8,6 +8,6 @@
  */
 
 interface HTMLTitleElement : HTMLElement {
-           [Throws]
+           [SetterThrows]
            attribute DOMString text;
 };

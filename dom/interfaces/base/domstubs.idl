@@ -69,6 +69,7 @@ interface nsIDOMCounter;
 interface nsIDOMRect;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMCSSStyleRuleCollection;
+interface nsIDOMHTMLTableCaptionElement;
 
 // Range
 interface nsIDOMRange;

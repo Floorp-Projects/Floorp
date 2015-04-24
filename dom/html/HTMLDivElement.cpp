@@ -18,6 +18,9 @@ HTMLDivElement::~HTMLDivElement()
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED(HTMLDivElement, nsGenericHTMLElement,
+                            nsIDOMHTMLDivElement)
+
 NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 
 JSObject*
