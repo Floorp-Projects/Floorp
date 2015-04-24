@@ -54,40 +54,40 @@ body.serif .remove-button  {
   font-family: Georgia, "Times New Roman", serif;
 }
 
-body.font-size1 {
-  font-size: 10px;
-}
-
-body.font-size2 {
+#container.font-size1 {
   font-size: 12px;
 }
 
-body.font-size3 {
+#container.font-size2 {
   font-size: 14px;
 }
 
-body.font-size4  {
+#container.font-size3 {
   font-size: 16px;
 }
 
-body.font-size5 {
+#container.font-size4  {
   font-size: 18px;
 }
 
-body.font-size6 {
+#container.font-size5 {
   font-size: 20px;
 }
 
-body.font-size7 {
+#container.font-size6 {
   font-size: 22px;
 }
 
-body.font-size8 {
+#container.font-size7 {
   font-size: 24px;
 }
 
-body.font-size9 {
+#container.font-size8 {
   font-size: 26px;
+}
+
+#container.font-size9 {
+  font-size: 28px;
 }
 
 /* Override some controls and content styles based on color scheme */
