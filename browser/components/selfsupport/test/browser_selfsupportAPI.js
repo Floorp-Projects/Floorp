@@ -1,6 +1,6 @@
 Cu.import("resource://gre/modules/Preferences.jsm");
 
-function test() {
+function test_resetPref() {
   const prefNewName = "browser.newpref.fake";
   Assert.ok(!Preferences.has(prefNewName), "pref should not exist");
 
@@ -44,4 +44,45 @@ function test() {
   // deleteBranch is implemented in such a way that
   // clearUserPref can't undo its action
   // see discussion in bug 1075160
+}
+
+function test_resetSearchEngines()
+{
+  const defaultEngineOriginal = Services.search.defaultEngine;
+  const visibleEnginesOriginal = Services.search.getVisibleEngines();
+
+  // 1. do nothing on unchanged search configuration
+  MozSelfSupport.resetSearchEngines();
+  Assert.equal(Services.search.defaultEngine, defaultEngineOriginal, "default engine should be reset");
+  Assert.deepEqual(Services.search.getVisibleEngines(), visibleEnginesOriginal,
+                   "default visible engines set should be reset");
+
+  // 2. change the default search engine
+  const defaultEngineNew = visibleEnginesOriginal[3];
+  Assert.notEqual(defaultEngineOriginal, defaultEngineNew, "new default engine should be different from original");
+  Services.search.defaultEngine = defaultEngineNew;
+  Assert.equal(Services.search.defaultEngine, defaultEngineNew, "default engine should be set to new");
+  MozSelfSupport.resetSearchEngines();
+  Assert.equal(Services.search.defaultEngine, defaultEngineOriginal, "default engine should be reset");
+  Assert.deepEqual(Services.search.getVisibleEngines(), visibleEnginesOriginal,
+                   "default visible engines set should be reset");
+
+  // 3. remove an engine
+  const engineRemoved = visibleEnginesOriginal[2];
+  Services.search.removeEngine(engineRemoved);
+  Assert.ok(Services.search.getVisibleEngines().indexOf(engineRemoved) == -1,
+            "removed engine should not be visible any more");
+  MozSelfSupport.resetSearchEngines();
+  Assert.equal(Services.search.defaultEngine, defaultEngineOriginal, "default engine should be reset");
+  Assert.deepEqual(Services.search.getVisibleEngines(), visibleEnginesOriginal,
+                   "default visible engines set should be reset");
+
+  // 4. add an angine
+  // we don't remove user-added engines as they are only used if selected
+}
+
+function test()
+{
+  test_resetPref();
+  test_resetSearchEngines();
 }
