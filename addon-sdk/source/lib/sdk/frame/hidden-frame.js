@@ -9,7 +9,6 @@ module.metadata = {
 };
 
 const { Cc, Ci } = require("chrome");
-const errors = require("../deprecated/errors");
 const { Class } = require("../core/heritage");
 const { List, addListItem, removeListItem } = require("../util/list");
 const { EventTarget } = require("../event/target");

@@ -1,356 +1,222 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-'use strict';
+"use strict";
 
-const { Cc, Ci, Cr } = require('chrome'),
-      { Trait } = require('../deprecated/traits'),
-      { List } = require('../deprecated/list'),
-      { EventEmitter } = require('../deprecated/events'),
-      { WindowTabs, WindowTabTracker } = require('./tabs-firefox'),
-      { WindowDom } = require('./dom'),
-      { isBrowser, getWindowDocShell, isFocused,
-        windows: windowIterator, isWindowPrivate } = require('../window/utils'),
-      { Options } = require('../tabs/common'),
-      apiUtils = require('../deprecated/api-utils'),
-      unload = require('../system/unload'),
-      windowUtils = require('../deprecated/window-utils'),
-      { WindowTrackerTrait } = windowUtils,
-      { ns } = require('../core/namespace'),
-      { observer: windowObserver } = require('./observer');
-const { windowNS } = require('../window/namespace');
-const { isPrivateBrowsingSupported } = require('../self');
-const { ignoreWindow, isPrivate } = require('sdk/private-browsing/utils');
+const { Class } = require('../core/heritage');
+const { observer } = require('./observer');
+const { isBrowser, getMostRecentBrowserWindow, windows, open, getInnerId,
+        getWindowTitle, isFocused, isWindowPrivate } = require('../window/utils');
+const { List, addListItem, removeListItem } = require('../util/list');
 const { viewFor } = require('../view/core');
-const { openDialog } = require('../window/utils');
-const ON_LOAD = 'load',
-      ON_UNLOAD = 'unload',
-      STATE_LOADED = 'complete';
-/**
- * Window trait composes safe wrappers for browser window that are E10S
- * compatible.
- */
-const BrowserWindowTrait = Trait.compose(
-  EventEmitter,
-  WindowDom.resolve({ close: '_close' }),
-  WindowTabs,
-  WindowTabTracker,
-  /* WindowSidebars, */
-  Trait.compose({
-    _emit: Trait.required,
-    _close: Trait.required,
-    /**
-     * Private window who's load event is being tracked. Once window is loaded
-     * `_onLoad` is called.
-     * @type {nsIWindow}
-     */
-    get _window() this.__window,
-    set _window(window) {
-      let _window = this.__window;
-      if (!window) window = null;
+const { modelFor } = require('../model/core');
+const { emit, emitOnObject, setListeners } = require('../event/core');
+const { once } = require('../dom/events');
+const { EventTarget } = require('../event/target');
+const { getSelectedTab } = require('../tabs/utils');
+const { Cc, Ci } = require('chrome');
+const { Options } = require('../tabs/common');
+const system = require('../system/events');
+const { ignoreWindow, isPrivate, isWindowPBSupported } = require('../private-browsing/utils');
+const { data, isPrivateBrowsingSupported } = require('../self');
+const { setImmediate } = require('../timers');
 
-      if (window !== _window) {
-        if (_window) {
-          if (this.__unloadListener)
-            _window.removeEventListener(ON_UNLOAD, this.__unloadListener, false);
+const supportPrivateWindows = isPrivateBrowsingSupported && isWindowPBSupported;
 
-          if (this.__loadListener)
-            _window.removeEventListener(ON_LOAD, this.__loadListener, false);
-        }
+const modelsFor = new WeakMap();
+const viewsFor = new WeakMap();
 
-        if (window) {
-          window.addEventListener(
-            ON_UNLOAD,
-            this.__unloadListener ||
-              (this.__unloadListener = this._unloadListener.bind(this))
-            ,
-            false
-          );
+const Window = Class({
+  implements: [EventTarget],
+  initialize: function(domWindow) {
+    modelsFor.set(domWindow, this);
+    viewsFor.set(this, domWindow);
+  },
 
-          this.__window = window;
+  get title() {
+    return getWindowTitle(viewsFor.get(this));
+  },
 
-          // If window is not loaded yet setting up a listener.
-          if (STATE_LOADED != window.document.readyState) {
-            window.addEventListener(
-              ON_LOAD,
-              this.__loadListener ||
-                (this.__loadListener = this._loadListener.bind(this))
-              ,
-              false
-            );
-          }
-          else { // If window is loaded calling listener next turn of event loop.
-            this._onLoad(window)
-          }
-        }
-        else {
-          this.__window = null;
-        }
-      }
-    },
-    __window: null,
-    /**
-     * Internal method used for listening 'load' event on the `_window`.
-     * Method takes care of removing itself from 'load' event listeners once
-     * event is being handled.
-     */
-    _loadListener: function _loadListener(event) {
-      let window = this._window;
-      if (!event.target || event.target.defaultView != window) return;
-      window.removeEventListener(ON_LOAD, this.__loadListener, false);
-      this._onLoad(window);
-    },
-    __loadListener: null,
-    /**
-     * Internal method used for listening 'unload' event on the `_window`.
-     * Method takes care of removing itself from 'unload' event listeners once
-     * event is being handled.
-     */
-    _unloadListener: function _unloadListener(event) {
-      let window = this._window;
-      if (!event.target
-        || event.target.defaultView != window
-        || STATE_LOADED != window.document.readyState
-      ) return;
-      window.removeEventListener(ON_UNLOAD, this.__unloadListener, false);
-      this._onUnload(window);
-    },
-    __unloadListener: null,
-    _load: function _load() {
-      if (this.__window)
-        return;
+  activate: function() {
+    viewsFor.get(this).focus();
+  },
 
-      this._window = openDialog({
-        private: this._isPrivate,
-        args: this._tabOptions.map(function(options) options.url).join("|")
-      });
-    },
-    /**
-     * Constructor returns wrapper of the specified chrome window.
-     * @param {nsIWindow} window
-     */
-    constructor: function BrowserWindow(options) {
-      // Register this window ASAP, in order to avoid loop that would try
-      // to create this window instance over and over (see bug 648244)
-      windows.push(this);
+  close: function(callback) {
+    let domWindow = viewsFor.get(this);
 
-      // make sure we don't have unhandled errors
-      this.on('error', console.exception.bind(console));
+    if (callback) {
+      // We want to catch the close event immediately after the close events are
+      // emitted everywhere but without letting the event loop spin. Registering
+      // for the same events as windowEventListener but afterwards does this
+      let listener = (event, closedWin) => {
+        if (event != "close" || closedWin != domWindow)
+          return;
 
-      if ('onOpen' in options)
-        this.on('open', options.onOpen);
-      if ('onClose' in options)
-        this.on('close', options.onClose);
-      if ('onActivate' in options)
-        this.on('activate', options.onActivate);
-      if ('onDeactivate' in options)
-        this.on('deactivate', options.onDeactivate);
-      if ('window' in options)
-        this._window = options.window;
-
-      if ('tabs' in options) {
-        this._tabOptions = Array.isArray(options.tabs) ?
-                           options.tabs.map(Options) :
-                           [ Options(options.tabs) ];
-      }
-      else if ('url' in options) {
-        this._tabOptions = [ Options(options.url) ];
-      }
-      for (let tab of this._tabOptions) {
-        tab.inNewWindow = true;
+        observer.off("*", listener);
+        callback();
       }
 
-      this._isPrivate = isPrivateBrowsingSupported && !!options.isPrivate;
-
-      this._load();
-
-      windowNS(this._public).window = this._window;
-      viewFor.implement(this._public, (w) => windowNS(w).window);
-
-      return this;
-    },
-    destroy: function () this._onUnload(),
-    _tabOptions: [],
-    _onLoad: function() {
-      try {
-        this._initWindowTabTracker();
-        this._loaded = true;
-      }
-      catch(e) {
-        this._emit('error', e);
-      }
-
-      this._emitOnObject(browserWindows, 'open', this._public);
-    },
-    _onUnload: function() {
-      if (!this._window)
-        return;
-      if (this._loaded)
-        this._destroyWindowTabTracker();
-
-      this._emitOnObject(browserWindows, 'close', this._public);
-      this._window = null;
-      windowNS(this._public).window = null;
-      // Removing reference from the windows array.
-      windows.splice(windows.indexOf(this), 1);
-      this._removeAllListeners();
-    },
-    close: function close(callback) {
-      // maybe we should deprecate this with message ?
-      if (callback) this.on('close', callback);
-      return this._close();
+      observer.on("*", listener);
     }
-  })
-);
 
-/**
- * Gets a `BrowserWindowTrait` for the given `chromeWindow` if previously
- * registered, `null` otherwise.
- */
-function getRegisteredWindow(chromeWindow) {
-  for (let window of windows) {
-    if (chromeWindow === window._window)
-      return window;
+    domWindow.close();
+  }
+});
+
+const windowTabs = new WeakMap();
+
+const BrowserWindow = Class({
+  extends: Window,
+
+  get tabs() {
+    let tabs = windowTabs.get(this);
+    if (tabs)
+      return tabs;
+
+    return new WindowTabs(this);
+  }
+});
+
+const WindowTabs = Class({
+  implements: [EventTarget],
+  extends: List,
+  initialize: function(window) {
+    List.prototype.initialize.call(this);
+    windowTabs.set(window, this);
+    viewsFor.set(this, viewsFor.get(window));
+
+    // Make sure the tabs module has loaded and found all existing tabs
+    const tabs = require('../tabs');
+
+    for (let tab of tabs) {
+      if (tab.window == window)
+        addListItem(this, tab);
+    }
+  },
+
+  get activeTab() {
+    return modelFor(getSelectedTab(viewsFor.get(this)));
+  },
+
+  open: function(options) {
+    options = Options(options);
+
+    let domWindow = viewsFor.get(this);
+    let { Tab } = require('../tabs/tab-firefox');
+
+    // The capturing listener will see the TabOpen event before
+    // sdk/tabs/observer giving us time to set up the tab and listeners before
+    // the real open event is fired
+    let listener = event => {
+      new Tab(event.target, options);
+    };
+
+    once(domWindow, "TabOpen", listener, true);
+    domWindow.gBrowser.addTab(options.url);
+  }
+});
+
+const BrowserWindows = Class({
+  implements: [EventTarget],
+  extends: List,
+  initialize: function() {
+    List.prototype.initialize.call(this);
+  },
+
+  get activeWindow() {
+    let domWindow = getMostRecentBrowserWindow();
+    if (ignoreWindow(domWindow))
+      return null;
+    return modelsFor.get(domWindow);
+  },
+
+  open: function(options) {
+    if (typeof options == "string")
+      options = { url: options };
+
+    let { url, isPrivate } = options;
+    if (url)
+      url = data.url(url);
+
+    let args = Cc["@mozilla.org/supports-string;1"].
+               createInstance(Ci.nsISupportsString);
+    args.data = url;
+
+    let features = {
+      chrome: true,
+      all: true,
+      dialog: false
+    };
+    features.private = supportPrivateWindows && isPrivate;
+
+    let domWindow = open(null, {
+      parent: null,
+      name: "_blank",
+      features,
+      args
+    })
+
+    let window = makeNewWindow(domWindow, true);
+    setListeners(window, options);
+    return window;
+  }
+});
+
+const browserWindows = new BrowserWindows();
+exports.browserWindows = browserWindows;
+
+function windowEmit(window, event, ...args) {
+  if (window instanceof BrowserWindow && (event == "open" || event == "close"))
+    emitOnObject(window, event, browserWindows, window, ...args);
+  else
+    emit(window, event, window, ...args);
+
+  if (window instanceof BrowserWindow)
+    emit(browserWindows, event, window, ...args);
+}
+
+function makeNewWindow(domWindow, browserHint = false) {
+  if (browserHint || isBrowser(domWindow))
+    return new BrowserWindow(domWindow);
+  else
+    return new Window(domWindow);
+}
+
+for (let domWindow of windows()) {
+  let window = makeNewWindow(domWindow);
+  if (window instanceof BrowserWindow)
+    addListItem(browserWindows, window);
+}
+
+let windowEventListener = (event, domWindow, ...args) => {
+  if (ignoreWindow(domWindow))
+    return;
+
+  let window = modelsFor.get(domWindow);
+  if (!window)
+    window = makeNewWindow(domWindow);
+
+  if (isBrowser(domWindow)) {
+    if (event == "open")
+      addListItem(browserWindows, window);
+    else if (event == "close")
+      removeListItem(browserWindows, window);
   }
 
-  return null;
-}
+  windowEmit(window, event, ...args);
 
-/**
- * Wrapper for `BrowserWindowTrait`. Creates new instance if wrapper for
- * window doesn't exists yet. If wrapper already exists then returns it
- * instead.
- * @params {Object} options
- *    Options that are passed to the the `BrowserWindowTrait`
- * @returns {BrowserWindow}
- * @see BrowserWindowTrait
- */
-function BrowserWindow(options) {
-  let window = null;
+  // The window object shouldn't be reachable after closed
+  if (event == "close") {
+    viewsFor.delete(window);
+    modelsFor.delete(domWindow);
+  }
+};
+observer.on("*", windowEventListener);
 
-  if ("window" in options)
-    window = getRegisteredWindow(options.window);
-
-  return (window || BrowserWindowTrait(options))._public;
-}
-// to have proper `instanceof` behavior will go away when #596248 is fixed.
-BrowserWindow.prototype = BrowserWindowTrait.prototype;
-exports.BrowserWindow = BrowserWindow;
-
-const windows = [];
-
-const browser = ns();
-
-function onWindowActivation (chromeWindow, event) {
-  if (!isBrowser(chromeWindow)) return; // Ignore if it's not a browser window.
-
-  let window = getRegisteredWindow(chromeWindow);
-
-  if (window)
-    window._emit(event.type, window._public);
-  else
-    window = BrowserWindowTrait({ window: chromeWindow });
-
-  browser(browserWindows).internals._emit(event.type, window._public);
-}
-
-windowObserver.on("activate", onWindowActivation);
-windowObserver.on("deactivate", onWindowActivation);
-
-/**
- * `BrowserWindows` trait is composed out of `List` trait and it represents
- * "live" list of currently open browser windows. Instance mutates itself
- * whenever new browser window gets opened / closed.
- */
-// Very stupid to resolve all `toStrings` but this will be fixed by #596248
-const browserWindows = Trait.resolve({ toString: null }).compose(
-  List.resolve({ constructor: '_initList' }),
-  EventEmitter.resolve({ toString: null }),
-  WindowTrackerTrait.resolve({ constructor: '_initTracker', toString: null }),
-  Trait.compose({
-    _emit: Trait.required,
-    _add: Trait.required,
-    _remove: Trait.required,
-
-    // public API
-
-    /**
-     * Constructor creates instance of `Windows` that represents live list of open
-     * windows.
-     */
-    constructor: function BrowserWindows() {
-      browser(this._public).internals = this;
-
-      this._trackedWindows = [];
-      this._initList();
-      this._initTracker();
-      unload.ensure(this, "_destructor");
-    },
-    _destructor: function _destructor() {
-      this._removeAllListeners('open');
-      this._removeAllListeners('close');
-      this._removeAllListeners('activate');
-      this._removeAllListeners('deactivate');
-      this._clear();
-
-      delete browser(this._public).internals;
-    },
-    /**
-     * This property represents currently active window.
-     * Property is non-enumerable, in order to preserve array like enumeration.
-     * @type {Window|null}
-     */
-    get activeWindow() {
-      let window = windowUtils.activeBrowserWindow;
-      // Bug 834961: ignore private windows when they are not supported
-      if (ignoreWindow(window))
-        window = windowIterator()[0];
-      return window ? BrowserWindow({window: window}) : null;
-    },
-    open: function open(options) {
-      if (typeof options === "string") {
-        // `tabs` option is under review and may be removed.
-        options = {
-          tabs: [Options(options)],
-          isPrivate: isPrivateBrowsingSupported && options.isPrivate
-        };
-      }
-      return BrowserWindow(options);
-    },
-
-     /**
-      * Internal listener which is called whenever new window gets open.
-      * Creates wrapper and adds to this list.
-      * @param {nsIWindow} chromeWindow
-      */
-    _onTrack: function _onTrack(chromeWindow) {
-      if (!isBrowser(chromeWindow)) return;
-      let window = BrowserWindow({ window: chromeWindow });
-      this._add(window);
-      this._emit('open', window);
-    },
-
-    /**
-     * Internal listener which is called whenever window gets closed.
-     * Cleans up references and removes wrapper from this list.
-     * @param {nsIWindow} window
-     */
-    _onUntrack: function _onUntrack(chromeWindow) {
-      if (!isBrowser(chromeWindow)) return;
-      let window = BrowserWindow({ window: chromeWindow });
-      this._remove(window);
-      this._emit('close', window);
-
-      // Bug 724404: do not leak this module and linked windows:
-      // We have to do it on untrack and not only when `_onUnload` is called
-      // when windows are closed, otherwise, we will leak on addon disabling.
-      window.destroy();
-    }
-  }).resolve({ toString: null })
-)();
+viewFor.define(BrowserWindow, window => {
+  return viewsFor.get(window);
+})
 
 const isBrowserWindow = (x) => x instanceof BrowserWindow;
-isPrivate.when(isBrowserWindow, (w) => isWindowPrivate(viewFor(w)));
-isFocused.when(isBrowserWindow, (w) => isFocused(viewFor(w)));
-
-exports.browserWindows = browserWindows;
+isPrivate.when(isBrowserWindow, (w) => isWindowPrivate(viewsFor.get(w)));
+isFocused.when(isBrowserWindow, (w) => isFocused(viewsFor.get(w)));

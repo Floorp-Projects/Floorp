@@ -8,6 +8,7 @@ bin/
 modules/
 node_modules/
 examples/
+cache/
 
 # Python
 python-lib/

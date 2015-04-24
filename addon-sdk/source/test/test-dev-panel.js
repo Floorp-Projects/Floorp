@@ -90,6 +90,55 @@ exports["test Panel API"] = test(function*(assert) {
   myTool.destroy();
 });
 
+exports["test forbid remote https docs"] = test(function*(assert) {
+  const MyPanel = Class({
+    extends: Panel,
+    label: "test https panel",
+    tooltip: "my test panel",
+    icon: iconURI,
+    url: "https://mozilla.org",
+  });
+
+  assert.throws(() => {
+    new Tool({ panels: { myPanel: MyPanel } });
+  },
+  /The `options.url` must be a valid local URI/,
+  "can't use panel with remote URI");
+});
+
+exports["test forbid remote http docs"] = test(function*(assert) {
+  const MyPanel = Class({
+    extends: Panel,
+    label: "test http panel",
+    tooltip: "my test panel",
+    icon: iconURI,
+    url: "http://arewefastyet.com/",
+  });
+
+  assert.throws(() => {
+    new Tool({ panels: { myPanel: MyPanel } });
+  },
+  /The `options.url` must be a valid local URI/,
+  "can't use panel with remote URI");
+});
+
+exports["test forbid remote ftp docs"] = test(function*(assert) {
+  const MyPanel = Class({
+    extends: Panel,
+    label: "test ftp panel",
+    tooltip: "my test panel",
+    icon: iconURI,
+    url: "ftp://ftp.mozilla.org/",
+  });
+
+  assert.throws(() => {
+    new Tool({ panels: { myPanel: MyPanel } });
+  },
+  /The `options.url` must be a valid local URI/,
+  "can't use panel with remote URI");
+});
+
+
 exports["test Panel communication"] = test(function*(assert) {
   const MyPanel = Class({
     extends: Panel,
@@ -320,6 +369,56 @@ exports["test createView panel"] = test(function*(assert) {
   assert.equal(frame.contentDocument.URL, url, "is expected iframe");
 
   yield closeToolbox();
+
+  myTool.destroy();
+});
+
+
+exports["test ports is an optional"] = test(function*(assert) {
+  const MyPanel = Class({
+    extends: Panel,
+    label: "no-port",
+    icon: iconURI,
+    url: makeHTML(() => {
+      window.addEventListener("message", event => {
+        if (event.ports.length) {
+          event.ports[0].postMessage(window.firstPacket);
+        } else {
+          window.firstPacket = event.data;
+        }
+      });
+    })
+  });
+
+
+  const myTool = new Tool({
+    panels: {
+      myPanel: MyPanel
+    }
+  });
+
+
+  const toolbox = yield openToolbox(MyPanel);
+  const panel = yield getCurrentPanel(toolbox);
+  assert.ok(panel instanceof MyPanel, "is instance of MyPanel");
+
+  assert.isRendered(panel, toolbox);
+
+  yield panel.ready();
+
+  const { port1, port2 } = new MessageChannel();
+  port1.start();
+
+  panel.postMessage("hi");
+  panel.postMessage("bye", [port2]);
+
+  const packet = yield when(port1, "message");
+
+  assert.equal(packet.data, "hi", "got first packet back");
+
+  yield closeToolbox();
+
+  assert.equal(panel.readyState, "destroyed", "panel is destroyed");
 
   myTool.destroy();
 });

@@ -34,6 +34,8 @@ const WorkerChild = Class({
     keepAlive.set(this.id, this);
 
     this.windowId = getInnerId(this.window);
+    if (this.contentScriptOptions)
+      this.contentScriptOptions = JSON.parse(this.contentScriptOptions);
 
     this.port = EventTarget();
     this.port.on('*', this.send.bind(this, 'event'));
@@ -53,7 +55,7 @@ const WorkerChild = Class({
     this.frozenMessages = [];
     this.on('pageshow', () => {
       this.frozen = false;
-      this.frozenMessages.forEach(args => this.receive(null, this.id, args));
+      this.frozenMessages.forEach(args => this.sandbox.emit(...args));
       this.frozenMessages = [];
     });
     this.on('pagehide', () => {
@@ -65,6 +67,7 @@ const WorkerChild = Class({
   receive(process, id, args) {
     if (id !== this.id)
       return;
+    args = JSON.parse(args);
 
     if (this.frozen)
       this.frozenMessages.push(args);
@@ -76,8 +79,7 @@ const WorkerChild = Class({
   },
 
   send(...args) {
-    args = JSON.parse(JSON.stringify(args, exceptions));
-    process.port.emit('sdk/worker/event', this.id, args);
+    process.port.emit('sdk/worker/event', this.id, JSON.stringify(args, exceptions));
   },
 
   // notifications
@@ -131,7 +133,7 @@ function exceptions(key, value) {
 let keepAlive = new Map();
 
 process.port.on('sdk/worker/create', (process, options) => {
-  options.window = getByInnerId(options.window);
+  options.window = getByInnerId(options.windowId);
   if (!options.window)
     return;
 

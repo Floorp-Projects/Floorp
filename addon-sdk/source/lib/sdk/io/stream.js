@@ -32,7 +32,7 @@ const InputStreamPump = CC("@mozilla.org/network/input-stream-pump;1",
 const threadManager = Cc["@mozilla.org/thread-manager;1"].
                       getService(Ci.nsIThreadManager);
 
-const eventTarget = Cc["@mozilla.org/network/socket-transport-service;1"].
+const eventTarget = Cc["@mozilla.org/network/stream-transport-service;1"].
                     getService(Ci.nsIEventTarget);
 
 let isFunction = value => typeof(value) === "function"

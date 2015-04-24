@@ -37,58 +37,6 @@ function makeEmptyWindow(options) {
   });
 }
 
-exports['test close on unload'] = function(assert) {
-  var timesClosed = 0;
-  var fakeWindow = {
-    _listeners: [],
-    addEventListener: function(name, func, bool) {
-      this._listeners.push(func);
-    },
-    removeEventListener: function(name, func, bool) {
-      var index = this._listeners.indexOf(func);
-      if (index == -1)
-        throw new Error("event listener not found");
-      this._listeners.splice(index, 1);
-    },
-    close: function() {
-      timesClosed++;
-      this._listeners.forEach(
-        function(func) {
-          func({target: fakeWindow.document});
-        });
-    },
-    document: {
-      get defaultView() { return fakeWindow; }
-    }
-  };
-
-  let loader = Loader(module);
-  loader.require("sdk/deprecated/window-utils").closeOnUnload(fakeWindow);
-  assert.equal(fakeWindow._listeners.length, 1,
-                   "unload listener added on closeOnUnload()");
-  assert.equal(timesClosed, 0,
-                   "window not closed when registered.");
-  loader.unload();
-  assert.equal(timesClosed, 1,
-                   "window closed on module unload.");
-  assert.equal(fakeWindow._listeners.length, 0,
-                   "unload event listener removed on module unload");
-
-  timesClosed = 0;
-  loader = Loader(module);
-  loader.require("sdk/deprecated/window-utils").closeOnUnload(fakeWindow);
-  assert.equal(timesClosed, 0,
-                   "window not closed when registered.");
-  fakeWindow.close();
-  assert.equal(timesClosed, 1,
-                   "window closed when close() called.");
-  assert.equal(fakeWindow._listeners.length, 0,
-                   "unload event listener removed on window close");
-  loader.unload();
-  assert.equal(timesClosed, 1,
-                   "window not closed again on module unload.");
-};
-
 exports.testWindowTracker = function(assert, done) {
   var myWindow = makeEmptyWindow();
   assert.pass('window was created');

@@ -22,8 +22,13 @@ exports["test compatibility"] = function(assert) {
                require("sdk/tabs"), "sdk/tabs -> tabs");
 
   if (app.is("Firefox")) {
-    assert.equal(require("widget"),
-                 require("sdk/widget"), "sdk/widget -> widget");
+    assert.throws(() => require("widget"),
+      /Module `widget` is not found at/,
+      "There is no widget module");
+
+    assert.throws(() => require("sdk/widget"),
+      /Module `sdk\/widget` is not found at/,
+      "There is no sdk/widget module");
   }
 
   assert.equal(require("page-mod"),
@@ -103,9 +108,6 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("passwords"),
                require("sdk/passwords"), "sdk/passwords -> passwords");
 
-  assert.equal(require("events"),
-               require("sdk/deprecated/events"), "sdk/deprecated/events -> events");
-
   assert.equal(require("match-pattern"),
                require("sdk/util/match-pattern"), "sdk/util/match-pattern -> match-pattern");
 
@@ -126,9 +128,6 @@ exports["test compatibility"] = function(assert) {
 
   assert.equal(require("xpcom"),
                require("sdk/platform/xpcom"), "sdk/platform/xpcom -> xpcom");
-
-  assert.equal(require("traits"),
-               require("sdk/deprecated/traits"), "sdk/deprecated/traits -> traits");
 
   assert.equal(require("keyboard/utils"),
                require("sdk/keyboard/utils"), "sdk/keyboard/utils -> keyboard/utils");
@@ -151,9 +150,6 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("memory"),
                require("sdk/deprecated/memory"), "sdk/deprecated/memory -> memory");
 
-  assert.equal(require("light-traits"),
-               require("sdk/deprecated/light-traits"), "sdk/deprecated/light-traits -> light-traits");
-
   assert.equal(require("environment"),
                require("sdk/system/environment"), "sdk/system/environment -> environment");
 
@@ -175,8 +171,4 @@ exports["test compatibility"] = function(assert) {
 
   assert.equal(require("array"),
                require("sdk/util/array"), "sdk/util/array -> array");
-
-  assert.equal(require("api-utils/cortex"),
-               require("sdk/deprecated/cortex"),
-               "api-utils/cortex -> sdk/deprecated/cortex");
 };

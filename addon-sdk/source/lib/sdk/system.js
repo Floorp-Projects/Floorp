@@ -9,7 +9,6 @@ module.metadata = {
 
 const { Cc, Ci, CC } = require('chrome');
 const options = require('@loader/options');
-const file = require('./io/file');
 const runtime = require("./system/runtime");
 const { when: unload } = require("./system/unload");
 

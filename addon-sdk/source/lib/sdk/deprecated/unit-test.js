@@ -14,7 +14,7 @@ const { getTabs, closeTab, getURI, getTabId, getSelectedTab } = require("../tabs
 const { windows, isBrowser, getMostRecentBrowserWindow } = require("../window/utils");
 const { defer, all, Debugging: PromiseDebugging, resolve } = require("../core/promise");
 const { getInnerId } = require("../window/utils");
-const { cleanUI } = require("../test/utils")
+const { cleanUI } = require("../test/utils");
 
 const findAndRunTests = function findAndRunTests(options) {
   var TestFinder = require("./unit-test-finder").TestFinder;

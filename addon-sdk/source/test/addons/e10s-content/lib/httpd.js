@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
 * An implementation of an HTTP server both as a loadable script and as an XPCOM
@@ -256,7 +256,7 @@ function toDateString(date)
   {
     var hrs = date.getUTCHours();
     var rv = (hrs < 10) ? "0" + hrs : hrs;
-    
+
     var mins = date.getUTCMinutes();
     rv += ":";
     rv += (mins < 10) ? "0" + mins : mins;
@@ -1003,7 +1003,7 @@ ServerIdentity.prototype =
       // Not the default primary location, nothing special to do here
       this.remove("http", "127.0.0.1", this._defaultPort);
     }
-    
+
     // This is a *very* tricky bit of reasoning here; make absolutely sure the
     // tests for this code pass before you commit changes to it.
     if (this._primaryScheme == "http" &&
@@ -1435,7 +1435,7 @@ RequestReader.prototype =
         this._handleResponse();
         return true;
       }
-      
+
       return false;
     }
     catch (e)
@@ -2080,7 +2080,7 @@ function maybeAddHeaders(file, metadata, response)
         code = status.substring(0, space);
         description = status.substring(space + 1, status.length);
       }
-    
+
       response.setStatusLine(metadata.httpVersion, parseInt(code, 10), description);
 
       line.value = "";
@@ -2156,7 +2156,7 @@ function ServerHandler(server)
 * pairs are stored as property-value pairs in this property.
 */
   this._overridePrefixes = {};
-  
+
   /**
 * Custom request handlers for the error handlers in the server in which this
 * resides. Path-handler pairs are stored as property-value pairs in this
@@ -3251,7 +3251,7 @@ files!</p>\
 
       if (metadata.queryString)
         body += "?" + metadata.queryString;
-        
+
       body += " HTTP/" + metadata.httpVersion + "\r\n";
 
       var headEnum = metadata.headers;
@@ -5115,7 +5115,7 @@ Request.prototype =
 
 
   // PRIVATE IMPLEMENTATION
-  
+
   /** Ensures a property bag has been created for ad-hoc behaviors. */
   _ensurePropertyBag: function()
   {

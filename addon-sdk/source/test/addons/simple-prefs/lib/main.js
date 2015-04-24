@@ -9,7 +9,7 @@ const app = require('sdk/system/xul-app');
 const { id, preferencesBranch } = require('sdk/self');
 const { open } = require('sdk/preferences/utils');
 const { getTabForId } = require('sdk/tabs/utils');
-const { Tab } = require('sdk/tabs/tab');
+const { modelFor } = require('sdk/model/core');
 const { getAddonByID } = require('sdk/addon/manager');
 const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
 require('sdk/tabs');
@@ -27,7 +27,7 @@ exports.testOptionsType = function*(assert) {
 
 exports.testButton = function(assert, done) {
   open({ id: id }).then(({ tabId, document }) => {
-    let tab = Tab({ tab: getTabForId(tabId) });
+    let tab = modelFor(getTabForId(tabId));
     sp.once('sayHello', _ => {
       assert.pass('The button was pressed!');
       tab.close(done);
@@ -42,7 +42,7 @@ exports.testButton = function(assert, done) {
 if (app.is('Firefox')) {
   exports.testAOM = function(assert, done) {
     open({ id: id }).then(({ tabId }) => {
-      let tab = Tab({ tab: getTabForId(tabId) });
+      let tab = modelFor(getTabForId(tabId));
       assert.pass('the add-on prefs page was opened.');
 
       tab.attach({

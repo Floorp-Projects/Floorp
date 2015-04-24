@@ -14,9 +14,9 @@ exports.testSelf = function(assert) {
   // Likewise, we can't assert anything about the full URL, because that
   // depends on self.id . We can only assert that it ends in the right
   // thing.
-  var url = self.data.url("test-content-symbiont.js");
+  var url = self.data.url("test.html");
   assert.equal(typeof(url), "string", "self.data.url('x') returns string");
-  assert.equal(/\/test-content-symbiont\.js$/.test(url), true);
+  assert.equal(/\/test\.html$/.test(url), true);
 
   // Make sure 'undefined' is not in url when no string is provided.
   url = self.data.url();

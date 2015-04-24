@@ -116,7 +116,7 @@ const WorkerSandbox = Class({
     // (This behavior can be turned off for now with the unsafe-content-script
     // flag to give addon developers time for making the necessary changes)
     // But prevent it when the Worker isn't used for a content script but for
-    // injecting `addon` object into a Panel, Widget, ... scope.
+    // injecting `addon` object into a Panel scope, for example.
     // That's because:
     // 1/ It is useless to use multiple domains as the worker is only used
     // to communicate with the addon,
@@ -214,7 +214,7 @@ const WorkerSandbox = Class({
     }
 
     // Inject our `console` into target document if worker doesn't have a tab
-    // (e.g Panel, PageWorker, Widget).
+    // (e.g Panel, PageWorker).
     // `worker.tab` can't be used because bug 804935.
     if (!isWindowInTab(window)) {
       let win = getUnsafeWindow(window);
