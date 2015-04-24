@@ -4562,8 +4562,10 @@ nsHTMLEditRules::CreateStyleForInsertText(Selection* aSelection,
 
     while (item) {
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->SetInlinePropertyOnNode(node, item->tag, &item->attr,
-                                                 &item->value);
+      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+      NS_ENSURE_STATE(content || !node);
+      res = mHTMLEditor->SetInlinePropertyOnNode(*content, *item->tag,
+                                                 &item->attr, item->value);
       NS_ENSURE_SUCCESS(res, res);
       item = mHTMLEditor->mTypeInState->TakeSetProperty();
     }
