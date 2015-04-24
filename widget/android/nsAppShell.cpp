@@ -248,7 +248,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             // (bug 750713). Looper messages effectively have the lowest
             // priority because we only process them before we're about to
             // wait for new events.
-            if (widget::GeckoAppShell::PumpMessageLoop()) {
+            if (AndroidBridge::Bridge()->PumpMessageLoop()) {
                 return true;
             }
 

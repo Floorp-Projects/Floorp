@@ -156,7 +156,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         Looper.prepare();
         ThreadUtils.sGeckoThread = this;
         ThreadUtils.sGeckoHandler = new Handler();
-        ThreadUtils.sGeckoQueue = Looper.myQueue();
 
         if (mDebugging) {
             try {
