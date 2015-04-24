@@ -53,8 +53,6 @@ let DebuggerView = {
     this.Toolbar.initialize();
     this.Options.initialize();
     this.Filtering.initialize();
-    this.FilteredSources.initialize();
-    this.FilteredFunctions.initialize();
     this.StackFrames.initialize();
     this.StackFramesClassicList.initialize();
     this.Sources.initialize();
@@ -88,8 +86,6 @@ let DebuggerView = {
     this.Toolbar.destroy();
     this.Options.destroy();
     this.Filtering.destroy();
-    this.FilteredSources.destroy();
-    this.FilteredFunctions.destroy();
     this.StackFrames.destroy();
     this.StackFramesClassicList.destroy();
     this.Sources.destroy();
@@ -649,8 +645,6 @@ let DebuggerView = {
     dumpn("Handling tab navigation in the DebuggerView");
 
     this.Filtering.clearSearch();
-    this.FilteredSources.clearView();
-    this.FilteredFunctions.clearView();
     this.GlobalSearch.clearView();
     this.StackFrames.empty();
     this.Sources.empty();
@@ -672,8 +666,6 @@ let DebuggerView = {
   Toolbar: null,
   Options: null,
   Filtering: null,
-  FilteredSources: null,
-  FilteredFunctions: null,
   GlobalSearch: null,
   StackFrames: null,
   Sources: null,
