@@ -12845,6 +12845,9 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
 MConstant*
 IonBuilder::constant(const Value& v)
 {
+    MOZ_ASSERT(!v.isString() || v.toString()->isAtom(),
+               "Handle non-atomized strings outside IonBuilder.");
+
     MConstant* c = MConstant::New(alloc(), v, constraints());
     current->add(c);
     return c;
