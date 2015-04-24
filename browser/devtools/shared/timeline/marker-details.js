@@ -222,7 +222,7 @@ MarkerDetails.prototype = {
 
         aNode.addEventListener("click", (event) => {
           event.preventDefault();
-          viewSourceInDebugger(toolbox, url, line);
+          this.emit("view-source", url, line);
         });
       }
 
@@ -303,35 +303,5 @@ MarkerDetails.prototype = {
   },
 
 };
-
-/**
- * Opens/selects the debugger in this toolbox and jumps to the specified
- * file name and line number.
- * @param object toolbox
- *        The toolbox.
- * @param string url
- * @param number line
- */
-let viewSourceInDebugger = Task.async(function *(toolbox, url, line) {
-  // If the Debugger was already open, switch to it and try to show the
-  // source immediately. Otherwise, initialize it and wait for the sources
-  // to be added first.
-  let debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
-  let { panelWin: dbg } = yield toolbox.selectTool("jsdebugger");
-
-  if (!debuggerAlreadyOpen) {
-    yield dbg.once(dbg.EVENTS.SOURCES_ADDED);
-  }
-
-  let { DebuggerView } = dbg;
-  let { Sources } = DebuggerView;
-
-  let item = Sources.getItemForAttachment(a => a.source.url === url);
-  if (item) {
-    return DebuggerView.setEditorLocation(item.attachment.source.actor, line, { noDebug: true });
-  }
-
-  return Promise.reject("Couldn't find the specified source in the debugger.");
-});
 
 exports.MarkerDetails = MarkerDetails;

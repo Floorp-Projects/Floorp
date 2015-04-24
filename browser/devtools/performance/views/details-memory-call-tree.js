@@ -51,9 +51,13 @@ let MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    */
   _onLink: function (_, treeItem) {
     let { url, line } = treeItem.frame.getInfo();
-    viewSourceInDebugger(url, line).then(
-      () => this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER),
-      () => this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER));
+    gToolbox.viewSourceInDebugger(url, line).then(success => {
+      if (success) {
+        this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+      } else {
+        this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
+      }
+    });
   },
 
   /**
