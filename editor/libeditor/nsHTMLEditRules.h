@@ -295,8 +295,8 @@ protected:
   nsresult GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes, bool aDontTouchContent=false);
   nsresult LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
-  nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
-                              nsCOMArray<nsIDOMNode>& outArrayOfNodes);
+  nsresult BustUpInlinesAtBRs(nsINode& aNode,
+                              nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes);
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
   nsresult MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
                               nsTArray<bool> &inTransitionArray);
