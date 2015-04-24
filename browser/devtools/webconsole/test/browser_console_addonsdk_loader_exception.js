@@ -67,8 +67,8 @@ function test()
     let viewSource = browserconsole.viewSource;
     let URL = null;
     let clickPromise = promise.defer();
-    browserconsole.viewSource = (aURL) => {
-      info("browserconsole.viewSource() was invoked: " + aURL);
+    browserconsole.viewSourceInDebugger = (aURL) => {
+      info("browserconsole.viewSourceInDebugger() was invoked: " + aURL);
       URL = aURL;
       clickPromise.resolve(null);
     };
@@ -85,6 +85,6 @@ function test()
     isnot(URL.indexOf("toolbox.js"), -1, "we have the expected view source URL");
     is(URL.indexOf("->"), -1, "no -> in the URL given to view-source");
 
-    browserconsole.viewSource = viewSource;
+    browserconsole.viewSourceInDebugger = viewSource;
   }
 }
