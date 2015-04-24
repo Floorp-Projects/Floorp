@@ -2769,10 +2769,14 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
         const Value val = target->getBoundFunctionArgument(i);
         if (val.isObject() && gc::IsInsideNursery(&val.toObject()))
             return InliningStatus_NotInlined;
+        if (val.isString() && !val.toString()->isAtom())
+            return InliningStatus_NotInlined;
     }
 
     const Value thisVal = target->getBoundFunctionThis();
     if (thisVal.isObject() && gc::IsInsideNursery(&thisVal.toObject()))
+        return InliningStatus_NotInlined;
+    if (thisVal.isString() && !thisVal.toString()->isAtom())
         return InliningStatus_NotInlined;
 
     size_t argc = target->getBoundFunctionArgumentCount() + nativeCallInfo.argc();
@@ -2783,18 +2787,13 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
 
     CallInfo callInfo(alloc(), nativeCallInfo.constructing());
     callInfo.setFun(constant(ObjectValue(*scriptedTarget)));
-    MConstant* thisConst = constantMaybeAtomize(thisVal);
-    if (!thisConst)
-        return InliningStatus_Error;
-    callInfo.setThis(thisConst);
+    callInfo.setThis(constant(thisVal));
 
     if (!callInfo.argv().reserve(argc))
         return InliningStatus_Error;
 
     for (size_t i = 0; i < target->getBoundFunctionArgumentCount(); i++) {
-        MConstant* argConst = constantMaybeAtomize(target->getBoundFunctionArgument(i));
-        if (!argConst)
-            return InliningStatus_Error;
+        MConstant* argConst = constant(target->getBoundFunctionArgument(i));
         callInfo.argv().infallibleAppend(argConst);
     }
     for (size_t i = 0; i < nativeCallInfo.argc(); i++)
