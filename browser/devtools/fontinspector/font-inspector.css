@@ -25,7 +25,7 @@
 }
 
 .preview-input-toolbar {
-  display: -moz-box;
+  display: flex;
   width: 100%;
 }
 
@@ -39,7 +39,7 @@
   margin-bottom: 1px;
   padding-top: 0;
   padding-bottom: 0;
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 :root {

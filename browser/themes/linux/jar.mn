@@ -258,6 +258,7 @@ browser.jar:
   skin/classic/browser/devtools/add.svg               (../shared/devtools/images/add.svg)
   skin/classic/browser/devtools/filters.svg           (../shared/devtools/filters.svg)
   skin/classic/browser/devtools/filter-swatch.svg     (../shared/devtools/images/filter-swatch.svg)
+  skin/classic/browser/devtools/pseudo-class.svg      (../shared/devtools/images/pseudo-class.svg)
   skin/classic/browser/devtools/controls.png          (../shared/devtools/images/controls.png)
   skin/classic/browser/devtools/controls@2x.png       (../shared/devtools/images/controls@2x.png)
   skin/classic/browser/devtools/performance-icons.svg  (../shared/devtools/images/performance-icons.svg)

@@ -24,9 +24,28 @@ body {
   flex: 1;
 }
 
-#root .devtools-toolbar {
+.devtools-toolbar {
   width: 100%;
-  display: -moz-box;
+  display: flex;
+}
+
+#pseudo-class-panel {
+  position: relative;
+  top: -1px;
+  overflow-y: hidden;
+  max-height: 24px;
+  justify-content: space-around;
+  transition-property: max-height;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+#pseudo-class-panel[hidden] {
+  max-height: 0px;
+}
+
+#pseudo-class-panel > label {
+  -moz-user-select: none;
 }
 
 .ruleview {
