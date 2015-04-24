@@ -49,6 +49,7 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
       "urlbar-container",
       "search-container",
       "bookmarks-menu-button",
+      "pocket-button",
       "downloads-button",
       "home-button",
       "social-share-button",

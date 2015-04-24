@@ -1,0 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+  content/browser/pocket/img/signup_logo.png     (img/signup_logo.png)
+  content/browser/pocket/img/signup_logo@2x.png  (img/signup_logo@2x.png)
+  content/browser/pocket/img/signup_or.png       (img/signup_or.png)
+  content/browser/pocket/img/signup_or@2x.png    (img/signup_or@2x.png)

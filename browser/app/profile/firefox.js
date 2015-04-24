@@ -1909,3 +1909,8 @@ pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");
 pref("browser.reader.detectedFirstArticle", false);
 // Don't limit how many nodes we care about on desktop:
 pref("reader.parse-node-limit", 0);
+
+pref("browser.pocket.enabled", false);
+pref("browser.pocket.removedByUser", false);
+pref("browser.pocket.useLocaleList", true);
+pref("browser.pocket.enabledLocales", "en-US");
