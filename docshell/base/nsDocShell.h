@@ -137,7 +137,7 @@ enum eCharsetReloadState
 
 class nsDocShell final
   : public nsDocLoader
-  , public nsIDocShell
+  , public nsIDocShell_ESR38
   , public nsIWebNavigation
   , public nsIBaseWindow
   , public nsIScrollable
@@ -169,6 +169,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_DECL_NSIDOCSHELL_ESR38
   NS_DECL_NSIDOCSHELL
   NS_DECL_NSIDOCSHELLTREEITEM
   NS_DECL_NSIWEBNAVIGATION
@@ -883,6 +884,7 @@ protected:
   bool mAllowDNSPrefetch;
   bool mAllowWindowControl;
   bool mAllowContentRetargeting;
+  bool mAllowContentRetargetingOnChildren;
   bool mCreatingDocument; // (should be) debugging only
   bool mUseErrorPages;
   bool mObserveErrorPages;
