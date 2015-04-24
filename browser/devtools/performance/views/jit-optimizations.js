@@ -350,7 +350,7 @@ let JITOptimizationsView = {
       fileName = url.slice(url.lastIndexOf("/") + 1);
       node.classList.add("debugger-link");
       node.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + url);
-      node.addEventListener("click", () => viewSourceInDebugger(url, line));
+      node.addEventListener("click", () => gToolbox.viewSourceInDebugger(url, line));
     }
     fileName = fileName || url || "";
     node.textContent = fileName ? `@${fileName}` : "";

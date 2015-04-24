@@ -2720,7 +2720,7 @@ WebConsoleFrame.prototype = {
     let onClick = () => {
       let target = locationNode.target;
       if (target == "scratchpad" || isScratchpad) {
-        this.owner.viewSourceInScratchpad(url);
+        this.owner.viewSourceInScratchpad(url, line);
         return;
       }
 

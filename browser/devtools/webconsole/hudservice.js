@@ -20,6 +20,7 @@ loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyImporter(this, "DebuggerServer", "resource://gre/modules/devtools/dbg-server.jsm");
 loader.lazyImporter(this, "DebuggerClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyGetter(this, "showDoorhanger", () => require("devtools/shared/doorhanger").showDoorhanger);
+loader.lazyRequireGetter(this, "sourceUtils", "devtools/shared/source-utils");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -432,10 +433,8 @@ WebConsole.prototype = {
    * @param integer aSourceLine
    *        The line number which should be highlighted.
    */
-  viewSource: function WC_viewSource(aSourceURL, aSourceLine)
-  {
-    this.gViewSourceUtils.viewSource(aSourceURL, null,
-                                     this.iframeWindow.document, aSourceLine);
+  viewSource: function WC_viewSource(aSourceURL, aSourceLine) {
+    this.gViewSourceUtils.viewSource(aSourceURL, null, this.iframeWindow.document, aSourceLine || 0);
   },
 
   /**
@@ -443,30 +442,20 @@ WebConsole.prototype = {
    * instance in the Style Editor. If the file is not found, it is opened in
    * source view instead.
    *
+   * Manually handle the case where toolbox does not exist (Browser Console).
+   *
    * @param string aSourceURL
    *        The URL of the file.
    * @param integer aSourceLine
    *        The line number which you want to place the caret.
-   * TODO: This function breaks the client-server boundaries.
-   *       To be fixed in bug 793259.
    */
-  viewSourceInStyleEditor:
-  function WC_viewSourceInStyleEditor(aSourceURL, aSourceLine)
-  {
+  viewSourceInStyleEditor: function WC_viewSourceInStyleEditor(aSourceURL, aSourceLine) {
     let toolbox = gDevTools.getToolbox(this.target);
     if (!toolbox) {
       this.viewSource(aSourceURL, aSourceLine);
       return;
     }
-
-    gDevTools.showToolbox(this.target, "styleeditor").then(function(toolbox) {
-      try {
-        toolbox.getCurrentPanel().selectStyleSheet(aSourceURL, aSourceLine);
-      } catch(e) {
-        // Open view source if style editor fails.
-        this.viewSource(aSourceURL, aSourceLine);
-      }
-    });
+    toolbox.viewSourceInStyleEditor(aSourceURL, aSourceLine);
   },
 
   /**
@@ -474,48 +463,23 @@ WebConsole.prototype = {
    * instance in the Script Debugger. If the file is not found, it is opened in
    * source view instead.
    *
+   * Manually handle the case where toolbox does not exist (Browser Console).
+   *
    * @param string aSourceURL
    *        The URL of the file.
    * @param integer aSourceLine
    *        The line number which you want to place the caret.
    */
-  viewSourceInDebugger:
-  function WC_viewSourceInDebugger(aSourceURL, aSourceLine)
-  {
+  viewSourceInDebugger: function WC_viewSourceInDebugger(aSourceURL, aSourceLine) {
     let toolbox = gDevTools.getToolbox(this.target);
     if (!toolbox) {
       this.viewSource(aSourceURL, aSourceLine);
       return;
     }
-
-    let showSource = ({ DebuggerView }) => {
-      let item = DebuggerView.Sources.getItemForAttachment(
-        a => a.source.url === aSourceURL
-      );
-      if (item) {
-        DebuggerView.setEditorLocation(item.attachment.source.actor, aSourceLine,
-                                       { noDebug: true }).then(() => {
-          this.ui.emit("source-in-debugger-opened");
-        });
-        return;
-      }
-      toolbox.selectTool("webconsole")
-             .then(() => this.viewSource(aSourceURL, aSourceLine));
-    }
-
-    // If the Debugger was already open, switch to it and try to show the
-    // source immediately. Otherwise, initialize it and wait for the sources
-    // to be added first.
-    let debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
-    toolbox.selectTool("jsdebugger").then(({ panelWin: dbg }) => {
-      if (debuggerAlreadyOpen) {
-        showSource(dbg);
-      } else {
-        dbg.once(dbg.EVENTS.SOURCES_ADDED, () => showSource(dbg));
-      }
-    });
+    toolbox.viewSourceInDebugger(aSourceURL, aSourceLine).then(() => {
+      this.ui.emit("source-in-debugger-opened");
+    })
   },
-
 
   /**
    * Tries to open a JavaScript file related to the web page for the web console
@@ -524,33 +488,8 @@ WebConsole.prototype = {
    * @param string aSourceURL
    *        The URL of the file which corresponds to a Scratchpad id.
    */
-  viewSourceInScratchpad: function WC_viewSourceInScratchpad(aSourceURL)
-  {
-    // Check for matching top level Scratchpad window.
-    let wins = Services.wm.getEnumerator("devtools:scratchpad");
-
-    while (wins.hasMoreElements()) {
-      let win = wins.getNext();
-
-      if (!win.closed && win.Scratchpad.uniqueName === aSourceURL) {
-        win.focus();
-        return;
-      }
-    }
-
-    // Check for matching Scratchpad toolbox tab.
-    for (let [, toolbox] of gDevTools) {
-      let scratchpadPanel = toolbox.getPanel("scratchpad");
-      if (scratchpadPanel) {
-        let { scratchpad } = scratchpadPanel;
-        if (scratchpad.uniqueName === aSourceURL) {
-          toolbox.selectTool("scratchpad");
-          toolbox.raise();
-          scratchpad.editor.focus();
-          return;
-        }
-      }
-    }
+  viewSourceInScratchpad: function WC_viewSourceInScratchpad(aSourceURL, aSourceLine) {
+    sourceUtils.viewSourceInScratchpad(aSourceURL, aSourceLine);
   },
 
   /**

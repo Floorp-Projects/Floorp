@@ -473,11 +473,6 @@ function dropSelection(graph) {
   graph.emit("selecting");
 }
 
-function getSourceActor(aSources, aURL) {
-  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
-  return item && item.value;
-}
-
 /**
  * Fires a key event, like "VK_UP", "VK_DOWN", etc.
  */

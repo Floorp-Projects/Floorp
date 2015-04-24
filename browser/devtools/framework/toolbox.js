@@ -21,6 +21,7 @@ let Telemetry = require("devtools/shared/telemetry");
 let {getHighlighterUtils} = require("devtools/framework/toolbox-highlighter-utils");
 let HUDService = require("devtools/webconsole/hudservice");
 let {showDoorhanger} = require("devtools/shared/doorhanger");
+let sourceUtils = require("devtools/shared/source-utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -1711,6 +1712,7 @@ Toolbox.prototype = {
     gDevTools.off("pref-changed", this._prefChanged);
 
     this._lastFocusedElement = null;
+
     if (this.webconsolePanel) {
       this._saveSplitConsoleHeight();
       this.webconsolePanel.removeEventListener("resize",
@@ -1880,4 +1882,48 @@ Toolbox.prototype = {
     yield this._performanceConnection.destroy();
     this._performanceConnection = null;
   }),
+
+  /**
+   * Returns gViewSourceUtils for viewing source.
+   */
+  get gViewSourceUtils() {
+    return this.frame.contentWindow.gViewSourceUtils;
+  },
+
+  /**
+   * Opens source in style editor. Falls back to plain "view-source:".
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSourceInStyleEditor: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSourceInStyleEditor(this, sourceURL, sourceLine);
+  },
+
+  /**
+   * Opens source in debugger. Falls back to plain "view-source:".
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSourceInDebugger: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSourceInDebugger(this, sourceURL, sourceLine);
+  },
+
+  /**
+   * Opens source in scratchpad. Falls back to plain "view-source:".
+   * TODO The `sourceURL` for scratchpad instances are like `Scratchpad/1`.
+   * If instances are scoped one-per-browser-window, then we should be able
+   * to infer the URL from this toolbox, or use the built in scratchpad IN
+   * the toolbox.
+   *
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSourceInScratchpad: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSourceInScratchpad(sourceURL, sourceLine);
+  },
+
+  /**
+   * Opens source in plain "view-source:".
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSource: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSource(this, sourceURL, sourceLine);
+  },
 };
