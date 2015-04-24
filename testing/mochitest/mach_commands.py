@@ -882,13 +882,15 @@ class MachCommands(MachCommandBase):
 
     @Command('jetpack-package', category='testing',
              conditions=[conditions.is_firefox],
-             description='Run a jetpack package test.')
+             description='Run a jetpack package test.',
+             parser=setup_argument_parser)
     def run_mochitest_jetpack_package(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'jetpack-package', **kwargs)
 
     @Command('jetpack-addon', category='testing',
              conditions=[conditions.is_firefox],
-             description='Run a jetpack addon test.')
+             description='Run a jetpack addon test.',
+             parser=setup_argument_parser)
     def run_mochitest_jetpack_addon(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'jetpack-addon', **kwargs)
 
