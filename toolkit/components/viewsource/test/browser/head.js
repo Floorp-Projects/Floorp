@@ -14,6 +14,12 @@ function openViewSourceWindow(aURI, aCallback) {
   }, false);
 }
 
+function loadViewSourceWindow(URL) {
+  return new Promise((resolve) => {
+    openViewSourceWindow(URL, resolve);
+  })
+}
+
 function closeViewSourceWindow(aWindow, aCallback) {
   Services.wm.addListener({
     onCloseWindow: function() {
