@@ -29,6 +29,11 @@ public:
   void DestroyDecoder(MPAPI::Decoder *aDecoder);
 };
 
+// Must be called on the main thread. Creates the plugin host if it doesn't
+// already exist.
+AndroidMediaPluginHost *EnsureAndroidMediaPluginHost();
+
+// May be called on any thread after EnsureAndroidMediaPluginHost has been called.
 AndroidMediaPluginHost *GetAndroidMediaPluginHost();
 
 } // namespace mozilla
