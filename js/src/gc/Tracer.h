@@ -252,6 +252,7 @@ class GCMarker : public JSTracer
     void eagerlyMarkChildren(JSString* str);
     void eagerlyMarkChildren(LazyScript *thing);
     void eagerlyMarkChildren(Shape* shape);
+    void lazilyMarkChildren(ObjectGroup* group);
 
     // We may not have concrete types yet, so this has to be out of the header.
     template <typename T>
