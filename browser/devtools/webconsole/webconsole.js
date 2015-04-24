@@ -8,7 +8,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} = require("devtools/toolkit/webconsole/utils");
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
@@ -137,10 +137,6 @@ const LEVELS = {
   timeEnd: SEVERITY_LOG,
   count: SEVERITY_LOG
 };
-
-// This array contains the prefKey for the workers and it must keep them in the
-// same order as CONSOLE_WORKER_IDS
-const WORKERTYPES_PREFKEYS = [ 'sharedworkers', 'serviceworkers', 'windowlessworkers' ];
 
 // The lowest HTTP response code (inclusive) that is considered an error.
 const MIN_HTTP_ERROR_CODE = 400;
@@ -653,8 +649,7 @@ WebConsoleFrame.prototype = {
   {
     let prefs = ["network", "networkinfo", "csserror", "cssparser", "csslog",
                  "exception", "jswarn", "jslog", "error", "info", "warn", "log",
-                 "secerror", "secwarn", "netwarn", "netxhr", "sharedworkers",
-                 "serviceworkers", "windowlessworkers"];
+                 "secerror", "secwarn", "netwarn", "netxhr"];
     for (let pref of prefs) {
       this.filterPrefs[pref] = Services.prefs
                                .getBoolPref(this._filterPrefsPrefix + pref);
@@ -1031,11 +1026,8 @@ WebConsoleFrame.prototype = {
     // (filter="error", filter="cssparser", etc.) and add or remove the
     // "filtered-by-type" class, which turns on or off the display.
 
-    let attribute = WORKERTYPES_PREFKEYS.indexOf(aPrefKey) == -1
-                      ? 'filter' : 'workerType';
-
     let xpath = ".//*[contains(@class, 'message') and " +
-      "@" + attribute + "='" + aPrefKey + "']";
+      "@filter='" + aPrefKey + "']";
     let result = doc.evaluate(xpath, outputNode, null,
       Ci.nsIDOMXPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
     for (let i = 0; i < result.snapshotLength; i++) {
@@ -1092,12 +1084,6 @@ WebConsoleFrame.prototype = {
     let prefKey = MESSAGE_PREFERENCE_KEYS[aNode.category][aNode.severity];
     if (prefKey && !this.getFilterState(prefKey)) {
       // The node is filtered by type.
-      aNode.classList.add("filtered-by-type");
-      isFiltered = true;
-    }
-
-    // Filter by worker type
-    if ("workerType" in aNode && !this.getFilterState(aNode.workerType)) {
       aNode.classList.add("filtered-by-type");
       isFiltered = true;
     }
@@ -1377,12 +1363,6 @@ WebConsoleFrame.prototype = {
         let repeatNode = node.getElementsByClassName("message-repeats")[0];
         repeatNode._uid += [...objectActors].join("-");
       }
-    }
-
-    let workerTypeID = CONSOLE_WORKER_IDS.indexOf(aMessage.workerType);
-    if (workerTypeID != -1) {
-      node.workerType = WORKERTYPES_PREFKEYS[workerTypeID];
-      node.setAttribute('workerType', WORKERTYPES_PREFKEYS[workerTypeID]);
     }
 
     return node;
