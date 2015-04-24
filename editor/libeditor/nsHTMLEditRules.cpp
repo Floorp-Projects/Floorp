@@ -3541,7 +3541,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
       arrayOfDOMNodes.AppendObject(GetAsDOMNode(node));
     }
     if (tString.EqualsLiteral("blockquote"))
-      res = MakeBlockquote(arrayOfDOMNodes);
+      res = MakeBlockquote(arrayOfNodes);
     else if (tString.EqualsLiteral("normal") ||
              tString.IsEmpty() )
       res = RemoveBlockStyle(arrayOfDOMNodes);
@@ -6802,76 +6802,52 @@ nsHTMLEditRules::ReturnInListItem(Selection* aSelection,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// MakeBlockquote:  put the list of nodes into one or more blockquotes.  
-//                       
-nsresult 
-nsHTMLEditRules::MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes)
+///////////////////////////////////////////////////////////////////////////////
+// MakeBlockquote: Put the list of nodes into one or more blockquotes.
+//
+nsresult
+nsHTMLEditRules::MakeBlockquote(nsTArray<nsCOMPtr<nsINode>>& aNodeArray)
 {
-  // the idea here is to put the nodes into a minimal number of 
-  // blockquotes.  When the user blockquotes something, they expect
-  // one blockquote.  That may not be possible (for instance, if they
-  // have two table cells selected, you need two blockquotes inside the cells).
-  
-  nsresult res = NS_OK;
-  
-  nsCOMPtr<nsIDOMNode> curNode, newBlock;
-  nsCOMPtr<nsINode> curParent;
+  // The idea here is to put the nodes into a minimal number of blockquotes.
+  // When the user blockquotes something, they expect one blockquote.  That may
+  // not be possible (for instance, if they have two table cells selected, you
+  // need two blockquotes inside the cells).
+  nsresult res;
   nsCOMPtr<Element> curBlock;
-  int32_t offset;
-  int32_t listCount = arrayOfNodes.Count();
-  
-  nsCOMPtr<nsIDOMNode> prevParent;
-  
-  int32_t i;
-  for (i=0; i<listCount; i++)
-  {
-    // get the node to act on, and its location
-    curNode = arrayOfNodes[i];
-    nsCOMPtr<nsIContent> curContent = do_QueryInterface(curNode);
-    NS_ENSURE_STATE(curContent);
-    curParent = curContent->GetParentNode();
-    offset = curParent ? curParent->IndexOf(curContent) : -1;
+  nsCOMPtr<nsINode> prevParent;
 
-    // if the node is a table element or list item, dive inside
-    if (nsHTMLEditUtils::IsTableElementButNotTable(curNode) || 
-        nsHTMLEditUtils::IsListItem(curNode))
-    {
-      curBlock = 0;  // forget any previous block
-      // recursion time
+  for (auto& curNode : aNodeArray) {
+    // Get the node to act on, and its location
+    NS_ENSURE_STATE(curNode->IsContent());
+
+    // If the node is a table element or list item, dive inside
+    if (nsHTMLEditUtils::IsTableElementButNotTable(curNode) ||
+        nsHTMLEditUtils::IsListItem(curNode)) {
+      // Forget any previous block
+      curBlock = nullptr;
+      // Recursion time
       nsTArray<nsCOMPtr<nsINode>> childArray;
-      nsCOMPtr<nsINode> node = do_QueryInterface(curNode);
-      NS_ENSURE_STATE(node || !curNode);
-      GetChildNodesForOperation(*node, childArray);
-      nsCOMArray<nsIDOMNode> childArrayDOM;
-      for (auto& child : childArray) {
-        childArrayDOM.AppendObject(GetAsDOMNode(child));
-      }
-      res = MakeBlockquote(childArrayDOM);
+      GetChildNodesForOperation(*curNode, childArray);
+      res = MakeBlockquote(childArray);
       NS_ENSURE_SUCCESS(res, res);
     }
-    
-    // if the node has different parent than previous node,
-    // further nodes in a new parent
-    if (prevParent)
-    {
-      nsCOMPtr<nsIDOMNode> temp;
-      curNode->GetParentNode(getter_AddRefs(temp));
-      if (temp != prevParent)
-      {
-        curBlock = 0;  // forget any previous blockquote node we were using
-        prevParent = temp;
-      }
-    }
-    else     
 
-    {
-      curNode->GetParentNode(getter_AddRefs(prevParent));
+    // If the node has different parent than previous node, further nodes in a
+    // new parent
+    if (prevParent) {
+      if (prevParent != curNode->GetParentNode()) {
+        // Forget any previous blockquote node we were using
+        curBlock = nullptr;
+        prevParent = curNode->GetParentNode();
+      }
+    } else {
+      prevParent = curNode->GetParentNode();
     }
-    
-    // if no curBlock, make one
-    if (!curBlock)
-    {
+
+    // If no curBlock, make one
+    if (!curBlock) {
+      nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
+      int32_t offset = curParent ? curParent->IndexOf(curNode) : -1;
       res = SplitAsNeeded(*nsGkAtoms::blockquote, curParent, offset);
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
@@ -6882,14 +6858,13 @@ nsHTMLEditRules::MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes)
       mNewBlock = curBlock->AsDOMNode();
       // note: doesn't matter if we set mNewBlock multiple times.
     }
-      
+
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->MoveNode(curContent, curBlock, -1);
+    res = mHTMLEditor->MoveNode(curNode->AsContent(), curBlock, -1);
     NS_ENSURE_SUCCESS(res, res);
   }
-  return res;
+  return NS_OK;
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////
