@@ -2496,10 +2496,14 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
         const Value val = target->getBoundFunctionArgument(i);
         if (val.isObject() && gc::IsInsideNursery(&val.toObject()))
             return InliningStatus_NotInlined;
+        if (val.isString() && !val.toString()->isAtom())
+            return InliningStatus_NotInlined;
     }
 
     const Value thisVal = target->getBoundFunctionThis();
     if (thisVal.isObject() && gc::IsInsideNursery(&thisVal.toObject()))
+        return InliningStatus_NotInlined;
+    if (thisVal.isString() && !thisVal.toString()->isAtom())
         return InliningStatus_NotInlined;
 
     size_t argc = target->getBoundFunctionArgumentCount() + nativeCallInfo.argc();
@@ -2510,7 +2514,7 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
 
     CallInfo callInfo(alloc(), nativeCallInfo.constructing());
     callInfo.setFun(constant(ObjectValue(*scriptedTarget)));
-    callInfo.setThis(constant(target->getBoundFunctionThis()));
+    callInfo.setThis(constant(thisVal));
 
     if (!callInfo.argv().reserve(argc))
         return InliningStatus_Error;
