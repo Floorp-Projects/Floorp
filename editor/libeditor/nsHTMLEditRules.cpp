@@ -2440,11 +2440,8 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
           // Build a list of nodes in the range
           nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
           nsTrivialFunctor functor;
-          nsDOMSubtreeIterator iter;
-          res = iter.Init(range);
-          NS_ENSURE_SUCCESS(res, res);
-          res = iter.AppendList(functor, arrayOfNodes);
-          NS_ENSURE_SUCCESS(res, res);
+          nsDOMSubtreeIterator iter(*range);
+          iter.AppendList(functor, arrayOfNodes);
 
           // Now that we have the list, delete non-table elements
           int32_t listCount = arrayOfNodes.Length();
@@ -4933,11 +4930,8 @@ nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType)
   // gather list of table cells or list items
   nsCOMArray<nsIDOMNode> arrayOfNodes;
   nsTableCellAndListItemFunctor functor;
-  nsDOMIterator iter;
-  res = iter.Init(aNode);
-  NS_ENSURE_SUCCESS(res, res);
-  res = iter.AppendList(functor, arrayOfNodes);
-  NS_ENSURE_SUCCESS(res, res);
+  nsDOMIterator iter(*aNode);
+  iter.AppendList(functor, arrayOfNodes);
   
   // now that we have the list, align their contents as requested
   int32_t listCount = arrayOfNodes.Count();
@@ -5939,13 +5933,10 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRang
   {
     opRange = inArrayOfRanges[i];
     
-    nsDOMSubtreeIterator iter;
-    res = iter.Init(opRange);
-    NS_ENSURE_SUCCESS(res, res);
+    nsDOMSubtreeIterator iter(*opRange);
     if (outArrayOfNodes.Count() == 0) {
       nsTrivialFunctor functor;
-      res = iter.AppendList(functor, outArrayOfNodes);
-      NS_ENSURE_SUCCESS(res, res);    
+      iter.AppendList(functor, outArrayOfNodes);
     }
     else {
       // We don't want duplicates in outArrayOfNodes, so we use an
@@ -5953,8 +5944,7 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRang
       // outArrayOfNodes.
       nsCOMArray<nsIDOMNode> nodes;
       nsUniqueFunctor functor(outArrayOfNodes);
-      res = iter.AppendList(functor, nodes);
-      NS_ENSURE_SUCCESS(res, res);
+      iter.AppendList(functor, nodes);
       if (!outArrayOfNodes.AppendObjects(nodes))
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -6344,11 +6334,8 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode,
   // the inline container.
   nsCOMArray<nsIDOMNode> arrayOfBreaks;
   nsBRNodeFunctor functor;
-  nsDOMIterator iter;
-  nsresult res = iter.Init(inNode);
-  NS_ENSURE_SUCCESS(res, res);
-  res = iter.AppendList(functor, arrayOfBreaks);
-  NS_ENSURE_SUCCESS(res, res);
+  nsDOMIterator iter(*inNode);
+  iter.AppendList(functor, arrayOfBreaks);
   
   // if there aren't any breaks, just put inNode itself in the array
   int32_t listCount = arrayOfBreaks.Count();
@@ -6376,7 +6363,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode,
       splitParentNode = GetAsDOMNode(nsEditor::GetNodeLocation(breakNode,
                                                                &splitOffset));
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->SplitNodeDeep(splitDeepNode, splitParentNode, splitOffset,
+      nsresult res = mHTMLEditor->SplitNodeDeep(splitDeepNode, splitParentNode, splitOffset,
                           &resultOffset, false, address_of(leftNode), address_of(rightNode));
       NS_ENSURE_SUCCESS(res, res);
       // put left node in node list
@@ -6404,7 +6391,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode,
         return NS_ERROR_FAILURE;
     }
   }
-  return res;
+  return NS_OK;
 }
 
 
@@ -7622,11 +7609,8 @@ nsHTMLEditRules::AdjustSpecialBreaks(bool aSafeToAskFrames)
   // gather list of empty nodes
   NS_ENSURE_STATE(mHTMLEditor);
   nsEmptyEditableFunctor functor(mHTMLEditor);
-  nsDOMIterator iter;
-  nsresult res = iter.Init(mDocChangeRange);
-  NS_ENSURE_SUCCESS(res, res);
-  res = iter.AppendList(functor, arrayOfNodes);
-  NS_ENSURE_SUCCESS(res, res);
+  nsDOMIterator iter(*mDocChangeRange);
+  iter.AppendList(functor, arrayOfNodes);
 
   // put moz-br's into these empty li's and td's
   nodeCount = arrayOfNodes.Count();
@@ -7639,13 +7623,13 @@ nsHTMLEditRules::AdjustSpecialBreaks(bool aSafeToAskFrames)
     uint32_t len;
     nsCOMPtr<nsIDOMNode> theNode = arrayOfNodes[0];
     arrayOfNodes.RemoveObjectAt(0);
-    res = nsEditor::GetLengthOfDOMNode(theNode, len);
+    nsresult res = nsEditor::GetLengthOfDOMNode(theNode, len);
     NS_ENSURE_SUCCESS(res, res);
     res = CreateMozBR(theNode, (int32_t)len);
     NS_ENSURE_SUCCESS(res, res);
   }
   
-  return res;
+  return NS_OK;
 }
 
 nsresult 
