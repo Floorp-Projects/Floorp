@@ -7,7 +7,6 @@
 #define nsHTMLEditor_h__
 
 #include "nsCOMPtr.h"
-#include "nsCOMArray.h"
 #include "nsPlaintextEditor.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -850,7 +849,7 @@ protected:
   nsCOMPtr<nsISelectionListener> mSelectionListenerP;
   nsCOMPtr<nsIDOMEventListener>  mResizeEventListenerP;
 
-  nsCOMArray<nsIHTMLObjectResizeListener> objectResizeEventListeners;
+  nsTArray<mozilla::dom::OwningNonNull<nsIHTMLObjectResizeListener>> mObjectResizeEventListeners;
 
   int32_t mOriginalX;
   int32_t mOriginalY;
