@@ -10,7 +10,6 @@
 #include "mozilla/dom/OwningNonNull.h"  // for OwningNonNull
 #include "mozilla/dom/Text.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMArray.h"                 // for nsCOMArray
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
@@ -835,7 +834,8 @@ protected:
   nsTArray<mozilla::dom::OwningNonNull<nsIEditActionListener>> mActionListeners;
   // Just notify once per high level change
   nsTArray<mozilla::dom::OwningNonNull<nsIEditorObserver>> mEditorObservers;
-  nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
+  // Listen to overall doc state (dirty or not, just created, etc)
+  nsTArray<mozilla::dom::OwningNonNull<nsIDocumentStateListener>> mDocStateListeners;
 
   nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
   nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
