@@ -536,7 +536,7 @@ class TreeMetadataEmitter(LoggingMixin):
                                          '.manifest file.  See '
                                          'https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0 .',
                                          context);
-            
+
         # Proxy some variables as-is until we have richer classes to represent
         # them. We should aim to keep this set small because it violates the
         # desired abstraction of the build definition away from makefiles.
