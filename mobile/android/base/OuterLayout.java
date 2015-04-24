@@ -161,11 +161,11 @@ public class OuterLayout extends RelativeLayout {
             if (mDragHelper.shouldInterceptTouchEvent(event)) {
                 return true;
             }
-        }
 
-        // Because while open the target layout is translated and draghelper does not catch it.
-        if (mIsOpen && mDragCallback.canInterceptEventWhileOpen(event)) {
-            return true;
+            // Because while open the target layout is translated and draghelper does not catch it.
+            if (mIsOpen && mDragCallback.canInterceptEventWhileOpen(event)) {
+                return true;
+            }
         }
         return false;
     }
