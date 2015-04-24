@@ -108,6 +108,59 @@ add_task(function* testSyncLoginError() {
   Assert.equal(Notifications.notifications.length, 0, "no notifications left");
 });
 
+add_task(function* testSyncLoginNetworkError() {
+  Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
+
+  // This test relies on the fact that observers are synchronous, and that error
+  // notifications synchronously create the error notification, which itself
+  // fires an observer notification.
+  // ie, we should see the error notification *during* the notifyObservers call.
+
+  // To prove that, we cause a notification that *does* show an error and make
+  // sure we see the error notification during that call. We then cause a
+  // notification that *should not* show an error, and the lack of the
+  // notification during the call implies the error was ignored.
+
+  // IOW, if this first part of the test fails in the future, it means the
+  // above is no longer true and we need a different strategy to check for
+  // ignored errors.
+
+  let sawNotificationAdded = false;
+  let obs = (subject, topic, data) => {
+    sawNotificationAdded = true;
+  }
+  Services.obs.addObserver(obs, "weave:notification:added", false);
+  try {
+    // notify of a display-able error - we should synchronously see our flag set.
+    Weave.Status.sync = Weave.LOGIN_FAILED;
+    Weave.Status.login = Weave.LOGIN_FAILED_LOGIN_REJECTED;
+    Services.obs.notifyObservers(null, "weave:ui:login:error", null);
+    Assert.ok(sawNotificationAdded);
+
+    // clear the notification.
+    let promiseNotificationRemoved = promiseObserver("weave:notification:removed");
+    Services.obs.notifyObservers(null, "readinglist:sync:start", null);
+    Services.obs.notifyObservers(null, "readinglist:sync:finish", null);
+    yield promiseNotificationRemoved;
+
+    // cool - so reset the flag and test what should *not* show an error.
+    sawNotificationAdded = false;
+    Weave.Status.sync = Weave.LOGIN_FAILED;
+    Weave.Status.login = Weave.LOGIN_FAILED_NETWORK_ERROR;
+    Services.obs.notifyObservers(null, "weave:ui:login:error", null);
+    Assert.ok(!sawNotificationAdded);
+
+    // ditto for LOGIN_FAILED_SERVER_ERROR
+    Weave.Status.sync = Weave.LOGIN_FAILED;
+    Weave.Status.login = Weave.LOGIN_FAILED_SERVER_ERROR;
+    Services.obs.notifyObservers(null, "weave:ui:login:error", null);
+    Assert.ok(!sawNotificationAdded);
+    // we are done.
+  } finally {
+    Services.obs.removeObserver(obs, "weave:notification:added");
+  }
+});
+
 add_task(function* testRLLoginError() {
   let promiseNotificationAdded = promiseObserver("weave:notification:added");
   Assert.equal(Notifications.notifications.length, 0, "start with no notifications");

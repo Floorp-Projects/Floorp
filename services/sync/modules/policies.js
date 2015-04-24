@@ -766,8 +766,12 @@ ErrorHandler.prototype = {
       return false;
     }
 
-    return ([Status.login, Status.sync].indexOf(SERVER_MAINTENANCE) == -1 &&
-            [Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) == -1);
+
+    let result = ([Status.login, Status.sync].indexOf(SERVER_MAINTENANCE) == -1 &&
+                  [Status.login, Status.sync].indexOf(LOGIN_FAILED_NETWORK_ERROR) == -1);
+    this._log.trace("shouldReportError: ${result} due to login=${login}, sync=${sync}",
+                    {result, login: Status.login, sync: Status.sync});
+    return result;
   },
 
   get currentAlertMode() {
