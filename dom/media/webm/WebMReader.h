@@ -187,8 +187,8 @@ public:
   int GetVideoCodec();
   nsIntRect GetPicture();
   nsIntSize GetInitialFrame();
-  uint64_t GetLastVideoFrameTime();
-  void SetLastVideoFrameTime(uint64_t aFrameTime);
+  int64_t GetLastVideoFrameTime();
+  void SetLastVideoFrameTime(int64_t aFrameTime);
   layers::LayersBackend GetLayersBackendType() { return mLayersBackendType; }
   FlushableMediaTaskQueue* GetVideoTaskQueue() { return mVideoTaskQueue; }
 
@@ -268,7 +268,7 @@ private:
 
   // Calculate the frame duration from the last decodeable frame using the
   // previous frame's timestamp.  In NS.
-  uint64_t mLastVideoFrameTime;
+  int64_t mLastVideoFrameTime;
 
   // Parser state and computed offset-time mappings.  Shared by multiple
   // readers when decoder has been cloned.  Main thread only.
