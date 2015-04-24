@@ -357,10 +357,11 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
       mFront->Surf()->Fence();
   } else {
     mFront = gl->Screen()->Front();
-    if (!mFront)
-      return;
   }
-  MOZ_ASSERT(mFront);
+  if (!mFront) {
+    gfxCriticalError() << "Invalid canvas front buffer";
+    return;
+  }
 
   // Alright, now sort out the IPC goop.
   SharedSurface* surf = mFront->Surf();
@@ -376,7 +377,7 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
     newTex = TexClientFromReadback(surf, forwarder, flags, layersBackend);
   }
-  MOZ_ASSERT(newTex);
+
   if (!newTex) {
     // May happen in a release build in case of memory pressure.
     gfxCriticalError() << "Failed to allocate a TextureClient for SharedSurface Canvas. size: " << aSize;
