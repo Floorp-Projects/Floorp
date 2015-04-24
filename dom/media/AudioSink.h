@@ -139,6 +139,23 @@ private:
   bool mSetPreservesPitch;
 
   bool mPlaying;
+
+  class OnAudioEndTimeUpdateTask : public nsRunnable {
+  public:
+    explicit OnAudioEndTimeUpdateTask(MediaDecoderStateMachine* aStateMachine);
+
+    NS_IMETHOD Run() override;
+
+    void Dispatch(int64_t aEndTime);
+    void Cancel();
+
+  private:
+    Mutex mMutex;
+    int64_t mEndTime;
+    nsRefPtr<MediaDecoderStateMachine> mStateMachine;
+  };
+
+  nsRefPtr<OnAudioEndTimeUpdateTask> mOnAudioEndTimeUpdateTask;
 };
 
 } // namespace mozilla
