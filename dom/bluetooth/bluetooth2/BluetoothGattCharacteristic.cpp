@@ -75,8 +75,8 @@ BluetoothGattCharacteristic::StartNotifications(ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
-  BT_ENSURE_TRUE_REJECT(mService, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(mService, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(
@@ -104,8 +104,8 @@ BluetoothGattCharacteristic::StopNotifications(ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
-  BT_ENSURE_TRUE_REJECT(mService, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(mService, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(
@@ -251,10 +251,11 @@ BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mProperties & GATT_CHAR_PROP_BIT_READ,
+                        promise,
                         NS_ERROR_NOT_AVAILABLE);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result = new ReadValueTask(this, promise);
   bs->GattClientReadCharacteristicValueInternal(mService->GetAppUuid(),
@@ -282,6 +283,7 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
                           (GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE ||
                            GATT_CHAR_PROP_BIT_WRITE ||
                            GATT_CHAR_PROP_BIT_SIGNED_WRITE),
+                        promise,
                         NS_ERROR_NOT_AVAILABLE);
 
   aValue.ComputeLengthAndData();
@@ -290,7 +292,7 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
   value.AppendElements(aValue.Data(), aValue.Length());
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result = new BluetoothVoidReplyRunnable(
     nullptr, promise, NS_LITERAL_STRING("GattClientWriteCharacteristicValue"));

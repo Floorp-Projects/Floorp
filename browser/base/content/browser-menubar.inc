@@ -48,15 +48,6 @@
                           command="Browser:OpenFile"
                           key="openFileKb"
                           accesskey="&openFileCmd.accesskey;"/>
-#ifdef HAVE_SHELL_SERVICE
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-                <menuitem id="menu_switchToMetro"
-                          label="&switchToMetroCmd2.label;"
-                          oncommand="SwitchToMetro()"/>
-#endif
-#endif
-#endif
                 <menuitem id="menu_close"
                           class="show-only-for-keyboard"
                           label="&closeCmd.label;"

@@ -65,9 +65,6 @@ browser.jar:
         skin/classic/browser/menuPanel-help.png
         skin/classic/browser/menuPanel-small.png
         skin/classic/browser/menuPanel-small-aero.png
-        skin/classic/browser/Metro_Glyph.png
-        skin/classic/browser/Metro_Glyph-inverted.png
-        skin/classic/browser/Metro_Glyph-menuPanel.png
         skin/classic/browser/bad-content-blocked-16.png             (../shared/bad-content-blocked-16.png)
         skin/classic/browser/bad-content-blocked-16@2x.png          (../shared/bad-content-blocked-16@2x.png)
         skin/classic/browser/bad-content-blocked-64.png             (../shared/bad-content-blocked-64.png)

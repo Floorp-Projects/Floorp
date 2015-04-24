@@ -14,6 +14,7 @@
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLTexelConversions.h"
+#include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
 
@@ -689,6 +690,7 @@ WebGLTexture::EnsureNoUninitializedImageData(TexImageTarget imageTarget,
     if (error) {
         // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover
         // from this here.
+        gfxCriticalError() << "GL context GetAndFlushUnderlyingGLErrors " << gfx::hexa(error);
         printf_stderr("Error: 0x%4x\n", error);
         MOZ_CRASH(); // Errors on texture upload have been related to video
                      // memory exposure in the past.

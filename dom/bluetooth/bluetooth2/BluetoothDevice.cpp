@@ -170,7 +170,7 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new FetchUuidsTask(promise,
@@ -178,7 +178,7 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
                        this);
 
   nsresult rv = bs->FetchUuidsInternal(mAddress, result);
-  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), NS_ERROR_DOM_OPERATION_ERR);
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();
 }

@@ -706,12 +706,6 @@ class Automation(object):
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
 
-        if "METRO_BROWSER_PROCESS" in line:
-          index = line.find("=")
-          if index:
-            browserProcessId = line[index+1:].rstrip()
-            self.log.info("INFO | automation.py | metro browser sub process id detected: %s", browserProcessId)
-
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
           # Kill the application.
           hitMaxTime = True

@@ -36,8 +36,8 @@ public:
                                                 const nsAString& aDocLang);
 
   void Speak(const nsAString& aText, const nsAString& aLang,
-             const nsAString& aUri, const float& aRate, const float& aPitch,
-             nsSpeechTask* aTask);
+             const nsAString& aUri, const float& aVolume,  const float& aRate,
+             const float& aPitch, nsSpeechTask* aTask);
 
   void SendVoices(InfallibleTArray<RemoteVoice>* aVoices,
                   InfallibleTArray<nsString>* aDefaults);

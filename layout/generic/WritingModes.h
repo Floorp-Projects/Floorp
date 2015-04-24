@@ -1731,6 +1731,17 @@ public:
                           aContainerWidth);
   }
 
+  /**
+   * Set *this to be the rectangle containing the intersection of aRect1
+   * and aRect2, return whether the intersection is non-empty.
+   */
+  bool IntersectRect(const LogicalRect& aRect1, const LogicalRect& aRect2)
+  {
+    CHECK_WRITING_MODE(aRect1.mWritingMode);
+    CHECK_WRITING_MODE(aRect2.mWritingMode);
+    return mRect.IntersectRect(aRect1.mRect, aRect2.mRect);
+  }
+
 private:
   LogicalRect() = delete;
 

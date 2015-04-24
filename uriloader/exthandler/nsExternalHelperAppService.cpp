@@ -400,16 +400,6 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
   else {
     return NS_ERROR_FAILURE;
   }
-#elif defined(XP_WIN)
-  // On metro we want to be able to search opened files and the temp directory
-  // is exlcuded in searches.
-  nsresult rv;
-  if (IsRunningInWindowsMetro()) {
-    rv = NS_GetSpecialDirectory(NS_WIN_DEFAULT_DOWNLOAD_DIR, getter_AddRefs(dir));
-  } else {
-    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
 #else
   // On all other platforms, we default to the systems temporary directory.
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dir));
