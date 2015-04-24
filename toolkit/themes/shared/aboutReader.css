@@ -40,8 +40,8 @@ body.dark a::-moz-selection {
 }
 
 body.sepia {
-  color: #333333;
-  background-color: #f0ece7;
+  color: #5b4636;
+  background-color: #f4ecd8;
 }
 
 body.sans-serif,
@@ -92,9 +92,12 @@ body.serif .remove-button  {
 
 /* Override some controls and content styles based on color scheme */
 
-body.light > .container > .header > .domain,
-body.sepia > .container > .header > .domain {
+body.light > .container > .header > .domain {
   border-bottom-color: #333333 !important;
+}
+
+body.sepia > .container > .header > .domain {
+  border-bottom-color: #5b4636 !important;
 }
 
 body.dark > .container > .header > .domain {
@@ -105,9 +108,12 @@ body.sepia > .container > .footer {
   background-color: #dedad4 !important;
 }
 
-body.light blockquote,
-body.sepia blockquote {
+body.light blockquote {
   -moz-border-start: 2px solid #333333 !important;
+}
+
+body.sepia blockquote {
+  -moz-border-start: 2px solid #5b4636 !important;
 }
 
 body.dark blockquote {
