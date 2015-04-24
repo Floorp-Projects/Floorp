@@ -20,7 +20,7 @@ function test() {
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
     gSourceUtils = gDebugger.SourceUtils;
-    gSearchView = gDebugger.DebuggerView.FilteredSources;
+    gSearchView = gDebugger.DebuggerView.Filtering.FilteredSources;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
     waitForSourceShown(gPanel, "-01.js")
