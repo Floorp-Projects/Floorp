@@ -294,7 +294,6 @@ class GCMarker : public JSTracer
     bool restoreValueArray(NativeObject* obj, void** vpp, void** endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
-    void processMarkStackOther(uintptr_t tag, uintptr_t addr);
 
     /* The color is only applied to objects and functions. */
     uint32_t color;

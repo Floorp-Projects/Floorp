@@ -1528,25 +1528,6 @@ GCMarker::restoreValueArray(NativeObject* obj, void** vpp, void** endp)
     return true;
 }
 
-void
-GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
-{
-    if (tag == GroupTag) {
-        lazilyMarkChildren(reinterpret_cast<ObjectGroup*>(addr));
-    } else if (tag == SavedValueArrayTag) {
-        MOZ_ASSERT(!(addr & CellMask));
-        NativeObject* obj = reinterpret_cast<NativeObject*>(addr);
-        HeapValue* vp;
-        HeapValue* end;
-        if (restoreValueArray(obj, (void**)&vp, (void**)&end))
-            pushValueArray(obj, vp, end);
-        else
-            repush(obj);
-    } else if (tag == JitCodeTag) {
-        reinterpret_cast<jit::JitCode*>(addr)->traceChildren(this);
-    }
-}
-
 inline void
 GCMarker::processMarkStackTop(SliceBudget& budget)
 {
@@ -1562,11 +1543,14 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     const int32_t* unboxedTraceList;
     uint8_t* unboxedMemory;
 
+    // Decode
     uintptr_t addr = stack.pop();
     uintptr_t tag = addr & StackTagMask;
     addr &= ~StackTagMask;
 
-    if (tag == ValueArrayTag) {
+    // Dispatch
+    switch (tag) {
+      case ValueArrayTag: {
         JS_STATIC_ASSERT(ValueArrayTag == 0);
         MOZ_ASSERT(!(addr & CellMask));
         obj = reinterpret_cast<JSObject*>(addr);
@@ -1577,15 +1561,36 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         vp = reinterpret_cast<HeapSlot*>(addr2);
         end = reinterpret_cast<HeapSlot*>(addr3);
         goto scan_value_array;
-    }
+      }
 
-    if (tag == ObjectTag) {
+      case ObjectTag: {
         obj = reinterpret_cast<JSObject*>(addr);
         JS_COMPARTMENT_ASSERT(runtime(), obj);
         goto scan_obj;
-    }
+      }
 
-    processMarkStackOther(tag, addr);
+      case GroupTag: {
+        return lazilyMarkChildren(reinterpret_cast<ObjectGroup*>(addr));
+      }
+
+      case JitCodeTag: {
+        return reinterpret_cast<jit::JitCode*>(addr)->traceChildren(this);
+      }
+
+      case SavedValueArrayTag: {
+        MOZ_ASSERT(!(addr & CellMask));
+        NativeObject* obj = reinterpret_cast<NativeObject*>(addr);
+        HeapValue* vp;
+        HeapValue* end;
+        if (restoreValueArray(obj, (void**)&vp, (void**)&end))
+            pushValueArray(obj, vp, end);
+        else
+            repush(obj);
+        return;
+      }
+
+      default: MOZ_CRASH("Invalid tag in mark stack");
+    }
     return;
 
   scan_value_array:
