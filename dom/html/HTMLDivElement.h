@@ -7,16 +7,36 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLDivElement.h"
 
 namespace mozilla {
 namespace dom {
 
-class HTMLDivElement final : public nsGenericHTMLElement
+class HTMLDivElement final : public nsGenericHTMLElement,
+                             public nsIDOMHTMLDivElement
 {
 public:
   explicit HTMLDivElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+  }
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMHTMLDivElement
+  NS_IMETHOD GetAlign(nsAString& aAlign) override
+  {
+    DOMString align;
+    GetAlign(align);
+    align.ToString(aAlign);
+    return NS_OK;
+  }
+  NS_IMETHOD SetAlign(const nsAString& aAlign) override
+  {
+    mozilla::ErrorResult rv;
+    SetAlign(aAlign, rv);
+    return rv.ErrorCode();
   }
 
   void GetAlign(DOMString& aAlign)

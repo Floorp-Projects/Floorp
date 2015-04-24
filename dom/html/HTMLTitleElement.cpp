@@ -28,7 +28,7 @@ HTMLTitleElement::~HTMLTitleElement()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(HTMLTitleElement, nsGenericHTMLElement,
-                            nsIMutationObserver)
+                            nsIDOMHTMLTitleElement, nsIMutationObserver)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
 
@@ -38,18 +38,20 @@ HTMLTitleElement::WrapNode(JSContext* cx, JS::Handle<JSObject*> aGivenProto)
   return HTMLTitleElementBinding::Wrap(cx, this, aGivenProto);
 }
 
-void
-HTMLTitleElement::GetText(DOMString& aText, ErrorResult& aError)
+
+NS_IMETHODIMP 
+HTMLTitleElement::GetText(nsAString& aTitle)
 {
-  if (!nsContentUtils::GetNodeTextContent(this, false, aText)) {
-    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+  if (!nsContentUtils::GetNodeTextContent(this, false, aTitle)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+  return NS_OK;
 }
 
-void
-HTMLTitleElement::SetText(const nsAString& aText, ErrorResult& aError)
+NS_IMETHODIMP 
+HTMLTitleElement::SetText(const nsAString& aTitle)
 {
-  aError = nsContentUtils::SetNodeTextContent(this, aText, true);
+  return nsContentUtils::SetNodeTextContent(this, aTitle, true);
 }
 
 void

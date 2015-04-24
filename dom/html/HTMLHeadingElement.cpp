@@ -21,6 +21,9 @@ HTMLHeadingElement::~HTMLHeadingElement()
 {
 }
 
+NS_IMPL_ISUPPORTS_INHERITED(HTMLHeadingElement, nsGenericHTMLElement,
+                            nsIDOMHTMLHeadingElement)
+
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 
 JSObject*
@@ -28,6 +31,9 @@ HTMLHeadingElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLHeadingElementBinding::Wrap(aCx, this, aGivenProto);
 }
+
+NS_IMPL_STRING_ATTR(HTMLHeadingElement, Align, align)
+
 
 bool
 HTMLHeadingElement::ParseAttribute(int32_t aNamespaceID,
