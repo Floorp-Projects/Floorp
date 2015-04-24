@@ -255,8 +255,9 @@ uploadsymbols:
 ifdef MOZ_CRASHREPORTER
 ifdef SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
-endif
+else
 	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
+endif
 endif
 
 # MOZ_SOURCE_STAMP is defined in package-name.mk with a deferred assignment.
