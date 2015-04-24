@@ -313,6 +313,9 @@ class Nursery
     MOZ_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer* trc, HeapSlot* vp, uint32_t nslots);
     MOZ_ALWAYS_INLINE void markSlots(gc::MinorCollectionTracer* trc, HeapSlot* vp, HeapSlot* end);
     MOZ_ALWAYS_INLINE void markSlot(gc::MinorCollectionTracer* trc, HeapSlot* slotp);
+    MOZ_ALWAYS_INLINE void markTraceList(gc::MinorCollectionTracer* trc,
+                                         const int32_t* traceList, uint8_t* memory);
+    MOZ_ALWAYS_INLINE bool markObject(gc::MinorCollectionTracer* trc, JSObject** pobj);
     void* moveToTenured(gc::MinorCollectionTracer* trc, JSObject* src);
     size_t moveObjectToTenured(gc::MinorCollectionTracer* trc, JSObject* dst, JSObject* src,
                                gc::AllocKind dstKind);

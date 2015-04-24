@@ -7,7 +7,7 @@
 interface nsIMobileCallForwardingOptions;
 interface nsITelephonyCallInfo;
 
-[scriptable, uuid(3cdc0b98-0c5f-489d-9190-083d137f40da)]
+[scriptable, uuid(37fb45bb-ae10-4cfd-b24e-d656a9787a0a)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -26,7 +26,8 @@ interface nsITelephonyListener : nsISupports
   /**
    * Notified when a telephony call changes state.
    */
-  void callStateChanged(in nsITelephonyCallInfo info);
+  void callStateChanged(in unsigned long length,
+                        [array, size_is(length)] in nsITelephonyCallInfo allInfo);
 
   /**
    * Called when participants of a conference call have been updated, and the

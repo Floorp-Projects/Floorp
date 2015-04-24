@@ -270,13 +270,10 @@ SmsService.prototype = {
       // Failed to send SMS out.
       if (aResponse.errorMsg) {
         let error = Ci.nsIMobileMessageCallback.UNKNOWN_ERROR;
-        switch (aResponse.errorMsg) {
-          case RIL.ERROR_RADIO_NOT_AVAILABLE:
-            error = Ci.nsIMobileMessageCallback.NO_SIGNAL_ERROR;
-            break;
-          case RIL.ERROR_FDN_CHECK_FAILURE:
-            error = Ci.nsIMobileMessageCallback.FDN_CHECK_ERROR;
-            break;
+        if (aResponse.errorMsg === RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE) {
+          error = Ci.nsIMobileMessageCallback.NO_SIGNAL_ERROR;
+        } else if (aResponse.errorMsg === RIL.GECKO_ERROR_FDN_CHECK_FAILURE) {
+          error = Ci.nsIMobileMessageCallback.FDN_CHECK_ERROR;
         }
 
         if (aSilent) {

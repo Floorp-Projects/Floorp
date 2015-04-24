@@ -1089,6 +1089,16 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 })();
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+try {
+  let gmpService = Cc["@mozilla.org/gecko-media-plugin-service;1"]
+                     .getService(Ci.mozIGeckoMediaPluginChromeService);
+  gmpService.addPluginDirectory("/system/b2g/gmp-clearkey/0.1");
+} catch(e) {
+  dump("Failed to add clearkey path! " + e + "\n");
+}
+#endif
+
 // Calling this observer will cause a shutdown an a profile reset.
 // Use eg. : Services.obs.notifyObservers(null, 'b2g-reset-profile', null);
 Services.obs.addObserver(function resetProfile(subject, topic, data) {
