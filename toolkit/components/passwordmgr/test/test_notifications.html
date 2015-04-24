@@ -48,6 +48,9 @@ var subtests = [
                    "http://test1.example.org:80" + testpath + "subtst_notifications_1.html", // 21
                    "http://test1.example.org:80" + testpath + "subtst_notifications_7.html", // 22
                    "http://test1.example.org:80" + testpath + "subtst_notifications_6.html", // 23
+                   "subtst_notifications_2pw_0un.html",  // 24
+                   "subtst_notifications_2pw_0un.html",  // 25
+                   "subtst_notifications_2pw_0un.html",  // 26
                ];
 
 
@@ -376,6 +379,46 @@ function checkTest() {
         expectedText = /^Would you like to remember the password on example.org\?$/;
         ok(expectedText.test(notificationText), "Checking text: " + notificationText);
         popup.remove();
+        break;
+
+      case 24:
+        // Check for notification popup when a form with 2 password fields (no username) is
+        // submitted and there are no saved logins.
+        is(gotUser, "null", "Checking submitted username");
+        is(gotPass, "notifyp2", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-save");
+        ok(popup, "got notification popup");
+        popup.remove();
+
+        // Add login for the next test
+        pwmgr.addLogin(login1);
+        break;
+
+      case 25:
+        // Check for notification popup when a form with 2 password fields (no username) is
+        // submitted and there is a saved login with a username and different password.
+        is(gotUser, "null", "Checking submitted username");
+        is(gotPass, "notifyp2", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        popup.remove();
+        // remove that login
+        pwmgr.removeLogin(login1);
+
+        // Add login for the next test
+        pwmgr.addLogin(login2B);
+        break;
+
+      case 26:
+        // Check for notification popup when a form with 2 password fields (no username) is
+        // submitted and there is a saved login with no username and a different password.
+        is(gotUser, "null", "Checking submitted username");
+        is(gotPass, "notifyp2", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-change");
+        ok(popup, "got notification popup");
+        popup.remove();
+        // remove that login
+        pwmgr.removeLogin(login2B);
         break;
 
       default:
