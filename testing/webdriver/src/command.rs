@@ -356,8 +356,8 @@ impl ToJson for GetParameters {
 
 #[derive(PartialEq)]
 pub struct TimeoutsParameters {
-    type_: String,
-    ms: f64
+    pub type_: String,
+    pub ms: f64
 }
 
 impl Parameters for TimeoutsParameters {
@@ -395,8 +395,8 @@ impl ToJson for TimeoutsParameters {
 
 #[derive(PartialEq)]
 pub struct WindowSizeParameters {
-    width: u64,
-    height: u64
+    pub width: u64,
+    pub height: u64
 }
 
 impl Parameters for WindowSizeParameters {
@@ -462,8 +462,8 @@ impl ToJson for SwitchToWindowParameters {
 
 #[derive(PartialEq)]
 pub struct LocatorParameters {
-    using: LocatorStrategy,
-    value: String
+    pub using: LocatorStrategy,
+    pub value: String
 }
 
 impl Parameters for LocatorParameters {
@@ -574,8 +574,8 @@ impl ToJson for SendKeysParameters {
 
 #[derive(PartialEq)]
 pub struct JavascriptCommandParameters {
-    script: String,
-    args: Nullable<Vec<Json>>
+    pub script: String,
+    pub args: Nullable<Vec<Json>>
 }
 
 impl Parameters for JavascriptCommandParameters {
@@ -622,7 +622,7 @@ impl ToJson for JavascriptCommandParameters {
 
 #[derive(PartialEq)]
 pub struct GetCookieParameters {
-    name: Nullable<String>
+    pub name: Nullable<String>
 }
 
 impl Parameters for GetCookieParameters {
