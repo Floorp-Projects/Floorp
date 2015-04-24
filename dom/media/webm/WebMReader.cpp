@@ -924,9 +924,46 @@ WebMReader::DemuxPacket()
     return nullptr;
   }
 
+  // Figure out if this is a keyframe.
+  //
+  // Doing this at packet-granularity is kind of the wrong level of
+  // abstraction, but timestamps are on the packet, so the only time
+  // we have multiple video frames in a packet is when we have "alternate
+  // reference frames", which are a compression detail and never displayed.
+  // So for our purposes, we can just take the union of the is_kf values for
+  // all the frames in the packet.
+  bool isKeyframe = false;
+  if (track == mAudioTrack) {
+    isKeyframe = true;
+  } else if (track == mVideoTrack) {
+    unsigned int count = 0;
+    r = nestegg_packet_count(packet, &count);
+    if (r == -1) {
+      return nullptr;
+    }
+
+    for (unsigned i = 0; i < count; ++i) {
+      unsigned char* data;
+      size_t length;
+      r = nestegg_packet_data(packet, i, &data, &length);
+      if (r == -1) {
+        return nullptr;
+      }
+      vpx_codec_stream_info_t si;
+      memset(&si, 0, sizeof(si));
+      si.sz = sizeof(si);
+      if (mVideoCodec == NESTEGG_CODEC_VP8) {
+        vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), data, length, &si);
+      } else if (mVideoCodec == NESTEGG_CODEC_VP9) {
+        vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), data, length, &si);
+      }
+      isKeyframe = isKeyframe || si.is_kf;
+    }
+  }
+
   int64_t offset = mDecoder->GetResource()->Tell();
   nsRefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
-  if (!holder->Init(packet, offset, track)) {
+  if (!holder->Init(packet, offset, track, isKeyframe)) {
     return nullptr;
   }
 
@@ -986,34 +1023,12 @@ int64_t WebMReader::GetNextKeyframeTime(int64_t aTimeThreshold)
     if (!holder) {
       break;
     }
-    unsigned int count = 0;
-    int r = nestegg_packet_count(holder->Packet(), &count);
-    if (r == -1) {
-      break;
+
+    if (holder->IsKeyframe()) {
+      foundKeyframe = true;
+      keyframeTime = holder->Timestamp();
     }
-    int64_t tstamp = holder->Timestamp();
-    for (uint32_t i = 0; i < count; ++i) {
-      unsigned char* data;
-      size_t length;
-      r = nestegg_packet_data(holder->Packet(), i, &data, &length);
-      if (r == -1) {
-        foundKeyframe = true;
-        break;
-      }
-      vpx_codec_stream_info_t si;
-      memset(&si, 0, sizeof(si));
-      si.sz = sizeof(si);
-      if (mVideoCodec == NESTEGG_CODEC_VP8) {
-        vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), data, length, &si);
-      } else if (mVideoCodec == NESTEGG_CODEC_VP9) {
-        vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), data, length, &si);
-      }
-      if (si.is_kf) {
-        foundKeyframe = true;
-        keyframeTime = tstamp;
-        break;
-      }
-    }
+
     skipPacketQueue.PushFront(holder.forget());
   }
 

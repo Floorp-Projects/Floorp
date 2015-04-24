@@ -36,9 +36,9 @@ static const double NS_PER_S = 1e9;
 class NesteggPacketHolder {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NesteggPacketHolder)
-  NesteggPacketHolder() : mPacket(nullptr), mOffset(-1), mTimestamp(-1) {}
+  NesteggPacketHolder() : mPacket(nullptr), mOffset(-1), mTimestamp(-1), mIsKeyframe(false) {}
 
-  bool Init(nestegg_packet* aPacket, int64_t aOffset, unsigned aTrack)
+  bool Init(nestegg_packet* aPacket, int64_t aOffset, unsigned aTrack, bool aIsKeyframe)
   {
     uint64_t timestamp_ns;
     if (nestegg_packet_tstamp(aPacket, &timestamp_ns) == -1) {
@@ -51,6 +51,7 @@ public:
     mPacket = aPacket;
     mOffset = aOffset;
     mTrack = aTrack;
+    mIsKeyframe = aIsKeyframe;
 
     return true;
   }
@@ -59,6 +60,7 @@ public:
   int64_t Offset() { MOZ_ASSERT(IsInitialized()); return mOffset; }
   int64_t Timestamp() { MOZ_ASSERT(IsInitialized()); return mTimestamp; }
   unsigned Track() { MOZ_ASSERT(IsInitialized()); return mTrack; }
+  bool IsKeyframe() { MOZ_ASSERT(IsInitialized()); return mIsKeyframe; }
 
 private:
   ~NesteggPacketHolder()
@@ -79,6 +81,9 @@ private:
 
   // Track ID.
   unsigned mTrack;
+
+  // Does this packet contain a keyframe?
+  bool mIsKeyframe;
 
   // Copy constructor and assignment operator not implemented. Don't use them!
   NesteggPacketHolder(const NesteggPacketHolder &aOther);
