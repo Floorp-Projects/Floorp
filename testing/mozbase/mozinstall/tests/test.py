@@ -20,6 +20,8 @@ class TestMozInstall(unittest.TestCase):
     def setUpClass(cls):
         """ Setting up stub installers """
         cls.dmg = os.path.join(here, 'Installer-Stubs', 'firefox.dmg')
+        # XXX: We have removed firefox.exe since it is not valid for mozinstall 1.12 and higher
+        # Bug 1157352 - We should grab a firefox.exe from the build process or download it
         cls.exe = os.path.join(here, 'Installer-Stubs', 'firefox.exe')
         cls.zipfile = os.path.join(here, 'Installer-Stubs', 'firefox.zip')
         cls.bz2 = os.path.join(here, 'Installer-Stubs', 'firefox.tar.bz2')
@@ -30,6 +32,7 @@ class TestMozInstall(unittest.TestCase):
     def tearDown(self):
         mozfile.rmtree(self.tempdir)
 
+    @unittest.skipIf(mozinfo.isWin, "Bug 1157352 - We need a new firefox.exe for mozinstall 1.12 and higher.")
     def test_get_binary(self):
         """ Test mozinstall's get_binary method """
 
@@ -41,8 +44,7 @@ class TestMozInstall(unittest.TestCase):
         elif mozinfo.isWin:
             installdir_exe = mozinstall.install(self.exe,
                                                 os.path.join(self.tempdir, 'exe'))
-            binary_exe = os.path.join(installdir_exe, 'firefox', 'firefox',
-                                      'firefox.exe')
+            binary_exe = os.path.join(installdir_exe, 'core', 'firefox.exe')
             self.assertEqual(binary_exe, mozinstall.get_binary(installdir_exe,
                              'firefox'))
 
@@ -65,6 +67,7 @@ class TestMozInstall(unittest.TestCase):
                           tempdir_empty, 'firefox')
         mozfile.rmtree(tempdir_empty)
 
+    @unittest.skipIf(mozinfo.isWin, "Bug 1157352 - We need a new firefox.exe for mozinstall 1.12 and higher.")
     def test_is_installer(self):
         """ Test we can identify a correct installer """
 
@@ -103,8 +106,9 @@ class TestMozInstall(unittest.TestCase):
 
         elif mozinfo.isMac:
             self.assertRaises(mozinstall.InvalidSource, mozinstall.install,
-                              self.exe, 'firefox')
+                              self.bz2, 'firefox')
 
+    @unittest.skipIf(mozinfo.isWin, "Bug 1157352 - We need a new firefox.exe for mozinstall 1.12 and higher.")
     def test_install(self):
         """ Test mozinstall's install capability """
 
@@ -128,6 +132,7 @@ class TestMozInstall(unittest.TestCase):
             self.assertEqual(os.path.join(os.path.realpath(self.tempdir),
                                           'FirefoxStub.app'), installdir)
 
+    @unittest.skipIf(mozinfo.isWin, "Bug 1157352 - We need a new firefox.exe for mozinstall 1.12 and higher.")
     def test_uninstall(self):
         """ Test mozinstall's uninstall capabilites """
         # Uninstall after installing

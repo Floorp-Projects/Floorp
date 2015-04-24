@@ -421,20 +421,12 @@ var LoginManagerParent = {
                    (usernameField ? usernameField.name  : ""),
                    newPasswordField.name);
 
+    let logins = Services.logins.findLogins({}, hostname, formSubmitURL, null);
+
     // If we didn't find a username field, but seem to be changing a
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
-    if (!usernameField && oldPasswordField) {
-
-      var logins = Services.logins.findLogins({}, hostname, formSubmitURL, null);
-
-      if (logins.length == 0) {
-        // Could prompt to save this as a new password-only login.
-        // This seems uncommon, and might be wrong, so ignore.
-        log("(no logins for this host -- pwchange ignored)");
-        return;
-      }
-
+    if (!usernameField && oldPasswordField && logins.length > 0) {
       var prompter = getPrompter();
 
       if (logins.length == 1) {
@@ -452,10 +444,8 @@ var LoginManagerParent = {
     }
 
 
-    // Look for an existing login that matches the form login.
     var existingLogin = null;
-    var logins = Services.logins.findLogins({}, hostname, formSubmitURL, null);
-
+    // Look for an existing login that matches the form login.
     for (var i = 0; i < logins.length; i++) {
       var same, login = logins[i];
 

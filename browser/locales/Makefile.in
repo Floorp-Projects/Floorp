@@ -71,14 +71,8 @@ STUB_HOOK = $(NSINSTALL) -D '$(_ABS_DIST)/$(PKG_INST_PATH)'; \
     $(NULL)
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT) $(DIST_SUBDIR),windows metro)
-SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/metrolist.txt))
-else
 SEARCHPLUGINS_NAMES = $(shell cat $(call MERGE_FILE,/searchplugins/list.txt)) ddg
-endif
 SEARCHPLUGINS_PATH := $(FINAL_TARGET)/searchplugins
-# metro build call a searchplugins target for search engine plugins
-.PHONY: searchplugins
 SEARCHPLUGINS_TARGET := libs searchplugins
 SEARCHPLUGINS := $(foreach plugin,$(addsuffix .xml,$(SEARCHPLUGINS_NAMES)),$(or $(wildcard $(call EN_US_OR_L10N_FILE,searchplugins/$(plugin))),$(info Missing searchplugin: $(plugin))))
 # Some locale-specific search plugins may have preprocessor directives, but the
@@ -88,12 +82,7 @@ PP_TARGETS += SEARCHPLUGINS
 
 # Required for l10n.mk - defines a list of app sub dirs that should
 # be included in langpack xpis.
-ifdef MOZ_METRO
-# metro build, include both app folders
-DIST_SUBDIRS = browser metro
-else
 DIST_SUBDIRS = $(DIST_SUBDIR)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -138,9 +127,6 @@ endif
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
-ifdef MOZ_METRO
-	@$(MAKE) -C ../metro/locales AB_CD=$* XPI_NAME=locale-$*
-endif
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
 
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe

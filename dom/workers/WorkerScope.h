@@ -232,6 +232,10 @@ public:
   IMPL_EVENT_HANDLER(fetch)
   IMPL_EVENT_HANDLER(install)
   IMPL_EVENT_HANDLER(message)
+
+  IMPL_EVENT_HANDLER(push)
+  IMPL_EVENT_HANDLER(pushsubscriptionchange)
+
 };
 
 class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,

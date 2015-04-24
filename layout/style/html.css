@@ -560,7 +560,7 @@ mark {
 
 /* titles */
 abbr[title], acronym[title] {
-  border-block-end: dotted 1px;
+  text-decoration: dotted underline;
 }
 
 /* lists */

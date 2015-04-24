@@ -993,30 +993,6 @@ const CustomizableWidgets = [
     }
   }];
 
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-if (Services.metro && Services.metro.supported) {
-  let widgetArgs = {tooltiptext: "switch-to-metro-button2.tooltiptext"};
-  let brandShortName = BrandBundle.GetStringFromName("brandShortName");
-  let metroTooltip = CustomizableUI.getLocalizedProperty(widgetArgs, "tooltiptext",
-                                                         [brandShortName]);
-  CustomizableWidgets.push({
-    id: "switch-to-metro-button",
-    label: "switch-to-metro-button2.label",
-    tooltiptext: metroTooltip,
-    defaultArea: CustomizableUI.AREA_PANEL,
-    showInPrivateBrowsing: false, /* See bug 928068 */
-    onCommand: function(aEvent) {
-      let win = aEvent.view;
-      if (win && typeof win.SwitchToMetro == "function") {
-        win.SwitchToMetro();
-      }
-    }
-  });
-}
-#endif
-#endif
-
 if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
   CustomizableWidgets.push({
     id: "panic-button",

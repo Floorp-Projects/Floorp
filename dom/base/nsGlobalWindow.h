@@ -52,6 +52,7 @@
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSize.h"
+#include "nsCheapSets.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -1590,6 +1591,7 @@ protected:
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
 #ifdef MOZ_GAMEPAD
+  nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
   bool mHasSeenGamepadInput;
 #endif

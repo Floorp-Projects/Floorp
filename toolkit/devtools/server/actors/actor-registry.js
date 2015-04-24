@@ -89,11 +89,6 @@ function request(uri) {
       reject(e);
     }
 
-    if (uri.scheme != "resource") {
-      reject(new Error(
-        "Can only register actors whose URI scheme is 'resource'."));
-    }
-
     NetUtil.asyncFetch({
       uri,
       loadUsingSystemPrincipal: true,

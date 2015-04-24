@@ -140,7 +140,6 @@ pref("app.update.cert.maxErrors", 5);
 // |app.update.url.override| user preference has been set for testing updates or
 // when the |app.update.cert.checkAttributes| preference is set to false. Also,
 // the |app.update.url.override| preference should ONLY be used for testing.
-// IMPORTANT! metro.js should also be updated for updates to certs.X.issuerName
 // IMPORTANT! media.gmp-manager.certs.* prefs should also be updated if these
 // are updated.
 
@@ -162,16 +161,7 @@ pref("app.update.enabled", true);
 pref("app.update.auto", true);
 
 // See chart in nsUpdateService.js source for more details
-// incompatibilities are ignored by updates in Metro
 pref("app.update.mode", 1);
-
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-// Enables update checking in the Metro environment.
-// add-on incompatibilities are ignored by updates in Metro.
-pref("app.update.metro.enabled", true);
-#endif
-#endif
 
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
@@ -1835,6 +1825,10 @@ pref("browser.translation.detectLanguage", false);
 pref("browser.translation.neverForLanguages", "");
 // Show the translation UI bits, like the info bar, notification icon and preferences.
 pref("browser.translation.ui.show", false);
+
+// Telemetry settings.
+// Determines if Telemetry pings can be archived locally.
+pref("toolkit.telemetry.archive.enabled", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);

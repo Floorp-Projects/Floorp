@@ -52,9 +52,4 @@ mochitest:: mochitest-browser-chrome
 
 .PHONY: mochitest-browser-chrome
 
-mochitest-metro-chrome:
-	$(RUN_MOCHITEST) --metro-immersive --browser-chrome
-	$(CHECK_TEST_ERROR)
-
-
 endif

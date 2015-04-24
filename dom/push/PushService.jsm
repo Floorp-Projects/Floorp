@@ -887,21 +887,26 @@ this.PushService = {
     if (uri.scheme === "wss") {
       socket = Cc["@mozilla.org/network/protocol;1?name=wss"]
                  .createInstance(Ci.nsIWebSocketChannel);
-
-      socket.initLoadInfo(null, // aLoadingNode
-                          Services.scriptSecurityManager.getSystemPrincipal(),
-                          null, // aTriggeringPrincipal
-                          Ci.nsILoadInfo.SEC_NORMAL,
-                          Ci.nsIContentPolicy.TYPE_WEBSOCKET);
     }
     else if (uri.scheme === "ws") {
-      debug("Push over an insecure connection (ws://) is not allowed!");
-      return null;
+      if (uri.host != "localhost") {
+        debug("Push over an insecure connection (ws://) is not allowed!");
+        return null;
+      }
+      socket = Cc["@mozilla.org/network/protocol;1?name=ws"]
+                 .createInstance(Ci.nsIWebSocketChannel);
     }
     else {
       debug("Unsupported websocket scheme " + uri.scheme);
       return null;
     }
+
+    socket.initLoadInfo(null, // aLoadingNode
+                        Services.scriptSecurityManager.getSystemPrincipal(),
+                        null, // aTriggeringPrincipal
+                        Ci.nsILoadInfo.SEC_NORMAL,
+                        Ci.nsIContentPolicy.TYPE_WEBSOCKET);
+
     return socket;
   },
 

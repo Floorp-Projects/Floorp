@@ -1311,15 +1311,17 @@ this.NewTabUtils = {
    * @return The "site" string or null
    */
   extractSite: function Links_extractSite(url) {
-    let uri;
+    let host;
     try {
-      uri = Services.io.newURI(url, null, null);
+      // Note that nsIURI.asciiHost throws NS_ERROR_FAILURE for some types of
+      // URIs, including jar and moz-icon URIs.
+      host = Services.io.newURI(url, null, null).asciiHost;
     } catch (ex) {
       return null;
     }
 
     // Strip off common subdomains of the same site (e.g., www, load balancer)
-    return uri.asciiHost.replace(/^(m|mobile|www\d*)\./, "");
+    return host.replace(/^(m|mobile|www\d*)\./, "");
   },
 
   init: function NewTabUtils_init() {

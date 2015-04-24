@@ -17,11 +17,3 @@ browser.jar:
   content/branding/identity-icons-brand@2x.png   (identity-icons-brand@2x.png)
   content/branding/silhouette-40.svg             (silhouette-40.svg)
   content/branding/aboutDialog.css               (aboutDialog.css)
-#ifdef MOZ_METRO
-  content/branding/metro-about.css               (metro-about.css)
-  content/branding/metro-about-footer.png        (metro-about-footer.png)
-  content/branding/metro-about-wordmark.png      (metro-about-wordmark.png)
-  content/branding/metro_firstrun_logo.png       (metro_firstrun_logo.png)
-  content/branding/metro_firstrun_logo@1.4x.png  (metro_firstrun_logo@1.4x.png)
-  content/branding/metro_firstrun_logo@1.8x.png  (metro_firstrun_logo@1.8x.png)
-#endif
