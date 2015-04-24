@@ -276,8 +276,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
   if (node->IsElement()) {
     ErrorResult rv;
     mDocChangeRange->SelectNode(*node, rv);
-    res = AdjustSpecialBreaks(node);
-    NS_ENSURE_SUCCESS(res, res);
+    AdjustSpecialBreaks();
   }
 
   // add ourselves as a listener to edit actions
@@ -461,8 +460,7 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
     }  
     
     // add in any needed <br>s, and remove any unneeded ones.
-    res = AdjustSpecialBreaks();
-    NS_ENSURE_SUCCESS(res, res);
+    AdjustSpecialBreaks();
     
     // merge any adjacent text nodes
     if ( (action != EditAction::insertText &&
@@ -7295,37 +7293,26 @@ nsHTMLEditRules::ClearCachedStyles()
 }
 
 
-nsresult 
-nsHTMLEditRules::AdjustSpecialBreaks(bool aSafeToAskFrames)
+void
+nsHTMLEditRules::AdjustSpecialBreaks()
 {
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsCOMPtr<nsISupports> isupports;
-  int32_t nodeCount,j;
-  
-  // gather list of empty nodes
-  NS_ENSURE_STATE(mHTMLEditor);
+  NS_ENSURE_TRUE(mHTMLEditor, );
+
+  // Gather list of empty nodes
+  nsTArray<nsCOMPtr<nsINode>> nodeArray;
   nsEmptyEditableFunctor functor(mHTMLEditor);
   nsDOMIterator iter(*mDocChangeRange);
-  iter.AppendList(functor, arrayOfNodes);
+  iter.AppendList(functor, nodeArray);
 
-  // put moz-br's into these empty li's and td's
-  nodeCount = arrayOfNodes.Count();
-  for (j = 0; j < nodeCount; j++)
-  {
-    // need to put br at END of node.  It may have
-    // empty containers in it and still pass the "IsEmptynode" test,
-    // and we want the br's to be after them.  Also, we want the br
-    // to be after the selection if the selection is in this node.
-    uint32_t len;
-    nsCOMPtr<nsIDOMNode> theNode = arrayOfNodes[0];
-    arrayOfNodes.RemoveObjectAt(0);
-    nsresult res = nsEditor::GetLengthOfDOMNode(theNode, len);
-    NS_ENSURE_SUCCESS(res, res);
-    res = CreateMozBR(theNode, (int32_t)len);
-    NS_ENSURE_SUCCESS(res, res);
+  // Put moz-br's into these empty li's and td's
+  for (auto& node : nodeArray) {
+    // Need to put br at END of node.  It may have empty containers in it and
+    // still pass the "IsEmptyNode" test, and we want the br's to be after
+    // them.  Also, we want the br to be after the selection if the selection
+    // is in this node.
+    nsresult res = CreateMozBR(node->AsDOMNode(), (int32_t)node->Length());
+    NS_ENSURE_SUCCESS(res, );
   }
-  
-  return NS_OK;
 }
 
 nsresult 
