@@ -603,21 +603,19 @@ protected:
                                       int32_t aEndOffset);
   nsresult CreateTagStack(nsTArray<nsString> &aTagStack,
                           nsIDOMNode *aNode);
-  nsresult GetListAndTableParents( bool aEnd, 
-                                   nsCOMArray<nsIDOMNode>& aListOfNodes,
-                                   nsCOMArray<nsIDOMNode>& outArray);
-  nsresult DiscoverPartialListsAndTables(nsCOMArray<nsIDOMNode>& aPasteNodes,
-                                         nsCOMArray<nsIDOMNode>& aListsAndTables,
-                                         int32_t *outHighWaterMark);
-  nsresult ScanForListAndTableStructure(bool aEnd,
-                                        nsCOMArray<nsIDOMNode>& aNodes,
-                                        nsIDOMNode *aListOrTable,
-                                        nsCOMPtr<nsIDOMNode> *outReplaceNode);
-  nsresult ReplaceOrphanedStructure( bool aEnd,
-                                     nsCOMArray<nsIDOMNode>& aNodeArray,
-                                     nsCOMArray<nsIDOMNode>& aListAndTableArray,
-                                     int32_t aHighWaterMark);
-  nsIDOMNode* GetArrayEndpoint(bool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
+  enum class StartOrEnd { start, end };
+  void GetListAndTableParents(StartOrEnd aStartOrEnd,
+                              nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeList,
+                              nsTArray<mozilla::dom::OwningNonNull<mozilla::dom::Element>>& outArray);
+  int32_t DiscoverPartialListsAndTables(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aPasteNodes,
+                                        nsTArray<mozilla::dom::OwningNonNull<mozilla::dom::Element>>& aListsAndTables);
+  nsINode* ScanForListAndTableStructure(StartOrEnd aStartOrEnd,
+                                        nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodes,
+                                        mozilla::dom::Element& aListOrTable);
+  void ReplaceOrphanedStructure(StartOrEnd aStartOrEnd,
+                                nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray,
+                                nsTArray<mozilla::dom::OwningNonNull<mozilla::dom::Element>>& aListAndTableArray,
+                                int32_t aHighWaterMark);
 
   /* small utility routine to test if a break node is visible to user */
   bool     IsVisBreak(nsINode* aNode);
