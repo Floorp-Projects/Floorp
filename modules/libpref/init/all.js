@@ -251,6 +251,9 @@ pref("browser.triple_click_selects_paragraph", true);
 // Print/Preview Shrink-To-Fit won't shrink below 20% for text-ish documents.
 pref("print.shrink-to-fit.scale-limit-percent", 20);
 
+// Enable scale transform for stretchy MathML operators. See bug 414277.
+pref("mathml.scale_stretchy_operators.enabled", true);
+
 // Media cache size in kilobytes
 pref("media.cache_size", 512000);
 // When a network connection is suspended, don't resume it until the
