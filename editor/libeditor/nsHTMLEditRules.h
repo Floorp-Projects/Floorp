@@ -272,9 +272,9 @@ protected:
   void GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
                         int32_t aOffset, EditAction actionID,
                         nsCOMPtr<nsIDOMNode>* outNode, int32_t* outOffset);
-  nsresult GetPromotedRanges(mozilla::dom::Selection* aSelection, 
-                             nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
-                             EditAction inOperationType);
+  void GetPromotedRanges(mozilla::dom::Selection& aSelection, 
+                         nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
+                         EditAction inOperationType);
   void PromoteRange(nsRange& aRange, EditAction inOperationType);
   enum class TouchContent { no, yes };
   nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRanges,
