@@ -5,6 +5,7 @@
 
 #include "nsEditorUtils.h"
 
+#include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMArray.h"
 #include "nsComponentManagerUtils.h"
@@ -87,6 +88,20 @@ nsDOMIterator::nsDOMIterator()
 
 nsDOMIterator::~nsDOMIterator()
 {
+}
+
+void
+nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
+                          nsTArray<OwningNonNull<nsINode>>& arrayOfNodes) const
+{
+  // Iterate through dom and build list
+  for (; !mIter->IsDone(); mIter->Next()) {
+    nsCOMPtr<nsINode> node = mIter->GetCurrentNode();
+
+    if (functor(node)) {
+      arrayOfNodes.AppendElement(*node);
+    }
+  }
 }
 
 void
