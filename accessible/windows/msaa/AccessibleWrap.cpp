@@ -1180,13 +1180,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Don't fire native MSAA events or mess with the system caret
-  // when running in metro mode. This confuses input focus tracking
-  // in metro's UIA implementation.
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
-    return NS_OK;
-  }
-
   uint32_t eventType = aEvent->GetEventType();
 
   static_assert(sizeof(gWinEventMap)/sizeof(gWinEventMap[0]) == nsIAccessibleEvent::EVENT_LAST_ENTRY,

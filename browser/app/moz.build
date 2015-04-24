@@ -6,7 +6,7 @@
 
 DIRS += ['profile/extensions']
 
-if CONFIG['OS_ARCH'] == 'WINNT' and (CONFIG['MOZ_METRO'] or CONFIG['MOZ_ASAN']):
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_ASAN']:
     GeckoProgram(CONFIG['MOZ_APP_NAME'])
 else:
     GeckoProgram(CONFIG['MOZ_APP_NAME'], msvcrt='static')
@@ -43,10 +43,9 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
-if not CONFIG['MOZ_METRO']:
-  DELAYLOAD_DLLS += [
-      'mozglue.dll',
-  ]
+DELAYLOAD_DLLS += [
+    'mozglue.dll',
+]
 
 USE_LIBS += [
     'mozglue',

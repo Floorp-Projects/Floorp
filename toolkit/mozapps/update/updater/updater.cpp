@@ -65,7 +65,6 @@
 
 // Amount of time in ms to wait for the parent process to close
 #define PARENT_WAIT 5000
-#define IMMERSIVE_PARENT_WAIT 15000
 
 #if defined(XP_MACOSX)
 // These functions are defined in launchchild_osx.mm
@@ -1731,23 +1730,6 @@ PatchIfFile::Finish(int status)
 #include "nsWindowsHelpers.h"
 #include "uachelper.h"
 #include "pathhash.h"
-
-#ifdef MOZ_METRO
-/**
- * Determines if the update came from an Immersive browser
- * @return true if the update came from an immersive browser
- */
-bool
-IsUpdateFromMetro(int argc, NS_tchar **argv)
-{
-  for (int i = 0; i < argc; i++) {
-    if (!wcsicmp(L"-ServerName:DefaultBrowserServer", argv[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
 #endif
 
 static void
@@ -1774,14 +1756,6 @@ LaunchCallbackApp(const NS_tchar *workingDir,
   // Do not allow the callback to run when running an update through the
   // service as session 0.  The unelevated updater.exe will do the launching.
   if (!usingService) {
-#if defined(MOZ_METRO)
-    // If our callback application is the default metro browser, then
-    // launch it now.
-    if (IsUpdateFromMetro(argc, argv)) {
-      LaunchDefaultMetroBrowser();
-      return;
-    }
-#endif
     WinLaunchChild(argv[0], argc, argv, nullptr);
   }
 #else
@@ -2484,15 +2458,10 @@ int NS_main(int argc, NS_tchar **argv)
     // Otherwise, wait for the parent process to exit before starting the
     // update.
     if (parent) {
-      bool updateFromMetro = false;
-#ifdef MOZ_METRO
-      updateFromMetro = IsUpdateFromMetro(argc, argv);
-#endif
-      DWORD waitTime = updateFromMetro ?
-                       IMMERSIVE_PARENT_WAIT : PARENT_WAIT;
+      DWORD waitTime = PARENT_WAIT;
       DWORD result = WaitForSingleObject(parent, waitTime);
       CloseHandle(parent);
-      if (result != WAIT_OBJECT_0 && !updateFromMetro)
+      if (result != WAIT_OBJECT_0)
         return 1;
     }
   }

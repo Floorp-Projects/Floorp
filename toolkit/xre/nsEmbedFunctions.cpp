@@ -843,23 +843,6 @@ XRE_InstallX11ErrorHandler()
 }
 #endif
 
-#ifdef XP_WIN
-static WindowsEnvironmentType
-sWindowsEnvironmentType = WindowsEnvironmentType_Desktop;
-
-void
-SetWindowsEnvironment(WindowsEnvironmentType aEnvID)
-{
-  sWindowsEnvironmentType = aEnvID;
-}
-
-WindowsEnvironmentType
-XRE_GetWindowsEnvironment()
-{
-  return sWindowsEnvironmentType;
-}
-#endif // XP_WIN
-
 #ifdef MOZ_B2G_LOADER
 extern const nsXREAppData* gAppData;
 

@@ -82,9 +82,6 @@ StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 static const char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
-#if defined(XP_WIN) && defined(MOZ_METRO)
-static const char sMetroStartupCacheName[] = "metroStartupCache." SC_WORDSIZE "." SC_ENDIAN;
-#endif
 
 StartupCache*
 StartupCache::GetSingleton()
@@ -199,14 +196,7 @@ StartupCache::Init()
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)
       return rv;
 
-#if defined(XP_WIN) && defined(MOZ_METRO)
-    if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
-      rv = file->AppendNative(NS_LITERAL_CSTRING(sMetroStartupCacheName));
-    } else
-#endif
-    {
-      rv = file->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
-    }
+    rv = file->AppendNative(NS_LITERAL_CSTRING(sStartupCacheName));
 
     NS_ENSURE_SUCCESS(rv, rv);
 

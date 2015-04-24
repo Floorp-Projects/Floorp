@@ -49,7 +49,7 @@ CURRENT_TIER := $(subst recurse_,,$(CURRENT_TIER:-deps=))
 # The rules here are doing directory traversal, so we don't want further
 # recursion to happen when running make -C subdir $tier. But some make files
 # further call make -C something else, and sometimes expect recursion to
-# happen in that case (see browser/metro/locales/Makefile.in for example).
+# happen in that case.
 # Conveniently, every invocation of make increases MAKELEVEL, so only stop
 # recursion from happening at current MAKELEVEL + 1.
 ifdef CURRENT_TIER

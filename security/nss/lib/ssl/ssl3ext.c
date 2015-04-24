@@ -2375,10 +2375,12 @@ ssl3_ClientSendSigAlgsXtn(sslSocket * ss, PRBool append, PRUint32 maxBytes)
          * https://tools.ietf.org/html/rfc5246#section-7.4.1.4.1 */
         tls_hash_sha256, tls_sig_rsa,
         tls_hash_sha384, tls_sig_rsa,
+        tls_hash_sha512, tls_sig_rsa,
         tls_hash_sha1,   tls_sig_rsa,
 #ifndef NSS_DISABLE_ECC
         tls_hash_sha256, tls_sig_ecdsa,
         tls_hash_sha384, tls_sig_ecdsa,
+        tls_hash_sha512, tls_sig_ecdsa,
         tls_hash_sha1,   tls_sig_ecdsa,
 #endif
         tls_hash_sha256, tls_sig_dsa,

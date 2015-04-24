@@ -40,7 +40,7 @@ var TestSpeechServiceWithAudio = SpecialPowers.wrapCallbackObject({
 
   serviceType: SpecialPowers.Ci.nsISpeechService.SERVICETYPE_DIRECT_AUDIO,
 
-  speak: function speak(aText, aUri, aRate, aPitch, aTask) {
+  speak: function speak(aText, aUri, aVolume, aRate, aPitch, aTask) {
     var task = SpecialPowers.wrap(aTask);
 
     window.setTimeout(
@@ -64,7 +64,7 @@ var TestSpeechServiceWithAudio = SpecialPowers.wrapCallbackObject({
 var TestSpeechServiceNoAudio = SpecialPowers.wrapCallbackObject({
   serviceType: SpecialPowers.Ci.nsISpeechService.SERVICETYPE_INDIRECT_AUDIO,
 
-  speak: function speak(aText, aUri, aRate, aPitch, aTask) {
+  speak: function speak(aText, aUri, aVolume, aRate, aPitch, aTask) {
     var pair = this.expectedSpeaks.shift();
     if (pair) {
       // XXX: These tests do not happen in OOP
