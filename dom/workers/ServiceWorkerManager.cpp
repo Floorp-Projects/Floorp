@@ -139,7 +139,7 @@ ServiceWorkerJob::Done(nsresult aStatus)
     GetErrorName(aStatus, errorName);
 #endif
     NS_WARNING(nsPrintfCString("ServiceWorkerJob failed with error: %s\n",
-               errorName.get()).get());
+                               errorName.get()).get());
   }
 
   if (mQueue) {
