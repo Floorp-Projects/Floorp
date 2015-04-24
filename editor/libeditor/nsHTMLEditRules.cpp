@@ -3536,17 +3536,17 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
     // Ok, now go through all the nodes and make the right kind of blocks, 
     // or whatever is approriate.  Wohoo! 
     // Note: blockquote is handled a little differently
-    nsCOMArray<nsIDOMNode> arrayOfDOMNodes;
-    for (auto& node : arrayOfNodes) {
-      arrayOfDOMNodes.AppendObject(GetAsDOMNode(node));
-    }
-    if (tString.EqualsLiteral("blockquote"))
+    if (tString.EqualsLiteral("blockquote")) {
       res = MakeBlockquote(arrayOfNodes);
-    else if (tString.EqualsLiteral("normal") ||
-             tString.IsEmpty() )
-      res = RemoveBlockStyle(arrayOfDOMNodes);
-    else
+    } else if (tString.EqualsLiteral("normal") || tString.IsEmpty()) {
+      res = RemoveBlockStyle(arrayOfNodes);
+    } else {
+      nsCOMArray<nsIDOMNode> arrayOfDOMNodes;
+      for (auto& node : arrayOfNodes) {
+        arrayOfDOMNodes.AppendObject(GetAsDOMNode(node));
+      }
       res = ApplyBlockStyle(arrayOfDOMNodes, aBlockType);
+    }
     return res;
   }
   return res;
@@ -4308,28 +4308,21 @@ nsHTMLEditRules::WillOutdent(Selection* aSelection,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// RemovePartOfBlock:  split aBlock and move aStartChild to aEndChild out
-//                     of aBlock.  return left side of block (if any) in
-//                     aLeftNode.  return right side of block (if any) in
-//                     aRightNode.  
-//                  
-nsresult 
-nsHTMLEditRules::RemovePartOfBlock(nsIDOMNode *aBlock, 
-                                   nsIDOMNode *aStartChild, 
-                                   nsIDOMNode *aEndChild,
-                                   nsCOMPtr<nsIDOMNode> *aLeftNode,
-                                   nsCOMPtr<nsIDOMNode> *aRightNode)
+///////////////////////////////////////////////////////////////////////////////
+// RemovePartOfBlock: Split aBlock and move aStartChild to aEndChild out of
+//                    aBlock.
+nsresult
+nsHTMLEditRules::RemovePartOfBlock(Element& aBlock,
+                                   nsIContent& aStartChild,
+                                   nsIContent& aEndChild)
 {
-  nsCOMPtr<nsIDOMNode> middleNode;
-  nsresult res = SplitBlock(aBlock, aStartChild, aEndChild,
-                            aLeftNode, aRightNode,
-                            address_of(middleNode));
+  nsresult res = SplitBlock(aBlock.AsDOMNode(), aStartChild.AsDOMNode(),
+                            aEndChild.AsDOMNode());
   NS_ENSURE_SUCCESS(res, res);
-  // get rid of part of blockquote we are outdenting
+  // Get rid of part of blockquote we are outdenting
 
   NS_ENSURE_STATE(mHTMLEditor);
-  return mHTMLEditor->RemoveBlockContainer(aBlock);
+  return mHTMLEditor->RemoveBlockContainer(aBlock.AsDOMNode());
 }
 
 nsresult 
@@ -6867,114 +6860,91 @@ nsHTMLEditRules::MakeBlockquote(nsTArray<nsCOMPtr<nsINode>>& aNodeArray)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// RemoveBlockStyle:  make the nodes have no special block type.  
-//                       
-nsresult 
-nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
+///////////////////////////////////////////////////////////////////////////////
+// RemoveBlockStyle: Make the nodes have no special block type.
+nsresult
+nsHTMLEditRules::RemoveBlockStyle(nsTArray<nsCOMPtr<nsINode>>& aNodeArray)
 {
-  // intent of this routine is to be used for converting to/from
-  // headers, paragraphs, pre, and address.  Those blocks
-  // that pretty much just contain inline things...
-  
-  nsresult res = NS_OK;
-  
-  nsCOMPtr<nsIDOMNode> curBlock, firstNode, lastNode;
-  int32_t listCount = arrayOfNodes.Count();
-  for (int32_t i = 0; i < listCount; ++i) {
-    // get the node to act on, and its location
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
-    nsCOMPtr<dom::Element> curElement = do_QueryInterface(curNode);
+  // Intent of this routine is to be used for converting to/from headers,
+  // paragraphs, pre, and address.  Those blocks that pretty much just contain
+  // inline things...
+  nsresult res;
 
-    // if curNode is a address, p, header, address, or pre, remove it 
-    if (curElement && nsHTMLEditUtils::IsFormatNode(curElement)) {
-      // process any partial progress saved
-      if (curBlock)
-      {
-        res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+  nsCOMPtr<Element> curBlock;
+  nsCOMPtr<nsIContent> firstNode, lastNode;
+  for (auto& curNode : aNodeArray) {
+    // If curNode is a address, p, header, address, or pre, remove it
+    if (nsHTMLEditUtils::IsFormatNode(curNode)) {
+      // Process any partial progress saved
+      if (curBlock) {
+        res = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
         NS_ENSURE_SUCCESS(res, res);
-        curBlock = 0;  firstNode = 0;  lastNode = 0;
+        firstNode = lastNode = curBlock = nullptr;
       }
-      // remove curent block
-      NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->RemoveBlockContainer(curNode); 
+      // Remove current block
+      res = mHTMLEditor->RemoveBlockContainer(curNode->AsDOMNode());
       NS_ENSURE_SUCCESS(res, res);
-    } else if (curElement &&
-               (curElement->IsAnyOfHTMLElements(nsGkAtoms::table,
-                                                nsGkAtoms::tr,
-                                                nsGkAtoms::tbody,
-                                                nsGkAtoms::td,
-                                                nsGkAtoms::li,
-                                                nsGkAtoms::blockquote,
-                                                nsGkAtoms::div) ||
-                nsHTMLEditUtils::IsList(curElement))) {
-      // process any partial progress saved
-      if (curBlock)
-      {
-        res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+    } else if (curNode->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                            nsGkAtoms::tr,
+                                            nsGkAtoms::tbody,
+                                            nsGkAtoms::td,
+                                            nsGkAtoms::li,
+                                            nsGkAtoms::blockquote,
+                                            nsGkAtoms::div) ||
+                nsHTMLEditUtils::IsList(curNode)) {
+      // Process any partial progress saved
+      if (curBlock) {
+        res = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
         NS_ENSURE_SUCCESS(res, res);
-        curBlock = 0;  firstNode = 0;  lastNode = 0;
+        firstNode = lastNode = curBlock = nullptr;
       }
-      // recursion time
+      // Recursion time
       nsTArray<nsCOMPtr<nsINode>> childArray;
-      GetChildNodesForOperation(*curElement, childArray);
-      nsCOMArray<nsIDOMNode> childArrayDOM;
-      for (auto& child : childArray) {
-        childArrayDOM.AppendObject(GetAsDOMNode(child));
-      }
-      res = RemoveBlockStyle(childArrayDOM);
+      GetChildNodesForOperation(*curNode, childArray);
+      res = RemoveBlockStyle(childArray);
       NS_ENSURE_SUCCESS(res, res);
-    }
-    else if (IsInlineNode(curNode))
-    {
-      if (curBlock)
-      {
-        // if so, is this node a descendant?
-        if (nsEditorUtils::IsDescendantOf(curNode, curBlock))
-        {
-          lastNode = curNode;
-          continue;  // then we don't need to do anything different for this node
-        }
-        else
-        {
-          // otherwise, we have progressed beyond end of curBlock,
-          // so lets handle it now.  We need to remove the portion of 
-          // curBlock that contains [firstNode - lastNode].
-          res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+    } else if (IsInlineNode(GetAsDOMNode(curNode))) {
+      if (curBlock) {
+        // If so, is this node a descendant?
+        if (nsEditorUtils::IsDescendantOf(curNode, curBlock)) {
+          // Then we don't need to do anything different for this node
+          lastNode = curNode->AsContent();
+          continue;
+        } else {
+          // Otherwise, we have progressed beyond end of curBlock, so let's
+          // handle it now.  We need to remove the portion of curBlock that
+          // contains [firstNode - lastNode].
+          res = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
           NS_ENSURE_SUCCESS(res, res);
-          curBlock = 0;  firstNode = 0;  lastNode = 0;
-          // fall out and handle curNode
+          firstNode = lastNode = curBlock = nullptr;
+          // Fall out and handle curNode
         }
       }
-      NS_ENSURE_STATE(mHTMLEditor);
       curBlock = mHTMLEditor->GetBlockNodeParent(curNode);
       if (curBlock && nsHTMLEditUtils::IsFormatNode(curBlock)) {
-        firstNode = curNode;  
-        lastNode = curNode;
+        firstNode = lastNode = curNode->AsContent();
+      } else {
+        // Not a block kind that we care about.
+        curBlock = nullptr;
       }
-      else
-        curBlock = 0;  // not a block kind that we care about.
-    }
-    else
-    { // some node that is already sans block style.  skip over it and
-      // process any partial progress saved
-      if (curBlock)
-      {
-        res = RemovePartOfBlock(curBlock, firstNode, lastNode);
-        NS_ENSURE_SUCCESS(res, res);
-        curBlock = 0;  firstNode = 0;  lastNode = 0;
-      }
+    } else if (curBlock) {
+      // Some node that is already sans block style.  Skip over it and process
+      // any partial progress saved.
+      res = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
+      NS_ENSURE_SUCCESS(res, res);
+      firstNode = lastNode = curBlock = nullptr;
     }
   }
-  // process any partial progress saved
-  if (curBlock)
-  {
-    res = RemovePartOfBlock(curBlock, firstNode, lastNode);
+  // Process any partial progress saved
+  if (curBlock) {
+    res = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
     NS_ENSURE_SUCCESS(res, res);
-    curBlock = 0;  firstNode = 0;  lastNode = 0;
+    firstNode = lastNode = curBlock = nullptr;
   }
-  return res;
+  return NS_OK;
 }
 
 
