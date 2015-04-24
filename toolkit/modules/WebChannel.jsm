@@ -66,11 +66,15 @@ let WebChannelBroker = Object.create({
    */
   _listener: function (event) {
     let data = event.data;
-    let sender = event.target;
+    let sendingContext = {
+      browser: event.target,
+      eventTarget: event.objects.eventTarget,
+      principal: event.principal,
+    };
 
     if (data && data.id) {
       if (!event.principal) {
-        this._sendErrorEventToContent(data.id, sender, "Message principal missing");
+        this._sendErrorEventToContent(data.id, sendingContext, "Message principal missing");
       } else {
         let validChannelFound = false;
         data.message = data.message || {};
@@ -79,13 +83,13 @@ let WebChannelBroker = Object.create({
           if (channel.id === data.id &&
             channel._originCheckCallback(event.principal)) {
             validChannelFound = true;
-            channel.deliver(data, sender);
+            channel.deliver(data, sendingContext);
           }
         }
 
         // if no valid origins send an event that there is no such valid channel
         if (!validChannelFound) {
-          this._sendErrorEventToContent(data.id, sender, "No Such Channel");
+          this._sendErrorEventToContent(data.id, sendingContext, "No Such Channel");
         }
       }
     } else {
@@ -108,20 +112,24 @@ let WebChannelBroker = Object.create({
    *
    * @param id {String}
    *        The WebChannel id to include in the message
-   * @param sender {EventTarget}
-   *        EventTarget with a "messageManager" that will send be used to send the message
+   * @param sendingContext {Object}
+   *        Message sending context
    * @param [errorMsg] {String}
    *        Error message
    * @private
    */
-  _sendErrorEventToContent: function (id, sender, errorMsg) {
+  _sendErrorEventToContent: function (id, sendingContext, errorMsg) {
+    let { browser: targetBrowser, eventTarget, principal: targetPrincipal } = sendingContext;
+
     errorMsg = errorMsg || "Web Channel Broker error";
 
-    if (sender.messageManager) {
-      sender.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
+    if (targetBrowser && targetBrowser.messageManager) {
+      targetBrowser.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
         id: id,
         error: errorMsg,
-      }, sender);
+      }, { eventTarget: eventTarget }, targetPrincipal);
+    } else {
+      Cu.reportError("Failed to send a WebChannel error. Target invalid.");
     }
     Cu.reportError(id.toString() + " error message. " + errorMsg);
   },
@@ -211,8 +219,17 @@ this.WebChannel.prototype = {
    *        The WebChannel id that was used for this message
    *        @param {Object} message
    *        The message itself
-   *        @param {EventTarget} sender
-   *        The source of the message
+   *        @param sendingContext {Object}
+   *        The sending context of the source of the message. Can be passed to
+   *        `send` to respond to a message.
+   *               @param sendingContext.browser {browser}
+   *                      The <browser> object that captured the
+   *                      WebChannelMessageToChrome.
+   *               @param sendingContext.eventTarget {EventTarget}
+   *                      The <EventTarget> where the message was sent.
+   *               @param sendingContext.principal {Principal}
+   *                      The <Principal> of the EventTarget where the
+   *                      message was sent.
    */
   listen: function (callback) {
     if (this._deliverCallback) {
@@ -239,16 +256,27 @@ this.WebChannel.prototype = {
    *
    * @param message {Object}
    *        The message object that will be sent
-   * @param target {browser}
-   *        The <browser> object that has a "messageManager" that sends messages
-   *
+   * @param target {Object}
+   *        A <target> with the information of where to send the message.
+   *        @param target.browser {browser}
+   *               The <browser> object with a "messageManager" that will
+   *               be used to send the message.
+   *        @param target.principal {Principal}
+   *               Principal of the target. Prevents messages from
+   *               being dispatched to unexpected origins. The system principal
+   *               can be specified to send to any target.
+   *        @param [target.eventTarget] {EventTarget}
+   *               Optional eventTarget within the browser, use to send to a
+   *               specific element, e.g., an iframe.
    */
   send: function (message, target) {
-    if (message && target && target.messageManager) {
-      target.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
+    let { browser, principal, eventTarget } = target;
+
+    if (message && browser && browser.messageManager && principal) {
+      browser.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
         id: this.id,
         message: message
-      });
+      }, { eventTarget }, principal);
     } else if (!message) {
       Cu.reportError("Failed to send a WebChannel message. Message not set.");
     } else {
@@ -261,18 +289,26 @@ this.WebChannel.prototype = {
    *
    * @param data {Object}
    *        Message data
-   * @param sender {browser}
-   *        Message sender
+   * @param sendingContext {Object}
+   *        Message sending context.
+   *        @param sendingContext.browser {browser}
+   *               The <browser> object that captured the
+   *               WebChannelMessageToChrome.
+   *        @param sendingContext.eventTarget {EventTarget}
+   *               The <EventTarget> where the message was sent.
+   *        @param sendingContext.principal {Principal}
+   *               The <Principal> of the EventTarget where the message was sent.
+   *
    */
-  deliver: function(data, sender) {
+  deliver: function(data, sendingContext) {
     if (this._deliverCallback) {
       try {
-        this._deliverCallback(data.id, data.message, sender);
+        this._deliverCallback(data.id, data.message, sendingContext);
       } catch (ex) {
         this.send({
           errno: ERRNO_UNKNOWN_ERROR,
           error: ex.message ? ex.message : ERROR_UNKNOWN
-        }, sender);
+        }, sendingContext);
         Cu.reportError("Failed to execute callback:" + ex);
       }
     } else {
