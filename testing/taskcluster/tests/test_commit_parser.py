@@ -483,8 +483,6 @@ class TestCommitParser(unittest.TestCase):
         result = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
-
-
     def test_commit_with_builds_and_tests(self):
         '''
         This test covers the broad case of a commit which has both builds and
@@ -632,7 +630,152 @@ class TestCommitParser(unittest.TestCase):
         result = parse_commit(commit, jobs)
         self.assertEqual(expected, result)
 
+    def test_commit_with_builds_and_tests(self):
+        '''
+        This tests the long form of the try flags.
+        '''
+        commit = 'try: --build od --platform linux,linux64 --unittests web-platform-tests --talos none'
+        jobs = {
+            'flags': {
+                'builds': ['linux', 'linux64'],
+                'tests': ['web-platform-tests'],
+            },
+            'builds': {
+                'linux': {
+                    'types': {
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
+                    }
+                },
+                'linux64': {
+                    'types': {
+                        'opt': {
+                            'task': 'task/linux64',
+                         },
+                        'debug': {
+                            'task': 'task/linux64-debug'
+                        }
+                    }
+                }
+            },
+            'tests': {
+                'web-platform-tests': {
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/linux-debug': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/linux64': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/linux64-debug': {
+                            'task': 'task/web-platform-tests',
+                        }
+                    }
+                }
+            }
+        }
+
+        expected = [
+            {
+                'task': 'task/linux',
+                'dependents': [
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
+            },
+            {
+                'task': 'task/linux-debug',
+                'dependents': [
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
+            },
+            {
+                'task': 'task/linux64',
+                'dependents': [
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
+            },
+            {
+                'task': 'task/linux64-debug',
+                'dependents': [
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
+            }
+        ]
+
+        result = parse_commit(commit, jobs)
+        self.assertEqual(expected, result)
+
 
 if __name__ == '__main__':
     mozunit.main()
-
