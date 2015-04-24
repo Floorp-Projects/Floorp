@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
@@ -5158,44 +5159,58 @@ nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// GetInnerContent: aList and aTbl allow the caller to specify what kind 
-//                  of content to "look inside".  If aTbl is true, look inside
-//                  any table content, and insert the inner content into the
-//                  supplied issupportsarray at offset aIndex.  
-//                  Similarly with aList and list content.
-//                  aIndex is updated to point past inserted elements.
-//                  
+////////////////////////////////////////////////////////////////////////////////
+// GetInnerContent: aList and aTbl allow the caller to specify what kind of
+//                  content to "look inside".  If aTbl is true, look inside any
+//                  table content, and insert the inner content into the
+//                  supplied issupportsarray at offset aIndex.  Similarly with
+//                  aList and list content.  aIndex is updated to point past
+//                  inserted elements.
+//
 nsresult
-nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode> &outArrayOfNodes, 
-                                 int32_t *aIndex, bool aList, bool aTbl)
+nsHTMLEditRules::GetInnerContent(nsIDOMNode* aNode,
+                                 nsCOMArray<nsIDOMNode>& aOutArrayOfDOMNodes,
+                                 int32_t* aIndex, bool aLists, bool aTables)
 {
-  nsCOMPtr<nsINode> aNode_ = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(aNode_ && aIndex, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIDOMNode> node =
-    GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*aNode_));
-  nsresult res = NS_OK;
-  while (NS_SUCCEEDED(res) && node)
-  {
-    if (  ( aList && (nsHTMLEditUtils::IsList(node)     || 
-                      nsHTMLEditUtils::IsListItem(node) ) )
-       || ( aTbl && nsHTMLEditUtils::IsTableElement(node) )  )
-    {
-      res = GetInnerContent(node, outArrayOfNodes, aIndex, aList, aTbl);
-      NS_ENSURE_SUCCESS(res, res);
+  // To be removed in a subsequent patch
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+  nsTArray<nsCOMPtr<nsINode>> aOutArrayOfNodes;
+  for (int32_t i = 0; i < aOutArrayOfDOMNodes.Count(); i++) {
+    nsCOMPtr<nsINode> newNode = do_QueryInterface(aOutArrayOfDOMNodes[i]);
+    if (newNode) {
+      aOutArrayOfNodes.AppendElement(newNode);
     }
-    else
-    {
-      outArrayOfNodes.InsertObjectAt(node, *aIndex);
-      (*aIndex)++;
-    }
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = node->GetNextSibling(getter_AddRefs(tmp));
-    node = tmp;
+  }
+  GetInnerContent(*node, aOutArrayOfNodes, aIndex,
+                  aLists ? Lists::yes : Lists::no,
+                  aTables ? Tables::yes : Tables::no);
+  aOutArrayOfDOMNodes.Clear();
+  for (auto& node : aOutArrayOfNodes) {
+    aOutArrayOfDOMNodes.AppendElement(GetAsDOMNode(node));
   }
 
-  return res;
+  return NS_OK;
+}
+
+void
+nsHTMLEditRules::GetInnerContent(nsINode& aNode,
+                                 nsTArray<nsCOMPtr<nsINode>>& aOutArrayOfNodes,
+                                 int32_t* aIndex, Lists aLists, Tables aTables)
+{
+  MOZ_ASSERT(aIndex);
+
+  for (nsCOMPtr<nsIContent> node = mHTMLEditor->GetFirstEditableChild(aNode);
+       node; node = node->GetNextSibling()) {
+    if ((aLists == Lists::yes && (nsHTMLEditUtils::IsList(node) ||
+                                  nsHTMLEditUtils::IsListItem(node))) ||
+        (aTables == Tables::yes && nsHTMLEditUtils::IsTableElement(node))) {
+      GetInnerContent(*node, aOutArrayOfNodes, aIndex, aLists, aTables);
+    } else {
+      aOutArrayOfNodes.InsertElementAt(*aIndex, node);
+      (*aIndex)++;
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
