@@ -156,9 +156,13 @@ add_task(function* test() {
   info("Opening URL");
   newTab.linkedBrowser.loadURI(URL);
 
-  info("Setting up monotonicity testing");
-  monotinicity_tester(() => PerformanceStats.getSnapshot(), "parent process");
-  monotinicity_tester(() => promiseContentResponseOrNull(browser, "compartments-test:getStatistics", null), "content process" );
+  if (Services.sysinfo.getPropertyAsAString("name") == "Windows_NT") {
+    info("Deactivating sanity checks under Windows (bug 1151240)");
+  } else {
+    info("Setting up sanity checks");
+    monotinicity_tester(() => PerformanceStats.getSnapshot(), "parent process");
+    monotinicity_tester(() => promiseContentResponseOrNull(browser, "compartments-test:getStatistics", null), "content process" );
+  }
 
   let skipTotalUserTime = hasLowPrecision();
 

@@ -29,7 +29,6 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_BRANCH_LOG = PREF_BRANCH + "log.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
-const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 const PREF_LOG_LEVEL = PREF_BRANCH_LOG + "level";
 const PREF_LOG_DUMP = PREF_BRANCH_LOG + "dump";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
@@ -55,10 +54,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "nsITelemetry");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryFile",
-                                  "resource://gre/modules/TelemetryFile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
-                                  "resource://gre/modules/TelemetryLog.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
+                                  "resource://gre/modules/TelemetryStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
                                   "resource://gre/modules/ThirdPartyCookieProbe.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
@@ -67,13 +64,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionRecorder",
                                   "resource://gre/modules/SessionRecorder.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
-
-// Compute the path of the pings archive on the first use.
-const DATAREPORTING_DIR = "datareporting";
-const PINGS_ARCHIVE_DIR = "archived";
-XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR, PINGS_ARCHIVE_DIR);
-});
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive",
+                                  "resource://gre/modules/TelemetryArchive.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -121,25 +113,6 @@ function isNewPingFormat(aPing) {
   return ("id" in aPing) && ("application" in aPing) &&
          ("version" in aPing) && (aPing.version >= 2);
 }
-
-/**
- * Build the path to the archived ping.
- * @param {String} aPingId The ping id.
- * @param {Object} aDate The ping creation date.
- * @param {String} aType The ping type.
- * @return {String} The full path to the archived ping.
- */
-function getArchivedPingPath(aPingId, aDate, aType) {
-  // Helper to pad the month to 2 digits, if needed (e.g. "1" -> "01").
-  let addLeftPadding = value => (value < 10) ? ("0" + value) : value;
-  // Get the ping creation date and generate the archive directory to hold it. Note
-  // that getMonth returns a 0-based month, so we need to add an offset.
-  let archivedPingDir = OS.Path.join(gPingsArchivePath,
-    aDate.getFullYear() + '-' + addLeftPadding(aDate.getMonth() + 1));
-  // Generate the archived ping file path as YYYY-MM/<TIMESTAMP>.UUID.type.json
-  let fileName = [aDate.getTime(), aPingId, aType, "json"].join(".");
-  return OS.Path.join(archivedPingDir, fileName);
-};
 
 /**
  * This is a policy object used to override behavior for testing.
@@ -326,24 +299,33 @@ this.TelemetryPing = Object.freeze({
    *
    * @return The client id as string, or null.
    */
-   get clientID() {
+  get clientID() {
     return Impl.clientID;
-   },
+  },
 
-   /**
-    * The AsyncShutdown.Barrier to synchronize with TelemetryPing shutdown.
-    */
-   get shutdown() {
+  /**
+   * The AsyncShutdown.Barrier to synchronize with TelemetryPing shutdown.
+   */
+  get shutdown() {
     return Impl._shutdownBarrier.client;
-   },
+  },
 
-   /**
-    * The session recorder instance managed by Telemetry.
-    * @return {Object} The active SessionRecorder instance or null if not available.
-    */
-   getSessionRecorder: function() {
+  /**
+   * The session recorder instance managed by Telemetry.
+   * @return {Object} The active SessionRecorder instance or null if not available.
+   */
+  getSessionRecorder: function() {
     return Impl._sessionRecorder;
-   },
+  },
+
+  /**
+   * Allows waiting for TelemetryPings delayed initialization to complete.
+   * The returned promise is guaranteed to resolve before TelemetryPing is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
+   */
+  promiseInitialized: function() {
+    return Impl.promiseInitialized();
+  },
 });
 
 let Impl = {
@@ -452,7 +434,7 @@ let Impl = {
   popPayloads: function popPayloads() {
     this._log.trace("popPayloads");
     function payloadIter() {
-      let iterator = TelemetryFile.popPendingPings();
+      let iterator = TelemetryStorage.popPendingPings();
       for (let data of iterator) {
         yield data;
       }
@@ -487,7 +469,7 @@ let Impl = {
    * @return {Promise} Resolved when the ping is correctly moved to the saved pings directory.
    */
   addPendingPingFromFile: function(aPingPath, aRemoveOriginal) {
-    return TelemetryFile.addPendingPing(aPingPath).then(() => {
+    return TelemetryStorage.addPendingPing(aPingPath).then(() => {
         if (aRemoveOriginal) {
           return OS.File.remove(aPingPath);
         }
@@ -518,7 +500,7 @@ let Impl = {
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
     // Always persist the pings if we are allowed to.
-    let archivePromise = this._archivePing(pingData)
+    let archivePromise = TelemetryArchive.promiseArchivePing(pingData)
       .catch(e => this._log.error("send - Failed to archive ping " + pingData.id, e));
 
     // Once ping is assembled, send it along with the persisted pings in the backlog.
@@ -526,7 +508,7 @@ let Impl = {
       archivePromise,
       // Persist the ping if sending it fails.
       this.doPing(pingData, false)
-          .catch(() => TelemetryFile.savePing(pingData, true)),
+          .catch(() => TelemetryStorage.savePing(pingData, true)),
       this.sendPersistedPings(),
     ];
 
@@ -578,7 +560,7 @@ let Impl = {
                     ", aOptions " + JSON.stringify(aOptions));
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
-    return TelemetryFile.savePendingPings(pingData);
+    return TelemetryStorage.savePendingPings(pingData);
   },
 
   /**
@@ -605,8 +587,8 @@ let Impl = {
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
 
-    let savePromise = TelemetryFile.savePing(pingData, aOptions.overwrite);
-    let archivePromise = this._archivePing(pingData).catch(e => {
+    let savePromise = TelemetryStorage.savePing(pingData, aOptions.overwrite);
+    let archivePromise = TelemetryArchive.promiseArchivePing(pingData).catch(e => {
       this._log.error("addPendingPing - Failed to archive ping " + pingData.id, e);
     });
 
@@ -642,7 +624,7 @@ let Impl = {
     this._log.trace("savePing - Type " + aType + ", Server " + this._server +
                     ", File Path " + aFilePath + ", aOptions " + JSON.stringify(aOptions));
     let pingData = this.assemblePing(aType, aPayload, aOptions);
-    return TelemetryFile.savePingToFile(pingData, aFilePath, aOptions.overwrite)
+    return TelemetryStorage.savePingToFile(pingData, aFilePath, aOptions.overwrite)
                         .then(() => pingData.id);
   },
 
@@ -656,7 +638,7 @@ let Impl = {
     hping.add(new Date() - startTime);
 
     if (success && isPersisted) {
-      return TelemetryFile.cleanupPingFile(ping);
+      return TelemetryStorage.cleanupPingFile(ping);
     } else {
       return Promise.resolve();
     }
@@ -675,7 +657,7 @@ let Impl = {
     } else {
       // This is a ping in the old format.
       if (!("slug" in ping)) {
-        // That's odd, we don't have a slug. Generate one so that TelemetryFile.jsm works.
+        // That's odd, we don't have a slug. Generate one so that TelemetryStorage.jsm works.
         ping.slug = generateUUID();
       }
 
@@ -912,11 +894,11 @@ let Impl = {
       try {
         this._initialized = true;
 
-        yield TelemetryFile.loadSavedPings();
+        yield TelemetryStorage.loadSavedPings();
         // If we have any TelemetryPings lying around, we'll be aggressive
         // and try to send them all off ASAP.
-        if (TelemetryFile.pingsOverdue > 0) {
-          this._log.trace("setupChromeProcess - Sending " + TelemetryFile.pingsOverdue +
+        if (TelemetryStorage.pingsOverdue > 0) {
+          this._log.trace("setupChromeProcess - Sending " + TelemetryStorage.pingsOverdue +
                           " overdue pings now.");
           // It doesn't really matter what we pass to this.send as a reason,
           // since it's never sent to the server. All that this.send does with
@@ -928,24 +910,12 @@ let Impl = {
         this._clientID = yield ClientID.getClientID();
         Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
 
-        // If pings should be archived, make sure the archive directory exists.
-        if (this._shouldArchivePings()) {
-          const DATAREPORTING_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
-          let reportError =
-            e => this._log.error("setupTelemetry - Unable to create the directory", e);
-          // Don't bail out if we can't create the archive folder, we might still be
-          // able to send telemetry pings to the servers.
-          yield OS.File.makeDir(DATAREPORTING_PATH, {ignoreExisting: true}).catch(reportError);
-          yield OS.File.makeDir(gPingsArchivePath, {ignoreExisting: true}).catch(reportError);
-        }
-
         Telemetry.asyncFetchTelemetryData(function () {});
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
         this._delayedInitTaskDeferred.reject(e);
       } finally {
         this._delayedInitTask = null;
-        this._delayedInitTaskDeferred = null;
       }
     }.bind(this), this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
@@ -1059,32 +1029,6 @@ let Impl = {
   },
 
   /**
-   * Checks if pings can be archived. Some products (e.g. Thunderbird) might not want
-   * to do that.
-   * @return {Boolean} True if pings should be archived, false otherwise.
-   */
-  _shouldArchivePings: function() {
-    return Preferences.get(PREF_ARCHIVE_ENABLED, true);
-  },
-
-  /**
-   * Save a ping to the pings archive. Note that any error should be handled by the caller.
-   * @param {Object} aPingData The content of the ping.
-   * @return {Promise} A promise resolved when the ping is saved to the archive.
-   */
-  _archivePing: Task.async(function*(aPingData) {
-    if (!this._shouldArchivePings()) {
-      return;
-    }
-
-    const creationDate = new Date(aPingData.creationDate);
-    const filePath = getArchivedPingPath(aPingData.id, creationDate, aPingData.type);
-    yield OS.File.makeDir(OS.Path.dirname(filePath), { ignoreExisting: true,
-                                                       from: OS.Constants.Path.profileDir });
-    yield TelemetryFile.savePingToFile(aPingData, filePath, true);
-  }),
-
-  /**
    * Get an object describing the current state of this module for AsyncShutdown diagnostics.
    */
   _getState: function() {
@@ -1095,5 +1039,14 @@ let Impl = {
       shutdownBarrier: this._shutdownBarrier.state,
       connectionsBarrier: this._connectionsBarrier.state,
     };
+  },
+
+  /**
+   * Allows waiting for TelemetryPings delayed initialization to complete.
+   * This will complete before TelemetryPing is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
+   */
+  promiseInitialized: function() {
+    return this._delayedInitTaskDeferred.promise;
   },
 };
