@@ -156,7 +156,7 @@ CellBroadcastService.prototype = {
         .getRadioInterface(clientId).sendWorkerMessage("setCellBroadcastSearchList",
                                                        { searchList: newSearchList },
                                                        (function callback(aResponse) {
-        if (DEBUG && !aResponse.success) {
+        if (DEBUG && aResponse.errorMsg) {
           debug("Failed to set new search list: " + newSearchList +
                 " to client id: " + clientId);
         }
@@ -165,7 +165,7 @@ CellBroadcastService.prototype = {
         if (responses.length == numOfRilClients) {
           let successCount = 0;
           for (let i = 0; i < responses.length; i++) {
-            if (responses[i].success) {
+            if (!responses[i].errorMsg) {
               successCount++;
             }
           }

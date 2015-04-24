@@ -13,9 +13,7 @@ add_test(function test_setVoicePrivacyMode_success() {
   let context = worker.ContextPool._contexts[0];
 
   context.RIL.setVoicePrivacyMode = function fakeSetVoicePrivacyMode(options) {
-    context.RIL[REQUEST_CDMA_SET_PREFERRED_VOICE_PRIVACY_MODE](0, {
-      rilRequestError: ERROR_SUCCESS
-    });
+    context.RIL[REQUEST_CDMA_SET_PREFERRED_VOICE_PRIVACY_MODE](0, {});
   };
 
   context.RIL.setVoicePrivacyMode({
@@ -36,7 +34,6 @@ add_test(function test_setVoicePrivacyMode_generic_failure() {
 
   context.RIL.setVoicePrivacyMode = function fakeSetVoicePrivacyMode(options) {
     context.RIL[REQUEST_CDMA_SET_PREFERRED_VOICE_PRIVACY_MODE](0, {
-      rilRequestError: ERROR_GENERIC_FAILURE,
       errorMsg: GECKO_ERROR_GENERIC_FAILURE
     });
   };
@@ -62,9 +59,7 @@ add_test(function test_queryVoicePrivacyMode_success_enabled_true() {
   };
 
   context.RIL.queryVoicePrivacyMode = function fakeQueryVoicePrivacyMode(options) {
-    context.RIL[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE](1, {
-      rilRequestError: ERROR_SUCCESS
-    });
+    context.RIL[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE](1, {});
   };
 
   context.RIL.queryVoicePrivacyMode();
@@ -86,9 +81,7 @@ add_test(function test_queryVoicePrivacyMode_success_enabled_false() {
   };
 
   context.RIL.queryVoicePrivacyMode = function fakeQueryVoicePrivacyMode(options) {
-    context.RIL[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE](1, {
-      rilRequestError: ERROR_SUCCESS
-    });
+    context.RIL[REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE](1, {});
   };
 
   context.RIL.queryVoicePrivacyMode();

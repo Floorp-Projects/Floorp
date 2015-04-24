@@ -367,10 +367,10 @@ TelephonyIPCService::SetSpeakerEnabled(bool aEnabled)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyIPCService::CallStateChanged(nsITelephonyCallInfo* aInfo)
+TelephonyIPCService::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
-    mListeners[i]->CallStateChanged(aInfo);
+    mListeners[i]->CallStateChanged(aLength, aAllInfo);
   }
   return NS_OK;
 }
