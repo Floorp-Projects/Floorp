@@ -29,7 +29,7 @@ public:
   template<class U>
   MOZ_IMPLICIT OwningNonNull(already_AddRefed<U>&& aValue)
   {
-    init(aValue.take());
+    init(aValue);
   }
 
   // This is no worse than get() in terms of const handling.
@@ -106,7 +106,7 @@ public:
 
 protected:
   template<typename U>
-  void init(U aValue)
+  void init(U&& aValue)
   {
     mPtr = aValue;
     MOZ_ASSERT(mPtr);

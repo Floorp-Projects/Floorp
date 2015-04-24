@@ -92,47 +92,6 @@ private:
   bool mEnabled;
   bool mShutdown;
   nsRefPtr<ContentParent> mPreallocatedAppProcess;
-
-#if defined(MOZ_NUWA_PROCESS) && defined(ENABLE_TESTS)
-  // For testing NS_NewUnmonitoredThread().
-
-  void CreateUnmonitoredThread();
-  void DestroyUnmonitoredThread();
-
-  class UnmonitoredThreadRunnable : public nsRunnable
-  {
-  public:
-    UnmonitoredThreadRunnable()
-      : mMonitor("UnmonitoredThreadRunnable")
-      , mEnabled(true)
-    { }
-
-    NS_IMETHODIMP Run() override
-    {
-      MonitorAutoLock mon(mMonitor);
-      while (mEnabled) {
-        mMonitor.Wait();
-      }
-      return NS_OK;
-    }
-
-    void Disable()
-    {
-      MonitorAutoLock mon(mMonitor);
-      mEnabled = false;
-      mMonitor.NotifyAll();
-    }
-
-  private:
-    ~UnmonitoredThreadRunnable() { }
-
-    Monitor mMonitor;
-    bool mEnabled;
-  };
-
-  nsCOMPtr<nsIThread> mUnmonitoredThread;
-  nsRefPtr<UnmonitoredThreadRunnable> mUnmonitoredThreadRunnable;
-#endif
 };
 
 /* static */ StaticRefPtr<PreallocatedProcessManagerImpl>
@@ -196,40 +155,6 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-#if defined(MOZ_NUWA_PROCESS) && defined(ENABLE_TESTS)
-void
-PreallocatedProcessManagerImpl::CreateUnmonitoredThread()
-{
-  if (Preferences::GetBool("dom.ipc.newUnmonitoredThread.testMode")) {
-    // Create an unmonitored thread and dispatch a blocking runnable in test
-    // case startup.
-    nsresult rv = NS_NewUnmonitoredThread(getter_AddRefs(mUnmonitoredThread),
-                                          nullptr);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    mUnmonitoredThreadRunnable = new UnmonitoredThreadRunnable();
-    mUnmonitoredThread->Dispatch(mUnmonitoredThreadRunnable,
-                                 NS_DISPATCH_NORMAL);
-  }
-}
-
-void
-PreallocatedProcessManagerImpl::DestroyUnmonitoredThread()
-{
-  // Cleanup after the test case finishes.
-  if (mUnmonitoredThreadRunnable) {
-    mUnmonitoredThreadRunnable->Disable();
-  }
-
-  if (mUnmonitoredThread) {
-    mUnmonitoredThread->Shutdown();
-  }
-
-  mUnmonitoredThreadRunnable = nullptr;
-  mUnmonitoredThread = nullptr;
-}
-#endif
-
 void
 PreallocatedProcessManagerImpl::RereadPrefs()
 {
@@ -255,11 +180,6 @@ PreallocatedProcessManagerImpl::Enable()
 
   mEnabled = true;
 #ifdef MOZ_NUWA_PROCESS
-#ifdef ENABLE_TESTS
-  // For testing New_UnmonitoredThread().
-  CreateUnmonitoredThread();
-#endif
-
   ScheduleDelayedNuwaFork();
 #else
   AllocateAfterDelay();
@@ -452,11 +372,6 @@ PreallocatedProcessManagerImpl::Disable()
   mEnabled = false;
 
 #ifdef MOZ_NUWA_PROCESS
-#ifdef ENABLE_TESTS
-  // Shut down the test-only unmonitored thread.
-  DestroyUnmonitoredThread();
-#endif
-
   // Cancel pending fork.
   if (mPreallocateAppProcessTask) {
     mPreallocateAppProcessTask->Cancel();

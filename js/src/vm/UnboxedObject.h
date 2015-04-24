@@ -233,6 +233,11 @@ class UnboxedPlainObject : public JSObject
         expando_ = nullptr;
     }
 
+    // For use during GC.
+    JSObject** addressOfExpando() {
+        return reinterpret_cast<JSObject**>(&expando_);
+    }
+
     bool containsUnboxedOrExpandoProperty(ExclusiveContext* cx, jsid id) const;
 
     static UnboxedExpandoObject* ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj);
