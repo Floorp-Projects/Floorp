@@ -169,6 +169,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "rndlnpshimswf.dll", ALL_VERSIONS },
   { "rndlmainbrowserrecordplugin.dll", ALL_VERSIONS },
 
+  // Old version of WebcamMax crashes WebRTC, bug 1130061
+  { "vwcsource.ax", MAKE_VERSION(1, 5, 0, 0) },
+
   { nullptr, 0 }
 };
 
