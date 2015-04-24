@@ -172,6 +172,10 @@ TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind);
 bool
 UnmarkGrayShapeRecursively(Shape* shape);
 
+template<typename T>
+void
+CheckTracedThing(JSTracer* trc, T thing);
+
 } /* namespace js */
 
 #endif /* gc_Marking_h */

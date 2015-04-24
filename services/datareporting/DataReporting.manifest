@@ -3,7 +3,6 @@
 #   mobile/android: {aa3c5121-dab2-40e2-81ca-7ea25febc110}
 #   mobile/xul:     {a23983c0-fd0e-11dc-95ff-0800200c9a66}
 #   suite (comm):   {92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}
-#   metro browser:  {99bceaaa-e3c6-48c1-b981-ef9b46b67d60}
 
 # The Data Reporting Service drives collection and submission of metrics
 # and other useful data to Mozilla. It drives the display of the data

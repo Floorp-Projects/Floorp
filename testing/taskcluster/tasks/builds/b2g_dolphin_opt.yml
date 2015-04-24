@@ -15,7 +15,7 @@ task:
 
   payload:
     cache:
-      build-dolphin-opt: /home/worker/object-folder
+      build-dolphin-opt: /home/worker/workspace
     env:
       TARGET: 'dolphin'
 

@@ -6,7 +6,6 @@
 #define mozilla_dom_GamepadService_h_
 
 #include <stdint.h>
-#include "Gamepad.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsIGamepadServiceTest.h"
@@ -15,11 +14,14 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
-
+// Needed for GamepadMappingType
+#include "mozilla/dom/GamepadBinding.h"
 namespace mozilla {
 namespace dom {
 
 class EventTarget;
+class GamepadChangeEvent;
+class Gamepad;
 
 class GamepadService : public nsIObserver
 {
@@ -27,6 +29,8 @@ class GamepadService : public nsIObserver
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
+  // Returns true if we actually have a service up and running
+  static bool IsServiceRunning();
   // Get the singleton service
   static already_AddRefed<GamepadService> GetService();
   // Return true if the API is preffed on.
@@ -39,9 +43,10 @@ class GamepadService : public nsIObserver
   // Indicate that |aWindow| should no longer receive gamepad events.
   void RemoveListener(nsGlobalWindow* aWindow);
 
-  // Add a gamepad to the list of known gamepads, and return its index.
-  uint32_t AddGamepad(const char* aID, GamepadMappingType aMapping,
+  // Add a gamepad to the list of known gamepads.
+  void AddGamepad(uint32_t aIndex, const nsAString& aID, GamepadMappingType aMapping,
                       uint32_t aNumButtons, uint32_t aNumAxes);
+
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex);
 
@@ -51,8 +56,6 @@ class GamepadService : public nsIObserver
   // aPressed is used for digital buttons, aValue is for analog buttons.
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
                       double aValue);
-  // When only a digital button is available the value will be synthesized.
-  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
 
   // Update the state of |aAxis| for the gamepad at |aIndex| for all
   // windows that are listening and visible, and fire a gamepadaxismove
@@ -62,6 +65,11 @@ class GamepadService : public nsIObserver
   // Synchronize the state of |aGamepad| to match the gamepad stored at |aIndex|
   void SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad);
 
+  // Returns gamepad object if index exists, null otherwise
+  already_AddRefed<Gamepad> GetGamepad(uint32_t aIndex);
+
+  // Receive GamepadChangeEvent messages from parent process to fire DOM events
+  void Update(const GamepadChangeEvent& aGamepadEvent);
  protected:
   GamepadService();
   virtual ~GamepadService() {};
@@ -115,37 +123,13 @@ class GamepadService : public nsIObserver
 
   // Gamepads connected to the system. Copies of these are handed out
   // to each window.
-  nsTArray<nsRefPtr<Gamepad> > mGamepads;
+  nsRefPtrHashtable<nsUint32HashKey, Gamepad> mGamepads;
   // Inner windows that are listening for gamepad events.
   // has been sent to that window.
   nsTArray<nsRefPtr<nsGlobalWindow> > mListeners;
   nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<nsIFocusManager> mFocusManager;
-  nsCOMPtr<nsIObserver> mObserver;
-};
-
-// Service for testing purposes
-class GamepadServiceTest : public nsIGamepadServiceTest
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGAMEPADSERVICETEST
-
-  GamepadServiceTest();
-
-  static already_AddRefed<GamepadServiceTest> CreateService();
-
-private:
-  static GamepadServiceTest* sSingleton;
-  virtual ~GamepadServiceTest() {};
 };
 
 }  // namespace dom
 }  // namespace mozilla
-
-#define NS_GAMEPAD_TEST_CID \
-{ 0xfb1fcb57, 0xebab, 0x4cf4, \
-{ 0x96, 0x3b, 0x1e, 0x4d, 0xb8, 0x52, 0x16, 0x96 } }
-#define NS_GAMEPAD_TEST_CONTRACTID "@mozilla.org/gamepad-test;1"
-
 #endif // mozilla_dom_GamepadService_h_

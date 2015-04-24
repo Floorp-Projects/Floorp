@@ -85,12 +85,6 @@ XPIDL_SOURCES += [
     'nsITransferable.idl',
 ]
 
-if CONFIG['MOZ_METRO']:
-    XPIDL_SOURCES += [
-        'MetroUIUtils.idl',
-        'nsIWinMetroUtils.idl',
-    ]
-
 XPIDL_MODULE = 'widget'
 
 EXPORTS += [
@@ -133,6 +127,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.widget += [
     'PuppetBidiKeyboard.h',
+    'WidgetMessageUtils.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -116,6 +116,22 @@ struct nsTraceRefcntStats
 {
   uint64_t mCreates;
   uint64_t mDestroys;
+
+  bool HaveLeaks() const
+  {
+    return mCreates != mDestroys;
+  }
+
+  void Clear()
+  {
+    mCreates = 0;
+    mDestroys = 0;
+  }
+
+  int64_t NumLeaked() const
+  {
+    return (int64_t)(mCreates - mDestroys);
+  }
 };
 
 #ifdef DEBUG
@@ -249,8 +265,8 @@ public:
   {
     NS_ASSERTION(strlen(aClassName) > 0, "BloatEntry name must be non-empty");
     mClassName = PL_strdup(aClassName);
-    Clear(&mNewStats);
-    Clear(&mAllStats);
+    mNewStats.Clear();
+    mAllStats.Clear();
     mTotalLeaked = 0;
   }
 
@@ -268,17 +284,11 @@ public:
     return mClassName;
   }
 
-  static void Clear(nsTraceRefcntStats* aStats)
-  {
-    aStats->mCreates = 0;
-    aStats->mDestroys = 0;
-  }
-
   void Accumulate()
   {
     mAllStats.mCreates += mNewStats.mCreates;
     mAllStats.mDestroys += mNewStats.mDestroys;
-    Clear(&mNewStats);
+    mNewStats.Clear();
   }
 
   void Ctor()
@@ -316,20 +326,13 @@ public:
     aTotal->mAllStats.mDestroys += mNewStats.mDestroys + mAllStats.mDestroys;
     uint64_t count = (mNewStats.mCreates + mAllStats.mCreates);
     aTotal->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
-    aTotal->mTotalLeaked += (uint64_t)(mClassSize *
-                                       ((mNewStats.mCreates + mAllStats.mCreates)
-                                        - (mNewStats.mDestroys + mAllStats.mDestroys)));
+    aTotal->mTotalLeaked += mClassSize * (mNewStats.NumLeaked() + mAllStats.NumLeaked());
   }
 
   void DumpTotal(FILE* aOut)
   {
     mClassSize /= mAllStats.mCreates;
     Dump(-1, aOut, nsTraceRefcnt::ALL_STATS);
-  }
-
-  static bool HaveLeaks(nsTraceRefcntStats* aStats)
-  {
-    return aStats->mCreates != aStats->mDestroys;
   }
 
   bool PrintDumpHeader(FILE* aOut, const char* aMsg,
@@ -339,7 +342,7 @@ public:
             XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
     nsTraceRefcntStats& stats =
       (aType == nsTraceRefcnt::NEW_STATS) ? mNewStats : mAllStats;
-    if (gLogLeaksOnly && !HaveLeaks(&stats)) {
+    if (gLogLeaksOnly && !stats.HaveLeaks()) {
       return false;
     }
 
@@ -357,27 +360,24 @@ public:
   {
     nsTraceRefcntStats* stats =
       (aType == nsTraceRefcnt::NEW_STATS) ? &mNewStats : &mAllStats;
-    if (gLogLeaksOnly && !HaveLeaks(stats)) {
+    if (gLogLeaksOnly && !stats->HaveLeaks()) {
       return;
     }
 
-    if ((stats->mCreates - stats->mDestroys) != 0 ||
-        stats->mCreates != 0) {
-      fprintf(aOut, "%4d |%-38.38s| %8d %8" PRIu64 "|%8" PRIu64 " %8" PRIu64"|\n",
+    if (stats->HaveLeaks() || stats->mCreates != 0) {
+      fprintf(aOut, "%4d |%-38.38s| %8d %8" PRId64 "|%8" PRIu64 " %8" PRId64"|\n",
               aIndex + 1, mClassName,
-              (int32_t)mClassSize,
-              (nsCRT::strcmp(mClassName, "TOTAL"))
-                ? (uint64_t)((stats->mCreates - stats->mDestroys) * mClassSize)
-                : mTotalLeaked,
+              GetClassSize(),
+              nsCRT::strcmp(mClassName, "TOTAL") ? (stats->NumLeaked() * GetClassSize()) : mTotalLeaked,
               stats->mCreates,
-              (stats->mCreates - stats->mDestroys));
+              stats->NumLeaked());
     }
   }
 
 protected:
   char*         mClassName;
   double        mClassSize;     // this is stored as a double because of the way we compute the avg class size for total bloat
-  uint64_t      mTotalLeaked; // used only for TOTAL entry
+  int64_t       mTotalLeaked; // used only for TOTAL entry
   nsTraceRefcntStats mNewStats;
   nsTraceRefcntStats mAllStats;
 };

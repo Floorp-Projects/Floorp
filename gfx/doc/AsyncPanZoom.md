@@ -263,7 +263,7 @@ If the CSS touch-action property is enabled, the above steps are modified as fol
 The bulk of the input processing in the APZ code happens on what we call "the input thread".
 In practice the input thread could be the Gecko main thread, the compositor thread, or some other thread.
 There are obvious downsides to using the Gecko main thread - that is, "asynchronous" panning and zooming is not really asynchronous as input events can only be processed while Gecko is idle.
-However, this is the current state of things on B2G and Metro.
+However, this is the current state of things on B2G.
 Using the compositor thread as the input thread could work on some platforms, but may be inefficient on others.
 For example, on Android (Fennec) we receive input events from the system on a dedicated UI thread.
 We would have to redispatch the input events to the compositor thread if we wanted to the input thread to be the same as the compositor thread.

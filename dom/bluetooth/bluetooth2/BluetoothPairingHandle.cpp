@@ -76,10 +76,11 @@ BluetoothPairingHandle::SetPinCode(const nsAString& aPinCode, ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral(PAIRING_REQ_TYPE_ENTERPINCODE),
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
@@ -104,13 +105,16 @@ BluetoothPairingHandle::Accept(ErrorResult& aRv)
 
   BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral(PAIRING_REQ_TYPE_CONFIRMATION) ||
                         mType.EqualsLiteral(PAIRING_REQ_TYPE_CONSENT),
+                        promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   BluetoothSspVariant variant;
-  BT_ENSURE_TRUE_REJECT(GetSspVariant(variant), NS_ERROR_DOM_OPERATION_ERR);
+  BT_ENSURE_TRUE_REJECT(GetSspVariant(variant),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
@@ -135,7 +139,7 @@ BluetoothPairingHandle::Reject(ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
@@ -147,7 +151,9 @@ BluetoothPairingHandle::Reject(ErrorResult& aRv)
       mDeviceAddress, false /* aAccept */, EmptyString(), result);
   } else { // Ssp request
     BluetoothSspVariant variant;
-    BT_ENSURE_TRUE_REJECT(GetSspVariant(variant), NS_ERROR_DOM_OPERATION_ERR);
+    BT_ENSURE_TRUE_REJECT(GetSspVariant(variant),
+                          promise,
+                          NS_ERROR_DOM_OPERATION_ERR);
 
     bs->SspReplyInternal(
       mDeviceAddress, variant, false /* aAccept */, result);

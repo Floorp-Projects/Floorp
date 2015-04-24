@@ -2466,19 +2466,6 @@ notification[value="loop-sharing-notification"] .messageImage {
 
 /* Social toolbar item */
 
-#switch-to-metro-button[cui-areatype="toolbar"] {
-  list-style-image: url(chrome://browser/skin/Metro_Glyph.png);
-}
-
-toolbar[brighttext] #switch-to-metro-button[cui-areatype="toolbar"] {
-  list-style-image: url(chrome://browser/skin/Metro_Glyph-inverted.png);
-}
-
-#switch-to-metro-button[cui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #switch-to-metro-button {
-  list-style-image: url(chrome://browser/skin/Metro_Glyph-menuPanel.png);
-}
-
 #social-undoactivation-button {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }

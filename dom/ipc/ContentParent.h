@@ -377,6 +377,8 @@ public:
     virtual bool
     DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor) override;
 
+    bool HasGamepadListener() const { return mHasGamepadListener; }
+
 protected:
     void OnChannelConnected(int32_t pid) override;
     virtual void ActorDestroy(ActorDestroyReason why) override;
@@ -543,8 +545,7 @@ private:
                                                bool* aIsLangRTL,
                                                InfallibleTArray<nsString>* dictionaries,
                                                ClipboardCapabilities* clipboardCaps,
-                                               DomainPolicyClone* domainPolicy)
-        override;
+                                               DomainPolicyClone* domainPolicy) override;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
 
@@ -756,6 +757,8 @@ private:
                                                      const bool& aHidden) override;
     virtual bool RecvGetSystemMemory(const uint64_t& getterId) override;
 
+    virtual bool RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
+
     virtual bool RecvDataStoreGetStores(
                        const nsString& aName,
                        const nsString& aOwner,
@@ -839,6 +842,10 @@ private:
 
     virtual bool RecvUpdateDropEffect(const uint32_t& aDragAction,
                                       const uint32_t& aDropEffect) override;
+
+    virtual bool RecvGamepadListenerAdded() override;
+    virtual bool RecvGamepadListenerRemoved() override;
+
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.
@@ -883,6 +890,7 @@ private:
     bool mSendDataStoreInfos;
     bool mIsForBrowser;
     bool mIsNuwaProcess;
+    bool mHasGamepadListener;
 
     // These variables track whether we've called Close(), CloseWithError()
     // and KillHard() on our channel.

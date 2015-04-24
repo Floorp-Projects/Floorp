@@ -41,9 +41,6 @@
 #if defined(XP_WIN)
 #include <tchar.h>
 #include "nsString.h"
-#ifdef MOZ_METRO
-#include "nsWindowsHelpers.h"
-#endif
 #endif
 
 #if defined(XP_MACOSX) || defined(__DragonFly__) || defined(__FreeBSD__) \

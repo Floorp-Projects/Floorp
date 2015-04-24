@@ -87,6 +87,7 @@ using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using gfxIntSize from "nsSize.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
+using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 
 union ChromeRegistryItem
 {
@@ -367,6 +368,38 @@ struct DomainPolicyClone
     URIParams[] superWhitelist;
 };
 
+struct GamepadAdded {
+    nsString id;
+    uint32_t index;
+    uint32_t mapping;
+    uint32_t num_buttons;
+    uint32_t num_axes;
+};
+
+struct GamepadRemoved {
+    uint32_t index;
+};
+
+struct GamepadAxisInformation {
+    uint32_t index;
+    uint32_t axis;
+    double value;
+};
+
+struct GamepadButtonInformation {
+    uint32_t index;
+    uint32_t button;
+    bool pressed;
+    double value;
+};
+
+union GamepadChangeEvent {
+    GamepadAdded;
+    GamepadRemoved;
+    GamepadAxisInformation;
+    GamepadButtonInformation;
+};
+
 prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -604,6 +637,10 @@ child:
      */
     async UpdateWindow(uintptr_t aChildId);
 
+    /**
+     * Send gamepad status update to child.
+     */
+    GamepadUpdate(GamepadChangeEvent aGamepadEvent);
 parent:
     /**
      * Tell the parent process a new accessible document has been created.
@@ -689,6 +726,8 @@ parent:
 
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
         returns (bool isSecureURI);
+
+    sync GetLookAndFeelCache(LookAndFeelInt[] lookAndFeelIntCache);
 
     PHal();
 
@@ -988,6 +1027,16 @@ parent:
      */
     PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal,
                               TabId tabId);
+
+    /*
+     * Tells the parent to start the gamepad listening service if it hasn't already.
+     */
+    GamepadListenerAdded();
+
+    /**
+     * Tells the parent to stop the gamepad listening service if it hasn't already.
+     */
+    GamepadListenerRemoved();
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
