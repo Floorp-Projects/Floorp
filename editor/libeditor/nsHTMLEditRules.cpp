@@ -2862,22 +2862,17 @@ nsHTMLEditRules::JoinBlocks(nsIDOMNode *aLeftNode,
 nsresult
 nsHTMLEditRules::MoveBlock(nsIDOMNode *aLeftBlock, nsIDOMNode *aRightBlock, int32_t aLeftOffset, int32_t aRightOffset)
 {
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  nsCOMPtr<nsISupports> isupports;
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
   // GetNodesFromPoint is the workhorse that figures out what we wnat to move.
   nsresult res = GetNodesFromPoint(::DOMPoint(aRightBlock,aRightOffset),
-                                   EditAction::makeList, arrayOfNodes, true);
+                                   EditAction::makeList, arrayOfNodes,
+                                   TouchContent::no);
   NS_ENSURE_SUCCESS(res, res);
-  int32_t listCount = arrayOfNodes.Count();
-  int32_t i;
-  for (i=0; i<listCount; i++)
-  {
+  for (auto& curNode : arrayOfNodes) {
     // get the node to act on
-    nsIDOMNode* curNode = arrayOfNodes[i];
-    if (IsBlockNode(curNode))
-    {
+    if (IsBlockNode(GetAsDOMNode(curNode))) {
       // For block nodes, move their contents only, then delete block.
-      res = MoveContents(curNode, aLeftBlock, &aLeftOffset); 
+      res = MoveContents(GetAsDOMNode(curNode), aLeftBlock, &aLeftOffset); 
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(curNode);
@@ -2885,7 +2880,7 @@ nsHTMLEditRules::MoveBlock(nsIDOMNode *aLeftBlock, nsIDOMNode *aRightBlock, int3
     else
     {
       // otherwise move the content as is, checking against the dtd.
-      res = MoveNodeSmart(curNode, aLeftBlock, &aLeftOffset);
+      res = MoveNodeSmart(GetAsDOMNode(curNode), aLeftBlock, &aLeftOffset);
     }
   }
   return res;
@@ -6254,38 +6249,36 @@ nsHTMLEditRules::GetHighestInlineParent(nsIDOMNode* aNode)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// GetNodesFromPoint: given a particular operation, construct a list  
-//                     of nodes from a point that will be operated on. 
-//                       
-nsresult 
-nsHTMLEditRules::GetNodesFromPoint(::DOMPoint point,
-                                   EditAction operation,
-                                   nsCOMArray<nsIDOMNode> &arrayOfNodes,
-                                   bool dontTouchContent)
+///////////////////////////////////////////////////////////////////////////////
+// GetNodesFromPoint: Given a particular operation, construct a list of nodes
+//                    from a point that will be operated on.
+//
+nsresult
+nsHTMLEditRules::GetNodesFromPoint(::DOMPoint aPoint,
+                                   EditAction aOperation,
+                                   nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
+                                   TouchContent aTouchContent)
 {
-  NS_ENSURE_STATE(point.node);
-  nsRefPtr<nsRange> range = new nsRange(point.node);
-  nsresult res = range->SetStart(point.node, point.offset);
-  NS_ENSURE_SUCCESS(res, res);
-  
-  // expand the range to include adjacent inlines
-  PromoteRange(*range, operation);
-      
-  // make array of ranges
+  NS_ENSURE_STATE(aPoint.node);
+  nsRefPtr<nsRange> range = new nsRange(aPoint.node);
+  nsresult res = range->SetStart(aPoint.node, aPoint.offset);
+  MOZ_ASSERT(NS_SUCCEEDED(res));
+
+  // Expand the range to include adjacent inlines
+  PromoteRange(*range, aOperation);
+
+  // Make array of ranges
   nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
-  
-  // stuff new opRange into array
+
+  // Stuff new opRange into array
   arrayOfRanges.AppendElement(range);
-  
-  // use these ranges to contruct a list of nodes to act on.
-  nsTArray<nsCOMPtr<nsINode>> array;
-  res = GetNodesForOperation(arrayOfRanges, array, operation, dontTouchContent
-                             ? TouchContent::no : TouchContent::yes);
-  for (auto& node : array) {
-    arrayOfNodes.AppendObject(GetAsDOMNode(node));
-  }
-  return res;
+
+  // Use these ranges to contruct a list of nodes to act on
+  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, aOperation,
+                             aTouchContent);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return NS_OK;
 }
 
 
