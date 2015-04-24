@@ -27,11 +27,11 @@ skip-if(B2G||Mulet) fuzzy-if(Android&&AndroidVersion<15,251,722) fuzzy-if(d2d,1,
 HTTP == transformed-1.html?up transformed-1.html?ref
 fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1-ref.html
 fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2-ref.html
-skip-if(B2G||Mulet) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(asyncPanZoom&&!layersGPUAccelerated,102,3721) == less-than-scrollbar-height.html less-than-scrollbar-height-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == huge-horizontal-overflow.html huge-horizontal-overflow-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == huge-vertical-overflow.html huge-vertical-overflow-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
-== iframe-scrolling-attr-1.html iframe-scrolling-attr-ref.html
-skip-if((B2G&&browserIsRemote)||Mulet) == iframe-scrolling-attr-2.html iframe-scrolling-attr-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(asyncPanZoom&&!layersGPUAccelerated,102,6818) == iframe-scrolling-attr-1.html iframe-scrolling-attr-ref.html
+skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(asyncPanZoom&&!layersGPUAccelerated,102,6818) == iframe-scrolling-attr-2.html iframe-scrolling-attr-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == frame-scrolling-attr-1.html frame-scrolling-attr-ref.html
-== frame-scrolling-attr-2.html frame-scrolling-attr-ref.html
+fuzzy-if(asyncPanZoom&&!layersGPUAccelerated,102,2420) == frame-scrolling-attr-2.html frame-scrolling-attr-ref.html
 == move-item.html move-item-ref.html # bug 1125750

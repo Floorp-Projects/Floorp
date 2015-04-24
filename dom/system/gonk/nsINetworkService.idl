@@ -159,7 +159,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(a0f29630-c25c-11e4-8830-0800200c9a66)]
+[scriptable, uuid(2e030f00-8b74-4800-8add-5862ab183503)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -250,20 +250,6 @@ interface nsINetworkService : nsISupports
   void setWifiOperationMode(in DOMString interfaceName,
                             in DOMString mode,
                             in nsIWifiOperationModeCallback callback);
-
-  /**
-   * Set http proxy for specific network
-   *
-   * @param networkInterface
-   *        The network interface which contains the http proxy host/port
-   *        we want to set.
-   */
-  void setNetworkProxy(in nsINetworkInterface networkInterface);
-
-  /**
-   * Clear all http proxy.
-   */
-  void clearNetworkProxy();
 
   /**
    * Set USB tethering.

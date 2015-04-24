@@ -537,8 +537,28 @@ MOZ_ALWAYS_INLINE void
 js::Nursery::traceObject(MinorCollectionTracer* trc, JSObject* obj)
 {
     const Class* clasp = obj->getClass();
-    if (clasp->trace)
+    if (clasp->trace) {
+        if (clasp->trace == InlineTypedObject::obj_trace) {
+            TypeDescr* descr = &obj->as<InlineTypedObject>().typeDescr();
+            if (descr->hasTraceList()) {
+                markTraceList(trc, descr->traceList(),
+                              obj->as<InlineTypedObject>().inlineTypedMem());
+            }
+            return;
+        }
+        if (clasp == &UnboxedPlainObject::class_) {
+            JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
+            if (*pexpando)
+                markObject(trc, pexpando);
+            const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
+            if (layout.traceList()) {
+                markTraceList(trc, layout.traceList(),
+                              obj->as<UnboxedPlainObject>().data());
+            }
+            return;
+        }
         clasp->trace(trc, obj);
+    }
 
     MOZ_ASSERT(obj->isNative() == clasp->isNative());
     if (!clasp->isNative())
@@ -579,16 +599,42 @@ js::Nursery::markSlot(MinorCollectionTracer* trc, HeapSlot* slotp)
         return;
 
     JSObject* obj = &slotp->toObject();
-    if (!IsInsideNursery(obj))
-        return;
-
-    if (getForwardedPointer(&obj)) {
+    if (markObject(trc, &obj))
         slotp->unsafeGet()->setObject(*obj);
-        return;
-    }
+}
 
-    JSObject* tenured = static_cast<JSObject*>(moveToTenured(trc, obj));
-    slotp->unsafeGet()->setObject(*tenured);
+MOZ_ALWAYS_INLINE void
+js::Nursery::markTraceList(MinorCollectionTracer* trc, const int32_t* traceList, uint8_t* memory)
+{
+    while (*traceList != -1) {
+        // Strings are not in the nursery and do not need tracing.
+        traceList++;
+    }
+    traceList++;
+    while (*traceList != -1) {
+        JSObject** pobj = reinterpret_cast<JSObject **>(memory + *traceList);
+        markObject(trc, pobj);
+        traceList++;
+    }
+    traceList++;
+    while (*traceList != -1) {
+        HeapSlot* pslot = reinterpret_cast<HeapSlot *>(memory + *traceList);
+        markSlot(trc, pslot);
+        traceList++;
+    }
+}
+
+MOZ_ALWAYS_INLINE bool
+js::Nursery::markObject(MinorCollectionTracer* trc, JSObject** pobj)
+{
+    if (!IsInsideNursery(*pobj))
+        return false;
+
+    if (getForwardedPointer(pobj))
+        return true;
+
+    *pobj = static_cast<JSObject*>(moveToTenured(trc, *pobj));
+    return true;
 }
 
 void*
