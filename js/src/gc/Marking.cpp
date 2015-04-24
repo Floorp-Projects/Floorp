@@ -775,6 +775,109 @@ js::GCMarker::eagerlyMarkChildren(Shape* shape)
     } while (shape && mark(shape));
 }
 
+void
+JSString::traceChildren(JSTracer* trc)
+{
+    if (hasBase())
+        traceBase(trc);
+    else if (isRope())
+        asRope().traceChildren(trc);
+}
+inline void
+GCMarker::eagerlyMarkChildren(JSString* str)
+{
+    if (str->isLinear())
+        eagerlyMarkChildren(&str->asLinear());
+    else
+        eagerlyMarkChildren(&str->asRope());
+}
+
+void
+JSString::traceBase(JSTracer* trc)
+{
+    MOZ_ASSERT(hasBase());
+    TraceManuallyBarrieredEdge(trc, &d.s.u3.base, "base");
+}
+inline void
+js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr)
+{
+    JS_COMPARTMENT_ASSERT(runtime(), linearStr);
+    MOZ_ASSERT(linearStr->isMarked());
+    MOZ_ASSERT(linearStr->JSString::isLinear());
+
+    // Use iterative marking to avoid blowing out the stack.
+    while (linearStr->hasBase()) {
+        linearStr = linearStr->base();
+        MOZ_ASSERT(linearStr->JSString::isLinear());
+        if (linearStr->isPermanentAtom())
+            break;
+        JS_COMPARTMENT_ASSERT(runtime(), linearStr);
+        if (!mark(static_cast<JSString*>(linearStr)))
+            break;
+    }
+}
+
+void
+JSRope::traceChildren(JSTracer* trc) {
+    js::TraceManuallyBarrieredEdge(trc, &d.s.u2.left, "left child");
+    js::TraceManuallyBarrieredEdge(trc, &d.s.u3.right, "right child");
+}
+inline void
+js::GCMarker::eagerlyMarkChildren(JSRope* rope)
+{
+    // This function tries to scan the whole rope tree using the marking stack
+    // as temporary storage. If that becomes full, the unscanned ropes are
+    // added to the delayed marking list. When the function returns, the
+    // marking stack is at the same depth as it was on entry. This way we avoid
+    // using tags when pushing ropes to the stack as ropes never leak to other
+    // users of the stack. This also assumes that a rope can only point to
+    // other ropes or linear strings, it cannot refer to GC things of other
+    // types.
+    ptrdiff_t savedPos = stack.position();
+    JS_DIAGNOSTICS_ASSERT(GetGCThingTraceKind(rope) == JSTRACE_STRING);
+    while (true) {
+        JS_DIAGNOSTICS_ASSERT(GetGCThingTraceKind(rope) == JSTRACE_STRING);
+        JS_DIAGNOSTICS_ASSERT(rope->JSString::isRope());
+        JS_COMPARTMENT_ASSERT(runtime(), rope);
+        MOZ_ASSERT(rope->isMarked());
+        JSRope* next = nullptr;
+
+        JSString* right = rope->rightChild();
+        if (!right->isPermanentAtom() &&
+            mark(right))
+        {
+            if (right->isLinear())
+                eagerlyMarkChildren(&right->asLinear());
+            else
+                next = &right->asRope();
+        }
+
+        JSString* left = rope->leftChild();
+        if (!left->isPermanentAtom() &&
+            mark(left))
+        {
+            if (left->isLinear()) {
+                eagerlyMarkChildren(&left->asLinear());
+            } else {
+                // When both children are ropes, set aside the right one to
+                // scan it later.
+                if (next && !stack.push(reinterpret_cast<uintptr_t>(next)))
+                    delayMarkingChildren(next);
+                next = &left->asRope();
+            }
+        }
+        if (next) {
+            rope = next;
+        } else if (savedPos != stack.position()) {
+            MOZ_ASSERT(savedPos < stack.position());
+            rope = reinterpret_cast<JSRope*>(stack.pop());
+        } else {
+            break;
+        }
+    }
+    MOZ_ASSERT(savedPos == stack.position());
+}
+
 template <typename T>
 static inline void
 CheckIsMarkedThing(T* thingp)
@@ -1071,92 +1174,6 @@ gc::MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name)
 }
 
 /*** Push Mark Stack ***/
-
-static inline void
-ScanLinearString(GCMarker* gcmarker, JSLinearString* str)
-{
-    JS_COMPARTMENT_ASSERT(gcmarker->runtime(), str);
-    MOZ_ASSERT(str->isMarked());
-
-    /*
-     * Add extra asserts to confirm the static type to detect incorrect string
-     * mutations.
-     */
-    MOZ_ASSERT(str->JSString::isLinear());
-    while (str->hasBase()) {
-        str = str->base();
-        MOZ_ASSERT(str->JSString::isLinear());
-        if (str->isPermanentAtom())
-            break;
-        JS_COMPARTMENT_ASSERT(gcmarker->runtime(), str);
-        if (!str->markIfUnmarked())
-            break;
-    }
-}
-
-/*
- * The function tries to scan the whole rope tree using the marking stack as
- * temporary storage. If that becomes full, the unscanned ropes are added to
- * the delayed marking list. When the function returns, the marking stack is
- * at the same depth as it was on entry. This way we avoid using tags when
- * pushing ropes to the stack as ropes never leaks to other users of the
- * stack. This also assumes that a rope can only point to other ropes or
- * linear strings, it cannot refer to GC things of other types.
- */
-static void
-ScanRope(GCMarker* gcmarker, JSRope* rope)
-{
-    ptrdiff_t savedPos = gcmarker->stack.position();
-    JS_DIAGNOSTICS_ASSERT(GetGCThingTraceKind(rope) == JSTRACE_STRING);
-    for (;;) {
-        JS_DIAGNOSTICS_ASSERT(GetGCThingTraceKind(rope) == JSTRACE_STRING);
-        JS_DIAGNOSTICS_ASSERT(rope->JSString::isRope());
-        JS_COMPARTMENT_ASSERT(gcmarker->runtime(), rope);
-        MOZ_ASSERT(rope->isMarked());
-        JSRope* next = nullptr;
-
-        JSString* right = rope->rightChild();
-        if (!right->isPermanentAtom() && right->markIfUnmarked()) {
-            if (right->isLinear())
-                ScanLinearString(gcmarker, &right->asLinear());
-            else
-                next = &right->asRope();
-        }
-
-        JSString* left = rope->leftChild();
-        if (!left->isPermanentAtom() && left->markIfUnmarked()) {
-            if (left->isLinear()) {
-                ScanLinearString(gcmarker, &left->asLinear());
-            } else {
-                /*
-                 * When both children are ropes, set aside the right one to
-                 * scan it later.
-                 */
-                if (next && !gcmarker->stack.push(reinterpret_cast<uintptr_t>(next)))
-                    gcmarker->delayMarkingChildren(next);
-                next = &left->asRope();
-            }
-        }
-        if (next) {
-            rope = next;
-        } else if (savedPos != gcmarker->stack.position()) {
-            MOZ_ASSERT(savedPos < gcmarker->stack.position());
-            rope = reinterpret_cast<JSRope*>(gcmarker->stack.pop());
-        } else {
-            break;
-        }
-    }
-    MOZ_ASSERT(savedPos == gcmarker->stack.position());
- }
-
-inline void
-GCMarker::eagerlyMarkChildren(JSString* str)
-{
-    if (str->isLinear())
-        ScanLinearString(this, &str->asLinear());
-    else
-        ScanRope(this, &str->asRope());
-}
 
 /*
  * This function is used by the cycle collector to trace through a

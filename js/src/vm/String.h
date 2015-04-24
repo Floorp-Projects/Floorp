@@ -466,10 +466,7 @@ class JSString : public js::gc::TenuredCell
 
     inline JSLinearString* base() const;
 
-    void traceBase(JSTracer* trc) {
-        MOZ_ASSERT(hasBase());
-        js::TraceManuallyBarrieredEdge(trc, &d.s.u3.base, "base");
-    }
+    void traceBase(JSTracer* trc);
 
     /* Only called by the GC for strings with the AllocKind::STRING kind. */
 
@@ -509,7 +506,7 @@ class JSString : public js::gc::TenuredCell
     bool equals(const char* s);
 #endif
 
-    inline void traceChildren(JSTracer* trc);
+    void traceChildren(JSTracer* trc);
 
     static MOZ_ALWAYS_INLINE void readBarrier(JSString* thing) {
         if (thing->isPermanentAtom())
@@ -578,10 +575,7 @@ class JSRope : public JSString
         return d.s.u3.right;
     }
 
-    void traceChildren(JSTracer* trc) {
-        js::TraceManuallyBarrieredEdge(trc, &d.s.u2.left, "left child");
-        js::TraceManuallyBarrieredEdge(trc, &d.s.u3.right, "right child");
-    }
+    void traceChildren(JSTracer* trc);
 
     static size_t offsetOfLeft() {
         return offsetof(JSRope, d.s.u2.left);
@@ -1270,15 +1264,6 @@ JSString::base() const
     MOZ_ASSERT(hasBase());
     MOZ_ASSERT(!d.s.u3.base->isInline());
     return d.s.u3.base;
-}
-
-inline void
-JSString::traceChildren(JSTracer* trc)
-{
-    if (hasBase())
-        traceBase(trc);
-    else if (isRope())
-        asRope().traceChildren(trc);
 }
 
 template<>
