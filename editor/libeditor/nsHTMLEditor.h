@@ -41,6 +41,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"
 
+class nsDocumentFragment;
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIClipboard;
@@ -53,6 +54,9 @@ class nsRange;
 struct PropItem;
 
 namespace mozilla {
+namespace dom {
+template<class T> class OwningNonNull;
+}
 namespace widget {
 struct IMEState;
 } // namespace widget
@@ -591,11 +595,11 @@ protected:
                            nsIDocument* aTargetDoc,
                            nsCOMPtr<nsIDOMNode> *outNode,
                            bool aTrustedInput);
-  nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
-                                      nsCOMArray<nsIDOMNode>& outNodeList,
-                                      nsIDOMNode *aStartNode,
+  void       CreateListOfNodesToPaste(mozilla::dom::DocumentFragment& aFragment,
+                                      nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outNodeList,
+                                      nsINode* aStartNode,
                                       int32_t aStartOffset,
-                                      nsIDOMNode *aEndNode,
+                                      nsINode* aEndNode,
                                       int32_t aEndOffset);
   nsresult CreateTagStack(nsTArray<nsString> &aTagStack,
                           nsIDOMNode *aNode);
