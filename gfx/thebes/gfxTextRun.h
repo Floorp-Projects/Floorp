@@ -878,10 +878,10 @@ public:
     };
     // The gfxFontGroup keeps ownership of this textrun.
     // It is only guaranteed to exist until the next call to GetEllipsisTextRun
-    // (which might use a different appUnitsPerDev value) for the font group,
-    // or until UpdateUserFonts is called, or the fontgroup is destroyed.
+    // (which might use a different appUnitsPerDev value or flags) for the font
+    // group, or until UpdateUserFonts is called, or the fontgroup is destroyed.
     // Get it/use it/forget it :) - don't keep a reference that might go stale.
-    gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
+    gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
                                    LazyReferenceContextGetter& aRefContextGetter);
 
     // helper method for resolving generic font families
@@ -1042,7 +1042,7 @@ protected:
     gfxTextPerfMetrics *mTextPerf;
 
     // Cache a textrun representing an ellipsis (useful for CSS text-overflow)
-    // at a specific appUnitsPerDevPixel size
+    // at a specific appUnitsPerDevPixel size and orientation
     nsAutoPtr<gfxTextRun>   mCachedEllipsisTextRun;
 
     // cache the most recent pref font to avoid general pref font lookup

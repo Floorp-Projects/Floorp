@@ -70,13 +70,6 @@
   <preference id="app.update.auto"
               name="app.update.auto"
               type="bool"/>
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-  <preference id="app.update.metro.enabled"
-              name="app.update.metro.enabled"
-              type="bool"/>
-#endif
-#endif
   <preference id="app.update.mode"
               name="app.update.mode"
               type="int"/>
@@ -329,18 +322,6 @@
       <groupbox id="updateApp" align="start">
         <caption><label>&updateApp.label;</label></caption>
         <radiogroup id="updateRadioGroup" align="start">
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-              <radio id="autoMetro"
-                     value="autoMetro"
-                     label="&updateAutoMetro.label;"
-                     accesskey="&updateAutoMetro.accesskey;"/>
-              <hbox id="autoMetroIndent"
-                    class="indent">
-                <label>&updateAutoMetroWarn.label;</label>
-              </hbox>
-#endif
-#endif
           <radio id="autoDesktop"
                  value="auto"
                  label="&updateAuto1.label;"

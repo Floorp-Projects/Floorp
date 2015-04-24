@@ -277,7 +277,7 @@ addEventListener("WebChannelMessageToChrome", function (e) {
   let principal = e.target.nodePrincipal ? e.target.nodePrincipal : e.target.document.nodePrincipal;
 
   if (e.detail) {
-    sendAsyncMessage("WebChannelMessageToChrome", e.detail, null, principal);
+    sendAsyncMessage("WebChannelMessageToChrome", e.detail, { eventTarget: e.target }, principal);
   } else  {
     Cu.reportError("WebChannel message failed. No message detail.");
   }
@@ -286,12 +286,30 @@ addEventListener("WebChannelMessageToChrome", function (e) {
 // Add message listener for "WebChannelMessageToContent" messages from chrome scripts
 addMessageListener("WebChannelMessageToContent", function (e) {
   if (e.data) {
-    content.dispatchEvent(new content.CustomEvent("WebChannelMessageToContent", {
-      detail: Cu.cloneInto({
-        id: e.data.id,
-        message: e.data.message,
-      }, content),
-    }));
+    // e.objects.eventTarget will be defined if sending a response to
+    // a WebChannelMessageToChrome event. An unsolicited send
+    // may not have an eventTarget defined, in this case send to the
+    // main content window.
+    let eventTarget = e.objects.eventTarget || content;
+
+    // if eventTarget is window then we want the document principal,
+    // otherwise use target itself.
+    let targetPrincipal = eventTarget instanceof Ci.nsIDOMWindow ? eventTarget.document.nodePrincipal : eventTarget.nodePrincipal;
+
+    if (e.principal.subsumes(targetPrincipal)) {
+      // if eventTarget is a window, use it as the targetWindow, otherwise
+      // find the window that owns the eventTarget.
+      let targetWindow = eventTarget instanceof Ci.nsIDOMWindow ? eventTarget : eventTarget.ownerDocument.defaultView;
+
+      eventTarget.dispatchEvent(new targetWindow.CustomEvent("WebChannelMessageToContent", {
+        detail: Cu.cloneInto({
+          id: e.data.id,
+          message: e.data.message,
+        }, targetWindow),
+      }));
+    } else {
+      Cu.reportError("WebChannel message failed. Principal mismatch.");
+    }
   } else {
     Cu.reportError("WebChannel message failed. No message data.");
   }

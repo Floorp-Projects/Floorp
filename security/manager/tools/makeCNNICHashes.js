@@ -19,6 +19,7 @@ let gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
 
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const HEADER = "// This Source Code Form is subject to the terms of the Mozilla Public\n" +
 "// License, v. 2.0. If a copy of the MPL was not distributed with this\n" +
@@ -105,8 +106,11 @@ const sixYearsInMilliseconds = 6 * 366 * 24 * 60 * 60 * 1000;
 
 function loadCertificates(certFile) {
   let nowInMilliseconds = (new Date()).getTime();
+  // months are 0-indexed, so April is month 3 :(
+  let april1InMilliseconds = (new Date(2015, 3, 1)).getTime();
   let latestNotAfter = nowInMilliseconds;
   let certs = [];
+  let certMap = {};
   let invalidCerts = [];
   let paths = readFileContents(certFile).split("\n");
   for (let path of paths) {
@@ -121,13 +125,33 @@ function loadCertificates(certFile) {
     if (!cert) {
       cert = gCertDB.constructX509(certData, certData.length);
     }
+    // Don't add multiple copies of any particular certificate.
+    if (cert.sha256Fingerprint in certMap) {
+      continue;
+    }
+    certMap[cert.sha256Fingerprint] = true;
+    // If we can't verify the certificate, don't include it. Unfortunately, if
+    // a CNNIC-issued certificate wasn't previously on the whitelist but it
+    // otherwise verifies successfully, verifyCertNow will return
+    // SEC_ERROR_REVOKED_CERTIFICATE, so we count that as verifying
+    // successfully. If the certificate is later revoked by CNNIC, the user
+    // will see that when they attempt to connect to a site using it and we do
+    // normal revocation checking.
+    let errorCode = gCertDB.verifyCertNow(cert, 2 /* SSL Server */,
+                                          Ci.nsIX509CertDB.LOCAL_ONLY, {}, {});
+    if (errorCode != 0 &&
+        errorCode != -8180 /* SEC_ERROR_REVOKED_CERTIFICATE */) {
+      continue;
+    }
     let durationMilliseconds = (cert.validity.notAfter - cert.validity.notBefore) / 1000;
+    let notBeforeMilliseconds = cert.validity.notBefore / 1000;
     let notAfterMilliseconds = cert.validity.notAfter / 1000;
-    // Only consider certificates that haven't expired and have a validity
-    // period shorter than 6 years (there is a delegated OCSP responder
-    // certificate with a validity period of 6 years that should be on the
-    // whitelist).
-    if (notAfterMilliseconds > nowInMilliseconds &&
+    // Only consider certificates that were issued before 1 April 2015, haven't
+    // expired, and have a validity period shorter than 6 years (there is a
+    // delegated OCSP responder certificate with a validity period of 6 years
+    // that should be on the whitelist).
+    if (notBeforeMilliseconds < april1InMilliseconds &&
+        notAfterMilliseconds > nowInMilliseconds &&
         durationMilliseconds < sixYearsInMilliseconds) {
       certs.push(cert);
       if (notAfterMilliseconds > latestNotAfter) {
@@ -183,15 +207,37 @@ function certToPEM(cert) {
   return output;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-if (arguments.length != 1) {
-  throw "Usage: makeCNNICHashes.js <path to list of certificates>";
+function loadIntermediates(intermediatesFile) {
+  let pem = readFileContents(intermediatesFile);
+  let intermediates = [];
+  let currentPEM = "";
+  for (let line of pem.split("\r\n")) {
+    if (line == "-----END CERTIFICATE-----") {
+      if (currentPEM) {
+        intermediates.push(gCertDB.constructX509FromBase64(currentPEM));
+      }
+      currentPEM = "";
+      continue;
+    }
+    if (line != "-----BEGIN CERTIFICATE-----") {
+      currentPEM += line;
+    }
+  }
+  return intermediates;
 }
 
-let certFile = pathToFile(arguments[0]);
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+if (arguments.length != 2) {
+  throw "Usage: makeCNNICHashes.js <intermediates file> <path to list of certificates>";
+}
+
+Services.prefs.setIntPref("security.OCSP.enabled", 0);
+let intermediatesFile = pathToFile(arguments[0]);
+let intermediates = loadIntermediates(intermediatesFile);
+let certFile = pathToFile(arguments[1]);
 let { certs, lastValidTime, invalidCerts } = loadCertificates(certFile);
 
 dump("The following certificates were not included due to overlong validity periods:\n");

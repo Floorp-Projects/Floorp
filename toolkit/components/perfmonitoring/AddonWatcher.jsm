@@ -183,7 +183,6 @@ let AddonWatcher = {
         // Report misbehaviors to the user.
 
         for (let filter of FILTERS) {
-          dump(`Checking addon ${addonId} with filter ${filter}\n`);
           let peak = stats.peaks[filter] || 0;
           stats.peaks[filter] = Math.max(diff[filter], peak);
 

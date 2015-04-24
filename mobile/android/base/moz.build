@@ -13,11 +13,24 @@ thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 
 constants_jar = add_java_jar('constants')
 constants_jar.sources = [
+    'adjust/AdjustHelperInterface.java',
     'SysInfo.java',
 ]
 constants_jar.generated_sources = [
     'preprocessed/org/mozilla/gecko/AppConstants.java',
 ]
+
+if CONFIG['MOZ_INSTALL_TRACKING']:
+    constants_jar.sources += [
+        'adjust/AdjustHelper.java',
+    ]
+    constants_jar.extra_jars = [
+        'gecko-thirdparty-adjust_sdk.jar',
+    ]
+else:
+    constants_jar.sources += [
+        'adjust/StubAdjustHelper.java',
+    ]
 
 resjar = add_java_jar('gecko-R')
 resjar.sources = []
@@ -674,6 +687,42 @@ if not CONFIG['MOZILLA_OFFICIAL']:
         'org/lucasr/dspec/RawResource.java'
     ] ]
 
+if CONFIG['MOZ_INSTALL_TRACKING']:
+    adjustjar = add_java_jar('gecko-thirdparty-adjust_sdk')
+    adjustjar.sources += [ thirdparty_source_dir + f for f in [
+        'com/adjust/sdk/ActivityHandler.java',
+        'com/adjust/sdk/ActivityKind.java',
+        'com/adjust/sdk/ActivityPackage.java',
+        'com/adjust/sdk/ActivityState.java',
+        'com/adjust/sdk/Adjust.java',
+        'com/adjust/sdk/AdjustAttribution.java',
+        'com/adjust/sdk/AdjustConfig.java',
+        'com/adjust/sdk/AdjustEvent.java',
+        'com/adjust/sdk/AdjustFactory.java',
+        'com/adjust/sdk/AdjustInstance.java',
+        'com/adjust/sdk/AdjustReferrerReceiver.java',
+        'com/adjust/sdk/AttributionHandler.java',
+        'com/adjust/sdk/Constants.java',
+        'com/adjust/sdk/DeviceInfo.java',
+        'com/adjust/sdk/IActivityHandler.java',
+        'com/adjust/sdk/IAttributionHandler.java',
+        'com/adjust/sdk/ILogger.java',
+        'com/adjust/sdk/IPackageHandler.java',
+        'com/adjust/sdk/IRequestHandler.java',
+        'com/adjust/sdk/Logger.java',
+        'com/adjust/sdk/LogLevel.java',
+        'com/adjust/sdk/OnAttributionChangedListener.java',
+        'com/adjust/sdk/PackageBuilder.java',
+        'com/adjust/sdk/PackageHandler.java',
+        'com/adjust/sdk/plugin/AndroidIdUtil.java',
+        'com/adjust/sdk/plugin/MacAddressUtil.java',
+        'com/adjust/sdk/plugin/Plugin.java',
+        'com/adjust/sdk/Reflection.java',
+        'com/adjust/sdk/RequestHandler.java',
+        'com/adjust/sdk/UnitTestActivity.java',
+        'com/adjust/sdk/Util.java'
+    ] ]
+
 # Putting branding earlier allows branders to override default resources.
 ANDROID_RES_DIRS += [
     TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res',
@@ -686,9 +735,12 @@ ANDROID_GENERATED_RESFILES += [
     'res/values/strings.xml',
 ]
 
+# We do not expose MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN here because that
+# would leak the value to build logs.  Instead we expose the token quietly where
+# appropriate in Makefile.in.
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
             'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER',
-            'MOZ_ANDROID_SHARE_OVERLAY', 'MOZ_ANDROID_DOWNLOADS_INTEGRATION',
+            'MOZ_ANDROID_SHARE_OVERLAY', 'MOZ_ANDROID_DOWNLOADS_INTEGRATION', 'MOZ_INSTALL_TRACKING',
             'MOZ_ANDROID_TAB_QUEUE'):
     if CONFIG[var]:
         DEFINES[var] = 1

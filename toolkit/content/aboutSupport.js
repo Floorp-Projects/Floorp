@@ -273,7 +273,7 @@ let snapshotFormatters = {
     let out = Object.create(data);
 
     if (apzInfo.length == 0)
-      out.asyncPanZoom = "none";
+      out.asyncPanZoom = localizedMsg(["apzNone"]);
     else
       out.asyncPanZoom = apzInfo.join("; ");
 

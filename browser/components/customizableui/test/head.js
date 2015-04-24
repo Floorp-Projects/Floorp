@@ -127,18 +127,6 @@ function removeDeveloperButtonIfDevEdition(areaPanelPlacements) {
   }
 }
 
-function isInWin8() {
-  if (!Services.metro)
-    return false;
-  return Services.metro.supported;
-}
-
-function addSwitchToMetroButtonInWindows8(areaPanelPlacements) {
-  if (isInWin8()) {
-    areaPanelPlacements.push("switch-to-metro-button");
-  }
-}
-
 function assertAreaPlacements(areaId, expectedPlacements) {
   let actualPlacements = getAreaWidgetIds(areaId);
   placementArraysEqual(areaId, actualPlacements, expectedPlacements);

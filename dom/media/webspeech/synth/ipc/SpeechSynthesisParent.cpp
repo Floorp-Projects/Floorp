@@ -64,7 +64,7 @@ SpeechSynthesisParent::RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRe
   MOZ_ASSERT(aActor);
   SpeechSynthesisRequestParent* actor =
     static_cast<SpeechSynthesisRequestParent*>(aActor);
-  nsSynthVoiceRegistry::GetInstance()->Speak(aText, aLang, aUri, aRate,
+  nsSynthVoiceRegistry::GetInstance()->Speak(aText, aLang, aUri, aVolume, aRate,
                                              aPitch, actor->mTask);
   return true;
 }

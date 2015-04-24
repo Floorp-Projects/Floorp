@@ -448,20 +448,6 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(metro,
-[  --enable-metro           Enable Windows Metro build targets],
-    MOZ_METRO=1,
-    MOZ_METRO=)
-if test -n "$MOZ_METRO"; then
-    AC_DEFINE(MOZ_METRO)
-    # toolkit/library/makefile.in needs these, see nsDllMain.
-    CRTDLLVERSION=110
-    CRTEXPDLLVERSION=1-1-0
-fi
-
-AC_SUBST(CRTDLLVERSION)
-AC_SUBST(CRTEXPDLLVERSION)
-
 # Target the Windows 8.1 SDK by default
 WINSDK_TARGETVER=603
 WINVER=502
@@ -572,16 +558,6 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
             AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
-        fi
-
-        dnl Confirm we have the pri tools on win8 builds
-        if test -n "$MOZ_METRO"; then
-          AC_MSG_CHECKING([for makepri])
-          AC_CHECK_PROGS(MAKEPRI, makepri, "")
-          if test -z "MAKEPRI" ; then
-              AC_MSG_ERROR([makepri.exe is required for generating metro browser install components. It should be in the Win8 SDK.])
-          fi
-          AC_SUBST(MAKEPRI)
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -3912,6 +3888,7 @@ MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
 MOZ_ANDROID_MLS_STUMBLER=
 MOZ_ANDROID_SHARE_OVERLAY=
+MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_SIMPLEPUSH=
@@ -4050,6 +4027,13 @@ if test -z "$MOZ_BING_API_CLIENTID"; then
 fi
 AC_SUBST(MOZ_BING_API_CLIENTID)
 AC_SUBST(MOZ_BING_API_KEY)
+
+# Allow specifying an Adjust SDK key file that contains the app token used for
+# Adjust SDK requests.
+MOZ_ARG_WITH_STRING(adjust-sdk-keyfile,
+[  --with-adjust-sdk-keyfile=file   Use the app token contained in the given keyfile for Adjust SDK requests],
+  MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN=`cat $withval`)
+AC_SUBST(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)
 
 # Whether to include optional-but-large font files in the final APK.
 # We want this in mobile/android/confvars.sh, so it goes early.
@@ -4974,6 +4958,13 @@ dnl = Temporary build flag to allow development in Nightly
 dnl ========================================================
 if test -n "$MOZ_ANDROID_TAB_QUEUE"; then
     AC_DEFINE(MOZ_ANDROID_TAB_QUEUE)
+fi
+
+dnl ========================================================
+dnl = Include install tracking on Android
+dnl ========================================================
+if test -n "$MOZ_INSTALL_TRACKING"; then
+    AC_DEFINE(MOZ_INSTALL_TRACKING)
 fi
 
 dnl ========================================================
@@ -8466,8 +8457,6 @@ AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_D3DCOMPILER_XP_DLL)
 AC_SUBST(MOZ_D3DCOMPILER_XP_CAB)
 
-AC_SUBST(MOZ_METRO)
-
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
@@ -8480,6 +8469,7 @@ AC_SUBST(MOZ_ANDROID_SHARE_OVERLAY)
 AC_SUBST(MOZ_ANDROID_TAB_QUEUE)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
+AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
@@ -9214,6 +9204,7 @@ export STLPORT_LIBS
 export JS_STANDALONE=no
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
+export MOZ_MEMORY
 
 if ! test -e js; then
     mkdir js

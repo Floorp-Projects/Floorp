@@ -405,8 +405,12 @@ let gSyncPane = {
   },
 
   manageFirefoxAccount: function() {
-    let url = Services.prefs.getCharPref("identity.fxaccounts.settings.uri");
-    this.openContentInBrowser(url);
+    fxAccounts.promiseAccountsManageURI()
+      .then(url => {
+        this.openContentInBrowser(url, {
+          replaceQueryString: true
+        });
+      });
   },
 
   verifyFirefoxAccount: function() {

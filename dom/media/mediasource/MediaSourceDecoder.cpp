@@ -54,14 +54,14 @@ MediaSourceDecoder::CreateStateMachine()
 nsresult
 MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
 {
-  MOZ_ASSERT(!mDecoderStateMachine);
-  mDecoderStateMachine = CreateStateMachine();
-  if (!mDecoderStateMachine) {
+  MOZ_ASSERT(!GetStateMachine());
+  SetStateMachine(CreateStateMachine());
+  if (!GetStateMachine()) {
     NS_WARNING("Failed to create state machine!");
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mDecoderStateMachine->Init(nullptr);
+  nsresult rv = GetStateMachine()->Init(nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
@@ -116,7 +116,7 @@ MediaSourceDecoder::CreateResource(nsIPrincipal* aPrincipal)
 void
 MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource)
 {
-  MOZ_ASSERT(!mMediaSource && !mDecoderStateMachine && NS_IsMainThread());
+  MOZ_ASSERT(!mMediaSource && !GetStateMachine() && NS_IsMainThread());
   mMediaSource = aMediaSource;
 }
 
@@ -233,10 +233,10 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration, MSRangeRemovalActio
       // We want a very bigger number, but not infinity.
       checkedDuration = INT64_MAX - 1;
     }
-    mDecoderStateMachine->SetDuration(checkedDuration);
+    GetStateMachine()->SetDuration(checkedDuration);
     mMediaSourceDuration = aDuration;
   } else {
-    mDecoderStateMachine->SetDuration(INT64_MAX);
+    GetStateMachine()->SetDuration(INT64_MAX);
     mMediaSourceDuration = PositiveInfinity<double>();
   }
   if (mReader) {

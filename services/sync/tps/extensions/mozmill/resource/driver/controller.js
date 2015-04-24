@@ -286,7 +286,6 @@ MozMillController.prototype.waitFor = assert.waitFor;
 MozMillController.prototype.open = function (url) {
   switch (this.mozmillModule.Application) {
     case "Firefox":
-    case "MetroFirefox":
       // Stop a running page load to not overlap requests
       if (this.browserObject.selectedBrowser) {
         this.browserObject.selectedBrowser.stop();
@@ -937,27 +936,12 @@ Tabs.prototype.__defineGetter__("length", function () {
 
 Tabs.prototype.__defineGetter__("activeTabIndex", function () {
   var browser = this.controller.browserObject;
-
-  switch(this.controller.mozmillModule.Application) {
-    case "MetroFirefox":
-      return browser.tabs.indexOf(browser.selectedTab);
-    case "Firefox":
-    default:
-      return browser.tabContainer.selectedIndex;
-  }
+  return browser.tabContainer.selectedIndex;
 });
 
 Tabs.prototype.selectTabIndex = function (aIndex) {
   var browser = this.controller.browserObject;
-
-  switch(this.controller.mozmillModule.Application) {
-    case "MetroFirefox":
-      browser.selectedTab = browser.tabs[aIndex];
-      break;
-    case "Firefox":
-    default:
-      browser.selectTabAtIndex(aIndex);
-  }
+  browser.selectTabAtIndex(aIndex);
 }
 
 function browserAdditions (controller) {

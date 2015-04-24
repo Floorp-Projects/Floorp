@@ -7,13 +7,40 @@
 EXPORTS.mozilla.dom += [
     'Gamepad.h',
     'GamepadButton.h',
+    'GamepadFunctions.h',
+    'GamepadMonitoring.h',
     'GamepadService.h',
+    'GamepadServiceTest.h'
     ]
 
 UNIFIED_SOURCES = [
     'Gamepad.cpp',
     'GamepadButton.cpp',
+    'GamepadFunctions.cpp',
+    'GamepadMonitoring.cpp',
     'GamepadService.cpp',
+    'GamepadServiceTest.cpp'
+    ]
+
+if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
+    UNIFIED_SOURCES += [
+        'fallback/FallbackGamepad.cpp'
+    ]
+elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'cocoa':
+    UNIFIED_SOURCES += [
+        'cocoa/CocoaGamepad.cpp'
+    ]
+elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'windows':
+    UNIFIED_SOURCES += [
+        'windows/WindowsGamepad.cpp'
+    ]
+elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'linux':
+    UNIFIED_SOURCES += [
+        'linux/LinuxGamepad.cpp'
+    ]
+elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'android':
+    UNIFIED_SOURCES += [
+        'android/AndroidGamepad.cpp'
     ]
 
 FAIL_ON_WARNINGS = True
@@ -25,3 +52,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
+CFLAGS += CONFIG['GLIB_CFLAGS']
+CFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+CXXFLAGS += CONFIG['GLIB_CFLAGS']
+CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

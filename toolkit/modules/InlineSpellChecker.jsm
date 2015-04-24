@@ -335,7 +335,7 @@ InlineSpellChecker.prototype = {
     this.mInlineSpellChecker.spellCheckRange(null); // causes recheck
   },
 
-  // callback for selecting a suggesteed replacement
+  // callback for selecting a suggested replacement
   replaceMisspelling: function(index)
   {
     if (this.mRemote) {
