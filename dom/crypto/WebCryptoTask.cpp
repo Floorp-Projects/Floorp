@@ -304,10 +304,6 @@ WebCryptoTask::CalculateResult()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  if (NS_FAILED(mEarlyRv)) {
-    return mEarlyRv;
-  }
-
   if (isAlreadyShutDown()) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
