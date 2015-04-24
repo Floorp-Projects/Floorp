@@ -3093,16 +3093,16 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
 
-  nsCOMArray<nsIDOMNode> arrayOfNodes;
-  res = GetListActionNodes(arrayOfNodes, aEntireList);
+  nsCOMArray<nsIDOMNode> arrayOfDOMNodes;
+  res = GetListActionNodes(arrayOfDOMNodes, aEntireList);
   NS_ENSURE_SUCCESS(res, res);
 
-  int32_t listCount = arrayOfNodes.Count();
+  int32_t listCount = arrayOfDOMNodes.Count();
 
   // check if all our nodes are <br>s, or empty inlines
   bool bOnlyBreaks = true;
   for (int32_t j = 0; j < listCount; j++) {
-    nsIDOMNode* curNode = arrayOfNodes[j];
+    nsIDOMNode* curNode = arrayOfDOMNodes[j];
     // if curNode is not a Break or empty inline, we're done
     if (!nsTextEditUtils::IsBreak(curNode) && !IsEmptyInline(curNode)) {
       bOnlyBreaks = false;
@@ -3117,7 +3117,7 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
     if (bOnlyBreaks) {
       for (int32_t j = 0; j < (int32_t)listCount; j++) {
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->DeleteNode(arrayOfNodes[j]);
+        res = mHTMLEditor->DeleteNode(arrayOfDOMNodes[j]);
         NS_ENSURE_SUCCESS(res, res);
       }
     }
@@ -3159,21 +3159,26 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
   // if there is only one node in the array, and it is a list, div, or
   // blockquote, then look inside of it until we find inner list or content.
 
-  res = LookInsideDivBQandList(arrayOfNodes);
-  NS_ENSURE_SUCCESS(res, res);
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  for (int32_t i = 0; i < arrayOfDOMNodes.Count(); i++) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(arrayOfDOMNodes[i]);
+    NS_ENSURE_STATE(node);
+    arrayOfNodes.AppendElement(node);
+  }
+  LookInsideDivBQandList(arrayOfNodes);
 
   // Ok, now go through all the nodes and put then in the list,
   // or whatever is approriate.  Wohoo!
 
-  listCount = arrayOfNodes.Count();
+  listCount = arrayOfNodes.Length();
   nsCOMPtr<nsINode> curParent;
   nsCOMPtr<Element> curList, prevListItem;
 
   for (int32_t i = 0; i < listCount; i++) {
     // here's where we actually figure out what to do
     nsCOMPtr<nsIDOMNode> newBlock;
-    nsCOMPtr<nsIContent> curNode = do_QueryInterface(arrayOfNodes[i]);
-    NS_ENSURE_STATE(curNode);
+    NS_ENSURE_STATE(arrayOfNodes[i]->IsContent());
+    nsCOMPtr<nsIContent> curNode = arrayOfNodes[i]->AsContent();
     int32_t offset;
     curParent = nsEditor::GetNodeLocation(curNode, &offset);
 
@@ -3293,12 +3298,11 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
     if (curNode->IsHTMLElement(nsGkAtoms::div)) {
       prevListItem = nullptr;
       int32_t j = i + 1;
-      res = GetInnerContent(curNode->AsDOMNode(), arrayOfNodes, &j);
-      NS_ENSURE_SUCCESS(res, res);
+      GetInnerContent(*curNode, arrayOfNodes, &j);
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->RemoveContainer(curNode);
       NS_ENSURE_SUCCESS(res, res);
-      listCount = arrayOfNodes.Count();
+      listCount = arrayOfNodes.Length();
       continue;
     }
 
@@ -6118,67 +6122,68 @@ nsHTMLEditRules::GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes,
 
   // if there is only one node in the array, and it is a list, div, or blockquote,
   // then look inside of it until we find inner list or content.
-  res = LookInsideDivBQandList(outArrayOfNodes);
-  return res;
+  nsTArray<nsCOMPtr<nsINode>> arrayOfNodes;
+  for (int32_t i = 0; i < outArrayOfNodes.Count(); i++) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(outArrayOfNodes[i]);
+    NS_ENSURE_STATE(node);
+    arrayOfNodes.AppendElement(node);
+  }
+  LookInsideDivBQandList(arrayOfNodes);
+  outArrayOfNodes.Clear();
+  for (auto& node : arrayOfNodes) {
+    outArrayOfNodes.AppendObject(GetAsDOMNode(node));
+  }
+  return NS_OK;
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// LookInsideDivBQandList: 
-//                       
-nsresult 
-nsHTMLEditRules::LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray)
+void
+nsHTMLEditRules::LookInsideDivBQandList(nsTArray<nsCOMPtr<nsINode>>& aNodeArray)
 {
-  // if there is only one node in the array, and it is a list, div, or blockquote,
-  // then look inside of it until we find inner list or content.
-  int32_t listCount = aNodeArray.Count();
+  NS_ENSURE_TRUE(mHTMLEditor, );
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
+  // If there is only one node in the array, and it is a list, div, or
+  // blockquote, then look inside of it until we find inner list or content.
+  int32_t listCount = aNodeArray.Length();
   if (listCount != 1) {
-    return NS_OK;
+    return;
   }
 
-  nsCOMPtr<nsINode> curNode = do_QueryInterface(aNodeArray[0]);
-  NS_ENSURE_STATE(curNode);
+  nsCOMPtr<nsINode> curNode = aNodeArray[0];
 
-  while (curNode->IsElement() &&
-         (curNode->IsHTMLElement(nsGkAtoms::div) ||
-          nsHTMLEditUtils::IsList(curNode) ||
-          curNode->IsHTMLElement(nsGkAtoms::blockquote))) {
-    // dive as long as there is only one child, and it is a list, div, blockquote
-    NS_ENSURE_STATE(mHTMLEditor);
+  while (curNode->IsHTMLElement(nsGkAtoms::div) ||
+         nsHTMLEditUtils::IsList(curNode) ||
+         curNode->IsHTMLElement(nsGkAtoms::blockquote)) {
+    // Dive as long as there's only one child, and it's a list, div, blockquote
     uint32_t numChildren = mHTMLEditor->CountEditableChildren(curNode);
     if (numChildren != 1) {
       break;
     }
 
-    // keep diving
-    // XXX One would expect to dive into the one editable node.
-    nsIContent* tmp = curNode->GetFirstChild();
-    if (!tmp->IsElement()) {
+    // Keep diving!  XXX One would expect to dive into the one editable node.
+    nsCOMPtr<nsIContent> child = curNode->GetFirstChild();
+    if (!child->IsHTMLElement(nsGkAtoms::div) &&
+        !nsHTMLEditUtils::IsList(child) &&
+        !child->IsHTMLElement(nsGkAtoms::blockquote)) {
       break;
     }
 
-    dom::Element* element = tmp->AsElement();
-    if (!element->IsHTMLElement(nsGkAtoms::div) &&
-        !nsHTMLEditUtils::IsList(element) &&
-        !element->IsHTMLElement(nsGkAtoms::blockquote)) {
-      break;
-    }
-
-    // check editablility XXX floppy moose
-    curNode = tmp;
+    // check editability XXX floppy moose
+    curNode = child;
   }
 
-  // we've found innermost list/blockquote/div: 
-  // replace the one node in the array with these nodes
-  aNodeArray.RemoveObjectAt(0);
+  // We've found innermost list/blockquote/div: replace the one node in the
+  // array with these nodes
+  aNodeArray.RemoveElementAt(0);
   if (curNode->IsAnyOfHTMLElements(nsGkAtoms::div,
                                    nsGkAtoms::blockquote)) {
     int32_t j = 0;
-    return GetInnerContent(curNode->AsDOMNode(), aNodeArray, &j, false, false);
+    GetInnerContent(*curNode, aNodeArray, &j, Lists::no, Tables::no);
+    return;
   }
 
-  aNodeArray.AppendObject(curNode->AsDOMNode());
-  return NS_OK;
+  aNodeArray.AppendElement(curNode);
 }
 
 
