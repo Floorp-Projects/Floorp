@@ -77,10 +77,6 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
     result["PanelUI-contents"].push("characterencoding-button");
   }
 
-  if (Services.metro && Services.metro.supported) {
-    result["PanelUI-contents"].push("switch-to-metro-button");
-  }
-
   return result;
 });
 

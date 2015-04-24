@@ -2573,10 +2573,13 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 }
 
 gfxTextRun *
-gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
+gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
                                  LazyReferenceContextGetter& aRefContextGetter)
 {
+    MOZ_ASSERT(!(aFlags & ~TEXT_ORIENT_MASK),
+               "flags here should only be used to specify orientation");
     if (mCachedEllipsisTextRun &&
+        (mCachedEllipsisTextRun->GetFlags() & TEXT_ORIENT_MASK) == aFlags &&
         mCachedEllipsisTextRun->GetAppUnitsPerDevUnit() == aAppUnitsPerDevPixel) {
         return mCachedEllipsisTextRun;
     }
@@ -2596,7 +2599,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
     };
     gfxTextRun* textRun =
         MakeTextRun(ellipsis.get(), ellipsis.Length(), &params,
-                    TEXT_IS_PERSISTENT, nullptr);
+                    aFlags | TEXT_IS_PERSISTENT, nullptr);
     if (!textRun) {
         return nullptr;
     }

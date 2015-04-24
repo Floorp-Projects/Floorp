@@ -24,6 +24,7 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
@@ -989,6 +990,19 @@ TabParent::UIResolutionChanged()
     // mDPI being greater than 0, so this invalidates it.
     mDPI = -1;
     unused << SendUIResolutionChanged();
+  }
+}
+
+void
+TabParent::ThemeChanged()
+{
+  if (!mIsDestroyed) {
+    // The theme has changed, and any cached values we had sent down
+    // to the child have been invalidated. When this method is called,
+    // LookAndFeel should have the up-to-date values, which we now
+    // send down to the child. We do this for every remote tab for now,
+    // but bug 1156934 has been filed to do it once per content process.
+    unused << SendThemeChanged(LookAndFeel::GetIntCache());
   }
 }
 

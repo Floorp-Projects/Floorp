@@ -6008,7 +6008,7 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
 
   uint32_t offset = *aStartOffset;
   uint32_t maxLength = *aMaxLength;
-  const nscoord frameWidth = GetSize().width;
+  const nscoord frameISize = ISize();
   const bool rtl = mTextRun->IsRightToLeft();
   gfxFloat advanceWidth = 0;
   const nscoord startEdge = rtl ? aRightEdge : aLeftEdge;
@@ -6032,7 +6032,7 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
 
   const nscoord endEdge = rtl ? aLeftEdge : aRightEdge;
   if (endEdge > 0) {
-    const gfxFloat maxAdvance = gfxFloat(frameWidth - endEdge);
+    const gfxFloat maxAdvance = gfxFloat(frameISize - endEdge);
     while (maxLength > 0) {
       uint32_t clusterLength =
         GetClusterLength(mTextRun, offset, maxLength, rtl);
@@ -6048,7 +6048,7 @@ nsTextFrame::MeasureCharClippedText(PropertyProvider& aProvider,
     }
     maxLength = offset - *aStartOffset;
     nscoord* snappedEndEdge = rtl ? aSnappedLeftEdge : aSnappedRightEdge;
-    *snappedEndEdge = NSToCoordFloor(gfxFloat(frameWidth) - advanceWidth);
+    *snappedEndEdge = NSToCoordFloor(gfxFloat(frameISize) - advanceWidth);
   }
   *aMaxLength = maxLength;
   return maxLength != 0;

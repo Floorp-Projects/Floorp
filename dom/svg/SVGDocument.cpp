@@ -105,7 +105,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
 
   if (IsBeingUsedAsImage()) {
     // nsDocumentViewer::CreateStyleSet skipped loading all user-agent/user
-    // style sheets in this case, but we'll need B2G/Fennec/Metro's
+    // style sheets in this case, but we'll need B2G/Fennec's
     // content.css. We could load all the sheets registered with the
     // nsIStyleSheetService (and maybe we should) but most likely it isn't
     // desirable or necessary for foreignObject in SVG-as-an-image. Instead we
@@ -114,7 +114,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     // SVG-as-an-image down.
     //
     // We do this before adding UASheet() etc. below because
-    // EnsureOnDemandBuiltInUASheet prepends, and B2G/Fennec/Metro's
+    // EnsureOnDemandBuiltInUASheet prepends, and B2G/Fennec's
     // content.css must come after UASheet() etc.
     nsCOMPtr<nsICategoryManager> catMan =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);

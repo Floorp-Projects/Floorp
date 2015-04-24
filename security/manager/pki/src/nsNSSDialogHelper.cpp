@@ -23,6 +23,12 @@ nsNSSDialogHelper::openDialog(
     nsISupports *params,
     bool modal)
 {
+#ifdef MOZ_WIDGET_GONK
+  // On b2g devices, we need to proxy the dialog creation & management
+  // to Gaia.
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+
   nsresult rv;
   nsCOMPtr<nsIWindowWatcher> windowWatcher = 
            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);

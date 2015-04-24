@@ -157,7 +157,7 @@ BluetoothGattDescriptor::ReadValue(ErrorResult& aRv)
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result = new ReadValueTask(this, promise);
   bs->GattClientReadDescriptorValueInternal(
@@ -189,7 +189,7 @@ BluetoothGattDescriptor::WriteValue(
   value.AppendElements(aValue.Data(), aValue.Length());
 
   BluetoothService* bs = BluetoothService::Get();
-  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<BluetoothReplyRunnable> result = new BluetoothVoidReplyRunnable(
     nullptr, promise, NS_LITERAL_STRING("GattClientWriteDescriptorValue"));
