@@ -136,6 +136,8 @@ let gSyncUI = {
   },
 
   _loginFailed: function () {
+    this.log.debug("_loginFailed has sync state=${sync}, readinglist state=${rl}",
+                   { sync: Weave.Status.login, rl: ReadingListScheduler.state});
     return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED ||
            ReadingListScheduler.state == ReadingListScheduler.STATE_ERROR_AUTHENTICATION;
   },
@@ -234,8 +236,14 @@ let gSyncUI = {
       this.updateUI();
       return;
     }
-    // if we are still waiting for the identity manager to initialize, don't show errors
-    if (Weave.Status.login == Weave.LOGIN_FAILED_NOT_READY) {
+    // if we are still waiting for the identity manager to initialize, or it's
+    // a network/server error, don't show errors.  If it weren't for the legacy
+    // provider we could just check LOGIN_FAILED_LOGIN_REJECTED, but the legacy
+    // provider has states like LOGIN_FAILED_INVALID_PASSPHRASE which we
+    // probably do want to surface.
+    if (Weave.Status.login == Weave.LOGIN_FAILED_NOT_READY ||
+        Weave.Status.login == Weave.LOGIN_FAILED_NETWORK_ERROR ||
+        Weave.Status.login == Weave.LOGIN_FAILED_SERVER_ERROR) {
       this.updateUI();
       return;
     }
