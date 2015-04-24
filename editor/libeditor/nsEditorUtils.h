@@ -177,26 +177,26 @@ class nsBoolDomIterFunctor
 class MOZ_STACK_CLASS nsDOMIterator
 {
   public:
-    nsDOMIterator();
+    explicit nsDOMIterator(nsRange& aRange);
+    explicit nsDOMIterator(nsIDOMNode& aNode);
     virtual ~nsDOMIterator();
-    
-    nsresult Init(nsRange* aRange);
-    nsresult Init(nsIDOMNode* aNode);
-    nsresult AppendList(nsBoolDomIterFunctor& functor,
-                        nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
-    nsresult AppendList(nsBoolDomIterFunctor& functor,
-                        nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
+
+    void AppendList(nsBoolDomIterFunctor& functor,
+                    nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
+    void AppendList(nsBoolDomIterFunctor& functor,
+                    nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
+
+    // For nsDOMSubtreeIterator
+    nsDOMIterator();
 };
 
 class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
 {
   public:
-    nsDOMSubtreeIterator();
+    explicit nsDOMSubtreeIterator(nsRange& aRange);
     virtual ~nsDOMSubtreeIterator();
-
-    nsresult Init(nsRange* aRange);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor
