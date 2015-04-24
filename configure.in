@@ -3912,6 +3912,7 @@ MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
 MOZ_ANDROID_MLS_STUMBLER=
 MOZ_ANDROID_SHARE_OVERLAY=
+MOZ_INSTALL_TRACKING=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_SIMPLEPUSH=
@@ -4050,6 +4051,13 @@ if test -z "$MOZ_BING_API_CLIENTID"; then
 fi
 AC_SUBST(MOZ_BING_API_CLIENTID)
 AC_SUBST(MOZ_BING_API_KEY)
+
+# Allow specifying an Adjust SDK key file that contains the app token used for
+# Adjust SDK requests.
+MOZ_ARG_WITH_STRING(adjust-sdk-keyfile,
+[  --with-adjust-sdk-keyfile=file   Use the app token contained in the given keyfile for Adjust SDK requests],
+  MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN=`cat $withval`)
+AC_SUBST(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)
 
 # Whether to include optional-but-large font files in the final APK.
 # We want this in mobile/android/confvars.sh, so it goes early.
@@ -4974,6 +4982,13 @@ dnl = Temporary build flag to allow development in Nightly
 dnl ========================================================
 if test -n "$MOZ_ANDROID_TAB_QUEUE"; then
     AC_DEFINE(MOZ_ANDROID_TAB_QUEUE)
+fi
+
+dnl ========================================================
+dnl = Include install tracking on Android
+dnl ========================================================
+if test -n "$MOZ_INSTALL_TRACKING"; then
+    AC_DEFINE(MOZ_INSTALL_TRACKING)
 fi
 
 dnl ========================================================
@@ -8480,6 +8495,7 @@ AC_SUBST(MOZ_ANDROID_SHARE_OVERLAY)
 AC_SUBST(MOZ_ANDROID_TAB_QUEUE)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
+AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)

@@ -136,8 +136,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
                                   "resource://gre/modules/TelemetryPing.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryFile",
-                                  "resource://gre/modules/TelemetryFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
+                                  "resource://gre/modules/TelemetryStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
                                   "resource://gre/modules/TelemetryLog.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ThirdPartyCookieProbe",
@@ -963,7 +963,7 @@ let Impl = {
     } catch(e) {
     }
     if (!forSavedSession || hasPingBeenSent) {
-      ret.savedPings = TelemetryFile.pingsLoaded;
+      ret.savedPings = TelemetryStorage.pingsLoaded;
     }
 
     ret.activeTicks = -1;
@@ -981,8 +981,8 @@ let Impl = {
       ret.activeTicks = activeTicks;
     }
 
-    ret.pingsOverdue = TelemetryFile.pingsOverdue;
-    ret.pingsDiscarded = TelemetryFile.pingsDiscarded;
+    ret.pingsOverdue = TelemetryStorage.pingsOverdue;
+    ret.pingsDiscarded = TelemetryStorage.pingsDiscarded;
 
     return ret;
   },
