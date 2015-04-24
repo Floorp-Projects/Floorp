@@ -23,10 +23,6 @@
 #include "nsXULAppAPI.h"
 #include "prthread.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#endif
-
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #endif
@@ -104,15 +100,6 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     // here.  To ensure that MessageLoop tasks and XPCOM events have
     // equal priority, we sensitively rely on processing exactly one
     // Task per DoWorkRunnable XPCOM event.
-
-#ifdef MOZ_WIDGET_ANDROID
-    // This processes messages in the Android Looper. Note that we only
-    // get here if the normal Gecko event loop has been awoken above.
-    // Bug 750713
-    if (MOZ_LIKELY(AndroidBridge::HasEnv())) {
-        did_work |= mozilla::widget::GeckoAppShell::PumpMessageLoop();
-    }
-#endif
 
     did_work |= aDelegate->DoDelayedWork(&delayed_work_time_);
 
