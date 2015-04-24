@@ -28,7 +28,7 @@ namespace image {
 class IProgressObserver : public SupportsWeakPtr<IProgressObserver>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(IProgressObserver)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(IProgressObserver)
 
   // Subclasses may or may not be XPCOM classes, so we just require that they
   // implement AddRef and Release.

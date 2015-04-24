@@ -13,7 +13,7 @@ using mozilla::WeakPtr;
 class C : public SupportsWeakPtr<C>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(C)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(C)
 
   int mNum;
 
