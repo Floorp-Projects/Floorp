@@ -16,7 +16,7 @@ task:
 
   payload:
     cache:
-      build-dolphin-512-eng: /home/worker/object-folder
+      build-dolphin-512-eng: /home/worker/workspace
     env:
       TARGET: 'dolphin-512'
       VARIANT: eng
