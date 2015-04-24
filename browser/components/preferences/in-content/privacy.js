@@ -511,7 +511,7 @@ var gPrivacyPane = {
    */
   showClearPrivateDataSettings: function ()
   {
-    gSubDialog.open("chrome://browser/content/preferences/sanitize.xul");
+    gSubDialog.open("chrome://browser/content/preferences/sanitize.xul", "resizable=no");
   },
 
 
