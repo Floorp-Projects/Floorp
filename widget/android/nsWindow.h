@@ -167,6 +167,8 @@ public:
 
     virtual bool WidgetPaintsBackground();
 
+    virtual uint32_t GetMaxTouchPoints() const override;
+
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
