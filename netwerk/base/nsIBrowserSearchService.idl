@@ -253,7 +253,7 @@ interface nsIBrowserSearchInitObserver : nsISupports
   void onInitComplete(in nsresult aStatus);
 };
 
-[scriptable, uuid(4a4ce87d-7cb9-4975-a267-345f6a49bb8f)]
+[scriptable, uuid(a982859b-2852-466a-8ed1-9e714c0e65d1)]
 interface nsIBrowserSearchService : nsISupports
 {
   /**
@@ -280,6 +280,11 @@ interface nsIBrowserSearchService : nsISupports
    * initialization has not been triggered yet.
    */
   readonly attribute bool isInitialized;
+
+  /**
+   * Resets the default engine to its original value.
+   */
+  void resetToOriginalDefaultEngine();
 
   /**
    * Adds a new search engine from the file at the supplied URI, optionally
