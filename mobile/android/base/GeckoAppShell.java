@@ -254,7 +254,7 @@ public class GeckoAppShell
 
     // Initialization methods
     public static native void registerJavaUiThread();
-    public static native void nativeInit(ClassLoader clsLoader, MessageQueue msgQueue);
+    public static native void nativeInit(ClassLoader clsLoader);
 
     // helper methods
     public static native void onResume();
@@ -264,6 +264,7 @@ public class GeckoAppShell
     public static void removeObserver(String observerKey) {
         sendEventToGecko(GeckoEvent.createRemoveObserverEvent(observerKey));
     }
+    public static native Message getNextMessageFromQueue(MessageQueue queue);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
     public static native void dispatchMemoryPressure();
 
@@ -350,7 +351,7 @@ public class GeckoAppShell
         Looper.myQueue().addIdleHandler(idleHandler);
 
         // Initialize AndroidBridge.
-        nativeInit(GeckoAppShell.class.getClassLoader(), Looper.myQueue());
+        nativeInit(GeckoAppShell.class.getClassLoader());
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;
@@ -2431,8 +2432,13 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI
-    public static boolean pumpMessageLoop(final Message msg) {
-        final Handler geckoHandler = ThreadUtils.sGeckoHandler;
+    public static boolean pumpMessageLoop() {
+        Handler geckoHandler = ThreadUtils.sGeckoHandler;
+        Message msg = getNextMessageFromQueue(ThreadUtils.sGeckoQueue);
+
+        if (msg == null) {
+            return false;
+        }
 
         if (msg.obj == geckoHandler && msg.getTarget() == geckoHandler) {
             // Our "queue is empty" message; see runGecko()
