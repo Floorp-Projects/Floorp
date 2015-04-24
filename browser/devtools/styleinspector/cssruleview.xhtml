@@ -38,7 +38,7 @@
   <body>
 
     <div id="root" class="devtools-monospace">
-      <div class="devtools-toolbar">
+      <div id="ruleview-toolbar" class="devtools-toolbar">
         <div class="devtools-searchbox">
           <input id="ruleview-searchbox"
                  class="devtools-searchinput devtools-rule-searchbox"
@@ -47,6 +47,12 @@
         </div>
         <!-- TODO : Bug 1165122 : Show this button by default -->
         <button hidden="true" id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></button>
+        <button id="pseudo-class-panel-toggle" class="devtools-button"></button>
+      </div>
+      <div id="pseudo-class-panel" class="devtools-toolbar" hidden="true">
+        <label><input id="pseudo-hover-toggle" type="checkbox" value=":hover" />:hover</label>
+        <label><input id="pseudo-active-toggle" type="checkbox" value=":active" />:active</label>
+        <label><input id="pseudo-focus-toggle" type="checkbox" value=":focus" />:focus</label>
       </div>
     </div>
 

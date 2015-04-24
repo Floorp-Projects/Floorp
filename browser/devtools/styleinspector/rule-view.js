@@ -1130,11 +1130,18 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this._onFilterKeyPress = this._onFilterKeyPress.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
   this._onFilterTextboxContextMenu = this._onFilterTextboxContextMenu.bind(this);
+  this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
+  this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
 
   this.element = this.doc.getElementById("ruleview-container");
   this.addRuleButton = this.doc.getElementById("ruleview-add-rule-button");
   this.searchField = this.doc.getElementById("ruleview-searchbox");
   this.searchClearButton = this.doc.getElementById("ruleview-searchinput-clear");
+  this.pseudoClassPanel = this.doc.getElementById("pseudo-class-panel");
+  this.pseudoClassToggle = this.doc.getElementById("pseudo-class-panel-toggle");
+  this.hoverCheckbox = this.doc.getElementById("pseudo-hover-toggle");
+  this.activeCheckbox = this.doc.getElementById("pseudo-active-toggle");
+  this.focusCheckbox = this.doc.getElementById("pseudo-focus-toggle");
 
   this.searchClearButton.hidden = true;
 
@@ -1145,6 +1152,10 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this.searchField.addEventListener("keypress", this._onFilterKeyPress);
   this.searchField.addEventListener("contextmenu", this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
+  this.pseudoClassToggle.addEventListener("click", this._onTogglePseudoClassPanel);
+  this.hoverCheckbox.addEventListener("click", this._onTogglePseudoClass);
+  this.activeCheckbox.addEventListener("click", this._onTogglePseudoClass);
+  this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
   this._onSourcePrefChanged = this._onSourcePrefChanged.bind(this);
@@ -1823,8 +1834,19 @@ CssRuleView.prototype = {
     this.searchField.removeEventListener("contextmenu",
       this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
+    this.pseudoClassToggle.removeEventListener("click",
+      this._onTogglePseudoClassPanel);
+    this.hoverCheckbox.removeEventListener("click", this._onTogglePseudoClass);
+    this.activeCheckbox.removeEventListener("click", this._onTogglePseudoClass);
+    this.focusCheckbox.removeEventListener("click", this._onTogglePseudoClass);
+
     this.searchField = null;
     this.searchClearButton = null;
+    this.pseudoClassPanel = null;
+    this.pseudoClassToggle = null;
+    this.hoverCheckbox = null;
+    this.activeCheckbox = null;
+    this.focusCheckbox = null;
 
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
@@ -1849,10 +1871,12 @@ CssRuleView.prototype = {
     }
 
     this.clear();
+    this.clearPseudoClassPanel();
 
     this._viewedElement = aElement;
     if (!this._viewedElement) {
       this._showEmpty();
+      this.refreshPseudoClassPanel();
       return promise.resolve(undefined);
     }
 
@@ -1894,6 +1918,45 @@ CssRuleView.prototype = {
     });
   },
 
+  /**
+   * Clear the pseudo class options panel by removing the checked and disabled
+   * attributes for each checkbox.
+   */
+  clearPseudoClassPanel: function() {
+    this.hoverCheckbox.checked = this.hoverCheckbox.disabled = false;
+    this.activeCheckbox.checked = this.activeCheckbox.disabled = false;
+    this.focusCheckbox.checked = this.focusCheckbox.disabled = false;
+  },
+
+  /**
+   * Update the pseudo class options for the currently highlighted element.
+   */
+  refreshPseudoClassPanel: function() {
+    if (!this._elementStyle || !this.inspector.selection.isElementNode()) {
+      this.hoverCheckbox.disabled = true;
+      this.activeCheckbox.disabled = true;
+      this.focusCheckbox.disabled = true;
+      return;
+    }
+
+    for (let pseudoClassLock of this._elementStyle.element.pseudoClassLocks) {
+      switch (pseudoClassLock) {
+        case ":hover": {
+          this.hoverCheckbox.checked = true;
+          break;
+        }
+        case ":active": {
+          this.activeCheckbox.checked = true;
+          break;
+        }
+        case ":focus": {
+          this.focusCheckbox.checked = true;
+          break;
+        }
+      }
+    }
+  },
+
   _populate: function(clearRules = false) {
     let elementStyle = this._elementStyle;
     return this._elementStyle.populate().then(() => {
@@ -1905,6 +1968,8 @@ CssRuleView.prototype = {
         this._clearRules();
       }
       this._createEditors();
+
+      this.refreshPseudoClassPanel();
 
       // Notify anyone that cares that we refreshed.
       this.emit("ruleview-refreshed");
@@ -2289,7 +2354,29 @@ CssRuleView.prototype = {
     }
 
     this._editorsExpandedForFilter = [];
-  }
+  },
+
+  /**
+   * Called when the pseudo class panel button is clicked and toggles
+   * the display of the pseudo class panel.
+   */
+  _onTogglePseudoClassPanel: function() {
+    if (this.pseudoClassPanel.hidden) {
+      this.pseudoClassToggle.setAttribute("checked", "true");
+    } else {
+      this.pseudoClassToggle.removeAttribute("checked");
+    }
+    this.pseudoClassPanel.hidden = !this.pseudoClassPanel.hidden;
+  },
+
+  /**
+   * Called when a pseudo class checkbox is clicked and toggles
+   * the pseudo class for the current selected element.
+   */
+  _onTogglePseudoClass: function(event) {
+    let target = event.currentTarget;
+    this.inspector.togglePseudoClass(target.value);
+   }
 };
 
 /**
