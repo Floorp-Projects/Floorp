@@ -2988,8 +2988,6 @@ nsHTMLEditor::GetURLForStyleSheet(CSSStyleSheet* aStyleSheet,
   int32_t foundIndex = mStyleSheets.IndexOf(aStyleSheet);
 
   // Don't fail if we don't find it in our list
-  // Note: mStyleSheets is nsCOMArray, so its IndexOf() method
-  // returns -1 on failure.
   if (foundIndex == -1)
     return NS_OK;
 
