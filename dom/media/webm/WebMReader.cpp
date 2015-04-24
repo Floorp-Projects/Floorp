@@ -593,23 +593,17 @@ bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
     return false;
   }
 
-  uint64_t tstamp = 0;
-  r = nestegg_packet_tstamp(aHolder->Packet(), &tstamp);
-  if (r == -1) {
-    return false;
-  }
-
-  uint64_t tstamp_usecs = tstamp / NS_PER_USEC;
+  int64_t tstamp = aHolder->Timestamp();
   if (mAudioStartUsec == -1) {
     // This is the first audio chunk. Assume the start time of our decode
     // is the start of this chunk.
-    mAudioStartUsec = tstamp_usecs;
+    mAudioStartUsec = tstamp;
   }
   // If there's a gap between the start of this audio chunk and the end of
   // the previous audio chunk, we need to increment the packet count so that
   // the vorbis decode doesn't use data from before the gap to help decode
   // from after the gap.
-  CheckedInt64 tstamp_frames = UsecsToFrames(tstamp_usecs, mInfo.mAudio.mRate);
+  CheckedInt64 tstamp_frames = UsecsToFrames(tstamp, mInfo.mAudio.mRate);
   CheckedInt64 decoded_frames = UsecsToFrames(mAudioStartUsec,
                                               mInfo.mAudio.mRate);
   if (!tstamp_frames.isValid() || !decoded_frames.isValid()) {
@@ -630,7 +624,7 @@ bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
                        gap_frames));
 #endif
     mPacketCount++;
-    mAudioStartUsec = tstamp_usecs;
+    mAudioStartUsec = tstamp;
     mAudioFrames = 0;
   }
 
@@ -643,11 +637,11 @@ bool WebMReader::DecodeAudioPacket(NesteggPacketHolder* aHolder)
       return false;
     }
     if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
-      if (!DecodeVorbis(data, length, aHolder->Offset(), tstamp_usecs, &total_frames)) {
+      if (!DecodeVorbis(data, length, aHolder->Offset(), tstamp, &total_frames)) {
         return false;
       }
     } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
-      if (!DecodeOpus(data, length, aHolder->Offset(), tstamp_usecs, aHolder->Packet())) {
+      if (!DecodeOpus(data, length, aHolder->Offset(), tstamp, aHolder->Packet())) {
         return false;
       }
     }
@@ -954,13 +948,8 @@ bool WebMReader::FilterPacketByTime(int64_t aEndTime, WebMPacketQueue& aOutput)
     if (!holder) {
       break;
     }
-    uint64_t tstamp = 0;
-    int r = nestegg_packet_tstamp(holder->Packet(), &tstamp);
-    if (r == -1) {
-      break;
-    }
-    uint64_t tstamp_usecs = tstamp / NS_PER_USEC;
-    if (tstamp_usecs >= (uint64_t)aEndTime) {
+    int64_t tstamp = holder->Timestamp();
+    if (tstamp >= aEndTime) {
       PushVideoPacket(holder.forget());
       return true;
     } else {
@@ -996,13 +985,7 @@ int64_t WebMReader::GetNextKeyframeTime(int64_t aTimeThreshold)
     if (r == -1) {
       break;
     }
-    uint64_t tstamp = 0;
-    r = nestegg_packet_tstamp(holder->Packet(), &tstamp);
-    if (r == -1) {
-      break;
-    }
-    uint64_t tstamp_usecs = tstamp / NS_PER_USEC;
-
+    int64_t tstamp = holder->Timestamp();
     for (uint32_t i = 0; i < count; ++i) {
       unsigned char* data;
       size_t length;
@@ -1021,7 +1004,7 @@ int64_t WebMReader::GetNextKeyframeTime(int64_t aTimeThreshold)
       }
       if (si.is_kf) {
         foundKeyframe = true;
-        keyframeTime = tstamp_usecs;
+        keyframeTime = tstamp;
         break;
       }
     }
@@ -1194,12 +1177,12 @@ nsIntSize WebMReader::GetInitialFrame()
   return mInitialFrame;
 }
 
-uint64_t WebMReader::GetLastVideoFrameTime()
+int64_t WebMReader::GetLastVideoFrameTime()
 {
   return mLastVideoFrameTime;
 }
 
-void WebMReader::SetLastVideoFrameTime(uint64_t aFrameTime)
+void WebMReader::SetLastVideoFrameTime(int64_t aFrameTime)
 {
   mLastVideoFrameTime = aFrameTime;
 }
