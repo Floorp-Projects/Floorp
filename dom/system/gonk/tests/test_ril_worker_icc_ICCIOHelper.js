@@ -72,8 +72,7 @@ add_test(function test_process_icc_io_error() {
     buf.writeInt32(sw1);
     buf.writeInt32(sw2);
 
-    context.RIL[REQUEST_SIM_IO](0, {rilRequestError: ERROR_SUCCESS,
-                                    fileId: 0xffff,
+    context.RIL[REQUEST_SIM_IO](0, {fileId: 0xffff,
                                     command: 0xff,
                                     onerror: errorCb});
 

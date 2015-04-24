@@ -273,11 +273,16 @@ TelephonyParent::RecvSetSpeakerEnabled(const bool& aEnabled)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyParent::CallStateChanged(nsITelephonyCallInfo* aInfo)
+TelephonyParent::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  return SendNotifyCallStateChanged(aInfo) ? NS_OK : NS_ERROR_FAILURE;
+  nsTArray<nsITelephonyCallInfo*> allInfo;
+  for (uint32_t i = 0; i < aLength; i++) {
+    allInfo.AppendElement(aAllInfo[i]);
+  }
+
+  return SendNotifyCallStateChanged(allInfo) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -381,7 +386,7 @@ TelephonyRequestParent::SendResponse(const IPCTelephonyResponse& aResponse)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyRequestParent::CallStateChanged(nsITelephonyCallInfo* aInfo)
+TelephonyRequestParent::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
   MOZ_CRASH("Not a TelephonyParent!");
 }
