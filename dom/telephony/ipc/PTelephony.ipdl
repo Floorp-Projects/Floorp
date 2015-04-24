@@ -127,7 +127,7 @@ sync protocol PTelephony {
 child:
   NotifyCallError(uint32_t aClientId, int32_t aCallIndex, nsString aError);
 
-  NotifyCallStateChanged(nsTelephonyCallInfo aInfo);
+  NotifyCallStateChanged(nsTelephonyCallInfo[] aAllInfo);
 
   NotifyCdmaCallWaiting(uint32_t aClientId, IPCCdmaWaitingCallData aData);
 
