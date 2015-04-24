@@ -1035,7 +1035,7 @@ void
 nsPluginFrame::DidSetWidgetGeometry()
 {
 #if defined(XP_MACOSX)
-  if (mInstanceOwner) {
+  if (mInstanceOwner && !IsHidden()) {
     mInstanceOwner->FixUpPluginWindow(nsPluginInstanceOwner::ePluginPaintEnable);
   }
 #else
