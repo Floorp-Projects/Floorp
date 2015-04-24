@@ -69,6 +69,25 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "ECDSA key generation with public key export",
+  function() {
+    var that = this;
+    var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
+    var msg = Uint8Array.from([1]);
+
+    crypto.subtle.generateKey(alg, false, ["sign", "verify"])
+      .then(pair => Promise.all([
+          crypto.subtle.sign(alg, pair.privateKey, msg),
+          crypto.subtle.exportKey("spki", pair.publicKey)
+            .then(spki => crypto.subtle.importKey("spki", spki, alg, false, ["verify"]))
+      ]))
+      .then(sigAndKey => crypto.subtle.verify(alg, sigAndKey[1], sigAndKey[0], msg))
+      .then(complete(that), error(that))
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "ECDSA JWK import and reject a known-bad signature",
   function() {
     var that = this;
@@ -131,9 +150,9 @@ TestArray.addTest(
 <body>
 
 <div id="content">
-	<div id="head">
-		<b>Web</b>Crypto<br>
-	</div>
+        <div id="head">
+                <b>Web</b>Crypto<br>
+        </div>
 
     <div id="start" onclick="start();">RUN ALL</div>
 
