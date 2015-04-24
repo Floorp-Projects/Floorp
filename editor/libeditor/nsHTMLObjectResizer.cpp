@@ -13,7 +13,6 @@
 #include "nsAString.h"
 #include "nsAlgorithm.h"
 #include "nsAutoPtr.h"
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsEditorUtils.h"

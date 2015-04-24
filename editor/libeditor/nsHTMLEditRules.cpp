@@ -107,7 +107,7 @@ class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 {
   public:
     // Used to build list of all li's, td's & th's iterator covers
-    virtual bool operator()(nsIDOMNode* aNode) const
+    virtual bool operator()(nsINode* aNode) const
     {
       if (nsHTMLEditUtils::IsTableCell(aNode)) return true;
       if (nsHTMLEditUtils::IsListItem(aNode)) return true;
@@ -118,9 +118,11 @@ class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
 class nsBRNodeFunctor : public nsBoolDomIterFunctor
 {
   public:
-    virtual bool operator()(nsIDOMNode* aNode) const
+    virtual bool operator()(nsINode* aNode) const
     {
-      if (nsTextEditUtils::IsBreak(aNode)) return true;
+      if (aNode->IsHTMLElement(nsGkAtoms::br)) {
+        return true;
+      }
       return false;
     }
 };
@@ -129,12 +131,11 @@ class nsEmptyEditableFunctor : public nsBoolDomIterFunctor
 {
   public:
     explicit nsEmptyEditableFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
-    virtual bool operator()(nsIDOMNode* aNode) const
+    virtual bool operator()(nsINode* aNode) const
     {
       if (mHTMLEditor->IsEditable(aNode) &&
-        (nsHTMLEditUtils::IsListItem(aNode) ||
-        nsHTMLEditUtils::IsTableCellOrCaption(aNode)))
-      {
+          (nsHTMLEditUtils::IsListItem(aNode) ||
+           nsHTMLEditUtils::IsTableCellOrCaption(GetAsDOMNode(aNode)))) {
         bool bIsEmptyNode;
         nsresult res = mHTMLEditor->IsEmptyNode(aNode, &bIsEmptyNode, false, false);
         NS_ENSURE_SUCCESS(res, false);
@@ -151,7 +152,7 @@ class nsEditableTextFunctor : public nsBoolDomIterFunctor
 {
   public:
     explicit nsEditableTextFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
-    virtual bool operator()(nsIDOMNode* aNode) const
+    virtual bool operator()(nsINode* aNode) const
     {
       if (nsEditor::IsTextNode(aNode) && mHTMLEditor->IsEditable(aNode)) 
       {
@@ -5718,15 +5719,6 @@ nsHTMLEditRules::PromoteRange(nsRange& aRange, EditAction aOperationType)
   MOZ_ASSERT(NS_SUCCEEDED(res));
 }
 
-class NodeComparator
-{
-  public:
-    bool Equals(const nsINode* node, const nsIDOMNode* domNode) const
-    {
-      return domNode == GetAsDOMNode(const_cast<nsINode*>(node));
-    }
-};
-
 class nsUniqueFunctor : public nsBoolDomIterFunctor
 {
 public:
@@ -5734,9 +5726,9 @@ public:
   {
   }
   // used to build list of all nodes iterator covers
-  virtual bool operator()(nsIDOMNode* aNode) const
+  virtual bool operator()(nsINode* aNode) const
   {
-    return !mArray.Contains(aNode, NodeComparator());
+    return !mArray.Contains(aNode);
   }
 
 private:

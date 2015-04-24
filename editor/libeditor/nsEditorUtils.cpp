@@ -7,7 +7,6 @@
 
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/Selection.h"
-#include "nsCOMArray.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "nsIClipboardDragDropHookList.h"
@@ -100,20 +99,6 @@ nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
 
     if (functor(node)) {
       arrayOfNodes.AppendElement(*node);
-    }
-  }
-}
-
-void
-nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
-                          nsCOMArray<nsIDOMNode>& arrayOfNodes) const
-{
-  // iterate through dom and build list
-  for (; !mIter->IsDone(); mIter->Next()) {
-    nsCOMPtr<nsIDOMNode> node = mIter->GetCurrentNode()->AsDOMNode();
-
-    if (functor(node)) {
-      arrayOfNodes.AppendObject(node);
     }
   }
 }
