@@ -15,7 +15,6 @@ let {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
 let {Messages} = require("devtools/webconsole/console-output");
 const asyncStorage = require("devtools/toolkit/shared/async-storage");
 
-// promise._reportErrors = true; // please never leave me.
 //Services.prefs.setBoolPref("devtools.debugger.log", true);
 
 let gPendingOutputTest = 0;
