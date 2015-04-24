@@ -178,7 +178,7 @@ class MOZ_STACK_CLASS nsDOMIterator
 {
   public:
     explicit nsDOMIterator(nsRange& aRange);
-    explicit nsDOMIterator(nsIDOMNode& aNode);
+    explicit nsDOMIterator(nsINode& aNode);
     virtual ~nsDOMIterator();
 
     void AppendList(const nsBoolDomIterFunctor& functor,
