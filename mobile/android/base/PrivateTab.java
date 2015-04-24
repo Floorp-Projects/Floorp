@@ -15,7 +15,7 @@ public class PrivateTab extends Tab {
 
         // Init background to private_toolbar_grey to ensure flicker-free
         // private tab creation. Page loads will reset it to white as expected.
-        final int bgColor = context.getResources().getColor(R.color.private_toolbar_grey);
+        final int bgColor = context.getResources().getColor(R.color.tabs_tray_grey_pressed);
         setBackgroundColor(bgColor);
     }
 
