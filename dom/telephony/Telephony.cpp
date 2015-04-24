@@ -613,9 +613,12 @@ Telephony::GetReady(ErrorResult& aRv) const
 // nsITelephonyListener
 
 NS_IMETHODIMP
-Telephony::CallStateChanged(nsITelephonyCallInfo* aInfo)
+Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
-  return HandleCallInfo(aInfo);
+  for (uint32_t i = 0; i < aLength; ++i) {
+    HandleCallInfo(aAllInfo[i]);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
