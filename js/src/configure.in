@@ -190,6 +190,11 @@ MOZ_ARG_WITH_STRING(gonk-toolchain-prefix,
 
 if test -n "$gonkdir" ; then
     kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
+    dnl Default to ICS
+    ANDROID_VERSION=15
+    if test -n "${PLATFORM_SDK_VERSION}"; then
+        ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
+    fi
 
     dnl set up compilers
     AS="$gonk_toolchain_prefix"as
