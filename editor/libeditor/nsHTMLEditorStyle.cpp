@@ -10,7 +10,6 @@
 #include "nsAString.h"
 #include "nsAttrName.h"
 #include "nsAutoPtr.h"
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsCaseTreatment.h"
 #include "nsComponentManagerUtils.h"
@@ -1392,150 +1391,126 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
 
 NS_IMETHODIMP nsHTMLEditor::IncreaseFontSize()
 {
-  return RelativeFontChange(1);
+  return RelativeFontChange(FontSize::incr);
 }
 
 NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
 {
-  return RelativeFontChange(-1);
+  return RelativeFontChange(FontSize::decr);
 }
 
 nsresult
-nsHTMLEditor::RelativeFontChange( int32_t aSizeChange)
+nsHTMLEditor::RelativeFontChange(FontSize aDir)
 {
-  // Can only change font size by + or - 1
-  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
-    return NS_ERROR_ILLEGAL_VALUE;
-  
   ForceCompositionEnd();
 
-  // Get the selection 
+  // Get the selection
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-  // Is the selection collapsed?
-  // if it's collapsed set typing state
+  // If selection is collapsed, set typing state
   if (selection->Collapsed()) {
-    nsCOMPtr<nsIAtom> atom;
-    if (aSizeChange == 1) {
-      atom = nsGkAtoms::big;
-    } else {
-      atom = nsGkAtoms::small;
-    }
+    nsIAtom& atom = aDir == FontSize::incr ? *nsGkAtoms::big :
+                                             *nsGkAtoms::small;
 
     // Let's see in what kind of element the selection is
-    int32_t offset;
-    nsCOMPtr<nsINode> selectedNode;
-    GetStartNodeAndOffset(selection, getter_AddRefs(selectedNode), &offset);
-    if (selectedNode && IsTextNode(selectedNode)) {
-      selectedNode = selectedNode->GetParentNode();
+    NS_ENSURE_TRUE(selection->RangeCount() &&
+                   selection->GetRangeAt(0)->GetStartParent(), NS_OK);
+    OwningNonNull<nsINode> selectedNode =
+      *selection->GetRangeAt(0)->GetStartParent();
+    if (IsTextNode(selectedNode)) {
+      NS_ENSURE_TRUE(selectedNode->GetParentNode(), NS_OK);
+      selectedNode = *selectedNode->GetParentNode();
     }
-    NS_ENSURE_TRUE(selectedNode, NS_OK);
-    if (!CanContainTag(*selectedNode, *atom)) {
+    if (!CanContainTag(selectedNode, atom)) {
       return NS_OK;
     }
 
-    // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-    mTypeInState->SetProp(atom, EmptyString(), EmptyString());
+    // Manipulating text attributes on a collapsed selection only sets state
+    // for the next text insertion
+    mTypeInState->SetProp(&atom, EmptyString(), EmptyString());
     return NS_OK;
   }
-  
-  // wrap with txn batching, rules sniffing, and selection preservation code
+
+  // Wrap with txn batching, rules sniffing, and selection preservation code
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::setTextProperty, nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, EditAction::setTextProperty,
+                                 nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
 
-  // loop thru the ranges in the selection
+  // Loop through the ranges in the selection
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
-    // adjust range to include any ancestors who's children are entirely selected
+    // Adjust range to include any ancestors with entirely selected children
     nsresult res = PromoteInlineRange(range);
     NS_ENSURE_SUCCESS(res, res);
-    
-    // check for easy case: both range endpoints in same text node
-    nsCOMPtr<nsIDOMNode> startNode, endNode;
-    res = range->GetStartContainer(getter_AddRefs(startNode));
-    NS_ENSURE_SUCCESS(res, res);
-    res = range->GetEndContainer(getter_AddRefs(endNode));
-    NS_ENSURE_SUCCESS(res, res);
-    if ((startNode == endNode) && IsTextNode(startNode))
-    {
-      int32_t startOffset, endOffset;
-      range->GetStartOffset(&startOffset);
-      range->GetEndOffset(&endOffset);
-      nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
-      res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, startOffset, endOffset);
-      NS_ENSURE_SUCCESS(res, res);
-    }
-    else
-    {
-      // not the easy case.  range not contained in single text node. 
-      // there are up to three phases here.  There are all the nodes
-      // reported by the subtree iterator to be processed.  And there
-      // are potentially a starting textnode and an ending textnode
-      // which are only partially contained by the range.
-      
-      // lets handle the nodes reported by the iterator.  These nodes
-      // are entirely contained in the selection range.  We build up
-      // a list of them (since doing operations on the document during
-      // iteration would perturb the iterator).
 
-      nsCOMPtr<nsIContentIterator> iter =
-        do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
+    // Check for easy case: both range endpoints in same text node
+    nsCOMPtr<nsINode> startNode = range->GetStartParent();
+    nsCOMPtr<nsINode> endNode = range->GetEndParent();
+    if (startNode == endNode && IsTextNode(startNode)) {
+      res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
+          static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
+          range->StartOffset(), range->EndOffset());
       NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(iter, NS_ERROR_FAILURE);
+    } else {
+      // Not the easy case.  Range not contained in single text node.  There
+      // are up to three phases here.  There are all the nodes reported by the
+      // subtree iterator to be processed.  And there are potentially a
+      // starting textnode and an ending textnode which are only partially
+      // contained by the range.
 
-      // iterate range and build up array
+      // Let's handle the nodes reported by the iterator.  These nodes are
+      // entirely contained in the selection range.  We build up a list of them
+      // (since doing operations on the document during iteration would perturb
+      // the iterator).
+
+      OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
+
+      // Iterate range and build up array
       res = iter->Init(range);
       if (NS_SUCCEEDED(res)) {
-        nsCOMArray<nsIContent> arrayOfNodes;
-        while (!iter->IsDone()) {
+        nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
+        for (; !iter->IsDone(); iter->Next()) {
           NS_ENSURE_TRUE(iter->GetCurrentNode()->IsContent(), NS_ERROR_FAILURE);
-          nsCOMPtr<nsIContent> node = iter->GetCurrentNode()->AsContent();
+          OwningNonNull<nsIContent> node = *iter->GetCurrentNode()->AsContent();
 
           if (IsEditable(node)) {
-            arrayOfNodes.AppendObject(node);
+            arrayOfNodes.AppendElement(node);
           }
-
-          iter->Next();
         }
-        
-        // now that we have the list, do the font size change on each node
-        int32_t listCount = arrayOfNodes.Count();
-        for (int32_t j = 0; j < listCount; ++j) {
-          nsIContent* node = arrayOfNodes[j];
-          res = RelativeFontChangeOnNode(aSizeChange, node);
+
+        // Now that we have the list, do the font size change on each node
+        for (auto& node : arrayOfNodes) {
+          res = RelativeFontChangeOnNode(aDir == FontSize::incr ? +1 : -1,
+                                         node);
           NS_ENSURE_SUCCESS(res, res);
         }
-        arrayOfNodes.Clear();
       }
-      // now check the start and end parents of the range to see if they need to 
-      // be separately handled (they do if they are text nodes, due to how the
-      // subtree iterator works - it will not have reported them).
-      if (IsTextNode(startNode) && IsEditable(startNode))
-      {
-        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
-        int32_t startOffset;
-        uint32_t textLen;
-        range->GetStartOffset(&startOffset);
-        nodeAsText->GetLength(&textLen);
-        res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, startOffset, textLen);
+      // Now check the start and end parents of the range to see if they need
+      // to be separately handled (they do if they are text nodes, due to how
+      // the subtree iterator works - it will not have reported them).
+      if (IsTextNode(startNode) && IsEditable(startNode)) {
+        res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
+            static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
+            range->StartOffset(), startNode->Length());
         NS_ENSURE_SUCCESS(res, res);
       }
-      if (IsTextNode(endNode) && IsEditable(endNode))
-      {
+      if (IsTextNode(endNode) && IsEditable(endNode)) {
         nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(endNode);
         int32_t endOffset;
         range->GetEndOffset(&endOffset);
-        res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, 0, endOffset);
+        res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
+            static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
+            0, range->EndOffset());
         NS_ENSURE_SUCCESS(res, res);
       }
     }
   }
-  
-  return NS_OK;  
+
+  return NS_OK;
 }
 
 nsresult
