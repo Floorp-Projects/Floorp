@@ -1894,3 +1894,8 @@ pref("reader.parse-node-limit", 0);
 #ifdef NIGHTLY_BUILD
 pref("dom.serviceWorkers.enabled", true);
 #endif
+
+pref("browser.pocket.enabled", false);
+pref("browser.pocket.removedByUser", false);
+pref("browser.pocket.useLocaleList", true);
+pref("browser.pocket.enabledLocales", "en-US");
