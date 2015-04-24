@@ -91,7 +91,9 @@ add_test(function test_error_message_update_icc_contact() {
 
   // Error 6, ICC IO Error.
   io.loadLinearFixedEF = function(options) {
-    ril[REQUEST_SIM_IO](0, {rilRequestError: ERROR_GENERIC_FAILURE});
+    ril[REQUEST_SIM_IO](0, {
+      errorMsg: GECKO_ERROR_GENERIC_FAILURE
+    });
   };
   do_test({contactType: GECKO_CARDCONTACT_TYPE_ADN,
            contact: {contactId: ICCID + "1"}},

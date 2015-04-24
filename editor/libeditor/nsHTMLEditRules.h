@@ -37,7 +37,6 @@ class Selection;
 }  // namespace dom
 }  // namespace mozilla
 struct DOMPoint;
-template <class E> class nsCOMArray;
 
 struct StyleCache : public PropItem
 {
@@ -191,14 +190,17 @@ protected:
   nsresult DidMakeBasicBlock(mozilla::dom::Selection* aSelection,
                              nsRulesInfo* aInfo, nsresult aResult);
   nsresult DidAbsolutePosition();
-  nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
+  nsresult AlignInnerBlocks(nsINode& aNode, const nsAString* alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType);
-  nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
+  nsresult AppendInnerFormatNodes(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
-  nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
-                                  nsIDOMNode *aNode);
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
-  nsresult GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode>& outArrayOfNodes, int32_t *aIndex, bool aList = true, bool aTble = true);
+  enum class Lists { no, yes };
+  enum class Tables { no, yes };
+  void GetInnerContent(nsINode& aNode,
+                       nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aOutArrayOfNodes,
+                       int32_t* aIndex, Lists aLists = Lists::yes,
+                       Tables aTables = Tables::yes);
   already_AddRefed<nsIDOMNode> IsInListItem(nsIDOMNode* aNode);
   mozilla::dom::Element* IsInListItem(nsINode* aNode);
   nsresult ReturnInHeader(mozilla::dom::Selection* aSelection,
@@ -217,11 +219,9 @@ protected:
                             int32_t aOffset);
   nsresult AfterEditInner(EditAction action,
                           nsIEditor::EDirection aDirection);
-  nsresult RemovePartOfBlock(nsIDOMNode *aBlock, 
-                             nsIDOMNode *aStartChild, 
-                             nsIDOMNode *aEndChild,
-                             nsCOMPtr<nsIDOMNode> *aLeftNode = 0,
-                             nsCOMPtr<nsIDOMNode> *aRightNode = 0);
+  nsresult RemovePartOfBlock(mozilla::dom::Element& aBlock,
+                             nsIContent& aStartChild,
+                             nsIContent& aEndChild);
   nsresult SplitBlock(nsIDOMNode *aBlock, 
                       nsIDOMNode *aStartChild, 
                       nsIDOMNode *aEndChild,
@@ -263,37 +263,44 @@ protected:
   void GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
                         int32_t aOffset, EditAction actionID,
                         nsCOMPtr<nsIDOMNode>* outNode, int32_t* outOffset);
-  nsresult GetPromotedRanges(mozilla::dom::Selection* aSelection, 
-                             nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
-                             EditAction inOperationType);
-  nsresult PromoteRange(nsRange* inRange, EditAction inOperationType);
-  nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRanges, 
-                                nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
-                                EditAction inOperationType,
-                                bool aDontTouchContent=false);
-  nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
-                                     nsCOMArray<nsIDOMNode>& outArrayOfNodes);
-  nsresult GetNodesFromPoint(::DOMPoint point,
-                             EditAction operation,
-                             nsCOMArray<nsIDOMNode>& arrayOfNodes,
-                             bool dontTouchContent);
-  nsresult GetNodesFromSelection(mozilla::dom::Selection* selection,
-                                 EditAction operation,
-                                 nsCOMArray<nsIDOMNode>& arrayOfNodes,
-                                 bool aDontTouchContent=false);
-  nsresult GetListActionNodes(nsCOMArray<nsIDOMNode> &outArrayOfNodes, bool aEntireList, bool aDontTouchContent=false);
+  void GetPromotedRanges(mozilla::dom::Selection& aSelection, 
+                         nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
+                         EditAction inOperationType);
+  void PromoteRange(nsRange& aRange, EditAction inOperationType);
+  enum class TouchContent { no, yes };
+  nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRanges,
+                                nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aOutArrayOfNodes,
+                                EditAction aOperationType,
+                                TouchContent aTouchContent = TouchContent::yes);
+  void GetChildNodesForOperation(nsINode& aNode,
+      nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outArrayOfNodes);
+  nsresult GetNodesFromPoint(::DOMPoint aPoint,
+                             EditAction aOperation,
+                             nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outArrayOfNodes,
+                             TouchContent aTouchContent);
+  nsresult GetNodesFromSelection(mozilla::dom::Selection& aSelection,
+                                 EditAction aOperation,
+                                 nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outArrayOfNodes,
+                                 TouchContent aTouchContent = TouchContent::yes);
+  enum class EntireList { no, yes };
+  nsresult GetListActionNodes(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aOutArrayOfNodes,
+                              EntireList aEntireList,
+                              TouchContent aTouchContent = TouchContent::yes);
   void GetDefinitionListItemTypes(mozilla::dom::Element* aElement, bool* aDT, bool* aDD);
-  nsresult GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes, bool aDontTouchContent=false);
-  nsresult LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray);
+  nsresult GetParagraphFormatNodes(
+      nsTArray<mozilla::dom::OwningNonNull<nsINode>>& outArrayOfNodes,
+      TouchContent aTouchContent = TouchContent::yes);
+  void LookInsideDivBQandList(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
-  nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
-                              nsCOMArray<nsIDOMNode>& outArrayOfNodes);
+  nsresult BustUpInlinesAtBRs(nsINode& aNode,
+                              nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aOutArrayOfNodes);
   nsCOMPtr<nsIDOMNode> GetHighestInlineParent(nsIDOMNode* aNode);
-  nsresult MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes, 
-                              nsTArray<bool> &inTransitionArray);
-  nsresult RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes);
-  nsresult ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsAString *aBlockTag);
-  nsresult MakeBlockquote(nsCOMArray<nsIDOMNode>& arrayOfNodes);
+  void MakeTransitionList(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray,
+                          nsTArray<bool>& aTransitionArray);
+  nsresult RemoveBlockStyle(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray);
+  nsresult ApplyBlockStyle(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray,
+                           nsIAtom& aBlockTag);
+  nsresult MakeBlockquote(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& aNodeArray);
   nsresult SplitAsNeeded(nsIAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
                          int32_t& inOutOffset);
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
@@ -304,7 +311,7 @@ protected:
   nsresult CacheInlineStyles(nsIDOMNode *aNode);
   nsresult ReapplyCachedStyles();
   void ClearCachedStyles();
-  nsresult AdjustSpecialBreaks(bool aSafeToAskFrames = false);
+  void AdjustSpecialBreaks();
   nsresult AdjustWhitespace(mozilla::dom::Selection* aSelection);
   nsresult PinSelectionToNewBlock(mozilla::dom::Selection* aSelection);
   nsresult CheckInterlinePosition(mozilla::dom::Selection* aSelection);
@@ -329,7 +336,7 @@ protected:
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
   bool     IsEmptyInline(nsIDOMNode *aNode);
-  bool     ListIsEmptyLine(nsCOMArray<nsIDOMNode> &arrayOfNodes);
+  bool     ListIsEmptyLine(nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes);
   nsresult RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignType, bool aChildrenOnly);
   nsresult MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts);
   nsresult AlignBlock(nsIDOMElement * aElement, const nsAString * aAlignType, bool aContentsOnly);

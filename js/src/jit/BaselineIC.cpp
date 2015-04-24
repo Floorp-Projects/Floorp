@@ -10130,6 +10130,17 @@ TryAttachStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript script,
     if (!CopyArray(cx, obj, &arr))
         return false;
 
+    // Atomize all elements of the array.
+    RootedArrayObject arrObj(cx, &arr.toObject().as<ArrayObject>());
+    uint32_t initLength = arrObj->length();
+    for (uint32_t i = 0; i < initLength; i++) {
+        JSAtom* str = js::AtomizeString(cx, arrObj->getDenseElement(i).toString());
+        if (!str)
+            return false;
+
+        arrObj->setDenseElement(i, StringValue(str));
+    }
+
     ICCall_StringSplit::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
                                           script->pcToOffset(pc), thisString, argString,
                                           arr);
