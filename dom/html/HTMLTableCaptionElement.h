@@ -7,11 +7,13 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMHTMLTableCaptionElem.h"
 
 namespace mozilla {
 namespace dom {
 
-class HTMLTableCaptionElement final : public nsGenericHTMLElement
+class HTMLTableCaptionElement final : public nsGenericHTMLElement,
+                                      public nsIDOMHTMLTableCaptionElement
 {
 public:
   explicit HTMLTableCaptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -19,6 +21,12 @@ public:
   {
     SetHasWeirdParserInsertionMode();
   }
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMHTMLTableCaptionElement
+  NS_DECL_NSIDOMHTMLTABLECAPTIONELEMENT
 
   void GetAlign(DOMString& aAlign)
   {
