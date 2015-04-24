@@ -77,16 +77,49 @@ exports.testStatus200 = function (assert, done) {
   let srv = startServerAsync(port, basePath);
   let content = "Look ma, no hands!\n";
   let basename = "test-request.txt"
+  let requestURL = "http://localhost:" + port + "/" + basename;
+
   prepareFile(basename, content);
 
   var req = Request({
-    url: "http://localhost:" + port + "/" + basename,
+    url: requestURL,
     onComplete: function (response) {
       assert.equal(this, req, "`this` should be request");
       assert.equal(response.status, 200);
       assert.equal(response.statusText, "OK");
       assert.equal(response.headers["Content-Type"], "text/plain");
       assert.equal(response.text, content);
+      assert.strictEqual(response.url, requestURL);
+      srv.stop(done);
+    }
+  }).get();
+};
+
+// Should return the location to which have been automatically redirected
+exports.testRedirection = function (assert, done) {
+  let srv = startServerAsync(port, basePath);
+  
+  let moveLocation = "test-request-302-located.txt";
+  let movedContent = "here now\n";
+  let movedUrl = "http://localhost:" + port + "/" + moveLocation;
+  prepareFile(moveLocation, movedContent);
+
+  let content = "The document has moved!\n";
+  let contentHeaders = "HTTP 302 Found\nLocation: "+moveLocation+"\n";
+  let basename = "test-request-302.txt"
+  let requestURL = "http://localhost:" + port + "/" + basename;
+  prepareFile(basename, content);
+  prepareFile(basename+"^headers^", contentHeaders);
+
+  var req = Request({
+    url: requestURL,
+    onComplete: function (response) {
+      assert.equal(this, req, "`this` should be request");
+      assert.equal(response.status, 200);
+      assert.equal(response.statusText, "OK");
+      assert.equal(response.headers["Content-Type"], "text/plain");
+      assert.equal(response.text, movedContent);
+      assert.strictEqual(response.url, movedUrl);
       srv.stop(done);
     }
   }).get();
@@ -95,13 +128,15 @@ exports.testStatus200 = function (assert, done) {
 // This tries to get a file that doesn't exist
 exports.testStatus404 = function (assert, done) {
   var srv = startServerAsync(port, basePath);
+  let requestURL = "http://localhost:" + port + "/test-request-404.txt";
 
   runMultipleURLs(srv, assert, done, {
     // the following URL doesn't exist
-    url: "http://localhost:" + port + "/test-request-404.txt",
+    url: requestURL,
     onComplete: function (response) {
       assert.equal(response.status, 404);
       assert.equal(response.statusText, "Not Found");
+      assert.strictEqual(response.url, requestURL);
     }
   });
 };

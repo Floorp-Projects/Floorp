@@ -1,19 +1,19 @@
 ##  Overview
 
 - Changes should follow the [design guidelines], as well as the [coding style guide]
-- All changes must be accompanied by tests
-- In order to land, changes must have been reviewed by one of the Jetpack reviewers
-- Changes should have additional API review when needed
-- Changes should have additional review from a Mozilla platform domain-expert when needed
+- All changes need tests
+- In order to land, changes need a review by one of the Jetpack reviewers
+- Changes may need an API review
+- Changes may need a review from a Mozilla platform domain-expert
 
 If you have questions, ask in [#jetpack on IRC][jetpack irc channel] or on the [Jetpack mailing list].
 
 ## How to Make Code Contributions
 
-If you'd like to contribute the Jetpack project, follow these steps:
+To write code for the Jetpack project, follow these steps:
 
-1. Look for your issue in the list of [bugs already filed][open bugs]. If you want to contribute, but don't already know what you want to do, we keep a list of [good first bugs].
-2. If no bug exists, [submit one][submit bug].
+1. Look for your issue in the list of [bugs already filed][open bugs]. If you don't already know what you want to do, we keep a list of [good first bugs].
+2. If no bug exists, [make one][make bug].
 3. Get the code: get a [GitHub][GitHub] account, fork the [Add-on SDK repo][Add-on SDK repo], and clone it to your machine.
 4. Make your changes. Changes should follow the [design guidelines] as well as the [coding style guide].
 5. Write tests: [unit testing introduction][test intro], [unit testing API][test API].
@@ -24,7 +24,7 @@ If you'd like to contribute the Jetpack project, follow these steps:
 10. Flag the attachment for code review from one of the Jetpack reviewers listed below. This step is optional, but could speed things up.
 11. Address any issues mentioned in the review.
 
-Finally, once review is approved, a team member will do the merging
+Finally, once the review is positive, a team member will do the merging
 
 ## Good First Bugs
 
@@ -32,7 +32,7 @@ There is a list of [good first bugs here][good first bugs].
 
 ## Reviewers
 
-All changes must be reviewed by someone on the Jetpack review crew:
+All changes need a review by someone on the Jetpack review crew:
 
 - [@mossop]
 - [@gozala]
@@ -50,7 +50,7 @@ For API and developer ergonomics review, ask [@gozala].
 [jetpack irc channel]:irc://irc.mozilla.org/#jetpack
 [Jetpack mailing list]:http://groups.google.com/group/mozilla-labs-jetpack
 [open bugs]:https://bugzilla.mozilla.org/buglist.cgi?quicksearch=product%3ASDK
-[submit bug]:https://bugzilla.mozilla.org/enter_bug.cgi?product=Add-on%20SDK&component=general
+[make bug]:https://bugzilla.mozilla.org/enter_bug.cgi?product=Add-on%20SDK&component=general
 [test intro]:https://developer.mozilla.org/en-US/Add-ons/SDK/Tutorials/Unit_testing
 [test API]:https://developer.mozilla.org/en-US/Add-ons/SDK/Low-Level_APIs/test_assert
 [coding style guide]:https://github.com/mozilla/addon-sdk/wiki/Coding-style-guide

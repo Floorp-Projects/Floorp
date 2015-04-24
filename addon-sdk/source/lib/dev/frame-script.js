@@ -72,6 +72,9 @@ addMessageListener("sdk/event/message", onInMessage);
 addMessageListener("sdk/port/message", onInPort);
 
 const observer = {
+  handleEvent: ({target, type}) => {
+    observer.observe(target, type);
+  },
   observe: (document, topic, data) => {
     // When frame associated with message manager is removed from document `docShell`
     // is set to `null` but observer is still kept alive. At this point accesing
@@ -82,21 +85,21 @@ const observer = {
       observerService.removeObserver(observer, topic);
     }
     else if (document === content.document) {
-      if (topic === "content-document-interactive") {
+      if (topic.endsWith("-document-interactive")) {
         sendAsyncMessage("sdk/event/ready", {
           type: "ready",
           readyState: document.readyState,
           uri: document.documentURI
         });
       }
-      if (topic === "content-document-loaded") {
+      if (topic.endsWith("-document-loaded")) {
         sendAsyncMessage("sdk/event/load", {
           type: "load",
           readyState: document.readyState,
           uri: document.documentURI
         });
       }
-      if (topic === "content-page-hidden") {
+      if (topic === "unload") {
         channels.clear();
         sendAsyncMessage("sdk/event/unload", {
           type: "unload",
@@ -110,6 +113,8 @@ const observer = {
 
 observerService.addObserver(observer, "content-document-interactive", false);
 observerService.addObserver(observer, "content-document-loaded", false);
-observerService.addObserver(observer, "content-page-hidden", false);
+observerService.addObserver(observer, "chrome-document-interactive", false);
+observerService.addObserver(observer, "chrome-document-loaded", false);
+addEventListener("unload", observer, false);
 
 })(this);

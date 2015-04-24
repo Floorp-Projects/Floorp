@@ -1,15 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 const { Class } = require("../../core/heritage");
 const { removeListener, on } = require("../../dom/events");
 
 /**
- * Trait may be used for building objects / composing traits that wish to handle
- * multiple dom events from multiple event targets in one place. Event targets
+ * Event targets
  * can be added / removed by calling `observe / ignore` methods. Composer should
  * provide array of event types it wishes to handle as property
  * `supportedEventsTypes` and function for handling all those events as

@@ -125,9 +125,12 @@ const PageMod = Class({
       }
     }
 
-    model.childOptions = omit(model, ["include", "exclude"]);
+    model.childOptions = omit(model, ["include", "exclude", "contentScriptOptions"]);
     model.childOptions.include = [...serializeRules(model.include)];
     model.childOptions.exclude = [...serializeRules(model.exclude)];
+    model.childOptions.contentScriptOptions = model.contentScriptOptions ?
+                                              JSON.stringify(model.contentScriptOptions) :
+                                              null;
 
     processes.port.emit('sdk/page-mod/create', model.childOptions);
   },

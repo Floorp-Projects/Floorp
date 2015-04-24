@@ -41,6 +41,49 @@ exports["test generator"] = function (assert) {
   assert.equal(utils.isGenerator(undefined), false, "`undefined` is not a generator");
 };
 
+exports["test array"] = function (assert) {
+  assert.equal(utils.isArray([]), true, "[] is an array");
+  assert.equal(utils.isArray([1]), true, "[1] is an array");
+  assert.equal(utils.isArray(new Array()), true, "new Array() is an array");
+  assert.equal(utils.isArray(new Array(10)), true, "new Array(10) is an array");
+  assert.equal(utils.isArray(Array.prototype), true, "Array.prototype is an array");
+
+  assert.equal(utils.isArray(), false, "implicit undefined is not an array");
+  assert.equal(utils.isArray(null), false, "null is not an array");
+  assert.equal(utils.isArray(undefined), false, "undefined is not an array");
+  assert.equal(utils.isArray(1), false, "1 is not an array");
+  assert.equal(utils.isArray(true), false, "true is not an array");
+  assert.equal(utils.isArray('foo'), false, "'foo' is not an array");
+  assert.equal(utils.isArray({}), false, "{} is not an array");
+  assert.equal(utils.isArray(Symbol.iterator), false, "Symbol.iterator is not an array");
+};
+
+exports["test arguments"] = function (assert) {
+  assert.equal(utils.isArguments(arguments), true, "arguments is an arguments");
+  (function() {
+    assert.equal(utils.isArguments(arguments), true, "arguments in nested function is an arguments");
+  })();
+  (function*() {
+    assert.equal(utils.isArguments(arguments), true, "arguments in nested generator is an arguments");
+  })();
+  (() => {
+    assert.equal(utils.isArguments(arguments), true, "arguments in arrow function is an arguments");
+  })();
+
+  assert.equal(utils.isArguments(), false, "implicit undefined is not an arguments");
+  assert.equal(utils.isArguments(null), false, "null is not an arguments");
+  assert.equal(utils.isArguments(undefined), false, "undefined is not an arguments");
+  assert.equal(utils.isArguments(1), false, "1 is not an arguments");
+  assert.equal(utils.isArguments(true), false, "true is not an arguments");
+  assert.equal(utils.isArguments('foo'), false, "'foo' is not an arguments");
+  assert.equal(utils.isArguments([]), false, "[] is not an arguments");
+  assert.equal(utils.isArguments({}), false, "{} is not an arguments");
+  assert.equal(utils.isArguments(Symbol.iterator), false, "Symbol.iterator is not an arguments");
+  (function(...args) {
+    assert.equal(utils.isArguments(args), false, "rest arguments is not an arguments");
+  })();
+};
+
 exports["test flat objects"] = function (assert) {
   assert.ok(utils.isFlat({}), "`{}` is a flat object");
   assert.ok(!utils.isFlat([]), "`[]` is not a flat object");

@@ -461,6 +461,127 @@ exports["test getView(window)"] = function(assert, done) {
   browserWindows.open({ url: "data:text/html,<title>yo</title>" });
 };
 
+// Tests that the this property is correct in event listeners called from
+// the windows API.
+exports.testWindowEventBindings = function(assert, done) {
+  let loader = Loader(module);
+  let { browserWindows } = loader.require("sdk/windows");
+  let firstWindow = browserWindows.activeWindow;
+  let { viewFor } = loader.require("sdk/view/core");
+
+  let EVENTS = ["open", "close", "activate", "deactivate"];
+
+  let windowBoundEventHandler = (event) => function(window) {
+    // Close event listeners are always bound to browserWindows.
+    if (event == "close")
+      assert.equal(this, browserWindows, "window listener for " + event + " event should be bound to the browserWindows object.");
+    else
+      assert.equal(this, window, "window listener for " + event + " event should be bound to the window object.");
+  };
+
+  let windowsBoundEventHandler = (event) => function(window) {
+    assert.equal(this, browserWindows, "windows listener for " + event + " event should be bound to the browserWindows object.");
+  }
+  for (let event of EVENTS)
+    browserWindows.on(event, windowsBoundEventHandler(event));
+
+  let windowsOpenEventHandler = (event) => function(window) {
+    // Open and close event listeners are always bound to browserWindows.
+    if (event == "open" || event == "close")
+      assert.equal(this, browserWindows, "windows open listener for " + event + " event should be bound to the browserWindows object.");
+    else
+      assert.equal(this, window, "windows open listener for " + event + " event should be bound to the window object.");
+  }
+
+  let openArgs = {
+    url: "data:text/html;charset=utf-8,binding-test",
+    onOpen: function(window) {
+      windowsOpenEventHandler("open").call(this, window);
+
+      for (let event of EVENTS)
+        window.on(event, windowBoundEventHandler(event));
+
+      let rawWindow = viewFor(window);
+      onFocus(rawWindow).then(() => {
+        window.once("deactivate", () => {
+          window.once("close", () => {
+            loader.unload();
+            done();
+          });
+
+          window.close();
+        });
+
+        firstWindow.activate();
+      });
+    }
+  };
+  // Listen to everything except onOpen
+  for (let event of EVENTS.slice(1)) {
+    openArgs["on" + event.slice(0, 1).toUpperCase() + event.slice(1)] = windowsOpenEventHandler(event);
+  }
+
+  browserWindows.open(openArgs);
+}
+
+// Tests that the this property is correct in event listeners called from
+// manipulating window.tabs.
+exports.testWindowTabEventBindings = function(assert, done) {
+  let loader = Loader(module);
+  let { browserWindows } = loader.require("sdk/windows");
+  let firstWindow = browserWindows.activeWindow;
+  let tabs = loader.require("sdk/tabs");
+  let windowTabs = firstWindow.tabs;
+  let firstTab = firstWindow.tabs.activeTab;
+
+  let EVENTS = ["open", "close", "activate", "deactivate",
+                "load", "ready", "pageshow"];
+
+  let tabBoundEventHandler = (event) => function(tab) {
+    assert.equal(this, tab, "tab listener for " + event + " event should be bound to the tab object.");
+  };
+
+  let windowTabsBoundEventHandler = (event) => function(tab) {
+    assert.equal(this, windowTabs, "window tabs listener for " + event + " event should be bound to the windowTabs object.");
+  }
+  for (let event of EVENTS)
+    windowTabs.on(event, windowTabsBoundEventHandler(event));
+
+  let windowTabsOpenEventHandler = (event) => function(tab) {
+    assert.equal(this, tab, "window tabs open listener for " + event + " event should be bound to the tab object.");
+  }
+
+  let openArgs = {
+    url: "data:text/html;charset=utf-8,binding-test",
+    onOpen: function(tab) {
+      windowTabsOpenEventHandler("open").call(this, tab);
+
+      for (let event of EVENTS)
+        tab.on(event, tabBoundEventHandler(event));
+
+      tab.once("pageshow", () => {
+        tab.once("deactivate", () => {
+          tab.once("close", () => {
+            loader.unload();
+            done();
+          });
+
+          tab.close();
+        });
+
+        firstTab.activate();
+      });
+    }
+  };
+  // Listen to everything except onOpen
+  for (let event of EVENTS.slice(1)) {
+    let eventProperty = "on" + event.slice(0, 1).toUpperCase() + event.slice(1);
+    openArgs[eventProperty] = windowTabsOpenEventHandler(event);
+  }
+
+  windowTabs.open(openArgs);
+}
+
 after(exports, function*(name, assert) {
   yield cleanUI();
 });

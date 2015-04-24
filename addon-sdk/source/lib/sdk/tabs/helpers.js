@@ -12,8 +12,7 @@ module.metadata = {
 
 
 const { getTabForContentWindow, getTabForBrowser: getRawTabForBrowser } = require('./utils');
-const { Tab } = require('./tab');
-const { rawTabNS } = require('./namespace');
+const { modelFor } = require('../model/core');
 
 function getTabForWindow(win) {
   let tab = getTabForContentWindow(win);
@@ -21,21 +20,13 @@ function getTabForWindow(win) {
   if (!tab)
     return null;
 
-  return getTabForRawTab(tab) || Tab({ tab: tab });
+  return modelFor(tab);
 }
 exports.getTabForWindow = getTabForWindow;
 
-// only works on fennec atm
-function getTabForRawTab(rawTab) {
-  let tab = rawTabNS(rawTab).tab;
-  if (tab) {
-    return tab;
-  }
-  return null;
-}
-exports.getTabForRawTab = getTabForRawTab;
+exports.getTabForRawTab = modelFor;
 
 function getTabForBrowser(browser) {
-  return getTabForRawTab(getRawTabForBrowser(browser));
+  return modelFor(getRawTabForBrowser(browser));
 }
 exports.getTabForBrowser = getTabForBrowser;
