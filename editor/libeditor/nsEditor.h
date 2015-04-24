@@ -833,7 +833,8 @@ protected:
   // various listeners
   // Listens to all low level actions on the doc
   nsTArray<mozilla::dom::OwningNonNull<nsIEditActionListener>> mActionListeners;
-  nsCOMArray<nsIEditorObserver> mEditorObservers;  // just notify once per high level change
+  // Just notify once per high level change
+  nsTArray<mozilla::dom::OwningNonNull<nsIEditorObserver>> mEditorObservers;
   nsCOMArray<nsIDocumentStateListener> mDocStateListeners;// listen to overall doc state (dirty or not, just created, etc)
 
   nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
