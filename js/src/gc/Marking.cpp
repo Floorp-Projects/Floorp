@@ -603,13 +603,15 @@ template <typename T>
 void
 js::GCMarker::markAndTraceChildren(T* thing)
 {
-    MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(thing));
+    if (ThingIsPermanentAtomOrWellKnownSymbol(thing))
+        return;
     if (mark(thing))
         thing->traceChildren(this);
 }
 namespace js {
-template <> void GCMarker::traverse(JSScript* thing) { markAndTraceChildren(thing); }
 template <> void GCMarker::traverse(BaseShape* thing) { markAndTraceChildren(thing); }
+template <> void GCMarker::traverse(JS::Symbol* thing) { markAndTraceChildren(thing); }
+template <> void GCMarker::traverse(JSScript* thing) { markAndTraceChildren(thing); }
 } // namespace js
 
 // Shape, BaseShape, String, and Symbol are extremely common, but have simple
@@ -625,9 +627,8 @@ js::GCMarker::markAndScan(T* thing)
         eagerlyMarkChildren(thing);
 }
 namespace js {
-template <> void GCMarker::traverse(LazyScript* thing) { markAndScan(thing); }
-template <> void GCMarker::traverse(JS::Symbol* thing) { markAndScan(thing); }
 template <> void GCMarker::traverse(JSString* thing) { markAndScan(thing); }
+template <> void GCMarker::traverse(LazyScript* thing) { markAndScan(thing); }
 template <> void GCMarker::traverse(Shape* thing) { markAndScan(thing); }
 } // namespace js
 
@@ -1155,13 +1156,6 @@ GCMarker::eagerlyMarkChildren(JSString* str)
         ScanLinearString(this, &str->asLinear());
     else
         ScanRope(this, &str->asRope());
-}
-
-inline void
-GCMarker::eagerlyMarkChildren(JS::Symbol* sym)
-{
-    if (JSString* desc = sym->description())
-        traverse(desc);
 }
 
 /*
