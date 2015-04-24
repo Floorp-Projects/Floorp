@@ -38,7 +38,7 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NesteggPacketHolder)
   NesteggPacketHolder() : mPacket(nullptr), mOffset(-1), mTimestamp(-1) {}
 
-  bool Init(nestegg_packet* aPacket, int64_t aOffset)
+  bool Init(nestegg_packet* aPacket, int64_t aOffset, unsigned aTrack)
   {
     uint64_t timestamp_ns;
     if (nestegg_packet_tstamp(aPacket, &timestamp_ns) == -1) {
@@ -50,6 +50,7 @@ public:
     mTimestamp = timestamp_ns / 1000;
     mPacket = aPacket;
     mOffset = aOffset;
+    mTrack = aTrack;
 
     return true;
   }
@@ -57,6 +58,7 @@ public:
   nestegg_packet* Packet() { MOZ_ASSERT(IsInitialized()); return mPacket; }
   int64_t Offset() { MOZ_ASSERT(IsInitialized()); return mOffset; }
   int64_t Timestamp() { MOZ_ASSERT(IsInitialized()); return mTimestamp; }
+  unsigned Track() { MOZ_ASSERT(IsInitialized()); return mTrack; }
 
 private:
   ~NesteggPacketHolder()
@@ -74,6 +76,9 @@ private:
 
   // Packet presentation timestamp in microseconds.
   int64_t mTimestamp;
+
+  // Track ID.
+  unsigned mTrack;
 
   // Copy constructor and assignment operator not implemented. Don't use them!
   NesteggPacketHolder(const NesteggPacketHolder &aOther);
@@ -227,6 +232,10 @@ private:
   // Push the packets into aOutput which's timestamp is less than aEndTime.
   // Return false if we reach the end of stream or something wrong.
   bool FilterPacketByTime(int64_t aEndTime, WebMPacketQueue& aOutput);
+
+  // Internal method that demuxes the next packet from the stream. The caller
+  // is responsible for making sure it doesn't get lost.
+  already_AddRefed<NesteggPacketHolder> DemuxPacket();
 
   // libnestegg context for webm container. Access on state machine thread
   // or decoder thread only.

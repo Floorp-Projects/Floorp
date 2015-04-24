@@ -886,42 +886,48 @@ already_AddRefed<NesteggPacketHolder> WebMReader::NextPacket(TrackType aTrackTyp
   // Value of other track
   uint32_t otherTrack = aTrackType == VIDEO ? mAudioTrack : mVideoTrack;
 
-  nsRefPtr<NesteggPacketHolder> holder;
-
   if (packets.GetSize() > 0) {
-    holder = packets.PopFront();
-  } else {
-    // Keep reading packets until we find a packet
-    // for the track we want.
-    do {
-      nestegg_packet* packet;
-      int r = nestegg_read_packet(mContext, &packet);
-      if (r <= 0) {
-        return nullptr;
-      }
-      int64_t offset = mDecoder->GetResource()->Tell();
-      holder = new NesteggPacketHolder();
-      if (!holder->Init(packet, offset)) {
-        return nullptr;
-      }
+    return packets.PopFront();
+  }
 
-      unsigned int track = 0;
-      r = nestegg_packet_track(packet, &track);
-      if (r == -1) {
-        return nullptr;
-      }
+  do {
+    nsRefPtr<NesteggPacketHolder> holder = DemuxPacket();
+    if (!holder) {
+      return nullptr;
+    }
 
-      if (hasOtherType && otherTrack == track) {
-        // Save the packet for when we want these packets
-        otherPackets.Push(holder.forget());
-        continue;
-      }
+    if (hasOtherType && otherTrack == holder->Track()) {
+      // Save the packet for when we want these packets
+      otherPackets.Push(holder.forget());
+      continue;
+    }
 
-      // The packet is for the track we want to play
-      if (hasType && ourTrack == track) {
-        break;
-      }
-    } while (true);
+    // The packet is for the track we want to play
+    if (hasType && ourTrack == holder->Track()) {
+      return holder.forget();
+    }
+  } while (true);
+}
+
+already_AddRefed<NesteggPacketHolder>
+WebMReader::DemuxPacket()
+{
+  nestegg_packet* packet;
+  int r = nestegg_read_packet(mContext, &packet);
+  if (r <= 0) {
+    return nullptr;
+  }
+
+  unsigned int track = 0;
+  r = nestegg_packet_track(packet, &track);
+  if (r == -1) {
+    return nullptr;
+  }
+
+  int64_t offset = mDecoder->GetResource()->Tell();
+  nsRefPtr<NesteggPacketHolder> holder = new NesteggPacketHolder();
+  if (!holder->Init(packet, offset, track)) {
+    return nullptr;
   }
 
   return holder.forget();
