@@ -10,9 +10,6 @@
 
 #include "nscore.h"
 #include "nsWindow.h"
-#ifdef MOZ_METRO
-#include "winrt/MetroWidget.h"
-#endif
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
 #include "mozilla/Preferences.h"
@@ -3413,21 +3410,19 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   if (event.mReply.mRect.height <= 0)
     event.mReply.mRect.height = 1;
 
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
-    // convert to unclipped screen rect
-    nsWindow* refWindow = static_cast<nsWindow*>(
-      event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWidget);
-    // Result rect is in top level widget coordinates
-    refWindow = refWindow->GetTopLevelWindow(false);
-    if (!refWindow) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::GetTextExt() FAILED due to "
-              "no top level window", this));
-      return E_FAIL;
-    }
-
-    event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
+  // convert to unclipped screen rect
+  nsWindow* refWindow = static_cast<nsWindow*>(
+    event.mReply.mFocusedWidget ? event.mReply.mFocusedWidget : mWidget);
+  // Result rect is in top level widget coordinates
+  refWindow = refWindow->GetTopLevelWindow(false);
+  if (!refWindow) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::GetTextExt() FAILED due to "
+            "no top level window", this));
+    return E_FAIL;
   }
+
+  event.mReply.mRect.MoveBy(refWindow->WidgetToScreenOffset());
 
   // get bounding screen rect to test for clipping
   if (!GetScreenExtInternal(*prc)) {
@@ -3524,50 +3519,36 @@ nsTextStore::GetScreenExtInternal(RECT &aScreenExt)
     return false;
   }
 
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
-    nsIntRect boundRect;
-    if (NS_FAILED(mWidget->GetClientBounds(boundRect))) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
-              "failed to get the client bounds", this));
-      return false;
-    }
+  nsWindow* refWindow = static_cast<nsWindow*>(
+    event.mReply.mFocusedWidget ?
+      event.mReply.mFocusedWidget : mWidget);
+  // Result rect is in top level widget coordinates
+  refWindow = refWindow->GetTopLevelWindow(false);
+  if (!refWindow) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
+            "no top level window", this));
+    return false;
+  }
+
+  nsIntRect boundRect;
+  if (NS_FAILED(refWindow->GetClientBounds(boundRect))) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
+            "failed to get the client bounds", this));
+    return false;
+  }
+
+  boundRect.MoveTo(0, 0);
+
+  // Clip frame rect to window rect
+  boundRect.IntersectRect(LayoutDevicePixel::ToUntyped(event.mReply.mRect), boundRect);
+  if (!boundRect.IsEmpty()) {
+    boundRect.MoveBy(refWindow->WidgetToScreenOffsetUntyped());
     ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
               boundRect.XMost(), boundRect.YMost());
   } else {
-    NS_ASSERTION(XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop,
-                 "environment isn't WindowsEnvironmentType_Desktop!");
-    nsWindow* refWindow = static_cast<nsWindow*>(
-      event.mReply.mFocusedWidget ?
-        event.mReply.mFocusedWidget : mWidget);
-    // Result rect is in top level widget coordinates
-    refWindow = refWindow->GetTopLevelWindow(false);
-    if (!refWindow) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
-              "no top level window", this));
-      return false;
-    }
-
-    nsIntRect boundRect;
-    if (NS_FAILED(refWindow->GetClientBounds(boundRect))) {
-      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-             ("TSF: 0x%p   nsTextStore::GetScreenExtInternal() FAILED due to "
-              "failed to get the client bounds", this));
-      return false;
-    }
-
-    boundRect.MoveTo(0, 0);
-
-    // Clip frame rect to window rect
-    boundRect.IntersectRect(LayoutDevicePixel::ToUntyped(event.mReply.mRect), boundRect);
-    if (!boundRect.IsEmpty()) {
-      boundRect.MoveBy(refWindow->WidgetToScreenOffsetUntyped());
-      ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
-                boundRect.XMost(), boundRect.YMost());
-    } else {
-      ::SetRectEmpty(&aScreenExt);
-    }
+    ::SetRectEmpty(&aScreenExt);
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -4498,11 +4479,6 @@ nsTextStore::OnMouseButtonEventInternal(const IMENotification& aIMENotification)
 void
 nsTextStore::CreateNativeCaret()
 {
-  // This method must work only on desktop application.
-  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Desktop) {
-    return;
-  }
-
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::CreateNativeCaret(), "
           "mComposition.IsComposing()=%s",

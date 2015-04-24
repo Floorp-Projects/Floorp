@@ -76,6 +76,7 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
@@ -223,6 +224,10 @@ using namespace mozilla::system;
 #ifdef MOZ_ENABLE_PROFILER_SPS
 #include "nsIProfiler.h"
 #include "nsIProfileSaveEvent.h"
+#endif
+
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadMonitoring.h"
 #endif
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
@@ -2156,6 +2161,7 @@ ContentParent::ContentParent(mozIApplication* aApp,
     , mOpener(aOpener)
     , mIsForBrowser(aIsForBrowser)
     , mIsNuwaProcess(aIsNuwaProcess)
+    , mHasGamepadListener(false)
 {
     InitializeMembers();  // Perform common initialization.
 
@@ -2887,6 +2893,7 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     InfallibleTArray<nsString> unusedDictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
+
     RecvGetXPCOMProcessAttributes(&isOffline, &isLangRTL, &unusedDictionaries,
                                   &clipboardCaps, &domainPolicy);
     mozilla::unused << content->SendSetOffline(isOffline);
@@ -4038,6 +4045,13 @@ ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
 }
 
 bool
+ContentParent::RecvGetLookAndFeelCache(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
+{
+    aLookAndFeelIntCache = LookAndFeel::GetIntCache();
+    return true;
+}
+
+bool
 ContentParent::RecvIsSecureURI(const uint32_t& type,
                                const URIParams& uri,
                                const uint32_t& flags,
@@ -4978,6 +4992,34 @@ ContentParent::DeallocPContentPermissionRequestParent(PContentPermissionRequestP
 {
     nsContentPermissionUtils::NotifyRemoveContentPermissionRequestParent(actor);
     delete actor;
+    return true;
+}
+
+bool
+ContentParent::RecvGamepadListenerAdded()
+{
+#ifdef MOZ_GAMEPAD
+    if (mHasGamepadListener) {
+        NS_WARNING("Gamepad listener already started, cannot start again!");
+        return false;
+    }
+    mHasGamepadListener = true;
+    StartGamepadMonitoring();
+#endif
+    return true;
+}
+
+bool
+ContentParent::RecvGamepadListenerRemoved()
+{
+#ifdef MOZ_GAMEPAD
+    if (!mHasGamepadListener) {
+        NS_WARNING("Gamepad listener already stopped, cannot stop again!");
+        return false;
+    }
+    mHasGamepadListener = false;
+    MaybeStopGamepadMonitoring();
+#endif
     return true;
 }
 

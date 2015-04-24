@@ -886,36 +886,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/webapprt/modules/WebRTCHandler.jsm
 #endif
 
-#ifdef MOZ_METRO
-@RESPATH@/components/MetroUIUtils.js
-@RESPATH@/components/MetroUIUtils.manifest
-[metro]
-; gre resources
-@BINPATH@/CommandExecuteHandler@BIN_SUFFIX@
-@RESPATH@/resources.pri
-@RESPATH@/VisualElementsManifest.xml
-@RESPATH@/tileresources
-; app dir resources
-@RESPATH@/metro/chrome.manifest
-@RESPATH@/metro/searchplugins
-@RESPATH@/metro/metroapp.ini
-@RESPATH@/metro/chrome/browser@JAREXT@
-@RESPATH@/metro/chrome/browser.manifest
-@RESPATH@/metro/chrome/chrome@JAREXT@
-@RESPATH@/metro/chrome/chrome.manifest
-@RESPATH@/metro/chrome/@AB_CD@@JAREXT@
-@RESPATH@/metro/chrome/@AB_CD@.manifest
-#ifdef NIGHTLY_BUILD
-@RESPATH@/metro/chrome/shumway.manifest
-@RESPATH@/metro/chrome/shumway/*
-@RESPATH@/metro/chrome/pdfjs.manifest
-@RESPATH@/metro/chrome/pdfjs/*
-#endif
-@RESPATH@/metro/components
-@RESPATH@/metro/defaults
-@RESPATH@/metro/modules
-#endif
-
 @RESPATH@/components/DataStore.manifest
 @RESPATH@/components/DataStoreImpl.js
 @RESPATH@/components/dom_datastore.xpt

@@ -263,17 +263,21 @@ ContainerPrepare(ContainerT* aContainer,
   for (uint32_t i = 0; i < children.Length(); i++) {
     LayerComposite* layerToRender = static_cast<LayerComposite*>(children.ElementAt(i)->ImplData());
 
-    if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty() &&
-        !layerToRender->GetLayer()->AsContainerLayer()) {
-      CULLING_LOG("Sublayer %p has no effective visible region\n", layerToRender->GetLayer());
-      continue;
-    }
-
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect);
-    if (clipRect.IsEmpty()) {
-      CULLING_LOG("Sublayer %p has an empty world clip rect\n", layerToRender->GetLayer());
-      continue;
+
+    // We don't want to skip container layers because otherwise their mPrepared
+    // may be null which is not allowed.
+    if (!layerToRender->GetLayer()->AsContainerLayer()) {
+      if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
+        CULLING_LOG("Sublayer %p has no effective visible region\n", layerToRender->GetLayer());
+        continue;
+      }
+
+      if (clipRect.IsEmpty()) {
+        CULLING_LOG("Sublayer %p has an empty world clip rect\n", layerToRender->GetLayer());
+        continue;
+      }
     }
 
     CULLING_LOG("Preparing sublayer %p\n", layerToRender->GetLayer());

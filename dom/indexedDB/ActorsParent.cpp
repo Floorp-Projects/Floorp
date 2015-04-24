@@ -4334,11 +4334,11 @@ private:
   nsInterfaceHashtable<nsCStringHashKey, mozIStorageStatement>
     mCachedStatements;
   nsRefPtr<UpdateRefcountFunction> mUpdateRefcountFunction;
+  bool mInWriteTransaction;
 
 #ifdef DEBUG
   uint32_t mDEBUGSavepointCount;
   PRThread* mDEBUGThread;
-  bool mDEBUGInWriteTransaction;
 #endif
 
 public:
@@ -4388,6 +4388,9 @@ public:
 
   nsresult
   BeginWriteTransaction();
+
+  void
+  RollbackWriteTransaction();
 
   void
   FinishWriteTransaction();
@@ -6627,9 +6630,6 @@ private:
   EnsureDatabaseActorIsAlive();
 
   void
-  CleanupBackgroundThreadObjects(bool aInvalidate);
-
-  void
   MetadataToSpec(DatabaseSpec& aSpec);
 
   void
@@ -8298,10 +8298,10 @@ DatabaseConnection::DatabaseConnection(
                                       FileManager* aFileManager)
   : mStorageConnection(aStorageConnection)
   , mFileManager(aFileManager)
+  , mInWriteTransaction(false)
 #ifdef DEBUG
   , mDEBUGSavepointCount(0)
   , mDEBUGThread(PR_GetCurrentThread())
-  , mDEBUGInWriteTransaction(false)
 #endif
 {
   AssertIsOnConnectionThread();
@@ -8315,15 +8315,15 @@ DatabaseConnection::~DatabaseConnection()
   MOZ_ASSERT(!mFileManager);
   MOZ_ASSERT(!mCachedStatements.Count());
   MOZ_ASSERT(!mUpdateRefcountFunction);
+  MOZ_ASSERT(!mInWriteTransaction);
   MOZ_ASSERT(!mDEBUGSavepointCount);
-  MOZ_ASSERT(!mDEBUGInWriteTransaction);
 }
 
 nsresult
 DatabaseConnection::Init()
 {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(!mDEBUGInWriteTransaction);
+  MOZ_ASSERT(!mInWriteTransaction);
 
   CachedStatement stmt;
   nsresult rv = GetCachedStatement("BEGIN", &stmt);
@@ -8385,20 +8385,20 @@ DatabaseConnection::BeginWriteTransaction()
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
-  MOZ_ASSERT(!mDEBUGInWriteTransaction);
+  MOZ_ASSERT(!mInWriteTransaction);
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseConnection::BeginWriteTransaction",
                  js::ProfileEntry::Category::STORAGE);
 
   // Release our read locks.
-  CachedStatement commitStmt;
-  nsresult rv = GetCachedStatement("ROLLBACK", &commitStmt);
+  CachedStatement rollbackStmt;
+  nsresult rv = GetCachedStatement("ROLLBACK", &rollbackStmt);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = commitStmt->Execute();
+  rv = rollbackStmt->Execute();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -8450,11 +8450,34 @@ DatabaseConnection::BeginWriteTransaction()
     return rv;
   }
 
-#ifdef DEBUG
-  mDEBUGInWriteTransaction = true;
-#endif
+  mInWriteTransaction = true;
 
   return NS_OK;
+}
+
+void
+DatabaseConnection::RollbackWriteTransaction()
+{
+  AssertIsOnConnectionThread();
+  MOZ_ASSERT(mStorageConnection);
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaseConnection::RollbackWriteTransaction",
+                 js::ProfileEntry::Category::STORAGE);
+
+  if (!mInWriteTransaction) {
+    return;
+  }
+
+  DatabaseConnection::CachedStatement stmt;
+  nsresult rv = GetCachedStatement("ROLLBACK", &stmt);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  // This may fail if SQLite already rolled back the transaction so ignore any
+  // errors.
+  unused << stmt->Execute();
 }
 
 void
@@ -8462,15 +8485,20 @@ DatabaseConnection::FinishWriteTransaction()
 {
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
-  MOZ_ASSERT(mDEBUGInWriteTransaction);
+
+  PROFILER_LABEL("IndexedDB",
+                 "DatabaseConnection::FinishWriteTransaction",
+                 js::ProfileEntry::Category::STORAGE);
 
   if (mUpdateRefcountFunction) {
     mUpdateRefcountFunction->Reset();
   }
 
-#ifdef DEBUG
-  mDEBUGInWriteTransaction = false;
-#endif
+  if (!mInWriteTransaction) {
+    return;
+  }
+
+  mInWriteTransaction = false;
 
   CachedStatement stmt;
   nsresult rv = GetCachedStatement("BEGIN", &stmt);
@@ -8490,7 +8518,7 @@ DatabaseConnection::StartSavepoint()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(mUpdateRefcountFunction);
-  MOZ_ASSERT(mDEBUGInWriteTransaction);
+  MOZ_ASSERT(mInWriteTransaction);
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseConnection::StartSavepoint",
@@ -8523,7 +8551,7 @@ DatabaseConnection::ReleaseSavepoint()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(mUpdateRefcountFunction);
-  MOZ_ASSERT(mDEBUGInWriteTransaction);
+  MOZ_ASSERT(mInWriteTransaction);
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseConnection::ReleaseSavepoint",
@@ -8554,7 +8582,7 @@ DatabaseConnection::RollbackSavepoint()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(mUpdateRefcountFunction);
-  MOZ_ASSERT(mDEBUGInWriteTransaction);
+  MOZ_ASSERT(mInWriteTransaction);
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseConnection::RollbackSavepoint",
@@ -8626,7 +8654,7 @@ DatabaseConnection::Close()
   AssertIsOnConnectionThread();
   MOZ_ASSERT(mStorageConnection);
   MOZ_ASSERT(!mDEBUGSavepointCount);
-  MOZ_ASSERT(!mDEBUGInWriteTransaction);
+  MOZ_ASSERT(!mInWriteTransaction);
 
   PROFILER_LABEL("IndexedDB",
                  "DatabaseConnection::Close",
@@ -17119,10 +17147,6 @@ OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy)
 
   FactoryOp::ActorDestroy(aWhy);
 
-  if (aWhy != Deletion) {
-    CleanupBackgroundThreadObjects(/* aInvalidate */ true);
-  }
-
   if (mVersionChangeOp) {
     mVersionChangeOp->NoteActorDestroyed();
   }
@@ -17907,7 +17931,25 @@ OpenDatabaseOp::SendResults()
       PBackgroundIDBFactoryRequestParent::Send__delete__(this, response);
   }
 
-  CleanupBackgroundThreadObjects(NS_FAILED(mResultCode));
+  if (mDatabase) {
+    MOZ_ASSERT(!mOfflineStorage);
+
+    if (NS_FAILED(mResultCode)) {
+      mDatabase->Invalidate();
+    }
+
+    // Make sure to release the database on this thread.
+    mDatabase = nullptr;
+  } else if (mOfflineStorage) {
+    mOfflineStorage->CloseOnOwningThread();
+
+    nsCOMPtr<nsIRunnable> callback =
+      NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
+
+    nsRefPtr<WaitForTransactionsHelper> helper =
+      new WaitForTransactionsHelper(mDatabaseId, callback);
+    helper->WaitForTransactions();
+  }
 
   FinishSendResults();
 }
@@ -17997,33 +18039,6 @@ OpenDatabaseOp::EnsureDatabaseActorIsAlive()
   }
 
   return NS_OK;
-}
-
-void
-OpenDatabaseOp::CleanupBackgroundThreadObjects(bool aInvalidate)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(IsActorDestroyed());
-
-  if (mDatabase) {
-    MOZ_ASSERT(!mOfflineStorage);
-
-    if (aInvalidate) {
-      mDatabase->Invalidate();
-    }
-
-    // Make sure to release the database on this thread.
-    mDatabase = nullptr;
-  } else if (mOfflineStorage) {
-    mOfflineStorage->CloseOnOwningThread();
-
-    nsCOMPtr<nsIRunnable> callback =
-      NS_NewRunnableMethod(this, &OpenDatabaseOp::ConnectionClosedCallback);
-
-    nsRefPtr<WaitForTransactionsHelper> helper =
-      new WaitForTransactionsHelper(mDatabaseId, callback);
-    helper->WaitForTransactions();
-  }
 }
 
 void
@@ -19422,14 +19437,7 @@ CommitOp::Run()
           fileRefcountFunction->DidAbort();
         }
 
-        DatabaseConnection::CachedStatement stmt;
-        if (NS_SUCCEEDED(connection->GetCachedStatement("ROLLBACK", &stmt))) {
-          // This may fail if SQLite already rolled back the transaction so
-          // ignore any errors.
-          unused << stmt->Execute();
-        } else {
-          NS_WARNING("Failed to prepare ROLLBACK statement!");
-        }
+        connection->RollbackWriteTransaction();
       }
 
       CommitOrRollbackAutoIncrementCounts();

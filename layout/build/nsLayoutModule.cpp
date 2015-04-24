@@ -209,7 +209,7 @@ static void Shutdown();
 #include "nsGeolocation.h"
 #include "nsDeviceSensors.h"
 #ifdef MOZ_GAMEPAD
-#include "mozilla/dom/GamepadService.h"
+#include "mozilla/dom/GamepadServiceTest.h"
 #endif
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPContext.h"

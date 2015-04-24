@@ -1,6 +1,5 @@
 # Simple test. Should fail on platforms where input type color isn't activated
-# yet. Missing platforms are B2G (bug 875751), Android (bug 875750) and Metro
-# (bug 895464).
+# yet. Missing platforms are B2G (bug 875751), Android (bug 875750).
 fails-if(B2G||Mulet||Android) == input-color-1.html input-color-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 default-preferences pref(dom.forms.color,true)

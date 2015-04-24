@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-#include "nsDeque.h"
 #include "MediaDecoderReader.h"
 #include "nsAutoRef.h"
 #include "nestegg/nestegg.h"
@@ -32,30 +31,22 @@
 // to stop to buffer, given the current download rate.
 class NesteggPacketHolder {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NesteggPacketHolder)
   NesteggPacketHolder(nestegg_packet* aPacket, int64_t aOffset)
-    : mPacket(aPacket), mOffset(aOffset)
-  {
-    MOZ_COUNT_CTOR(NesteggPacketHolder);
-  }
-  ~NesteggPacketHolder() {
-    MOZ_COUNT_DTOR(NesteggPacketHolder);
-    nestegg_free_packet(mPacket);
-  }
+    : mPacket(aPacket), mOffset(aOffset) {}
+
   nestegg_packet* mPacket;
   // Offset in bytes. This is the offset of the end of the Block
   // which contains the packet.
   int64_t mOffset;
 private:
+  ~NesteggPacketHolder() {
+    nestegg_free_packet(mPacket);
+  }
+
   // Copy constructor and assignment operator not implemented. Don't use them!
   NesteggPacketHolder(const NesteggPacketHolder &aOther);
   NesteggPacketHolder& operator= (NesteggPacketHolder const& aOther);
-};
-
-template <>
-class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
-{
-public:
-  static void Release(NesteggPacketHolder* aHolder) { delete aHolder; }
 };
 
 namespace mozilla {
@@ -63,50 +54,35 @@ class WebMBufferedState;
 static const unsigned NS_PER_USEC = 1000;
 static const double NS_PER_S = 1e9;
 
-// Thread and type safe wrapper around nsDeque.
-class PacketQueueDeallocator : public nsDequeFunctor {
-  virtual void* operator() (void* aObject) {
-    delete static_cast<NesteggPacketHolder*>(aObject);
-    return nullptr;
-  }
-};
-
-// Typesafe queue for holding nestegg packets. It has
-// ownership of the items in the queue and will free them
-// when destroyed.
-class WebMPacketQueue : private nsDeque {
+// Queue for holding nestegg packets.
+class WebMPacketQueue {
  public:
-   WebMPacketQueue()
-     : nsDeque(new PacketQueueDeallocator())
-   {}
-
-  ~WebMPacketQueue() {
-    Reset();
+  int32_t GetSize() {
+    return mQueue.size();
   }
 
-  inline int32_t GetSize() {
-    return nsDeque::GetSize();
+  void Push(already_AddRefed<NesteggPacketHolder> aItem) {
+    mQueue.push_back(Move(aItem));
   }
 
-  inline void Push(NesteggPacketHolder* aItem) {
-    NS_ASSERTION(aItem, "NULL pushed to WebMPacketQueue");
-    nsDeque::Push(aItem);
+  void PushFront(already_AddRefed<NesteggPacketHolder> aItem) {
+    mQueue.push_front(Move(aItem));
   }
 
-  inline void PushFront(NesteggPacketHolder* aItem) {
-    NS_ASSERTION(aItem, "NULL pushed to WebMPacketQueue");
-    nsDeque::PushFront(aItem);
-  }
-
-  inline NesteggPacketHolder* PopFront() {
-    return static_cast<NesteggPacketHolder*>(nsDeque::PopFront());
+  already_AddRefed<NesteggPacketHolder> PopFront() {
+    nsRefPtr<NesteggPacketHolder> result = mQueue.front().forget();
+    mQueue.pop_front();
+    return result.forget();
   }
 
   void Reset() {
-    while (GetSize() > 0) {
-      delete PopFront();
+    while (!mQueue.empty()) {
+      mQueue.pop_front();
     }
   }
+
+private:
+  std::deque<nsRefPtr<NesteggPacketHolder>> mQueue;
 };
 
 class WebMReader;
@@ -175,10 +151,10 @@ public:
   // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass VIDEO or AUDIO to indicate the
   // type of the packet we want to read.
-  nsReturnRef<NesteggPacketHolder> NextPacket(TrackType aTrackType);
+  already_AddRefed<NesteggPacketHolder> NextPacket(TrackType aTrackType);
 
   // Pushes a packet to the front of the video packet queue.
-  virtual void PushVideoPacket(NesteggPacketHolder* aItem);
+  virtual void PushVideoPacket(already_AddRefed<NesteggPacketHolder> aItem);
 
   int GetVideoCodec();
   nsIntRect GetPicture();
@@ -245,7 +221,7 @@ private:
   uint64_t mSeekPreroll; // Nanoseconds to discard after seeking.
 
   // Queue of video and audio packets that have been read but not decoded. These
-  // must only be accessed from the state machine thread.
+  // must only be accessed from the decode thread.
   WebMPacketQueue mVideoPackets;
   WebMPacketQueue mAudioPackets;
 
