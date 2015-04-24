@@ -95,9 +95,7 @@ public:
 
   // Sample transforms for layer trees.  Return true to request
   // another animation frame.
-  enum class TransformsToSkip : uint8_t { None = 0, APZ = 1 };
-  bool TransformShadowTree(TimeStamp aCurrentFrame,
-    TransformsToSkip aSkip = TransformsToSkip::None);
+  bool TransformShadowTree(TimeStamp aCurrentFrame);
 
   // Calculates the correct rotation and applies the transform to
   // our layer manager
@@ -209,8 +207,6 @@ private:
 
   gfx::Matrix mWorldTransform;
 };
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AsyncCompositionManager::TransformsToSkip)
 
 class MOZ_STACK_CLASS AutoResolveRefLayers {
 public:
