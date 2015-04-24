@@ -1420,7 +1420,9 @@ IonBuilder::inlineConstantStringSplit(CallInfo& callInfo)
 
     Vector<MConstant*, 0, SystemAllocPolicy> arrayValues;
     for (uint32_t i = 0; i < initLength; i++) {
-        MConstant* value = MConstant::New(alloc(), templateObject->getDenseElement(i), constraints());
+        Value str = templateObject->getDenseElement(i);
+        MOZ_ASSERT(str.toString()->isAtom());
+        MConstant* value = MConstant::New(alloc(), str, constraints());
         if (!TypeSetIncludes(key.maybeTypes(), value->type(), value->resultTypeSet()))
             return InliningStatus_NotInlined;
 
@@ -2494,10 +2496,14 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
         const Value val = target->getBoundFunctionArgument(i);
         if (val.isObject() && gc::IsInsideNursery(&val.toObject()))
             return InliningStatus_NotInlined;
+        if (val.isString() && !val.toString()->isAtom())
+            return InliningStatus_NotInlined;
     }
 
     const Value thisVal = target->getBoundFunctionThis();
     if (thisVal.isObject() && gc::IsInsideNursery(&thisVal.toObject()))
+        return InliningStatus_NotInlined;
+    if (thisVal.isString() && !thisVal.toString()->isAtom())
         return InliningStatus_NotInlined;
 
     size_t argc = target->getBoundFunctionArgumentCount() + nativeCallInfo.argc();
@@ -2508,7 +2514,7 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
 
     CallInfo callInfo(alloc(), nativeCallInfo.constructing());
     callInfo.setFun(constant(ObjectValue(*scriptedTarget)));
-    callInfo.setThis(constant(target->getBoundFunctionThis()));
+    callInfo.setThis(constant(thisVal));
 
     if (!callInfo.argv().reserve(argc))
         return InliningStatus_Error;
