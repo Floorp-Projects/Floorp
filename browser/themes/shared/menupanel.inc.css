@@ -175,6 +175,15 @@ toolbarpaletteitem[place="palette"] > #webide-button {
   -moz-image-region: rect(0px, 960px, 32px, 928px);
 }
 
+#pocket-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #pocket-button {
+  -moz-image-region: rect(0px, 992px, 32px, 960px);
+}
+
+#pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+  -moz-image-region: rect(32px, 992px, 64px, 960px);
+}
+
 toolbaritem[sdkstylewidget="true"] > toolbarbutton {
   -moz-image-region: rect(0, 832px, 32px, 800px);
 }

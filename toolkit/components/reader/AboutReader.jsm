@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/ReaderMode.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
@@ -77,6 +78,13 @@ let AboutReader = function(mm, win, articlePromise) {
     }
   } catch (e) {
     // Pref doesn't exist.
+  }
+
+  let pocketPlacement = CustomizableUI.getPlacementOfWidget("pocket-button");
+  if (pocketPlacement && pocketPlacement.area) {
+    this._setupButton("pocket-button", this._onPocketToggle.bind(this, "button"));
+  } else {
+    this._doc.getElementById("pocket-button").hidden = true;
   }
 
   let colorSchemeValues = JSON.parse(Services.prefs.getCharPref("reader.color_scheme.values"));
@@ -301,6 +309,14 @@ AboutReader.prototype = {
       this._mm.sendAsyncMessage("Reader:RemoveFromList", { url: this._article.url });
       UITelemetry.addEvent("unsave.1", aMethod, null, "reader");
     }
+  },
+
+  _onPocketToggle: function Reader_onPocketToggle(aMethod) {
+    if (!this._article)
+      return;
+
+    this._mm.sendAsyncMessage("Reader:AddToPocket", { article: this._article });
+    UITelemetry.addEvent("pocket.1", aMethod, null, "reader");
   },
 
   _onShare: function Reader_onShare() {
@@ -842,11 +858,14 @@ AboutReader.prototype = {
   },
 
   _setupButton: function(id, callback, titleEntity, textEntity) {
-    this._setButtonTip(id, titleEntity);
+    if (titleEntity) {
+      this._setButtonTip(id, titleEntity);
+    }
 
     let button = this._doc.getElementById(id);
-    if (textEntity)
+    if (textEntity) {
       button.textContent = gStrings.GetStringFromName(textEntity);
+    }
     button.removeAttribute("hidden");
     button.addEventListener("click", function(aEvent) {
       if (!aEvent.isTrusted)
