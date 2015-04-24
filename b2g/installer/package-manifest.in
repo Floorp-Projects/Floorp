@@ -159,6 +159,7 @@
 @BINPATH@/components/commandlines.xpt
 @BINPATH@/components/composer.xpt
 @BINPATH@/components/content_events.xpt
+@BINPATH@/components/content_geckomediaplugins.xpt
 @BINPATH@/components/content_html.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/cookie.xpt

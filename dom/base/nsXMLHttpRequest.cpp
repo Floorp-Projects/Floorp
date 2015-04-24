@@ -4080,13 +4080,12 @@ ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
     uint32_t offset = zip->GetDataOffset(zipItem);
     uint32_t size = zipItem->RealSize();
     mozilla::AutoFDClose pr_fd;
-    mozilla::ScopedClose fd;
     rv = aJarFile->OpenNSPRFileDesc(PR_RDONLY, 0, &pr_fd.rwget());
     if (NS_FAILED(rv)) {
       return rv;
     }
-    fd.rwget() = PR_FileDesc2NativeHandle(pr_fd);
-    mMapPtr = JS_CreateMappedArrayBufferContents(fd, offset, size);
+    mMapPtr = JS_CreateMappedArrayBufferContents(PR_FileDesc2NativeHandle(pr_fd),
+                                                 offset, size);
     if (mMapPtr) {
       mLength = size;
       return NS_OK;

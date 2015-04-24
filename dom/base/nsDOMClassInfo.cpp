@@ -2607,6 +2607,5 @@ nsMessageManagerSH<Super>::Enumerate(nsIXPConnectWrappedNative* wrapper,
 
   // Don't call up to our superclass, since neither nsDOMGenericSH nor
   // nsEventTargetSH have WANT_ENUMERATE.
-  MOZ_ASSERT(!(this->GetScriptableFlags() & nsIXPCScriptable::WANT_ENUMERATE));
   return NS_OK;
 }

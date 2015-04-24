@@ -62,17 +62,6 @@ NS_NewThread(nsIThread** aResult,
              uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
 
 /**
- * Create a new thread that is ignored in thread status monitoring by default on
- * platforms with Nuwa process enabled. On non-Nuwa platforms, this function is
- * identical to NS_NewThread().
- */
-extern NS_METHOD
-NS_NewUnmonitoredThread(nsIThread** aResult,
-                        nsIRunnable* aInitialEvent = nullptr,
-                        uint32_t aStackSize =
-                                 nsIThreadManager::DEFAULT_STACK_SIZE);
-
-/**
  * Creates a named thread, otherwise the same as NS_NewThread
  */
 template<size_t LEN>
