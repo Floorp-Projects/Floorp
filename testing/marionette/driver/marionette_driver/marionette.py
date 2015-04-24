@@ -1136,23 +1136,28 @@ class Marionette(object):
         return None
 
     def switch_to_default_content(self):
-        '''
-        Switch the current context to page's default content.
-        '''
+        """Switch the current context to page's default content."""
         return self.switch_to_frame()
 
     def switch_to_frame(self, frame=None, focus=True):
-        '''
-        Switch the current context to the specified frame. Subsequent commands will operate in the context of the specified frame, if applicable.
+        """Switch the current context to the specified frame. Subsequent
+        commands will operate in the context of the specified frame,
+        if applicable.
 
-        :param frame: A reference to the frame to switch to: this can be an HTMLElement, an index, name or an id attribute. If you call switch_to_frame() without an argument, it will switch to the top-level frame.
-        :param focus: A boolean value which determins whether to focus the frame that we just switched to.
-        '''
+        :param frame: A reference to the frame to switch to.  This can
+            be an ``HTMLElement``, an integer index, string name, or an
+            ID attribute.  If you call ``switch_to_frame`` without an
+            argument, it will switch to the top-level frame.
+
+        :param focus: A boolean value which determins whether to focus
+            the frame that we just switched to.
+        """
+        kwargs = {"focus": focus}
         if isinstance(frame, HTMLElement):
-            response = self._send_message('switchToFrame', 'ok', element=frame.id, focus=focus)
-        else:
-            response = self._send_message('switchToFrame', 'ok', id=frame, focus=focus)
-        return response
+            kwargs["element"] = frame.id
+        elif frame is not None:
+            kwargs["id"] = frame
+        return self._send_message("switchToFrame", "ok", **kwargs)
 
     def get_url(self):
         """Get a string representing the current URL.
