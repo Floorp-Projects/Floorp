@@ -109,23 +109,20 @@ NS_IMETHODIMP nsHTMLEditor::RemoveAllDefaultProperties()
 
 
 NS_IMETHODIMP
-nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
+nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
                                 const nsAString& aAttribute,
                                 const nsAString& aValue)
 {
-  if (!aProperty) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (!mRules) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
   ForceCompositionEnd();
 
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (selection->Collapsed()) {
-    // manipulating text attributes on a collapsed selection only sets state
+    // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
     mTypeInState->SetProp(aProperty, aAttribute, aValue);
     return NS_OK;
@@ -139,21 +136,20 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   bool cancel, handled;
   nsTextRulesInfo ruleInfo(EditAction::setTextProperty);
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
   nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(res, res);
   if (!cancel && !handled) {
-    // loop thru the ranges in the selection
+    // Loop through the ranges in the selection
     uint32_t rangeCount = selection->RangeCount();
-    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+    for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; rangeIdx++) {
       nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
-      // adjust range to include any ancestors whose children are entirely
+      // Adjust range to include any ancestors whose children are entirely
       // selected
       res = PromoteInlineRange(range);
       NS_ENSURE_SUCCESS(res, res);
 
-      // check for easy case: both range endpoints in same text node
+      // Check for easy case: both range endpoints in same text node
       nsCOMPtr<nsINode> startNode = range->GetStartParent();
       nsCOMPtr<nsINode> endNode = range->GetEndParent();
       if (startNode && startNode == endNode && startNode->GetAsText()) {
@@ -176,31 +172,26 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
       // (since doing operations on the document during iteration would perturb
       // the iterator).
 
-      nsCOMPtr<nsIContentIterator> iter =
-        do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
-      NS_ENSURE_SUCCESS(res, res);
-      NS_ENSURE_TRUE(iter, NS_ERROR_FAILURE);
+      OwningNonNull<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
 
-      nsCOMArray<nsIDOMNode> arrayOfNodes;
+      nsTArray<OwningNonNull<nsIContent>> arrayOfNodes;
 
-      // iterate range and build up array
+      // Iterate range and build up array
       res = iter->Init(range);
       // Init returns an error if there are no nodes in range.  This can easily
       // happen with the subtree iterator if the selection doesn't contain any
       // *whole* nodes.
       if (NS_SUCCEEDED(res)) {
-        nsCOMPtr<nsIDOMNode> node;
         for (; !iter->IsDone(); iter->Next()) {
-          node = do_QueryInterface(iter->GetCurrentNode());
-          NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+          OwningNonNull<nsINode> node = *iter->GetCurrentNode();
 
-          if (IsEditable(node)) {
-            arrayOfNodes.AppendObject(node);
+          if (node->IsContent() && IsEditable(node)) {
+            arrayOfNodes.AppendElement(*node->AsContent());
           }
         }
       }
-      // first check the start parent of the range to see if it needs to
-      // be separately handled (it does if it's a text node, due to how the
+      // First check the start parent of the range to see if it needs to be
+      // separately handled (it does if it's a text node, due to how the
       // subtree iterator works - it will not have reported it).
       if (startNode && startNode->GetAsText() && IsEditable(startNode)) {
         res = SetInlinePropertyOnTextNode(*startNode->GetAsText(),
@@ -210,17 +201,14 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         NS_ENSURE_SUCCESS(res, res);
       }
 
-      // then loop through the list, set the property on each node
-      int32_t listCount = arrayOfNodes.Count();
-      int32_t j;
-      for (j = 0; j < listCount; j++) {
-        res = SetInlinePropertyOnNode(arrayOfNodes[j], aProperty,
-                                      &aAttribute, &aValue);
+      // Then loop through the list, set the property on each node
+      for (auto& node : arrayOfNodes) {
+        res = SetInlinePropertyOnNode(node, aProperty, &aAttribute, &aValue);
         NS_ENSURE_SUCCESS(res, res);
       }
 
-      // last check the end parent of the range to see if it needs to
-      // be separately handled (it does if it's a text node, due to how the
+      // Last check the end parent of the range to see if it needs to be
+      // separately handled (it does if it's a text node, due to how the
       // subtree iterator works - it will not have reported it).
       if (endNode && endNode->GetAsText() && IsEditable(endNode)) {
         res = SetInlinePropertyOnTextNode(*endNode->GetAsText(), 0,
@@ -231,7 +219,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
     }
   }
   if (!cancel) {
-    // post-process
+    // Post-process
     return mRules->DidDoAction(selection, &ruleInfo, res);
   }
   return NS_OK;
