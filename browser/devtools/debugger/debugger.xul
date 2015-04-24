@@ -25,12 +25,17 @@
   <script type="application/javascript;version=1.8"
           src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="text/javascript" src="debugger/utils.js"/>
   <script type="text/javascript" src="debugger-controller.js"/>
   <script type="text/javascript" src="debugger-view.js"/>
   <script type="text/javascript" src="debugger-toolbar.js"/>
-  <script type="text/javascript" src="debugger-panes.js"/>
-
+  <script type="text/javascript" src="debugger/utils.js"/>
+  <script type="text/javascript" src="debugger/sources-view.js"/>
+  <script type="text/javascript" src="debugger/variable-bubble-view.js"/>
+  <script type="text/javascript" src="debugger/tracer-view.js"/>
+  <script type="text/javascript" src="debugger/watch-expressions-view.js"/>
+  <script type="text/javascript" src="debugger/event-listeners-view.js"/>
+  <script type="text/javascript" src="debugger/global-search-view.js"/>
+  
   <commandset id="editMenuCommands"/>
 
   <commandset id="debuggerCommands"></commandset>

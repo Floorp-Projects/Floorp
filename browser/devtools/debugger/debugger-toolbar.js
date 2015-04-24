@@ -77,7 +77,7 @@ ToolbarView.prototype = {
    * Add commands that XUL can fire.
    */
   _addCommands: function() {
-    utils.addCommands(document.getElementById('debuggerCommands'), {
+    XULUtils.addCommands(document.getElementById('debuggerCommands'), {
       resumeCommand: () => this._onResumePressed(),
       stepOverCommand: () => this._onStepOverPressed(),
       stepInCommand: () => this._onStepInPressed(),
@@ -254,7 +254,7 @@ OptionsView.prototype = {
    * Add commands that XUL can fire.
    */
   _addCommands: function() {
-    utils.addCommands(document.getElementById('debuggerCommands'), {
+    XULUtils.addCommands(document.getElementById('debuggerCommands'), {
       toggleAutoPrettyPrint: () => this._toggleAutoPrettyPrint(),
       togglePauseOnExceptions: () => this._togglePauseOnExceptions(),
       toggleIgnoreCaughtExceptions: () => this._toggleIgnoreCaughtExceptions(),
@@ -835,7 +835,7 @@ FilterView.prototype = {
    * Add commands that XUL can fire.
    */
   _addCommands: function() {
-    utils.addCommands(document.getElementById('debuggerCommands'), {
+    XULUtils.addCommands(document.getElementById('debuggerCommands'), {
       fileSearchCommand: () => this._doFileSearch(),
       globalSearchCommand: () => this._doGlobalSearch(),
       functionSearchCommand: () => this._doFunctionSearch(),
