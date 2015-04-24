@@ -35,15 +35,17 @@
         newTrack = newStream.getVideoTracks()[0];
         audiotrack = newStream.getAudioTracks()[0];
         isnot(newTrack, sender.track, "replacing with a different track");
-        ok(!pc.getLocalStreams().includes(newStream), "from a different stream");
+        ok(!pc.getLocalStreams().some(s => s == newStream),
+           "from a different stream");
         return sender.replaceTrack(newTrack);
       })
       .then(() => {
         is(pc.getSenders().length, oldSenderCount, "same sender count");
         is(sender.track, newTrack, "sender.track has been replaced");
-        ok(!pc.getSenders().map(sn => sn.track).includes(oldTrack),
+        ok(!pc.getSenders().map(sn => sn.track).some(t => t == oldTrack),
            "old track not among senders");
-        ok(pc.getLocalStreams().some(s => s.getTracks().includes(sender.track)),
+        ok(pc.getLocalStreams().some(s => s.getTracks()
+                                           .some(t => t == sender.track)),
            "track exists among pc's local streams");
         return sender.replaceTrack(audiotrack)
           .then(() => ok(false, "replacing with different kind should fail"),
@@ -125,7 +127,8 @@
             ok(allLocalStreamsHaveSender(pc),
                "Shouldn't have any streams without a corresponding sender");
             is(sender.track, newTrack, "sender.track has been replaced");
-            ok(pc.getLocalStreams().some(s => s.getTracks().includes(sender.track)),
+            ok(pc.getLocalStreams().some(s => s.getTracks()
+                                               .some(t => t == sender.track)),
                "track exists among pc's local streams");
           });
       }
