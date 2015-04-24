@@ -863,6 +863,7 @@ nsDocShell::nsDocShell()
   , mAllowDNSPrefetch(true)
   , mAllowWindowControl(true)
   , mAllowContentRetargeting(true)
+  , mAllowContentRetargetingOnChildren(true)
   , mCreatingDocument(false)
   , mUseErrorPages(false)
   , mObserveErrorPages(true)
@@ -1024,6 +1025,7 @@ NS_IMPL_ADDREF_INHERITED(nsDocShell, nsDocLoader)
 NS_IMPL_RELEASE_INHERITED(nsDocShell, nsDocLoader)
 
 NS_INTERFACE_MAP_BEGIN(nsDocShell)
+  NS_INTERFACE_MAP_ENTRY(nsIDocShell_ESR38)
   NS_INTERFACE_MAP_ENTRY(nsIDocShell)
   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
@@ -2591,7 +2593,22 @@ nsDocShell::GetAllowContentRetargeting(bool* aAllowContentRetargeting)
 NS_IMETHODIMP
 nsDocShell::SetAllowContentRetargeting(bool aAllowContentRetargeting)
 {
+  mAllowContentRetargetingOnChildren = aAllowContentRetargeting;
   mAllowContentRetargeting = aAllowContentRetargeting;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetAllowContentRetargetingOnChildren(bool* aAllowContentRetargetingOnChildren)
+{
+  *aAllowContentRetargetingOnChildren = mAllowContentRetargetingOnChildren;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAllowContentRetargetingOnChildren(bool aAllowContentRetargetingOnChildren)
+{
+  mAllowContentRetargetingOnChildren = aAllowContentRetargetingOnChildren;
   return NS_OK;
 }
 
@@ -3444,7 +3461,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   // If parent is another docshell, we inherit all their flags for
   // allowing plugins, scripting etc.
   bool value;
-  nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
+  nsCOMPtr<nsIDocShell_ESR38> parentAsDocShell(do_QueryInterface(parent));
   if (parentAsDocShell) {
     if (NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value))) {
       SetAllowPlugins(value);
@@ -3465,7 +3482,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
     if (NS_SUCCEEDED(parentAsDocShell->GetAllowWindowControl(&value))) {
       SetAllowWindowControl(value);
     }
-    SetAllowContentRetargeting(parentAsDocShell->GetAllowContentRetargeting());
+    SetAllowContentRetargeting(parentAsDocShell->GetAllowContentRetargetingOnChildren());
     if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
       SetIsActive(value);
     }
@@ -8716,7 +8733,7 @@ nsDocShell::RestoreFromHistory()
   // Now we simulate appending child docshells for subframes.
   for (i = 0; i < childShells.Count(); ++i) {
     nsIDocShellTreeItem* childItem = childShells.ObjectAt(i);
-    nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(childItem);
+    nsCOMPtr<nsIDocShell_ESR38> childShell = do_QueryInterface(childItem);
 
     // Make sure to not clobber the state of the child.  Since AddChild
     // always clobbers it, save it off first.
@@ -8741,6 +8758,7 @@ nsDocShell::RestoreFromHistory()
     childShell->GetAllowDNSPrefetch(&allowDNSPrefetch);
 
     bool allowContentRetargeting = childShell->GetAllowContentRetargeting();
+    bool allowContentRetargetingOnChildren = childShell->GetAllowContentRetargetingOnChildren();
 
     uint32_t defaultLoadFlags;
     childShell->GetDefaultLoadFlags(&defaultLoadFlags);
@@ -8759,6 +8777,7 @@ nsDocShell::RestoreFromHistory()
     childShell->SetAllowMedia(allowMedia);
     childShell->SetAllowDNSPrefetch(allowDNSPrefetch);
     childShell->SetAllowContentRetargeting(allowContentRetargeting);
+    childShell->SetAllowContentRetargetingOnChildren(allowContentRetargetingOnChildren);
     childShell->SetDefaultLoadFlags(defaultLoadFlags);
 
     rv = childShell->BeginRestore(nullptr, false);

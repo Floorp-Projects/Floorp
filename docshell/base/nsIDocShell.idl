@@ -1054,3 +1054,13 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   attribute boolean windowDraggingAllowed;
 };
+
+[scriptable, builtinclass, uuid(395c6a79-80ae-4ede-9e05-93bee6c3d9a1)]
+interface nsIDocShell_ESR38 : nsIDocShell
+{
+  /**
+   * True if new child docshells should allow content retargeting.
+   * Setting allowContentRetargeting also overwrites this value.
+   */
+  [infallible] attribute boolean allowContentRetargetingOnChildren;
+};
