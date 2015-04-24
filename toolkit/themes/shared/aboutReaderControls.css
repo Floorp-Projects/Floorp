@@ -381,9 +381,9 @@
 
 @media print {
   .toolbar {
-    display: none;
+    display: none !important;
   }
   .footer {
-    display: none;
+    display: none !important;
   }
 }
