@@ -16,7 +16,6 @@
         <view class="org.mozilla.gecko.tabs.TabsPanel$TabsPanelToolbar"
               android:layout_width="match_parent"
               android:layout_height="@dimen/browser_toolbar_height"
-              android:layout_height="match_parent"
               android:background="@color/text_and_tabs_tray_grey">
 
             <ViewStub android:id="@+id/nav_back_stub"
