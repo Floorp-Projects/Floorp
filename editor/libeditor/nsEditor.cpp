@@ -1353,9 +1353,9 @@ nsEditor::CreateNode(nsIAtom* aTag,
 
   nsAutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillCreateNode(nsDependentAtomString(aTag),
-                                        GetAsDOMNode(aParent), aPosition);
+  for (auto& listener : mActionListeners) {
+    listener->WillCreateNode(nsDependentAtomString(aTag),
+                             GetAsDOMNode(aParent), aPosition);
   }
 
   nsCOMPtr<Element> ret;
@@ -1370,11 +1370,9 @@ nsEditor::CreateNode(nsIAtom* aTag,
 
   mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidCreateNode(nsDependentAtomString(aTag),
-                                       GetAsDOMNode(ret),
-                                       GetAsDOMNode(aParent), aPosition,
-                                       res);
+  for (auto& listener : mActionListeners) {
+    listener->DidCreateNode(nsDependentAtomString(aTag), GetAsDOMNode(ret),
+                            GetAsDOMNode(aParent), aPosition, res);
   }
 
   return ret.forget();
@@ -1396,9 +1394,9 @@ nsEditor::InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition)
 {
   nsAutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(),
-                                        aPosition);
+  for (auto& listener : mActionListeners) {
+    listener->WillInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(),
+                             aPosition);
   }
 
   nsRefPtr<InsertNodeTxn> txn = CreateTxnForInsertNode(aNode, aParent,
@@ -1407,9 +1405,9 @@ nsEditor::InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition)
 
   mRangeUpdater.SelAdjInsertNode(aParent.AsDOMNode(), aPosition);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(),
-                                       aPosition, res);
+  for (auto& listener : mActionListeners) {
+    listener->DidInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(), aPosition,
+                            res);
   }
 
   return res;
@@ -1435,8 +1433,8 @@ nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
   nsAutoRules beginRulesSniffing(this, EditAction::splitNode,
                                  nsIEditor::eNext);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillSplitNode(aNode.AsDOMNode(), aOffset);
+  for (auto& listener : mActionListeners) {
+    listener->WillSplitNode(aNode.AsDOMNode(), aOffset);
   }
 
   nsRefPtr<SplitNodeTxn> txn = CreateTxnForSplitNode(aNode, aOffset);
@@ -1447,10 +1445,9 @@ nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
 
   mRangeUpdater.SelAdjSplitNode(aNode, aOffset, newNode);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidSplitNode(aNode.AsDOMNode(), aOffset,
-                                      GetAsDOMNode(newNode),
-                                      aResult.ErrorCode());
+  for (auto& listener : mActionListeners) {
+    listener->DidSplitNode(aNode.AsDOMNode(), aOffset, GetAsDOMNode(newNode),
+                           aResult.ErrorCode());
   }
 
   return newNode;
@@ -1483,10 +1480,9 @@ nsEditor::JoinNodes(nsINode& aLeftNode, nsINode& aRightNode)
   // Find the number of children of the lefthand node
   uint32_t oldLeftNodeLen = aLeftNode.Length();
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillJoinNodes(aLeftNode.AsDOMNode(),
-                                       aRightNode.AsDOMNode(),
-                                       parent->AsDOMNode());
+  for (auto& listener : mActionListeners) {
+    listener->WillJoinNodes(aLeftNode.AsDOMNode(), aRightNode.AsDOMNode(),
+                            parent->AsDOMNode());
   }
 
   nsresult result;
@@ -1498,10 +1494,9 @@ nsEditor::JoinNodes(nsINode& aLeftNode, nsINode& aRightNode)
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
                                 (int32_t)oldLeftNodeLen);
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidJoinNodes(aLeftNode.AsDOMNode(),
-                                      aRightNode.AsDOMNode(),
-                                      parent->AsDOMNode(), result);
+  for (auto& listener : mActionListeners) {
+    listener->DidJoinNodes(aLeftNode.AsDOMNode(), aRightNode.AsDOMNode(),
+                           parent->AsDOMNode(), result);
   }
 
   return result;
@@ -1522,8 +1517,8 @@ nsEditor::DeleteNode(nsINode* aNode)
   nsAutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::ePrevious);
 
   // save node location for selection updating code.
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillDeleteNode(aNode->AsDOMNode());
+  for (auto& listener : mActionListeners) {
+    listener->WillDeleteNode(aNode->AsDOMNode());
   }
 
   nsRefPtr<DeleteNodeTxn> txn;
@@ -1532,8 +1527,8 @@ nsEditor::DeleteNode(nsINode* aNode)
     res = DoTransaction(txn);
   }
 
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidDeleteNode(aNode->AsDOMNode(), res);
+  for (auto& listener : mActionListeners) {
+    listener->DidDeleteNode(aNode->AsDOMNode(), res);
   }
 
   NS_ENSURE_SUCCESS(res, res);
@@ -1738,10 +1733,8 @@ nsEditor::AddEditorObserver(nsIEditorObserver *aObserver)
   NS_ENSURE_TRUE(aObserver, NS_ERROR_NULL_POINTER);
 
   // Make sure the listener isn't already on the list
-  if (mEditorObservers.IndexOf(aObserver) == -1) 
-  {
-    if (!mEditorObservers.AppendObject(aObserver))
-      return NS_ERROR_FAILURE;
+  if (!mEditorObservers.Contains(aObserver)) {
+    mEditorObservers.AppendElement(*aObserver);
   }
 
   return NS_OK;
@@ -1753,8 +1746,7 @@ nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
 {
   NS_ENSURE_TRUE(aObserver, NS_ERROR_FAILURE);
 
-  if (!mEditorObservers.RemoveObject(aObserver))
-    return NS_ERROR_FAILURE;
+  mEditorObservers.RemoveElement(aObserver);
 
   return NS_OK;
 }
@@ -1814,8 +1806,8 @@ nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
   switch (aNotification) {
     case eNotifyEditorObserversOfEnd:
       mIsInEditAction = false;
-      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-        mEditorObservers[i]->EditAction();
+      for (auto& observer : mEditorObservers) {
+        observer->EditAction();
       }
 
       if (!mDispatchInputEvent) {
@@ -1826,14 +1818,14 @@ nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       break;
     case eNotifyEditorObserversOfBefore:
       mIsInEditAction = true;
-      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-        mEditorObservers[i]->BeforeEditAction();
+      for (auto& observer : mEditorObservers) {
+        observer->BeforeEditAction();
       }
       break;
     case eNotifyEditorObserversOfCancel:
       mIsInEditAction = false;
-      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-        mEditorObservers[i]->CancelEditAction();
+      for (auto& observer : mEditorObservers) {
+        observer->CancelEditAction();
       }
       break;
     default:
@@ -1866,10 +1858,8 @@ nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
   // Make sure the listener isn't already on the list
-  if (mActionListeners.IndexOf(aListener) == -1) 
-  {
-    if (!mActionListeners.AppendObject(aListener))
-      return NS_ERROR_FAILURE;
+  if (!mActionListeners.Contains(aListener)) {
+    mActionListeners.AppendElement(*aListener);
   }
 
   return NS_OK;
@@ -1881,8 +1871,7 @@ nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_FAILURE);
 
-  if (!mActionListeners.RemoveObject(aListener))
-    return NS_ERROR_FAILURE;
+  mActionListeners.RemoveElement(aListener);
 
   return NS_OK;
 }
@@ -1893,10 +1882,8 @@ nsEditor::AddDocumentStateListener(nsIDocumentStateListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
-  if (mDocStateListeners.IndexOf(aListener) == -1)
-  {
-    if (!mDocStateListeners.AppendObject(aListener))
-      return NS_ERROR_FAILURE;
+  if (!mDocStateListeners.Contains(aListener)) {
+    mDocStateListeners.AppendElement(*aListener);
   }
 
   return NS_OK;
@@ -1908,8 +1895,7 @@ nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
-  if (!mDocStateListeners.RemoveObject(aListener))
-    return NS_ERROR_FAILURE;
+  mDocStateListeners.RemoveElement(aListener);
 
   return NS_OK;
 }
@@ -2392,8 +2378,8 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   }
 
   // Let listeners know what's up
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillInsertText(
+  for (auto& listener : mActionListeners) {
+    listener->WillInsertText(
       static_cast<nsIDOMCharacterData*>(aTextNode.AsDOMNode()), aOffset,
       aStringToInsert);
   }
@@ -2407,8 +2393,8 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   mRangeUpdater.SelAdjInsertText(aTextNode, aOffset, aStringToInsert);
 
   // let listeners know what happened
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidInsertText(
+  for (auto& listener : mActionListeners) {
+    listener->DidInsertText(
       static_cast<nsIDOMCharacterData*>(aTextNode.AsDOMNode()),
       aOffset, aStringToInsert, res);
   }
@@ -2465,29 +2451,28 @@ nsEditor::GetFirstEditableNode(nsINode* aRoot)
 NS_IMETHODIMP
 nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationType)
 {
-  int32_t numListeners = mDocStateListeners.Count();
-  if (!numListeners)    // maybe there just aren't any.
+  if (!mDocStateListeners.Length()) {
+    // Maybe there just aren't any.
     return NS_OK;
+  }
  
-  nsCOMArray<nsIDocumentStateListener> listeners(mDocStateListeners);
+  nsTArray<OwningNonNull<nsIDocumentStateListener>>
+    listeners(mDocStateListeners);
   nsresult rv = NS_OK;
-  int32_t i;
 
   switch (aNotificationType)
   {
     case eDocumentCreated:
-      for (i = 0; i < numListeners;i++)
-      {
-        rv = listeners[i]->NotifyDocumentCreated();
+      for (auto& listener : listeners) {
+        rv = listener->NotifyDocumentCreated();
         if (NS_FAILED(rv))
           break;
       }
       break;
       
     case eDocumentToBeDestroyed:
-      for (i = 0; i < numListeners;i++)
-      {
-        rv = listeners[i]->NotifyDocumentWillBeDestroyed();
+      for (auto& listener : listeners) {
+        rv = listener->NotifyDocumentWillBeDestroyed();
         if (NS_FAILED(rv))
           break;
       }
@@ -2504,9 +2489,8 @@ nsEditor::NotifyDocumentListeners(TDocumentListenerNotification aNotificationTyp
 
         mDocDirtyState = docIsDirty;
 
-        for (i = 0; i < numListeners;i++)
-        {
-          rv = listeners[i]->NotifyDocumentStateChanged(mDocDirtyState);
+        for (auto& listener : listeners) {
+          rv = listener->NotifyDocumentStateChanged(mDocDirtyState);
           if (NS_FAILED(rv))
             break;
         }
@@ -2542,8 +2526,8 @@ nsEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
   nsAutoRules beginRulesSniffing(this, EditAction::deleteText, nsIEditor::ePrevious);
 
   // Let listeners know what's up
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->WillDeleteText(
+  for (auto& listener : mActionListeners) {
+    listener->WillDeleteText(
         static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
         aLength);
   }
@@ -2551,8 +2535,8 @@ nsEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
   nsresult res = DoTransaction(txn);
 
   // Let listeners know what happened
-  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
-    mActionListeners[i]->DidDeleteText(
+  for (auto& listener : mActionListeners) {
+    listener->DidDeleteText(
         static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
         aLength, res);
   }
@@ -3960,31 +3944,38 @@ nsEditor::DeleteSelectionImpl(EDirection aAction,
   if (NS_SUCCEEDED(res))  
   {
     nsAutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
-    int32_t i;
     // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
-    if (!deleteNode)
-      for (i = 0; i < mActionListeners.Count(); i++)
-        mActionListeners[i]->WillDeleteSelection(selection);
-    else if (deleteCharData)
-      for (i = 0; i < mActionListeners.Count(); i++)
-        mActionListeners[i]->WillDeleteText(deleteCharData, deleteCharOffset, 1);
-    else
-      for (i = 0; i < mActionListeners.Count(); i++)
-        mActionListeners[i]->WillDeleteNode(deleteNode->AsDOMNode());
+    if (!deleteNode) {
+      for (auto& listener : mActionListeners) {
+        listener->WillDeleteSelection(selection);
+      }
+    } else if (deleteCharData) {
+      for (auto& listener : mActionListeners) {
+        listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+      }
+    } else {
+      for (auto& listener : mActionListeners) {
+        listener->WillDeleteNode(deleteNode->AsDOMNode());
+      }
+    }
 
     // Delete the specified amount
     res = DoTransaction(txn);  
 
     // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-    if (!deleteNode)
-      for (i = 0; i < mActionListeners.Count(); i++)
-        mActionListeners[i]->DidDeleteSelection(selection);
-    else if (deleteCharData)
-      for (i = 0; i < mActionListeners.Count(); i++)
-        mActionListeners[i]->DidDeleteText(deleteCharData, deleteCharOffset, 1, res);
-    else
-      for (i = 0; i < mActionListeners.Count(); i++)
-        mActionListeners[i]->DidDeleteNode(deleteNode->AsDOMNode(), res);
+    if (!deleteNode) {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteSelection(selection);
+      }
+    } else if (deleteCharData) {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, res);
+      }
+    } else {
+      for (auto& listener : mActionListeners) {
+        listener->DidDeleteNode(deleteNode->AsDOMNode(), res);
+      }
+    }
   }
 
   return res;
