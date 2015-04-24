@@ -224,7 +224,7 @@ this.WebappOSUtils = {
 #endif
 
 #endif
-    // Anything unsupported, like Metro
+    // Anything unsupported
     throw new Error("Unsupported apps platform");
   },
 

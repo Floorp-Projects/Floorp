@@ -111,6 +111,7 @@ CERT_GetCountryName
 CERT_GetDefaultCertDB
 CERT_GetFirstEmailAddress
 CERT_GetGeneralNameTypeFromString
+CERT_GetImposedNameConstraints
 CERT_GetLocalityName
 CERT_GetNextEmailAddress
 CERT_GetNextGeneralName

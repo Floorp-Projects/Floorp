@@ -58,6 +58,7 @@ using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/laye
 using mozilla::WritingMode from "mozilla/WritingModes.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using nsIWidget::TouchPointerState from "nsIWidget.h";
+using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -672,6 +673,12 @@ child:
      * window.
      */
     UIResolutionChanged();
+
+    /**
+     * Tell the child that the system theme has changed, and that a repaint
+     * is necessary.
+     */
+    ThemeChanged(LookAndFeelInt[] lookAndFeelIntCache);
 
     /**
      * Tell the child of an app's offline status

@@ -399,9 +399,11 @@ PSMContentListener::DoContent(const nsACString& aContentType,
 {
   uint32_t type;
   type = getPSMContentType(PromiseFlatCString(aContentType).get());
+#ifdef PR_LOGGING
   if (gPIPNSSLog) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PSMContentListener::DoContent\n"));
   }
+#endif
   if (type != UNKNOWN_TYPE) {
     nsCOMPtr<nsIStreamListener> downloader;
     if (XRE_GetProcessType() == GeckoProcessType_Default) {

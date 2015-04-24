@@ -8,6 +8,13 @@ package org.mozilla.gecko;
 
 import android.os.Build;
 
+import org.mozilla.gecko.adjust.AdjustHelperInterface;
+//#ifdef MOZ_INSTALL_TRACKING
+import org.mozilla.gecko.adjust.AdjustHelper;
+//#else
+import org.mozilla.gecko.adjust.StubAdjustHelper;
+//#endif
+
 /**
  * A collection of constants that pertain to the build and runtime state of the
  * application. Typically these are sourced from build-time definitions (see
@@ -298,4 +305,25 @@ public class AppConstants {
 
     public static final boolean MOZ_DRAGGABLE_URLBAR = false;
 
+    public static final boolean MOZ_INSTALL_TRACKING =
+//#ifdef MOZ_INSTALL_TRACKING
+    true;
+//#else
+    false;
+//#endif
+
+    public static final String MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN =
+//#ifdef MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN
+    "@MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN@";
+//#else
+    null;
+//#endif
+
+    public static AdjustHelperInterface getAdjustHelper() {
+//#ifdef MOZ_INSTALL_TRACKING
+        return new AdjustHelper();
+//#else
+        return new StubAdjustHelper();
+//#endif
+    }
 }

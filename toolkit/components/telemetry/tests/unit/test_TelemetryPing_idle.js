@@ -7,7 +7,7 @@ Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
-Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
+Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
@@ -39,7 +39,7 @@ add_task(function* testSendPendingOnIdleDaily() {
     application: {},
     payload: {},
   };
-  yield TelemetryFile.savePing(PENDING_PING, true);
+  yield TelemetryStorage.savePing(PENDING_PING, true);
 
   // Telemetry will not send this ping at startup, because it's not overdue.
   yield TelemetryPing.setup();

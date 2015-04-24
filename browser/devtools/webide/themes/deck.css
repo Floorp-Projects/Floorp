@@ -18,6 +18,15 @@ body {
   background-image: linear-gradient(#fff, #ededed 100px);
 }
 
+.text-input {
+  display: flex;
+}
+
+.text-input input {
+  flex: 0.5;
+  margin-left: 5px;
+}
+
 h1 {
   font-size: 2.5em;
   font-weight: lighter;

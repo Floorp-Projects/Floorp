@@ -24,7 +24,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, printButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -51,7 +50,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, savePageButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   ok(CustomizableUI.inDefaultState, "Should be in default state.");
@@ -76,7 +74,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, newWindowButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   ok(CustomizableUI.inDefaultState, "Should still be in default state.");
@@ -100,7 +97,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, historyPanelMenu);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -128,7 +124,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, preferencesButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -156,7 +151,6 @@ add_task(function() {
                                "add-ons-button",
                                "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterInsert);
-  addSwitchToMetroButtonInWindows8(placementsAfterInsert);
   simulateItemDrag(openFileButton, zoomControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -196,7 +190,6 @@ add_task(function() {
                                "add-ons-button",
                                "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterInsert);
-  addSwitchToMetroButtonInWindows8(placementsAfterInsert);
   simulateItemDrag(openFileButton, editControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -233,7 +226,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, zoomControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   ok(CustomizableUI.inDefaultState, "Should still be in default state.");
@@ -258,7 +250,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, newWindowButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let zoomControls = document.getElementById("zoom-controls");
@@ -286,7 +277,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, privateBrowsingButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let zoomControls = document.getElementById("zoom-controls");
@@ -314,7 +304,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, savePageButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let zoomControls = document.getElementById("zoom-controls");
@@ -341,7 +330,6 @@ add_task(function() {
                              "edit-controls",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, panel);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let zoomControls = document.getElementById("zoom-controls");
@@ -367,7 +355,6 @@ add_task(function() {
                              "add-ons-button",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   let paletteChildElementCount = palette.childElementCount;
   simulateItemDrag(editControls, palette);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -390,7 +377,7 @@ add_task(function() {
   yield startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
-  let numPlaceholders = isInWin8() ? 1 : 2;
+  let numPlaceholders = 2;
   for (let i = 0; i < numPlaceholders; i++) {
     // NB: We can't just iterate over all of the placeholders
     // because each drag-drop action recreates them.
@@ -408,7 +395,6 @@ add_task(function() {
                                "edit-controls",
                                "developer-button"];
     removeDeveloperButtonIfDevEdition(placementsAfterMove);
-    addSwitchToMetroButtonInWindows8(placementsAfterMove);
     simulateItemDrag(editControls, placeholder);
     assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
     let zoomControls = document.getElementById("zoom-controls");
@@ -451,18 +437,11 @@ add_task(function() {
                              "edit-controls",
                              "developer-button"];
   removeDeveloperButtonIfDevEdition(placementsAfterMove);
-  addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, target);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let itemToDrag = "sync-button";
   let button = document.getElementById(itemToDrag);
   placementsAfterMove.splice(11, 0, itemToDrag);
-  if (isInWin8()) {
-    placementsAfterMove[10] = placementsAfterMove[11];
-    placementsAfterMove[11] = placementsAfterMove[12];
-    placementsAfterMove[12] = placementsAfterMove[13];
-    placementsAfterMove[13] = "edit-controls";
-  }
   simulateItemDrag(button, editControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
 

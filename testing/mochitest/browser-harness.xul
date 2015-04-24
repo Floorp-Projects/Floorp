@@ -240,7 +240,6 @@
       var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
                              getService(Ci.nsIWindowMediator);
       var winType = gConfig.testRoot == "browser" ? "navigator:browser" :
-                    gConfig.testRoot == "metro" ? "navigator:browser" :
                     gConfig.testRoot == "webapprtChrome" ? "webapprt:webapp" :
                     null;
       if (!winType) {

@@ -172,10 +172,6 @@ let CustomizableUIInternal = {
 #endif
     ];
 
-    if (gPalette.has("switch-to-metro-button")) {
-      panelPlacements.push("switch-to-metro-button");
-    }
-
 #ifdef E10S_TESTING_ONLY
     if (gPalette.has("e10s-button")) {
       let newWindowIndex = panelPlacements.indexOf("new-window-button");

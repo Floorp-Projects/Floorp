@@ -197,10 +197,6 @@ user_pref("browser.download.panel.shown", true);
 // which test runs first and happens to open about:newtab
 user_pref("browser.newtabpage.introShown", true);
 
-// prefs for firefox metro.
-// Disable first-tun tab
-user_pref("browser.firstrun.count", 0);
-
 // Tell the PBackground infrastructure to run a test at startup.
 user_pref("pbackground.testing", true);
 

@@ -127,36 +127,6 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 
 namespace {
 
-bool inline
-IsRunningInWindowsMetro()
-{
-  static bool alreadyChecked = false;
-  static bool isMetro = false;
-  if (alreadyChecked) {
-    return isMetro;
-  }
-
-  HMODULE user32DLL = LoadLibraryW(L"user32.dll");
-  if (!user32DLL) {
-    return false;
-  }
-
-  typedef BOOL (WINAPI* IsImmersiveProcessFunc)(HANDLE aProcess);
-  IsImmersiveProcessFunc IsImmersiveProcessPtr =
-    (IsImmersiveProcessFunc)GetProcAddress(user32DLL,
-                                           "IsImmersiveProcess");
-  FreeLibrary(user32DLL);
-  if (!IsImmersiveProcessPtr) {
-    // isMetro is already set to false.
-    alreadyChecked = true;
-    return false;
-  }
-
-  isMetro = IsImmersiveProcessPtr(GetCurrentProcess());
-  alreadyChecked = true;
-  return isMetro;
-}
-
 HMODULE inline
 LoadLibrarySystem32(LPCWSTR aModule)
 {

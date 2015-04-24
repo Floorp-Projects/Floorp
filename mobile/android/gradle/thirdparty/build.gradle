@@ -21,6 +21,15 @@ android {
     lintOptions {
         abortOnError false
     }
+
+    sourceSets {
+        main {
+            java {
+                // Thirdparty Adjust SDK code is included in the thirdparty_adjust_sdk project.
+                exclude 'com/adjust/**'
+            }
+        }
+    }
 }
 
 dependencies {

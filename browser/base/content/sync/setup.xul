@@ -172,20 +172,6 @@
             <label class="status" value=" "/>
           </hbox>
         </row>
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-        <row id="metroRow" align="center">
-          <spacer/>
-          <hbox align="center">
-            <checkbox label="&setup.setupMetro.label;"
-                      accesskey="&setup.setupMetro.accesskey;"
-                      control="weavePasswordConfirm"
-                      id="metroSetupCheckbox"
-                      checked="true"/>
-          </hbox>
-        </row>
-#endif
-#endif
         <row id="TOSRow" align="center">
           <spacer/>
           <hbox align="center">
