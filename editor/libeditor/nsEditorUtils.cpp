@@ -106,20 +106,6 @@ nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
 
 void
 nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
-                          nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const
-{
-  // Iterate through dom and build list
-  for (; !mIter->IsDone(); mIter->Next()) {
-    nsCOMPtr<nsINode> node = mIter->GetCurrentNode();
-
-    if (functor(node)) {
-      arrayOfNodes.AppendElement(node);
-    }
-  }
-}
-
-void
-nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
                           nsCOMArray<nsIDOMNode>& arrayOfNodes) const
 {
   // iterate through dom and build list

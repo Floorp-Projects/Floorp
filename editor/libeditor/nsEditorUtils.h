@@ -185,8 +185,6 @@ class MOZ_STACK_CLASS nsDOMIterator
     void AppendList(const nsBoolDomIterFunctor& functor,
                     nsTArray<mozilla::dom::OwningNonNull<nsINode>>& arrayOfNodes) const;
     void AppendList(const nsBoolDomIterFunctor& functor,
-                    nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
-    void AppendList(const nsBoolDomIterFunctor& functor,
                     nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
