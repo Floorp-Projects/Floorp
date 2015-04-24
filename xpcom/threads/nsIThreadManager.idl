@@ -13,7 +13,7 @@ interface nsIThread;
 /**
  * An interface for creating and locating nsIThread instances.
  */
-[scriptable, uuid(1be89eca-e2f7-453b-8d38-c11ba247f6f3)]
+[scriptable, uuid(04092259-4498-4c82-ac52-f9225eb114d0)]
 interface nsIThreadManager : nsISupports
 {
   /**
@@ -65,4 +65,11 @@ interface nsIThreadManager : nsISupports
    * application process.
    */
   readonly attribute boolean isMainThread;
+
+  /**
+   * Informs the thread manager to not monitor the status of the current thread.
+   * This method only works on platforms with Nuwa enabled; on other platforms,
+   * it throws an error.
+   */
+  [noscript] void setIgnoreThreadStatus();
 };

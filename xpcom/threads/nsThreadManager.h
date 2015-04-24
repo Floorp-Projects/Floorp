@@ -72,8 +72,6 @@ public:
   }
 
 #ifdef MOZ_NUWA_PROCESS
-  void SetIgnoreThreadStatus();
-
   // |SetThreadWorking| and |SetThreadIdle| set status of thread that is
   // currently running. They get thread status information from TLS and pass
   // the information to |SetThreadIsWorking|.
