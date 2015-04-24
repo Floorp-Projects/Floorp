@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const { defer } = require('../core/promise');
+const { defer, all } = require('../core/promise');
 const events = require('../system/events');
 const { open: openWindow, onFocus, getToplevelWindow,
         isInteractive, getOuterId } = require('./utils');
 const { Ci } = require("chrome");
 
 function open(uri, options) {
-  return promise(openWindow.apply(null, arguments), 'load');
+  return promise(openWindow.apply(null, arguments), 'load').then(focus);
 }
 exports.open = open;
 

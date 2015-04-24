@@ -26,7 +26,7 @@ PACKAGE_JSON = '''\
   "id": "%(id)s",
   "description": "a basic add-on",
   "author": "",
-  "license": "MPL 2.0",
+  "license": "MPL-2.0",
   "version": "0.1"
 }
 '''

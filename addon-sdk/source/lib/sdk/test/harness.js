@@ -439,6 +439,12 @@ var POINTLESS_ERRORS = [
   'file: "chrome://browser/skin/'
 ];
 
+// These are messages that will cause a test to fail if logged through the
+// console service
+var IMPORTANT_ERRORS = [
+  'Sending message that cannot be cloned. Are you trying to send an XPCOM object?',
+];
+
 var consoleListener = {
   registered: false,
 
@@ -463,6 +469,10 @@ var consoleListener = {
       return;
     this.errorsLogged++;
     var message = object.QueryInterface(Ci.nsIConsoleMessage).message;
+    if (IMPORTANT_ERRORS.find(msg => message.indexOf(msg) >= 0)) {
+      testConsole.error(message);
+      return;
+    }
     var pointless = [err for (err of POINTLESS_ERRORS)
                          if (message.indexOf(err) >= 0)];
     if (pointless.length == 0 && message)
@@ -597,8 +607,8 @@ var runTests = exports.runTests = function runTests(options) {
   try {
     consoleListener.register();
     print("Running tests on " + system.name + " " + system.version +
-          "/Gecko " + system.platformVersion + " (" +
-          system.id + ") under " +
+          "/Gecko " + system.platformVersion + " (Build " +
+          system.build + ") (" + system.id + ") under " +
           system.platform + "/" + system.architecture + ".\n");
 
     if (options.parseable)

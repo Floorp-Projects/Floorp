@@ -164,6 +164,8 @@ const Response = Class({
   initialize: function initialize(request) {
     response(this).request = request;
   },
+  // more about responseURL: https://bugzilla.mozilla.org/show_bug.cgi?id=998076
+  get url() response(this).request.responseURL,
   get text() response(this).request.responseText,
   get xml() {
     throw new Error("Sorry, the 'xml' property is no longer available. " +

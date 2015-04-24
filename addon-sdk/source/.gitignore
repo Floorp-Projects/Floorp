@@ -9,6 +9,7 @@ doc/modules/
 doc/status.md5
 packages/*
 node_modules
+cache
 
 # Python
 *.pyc
@@ -18,3 +19,18 @@ node_modules
 
 # Windows
 *Thumbs.db
+
+# Ignore subtrees
+
+# git@github.com:jsantell/jetpack-id.git
+lib/jetpack-id/*
+!lib/jetpack-id/index.js
+!lib/jetpack-id/package.json
+
+# git@github.com:jsantell/mozilla-toolkit-versioning.git
+lib/mozilla-toolkit-versioning/*
+!lib/mozilla-toolkit-versioning/index.js
+!lib/mozilla-toolkit-versioning/lib
+lib/mozilla-toolkit-versioning/lib/*
+!lib/mozilla-toolkit-versioning/lib/*.js
+!lib/mozilla-toolkit-versioning/package.json

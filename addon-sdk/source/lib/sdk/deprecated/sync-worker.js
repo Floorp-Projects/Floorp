@@ -90,7 +90,7 @@ const Worker = Class({
    * argument, which represents data to be sent to the worker. The data may
    * be any primitive type value or `JSON`. Call of this method asynchronously
    * emits `message` event with data value in the global scope of this
-   * symbiont.
+   * worker.
    *
    * `message` event listeners can be set either by calling
    * `self.on` with a first argument string `"message"` or by

@@ -15,6 +15,7 @@ const { getActiveTab, getTabs } = require("./utils");
 const { browserWindowIterator } = require("../deprecated/window-utils");
 const { isBrowser, windows, getMostRecentBrowserWindow } = require("../window/utils");
 const { observer: windowObserver } = require("../windows/observer");
+const { when } = require("../system/unload");
 
 const EVENTS = {
   "TabOpen": "open",
@@ -87,6 +88,11 @@ const Observer = Class({
     for (let chromeWindow of browserWindowIterator()) {
       this.observe(chromeWindow);
     }
+
+    when(_ => {
+      // Don't dispatch a deactivate event during unload.
+      this[selectedTab] = null;
+    });
   },
   /**
    * Events that are supported and emitted by the module.

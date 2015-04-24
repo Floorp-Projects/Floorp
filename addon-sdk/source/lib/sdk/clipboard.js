@@ -16,7 +16,6 @@ module.metadata = {
 
 const { Cc, Ci } = require("chrome");
 const { DataURL } = require("./url");
-const errors = require("./deprecated/errors");
 const apiUtils = require("./deprecated/api-utils");
 /*
 While these data flavors resemble Internet media types, they do

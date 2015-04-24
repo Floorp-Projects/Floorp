@@ -8,6 +8,8 @@ const { Page } = require("sdk/page-worker");
 const { URL } = require("sdk/url");
 const fixtures = require("./fixtures");
 const testURI = fixtures.url("test.html");
+const { getActiveView } = require("sdk/view/core");
+const { getDocShell } = require('sdk/frame/utils');
 
 const ERR_DESTROYED =
   "Couldn't find the worker to receive this message. " +
@@ -316,6 +318,7 @@ exports.testAllowScript = function(assert, done) {
   let page = Page({
     onMessage: function(message) {
       assert.ok(message, "Script runs when allowed to do so.");
+      page.destroy();
       done();
     },
     allow: { script: true },
@@ -324,6 +327,19 @@ exports.testAllowScript = function(assert, done) {
                    "                 document.documentElement.getAttribute('foo') == 3)",
     contentScriptWhen: "ready"
   });
+
+  let frame = getActiveView(page);
+  assert.equal(getDocShell(frame).allowJavascript, true, "allowJavascript is true");
+}
+
+exports.testGetActiveViewAndDestroy = function(assert) {
+  let page = Page({
+    contentURL: "data:text/html;charset=utf-8,<title>test</title>"
+  });
+  let frame = getActiveView(page);
+  assert.ok(frame.parentNode, "there is a parent node");
+  page.destroy();
+  assert.ok(!frame.parentNode, "there is not a parent node");
 }
 
 exports.testPingPong = function(assert, done) {
@@ -513,7 +529,7 @@ exports.testWindowStopDontBreak = function (assert, done) {
   page.port.emit("ping");
 };
 
-/**  
+/**
  * bug 1138545 - the docs claim you can pass in a bare regexp.
  */
 exports.testRegexArgument = function (assert, done) {
@@ -523,10 +539,10 @@ exports.testRegexArgument = function (assert, done) {
     contentURL: url,
     contentScriptWhen: 'ready',
     contentScript: Isolate(() => {
-     self.port.emit("pong", document.location.href); 
+     self.port.emit("pong", document.location.href);
     }),
     include: /^data\:text\/html;.*/
-  });    
+  });
 
   assert.pass("We can pass in a RegExp into page-worker's include option.");
 
