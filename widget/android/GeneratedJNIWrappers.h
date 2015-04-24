@@ -1009,13 +1009,13 @@ public:
         typedef bool SetterType;
         static constexpr char name[] = "pumpMessageLoop";
         static constexpr char signature[] =
-                "(Landroid/os/Message;)Z";
+                "()Z";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode = mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static bool PumpMessageLoop(mozilla::jni::Object::Param);
+    static bool PumpMessageLoop();
 
 public:
     struct RegisterSurfaceTextureFrameListener_t {

@@ -65,10 +65,9 @@ Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread(JNIEnv *jenv, jclass j
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv *jenv, jclass, jobject clsLoader, jobject msgQueue)
+Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv *jenv, jclass, jobject clsLoader)
 {
-    AndroidBridge::ConstructBridge(
-            jenv, jni::Object::Ref::From(clsLoader), jni::Object::Ref::From(msgQueue));
+    AndroidBridge::ConstructBridge(jenv, jni::Object::Ref::From(clsLoader));
 }
 
 NS_EXPORT void JNICALL
@@ -853,6 +852,33 @@ Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jcla
 
   nsCOMPtr<nsIRunnable> runnable = new ExitFullScreenRunnable(jenv->NewGlobalRef(view));
   NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv* jenv, jclass, jobject queue)
+{
+    static jclass jMessageQueueCls = nullptr;
+    static jfieldID jMessagesField;
+    static jmethodID jNextMethod;
+    if (!jMessageQueueCls) {
+        jMessageQueueCls = (jclass) jenv->NewGlobalRef(jenv->FindClass("android/os/MessageQueue"));
+        jNextMethod = jenv->GetMethodID(jMessageQueueCls, "next", "()Landroid/os/Message;");
+        jMessagesField = jenv->GetFieldID(jMessageQueueCls, "mMessages", "Landroid/os/Message;");
+    }
+
+    if (!jMessageQueueCls || !jNextMethod)
+        return nullptr;
+
+    if (jMessagesField) {
+        jobject msg = jenv->GetObjectField(queue, jMessagesField);
+        // if queue.mMessages is null, queue.next() will block, which we don't want
+        // It turns out to be an order of magnitude more performant to do this extra check here and
+        // block less vs. one fewer checks here and more blocking.
+        if (!msg) {
+            return nullptr;
+        }
+    }
+    return jenv->CallObjectMethod(queue, jNextMethod);
 }
 
 NS_EXPORT void JNICALL

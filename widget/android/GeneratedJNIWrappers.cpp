@@ -529,9 +529,9 @@ void GeckoAppShell::PerformHapticFeedback(bool a0)
 constexpr char GeckoAppShell::PumpMessageLoop_t::name[];
 constexpr char GeckoAppShell::PumpMessageLoop_t::signature[];
 
-bool GeckoAppShell::PumpMessageLoop(mozilla::jni::Object::Param a0)
+bool GeckoAppShell::PumpMessageLoop()
 {
-    return mozilla::jni::Method<PumpMessageLoop_t>::Call(nullptr, nullptr, a0);
+    return mozilla::jni::Method<PumpMessageLoop_t>::Call(nullptr, nullptr);
 }
 
 constexpr char GeckoAppShell::RegisterSurfaceTextureFrameListener_t::name[];

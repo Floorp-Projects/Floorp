@@ -133,9 +133,7 @@ public:
         return pthread_equal(pthread_self(), sJavaUiThread);
     }
 
-    static void ConstructBridge(JNIEnv *jEnv,
-                                jni::Object::Param clsLoader,
-                                jni::Object::Param msgQueue);
+    static void ConstructBridge(JNIEnv *jEnv, jni::Object::Param clsLoader);
 
     static AndroidBridge *Bridge() {
         return sBridge;
@@ -316,8 +314,6 @@ public:
                             const int32_t      aPort,
                             nsACString & aResult);
 
-    bool PumpMessageLoop();
-
     // Utility methods.
     static jstring NewJavaString(JNIEnv* env, const char16_t* string, uint32_t len);
     static jstring NewJavaString(JNIEnv* env, const nsAString& string);
@@ -413,10 +409,6 @@ protected:
 
     jni::Object::GlobalRef mClassLoader;
     jmethodID mClassLoaderLoadClass;
-
-    jni::Object::GlobalRef mMessageQueue;
-    jfieldID mMessageQueueMessages;
-    jmethodID mMessageQueueNext;
 
     // calls we've dlopened from libjnigraphics.so
     int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);
