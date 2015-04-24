@@ -277,10 +277,10 @@ protected:
                                 TouchContent aTouchContent = TouchContent::yes);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMArray<nsIDOMNode>& outArrayOfNodes);
-  nsresult GetNodesFromPoint(::DOMPoint point,
-                             EditAction operation,
-                             nsCOMArray<nsIDOMNode>& arrayOfNodes,
-                             bool dontTouchContent);
+  nsresult GetNodesFromPoint(::DOMPoint aPoint,
+                             EditAction aOperation,
+                             nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
+                             TouchContent aTouchContent);
   nsresult GetNodesFromSelection(mozilla::dom::Selection& aSelection,
                                  EditAction aOperation,
                                  nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
