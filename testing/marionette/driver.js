@@ -2308,7 +2308,7 @@ GeckoDriver.prototype.sendKeysToElement = function(cmd, resp) {
   let {id, value} = cmd.parameters;
 
   if (!value) {
-    throw new IllegalArgumentError(`Expected character sequence: ${value}`);
+    throw new InvalidArgumentError(`Expected character sequence: ${value}`);
   }
 
   switch (this.context) {
@@ -2341,7 +2341,7 @@ GeckoDriver.prototype.sendKeysToElement = function(cmd, resp) {
           try {
             file = new File(val);
           } catch (e) {
-            err = new IllegalArgumentError(`File not found: ${val}`);
+            err = new InvalidArgumentError(`File not found: ${val}`);
           }
           fs.push(file);
           el.mozSetFileArray(fs);

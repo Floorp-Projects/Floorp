@@ -13,7 +13,6 @@
 #include "nsAString.h"
 #include "nsAlgorithm.h"
 #include "nsAutoPtr.h"
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsEditorUtils.h"
@@ -499,14 +498,8 @@ nsresult
 nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
 {
   // First notify the listeners if any
-  int32_t listenersCount = objectResizeEventListeners.Count();
-  if (listenersCount) {
-    nsCOMPtr<nsIHTMLObjectResizeListener> listener;
-    int32_t index;
-    for (index = 0; index < listenersCount; index++) {
-      listener = objectResizeEventListeners[index];
-      listener->OnStartResizing(static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject)));
-    }
+  for (auto& listener : mObjectResizeEventListeners) {
+    listener->OnStartResizing(static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject)));
   }
 
   mIsResizing = true;
@@ -976,16 +969,10 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
                                        EmptyString());
   }
   // finally notify the listeners if any
-  int32_t listenersCount = objectResizeEventListeners.Count();
-  if (listenersCount) {
-    nsCOMPtr<nsIHTMLObjectResizeListener> listener;
-    int32_t index;
-    for (index = 0; index < listenersCount; index++) {
-      listener = objectResizeEventListeners[index];
-      listener->OnEndResizing(static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject)),
-                              mResizedObjectWidth, mResizedObjectHeight,
-                              width, height);
-    }
+  for (auto& listener : mObjectResizeEventListeners) {
+    listener->OnEndResizing(static_cast<nsIDOMElement*>(GetAsDOMNode(mResizedObject)),
+                            mResizedObjectWidth, mResizedObjectHeight, width,
+                            height);
   }
 
   // keep track of that size
@@ -1021,14 +1008,13 @@ NS_IMETHODIMP
 nsHTMLEditor::AddObjectResizeEventListener(nsIHTMLObjectResizeListener * aListener)
 {
   NS_ENSURE_ARG_POINTER(aListener);
-  if (objectResizeEventListeners.Count() &&
-      objectResizeEventListeners.IndexOf(aListener) != -1) {
+  if (mObjectResizeEventListeners.Contains(aListener)) {
     /* listener already registered */
     NS_ASSERTION(false,
                  "trying to register an already registered object resize event listener");
     return NS_OK;
   }
-  objectResizeEventListeners.AppendObject(aListener);
+  mObjectResizeEventListeners.AppendElement(*aListener);
   return NS_OK;
 }
 
@@ -1036,14 +1022,13 @@ NS_IMETHODIMP
 nsHTMLEditor::RemoveObjectResizeEventListener(nsIHTMLObjectResizeListener * aListener)
 {
   NS_ENSURE_ARG_POINTER(aListener);
-  if (!objectResizeEventListeners.Count() ||
-      objectResizeEventListeners.IndexOf(aListener) == -1) {
+  if (!mObjectResizeEventListeners.Contains(aListener)) {
     /* listener was not registered */
     NS_ASSERTION(false,
                  "trying to remove an object resize event listener that was not already registered");
     return NS_OK;
   }
-  objectResizeEventListeners.RemoveObject(aListener);
+  mObjectResizeEventListeners.RemoveElement(aListener);
   return NS_OK;
 }
 

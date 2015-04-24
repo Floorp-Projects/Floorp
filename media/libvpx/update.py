@@ -328,7 +328,7 @@ platform_files = [
 ]
 
 def prepare_upstream(prefix, commit=None):
-    upstream_url = 'https://gerrit.chromium.org/gerrit/webm/libvpx'
+    upstream_url = 'https://chromium.googlesource.com/webm/libvpx'
     if os.path.exists(prefix):
         print "Using existing repo in '%s'" % prefix
         os.chdir(prefix)
