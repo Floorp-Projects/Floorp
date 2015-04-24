@@ -9,7 +9,9 @@
 
 #include "nsDisplayList.h"
 #include "nsTHashtable.h"
+#include "nsAutoPtr.h"
 #include "mozilla/Likely.h"
+#include "mozilla/WritingModes.h"
 #include <algorithm>
 
 class nsIScrollableFrame;
@@ -58,51 +60,65 @@ class TextOverflow {
   typedef nsTHashtable<nsPtrHashKey<nsIFrame> > FrameHashtable;
 
  protected:
-  TextOverflow() {}
-  void Init(nsDisplayListBuilder*   aBuilder,
-            nsIFrame*               aBlockFrame);
+  TextOverflow(nsDisplayListBuilder* aBuilder,
+               nsIFrame* aBlockFrame);
+
+  typedef mozilla::WritingMode WritingMode;
+  typedef mozilla::LogicalRect LogicalRect;
 
   struct AlignmentEdges {
     AlignmentEdges() : mAssigned(false) {}
-    void Accumulate(const nsRect& aRect) {
+    void Accumulate(WritingMode aWM, const LogicalRect& aRect)
+    {
       if (MOZ_LIKELY(mAssigned)) {
-        x = std::min(x, aRect.X());
-        xmost = std::max(xmost, aRect.XMost());
+        mIStart = std::min(mIStart, aRect.IStart(aWM));
+        mIEnd = std::max(mIEnd, aRect.IEnd(aWM));
       } else {
-        x = aRect.X();
-        xmost = aRect.XMost();
+        mIStart = aRect.IStart(aWM);
+        mIEnd = aRect.IEnd(aWM);
         mAssigned = true;
       }
     }
-    nscoord Width() { return xmost - x; }
-    nscoord x;
-    nscoord xmost;
+    nscoord ISize() { return mIEnd - mIStart; }
+    nscoord mIStart;
+    nscoord mIEnd;
     bool mAssigned;
   };
 
   struct InnerClipEdges {
-    InnerClipEdges() : mAssignedLeft(false), mAssignedRight(false) {}
-    void AccumulateLeft(const nsRect& aRect) {
-      if (MOZ_LIKELY(mAssignedLeft)) {
-        mLeft = std::max(mLeft, aRect.X());
+    InnerClipEdges() : mAssignedIStart(false), mAssignedIEnd(false) {}
+    void AccumulateIStart(WritingMode aWM, const LogicalRect& aRect)
+    {
+      if (MOZ_LIKELY(mAssignedIStart)) {
+        mIStart = std::max(mIStart, aRect.IStart(aWM));
       } else {
-        mLeft = aRect.X();
-        mAssignedLeft = true;
+        mIStart = aRect.IStart(aWM);
+        mAssignedIStart = true;
       }
     }
-    void AccumulateRight(const nsRect& aRect) {
-      if (MOZ_LIKELY(mAssignedRight)) {
-        mRight = std::min(mRight, aRect.XMost());
+    void AccumulateIEnd(WritingMode aWM, const LogicalRect& aRect)
+    {
+      if (MOZ_LIKELY(mAssignedIEnd)) {
+        mIEnd = std::min(mIEnd, aRect.IEnd(aWM));
       } else {
-        mRight = aRect.XMost();
-        mAssignedRight = true;
+        mIEnd = aRect.IEnd(aWM);
+        mAssignedIEnd = true;
       }
     }
-    nscoord mLeft;
-    nscoord mRight;
-    bool mAssignedLeft;
-    bool mAssignedRight;
+    nscoord mIStart;
+    nscoord mIEnd;
+    bool mAssignedIStart;
+    bool mAssignedIEnd;
   };
+
+  LogicalRect
+    GetLogicalScrollableOverflowRectRelativeToBlock(nsIFrame* aFrame) const
+  {
+    return LogicalRect(mBlockWM,
+                       aFrame->GetScrollableOverflowRect() +
+                         aFrame->GetOffsetTo(mBlock),
+                       mBlockWidth);
+  }
 
   /**
    * Examines frames on the line to determine whether we should draw a left
@@ -132,8 +148,8 @@ class TextOverflow {
    *   inline-level frames that are clipped by the current marker width
    */
   void ExamineFrameSubtree(nsIFrame*       aFrame,
-                           const nsRect&   aContentArea,
-                           const nsRect&   aInsideMarkersArea,
+                           const LogicalRect& aContentArea,
+                           const LogicalRect& aInsideMarkersArea,
                            FrameHashtable* aFramesToHide,
                            AlignmentEdges* aAlignmentEdges,
                            bool*           aFoundVisibleTextOrAtomic,
@@ -160,7 +176,7 @@ class TextOverflow {
    */
   void AnalyzeMarkerEdges(nsIFrame*       aFrame,
                           const nsIAtom*  aFrameType,
-                          const nsRect&   aInsideMarkersArea,
+                          const LogicalRect& aInsideMarkersArea,
                           FrameHashtable* aFramesToHide,
                           AlignmentEdges* aAlignmentEdges,
                           bool*           aFoundVisibleTextOrAtomic,
@@ -173,37 +189,37 @@ class TextOverflow {
    * @param aFramesToHide remove display items for these frames
    * @param aInsideMarkersArea is the area inside the markers
    */
-  void PruneDisplayListContents(nsDisplayList*        aList,
+  void PruneDisplayListContents(nsDisplayList* aList,
                                 const FrameHashtable& aFramesToHide,
-                                const nsRect&         aInsideMarkersArea);
+                                const LogicalRect& aInsideMarkersArea);
 
   /**
    * ProcessLine calls this to create display items for the markers and insert
    * them into mMarkerList.
    * @param aLine the line we're processing
-   * @param aCreateLeft if true, create a marker on the left side
-   * @param aCreateRight if true, create a marker on the right side
+   * @param aCreateIStart if true, create a marker on the inline start side
+   * @param aCreateIEnd if true, create a marker on the inline end side
    * @param aInsideMarkersArea is the area inside the markers
    */
   void CreateMarkers(const nsLineBox* aLine,
-                     bool             aCreateLeft,
-                     bool             aCreateRight,
-                     const nsRect&    aInsideMarkersArea);
+                     bool aCreateIStart, bool aCreateIEnd,
+                     const LogicalRect& aInsideMarkersArea);
 
-  nsRect                 mContentArea;
+  LogicalRect            mContentArea;
   nsDisplayListBuilder*  mBuilder;
   nsIFrame*              mBlock;
   nsIScrollableFrame*    mScrollableFrame;
   nsDisplayList          mMarkerList;
-  bool                   mBlockIsRTL;
-  bool                   mCanHaveHorizontalScrollbar;
+  nscoord                mBlockWidth;
+  WritingMode            mBlockWM;
+  bool                   mCanHaveInlineAxisScrollbar;
   bool                   mAdjustForPixelSnapping;
 
   class Marker {
   public:
     void Init(const nsStyleTextOverflowSide& aStyle) {
       mInitialized = false;
-      mWidth = 0;
+      mISize = 0;
       mStyle = &aStyle;
     }
 
@@ -220,7 +236,7 @@ class TextOverflow {
     }
 
     // The current width of the marker, the range is [0 .. mIntrinsicISize].
-    nscoord                        mWidth;
+    nscoord                        mISize;
     // The intrinsic width of the marker.
     nscoord                        mIntrinsicISize;
     // The style for this side.
@@ -234,8 +250,8 @@ class TextOverflow {
     bool                           mActive;
   };
 
-  Marker mLeft;  // the horizontal left marker
-  Marker mRight; // the horizontal right marker
+  Marker mIStart; // the inline start marker
+  Marker mIEnd; // the inline end marker
 };
 
 } // namespace css

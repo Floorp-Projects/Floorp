@@ -428,12 +428,7 @@ IOInterposer::Init()
   if (!sThreadLocalData.init()) {
     return false;
   }
-#if defined(XP_WIN)
-  bool isMainThread =
-    XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro;
-#else
   bool isMainThread = true;
-#endif
   RegisterCurrentThread(isMainThread);
   sMasterList = new MasterList();
 

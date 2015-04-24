@@ -1104,7 +1104,18 @@ class ADBDevice(ADBCommand):
 
     # Informational methods
 
-    def clear_logcat(self, timeout=None):
+    def _get_logcat_buffer_args(self, buffers):
+        valid_buffers = set(['radio', 'main', 'events'])
+        invalid_buffers = set(buffers).difference(valid_buffers)
+        if invalid_buffers:
+            raise ADBError('Invalid logcat buffers %s not in %s ' % (
+                list(invalid_buffers), list(valid_buffers)))
+        args = []
+        for b in buffers:
+            args.extend(['-b', b])
+        return args
+
+    def clear_logcat(self, timeout=None, buffers=["main"]):
         """Clears logcat via adb logcat -c.
 
         :param timeout: optional integer specifying the maximum time in
@@ -1113,23 +1124,28 @@ class ADBDevice(ADBCommand):
             adb call. The total time spent may exceed this
             value. If it is not specified, the value set
             in the ADBDevice constructor is used.
+        :param buffers: list of log buffers to clear. Valid buffers are
+            "radio", "events", and "main". Defaults to "main".
         :raises: * ADBTimeoutError
                  * ADBError
 
         """
-        self.command_output(["logcat", "-c"], timeout=timeout)
+        buffers = self._get_logcat_buffer_args(buffers)
+        cmds = ["logcat", "-c"] + buffers
+        self.command_output(cmds, timeout=timeout)
 
     def get_logcat(self,
-                  filter_specs=[
-                      "dalvikvm:I",
-                      "ConnectivityService:S",
-                      "WifiMonitor:S",
-                      "WifiStateTracker:S",
-                      "wpa_supplicant:S",
-                      "NetworkStateTracker:S"],
-                  format="time",
-                  filter_out_regexps=[],
-                  timeout=None):
+                   filter_specs=[
+                       "dalvikvm:I",
+                       "ConnectivityService:S",
+                       "WifiMonitor:S",
+                       "WifiStateTracker:S",
+                       "wpa_supplicant:S",
+                       "NetworkStateTracker:S"],
+                   format="time",
+                   filter_out_regexps=[],
+                   timeout=None,
+                   buffers=["main"]):
         """Returns the contents of the logcat file as a list of strings.
 
         :param filter_specs: optional list containing logcat messages to
@@ -1143,12 +1159,15 @@ class ADBDevice(ADBCommand):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADBDevice constructor is used.
+        :param buffers: list of log buffers to retrieve. Valid buffers are
+            "radio", "events", and "main". Defaults to "main".
         :returns: list of lines logcat output.
         :raises: * ADBTimeoutError
                  * ADBError
 
         """
-        cmds = ["logcat", "-v", format, "-d"] + filter_specs
+        buffers = self._get_logcat_buffer_args(buffers)
+        cmds = ["logcat", "-v", format, "-d"] + buffers + filter_specs
         lines = self.command_output(cmds, timeout=timeout).split('\r')
 
         for regex in filter_out_regexps:

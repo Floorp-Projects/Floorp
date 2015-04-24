@@ -1878,7 +1878,7 @@ public:
    *
    * Making the fullscreen API content only is useful on platforms where we
    * still want chrome to be visible or accessible while content is
-   * fullscreen, like on Windows 8 in Metro mode.
+   * fullscreen.
    *
    * Note that if the fullscreen API is content only, chrome can still go
    * fullscreen by setting the "fullScreen" attribute on its XUL window.

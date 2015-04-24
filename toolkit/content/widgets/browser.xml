@@ -657,7 +657,7 @@
 
       <field name="blockedPopups">null</field>
 
-      <!-- Obsolete name for blockedPopups. Used by metro and android. -->
+      <!-- Obsolete name for blockedPopups. Used by android. -->
       <property name="pageReport"
          onget="return this.blockedPopups;"
          readonly="true"/>

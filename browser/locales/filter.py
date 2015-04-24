@@ -20,8 +20,7 @@ def test(mod, path, entity = None):
     if mod == "extensions/spellcheck":
       return "ignore"
     # browser
-    if (re.match(r"searchplugins\/.+\.xml", path) or
-        path == "searchplugins/metrolist.txt"):
+    if (re.match(r"searchplugins\/.+\.xml", path):
       return "ignore"
     return "error"
   if mod == "extensions/spellcheck":

@@ -142,6 +142,8 @@ private:
   }
 
   nsTArray<nsRefPtr<AbstractWatcher>> mWatchers;
+
+protected:
   const char* mName;
 };
 

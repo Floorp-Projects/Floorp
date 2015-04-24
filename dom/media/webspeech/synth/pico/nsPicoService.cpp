@@ -462,7 +462,8 @@ nsPicoService::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP
 nsPicoService::Speak(const nsAString& aText, const nsAString& aUri,
-                     float aRate, float aPitch, nsISpeechTask* aTask)
+                     float aVolume, float aRate, float aPitch,
+                     nsISpeechTask* aTask)
 {
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_AVAILABLE);
 

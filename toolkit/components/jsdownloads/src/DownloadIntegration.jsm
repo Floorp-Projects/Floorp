@@ -461,13 +461,7 @@ this.DownloadIntegration = {
 #elifdef MOZ_WIDGET_GONK
       directoryPath = yield this.getSystemDownloadsDirectory();
 #else
-      // For Metro mode on Windows 8,  we want searchability for documents
-      // that the user chose to open with an external application.
-      if (Services.metro && Services.metro.immersive) {
-        directoryPath = yield this.getSystemDownloadsDirectory();
-      } else {
-        directoryPath = this._getDirectory("TmpD");
-      }
+      directoryPath = this._getDirectory("TmpD");
 #endif
       throw new Task.Result(directoryPath);
     }.bind(this));

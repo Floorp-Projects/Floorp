@@ -23,6 +23,7 @@
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/DocAccessibleChild.h"
 #endif
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
@@ -53,6 +54,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
+#include "mozilla/widget/WidgetMessageUtils.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)
@@ -151,6 +153,10 @@
 #ifdef MOZ_NUWA_PROCESS
 #include <setjmp.h>
 #include "ipc/Nuwa.h"
+#endif
+
+#ifdef MOZ_GAMEPAD
+#include "mozilla/dom/GamepadService.h"
 #endif
 
 #include "mozilla/dom/File.h"
@@ -2770,6 +2776,18 @@ ContentChild::DeallocPContentPermissionRequestChild(PContentPermissionRequestChi
 {
     auto child = static_cast<RemotePermissionRequest*>(actor);
     child->IPDLRelease();
+    return true;
+}
+
+bool
+ContentChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
+{
+#ifdef MOZ_GAMEPAD
+    nsRefPtr<GamepadService> svc(GamepadService::GetService());
+    if (svc) {
+        svc->Update(aGamepadEvent);
+    }
+#endif
     return true;
 }
 
