@@ -666,6 +666,17 @@ js::GCMarker::traverse(S source, T target)
     traverse(target);
 }
 
+namespace js {
+// Special-case JSObject->JSObject edges to check the compartment too.
+template <>
+void
+GCMarker::traverse(JSObject* source, JSObject* target)
+{
+    MOZ_ASSERT(target->compartment() == source->compartment());
+    traverse(target);
+}
+} // namespace js
+
 template <typename V, typename S> struct TraverseFunctor : public VoidDefaultAdaptor<V> {
     template <typename T> void operator()(T t, GCMarker* gcmarker, S s) {
         return gcmarker->traverse(s, t);
@@ -1631,8 +1642,8 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         while (*unboxedTraceList != -1) {
             JSObject* obj2 = *reinterpret_cast<JSObject**>(unboxedMemory + *unboxedTraceList);
             MOZ_ASSERT_IF(obj2, obj->compartment() == obj2->compartment());
-            if (obj2 && mark(obj2))
-                repush(obj2);
+            if (obj2)
+                traverse(obj, obj2);
             unboxedTraceList++;
         }
         unboxedTraceList++;
@@ -1641,10 +1652,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             if (v.isString()) {
                 traverse(obj, v.toString());
             } else if (v.isObject()) {
-                JSObject* obj2 = &v.toObject();
-                MOZ_ASSERT(obj->compartment() == obj2->compartment());
-                if (mark(obj2))
-                    repush(obj2);
+                traverse(obj, &v.toObject());
             } else if (v.isSymbol()) {
                 traverse(obj, v.toSymbol());
             }
@@ -1664,7 +1672,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         }
 
         ObjectGroup* group = obj->groupFromGC();
-        traverse(group);
+        traverse(obj, group);
 
         /* Call the trace hook if necessary. */
         const Class* clasp = group->clasp();
@@ -1677,7 +1685,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                           clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
             if (clasp->trace == InlineTypedObject::obj_trace) {
                 Shape* shape = obj->as<InlineTypedObject>().shapeFromGC();
-                traverse(shape);
+                traverse(obj, shape);
                 TypeDescr* descr = &obj->as<InlineTypedObject>().typeDescr();
                 if (!descr->hasTraceList())
                     return;
@@ -1687,8 +1695,8 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             }
             if (clasp == &UnboxedPlainObject::class_) {
                 JSObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-                if (expando && mark(expando))
-                    repush(expando);
+                if (expando)
+                    traverse(obj, expando);
                 const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
                 unboxedTraceList = layout.traceList();
                 if (!unboxedTraceList)
@@ -1705,7 +1713,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         NativeObject* nobj = &obj->as<NativeObject>();
 
         Shape* shape = nobj->lastProperty();
-        traverse(shape);
+        traverse(obj, shape);
 
         unsigned nslots = nobj->slotSpan();
 
@@ -1716,7 +1724,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             if (nobj->denseElementsAreCopyOnWrite()) {
                 JSObject* owner = nobj->getElementsHeader()->ownerObject();
                 if (owner != nobj) {
-                    traverse(owner);
+                    traverse(obj, owner);
                     break;
                 }
             }
