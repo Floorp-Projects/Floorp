@@ -878,6 +878,79 @@ js::GCMarker::eagerlyMarkChildren(JSRope* rope)
     MOZ_ASSERT(savedPos == stack.position());
 }
 
+void
+js::ObjectGroup::traceChildren(JSTracer* trc)
+{
+    unsigned count = getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        if (ObjectGroup::Property* prop = getProperty(i))
+            TraceEdge(trc, &prop->id, "group_property");
+    }
+
+    if (proto().isObject())
+        TraceEdge(trc, &protoRaw(), "group_proto");
+
+    if (newScript())
+        newScript()->trace(trc);
+
+    if (maybePreliminaryObjects())
+        maybePreliminaryObjects()->trace(trc);
+
+    if (maybeUnboxedLayout())
+        unboxedLayout().trace(trc);
+
+    if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup()) {
+        TraceManuallyBarrieredEdge(trc, &unboxedGroup, "group_original_unboxed_group");
+        setOriginalUnboxedGroup(unboxedGroup);
+    }
+
+    if (JSObject* descr = maybeTypeDescr()) {
+        TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
+        setTypeDescr(&descr->as<TypeDescr>());
+    }
+
+    if (JSObject* fun = maybeInterpretedFunction()) {
+        TraceManuallyBarrieredEdge(trc, &fun, "group_function");
+        setInterpretedFunction(&fun->as<JSFunction>());
+    }
+}
+void
+js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
+{
+    unsigned count = group->getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        if (ObjectGroup::Property* prop = group->getProperty(i))
+            traverse(group, prop->id.get());
+    }
+
+    if (group->proto().isObject())
+        traverse(group, group->proto().toObject());
+
+    group->compartment()->mark();
+
+    if (GlobalObject* global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
+        traverse(group, static_cast<JSObject*>(global));
+
+    if (group->newScript())
+        group->newScript()->trace(this);
+
+    if (group->maybePreliminaryObjects())
+        group->maybePreliminaryObjects()->trace(this);
+
+    if (group->maybeUnboxedLayout())
+        group->unboxedLayout().trace(this);
+
+    if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup())
+        traverse(group, unboxedGroup);
+
+    if (TypeDescr* descr = group->maybeTypeDescr())
+        traverse(group, static_cast<JSObject*>(descr));
+
+    if (JSFunction* fun = group->maybeInterpretedFunction())
+        traverse(group, static_cast<JSObject*>(fun));
+}
+
+
 template <typename T>
 static inline void
 CheckIsMarkedThing(T* thingp)
@@ -1295,79 +1368,6 @@ gc::MarkCycleCollectorChildren(JSTracer* trc, ObjectGroup* group)
     }
 }
 
-static void
-ScanObjectGroup(GCMarker* gcmarker, ObjectGroup* group)
-{
-    unsigned count = group->getPropertyCount();
-    for (unsigned i = 0; i < count; i++) {
-        if (ObjectGroup::Property* prop = group->getProperty(i))
-            DoMarking(gcmarker, prop->id.get());
-    }
-
-    if (group->proto().isObject())
-        gcmarker->traverse(group->proto().toObject());
-
-    group->compartment()->mark();
-
-    if (GlobalObject* global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
-        gcmarker->traverse(static_cast<JSObject*>(global));
-
-    if (group->newScript())
-        group->newScript()->trace(gcmarker);
-
-    if (group->maybePreliminaryObjects())
-        group->maybePreliminaryObjects()->trace(gcmarker);
-
-    if (group->maybeUnboxedLayout())
-        group->unboxedLayout().trace(gcmarker);
-
-    if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup())
-        gcmarker->traverse(unboxedGroup);
-
-    if (TypeDescr* descr = group->maybeTypeDescr())
-        gcmarker->traverse(static_cast<JSObject*>(descr));
-
-    if (JSFunction* fun = group->maybeInterpretedFunction())
-        gcmarker->traverse(static_cast<JSObject*>(fun));
-}
-
-void
-js::ObjectGroup::traceChildren(JSTracer* trc)
-{
-    unsigned count = getPropertyCount();
-    for (unsigned i = 0; i < count; i++) {
-        if (ObjectGroup::Property* prop = getProperty(i))
-            TraceEdge(trc, &prop->id, "group_property");
-    }
-
-    if (proto().isObject())
-        TraceEdge(trc, &protoRaw(), "group_proto");
-
-    if (newScript())
-        newScript()->trace(trc);
-
-    if (maybePreliminaryObjects())
-        maybePreliminaryObjects()->trace(trc);
-
-    if (maybeUnboxedLayout())
-        unboxedLayout().trace(trc);
-
-    if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup()) {
-        TraceManuallyBarrieredEdge(trc, &unboxedGroup, "group_original_unboxed_group");
-        setOriginalUnboxedGroup(unboxedGroup);
-    }
-
-    if (JSObject* descr = maybeTypeDescr()) {
-        TraceManuallyBarrieredEdge(trc, &descr, "group_type_descr");
-        setTypeDescr(&descr->as<TypeDescr>());
-    }
-
-    if (JSObject* fun = maybeInterpretedFunction()) {
-        TraceManuallyBarrieredEdge(trc, &fun, "group_function");
-        setInterpretedFunction(&fun->as<JSFunction>());
-    }
-}
-
 template<typename T>
 static void
 PushArenaTyped(GCMarker* gcmarker, ArenaHeader* aheader)
@@ -1532,7 +1532,7 @@ void
 GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
 {
     if (tag == GroupTag) {
-        ScanObjectGroup(this, reinterpret_cast<ObjectGroup*>(addr));
+        lazilyMarkChildren(reinterpret_cast<ObjectGroup*>(addr));
     } else if (tag == SavedValueArrayTag) {
         MOZ_ASSERT(!(addr & CellMask));
         NativeObject* obj = reinterpret_cast<NativeObject*>(addr);
