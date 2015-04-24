@@ -93,67 +93,6 @@ NS_NewThread(nsIThread** aResult, nsIRunnable* aEvent, uint32_t aStackSize)
   return NS_OK;
 }
 
-#if defined(MOZ_NUWA_PROCESS) && !defined(XPCOM_GLUE_AVOID_NSPR)
-
-namespace {
-class IgnoreThreadStatusRunnable : public nsIRunnable
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-private:
-  virtual ~IgnoreThreadStatusRunnable() = default;
-};
-
-NS_IMPL_ISUPPORTS(IgnoreThreadStatusRunnable, nsIRunnable)
-
-NS_IMETHODIMP IgnoreThreadStatusRunnable::Run(void)
-{
-#ifdef MOZILLA_INTERNAL_API
-  nsThreadManager::get()->SetIgnoreThreadStatus();
-  return NS_OK;
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-} // Anonymous namespace.
-#endif // defined(MOZ_NUWA_PROCESS) && !defined(XPCOM_GLUE_AVOID_NSPR)
-
-NS_METHOD
-NS_NewUnmonitoredThread(nsIThread** aResult,
-                        nsIRunnable* aEvent,
-                        uint32_t aStackSize)
-{
-#if defined(MOZ_NUWA_PROCESS) && !defined(XPCOM_GLUE_AVOID_NSPR)
-  // Hold a ref while dispatching the initial event to match NS_NewThread()
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewThread(getter_AddRefs(thread), nullptr, aStackSize);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIRunnable> ignoreme = new IgnoreThreadStatusRunnable();
-  rv = thread->Dispatch(ignoreme, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (aEvent) {
-    rv = thread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  *aResult = nullptr;
-  thread.swap(*aResult);
-  return rv;
-#else
-  return NS_NewThread(aResult, aEvent, aStackSize);
-#endif
-}
-
 NS_METHOD
 NS_GetCurrentThread(nsIThread** aResult)
 {
