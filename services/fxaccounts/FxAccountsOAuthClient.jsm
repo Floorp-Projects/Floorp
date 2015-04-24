@@ -163,14 +163,15 @@ this.FxAccountsOAuthClient.prototype = {
      *        Command webChannelId
      * @param message {Object}
      *        Command message
-     * @param target {EventTarget}
-     *        Channel message event target
+     * @param sendingContext {Object}
+     *        Channel message event sendingContext
      * @private
      */
-    let listener = function (webChannelId, message, target) {
+    let listener = function (webChannelId, message, sendingContext) {
       if (message) {
         let command = message.command;
         let data = message.data;
+        let target = sendingContext && sendingContext.browser;
 
         switch (command) {
           case "oauth_complete":
