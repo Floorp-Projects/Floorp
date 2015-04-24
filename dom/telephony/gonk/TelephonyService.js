@@ -805,17 +805,16 @@ TelephonyService.prototype = {
       childCall.isMergeable = true;
 
       // Manual update call state according to the request response.
-      this._handleCallStateChanged(aClientId, childCall);
+      this._handleCallStateChanged(aClientId, [childCall]);
 
       childCall.state = nsITelephonyService.CALL_STATE_CONNECTED;
-      this._handleCallStateChanged(aClientId, childCall);
 
       let parentCall = this._currentCalls[aClientId][childCall.parentId];
       parentCall.childId = CDMA_SECOND_CALL_INDEX;
       parentCall.state = nsITelephonyService.CALL_STATE_HELD;
       parentCall.isSwitchable = false;
       parentCall.isMergeable = true;
-      this._handleCallStateChanged(aClientId, parentCall);
+      this._handleCallStateChanged(aClientId, [childCall, parentCall]);
     });
   },
 
@@ -1026,7 +1025,7 @@ TelephonyService.prototype = {
 
   /**
    * Identify the conference group.
-   * Return the conference state and a array of calls in group.
+   * @return [conference state, array of calls in group]
    *
    * TODO: handle multi-sim case.
    */
@@ -1049,6 +1048,30 @@ TelephonyService.prototype = {
     }
 
     return [nsITelephonyService.CALL_STATE_UNKNOWN, null];
+  },
+
+  /**
+   * Update the isConference flag of all Calls.
+   *
+   * @return [conference state, array of calls being updated]
+   */
+  _updateConference: function(aClientId) {
+    let [newConferenceState, conferenceCalls] = this._detectConference(aClientId);
+    if (DEBUG) debug("Conference state: " + newConferenceState);
+
+    let changedCalls = [];
+    let conference = new Set(conferenceCalls);
+
+    for (let i in this._currentCalls[aClientId]) {
+      let call = this._currentCalls[aClientId][i];
+      let isConference = conference.has(call);
+      if (call.isConference != isConference) {
+        call.isConference = isConference;
+        changedCalls.push(call);
+      }
+    }
+
+    return [newConferenceState, changedCalls];
   },
 
   sendTones: function(aClientId, aDtmfChars, aPauseDuration, aToneDuration,
@@ -1249,12 +1272,14 @@ TelephonyService.prototype = {
         return;
       }
 
+      let calls = [];
       for (let index in this._currentCalls[aClientId]) {
         let call = this._currentCalls[aClientId][index];
         call.state = nsITelephonyService.CALL_STATE_CONNECTED;
         call.isConference = true;
-        this._handleCallStateChanged(aClientId, call);
+        calls.push(call);
       }
+      this._handleCallStateChanged(aClientId, calls);
       this._handleConferenceCallStateChanged(nsITelephonyService.CALL_STATE_CONNECTED);
 
       aCallback.notifySuccess();
@@ -1289,6 +1314,19 @@ TelephonyService.prototype = {
     });
   },
 
+  _removeCdmaSecondCall: function(aClientId) {
+    let childCall = this._currentCalls[aClientId][CDMA_SECOND_CALL_INDEX];
+    let parentCall = this._currentCalls[aClientId][CDMA_FIRST_CALL_INDEX];
+
+    this._disconnectCalls(aClientId, [childCall]);
+
+    parentCall.isConference = false;
+    parentCall.isSwitchable = true;
+    parentCall.isMergeable = true;
+    this._handleCallStateChanged(aClientId, [childCall, parentCall]);
+    this._handleConferenceCallStateChanged(nsITelephonyService.CALL_STATE_UNKNOWN);
+  },
+
   // See 3gpp2, S.R0006-522-A v1.0. Table 4, XID 6S.
   // Release the third party. Optionally apply a warning tone. Connect the
   // controlling subscriber and the second party. Go to the 2-way state.
@@ -1302,9 +1340,7 @@ TelephonyService.prototype = {
         return;
       }
 
-      let childCall = this._currentCalls[aClientId][CDMA_SECOND_CALL_INDEX];
-      this._handleCallDisconnected(aClientId, childCall);
-
+      this._removeCdmaSecondCall(aClientId);
       aCallback.notifySuccess();
     });
   },
@@ -1387,17 +1423,11 @@ TelephonyService.prototype = {
    * nsIGonkTelephonyService interface.
    */
 
-  /**
-   * Handle call disconnects by updating our current state and the audio system.
-   */
-  _handleCallDisconnected: function(aClientId, aCall) {
-    if (DEBUG) debug("handleCallDisconnected: " + JSON.stringify(aCall));
-
-    aCall.state = nsITelephonyService.CALL_STATE_DISCONNECTED;
+  _notifyCallEnded: function(aCall) {
     let duration = ("started" in aCall && typeof aCall.started == "number") ?
       new Date().getTime() - aCall.started : 0;
 
-    gTelephonyMessenger.notifyCallEnded(aClientId,
+    gTelephonyMessenger.notifyCallEnded(aCall.clientId,
                                         aCall.number,
                                         this._cdmaCallWaitingNumber,
                                         aCall.isEmergency,
@@ -1407,46 +1437,61 @@ TelephonyService.prototype = {
 
     // Clear cache of this._cdmaCallWaitingNumber after call disconnected.
     this._cdmaCallWaitingNumber = null;
+  },
 
-    let manualConfStateChange = false;
-    let childId = this._currentCalls[aClientId][aCall.callIndex].childId;
-    if (childId) {
-      // Child cannot live without parent.
-      let childCall = this._currentCalls[aClientId][childId];
-      this._handleCallDisconnected(aClientId, childCall);
-    } else {
-      let parentId = this._currentCalls[aClientId][aCall.callIndex].parentId;
-      if (parentId) {
-        let parentCall = this._currentCalls[aClientId][parentId];
-        // The child is going to be released.
-        delete parentCall.childId;
-        if (parentCall.isConference) {
-          // As the child is going to be gone, the parent should be moved out
-          // of conference accordingly.
-          manualConfStateChange = true;
-          parentCall.isConference = false;
-          parentCall.isSwitchable = true;
-          parentCall.isMergeable = true;
-          aCall.isConference = false;
-          this._handleCallStateChanged(aClientId, parentCall);
-        }
+  /**
+   * Disconnect calls by updating their states. Sometimes, it may cause other
+   * calls being disconnected as well.
+   *
+   * @return Array a list of calls we need to fire callStateChange
+   *
+   * TODO: The list currently doesn't contain calls that we fire notifyError
+   * for them. However, after Bug 1147736, notifyError is replaced by
+   * callStateChanged and those calls should be included in the list.
+   */
+  _disconnectCalls: function(aClientId, aCalls,
+                             aFailCause = RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
+    if (DEBUG) debug("_disconnectCalls: " + JSON.stringify(aCalls));
+
+    // Child cannot live without parent. Let's find all the calls that need to
+    // be disconnected.
+    let disconnectedCalls = aCalls.slice();
+
+    for (let call in aCalls) {
+      while (call.childId) {
+        call = this._currentCalls[aClientId][call.childId];
+        disconnectedCalls.push(call);
       }
     }
 
-    if (aCall.hangUpLocal || !aCall.failCause ||
-        aCall.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
-      let callInfo = new TelephonyCallInfo(aCall);
-      this._notifyAllListeners("callStateChanged", [callInfo]);
-    } else {
-      this._notifyAllListeners("notifyError",
-                               [aClientId, aCall.callIndex, aCall.failCause]);
-    }
+    // Store unique value in the list.
+    disconnectedCalls = [...Set(disconnectedCalls)];
 
-    delete this._currentCalls[aClientId][aCall.callIndex];
+    let callsForStateChanged = [];
 
-    if (manualConfStateChange) {
-      this._handleConferenceCallStateChanged(nsITelephonyService.CALL_STATE_UNKNOWN);
-    }
+    disconnectedCalls.forEach(call => {
+      call.state = nsITelephonyService.CALL_STATE_DISCONNECTED;
+      call.failCause = aFailCause;
+
+      if (call.parentId) {
+        let parentCall = this._currentCalls[aClientId][call.parentId];
+        delete parentCall.childId;
+      }
+
+      this._notifyCallEnded(call);
+
+      if (call.hangUpLocal || !call.failCause ||
+          call.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
+        callsForStateChanged.push(call);
+      } else {
+        this._notifyAllListeners("notifyError",
+                                 [aClientId, call.callIndex, call.failCause]);
+      }
+
+      delete this._currentCalls[aClientId][call.callIndex];
+    });
+
+    return callsForStateChanged;
   },
 
   /**
@@ -1531,27 +1576,14 @@ TelephonyService.prototype = {
 
     // For correct conference detection, we should mark removedCalls as
     // DISCONNECTED first.
-    removedCalls.forEach(call => {
-      call.state = nsITelephonyService.CALL_STATE_DISCONNECTED;
-      call.failCause = aFailCause;
-      this._handleCallDisconnected(aClientId, call);
-    });
+    let disconnectedCalls = this._disconnectCalls(aClientId, [...removedCalls], aFailCause);
+    disconnectedCalls.forEach(call => changedCalls.add(call));
 
     // Detect conference and update isConference flag.
-    let [newConferenceState, conferenceCalls] = this._detectConference(aClientId);
-    if (DEBUG) debug("Conference state: " + newConferenceState);
+    let [newConferenceState, conferenceChangedCalls] = this._updateConference(aClientId);
+    conferenceChangedCalls.forEach(call => changedCalls.add(call));
 
-    let conference = new Set(conferenceCalls);
-    for (let i in this._currentCalls[aClientId]) {
-      let call = this._currentCalls[aClientId][i];
-      let isConference = conference.has(call);
-      if (call.isConference != isConference) {
-        call.isConference = isConference;
-        changedCalls.add(call);
-      }
-    }
-
-    changedCalls.forEach(call => this._handleCallStateChanged(aClientId, call));
+    this._handleCallStateChanged(aClientId, [...changedCalls]);
 
     // Should handle conferenceCallStateChange after callStateChanged and
     // callDisconnected.
@@ -1575,15 +1607,15 @@ TelephonyService.prototype = {
   /**
    * Handle call state changes.
    */
-  _handleCallStateChanged: function(aClientId, aCall) {
-    if (DEBUG) debug("handleCallStateChange: " + JSON.stringify(aCall));
+  _handleCallStateChanged: function(aClientId, aCalls) {
+    if (DEBUG) debug("handleCallStateChanged: " + JSON.stringify(aCalls));
 
-    if (aCall.state == nsITelephonyService.CALL_STATE_DIALING) {
+    if (aCalls.some(call => call.state == nsITelephonyService.CALL_STATE_DIALING)) {
       gTelephonyMessenger.notifyNewCall();
     }
 
-    let callInfo = new TelephonyCallInfo(aCall);
-    this._notifyAllListeners("callStateChanged", [callInfo]);
+    let allInfo = aCalls.map(call => new TelephonyCallInfo(call));
+    this._notifyAllListeners("callStateChanged", [allInfo.length, allInfo]);
   },
 
   notifyCdmaCallWaiting: function(aClientId, aCall) {
@@ -1595,7 +1627,7 @@ TelephonyService.prototype = {
     if (call) {
       // TODO: Bug 977503 - B2G RIL: [CDMA] update callNumber when a waiting
       // call comes after a 3way call.
-      this._handleCallDisconnected(aClientId, call);
+      this._removeCdmaSecondCall(aClientId);
     }
 
     this._cdmaCallWaitingNumber = aCall.number;
