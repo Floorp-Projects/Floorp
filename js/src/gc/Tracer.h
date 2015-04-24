@@ -14,6 +14,8 @@
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
 
+class JSLinearString;
+class JSRope;
 namespace js {
 class BaseShape;
 class GCMarker;
@@ -245,9 +247,11 @@ class GCMarker : public JSTracer
     template <typename T> void markAndTraceChildren(T* thing);
     template <typename T> void markAndPush(StackTag tag, T* thing);
     template <typename T> void markAndScan(T* thing);
-    void eagerlyMarkChildren(Shape* shape);
+    void eagerlyMarkChildren(JSLinearString* str);
+    void eagerlyMarkChildren(JSRope* rope);
     void eagerlyMarkChildren(JSString* str);
     void eagerlyMarkChildren(LazyScript *thing);
+    void eagerlyMarkChildren(Shape* shape);
 
     // We may not have concrete types yet, so this has to be out of the header.
     template <typename T>
