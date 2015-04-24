@@ -1280,6 +1280,12 @@ var gBrowserInit = {
     gHomeButton.updateTooltip(homeButton);
     gHomeButton.updatePersonalToolbarStyle(homeButton);
 
+    let safeMode = document.getElementById("helpSafeMode");
+    if (Services.appinfo.inSafeMode) {
+      safeMode.label = safeMode.getAttribute("stoplabel");
+      safeMode.accesskey = safeMode.getAttribute("stopaccesskey");
+    }
+
     // BiDi UI
     gBidiUI = isBidiEnabled();
     if (gBidiUI) {
@@ -2386,9 +2392,11 @@ function URLBarSetURI(aURI) {
 }
 
 function losslessDecodeURI(aURI) {
-  var value = aURI.spec;
   if (aURI.schemeIs("moz-action"))
     throw new Error("losslessDecodeURI should never get a moz-action URI");
+
+  var value = aURI.spec;
+
   // Try to decode as UTF-8 if there's no encoding sequence that we would break.
   if (!/%25(?:3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/i.test(value))
     try {
@@ -7473,6 +7481,18 @@ Object.defineProperty(this, "HUDService", {
 
 // Prompt user to restart the browser in safe mode
 function safeModeRestart() {
+  if (Services.appinfo.inSafeMode) {
+    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
+                     createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+    if (cancelQuit.data)
+      return;
+
+    Services.startup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);
+    return;
+  }
+
   Services.obs.notifyObservers(null, "restart-in-safe-mode", "");
 }
 

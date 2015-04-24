@@ -430,7 +430,7 @@ PerformanceActorsConnection.prototype = {
   stopRecording: Task.async(function*(model) {
     // If model isn't in the PerformanceActorsConnections internal store,
     // then do nothing.
-    if (!this._recordings.includes(model)) {
+    if (this._recordings.indexOf(model) === -1) {
       return;
     }
 
