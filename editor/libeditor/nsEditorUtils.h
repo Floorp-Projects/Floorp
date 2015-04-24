@@ -167,8 +167,8 @@ class MOZ_STACK_CLASS nsAutoUpdateViewBatch
 class nsBoolDomIterFunctor 
 {
   public:
-    virtual bool operator()(nsIDOMNode* aNode)=0;
-    bool operator()(nsINode* aNode)
+    virtual bool operator()(nsIDOMNode* aNode) const = 0;
+    bool operator()(nsINode* aNode) const
     {
       return operator()(GetAsDOMNode(aNode));
     }
@@ -181,9 +181,9 @@ class MOZ_STACK_CLASS nsDOMIterator
     explicit nsDOMIterator(nsIDOMNode& aNode);
     virtual ~nsDOMIterator();
 
-    void AppendList(nsBoolDomIterFunctor& functor,
+    void AppendList(const nsBoolDomIterFunctor& functor,
                     nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
-    void AppendList(nsBoolDomIterFunctor& functor,
+    void AppendList(const nsBoolDomIterFunctor& functor,
                     nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
     nsCOMPtr<nsIContentIterator> mIter;
@@ -202,7 +202,8 @@ class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
 class nsTrivialFunctor : public nsBoolDomIterFunctor
 {
   public:
-    virtual bool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
+    // Used to build list of all nodes iterator covers
+    virtual bool operator()(nsIDOMNode* aNode) const
     {
       return true;
     }
