@@ -38,7 +38,7 @@ protected:
                       const nsString& aError) override;
 
   virtual bool
-  RecvNotifyCallStateChanged(nsITelephonyCallInfo* const& aInfo) override;
+  RecvNotifyCallStateChanged(nsTArray<nsITelephonyCallInfo*>&& aAllInfo) override;
 
   virtual bool
   RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,

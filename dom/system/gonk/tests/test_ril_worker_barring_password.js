@@ -48,9 +48,7 @@ add_test(function test_check_change_call_barring_password_result() {
   context.RIL.changeCallBarringPassword =
     function fakeChangeCallBarringPassword(options) {
       barringPasswordOptions = options;
-      context.RIL[REQUEST_CHANGE_BARRING_PASSWORD](0, {
-        rilRequestError: ERROR_SUCCESS
-      });
+      context.RIL[REQUEST_CHANGE_BARRING_PASSWORD](0, {});
     };
 
   context.RIL.changeCallBarringPassword({pin: PIN, newPin: NEW_PIN});
