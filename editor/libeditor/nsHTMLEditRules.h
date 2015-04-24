@@ -193,10 +193,8 @@ protected:
   nsresult DidAbsolutePosition();
   nsresult AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType);
   nsresult AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignType);
-  nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
+  nsresult AppendInnerFormatNodes(nsTArray<nsCOMPtr<nsINode>>& aArray,
                                   nsINode* aNode);
-  nsresult AppendInnerFormatNodes(nsCOMArray<nsIDOMNode>& aArray,
-                                  nsIDOMNode *aNode);
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
   enum class Lists { no, yes };
   enum class Tables { no, yes };
@@ -292,7 +290,9 @@ protected:
                               EntireList aEntireList,
                               TouchContent aTouchContent = TouchContent::yes);
   void GetDefinitionListItemTypes(mozilla::dom::Element* aElement, bool* aDT, bool* aDD);
-  nsresult GetParagraphFormatNodes(nsCOMArray<nsIDOMNode>& outArrayOfNodes, bool aDontTouchContent=false);
+  nsresult GetParagraphFormatNodes(
+      nsTArray<nsCOMPtr<nsINode>>& outArrayOfNodes,
+      TouchContent aTouchContent = TouchContent::yes);
   void LookInsideDivBQandList(nsTArray<nsCOMPtr<nsINode>>& aNodeArray);
   nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
   nsresult BustUpInlinesAtBRs(nsINode& aNode,
