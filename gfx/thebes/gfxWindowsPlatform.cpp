@@ -2026,6 +2026,10 @@ gfxWindowsPlatform::InitD3D11Devices()
 
     mD3D11ContentDevice->SetExceptionMode(0);
 
+    nsRefPtr<ID3D10Multithread> multi;
+    mD3D11ContentDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+    multi->SetMultithreadProtected(TRUE);
+
     Factory::SetDirect3D11Device(mD3D11ContentDevice);
   }
 
