@@ -257,7 +257,7 @@ NS_IMPL_ISUPPORTS(CompareCache, nsIStreamLoaderObserver)
 class CompareManager final : public PromiseNativeHandler
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(CompareManager)
+  NS_INLINE_DECL_REFCOUNTING(CompareManager, override)
 
   explicit CompareManager(CompareCallback* aCallback)
     : mCallback(aCallback)
