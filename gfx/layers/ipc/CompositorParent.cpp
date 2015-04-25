@@ -1152,12 +1152,6 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     if (mPaused) {
       DidComposite();
     }
-    // When testing we synchronously update the shadow tree with the animated
-    // values to avoid race conditions when calling GetAnimationTransform etc.
-    // (since the above SetShadowProperties will remove animation effects).
-    if (mIsTesting) {
-      ApplyAsyncProperties(aLayerTree);
-    }
   }
   mLayerManager->NotifyShadowTreeTransaction();
 }
@@ -1210,16 +1204,15 @@ CompositorParent::ApplyAsyncProperties(LayerTransactionParent* aLayerTree)
   // true or when called from test-only methods like
   // LayerTransactionParent::RecvGetAnimationTransform.
 
-  // Synchronously update the layer tree, but only if a composite was already
-  // scehduled.
-  if (aLayerTree->GetRoot() &&
-      (mCurrentCompositeTask ||
-       (mCompositorVsyncObserver &&
-        mCompositorVsyncObserver->NeedsComposite()))) {
+  // Synchronously update the layer tree
+  if (aLayerTree->GetRoot()) {
     AutoResolveRefLayers resolve(mCompositionManager);
+    SetShadowProperties(mLayerManager->GetRoot());
+
     TimeStamp time = mIsTesting ? mTestTime : mLastCompose;
     bool requestNextFrame =
-      mCompositionManager->TransformShadowTree(time);
+      mCompositionManager->TransformShadowTree(time,
+        AsyncCompositionManager::TransformsToSkip::APZ);
     if (!requestNextFrame) {
       CancelCurrentCompositeTask();
       // Pretend we composited in case someone is waiting for this event.
