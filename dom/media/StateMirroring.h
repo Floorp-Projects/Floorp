@@ -345,7 +345,14 @@ public:
     ~Holder()
     {
       MOZ_DIAGNOSTIC_ASSERT(mMirror, "Should have initialized me");
-      mMirror->DisconnectIfConnected();
+      if (mMirror->OwnerThread()->IsCurrentThreadIn()) {
+        mMirror->DisconnectIfConnected();
+      } else {
+        // If holder destruction happens on a thread other than the mirror's
+        // owner thread, manual disconnection is mandatory. We should make this
+        // more automatic by hooking it up to task queue shutdown.
+        MOZ_DIAGNOSTIC_ASSERT(!mMirror->IsConnected());
+      }
     }
 
     // NB: Because mirror-initiated disconnection can race with canonical-
