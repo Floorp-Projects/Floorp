@@ -6,13 +6,12 @@
 
 interface nsIURI;
 
-interface mozILivemarkCallback;
 interface mozILivemarkInfo;
 interface mozILivemark;
 
 interface nsINavHistoryResultObserver;
 
-[scriptable, uuid(5B48E5A2-F07A-4E64-A935-C722A3D60B65)]
+[scriptable, uuid(672387b7-a75d-4e8f-9b49-5c1dcbfff46b)]
 interface mozIAsyncLivemarks : nsISupports
 {
   /**
@@ -21,18 +20,12 @@ interface mozIAsyncLivemarks : nsISupports
    * @param aLivemarkInfo
    *        mozILivemarkInfo object containing at least title, parentId,
    *        index and feedURI of the livemark to create.
-   * @param [optional] aCallback
-   *        Invoked when the creation process is done.  In case of failure will
-   *        receive an error code.
+   *
    * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the supplied information is insufficient
    *         for the creation.
-   * @deprecated passing a callback is deprecated. Moreover, for backwards
-   *             compatibility reasons, when a callback is provided this method
-   *             won't return a promise.
    */
-  jsval addLivemark(in jsval aLivemarkInfo,
-                    [optional] in mozILivemarkCallback aCallback);
+  jsval addLivemark(in jsval aLivemarkInfo);
 
   /**
    * Removes an existing livemark.
@@ -40,18 +33,11 @@ interface mozIAsyncLivemarks : nsISupports
    * @param aLivemarkInfo
    *        mozILivemarkInfo object containing either an id or a guid of the
    *        livemark to remove.
-   * @param [optional] aCallback
-   *        Invoked when the removal process is done.  In case of failure will
-   *        receive an error code.
    *
    * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid.
-   * @deprecated passing a callback is deprecated. Moreover, for backwards
-   *             compatibility reasons, when a callback is provided this method
-   *             won't return a promise.
    */
-  jsval removeLivemark(in jsval aLivemarkInfo,
-                       [optional] in mozILivemarkCallback aCallback);
+  jsval removeLivemark(in jsval aLivemarkInfo);
 
   /**
    * Gets an existing livemark.
@@ -59,19 +45,12 @@ interface mozIAsyncLivemarks : nsISupports
    * @param aLivemarkInfo
    *        mozILivemarkInfo object containing either an id or a guid of the
    *        livemark to retrieve.
-   * @param [optional] aCallback
-   *        Invoked when the fetching process is done.  In case of failure will
-   *        receive an error code.
    *
    * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid or an invalid
    *         callback is provided.
-   * @deprecated passing a callback is deprecated. Moreover, for backwards
-   *             compatibility reasons, when a callback is provided this method
-   *             won't return a promise.
    */
-  jsval getLivemark(in jsval aLivemarkInfo,
-                    [optional] in mozILivemarkCallback aCallback);
+  jsval getLivemark(in jsval aLivemarkInfo);
 
   /**
    * Reloads all livemarks if they are expired or if forced to do so.
@@ -85,27 +64,13 @@ interface mozIAsyncLivemarks : nsISupports
   void reloadLivemarks([optional]in boolean aForceUpdate);
 };
 
-[scriptable, function, uuid(62a426f9-39a6-42f0-ad48-b7404d48188f)]
-interface mozILivemarkCallback : nsISupports
-{
-  /**
-   * Invoked when a livemark is added, removed or retrieved.
-   *
-   * @param aStatus
-   *        Whether the request was completed successfully.
-   *        Use Components.isSuccessCode(aStatus) to check this.
-   * @param aLivemark
-   *        A mozILivemark object representing the livemark, or null on removal.
-   */
-  void onCompletion(in nsresult aStatus,
-                    in mozILivemark aLivemark);
-};
-
-[scriptable, uuid(E52B2273-729D-4EBC-A039-E9CD9E18FF86)]
+[scriptable, uuid(3a3c5e8f-ec4a-4086-ae0a-d16420d30c9f)]
 interface mozILivemarkInfo : nsISupports
 {
   /**
    * Id of the bookmarks folder representing this livemark.
+   *
+   * @deprecated Use guid instead.
    */
   readonly attribute long long id;
 
@@ -121,8 +86,15 @@ interface mozILivemarkInfo : nsISupports
 
   /**
    * Id of the bookmarks parent folder containing this livemark.
+   *
+   * @deprecated Use parentGuid instead.
    */
   readonly attribute long long parentId;
+
+  /**
+   * Guid of the bookmarks parent folder containing this livemark.
+   */
+  readonly attribute long long parentGuid;
 
   /**
    * The position of this livemark in the bookmarks parent folder.
