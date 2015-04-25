@@ -30,7 +30,7 @@ ProfilerMarkerPayload::~ProfilerMarkerPayload()
 
 void
 ProfilerMarkerPayload::streamCommonProps(const char* aMarkerType,
-                                         JSStreamWriter& b)
+                                          JSStreamWriter& b)
 {
   MOZ_ASSERT(aMarkerType);
   b.NameValue("type", aMarkerType);

@@ -53,9 +53,9 @@ const double* mozilla_sampler_get_responsiveness();
 
 void mozilla_sampler_save();
 
-char* mozilla_sampler_get_profile(float aSinceTime);
+char* mozilla_sampler_get_profile();
 
-JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, float aSinceTime);
+JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 
 // Make this function easily callable from a debugger in a build without
 // debugging information (work around http://llvm.org/bugs/show_bug.cgi?id=22211)
