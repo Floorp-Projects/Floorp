@@ -8,8 +8,8 @@
 #include "nsString.h"
 
 #include "AndroidBridge.h"
+#include "AndroidContentController.h"
 #include "AndroidGraphicBuffer.h"
-#include "APZCCallbackHandler.h"
 
 #include <jni.h>
 #include <pthread.h>
@@ -924,7 +924,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
 
     const auto& newRef = NativePanZoomController::Ref::From(instance);
     NativePanZoomController::LocalRef oldRef =
-            APZCCallbackHandler::SetNativePanZoomController(newRef);
+            AndroidContentController::SetNativePanZoomController(newRef);
 
     MOZ_ASSERT(!oldRef, "Registering a new NPZC when we already have one");
 }
@@ -968,7 +968,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
     }
 
     NativePanZoomController::LocalRef oldRef =
-            APZCCallbackHandler::SetNativePanZoomController(nullptr);
+            AndroidContentController::SetNativePanZoomController(nullptr);
 
     MOZ_ASSERT(oldRef, "Clearing a non-existent NPZC");
 }
