@@ -12,7 +12,7 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(9c3c0534-ef4b-4a6e-a1a6-4522d4824ac8)]
+[scriptable, uuid(edd65f3f-c2a2-4217-a2e2-40347ba4a2b3)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -33,12 +33,6 @@ interface nsIProfiler : nsISupports
 
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);
-
-  /**
-   * Returns the elapsed time, in milliseconds, since the last StartProfiler call.
-   * Returns 0 if there is no active sampler.
-   */
-  float getElapsedTime();
 
   /**
    * Returns a JSON string of an array of shared library objects.
