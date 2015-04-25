@@ -117,9 +117,9 @@ nsProfiler::AddMarker(const char *aMarker)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetProfile(float aSinceTime, char **aProfile)
+nsProfiler::GetProfile(char **aProfile)
 {
-  char *profile = profiler_get_profile(aSinceTime);
+  char *profile = profiler_get_profile();
   if (profile) {
     size_t len = strlen(profile);
     char *profileStr = static_cast<char *>
@@ -202,10 +202,10 @@ nsProfiler::DumpProfileToFile(const char* aFilename)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetProfileData(float aSinceTime, JSContext* aCx,
+nsProfiler::GetProfileData(JSContext* aCx,
                            JS::MutableHandle<JS::Value> aResult)
 {
-  JS::RootedObject obj(aCx, profiler_get_profile_jsobject(aCx, aSinceTime));
+  JS::RootedObject obj(aCx, profiler_get_profile_jsobject(aCx));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
