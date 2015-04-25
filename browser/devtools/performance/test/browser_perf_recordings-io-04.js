@@ -3,27 +3,15 @@
 
 /**
  * Tests if the performance tool can import profiler data from the
- * original profiler tool.
+ * original profiler tool and the correct views and graphs are loaded.
  */
 
 let test = Task.async(function*() {
   let { target, panel, toolbox } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, PerformanceController, DetailsView, DetailsSubview } = panel.panelWin;
+  let { $, EVENTS, PerformanceController, DetailsView, OverviewView, JsCallTreeView } = panel.panelWin;
 
   // Enable memory to test the memory-calltree and memory-flamegraph.
   Services.prefs.setBoolPref(MEMORY_PREF, true);
-
-  // Cycle through all the views to initialize them, otherwise we can't use
-  // `waitForWidgetsRendered`. The waterfall is shown by default, but all the
-  // other views are created lazily, so won't emit any events.
-  yield DetailsView.selectView("js-calltree");
-  yield DetailsView.selectView("js-flamegraph");
-  yield DetailsView.selectView("memory-calltree");
-  yield DetailsView.selectView("memory-flamegraph");
-
-  // Need to allow widgets to be updated while hidden, otherwise we can't use
-  // `waitForWidgetsRendered`.
-  DetailsSubview.canUpdateWhileHidden = true;
 
   yield startRecording(panel);
   yield stopRecording(panel);
@@ -49,15 +37,29 @@ let test = Task.async(function*() {
 
   // Import recording.
 
-  let rerendered = waitForWidgetsRendered(panel);
+  let calltreeRendered = once(OverviewView, EVENTS.FRAMERATE_GRAPH_RENDERED);
+  let fpsRendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
   yield PerformanceController.importRecording("", file);
 
   yield imported;
   ok(true, "The original profiler data appears to have been successfully imported.");
 
-  yield rerendered;
+  yield calltreeRendered;
+  yield fpsRendered;
   ok(true, "The imported data was re-rendered.");
+
+  // Ensure that only framerate and js calltree/flamegraph view are available
+  is($("#overview-pane").hidden, false, "overview graph container still shown");
+  is($("#memory-overview").hidden, true, "memory graph hidden");
+  is($("#markers-overview").hidden, true, "markers overview graph hidden");
+  is($("#time-framerate").hidden, false, "fps graph shown");
+  is($("#select-waterfall-view").hidden, true, "waterfall button hidden");
+  is($("#select-js-calltree-view").hidden, false, "jscalltree button shown");
+  is($("#select-js-flamegraph-view").hidden, false, "jsflamegraph button shown");
+  is($("#select-memory-calltree-view").hidden, true, "memorycalltree button hidden");
+  is($("#select-memory-flamegraph-view").hidden, true, "memoryflamegraph button hidden");
+  ok(DetailsView.isViewSelected(JsCallTreeView), "jscalltree view selected as its the only option");
 
   // Verify imported recording.
 
@@ -79,6 +81,12 @@ let test = Task.async(function*() {
     "The imported legacy data was successfully converted for the current tool (7).");
   is(importedData.profile.toSource(), data.profile.toSource(),
     "The imported legacy data was successfully converted for the current tool (8).");
+  is(importedData.configuration.withTicks, true,
+    "The imported legacy data was successfully converted for the current tool (9).");
+  is(importedData.configuration.withMemory, false,
+    "The imported legacy data was successfully converted for the current tool (10).");
+  is(importedData.configuration.sampleFrequency, void 0,
+    "The imported legacy data was successfully converted for the current tool (11).");
 
   yield teardown(panel);
   finish();

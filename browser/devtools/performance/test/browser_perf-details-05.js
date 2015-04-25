@@ -7,7 +7,7 @@
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, DetailsView } = panel.panelWin;
-  let { WaterfallView, JsCallTreeView, JsFlameGraphView } = panel.panelWin;
+  let { PerformanceController, WaterfallView, JsCallTreeView } = panel.panelWin;
 
   yield startRecording(panel);
   yield stopRecording(panel);
@@ -23,21 +23,15 @@ function spawnTest () {
   ok(DetailsView.isViewSelected(JsCallTreeView),
     "The jscalltree view is now selected in the details view.");
 
-  selected = DetailsView.whenViewSelected(JsFlameGraphView);
-  notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  yield DetailsView.selectView("js-flamegraph");
-  yield Promise.all([selected, notified]);
+  yield PerformanceController.clearRecordings();
 
-  ok(DetailsView.isViewSelected(JsFlameGraphView),
-    "The flamegraph view is now selected in the details view.");
+  yield startRecording(panel);
+  let render = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
+  yield stopRecording(panel);
+  yield render;
 
-  selected = DetailsView.whenViewSelected(WaterfallView);
-  notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  yield DetailsView.selectView("waterfall");
-  yield Promise.all([selected, notified]);
-
-  ok(DetailsView.isViewSelected(WaterfallView),
-    "The waterfall view is now selected in the details view.");
+  ok(DetailsView.isViewSelected(JsCallTreeView),
+    "The jscalltree view is still selected in the details view");
 
   yield teardown(panel);
   finish();
