@@ -119,8 +119,7 @@ private:
   bool mCanceled;
   uint32_t mSuspendCount;
   bool mIsPending;
-  bool mWasOpened;
-  
+
   PRTime mLastModifiedTime;
   uint64_t mStartPos;
   nsCString mEntityID;
