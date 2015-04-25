@@ -178,7 +178,6 @@ nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent)
 nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nullptr),
-    mFocus(nullptr),
     mIMEMaskSelectionUpdate(false),
     mIMEMaskEventsCount(1), // Mask IME events since there's no focus yet
     mIMERanges(new TextRangeArray()),
@@ -190,9 +189,6 @@ nsWindow::nsWindow() :
 nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
-    nsWindow *top = FindTopLevel();
-    if (top->mFocus == this)
-        top->mFocus = nullptr;
     ALOG("nsWindow %p destructor", (void*)this);
     if (mLayerManager == sLayerManager) {
         // If this window was the one that created the global OMTC layer manager
@@ -298,10 +294,9 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 void
 nsWindow::RedrawAll()
 {
-    if (mFocus) {
-        mFocus->RedrawAll();
-    }
-    if (mWidgetListener) {
+    if (mAttachedWidgetListener) {
+        mAttachedWidgetListener->RequestRepaint();
+    } else if (mWidgetListener) {
         mWidgetListener->RequestRepaint();
     }
 }
@@ -567,12 +562,7 @@ nsWindow::FindTopLevel()
 NS_IMETHODIMP
 nsWindow::SetFocus(bool aRaise)
 {
-    if (!aRaise) {
-        ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
-    }
-
     nsWindow *top = FindTopLevel();
-    top->mFocus = this;
     top->BringToFront();
 
     return NS_OK;
@@ -671,21 +661,9 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
 nsEventStatus
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
 {
-    if (this == TopWindow() && mFocus) {
-        // On Fennec the window structure has two windows, a root-level window
-        // and a child window. The root-level window has a nsWebShellWindow as
-        // a widget listener, and that does nothing in its HandleEvent call. The
-        // child window however is hooked up to a nsView, and is the window
-        // we actually want to send events to. The child window also always has
-        // focus and completely covers the root window, so technically the child
-        // window is "topmost" and should be receiving all events. So when
-        // dispatching an event to the root window, redispatch it to the child
-        // window instead.
-        return mFocus->DispatchEvent(aEvent);
-    }
-
-    aEvent->widget = this;
-    if (mWidgetListener) {
+    if (mAttachedWidgetListener) {
+        return mAttachedWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+    } else if (mWidgetListener) {
         return mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
     }
     return nsEventStatus_eIgnore;
@@ -1678,17 +1656,8 @@ public:
 nsRefPtr<mozilla::TextComposition>
 nsWindow::GetIMEComposition()
 {
-    // See comment in DispatchEvent. This function gets called on the root
-    // window, but the IMEStateManager uses the IME event's widget pointer
-    // (which is the child window) to maintain state. Therefore when requesting
-    // the text composition from the IMEStateManager we need to use the child
-    // window.
     MOZ_ASSERT(this == TopWindow());
-    nsWindow* win = this;
-    if (mFocus) {
-        win = mFocus;
-    }
-    return mozilla::IMEStateManager::GetTextCompositionFor(win);
+    return mozilla::IMEStateManager::GetTextCompositionFor(this);
 }
 
 /*
@@ -2038,13 +2007,7 @@ nsWindow::UserActivity()
 nsresult
 nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
-    // See comment in DispatchEvent. This function may get called on the child
-    // window, but all of our IME state is in the root window. So when this
-    // function is called, pass it on to the root window.
-    nsWindow* top = TopWindow();
-    if (top && top != this) {
-        return top->NotifyIMEInternal(aIMENotification);
-    }
+    MOZ_ASSERT(this == TopWindow());
 
     switch (aIMENotification.mMessage) {
         case REQUEST_TO_COMMIT_COMPOSITION:
