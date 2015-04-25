@@ -22,6 +22,7 @@ const RecordingModel = function (options={}) {
   this._console = options.console || false;
 
   this._configuration = {
+    withMarkers: options.withMarkers || false,
     withTicks: options.withTicks || false,
     withMemory: options.withMemory || false,
     withAllocations: options.withAllocations || false,
@@ -70,6 +71,7 @@ RecordingModel.prototype = {
     this._ticks = recordingData.ticks;
     this._allocations = recordingData.allocations;
     this._profile = recordingData.profile;
+    this._configuration = recordingData.configuration || {};
   }),
 
   /**
@@ -226,7 +228,8 @@ RecordingModel.prototype = {
     let ticks = this.getTicks();
     let allocations = this.getAllocations();
     let profile = this.getProfile();
-    return { label, duration, markers, frames, memory, ticks, allocations, profile };
+    let configuration = this.getConfiguration();
+    return { label, duration, markers, frames, memory, ticks, allocations, profile, configuration };
   },
 
   /**
@@ -263,10 +266,13 @@ RecordingModel.prototype = {
       return;
     }
 
+    let config = this.getConfiguration();
+
     switch (eventName) {
       // Accumulate timeline markers into an array. Furthermore, the timestamps
       // do not have a zero epoch, so offset all of them by the start time.
       case "markers": {
+        if (!config.withMarkers) { break; }
         let [markers] = data;
         RecordingUtils.offsetMarkerTimes(markers, this._timelineStartTime);
         Array.prototype.push.apply(this._markers, markers);
@@ -274,6 +280,7 @@ RecordingModel.prototype = {
       }
       // Accumulate stack frames into an array.
       case "frames": {
+        if (!config.withMarkers) { break; }
         let [, frames] = data;
         Array.prototype.push.apply(this._frames, frames);
         break;
@@ -281,6 +288,7 @@ RecordingModel.prototype = {
       // Accumulate memory measurements into an array. Furthermore, the timestamp
       // does not have a zero epoch, so offset it by the actor's start time.
       case "memory": {
+        if (!config.withMemory) { break; }
         let [currentTime, measurement] = data;
         this._memory.push({
           delta: currentTime - this._timelineStartTime,
@@ -290,6 +298,7 @@ RecordingModel.prototype = {
       }
       // Save the accumulated refresh driver ticks.
       case "ticks": {
+        if (!config.withTicks) { break; }
         let [, timestamps] = data;
         this._ticks = timestamps;
         break;
@@ -298,6 +307,7 @@ RecordingModel.prototype = {
       // do not have a zero epoch, and are microseconds instead of milliseconds,
       // so offset all of them by the start time, also converting from µs to ms.
       case "allocations": {
+        if (!config.withAllocations) { break; }
         let [{ sites, timestamps, frames, counts }] = data;
         let timeOffset = this._memoryStartTime * 1000;
         let timeScale = 1000;

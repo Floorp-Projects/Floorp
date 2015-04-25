@@ -8,7 +8,8 @@
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
-  let { MARKERS_GRAPH_ROW_HEIGHT } = panel.panelWin;
+  let { TimelineGraph } = devtools.require("devtools/performance/graphs");
+  let { rowHeight: MARKERS_GRAPH_ROW_HEIGHT } = TimelineGraph.prototype;
 
   yield startRecording(panel);
   ok(true, "Recording has started.");
@@ -23,7 +24,7 @@ function spawnTest () {
 
   yield stopRecording(panel);
 
-  let overview = OverviewView.markersOverview;
+  let overview = OverviewView.graphs.get("timeline");
   let waterfall = WaterfallView.waterfall;
 
   // Select everything

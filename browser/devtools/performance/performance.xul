@@ -102,22 +102,27 @@
           <toolbarbutton id="select-waterfall-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&profilerUI.toolbar.waterfall;"
+                         hidden="true"
                          data-view="waterfall" />
           <toolbarbutton id="select-js-calltree-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&profilerUI.toolbar.js-calltree;"
+                         hidden="true"
                          data-view="js-calltree" />
           <toolbarbutton id="select-js-flamegraph-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&profilerUI.toolbar.js-flamegraph;"
+                         hidden="true"
                          data-view="js-flamegraph" />
           <toolbarbutton id="select-memory-calltree-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&profilerUI.toolbar.memory-calltree1;"
+                         hidden="true"
                          data-view="memory-calltree" />
           <toolbarbutton id="select-memory-flamegraph-view"
                          class="devtools-toolbarbutton devtools-button"
                          label="&profilerUI.toolbar.memory-flamegraph1;"
+                         hidden="true"
                          data-view="memory-flamegraph" />
         </hbox>
         <spacer flex="1"></spacer>

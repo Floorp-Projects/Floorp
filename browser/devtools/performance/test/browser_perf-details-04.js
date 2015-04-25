@@ -7,7 +7,7 @@
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
-  let { EVENTS, $, $$, PerformanceController, RecordingsView, DetailsView } = panel.panelWin;
+  let { EVENTS, $, $$, PerformanceController, RecordingsView, WaterfallView } = panel.panelWin;
 
   let waterfallBtn = $("toolbarbutton[data-view='waterfall']");
   let jsFlameBtn = $("toolbarbutton[data-view='js-flamegraph']");
@@ -46,8 +46,9 @@ function spawnTest () {
   is(memCallBtn.hidden, true, "memory-calltree button hidden when another recording starts.");
 
   let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
+  let render = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
   mousedown(panel.panelWin, $$(".recording-item")[0]);
-  yield select;
+  yield Promise.all([select, render]);
 
   is(RecordingsView.selectedIndex, 0,
     "The first recording was selected again.");
@@ -71,7 +72,9 @@ function spawnTest () {
   is(memFlameBtn.hidden, true, "memory-flamegraph button still hidden when second recording selected.");
   is(memCallBtn.hidden, true, "memory-calltree button still hidden when second recording selected.");
 
+  render = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
   yield stopRecording(panel);
+  yield render;
 
   is(RecordingsView.selectedIndex, 1,
     "The second recording is still selected.");
