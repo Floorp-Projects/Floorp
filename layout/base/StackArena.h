@@ -22,8 +22,6 @@ private:
   StackArena();
   ~StackArena();
 
-  nsresult Init() { return mBlocks ? NS_OK : NS_ERROR_OUT_OF_MEMORY; }
-
   // Memory management functions.
   void* Allocate(size_t aSize);
   void Push();
@@ -70,7 +68,6 @@ public:
     if (!gStackArena) {
       gStackArena = new StackArena();
       mOwnsStackArena = true;
-      gStackArena->Init();
     }
     gStackArena->Push();
   }
