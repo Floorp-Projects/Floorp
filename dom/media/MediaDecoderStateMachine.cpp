@@ -543,7 +543,6 @@ void MediaDecoderStateMachine::SendStreamData()
   // until all samples are drained.
   if (finished && AudioQueue().GetSize() == 0) {
     mAudioCompleted = true;
-    UpdateNextFrameStatus();
   }
 }
 
@@ -940,9 +939,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     case DECODER_STATE_BUFFERING:
     case DECODER_STATE_DECODING: {
       CheckIfDecodeComplete();
-      // The ready state can change when we've decoded data, so update the
-      // ready state, so that DOM events can fire.
-      UpdateNextFrameStatus();
       mDecoder->GetReentrantMonitor().NotifyAll();
       // Schedule the state machine to notify track ended as soon as possible.
       if (mAudioCaptured) {
@@ -1324,6 +1320,8 @@ void MediaDecoderStateMachine::SetState(State aState)
               gMachineStateStr[mState], gMachineStateStr[aState]);
 
   mState = aState;
+
+  UpdateNextFrameStatus();
 
   // Clear state-scoped state.
   mSentPlaybackEndedEvent = false;
@@ -1867,11 +1865,6 @@ MediaDecoderStateMachine::InitiateSeek()
   StopPlayback();
   UpdatePlaybackPositionInternal(mCurrentSeek.mTarget.mTime);
 
-
-  // Make sure the main thread decoder gets notified of the seek only after
-  // we've updated the mirrored NextFrameStatus, which has special behavior
-  // when we're in DECODER_STATE_SEEKING.
-  UpdateNextFrameStatus();
   nsCOMPtr<nsIRunnable> startEvent =
       NS_NewRunnableMethodWithArg<MediaDecoderEventVisibility>(
         mDecoder,
@@ -2677,7 +2670,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
       // Notify to allow blocked decoder thread to continue
       mDecoder->GetReentrantMonitor().NotifyAll();
-      UpdateNextFrameStatus();
       MaybeStartPlayback();
       NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
       return NS_OK;
@@ -3031,12 +3023,6 @@ void MediaDecoderStateMachine::AdvanceFrame()
     currentFrame = nullptr;
   }
 
-  // If the number of audio/video frames queued has changed, either by
-  // this function popping and playing a video frame, or by the audio
-  // thread popping and playing an audio frame, we may need to update our
-  // ready state. Post an update to do so.
-  UpdateNextFrameStatus();
-
   int64_t delay = remainingTime / mPlaybackRate;
   if (delay > 0) {
     ScheduleStateMachineIn(delay);
@@ -3256,7 +3242,6 @@ void MediaDecoderStateMachine::StartBuffering()
   mBufferingStart = TimeStamp::Now();
 
   SetState(DECODER_STATE_BUFFERING);
-  UpdateNextFrameStatus();
   DECODER_LOG("Changed state from DECODING to BUFFERING, decoded for %.3lfs",
               decodeDuration.ToSeconds());
 #ifdef PR_LOGGING
