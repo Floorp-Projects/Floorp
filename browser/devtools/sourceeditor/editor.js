@@ -102,7 +102,8 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "refresh",
-  "getScrollInfo"
+  "getScrollInfo",
+  "getViewport"
 ];
 
 const { cssProperties, cssValues, cssColors } = getCSSKeywords();
