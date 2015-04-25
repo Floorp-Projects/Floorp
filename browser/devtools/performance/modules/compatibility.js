@@ -4,72 +4,12 @@
 "use strict";
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
-loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/performance/recording-utils", true);
 
 const REQUIRED_MEMORY_ACTOR_METHODS = [
   "attach", "detach", "startRecordingAllocations", "stopRecordingAllocations", "getAllocations"
 ];
-
-/**
- * Constructor for a facade around an underlying ProfilerFront.
- */
-function ProfilerFront (target) {
-  this._target = target;
-}
-
-ProfilerFront.prototype = {
-  // Connects to the targets underlying real ProfilerFront.
-  connect: Task.async(function*() {
-    let target = this._target;
-    // Chrome and content process targets already have obtained a reference
-    // to the profiler tab actor. Use it immediately.
-    if (target.form && target.form.profilerActor) {
-      this._profiler = target.form.profilerActor;
-    }
-    // Check if we already have a grip to the `listTabs` response object
-    // and, if we do, use it to get to the profiler actor.
-    else if (target.root && target.root.profilerActor) {
-      this._profiler = target.root.profilerActor;
-    }
-    // Otherwise, call `listTabs`.
-    else {
-      this._profiler = (yield listTabs(target.client)).profilerActor;
-    }
-
-    // Fetch and store information about the SPS profiler and
-    // server profiler.
-    this.traits = {};
-    this.traits.filterable = target.getTrait("profilerDataFilterable");
-  }),
-
-  /**
-   * Makes a request to the underlying real profiler actor. Handles
-   * backwards compatibility differences based off of the features
-   * and traits of the actor.
-   */
-  _request: function (method, ...args) {
-    let deferred = promise.defer();
-    let data = args[0] || {};
-    data.to = this._profiler;
-    data.type = method;
-    this._target.client.request(data, res => {
-      // If the backend does not support filtering by start and endtime on platform (< Fx40),
-      // do it on the client (much slower).
-      if (method === "getProfile" && !this.traits.filterable) {
-        RecordingUtils.filterSamples(res.profile, data.startTime || 0);
-      }
-
-      deferred.resolve(res);
-    });
-    return deferred.promise;
-  }
-};
-
-exports.ProfilerFront = ProfilerFront;
 
 /**
  * A dummy front decorated with the provided methods.
@@ -167,14 +107,3 @@ function timelineActorSupported(target) {
   return target.hasActor("timeline");
 }
 exports.timelineActorSupported = Task.async(timelineActorSupported);
-
-/**
- * Returns a promise resolved with a listing of all the tabs in the
- * provided thread client.
- */
-function listTabs(client) {
-  let deferred = promise.defer();
-  client.listTabs(deferred.resolve);
-  return deferred.promise;
-}
-

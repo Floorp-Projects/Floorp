@@ -18,6 +18,9 @@ let DEFAULT_PROFILER_THREADFILTERS = ["GeckoMain"];
  * consumers (i.e. "toolboxes") don't interfere with each other.
  */
 let gProfilerConsumers = 0;
+let gProfilingStartTime = -1;
+Services.obs.addObserver(() => gProfilingStartTime = Date.now(), "profiler-started", false);
+Services.obs.addObserver(() => gProfilingStartTime = -1, "profiler-stopped", false);
 
 loader.lazyGetter(this, "nsIProfilerModule", () => {
   return Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
@@ -94,7 +97,7 @@ ProfilerActor.prototype = {
    */
   onIsActive: function() {
     let isActive = nsIProfilerModule.IsActive();
-    let elapsedTime = isActive ? nsIProfilerModule.getElapsedTime() : undefined;
+    let elapsedTime = isActive ? getElapsedTime() : undefined;
     return { isActive: isActive, currentTime: elapsedTime };
   },
 
@@ -130,18 +133,10 @@ ProfilerActor.prototype = {
    *     } ... ]
    *   } ... ]
    * }
-   *
-   *
-   * @param number startTime
-   *        Since the circular buffer will only grow as long as the profiler lives,
-   *        the buffer can contain unwanted samples. Pass in a `startTime` to only retrieve
-   *        samples that took place after the `startTime`, with 0 being when the profiler
-   *        just started.
    */
-  onGetProfile: function(request) {
-    let startTime = request.startTime || 0;
-    let profile = nsIProfilerModule.getProfileData(startTime);
-    return { profile: profile, currentTime: nsIProfilerModule.getElapsedTime() };
+  onGetProfile: function() {
+    let profile = nsIProfilerModule.getProfileData();
+    return { profile: profile, currentTime: getElapsedTime() };
   },
 
   /**
@@ -234,38 +229,35 @@ ProfilerActor.prototype = {
   _handleConsoleEvent: function(subject, data) {
     // An optional label may be specified when calling `console.profile`.
     // If that's the case, stringify it and send it over with the response.
-    let { action, arguments: args } = subject;
+    let args = subject.arguments;
     let profileLabel = args.length > 0 ? args[0] + "" : undefined;
 
     // If the event was generated from `console.profile` or `console.profileEnd`
     // we need to start the profiler right away and then just notify the client.
     // Otherwise, we'll lose precious samples.
 
-    if (action === "profile" || action === "profileEnd") {
+    if (subject.action == "profile") {
       let { isActive, currentTime } = this.onIsActive();
 
       // Start the profiler only if it wasn't already active. Otherwise, any
       // samples that might have been accumulated so far will be discarded.
-      if (!isActive && action === "profile") {
+      if (!isActive) {
         this.onStartProfiler();
         return {
           profileLabel: profileLabel,
           currentTime: 0
         };
       }
-      // Otherwise, if inactive and a call to profile end, send
-      // an empty object because we can't do anything with this.
-      else if (!isActive) {
-        return {};
-      }
-
-      // Otherwise, the profiler is already active, so just send
-      // to the front the current time, label, and the notification
-      // adds the action as well.
       return {
         profileLabel: profileLabel,
         currentTime: currentTime
       };
+    }
+
+    if (subject.action == "profileEnd") {
+      let details = this.onGetProfile();
+      details.profileLabel = profileLabel;
+      return details;
     }
   }
 };
@@ -280,6 +272,39 @@ function cycleBreaker(key, value) {
     return undefined;
   }
   return value;
+}
+
+/**
+ * Gets the time elapsed since the profiler was last started.
+ * @return number
+ */
+function getElapsedTime() {
+  // Assign `gProfilingStartTime` now if no client of this actor has actually
+  // started it yet, but the built-in profiler module is somehow already active
+  // (it could happen if the MOZ_PROFILER_STARTUP environment variable is set,
+  // or the Gecko Profiler add-on is installed and isn't using this actor).
+  // Otherwise, the returned value is bogus and messes up the samples filtering.
+  if (gProfilingStartTime == -1) {
+    let profile = nsIProfilerModule.getProfileData();
+    let lastSampleTime = findOldestSampleTime(profile);
+    gProfilingStartTime = Date.now() - lastSampleTime;
+  }
+  return Date.now() - gProfilingStartTime;
+}
+
+/**
+ * Finds the oldest sample time in the provided profile.
+ * @param object profile
+ * @return number
+ */
+function findOldestSampleTime(profile) {
+  let firstThreadSamples = profile.threads[0].samples;
+
+  for (let i = firstThreadSamples.length - 1; i >= 0; i--) {
+    if ("time" in firstThreadSamples[i]) {
+      return firstThreadSamples[i].time;
+    }
+  }
 }
 
 /**

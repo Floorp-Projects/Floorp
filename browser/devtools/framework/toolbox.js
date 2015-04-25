@@ -380,14 +380,11 @@ Toolbox.prototype = {
         framesPromise
       ]);
 
-      // Lazily connect to the profiler here and don't wait for it to complete,
-      // used to intercept console.profile calls before the performance tools are open.
       let profilerReady = this._connectProfiler();
 
-      // However, while testing, we must wait for the performance connection to finish,
-      // as most tests shut down without waiting for a toolbox destruction event,
-      // resulting in the shared profiler connection being opened and closed
-      // outside of the test that originally opened the toolbox.
+      // Only wait for the profiler initialization during tests. Otherwise,
+      // lazily load this. This is to intercept console.profile calls; the performance
+      // tools will explicitly wait for the connection opening when opened.
       if (gDevTools.testing) {
         yield profilerReady;
       }
@@ -1869,9 +1866,7 @@ Toolbox.prototype = {
   }),
 
   /**
-   * Disconnects the underlying Performance Actor Connection. If the connection
-   * has not finished initializing, as opening a toolbox does not wait,
-   * the performance connection destroy method will wait for it on its own.
+   * Disconnects the underlying Performance Actor Connection.
    */
   _disconnectProfiler: Task.async(function*() {
     if (!this._performanceConnection) {

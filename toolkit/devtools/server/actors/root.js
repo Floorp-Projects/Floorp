@@ -166,9 +166,6 @@ RootActor.prototype = {
     get allowChromeProcess() {
       return DebuggerServer.allowChromeProcess;
     },
-    // Whether or not `getProfile()` supports specifying a `startTime`
-    // and `endTime` to filter out samples. Fx40+
-    profilerDataFilterable: true,
   },
 
   /**
