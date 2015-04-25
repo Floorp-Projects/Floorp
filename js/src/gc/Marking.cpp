@@ -1108,6 +1108,83 @@ gc::MarkCycleCollectorChildren(JSTracer* trc, Shape* shape)
     } while (shape);
 }
 
+void
+TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trc,
+                                               void** thingp, JSGCTraceKind kind);
+
+// Object groups can point to other object groups via an UnboxedLayout or the
+// the original unboxed group link. There can potentially be deep or cyclic
+// chains of such groups to trace through without going through a thing that
+// participates in cycle collection. These need to be handled iteratively to
+// avoid blowing the stack when running the cycle collector's callback tracer.
+struct ObjectGroupCycleCollectorTracer : public JS::CallbackTracer
+{
+    explicit ObjectGroupCycleCollectorTracer(JS::CallbackTracer* innerTracer)
+        : JS::CallbackTracer(innerTracer->runtime(),
+                             TraceObjectGroupCycleCollectorChildrenCallback,
+                             DoNotTraceWeakMaps),
+          innerTracer(innerTracer)
+    {}
+
+    JS::CallbackTracer* innerTracer;
+    Vector<ObjectGroup*, 4, SystemAllocPolicy> seen, worklist;
+};
+
+void
+TraceObjectGroupCycleCollectorChildrenCallback(JS::CallbackTracer* trcArg,
+                                               void** thingp, JSGCTraceKind kind)
+{
+    ObjectGroupCycleCollectorTracer* trc = static_cast<ObjectGroupCycleCollectorTracer*>(trcArg);
+    JS::GCCellPtr thing(*thingp, kind);
+
+    if (thing.isObject() || thing.isScript()) {
+        // Invoke the inner cycle collector callback on this child. It will not
+        // recurse back into TraceChildren.
+        trc->innerTracer->invoke(thingp, kind);
+        return;
+    }
+
+    if (thing.isObjectGroup()) {
+        // If this group is required to be in an ObjectGroup chain, trace it
+        // via the provided worklist rather than continuing to recurse.
+        ObjectGroup* group = static_cast<ObjectGroup*>(thing.asCell());
+        if (group->maybeUnboxedLayout()) {
+            for (size_t i = 0; i < trc->seen.length(); i++) {
+                if (trc->seen[i] == group)
+                    return;
+            }
+            if (trc->seen.append(group) && trc->worklist.append(group)) {
+                return;
+            } else {
+                // If append fails, keep tracing normally. The worst that will
+                // happen is we end up overrecursing.
+            }
+        }
+    }
+
+    TraceChildren(trc, thing.asCell(), thing.kind());
+}
+
+void
+gc::MarkCycleCollectorChildren(JSTracer* trc, ObjectGroup* group)
+{
+    MOZ_ASSERT(trc->isCallbackTracer());
+
+    // Early return if this group is not required to be in an ObjectGroup chain.
+    if (!group->maybeUnboxedLayout()) {
+        TraceChildren(trc, group, JSTRACE_OBJECT_GROUP);
+        return;
+    }
+
+    ObjectGroupCycleCollectorTracer groupTracer(trc->asCallbackTracer());
+    TraceChildren(&groupTracer, group, JSTRACE_OBJECT_GROUP);
+
+    while (!groupTracer.worklist.empty()) {
+        ObjectGroup* innerGroup = groupTracer.worklist.popCopy();
+        TraceChildren(&groupTracer, innerGroup, JSTRACE_OBJECT_GROUP);
+    }
+}
+
 static void
 ScanObjectGroup(GCMarker* gcmarker, ObjectGroup* group)
 {
