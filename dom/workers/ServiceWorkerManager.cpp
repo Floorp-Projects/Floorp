@@ -599,7 +599,7 @@ public:
   }
 
   void
-  ComparisonResult(nsresult aStatus, bool aInCacheAndEqual, const nsAString& aNewCacheName) override
+  ComparisonResult(nsresult aStatus, bool aInCacheAndEqual) override
   {
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
       Fail(NS_ERROR_DOM_TYPE_ERR);
@@ -629,6 +629,12 @@ public:
     }
 
     nsAutoString cacheName;
+    rv = serviceWorkerScriptCache::GenerateCacheName(cacheName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      Fail(NS_ERROR_DOM_TYPE_ERR);
+      return;
+    }
+
     // We have to create a ServiceWorker here simply to ensure there are no
     // errors. Ideally we should just pass this worker on to ContinueInstall.
     MOZ_ASSERT(!swm->mSetOfScopesBeingUpdated.Contains(mRegistration->mScope));
@@ -637,7 +643,7 @@ public:
     MOZ_ASSERT(!mUpdateAndInstallInfo);
     mUpdateAndInstallInfo =
       new ServiceWorkerInfo(mRegistration, mRegistration->mScriptSpec,
-                            aNewCacheName);
+                            cacheName);
     nsRefPtr<ServiceWorker> serviceWorker;
     rv = swm->CreateServiceWorker(mRegistration->mPrincipal,
                                   mUpdateAndInstallInfo,
