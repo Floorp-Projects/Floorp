@@ -592,9 +592,7 @@ public:
   FileImplTemporaryFileBlob(PRFileDesc* aFD, uint64_t aStartPos,
                             uint64_t aLength, const nsAString& aContentType)
     : FileImplBase(aContentType, aLength)
-    , mLength(aLength)
     , mStartPos(aStartPos)
-    , mContentType(aContentType)
   {
     mFileDescOwner = new nsTemporaryFileInputStream::FileDescOwner(aFD);
   }
@@ -610,17 +608,14 @@ private:
                             uint64_t aStart, uint64_t aLength,
                             const nsAString& aContentType)
     : FileImplBase(aContentType, aLength)
-    , mLength(aLength)
     , mStartPos(aStart)
     , mFileDescOwner(aOther->mFileDescOwner)
-    , mContentType(aContentType) {}
+  {}
 
   ~FileImplTemporaryFileBlob() {}
 
-  uint64_t mLength;
   uint64_t mStartPos;
   nsRefPtr<nsTemporaryFileInputStream::FileDescOwner> mFileDescOwner;
-  nsString mContentType;
 };
 
 class FileImplFile : public FileImplBase
