@@ -144,15 +144,15 @@ void profiler_set_frame_number(int frameNumber)
 }
 
 static inline
-char* profiler_get_profile()
+char* profiler_get_profile(float aSinceTime = 0)
 {
-  return mozilla_sampler_get_profile();
+  return mozilla_sampler_get_profile(aSinceTime);
 }
 
 static inline
-JSObject* profiler_get_profile_jsobject(JSContext* aCx)
+JSObject* profiler_get_profile_jsobject(JSContext* aCx, float aSinceTime = 0)
 {
-  return mozilla_sampler_get_profile_data(aCx);
+  return mozilla_sampler_get_profile_data(aCx, aSinceTime);
 }
 
 static inline
