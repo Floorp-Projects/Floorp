@@ -217,6 +217,13 @@ JS_TraceShapeCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr shape)
     MarkCycleCollectorChildren(trc, static_cast<Shape*>(shape.asCell()));
 }
 
+JS_FRIEND_API(void)
+JS_TraceObjectGroupCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr group)
+{
+    MOZ_ASSERT(group.isObjectGroup());
+    MarkCycleCollectorChildren(trc, static_cast<ObjectGroup*>(group.asCell()));
+}
+
 static bool
 DefineHelpProperty(JSContext* cx, HandleObject obj, const char* prop, const char* value)
 {
