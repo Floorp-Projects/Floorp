@@ -209,8 +209,8 @@ public:
     Canonical<T>* operator&() { return mCanonical; }
 
     // Access to the T.
-    const T& Ref() { return *mCanonical; }
-    operator const T&() { return Ref(); }
+    const T& Ref() const { return *mCanonical; }
+    operator const T&() const { return Ref(); }
     Holder& operator=(const T& aNewValue) { *mCanonical = aNewValue; return *this; }
 
   private:
@@ -372,8 +372,8 @@ public:
     Mirror<T>* operator&() { return mMirror; }
 
     // Access to the T.
-    const T& Ref() { return *mMirror; }
-    operator const T&() { return Ref(); }
+    const T& Ref() const { return *mMirror; }
+    operator const T&() const { return Ref(); }
 
   private:
     nsRefPtr<Mirror<T>> mMirror;
