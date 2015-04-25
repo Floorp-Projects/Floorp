@@ -16,8 +16,8 @@ function run_test()
 {
   get_chrome_actors((client, form) => {
     let actor = form.profilerActor;
-    activate_profiler(client, actor, startTime => {
-      test_data(client, actor, startTime, () => {
+    activate_profiler(client, actor, () => {
+      test_data(client, actor, () => {
         deactivate_profiler(client, actor, () => {
           client.close(do_test_finished);
         })
@@ -34,7 +34,7 @@ function activate_profiler(client, actor, callback)
     do_check_true(response.started);
     client.request({ to: actor, type: "isActive" }, response => {
       do_check_true(response.isActive);
-      callback(response.currentTime);
+      callback();
     });
   });
 }
@@ -50,7 +50,7 @@ function deactivate_profiler(client, actor, callback)
   });
 }
 
-function test_data(client, actor, startTime, callback)
+function test_data(client, actor, callback)
 {
   function attempt(delay)
   {
@@ -64,7 +64,7 @@ function test_data(client, actor, startTime, callback)
     while (Date.now() - start < delay) { stack = Components.stack; }
     do_print("Attempt: finished waiting.");
 
-    client.request({ to: actor, type: "getProfile", startTime  }, response => {
+    client.request({ to: actor, type: "getProfile" }, response => {
       // Any valid getProfile response should have the following top
       // level structure.
       do_check_eq(typeof response.profile, "object");
