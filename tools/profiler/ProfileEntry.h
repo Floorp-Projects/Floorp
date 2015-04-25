@@ -102,9 +102,9 @@ public:
 
   void addTag(const ProfileEntry& aTag);
   void IterateTagsForThread(IterateTagsCallback aCallback, int aThreadId);
-  void StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, float aSinceTime,
-                               JSRuntime* rt, UniqueJITOptimizations& aUniqueOpts);
-  void StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId, float aSinceTime);
+  void StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt,
+                               UniqueJITOptimizations& aUniqueOpts);
+  void StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId);
   void DuplicateLastSample(int aThreadId);
 
   void addStoredMarker(ProfilerMarker* aStoredMarker);
@@ -155,11 +155,11 @@ public:
   void addStoredMarker(ProfilerMarker *aStoredMarker);
 
   void IterateTags(IterateTagsCallback aCallback);
-  void ToStreamAsJSON(std::ostream& stream, float aSinceTime = 0);
-  JSObject *ToJSObject(JSContext *aCx, float aSinceTime = 0);
+  void ToStreamAsJSON(std::ostream& stream);
+  JSObject *ToJSObject(JSContext *aCx);
   PseudoStack* GetPseudoStack();
   mozilla::Mutex* GetMutex();
-  void StreamJSObject(JSStreamWriter& b, float aSinceTime = 0);
+  void StreamJSObject(JSStreamWriter& b);
 
   /**
    * Call this method when the JS entries inside the buffer are about to

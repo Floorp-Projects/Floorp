@@ -218,13 +218,13 @@ void TableTicker::StreamMetaJSCustomObject(JSStreamWriter& b)
   b.EndObject();
 }
 
-void TableTicker::ToStreamAsJSON(std::ostream& stream, float aSinceTime)
+void TableTicker::ToStreamAsJSON(std::ostream& stream)
 {
   JSStreamWriter b(stream);
-  StreamJSObject(b, aSinceTime);
+  StreamJSObject(b);
 }
 
-JSObject* TableTicker::ToJSObject(JSContext *aCx, float aSinceTime)
+JSObject* TableTicker::ToJSObject(JSContext *aCx)
 {
   JS::RootedValue val(aCx);
   std::stringstream ss;
@@ -232,7 +232,7 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx, float aSinceTime)
     // Define a scope to prevent a moving GC during ~JSStreamWriter from
     // trashing the return value.
     JSStreamWriter b(ss);
-    StreamJSObject(b, aSinceTime);
+    StreamJSObject(b);
     NS_ConvertUTF8toUTF16 js_string(nsDependentCString(ss.str().c_str()));
     JS_ParseJSON(aCx, static_cast<const char16_t*>(js_string.get()),
                  js_string.Length(), &val);
@@ -316,7 +316,7 @@ void BuildJavaThreadJSObject(JSStreamWriter& b)
 }
 #endif
 
-void TableTicker::StreamJSObject(JSStreamWriter& b, float aSinceTime)
+void TableTicker::StreamJSObject(JSStreamWriter& b)
 {
   b.BeginObject();
     // Put shared library info
@@ -351,7 +351,7 @@ void TableTicker::StreamJSObject(JSStreamWriter& b, float aSinceTime)
 
           MutexAutoLock lock(*sRegisteredThreads->at(i)->Profile()->GetMutex());
 
-          sRegisteredThreads->at(i)->Profile()->StreamJSObject(b, aSinceTime);
+          sRegisteredThreads->at(i)->Profile()->StreamJSObject(b);
         }
       }
 
@@ -979,11 +979,6 @@ void TableTicker::InplaceTick(TickSample* sample)
 
   currThreadProfile.addTag(ProfileEntry('T', currThreadProfile.ThreadId()));
 
-  if (sample) {
-    mozilla::TimeDuration delta = sample->timestamp - sStartTime;
-    currThreadProfile.addTag(ProfileEntry('t', static_cast<float>(delta.ToMilliseconds())));
-  }
-
   PseudoStack* stack = currThreadProfile.GetPseudoStack();
 
 #if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK) || \
@@ -1011,6 +1006,11 @@ void TableTicker::InplaceTick(TickSample* sample)
   if (sample && currThreadProfile.GetThreadResponsiveness()->HasData()) {
     mozilla::TimeDuration delta = currThreadProfile.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
     currThreadProfile.addTag(ProfileEntry('r', static_cast<float>(delta.ToMilliseconds())));
+  }
+
+  if (sample) {
+    mozilla::TimeDuration delta = sample->timestamp - sStartTime;
+    currThreadProfile.addTag(ProfileEntry('t', static_cast<float>(delta.ToMilliseconds())));
   }
 
   // rssMemory is equal to 0 when we are not recording.
