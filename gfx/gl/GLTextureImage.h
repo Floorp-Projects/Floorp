@@ -196,7 +196,6 @@ public:
 
     gfx::IntSize GetSize() const;
     ContentType GetContentType() const { return mContentType; }
-    ImageFormat GetImageFormat() const { return mImageFormat; }
     virtual bool InUpdate() const = 0;
     GLenum GetWrapMode() const { return mWrapMode; }
 
@@ -224,7 +223,6 @@ protected:
     gfx::IntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
-    ImageFormat mImageFormat;
     gfx::SurfaceFormat mTextureFormat;
     GraphicsFilter mFilter;
     Flags mFlags;
