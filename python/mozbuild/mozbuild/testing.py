@@ -80,8 +80,9 @@ class TestMetadata(object):
         ``paths`` can be an iterable of values to use to identify tests to run.
         If an entry is a known test file, tests associated with that file are
         returned (there may be multiple configurations for a single file). If
-        an entry is a directory, all tests in that directory are returned. If
-        the string appears in a known test file, that test file is considered.
+        an entry is a directory, or a prefix of a directory containing tests,
+        all tests in that directory are returned. If the string appears in a
+        known test file, that test file is considered.
 
         If ``under_path`` is a string, it will be used to filter out tests that
         aren't in the specified path prefix relative to topsrcdir or the
@@ -123,8 +124,10 @@ class TestMetadata(object):
                 candidate_paths |= set(self._tests_by_path.keys())
                 continue
 
-            # If the path is a directory, pull in all tests in that directory.
-            if path in self._test_dirs:
+            # If the path is a directory, or the path is a prefix of a directory
+            # containing tests, pull in all tests in that directory.
+            if (path in self._test_dirs or
+                any(p.startswith(path) for p in self._tests_by_path)):
                 candidate_paths |= {p for p in self._tests_by_path
                                     if p.startswith(path)}
                 continue
