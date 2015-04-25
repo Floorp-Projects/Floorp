@@ -19,7 +19,7 @@ function spawnTest () {
 
   yield stopRecording(panel);
 
-  let graph = OverviewView.markersOverview;
+  let graph = OverviewView.graphs.get("timeline");
   let MAX = graph.width;
 
   // Select the first half of the graph

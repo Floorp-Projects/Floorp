@@ -12,13 +12,12 @@ function spawnTest () {
   Services.prefs.setBoolPref(MEMORY_PREF, true);
   Services.prefs.setBoolPref(FLATTEN_PREF, true);
 
-  yield DetailsView.selectView("memory-flamegraph");
-
   yield startRecording(panel);
   yield busyWait(100);
 
   let rendered = once(MemoryFlameGraphView, EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
   yield stopRecording(panel);
+  yield DetailsView.selectView("memory-flamegraph");
   yield rendered;
 
   let allocations1 = PerformanceController.getCurrentRecording().getAllocations();

@@ -17,6 +17,9 @@ let test = Task.async(function*() {
   // `waitForWidgetsRendered`.
   DetailsSubview.canUpdateWhileHidden = true;
 
+  yield startRecording(panel);
+  yield stopRecording(panel);
+
   // Cycle through all the views to initialize them, otherwise we can't use
   // `waitForWidgetsRendered`. The waterfall is shown by default, but all the
   // other views are created lazily, so won't emit any events.
@@ -24,9 +27,6 @@ let test = Task.async(function*() {
   yield DetailsView.selectView("js-flamegraph");
   yield DetailsView.selectView("memory-calltree");
   yield DetailsView.selectView("memory-flamegraph");
-
-  yield startRecording(panel);
-  yield stopRecording(panel);
 
   yield startRecording(panel);
   yield stopRecording(panel);
