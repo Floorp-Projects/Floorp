@@ -1077,7 +1077,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // previous block should not be default-prevented
         bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
         if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-            widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzInputBlockId(), defaultPrevented);
+            widget::android::APZCCallbackHandler::NotifyDefaultPrevented(ae->ApzInputBlockId(), defaultPrevented);
         } else {
             GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
         }
@@ -1090,7 +1090,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     if (isDownEvent) {
         if (preventDefaultActions) {
             if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-                widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzInputBlockId(), true);
+                widget::android::APZCCallbackHandler::NotifyDefaultPrevented(ae->ApzInputBlockId(), true);
             } else {
                 GeckoAppShell::NotifyDefaultPrevented(true);
             }
@@ -2492,10 +2492,7 @@ nsWindow::ConfigureAPZControllerThread()
 already_AddRefed<GeckoContentController>
 nsWindow::CreateRootContentController()
 {
-    widget::android::APZCCallbackHandler::Initialize(this, mAPZEventState);
-
-    nsRefPtr<widget::android::APZCCallbackHandler> controller =
-        widget::android::APZCCallbackHandler::GetInstance();
+    nsRefPtr<GeckoContentController> controller = new widget::android::APZCCallbackHandler(this, mAPZEventState);
     return controller.forget();
 }
 
