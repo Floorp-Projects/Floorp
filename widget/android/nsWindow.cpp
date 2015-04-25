@@ -51,7 +51,7 @@ using mozilla::unused;
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/layers/CompositorOGL.h"
-#include "APZCCallbackHandler.h"
+#include "AndroidContentController.h"
 
 #include "nsTArray.h"
 
@@ -1077,7 +1077,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // previous block should not be default-prevented
         bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
         if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-            widget::android::APZCCallbackHandler::NotifyDefaultPrevented(ae->ApzInputBlockId(), defaultPrevented);
+            widget::android::AndroidContentController::NotifyDefaultPrevented(ae->ApzInputBlockId(), defaultPrevented);
         } else {
             GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
         }
@@ -1090,7 +1090,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     if (isDownEvent) {
         if (preventDefaultActions) {
             if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
-                widget::android::APZCCallbackHandler::NotifyDefaultPrevented(ae->ApzInputBlockId(), true);
+                widget::android::AndroidContentController::NotifyDefaultPrevented(ae->ApzInputBlockId(), true);
             } else {
                 GeckoAppShell::NotifyDefaultPrevented(true);
             }
@@ -2492,7 +2492,7 @@ nsWindow::ConfigureAPZControllerThread()
 already_AddRefed<GeckoContentController>
 nsWindow::CreateRootContentController()
 {
-    nsRefPtr<GeckoContentController> controller = new widget::android::APZCCallbackHandler(this, mAPZEventState);
+    nsRefPtr<GeckoContentController> controller = new widget::android::AndroidContentController(this, mAPZEventState);
     return controller.forget();
 }
 

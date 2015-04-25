@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef APZCCallbackHandler_h__
-#define APZCCallbackHandler_h__
+#ifndef AndroidContentController_h__
+#define AndroidContentController_h__
 
 #include "mozilla/layers/ChromeProcessController.h"
 #include "mozilla/layers/APZEventState.h"
@@ -19,10 +19,10 @@ namespace mozilla {
 namespace widget {
 namespace android {
 
-class APZCCallbackHandler final : public mozilla::layers::ChromeProcessController
+class AndroidContentController final : public mozilla::layers::ChromeProcessController
 {
 public:
-    APZCCallbackHandler(nsIWidget* aWidget, mozilla::layers::APZEventState* aAPZEventState)
+    AndroidContentController(nsIWidget* aWidget, mozilla::layers::APZEventState* aAPZEventState)
       : mozilla::layers::ChromeProcessController(aWidget, aAPZEventState)
     {}
 
