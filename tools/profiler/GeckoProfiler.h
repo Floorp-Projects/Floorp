@@ -158,10 +158,13 @@ static inline void profiler_responsiveness(const mozilla::TimeStamp& aTime) {}
 static inline void profiler_set_frame_number(int frameNumber) {}
 
 // Get the profile encoded as a JSON string.
-static inline char* profiler_get_profile() { return nullptr; }
+static inline char* profiler_get_profile(float aSinceTime = 0) { return nullptr; }
 
 // Get the profile encoded as a JSON object.
-static inline JSObject* profiler_get_profile_jsobject(JSContext* aCx) { return nullptr; }
+static inline JSObject* profiler_get_profile_jsobject(JSContext* aCx,
+                                                      float aSinceTime = 0) {
+  return nullptr;
+}
 
 // Get the profile and write it into a file
 static inline void profiler_save_profile_to_file(char* aFilename) { }
