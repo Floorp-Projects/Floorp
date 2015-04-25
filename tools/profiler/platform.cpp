@@ -201,7 +201,7 @@ ProfilerMarker::SetGeneration(uint32_t aGenID) {
 }
 
 float
-ProfilerMarker::GetTime() const {
+ProfilerMarker::GetTime() {
   return mTime;
 }
 
@@ -551,7 +551,7 @@ void mozilla_sampler_save()
   t->HandleSaveRequest();
 }
 
-char* mozilla_sampler_get_profile(float aSinceTime)
+char* mozilla_sampler_get_profile()
 {
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -559,19 +559,19 @@ char* mozilla_sampler_get_profile(float aSinceTime)
   }
 
   std::stringstream stream;
-  t->ToStreamAsJSON(stream, aSinceTime);
+  t->ToStreamAsJSON(stream);
   char* profile = strdup(stream.str().c_str());
   return profile;
 }
 
-JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, float aSinceTime)
+JSObject *mozilla_sampler_get_profile_data(JSContext *aCx)
 {
   TableTicker *t = tlsTicker.get();
   if (!t) {
     return nullptr;
   }
 
-  return t->ToJSObject(aCx, aSinceTime);
+  return t->ToJSObject(aCx);
 }
 
 void mozilla_sampler_save_profile_to_file(const char* aFilename)

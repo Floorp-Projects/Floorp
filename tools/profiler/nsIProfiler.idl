@@ -12,7 +12,7 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(9f3e7c97-abcf-425c-83fd-34d354eb95e8)]
+[scriptable, uuid(9c3c0534-ef4b-4a6e-a1a6-4522d4824ac8)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -25,19 +25,9 @@ interface nsIProfiler : nsISupports
   void PauseSampling();
   void ResumeSampling();
   void AddMarker(in string aMarker);
-  /*
-   * Returns the JSON string of the profile. If aSinceTime is passed, only
-   * report samples taken at >= aSinceTime.
-   */
-  string GetProfile([optional] in float aSinceTime);
-
-  /*
-   * Returns a JS object of the profile. If aSinceTime is passed, only report
-   * samples taken at >= aSinceTime.
-   */
+  string GetProfile();
   [implicit_jscontext]
-  jsval getProfileData([optional] in float aSinceTime);
-
+  jsval getProfileData();
   boolean IsActive();
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 
