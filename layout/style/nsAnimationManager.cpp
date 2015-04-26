@@ -390,7 +390,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         // Although we're doing this while iterating this is safe because
         // we're not changing the length of newAnimations and we've finished
         // iterating over the list of old iterations.
-        newAnim->Cancel();
+        newAnim->CancelFromStyle();
         newAnim = nullptr;
         newAnimations.ReplaceElementAt(newIdx, oldAnim);
         collection->mAnimations.RemoveElementAt(oldIdx);
@@ -410,7 +410,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   // Cancel removed animations
   for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0; ) {
-    newAnimations[newAnimIdx]->Cancel();
+    newAnimations[newAnimIdx]->CancelFromStyle();
   }
 
   UpdateCascadeResults(aStyleContext, collection);
