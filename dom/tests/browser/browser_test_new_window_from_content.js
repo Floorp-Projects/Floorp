@@ -49,6 +49,8 @@ const kSameTab = "same tab";
 const kNewWin = "new window";
 const kNewTab = "new tab";
 
+requestLongerTimeout(2);
+
 // The following "matrices" represent the result of content attempting to
 // open a window with window.open with the default feature set. The key of
 // the kWinOpenDefault object represents the value of browser.link.open_newwindow.
