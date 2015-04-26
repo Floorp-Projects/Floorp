@@ -25,6 +25,7 @@
 using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
+using mozilla::dom::AnimationPlayState;
 using mozilla::dom::KeyframeEffectReadonly;
 using mozilla::CSSAnimation;
 
@@ -49,7 +50,7 @@ CSSAnimation::Pause()
   Animation::Pause();
 }
 
-mozilla::dom::AnimationPlayState
+AnimationPlayState
 CSSAnimation::PlayStateFromJS() const
 {
   // Flush style to ensure that any properties controlling animation state
@@ -363,21 +364,24 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         // Reset compositor state so animation will be re-synchronized.
         oldAnim->ClearIsRunningOnCompositor();
 
-        // Handle changes in play state.
-        // CSSAnimation takes care of override behavior so that,
-        // for example, if the author has called pause(), that will
-        // override the animation-play-state.
-        // (We should check newAnim->IsStylePaused() but that requires
-        //  downcasting to CSSAnimation and we happen to know that
-        //  newAnim will only ever be paused by calling PauseFromStyle
-        //  making IsPausedOrPausing synonymous in this case.)
-        if (!oldAnim->IsStylePaused() && newAnim->IsPausedOrPausing()) {
-          oldAnim->PauseFromStyle();
-          animationChanged = true;
-        } else if (oldAnim->IsStylePaused() &&
-                   !newAnim->IsPausedOrPausing()) {
-          oldAnim->PlayFromStyle();
-          animationChanged = true;
+        // Handle changes in play state. If the animation is idle, however,
+        // changes to animation-play-state should *not* restart it.
+        if (oldAnim->PlayState() != AnimationPlayState::Idle) {
+          // CSSAnimation takes care of override behavior so that,
+          // for example, if the author has called pause(), that will
+          // override the animation-play-state.
+          // (We should check newAnim->IsStylePaused() but that requires
+          //  downcasting to CSSAnimation and we happen to know that
+          //  newAnim will only ever be paused by calling PauseFromStyle
+          //  making IsPausedOrPausing synonymous in this case.)
+          if (!oldAnim->IsStylePaused() && newAnim->IsPausedOrPausing()) {
+            oldAnim->PauseFromStyle();
+            animationChanged = true;
+          } else if (oldAnim->IsStylePaused() &&
+                    !newAnim->IsPausedOrPausing()) {
+            oldAnim->PlayFromStyle();
+            animationChanged = true;
+          }
         }
 
         if (animationChanged) {
