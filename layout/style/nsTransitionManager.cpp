@@ -339,7 +339,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           currentValue != segment.mToValue) {
         // stop the transition
         if (!anim->GetEffect()->IsFinishedTransition()) {
-          anim->Cancel();
+          anim->CancelFromStyle();
           collection->UpdateAnimationGeneration(mPresContext);
         }
         animations.RemoveElementAt(i);
@@ -475,7 +475,7 @@ nsTransitionManager::ConsiderStartingTransition(
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
       AnimationPtrArray& animations = aElementTransitions->mAnimations;
-      animations[currentIndex]->Cancel();
+      animations[currentIndex]->CancelFromStyle();
       oldPT = nullptr; // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
@@ -593,7 +593,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 #endif
   if (haveCurrentTransition) {
-    animations[currentIndex]->Cancel();
+    animations[currentIndex]->CancelFromStyle();
     oldPT = nullptr; // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;
   } else {
