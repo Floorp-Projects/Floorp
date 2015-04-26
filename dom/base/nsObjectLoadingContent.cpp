@@ -38,6 +38,7 @@
 #include "nsIBlocklistService.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
+#include "nsIXULRuntime.h"
 
 #include "nsError.h"
 
@@ -3196,9 +3197,7 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Default &&
-      (Preferences::GetBool("browser.tabs.remote.autostart", false) ||
-       Preferences::GetBool("browser.tabs.remote.autostart.1", false) ||
-       Preferences::GetBool("browser.tabs.remote.autostart.2", false))) {
+      BrowserTabsRemoteAutostart()) {
     // Plugins running OOP from the chrome process along with plugins running
     // OOP from the content process will hang. Let's prevent that situation.
     aReason = eFallbackDisabled;
