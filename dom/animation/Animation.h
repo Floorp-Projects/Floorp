@@ -116,6 +116,11 @@ public:
   // CSSAnimation::PauseFromJS so we leave it for now.
   void PauseFromJS() { Pause(); }
 
+  // Wrapper functions for Animation DOM methods when called from style.
+  // Typically these DOM methods also notify style of changes but when
+  // we are calling from style we don't need to do this.
+  void CancelFromStyle() { DoCancel(); }
+
   void SetEffect(KeyframeEffectReadonly* aEffect);
   void Tick();
 
@@ -266,6 +271,7 @@ public:
                     bool& aNeedsRefreshes);
 
 protected:
+  void DoCancel();
   void DoPlay(LimitBehavior aLimitBehavior);
   void DoPause();
   void ResumeAt(const TimeDuration& aReadyTime);
