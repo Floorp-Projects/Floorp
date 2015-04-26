@@ -63,11 +63,6 @@ PushSubscription.prototype = {
     return this._pushEndpoint;
   },
 
-  get subscriptionId() {
-    // TODO bug 1149271.  Not sure what this is about.
-    return "The twins of Mammon quarrelled.";
-  },
-
   unsubscribe: function() {
     debug("unsubscribe! ")
 
