@@ -17,9 +17,9 @@ add_task(function* () {
   document.addEventListener("popupshown", onPopupShown, true);
 
   // Send a mousemove at a known position to start the test.
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" },
+  BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" },
                                            gBrowser.selectedBrowser);
-  yield BrowserTestUtils.synthesizeMouseAtCenter("#p1", { }, gBrowser.selectedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#p1", { }, gBrowser.selectedBrowser);
 
   yield new Promise(resolve => {
     setTimeout(function() {
