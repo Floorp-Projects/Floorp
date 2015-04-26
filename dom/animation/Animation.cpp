@@ -97,6 +97,7 @@ void
 Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
 {
   if (!mHoldTime.IsNull() ||
+      mStartTime.IsNull() ||
       !mTimeline ||
       mTimeline->GetCurrentTime().IsNull() ||
       mPlaybackRate == 0.0
