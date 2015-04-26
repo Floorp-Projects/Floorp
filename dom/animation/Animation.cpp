@@ -100,8 +100,7 @@ Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
       mStartTime.IsNull() ||
       !mTimeline ||
       mTimeline->GetCurrentTime().IsNull() ||
-      mPlaybackRate == 0.0
-      /*or, once supported, if we have a pending pause task*/) {
+      mPlaybackRate == 0.0) {
     mHoldTime.SetValue(aSeekTime);
     if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
       mStartTime.SetNull();
