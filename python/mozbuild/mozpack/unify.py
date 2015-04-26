@@ -18,9 +18,23 @@ from tempfile import mkstemp
 import mozpack.path as mozpath
 import struct
 import os
+import re
 import subprocess
 from collections import OrderedDict
 
+# Regular expressions for unifying install.rdf
+FIND_TARGET_PLATFORM = re.compile(r"""
+    <(?P<ns>[-._0-9A-Za-z]+:)?targetPlatform>       # The targetPlatform tag, with any namespace
+    (?P<platform>[^<]*)                             # The actual platform value
+    </(?P=ns)?targetPlatform>                       # The closing tag
+    """, re.X)
+FIND_TARGET_PLATFORM_ATTR = re.compile(r"""
+    (?P<tag><(?:[-._0-9A-Za-z]+:)?Description)      # The opening part of the <Description> tag
+    (?P<attrs>[^>]*?)\s+                            # The initial attributes
+    (?P<ns>[-._0-9A-Za-z]+:)?targetPlatform=        # The targetPlatform attribute, with any namespace
+    [\'"](?P<platform>[^\'"]+)[\'"]                 # The actual platform value
+    (?P<otherattrs>[^>]*?>)                         # The remaining attributes and closing angle bracket
+    """, re.X)
 
 def may_unify_binary(file):
     '''
@@ -165,9 +179,11 @@ class UnifiedBuildFinder(UnifiedFinder):
 
     def unify_file(self, path, file1, file2):
         '''
-        Unify buildconfig.html contents, or defer to UnifiedFinder.unify_file.
+        Unify files taking Mozilla application special cases into account.
+        Otherwise defer to UnifiedFinder.unify_file.
         '''
-        if mozpath.basename(path) == 'buildconfig.html':
+        basename = mozpath.basename(path)
+        if basename == 'buildconfig.html':
             content1 = file1.open().readlines()
             content2 = file2.open().readlines()
             # Copy everything from the first file up to the end of its <body>,
@@ -178,7 +194,26 @@ class UnifiedBuildFinder(UnifiedFinder):
                 ['<hr> </hr>\n'] +
                 content2[content2.index('<h1>about:buildconfig</h1>\n') + 1:]
             ))
-        if path.endswith('.xpi'):
+        elif basename == 'install.rdf':
+            # install.rdf files often have em:targetPlatform (either as
+            # attribute or as tag) that will differ between platforms. The
+            # unified install.rdf should contain both em:targetPlatforms if
+            # they exist, or strip them if only one file has a target platform.
+            content1, content2 = (
+                FIND_TARGET_PLATFORM_ATTR.sub(lambda m: \
+                    m.group('tag') + m.group('attrs') + m.group('otherattrs') +
+                        '<%stargetPlatform>%s</%stargetPlatform>' % \
+                        (m.group('ns') or "", m.group('platform'), m.group('ns') or ""),
+                    f.open().read()
+                ) for f in (file1, file2)
+            )
+
+            platform2 = FIND_TARGET_PLATFORM.search(content2)
+            return GeneratedFile(FIND_TARGET_PLATFORM.sub(
+                lambda m: m.group(0) + platform2.group(0) if platform2 else '',
+                content1
+            ))
+        elif path.endswith('.xpi'):
             finder1 = JarFinder(os.path.join(self._finder1.base, path),
                                 JarReader(fileobj=file1.open()))
             finder2 = JarFinder(os.path.join(self._finder2.base, path),
