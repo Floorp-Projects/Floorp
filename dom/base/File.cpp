@@ -161,7 +161,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(File)
 /* static */ already_AddRefed<File>
 File::Create(nsISupports* aParent, const nsAString& aName,
              const nsAString& aContentType, uint64_t aLength,
-             uint64_t aLastModifiedDate)
+             int64_t aLastModifiedDate)
 {
   nsRefPtr<File> file = new File(aParent,
     new FileImplBase(aName, aContentType, aLength, aLastModifiedDate));
@@ -199,7 +199,7 @@ File::Create(nsISupports* aParent, const nsAString& aContentType,
 File::CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer,
                        uint64_t aLength, const nsAString& aName,
                        const nsAString& aContentType,
-                       uint64_t aLastModifiedDate)
+                       int64_t aLastModifiedDate)
 {
   nsRefPtr<File> file = new File(aParent,
     new FileImplMemory(aMemoryBuffer, aLength, aName,
@@ -420,7 +420,7 @@ File::GetType(nsAString &aType)
 }
 
 NS_IMETHODIMP
-File::GetMozLastModifiedDate(uint64_t* aDate)
+File::GetMozLastModifiedDate(int64_t* aDate)
 {
   MOZ_ASSERT(aDate);
 
