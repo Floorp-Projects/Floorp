@@ -91,15 +91,19 @@ function display(info) {
     bold.appendChild(document.createTextNode(title + " "));
     item.appendChild(bold);
 
+    let textNode = document.createTextNode(value);
+
     if (makeLink) {
       let link = document.createElement("a");
       link.href = value;
       link.target = "_blank";
-      link.appendChild(document.createTextNode(value));
+      link.appendChild(textNode);
       item.appendChild(link);
     } else {
-      item.appendChild(document.createTextNode(value));
+      item.appendChild(textNode);
     }
+
+    return textNode;
   }
 
   createItem(bundle.GetStringFromName('scope'), info.scope);
@@ -108,9 +112,10 @@ function display(info) {
   createItem(bundle.GetStringFromName('activeCacheName'), info.activeCacheName);
   createItem(bundle.GetStringFromName('waitingCacheName'), info.waitingCacheName);
 
+  let pushItem = createItem(bundle.GetStringFromName('pushEndpoint'), bundle.GetStringFromName('waiting'));
   PushNotificationService.registration(info.scope).then(
     pushRecord => {
-      createItem(bundle.GetStringFromName('pushEndpoint'), JSON.stringify(pushRecord));
+      pushItem.data = JSON.stringify(pushRecord);
     },
     error => {
       dump("about:serviceworkers - push registration failed\n");
