@@ -674,6 +674,7 @@ public:
   virtual void RecursiveSort(const char* aData,
                              SortComparator aComparator) override;
 
+  nsCOMPtr<nsIURI> mRemovingURI;
   nsresult NotifyIfTagsChanged(nsIURI* aURI);
 
   uint32_t mBatchChanges;

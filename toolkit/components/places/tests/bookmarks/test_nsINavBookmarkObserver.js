@@ -143,6 +143,8 @@ add_test(function onItemChanged_tags_bookmark() {
   const TITLE = "New title";
   const TAG = "tag"
   gBookmarksObserver.expected = [
+    { name: "onBeginUpdateBatch", // Tag addition uses a batch.
+     args: [] },
     { name: "onItemAdded", // This is the tag folder.
       args: [
         { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
@@ -179,6 +181,10 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
       ] },
+    { name: "onEndUpdateBatch",
+      args: [] },
+    { name: "onBeginUpdateBatch", // Tag removal uses a batch.
+     args: [] },
     { name: "onItemRemoved", // This is the tag.
       args: [
         { name: "itemId", check: function (v) typeof(v) == "number" && v > 0 },
@@ -211,6 +217,8 @@ add_test(function onItemChanged_tags_bookmark() {
         { name: "guid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
         { name: "parentGuid", check: function (v) typeof(v) == "string" && /^[a-zA-Z0-9\-_]{12}$/.test(v) },
       ] },
+    { name: "onEndUpdateBatch",
+      args: [] },
   ];
   PlacesUtils.tagging.tagURI(uri, [TAG]);
   PlacesUtils.tagging.untagURI(uri, [TAG]);

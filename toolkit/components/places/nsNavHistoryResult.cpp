@@ -2767,7 +2767,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
   nsCOMArray<nsNavHistoryResultNode> matches;
   RecursiveFindURIs(onlyOneEntry, this, spec, &matches);
 
-  if (matches.Count() == 0 && mHasSearchTerms) {
+  if (matches.Count() == 0 && mHasSearchTerms && !mRemovingURI) {
     // A new tag has been added, it's possible it matches our query.
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
@@ -2838,6 +2838,7 @@ nsNavHistoryQueryResultNode::OnItemRemoved(int64_t aItemId,
                                            const nsACString& aGUID,
                                            const nsACString& aParentGUID)
 {
+  mRemovingURI = aURI;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
       mLiveUpdate != QUERYUPDATE_SIMPLE && mLiveUpdate != QUERYUPDATE_TIME) {
     nsresult rv = Refresh();
