@@ -48,7 +48,7 @@ SplitNodeTxn::DoTransaction()
   // Don't use .downcast directly because AsContent has an assertion we want
   nsCOMPtr<nsINode> clone = mExistingRightNode->CloneNode(false, rv);
   NS_ASSERTION(!rv.Failed() && clone, "Could not create clone");
-  NS_ENSURE_TRUE(!rv.Failed() && clone, rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed() && clone, rv.StealNSResult());
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
   mEditor.MarkNodeDirty(mExistingRightNode->AsDOMNode());
 

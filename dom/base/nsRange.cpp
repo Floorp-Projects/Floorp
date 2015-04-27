@@ -1995,7 +1995,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
       if (parent) {
         mozilla::ErrorResult error;
         parent->RemoveChild(*node, error);
-        NS_ENSURE_FALSE(error.Failed(), error.ErrorCode());
+        NS_ENSURE_FALSE(error.Failed(), error.StealNSResult());
       }
       NS_ENSURE_STATE(!guard.Mutated(1) ||
                       ValidateCurrentNode(this, iter));
