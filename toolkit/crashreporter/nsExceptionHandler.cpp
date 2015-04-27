@@ -511,7 +511,7 @@ public:
     : mHandle(INVALID_HANDLE_VALUE)
   { }
 
-  PlatformWriter(const wchar_t* path)
+  explicit PlatformWriter(const wchar_t* path)
     : PlatformWriter()
   {
     Open(path);
@@ -559,7 +559,7 @@ public:
     : mFD(-1)
   { }
 
-  PlatformWriter(const char* path)
+  explicit PlatformWriter(const char* path)
     : PlatformWriter()
   {
     Open(path);
