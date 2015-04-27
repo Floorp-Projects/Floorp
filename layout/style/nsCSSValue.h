@@ -137,7 +137,9 @@ public:
 
   nsRefPtrHashtable<nsPtrHashKey<nsISupports>, imgRequestProxy> mRequests; 
 
-  // Override AddRef and Release to log ourselves correctly.
+  // Override AddRef and Release to not only log ourselves correctly, but
+  // also so that we delete correctly without a virtual destructor (assuming
+  // callers always call *our* Release method and not our base class's).
   NS_METHOD_(MozExternalRefCountType) AddRef();
   NS_METHOD_(MozExternalRefCountType) Release();
 };
