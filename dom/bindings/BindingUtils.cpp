@@ -223,13 +223,12 @@ ErrorResult::ReportErrorWithMessage(JSContext* aCx)
 void
 ErrorResult::ClearMessage()
 {
-  if (IsErrorWithMessage()) {
-    delete mMessage;
-    mMessage = nullptr;
+  MOZ_ASSERT(IsErrorWithMessage());
+  delete mMessage;
+  mMessage = nullptr;
 #ifdef DEBUG
-    mHasMessage = false;
+  mHasMessage = false;
 #endif
-  }
 }
 
 void
