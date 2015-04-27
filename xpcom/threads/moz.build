@@ -52,8 +52,6 @@ UNIFIED_SOURCES += [
     'TimerThread.cpp',
 ]
 
-MSVC_ENABLE_PGO = True
-
 LOCAL_INCLUDES += [
     '../build',
     '/caps',

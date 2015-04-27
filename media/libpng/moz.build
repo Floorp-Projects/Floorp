@@ -40,8 +40,6 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
 
 Library('mozpng')
 
-MSVC_ENABLE_PGO = True
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

@@ -23,8 +23,6 @@ if CONFIG['MOZ_NFC']:
 
 FAIL_ON_WARNINGS = True
 
-MSVC_ENABLE_PGO = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

@@ -56,8 +56,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsUTF8UtilsSSE2.cpp']
     SOURCES['nsUTF8UtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True
