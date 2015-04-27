@@ -1493,7 +1493,7 @@ OpenRunnable::MainThreadRunInternal()
   mProxy->mInOpen = false;
 
   if (rv2.Failed()) {
-    return rv2.ErrorCode();
+    return rv2.StealNSResult();
   }
 
   return mProxy->mXHR->SetResponseType(NS_LITERAL_STRING("text"));

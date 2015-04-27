@@ -59,7 +59,7 @@ HTMLLabelElement::SetHtmlFor(const nsAString& aHtmlFor)
 {
   ErrorResult rv;
   SetHtmlFor(aHtmlFor, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

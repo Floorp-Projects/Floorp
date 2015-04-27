@@ -1518,7 +1518,7 @@ NS_IMETHOD SetAttribute(const nsAString& name,                                \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::SetAttribute(name, value, rv);                                     \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                  \
 }                                                                             \
 NS_IMETHOD SetAttributeNS(const nsAString& namespaceURI,                      \
                           const nsAString& qualifiedName,                     \
@@ -1526,21 +1526,21 @@ NS_IMETHOD SetAttributeNS(const nsAString& namespaceURI,                      \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::SetAttributeNS(namespaceURI, qualifiedName, value, rv);            \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 using Element::RemoveAttribute;                                               \
 NS_IMETHOD RemoveAttribute(const nsAString& name) final override              \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   RemoveAttribute(name, rv);                                                  \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNS(const nsAString& namespaceURI,                   \
                              const nsAString& localName) final override       \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::RemoveAttributeNS(namespaceURI, localName, rv);                    \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 using Element::HasAttribute;                                                  \
 NS_IMETHOD HasAttribute(const nsAString& name,                                \
@@ -1576,7 +1576,7 @@ NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
   *_retval = Element::SetAttributeNode(*attr, rv).take();                     \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
                                nsIDOMAttr** _retval) final override           \
@@ -1587,7 +1587,7 @@ NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(oldAttr);       \
   *_retval = Element::RemoveAttributeNode(*attr, rv).take();                  \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
                               const nsAString& localName,                     \
@@ -1603,7 +1603,7 @@ NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* newAttr,                            \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
   *_retval = Element::SetAttributeNodeNS(*attr, rv).take();                   \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 NS_IMETHOD GetElementsByTagName(const nsAString& name,                        \
                                 nsIDOMHTMLCollection** _retval) final         \
@@ -1756,7 +1756,7 @@ NS_IMETHOD MozMatchesSelector(const nsAString& selector,                      \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   *_retval = Element::MozMatchesSelector(selector, rv);                       \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 NS_IMETHOD SetCapture(bool retargetToElement) final override                  \
 {                                                                             \
@@ -1772,7 +1772,7 @@ NS_IMETHOD MozRequestFullScreen(void) final override                          \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   Element::MozRequestFullScreen(nullptr, JS::UndefinedHandleValue, rv);       \
-  return rv.ErrorCode();                                                      \
+  return rv.StealNSResult();                                                      \
 }                                                                             \
 NS_IMETHOD MozRequestPointerLock(void) final override                         \
 {                                                                             \

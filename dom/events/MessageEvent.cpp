@@ -70,7 +70,7 @@ MessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData)
 {
   ErrorResult rv;
   GetData(aCx, aData, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

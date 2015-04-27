@@ -130,6 +130,24 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+namespace {
+
+bool IsHeadRequest(CacheRequest aRequest, CacheQueryParams aParams)
+{
+  return !aParams.ignoreMethod() && aRequest.method().LowerCaseEqualsLiteral("head");
+}
+
+bool IsHeadRequest(CacheRequestOrVoid aRequest, CacheQueryParams aParams)
+{
+  if (aRequest.type() == CacheRequestOrVoid::TCacheRequest) {
+    return !aParams.ignoreMethod() &&
+           aRequest.get_CacheRequest().method().LowerCaseEqualsLiteral("head");
+  }
+  return false;
+}
+
+} // anonymous namespace
+
 // ----------------------------------------------------------------------------
 
 // Singleton class to track Manager instances and ensure there is only
@@ -510,7 +528,9 @@ public:
                                  mArgs.params(), &mFoundResponse, &mResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    if (!mFoundResponse || !mResponse.mHasBodyId) {
+    if (!mFoundResponse || !mResponse.mHasBodyId
+                        || IsHeadRequest(mArgs.request(), mArgs.params())) {
+      mResponse.mHasBodyId = false;
       return rv;
     }
 
@@ -573,7 +593,9 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     for (uint32_t i = 0; i < mSavedResponses.Length(); ++i) {
-      if (!mSavedResponses[i].mHasBodyId) {
+      if (!mSavedResponses[i].mHasBodyId
+          || IsHeadRequest(mArgs.requestOrVoid(), mArgs.params())) {
+        mSavedResponses[i].mHasBodyId = false;
         continue;
       }
 
@@ -1062,7 +1084,9 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
     for (uint32_t i = 0; i < mSavedRequests.Length(); ++i) {
-      if (!mSavedRequests[i].mHasBodyId) {
+      if (!mSavedRequests[i].mHasBodyId
+          || IsHeadRequest(mArgs.requestOrVoid(), mArgs.params())) {
+        mSavedRequests[i].mHasBodyId = false;
         continue;
       }
 
@@ -1124,7 +1148,9 @@ public:
                                    &mSavedResponse);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    if (!mFoundResponse || !mSavedResponse.mHasBodyId) {
+    if (!mFoundResponse || !mSavedResponse.mHasBodyId
+                        || IsHeadRequest(mArgs.request(), mArgs.params())) {
+      mSavedResponse.mHasBodyId = false;
       return rv;
     }
 

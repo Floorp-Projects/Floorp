@@ -306,7 +306,11 @@ my %bidicategoryCode = (
   "RLO" => "15", # Right-to-Left Override
   "PDF" => "16", # Pop Directional Format
   "NSM" => "17", # Non-Spacing Mark
-  "BN"  => "18"  # Boundary Neutral
+  "BN"  => "18", # Boundary Neutral
+  "LRI" => "19", # Left-to-Right Isolate
+  "RLI" => "20", # Right-to-left Isolate
+  "FSI" => "21", # First Strong Isolate
+  "PDI" => "22"  # Pop Direcitonal Isolate
 );
 
 my %verticalOrientationCode = (
