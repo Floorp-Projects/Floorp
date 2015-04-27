@@ -68,6 +68,10 @@ WebConsoleClient.prototype = {
     this._networkRequests.delete(actorId);
   },
 
+  getNetworkEvents() {
+    return this._networkRequests.values();
+  },
+
   get actor() { return this._actor; },
 
   /**
@@ -85,6 +89,8 @@ WebConsoleClient.prototype = {
     if (packet.from == this._actor) {
       let actor = packet.eventActor;
       let networkInfo = {
+        _type: "NetworkEvent",
+        timeStamp: actor.timeStamp,
         node: null,
         actor: actor.actor,
         discardRequestBody: true,

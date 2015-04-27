@@ -1213,6 +1213,9 @@ WebConsoleFrame.prototype = {
           this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage,
                              [aMessage]);
           break;
+        case "NetworkEvent":
+          this.outputMessage(CATEGORY_NETWORK, this.logNetEvent, [aMessage]);
+          break;
       }
     }, this);
   },
@@ -1546,7 +1549,8 @@ WebConsoleFrame.prototype = {
 
     let messageNode = this.createMessageNode(CATEGORY_NETWORK, severity,
                                              methodNode, null, null,
-                                             clipboardText);
+                                             clipboardText, null,
+                                             networkInfo.timeStamp);
     if (networkInfo.private) {
       messageNode.setAttribute("private", true);
     }
@@ -5140,7 +5144,10 @@ WebConsoleConnectionProxy.prototype = {
       Cu.reportError("Web Console getCachedMessages error: invalid state.");
     }
 
-    this.owner.displayCachedMessages(aResponse.messages);
+    let messages = aResponse.messages.concat(...this.webConsoleClient.getNetworkEvents());
+    messages.sort((a, b) => a.timeStamp - b.timeStamp);
+
+    this.owner.displayCachedMessages(messages);
 
     if (!this._hasNativeConsoleAPI) {
       this.owner.logWarningAboutReplacedAPI();
