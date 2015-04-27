@@ -538,9 +538,10 @@ class Type
     Type() : which_(Which(-1)) {}
     static Type Of(const AsmJSNumLit& lit) {
         MOZ_ASSERT(lit.hasType());
-        MOZ_ASSERT(Type::Which(lit.which()) >= Fixnum && Type::Which(lit.which()) <= Float32x4);
+        Which which = Type::Which(lit.which());
+        MOZ_ASSERT(which >= Fixnum && which <= Float32x4);
         Type t;
-        t.which_ = Type::Which(lit.which());
+        t.which_ = which;
         return t;
     }
     MOZ_IMPLICIT Type(Which w) : which_(w) {}
@@ -1119,7 +1120,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         PropertyName* name() const { return name_; }
         bool defined() const { return defined_; }
 
-        void define(ModuleCompiler& m, ParseNode* fn) {
+        void define(ParseNode* fn) {
             MOZ_ASSERT(!defined_);
             defined_ = true;
             srcBegin_ = fn->pn_pos.begin;
@@ -2601,10 +2602,6 @@ class FunctionCompiler
         return m_.lookupGlobal(name);
     }
 
-    bool supportsSimd() const {
-        return m_.supportsSimd();
-    }
-
     /*************************************************************************/
 
     void enterHeapExpression() {
@@ -3373,11 +3370,11 @@ class FunctionCompiler
     {
         if (!loopStack_.append(pn) || !breakableStack_.append(pn))
             return false;
-        MOZ_ASSERT_IF(curBlock_, curBlock_->loopDepth() == loopStack_.length() - 1);
         if (inDeadCode()) {
             *loopEntry = nullptr;
             return true;
         }
+        MOZ_ASSERT(curBlock_->loopDepth() == loopStack_.length() - 1);
         *loopEntry = MBasicBlock::NewAsmJS(mirGraph(), info(), curBlock_,
                                            MBasicBlock::PENDING_LOOP_HEADER);
         if (!*loopEntry)
@@ -7688,7 +7685,7 @@ CheckFunction(ModuleCompiler& m, LifoAlloc& lifo, MIRGenerator** mir, ModuleComp
     if (func->defined())
         return m.failName(fn, "function '%s' already defined", FunctionName(fn));
 
-    func->define(m, fn);
+    func->define(fn);
     func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
     m.parser().release(mark);
