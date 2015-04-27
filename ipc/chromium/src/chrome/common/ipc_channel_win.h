@@ -49,7 +49,8 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   void OutputQueuePush(Message* msg);
   void OutputQueuePop();
 
-  const std::wstring PipeName(const std::wstring& channel_id) const;
+  const std::wstring PipeName(const std::wstring& channel_id,
+                              int32_t* secret) const;
   bool CreatePipe(const std::wstring& channel_id, Mode mode);
   bool EnqueueHelloMessage();
 
@@ -107,6 +108,16 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   size_t output_queue_length_;
 
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
+
+  // This is a unique per-channel value used to authenticate the client end of
+  // a connection. If the value is non-zero, the client passes it in the hello
+  // and the host validates. (We don't send the zero value to preserve IPC
+  // compatibility with existing clients that don't validate the channel.)
+  int32_t shared_secret_;
+
+  // In server-mode, we wait for the channel at the other side of the pipe to
+  // send us back our shared secret, if we are using one.
+  bool waiting_for_shared_secret_;
 
   mozilla::UniquePtr<NonThreadSafe> thread_check_;
 
