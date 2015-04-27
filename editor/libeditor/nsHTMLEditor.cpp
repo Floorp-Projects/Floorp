@@ -2538,13 +2538,22 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   if (tagName.EqualsLiteral("table")) {
     newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),
                              NS_LITERAL_STRING("2"), rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return nullptr;
+    }
     newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),
                              NS_LITERAL_STRING("2"), rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return nullptr;
+    }
     newElement->SetAttribute(NS_LITERAL_STRING("border"),
                              NS_LITERAL_STRING("1"), rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return nullptr;
+    }
   } else if (tagName.EqualsLiteral("td")) {
     nsresult res = SetAttributeOrEquivalent(
         static_cast<nsIDOMElement*>(newElement->AsDOMNode()),
