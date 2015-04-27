@@ -17,5 +17,5 @@ webide.jar:
   skin/config-view.css         (config-view.css)
   skin/wifi-auth.css           (wifi-auth.css)
   skin/logs.css                (logs.css)
-  skin/project-listing.css     (project-listing.css)
+  skin/panel-listing.css       (panel-listing.css)
   skin/simulator.css           (simulator.css)

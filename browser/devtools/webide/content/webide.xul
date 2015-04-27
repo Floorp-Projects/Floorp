@@ -28,6 +28,7 @@
 
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"></script>
   <script type="application/javascript" src="project-panel.js"></script>
+  <script type="application/javascript" src="runtime-panel.js"></script>
   <script type="application/javascript" src="webide.js"></script>
 
   <commandset id="mainCommandSet">
@@ -167,7 +168,7 @@
 
     <!-- Runtime panel -->
     <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true" animate="false">
-      <vbox flex="1">
+      <vbox flex="1" id="runtime-panel-box">
         <label class="panel-header">&runtimePanel_usb;</label>
         <toolbarbutton class="panel-item" label="&runtimePanel_nousbdevice;" id="runtime-panel-nousbdevice" command="cmd_showTroubleShooting"/>
         <toolbarbutton class="panel-item" label="&runtimePanel_noadbhelper;" id="runtime-panel-noadbhelper" command="cmd_showAddons"/>
@@ -193,9 +194,9 @@
   </popupset>
 
   <notificationbox flex="1" id="notificationbox">
-    <hbox flex="1" id="deck-panels">
-      <vbox id="project-listing-panel" class="project-listing" flex="1">
-        <div id="project-listing-wrapper">
+    <div flex="1" id="deck-panels">
+      <vbox id="project-listing-panel" class="project-listing panel-list" flex="1">
+        <div id="project-listing-wrapper" class="panel-list-wrapper">
           <iframe id="project-listing-panel-details" flex="1" src="project-listing.xhtml"/>
         </div>
       </vbox>
@@ -213,7 +214,13 @@
         <iframe id="deck-panel-logs" flex="1" src="logs.xhtml"/>
         <iframe id="deck-panel-simulator" flex="1" lazysrc="simulator.xhtml"/>
       </deck>
-    </hbox>
+      <splitter class="devtools-side-splitter" id="runtime-listing-splitter"/>
+      <vbox id="runtime-listing-panel" class="runtime-listing panel-list" flex="1">
+        <div id="runtime-listing-wrapper" class="panel-list-wrapper">
+          <iframe id="runtime-listing-panel-details" flex="1" src="runtime-listing.xhtml"/>
+        </div>
+      </vbox>
+    </div>
     <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
     <!-- toolbox iframe will be inserted here -->
   </notificationbox>
