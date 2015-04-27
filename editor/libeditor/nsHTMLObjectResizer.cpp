@@ -684,7 +684,7 @@ nsHTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW, int32_
   ErrorResult rv;
   if (textInfo) {
     mResizingInfo->RemoveChild(*textInfo, rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
     textInfo = nullptr;
   }
 
@@ -710,7 +710,7 @@ nsHTMLEditor::SetResizingInfoPosition(int32_t aX, int32_t aY, int32_t aW, int32_
   NS_ENSURE_SUCCESS(res, res);
   textInfo = do_QueryInterface(nodeAsText);
   mResizingInfo->AppendChild(*textInfo, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   res = mResizingInfo->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_class, true);
 
