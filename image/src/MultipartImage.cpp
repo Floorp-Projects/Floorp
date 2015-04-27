@@ -35,9 +35,13 @@ public:
     tracker->AddObserver(this);
   }
 
-  void FinishObservingWithoutNotifying()
+  void BlockUntilDecodedAndFinishObserving()
   {
-    FinishObserving(/* aNotify = */ false);
+    // Use GetFrame() to block until our image finishes decoding.
+    mImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                     imgIContainer::FLAG_SYNC_DECODE);
+
+    FinishObserving();
   }
 
   virtual void Notify(int32_t aType,
@@ -49,7 +53,7 @@ public:
     }
 
     if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-      FinishObserving(/* aNotify = */ true);
+      FinishObserving();
     }
   }
 
@@ -64,7 +68,7 @@ public:
     // notification, so go ahead and notify our owner right away.
     nsRefPtr<ProgressTracker> tracker = mImage->GetProgressTracker();
     if (tracker->GetProgress() & FLAG_HAS_ERROR) {
-      FinishObserving(/* aNotify = */ true);
+      FinishObserving();
     }
   }
 
@@ -79,7 +83,7 @@ public:
 private:
   virtual ~NextPartObserver() { }
 
-  void FinishObserving(bool aNotify)
+  void FinishObserving()
   {
     MOZ_ASSERT(mImage);
 
@@ -87,9 +91,7 @@ private:
     tracker->RemoveObserver(this);
     mImage = nullptr;
 
-    if (aNotify) {
-      mOwner->FinishTransition();
-    }
+    mOwner->FinishTransition();
   }
 
   MultipartImage* mOwner;
@@ -130,8 +132,9 @@ MultipartImage::BeginTransitionToPart(Image* aNextPart)
   MOZ_ASSERT(aNextPart);
 
   if (mNextPart) {
-    NS_WARNING("Decoder not keeping up with multipart image");
-    mNextPartObserver->FinishObservingWithoutNotifying();
+    // Let the decoder catch up so we don't drop frames.
+    mNextPartObserver->BlockUntilDecodedAndFinishObserving();
+    MOZ_ASSERT(!mNextPart);
   }
 
   mNextPart = aNextPart;
@@ -148,6 +151,21 @@ void MultipartImage::FinishTransition()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mNextPart, "Should have a next part here");
 
+  nsRefPtr<ProgressTracker> newCurrentPartTracker =
+    mNextPart->GetProgressTracker();
+  if (newCurrentPartTracker->GetProgress() & FLAG_HAS_ERROR) {
+    // This frame has an error; drop it.
+    mNextPart = nullptr;
+
+    // We still need to notify, though.
+    mTracker->ResetForNewRequest();
+    nsRefPtr<ProgressTracker> currentPartTracker =
+      InnerImage()->GetProgressTracker();
+    mTracker->SyncNotifyProgress(currentPartTracker->GetProgress());
+
+    return;
+  }
+
   // Stop observing the current part.
   {
     nsRefPtr<ProgressTracker> currentPartTracker =
@@ -159,8 +177,6 @@ void MultipartImage::FinishTransition()
   mTracker->ResetForNewRequest();
   SetInnerImage(mNextPart);
   mNextPart = nullptr;
-  nsRefPtr<ProgressTracker> newCurrentPartTracker =
-    InnerImage()->GetProgressTracker();
   newCurrentPartTracker->AddObserver(this);
 
   // Finally, send all the notifications for the new current part and send a
@@ -207,12 +223,14 @@ MultipartImage::OnImageDataAvailable(nsIRequest* aRequest,
   // We may trigger notifications that will free mNextPart, so keep it alive.
   nsRefPtr<Image> nextPart = mNextPart;
   if (nextPart) {
-    return nextPart->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                          aSourceOffset, aCount);
+    nextPart->OnImageDataAvailable(aRequest, aContext, aInStr,
+                                   aSourceOffset, aCount);
+  } else {
+    InnerImage()->OnImageDataAvailable(aRequest, aContext, aInStr,
+                                       aSourceOffset, aCount);
   }
 
-  return InnerImage()->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                            aSourceOffset, aCount);
+  return NS_OK;
 }
 
 nsresult
@@ -227,12 +245,12 @@ MultipartImage::OnImageDataComplete(nsIRequest* aRequest,
   // We may trigger notifications that will free mNextPart, so keep it alive.
   nsRefPtr<Image> nextPart = mNextPart;
   if (nextPart) {
-    return nextPart->OnImageDataComplete(aRequest, aContext, aStatus,
-                                         aLastPart);
+    nextPart->OnImageDataComplete(aRequest, aContext, aStatus, aLastPart);
+  } else {
+    InnerImage()->OnImageDataComplete(aRequest, aContext, aStatus, aLastPart);
   }
 
-  return InnerImage()->OnImageDataComplete(aRequest, aContext, aStatus,
-                                           aLastPart);
+  return NS_OK;
 }
 
 void
