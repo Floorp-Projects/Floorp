@@ -149,15 +149,27 @@ this.TelemetryStorage = {
   },
 
   /**
-   * Add a ping to the saved pings directory so that it gets along with other pings. Note
-   * that the original ping file will not be modified.
+   * Add a ping to the saved pings directory so that it gets saved
+   * and sent along with other pings.
    *
-   * @param {String} aFilePath The path to the ping file that needs to be added to the
+   * @param {Object} pingData The ping object.
+   * @return {Promise} A promise resolved when the ping is saved to the pings directory.
+   */
+  addPendingPing: function(pingData) {
+    return TelemetryStorageImpl.addPendingPing(pingData);
+  },
+
+  /**
+   * Add a ping from an existing file to the saved pings directory so that it gets saved
+   * and sent along with other pings.
+   * Note: that the original ping file will not be modified.
+   *
+   * @param {String} pingPath The path to the ping file that needs to be added to the
    *                           saved pings directory.
    * @return {Promise} A promise resolved when the ping is saved to the pings directory.
    */
-  addPendingPing: function(aPingPath) {
-    return TelemetryStorageImpl.addPendingPing(aPingPath);
+  addPendingPingFromFile: function(pingPath) {
+    return TelemetryStorageImpl.addPendingPingFromFile(pingPath);
   },
 
   /**
@@ -416,25 +428,39 @@ let TelemetryStorageImpl = {
   },
 
   /**
-   * Add a ping to the saved pings directory so that it gets along with other pings. Note
-   * that the original ping file will not be modified.
+   * Add a ping from an existing file to the saved pings directory so that it gets saved
+   * and sent along with other pings.
+   * Note: that the original ping file will not be modified.
    *
-   * @param {String} aFilePath The path to the ping file that needs to be added to the
+   * @param {String} pingPath The path to the ping file that needs to be added to the
    *                           saved pings directory.
    * @return {Promise} A promise resolved when the ping is saved to the pings directory.
    */
-  addPendingPing: function(aPingPath) {
+  addPendingPingFromFile: function(pingPath) {
     // Pings in the saved ping directory need to have the ping id or slug (old format) as
     // the file name. We load the ping content, check that it is valid, and use it to save
     // the ping file with the correct file name.
-    return this.loadPingFile(aPingPath).then(ping => {
-        // Append the ping to the pending list.
-        pendingPings.push(ping);
-        // Since we read a ping successfully, update the related histogram.
-        Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS").add(1);
-        // Save the ping to the saved pings directory.
-        return this.savePing(ping, false);
-      });
+    return this.loadPingFile(pingPath).then(ping => {
+      // Since we read a ping successfully, update the related histogram.
+      Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS").add(1);
+      this.addPendingPing(ping);
+      return this.savePing(ping, false);
+    });
+  },
+
+  /**
+   * Add a ping to the saved pings directory so that it gets saved
+   * and sent along with other pings.
+   * Note: that the original ping file will not be modified.
+   *
+   * @param {Object} ping The ping object.
+   * @return {Promise} A promise resolved when the ping is saved to the pings directory.
+   */
+  addPendingPing: function(ping) {
+    // Append the ping to the pending list.
+    pendingPings.push(ping);
+    // Save the ping to the saved pings directory.
+    return this.savePing(ping, false);
   },
 
   /**

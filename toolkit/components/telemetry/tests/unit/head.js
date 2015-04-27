@@ -17,6 +17,8 @@ const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR;
 
 const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 let gOldAppInfo = null;
 let gGlobalScope = this;
 
