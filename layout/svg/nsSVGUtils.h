@@ -21,6 +21,7 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
+#include "nsIFrame.h"
 #include "nsISupportsBase.h"
 #include "nsMathUtils.h"
 #include "nsStyleStruct.h"
@@ -179,11 +180,19 @@ class nsSVGUtils
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::gfx::AntialiasMode AntialiasMode;
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
 
   static void Init();
+
+  static void DestroyObjectBoundingBoxProperty(void* aPropertyValue) {
+    delete static_cast<gfxRect*>(aPropertyValue);
+  }
+
+  NS_DECLARE_FRAME_PROPERTY(ObjectBoundingBoxProperty,
+                            DestroyObjectBoundingBoxProperty);
 
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
@@ -394,6 +403,8 @@ public:
    * aFrame's userspace.
    */
   static gfxRect GetBBox(nsIFrame *aFrame,
+                         // If the default arg changes, update the handling for
+                         // ObjectBoundingBoxProperty() in the implementation.
                          uint32_t aFlags = eBBoxIncludeFillGeometry);
 
   /*
