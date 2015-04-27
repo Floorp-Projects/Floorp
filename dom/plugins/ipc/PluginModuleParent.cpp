@@ -537,6 +537,8 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
     Preferences::RegisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
 #endif
 
+    RegisterSettingsCallbacks();
+
 #ifdef MOZ_CRASHREPORTER
     // If this fails, we're having IPC troubles, and we're doomed anyways.
     if (!CrashReporterParent::CreateCrashReporter(this)) {
@@ -692,8 +694,6 @@ PluginModuleChromeParent::PluginModuleChromeParent(const char* aFilePath, uint32
     NS_ASSERTION(mSubprocess, "Out of memory!");
     sInstantiated = true;
     mRunID = sNextRunID++;
-
-    RegisterSettingsCallbacks();
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     InitPluginProfiling();
