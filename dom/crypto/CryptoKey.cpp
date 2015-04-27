@@ -1089,11 +1089,15 @@ CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
   CryptoBuffer priv, pub;
 
   if (mPrivateKey) {
-    CryptoKey::PrivateKeyToPkcs8(mPrivateKey, priv, locker);
+    if (NS_FAILED(CryptoKey::PrivateKeyToPkcs8(mPrivateKey, priv, locker))) {
+      return false;
+    }
   }
 
   if (mPublicKey) {
-    CryptoKey::PublicKeyToSpki(mPublicKey, pub, locker);
+    if (NS_FAILED(CryptoKey::PublicKeyToSpki(mPublicKey, pub, locker))) {
+      return false;
+    }
   }
 
   return JS_WriteUint32Pair(aWriter, mAttributes, CRYPTOKEY_SC_VERSION) &&
