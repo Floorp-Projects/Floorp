@@ -73,15 +73,17 @@ public:
   virtual CSSAnimation* AsCSSAnimation() { return nullptr; }
   virtual CSSTransition* AsCSSTransition() { return nullptr; }
 
-  // Flag to pass to DoPlay to indicate that it should not carry out finishing
+  // Flag to pass to Play to indicate that it should not carry out finishing
   // behavior (reset the current time to the beginning of the active duration).
   enum LimitBehavior {
     AutoRewind = 0,
     Continue = 1
   };
 
-  // Animation methods
+  // Animation interface methods
+
   KeyframeEffectReadonly* GetEffect() const { return mEffect; }
+  void SetEffect(KeyframeEffectReadonly* aEffect);
   DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
@@ -101,9 +103,12 @@ public:
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   // Wrapper functions for Animation DOM methods when called
-  // from script. We often use the same methods internally and from
-  // script but when called from script we (or one of our subclasses) perform
-  // extra steps such as flushing style or converting the return type.
+  // from script.
+  //
+  // We often use the same methods internally and from script but when called
+  // from script we (or one of our subclasses) perform extra steps such as
+  // flushing style or converting the return type.
+
   Nullable<double> GetStartTimeAsDouble() const;
   void SetStartTimeAsDouble(const Nullable<double>& aStartTime);
   Nullable<double> GetCurrentTimeAsDouble() const;
@@ -117,11 +122,12 @@ public:
   void PauseFromJS() { Pause(); }
 
   // Wrapper functions for Animation DOM methods when called from style.
+  //
   // Typically these DOM methods also notify style of changes but when
   // we are calling from style we don't need to do this.
+
   void CancelFromStyle() { DoCancel(); }
 
-  void SetEffect(KeyframeEffectReadonly* aEffect);
   void Tick();
 
   /**
