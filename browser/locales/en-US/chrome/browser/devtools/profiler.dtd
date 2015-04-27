@@ -51,16 +51,22 @@
 
 <!-- LOCALIZATION NOTE (profilerUI.table.*): These strings are displayed
   -  in the call tree headers for a recording. -->
-<!ENTITY profilerUI.table.totalDuration2  "Total Time">
-<!ENTITY profilerUI.table.selfDuration2   "Self Time">
-<!ENTITY profilerUI.table.totalPercentage "Total Cost">
-<!ENTITY profilerUI.table.selfPercentage  "Self Cost">
-<!ENTITY profilerUI.table.samples         "Samples">
-<!ENTITY profilerUI.table.function        "Function">
-<!ENTITY profilerUI.table.totalAlloc1       "Total Sampled Allocations">
-<!ENTITY profilerUI.table.totalAllocTooltip "The total number of Object allocations sampled at this location and in callees.">
-<!ENTITY profilerUI.table.selfAlloc1        "Self Sampled Allocations">
-<!ENTITY profilerUI.table.selfAllocTooltip  "The number of Object allocations sampled at this location.">
+<!ENTITY profilerUI.table.totalDuration2           "Total Time">
+<!ENTITY profilerUI.table.totalDuration.tooltip    "The amount of time spent in this function and functions it calls.">
+<!ENTITY profilerUI.table.selfDuration2            "Self Time">
+<!ENTITY profilerUI.table.selfDuration.tooltip     "The amount of time spent only within this function.">
+<!ENTITY profilerUI.table.totalPercentage          "Total Cost">
+<!ENTITY profilerUI.table.totalPercentage.tooltip  "The percentage of time spent in this function and functions it calls.">
+<!ENTITY profilerUI.table.selfPercentage           "Self Cost">
+<!ENTITY profilerUI.table.selfPercentage.tooltip   "The percentage of time spent only within this function.">
+<!ENTITY profilerUI.table.samples                  "Samples">
+<!ENTITY profilerUI.table.samples.tooltip          "The number of times this function was on the stack when the profiler took a sample.">
+<!ENTITY profilerUI.table.function                 "Function">
+<!ENTITY profilerUI.table.function.tooltip         "The name and source location of the sampled function.">
+<!ENTITY profilerUI.table.totalAlloc1              "Total Sampled Allocations">
+<!ENTITY profilerUI.table.totalAlloc.tooltip       "The total number of Object allocations sampled at this location and in callees.">
+<!ENTITY profilerUI.table.selfAlloc1               "Self Sampled Allocations">
+<!ENTITY profilerUI.table.selfAlloc.tooltip        "The number of Object allocations sampled at this location.">
 
 <!-- LOCALIZATION NOTE (profilerUI.newtab.tooltiptext): The tooltiptext shown
   -  on the "+" (new tab) button for a profile when a selection is available. -->
