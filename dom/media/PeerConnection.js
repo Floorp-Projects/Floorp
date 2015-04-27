@@ -45,9 +45,14 @@ function GlobalPCList() {
   Services.obs.addObserver(this, "network:offline-about-to-go-offline", true);
   Services.obs.addObserver(this, "network:offline-status-changed", true);
   Services.obs.addObserver(this, "gmp-plugin-crash", true);
+  if (Cc["@mozilla.org/childprocessmessagemanager;1"]) {
+    let mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
+    mm.addMessageListener("gmp-plugin-crash", this);
+  }
 }
 GlobalPCList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsIMessageListener,
                                          Ci.nsISupportsWeakReference,
                                          Ci.IPeerConnectionManager]),
   classID: PC_MANAGER_CID,
@@ -93,6 +98,31 @@ GlobalPCList.prototype = {
     return this._list[winID] ? true : false;
   },
 
+  handleGMPCrash: function(data) {
+    let broadcastPluginCrash = function(list, winID, pluginID, pluginName) {
+      if (list.hasOwnProperty(winID)) {
+        list[winID].forEach(function(pcref) {
+          let pc = pcref.get();
+          if (pc) {
+            pc._pc.pluginCrash(pluginID, pluginName);
+          }
+        });
+      }
+    };
+
+    // a plugin crashed; if it's associated with any of our PCs, fire an
+    // event to the DOM window
+    for (let winId in this._list) {
+      broadcastPluginCrash(this._list, winId, data.pluginID, data.pluginName);
+    }
+  },
+
+  receiveMessage: function(message) {
+    if (message.name == "gmp-plugin-crash") {
+      this.handleGMPCrash(message.data);
+    }
+  },
+
   observe: function(subject, topic, data) {
     let cleanupPcRef = function(pcref) {
       let pc = pcref.get();
@@ -107,17 +137,6 @@ GlobalPCList.prototype = {
       if (list.hasOwnProperty(winID)) {
         list[winID].forEach(cleanupPcRef);
         delete list[winID];
-      }
-    };
-
-    let broadcastPluginCrash = function(list, winID, pluginID, name, crashReportID) {
-      if (list.hasOwnProperty(winID)) {
-        list[winID].forEach(function(pcref) {
-          let pc = pcref.get();
-          if (pc) {
-            pc._pc.pluginCrash(pluginID, name, crashReportID);
-          }
-        });
       }
     };
 
@@ -162,17 +181,11 @@ GlobalPCList.prototype = {
         }
       }
     } else if (topic == "gmp-plugin-crash") {
-      // a plugin crashed; if it's associated with any of our PCs, fire an
-      // event to the DOM window
-      let sep = data.indexOf(' ');
-      let pluginId = data.slice(0, sep);
-      let rest = data.slice(sep+1);
-      // This presumes no spaces in the name!
-      sep = rest.indexOf(' ');
-      let name = rest.slice(0, sep);
-      let crashId = rest.slice(sep+1);
-      for (let winId in this._list) {
-        broadcastPluginCrash(this._list, winId, pluginId, name, crashId);
+      if (subject instanceof Ci.nsIWritablePropertyBag2) {
+        let pluginID = subject.getPropertyAsUint32("pluginID");
+        let pluginName = subject.getPropertyAsAString("pluginName");
+        let data = { pluginID, pluginName };
+        this.handleGMPCrash(data);
       }
     }
   },

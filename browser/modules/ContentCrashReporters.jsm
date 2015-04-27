@@ -114,27 +114,68 @@ this.PluginCrashReporter = {
     this.crashReports = new Map();
 
     Services.obs.addObserver(this, "plugin-crashed", false);
+    Services.obs.addObserver(this, "gmp-plugin-crash", false);
+    Services.obs.addObserver(this, "profile-after-change", false);
+  },
+
+  uninit() {
+    Services.obs.removeObserver(this, "plugin-crashed", false);
+    Services.obs.removeObserver(this, "gmp-plugin-crash", false);
+    Services.obs.removeObserver(this, "profile-after-change", false);
+    this.initialized = false;
   },
 
   observe(subject, topic, data) {
-    if (topic != "plugin-crashed") {
-      return;
-    }
+    switch(topic) {
+      case "plugin-crashed": {
+        let propertyBag = subject;
+        if (!(propertyBag instanceof Ci.nsIPropertyBag2) ||
+            !(propertyBag instanceof Ci.nsIWritablePropertyBag2) ||
+            !propertyBag.hasKey("runID") ||
+            !propertyBag.hasKey("pluginDumpID")) {
+          Cu.reportError("PluginCrashReporter can not read plugin information.");
+          return;
+        }
 
-    let propertyBag = subject;
-    if (!(propertyBag instanceof Ci.nsIPropertyBag2) ||
-        !(propertyBag instanceof Ci.nsIWritablePropertyBag2) ||
-        !propertyBag.hasKey("runID") ||
-        !propertyBag.hasKey("pluginName")) {
-      Cu.reportError("PluginCrashReporter can not read plugin information.");
-      return;
-    }
+        let runID = propertyBag.getPropertyAsUint32("runID");
+        let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
+        let browserDumpID = propertyBag.getPropertyAsAString("browserDumpID");
+        if (pluginDumpID) {
+          this.crashReports.set(runID, { pluginDumpID, browserDumpID });
+        }
+        break;
+      }
+      case "gmp-plugin-crash": {
+        let propertyBag = subject;
+        if (!(propertyBag instanceof Ci.nsIWritablePropertyBag2) ||
+            !propertyBag.hasKey("pluginID") ||
+            !propertyBag.hasKey("pluginDumpID") ||
+            !propertyBag.hasKey("pluginName")) {
+          Cu.reportError("PluginCrashReporter can not read plugin information.");
+          return;
+        }
 
-    let runID = propertyBag.getPropertyAsUint32("runID");
-    let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
-    let browserDumpID = propertyBag.getPropertyAsAString("browserDumpID");
-    if (pluginDumpID) {
-      this.crashReports.set(runID, { pluginDumpID, browserDumpID });
+        let pluginID = propertyBag.getPropertyAsUint32("pluginID");
+        let pluginDumpID = propertyBag.getPropertyAsAString("pluginDumpID");
+        if (pluginDumpID) {
+          this.crashReports.set(pluginID, { pluginDumpID });
+        }
+
+        // Only the parent process gets the gmp-plugin-crash observer
+        // notification, so we need to inform any content processes that
+        // the GMP has crashed.
+        if (Cc["@mozilla.org/parentprocessmessagemanager;1"]) {
+          let pluginName = propertyBag.getPropertyAsAString("pluginName");
+          let mm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+            .getService(Ci.nsIMessageListenerManager);
+          mm.broadcastAsyncMessage("gmp-plugin-crash",
+                                   { pluginName, pluginID });
+        }
+        break;
+      }
+      case "profile-after-change":
+        this.uninit();
+        break;
     }
   },
 
@@ -193,15 +234,5 @@ this.PluginCrashReporter = {
 
   hasCrashReport(runID) {
     return this.crashReports.has(runID);
-  },
-
-  /**
-   * Deprecated mechanism for sending crash reports for GMPs. This
-   * should be removed when bug 1146955 is fixed.
-   */
-  submitGMPCrashReport(pluginDumpID, browserDumpID) {
-    CrashSubmit.submit(pluginDumpID, { recordSubmission: true });
-    if (browserDumpID)
-      CrashSubmit.submit(browserDumpID);
   },
 };
