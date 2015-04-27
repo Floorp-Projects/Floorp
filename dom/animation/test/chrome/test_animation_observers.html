@@ -573,7 +573,8 @@ function assert_records(expected, desc) {
   // Test that starting a single animation that is cancelled by updating
   // the animation-iteration-count property dispatches an added notification
   // and then a removed notification.
-  addAsyncAnimTest("single_animation_cancelled_fill", aOptions, function*() {
+  addAsyncAnimTest("single_animation_cancelled_iteration_count",
+                   aOptions, function*() {
     // Start a short, repeated animation.
     e.style = "animation: anim 0.5s infinite;";
 
@@ -601,6 +602,44 @@ function assert_records(expected, desc) {
     yield await_frame();
     assert_records([{ added: [], changed: [], removed: animations }],
                    "records after animation end");
+
+    e.style = "";
+  });
+
+  // Test that starting a single animation that is cancelled by calling
+  // cancel() dispatches an added notification and then a removed
+  // notification.
+  addAsyncAnimTest("single_animation_cancelled_api", aOptions, function*() {
+    // Start a short, filled animation.
+    e.style = "animation: anim 100s forwards;";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                   "records after animation start");
+
+    // Cancel the animation
+    animations[0].cancel();
+
+    // Wait for the single MutationRecord for the Animation removal to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                   "records after animation end");
+
+    // Re-trigger the animation
+    animations[0].play();
+    yield await_frame();
+
+    // Wait for the single MutationRecord for the Animation (re-)addition to
+    // be delivered.
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                   "records after animation start");
 
     e.style = "";
   });

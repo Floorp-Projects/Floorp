@@ -1859,6 +1859,29 @@ class PersistentRootedBase<JS::Value> : public MutableValueOperations<JS::Persis
     }
 };
 
+/*
+ * If the Value is a GC pointer type, convert to that type and call |f| with
+ * the pointer. If the Value is not a GC type, calls F::defaultValue.
+ */
+template <typename F, typename... Args>
+auto
+DispatchValueTyped(F f, const JS::Value& val, Args&&... args)
+  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
+{
+    if (val.isString())
+        return f(val.toString(), mozilla::Forward<Args>(args)...);
+    if (val.isObject())
+        return f(&val.toObject(), mozilla::Forward<Args>(args)...);
+    if (val.isSymbol())
+        return f(val.toSymbol(), mozilla::Forward<Args>(args)...);
+    MOZ_ASSERT(!val.isMarkable());
+    return F::defaultValue(val);
+}
+
+template <class S> struct VoidDefaultAdaptor { static void defaultValue(S) {} };
+template <class S> struct IdentityDefaultAdaptor { static S defaultValue(const S& v) {return v;} };
+template <class S, bool v> struct BoolDefaultAdaptor { static bool defaultValue(S) { return v; } };
+
 } // namespace js
 
 inline jsval_layout

@@ -32,7 +32,7 @@ class MessageLoopIdleTask
   , public SupportsWeakPtr<MessageLoopIdleTask>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(MessageLoopIdleTask)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(MessageLoopIdleTask)
   MessageLoopIdleTask(nsIRunnable* aTask, uint32_t aEnsureRunsAfterMS);
   virtual void Run();
 

@@ -511,7 +511,7 @@ async_test(function(t) {
       'animation has finished');
     t.done();
   }));
-}, 'Test Animation.currentTime clamping');
+}, 'Animation.currentTime clamping');
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});
@@ -533,7 +533,17 @@ async_test(function(t) {
       'animation running in reverse has finished and currentTime is zero');
     t.done();
   }));
-}, 'Test Animation.currentTime clamping for reversed animation');
+}, 'Animation.currentTime clamping for reversed animation');
+
+test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = 'anim 100s';
+
+  var animation = div.getAnimations()[0];
+  animation.cancel();
+  assert_equals(animation.currentTime, null,
+                'The currentTime of a cancelled animation should be null');
+}, 'Animation.currentTime after cancelling');
 
     </script>
   </body>

@@ -210,7 +210,7 @@ class PastebinProvider(object):
         description='Command line interface to pastebin.mozilla.org.')
     @CommandArgument('--language', default=None,
                      help='Language to use for syntax highlighting')
-    @CommandArgument('--poster', default=None,
+    @CommandArgument('--poster', default='',
                      help='Specify your name for use with pastebin.mozilla.org')
     @CommandArgument('--duration', default='day',
                      choices=['d', 'day', 'm', 'month', 'f', 'forever'],
@@ -222,7 +222,7 @@ class PastebinProvider(object):
         import sys
         import urllib
 
-        URL = 'http://pastebin.mozilla.org/'
+        URL = 'https://pastebin.mozilla.org/'
 
         FILE_TYPES = [{'value': 'text', 'name': 'None', 'extension': 'txt'},
         {'value': 'bash', 'name': 'Bash', 'extension': 'sh'},

@@ -204,15 +204,14 @@ public:
     virtual ~OnTracksAvailableCallback() {}
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
   };
-  // When one track of the appropriate type has been added for each bit set
-  // in aCallback->GetExpectedTracks(), run aCallback->NotifyTracksAvailable.
+  // When the initial set of tracks has been added, run
+  // aCallback->NotifyTracksAvailable.
   // It is allowed to do anything, including run script.
   // aCallback may run immediately during this call if tracks are already
   // available!
   // We only care about track additions, we'll fire the notification even if
   // some of the tracks have been removed.
   // Takes ownership of aCallback.
-  // If GetExpectedTracks() returns 0, the callback will be fired as soon as there are any tracks.
   void OnTracksAvailable(OnTracksAvailableCallback* aCallback);
 
   /**

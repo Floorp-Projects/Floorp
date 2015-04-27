@@ -44,6 +44,7 @@ gyp_vars = {
 
     'moz_widget_toolkit_gonk': 0,
     'moz_webrtc_omx': 0,
+    'moz_webrtc_mediacodec': 0,
 
     # (for vp8) chromium sets to 0 also
     'use_temporal_layers': 0,
@@ -80,6 +81,7 @@ elif os == 'Android':
     else:
         gyp_vars.update(
             gtest_target_type='executable',
+            moz_webrtc_mediacodec=1,
             android_toolchain=CONFIG['ANDROID_TOOLCHAIN'],
         )
 

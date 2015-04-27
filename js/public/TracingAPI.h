@@ -42,6 +42,9 @@ enum JSGCTraceKind
     // Shape details are exposed through JS_TraceShapeCycleCollectorChildren.
     JSTRACE_SHAPE = 0x04,
 
+    // ObjectGroup details are exposed through JS_TraceObjectGroupCycleCollectorChildren.
+    JSTRACE_OBJECT_GROUP = 0x05,
+
     // The kind associated with a nullptr.
     JSTRACE_NULL = 0x06,
 
@@ -52,7 +55,6 @@ enum JSGCTraceKind
     JSTRACE_BASE_SHAPE = 0x0F,
     JSTRACE_JITCODE = 0x1F,
     JSTRACE_LAZY_SCRIPT = 0x2F,
-    JSTRACE_OBJECT_GROUP = 0x3F,
 
     JSTRACE_LAST = JSTRACE_OBJECT_GROUP
 };

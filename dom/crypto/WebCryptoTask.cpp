@@ -304,10 +304,6 @@ WebCryptoTask::CalculateResult()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  if (NS_FAILED(mEarlyRv)) {
-    return mEarlyRv;
-  }
-
   if (isAlreadyShutDown()) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
@@ -2992,6 +2988,7 @@ WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
       algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
     return new ExportKeyTask(aFormat, aKey);

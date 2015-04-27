@@ -1170,14 +1170,6 @@ endif #} XPT_NAME
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
-ifneq (,$(filter %.js,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS)))
-ifeq (,$(filter %.manifest,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS)))
-ifndef NO_JS_MANIFEST
-$(error .js component without matching .manifest. See https://developer.mozilla.org/en/XPCOM/XPCOM_changes_in_Gecko_2.0)
-endif
-endif
-endif
-
 ifdef EXTRA_COMPONENTS
 misc:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL

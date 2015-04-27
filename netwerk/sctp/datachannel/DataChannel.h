@@ -106,7 +106,7 @@ public:
   class DataConnectionListener : public SupportsWeakPtr<DataConnectionListener>
   {
   public:
-    MOZ_DECLARE_REFCOUNTED_TYPENAME(DataChannelConnection::DataConnectionListener)
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(DataChannelConnection::DataConnectionListener)
     virtual ~DataConnectionListener() {}
 
     // Called when a new DataChannel has been opened by the other side.
