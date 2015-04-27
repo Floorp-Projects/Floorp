@@ -248,10 +248,10 @@ function LoadTest(test, elem, token, loadParams)
 
 // Same as LoadTest, but manage a token+"_load" start&finished.
 // Also finish main token if loading fails.
-function LoadTestWithManagedLoadToken(test, elem, manager, token, loadParams)
+function LoadTestWithManagedLoadToken(test, elem, manager, token)
 {
   manager.started(token + "_load");
-  return LoadTest(test, elem, token, loadParams)
+  return LoadTest(test, elem, token)
   .catch(function (reason) {
     ok(false, TimeStamp(token) + " - Error during load: " + reason);
     manager.finished(token + "_load");
