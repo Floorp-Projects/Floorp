@@ -246,7 +246,8 @@
           <label id="pocket-page-saved-header" class="pocket-header"/>
           <hbox id="pocket-page-saved-next-steps" pack="center">
             <label id="pocket-open-pocket" class="text-link"/>
-            <label id="pocket-remove-page" class="text-link"/>
+            <label id="pocket-remove-page" class="text-link"
+                   onclick="Pocket.remove(this.itemId);"/>
           </hbox>
           <hbox id="pocket-separator">
             <box class="pocket-separator-colorstop"/>
