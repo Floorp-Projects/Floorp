@@ -143,7 +143,7 @@ typedef std::string xpstring;
 #else
 #define XP_STRLEN(x) strlen(x)
 #define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
-#define XP_STOA(size, buffer, base) sprintf(buffer, "%zu", (size_t) size)
+#define XP_STOA(size, buffer, base) sprintf(buffer, "%zu", size)
 #define my_strlen strlen
 #define sys_close close
 #define sys_fork fork
@@ -159,32 +159,6 @@ static const XP_CHAR dumpFileExtension[] = XP_TEXT(".dmp");
 
 static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
 static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
-
-// A whitelist of crash annotations which do not contain sensitive data
-// and are saved in the crash record and sent with Firefox Health Report.
-static char const * const kCrashEventAnnotations[] = {
-  "AsyncShutdownTimeout",
-  "BuildID",
-  "TelemetryEnvironment",
-  "ProductID",
-  "ProductName",
-  "ReleaseChannel",
-  "SecondsSinceLastCrash",
-  "ShutdownProgress",
-  "Version"
-  // The following entries are not normal annotations but are included
-  // in the crash record/FHR:
-  // "ContainsMemoryReport"
-  // "EventLoopNestingLevel"
-  // "IsGarbageCollecting"
-  // "AvailablePageFile"
-  // "AvailableVirtualMemory"
-  // "SystemMemoryUsePercentage"
-  // "OOMAllocationSize"
-  // "TotalPageFile"
-  // "TotalPhysicalMemory"
-  // "TotalVirtualMemory"
-};
 
 static const char kCrashMainID[] = "crash.main.2\n";
 
@@ -229,16 +203,73 @@ static char* androidUserSerial = nullptr;
 #endif
 
 // these are just here for readability
+static const char kCrashTimeParameter[] = "CrashTime=";
+static const int kCrashTimeParameterLen = sizeof(kCrashTimeParameter)-1;
+
 static const char kTimeSinceLastCrashParameter[] = "SecondsSinceLastCrash=";
 static const int kTimeSinceLastCrashParameterLen =
                                      sizeof(kTimeSinceLastCrashParameter)-1;
+
+static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
+static const int kOOMAllocationSizeParameterLen =
+  sizeof(kOOMAllocationSizeParameter)-1;
+
+#ifdef XP_WIN32
+static const char kSysMemoryParameter[] = "SystemMemoryUsePercentage=";
+static const int kSysMemoryParameterLen = sizeof(kSysMemoryParameter)-1;
+
+static const char kTotalVirtualMemoryParameter[] = "TotalVirtualMemory=";
+static const int kTotalVirtualMemoryParameterLen =
+  sizeof(kTotalVirtualMemoryParameter)-1;
+
+static const char kAvailableVirtualMemoryParameter[] = "AvailableVirtualMemory=";
+static const int kAvailableVirtualMemoryParameterLen =
+  sizeof(kAvailableVirtualMemoryParameter)-1;
+
+static const char kTotalPageFileParameter[] = "TotalPageFile=";
+static const int kTotalPageFileParameterLen =
+  sizeof(kTotalPageFileParameter)-1;
+
+static const char kAvailablePageFileParameter[] = "AvailablePageFile=";
+static const int kAvailablePageFileParameterLen =
+  sizeof(kAvailablePageFileParameter)-1;
+
+static const char kTotalPhysicalMemoryParameter[] = "TotalPhysicalMemory=";
+static const int kTotalPhysicalMemoryParameterLen =
+  sizeof(kTotalPhysicalMemoryParameter)-1;
+
+static const char kAvailablePhysicalMemoryParameter[] = "AvailablePhysicalMemory=";
+static const int kAvailablePhysicalMemoryParameterLen =
+  sizeof(kAvailablePhysicalMemoryParameter)-1;
+#endif
+
+static const char kIsGarbageCollectingParameter[] = "IsGarbageCollecting=";
+static const int kIsGarbageCollectingParameterLen =
+  sizeof(kIsGarbageCollectingParameter)-1;
+
+static const char kEventLoopNestingLevelParameter[] = "EventLoopNestingLevel=";
+static const int kEventLoopNestingLevelParameterLen =
+  sizeof(kEventLoopNestingLevelParameter)-1;
+
+#ifdef XP_WIN
+static const char kBreakpadReserveAddressParameter[] = "BreakpadReserveAddress=";
+static const int kBreakpadReserveAddressParameterLen =
+  sizeof(kBreakpadReserveAddressParameter)-1;
+
+static const char kBreakpadReserveSizeParameter[] = "BreakpadReserveSize=";
+static const int kBreakpadReserveSizeParameterLen =
+  sizeof(kBreakpadReserveSizeParameter)-1;
+#endif
+
+static const char kMemoryReportParameter[] = "ContainsMemoryReport=1\n";
+static const int kMemoryReportParameterLen =
+  sizeof(kMemoryReportParameter)-1;
 
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
 static Mutex* notesFieldLock;
 static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nullptr;
-static nsCString* crashEventAPIData = nullptr;
 static nsCString* notesField = nullptr;
 static bool isGarbageCollecting;
 static uint32_t eventloopNestingLevel = 0;
@@ -503,125 +534,6 @@ bool copy_file(const char* from, const char* to)
 }
 #endif
 
-#ifdef XP_WIN
-class PlatformWriter
-{
-public:
-  PlatformWriter()
-    : mHandle(INVALID_HANDLE_VALUE)
-  { }
-
-  explicit PlatformWriter(const wchar_t* path)
-    : PlatformWriter()
-  {
-    Open(path);
-  }
-
-  ~PlatformWriter() {
-    if (Valid()) {
-      CloseHandle(mHandle);
-    }
-  }
-
-  void Open(const wchar_t* path) {
-    mHandle = CreateFile(path, GENERIC_WRITE, 0,
-                         nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-                         nullptr);
-  }
-
-  bool Valid() {
-    return mHandle != INVALID_HANDLE_VALUE;
-  }
-
-  void WriteBuffer(const char* buffer, size_t len)
-  {
-    if (!Valid()) {
-      return;
-    }
-    DWORD nBytes;
-    WriteFile(mHandle, buffer, len, &nBytes, nullptr);
-  }
-
-  HANDLE Handle() {
-    return mHandle;
-  }
-
-private:
-  HANDLE mHandle;
-};
-
-#elif defined(XP_UNIX)
-
-class PlatformWriter
-{
-public:
-  PlatformWriter()
-    : mFD(-1)
-  { }
-
-  explicit PlatformWriter(const char* path)
-    : PlatformWriter()
-  {
-    Open(path);
-  }
-
-  ~PlatformWriter() {
-    if (Valid()) {
-      sys_close(mFD);
-    }
-  }
-
-  void Open(const char* path) {
-    mFD = sys_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-  }
-
-  bool Valid() {
-    return mFD != -1;
-  }
-
-  void WriteBuffer(const char* buffer, size_t len) {
-    if (!Valid()) {
-      return;
-    }
-    unused << sys_write(mFD, buffer, len);
-  }
-
-private:
-  int mFD;
-};
-
-#else
-#error "Need implementation of PlatformWrite for this platform"
-#endif
-
-template<int N>
-void
-WriteLiteral(PlatformWriter& pw, const char (&str)[N])
-{
-  pw.WriteBuffer(str, N - 1);
-}
-
-static void
-WriteString(PlatformWriter& pw, const char* str) {
-#ifdef XP_LINUX
-  size_t len = my_strlen(str);
-#else
-  size_t len = strlen(str);
-#endif
-
-  pw.WriteBuffer(str, len);
-}
-
-template<int N>
-static void
-WriteAnnotation(PlatformWriter& pw, const char (&name)[N],
-                const char* value) {
-  WriteLiteral(pw, name);
-  WriteLiteral(pw, "=");
-  WriteString(pw, value);
-  WriteLiteral(pw, "\n");
-};
-
 bool MinidumpCallback(
 #ifdef XP_LINUX
                       const MinidumpDescriptor& descriptor,
@@ -686,18 +598,31 @@ bool MinidumpCallback(
 
   if (headlessClient) {
     // Leave a marker indicating that there was a crash.
-    PlatformWriter markerFile(crashMarkerFilename);
-#if defined(XP_WIN)
-    markerFile.WriteBuffer(reinterpret_cast<const char*>(minidumpPath),
-                           2*wcslen(minidumpPath));
+#if defined(XP_WIN32)
+    HANDLE hFile = CreateFile(crashMarkerFilename, GENERIC_WRITE, 0,
+                              nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if(hFile != INVALID_HANDLE_VALUE) {
+      DWORD nBytes;
+      WriteFile(hFile, minidumpPath, 2*wcslen(minidumpPath), &nBytes, nullptr);
+      CloseHandle(hFile);
+    }
 #elif defined(XP_UNIX)
-    markerFile.WriteBuffer(minidumpPath, my_strlen(minidumpPath));
+    int fd = sys_open(crashMarkerFilename,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0600);
+    if (fd != -1) {
+      unused << sys_write(fd, minidumpPath, my_strlen(minidumpPath));
+      sys_close(fd);
+    }
 #endif
   }
 
-  char oomAllocationSizeBuffer[32] = "";
+  char oomAllocationSizeBuffer[32];
+  int oomAllocationSizeBufferLen = 0;
   if (gOOMAllocationSize) {
     XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
+    oomAllocationSizeBufferLen = my_strlen(oomAllocationSizeBuffer);
   }
 
   // calculate time since last crash (if possible), and store
@@ -713,17 +638,37 @@ bool MinidumpCallback(
   time_t timeSinceLastCrash = 0;
   // stringified versions of the above
   char crashTimeString[32];
+  int crashTimeStringLen = 0;
   char timeSinceLastCrashString[32];
+  int timeSinceLastCrashStringLen = 0;
 
   XP_TTOA(crashTime, crashTimeString, 10);
+  crashTimeStringLen = my_strlen(crashTimeString);
   if (lastCrashTime != 0) {
     timeSinceLastCrash = crashTime - lastCrashTime;
     XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString, 10);
+    timeSinceLastCrashStringLen = my_strlen(timeSinceLastCrashString);
   }
   // write crash time to file
   if (lastCrashTimeFilename[0] != 0) {
-    PlatformWriter lastCrashFile(lastCrashTimeFilename);
-    WriteString(lastCrashFile, crashTimeString);
+#if defined(XP_WIN32)
+    HANDLE hFile = CreateFile(lastCrashTimeFilename, GENERIC_WRITE, 0,
+                              nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if(hFile != INVALID_HANDLE_VALUE) {
+      DWORD nBytes;
+      WriteFile(hFile, crashTimeString, crashTimeStringLen, &nBytes, nullptr);
+      CloseHandle(hFile);
+    }
+#elif defined(XP_UNIX)
+    int fd = sys_open(lastCrashTimeFilename,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0600);
+    if (fd != -1) {
+      unused << sys_write(fd, crashTimeString, crashTimeStringLen);
+      sys_close(fd);
+    }
+#endif
   }
 
   // Write crash event file.
@@ -744,108 +689,153 @@ bool MinidumpCallback(
   }
 #endif
 
-  {
-    PlatformWriter apiData;
-    PlatformWriter eventFile;
-
-    if (eventsDirectory) {
-      static XP_CHAR crashEventPath[XP_PATH_MAX];
-      int size = XP_PATH_MAX;
-      XP_CHAR* p;
-      p = Concat(crashEventPath, eventsDirectory, &size);
-      p = Concat(p, XP_PATH_SEPARATOR, &size);
+  if (eventsDirectory) {
+    static XP_CHAR crashEventPath[XP_PATH_MAX];
+    int size = XP_PATH_MAX;
+    XP_CHAR* p;
+    p = Concat(crashEventPath, eventsDirectory, &size);
+    p = Concat(p, XP_PATH_SEPARATOR, &size);
 #ifdef XP_LINUX
-      p = Concat(p, id_ascii, &size);
+    p = Concat(p, id_ascii, &size);
 #else
-      p = Concat(p, minidump_id, &size);
+    p = Concat(p, minidump_id, &size);
 #endif
 
-      eventFile.Open(crashEventPath);
-      WriteLiteral(eventFile, kCrashMainID);
-      WriteString(eventFile, crashTimeString);
-      WriteLiteral(eventFile, "\n");
-      WriteString(eventFile, id_ascii);
-      WriteLiteral(eventFile, "\n");
-      if (crashEventAPIData) {
-        eventFile.WriteBuffer(crashEventAPIData->get(), crashEventAPIData->Length());
+#if defined(XP_WIN32)
+    HANDLE hFile = CreateFile(crashEventPath, GENERIC_WRITE, 0,
+                              nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      DWORD nBytes;
+      WriteFile(hFile, kCrashMainID, sizeof(kCrashMainID) - 1, &nBytes,
+                nullptr);
+      WriteFile(hFile, crashTimeString, crashTimeStringLen, &nBytes, nullptr);
+      WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      WriteFile(hFile, id_ascii, strlen(id_ascii), &nBytes, nullptr);
+      if (oomAllocationSizeBufferLen) {
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+        WriteFile(hFile, kOOMAllocationSizeParameter,
+                  kOOMAllocationSizeParameterLen, &nBytes, nullptr);
+        WriteFile(hFile, oomAllocationSizeBuffer, oomAllocationSizeBufferLen,
+                  &nBytes, nullptr);
       }
+      CloseHandle(hFile);
     }
+#elif defined(XP_UNIX)
+    int fd = sys_open(crashEventPath,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0600);
+    if (fd != -1) {
+      unused << sys_write(fd, kCrashMainID, sizeof(kCrashMainID) - 1);
+      unused << sys_write(fd, crashTimeString, crashTimeStringLen);
+      unused << sys_write(fd, "\n", 1);
+      unused << sys_write(fd, id_ascii, strlen(id_ascii));
+      if (oomAllocationSizeBufferLen) {
+        unused << sys_write(fd, "\n", 1);
+        unused << sys_write(fd, kOOMAllocationSizeParameter,
+                            kOOMAllocationSizeParameterLen);
+        unused << sys_write(fd, oomAllocationSizeBuffer,
+                            oomAllocationSizeBufferLen);
+      }
+      sys_close(fd);
+    }
+#endif
+  }
 
-    if (!crashReporterAPIData->IsEmpty()) {
-      // write out API data
-      apiData.Open(extraDataPath);
-      apiData.WriteBuffer(crashReporterAPIData->get(), crashReporterAPIData->Length());
-    }
-    WriteAnnotation(apiData, "CrashTime", crashTimeString);
-    if (timeSinceLastCrash != 0) {
-      WriteAnnotation(apiData, "SecondsSinceLastCrash",
-                      timeSinceLastCrashString);
-      WriteAnnotation(eventFile, "SecondsSinceLastCrash",
-                      timeSinceLastCrashString);
-    }
-    if (isGarbageCollecting) {
-      WriteAnnotation(apiData, "IsGarbageCollecting",
-                      isGarbageCollecting ? "1" : "0");
-      WriteAnnotation(eventFile, "IsGarbageCollecting",
-                      isGarbageCollecting ? "1" : "0");
-    }
+#if defined(XP_WIN32)
+  if (!crashReporterAPIData->IsEmpty()) {
+    // write out API data
+    HANDLE hFile = CreateFile(extraDataPath, GENERIC_WRITE, 0,
+                              nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if(hFile != INVALID_HANDLE_VALUE) {
+      DWORD nBytes;
+      WriteFile(hFile, crashReporterAPIData->get(),
+                crashReporterAPIData->Length(), &nBytes, nullptr);
+      WriteFile(hFile, kCrashTimeParameter, kCrashTimeParameterLen,
+                &nBytes, nullptr);
+      WriteFile(hFile, crashTimeString, crashTimeStringLen, &nBytes, nullptr);
+      WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      if (timeSinceLastCrash != 0) {
+        WriteFile(hFile, kTimeSinceLastCrashParameter,
+                  kTimeSinceLastCrashParameterLen, &nBytes, nullptr);
+        WriteFile(hFile, timeSinceLastCrashString, timeSinceLastCrashStringLen,
+                  &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
+      if (isGarbageCollecting) {
+        WriteFile(hFile, kIsGarbageCollectingParameter, kIsGarbageCollectingParameterLen,
+                  &nBytes, nullptr);
+        WriteFile(hFile, isGarbageCollecting ? "1" : "0", 1, &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
 
-    char buffer[128];
+      char buffer[128];
+      int bufferLen;
 
-    if (eventloopNestingLevel > 0) {
-      XP_STOA(eventloopNestingLevel, buffer, 10);
-      WriteAnnotation(apiData, "EventLoopNestingLevel", buffer);
-      WriteAnnotation(eventFile, "EventLoopNestingLevel", buffer);
-    }
+      if (eventloopNestingLevel > 0) {
+        WriteFile(hFile, kEventLoopNestingLevelParameter, kEventLoopNestingLevelParameterLen,
+                  &nBytes, nullptr);
+        _ultoa(eventloopNestingLevel, buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
 
-#ifdef XP_WIN
-    if (gBreakpadReservedVM) {
-      _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
-      WriteAnnotation(apiData, "BreakpadReserveAddress", buffer);
-      _ui64toa(kReserveSize, buffer, 10);
-      WriteAnnotation(apiData, "BreakpadReserveSize", buffer);
-    }
+      if (gBreakpadReservedVM) {
+        WriteFile(hFile, kBreakpadReserveAddressParameter, kBreakpadReserveAddressParameterLen, &nBytes, nullptr);
+        _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+        WriteFile(hFile, kBreakpadReserveSizeParameter, kBreakpadReserveSizeParameterLen, &nBytes, nullptr);
+        _ui64toa(kReserveSize, buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
 
 #ifdef HAS_DLL_BLOCKLIST
-    if (apiData.Valid()) {
-      DllBlocklist_WriteNotes(apiData.Handle());
-      DllBlocklist_WriteNotes(eventFile.Handle());
-    }
+      DllBlocklist_WriteNotes(hFile);
 #endif
 
-    // Try to get some information about memory.
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    if (GlobalMemoryStatusEx(&statex)) {
+      // Try to get some information about memory.
+      MEMORYSTATUSEX statex;
+      statex.dwLength = sizeof(statex);
+      if (GlobalMemoryStatusEx(&statex)) {
 
-#define WRITE_STATEX_FIELD(field, name, conversionFunc)          \
-      conversionFunc(statex.field, buffer, 10);                  \
-      WriteAnnotation(apiData, name, buffer);                    \
-      WriteAnnotation(eventFile, name, buffer);
+#define WRITE_STATEX_FIELD(field, paramName, conversionFunc)     \
+        WriteFile(hFile, k##paramName##Parameter,                \
+                  k##paramName##ParameterLen, &nBytes, nullptr); \
+        conversionFunc(statex.field, buffer, 10);                \
+        bufferLen = strlen(buffer);                              \
+        WriteFile(hFile, buffer, bufferLen, &nBytes, nullptr);   \
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
 
-      WRITE_STATEX_FIELD(dwMemoryLoad, "SystemMemoryUsePercentage", ltoa);
-      WRITE_STATEX_FIELD(ullTotalVirtual, "TotalVirtualMemory", _ui64toa);
-      WRITE_STATEX_FIELD(ullAvailVirtual, "AvailableVirtualMemory", _ui64toa);
-      WRITE_STATEX_FIELD(ullTotalPageFile, "TotalPageFile", _ui64toa);
-      WRITE_STATEX_FIELD(ullAvailPageFile, "AvailablePageFile", _ui64toa);
-      WRITE_STATEX_FIELD(ullTotalPhys, "TotalPhysicalMemory", _ui64toa);
-      WRITE_STATEX_FIELD(ullAvailPhys, "AvailablePhysicalMemory", _ui64toa);
+        WRITE_STATEX_FIELD(dwMemoryLoad, SysMemory, ltoa);
+        WRITE_STATEX_FIELD(ullTotalVirtual, TotalVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailVirtual, AvailableVirtualMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullTotalPageFile, TotalPageFile, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPageFile, AvailablePageFile, _ui64toa);
+        WRITE_STATEX_FIELD(ullTotalPhys, TotalPhysicalMemory, _ui64toa);
+        WRITE_STATEX_FIELD(ullAvailPhys, AvailablePhysicalMemory, _ui64toa);
 
 #undef WRITE_STATEX_FIELD
-    }
-#endif // XP_WIN
-    if (oomAllocationSizeBuffer[0]) {
-      WriteAnnotation(apiData, "OOMAllocationSize", oomAllocationSizeBuffer);
-      WriteAnnotation(eventFile, "OOMAllocationSize", oomAllocationSizeBuffer);
-    }
+      }
 
-    if (memoryReportPath) {
-      WriteLiteral(apiData, "ContainsMemoryReport=1\n");
-      WriteLiteral(eventFile, "ContainsMemoryReport=1\n");
+      if (oomAllocationSizeBufferLen) {
+        WriteFile(hFile, kOOMAllocationSizeParameter,
+                  kOOMAllocationSizeParameterLen, &nBytes, nullptr);
+        WriteFile(hFile, oomAllocationSizeBuffer, oomAllocationSizeBufferLen,
+                  &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
+
+      if (memoryReportPath) {
+        WriteFile(hFile, kMemoryReportParameter,
+                  kMemoryReportParameterLen, &nBytes, nullptr);
+      }
+      CloseHandle(hFile);
     }
   }
 
-#ifdef XP_WIN
   if (!doReport) {
     TerminateProcess(GetCurrentProcess(), 1);
     return returnValue;
@@ -876,6 +866,53 @@ bool MinidumpCallback(
   // we're not really in a position to do anything if the CreateProcess fails
   TerminateProcess(GetCurrentProcess(), 1);
 #elif defined(XP_UNIX)
+  if (!crashReporterAPIData->IsEmpty()) {
+    // write out API data
+    int fd = sys_open(extraDataPath,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0666);
+
+    if (fd != -1) {
+      // not much we can do in case of error
+      unused << sys_write(fd, crashReporterAPIData->get(),
+                                  crashReporterAPIData->Length());
+      unused << sys_write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
+      unused << sys_write(fd, crashTimeString, crashTimeStringLen);
+      unused << sys_write(fd, "\n", 1);
+      if (timeSinceLastCrash != 0) {
+        unused << sys_write(fd, kTimeSinceLastCrashParameter,
+                        kTimeSinceLastCrashParameterLen);
+        unused << sys_write(fd, timeSinceLastCrashString,
+                        timeSinceLastCrashStringLen);
+        unused << sys_write(fd, "\n", 1);
+      }
+      if (isGarbageCollecting) {
+        unused << sys_write(fd, kIsGarbageCollectingParameter, kIsGarbageCollectingParameterLen);
+        unused << sys_write(fd, isGarbageCollecting ? "1" : "0", 1);
+        unused << sys_write(fd, "\n", 1);
+      }
+      if (eventloopNestingLevel > 0) {
+        unused << sys_write(fd, kEventLoopNestingLevelParameter, kEventLoopNestingLevelParameterLen);
+        char buffer[16];
+        XP_TTOA(static_cast<time_t>(eventloopNestingLevel), buffer, 10);
+        unused << sys_write(fd, buffer, my_strlen(buffer));
+        unused << sys_write(fd, "\n", 1);
+      }
+      if (oomAllocationSizeBufferLen) {
+        unused << sys_write(fd, kOOMAllocationSizeParameter,
+                            kOOMAllocationSizeParameterLen);
+        unused << sys_write(fd, oomAllocationSizeBuffer,
+                            oomAllocationSizeBufferLen);
+        unused << sys_write(fd, "\n", 1);
+      }
+      if (memoryReportPath) {
+        unused << sys_write(fd, kMemoryReportParameter,
+                            kMemoryReportParameterLen);
+      }
+      sys_close(fd);
+    }
+  }
+
   if (!doReport) {
     return returnValue;
   }
@@ -1061,7 +1098,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 
   // allocate our strings
   crashReporterAPIData = new nsCString();
-  crashEventAPIData = new nsCString();
+  NS_ENSURE_TRUE(crashReporterAPIData, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
   crashReporterAPILock = new Mutex("crashReporterAPILock");
@@ -1601,9 +1638,6 @@ nsresult UnsetExceptionHandler()
   delete crashReporterAPIData;
   crashReporterAPIData = nullptr;
 
-  delete crashEventAPIData;
-  crashEventAPIData = nullptr;
-
   delete notesField;
   notesField = nullptr;
 
@@ -1674,30 +1708,13 @@ static bool DoFindInReadable(const nsACString& str, const nsACString& value)
   return FindInReadable(value, start, end);
 }
 
-static bool
-IsInWhitelist(const nsACString& key)
-{
-  for (size_t i = 0; i < ArrayLength(kCrashEventAnnotations); ++i) {
-    if (key.EqualsASCII(kCrashEventAnnotations[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-
 static PLDHashOperator EnumerateEntries(const nsACString& key,
                                         nsCString entry,
                                         void* userData)
 {
   if (!entry.IsEmpty()) {
-    NS_NAMED_LITERAL_CSTRING(kEquals, "=");
-    NS_NAMED_LITERAL_CSTRING(kNewline, "\n");
-    nsAutoCString line = key + kEquals + entry + kNewline;
-
-    crashReporterAPIData->Append(line);
-    if (IsInWhitelist(key)) {
-      crashEventAPIData->Append(line);
-    }
+    crashReporterAPIData->Append(key + NS_LITERAL_CSTRING("=") + entry +
+                                 NS_LITERAL_CSTRING("\n"));
   }
   return PL_DHASH_NEXT;
 }
@@ -1794,8 +1811,8 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data)
 
   // now rebuild the file contents
   crashReporterAPIData->Truncate(0);
-  crashEventAPIData->Truncate(0);
-  crashReporterAPIData_Hash->EnumerateRead(EnumerateEntries, nullptr);
+  crashReporterAPIData_Hash->EnumerateRead(EnumerateEntries,
+                                           crashReporterAPIData);
 
   return NS_OK;
 }
