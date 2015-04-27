@@ -286,7 +286,7 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest)
       ErrorResult err;
       context2d->DrawImage(element,
                            0.0, 0.0, err);
-      rv = err.ErrorCode();
+      rv = err.StealNSResult();
     }
   }
   return rv;

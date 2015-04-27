@@ -815,8 +815,9 @@ private:
       nsRefPtr<Promise> cachePromise =
         mCacheCreator->Cache_()->Put(request, *response, error);
       if (NS_WARN_IF(error.Failed())) {
-        channel->Cancel(error.ErrorCode());
-        return error.StealNSResult();
+        nsresult rv = error.StealNSResult();
+        channel->Cancel(rv);
+        return rv;
       }
 
       nsRefPtr<CachePromiseHandler> promiseHandler =
@@ -1322,7 +1323,7 @@ CacheScriptLoader::Load(Cache* aCache)
   ErrorResult error;
   nsRefPtr<Promise> promise = aCache->Match(request, params, error);
   if (NS_WARN_IF(error.Failed())) {
-    Fail(error.ErrorCode());
+    Fail(error.StealNSResult());
     return;
   }
 

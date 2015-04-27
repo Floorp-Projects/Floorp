@@ -1209,7 +1209,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   if (err.Failed()) {
 #ifdef DEBUG
     printf("Couldn't create contextual fragment: error was %X\n",
-           static_cast<uint32_t>(err.ErrorCode()));
+           err.ErrorCodeAsInt());
 #endif
     return err.StealNSResult();
   }
