@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
@@ -97,10 +97,10 @@ function truncateDateToDays(date) {
 function sendPing() {
   TelemetrySession.gatherStartup();
   if (gServerStarted) {
-    TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+    TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
     return TelemetrySession.testPing();
   } else {
-    TelemetryPing.setServer("http://doesnotexist");
+    TelemetryController.setServer("http://doesnotexist");
     return TelemetrySession.testPing();
   }
 }
@@ -366,7 +366,7 @@ function checkPayload(payload, reason, successfulPings) {
   // memory reporters.  But we can at least check that the data is there.
   //
   // It's important to check for the presence of reporters with a mix of units,
-  // because TelemetryPing has separate logic for each one.  But we can't
+  // because TelemetryController has separate logic for each one.  But we can't
   // currently check UNITS_COUNT_CUMULATIVE or UNITS_PERCENTAGE because
   // Telemetry doesn't touch a memory reporter with these units that's
   // available on all platforms.
@@ -483,7 +483,7 @@ function run_test() {
 
 add_task(function* asyncSetup() {
   yield TelemetrySession.setup();
-  yield TelemetryPing.setup();
+  yield TelemetryController.setup();
   // Load the client ID from the client ID provider to check for pings sanity.
   gClientID = yield ClientID.getClientID();
 });
@@ -795,7 +795,7 @@ add_task(function* test_checkSubsessionData() {
   }
 
   // Keep track of the active ticks count if the session recorder is available.
-  let sessionRecorder = TelemetryPing.getSessionRecorder();
+  let sessionRecorder = TelemetryController.getSessionRecorder();
   let activeTicksAtSubsessionStart = sessionRecorder.activeTicks;
   let expectedActiveTicks = activeTicksAtSubsessionStart;
 
@@ -855,7 +855,7 @@ add_task(function* test_dailyCollection() {
 
   // Init and check timer.
   yield TelemetrySession.setup();
-  TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
 
   // Set histograms to expected state.
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
@@ -1066,7 +1066,7 @@ add_task(function* test_environmentChange() {
 
   // Setup.
   yield TelemetrySession.setup();
-  TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
   TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
 
   // Set histograms to expected state.
@@ -1317,10 +1317,10 @@ add_task(function* test_abortedSession() {
             "The aborted session ping must exist in the saved pings directory.");
 
   // Trick: make the aborted ping file overdue so that it gets sent immediately when
-  // resetting TelemetryPing.
+  // resetting TelemetryController.
   const OVERDUE_PING_FILE_AGE = TelemetryStorage.OVERDUE_PING_FILE_AGE + 60 * 1000;
   yield OS.File.setDates(PENDING_PING_FILE, null, Date.now() - OVERDUE_PING_FILE_AGE);
-  yield TelemetryPing.reset();
+  yield TelemetryController.reset();
 
   // Wait for the aborted-session ping.
   let request = yield gRequestIterator.next();

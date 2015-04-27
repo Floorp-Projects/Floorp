@@ -3,7 +3,7 @@
 
 const { classes: Cc, utils: Cu, interfaces: Ci, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
@@ -143,7 +143,7 @@ function fakeSchedulerTimer(set, clear) {
 function fakeNow(...args) {
   const date = new Date(...args);
 
-  let ping = Cu.import("resource://gre/modules/TelemetryPing.jsm");
+  let ping = Cu.import("resource://gre/modules/TelemetryController.jsm");
   ping.Policy.now = () => date;
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.now = () => date;
@@ -170,7 +170,7 @@ function promiseRejects(promise) {
 
 // Set logging preferences for all the tests.
 Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
-TelemetryPing.initLogging();
+TelemetryController.initLogging();
 
 // Telemetry archiving should be on.
 Services.prefs.setBoolPref("toolkit.telemetry.archive.enabled", true);

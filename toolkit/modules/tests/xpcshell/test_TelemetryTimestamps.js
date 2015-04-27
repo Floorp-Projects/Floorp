@@ -5,7 +5,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
@@ -32,7 +32,7 @@ function loadAddonManager() {
   startupManager();
 }
 
-function getSimpleMeasurementsFromTelemetryPing() {
+function getSimpleMeasurementsFromTelemetryController() {
   return TelemetrySession.getPayload().simpleMeasurements;
 }
 
@@ -44,7 +44,7 @@ function initialiseTelemetry() {
     gDatareportingService.observe(null, "profile-after-change", null);
   }
 
-  return TelemetryPing.setup().then(TelemetrySession.setup);
+  return TelemetryController.setup().then(TelemetrySession.setup);
 }
 
 function run_test() {
@@ -71,7 +71,7 @@ add_task(function* actualTest() {
   do_check_true(TelemetryTimestamps.get().foo >= now); // foo has a reasonable value
 
   // Add timestamp with value
-  // Use a value far in the future since TelemetryPing substracts the time of
+  // Use a value far in the future since TelemetryController substracts the time of
   // process initialization.
   const YEAR_4000_IN_MS = 64060588800000;
   TelemetryTimestamps.add("bar", YEAR_4000_IN_MS);
@@ -91,7 +91,7 @@ add_task(function* actualTest() {
   do_check_null(TelemetryTimestamps.get().baz); // no baz was added
 
   // Test that the data gets added to the telemetry ping properly
-  let simpleMeasurements = getSimpleMeasurementsFromTelemetryPing();
+  let simpleMeasurements = getSimpleMeasurementsFromTelemetryController();
   do_check_true(simpleMeasurements != null); // got simple measurements from ping data
   do_check_true(simpleMeasurements.foo > 1); // foo was included
   do_check_true(simpleMeasurements.bar > 1); // bar was included
