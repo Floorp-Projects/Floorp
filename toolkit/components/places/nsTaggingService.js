@@ -107,30 +107,31 @@ TaggingService.prototype = {
    * @throws Cr.NS_ERROR_INVALID_ARG if any element of the input array is not
    *         a valid tag.
    */
-  _convertInputMixedTagsArray: function TS__convertInputMixedTagsArray(aTags, trim=false)
-  {
-    return aTags.map(function (val)
-    {
-      let tag = { _self: this };
-      if (typeof(val) == "number" && this._tagFolders[val]) {
+  _convertInputMixedTagsArray(aTags, trim=false) {
+    // Handle sparse array with a .filter.
+    return aTags.filter(tag => tag !== undefined)
+                .map(idOrName => {
+      let tag = {};
+      if (typeof(idOrName) == "number" && this._tagFolders[idOrName]) {
         // This is a tag folder id.
-        tag.id = val;
+        tag.id = idOrName;
         // We can't know the name at this point, since a previous tag could
         // want to change it.
-        tag.__defineGetter__("name", function () this._self._tagFolders[this.id]);
+        tag.__defineGetter__("name", () => this._tagFolders[tag.id]);
       }
-      else if (typeof(val) == "string" && val.length > 0 && val.length <= Ci.nsITaggingService.MAX_TAG_LENGTH) {
+      else if (typeof(idOrName) == "string" && idOrName.length > 0 &&
+               idOrName.length <= Ci.nsITaggingService.MAX_TAG_LENGTH) {
         // This is a tag name.
-        tag.name = trim ? val.trim() : val;
+        tag.name = trim ? idOrName.trim() : idOrName;
         // We can't know the id at this point, since a previous tag could
         // have created it.
-        tag.__defineGetter__("id", function () this._self._getItemIdForTag(this.name));
+        tag.__defineGetter__("id", () => this._getItemIdForTag(tag.name));
       }
       else {
         throw Cr.NS_ERROR_INVALID_ARG;
       }
       return tag;
-    }, this);
+    });
   },
 
   // nsITaggingService
@@ -143,35 +144,37 @@ TaggingService.prototype = {
     // This also does some input validation.
     let tags = this._convertInputMixedTagsArray(aTags, true);
 
-    let taggingService = this;
-    PlacesUtils.bookmarks.runInBatchMode({
-      runBatched: function (aUserData)
-      {
-        tags.forEach(function (tag)
-        {
-          if (tag.id == -1) {
-            // Tag does not exist yet, create it.
-            this._createTag(tag.name);
-          }
+    let taggingFunction = () => {
+      for (let tag of tags) {
+        if (tag.id == -1) {
+          // Tag does not exist yet, create it.
+          this._createTag(tag.name);
+        }
 
-          if (this._getItemIdForTaggedURI(aURI, tag.name) == -1) {
-            // The provided URI is not yet tagged, add a tag for it.
-            // Note that bookmarks under tag containers must have null titles.
-            PlacesUtils.bookmarks.insertBookmark(
-              tag.id, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX, null
-            );
-          }
+        if (this._getItemIdForTaggedURI(aURI, tag.name) == -1) {
+          // The provided URI is not yet tagged, add a tag for it.
+          // Note that bookmarks under tag containers must have null titles.
+          PlacesUtils.bookmarks.insertBookmark(
+            tag.id, aURI, PlacesUtils.bookmarks.DEFAULT_INDEX, null
+          );
+        }
 
-          // Try to preserve user's tag name casing.
-          // Rename the tag container so the Places view matches the most-recent
-          // user-typed value.
-          if (PlacesUtils.bookmarks.getItemTitle(tag.id) != tag.name) {
-            // this._tagFolders is updated by the bookmarks observer.
-            PlacesUtils.bookmarks.setItemTitle(tag.id, tag.name);
-          }
-        }, taggingService);
+        // Try to preserve user's tag name casing.
+        // Rename the tag container so the Places view matches the most-recent
+        // user-typed value.
+        if (PlacesUtils.bookmarks.getItemTitle(tag.id) != tag.name) {
+          // this._tagFolders is updated by the bookmarks observer.
+          PlacesUtils.bookmarks.setItemTitle(tag.id, tag.name);
+        }
       }
-    }, null);
+    };
+
+    // Use a batch only if creating more than 2 tags.
+    if (tags.length < 3) {
+      taggingFunction();
+    } else {
+      PlacesUtils.bookmarks.runInBatchMode(taggingFunction, null);
+    }
   },
 
   /**
@@ -225,23 +228,25 @@ TaggingService.prototype = {
                          "https://bugzilla.mozilla.org/show_bug.cgi?id=967196");
     }
 
-    let taggingService = this;
-    PlacesUtils.bookmarks.runInBatchMode({
-      runBatched: function (aUserData)
-      {
-        tags.forEach(function (tag)
-        {
-          if (tag.id != -1) {
-            // A tag could exist.
-            let itemId = this._getItemIdForTaggedURI(aURI, tag.name);
-            if (itemId != -1) {
-              // There is a tagged item.
-              PlacesUtils.bookmarks.removeItem(itemId);
-            }
+    let untaggingFunction = () => {
+      for (let tag of tags) {
+        if (tag.id != -1) {
+          // A tag could exist.
+          let itemId = this._getItemIdForTaggedURI(aURI, tag.name);
+          if (itemId != -1) {
+            // There is a tagged item.
+            PlacesUtils.bookmarks.removeItem(itemId);
           }
-        }, taggingService);
+        }
       }
-    }, null);
+    };
+
+    // Use a batch only if creating more than 2 tags.
+    if (tags.length < 3) {
+      untaggingFunction();
+    } else {
+      PlacesUtils.bookmarks.runInBatchMode(untaggingFunction, null);
+    }
   },
 
   // nsITaggingService
