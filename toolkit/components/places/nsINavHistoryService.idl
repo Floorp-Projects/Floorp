@@ -1415,7 +1415,7 @@ interface nsINavHistoryService : nsISupports
 /**
  * @see runInBatchMode of nsINavHistoryService/nsINavBookmarksService
  */
-[scriptable, uuid(5143f2bb-be0a-4faf-9acb-b0ed3f82952c)]
+[scriptable, function, uuid(5a5a9154-95ac-4e3d-90df-558816297407)]
 interface nsINavHistoryBatchCallback : nsISupports {
   void runBatched(in nsISupports aUserData);
 };
