@@ -1911,6 +1911,7 @@ pref("browser.reader.detectedFirstArticle", false);
 pref("reader.parse-node-limit", 0);
 
 pref("browser.pocket.enabled", false);
+pref("browser.pocket.hostname", "localhost");
 pref("browser.pocket.removedByUser", false);
 pref("browser.pocket.useLocaleList", true);
 pref("browser.pocket.enabledLocales", "en-US");
