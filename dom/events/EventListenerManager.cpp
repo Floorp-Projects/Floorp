@@ -960,7 +960,7 @@ EventListenerManager::HandleEventSubType(Listener* aListener,
       ErrorResult rv;
       listenerHolder.GetWebIDLCallback()->
         HandleEvent(aCurrentTarget, *(aDOMEvent->InternalDOMEvent()), rv);
-      result = rv.ErrorCode();
+      result = rv.StealNSResult();
     } else {
       result = listenerHolder.GetXPCOMCallback()->HandleEvent(aDOMEvent);
     }

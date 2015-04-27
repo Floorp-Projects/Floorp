@@ -290,7 +290,7 @@ WorkerThread::RecursionDepth(const WorkerThreadFriendKey& /* aKey */) const
 {
   MOZ_ASSERT(PR_GetCurrentThread() == mThread);
 
-  return mRunningEvent;
+  return mNestedEventLoopDepth;
 }
 
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)

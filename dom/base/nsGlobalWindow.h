@@ -1306,7 +1306,7 @@ public:
   {
     mozilla::ErrorResult rv;
     ClearTimeoutOrInterval(aTimerID, rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   // JS specific timeout functions (JS args grabbed from context).

@@ -569,7 +569,7 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   ErrorResult error;
   uint64_t size = blob->GetSize(error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   channel->SetOriginalURI(uri);

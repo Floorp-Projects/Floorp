@@ -3107,6 +3107,12 @@ this.DOMApplicationRegistry = {
     // don't update the permissions yet.
     if (!aData.isPackage) {
       if (supportUseCurrentProfile()) {
+        try {
+          if (Services.prefs.getBoolPref("dom.apps.developer_mode")) {
+            this.webapps[id].appStatus =
+              AppsUtils.getAppManifestStatus(app.manifest);
+          }
+        } catch(e) {};
         PermissionsInstaller.installPermissions(
           {
             origin: appObject.origin,

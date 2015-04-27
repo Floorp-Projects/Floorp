@@ -29,7 +29,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   mozilla::ErrorResult rv;
   *aDocType = NS_NewDOMDocumentType(aNodeInfoManager, aName, aPublicId,
                                     aSystemId, aInternalSubset, rv).take();
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 already_AddRefed<mozilla::dom::DocumentType>

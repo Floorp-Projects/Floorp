@@ -1209,9 +1209,9 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   if (err.Failed()) {
 #ifdef DEBUG
     printf("Couldn't create contextual fragment: error was %X\n",
-           static_cast<uint32_t>(err.ErrorCode()));
+           err.ErrorCodeAsInt());
 #endif
-    return err.ErrorCode();
+    return err.StealNSResult();
   }
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
@@ -1372,7 +1372,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   ErrorResult rv;
   nsRefPtr<DocumentFragment> docfrag =
     range->CreateContextualFragment(bodyTag, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIContent> child = docfrag->GetFirstChild();
@@ -2538,13 +2538,22 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   if (tagName.EqualsLiteral("table")) {
     newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),
                              NS_LITERAL_STRING("2"), rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return nullptr;
+    }
     newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),
                              NS_LITERAL_STRING("2"), rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return nullptr;
+    }
     newElement->SetAttribute(NS_LITERAL_STRING("border"),
                              NS_LITERAL_STRING("1"), rv);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), nullptr);
+    if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
+      return nullptr;
+    }
   } else if (tagName.EqualsLiteral("td")) {
     nsresult res = SetAttributeOrEquivalent(
         static_cast<nsIDOMElement*>(newElement->AsDOMNode()),

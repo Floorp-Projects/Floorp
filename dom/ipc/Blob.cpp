@@ -667,7 +667,7 @@ public:
 
   EmptyBlobImpl(const nsAString& aName,
                 const nsAString& aContentType,
-                uint64_t aLastModifiedDate)
+                int64_t aLastModifiedDate)
     : FileImplBase(aName, aContentType, 0, aLastModifiedDate)
   {
     mImmutable = true;
@@ -728,13 +728,13 @@ public:
   SameProcessInputStreamBlobImpl(const nsAString& aName,
                                  const nsAString& aContentType,
                                  uint64_t aLength,
-                                 uint64_t aLastModifiedDate,
+                                 int64_t aLastModifiedDate,
                                  nsIInputStream* aInputStream)
     : FileImplBase(aName, aContentType, aLength, aLastModifiedDate)
     , mInputStream(aInputStream)
   {
     MOZ_ASSERT(aLength != UINT64_MAX);
-    MOZ_ASSERT(aLastModifiedDate != UINT64_MAX);
+    MOZ_ASSERT(aLastModifiedDate != INT64_MAX);
     MOZ_ASSERT(aInputStream);
 
     mImmutable = true;
@@ -766,7 +766,7 @@ struct MOZ_STACK_CLASS CreateBlobImplMetadata final
   nsString mContentType;
   nsString mName;
   uint64_t mLength;
-  uint64_t mLastModifiedDate;
+  int64_t mLastModifiedDate;
   bool mHasRecursed;
   const bool mIsSameProcessActor;
 
@@ -1040,7 +1040,7 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
       return nullptr;
     }
 
-    if (NS_WARN_IF(params.modDate() == UINT64_MAX)) {
+    if (NS_WARN_IF(params.modDate() == INT64_MAX)) {
       ASSERT_UNLESS_FUZZING();
       return nullptr;
     }
@@ -1342,7 +1342,7 @@ RemoteInputStream::Available(uint64_t* aAvailable)
   ErrorResult error;
   *aAvailable = mBlobImpl->GetSize(error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   return NS_OK;
@@ -1849,7 +1849,7 @@ public:
                  const nsAString& aName,
                  const nsAString& aContentType,
                  uint64_t aLength,
-                 uint64_t aModDate);
+                 int64_t aModDate);
 
   // For Blob.
   RemoteBlobImpl(BlobChild* aActor,
@@ -1862,7 +1862,7 @@ public:
                  const nsAString& aName,
                  const nsAString& aContentType,
                  uint64_t aLength,
-                 uint64_t aModDate);
+                 int64_t aModDate);
 
   // For same-process blobs.
   RemoteBlobImpl(BlobChild* aActor,
@@ -2120,7 +2120,7 @@ public:
   SetLazyData(const nsAString& aName,
               const nsAString& aContentType,
               uint64_t aLength,
-              uint64_t aLastModifiedDate) override;
+              int64_t aLastModifiedDate) override;
 
   virtual bool
   IsMemoryFile() const override;
@@ -2163,7 +2163,7 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
                                const nsAString& aName,
                                const nsAString& aContentType,
                                uint64_t aLength,
-                               uint64_t aModDate)
+                               int64_t aModDate)
   : FileImplBase(aName, aContentType, aLength, aModDate)
   , mIsSlice(false)
 {
@@ -2186,7 +2186,7 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
                                const nsAString& aName,
                                const nsAString& aContentType,
                                uint64_t aLength,
-                               uint64_t aModDate)
+                               int64_t aModDate)
   : FileImplBase(aName, aContentType, aLength, aModDate)
   , mSameProcessFileImpl(aSameProcessBlobImpl)
   , mIsSlice(false)
@@ -2214,7 +2214,7 @@ RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor,
 
 BlobChild::
 RemoteBlobImpl::RemoteBlobImpl(BlobChild* aActor)
-  : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+  : FileImplBase(EmptyString(), EmptyString(), UINT64_MAX, INT64_MAX)
   , mIsSlice(false)
 {
   CommonInit(aActor);
@@ -2866,7 +2866,7 @@ BlobParent::
 RemoteBlobImpl::SetLazyData(const nsAString& aName,
                             const nsAString& aContentType,
                             uint64_t aLength,
-                            uint64_t aLastModifiedDate)
+                            int64_t aLastModifiedDate)
 {
   MOZ_CRASH("This should never be called!");
 }
@@ -3086,7 +3086,7 @@ BlobChild::CommonInit(BlobChild* aOther, FileImpl* aBlobImpl)
     nsString name;
     otherImpl->GetName(name);
 
-    uint64_t modDate = otherImpl->GetLastModified(rv);
+    int64_t modDate = otherImpl->GetLastModified(rv);
     MOZ_ASSERT(!rv.Failed());
 
     remoteBlob = new RemoteBlobImpl(this, name, contentType, length, modDate);
@@ -3156,7 +3156,7 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
         nsString name;
         blobImpl->GetName(name);
 
-        uint64_t lastModifiedDate = blobImpl->GetLastModified(rv);
+        int64_t lastModifiedDate = blobImpl->GetLastModified(rv);
         MOZ_ASSERT(!rv.Failed());
 
         remoteBlob =
@@ -3345,7 +3345,7 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
       nsString name;
       aBlobImpl->GetName(name);
 
-      uint64_t modDate = aBlobImpl->GetLastModified(rv);
+      int64_t modDate = aBlobImpl->GetLastModified(rv);
       MOZ_ASSERT(!rv.Failed());
 
       blobParams =
@@ -3522,12 +3522,12 @@ bool
 BlobChild::SetMysteryBlobInfo(const nsString& aName,
                               const nsString& aContentType,
                               uint64_t aLength,
-                              uint64_t aLastModifiedDate)
+                              int64_t aLastModifiedDate)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mBlobImpl);
   MOZ_ASSERT(mRemoteBlobImpl);
-  MOZ_ASSERT(aLastModifiedDate != UINT64_MAX);
+  MOZ_ASSERT(aLastModifiedDate != INT64_MAX);
 
   mBlobImpl->SetLazyData(aName, aContentType, aLength, aLastModifiedDate);
 
@@ -3549,7 +3549,7 @@ BlobChild::SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength)
   nsString voidString;
   voidString.SetIsVoid(true);
 
-  mBlobImpl->SetLazyData(voidString, aContentType, aLength, UINT64_MAX);
+  mBlobImpl->SetLazyData(voidString, aContentType, aLength, INT64_MAX);
 
   NormalBlobConstructorParams params(aContentType,
                                      aLength,
@@ -3887,7 +3887,7 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
         nsString name;
         aBlobImpl->GetName(name);
 
-        uint64_t modDate = aBlobImpl->GetLastModified(rv);
+        int64_t modDate = aBlobImpl->GetLastModified(rv);
         MOZ_ASSERT(!rv.Failed());
 
         blobParams =
@@ -4369,7 +4369,7 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
       mBlobImpl->SetLazyData(voidString,
                              params.contentType(),
                              params.length(),
-                             UINT64_MAX);
+                             INT64_MAX);
       return true;
     }
 
@@ -4386,7 +4386,7 @@ BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
         return false;
       }
 
-      if (NS_WARN_IF(params.modDate() == UINT64_MAX)) {
+      if (NS_WARN_IF(params.modDate() == INT64_MAX)) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
