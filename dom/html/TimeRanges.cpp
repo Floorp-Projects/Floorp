@@ -47,7 +47,7 @@ TimeRanges::Start(uint32_t aIndex, double* aTime)
 {
   ErrorResult rv;
   *aTime = Start(aIndex, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 double
@@ -66,7 +66,7 @@ TimeRanges::End(uint32_t aIndex, double* aTime)
 {
   ErrorResult rv;
   *aTime = End(aIndex, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

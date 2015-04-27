@@ -73,7 +73,7 @@ CreateElementTxn::DoTransaction()
   ErrorResult rv;
   if (mOffsetInParent == -1) {
     mParent->AppendChild(*mNewNode, rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   mOffsetInParent = std::min(mOffsetInParent,
@@ -108,7 +108,7 @@ CreateElementTxn::UndoTransaction()
   ErrorResult rv;
   mParent->RemoveChild(*mNewNode, rv);
 
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -123,7 +123,7 @@ CreateElementTxn::RedoTransaction()
   // Now, reinsert mNewNode
   ErrorResult rv;
   mParent->InsertBefore(*mNewNode, mRefNode, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

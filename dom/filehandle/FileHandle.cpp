@@ -474,7 +474,7 @@ FileHandleBase::OpenInputStream(bool aWholeFile, uint64_t aStart,
   // Common state checking
   ErrorResult error;
   if (!CheckState(error)) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   // Do nothing if the window is closed

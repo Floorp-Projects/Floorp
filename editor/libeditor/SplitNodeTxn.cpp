@@ -63,7 +63,7 @@ SplitNodeTxn::DoTransaction()
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     rv = selection->Collapse(mNewLeftNode, mOffset);
   }
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -94,7 +94,7 @@ SplitNodeTxn::RedoTransaction()
     nsCOMPtr<nsIContent> nextSibling;
     for (int32_t i=0; i < mOffset; i++) {
       if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
       }
       if (!child) {
         return NS_ERROR_NULL_POINTER;
@@ -109,7 +109,7 @@ SplitNodeTxn::RedoTransaction()
   }
   // Second, re-insert the left node into the tree
   mParent->InsertBefore(*mNewLeftNode, mExistingRightNode, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 

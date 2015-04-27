@@ -220,7 +220,7 @@ FetchDriver::BasicFetch()
       uint64_t size = blob->GetSize(result);
       if (NS_WARN_IF(result.Failed())) {
         FailWithNetworkError();
-        return result.ErrorCode();
+        return result.StealNSResult();
       }
 
       nsAutoString sizeStr;
@@ -228,7 +228,7 @@ FetchDriver::BasicFetch()
       response->Headers()->Append(NS_LITERAL_CSTRING("Content-Length"), NS_ConvertUTF16toUTF8(sizeStr), result);
       if (NS_WARN_IF(result.Failed())) {
         FailWithNetworkError();
-        return result.ErrorCode();
+        return result.StealNSResult();
       }
 
       nsAutoString type;
@@ -236,7 +236,7 @@ FetchDriver::BasicFetch()
       response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), NS_ConvertUTF16toUTF8(type), result);
       if (NS_WARN_IF(result.Failed())) {
         FailWithNetworkError();
-        return result.ErrorCode();
+        return result.StealNSResult();
       }
     }
 

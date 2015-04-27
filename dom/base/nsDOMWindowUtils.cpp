@@ -3472,7 +3472,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
     ErrorResult rv;
     cssValue->GetCssText(text, rv);
     aResult.Assign(text);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   } else {
     aResult.Truncate();
   }

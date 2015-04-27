@@ -55,7 +55,7 @@ nsXULTemplateResultSetXML::GetNext(nsISupports **aResult)
     ErrorResult rv;
     nsINode* node = mResults->SnapshotItem(mPosition, rv);
     if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
     }
 
     nsXULTemplateResultXML* result =
@@ -252,7 +252,7 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
     compiledexpr = CreateExpression(expr, content, rv);
     if (rv.Failed()) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BAD_XPATH);
-        return rv.ErrorCode();
+        return rv.StealNSResult();
     }
 
     nsRefPtr<nsXMLQuery> query =
@@ -275,7 +275,7 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                 compiledexpr = CreateExpression(expr, condition, rv);
                 if (rv.Failed()) {
                     nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BAD_ASSIGN_XPATH);
-                    return rv.ErrorCode();
+                    return rv.StealNSResult();
                 }
 
                 nsCOMPtr<nsIAtom> varatom = do_GetAtom(var);
@@ -323,7 +323,7 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
         expr->Evaluate(*context, XPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                        nullptr, rv);
     if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
     }
 
     nsRefPtr<nsXULTemplateResultSetXML> results =

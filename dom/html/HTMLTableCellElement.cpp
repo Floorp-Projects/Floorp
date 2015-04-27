@@ -121,7 +121,7 @@ HTMLTableCellElement::SetAbbr(const nsAString& aAbbr)
 {
   ErrorResult rv;
   SetAbbr(aAbbr, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -138,7 +138,7 @@ HTMLTableCellElement::SetAxis(const nsAString& aAxis)
 {
   ErrorResult rv;
   SetAxis(aAxis, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -155,7 +155,7 @@ HTMLTableCellElement::SetAlign(const nsAString& aAlign)
 {
   ErrorResult rv;
   SetAlign(aAlign, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -172,7 +172,7 @@ HTMLTableCellElement::SetVAlign(const nsAString& aVAlign)
 {
   ErrorResult rv;
   SetVAlign(aVAlign, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -189,7 +189,7 @@ HTMLTableCellElement::SetCh(const nsAString& aCh)
 {
   ErrorResult rv;
   SetCh(aCh, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -206,7 +206,7 @@ HTMLTableCellElement::SetChOff(const nsAString& aChOff)
 {
   ErrorResult rv;
   SetChOff(aChOff, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -223,7 +223,7 @@ HTMLTableCellElement::SetBgColor(const nsAString& aBgColor)
 {
   ErrorResult rv;
   SetBgColor(aBgColor, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -240,7 +240,7 @@ HTMLTableCellElement::SetHeight(const nsAString& aHeight)
 {
   ErrorResult rv;
   SetHeight(aHeight, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -257,7 +257,7 @@ HTMLTableCellElement::SetWidth(const nsAString& aWidth)
 {
   ErrorResult rv;
   SetWidth(aWidth, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -274,7 +274,7 @@ HTMLTableCellElement::SetNoWrap(bool aNoWrap)
 {
   ErrorResult rv;
   SetNoWrap(aNoWrap, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -289,7 +289,7 @@ HTMLTableCellElement::SetScope(const nsAString& aScope)
 {
   ErrorResult rv;
   SetScope(aScope, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -306,7 +306,7 @@ HTMLTableCellElement::SetHeaders(const nsAString& aHeaders)
 {
   ErrorResult rv;
   SetHeaders(aHeaders, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -323,7 +323,7 @@ HTMLTableCellElement::SetColSpan(int32_t aColSpan)
 {
   ErrorResult rv;
   SetColSpan(aColSpan, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -338,7 +338,7 @@ HTMLTableCellElement::SetRowSpan(int32_t aRowSpan)
 {
   ErrorResult rv;
   SetRowSpan(aRowSpan, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

@@ -615,7 +615,7 @@ public:
     nsRefPtr<IDBObjectStore> store =
       aTxn->ObjectStore(NS_LITERAL_STRING(DATASTOREDB_REVISION), error);
     if (NS_WARN_IF(error.Failed())) {
-      return error.ErrorCode();
+      return error.StealNSResult();
     }
     MOZ_ASSERT(store);
 
@@ -669,7 +669,7 @@ public:
     JS::Rooted<JS::Value> result(cx);
     request->GetResult(cx, &result, error);
     if (NS_WARN_IF(error.Failed())) {
-      return error.ErrorCode();
+      return error.StealNSResult();
     }
 
     // This means that the content is a IDBCursor, so the first revision already
@@ -960,7 +960,7 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
   ErrorResult rv;
   nsRefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   nsCOMPtr<nsIDocument> document = window->GetDoc();

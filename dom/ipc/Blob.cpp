@@ -1342,7 +1342,7 @@ RemoteInputStream::Available(uint64_t* aAvailable)
   ErrorResult error;
   *aAvailable = mBlobImpl->GetSize(error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   return NS_OK;
