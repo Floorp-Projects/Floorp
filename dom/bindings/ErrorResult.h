@@ -94,7 +94,6 @@ public:
   void ThrowTypeError(const dom::ErrNum errorNumber, ...);
   void ThrowRangeError(const dom::ErrNum errorNumber, ...);
   void ReportErrorWithMessage(JSContext* cx);
-  void ClearMessage();
   bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
 
   // Facilities for throwing a preexisting JS exception value via this
@@ -183,6 +182,8 @@ private:
     MOZ_ASSERT(!IsNotEnoughArgsError(), "Don't overwrite not enough args error");
     mResult = aRv;
   }
+
+  void ClearMessage();
 
   nsresult mResult;
   struct Message;
