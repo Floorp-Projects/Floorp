@@ -37,6 +37,10 @@ enum {
     PDF = eCharType_PopDirectionalFormat,
     NSM = eCharType_DirNonSpacingMark,
     BN =  eCharType_BoundaryNeutral,
+    LRI = eCharType_LeftToRightIsolate,
+    RLI = eCharType_RightToLeftIsolate,
+    FSI = eCharType_FirstStrongIsolate,
+    PDI = eCharType_PopDirectionalIsolate,
     dirPropCount
 };
 

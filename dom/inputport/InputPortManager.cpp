@@ -186,12 +186,12 @@ InputPortManager::NotifySuccess(nsIArray* aDataList)
   }
 
   if (NS_WARN_IF(erv.Failed())) {
-    return erv.ErrorCode();
+    return erv.StealNSResult();
   }
 
   erv = SetInputPorts(ports);
 
-  return erv.ErrorCode();
+  return erv.StealNSResult();
 }
 
 NS_IMETHODIMP

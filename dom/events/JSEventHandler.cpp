@@ -166,7 +166,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
     bool handled = handler->Call(mTarget, msgOrEvent, fileName, lineNumber,
                                  columnNumber, error, rv);
     if (rv.Failed()) {
-      return rv.ErrorCode();
+      return rv.StealNSResult();
     }
 
     if (handled) {
@@ -184,7 +184,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
     nsString retval;
     handler->Call(mTarget, *(aEvent->InternalDOMEvent()), retval, rv);
     if (rv.Failed()) {
-      return rv.ErrorCode();
+      return rv.StealNSResult();
     }
 
     nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(aEvent);
@@ -213,7 +213,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   JS::Rooted<JS::Value> retval(CycleCollectedJSRuntime::Get()->Runtime());
   handler->Call(mTarget, *(aEvent->InternalDOMEvent()), &retval, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   // If the handler returned false and its sense is not reversed,

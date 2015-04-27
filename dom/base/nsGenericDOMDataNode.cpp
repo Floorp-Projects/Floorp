@@ -202,7 +202,7 @@ nsGenericDOMDataNode::SubstringData(uint32_t aStart, uint32_t aCount,
 {
   ErrorResult rv;
   SubstringData(aStart, aCount, aReturn, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

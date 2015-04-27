@@ -2111,7 +2111,7 @@ class Mochitest(MochitestUtilsMixin):
                 continue
 
             print "dir: %s" % d
-            tests_in_dir = [t for t in testsToRun if t.startswith(d)]
+            tests_in_dir = [t for t in testsToRun if os.path.dirname(t) == d]
 
             # If we are using --run-by-dir, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face problems

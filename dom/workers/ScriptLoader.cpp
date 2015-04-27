@@ -815,8 +815,9 @@ private:
       nsRefPtr<Promise> cachePromise =
         mCacheCreator->Cache_()->Put(request, *response, error);
       if (NS_WARN_IF(error.Failed())) {
-        channel->Cancel(error.ErrorCode());
-        return error.ErrorCode();
+        nsresult rv = error.StealNSResult();
+        channel->Cancel(rv);
+        return rv;
       }
 
       nsRefPtr<CachePromiseHandler> promiseHandler =
@@ -1166,7 +1167,7 @@ CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal)
                                      mSandboxGlobalObject,
                                      aPrincipal, error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   return NS_OK;
@@ -1187,7 +1188,7 @@ CacheCreator::Load(nsIPrincipal* aPrincipal)
   MOZ_ASSERT(!mCacheName.IsEmpty());
   nsRefPtr<Promise> promise = mCacheStorage->Open(mCacheName, error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   promise->AppendNativeHandler(this);
@@ -1322,7 +1323,7 @@ CacheScriptLoader::Load(Cache* aCache)
   ErrorResult error;
   nsRefPtr<Promise> promise = aCache->Match(request, params, error);
   if (NS_WARN_IF(error.Failed())) {
-    Fail(error.ErrorCode());
+    Fail(error.StealNSResult());
     return;
   }
 

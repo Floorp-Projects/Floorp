@@ -110,7 +110,10 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         }
 
         if(param.IsOut() || !type.IsArithmetic()) {
-            dp->val.p = (void*) tempu32;
+            if (type == nsXPTType::T_JSVAL)
+                dp->val.p = *((void**) tempu32);
+            else
+                dp->val.p = (void*) tempu32;
             continue;
         }
 
@@ -123,7 +126,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
         case nsXPTType::T_U16:     dp->val.u16 = (uint16_t) tempu32; break;
         case nsXPTType::T_U32:     dp->val.u32 = (uint32_t) tempu32; break;
         case nsXPTType::T_U64:     dp->val.u64 = (uint64_t) tempu64; break;
-        case nsXPTType::T_BOOL:    dp->val.b   = (bool)   tempu32; break;
+        case nsXPTType::T_BOOL:    dp->val.b   = (bool)     tempu32; break;
         case nsXPTType::T_CHAR:    dp->val.c   = (char)     tempu32; break;
         case nsXPTType::T_WCHAR:   dp->val.wc  = (wchar_t)  tempu32; break;
 

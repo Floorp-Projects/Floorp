@@ -15,7 +15,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
-== rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
-== rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
-== vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
-== vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
+pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001-ref.html
+pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001-ref.html
+pref(layout.css.vertical-text.enabled,true) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
+pref(layout.css.vertical-text.enabled,true) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html

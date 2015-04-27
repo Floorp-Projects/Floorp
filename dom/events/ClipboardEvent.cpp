@@ -44,7 +44,7 @@ ClipboardEvent::InitClipboardEvent(const nsAString& aType,
   ErrorResult rv;
   InitClipboardEvent(aType, aCanBubble, aCancelable, clipboardData, rv);
 
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

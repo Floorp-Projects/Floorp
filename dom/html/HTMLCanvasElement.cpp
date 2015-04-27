@@ -286,7 +286,7 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest)
       ErrorResult err;
       context2d->DrawImage(element,
                            0.0, 0.0, err);
-      rv = err.ErrorCode();
+      rv = err.StealNSResult();
     }
   }
   return rv;
@@ -574,7 +574,7 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
       mGlobal = nullptr;
       mFileCallback = nullptr;
 
-      return error.ErrorCode();
+      return error.StealNSResult();
     }
 
     nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -728,7 +728,7 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
 {
   ErrorResult rv;
   *aContext = GetContext(nullptr, aContextId, JS::NullHandleValue, rv).take();
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 already_AddRefed<nsISupports>
