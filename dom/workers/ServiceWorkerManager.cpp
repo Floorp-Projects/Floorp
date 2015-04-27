@@ -20,6 +20,7 @@
 
 #include "jsapi.h"
 
+#include "mozilla/ErrorNames.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMError.h"
@@ -133,7 +134,12 @@ void
 ServiceWorkerJob::Done(nsresult aStatus)
 {
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
-    // Windows builds complain if the return value of NS_WARN_IF isn't used.
+#ifdef DEBUG
+    nsAutoCString errorName;
+    GetErrorName(aStatus, errorName);
+#endif
+    NS_WARNING(nsPrintfCString("ServiceWorkerJob failed with error: %s\n",
+                               errorName.get()).get());
   }
 
   if (mQueue) {
@@ -801,6 +807,7 @@ private:
     swm->MaybeRemoveRegistration(mRegistration);
     // Ensures that the job can't do anything useful from this point on.
     mRegistration = nullptr;
+    unused << NS_WARN_IF(NS_FAILED(aRv));
     Done(aRv);
   }
 
@@ -818,15 +825,14 @@ private:
   void
   ContinueAfterInstallEvent(bool aInstallEventSuccess, bool aActivateImmediately)
   {
-    if (!mRegistration->mInstallingWorker) {
-      NS_WARNING("mInstallingWorker was null.");
+    if (NS_WARN_IF(!mRegistration->mInstallingWorker)) {
       return Done(NS_ERROR_DOM_ABORT_ERR);
     }
 
     nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
     // "If installFailed is true"
-    if (!aInstallEventSuccess) {
+    if (NS_WARN_IF(!aInstallEventSuccess)) {
       mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
       mRegistration->mInstallingWorker = nullptr;
       swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
@@ -1803,7 +1809,9 @@ private:
   void
   UnregisterAndDone()
   {
-    Done(Unregister());
+    nsresult rv = Unregister();
+    unused << NS_WARN_IF(NS_FAILED(rv));
+    Done(rv);
   }
 };
 
@@ -1895,6 +1903,10 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
   init.mLineno = aLineNumber;
   init.mColno = aColumnNumber;
 
+  NS_WARNING(nsPrintfCString(
+              "Script error caused ServiceWorker registration to fail: %s:%u '%s'",
+              NS_ConvertUTF16toUTF8(aFilename).get(), aLineNumber,
+              NS_ConvertUTF16toUTF8(aMessage).get()).get());
   regJob->Fail(init);
   return true;
 }

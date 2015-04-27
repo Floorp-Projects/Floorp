@@ -140,13 +140,11 @@ async_test(function(t) {
   animation.finished.then(t.step_func(function() {
     assert_unreached('finished promise is fulfilled');
   })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'finished promise is rejected with AbortError');
     assert_not_equals(animation.finished, previousFinishedPromise,
                       'Finished promise should change after the original is ' +
                       'rejected');
-    assert_equals(err.name, 'AbortError',
-                  'finished promise is rejected with AbortError');
-    assert_equals(animation.playState, 'idle',
-                  'Animation is idle after animation was cancelled');
   })).then(t.step_func(function() {
     t.done();
   }));
@@ -174,13 +172,11 @@ async_test(function(t) {
   animation.finished.then(t.step_func(function() {
     assert_unreached('finished promise was fulfilled');
   })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'finished promise is rejected with AbortError');
     assert_not_equals(animation.finished, previousFinishedPromise,
                       'Finished promise should change after the original is ' +
                       'rejected');
-    assert_equals(err.name, 'AbortError',
-                  'finished promise is rejected with AbortError');
-    assert_equals(animation.playState, 'idle',
-                  'Animation is idle after animation was cancelled');
   })).then(t.step_func(function() {
     t.done();
   }));
@@ -191,6 +187,72 @@ async_test(function(t) {
 
 }, 'finished promise is rejected when an animation is cancelled by changing ' +
    'the animation property');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+  var previousFinishedPromise = animation.finished;
+
+  // Set up listeners on finished promise
+  animation.finished.then(t.step_func(function() {
+    assert_unreached('finished promise was fulfilled');
+  })).catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'finished promise is rejected with AbortError');
+    assert_not_equals(animation.finished, previousFinishedPromise,
+                      'Finished promise should change after the original is ' +
+                      'rejected');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+  animation.cancel();
+
+}, 'finished promise is rejected when an animation is cancelled by calling ' +
+   'cancel()');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+
+  var previousFinishedPromise = animation.finished;
+
+  animation.currentTime = ANIM_DURATION;
+
+  animation.finished.then(t.step_func(function() {
+    animation.cancel();
+    assert_not_equals(animation.finished, previousFinishedPromise,
+                      'A new finished promise should be created when'
+                      + ' cancelling a finished player');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+}, 'cancelling an already-finished player replaces the finished promise');
+
+async_test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = ANIM_PROP_VAL;
+  var animation = div.getAnimations()[0];
+  animation.cancel();
+
+  // The spec says we still create a new finished promise and reject the old
+  // one even if we're already idle. That behavior might change, but for now
+  // test that we do that.
+  animation.finished.catch(t.step_func(function(err) {
+    assert_equals(err.name, 'AbortError',
+                  'finished promise is rejected with AbortError');
+    t.done();
+  }));
+
+  // Redundant call to cancel();
+  var previousFinishedPromise = animation.finished;
+  animation.cancel();
+  assert_not_equals(animation.finished, previousFinishedPromise,
+                    'A redundant call to cancel() should still generate a new'
+                    + ' finished promise');
+}, 'cancelling an idle player still replaces the finished promise');
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -285,6 +347,5 @@ async_test(function(t) {
     t.done();
   }));
 }, 'Test finished promise changes when animationPlayState set to running');
-
 
 </script>
