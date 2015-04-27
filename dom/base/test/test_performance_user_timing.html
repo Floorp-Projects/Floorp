@@ -36,7 +36,7 @@
                      performance.mark("test");
                      var marks_type = performance.getEntriesByType("mark");
                      is(marks_type.length, 3, "Number of marks by type should be 3");
-                     var marks_name = performance.getEntriesByType("mark");
+                     var marks_name = performance.getEntriesByName("test");
                      is(marks_name.length, 3, "Number of marks by name should be 3");
                      var mark = marks_name[0];
                      is(mark.name, "test", "mark name should be 'test'");
