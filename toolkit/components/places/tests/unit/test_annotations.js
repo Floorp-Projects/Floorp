@@ -271,9 +271,9 @@ add_task(function test_execute()
   bmsvc.setItemLastModified(testItemId, --lastModified3);
   annosvc.removeItemAnnotation(testItemId, int32Key);
   var lastModified4 = bmsvc.getItemLastModified(testItemId);
-  do_print("verify that removing an annotation updates the last modified date");
-  do_print("lastModified3 = " + lastModified3);
-  do_print("lastModified4 = " + lastModified4);
+  LOG("verify that removing an annotation updates the last modified date");
+  LOG("lastModified3 = " + lastModified3);
+  LOG("lastModified4 = " + lastModified4);
   do_check_true(lastModified4 > lastModified3);
 
   do_check_eq(annoObserver.PAGE_lastRemoved_URI, testURI.spec);

@@ -186,7 +186,7 @@ function task_populateDB(aArray)
       }
     } catch (ex) {
       // use the data object here in case instantiation of qdata failed
-      do_print("Problem with this URI: " + data.uri);
+      LOG("Problem with this URI: " + data.uri);
       do_throw("Error creating database: " + ex + "\n");
     }
   }
@@ -254,7 +254,7 @@ queryData.prototype = { }
  * the results, where appropriate.
  */
 function compareArrayToResult(aArray, aRoot) {
-  do_print("Comparing Array to Results");
+  LOG("Comparing Array to Results");
 
   var wasOpen = aRoot.containerOpen;
   if (!wasOpen)
@@ -266,14 +266,14 @@ function compareArrayToResult(aArray, aRoot) {
     // Debugging code for failures.
     dump_table("moz_places");
     dump_table("moz_historyvisits");
-    do_print("Found children:");
+    LOG("Found children:");
     for (let i = 0; i < aRoot.childCount; i++) {
-      do_print(aRoot.getChild(i).uri);
+      LOG(aRoot.getChild(i).uri);
     }
-    do_print("Expected:");
+    LOG("Expected:");
     for (let i = 0; i < aArray.length; i++) {
       if (aArray[i].isInQuery)
-        do_print(aArray[i].uri);
+        LOG(aArray[i].uri);
     }
   }
   do_check_eq(expectedResultCount, aRoot.childCount);
@@ -282,9 +282,9 @@ function compareArrayToResult(aArray, aRoot) {
   for (var i = 0; i < aArray.length; i++) {
     if (aArray[i].isInQuery) {
       var child = aRoot.getChild(inQueryIndex);
-      //do_print("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
+      //LOG("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
       if (!aArray[i].isFolder && !aArray[i].isSeparator) {
-        do_print("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
+        LOG("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
         if (aArray[i].uri != child.uri) {
           dump_table("moz_places");
           do_throw("Expected " + aArray[i].uri + " found " + child.uri);
@@ -306,7 +306,7 @@ function compareArrayToResult(aArray, aRoot) {
 
   if (!wasOpen)
     aRoot.containerOpen = false;
-  do_print("Comparing Array to Results passes");
+  LOG("Comparing Array to Results passes");
 }
 
 
@@ -347,7 +347,7 @@ function isInResult(aQueryData, aRoot) {
 
 
 /**
- * A nice helper function for debugging things. It prints the contents of a
+ * A nice helper function for debugging things. It LOGs the contents of a
  * result set.
  */
 function displayResultSet(aRoot) {
@@ -358,12 +358,12 @@ function displayResultSet(aRoot) {
 
   if (!aRoot.hasChildren) {
     // Something wrong? Empty result set?
-    do_print("Result Set Empty");
+    LOG("Result Set Empty");
     return;
   }
 
   for (var i=0; i < aRoot.childCount; ++i) {
-    do_print("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
+    LOG("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
         aRoot.getChild(i).title + "   Visit Time: " + aRoot.getChild(i).time);
   }
   if (!wasOpen)
