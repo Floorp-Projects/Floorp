@@ -110,7 +110,6 @@ public:
   // We often use the same methods internally and from script but when called
   // from script we (or one of our subclasses) perform extra steps such as
   // flushing style or converting the return type.
-
   Nullable<double> GetStartTimeAsDouble() const;
   void SetStartTimeAsDouble(const Nullable<double>& aStartTime);
   Nullable<double> GetCurrentTimeAsDouble() const;
@@ -118,16 +117,16 @@ public:
                               ErrorResult& aRv);
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
   virtual void PlayFromJS() { Play(LimitBehavior::AutoRewind); }
-  // PauseFromJS is currently only here for symmetry with PlayFromJS but
-  // in future we will likely have to flush style in
-  // CSSAnimation::PauseFromJS so we leave it for now.
+  /**
+   * PauseFromJS is currently only here for symmetry with PlayFromJS but
+   * in future we will likely have to flush style in
+   * CSSAnimation::PauseFromJS so we leave it for now.
+   */
   void PauseFromJS() { Pause(); }
-
   // Wrapper functions for Animation DOM methods when called from style.
   //
   // Typically these DOM methods also notify style of changes but when
   // we are calling from style we don't need to do this.
-
   void CancelFromStyle() { DoCancel(); }
 
   void Tick();
@@ -184,17 +183,17 @@ public:
    * animation from any PendingAnimationTracker it may have been added to.
    */
   void TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime);
-
-  // Testing only: Start or pause a pending animation using the current timeline
-  // time. This is used to support existing tests that expect animations to
-  // begin immediately. Ideally we would rewrite the those tests and get rid of
-  // this method, but there are a lot of them.
-  //
-  // As with TriggerOnNextTick, the caller of this method is responsible for
-  // removing the animation from any PendingAnimationTracker it may have been
-  // added to.
+  /**
+   * Testing only: Start or pause a pending animation using the current
+   * timeline time. This is used to support existing tests that expect
+   * animations to begin immediately. Ideally we would rewrite the those tests
+   * and get rid of this method, but there are a lot of them.
+   *
+   * As with TriggerOnNextTick, the caller of this method is responsible for
+   * removing the animation from any PendingAnimationTracker it may have been
+   * added to.
+   */
   void TriggerNow();
-
   /**
    * When StartOnNextTick is called, we store the ready time but we don't apply
    * it until the next tick. In the meantime, GetStartTime() will return null.
@@ -255,29 +254,28 @@ public:
            (PlayState() == AnimationPlayState::Running ||
             mPendingState == PendingState::PlayPending);
   }
-
   bool IsRelevant() const { return mIsRelevant; }
   void UpdateRelevance();
-
   void SetIsRunningOnCompositor() { mIsRunningOnCompositor = true; }
   void ClearIsRunningOnCompositor() { mIsRunningOnCompositor = false; }
-
-  // Returns true if this animation does not currently need to update
-  // style on the main thread (e.g. because it is empty, or is
-  // running on the compositor).
+  /**
+   * Returns true if this animation does not currently need to update
+   * style on the main thread (e.g. because it is empty, or is
+   * running on the compositor).
+   */
   bool CanThrottle() const;
-
-  // Updates |aStyleRule| with the animation values of this animation's effect,
-  // if any.
-  // Any properties already contained in |aSetProperties| are not changed. Any
-  // properties that are changed are added to |aSetProperties|.
-  // |aNeedsRefreshes| will be set to true if this animation expects to update
-  // the style rule on the next refresh driver tick as well (because it
-  // is running and has an effect to sample).
+  /**
+   * Updates |aStyleRule| with the animation values of this animation's effect,
+   * if any.
+   * Any properties already contained in |aSetProperties| are not changed. Any
+   * properties that are changed are added to |aSetProperties|.
+   * |aNeedsRefreshes| will be set to true if this animation expects to update
+   * the style rule on the next refresh driver tick as well (because it
+   * is running and has an effect to sample).
+   */
   void ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
-
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SilentlySetPlaybackRate(double aPlaybackRate);
