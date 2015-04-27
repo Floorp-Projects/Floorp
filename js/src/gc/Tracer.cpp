@@ -36,61 +36,41 @@ CheckTracedThing(JSTracer* trc, T thing);
 } // namespace js
 
 template <typename T>
-void
+T
 DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name)
 {
     CheckTracedThing(trc, *thingp);
     JSGCTraceKind kind = MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind;
     JS::AutoTracingName ctx(trc, name);
     trc->invoke((void**)thingp, kind);
+    return *thingp;
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
-    template void DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
+    template type* DoCallback<type*>(JS::CallbackTracer*, type**, const char*);
 FOR_EACH_GC_LAYOUT(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
+template <typename S>
+struct DoCallbackFunctor : public IdentityDefaultAdaptor<S> {
+    template <typename T> S operator()(T* t, JS::CallbackTracer* trc, const char* name) {
+        return js::gc::RewrapValueOrId<S, T*>::wrap(DoCallback(trc, &t, name));
+    }
+};
+
 template <>
-void
+Value
 DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name)
 {
-    if (vp->isObject()) {
-        JSObject* prior = &vp->toObject();
-        JSObject* obj = prior;
-        DoCallback(trc, &obj, name);
-        if (obj != prior)
-            vp->setObjectOrNull(obj);
-    } else if (vp->isString()) {
-        JSString* prior = vp->toString();
-        JSString* str = prior;
-        DoCallback(trc, &str, name);
-        if (str != prior)
-            vp->setString(str);
-    } else if (vp->isSymbol()) {
-        JS::Symbol* prior = vp->toSymbol();
-        JS::Symbol* sym = prior;
-        DoCallback(trc, &sym, name);
-        if (sym != prior)
-            vp->setSymbol(sym);
-    }
+    *vp = DispatchValueTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
+    return *vp;
 }
 
 template <>
-void
+jsid
 DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
 {
-    if (JSID_IS_STRING(*idp)) {
-        JSString* prior = JSID_TO_STRING(*idp);
-        JSString* str = prior;
-        DoCallback(trc, &str, name);
-        if (str != prior)
-            *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
-    } else if (JSID_IS_SYMBOL(*idp)) {
-        JS::Symbol* prior = JSID_TO_SYMBOL(*idp);
-        JS::Symbol* sym = prior;
-        DoCallback(trc, &sym, name);
-        if (sym != prior)
-            *idp = SYMBOL_TO_JSID(sym);
-    }
+    *idp = DispatchIdTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
+    return *idp;
 }
 
 JS_PUBLIC_API(void)

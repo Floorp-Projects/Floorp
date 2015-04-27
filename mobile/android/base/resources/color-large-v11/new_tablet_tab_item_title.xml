@@ -2,11 +2,11 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_checked="true"
-          android:color="@color/text_color_primary_inverse"/>
+          android:color="@color/about_page_header_grey"/>
 
     <item android:state_pressed="true"
-          android:color="@color/text_color_primary_inverse"/>
+          android:color="@color/about_page_header_grey"/>
 
-    <item android:color="@color/new_tablet_tab_grid_text_unselected"/>
+    <item android:color="@color/tabs_tray_icon_grey"/>
 
 </selector>

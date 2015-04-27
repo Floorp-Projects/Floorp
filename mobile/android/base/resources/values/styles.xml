@@ -244,7 +244,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
-        <item name="android:background">@color/background_light</item>
+        <item name="android:background">@color/about_page_header_grey</item>
         <item name="android:focusable">false</item>
         <item name="android:gravity">center|left</item>
         <item name="android:paddingLeft">10dip</item>
@@ -403,7 +403,7 @@
     <style name="TextAppearance.Widget.Home.ItemTitle" parent="TextAppearance.Medium"/>
 
     <style name="TextAppearance.Widget.Home.ItemDescription" parent="TextAppearance.Micro">
-        <item name="android:textColor">#AFB1B3</item>
+        <item name="android:textColor">@color/tabs_tray_icon_grey</item>
     </style>
 
     <style name="TextAppearance.Widget.HomeBanner" parent="TextAppearance.Small">
@@ -571,7 +571,7 @@
     <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
-        <item name="android:background">@color/background_light</item>
+        <item name="android:background">@color/about_page_header_grey</item>
     </style>
 
     <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
@@ -600,7 +600,7 @@
 
     <!-- Find bar -->
     <style name="FindBar">
-        <item name="android:background">@color/background_tabs</item>
+        <item name="android:background">@color/text_and_tabs_tray_grey</item>
         <item name="android:paddingLeft">3dip</item>
         <item name="android:paddingRight">3dip</item>
         <item name="android:paddingTop">6dip</item>
@@ -794,7 +794,7 @@
 
     <style name="TextAppearance.FirstrunLight.Main">
         <item name="android:textSize">20sp</item>
-        <item name="android:textColor">#363B40</item>
+        <item name="android:textColor">@color/text_and_tabs_tray_grey</item>
     </style>
 
     <style name="TextAppearance.FirstrunRegular.Body">

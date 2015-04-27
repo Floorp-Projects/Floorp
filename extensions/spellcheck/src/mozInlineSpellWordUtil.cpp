@@ -12,7 +12,6 @@
 #include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMHTMLBRElement.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsUnicodeProperties.h"
 #include "nsServiceManagerUtils.h"

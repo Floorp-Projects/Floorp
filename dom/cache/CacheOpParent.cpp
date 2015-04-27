@@ -195,7 +195,7 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
   // void_t() to ensure that we don't leak actors on the child side.
   if (aRv.Failed()) {
     unused << Send__delete__(this, aRv, void_t());
-    aRv.ClearMessage(); // This may contain a TypeError.
+    aRv.SuppressException(); // We serialiazed it, as best we could.
     return;
   }
 

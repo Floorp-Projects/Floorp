@@ -69,6 +69,14 @@ class LoopTestServers:
         p = processhandler.ProcessHandler(CONTENT_SERVER_COMMAND,
                                           env=CONTENT_SERVER_ENV)
         p.run()
+
+        # Give the content server time to start.
+        import time
+        output = p.output
+        while not output:
+            time.sleep(1)
+            output = p.output
+
         return p
 
     def shutdown(self):

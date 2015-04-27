@@ -61,9 +61,13 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
    */
   _onLink: function (_, treeItem) {
     let { url, line } = treeItem.frame.getInfo();
-    viewSourceInDebugger(url, line).then(
-      () => this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER),
-      () => this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER));
+    gToolbox.viewSourceInDebugger(url, line).then(success => {
+      if (success) {
+        this.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
+      } else {
+        this.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
+      }
+    });
   },
 
   /**
@@ -120,32 +124,4 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
   },
 
   toString: () => "[object JsCallTreeView]"
-});
-
-/**
- * Opens/selects the debugger in this toolbox and jumps to the specified
- * file name and line number.
- * @param string url
- * @param number line
- */
-let viewSourceInDebugger = Task.async(function *(url, line) {
-  // If the Debugger was already open, switch to it and try to show the
-  // source immediately. Otherwise, initialize it and wait for the sources
-  // to be added first.
-  let debuggerAlreadyOpen = gToolbox.getPanel("jsdebugger");
-  let { panelWin: dbg } = yield gToolbox.selectTool("jsdebugger");
-
-  if (!debuggerAlreadyOpen) {
-    yield dbg.once(dbg.EVENTS.SOURCES_ADDED);
-  }
-
-  let { DebuggerView } = dbg;
-  let { Sources } = DebuggerView;
-
-  let item = Sources.getItemForAttachment(a => a.source.url === url);
-  if (item) {
-    return DebuggerView.setEditorLocation(item.attachment.source.actor, line, { noDebug: true });
-  }
-
-  return Promise.reject("Couldn't find the specified source in the debugger.");
 });

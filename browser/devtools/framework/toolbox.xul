@@ -18,6 +18,9 @@
 
   <script type="application/javascript;version=1.8"
           src="chrome://browser/content/devtools/theme-switching.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/viewSourceUtils.js"/>
+
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <commandset id="editMenuCommands"/>

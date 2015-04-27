@@ -3009,9 +3009,7 @@ CSSParserImpl::ParseCharsetRule(RuleAppendFunc aAppendFunc,
     return false;
   }
 
-  nsRefPtr<css::CharsetRule> rule = new css::CharsetRule(charset,
-                                                         linenum, colnum);
-  (*aAppendFunc)(rule, aData);
+  // It's intentional that we don't create a rule object for @charset rules.
 
   return true;
 }
