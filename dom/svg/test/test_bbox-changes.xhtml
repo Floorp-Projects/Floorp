@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1159053
+-->
+<head>
+  <title>Test that the results of getBBox update for changes</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <rect id="rect1" x="10" y="10" width="10" height="10"/>
+    <rect id="rect2" x="30" y="10" width="10" height="10"/>
+    <g id="g">
+      <circle id="circle1" cx="60" cy="20" r="5"/>
+      <circle id="circle2" cx="120" cy="20" r="5"/>
+    </g>
+  </svg>
+</p>
+
+<div id="content" style="display: none"></div>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">//<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function init_and_run() {
+  SpecialPowers.pushPrefEnv({"set": [["svg.new-getBBox.enabled", true]]}, run);
+}
+
+function checkBBox(id, options, x, y, width, height, msg) {
+  var bbox = document.getElementById(id).getBBox(options);
+  is(bbox.x, x, id + ".getBBox().x" + msg);
+  is(bbox.y, y, id + ".getBBox().y" + msg);
+  is(bbox.width, width, id + ".getBBox().width" + msg);
+  is(bbox.height, height, id + ".getBBox().height" + msg);
+}
+
+function run()
+{
+  // First call getBBox on 'rect1' with stroke included:
+  $("rect1").setAttribute("stroke", "black");
+  $("rect1").setAttribute("stroke-width", "10");
+  checkBBox("rect1", { fill:true, stroke:true }, 5, 5, 20, 20, " with stroke");
+
+  // Now remove the stroke from 'rect1' and check again:
+  $("rect1").removeAttribute("stroke");
+  $("rect1").removeAttribute("stroke-width");
+  checkBBox("rect1", { fill:true }, 10, 10, 10, 10, " after stroke removed");
+
+  // First call getBBox on 'rect2' without a stroke included:
+  checkBBox("rect2", { fill:true }, 30, 10, 10, 10, " with stroke");
+
+  // Now add a stroke to 'rect2' and check again:
+  $("rect2").setAttribute("stroke", "black");
+  $("rect2").setAttribute("stroke-width", "10");
+  checkBBox("rect2", { fill:true, stroke:true }, 25, 5, 20, 20, " with stroke");
+
+  // Check the initial result for getBBox on the group:
+  checkBBox("g", { fill:true }, 55, 15, 70, 10, " before child moves");
+
+  // Now move one of the circle children and check again:
+  $("circle2").setAttribute("cx", "110");
+  checkBBox("g", { fill:true }, 55, 15, 60, 10, " after child moves");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", init_and_run, false);
+
+//]]></script>
+</pre>
+</body>
+</html>
