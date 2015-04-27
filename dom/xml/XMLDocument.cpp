@@ -285,7 +285,7 @@ XMLDocument::Load(const nsAString& aUrl, bool *aReturn)
 {
   ErrorResult rv;
   *aReturn = Load(aUrl, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 bool

@@ -1424,7 +1424,7 @@ nsEditor::SplitNode(nsIDOMNode* aNode,
   ErrorResult rv;
   nsCOMPtr<nsIContent> newNode = SplitNode(*node, aOffset, rv);
   *aNewLeftNode = GetAsDOMNode(newNode.forget().take());
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 nsIContent*
@@ -2873,7 +2873,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     selection->Collapse(aNodeToKeep, AssertedCast<int32_t>(firstNodeLength));
   }
 
-  return err.ErrorCode();
+  return err.StealNSResult();
 }
 
 

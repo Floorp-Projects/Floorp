@@ -85,7 +85,7 @@ nsScreen::GetPixelDepth(ErrorResult& aRv)
   {                                                                             \
     ErrorResult rv;                                                             \
     *aOut = Get ## _name(rv);                                                   \
-    return rv.ErrorCode();                                                      \
+    return rv.StealNSResult();                                                  \
   }
 
 FORWARD_LONG_GETTER(AvailWidth)

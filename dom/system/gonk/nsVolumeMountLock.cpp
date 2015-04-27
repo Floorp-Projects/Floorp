@@ -160,7 +160,7 @@ nsVolumeMountLock::Lock(nsIVolume* aVolume)
   ErrorResult err;
   mWakeLock = pmService->NewWakeLock(mountLockName, nullptr, err);
   if (err.Failed()) {
-    return err.ErrorCode();
+    return err.StealNSResult();
   }
 
   LOG("nsVolumeMountLock acquired for '%s' gen %d",

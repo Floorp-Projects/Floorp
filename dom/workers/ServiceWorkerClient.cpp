@@ -92,7 +92,7 @@ public:
     ErrorResult result;
     dom::Navigator* navigator = window->GetNavigator(result);
     if (NS_WARN_IF(result.Failed())) {
-      return result.ErrorCode();
+      return result.StealNSResult();
     }
 
     nsRefPtr<ServiceWorkerContainer> container = navigator->ServiceWorker();

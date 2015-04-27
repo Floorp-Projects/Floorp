@@ -996,7 +996,7 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(cleanedScope);
@@ -1317,7 +1317,7 @@ ServiceWorkerManager::GetRegistrations(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   nsCOMPtr<nsIRunnable> runnable =
@@ -1418,7 +1418,7 @@ ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   nsCOMPtr<nsIRunnable> runnable =
@@ -1629,7 +1629,7 @@ ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   nsCOMPtr<nsIRunnable> runnable =

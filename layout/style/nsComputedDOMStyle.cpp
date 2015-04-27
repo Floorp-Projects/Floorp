@@ -365,14 +365,14 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   ErrorResult error;
   nsRefPtr<CSSValue> val = GetPropertyCSSValue(aPropertyName, error);
   if (error.Failed()) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   if (val) {
     nsString text;
     val->GetCssText(text, error);
     aReturn.Assign(text);
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   return NS_OK;

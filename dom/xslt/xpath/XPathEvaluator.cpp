@@ -95,7 +95,7 @@ XPathEvaluator::Evaluate(const nsAString & aExpression,
     nsAutoPtr<XPathExpression> expression(CreateExpression(aExpression,
                                                            resolver, rv));
     if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
     }
 
     nsCOMPtr<nsINode> node = do_QueryInterface(aContextNode);
@@ -108,7 +108,7 @@ XPathEvaluator::Evaluate(const nsAString & aExpression,
         expression->Evaluate(*node, aType,
                              static_cast<XPathResult*>(inResult.get()), rv);
     if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
     }
 
     *aResult = ToSupports(result.forget().take());
@@ -216,7 +216,7 @@ nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
         ErrorResult rv;
         mResolver->LookupNamespaceURI(prefix, ns, rv);
         if (rv.Failed()) {
-            return rv.ErrorCode();
+            return rv.StealNSResult();
         }
     } else {
         if (aPrefix == nsGkAtoms::xml) {

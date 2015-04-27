@@ -347,7 +347,7 @@ File::GetLastModifiedDate(JSContext* aCx,
   ErrorResult rv;
   Date value = GetLastModifiedDate(rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   if (!value.ToDateObject(aCx, aDate)) {
@@ -379,7 +379,7 @@ File::GetMozFullPath(nsAString& aFileName)
 {
   ErrorResult rv;
   GetMozFullPath(aFileName, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -393,7 +393,7 @@ File::GetMozFullPathInternal(nsAString& aFileName)
 {
   ErrorResult rv;
   mImpl->GetMozFullPathInternal(aFileName, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -403,7 +403,7 @@ File::GetSize(uint64_t* aSize)
 
   ErrorResult rv;
   *aSize = GetSize(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 uint64_t
@@ -426,7 +426,7 @@ File::GetMozLastModifiedDate(int64_t* aDate)
 
   ErrorResult rv;
   *aDate = GetLastModified(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 // Makes sure that aStart and aEnd is less then or equal to aSize and greater
@@ -484,7 +484,7 @@ File::Slice(int64_t aStart, int64_t aEnd,
   ErrorResult rv;
   nsRefPtr<File> file = Slice(start, end, aContentType, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   file.forget(aBlob);
@@ -903,7 +903,7 @@ FileImplBase::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   ErrorResult error;
   *aContentLength = GetSize(error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   nsAutoString contentType;
@@ -939,7 +939,7 @@ FileImplBase::SetMutable(bool aMutable)
     ErrorResult error;
     GetSize(error);
     if (NS_WARN_IF(error.Failed())) {
-      return error.ErrorCode();
+      return error.StealNSResult();
     }
   }
 

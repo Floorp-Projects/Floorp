@@ -82,7 +82,7 @@ JoinNodeTxn::UndoTransaction()
     nsCOMPtr<nsIContent> child = mRightNode->GetFirstChild();
     for (uint32_t i = 0; i < mOffset; i++) {
       if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
       }
       if (!child) {
         return NS_ERROR_NULL_POINTER;
@@ -94,7 +94,7 @@ JoinNodeTxn::UndoTransaction()
   }
   // Second, re-insert the left node into the tree
   mParent->InsertBefore(*mLeftNode, mRightNode, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
