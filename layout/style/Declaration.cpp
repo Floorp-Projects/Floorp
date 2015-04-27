@@ -1171,10 +1171,8 @@ void
 Declaration::AppendVariableAndValueToString(const nsAString& aName,
                                             nsAString& aResult) const
 {
-  nsAutoString localName;
-  localName.AppendLiteral("--");
-  localName.Append(aName);
-  nsStyleUtil::AppendEscapedCSSIdent(localName, aResult);
+  aResult.AppendLiteral("--");
+  aResult.Append(aName);
   CSSVariableDeclarations::Type type;
   nsString value;
   bool important;
