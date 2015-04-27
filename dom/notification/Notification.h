@@ -34,8 +34,8 @@ namespace workers {
 class Notification;
 class NotificationFeature final : public workers::WorkerFeature
 {
-  // Held alive by Notification itself before feature is added, and only
-  // released after feature is removed.
+  // Since the feature is strongly held by a Notification, it is ok to hold
+  // a raw pointer here.
   Notification* mNotification;
 
 public:
@@ -47,7 +47,7 @@ public:
 
 
 /*
- * Notifications on workers introduce some liveness issues. The property we
+ * Notifications on workers introduce some lifetime issues. The property we
  * are trying to satisfy is:
  *   Whenever a task is dispatched to the main thread to operate on
  *   a Notification, the Notification should be addrefed on the worker thread
@@ -69,7 +69,14 @@ public:
  * UI is still visible to the user. We handle this case with the following
  * steps:
  *   a) Close the notification. This is done by blocking the worker on the main
- *   thread.
+ *   thread. This ensures that there are no main thread holders when the worker
+ *   resumes. This also deals with the case where Notify() runs on the worker
+ *   before the observer has been created on the main thread. Even in such
+ *   a situation, the CloseNotificationRunnable() will only run after the
+ *   Show task that was previously queued. Since the show task is only queued
+ *   once when the Notification is created, we can be sure that no new tasks
+ *   will follow the Notify().
+ *
  *   b) Ask the observer to let go of its NotificationRef's underlying
  *   Notification without proper cleanup since the feature will handle the
  *   release. This is only OK because every notification has only one
@@ -206,7 +213,10 @@ public:
     MOZ_ASSERT(IsTargetThread());
   }
 
+  // Initialized on the worker thread, never unset, and always used in
+  // a read-only capacity. Used on any thread.
   workers::WorkerPrivate* mWorkerPrivate;
+
   // Main thread only.
   WorkerNotificationObserver* mObserver;
 
@@ -215,9 +225,12 @@ public:
   // passes this on to the Notification itself via mTempRef so that
   // ShowInternal()/CloseInternal() may pass it along appropriately (or release
   // it).
+  //
+  // Main thread only.
   UniquePtr<NotificationRef> mTempRef;
 
-  void AddRefObject();
+  // Returns true if addref succeeded.
+  bool AddRefObject();
   void ReleaseObject();
 
   static NotificationPermission GetPermissionInternal(nsIPrincipal* aPrincipal,
@@ -311,12 +324,14 @@ private:
     return NS_IsMainThread() == !mWorkerPrivate;
   }
 
-  void RegisterFeature();
+  bool RegisterFeature();
   void UnregisterFeature();
 
   nsresult ResolveIconAndSoundURL(nsString&, nsString&);
 
+  // Only used for Notifications on Workers, worker thread only.
   UniquePtr<NotificationFeature> mFeature;
+  // Target thread only.
   uint32_t mTaskCount;
 };
 
