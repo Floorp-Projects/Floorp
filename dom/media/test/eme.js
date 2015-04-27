@@ -417,12 +417,10 @@ function SetupEMEPref(callback) {
     [ "media.eme.apiVisible", true ],
   ];
 
-  if (/Linux/.test(manifestNavigator().userAgent)) {
-    prefs.push([ "media.fragmented-mp4.ffmpeg.enabled", true ]);
-  } else if (SpecialPowers.Services.appinfo.name == "B2G" ||
-             !manifestVideo().canPlayType("video/mp4")) {
-   // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
-   prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+  if (SpecialPowers.Services.appinfo.name == "B2G" ||
+      !manifestVideo().canPlayType("video/mp4")) {
+    // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+    prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
   }
 
   SpecialPowers.pushPrefEnv({ "set" : prefs }, callback);
