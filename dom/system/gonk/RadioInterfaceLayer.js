@@ -157,10 +157,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
                                    "@mozilla.org/cellbroadcast/cellbroadcastservice;1",
                                    "nsIGonkCellBroadcastService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
-                                   "@mozilla.org/ril/system-messenger-helper;1",
-                                   "nsIIccMessenger");
-
 XPCOMUtils.defineLazyServiceGetter(this, "gDataCallManager",
                                    "@mozilla.org/datacall/manager;1",
                                    "nsIDataCallManager");
@@ -966,11 +962,6 @@ RadioInterface.prototype = {
     Services.obs.removeObserver(this, kNetworkConnStateChangedTopic);
   },
 
-  getIccInfo: function() {
-    let icc = gIccService.getIccByServiceId(this.clientId);
-    return icc ? icc.iccInfo : null;
-  },
-
   isCardPresent: function() {
     let icc = gIccService.getIccByServiceId(this.clientId);
     let cardState = icc ? icc.cardState : Ci.nsIIcc.CARD_STATE_UNKNOWN;
@@ -1097,11 +1088,11 @@ RadioInterface.prototype = {
         this.handleIccMwis(message.mwi);
         break;
       case "stkcommand":
-        this.handleStkProactiveCommand(message);
+        gIccService.notifyStkCommand(this.clientId,
+                                     gStkCmdFactory.createCommand(message));
         break;
       case "stksessionend":
-        // TODO: Bug 815526, deprecate RILContentHelper.
-        gMessageManager.sendIccMessage("RIL:StkSessionEnd", this.clientId, null);
+        gIccService.notifyStkSessionEnd(this.clientId);
         break;
       case "cdma-info-rec-received":
         this.handleCdmaInformationRecords(message.records);
@@ -1288,18 +1279,6 @@ RadioInterface.prototype = {
     // Note: returnNumber and returnMessage is not available from UICC.
     service.notifyStatusChanged(this.clientId, mwi.active, mwi.msgCount,
                                 null, null);
-  },
-
-  handleStkProactiveCommand: function(message) {
-    if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
-    let iccInfo = this.getIccInfo();
-    if (iccInfo && iccInfo.iccid) {
-      gIccMessenger
-        .notifyStkProactiveCommand(iccInfo.iccid,
-                                   gStkCmdFactory.createCommand(message));
-    }
-    // TODO: Bug 815526, deprecate RILContentHelper.
-    gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
   },
 
   _convertCbGsmGeographicalScope: function(aGeographicalScope) {

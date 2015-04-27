@@ -9,12 +9,11 @@
         "@mozilla.org/icc/gonkiccservice;1"
 %}
 
-[scriptable, uuid(a037b8a2-b027-11e4-9496-c3b7af59a512)]
+[scriptable, uuid(cdcdd800-ef24-11e4-99e7-1f0f5f2576c5)]
 interface nsIGonkIccService : nsIIccService
 {
-  // TODO: Bug 1114938 - Refactor STK in MozIcc.webidl with IPDL:
-  // void notifyStkCommand(in unsigned long aServiceId, in jsval aStkcommand);
-  // void notifyStkSessionEnd(in unsigned long aServiceId);
+  void notifyStkCommand(in unsigned long aServiceId, in nsIStkProactiveCmd aStkcommand);
+  void notifyStkSessionEnd(in unsigned long aServiceId);
   void notifyCardStateChanged(in unsigned long aServiceId, in unsigned long aCardState);
   void notifyIccInfoChanged(in unsigned long aServiceId, in jsval aIccInfo);
   void notifyImsiChanged(in unsigned long aServiceId, in DOMString aImsi);

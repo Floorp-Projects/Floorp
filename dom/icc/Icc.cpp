@@ -15,7 +15,8 @@
 #include "nsIIccInfo.h"
 #include "nsIIccProvider.h"
 #include "nsIIccService.h"
-#include "nsJSON.h"
+#include "nsIStkCmdFactory.h"
+#include "nsIStkProactiveCmd.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 
@@ -99,7 +100,7 @@ Icc::NotifyEvent(const nsAString& aName)
 }
 
 nsresult
-Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
+Icc::NotifyStkEvent(const nsAString& aName, nsIStkProactiveCmd* aStkProactiveCmd)
 {
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetOwner()))) {
@@ -108,13 +109,12 @@ Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
   JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> value(cx);
 
-  if (!aMessage.IsEmpty()) {
-    nsCOMPtr<nsIJSON> json(new nsJSON());
-    nsresult rv = json->DecodeToJSVal(aMessage, cx, &value);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    value = JS::NullValue();
-  }
+  nsCOMPtr<nsIStkCmdFactory> cmdFactory =
+    do_GetService(ICC_STK_CMD_FACTORY_CONTRACTID);
+  NS_ENSURE_TRUE(cmdFactory, NS_ERROR_UNEXPECTED);
+
+  cmdFactory->CreateCommandMessage(aStkProactiveCmd, &value);
+  NS_ENSURE_TRUE(value.isObject(), NS_ERROR_UNEXPECTED);
 
   MozStkCommandEventInit init;
   init.mBubbles = false;
