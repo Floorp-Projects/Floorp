@@ -178,13 +178,14 @@ this.TelemetryController = Object.freeze({
   },
 
   /**
-   * Send payloads to the server.
+   * Submit ping payloads to Telemetry. This will assemble a complete ping, adding
+   * environment data, client id and some general info.
+   * Depending on configuration, the ping will be sent to the server (immediately or later)
+   * and archived locally.
    *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} [aOptions] Options object.
-   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
@@ -192,13 +193,11 @@ this.TelemetryController = Object.freeze({
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @returns {Promise} A promise that resolves when the ping is sent.
    */
-  send: function(aType, aPayload, aOptions = {}) {
-    let options = aOptions;
-    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
-    options.addClientId = aOptions.addClientId || false;
-    options.addEnvironment = aOptions.addEnvironment || false;
+  submitExternalPing: function(aType, aPayload, aOptions = {}) {
+    aOptions.addClientId = aOptions.addClientId || false;
+    aOptions.addEnvironment = aOptions.addEnvironment || false;
 
-    return Impl.send(aType, aPayload, options);
+    return Impl.submitExternalPing(aType, aPayload, aOptions);
   },
 
   /**
@@ -477,31 +476,29 @@ let Impl = {
   },
 
   /**
-   * Build a complete ping and send data to the server. Record success/send-time in
-   * histograms. Also archive the ping if allowed to.
+   * Submit ping payloads to Telemetry. This will assemble a complete ping, adding
+   * environment data, client id and some general info.
+   * Depending on configuration, the ping will be sent to the server (immediately or later)
+   * and archived locally.
    *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} aOptions Options object.
-   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
-   *                 if sending fails.
-   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
-   *                  false otherwise.
-   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   * @param {Object} [aOptions] Options object.
+   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
-   * @param {Object}  aOptions.overrideEnvironment set to override the environment data.
-   *
-   * @returns {Promise} A promise that resolves with the ping id when the ping is sent or
-   *                    saved to disk.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @returns {Promise} A promise that resolves when the ping is sent or saved.
    */
-  send: function send(aType, aPayload, aOptions) {
-    this._log.trace("send - Type " + aType + ", Server " + this._server +
+  submitExternalPing: function send(aType, aPayload, aOptions) {
+    this._log.trace("submitExternalPing - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
     // Always persist the pings if we are allowed to.
     let archivePromise = TelemetryArchive.promiseArchivePing(pingData)
-      .catch(e => this._log.error("send - Failed to archive ping " + pingData.id, e));
+      .catch(e => this._log.error("submitExternalPing - Failed to archive ping " + pingData.id, e));
 
     // Once ping is assembled, send it along with the persisted pings in the backlog.
     let p = [
