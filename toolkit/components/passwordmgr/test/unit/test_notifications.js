@@ -76,7 +76,7 @@ testdesc = "addLogin";
 expectedNotification = "addLogin";
 expectedData = testuser1;
 Services.logins.addLogin(testuser1);
-LoginTest.checkLogins([testuser1]);
+LoginTestUtils.checkLogins([testuser1]);
 do_check_eq(expectedNotification, null); // check that observer got a notification
 
 /* ========== 3 ========== */
@@ -87,7 +87,7 @@ expectedNotification = "modifyLogin";
 expectedData=[testuser1, testuser2];
 Services.logins.modifyLogin(testuser1, testuser2);
 do_check_eq(expectedNotification, null);
-LoginTest.checkLogins([testuser2]);
+LoginTestUtils.checkLogins([testuser2]);
 
 /* ========== 4 ========== */
 testnum++;
@@ -97,7 +97,7 @@ expectedNotification = "removeLogin";
 expectedData = testuser2;
 Services.logins.removeLogin(testuser2);
 do_check_eq(expectedNotification, null);
-LoginTest.checkLogins([]);
+LoginTestUtils.checkLogins([]);
 
 /* ========== 5 ========== */
 testnum++;
@@ -107,7 +107,7 @@ expectedNotification = "removeAllLogins";
 expectedData = null;
 Services.logins.removeAllLogins();
 do_check_eq(expectedNotification, null);
-LoginTest.checkLogins([]);
+LoginTestUtils.checkLogins([]);
 
 /* ========== 6 ========== */
 testnum++;
@@ -117,7 +117,7 @@ expectedNotification = "removeAllLogins";
 expectedData = null;
 Services.logins.removeAllLogins();
 do_check_eq(expectedNotification, null);
-LoginTest.checkLogins([]);
+LoginTestUtils.checkLogins([]);
 
 /* ========== 7 ========== */
 testnum++;
@@ -127,8 +127,8 @@ expectedNotification = "hostSavingDisabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", false);
 do_check_eq(expectedNotification, null);
-LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                   ["http://site.com"]);
+LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                        ["http://site.com"]);
 
 /* ========== 8 ========== */
 testnum++;
@@ -138,8 +138,8 @@ expectedNotification = "hostSavingDisabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", false);
 do_check_eq(expectedNotification, null);
-LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                   ["http://site.com"]);
+LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                        ["http://site.com"]);
 
 /* ========== 9 ========== */
 testnum++;
@@ -149,7 +149,7 @@ expectedNotification = "hostSavingEnabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", true);
 do_check_eq(expectedNotification, null);
-LoginTest.checkLogins([]);
+LoginTestUtils.checkLogins([]);
 
 /* ========== 10 ========== */
 testnum++;
@@ -159,11 +159,11 @@ expectedNotification = "hostSavingEnabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", true);
 do_check_eq(expectedNotification, null);
-LoginTest.checkLogins([]);
+LoginTestUtils.checkLogins([]);
 
 Services.obs.removeObserver(TestObserver, "passwordmgr-storage-changed");
 
-LoginTest.clearData();
+LoginTestUtils.clearData();
 
 } catch (e) {
     throw new Error("FAILED in test #" + testnum + " -- " + testdesc + ": " + e);

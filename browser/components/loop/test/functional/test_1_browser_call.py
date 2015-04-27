@@ -102,6 +102,8 @@ class Test1BrowserCall(MarionetteTestCase):
         media_container = self.wait_for_element_displayed(By.CLASS_NAME, "media")
         self.assertEqual(media_container.tag_name, "div", "expect a video container")
 
+        self.check_video(".local .OT_publisher .OT_widget-container");
+
     def local_get_and_verify_room_url(self):
         self.switch_to_chatbox()
         button = self.wait_for_element_displayed(By.CLASS_NAME, "btn-copy")
@@ -162,6 +164,10 @@ class Test1BrowserCall(MarionetteTestCase):
         # check that the feedback form is displayed
         feedback_form = self.wait_for_element_displayed(By.CLASS_NAME, "faces")
         self.assertEqual(feedback_form.tag_name, "div", "expect feedback form")
+
+        self.switch_to_chatbox()
+        # check that the local view reverts to the preview mode
+        self.wait_for_element_displayed(By.CLASS_NAME, "room-invitation-content")
 
     def local_get_chatbox_window_expr(self, expr):
         """

@@ -70,7 +70,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "skinnable", "size", "sourceURI", "releaseNotesURI",
                           "softDisabled", "foreignInstall", "hasBinaryComponents",
                           "strictCompatibility", "locales", "targetApplications",
-                          "targetPlatforms", "multiprocessCompatible"];
+                          "targetPlatforms", "multiprocessCompatible", "signedState"];
 
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
@@ -439,7 +439,7 @@ this.XPIDatabase = {
     let promise = this._deferredSave.saveChanges();
     if (!this._schemaVersionSet) {
       this._schemaVersionSet = true;
-      promise.then(
+      promise = promise.then(
         count => {
           // Update the XPIDB schema version preference the first time we successfully
           // save the database.
@@ -451,12 +451,17 @@ this.XPIDatabase = {
         error => {
           // Need to try setting the schema version again later
           this._schemaVersionSet = false;
-          logger.warn("Failed to save XPI database", error);
           // this._deferredSave.lastError has the most recent error so we don't
           // need this any more
           this._loadError = null;
+
+          throw error;
         });
     }
+
+    promise.catch(error => {
+      logger.warn("Failed to save XPI database", error);
+    });
   },
 
   flush: function() {

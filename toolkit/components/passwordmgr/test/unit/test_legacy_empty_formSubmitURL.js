@@ -104,5 +104,5 @@ add_task(function test_searchLogins_wildcard()
 
   let loginInfo = TestData.formLogin({ hostname: "http://any.example.com",
                                        formSubmitURL: "" });
-  LoginTest.assertLoginListsEqual(logins, [loginInfo]);
+  LoginTestUtils.assertLoginListsEqual(logins, [loginInfo]);
 });

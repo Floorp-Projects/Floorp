@@ -13,24 +13,41 @@
 <body>
   <div id="container" class="container">
     <div id="reader-header" class="header">
+      <style scoped>
+        @import url("chrome://global/skin/aboutReaderControls.css");
+      </style>
       <a id="reader-domain" class="domain"></a>
       <div class="domain-border"></div>
       <h1 id="reader-title"></h1>
       <div id="reader-credits" class="credits"></div>
     </div>
 
-    <div id="moz-reader-content" class="content">
+    <div class="content">
+      <style scoped>
+        @import url("chrome://global/skin/aboutReaderContent.css");
+      </style>
+      <div id="moz-reader-content"></div>
     </div>
 
-    <div id="reader-message" class="message">
+    <div class="message">
+      <style scoped>
+        @import url("chrome://global/skin/aboutReaderControls.css");
+      </style>
+      <div id="reader-message"></div>
     </div>
 
     <div id="reader-footer" class="footer">
+      <style scoped>
+        @import url("chrome://global/skin/aboutReaderControls.css");
+      </style>
       <button id="remove-button" class="button remove-button"/>
     </div>
   </div>
 
   <ul id="reader-toolbar" class="toolbar">
+    <style scoped>
+      @import url("chrome://global/skin/aboutReaderControls.css");
+    </style>
     <li><button id="close-button" class="button close-button"/></li>
     <li><button id="share-button" class="button share-button"/></li>
     <ul id="style-dropdown" class="dropdown">
@@ -50,6 +67,7 @@
     </ul>
     <li><button id="toggle-button" class="button toggle-button" hidden="true"/></li>
     <li><button id="list-button" class="button list-button" hidden="true"/></li>
+    <li><button id="pocket-button" class="button" hidden="true"/></li>
   </ul>
 
 </body>

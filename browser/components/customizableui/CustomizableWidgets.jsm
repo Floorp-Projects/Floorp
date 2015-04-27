@@ -33,6 +33,10 @@ XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
   const kBrandBundle = "chrome://branding/locale/brand.properties";
   return Services.strings.createBundle(kBrandBundle);
 });
+XPCOMUtils.defineLazyGetter(this, "PocketBundle", function() {
+  const kPocketBundle = "chrome://browser/content/browser-pocket.properties";
+  return Services.strings.createBundle(kPocketBundle);
+});
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
@@ -1055,6 +1059,133 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       forgetButton.removeEventListener("command", this);
     },
   });
+}
+
+if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
+  let isEnabledForLocale = true;
+  if (Services.prefs.getBoolPref("browser.pocket.useLocaleList")) {
+    let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                           .getService(Ci.nsIXULChromeRegistry);
+    let browserLocale = chromeRegistry.getSelectedLocale("browser");
+    let enabledLocales = [];
+    try {
+      enabledLocales = Services.prefs.getCharPref("browser.pocket.enabledLocales").split(' ');
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    isEnabledForLocale = enabledLocales.indexOf(browserLocale) != -1;
+  }
+
+  if (isEnabledForLocale) {
+    let pocketButton = {
+      id: "pocket-button",
+      type: "view",
+      viewId: "PanelUI-pocketView",
+      label: PocketBundle.GetStringFromName("pocket-button.label"),
+      tooltiptext: PocketBundle.GetStringFromName("pocket-button.tooltiptext"),
+      onCreated(node) {
+        let doc = node.ownerDocument;
+        let elementsNeedingStrings = [
+          "pocket-header",
+          "pocket-login-required-tagline",
+          "pocket-signup-with-fxa",
+          "pocket-signup-with-email",
+          "pocket-account-question",
+          "pocket-login-now",
+          "pocket-page-saved-header",
+          "pocket-open-pocket",
+          "pocket-remove-page",
+          "pocket-page-tags-field",
+          "pocket-page-tags-add",
+          "pocket-page-suggested-tags-header",
+          "pocket-signup-or",
+        ];
+
+        for (let elementId of elementsNeedingStrings) {
+          let el = doc.getElementById(elementId);
+          let string = PocketBundle.GetStringFromName(elementId);
+
+          switch (el.localName) {
+            case "button":
+              el.label = string;
+              break;
+            case "textbox":
+              el.setAttribute("placeholder", string);
+              break;
+            default:
+              el.textContent = string;
+              break;
+          }
+        }
+
+        let addTagsField = doc.getElementById("pocket-page-tags-field");
+        let addTagsButton = doc.getElementById("pocket-page-tags-add");
+        addTagsField.addEventListener("input", this);
+        addTagsButton.addEventListener("command", this);
+      },
+      onViewShowing(event) {
+        let doc = event.target.ownerDocument;
+
+        let loginView = doc.getElementById("pocket-login-required");
+        let pageSavedView = doc.getElementById("pocket-page-saved");
+        let showPageSaved = Math.random() < 0.5;
+        loginView.hidden = !showPageSaved;
+        pageSavedView.hidden = showPageSaved;
+      },
+
+      handleEvent: function(event) {
+        let doc = event.target.ownerDocument;
+        let field = doc.getElementById("pocket-page-tags-field");
+        let button = doc.getElementById("pocket-page-tags-add");
+        switch (event.type) {
+          case "input":
+            button.disabled = !field.value.trim();
+            break;
+          case "command":
+            //XXXjaws Send tag to the Pocket server
+            field.value = "";
+            break;
+        }
+      },
+
+      USER_REMOVED_PREF: "browser.pocket.removedByUser",
+      onWidgetAdded(aWidgetId, aArea, aPosition) {
+        if (aWidgetId != this.id) {
+          return;
+        }
+
+        let placement = CustomizableUI.getPlacementOfWidget(this.id);
+        let widgetInUI = placement && placement.area;
+        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !widgetInUI);
+      },
+      onWidgetRemoved(aWidgetId, aArea) {
+        if (aWidgetId != this.id) {
+          return;
+        }
+
+        let placement = CustomizableUI.getPlacementOfWidget(this.id);
+        let widgetInUI = placement && placement.area;
+        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !widgetInUI);
+      },
+      onWidgetReset(aNode, aContainer) {
+        if (aNode.id != this.id) {
+          return;
+        }
+
+        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !aContainer);
+      },
+      onWidgetUndoMove(aNode, aContainer) {
+        if (aNode.id != this.id) {
+          return;
+        }
+
+        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !aContainer);
+      }
+    };
+
+    CustomizableWidgets.push(pocketButton);
+    CustomizableUI.addListener(pocketButton);
+  }
 }
 
 #ifdef E10S_TESTING_ONLY

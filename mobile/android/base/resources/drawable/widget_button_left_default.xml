@@ -13,7 +13,7 @@
                      android:topRightRadius="0dp"
                      android:bottomLeftRadius="0dp"
                      android:bottomRightRadius="0dp"/>
-            <solid android:color="@color/widget_logo_default"/>
+            <solid android:color="@color/toolbar_grey"/>
         </shape>
     </item>
 </layer-list>

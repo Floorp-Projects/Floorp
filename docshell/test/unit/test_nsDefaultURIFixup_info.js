@@ -115,11 +115,25 @@ let testcases = [ {
     fixedURI: "http://192.168.10.110/",
     protocolChange: true,
   }, {
+    input: "192.168.10.110/123",
+    fixedURI: "http://192.168.10.110/123",
+    protocolChange: true,
+  }, {
+    input: "192.168.10.110/123foo",
+    fixedURI: "http://192.168.10.110/123foo",
+    protocolChange: true,
+  }, {
+    input: "192.168.10.110:1234/123",
+    fixedURI: "http://192.168.10.110:1234/123",
+    protocolChange: true,
+  }, {
+    input: "192.168.10.110:1234/123foo",
+    fixedURI: "http://192.168.10.110:1234/123foo",
+    protocolChange: true,
+  }, {
     input: "1.2.3",
     fixedURI: "http://1.2.3/",
-    keywordLookup: true,
     protocolChange: true,
-    affectedByDNSForSingleHosts: true,
   }, {
     input: "1.2.3/",
     fixedURI: "http://1.2.3/",
@@ -129,11 +143,13 @@ let testcases = [ {
     fixedURI: "http://1.2.3/foo",
     protocolChange: true,
   }, {
+    input: "1.2.3/123",
+    fixedURI: "http://1.2.3/123",
+    protocolChange: true,
+  }, {
     input: "1.2.3:8000",
     fixedURI: "http://1.2.3:8000/",
-    keywordLookup: true,
     protocolChange: true,
-    affectedByDNSForSingleHosts: true,
   }, {
     input: "1.2.3:8000/",
     fixedURI: "http://1.2.3:8000/",
@@ -141,6 +157,10 @@ let testcases = [ {
   }, {
     input: "1.2.3:8000/foo",
     fixedURI: "http://1.2.3:8000/foo",
+    protocolChange: true,
+  }, {
+    input: "1.2.3:8000/123",
+    fixedURI: "http://1.2.3:8000/123",
     protocolChange: true,
   }, {
     input: "http://1.2.3",

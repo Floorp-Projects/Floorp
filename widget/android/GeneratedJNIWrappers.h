@@ -583,6 +583,21 @@ public:
     static mozilla::jni::ByteArray::LocalRef GetIconForExtensionWrapper(mozilla::jni::String::Param, int32_t);
 
 public:
+    struct GetMaxTouchPoints_t {
+        typedef GeckoAppShell Owner;
+        typedef int32_t ReturnType;
+        typedef int32_t SetterType;
+        static constexpr char name[] = "getMaxTouchPoints";
+        static constexpr char signature[] =
+                "()I";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode = mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static int32_t GetMaxTouchPoints();
+
+public:
     struct GetMessageWrapper_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;

@@ -145,7 +145,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     public LayerRenderer(LayerView view) {
         mView = view;
-        setOverscrollColor(R.color.background_normal);
+        setOverscrollColor(R.color.toolbar_grey);
 
         Bitmap scrollbarImage = view.getScrollbarImage();
         IntSize size = new IntSize(scrollbarImage.getWidth(), scrollbarImage.getHeight());
@@ -682,7 +682,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         if (msg == Tabs.TabEvents.SELECTED) {
             if (mView != null) {
                 final int overscrollColor =
-                        (tab.isPrivate() ? R.color.background_private : R.color.background_normal);
+                        (tab.isPrivate() ? R.color.private_toolbar_grey : R.color.toolbar_grey);
                 setOverscrollColor(overscrollColor);
 
                 if (mView.getChildAt(0) != null) {

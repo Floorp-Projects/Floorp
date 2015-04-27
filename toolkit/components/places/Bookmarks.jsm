@@ -1065,7 +1065,9 @@ function removeSameValueProperties(dest, src) {
  *        the URL object to convert.
  * @return nsIURI for the given URL.
  */
-function toURI(url) NetUtil.newURI(url.href);
+function toURI(url) {
+  return NetUtil.newURI(url.href);
+}
 
 /**
  * Convert a Date object to a PRTime (microseconds).
@@ -1074,7 +1076,9 @@ function toURI(url) NetUtil.newURI(url.href);
  *        the Date object to convert.
  * @return microseconds from the epoch.
  */
-function toPRTime(date) date * 1000;
+function toPRTime(date) {
+  return date * 1000;
+}
 
 /**
  * Convert a PRTime to a Date object.
@@ -1083,7 +1087,9 @@ function toPRTime(date) date * 1000;
  *        microseconds from the epoch.
  * @return a Date object.
  */
-function toDate(time) new Date(parseInt(time / 1000));
+function toDate(time) {
+  return new Date(parseInt(time / 1000));
+}
 
 /**
  * Convert an array of mozIStorageRow objects to an array of bookmark objects.
@@ -1216,8 +1222,12 @@ function validateBookmarkObject(input, behavior={}) {
   }
 
   for (let prop in input) {
-    if (required.has(prop))
+    if (required.has(prop)) {
       required.delete(prop);
+    } else if (input[prop] === undefined) {
+      // Skip undefined properties that are not required.
+      continue;
+    }
     if (VALIDATORS.hasOwnProperty(prop)) {
       try {
         normalizedInput[prop] = VALIDATORS[prop](input[prop], input);
@@ -1264,8 +1274,8 @@ let updateFrecency = Task.async(function* (db, urls) {
 let removeOrphanAnnotations = Task.async(function* (db) {
   yield db.executeCached(
     `DELETE FROM moz_items_annos
-     WHERE id IN (SELECT a.id from moz_items_annos a 
-                  LEFT JOIN moz_bookmarks b ON a.item_id = b.id 
+     WHERE id IN (SELECT a.id from moz_items_annos a
+                  LEFT JOIN moz_bookmarks b ON a.item_id = b.id
                   WHERE b.id ISNULL)
     `);
   yield db.executeCached(
@@ -1293,8 +1303,9 @@ let removeAnnotationsForItem = Task.async(function* (db, itemId) {
   yield db.executeCached(
     `DELETE FROM moz_anno_attributes
      WHERE id IN (SELECT n.id from moz_anno_attributes n
-                  LEFT JOIN moz_items_annos a ON a.anno_attribute_id = n.id
-                  WHERE a.id ISNULL)
+                  LEFT JOIN moz_annos a1 ON a1.anno_attribute_id = n.id
+                  LEFT JOIN moz_items_annos a2 ON a2.anno_attribute_id = n.id
+                  WHERE a1.id ISNULL AND a2.id ISNULL)
     `);
 });
 

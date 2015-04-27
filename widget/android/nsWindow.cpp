@@ -2502,3 +2502,9 @@ nsWindow::RootLayerTreeId()
     MOZ_ASSERT(sCompositorParent);
     return sCompositorParent->RootLayerTreeId();
 }
+
+uint32_t
+nsWindow::GetMaxTouchPoints() const
+{
+    return GeckoAppShell::GetMaxTouchPoints();
+}

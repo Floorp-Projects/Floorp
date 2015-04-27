@@ -12,11 +12,13 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 
-const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+const { require } = devtools;
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { CanvasFront } = require("devtools/server/actors/canvas");
+
 const Telemetry = require("devtools/shared/telemetry");
 const telemetry = new Telemetry();
 
@@ -353,33 +355,4 @@ function getThumbnailForCall(thumbnails, index) {
     }
   }
   return CanvasFront.INVALID_SNAPSHOT_IMAGE;
-}
-
-/**
- * Opens/selects the debugger in this toolbox and jumps to the specified
- * file name and line number.
- */
-function viewSourceInDebugger(url, line) {
-  let showSource = ({ DebuggerView }) => {
-    let item = DebuggerView.Sources.getItemForAttachment(a => a.source.url === url);
-    if (item) {
-      DebuggerView.setEditorLocation(item.attachment.source.actor, line, { noDebug: true }).then(() => {
-        window.emit(EVENTS.SOURCE_SHOWN_IN_JS_DEBUGGER);
-      }, () => {
-        window.emit(EVENTS.SOURCE_NOT_FOUND_IN_JS_DEBUGGER);
-      });
-    }
-  }
-
-  // If the Debugger was already open, switch to it and try to show the
-  // source immediately. Otherwise, initialize it and wait for the sources
-  // to be added first.
-  let debuggerAlreadyOpen = gToolbox.getPanel("jsdebugger");
-  gToolbox.selectTool("jsdebugger").then(({ panelWin: dbg }) => {
-    if (debuggerAlreadyOpen) {
-      showSource(dbg);
-    } else {
-      dbg.once(dbg.EVENTS.SOURCES_ADDED, () => showSource(dbg));
-    }
-  });
 }

@@ -13,7 +13,7 @@
 
     <item android:state_checked="true"
           gecko:state_private="true"
-          android:color="@color/background_private" />
+          android:color="@color/private_toolbar_grey" />
 
     <item android:state_pressed="true"
           gecko:state_private="true"
@@ -21,7 +21,7 @@
 
     <item android:state_pressed="true"
           android:state_checked="true"
-          android:color="@color/new_tablet_highlight" />
+          android:color="@color/toolbar_grey_pressed" />
 
     <!-- Lightweight Themes -->
     <item android:state_checked="true"
@@ -38,10 +38,10 @@
           android:color="@color/new_tablet_highlight_dark_lwt" />
 
     <item android:state_checked="true"
-          android:color="@color/background_normal" />
+          android:color="@color/toolbar_grey" />
 
     <item android:state_pressed="true"
-          android:color="@color/new_tablet_highlight_dark" />
+          android:color="@color/tabs_tray_grey_pressed" />
 
     <item android:color="@android:color/transparent"/>
 
