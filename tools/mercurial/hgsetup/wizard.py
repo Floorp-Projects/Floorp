@@ -178,13 +178,21 @@ class MercurialSetupWizard(object):
             if e.errno != errno.EEXIST:
                 raise
 
+        # We use subprocess in places, which expects a Win32 executable or
+        # batch script. On some versions of MozillaBuild, we have "hg.exe",
+        # "hg.bat," and "hg" (a Python script). "which" will happily return the
+        # Python script, which will cause subprocess to choke. Explicitly favor
+        # the Windows version over the plain script.
         try:
-            hg = which.which('hg')
-        except which.WhichError as e:
-            print(e)
-            print('Try running |mach bootstrap| to ensure your environment is '
-                'up to date.')
-            return 1
+            hg = which.which('hg.exe')
+        except which.WhichError:
+            try:
+                hg = which.which('hg')
+            except which.WhichError as e:
+                print(e)
+                print('Try running |mach bootstrap| to ensure your environment is '
+                      'up to date.')
+                return 1
 
         try:
             c = MercurialConfig(config_paths)
