@@ -159,12 +159,12 @@ struct MOZ_STACK_CLASS BlobOrFileData final
   uint64_t size;
   nsString type;
   nsString name;
-  uint64_t lastModifiedDate;
+  int64_t lastModifiedDate;
 
   BlobOrFileData()
     : tag(0)
     , size(0)
-    , lastModifiedDate(UINT64_MAX)
+    , lastModifiedDate(INT64_MAX)
   {
     MOZ_COUNT_CTOR(BlobOrFileData);
   }
@@ -333,7 +333,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
       }
 
       if (blob->IsFile()) {
-        uint64_t lastModifiedDate;
+        int64_t lastModifiedDate;
         MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
           blob->GetMozLastModifiedDate(&lastModifiedDate)));
 
@@ -541,9 +541,9 @@ ReadBlobOrFile(JSStructuredCloneReader* aReader,
   MOZ_ASSERT(aTag == SCTAG_DOM_FILE ||
              aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE);
 
-  uint64_t lastModifiedDate;
+  int64_t lastModifiedDate;
   if (aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE) {
-    lastModifiedDate = UINT64_MAX;
+    lastModifiedDate = INT64_MAX;
   } else {
     if (NS_WARN_IF(!JS_ReadBytes(aReader, &lastModifiedDate,
                                 sizeof(lastModifiedDate)))) {
