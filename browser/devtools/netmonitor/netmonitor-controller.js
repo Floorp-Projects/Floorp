@@ -440,7 +440,6 @@ function TargetEventsHandler() {
 
 TargetEventsHandler.prototype = {
   get target() NetMonitorController._target,
-  get webConsoleClient() NetMonitorController.webConsoleClient,
 
   /**
    * Listen for events emitted by the current tab target.
