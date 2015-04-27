@@ -547,6 +547,92 @@ tail =
         self.assertInLog(TEST_PASS_STRING)
         self.assertNotInLog(TEST_FAIL_STRING)
 
+    def testSkipForAddTest(self):
+        """
+        Check that add_test is skipped if |skip_if| condition is true
+        """
+        self.writeFile("test_skip.js", """
+add_test({
+  skip_if: () => true,
+}, function test_should_be_skipped() {
+  do_check_true(false);
+  run_next_test();
+});
+""")
+        self.writeManifest(["test_skip.js"])
+        self.assertTestResult(True, verbose=True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertInLog("TEST-SKIP")
+        self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testNotSkipForAddTask(self):
+        """
+        Check that add_task is not skipped if |skip_if| condition is false
+        """
+        self.writeFile("test_not_skip.js", """
+add_task({
+  skip_if: () => false,
+}, function test_should_not_be_skipped() {
+  do_check_true(true);
+});
+""")
+        self.writeManifest(["test_not_skip.js"])
+        self.assertTestResult(True, verbose=True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog("TEST-SKIP")
+        self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testSkipForAddTask(self):
+        """
+        Check that add_task is skipped if |skip_if| condition is true
+        """
+        self.writeFile("test_skip.js", """
+add_task({
+  skip_if: () => true,
+}, function test_should_be_skipped() {
+  do_check_true(false);
+});
+""")
+        self.writeManifest(["test_skip.js"])
+        self.assertTestResult(True, verbose=True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertInLog("TEST-SKIP")
+        self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testNotSkipForAddTest(self):
+        """
+        Check that add_test is not skipped if |skip_if| condition is false
+        """
+        self.writeFile("test_not_skip.js", """
+add_test({
+  skip_if: () => false,
+}, function test_should_not_be_skipped() {
+  do_check_true(true);
+  run_next_test();
+});
+""")
+        self.writeManifest(["test_not_skip.js"])
+        self.assertTestResult(True, verbose=True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog("TEST-SKIP")
+        self.assertNotInLog(TEST_FAIL_STRING)
+
     def testSyntaxError(self):
         """
         Check that running a test file containing a syntax error produces
