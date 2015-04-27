@@ -105,7 +105,7 @@ ArchiveReader::GetSize(uint64_t* aSize)
 {
   ErrorResult rv;
   *aSize = mFileImpl->GetSize(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 // Here we open the archive:

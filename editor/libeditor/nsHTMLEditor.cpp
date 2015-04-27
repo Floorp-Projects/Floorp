@@ -1211,7 +1211,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
     printf("Couldn't create contextual fragment: error was %X\n",
            static_cast<uint32_t>(err.ErrorCode()));
 #endif
-    return err.ErrorCode();
+    return err.StealNSResult();
   }
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 

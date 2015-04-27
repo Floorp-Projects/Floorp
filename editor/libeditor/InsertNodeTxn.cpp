@@ -81,7 +81,7 @@ InsertNodeTxn::UndoTransaction()
 
   ErrorResult rv;
   mParent->RemoveChild(*mNode, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

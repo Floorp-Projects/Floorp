@@ -57,7 +57,7 @@ DOMCursor::Continue()
 {
   ErrorResult rv;
   Continue(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

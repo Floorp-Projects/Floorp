@@ -100,7 +100,7 @@ private:
         mozilla::ErrorResult rv;
         nsCOMPtr<nsINode> node = (this->*aGetter)(rv);
         if (rv.Failed()) {
-            return rv.ErrorCode();
+            return rv.StealNSResult();
         }
         *aRetval = node ? node.forget().take()->AsDOMNode() : nullptr;
         return NS_OK;

@@ -90,7 +90,7 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   ErrorResult rv;
   *aReturn =
     CreateDocumentType(aQualifiedName, aPublicId, aSystemId, rv).take();
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 nsresult

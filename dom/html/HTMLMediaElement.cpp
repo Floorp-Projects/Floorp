@@ -1575,7 +1575,7 @@ NS_IMETHODIMP HTMLMediaElement::SetCurrentTime(double aCurrentTime)
 
   ErrorResult rv;
   SetCurrentTime(aCurrentTime, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* readonly attribute double duration; */
@@ -1698,7 +1698,7 @@ NS_IMETHODIMP HTMLMediaElement::Pause()
 {
   ErrorResult rv;
   Pause(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* attribute double volume; */
@@ -1731,7 +1731,7 @@ NS_IMETHODIMP HTMLMediaElement::SetVolume(double aVolume)
 {
   ErrorResult rv;
   SetVolume(aVolume, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 // Helper struct with arguments for our hash iterator.
@@ -1803,7 +1803,7 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx, JS::MutableHandle<JS::Value> aVa
     aValue.setObject(*obj);
   }
 
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* attribute boolean muted; */
@@ -2272,7 +2272,7 @@ NS_IMETHODIMP HTMLMediaElement::Play()
 {
   ErrorResult rv;
   Play(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 HTMLMediaElement::WakeLockBoolWrapper&
@@ -4319,7 +4319,7 @@ NS_IMETHODIMP HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRa
 {
   ErrorResult rv;
   SetDefaultPlaybackRate(aDefaultPlaybackRate, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* attribute double playbackRate; */
@@ -4359,7 +4359,7 @@ NS_IMETHODIMP HTMLMediaElement::SetPlaybackRate(double aPlaybackRate)
 {
   ErrorResult rv;
   SetPlaybackRate(aPlaybackRate, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* attribute bool mozPreservesPitch; */
