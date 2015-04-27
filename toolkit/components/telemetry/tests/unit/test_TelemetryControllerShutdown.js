@@ -60,7 +60,7 @@ add_task(function* test_sendTimeout() {
 
   yield TelemetryController.setup();
   TelemetryController.setServer("http://localhost:" + httpServer.identity.primaryPort);
-  TelemetryController.send("test-ping-type", {});
+  TelemetryController.submitExternalPing("test-ping-type", {});
 
   // Trigger the AsyncShutdown phase TelemetryController hangs off.
   AsyncShutdown.profileBeforeChange._trigger();
