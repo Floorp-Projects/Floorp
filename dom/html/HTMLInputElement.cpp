@@ -1610,7 +1610,7 @@ HTMLInputElement::SetHeight(uint32_t aHeight)
 {
   ErrorResult rv;
   SetHeight(aHeight, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -1664,7 +1664,7 @@ HTMLInputElement::SetWidth(uint32_t aWidth)
 {
   ErrorResult rv;
   SetWidth(aWidth, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -1875,7 +1875,7 @@ HTMLInputElement::SetValue(const nsAString& aValue)
 {
   ErrorResult rv;
   SetValue(aValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 nsGenericHTMLElement*
@@ -2089,7 +2089,7 @@ HTMLInputElement::SetValueAsNumber(double aValueAsNumber)
 {
   ErrorResult rv;
   SetValueAsNumber(aValueAsNumber, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 Decimal
@@ -2405,7 +2405,7 @@ HTMLInputElement::MozSetFileNameArray(const char16_t** aFileNames, uint32_t aLen
 
   ErrorResult rv;
   MozSetFileNameArray(list, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 bool
@@ -2454,7 +2454,7 @@ HTMLInputElement::SetUserInput(const nsAString& aValue)
     list.AppendElement(aValue);
     ErrorResult rv;
     MozSetFileNameArray(list, rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   } else {
     nsresult rv = SetValueInternal(aValue, true, true);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -5187,7 +5187,7 @@ HTMLInputElement::GetControllers(nsIControllers** aResult)
   ErrorResult rv;
   nsRefPtr<nsIControllers> controller = GetControllers(rv);
   controller.forget(aResult);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 int32_t
@@ -5203,7 +5203,7 @@ HTMLInputElement::GetTextLength(int32_t* aTextLength)
 {
   ErrorResult rv;
   *aTextLength = GetTextLength(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -5244,7 +5244,7 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
   direction = &aDirection;
 
   SetSelectionRange(aSelectionStart, aSelectionEnd, direction, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -5386,7 +5386,7 @@ HTMLInputElement::GetSelectionStart(int32_t* aSelectionStart)
 
   ErrorResult rv;
   *aSelectionStart = GetSelectionStart(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -5423,7 +5423,7 @@ HTMLInputElement::SetSelectionStart(int32_t aSelectionStart)
 {
   ErrorResult rv;
   SetSelectionStart(aSelectionStart, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 int32_t
@@ -5450,7 +5450,7 @@ HTMLInputElement::GetSelectionEnd(int32_t* aSelectionEnd)
 
   ErrorResult rv;
   *aSelectionEnd = GetSelectionEnd(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -5487,7 +5487,7 @@ HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd)
 {
   ErrorResult rv;
   SetSelectionEnd(aSelectionEnd, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -5557,7 +5557,7 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection)
 {
   ErrorResult rv;
   GetSelectionDirection(aDirection, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -5587,7 +5587,7 @@ HTMLInputElement::SetSelectionDirection(const nsAString& aDirection)
 {
   ErrorResult rv;
   SetSelectionDirection(aDirection, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

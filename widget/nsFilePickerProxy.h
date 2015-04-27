@@ -59,8 +59,6 @@ private:
     ~nsFilePickerProxy();
     void InitNative(nsIWidget*, const nsAString&) override;
 
-    // This is an innerWindow.
-    nsCOMPtr<nsPIDOMWindow> mParent;
     nsCOMArray<nsIDOMFile> mDomfiles;
     nsCOMPtr<nsIFilePickerShownCallback> mCallback;
 

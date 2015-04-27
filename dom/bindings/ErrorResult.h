@@ -119,6 +119,10 @@ public:
                                 const char* memberName);
   bool IsNotEnoughArgsError() const { return ErrorCode() == NS_ERROR_XPC_NOT_ENOUGH_ARGS; }
 
+  // Report a generic error.  This should only be used if we're not
+  // some more specific exception type.
+  void ReportGenericError(JSContext* cx);
+
   // Support for uncatchable exceptions.
   void ThrowUncatchableException() {
     Throw(NS_ERROR_UNCATCHABLE_EXCEPTION);
@@ -129,7 +133,7 @@ public:
 
   // StealJSException steals the JS Exception from the object. This method must
   // be called only if IsJSException() returns true. This method also resets the
-  // ErrorCode() to NS_OK.
+  // error code to NS_OK.
   void StealJSException(JSContext* cx, JS::MutableHandle<JS::Value> value);
 
   void MOZ_ALWAYS_INLINE MightThrowJSException()
@@ -160,6 +164,16 @@ public:
     return NS_FAILED(mResult);
   }
 
+  bool ErrorCodeIs(nsresult rv) const {
+    return mResult == rv;
+  }
+
+  // For use in logging ONLY.
+  uint32_t ErrorCodeAsInt() const {
+    return static_cast<uint32_t>(ErrorCode());
+  }
+
+protected:
   nsresult ErrorCode() const {
     return mResult;
   }
@@ -221,7 +235,7 @@ private:
     if (res.Failed()) {                                                   \
       nsCString msg;                                                      \
       msg.AppendPrintf("ENSURE_SUCCESS(%s, %s) failed with "              \
-                       "result 0x%X", #res, #ret, res.ErrorCode());       \
+                       "result 0x%X", #res, #ret, res.ErrorCodeAsInt());  \
       NS_WARNING(msg.get());                                              \
       return ret;                                                         \
     }                                                                     \
@@ -232,7 +246,7 @@ private:
     if (res.Failed()) {                                                   \
       nsCString msg;                                                      \
       msg.AppendPrintf("ENSURE_SUCCESS_VOID(%s) failed with "             \
-                       "result 0x%X", #res, res.ErrorCode());             \
+                       "result 0x%X", #res, res.ErrorCodeAsInt());        \
       NS_WARNING(msg.get());                                              \
       return;                                                             \
     }                                                                     \

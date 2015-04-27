@@ -5537,6 +5537,9 @@ AddHyphenToMetrics(nsTextFrame* aTextFrame, gfxTextRun* aBaseTextRun,
   gfxTextRun::Metrics hyphenMetrics =
     hyphenTextRun->MeasureText(0, hyphenTextRun->GetLength(),
                                aBoundingBoxType, aContext, nullptr);
+  if (aTextFrame->GetWritingMode().IsLineInverted()) {
+    hyphenMetrics.mBoundingBox.y = -hyphenMetrics.mBoundingBox.YMost();
+  }
   aMetrics->CombineWith(hyphenMetrics, aBaseTextRun->IsRightToLeft());
 }
 
@@ -5559,8 +5562,25 @@ nsTextFrame::PaintOneShadow(uint32_t aOffset, uint32_t aLength,
   // This rect is the box which is equivalent to where the shadow will be painted.
   // The origin of aBoundingBox is the text baseline left, so we must translate it by
   // that much in order to make the origin the top-left corner of the text bounding box.
-  gfxRect shadowGfxRect = aBoundingBox +
-    gfxPoint(aFramePt.x + aLeftSideOffset, aTextBaselinePt.y) + shadowOffset;
+  // Note that aLeftSideOffset is line-left, so actually means top offset in
+  // vertical writing modes.
+  gfxRect shadowGfxRect;
+  WritingMode wm = GetWritingMode();
+  if (wm.IsVertical()) {
+    shadowGfxRect = aBoundingBox;
+    if (wm.IsVerticalRL()) {
+      // for vertical-RL, reverse direction of x-coords of bounding box
+      shadowGfxRect.x = -shadowGfxRect.XMost();
+    }
+    shadowGfxRect +=
+      gfxPoint(aTextBaselinePt.x, aFramePt.y + aLeftSideOffset);
+  } else {
+    shadowGfxRect =
+      aBoundingBox + gfxPoint(aFramePt.x + aLeftSideOffset,
+                              aTextBaselinePt.y);
+  }
+  shadowGfxRect += shadowOffset;
+
   nsRect shadowRect(NSToCoordRound(shadowGfxRect.X()),
                     NSToCoordRound(shadowGfxRect.Y()),
                     NSToCoordRound(shadowGfxRect.Width()),
@@ -6073,6 +6093,10 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, gfxFont::LOOSE_INK_EXTENTS,
                           nullptr, &aProvider);
+  if (GetWritingMode().IsLineInverted()) {
+    Swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
+    shadowMetrics.mBoundingBox.y = -shadowMetrics.mBoundingBox.YMost();
+  }
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
     AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
                        gfxFont::LOOSE_INK_EXTENTS, aCtx);
@@ -6094,6 +6118,11 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
       break;
     }
     run++;
+  }
+
+  if (mTextRun->IsVertical()) {
+    Swap(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y);
+    Swap(shadowMetrics.mBoundingBox.width, shadowMetrics.mBoundingBox.height);
   }
 
   for (uint32_t i = aShadow->Length(); i > 0; --i) {
@@ -7739,12 +7768,12 @@ nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
                               ComputeTransformedLength(provider),
                               gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
                               aContext, &provider);
+  if (GetWritingMode().IsLineInverted()) {
+    metrics.mBoundingBox.y = -metrics.mBoundingBox.YMost();
+  }
   // mAscent should be the same as metrics.mAscent, but it's what we use to
   // paint so that's the one we'll use.
   nsRect boundingBox = RoundOut(metrics.mBoundingBox);
-  if (GetWritingMode().IsLineInverted()) {
-    boundingBox.y = -boundingBox.YMost();
-  }
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
@@ -8334,6 +8363,10 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       textMetrics.mDescent = gfxFloat(fm->MaxDescent());
     }
   }
+  if (GetWritingMode().IsLineInverted()) {
+    Swap(textMetrics.mAscent, textMetrics.mDescent);
+    textMetrics.mBoundingBox.y = -textMetrics.mBoundingBox.YMost();
+  }
   // The "end" iterator points to the first character after the string mapped
   // by this frame. Basically, its original-string offset is offset+charsFit
   // after we've computed charsFit.
@@ -8439,31 +8472,21 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     finalSize.BSize(wm) = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
     // Use actual text metrics for floating first letter frame.
-    if (wm.IsLineInverted()) {
-      aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mDescent));
-      finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
-        NSToCoordCeil(textMetrics.mAscent);
-    } else {
-      aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mAscent));
-      finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
-        NSToCoordCeil(textMetrics.mDescent);
-    }
+    aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mAscent));
+    finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
+      NSToCoordCeil(textMetrics.mDescent);
   } else {
     // Otherwise, ascent should contain the overline drawable area.
     // And also descent should contain the underline drawable area.
     // nsFontMetrics::GetMaxAscent/GetMaxDescent contains them.
     nsFontMetrics* fm = provider.GetFontMetrics();
-    nscoord fontAscent = fm->MaxAscent();
-    nscoord fontDescent = fm->MaxDescent();
-    if (wm.IsLineInverted()) {
-      aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent));
-      nscoord descent = std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent);
-      finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
-    } else {
-      aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
-      nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
-      finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
-    }
+    nscoord fontAscent =
+      wm.IsLineInverted() ? fm->MaxDescent() : fm->MaxAscent();
+    nscoord fontDescent =
+      wm.IsLineInverted() ? fm->MaxAscent() : fm->MaxDescent();
+    aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
+    nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
+    finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
   }
   aMetrics.SetSize(wm, finalSize);
 
@@ -8477,14 +8500,18 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // Handle text that runs outside its normal bounds.
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
-  if (wm.IsLineInverted()) {
-    boundingBox.y = -boundingBox.YMost();
-  }
-  boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     Swap(boundingBox.x, boundingBox.y);
     Swap(boundingBox.width, boundingBox.height);
+    if (GetWritingMode().IsVerticalRL()) {
+      boundingBox.x = -boundingBox.XMost();
+      boundingBox.x += aMetrics.Width() - mAscent;
+    } else {
+      boundingBox.x += mAscent;
+    }
+  } else {
+    boundingBox.y += mAscent;
   }
   aMetrics.SetOverflowAreasToDesiredBounds();
   aMetrics.VisualOverflow().UnionRect(aMetrics.VisualOverflow(), boundingBox);
@@ -8706,10 +8733,10 @@ nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame)
                           ComputeTransformedLength(provider),
                           gfxFont::LOOSE_INK_EXTENTS, nullptr,
                           &provider);
-  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
   if (GetWritingMode().IsLineInverted()) {
-    boundingBox.y = -boundingBox.YMost();
+    textMetrics.mBoundingBox.y = -textMetrics.mBoundingBox.YMost();
   }
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
   boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.

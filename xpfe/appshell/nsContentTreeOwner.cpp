@@ -809,7 +809,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const char16_t* aTitle)
     nsIDocument* document = docShellElement->OwnerDoc();
     ErrorResult rv;
     document->SetTitle(title, rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   return mXULWindow->SetTitle(title.get());

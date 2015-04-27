@@ -136,13 +136,7 @@ public:
   ~JSErrorResult()
   {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    WouldReportJSException();
-    if (IsJSException()) {
-      MOZ_ASSERT(NS_IsMainThread());
-      AutoJSContext cx;
-      Optional<JS::Handle<JS::Value> > value(cx);
-      StealJSException(cx, &value.Value());
-    }
+    SuppressException();
 #endif
   }
 };
@@ -237,7 +231,7 @@ public:
       if (jrv.Failed()) {
         CSFLogError(logTag, ": OnAddTrack(%u) failed! Error: %u",
                     static_cast<unsigned>(i),
-                    static_cast<unsigned>(jrv.ErrorCode()));
+                    jrv.ErrorCodeAsInt());
       }
     }
 
@@ -252,7 +246,7 @@ public:
       mObserver->OnAddStream(*aStream, rv);
       if (rv.Failed()) {
         CSFLogError(logTag, ": OnAddStream() failed! Error: %u",
-                    static_cast<unsigned>(rv.ErrorCode()));
+                    rv.ErrorCodeAsInt());
       }
     }
   }

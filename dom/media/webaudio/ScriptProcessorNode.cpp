@@ -54,8 +54,8 @@ private:
 
     size_t ReadyToConsume() const
     {
+      // Accessed on both main thread and media graph thread.
       mMutex.AssertCurrentThreadOwns();
-      MOZ_ASSERT(!NS_IsMainThread());
       return mBufferList.size();
     }
 
@@ -130,34 +130,34 @@ public:
     if (mLastEventTime.IsNull()) {
       mLastEventTime = now;
     } else {
-      // When the main thread is blocked, and all the event are processed in a
-      // burst after the main thread unblocks, the |(now - mLastEventTime)|
-      // interval will be very short. |latency - bufferDuration| will be
-      // negative, effectively moving back mLatency to a smaller and smaller
-      // value, until it crosses zero, at which point we stop dropping buffers
-      // and resume normal operation. This does not work if at the same time,
-      // the MSG thread was also slowed down, so if the latency on the MSG
-      // thread is normal, and we are still dropping buffers, and mLatency is
-      // still more than twice the duration of a buffer, we reset it and stop
-      // dropping buffers.
+      // When main thread blocking has built up enough so
+      // |mLatency > MAX_LATENCY_S|, frame dropping starts. It continues until
+      // the output buffer is completely empty, at which point the accumulated
+      // latency is also reset to 0.
+      // It could happen that the output queue becomes empty before the input
+      // node has fully caught up. In this case there will be events where
+      // |(now - mLastEventTime)| is very short, making mLatency negative.
+      // As this happens and the size of |mLatency| becomes greater than
+      // MAX_LATENCY_S, frame dropping starts again to maintain an as short
+      // output queue as possible.
       float latency = (now - mLastEventTime).ToSeconds();
       float bufferDuration = aBufferSize / mSampleRate;
       mLatency += latency - bufferDuration;
       mLastEventTime = now;
-      if (mLatency > MAX_LATENCY_S ||
-          (mDroppingBuffers && mLatency > 0.0 &&
-           fabs(latency - bufferDuration) < bufferDuration)) {
+      if (fabs(mLatency) > MAX_LATENCY_S) {
         mDroppingBuffers = true;
-        return;
-      } else {
-        if (mDroppingBuffers) {
-          mLatency = 0;
-        }
-        mDroppingBuffers = false;
       }
     }
 
     MutexAutoLock lock(mOutputQueue.Lock());
+    if (mDroppingBuffers) {
+      if (mOutputQueue.ReadyToConsume()) {
+        return;
+      }
+      mDroppingBuffers = false;
+      mLatency = 0;
+    }
+
     for (uint32_t offset = 0; offset < aBufferSize; offset += WEBAUDIO_BLOCK_SIZE) {
       AudioChunk& chunk = mOutputQueue.Produce();
       if (aBuffer) {
