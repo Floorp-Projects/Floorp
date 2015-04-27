@@ -72,6 +72,8 @@ InstallDirRegKey HKLM "Software\Mozilla\MaintenanceService" ""
 
 SetOverwrite on
 
+; serviceinstall.cpp also uses this key, in case the path is changed, update
+; there too.
 !define MaintUninstallKey \
  "Software\Microsoft\Windows\CurrentVersion\Uninstall\MozillaMaintenanceService"
 

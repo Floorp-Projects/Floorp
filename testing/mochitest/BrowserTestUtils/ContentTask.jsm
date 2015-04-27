@@ -13,10 +13,15 @@ this.EXPORTED_SYMBOLS = [
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Promise.jsm");
 
+const FRAME_SCRIPT = "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js";
+
+const globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
+                   .getService(Ci.nsIMessageListenerManager);
+
 /**
- * Set of browsers which have loaded the content-task frame script.
+ * Keeps track of whether the frame script was already loaded.
  */
-let gScriptLoadedSet = new WeakSet();
+let gFrameScriptLoaded = false;
 
 /**
  * Mapping from message id to associated promise.
@@ -50,12 +55,10 @@ this.ContentTask = {
    * @rejects An error message if execution fails.
    */
   spawn: function ContentTask_spawn(browser, arg, task) {
-    if(!gScriptLoadedSet.has(browser.permanentKey)) {
-      let mm = browser.messageManager;
-      mm.loadFrameScript(
-        "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js", true);
-
-      gScriptLoadedSet.add(browser.permanentKey);
+    // Load the frame script if needed.
+    if (!gFrameScriptLoaded) {
+      globalMM.loadFrameScript(FRAME_SCRIPT, true);
+      gFrameScriptLoaded = true;
     }
 
     let deferred = {};

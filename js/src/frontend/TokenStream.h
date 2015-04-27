@@ -774,6 +774,7 @@ class MOZ_STACK_CLASS TokenStream
 
     bool getTokenInternal(TokenKind* ttp, Modifier modifier);
 
+    bool getBracedUnicode(uint32_t* code);
     bool getStringOrTemplateToken(int untilChar, Token** tp);
 
     int32_t getChar();

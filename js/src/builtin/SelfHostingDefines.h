@@ -14,13 +14,6 @@
 #define TO_UINT32(x) ((x) >>> 0)
 #define IS_UINT32(x) ((x) >>> 0 === (x))
 
-// Assertions.
-#ifdef DEBUG
-#define assert(b, info) if (!(b)) AssertionFailed(info)
-#else
-#define assert(b, info) // Elided assertion.
-#endif
-
 // Unforgeable versions of ARRAY.push(ELEMENT) and ARRAY.slice.
 #define ARRAY_PUSH(ARRAY, ELEMENT) \
   callFunction(std_Array_push, ARRAY, ELEMENT);

@@ -1358,7 +1358,7 @@ NativeLookupOwnProperty(ExclusiveContext* cx,
  */
 extern bool
 NativeGetExistingProperty(JSContext* cx, HandleObject receiver, HandleNativeObject obj,
-                          HandleShape shape, MutableHandle<Value> vp);
+                          HandleShape shape, MutableHandleValue vp);
 
 /* * */
 

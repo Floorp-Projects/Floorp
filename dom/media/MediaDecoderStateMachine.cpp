@@ -392,16 +392,6 @@ static void WriteVideoToMediaStream(MediaStream* aStream,
   aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize);
 }
 
-static bool ZeroDurationAtLastChunk(VideoSegment& aInput)
-{
-  // Get the last video frame's start time in VideoSegment aInput.
-  // If the start time is equal to the duration of aInput, means the last video
-  // frame's duration is zero.
-  StreamTime lastVideoStratTime;
-  aInput.GetLastFrame(&lastVideoStratTime);
-  return lastVideoStratTime == aInput.GetDuration();
-}
-
 void MediaDecoderStateMachine::SendStreamData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -512,25 +502,10 @@ void MediaDecoderStateMachine::SendStreamData()
                       v->mTime, v->GetEndTime());
         }
       }
-      // Check the output is not empty.
-      if (output.GetLastFrame()) {
-        stream->mEOSVideoCompensation = ZeroDurationAtLastChunk(output);
-      }
       if (output.GetDuration() > 0) {
         mediaStream->AppendToTrack(videoTrackId, &output);
       }
       if (VideoQueue().IsFinished() && !stream->mHaveSentFinishVideo) {
-        if (stream->mEOSVideoCompensation) {
-          VideoSegment endSegment;
-          // Calculate the deviation clock time from DecodedStream.
-          int64_t deviation_usec = mediaStream->StreamTimeToMicroseconds(1);
-          WriteVideoToMediaStream(mediaStream, stream->mLastVideoImage,
-            stream->mNextVideoTime + deviation_usec, stream->mNextVideoTime,
-            stream->mLastVideoImageDisplaySize, &endSegment);
-          stream->mNextVideoTime += deviation_usec;
-          MOZ_ASSERT(endSegment.GetDuration() > 0);
-          mediaStream->AppendToTrack(videoTrackId, &endSegment);
-        }
         mediaStream->EndTrack(videoTrackId);
         stream->mHaveSentFinishVideo = true;
       }

@@ -69,6 +69,9 @@ pref("extensions.hotfix.certs.1.sha1Fingerprint", "91:53:98:0C:C1:86:DF:47:8F:35
 // See the SCOPE constants in AddonManager.jsm for values to use here.
 pref("extensions.autoDisableScopes", 15);
 
+// Don't require signed add-ons by default
+pref("xpinstall.signatures.required", false);
+
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/dictionaries/");
 
@@ -1425,6 +1428,8 @@ pref("devtools.performance.enabled", true);
 pref("devtools.performance.memory.sample-probability", "0.05");
 pref("devtools.performance.memory.max-log-length", 2147483647); // Math.pow(2,31) - 1
 pref("devtools.performance.timeline.hidden-markers", "[]");
+pref("devtools.performance.profiler.buffer-size", 10000000);
+pref("devtools.performance.profiler.sample-frequency-khz", 1);
 pref("devtools.performance.ui.invert-call-tree", true);
 pref("devtools.performance.ui.invert-flame-graph", false);
 pref("devtools.performance.ui.flatten-tree-recursion", true);
@@ -1530,6 +1535,9 @@ pref("devtools.webconsole.filter.info", true);
 pref("devtools.webconsole.filter.log", true);
 pref("devtools.webconsole.filter.secerror", true);
 pref("devtools.webconsole.filter.secwarn", true);
+pref("devtools.webconsole.filter.serviceworkers", false);
+pref("devtools.webconsole.filter.sharedworkers", false);
+pref("devtools.webconsole.filter.windowlessworkers", false);
 
 // Remember the Browser Console filters
 pref("devtools.browserconsole.filter.network", true);
@@ -1548,6 +1556,9 @@ pref("devtools.browserconsole.filter.info", true);
 pref("devtools.browserconsole.filter.log", true);
 pref("devtools.browserconsole.filter.secerror", true);
 pref("devtools.browserconsole.filter.secwarn", true);
+pref("devtools.browserconsole.filter.serviceworkers", true);
+pref("devtools.browserconsole.filter.sharedworkers", true);
+pref("devtools.browserconsole.filter.windowlessworkers", true);
 
 // Text size in the Web Console. Use 0 for the system default size.
 pref("devtools.webconsole.fontSize", 0);
@@ -1891,3 +1902,8 @@ pref("reader.parse-node-limit", 0);
 #ifdef NIGHTLY_BUILD
 pref("dom.serviceWorkers.enabled", true);
 #endif
+
+pref("browser.pocket.enabled", false);
+pref("browser.pocket.removedByUser", false);
+pref("browser.pocket.useLocaleList", true);
+pref("browser.pocket.enabledLocales", "en-US");

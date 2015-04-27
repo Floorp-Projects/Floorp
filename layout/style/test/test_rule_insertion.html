@@ -107,11 +107,6 @@ var innerRuleInfo = [
     return Math.abs(width - (aApplied ? monospaceWidth : serifWidth)) <= 1; // bug 769194 prevents local()
                                              // fonts working on Android
    }],
-  ["@charset 'UTF-8';",
-   function(aApplied, aParent, aException) {
-     // just test whether it threw
-     return aParent instanceof CSSRule ? aException : !aException;
-   }],
   ["@import url(nothing.css);",
    function(aApplied, aParent, aException) {
      // just test whether it threw
