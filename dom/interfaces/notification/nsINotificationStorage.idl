@@ -4,7 +4,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(9f1c43b9-f01b-4c87-ad3d-1a86520c2159)]
+[scriptable, uuid(c1622232-259c-43b0-b52e-89c39dcd9796)]
 interface nsINotificationStorageCallback : nsISupports
 {
   /**
@@ -28,7 +28,8 @@ interface nsINotificationStorageCallback : nsISupports
               in DOMString tag,
               in DOMString icon,
               in DOMString data,
-              in DOMString behavior);
+              in DOMString behavior,
+              in DOMString serviceWorkerRegistrationID);
 
   /**
    * Callback function used to notify C++ the we have returned
@@ -41,7 +42,7 @@ interface nsINotificationStorageCallback : nsISupports
 /**
  * Interface for notification persistence layer.
  */
-[scriptable, uuid(2f8f84b7-70b5-4673-98d8-fd3f9f8e0e5c)]
+[scriptable, uuid(17f85e52-fe57-440e-9ba1-5c312ca02b95)]
 interface nsINotificationStorage : nsISupports
 {
 
@@ -61,6 +62,10 @@ interface nsINotificationStorage : nsISupports
    *                   Stored in the database to avoid re-computing
    *                   it. Built from origin and tag or id depending
    *                   whether there is a tag defined.
+   * @param registrationID: Opaque string that identifies the service worker
+   *                        registration this Notification is associated with.
+   *                        May be empty. Only set for Notifications created by
+   *                        showNotification().
    */
   void put(in DOMString origin,
            in DOMString id,
@@ -72,7 +77,8 @@ interface nsINotificationStorage : nsISupports
            in DOMString icon,
            in DOMString alertName,
            in DOMString data,
-           in DOMString behavior);
+           in DOMString behavior,
+           in DOMString serviceWorkerRegistrationID);
 
   /**
    * Retrieve a list of notifications.
