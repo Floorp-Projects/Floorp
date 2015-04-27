@@ -426,11 +426,8 @@ MediaCodecReader::DecodeAudioDataSync()
     }
   }
 
-  if ((bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_EOS) ||
-      (status == ERROR_END_OF_STREAM)) {
-    AudioQueue().Finish();
-  } else if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 &&
-             bufferInfo.mBuffer->data() != nullptr) {
+  if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 &&
+      bufferInfo.mBuffer->data() != nullptr) {
     // This is the approximate byte position in the stream.
     int64_t pos = mDecoder->GetResource()->Tell();
 
@@ -448,7 +445,13 @@ MediaCodecReader::DecodeAudioDataSync()
         bufferInfo.mSize,
         mInfo.mAudio.mChannels));
   }
+
+  if ((bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_EOS) ||
+      (status == ERROR_END_OF_STREAM)) {
+    AudioQueue().Finish();
+  }
   mAudioTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
+
 }
 
 void
@@ -915,13 +918,6 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
     }
   }
 
-  if ((bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_EOS) ||
-      (status == ERROR_END_OF_STREAM)) {
-    VideoQueue().Finish();
-    mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
-    return;
-  }
-
   nsRefPtr<VideoData> v;
   RefPtr<TextureClient> textureClient;
   sp<GraphicBuffer> graphicBuffer;
@@ -1016,6 +1012,11 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
     } else {
       NS_WARNING("Unable to create VideoData");
     }
+  }
+
+  if ((bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_EOS) ||
+      (status == ERROR_END_OF_STREAM)) {
+    VideoQueue().Finish();
   }
 
   if (v != nullptr && textureClient != nullptr && graphicBuffer != nullptr) {

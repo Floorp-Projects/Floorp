@@ -281,6 +281,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // properties to transition), but for which we didn't just start the
   // transition.  This can happen delay and duration are both zero, or
   // because the new value is not interpolable.
+  // Note that we also do the latter set of work in
+  // nsTransitionManager::PruneCompletedTransitions.
   if (collection) {
     bool checkProperties =
       disp->mTransitions[0].GetProperty() != eCSSPropertyExtra_all_properties;
@@ -339,7 +341,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           currentValue != segment.mToValue) {
         // stop the transition
         if (!anim->GetEffect()->IsFinishedTransition()) {
-          anim->Cancel();
+          anim->CancelFromStyle();
           collection->UpdateAnimationGeneration(mPresContext);
         }
         animations.RemoveElementAt(i);
@@ -475,7 +477,7 @@ nsTransitionManager::ConsiderStartingTransition(
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
       AnimationPtrArray& animations = aElementTransitions->mAnimations;
-      animations[currentIndex]->Cancel();
+      animations[currentIndex]->CancelFromStyle();
       oldPT = nullptr; // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
@@ -593,7 +595,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 #endif
   if (haveCurrentTransition) {
-    animations[currentIndex]->Cancel();
+    animations[currentIndex]->CancelFromStyle();
     oldPT = nullptr; // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;
   } else {
@@ -606,6 +608,59 @@ nsTransitionManager::ConsiderStartingTransition(
 
   *aStartedAny = true;
   aWhichStarted->AddProperty(aProperty);
+}
+
+void
+nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
+                                               nsCSSPseudoElements::Type
+                                                 aPseudoType,
+                                               nsStyleContext* aNewStyleContext)
+{
+  AnimationCollection* collection = GetAnimations(aElement, aPseudoType, false);
+  if (!collection) {
+    return;
+  }
+
+  // Remove any finished transitions whose style doesn't match the new
+  // style.
+  // This is similar to some of the work that happens near the end of
+  // nsTransitionManager::StyleContextChanged.
+  // FIXME (bug 1158431): Really, we should also cancel running
+  // transitions whose destination doesn't match as well.
+  AnimationPtrArray& animations = collection->mAnimations;
+  size_t i = animations.Length();
+  MOZ_ASSERT(i != 0, "empty transitions list?");
+  do {
+    --i;
+    Animation* anim = animations[i];
+    dom::KeyframeEffectReadonly* effect = anim->GetEffect();
+
+    if (!effect->IsFinishedTransition()) {
+      continue;
+    }
+
+    MOZ_ASSERT(effect && effect->Properties().Length() == 1,
+               "Should have one animation property for a transition");
+    MOZ_ASSERT(effect && effect->Properties()[0].mSegments.Length() == 1,
+               "Animation property should have one segment for a transition");
+    const AnimationProperty& prop = effect->Properties()[0];
+    const AnimationPropertySegment& segment = prop.mSegments[0];
+
+    // Since effect is a finished transition, we know it didn't
+    // influence style.
+    StyleAnimationValue currentValue;
+    if (!ExtractComputedValueForTransition(prop.mProperty, aNewStyleContext,
+                                           currentValue) ||
+        currentValue != segment.mToValue) {
+      animations.RemoveElementAt(i);
+    }
+  } while (i != 0);
+
+  if (collection->mAnimations.IsEmpty()) {
+    collection->Destroy();
+    // |collection| is now a dangling pointer!
+    collection = nullptr;
+  }
 }
 
 void

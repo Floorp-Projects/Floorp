@@ -39,6 +39,8 @@ const CONSOLE_ENTRY_THRESHOLD = 5;
 // with numeric values that wouldn't be tallied towards MAX_AUTOCOMPLETIONS.
 const MAX_AUTOCOMPLETE_ATTEMPTS = exports.MAX_AUTOCOMPLETE_ATTEMPTS = 100000;
 
+const CONSOLE_WORKER_IDS = exports.CONSOLE_WORKER_IDS = [ 'SharedWorker', 'ServiceWorker', 'Worker' ];
+
 // Prevent iterating over too many properties during autocomplete suggestions.
 const MAX_AUTOCOMPLETIONS = exports.MAX_AUTOCOMPLETIONS = 1500;
 
@@ -1446,7 +1448,7 @@ ConsoleAPIListener.prototype =
     }
 
     let apiMessage = aMessage.wrappedJSObject;
-    if (this.window) {
+    if (this.window && CONSOLE_WORKER_IDS.indexOf(apiMessage.innerID) == -1) {
       let msgWindow = Services.wm.getCurrentInnerWindowWithId(apiMessage.innerID);
       if (!msgWindow || !this.layoutHelpers.isIncludedInTopLevelWindow(msgWindow)) {
         // Not the same window!
@@ -1486,9 +1488,20 @@ ConsoleAPIListener.prototype =
       });
     }
 
+    CONSOLE_WORKER_IDS.forEach((id) => {
+      messages = messages.concat(ConsoleAPIStorage.getEvents(id));
+    });
+
     if (this.consoleID) {
       messages = messages.filter((m) => m.consoleID == this.consoleID);
     }
+
+    // ConsoleAPIStorage gives up messages sorted, but we ask for different
+    // blocks of events and we must sort them again in order to show them in the
+    // proper order.
+    messages = messages.sort(function(a, b) {
+      return a.timeStamp - b.timeStamp;
+    });
 
     if (aIncludePrivate) {
       return messages;

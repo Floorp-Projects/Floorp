@@ -22,6 +22,27 @@
 
 #pragma comment(lib, "version.lib")
 
+// This uninstall key is defined originally in maintenanceservice_installer.nsi
+#define MAINT_UNINSTALL_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\MozillaMaintenanceService"
+
+static BOOL
+UpdateUninstallerVersionString(LPWSTR versionString)
+{
+  HKEY uninstallKey;
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                    MAINT_UNINSTALL_KEY, 0,
+                    KEY_WRITE | KEY_WOW64_32KEY,
+                    &uninstallKey) != ERROR_SUCCESS) {
+    return FALSE;
+  }
+
+  LONG rv = RegSetValueExW(uninstallKey, L"DisplayVersion", 0, REG_SZ,
+                           reinterpret_cast<const BYTE *>(versionString),
+                           (wcslen(versionString) + 1) * sizeof(WCHAR));
+  RegCloseKey(uninstallKey);
+  return rv == ERROR_SUCCESS;
+}
+
 /**
  * A wrapper function to read strings for the maintenance service.
  *
@@ -433,6 +454,11 @@ SvcInstall(SvcInstallAction action)
             result = FALSE;
         }
       } else {
+        WCHAR versionStr[128] = { L'\0' };
+        swprintf(versionStr, 128, L"%d.%d.%d.%d", newA, newB, newC, newD);
+        if (!UpdateUninstallerVersionString(versionStr)) {
+            LOG(("The uninstaller version string could not be updated."));
+        }
         LOG(("The new service binary was copied in."));
       }
 

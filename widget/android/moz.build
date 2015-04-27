@@ -24,12 +24,12 @@ EXPORTS += [
 
 SOURCES += [
     'AndroidBridge.cpp',
+    'AndroidContentController.cpp',
     'AndroidDirectTexture.cpp',
     'AndroidGraphicBuffer.cpp',
     'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
     'AndroidJNIWrapper.cpp',
-    'APZCCallbackHandler.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
     'NativeJSContainer.cpp',

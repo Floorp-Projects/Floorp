@@ -354,6 +354,44 @@ WebGLShader::FindUniformBlockByMappedName(const nsACString& mappedName,
     return false;
 }
 
+void
+WebGLShader::ApplyTransformFeedbackVaryings(GLuint prog,
+                                            const std::vector<nsCString>& varyings,
+                                            GLenum bufferMode,
+                                            std::vector<std::string>* out_mappedVaryings) const
+{
+    MOZ_ASSERT(mType == LOCAL_GL_VERTEX_SHADER);
+    MOZ_ASSERT(!varyings.empty());
+    MOZ_ASSERT(out_mappedVaryings);
+
+    const size_t varyingsCount = varyings.size();
+    std::vector<std::string> mappedVaryings;
+
+    for (size_t i = 0; i < varyingsCount; i++) {
+        const nsCString& userName = varyings[i];
+        std::string userNameStr(userName.BeginReading());
+
+        const std::string* mappedNameStr = &userNameStr;
+        // TODO: Are vertex->fragment shader varyings listed under attribs?
+        if (mValidator)
+            mValidator->FindAttribMappedNameByUserName(userNameStr, &mappedNameStr);
+
+        mappedVaryings.push_back(*mappedNameStr);
+    }
+
+    // Temporary, tight packed array of string pointers into mappedVaryings.
+    std::vector<const GLchar*> strings;
+    strings.resize(varyingsCount);
+    for (size_t i = 0; i < varyingsCount; i++) {
+        strings[i] = mappedVaryings[i].c_str();
+    }
+
+    mContext->MakeContextCurrent();
+    mContext->gl->fTransformFeedbackVaryings(prog, varyingsCount, &strings[0], bufferMode);
+
+    out_mappedVaryings->swap(mappedVaryings);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Boilerplate
 
