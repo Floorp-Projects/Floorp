@@ -73,11 +73,15 @@ public:
   virtual CSSAnimation* AsCSSAnimation() { return nullptr; }
   virtual CSSTransition* AsCSSTransition() { return nullptr; }
 
-  // Flag to pass to Play to indicate that it should not carry out finishing
-  // behavior (reset the current time to the beginning of the active duration).
-  enum LimitBehavior {
-    AutoRewind = 0,
-    Continue = 1
+  /**
+   * Flag to pass to Play to indicate whether or not it should automatically
+   * rewind the current time to the start point if the animation is finished.
+   * For regular calls to play() from script we should do this, but when a CSS
+   * animation's animation-play-state changes we shouldn't rewind the animation.
+   */
+  enum class LimitBehavior {
+    AutoRewind,
+    Continue
   };
 
   // Animation interface methods
