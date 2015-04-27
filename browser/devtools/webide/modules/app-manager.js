@@ -117,6 +117,8 @@ let AppManager = exports.AppManager = {
    *     name, manifest details, etc.
    *   runtime:
    *     The selected runtime has changed.
+   *   runtime-apps-icons:
+   *     The list of URLs for the runtime app icons are available.
    *   runtime-global-actors:
    *     The list of global actors for the entire runtime (but not actors for a
    *     specific tab or app) are now available, so we can test for features
@@ -131,7 +133,7 @@ let AppManager = exports.AppManager = {
    *     The list of remote runtime targets available from the currently
    *     connected runtime (such as tabs or apps) has changed, or any of the
    *     user-visible details (like names) for the non-selected runtime targets
-   *     has changed.  This event includes |type| in the details, to distguish
+   *     has changed.  This event includes |type| in the details, to distinguish
    *     "apps" and "tabs".
    */
   update: function(what, details) {
@@ -186,7 +188,7 @@ let AppManager = exports.AppManager = {
           .then(() => {
             this.checkIfProjectIsRunning();
             this.update("runtime-targets", { type: "apps" });
-            front.fetchIcons();
+            front.fetchIcons().then(() => this.update("runtime-apps-icons"));
           });
         } else {
           this._listTabsResponse = response;
