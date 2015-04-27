@@ -8,7 +8,7 @@
 
     <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
-    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <script type="application/javascript;version=1.8" src="../head.js"></script>
     <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   </head>
 
@@ -18,9 +18,9 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Task.spawn(function* () {
-
+        Task.spawn(function*() {
           Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          Services.prefs.setBoolPref("devtools.webide.sidebars", true);
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
@@ -28,6 +28,7 @@
           }
 
           let win = yield openWebIDE();
+          let docRuntime = getRuntimeDocument(win);
 
           let fakeRuntime = {
             type: "USB",
@@ -49,7 +50,7 @@
           win.AppManager.runtimeList.usb.push(fakeRuntime);
           win.AppManager.update("runtime-list");
 
-          let panelNode = win.document.querySelector("#runtime-panel");
+          let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 1, "Found one runtime button");
 
@@ -87,8 +88,6 @@
           SimpleTest.finish();
         });
       }
-
-
     </script>
   </body>
 </html>

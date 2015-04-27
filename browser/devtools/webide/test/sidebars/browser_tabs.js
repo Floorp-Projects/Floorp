@@ -12,6 +12,8 @@ function test() {
     const { DebuggerServer } =
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
+    Services.prefs.setBoolPref("devtools.webide.sidebars", true);
+
     // Since we test the connections set below, destroy the server in case it
     // was left open.
     DebuggerServer.destroy();
@@ -21,12 +23,14 @@ function test() {
     let tab = yield addTab(TEST_URI);
 
     let win = yield openWebIDE();
+    let docProject = getProjectDocument(win);
+    let docRuntime = getRuntimeDocument(win);
 
-    yield connectToLocal(win);
+    yield connectToLocal(win, docRuntime);
 
     is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
 
-    yield selectTabProject(win);
+    yield selectTabProject(win, docProject);
 
     ok(win.UI.toolboxPromise, "Toolbox promise exists");
     yield win.UI.toolboxPromise;
@@ -36,7 +40,7 @@ function test() {
     is(project.name, "example.com: Test Tab", "Name is correct");
 
     // Ensure tab list changes are noticed
-    let tabsNode = win.document.querySelector("#project-panel-tabs");
+    let tabsNode = docProject.querySelector("#project-panel-tabs");
     is(tabsNode.querySelectorAll(".panel-item").length, 2, "2 tabs available");
     yield removeTab(tab);
     yield waitForUpdate(win, "project");
@@ -50,20 +54,19 @@ function test() {
   }).then(finish, handleError);
 }
 
-function connectToLocal(win) {
+function connectToLocal(win, docRuntime) {
   let deferred = promise.defer();
   win.AppManager.connection.once(
       win.Connection.Events.CONNECTED,
       () => deferred.resolve());
-  win.document.querySelectorAll(".runtime-panel-item-other")[1].click();
+  docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
   return deferred.promise;
 }
 
-function selectTabProject(win) {
+function selectTabProject(win, docProject) {
   return Task.spawn(function() {
-    yield win.Cmds.showProjectPanel();
     yield waitForUpdate(win, "runtime-targets");
-    let tabsNode = win.document.querySelector("#project-panel-tabs");
+    let tabsNode = docProject.querySelector("#project-panel-tabs");
     let tabNode = tabsNode.querySelectorAll(".panel-item")[1];
     let project = waitForUpdate(win, "project");
     tabNode.click();
