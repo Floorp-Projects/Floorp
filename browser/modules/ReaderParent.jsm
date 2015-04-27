@@ -30,6 +30,7 @@ let ReaderParent = {
     "Reader:ArticleGet",
     "Reader:FaviconRequest",
     "Reader:ListStatusRequest",
+    "Reader:PocketEnabledGet",
     "Reader:RemoveFromList",
     "Reader:Share",
     "Reader:SystemUIVisibility",
@@ -90,6 +91,13 @@ let ReaderParent = {
           }
         });
         break;
+
+      case "Reader:PocketEnabledGet": {
+        let pocketPlacement = CustomizableUI.getPlacementOfWidget("pocket-button");
+        let isPocketEnabled = pocketPlacement && pocketPlacement.area;
+        message.target.messageManager.sendAsyncMessage("Reader:PocketEnabledData", { enabled: !!isPocketEnabled});
+        break;
+      }
 
       case "Reader:FaviconRequest": {
         if (message.target.messageManager) {
