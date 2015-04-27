@@ -1757,7 +1757,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
 
   ErrorResult res;
   nsCOMPtr<nsINode> commonAncestor = GetCommonAncestorContainer(res);
-  NS_ENSURE_SUCCESS(res.ErrorCode(), res.ErrorCode());
+  NS_ENSURE_TRUE(!res.Failed(), res.StealNSResult());
 
   // If aFragment isn't null, create a temporary fragment to hold our return.
   nsRefPtr<DocumentFragment> retval;
@@ -1931,7 +1931,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
         if (retval) {
           ErrorResult rv;
           nodeToResult = node->CloneNode(false, rv);
-          NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+          NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
         }
         handled = true;
       }

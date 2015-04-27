@@ -1372,7 +1372,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   ErrorResult rv;
   nsRefPtr<DocumentFragment> docfrag =
     range->CreateContextualFragment(bodyTag, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIContent> child = docfrag->GetFirstChild();
