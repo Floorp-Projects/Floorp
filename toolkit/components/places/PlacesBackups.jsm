@@ -219,6 +219,24 @@ this.PlacesBackups = {
   },
 
   /**
+   * Generates a ISO date string (YYYY-MM-DD) from a Date object.
+   *
+   * @param dateObj
+   *        The date object to parse.
+   * @return an ISO date string.
+   */
+   toISODateString: function toISODateString(dateObj) {
+    if (!dateObj || dateObj.constructor.name != "Date" || !dateObj.getTime())
+      throw new Error("invalid date object");
+    let padDate = val => ("0" + val).substr(-2, 2);
+    return [
+      dateObj.getFullYear(),
+      padDate(dateObj.getMonth() + 1),
+      padDate(dateObj.getDate())
+    ].join("-");
+   },
+
+  /**
    * Creates a filename for bookmarks backup files.
    *
    * @param [optional] aDateObj
@@ -233,7 +251,7 @@ this.PlacesBackups = {
     let dateObj = aDateObj || new Date();
     // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
     // and makes the alphabetical order of multiple backup files more useful.
-      return "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + ".json" +
+      return "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json" +
                             (aCompress ? "lz4" : "");
   },
 
