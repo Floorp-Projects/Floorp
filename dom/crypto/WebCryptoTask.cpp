@@ -1913,9 +1913,13 @@ private:
       }
 
       switch (mPrivateKey->keyType) {
-        case rsaKey:
-          CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
+        case rsaKey: {
+          nsresult rv = CryptoKey::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
+          if (NS_FAILED(rv)) {
+            return NS_ERROR_DOM_OPERATION_ERR;
+          }
           return NS_OK;
+        }
         default:
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
