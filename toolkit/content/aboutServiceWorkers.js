@@ -19,6 +19,9 @@ XPCOMUtils.defineLazyServiceGetter(
 const bundle = Services.strings.createBundle(
   "chrome://global/locale/aboutServiceWorkers.properties");
 
+const brandBundle = Services.strings.createBundle(
+  "chrome://branding/locale/brand.properties");
+
 let gSWM;
 let gSWCount = 0;
 
@@ -75,7 +78,11 @@ function display(info) {
   if (info.principal.appId) {
     let b2gtitle = document.createElement('h3');
     let trueFalse = bundle.GetStringFromName(info.principal.isInBrowserElement ? 'true' : 'false');
-    let b2gtitleStr = bundle.formatStringFromName('b2gtitle', [info.principal.appId, trueFalse], 2);
+
+    let b2gtitleStr =
+      bundle.formatStringFromName('b2gtitle', [ brandBundle.getString("brandShortName"),
+                                                info.principal.appId,
+                                                trueFalse], 2);
     b2gtitle.appendChild(document.createTextNode(b2gtitleStr));
     div.appendChild(b2gtitle);
   }
