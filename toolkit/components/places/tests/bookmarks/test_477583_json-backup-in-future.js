@@ -21,7 +21,7 @@ function run_test() {
     let dateObj = new Date();
     dateObj.setYear(dateObj.getFullYear() + 1);
     let name = PlacesBackups.getFilenameForDate(dateObj);
-    do_check_eq(name, "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + ".json");
+    do_check_eq(name, "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json");
     files = bookmarksBackupDir.directoryEntries;
     while (files.hasMoreElements()) {
       let entry = files.getNext().QueryInterface(Ci.nsIFile);
