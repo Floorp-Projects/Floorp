@@ -143,7 +143,7 @@ typedef std::string xpstring;
 #else
 #define XP_STRLEN(x) strlen(x)
 #define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
-#define XP_STOA(size, buffer, base) sprintf(buffer, "%zu", size)
+#define XP_STOA(size, buffer, base) sprintf(buffer, "%zu", (size_t) size)
 #define my_strlen strlen
 #define sys_close close
 #define sys_fork fork
