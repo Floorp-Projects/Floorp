@@ -56,17 +56,21 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(NotificationStorageCallback)
 
-  NotificationStorageCallback(const GlobalObject& aGlobal, nsPIDOMWindow* aWindow, Promise* aPromise)
+  NotificationStorageCallback(nsIGlobalObject* aWindow, const nsAString& aScope,
+                              Promise* aPromise)
     : mCount(0),
-      mGlobal(aGlobal.Get()),
       mWindow(aWindow),
-      mPromise(aPromise)
+      mPromise(aPromise),
+      mScope(aScope)
   {
+    AssertIsOnMainThread();
     MOZ_ASSERT(aWindow);
     MOZ_ASSERT(aPromise);
-    JSContext* cx = aGlobal.Context();
-    JSAutoCompartment ac(cx, mGlobal);
-    mNotifications = JS_NewArrayObject(cx, 0);
+    AutoJSAPI jsapi;
+    DebugOnly<bool> ok = jsapi.Init(aWindow);
+    MOZ_ASSERT(ok);
+    // Created in the compartment of the window.
+    mNotifications = JS_NewArrayObject(jsapi.cx(), 0);
     HoldData();
   }
 
@@ -79,9 +83,16 @@ public:
                     const nsAString& aIcon,
                     const nsAString& aData,
                     const nsAString& aBehavior,
+                    const nsAString& aServiceWorkerRegistrationID,
                     JSContext* aCx) override
   {
+    AssertIsOnMainThread();
     MOZ_ASSERT(!aID.IsEmpty());
+
+    // Skip scopes that don't match when called from getNotifications().
+    if (!mScope.IsEmpty() && !mScope.Equals(aServiceWorkerRegistrationID)) {
+      return NS_OK;
+    }
 
     RootedDictionary<NotificationOptions> options(aCx);
     options.mDir = Notification::StringToDirection(nsString(aDir));
@@ -91,7 +102,6 @@ public:
     options.mIcon = aIcon;
     options.mMozbehavior.Init(aBehavior);
     nsRefPtr<Notification> notification;
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
     notification = Notification::CreateInternal(aID,
                                                 aTitle,
                                                 options);
@@ -102,10 +112,14 @@ public:
       return rv.StealNSResult();
     }
 
+    notification->SetScope(aServiceWorkerRegistrationID);
+
     notification->SetStoredState(true);
 
-    JSAutoCompartment ac(aCx, mGlobal);
-    JS::Rooted<JSObject*> element(aCx, notification->WrapObject(aCx, nullptr));
+    AutoJSAPI jsapi;
+    DebugOnly<bool> ok = jsapi.Init(mWindow, aCx);
+    MOZ_ASSERT(ok);
+
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
     JS::Rooted<JSObject*> notifications(aCx, mNotifications);
@@ -117,7 +131,10 @@ public:
 
   NS_IMETHOD Done(JSContext* aCx) override
   {
-    JSAutoCompartment ac(aCx, mGlobal);
+    AutoJSAPI jsapi;
+    DebugOnly<bool> ok = jsapi.Init(mWindow, aCx);
+    MOZ_ASSERT(ok);
+
     JS::Rooted<JS::Value> result(aCx, JS::ObjectValue(*mNotifications));
     mPromise->MaybeResolve(aCx, result);
     return NS_OK;
@@ -136,16 +153,15 @@ private:
 
   void DropData()
   {
-    mGlobal = nullptr;
     mNotifications = nullptr;
     mozilla::DropJSObjects(this);
   }
 
   uint32_t  mCount;
-  JS::Heap<JSObject *> mGlobal;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsIGlobalObject> mWindow;
   nsRefPtr<Promise> mPromise;
   JS::Heap<JSObject *> mNotifications;
+  const nsString mScope;
 };
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(NotificationStorageCallback)
@@ -158,7 +174,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NotificationStorageCallback)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(NotificationStorageCallback)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mNotifications)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -750,6 +765,7 @@ Notification::ConstructFromFields(
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
+    const nsAString& aScope,
     ErrorResult& aRv)
 {
   MOZ_ASSERT(aGlobal);
@@ -777,6 +793,8 @@ Notification::ConstructFromFields(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
+
+  notification->SetScope(aScope);
 
   return notification.forget();
 }
@@ -824,7 +842,8 @@ Notification::PersistNotification()
                                 mIconUrl,
                                 alertName,
                                 dataString,
-                                behavior);
+                                behavior,
+                                mScope);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -1206,9 +1225,11 @@ public:
                     const nsAString& aIcon,
                     const nsAString& aData,
                     const nsAString& aBehavior,
+                    const nsAString& aServiceWorkerRegistrationID,
                     JSContext* aCx) override
   {
     MOZ_ASSERT(!aID.IsEmpty());
+    MOZ_ASSERT(mScope.Equals(aServiceWorkerRegistrationID));
 
     AssertIsOnMainThread();
 
@@ -1621,18 +1642,14 @@ Notification::ResolveIconAndSoundURL(nsString& iconUrl, nsString& soundUrl)
 }
 
 already_AddRefed<Promise>
-Notification::Get(const GlobalObject& aGlobal,
+Notification::Get(nsPIDOMWindow* aWindow,
                   const GetNotificationOptions& aFilter,
+                  const nsAString& aScope,
                   ErrorResult& aRv)
 {
-  AssertIsOnMainThread();
-  nsCOMPtr<nsIGlobalObject> global =
-    do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
-  MOZ_ASSERT(window);
+  MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
   if (!doc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -1644,13 +1661,14 @@ Notification::Get(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   nsCOMPtr<nsINotificationStorageCallback> callback =
-    new NotificationStorageCallback(aGlobal, window, promise);
+    new NotificationStorageCallback(global, aScope, promise);
 
   nsRefPtr<NotificationGetRunnable> r =
     new NotificationGetRunnable(origin, aFilter.mTag, callback);
@@ -1661,6 +1679,20 @@ Notification::Get(const GlobalObject& aGlobal,
   }
 
   return promise.forget();
+}
+
+already_AddRefed<Promise>
+Notification::Get(const GlobalObject& aGlobal,
+                  const GetNotificationOptions& aFilter,
+                  ErrorResult& aRv)
+{
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIGlobalObject> global =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
+
+  return Get(window, aFilter, EmptyString(), aRv);
 }
 
 JSObject*
