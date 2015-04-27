@@ -15,7 +15,7 @@
 
     <org.mozilla.gecko.home.TabMenuStrip android:layout_width="match_parent"
                                          android:layout_height="@dimen/tabs_strip_height"
-                                         android:background="@color/background_light"
+                                         android:background="@color/about_page_header_grey"
                                          android:layout_gravity="top"
                                          gecko:strip="@drawable/home_tab_menu_strip"/>
 

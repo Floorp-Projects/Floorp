@@ -29,7 +29,7 @@
                 <shape android:shape="rectangle" >
                     <stroke android:width="2dp"
                             android:color="#FFE0E4E7" />
-                    <solid android:color="@color/background_light" />
+                    <solid android:color="@color/about_page_header_grey" />
                 </shape>
             </item>
         </layer-list>

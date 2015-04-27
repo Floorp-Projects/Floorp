@@ -411,7 +411,7 @@ BookmarkImporter.prototype = {
           });
 
           if (feedURI) {
-            PlacesUtils.livemarks.addLivemark({
+            let lmPromise = PlacesUtils.livemarks.addLivemark({
               title: aData.title,
               feedURI: feedURI,
               parentId: aContainer,
@@ -424,7 +424,8 @@ BookmarkImporter.prototype = {
                 PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
               if (aData.annos && aData.annos.length)
                 PlacesUtils.setAnnotationsForItem(id, aData.annos);
-            }, Cu.reportError);
+            });
+            this._importPromises.push(lmPromise);
           }
         } else {
           id = PlacesUtils.bookmarks.createFolder(

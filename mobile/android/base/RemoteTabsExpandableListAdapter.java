@@ -155,7 +155,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
             deviceExpandedResId = showGroupIndicator ? R.drawable.home_group_expanded : R.drawable.home_group_collapsed;
         } else {
             deviceTypeResId = "desktop".equals(client.deviceType) ? R.drawable.sync_desktop_inactive : R.drawable.sync_mobile_inactive;
-            textColorResId = R.color.home_text_color_disabled;
+            textColorResId = R.color.tabs_tray_icon_grey;
             deviceExpandedResId = showGroupIndicator ? R.drawable.home_group_collapsed : 0;
         }
 

@@ -29,10 +29,12 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
 
     this._onMarkerSelected = this._onMarkerSelected.bind(this);
     this._onResize = this._onResize.bind(this);
+    this._onViewSource = this._onViewSource.bind(this);
 
     this.waterfall.on("selected", this._onMarkerSelected);
     this.waterfall.on("unselected", this._onMarkerSelected);
     this.details.on("resize", this._onResize);
+    this.details.on("view-source", this._onViewSource);
 
     let blueprint = PerformanceController.getTimelineBlueprint();
     this.waterfall.setBlueprint(blueprint);
@@ -48,6 +50,7 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
     this.waterfall.off("selected", this._onMarkerSelected);
     this.waterfall.off("unselected", this._onMarkerSelected);
     this.details.off("resize", this._onResize);
+    this.details.off("view-source", this._onViewSource);
   },
 
   /**
@@ -95,6 +98,13 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
   _onObservedPrefChange: function(_, prefName) {
     let blueprint = PerformanceController.getTimelineBlueprint();
     this.waterfall.setBlueprint(blueprint);
+  },
+
+  /**
+   * Called when MarkerDetails view emits an event to view source.
+   */
+  _onViewSource: function (_, file, line) {
+    gToolbox.viewSourceInDebugger(file, line);
   },
 
   toString: () => "[object WaterfallView]"

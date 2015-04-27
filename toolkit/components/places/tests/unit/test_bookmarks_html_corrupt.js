@@ -101,14 +101,22 @@ let database_check = Task.async(function* () {
   root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
   Assert.equal(root.childCount, 3);
 
-  let livemarkNode = root.getChild(1);
-  Assert.equal("Latest Headlines", livemarkNode.title);
+  // For now some promises are resolved later, so we can't guarantee an order.
+  let foundLivemark = false;
+  for (let i = 0; i < root.childCount; ++i) {
+    let node = root.getChild(i);
+    if (node.title == "Latest Headlines") {
+      foundLivemark = true;
+      Assert.equal("Latest Headlines", node.title);
 
-  let livemark = yield PlacesUtils.livemarks.getLivemark({ id: livemarkNode.itemId });
-  Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
-               livemark.siteURI.spec);
-  Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
-               livemark.feedURI.spec);
+      let livemark = yield PlacesUtils.livemarks.getLivemark({ guid: node.bookmarkGuid });
+      Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
+                   livemark.siteURI.spec);
+      Assert.equal("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+                   livemark.feedURI.spec);
+    }
+  }
+  Assert.ok(foundLivemark);
 
   // cleanup
   root.containerOpen = false;

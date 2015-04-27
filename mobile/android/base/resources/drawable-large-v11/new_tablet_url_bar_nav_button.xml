@@ -15,11 +15,11 @@
     <item gecko:state_private="true"
           android:state_focused="true"
           android:state_pressed="false"
-          android:drawable="@color/new_tablet_highlight_focused_pb"/>
+          android:drawable="@color/text_and_tabs_tray_grey"/>
 
     <!-- pressed state -->
     <item android:state_pressed="true"
-          android:drawable="@color/new_tablet_highlight"/>
+          android:drawable="@color/toolbar_grey_pressed"/>
 
     <!-- focused state -->
     <item android:state_focused="true"
@@ -28,9 +28,9 @@
 
     <!-- private browsing mode -->
     <item gecko:state_private="true"
-          android:drawable="@color/background_private"/>
+          android:drawable="@color/private_toolbar_grey"/>
 
     <!-- normal mode -->
-    <item android:drawable="@color/background_normal"/>
+    <item android:drawable="@color/toolbar_grey"/>
 
 </selector>

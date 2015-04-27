@@ -53,6 +53,8 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         focusOrder.addAll(Arrays.asList(tabsButton, (View) backButton, (View) forwardButton, this));
         focusOrder.addAll(urlDisplayLayout.getFocusOrder());
         focusOrder.addAll(Arrays.asList(actionItemBar, menuButton));
+
+        urlDisplayLayout.updateSiteIdentityAnchor(backButton);
     }
 
     private void initButtonListeners() {

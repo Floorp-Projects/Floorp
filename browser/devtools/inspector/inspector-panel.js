@@ -284,13 +284,6 @@ InspectorPanel.prototype = {
   },
 
   /**
-   * Expose gViewSourceUtils so that other tools can make use of them.
-   */
-  get viewSourceUtils() {
-    return this.panelWin.gViewSourceUtils;
-  },
-
-  /**
    * Indicate that a tool has modified the state of the page.  Used to
    * decide whether to show the "are you sure you want to navigate"
    * notification.

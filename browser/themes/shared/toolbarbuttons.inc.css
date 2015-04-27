@@ -222,6 +222,18 @@ toolbar[brighttext] #loop-button > .toolbarbutton-badge-container {
   -moz-image-region: rect(0, 738px, 18px, 720px);
 }
 
+#pocket-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 774px, 18px, 756px);
+}
+
+#pocket-button[cui-areatype="toolbar"][open] {
+%ifdef XP_MACOSX
+  -moz-image-region: rect(36px, 774px, 54px, 756px);
+%else
+  -moz-image-region: rect(18px, 774px, 36px, 756px);
+%endif
+}
+
 %if defined(XP_WIN) || defined(XP_MACOSX)
 @media (min-resolution: 1.1dppx) {
   :-moz-any(@primaryToolbarButtons@),
@@ -405,5 +417,18 @@ toolbar[brighttext] #loop-button > .toolbarbutton-badge-container {
   #webide-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 1476px, 36px, 1440px);
   }
+
+  #pocket-button[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 1548px, 36px, 1512px);
+  }
+
+  #pocket-button[cui-areatype="toolbar"][open] {
+%ifdef XP_MACOSX
+    -moz-image-region: rect(72px, 1548px, 108px, 1512px);
+%else
+    -moz-image-region: rect(36px, 1548px, 72px, 1512px);
+%endif
+  }
+
 }
 %endif

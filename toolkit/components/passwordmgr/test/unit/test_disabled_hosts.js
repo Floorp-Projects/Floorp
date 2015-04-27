@@ -26,23 +26,24 @@ add_task(function test_setLoginSavingEnabled_getAllDisabledHosts()
   Services.logins.setLoginSavingEnabled(hostname2, false);
   Services.logins.setLoginSavingEnabled(hostname3, false);
 
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                     [hostname1, hostname2, hostname3]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          [hostname1, hostname2, hostname3]);
 
   // Adding the same host twice should not result in an error.
   Services.logins.setLoginSavingEnabled(hostname2, false);
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                     [hostname1, hostname2, hostname3]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          [hostname1, hostname2, hostname3]);
 
   // Removing a disabled host should work.
   Services.logins.setLoginSavingEnabled(hostname2, true);
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                     [hostname1, hostname3]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          [hostname1, hostname3]);
 
   // Removing the last disabled host should work.
   Services.logins.setLoginSavingEnabled(hostname1, true);
   Services.logins.setLoginSavingEnabled(hostname3, true);
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), []);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          []);
 });
 
 /**
@@ -83,7 +84,8 @@ add_task(function test_setLoginSavingEnabled_invalid_characters()
                 /Invalid hostname/);
 
   // Verify that no data was stored by the previous call.
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), []);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          []);
 });
 
 /**
@@ -112,8 +114,8 @@ add_task(function test_rememberSignons()
   do_check_false(Services.logins.getLoginSavingEnabled(hostname2));
 
   // The list of disabled hosts should be unaltered.
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                     [hostname1]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          [hostname1]);
 
   // Changing values with the preference set should work.
   Services.logins.setLoginSavingEnabled(hostname1, true);
@@ -124,8 +126,8 @@ add_task(function test_rememberSignons()
   do_check_false(Services.logins.getLoginSavingEnabled(hostname2));
 
   // The list of disabled hosts should have been changed.
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                     [hostname2]);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          [hostname2]);
 
   // Enable storage of saved passwords again.
   Services.prefs.setBoolPref("signon.rememberSignons", true);
@@ -136,7 +138,8 @@ add_task(function test_rememberSignons()
 
   // Clean up.
   Services.logins.setLoginSavingEnabled(hostname2, true);
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(), []);
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          []);
 });
 
 /**
@@ -147,8 +150,8 @@ add_task(function test_storage_setLoginSavingEnabled_nonascii()
   let hostname = "http://" + String.fromCharCode(355) + ".example.com";
   Services.logins.setLoginSavingEnabled(hostname, false);
 
-  yield LoginTest.reloadData();
-  LoginTest.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
-                                     [hostname]);
-  LoginTest.clearData();
+  yield LoginTestUtils.reloadData();
+  LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
+                                          [hostname]);
+  LoginTestUtils.clearData();
 });

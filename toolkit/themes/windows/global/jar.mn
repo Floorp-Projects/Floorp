@@ -8,7 +8,9 @@ toolkit.jar:
         skin/classic/global/aboutCache.css                       (../../shared/aboutCache.css)
         skin/classic/global/aboutCacheEntry.css                  (../../shared/aboutCacheEntry.css)
         skin/classic/global/aboutMemory.css                      (../../shared/aboutMemory.css)
-*       skin/classic/global/aboutReader.css                      (../../shared/aboutReader.css)
+        skin/classic/global/aboutReader.css                      (../../shared/aboutReader.css)
+        skin/classic/global/aboutReaderContent.css               (../../shared/aboutReaderContent.css)
+*       skin/classic/global/aboutReaderControls.css              (../../shared/aboutReaderControls.css)
         skin/classic/global/aboutSupport.css                     (../../shared/aboutSupport.css)
         skin/classic/global/appPicker.css                        (../../shared/appPicker.css)
         skin/classic/global/arrow.css
@@ -106,18 +108,13 @@ toolkit.jar:
         skin/classic/global/icons/collapse.png                   (icons/collapse.png)
         skin/classic/global/icons/Error.png                      (icons/Error.png)
         skin/classic/global/icons/error-16.png                   (icons/error-16.png)
-        skin/classic/global/icons/error-24.png                   (icons/error-24.png)
-        skin/classic/global/icons/error-48.png                   (icons/error-48.png)
         skin/classic/global/icons/error-64.png                   (icons/error-64.png)
         skin/classic/global/icons/expand.png                     (icons/expand.png)
-        skin/classic/global/icons/find.png                       (icons/find.png)
         skin/classic/global/icons/find-arrows.png                (icons/find-arrows.png)
         skin/classic/global/icons/folder-item.png                (icons/folder-item.png)
         skin/classic/global/icons/information-16.png             (icons/information-16.png)
         skin/classic/global/icons/information-24.png             (icons/information-24.png)
         skin/classic/global/icons/information-32.png             (icons/information-32.png)
-        skin/classic/global/icons/information-48.png             (icons/information-48.png)
-        skin/classic/global/icons/information-64.png             (icons/information-64.png)
         skin/classic/global/icons/loading_16.png                 (icons/loading_16.png)
         skin/classic/global/icons/Minimize.gif                   (icons/Minimize.gif)
         skin/classic/global/icons/Print-preview.png              (icons/Print-preview.png)
@@ -125,8 +122,6 @@ toolkit.jar:
         skin/classic/global/icons/Landscape.png                  (icons/Landscape.png)
         skin/classic/global/icons/Question.png                   (icons/Question.png)
         skin/classic/global/icons/question-16.png                (icons/question-16.png)
-        skin/classic/global/icons/question-24.png                (icons/question-24.png)
-        skin/classic/global/icons/question-48.png                (icons/question-48.png)
         skin/classic/global/icons/question-64.png                (icons/question-64.png)
         skin/classic/global/icons/resizer.png                    (icons/resizer.png)
         skin/classic/global/icons/resizer-rtl.png                (icons/resizer-rtl.png)
@@ -139,10 +134,8 @@ toolkit.jar:
         skin/classic/global/icons/warning.svg                    (../../shared/incontent-icons/warning.svg)
         skin/classic/global/icons/warning-large.png              (icons/warning-large.png)
         skin/classic/global/icons/warning-16.png                 (icons/warning-16.png)
-        skin/classic/global/icons/warning-24.png                 (icons/warning-24.png)
         skin/classic/global/icons/warning-64.png                 (icons/warning-64.png)
         skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
-        skin/classic/global/icons/wrap.png                       (icons/wrap.png)
         skin/classic/global/icons/webapps-16.png                 (icons/webapps-16.png)
         skin/classic/global/icons/webapps-64.png                 (icons/webapps-64.png)
         skin/classic/global/inContentUI/background-texture.png   (inContentUI/background-texture.png)
@@ -221,23 +214,16 @@ toolkit.jar:
         skin/classic/global/icons/blacklist_large-XP.png               (icons/blacklist_large-XP.png)
         skin/classic/global/icons/Error-XP.png                         (icons/Error-XP.png)
         skin/classic/global/icons/error-16-XP.png                      (icons/error-16-XP.png)
-        skin/classic/global/icons/error-24-XP.png                      (icons/error-24-XP.png)
-        skin/classic/global/icons/error-48-XP.png                      (icons/error-48-XP.png)
         skin/classic/global/icons/error-64-XP.png                      (icons/error-64-XP.png)
-        skin/classic/global/icons/find-XP.png                          (icons/find-XP.png)
         skin/classic/global/icons/folder-item-XP.png                   (icons/folder-item-XP.png)
         skin/classic/global/icons/information-16-XP.png                (icons/information-16-XP.png)
         skin/classic/global/icons/information-24-XP.png                (icons/information-24-XP.png)
         skin/classic/global/icons/information-32-XP.png                (icons/information-32-XP.png)
-        skin/classic/global/icons/information-48-XP.png                (icons/information-48-XP.png)
-        skin/classic/global/icons/information-64-XP.png                (icons/information-64-XP.png)
         skin/classic/global/icons/Print-preview-XP.png                 (icons/Print-preview-XP.png)
         skin/classic/global/icons/Portrait-XP.png                      (icons/Portrait-XP.png)
         skin/classic/global/icons/Landscape-XP.png                     (icons/Landscape-XP.png)
         skin/classic/global/icons/Question-XP.png                      (icons/Question-XP.png)
         skin/classic/global/icons/question-16-XP.png                   (icons/question-16-XP.png)
-        skin/classic/global/icons/question-24-XP.png                   (icons/question-24-XP.png)
-        skin/classic/global/icons/question-48-XP.png                   (icons/question-48-XP.png)
         skin/classic/global/icons/question-64-XP.png                   (icons/question-64-XP.png)
         skin/classic/global/icons/Search-close-XP.png                  (icons/Search-close-XP.png)
         skin/classic/global/icons/Search-glass-XP.png                  (icons/Search-glass-XP.png)
@@ -245,10 +231,8 @@ toolkit.jar:
         skin/classic/global/icons/Warning-XP.png                       (icons/Warning-XP.png)
         skin/classic/global/icons/warning-large-XP.png                 (icons/warning-large-XP.png)
         skin/classic/global/icons/warning-16-XP.png                    (icons/warning-16-XP.png)
-        skin/classic/global/icons/warning-24-XP.png                    (icons/warning-24-XP.png)
         skin/classic/global/icons/warning-64-XP.png                    (icons/warning-64-XP.png)
         skin/classic/global/icons/windowControls-XP.png                (icons/windowControls-XP.png)
-        skin/classic/global/icons/wrap-XP.png                          (icons/wrap-XP.png)
         skin/classic/global/printpreview/arrow-left-XP.png             (printpreview/arrow-left-XP.png)
         skin/classic/global/printpreview/arrow-left-end-XP.png         (printpreview/arrow-left-end-XP.png)
         skin/classic/global/printpreview/arrow-right-XP.png            (printpreview/arrow-right-XP.png)
@@ -269,23 +253,16 @@ toolkit.jar:
 % override chrome://global/skin/icons/blacklist_large.png         chrome://global/skin/icons/blacklist_large-XP.png        osversion<6
 % override chrome://global/skin/icons/Error.png                   chrome://global/skin/icons/Error-XP.png                  osversion<6
 % override chrome://global/skin/icons/error-16.png                chrome://global/skin/icons/error-16-XP.png               osversion<6
-% override chrome://global/skin/icons/error-24.png                chrome://global/skin/icons/error-24-XP.png               osversion<6
-% override chrome://global/skin/icons/error-48.png                chrome://global/skin/icons/error-48-XP.png               osversion<6
 % override chrome://global/skin/icons/error-64.png                chrome://global/skin/icons/error-64-XP.png               osversion<6
-% override chrome://global/skin/icons/find.png                    chrome://global/skin/icons/find-XP.png                   osversion<6
 % override chrome://global/skin/icons/folder-item.png             chrome://global/skin/icons/folder-item-XP.png            osversion<6
 % override chrome://global/skin/icons/information-16.png          chrome://global/skin/icons/information-16-XP.png         osversion<6
 % override chrome://global/skin/icons/information-24.png          chrome://global/skin/icons/information-24-XP.png         osversion<6
 % override chrome://global/skin/icons/information-32.png          chrome://global/skin/icons/information-32-XP.png         osversion<6
-% override chrome://global/skin/icons/information-48.png          chrome://global/skin/icons/information-48-XP.png         osversion<6
-% override chrome://global/skin/icons/information-64.png          chrome://global/skin/icons/information-64-XP.png         osversion<6
 % override chrome://global/skin/icons/Print-preview.png           chrome://global/skin/icons/Print-preview-XP.png          osversion<6
 % override chrome://global/skin/icons/Portrait.png                chrome://global/skin/icons/Portrait-XP.png               osversion<6
 % override chrome://global/skin/icons/Landscape.png               chrome://global/skin/icons/Landscape-XP.png              osversion<6
 % override chrome://global/skin/icons/Question.png                chrome://global/skin/icons/Question-XP.png               osversion<6
 % override chrome://global/skin/icons/question-16.png             chrome://global/skin/icons/question-16-XP.png            osversion<6
-% override chrome://global/skin/icons/question-24.png             chrome://global/skin/icons/question-24-XP.png            osversion<6
-% override chrome://global/skin/icons/question-48.png             chrome://global/skin/icons/question-48-XP.png            osversion<6
 % override chrome://global/skin/icons/question-64.png             chrome://global/skin/icons/question-64-XP.png            osversion<6
 % override chrome://global/skin/icons/Search-close.png            chrome://global/skin/icons/Search-close-XP.png           osversion<6
 % override chrome://global/skin/icons/Search-glass.png            chrome://global/skin/icons/Search-glass-XP.png           osversion<6
@@ -293,10 +270,8 @@ toolkit.jar:
 % override chrome://global/skin/icons/Warning.png                 chrome://global/skin/icons/Warning-XP.png                osversion<6
 % override chrome://global/skin/icons/warning-large.png           chrome://global/skin/icons/warning-large-XP.png          osversion<6
 % override chrome://global/skin/icons/warning-16.png              chrome://global/skin/icons/warning-16-XP.png             osversion<6
-% override chrome://global/skin/icons/warning-24.png              chrome://global/skin/icons/warning-24-XP.png             osversion<6
 % override chrome://global/skin/icons/warning-64.png              chrome://global/skin/icons/warning-64-XP.png             osversion<6
 % override chrome://global/skin/icons/windowControls.png          chrome://global/skin/icons/windowControls-XP.png         osversion<6
-% override chrome://global/skin/icons/wrap.png                    chrome://global/skin/icons/wrap-XP.png                   osversion<6
 % override chrome://global/skin/printpreview/arrow-left.png       chrome://global/skin/printpreview/arrow-left-XP.png      osversion<6
 % override chrome://global/skin/printpreview/arrow-left-end.png   chrome://global/skin/printpreview/arrow-left-end-XP.png  osversion<6
 % override chrome://global/skin/printpreview/arrow-right.png      chrome://global/skin/printpreview/arrow-right-XP.png     osversion<6

@@ -168,6 +168,10 @@ const kEventConstructors = {
                                                          return new DeviceProximityEvent(aName, aProps);
                                                        },
                                              },
+  DeviceStorageAreaChangedEvent:             { create: function (aName, aProps) {
+                                                         return new DeviceStorageAreaChangedEvent(aName, aProps);
+                                                       },
+                                             },
   DeviceStorageChangeEvent:                  { create: function (aName, aProps) {
                                                          return new DeviceStorageChangeEvent(aName, aProps);
                                                        },

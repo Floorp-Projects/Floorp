@@ -7,6 +7,7 @@ let TargetFactory = gDevTools.TargetFactory;
 const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { ScratchpadManager } = Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", {});
 
 const URL_ROOT = "http://example.com/browser/browser/devtools/framework/test/";
 const CHROME_URL_ROOT = "chrome://mochitests/content/browser/browser/devtools/framework/test/";
@@ -174,4 +175,50 @@ function getChromeActors(callback)
   SimpleTest.registerCleanupFunction(() => {
     DebuggerServer.destroy();
   });
+}
+
+function loadToolbox (url) {
+  let { promise: p, resolve } = promise.defer();
+  gBrowser.selectedTab = gBrowser.addTab();
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
+    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
+    gDevTools.showToolbox(target).then(resolve);
+  }, true);
+
+  content.location = url;
+  return p;
+}
+
+function unloadToolbox (toolbox) {
+  return toolbox.destroy().then(function() {
+    gBrowser.removeCurrentTab();
+  });
+}
+
+function getSourceActor(aSources, aURL) {
+  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  return item && item.value;
+}
+
+/**
+ * Open a Scratchpad window.
+ *
+ * @return nsIDOMWindow
+ *         The new window object that holds Scratchpad.
+ */
+function *openScratchpadWindow () {
+  let { promise: p, resolve } = promise.defer();
+  let win = ScratchpadManager.openScratchpad();
+
+  yield once(win, "load");
+
+  win.Scratchpad.addObserver({
+    onReady: function () {
+      win.Scratchpad.removeObserver(this);
+      resolve(win);
+    }
+  });
+  return p;
 }

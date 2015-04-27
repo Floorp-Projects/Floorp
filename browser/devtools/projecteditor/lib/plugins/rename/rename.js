@@ -22,6 +22,14 @@ var RenamePlugin = Class({
     });
   },
 
+  onContextMenuOpen: function(resource) {
+    if (resource.isRoot) {
+      this.contextMenuItem.setAttribute("hidden", "true");
+    } else {
+      this.contextMenuItem.removeAttribute("hidden");
+    }
+  },
+
   onCommand: function(cmd) {
     if (cmd === "cmd-rename") {
       let tree = this.host.projectTree;
