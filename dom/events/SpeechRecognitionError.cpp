@@ -42,7 +42,7 @@ SpeechRecognitionError::InitSpeechRecognitionError(const nsAString& aType,
                                                    ErrorResult& aRv)
 {
   aRv = Event::InitEvent(aType, aCanBubble, aCancelable);
-  NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
+  NS_ENSURE_TRUE_VOID(!aRv.Failed());
 
   mError = aError;
   mMessage = aMessage;
