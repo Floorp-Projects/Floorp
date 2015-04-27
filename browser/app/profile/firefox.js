@@ -1898,6 +1898,7 @@ pref("dom.serviceWorkers.enabled", true);
 #endif
 
 pref("browser.pocket.enabled", false);
+pref("browser.pocket.hostname", "localhost");
 pref("browser.pocket.removedByUser", false);
 pref("browser.pocket.useLocaleList", true);
 pref("browser.pocket.enabledLocales", "en-US");
