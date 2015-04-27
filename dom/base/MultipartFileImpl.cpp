@@ -187,10 +187,10 @@ void
 MultipartFileImpl::SetLengthAndModifiedDate()
 {
   MOZ_ASSERT(mLength == UINT64_MAX);
-  MOZ_ASSERT(mLastModificationDate == UINT64_MAX);
+  MOZ_ASSERT(mLastModificationDate == INT64_MAX);
 
   uint64_t totalLength = 0;
-  uint64_t lastModified = 0;
+  int64_t lastModified = 0;
   bool lastModifiedSet = false;
 
   for (uint32_t index = 0, count = mBlobImpls.Length(); index < count; index++) {
@@ -209,7 +209,7 @@ MultipartFileImpl::SetLengthAndModifiedDate()
     totalLength += subBlobLength;
 
     if (blob->IsFile()) {
-      uint64_t partLastModified = blob->GetLastModified(error);
+      int64_t partLastModified = blob->GetLastModified(error);
       MOZ_ALWAYS_TRUE(!error.Failed());
 
       if (lastModified < partLastModified) {
@@ -365,7 +365,8 @@ MultipartFileImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
   }
 
   // Pre-cache modified date.
-  aRv = blob->GetMozLastModifiedDate(&unused);
+  int64_t unusedDate;
+  aRv = blob->GetMozLastModifiedDate(&unusedDate);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

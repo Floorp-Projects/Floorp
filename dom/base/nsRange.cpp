@@ -716,7 +716,7 @@ nsRange::IsPointInRange(nsIDOMNode* aParent, int32_t aOffset, bool* aResult)
 
   ErrorResult rv;
   *aResult = IsPointInRange(*parent, aOffset, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 bool
@@ -724,8 +724,8 @@ nsRange::IsPointInRange(nsINode& aParent, uint32_t aOffset, ErrorResult& aRv)
 {
   uint16_t compareResult = ComparePoint(aParent, aOffset, aRv);
   // If the node isn't in the range's document, it clearly isn't in the range.
-  if (aRv.ErrorCode() == NS_ERROR_DOM_WRONG_DOCUMENT_ERR) {
-    aRv = NS_OK;
+  if (aRv.ErrorCodeIs(NS_ERROR_DOM_WRONG_DOCUMENT_ERR)) {
+    aRv.SuppressException();
     return false;
   }
 
@@ -742,7 +742,7 @@ nsRange::ComparePoint(nsIDOMNode* aParent, int32_t aOffset, int16_t* aResult)
 
   ErrorResult rv;
   *aResult = ComparePoint(*parent, aOffset, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 int16_t
@@ -794,7 +794,7 @@ nsRange::IntersectsNode(nsIDOMNode* aNode, bool* aResult)
 
   ErrorResult rv;
   *aResult = IntersectsNode(*node, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 bool
@@ -1050,7 +1050,7 @@ nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
     *aCommonParent = nullptr;
   }
 
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 nsINode*
@@ -1121,7 +1121,7 @@ nsRange::SetStart(nsIDOMNode* aParent, int32_t aOffset)
 
   ErrorResult rv;
   SetStart(*parent, aOffset, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* virtual */ nsresult
@@ -1171,7 +1171,7 @@ nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
   ErrorResult rv;
   SetStartBefore(*sibling, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1196,7 +1196,7 @@ nsRange::SetStartAfter(nsIDOMNode* aSibling)
 
   ErrorResult rv;
   SetStartAfter(*sibling, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1220,7 +1220,7 @@ nsRange::SetEnd(nsIDOMNode* aParent, int32_t aOffset)
 
   ErrorResult rv;
   SetEnd(*parent, aOffset, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* virtual */ nsresult
@@ -1270,7 +1270,7 @@ nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
   ErrorResult rv;
   SetEndBefore(*sibling, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1295,7 +1295,7 @@ nsRange::SetEndAfter(nsIDOMNode* aSibling)
 
   ErrorResult rv;
   SetEndAfter(*sibling, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -1321,7 +1321,7 @@ nsRange::SelectNode(nsIDOMNode* aN)
 
   ErrorResult rv;
   SelectNode(*node, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1357,7 +1357,7 @@ nsRange::SelectNodeContents(nsIDOMNode* aN)
 
   ErrorResult rv;
   SelectNodeContents(*node, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1652,12 +1652,12 @@ CollapseRangeAfterDelete(nsRange* aRange)
 
   ErrorResult rv;
   nsCOMPtr<nsINode> commonAncestor = aRange->GetCommonAncestorContainer(rv);
-  if (rv.Failed()) return rv.ErrorCode();
+  if (rv.Failed()) return rv.StealNSResult();
 
   nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer(rv);
-  if (rv.Failed()) return rv.ErrorCode();
+  if (rv.Failed()) return rv.StealNSResult();
   nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer(rv);
-  if (rv.Failed()) return rv.ErrorCode();
+  if (rv.Failed()) return rv.StealNSResult();
 
   // Collapse to one of the end points if they are already in the
   // commonAncestor. This should work ok since this method is called
@@ -1688,7 +1688,7 @@ CollapseRangeAfterDelete(nsRange* aRange)
     return NS_ERROR_FAILURE; // This should never happen!
 
   aRange->SelectNode(*nodeToSelect, rv);
-  if (rv.Failed()) return rv.ErrorCode();
+  if (rv.Failed()) return rv.StealNSResult();
 
   return aRange->Collapse(false);
 }
@@ -1725,7 +1725,7 @@ PrependChild(nsINode* aParent, nsINode* aChild)
   nsCOMPtr<nsINode> first = aParent->GetFirstChild();
   ErrorResult rv;
   aParent->InsertBefore(*aChild, first, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 // Helper function for CutContents, making sure that the current node wasn't
@@ -1757,7 +1757,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
 
   ErrorResult res;
   nsCOMPtr<nsINode> commonAncestor = GetCommonAncestorContainer(res);
-  NS_ENSURE_SUCCESS(res.ErrorCode(), res.ErrorCode());
+  NS_ENSURE_TRUE(!res.Failed(), res.StealNSResult());
 
   // If aFragment isn't null, create a temporary fragment to hold our return.
   nsRefPtr<DocumentFragment> retval;
@@ -1931,7 +1931,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
         if (retval) {
           ErrorResult rv;
           nodeToResult = node->CloneNode(false, rv);
-          NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+          NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
         }
         handled = true;
       }
@@ -1995,7 +1995,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
       if (parent) {
         mozilla::ErrorResult error;
         parent->RemoveChild(*node, error);
-        NS_ENSURE_FALSE(error.Failed(), error.ErrorCode());
+        NS_ENSURE_FALSE(error.Failed(), error.StealNSResult());
       }
       NS_ENSURE_STATE(!guard.Mutated(1) ||
                       ValidateCurrentNode(this, iter));
@@ -2059,7 +2059,7 @@ nsRange::CompareBoundaryPoints(uint16_t aHow, nsIDOMRange* aOtherRange,
 
   ErrorResult rv;
   *aCmpRet = CompareBoundaryPoints(aHow, *otherRange, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 int16_t
@@ -2137,7 +2137,7 @@ nsRange::CloneParentsBetween(nsINode *aAncestor,
     nsCOMPtr<nsINode> clone = parent->CloneNode(false, rv);
 
     if (rv.Failed()) {
-      return rv.ErrorCode();
+      return rv.StealNSResult();
     }
     if (!clone) {
       return NS_ERROR_FAILURE;
@@ -2147,7 +2147,7 @@ nsRange::CloneParentsBetween(nsINode *aAncestor,
       firstParent = lastParent = clone;
     } else {
       clone->AppendChild(*lastParent, rv);
-      if (rv.Failed()) return rv.ErrorCode();
+      if (rv.Failed()) return rv.StealNSResult();
 
       lastParent = clone;
     }
@@ -2169,7 +2169,7 @@ nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
   ErrorResult rv;
   *aReturn = CloneContents(rv).take();
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 already_AddRefed<DocumentFragment>
@@ -2405,7 +2405,7 @@ nsRange::InsertNode(nsIDOMNode* aNode)
 
   ErrorResult rv;
   InsertNode(*node, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -2502,7 +2502,7 @@ nsRange::SurroundContents(nsIDOMNode* aNewParent)
   }
   ErrorResult rv;
   SurroundContents(*node, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

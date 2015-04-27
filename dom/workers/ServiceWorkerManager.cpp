@@ -996,7 +996,7 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(cleanedScope);
@@ -1317,7 +1317,7 @@ ServiceWorkerManager::GetRegistrations(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   nsCOMPtr<nsIRunnable> runnable =
@@ -1418,7 +1418,7 @@ ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   nsCOMPtr<nsIRunnable> runnable =
@@ -1531,11 +1531,23 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
 
-    nsRefPtr<EventTarget> target = do_QueryObject(aWorkerPrivate->GlobalScope());
+    WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
 
-    nsContentUtils::DispatchTrustedEvent(nullptr, target,
-                                         NS_LITERAL_STRING("pushsubscriptionchange"),
-                                         true, true);
+    nsCOMPtr<nsIDOMEvent> event;
+    nsresult rv =
+      NS_NewDOMEvent(getter_AddRefs(event), globalScope, nullptr, nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    rv = event->InitEvent(NS_LITERAL_STRING("pushsubscriptionchange"), false, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    event->SetTrusted(true);
+
+    globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
     return true;
   }
 };
@@ -1570,7 +1582,7 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aScope, const nsAString& a
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::SendPushSubscriptionChangedEvent(const nsACString& aScope)
+ServiceWorkerManager::SendPushSubscriptionChangeEvent(const nsACString& aScope)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
@@ -1617,7 +1629,7 @@ ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
   ErrorResult result;
   nsRefPtr<Promise> promise = Promise::Create(sgo, result);
   if (result.Failed()) {
-    return result.ErrorCode();
+    return result.StealNSResult();
   }
 
   nsCOMPtr<nsIRunnable> runnable =

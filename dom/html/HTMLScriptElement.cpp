@@ -121,7 +121,7 @@ HTMLScriptElement::SetText(const nsAString& aValue)
 {
   ErrorResult rv;
   SetText(aValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -198,7 +198,7 @@ HTMLScriptElement::SetAsync(bool aValue)
 {
   ErrorResult rv;
   SetAsync(aValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

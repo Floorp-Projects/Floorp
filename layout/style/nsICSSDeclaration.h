@@ -78,7 +78,7 @@ public:
     mozilla::ErrorResult error;
     nsRefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
     if (error.Failed()) {
-      return error.ErrorCode();
+      return error.StealNSResult();
     }
 
     nsCOMPtr<nsIDOMCSSValue> xpVal = do_QueryInterface(val);

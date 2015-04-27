@@ -1222,7 +1222,7 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
   ErrorResult rv;
   nsRefPtr<DOMStringList> types = aDataTransfer->MozTypesAt(aIndex, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   bool hasPrivateHTMLFlavor = types->Contains(NS_LITERAL_STRING(kHTMLContext));

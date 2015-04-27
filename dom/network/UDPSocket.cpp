@@ -292,7 +292,7 @@ UDPSocket::DoPendingMcastCommand()
     }
 
     if (NS_WARN_IF(rv.Failed())) {
-      return rv.ErrorCode();
+      return rv.StealNSResult();
     }
   }
 
@@ -527,12 +527,12 @@ UDPSocket::Init(const nsString& aLocalAddress,
 
   mOpened = Promise::Create(global, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   mClosed = Promise::Create(global, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   class OpenSocketRunnable final : public nsRunnable

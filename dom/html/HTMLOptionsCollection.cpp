@@ -176,7 +176,7 @@ HTMLOptionsCollection::SetOption(uint32_t aIndex,
       nsCOMPtr<nsINode> node = do_QueryInterface(aOption);
       ErrorResult res;
       parent->ReplaceChild(*node, *refChild, res);
-      rv = res.ErrorCode();
+      rv = res.StealNSResult();
     }
   }
 
@@ -201,7 +201,7 @@ HTMLOptionsCollection::GetSelectedIndex(int32_t* aSelectedIndex)
 {
   ErrorResult rv;
   *aSelectedIndex = GetSelectedIndex(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -221,7 +221,7 @@ HTMLOptionsCollection::SetSelectedIndex(int32_t aSelectedIndex)
 {
   ErrorResult rv;
   SetSelectedIndex(aSelectedIndex, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -371,7 +371,7 @@ HTMLOptionsCollection::Remove(int32_t aIndex)
 {
   ErrorResult rv;
   Remove(aIndex, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 } // namespace dom

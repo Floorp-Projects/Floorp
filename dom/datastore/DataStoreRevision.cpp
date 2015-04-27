@@ -65,7 +65,7 @@ DataStoreRevision::AddRevision(JSContext* aCx,
   ErrorResult error;
   mRequest = aStore->Put(aCx, value, JS::UndefinedHandleValue, error);
   if (NS_WARN_IF(error.Failed())) {
-    return error.ErrorCode();
+    return error.StealNSResult();
   }
 
   rv = mRequest->EventTarget::AddEventListener(NS_LITERAL_STRING("success"),

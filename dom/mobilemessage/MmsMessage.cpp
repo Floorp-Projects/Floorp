@@ -390,7 +390,7 @@ MmsMessage::GetData(ContentParent* aParent,
     // send a "Mystery Blob" to the ContentChild. Attempting to get the
     // last modified date of blob can force that value to be initialized.
     if (element.content->IsDateUnknown()) {
-      uint64_t date;
+      int64_t date;
       if (NS_FAILED(element.content->GetMozLastModifiedDate(&date))) {
         NS_WARNING("Failed to get last modified date!");
       }

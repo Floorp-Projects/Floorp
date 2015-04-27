@@ -48,7 +48,7 @@ SplitNodeTxn::DoTransaction()
   // Don't use .downcast directly because AsContent has an assertion we want
   nsCOMPtr<nsINode> clone = mExistingRightNode->CloneNode(false, rv);
   NS_ASSERTION(!rv.Failed() && clone, "Could not create clone");
-  NS_ENSURE_TRUE(!rv.Failed() && clone, rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed() && clone, rv.StealNSResult());
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
   mEditor.MarkNodeDirty(mExistingRightNode->AsDOMNode());
 
@@ -63,7 +63,7 @@ SplitNodeTxn::DoTransaction()
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     rv = selection->Collapse(mNewLeftNode, mOffset);
   }
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -88,13 +88,13 @@ SplitNodeTxn::RedoTransaction()
   // First, massage the existing node so it is in its post-split state
   if (mExistingRightNode->GetAsText()) {
     rv = mExistingRightNode->GetAsText()->DeleteData(0, mOffset);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
   } else {
     nsCOMPtr<nsIContent> child = mExistingRightNode->GetFirstChild();
     nsCOMPtr<nsIContent> nextSibling;
     for (int32_t i=0; i < mOffset; i++) {
       if (rv.Failed()) {
-        return rv.ErrorCode();
+        return rv.StealNSResult();
       }
       if (!child) {
         return NS_ERROR_NULL_POINTER;
@@ -109,7 +109,7 @@ SplitNodeTxn::RedoTransaction()
   }
   // Second, re-insert the left node into the tree
   mParent->InsertBefore(*mNewLeftNode, mExistingRightNode, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 
