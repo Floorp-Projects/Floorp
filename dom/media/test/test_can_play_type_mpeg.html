@@ -46,14 +46,12 @@ function check_mp4(v, enabled) {
   check("video/mp4; codecs=\"avc1.42001E, mp4a.40.2\"", "probably");
   check("video/mp4; codecs=\"avc1.58A01E, mp4a.40.2\"", "probably");
 
-  const ProbablyIfNotLinux = !IsLinuxGStreamer() ? "probably" : "";
-
   // H.264 Main Profile Level 3.0, AAC-LC
   check("video/mp4; codecs=\"avc1.4D401E, mp4a.40.2\"", "probably");
   // H.264 Main Profile Level 3.1, AAC-LC
-  check("video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"", ProbablyIfNotLinux);
+  check("video/mp4; codecs=\"avc1.4D401F, mp4a.40.2\"", "probably");
   // H.264 Main Profile Level 4.0, AAC-LC
-  check("video/mp4; codecs=\"avc1.4D4028, mp4a.40.2\"", ProbablyIfNotLinux);
+  check("video/mp4; codecs=\"avc1.4D4028, mp4a.40.2\"", "probably");
   // H.264 High Profile Level 3.0, AAC-LC
   check("video/mp4; codecs=\"avc1.64001E, mp4a.40.2\"", "probably");
   // H.264 High Profile Level 3.1, AAC-LC
@@ -72,10 +70,10 @@ function check_mp4(v, enabled) {
   check("audio/x-m4a; codecs=mp4a.40.2", "probably");
 
   // HE-AAC v1
-  check("audio/mp4; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
-  check("audio/mp4; codecs=mp4a.40.5", ProbablyIfNotLinux);
-  check("audio/x-m4a; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
-  check("audio/x-m4a; codecs=mp4a.40.5", ProbablyIfNotLinux);
+  check("audio/mp4; codecs=\"mp4a.40.5\"", "probably");
+  check("audio/mp4; codecs=mp4a.40.5", "probably");
+  check("audio/x-m4a; codecs=\"mp4a.40.5\"", "probably");
+  check("audio/x-m4a; codecs=mp4a.40.5", "probably");
 
 }
 
@@ -118,11 +116,6 @@ function getPref(name) {
     pref = SpecialPowers.getBoolPref(name);
   } catch(ex) { }
   return pref;
-}
-
-function IsLinuxGStreamer() {
-  return /Linux/.test(navigator.userAgent) &&
-         getPref("media.gstreamer.enabled");
 }
 
 function IsJellyBeanOrLater() {
