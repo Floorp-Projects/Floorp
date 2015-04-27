@@ -26,13 +26,7 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLBRElement, nsGenericHTMLElement,
-                            nsIDOMHTMLBRElement)
-
 NS_IMPL_ELEMENT_CLONE(HTMLBRElement)
-
-
-NS_IMPL_STRING_ATTR(HTMLBRElement, Clear, clear)
 
 static const nsAttrValue::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },

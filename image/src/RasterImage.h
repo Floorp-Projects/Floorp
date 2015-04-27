@@ -154,7 +154,7 @@ class RasterImage final : public ImageResource
   virtual ~RasterImage();
 
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(RasterImage)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(RasterImage)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPROPERTIES
   NS_DECL_IMGICONTAINER

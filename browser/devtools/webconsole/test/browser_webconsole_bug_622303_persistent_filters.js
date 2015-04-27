@@ -22,7 +22,10 @@ const prefs = {
      "error",
      "warn",
      "info",
-     "log"
+     "log",
+     "serviceworkers",
+     "sharedworkers",
+     "windowlessworkers"
   ]
 };
 

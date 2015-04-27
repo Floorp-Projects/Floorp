@@ -30,7 +30,7 @@ class WebGLFramebuffer final
     , public SupportsWeakPtr<WebGLFramebuffer>
 {
 public:
-    MOZ_DECLARE_REFCOUNTED_TYPENAME(WebGLFramebuffer)
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLFramebuffer)
 
     class AttachPoint
     {

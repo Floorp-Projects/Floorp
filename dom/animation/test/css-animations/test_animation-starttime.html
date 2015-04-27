@@ -539,7 +539,20 @@ async_test(function(t) {
   })).then(function() {
     t.done();
   });
-}, 'Animation.startTime after paused');
+}, 'Animation.startTime after pausing');
+
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  div.style.animation = 'anim 100s';
+
+  var animation = div.getAnimations()[0];
+  animation.ready.then(t.step_func(function() {
+    animation.cancel();
+    assert_equals(animation.startTime, null,
+                  'The startTime of a cancelled animation should be null');
+    t.done();
+  }));
+}, 'Animation.startTime after cancelling');
 
     </script>
   </body>

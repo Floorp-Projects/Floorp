@@ -85,6 +85,7 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'BrowserConfiguration.ipdlh',
     'DOMTypes.ipdlh',
     'PBlob.ipdl',
     'PBlobStream.ipdl',

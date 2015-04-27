@@ -58,7 +58,7 @@ class SpeechRecognition final : public DOMEventTargetHelper,
                                 public SupportsWeakPtr<SpeechRecognition>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(SpeechRecognition)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SpeechRecognition)
   explicit SpeechRecognition(nsPIDOMWindow* aOwnerWindow);
 
   NS_DECL_ISUPPORTS_INHERITED

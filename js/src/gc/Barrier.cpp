@@ -10,23 +10,20 @@
 #include "jsobj.h"
 
 #include "gc/Zone.h"
-
+#include "js/Value.h"
 #include "vm/Symbol.h"
 
 namespace js {
+
+struct ReadBarrierFunctor : public VoidDefaultAdaptor<Value> {
+    template <typename T> void operator()(T* t) { T::readBarrier(t); }
+};
 
 void
 ValueReadBarrier(const Value& value)
 {
     MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-    if (value.isObject())
-        JSObject::readBarrier(&value.toObject());
-    else if (value.isString())
-        JSString::readBarrier(value.toString());
-    else if (value.isSymbol())
-        JS::Symbol::readBarrier(value.toSymbol());
-    else
-        MOZ_ASSERT(!value.isMarkable());
+    DispatchValueTyped(ReadBarrierFunctor(), value);
 }
 
 #ifdef DEBUG

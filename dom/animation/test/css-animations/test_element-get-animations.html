@@ -250,4 +250,23 @@ test(function(t) {
                 + ' duration changes');
 }, 'getAnimations returns objects with the same identity');
 
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim1 100s';
+
+  assert_equals(div.getAnimations().length, 1,
+    'getAnimations returns an animation before cancelling');
+
+  var animation = div.getAnimations()[0];
+
+  animation.cancel();
+  assert_equals(div.getAnimations().length, 0,
+    'getAnimations does not return cancelled animations');
+
+  animation.play();
+  assert_equals(div.getAnimations().length, 1,
+    'getAnimations returns cancelled animations that have been re-started');
+
+}, 'getAnimations for CSS Animations that are cancelled');
+
 </script>

@@ -171,7 +171,7 @@ class ResultsSink:
                 self.counts['SKIP'] += 1
 
             if self.options.tinderbox:
-                if len(result.results) > 1:
+                if result.result != TestResult.PASS and len(result.results) > 1:
                     for sub_ok, msg in result.results:
                         tup = (sub_ok, result.test.expect, result.test.random)
                         label = self.LABELS[tup][0]

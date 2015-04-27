@@ -279,7 +279,6 @@ private:
   bool                                mQueriedProgressSink;
   bool                                mSynthProgressEvents;
   bool                                mAllowThreadRetargeting;
-  bool                                mWasOpened;
   bool                                mWaitingOnAsyncRedirect;
   bool                                mOpenRedirectChannel;
   uint32_t                            mRedirectFlags;
@@ -294,6 +293,7 @@ protected:
   uint32_t                            mContentDispositionHint;
   nsAutoPtr<nsString>                 mContentDispositionFilename;
   int64_t                             mContentLength;
+  bool                                mWasOpened;
 
   friend class mozilla::net::PrivateBrowsingChannel<nsBaseChannel>;
 };

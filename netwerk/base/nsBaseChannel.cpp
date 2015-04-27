@@ -58,11 +58,11 @@ nsBaseChannel::nsBaseChannel()
   , mQueriedProgressSink(true)
   , mSynthProgressEvents(false)
   , mAllowThreadRetargeting(true)
-  , mWasOpened(false)
   , mWaitingOnAsyncRedirect(false)
   , mStatus(NS_OK)
   , mContentDispositionHint(UINT32_MAX)
   , mContentLength(-1)
+  , mWasOpened(false)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 }

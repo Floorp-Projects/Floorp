@@ -384,3 +384,22 @@ function SetupEME(test, token, params)
   });
   return v;
 }
+
+function SetupEMEPref(callback) {
+  var prefs = [
+    [ "media.mediasource.enabled", true ],
+    [ "media.mediasource.whitelist", false ],
+    [ "media.mediasource.mp4.enabled", true ],
+    [ "media.fragmented-mp4.exposed", true ],
+  ];
+
+  if (/Linux/.test(navigator.userAgent)) {
+    prefs.push([ "media.fragmented-mp4.ffmpeg.enabled", true ]);
+  } else if (SpecialPowers.Services.appinfo.name == "B2G" ||
+             !document.createElement('video').canPlayType("video/mp4")) {
+   // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+   prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+  }
+
+  SpecialPowers.pushPrefEnv({ "set" : prefs }, callback);
+}

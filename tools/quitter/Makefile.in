@@ -4,7 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPI_PKGNAME = quitter@mozilla.org
-NO_JS_MANIFEST = 1
-
-# Used in install.rdf
-USE_EXTENSION_MANIFEST=1

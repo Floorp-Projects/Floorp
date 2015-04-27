@@ -158,7 +158,7 @@ class nsDocShell final
   friend class nsDSURIContentListener;
 
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(nsDocShell)
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsDocShell)
   // Object Management
   nsDocShell();
 

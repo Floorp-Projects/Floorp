@@ -265,6 +265,7 @@ class TestRecursiveMakeBackend(BackendTester):
             ],
             'EXTRA_COMPONENTS': [
                 'EXTRA_COMPONENTS += bar.js',
+                'EXTRA_COMPONENTS += dummy.manifest',
                 'EXTRA_COMPONENTS += foo.js',
             ],
             'EXTRA_PP_COMPONENTS': [

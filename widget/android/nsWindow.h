@@ -216,7 +216,6 @@ protected:
     bool mIsVisible;
     nsTArray<nsWindow*> mChildren;
     nsWindow* mParent;
-    nsWindow* mFocus;
 
     double mStartDist;
     double mLastDist;

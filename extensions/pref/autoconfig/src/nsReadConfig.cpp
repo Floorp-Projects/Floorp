@@ -158,11 +158,6 @@ nsresult nsReadConfig::readConfigFile()
         if (NS_FAILED(rv)) 
             return rv;
 
-        // Evaluate platform specific directives
-        rv = openAndEvaluateJSFile("platform.js", 0, false, false);
-        if (NS_FAILED(rv)) 
-            return rv;
-
         mRead = true;
     }
     // If the lockFileName is nullptr return ok, because no lockFile will be used

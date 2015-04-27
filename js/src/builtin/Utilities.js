@@ -26,6 +26,14 @@
 
 #include "SelfHostingDefines.h"
 
+// Assertions, defined here instead of in the header above to make `assert`
+// invisible to C++.
+#ifdef DEBUG
+#define assert(b, info) if (!(b)) AssertionFailed(info)
+#else
+#define assert(b, info) // Elided assertion.
+#endif
+
 // All C++-implemented standard builtins library functions used in self-hosted
 // code are installed via the std_functions JSFunctionSpec[] in
 // SelfHosting.cpp.

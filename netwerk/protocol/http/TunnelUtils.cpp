@@ -1022,9 +1022,6 @@ SpdyConnectTransaction::SpdyConnectTransaction(nsHttpConnectionInfo *ci,
 SpdyConnectTransaction::~SpdyConnectTransaction()
 {
   LOG(("SpdyConnectTransaction dtor %p\n", this));
-  if (mRequestHead) {
-    delete mRequestHead;
-  }
 
   if (mDrivingTransaction) {
     // requeue it I guess. This should be gone.

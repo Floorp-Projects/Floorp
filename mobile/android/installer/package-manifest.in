@@ -513,7 +513,6 @@
 @BINPATH@/@PREF_DIR@/mobile-branding.js
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/greprefs.js
-@BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 @BINPATH@/defaults/profile/prefs.js
 
