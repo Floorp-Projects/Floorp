@@ -25,6 +25,11 @@ function evaluateJS(input) {
   return new Promise((resolve) => gState.client.evaluateJS(input, resolve));
 }
 
+function* evaluateJSAndCheckResult(input, result) {
+  let response = yield evaluateJS(input);
+  checkObject(response, {result});
+}
+
 function startTest()
 {
   removeEventListener("load", startTest);
@@ -138,6 +143,34 @@ tests = [
     WebConsoleCommands.unregister("$foo");
     ok(!WebConsoleCommands.hasCommand("$foo"), "$foo should be unregistered");
     nextTest();
+  }),
+
+  Task.async(function* unregisterAfterOverridingTwice() {
+    WebConsoleCommands.register("keys", (owner, obj) => "command 1");
+    info("checking the value of the first override");
+    yield evaluateJSAndCheckResult("keys('foo');", "command 1");
+
+    let orig = WebConsoleCommands.getCommand("keys");
+    WebConsoleCommands.register("keys", (owner, obj) => {
+      if (obj === "quack")
+        return "bang!";
+      return orig(owner, obj);
+    });
+
+    info("checking the values after the second override");
+    yield evaluateJSAndCheckResult("keys({});", "command 1");
+    yield evaluateJSAndCheckResult("keys('quack');", "bang!");
+
+    WebConsoleCommands.unregister("keys");
+
+    info("checking the value after unregistration (should restore " +
+      "the original command)");
+    yield evaluateJSAndCheckResult("keys({});", {
+      class: "Array",
+      preview: {items: []}
+    });
+    nextTest();
+
   })
 ];
 
