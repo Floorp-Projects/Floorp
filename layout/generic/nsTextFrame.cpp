@@ -5559,8 +5559,25 @@ nsTextFrame::PaintOneShadow(uint32_t aOffset, uint32_t aLength,
   // This rect is the box which is equivalent to where the shadow will be painted.
   // The origin of aBoundingBox is the text baseline left, so we must translate it by
   // that much in order to make the origin the top-left corner of the text bounding box.
-  gfxRect shadowGfxRect = aBoundingBox +
-    gfxPoint(aFramePt.x + aLeftSideOffset, aTextBaselinePt.y) + shadowOffset;
+  // Note that aLeftSideOffset is line-left, so actually means top offset in
+  // vertical writing modes.
+  gfxRect shadowGfxRect;
+  WritingMode wm = GetWritingMode();
+  if (wm.IsVertical()) {
+    shadowGfxRect = aBoundingBox;
+    if (wm.IsVerticalRL()) {
+      // for vertical-RL, reverse direction of x-coords of bounding box
+      shadowGfxRect.x = -shadowGfxRect.XMost();
+    }
+    shadowGfxRect +=
+      gfxPoint(aTextBaselinePt.x, aFramePt.y + aLeftSideOffset);
+  } else {
+    shadowGfxRect =
+      aBoundingBox + gfxPoint(aFramePt.x + aLeftSideOffset,
+                              aTextBaselinePt.y);
+  }
+  shadowGfxRect += shadowOffset;
+
   nsRect shadowRect(NSToCoordRound(shadowGfxRect.X()),
                     NSToCoordRound(shadowGfxRect.Y()),
                     NSToCoordRound(shadowGfxRect.Width()),
@@ -6073,6 +6090,10 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
   gfxTextRun::Metrics shadowMetrics =
     mTextRun->MeasureText(aOffset, aLength, gfxFont::LOOSE_INK_EXTENTS,
                           nullptr, &aProvider);
+  if (GetWritingMode().IsLineInverted()) {
+    Swap(shadowMetrics.mAscent, shadowMetrics.mDescent);
+    shadowMetrics.mBoundingBox.y = -shadowMetrics.mBoundingBox.YMost();
+  }
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
     AddHyphenToMetrics(this, mTextRun, &shadowMetrics,
                        gfxFont::LOOSE_INK_EXTENTS, aCtx);
@@ -6094,6 +6115,11 @@ nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
       break;
     }
     run++;
+  }
+
+  if (mTextRun->IsVertical()) {
+    Swap(shadowMetrics.mBoundingBox.x, shadowMetrics.mBoundingBox.y);
+    Swap(shadowMetrics.mBoundingBox.width, shadowMetrics.mBoundingBox.height);
   }
 
   for (uint32_t i = aShadow->Length(); i > 0; --i) {
