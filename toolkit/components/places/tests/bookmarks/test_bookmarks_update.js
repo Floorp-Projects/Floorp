@@ -65,9 +65,9 @@ add_task(function* invalid_input_throws() {
   Assert.throws(() => PlacesUtils.bookmarks.update({ url: "te st" }),
                 /Invalid value for property 'url'/);
 
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ title: -1 }),
+  Assert.throws(() => PlacesUtils.bookmarks.update({ title: -1 }),
                 /Invalid value for property 'title'/);
-  Assert.throws(() => PlacesUtils.bookmarks.insert({ title: undefined }),
+  Assert.throws(() => PlacesUtils.bookmarks.update({ title: {} }),
                 /Invalid value for property 'title'/);
 
   Assert.throws(() => PlacesUtils.bookmarks.update({ guid: "123456789012" }),

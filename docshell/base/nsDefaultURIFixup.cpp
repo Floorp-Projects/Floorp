@@ -967,6 +967,23 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
         looksLikeIpv6 = false;
       }
     }
+
+    // If we're at the end of the string or this is the first slash,
+    // check if the thing before the slash looks like ipv4:
+    if ((iter.size_forward() == 1 || (lastSlashLoc == uint32_t(kNotFound) && *iter == '/')) &&
+        // Need 2 or 3 dots + only digits
+        (foundDots == 2 || foundDots == 3) &&
+        // and they should be all that came before now:
+        (foundDots + foundDigits == pos ||
+         // or maybe there was also exactly 1 colon that came after the last dot,
+         // and the digits, dots and colon were all that came before now:
+         (foundColons == 1 && firstColonLoc > lastDotLoc &&
+          foundDots + foundDigits + foundColons == pos))) {
+      // Hurray, we got ourselves some ipv4!
+      // At this point, there's no way we will do a keyword lookup, so just bail immediately:
+      return NS_OK;
+    }
+
     if (*iter == '.') {
       ++foundDots;
       lastDotLoc = pos;
@@ -1005,6 +1022,12 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
     looksLikeIpv6 = false;
   }
 
+  // If there are only colons and only hexadecimal characters ([a-z][0-9])
+  // enclosed in [], then don't do a keyword lookup
+  if (looksLikeIpv6) {
+    return NS_OK;
+  }
+
   nsAutoCString asciiHost;
   nsAutoCString host;
 
@@ -1017,34 +1040,6 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
     aFixupInfo->mFixedURI &&
     NS_SUCCEEDED(aFixupInfo->mFixedURI->GetHost(host)) &&
     !host.IsEmpty();
-
-  // If there are 2 dots and only numbers between them, an optional port number
-  // and a trailing slash, then don't do a keyword lookup
-  if (foundDots == 2 && lastSlashLoc == pos - 1 &&
-      ((foundDots + foundDigits == pos - 1) ||
-       (foundColons == 1 && firstColonLoc > lastDotLoc &&
-        foundDots + foundDigits + foundColons == pos - 1))) {
-    return NS_OK;
-  }
-
-  uint32_t posWithNoTrailingSlash = pos;
-  if (lastSlashLoc == pos - 1) {
-    posWithNoTrailingSlash -= 1;
-  }
-  // If there are 3 dots and only numbers between them, an optional port number
-  // and an optional trailling slash, then don't do a keyword lookup (ipv4)
-  if (foundDots == 3 &&
-      ((foundDots + foundDigits == posWithNoTrailingSlash) ||
-       (foundColons == 1 && firstColonLoc > lastDotLoc &&
-        foundDots + foundDigits + foundColons == posWithNoTrailingSlash))) {
-    return NS_OK;
-  }
-
-  // If there are only colons and only hexadecimal characters ([a-z][0-9])
-  // enclosed in [], then don't do a keyword lookup
-  if (looksLikeIpv6) {
-    return NS_OK;
-  }
 
   nsresult rv = NS_OK;
   // We do keyword lookups if a space or quote preceded the dot, colon

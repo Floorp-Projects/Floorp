@@ -97,7 +97,7 @@ public:
     return mGenID + 2 <= aGenID;
   }
 
-  float GetTime();
+  float GetTime() const;
 
 private:
   char* mMarkerName;

@@ -138,6 +138,9 @@ MarkerDetails.prototype = {
       case "DOMEvent":
         this.renderDOMEventMarker(this._parent, marker);
         break;
+      case "Javascript":
+        this.renderJavascriptMarker(this._parent, marker);
+        break;
       default:
     }
 
@@ -219,7 +222,7 @@ MarkerDetails.prototype = {
 
         aNode.addEventListener("click", (event) => {
           event.preventDefault();
-          viewSourceInDebugger(toolbox, url, line);
+          this.emit("view-source", url, line);
         });
       }
 
@@ -284,36 +287,21 @@ MarkerDetails.prototype = {
     }
   },
 
+  /**
+   * Render details of a Javascript marker.
+   *
+   * @param nsIDOMNode parent
+   *        The parent node holding the view.
+   * @param object marker
+   *        The marker to display.
+   */
+  renderJavascriptMarker: function(parent, marker) {
+    if ("causeName" in marker) {
+      let cause = this.buildNameValueLabel("timeline.markerDetail.causeName", marker.causeName);
+      this._parent.appendChild(cause);
+    }
+  },
+
 };
-
-/**
- * Opens/selects the debugger in this toolbox and jumps to the specified
- * file name and line number.
- * @param object toolbox
- *        The toolbox.
- * @param string url
- * @param number line
- */
-let viewSourceInDebugger = Task.async(function *(toolbox, url, line) {
-  // If the Debugger was already open, switch to it and try to show the
-  // source immediately. Otherwise, initialize it and wait for the sources
-  // to be added first.
-  let debuggerAlreadyOpen = toolbox.getPanel("jsdebugger");
-  let { panelWin: dbg } = yield toolbox.selectTool("jsdebugger");
-
-  if (!debuggerAlreadyOpen) {
-    yield dbg.once(dbg.EVENTS.SOURCES_ADDED);
-  }
-
-  let { DebuggerView } = dbg;
-  let { Sources } = DebuggerView;
-
-  let item = Sources.getItemForAttachment(a => a.source.url === url);
-  if (item) {
-    return DebuggerView.setEditorLocation(item.attachment.source.actor, line, { noDebug: true });
-  }
-
-  return Promise.reject("Couldn't find the specified source in the debugger.");
-});
 
 exports.MarkerDetails = MarkerDetails;
