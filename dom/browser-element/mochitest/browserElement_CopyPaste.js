@@ -52,7 +52,7 @@ function runTest() {
   iframeOuter = document.createElement('iframe');
   iframeOuter.setAttribute('mozbrowser', 'true');
   if (createEmbededFrame) {
-    iframeOuter.src = "file_NestedFramesOuter_CopyPaste.html";
+    iframeOuter.src = "file_empty.html";
   }
   document.body.appendChild(iframeOuter);
 
@@ -67,7 +67,10 @@ function runTest() {
                              .QueryInterface(SpecialPowers.Ci.nsIFrameLoaderOwner)
                              .frameLoader.docShell.contentViewer.DOMDocument.defaultView;
       var contentDoc = contentWin.document;
-      iframeInner = contentDoc.getElementById('iframeInner');
+      iframeInner = contentDoc.createElement('iframe');
+      iframeInner.setAttribute('mozbrowser', true);
+      iframeInner.setAttribute('remote', 'false');
+      contentDoc.body.appendChild(iframeInner);
       iframeInner.addEventListener("mozbrowserloadend", function onloadendinner(e) {
         iframeInner.removeEventListener("mozbrowserloadend", onloadendinner);
         mm = SpecialPowers.getBrowserFrameMessageManager(iframeInner);

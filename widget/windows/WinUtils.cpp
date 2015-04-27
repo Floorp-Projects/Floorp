@@ -943,14 +943,16 @@ WinUtils::GetMouseInputSource()
   return static_cast<uint16_t>(inputSource);
 }
 
+/* static */
 bool
 WinUtils::GetIsMouseFromTouch(uint32_t aEventType)
 {
-#define MOUSEEVENTF_FROMTOUCH 0xFF515700
-  return (aEventType == NS_MOUSE_BUTTON_DOWN ||
-          aEventType == NS_MOUSE_BUTTON_UP ||
-          aEventType == NS_MOUSE_MOVE) &&
-          (GetMessageExtraInfo() & MOUSEEVENTF_FROMTOUCH);
+  const int MOZ_T_I_SIGNATURE = TABLET_INK_TOUCH | TABLET_INK_SIGNATURE;
+  const int MOZ_T_I_CHECK_TCH = TABLET_INK_TOUCH | TABLET_INK_CHECK;
+  return ((aEventType == NS_MOUSE_MOVE ||
+           aEventType == NS_MOUSE_BUTTON_DOWN ||
+           aEventType == NS_MOUSE_BUTTON_UP) &&
+         (GetMessageExtraInfo() & MOZ_T_I_SIGNATURE) == MOZ_T_I_CHECK_TCH);
 }
 
 /* static */

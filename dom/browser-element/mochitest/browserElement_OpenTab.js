@@ -51,7 +51,7 @@ function runTest() {
     iframe.sendMouseEvent('mouseup', x, y, 1, 1, 0);
   }
 
-  let onMiddleClick= e => {
+  let onMiddleClick = e => {
     is(e.detail.url, 'http://example.com/', 'URL matches');
     iframe.removeEventListener('mozbrowseropentab', onMiddleClick);
     SimpleTest.finish();
@@ -63,7 +63,7 @@ function runTest() {
   });
 
 
-  iframe.src = 'data:text/html,<body style="margin:0"><a href="http://example.com">click here</a></body>';
+  iframe.src = 'data:text/html,<body style="margin:0"><a href="http://example.com"><span>click here</span></a></body>';
 }
 
 addEventListener('testready', runTest);

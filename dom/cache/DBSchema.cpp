@@ -983,14 +983,14 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
       nsAutoCString queryValue;
       queryHeaders->Get(header, queryValue, errorResult);
       if (errorResult.Failed()) {
-        errorResult.ClearMessage();
+        errorResult.SuppressException();
         MOZ_ASSERT(queryValue.IsEmpty());
       }
 
       nsAutoCString cachedValue;
       cachedHeaders->Get(header, cachedValue, errorResult);
       if (errorResult.Failed()) {
-        errorResult.ClearMessage();
+        errorResult.SuppressException();
         MOZ_ASSERT(cachedValue.IsEmpty());
       }
 

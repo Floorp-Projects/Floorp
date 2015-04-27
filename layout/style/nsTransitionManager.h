@@ -136,6 +136,18 @@ public:
                            nsStyleContext *aOldStyleContext,
                            nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
+  /**
+   * When we're resolving style for an element that previously didn't have
+   * style, we might have some old finished transitions for it, if,
+   * say, it was display:none for a while, but previously displayed.
+   *
+   * This method removes any finished transitions that don't match the
+   * new style.
+   */
+  void PruneCompletedTransitions(mozilla::dom::Element* aElement,
+                                 nsCSSPseudoElements::Type aPseudoType,
+                                 nsStyleContext* aNewStyleContext);
+
   void UpdateCascadeResultsWithTransitions(AnimationCollection* aTransitions);
   void UpdateCascadeResultsWithAnimations(AnimationCollection* aAnimations);
   void UpdateCascadeResultsWithAnimationsToBeDestroyed(

@@ -313,8 +313,7 @@ MediaDecoder::DecodedStreamData::DecodedStreamData(MediaDecoder* aDecoder,
     mHaveSentFinishVideo(false),
     mStream(aStream),
     mHaveBlockedForPlayState(false),
-    mHaveBlockedForStateMachineNotPlaying(false),
-    mEOSVideoCompensation(false)
+    mHaveBlockedForStateMachineNotPlaying(false)
 {
   mListener = new DecodedStreamGraphListener(mStream, this);
   mStream->AddListener(mListener);

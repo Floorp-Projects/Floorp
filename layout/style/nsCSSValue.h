@@ -137,9 +137,9 @@ public:
 
   nsRefPtrHashtable<nsPtrHashKey<nsISupports>, imgRequestProxy> mRequests; 
 
-  // Override AddRef and Release to not only log ourselves correctly, but
-  // also so that we delete correctly without a virtual destructor
-  NS_INLINE_DECL_REFCOUNTING(ImageValue)
+  // Override AddRef and Release to log ourselves correctly.
+  NS_METHOD_(MozExternalRefCountType) AddRef();
+  NS_METHOD_(MozExternalRefCountType) Release();
 };
 
 struct GridNamedArea {

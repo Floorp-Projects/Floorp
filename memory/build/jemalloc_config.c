@@ -10,7 +10,7 @@
 #include "mozilla/Types.h"
 
 /* Override some jemalloc defaults */
-#ifdef MOZ_B2G
+#ifdef MOZ_WIDGET_GONK
 /* we tolerate around 4MiB of dirty pages on most platforms, except for B2G,
  * where our limit is 1MiB
  */

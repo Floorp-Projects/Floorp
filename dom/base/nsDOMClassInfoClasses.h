@@ -9,7 +9,6 @@ DOMCI_CLASS(DOMConstructor)
 
 // CSS classes
 DOMCI_CLASS(CSSStyleRule)
-DOMCI_CLASS(CSSCharsetRule)
 DOMCI_CLASS(CSSImportRule)
 DOMCI_CLASS(CSSMediaRule)
 DOMCI_CLASS(CSSNameSpaceRule)

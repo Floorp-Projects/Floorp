@@ -1,6 +1,7 @@
 /* Tests for correct behaviour of getEffectiveHost on identity handler */
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
 
   ok(gIdentityHandler, "gIdentityHandler should exist");
 
