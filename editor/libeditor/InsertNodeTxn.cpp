@@ -60,7 +60,7 @@ InsertNodeTxn::DoTransaction()
 
   ErrorResult rv;
   mParent->InsertBefore(*mNode, ref, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   // Only set selection to insertion point if editor gives permission
   if (mEditor.GetShouldTxnSetSelection()) {
@@ -81,7 +81,7 @@ InsertNodeTxn::UndoTransaction()
 
   ErrorResult rv;
   mParent->RemoveChild(*mNode, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

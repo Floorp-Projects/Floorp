@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Tue Sep 23 08:31:06 2014 from UCD data files with version info:
+ * Created on Tue Apr  7 00:14:33 2015 from UCD data files with version info:
  *
 
 # Date: 2014-06-12, 20:18:00 GMT [KW]
@@ -46,7 +46,7 @@ Standard.
 
 # File: xidmodifications.txt
 # Version: 7.0.0
-# Generated: 2014-07-23, 12:42:33 GMT
+# Generated: 2014-09-09, 13:36:12 GMT
 
 #
 # Unihan_Variants.txt

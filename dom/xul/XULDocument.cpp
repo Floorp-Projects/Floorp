@@ -737,7 +737,7 @@ XULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     nsCOMPtr<Element> listener = do_QueryInterface(aListener);
     NS_ENSURE_ARG(broadcaster && listener);
     AddBroadcastListenerFor(*broadcaster, *listener, aAttr, rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
 }
 
 void
@@ -1220,7 +1220,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     ErrorResult rv;
     *aReturn = GetElementsByAttributeNS(aNamespaceURI, aAttribute,
                                         aValue, rv).take();
-    return rv.ErrorCode();
+    return rv.StealNSResult();
 }
 
 already_AddRefed<nsINodeList>
@@ -1526,7 +1526,7 @@ XULDocument::GetPopupRangeOffset(int32_t* aRangeOffset)
 {
     ErrorResult rv;
     *aRangeOffset = GetPopupRangeOffset(rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
 }
 
 int32_t
@@ -4306,7 +4306,7 @@ XULDocument::CheckBroadcasterHookup(Element* aElement,
     ErrorResult domRv;
     AddBroadcastListenerFor(*broadcaster, *listener, attribute, domRv);
     if (domRv.Failed()) {
-        return domRv.ErrorCode();
+        return domRv.StealNSResult();
     }
 
 #ifdef PR_LOGGING
@@ -4657,7 +4657,7 @@ XULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     ErrorResult rv;
     nsCOMPtr<Element> el = do_QueryInterface(aElement);
     *aResult = GetBoxObjectFor(el, rv).take();
-    return rv.ErrorCode();
+    return rv.StealNSResult();
 }
 
 JSObject*

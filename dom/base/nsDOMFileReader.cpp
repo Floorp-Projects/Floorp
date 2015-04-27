@@ -188,7 +188,7 @@ nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aFile, JSContext* aCx)
   ErrorResult rv;
   nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsArrayBuffer(aCx, *file, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -198,7 +198,7 @@ nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aFile)
   ErrorResult rv;
   nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsBinaryString(*file, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -209,7 +209,7 @@ nsDOMFileReader::ReadAsText(nsIDOMBlob* aFile,
   ErrorResult rv;
   nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsText(*file, aCharset, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -219,7 +219,7 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aFile)
   ErrorResult rv;
   nsRefPtr<File> file = static_cast<File*>(aFile);
   ReadAsDataURL(*file, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -227,7 +227,7 @@ nsDOMFileReader::Abort()
 {
   ErrorResult rv;
   FileIOObject::Abort(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* virtual */ void

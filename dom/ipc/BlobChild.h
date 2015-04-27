@@ -112,7 +112,7 @@ public:
   SetMysteryBlobInfo(const nsString& aName,
                      const nsString& aContentType,
                      uint64_t aLength,
-                     uint64_t aLastModifiedDate);
+                     int64_t aLastModifiedDate);
 
   // Use this for non-file blobs.
   bool

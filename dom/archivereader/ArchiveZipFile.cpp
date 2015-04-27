@@ -365,7 +365,7 @@ ArchiveZipFileImpl::GetInternalStream(nsIInputStream** aStream)
   ErrorResult rv;
   uint64_t size = mFileImpl->GetSize(rv);
   if (NS_WARN_IF(rv.Failed())) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   nsCOMPtr<nsIInputStream> inputStream;

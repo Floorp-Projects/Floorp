@@ -33,7 +33,7 @@ HTMLFrameSetElement::SetCols(const nsAString& aCols)
 {
   ErrorResult rv;
   SetCols(aCols, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -50,7 +50,7 @@ HTMLFrameSetElement::SetRows(const nsAString& aRows)
 {
   ErrorResult rv;
   SetRows(aRows, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

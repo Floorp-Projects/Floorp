@@ -229,7 +229,7 @@ PowerManagerService::NewWakeLock(const nsAString &aTopic,
   mozilla::ErrorResult rv;
   nsRefPtr<WakeLock> wakelock = NewWakeLock(aTopic, aWindow, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   nsCOMPtr<nsIDOMEventListener> eventListener = wakelock.get();

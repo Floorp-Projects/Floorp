@@ -63,15 +63,34 @@ template bool js::IsVectorObject<Int32x4>(HandleValue v);
 template bool js::IsVectorObject<Float32x4>(HandleValue v);
 template bool js::IsVectorObject<Float64x2>(HandleValue v);
 
+static inline bool
+ErrorBadArgs(JSContext* cx)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
+    return false;
+}
+
+static inline bool
+ErrorWrongTypeArg(JSContext* cx, size_t argIndex, Handle<TypeDescr*> typeDescr)
+{
+    MOZ_ASSERT(argIndex < 10);
+    char charArgIndex[2];
+    JS_snprintf(charArgIndex, sizeof charArgIndex, "%d", argIndex);
+
+    HeapSlot& typeNameSlot = typeDescr->getReservedSlotRef(JS_DESCR_SLOT_STRING_REPR);
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
+                         JS_EncodeString(cx, typeNameSlot.toString()), charArgIndex);
+    return false;
+}
+
 template<typename V>
 bool
 js::ToSimdConstant(JSContext* cx, HandleValue v, jit::SimdConstant* out)
 {
     typedef typename V::Elem Elem;
-    if (!IsVectorObject<V>(v)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR);
-        return false;
-    }
+    Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
+    if (!IsVectorObject<V>(v))
+        return ErrorWrongTypeArg(cx, 1, typeDescr);
 
     Elem* mem = reinterpret_cast<Elem*>(v.toObject().as<TypedObject>().typedMem());
     *out = jit::SimdConstant::CreateX4(mem);
@@ -620,13 +639,6 @@ struct ShiftRightLogical {
         return uint32_t(bits) >= 32 ? 0 : uint32_t(v) >> bits;
     }
 };
-}
-
-static inline bool
-ErrorBadArgs(JSContext* cx)
-{
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-    return false;
 }
 
 template<typename Out>
