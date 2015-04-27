@@ -6,28 +6,28 @@
 
 // Test several types of rule-view property edition
 
-add_task(function*() {
-  yield addTab("data:text/html;charset=utf-8,browser_ruleview_ui.js");
-  let {toolbox, inspector, view} = yield openRuleView();
+let TEST_URI = [
+  '<style type="text/css">',
+  '#testid {',
+  '  background-color: blue;',
+  '}',
+  '.testclass, .unmatched {',
+  '  background-color: green;',
+  '}',
+  '</style>',
+  '<div id="testid" class="testclass">Styled Node</div>',
+  '<div id="testid2">Styled Node</div>'
+].join("\n");
 
-  info("Creating the test document");
-  let style = "" +
-    "#testid {" +
-    "  background-color: blue;" +
-    "}" +
-    ".testclass, .unmatched {" +
-    "  background-color: green;" +
-    "}";
-  let styleNode = addStyle(content.document, style);
-  content.document.body.innerHTML = "<div id='testid' class='testclass'>Styled Node</div>" +
-                                    "<div id='testid2'>Styled Node</div>";
+add_task(function*() {
+  let tab = yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+
+  let {toolbox, inspector, view} = yield openRuleView();
 
   yield selectNode("#testid", inspector);
   yield testEditProperty(inspector, view);
   yield testDisableProperty(inspector, view);
   yield testPropertyStillMarkedDirty(inspector, view);
-
-  gBrowser.removeCurrentTab();
 });
 
 function* testEditProperty(inspector, ruleView) {
