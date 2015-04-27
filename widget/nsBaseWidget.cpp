@@ -295,7 +295,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     mBorderStyle = aInitData->mBorderStyle;
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
-    mRequireOffMainThreadCompositing = aInitData->mRequireOffMainThreadCompositing;
+    mMultiProcessWindow = aInitData->mMultiProcessWindow;
   }
 
   if (aParent) {
