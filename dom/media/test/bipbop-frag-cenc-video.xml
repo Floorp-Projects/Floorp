@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  This XML file describes the encryption applied to |bipbop-cenc*|. To
+  generate the bipbop-cenc1 files, run the following commands:
+
+  # Encrypt bipbop-no-edts.mp4 with the keys specified in this file,
+  # and output to |bipbop-cenc1-{video,audio}.mp4|
+  MP4Box -crypt bipbop-frag-cenc-video.xml -rem 2 -out bipbop-cenc1-video.mp4 bipbop-no-edts.mp4
+  MP4Box -crypt bipbop-frag-cenc-audio.xml -rem 1 -out bipbop-cenc1-audio.mp4 bipbop-no-edts.mp4
+
+  # Fragment |bipbop-cenc1-*.mp4| into 500ms segments:
+  MP4Box -dash 500 -rap -segment-name bipbop-cenc1-video -subsegs-per-sidx 5 bipbop-cenc1-video.mp4
+  MP4Box -dash 500 -rap -segment-name bipbop-cenc1-audio -subsegs-per-sidx 5 bipbop-cenc1-audio.mp4
+
+  # The above command will generate a set of fragments in |bipbop-cenc1-{video,audio}*.m4s
+  # and |bipbop-cenc1-{video,audio}init.mp4| containing just the init segment.
+
+  # To cut down the duration, we throw out all but the first 3 audio & 2 video segments:
+  rm bipbop-cenc1-audio{[^123],[123][^.]}.m4s
+  rm bipbop-cenc1-video{[^12],[12][^.]}.m4s
+
+  # MP4Box will also have generated some *.mpd files we don't need:
+  rm bipbop-cenc1-*.mpd
+
+  # Delete intermediate encrypted files:
+  rm bipbop-cenc1-{audio,video}.mp4
+-->
+
+<GPACDRM type="CENC AES-CTR">
+
+  <DRMInfo type="pssh" version="1">
+    <!--
+    SystemID specified in
+    https://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/cenc-format.html
+    -->
+    <BS ID128="1077efecc0b24d02ace33c1e52e2fb4b" />
+    <!-- Number of KeyIDs = 1 -->
+    <BS bits="32" value="1" />
+    <!-- KeyID -->
+    <BS ID128="0x7e571d037e571d037e571d037e571d03" />
+  </DRMInfo>
+
+  <CrypTrack trackID="1" isEncrypted="1" IV_size="16" saiSavedBox="senc"
+    first_IV="0x00000000000000000000000000000000">
+    <key KID="0x7e571d037e571d037e571d037e571d03"
+      value="0x7e5733337e5733337e5733337e573333" />
+  </CrypTrack>
+
+</GPACDRM>
