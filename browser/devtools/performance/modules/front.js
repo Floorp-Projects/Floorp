@@ -37,7 +37,8 @@ const DEFAULT_ALLOCATION_SITES_PULL_TIMEOUT = 200; // ms
 // Events to pipe from PerformanceActorsConnection to the PerformanceFront
 const CONNECTION_PIPE_EVENTS = [
   "console-profile-start", "console-profile-ending", "console-profile-end",
-  "timeline-data", "profiler-already-active", "profiler-activated"
+  "timeline-data", "profiler-already-active", "profiler-activated",
+  "recording-started", "recording-stopped"
 ];
 
 // Events to listen to from the profiler actor
@@ -413,6 +414,7 @@ PerformanceActorsConnection.prototype = {
     model.populate(data);
     this._recordings.push(model);
 
+    this.emit("recording-started", model);
     return model;
   }),
 
@@ -467,6 +469,7 @@ PerformanceActorsConnection.prototype = {
       memoryEndTime: memoryEndTime
     });
 
+    this.emit("recording-stopped", model);
     return model;
   }),
 
@@ -668,6 +671,15 @@ PerformanceFront.prototype = {
       memory: this._memorySupported,
       timeline: this._timelineSupported
     };
+  },
+
+  /**
+   * Returns a boolean indicating whether or not the current performance connection is recording.
+   *
+   * @return Boolean
+   */
+  isRecording: function () {
+    return this._connection.isRecording();
   }
 };
 
