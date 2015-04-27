@@ -634,7 +634,7 @@ public:
       NS_WARNING(nsPrintfCString("Fetch ignoring illegal header - '%s': '%s'",
                                  PromiseFlatCString(aHeader).get(),
                                  PromiseFlatCString(aValue).get()).get());
-      result.ClearMessage();
+      result.SuppressException();
     }
     return NS_OK;
   }
