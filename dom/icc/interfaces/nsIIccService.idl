@@ -6,11 +6,12 @@
 
 interface nsIIcc;
 interface nsIIccInfo;
+interface nsIStkProactiveCmd;
 
-[scriptable, uuid(7c0ada3d-d8d4-493e-9243-fa3df39855e4)]
+[scriptable, uuid(71b33012-eca2-11e4-a40d-9ff040a6fe2a)]
 interface nsIIccListener : nsISupports
 {
-  void notifyStkCommand(in DOMString aMessage);
+  void notifyStkCommand(in nsIStkProactiveCmd aStkProactiveCmd);
   void notifyStkSessionEnd();
   void notifyCardStateChanged();
   void notifyIccInfoChanged();

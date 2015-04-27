@@ -154,7 +154,7 @@ IccParent::RecvPIccRequestConstructor(PIccRequestParent* aActor,
 NS_IMPL_ISUPPORTS(IccParent, nsIIccListener)
 
 NS_IMETHODIMP
-IccParent::NotifyStkCommand(const nsAString & aMessage)
+IccParent::NotifyStkCommand(nsIStkProactiveCmd *aStkProactiveCmd)
 {
   // Bug 1114938 - [B2G][ICC] Refactor STK in MozIcc.webidl with IPDL.
   return NS_ERROR_NOT_IMPLEMENTED;
