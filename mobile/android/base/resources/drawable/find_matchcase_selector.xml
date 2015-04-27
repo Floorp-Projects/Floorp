@@ -6,7 +6,7 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_checked="true"
-          android:color="@color/find_matchcase_on"/>
+          android:color="@color/tabs_tray_icon_grey"/>
 
     <item android:state_checked="false"
           android:color="@color/find_matchcase_off"/>

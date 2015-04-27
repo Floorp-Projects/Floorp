@@ -9,6 +9,6 @@
                                   android:id="@+id/tabs_panel"
                                   android:layout_width="match_parent"
                                   android:layout_height="match_parent"
-                                  android:background="@color/background_tabs"
+                                  android:background="@color/text_and_tabs_tray_grey"
                                   android:orientation="vertical"
                                   android:visibility="invisible"/>

@@ -90,6 +90,14 @@ public class SiteIdentityPopup extends AnchoredPopup {
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
         mDivider = mIdentity.findViewById(R.id.divider_doorhanger);
+
+        final TextView siteSettingsLink = (TextView) mIdentity.findViewById(R.id.site_settings_link);
+        siteSettingsLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Permissions:Get", null));
+            }
+        });
     }
 
     private void updateIdentity(final SiteIdentity siteIdentity) {

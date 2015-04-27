@@ -5,7 +5,7 @@
 <resources>
 
     <style name="TextAppearance.EmptyView.Title" parent="@android:style/TextAppearance.Small">
-        <item name="android:textColor">#363B40</item>
+        <item name="android:textColor">@color/text_and_tabs_tray_grey</item>
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">sans-serif-light</item>
     </style>

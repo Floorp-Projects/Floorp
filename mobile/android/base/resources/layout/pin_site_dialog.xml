@@ -11,7 +11,7 @@
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="@dimen/browser_toolbar_height"
                   android:orientation="vertical"
-                  android:background="@color/background_normal"
+                  android:background="@color/toolbar_grey"
                   android:padding="4dip">
 
         <EditText android:id="@+id/search"

@@ -62,6 +62,20 @@ types.addDictType("AllocationsRecordingOptions", {
 let MemoryActor = protocol.ActorClass({
   typeName: "memory",
 
+  /**
+   * The set of unsolicited events the MemoryActor emits that will be sent over
+   * the RDP (by protocol.js).
+   */
+  events: {
+    // Same format as the data passed to the
+    // `Debugger.Memory.prototype.onGarbageCollection` hook. See
+    // `js/src/doc/Debugger/Debugger.Memory.md` for documentation.
+    "garbage-collection": {
+      type: "garbage-collection",
+      data: Arg(0, "json"),
+    },
+  },
+
   get dbg() {
     if (!this._dbg) {
       this._dbg = this.parent.makeDebugger();
@@ -77,6 +91,10 @@ let MemoryActor = protocol.ActorClass({
     this.state = "detached";
     this._dbg = null;
     this._frameCache = frameCache;
+
+    this._onGarbageCollection = data =>
+      events.emit(this, "garbage-collection", data);
+
     this._onWindowReady = this._onWindowReady.bind(this);
 
     events.on(this.parent, "window-ready", this._onWindowReady);
@@ -94,9 +112,14 @@ let MemoryActor = protocol.ActorClass({
 
   /**
    * Attach to this MemoryActor.
+   *
+   * This attaches the MemoryActor's Debugger instance so that you can start
+   * recording allocations or take a census of the heap. In addition, the
+   * MemoryActor will start emitting GC events.
    */
   attach: method(expectState("detached", function() {
     this.dbg.addDebuggees();
+    this.dbg.memory.onGarbageCollection = this._onGarbageCollection;
     this.state = "attached";
   },
   `attaching to the debugger`), {

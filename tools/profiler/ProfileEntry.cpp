@@ -393,18 +393,30 @@ void UniqueJITOptimizations::stream(JSStreamWriter& b, JSRuntime* rt)
   }
 }
 
-void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt,
+void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId,
+                                            float aSinceTime, JSRuntime* rt,
                                             UniqueJITOptimizations& aUniqueOpts)
 {
   bool sample = false;
   int readPos = mReadPos;
   int currentThreadID = -1;
+  float currentTime = 0;
+  bool hasCurrentTime = false;
   while (readPos != mWritePos) {
     ProfileEntry entry = mEntries[readPos];
     if (entry.mTagName == 'T') {
       currentThreadID = entry.mTagInt;
+      hasCurrentTime = false;
+      int readAheadPos = (readPos + 1) % mEntrySize;
+      if (readAheadPos != mWritePos) {
+        ProfileEntry readAheadEntry = mEntries[readAheadPos];
+        if (readAheadEntry.mTagName == 't') {
+          currentTime = readAheadEntry.mTagFloat;
+          hasCurrentTime = true;
+        }
+      }
     }
-    if (currentThreadID == aThreadId) {
+    if (currentThreadID == aThreadId && (!hasCurrentTime || currentTime >= aSinceTime)) {
       switch (entry.mTagName) {
         case 'r':
           {
@@ -443,7 +455,13 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
           break;
         case 't':
           {
-            if (sample) {
+            // FIXMEshu: this case is only needed because filtering by
+            // aSinceTime is broken if the unwinder thread is used, due to
+            // its placement of 't' tags.
+            //
+            // UnwinderTick is slated for removal in bug 1141712. Remove
+            // this case once it lands.
+            if (sample && (currentTime != entry.mTagFloat)) {
               b.NameValue("time", entry.mTagFloat);
             }
           }
@@ -458,6 +476,10 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
             b.BeginObject();
 
             sample = true;
+
+            if (hasCurrentTime) {
+              b.NameValue("time", currentTime);
+            }
 
             // Seek forward through the entire sample, looking for frames
             // this is an easier approach to reason about than adding more
@@ -535,7 +557,7 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
   }
 }
 
-void ProfileBuffer::StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId)
+void ProfileBuffer::StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId, float aSinceTime)
 {
   int readPos = mReadPos;
   int currentThreadID = -1;
@@ -544,7 +566,10 @@ void ProfileBuffer::StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId)
     if (entry.mTagName == 'T') {
       currentThreadID = entry.mTagInt;
     } else if (currentThreadID == aThreadId && entry.mTagName == 'm') {
-      entry.getMarker()->StreamJSObject(b);
+      const ProfilerMarker* marker = entry.getMarker();
+      if (marker->GetTime() >= aSinceTime) {
+        marker->StreamJSObject(b);
+      }
     }
     readPos = (readPos + 1) % mEntrySize;
   }
@@ -650,13 +675,13 @@ void ThreadProfile::IterateTags(IterateTagsCallback aCallback)
   mBuffer->IterateTagsForThread(aCallback, mThreadId);
 }
 
-void ThreadProfile::ToStreamAsJSON(std::ostream& stream)
+void ThreadProfile::ToStreamAsJSON(std::ostream& stream, float aSinceTime)
 {
   JSStreamWriter b(stream);
-  StreamJSObject(b);
+  StreamJSObject(b, aSinceTime);
 }
 
-void ThreadProfile::StreamJSObject(JSStreamWriter& b)
+void ThreadProfile::StreamJSObject(JSStreamWriter& b, float aSinceTime)
 {
   b.BeginObject();
     // Thread meta data
@@ -677,16 +702,22 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
     b.Name("samples");
     b.BeginArray();
       if (!mSavedStreamedSamples.empty()) {
+        // We would only have saved streamed samples during shutdown
+        // streaming, which cares about dumping the entire buffer, and thus
+        // should have passed in 0 for aSinceTime.
+        MOZ_ASSERT(aSinceTime == 0);
         b.SpliceArrayElements(mSavedStreamedSamples.c_str());
         mSavedStreamedSamples.clear();
       }
-      mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime, uniqueOpts);
+      mBuffer->StreamSamplesToJSObject(b, mThreadId, aSinceTime, mPseudoStack->mRuntime,
+                                       uniqueOpts);
     b.EndArray();
 
     // Having saved streamed optimizations implies the JS engine has
     // shutdown. If the JS engine is gone, we shouldn't have any new JS
     // samples, and thus no optimizations.
     if (!mSavedStreamedOptimizations.empty()) {
+      MOZ_ASSERT(aSinceTime == 0);
       MOZ_ASSERT(uniqueOpts.empty());
       b.Name("optimizations");
       b.BeginArray();
@@ -703,10 +734,11 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
     b.Name("markers");
     b.BeginArray();
       if (!mSavedStreamedMarkers.empty()) {
+        MOZ_ASSERT(aSinceTime == 0);
         b.SpliceArrayElements(mSavedStreamedMarkers.c_str());
         mSavedStreamedMarkers.clear();
       }
-      mBuffer->StreamMarkersToJSObject(b, mThreadId);
+      mBuffer->StreamMarkersToJSObject(b, mThreadId, aSinceTime);
     b.EndArray();
   b.EndObject();
 }
@@ -725,7 +757,7 @@ void ThreadProfile::FlushSamplesAndMarkers()
   JSStreamWriter b(ss);
   UniqueJITOptimizations uniqueOpts;
   b.BeginBareList();
-    mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime, uniqueOpts);
+  mBuffer->StreamSamplesToJSObject(b, mThreadId, 0, mPseudoStack->mRuntime, uniqueOpts);
   b.EndBareList();
   mSavedStreamedSamples = ss.str();
 
@@ -745,7 +777,7 @@ void ThreadProfile::FlushSamplesAndMarkers()
   ss.clear();
 
   b.BeginBareList();
-    mBuffer->StreamMarkersToJSObject(b, mThreadId);
+    mBuffer->StreamMarkersToJSObject(b, mThreadId, 0);
   b.EndBareList();
   mSavedStreamedMarkers = ss.str();
 
@@ -754,7 +786,7 @@ void ThreadProfile::FlushSamplesAndMarkers()
   mBuffer->reset();
 }
 
-JSObject* ThreadProfile::ToJSObject(JSContext *aCx)
+JSObject* ThreadProfile::ToJSObject(JSContext *aCx, float aSinceTime)
 {
   JS::RootedValue val(aCx);
   std::stringstream ss;
@@ -762,7 +794,7 @@ JSObject* ThreadProfile::ToJSObject(JSContext *aCx)
     // Define a scope to prevent a moving GC during ~JSStreamWriter from
     // trashing the return value.
     JSStreamWriter b(ss);
-    StreamJSObject(b);
+    StreamJSObject(b, aSinceTime);
     NS_ConvertUTF8toUTF16 js_string(nsDependentCString(ss.str().c_str()));
     JS_ParseJSON(aCx, static_cast<const char16_t*>(js_string.get()),
                  js_string.Length(), &val);
