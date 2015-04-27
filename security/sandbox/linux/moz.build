@@ -86,5 +86,8 @@ if CONFIG['OS_TARGET'] != 'Android':
 DIRS += [
     'common',
     'glue',
+]
+
+TEST_DIRS += [
     'gtest',
 ]

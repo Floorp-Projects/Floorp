@@ -456,9 +456,6 @@ public:
     // We also have an explicit blocker on the stream when
     // mDecoderStateMachine is non-null and MediaDecoderStateMachine is false.
     bool mHaveBlockedForStateMachineNotPlaying;
-    // True if we need to send a compensation video frame to ensure the
-    // StreamTime going forward.
-    bool mEOSVideoCompensation;
   };
 
   class DecodedStreamGraphListener : public MediaStreamListener {

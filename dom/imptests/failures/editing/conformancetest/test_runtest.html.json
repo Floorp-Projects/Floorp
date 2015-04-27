@@ -6419,6 +6419,7 @@
   "[[\"stylewithcss\",\"true\"],[\"inserttext\",\"a\"]] \"[foo<u>bar]</u>baz\" compare innerHTML":true,
   "[[\"stylewithcss\",\"false\"],[\"inserttext\",\"a\"]] \"[foo<u>bar]</u>baz\" compare innerHTML":true,
   "[[\"inserttext\",\"a\"]] \"[foo<a href=http://www.google.com>bar]</a>baz\" compare innerHTML":true,
+  "[[\"inserttext\",\"a\"]] \"foo<font color=brown><a href=http://www.google.com>[bar]</a></font>baz\" compare innerHTML":true,
   "[[\"stylewithcss\",\"true\"],[\"inserttext\",\"a\"]] \"[foo<font face=sans-serif>bar]</font>baz\" compare innerHTML":true,
   "[[\"stylewithcss\",\"false\"],[\"inserttext\",\"a\"]] \"[foo<font face=sans-serif>bar]</font>baz\" compare innerHTML":true,
   "[[\"stylewithcss\",\"true\"],[\"inserttext\",\"a\"]] \"[foo<font size=4>bar]</font>baz\" compare innerHTML":true,

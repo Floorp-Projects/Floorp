@@ -2591,12 +2591,6 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, bool aEntireDomain)
   if (!aHost.Equals(localFiles))
     CopyUTF8toUTF16(aHost, host16);
 
-  // nsISupports version of the host string for passing to observers
-  nsCOMPtr<nsISupportsString> hostSupports(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = hostSupports->SetData(host16);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // see BindQueryClauseParameters for how this host selection works
   nsAutoString revHostDot;
   GetReversedHostname(host16, revHostDot);

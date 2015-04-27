@@ -72,6 +72,33 @@ is(cs.textIndent, "0px", "value should now be 0px");
 utils.advanceTimeAndRefresh(10);
 is(endCount, 0, "should not have started transition when combined duration less than or equal to 0");
 utils.restoreNormalRefresh();
+p.style.textIndent = "";
+
+/** Test for bug 1144410 */
+utils.advanceTimeAndRefresh(0);
+p.style.transition = "opacity 200ms linear";
+p.style.opacity = "1";
+is(cs.opacity, "1", "bug 1144410 test - initial opacity");
+p.style.opacity = "0";
+is(cs.opacity, "1", "bug 1144410 test - opacity after starting transition");
+utils.advanceTimeAndRefresh(100);
+is(cs.opacity, "0.5", "bug 1144410 test - opacity during transition");
+utils.advanceTimeAndRefresh(200);
+is(cs.opacity, "0", "bug 1144410 test - opacity after transition");
+document.body.style.display = "none";
+is(cs.opacity, "0", "bug 1144410 test - opacity after display:none");
+p.style.opacity = "1";
+document.body.style.display = "";
+is(cs.opacity, "1", "bug 1144410 test - second transition, initial opacity");
+p.style.opacity = "0";
+is(cs.opacity, "1", "bug 1144410 test - opacity after starting second transition");
+utils.advanceTimeAndRefresh(100);
+is(cs.opacity, "0.5", "bug 1144410 test - opacity during second transition");
+utils.advanceTimeAndRefresh(200);
+is(cs.opacity, "0", "bug 1144410 test - opacity after second transition");
+utils.restoreNormalRefresh();
+p.style.opacity = "";
+p.style.transition = "";
 
 </script>
 </pre>

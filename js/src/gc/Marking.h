@@ -7,6 +7,8 @@
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
+#include "jsfriendapi.h"
+
 #include "gc/Barrier.h"
 
 namespace js {
@@ -90,12 +92,13 @@ MarkObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t nslot
 /*** Special Cases ***/
 
 /*
- * Trace through the shape and any shapes it contains to mark
- * non-shape children. This is exposed to the JS API as
- * JS_TraceShapeCycleCollectorChildren.
+ * Trace through a shape or group iteratively during cycle collection to avoid
+ * deep or infinite recursion.
  */
 void
 MarkCycleCollectorChildren(JSTracer* trc, Shape* shape);
+void
+MarkCycleCollectorChildren(JSTracer* trc, ObjectGroup* group);
 
 void
 PushArena(GCMarker* gcmarker, ArenaHeader* aheader);
@@ -163,6 +166,18 @@ class HashKeyRef : public BufferableRef
         map->rekeyIfMoved(prior, key);
     }
 };
+
+template <typename S, typename T>
+struct RewrapValueOrId {};
+#define DECLARE_REWRAP(S, T, method, prefix) \
+    template <> struct RewrapValueOrId<S, T> { \
+        static S wrap(T thing) { return method ( prefix thing ); } \
+    }
+DECLARE_REWRAP(JS::Value, JSObject*, JS::ObjectOrNullValue, );
+DECLARE_REWRAP(JS::Value, JSString*, JS::StringValue, );
+DECLARE_REWRAP(JS::Value, JS::Symbol*, JS::SymbolValue, );
+DECLARE_REWRAP(jsid, JSString*, NON_INTEGER_ATOM_TO_JSID, (JSAtom*));
+DECLARE_REWRAP(jsid, JS::Symbol*, SYMBOL_TO_JSID, );
 
 } /* namespace gc */
 

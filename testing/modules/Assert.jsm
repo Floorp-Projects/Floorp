@@ -392,3 +392,82 @@ proto.rejects = function(promise, expected, message) {
     ).then(null, reject);
   });
 };
+
+function compareNumbers(expression, lhs, rhs, message, operator) {
+  let lhsIsNumber = typeof lhs == "number";
+  let rhsIsNumber = typeof rhs == "number";
+
+  if (lhsIsNumber && rhsIsNumber) {
+    this.report(expression, lhs, rhs, message, operator);
+    return;
+  }
+
+  let errorMessage;
+  if (!lhsIsNumber && !rhsIsNumber) {
+    errorMessage = "Neither '" + lhs + "' nor '" + rhs + "' are numbers";
+  } else {
+    errorMessage = "'" + (lhsIsNumber ? rhs : lhs) + "' is not a number";
+  }
+  this.report(true, lhs, rhs, errorMessage);
+}
+
+/**
+ * The lhs must be greater than the rhs.
+ * assert.greater(lhs, rhs, message_opt);
+ *
+ * @param lhs
+ *        (number) The left-hand side value
+ * @param rhs
+ *        (number) The right-hand side value
+ * @param message (optional)
+ *        (string) Short explanation of the comparison result
+ */
+proto.greater = function greater(lhs, rhs, message) {
+  compareNumbers.call(this, lhs <= rhs, lhs, rhs, message, ">");
+};
+
+/**
+ * The lhs must be greater than or equal to the rhs.
+ * assert.greaterOrEqual(lhs, rhs, message_opt);
+ *
+ * @param lhs
+ *        (number) The left-hand side value
+ * @param rhs
+ *        (number) The right-hand side value
+ * @param message (optional)
+ *        (string) Short explanation of the comparison result
+ */
+proto.greaterOrEqual = function greaterOrEqual(lhs, rhs, message) {
+  compareNumbers.call(this, lhs < rhs, lhs, rhs, message, ">=");
+};
+
+/**
+ * The lhs must be less than the rhs.
+ * assert.less(lhs, rhs, message_opt);
+ *
+ * @param lhs
+ *        (number) The left-hand side value
+ * @param rhs
+ *        (number) The right-hand side value
+ * @param message (optional)
+ *        (string) Short explanation of the comparison result
+ */
+proto.less = function less(lhs, rhs, message) {
+  compareNumbers.call(this, lhs >= rhs, lhs, rhs, message, "<");
+};
+
+/**
+ * The lhs must be less than or equal to the rhs.
+ * assert.lessOrEqual(lhs, rhs, message_opt);
+ *
+ * @param lhs
+ *        (number) The left-hand side value
+ * @param rhs
+ *        (number) The right-hand side value
+ * @param message (optional)
+ *        (string) Short explanation of the comparison result
+ */
+proto.lessOrEqual = function lessOrEqual(lhs, rhs, message) {
+  compareNumbers.call(this, lhs > rhs, lhs, rhs, message, "<=");
+};
+

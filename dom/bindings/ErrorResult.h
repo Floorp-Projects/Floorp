@@ -77,10 +77,23 @@ public:
     AssignErrorCode(rv);
   }
 
+  // Use SuppressException when you want to suppress any exception that might be
+  // on the ErrorResult.  After this call, the ErrorResult will be back a "no
+  // exception thrown" state.
+  void SuppressException();
+
+  // Use StealNSResult() when you want to safely convert the ErrorResult to an
+  // nsresult that you will then return to a caller.  This will
+  // SuppressException(), since there will no longer be a way to report it.
+  nsresult StealNSResult() {
+    nsresult rv = ErrorCode();
+    SuppressException();
+    return rv;
+  }
+
   void ThrowTypeError(const dom::ErrNum errorNumber, ...);
   void ThrowRangeError(const dom::ErrNum errorNumber, ...);
   void ReportErrorWithMessage(JSContext* cx);
-  void ClearMessage();
   bool IsErrorWithMessage() const { return ErrorCode() == NS_ERROR_TYPE_ERR || ErrorCode() == NS_ERROR_RANGE_ERR; }
 
   // Facilities for throwing a preexisting JS exception value via this
@@ -169,6 +182,8 @@ private:
     MOZ_ASSERT(!IsNotEnoughArgsError(), "Don't overwrite not enough args error");
     mResult = aRv;
   }
+
+  void ClearMessage();
 
   nsresult mResult;
   struct Message;

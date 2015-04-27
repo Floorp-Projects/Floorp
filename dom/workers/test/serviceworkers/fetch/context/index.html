@@ -240,6 +240,8 @@
         if (e.data.data == "plugin") {
           is(e.data.context, "plugin", "Expected the plugin context on a request coming from a plugin");
           navigator.serviceWorker.removeEventListener("message", onMessage);
+          // Without this, the test leaks in e10s!
+          embed.parentNode.removeChild(embed);
           resolve();
         }
       }, false);
@@ -315,6 +317,8 @@
         if (e.data.data == "xslt") {
           is(e.data.context, "xslt", "Expected the xslt context on an XSLT stylesheet");
           navigator.serviceWorker.removeEventListener("message", onMessage);
+          // Without this, the test leaks in e10s!
+          iframe.parentNode.removeChild(iframe);
           resolve();
         }
       }, false);
