@@ -1502,11 +1502,8 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
         NS_ENSURE_SUCCESS(res, res);
       }
       if (IsTextNode(endNode) && IsEditable(endNode)) {
-        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(endNode);
-        int32_t endOffset;
-        range->GetEndOffset(&endOffset);
         res = RelativeFontChangeOnTextNode(aDir == FontSize::incr ? +1 : -1,
-            static_cast<nsIDOMCharacterData*>(startNode->AsDOMNode()),
+            static_cast<nsIDOMCharacterData*>(endNode->AsDOMNode()),
             0, range->EndOffset());
         NS_ENSURE_SUCCESS(res, res);
       }
