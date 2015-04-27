@@ -331,6 +331,10 @@ body {
   border: 0;
 }
 
+.button[hidden] {
+  display: none;
+}
+
 .dropdown {
   left: 0;
   text-align: center;
