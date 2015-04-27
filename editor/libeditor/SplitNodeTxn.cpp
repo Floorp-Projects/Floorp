@@ -88,7 +88,7 @@ SplitNodeTxn::RedoTransaction()
   // First, massage the existing node so it is in its post-split state
   if (mExistingRightNode->GetAsText()) {
     rv = mExistingRightNode->GetAsText()->DeleteData(0, mOffset);
-    NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+    NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
   } else {
     nsCOMPtr<nsIContent> child = mExistingRightNode->GetFirstChild();
     nsCOMPtr<nsIContent> nextSibling;
