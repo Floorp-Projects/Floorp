@@ -5,7 +5,7 @@
 
 
 Cu.import("resource:///modules/experiments/Experiments.jsm");
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
@@ -59,7 +59,7 @@ function initialiseTelemetry() {
     gDatareportingService.observe(null, "profile-after-change", null);
   }
 
-  return TelemetryPing.setup().then(TelemetrySession.setup);
+  return TelemetryController.setup().then(TelemetrySession.setup);
 }
 
 function run_test() {

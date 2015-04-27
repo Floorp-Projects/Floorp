@@ -23,7 +23,7 @@ Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
-const LOGGER_PREFIX = "TelemetryPing::";
+const LOGGER_PREFIX = "TelemetryController::";
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_BRANCH_LOG = PREF_BRANCH + "log.";
@@ -121,9 +121,9 @@ let Policy = {
   now: () => new Date(),
 }
 
-this.EXPORTED_SYMBOLS = ["TelemetryPing"];
+this.EXPORTED_SYMBOLS = ["TelemetryController"];
 
-this.TelemetryPing = Object.freeze({
+this.TelemetryController = Object.freeze({
   Constants: Object.freeze({
     PREF_ENABLED: PREF_ENABLED,
     PREF_LOG_LEVEL: PREF_LOG_LEVEL,
@@ -304,7 +304,7 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
-   * The AsyncShutdown.Barrier to synchronize with TelemetryPing shutdown.
+   * The AsyncShutdown.Barrier to synchronize with TelemetryController shutdown.
    */
   get shutdown() {
     return Impl._shutdownBarrier.client;
@@ -319,9 +319,9 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
-   * Allows waiting for TelemetryPings delayed initialization to complete.
-   * The returned promise is guaranteed to resolve before TelemetryPing is shutting down.
-   * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
+   * Allows waiting for TelemetryControllers delayed initialization to complete.
+   * The returned promise is guaranteed to resolve before TelemetryController is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   promiseInitialized: function() {
     return Impl.promiseInitialized();
@@ -330,7 +330,7 @@ this.TelemetryPing = Object.freeze({
 
 let Impl = {
   _initialized: false,
-  _initStarted: false, // Whether we started setting up TelemetryPing.
+  _initStarted: false, // Whether we started setting up TelemetryController.
   _log: null,
   _prevValues: {},
   // The previous build ID, if this is the first run with a new build.
@@ -344,11 +344,11 @@ let Impl = {
   // The session recorder, shared with FHR and the Data Reporting Service.
   _sessionRecorder: null,
   // This is a public barrier Telemetry clients can use to add blockers to the shutdown
-  // of TelemetryPing.
+  // of TelemetryController.
   // After this barrier, clients can not submit Telemetry pings anymore.
-  _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for clients."),
+  _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryController: Waiting for clients."),
   // This is a private barrier blocked by pending async ping activity (sending & saving).
-  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for pending ping activity"),
+  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryController: Waiting for pending ping activity"),
   // This is true when running in the test infrastructure.
   _testMode: false,
 
@@ -837,7 +837,7 @@ let Impl = {
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    *
-   * This delayed initialization means TelemetryPing init can be in the following states:
+   * This delayed initialization means TelemetryController init can be in the following states:
    * 1) setupTelemetry was never called
    * or it was called and
    *   2) _delayedInitTask was scheduled, but didn't run yet.
@@ -895,7 +895,7 @@ let Impl = {
         this._initialized = true;
 
         yield TelemetryStorage.loadSavedPings();
-        // If we have any TelemetryPings lying around, we'll be aggressive
+        // If we have any TelemetryControllers lying around, we'll be aggressive
         // and try to send them all off ASAP.
         if (TelemetryStorage.pingsOverdue > 0) {
           this._log.trace("setupChromeProcess - Sending " + TelemetryStorage.pingsOverdue +
@@ -919,7 +919,7 @@ let Impl = {
       }
     }.bind(this), this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
-    AsyncShutdown.sendTelemetry.addBlocker("TelemetryPing: shutting down",
+    AsyncShutdown.sendTelemetry.addBlocker("TelemetryController: shutting down",
                                            () => this.shutdown(),
                                            () => this._getState());
 
@@ -1042,9 +1042,9 @@ let Impl = {
   },
 
   /**
-   * Allows waiting for TelemetryPings delayed initialization to complete.
-   * This will complete before TelemetryPing is shutting down.
-   * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
+   * Allows waiting for TelemetryControllers delayed initialization to complete.
+   * This will complete before TelemetryController is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   promiseInitialized: function() {
     return this._delayedInitTaskDeferred.promise;
