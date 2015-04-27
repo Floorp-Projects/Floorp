@@ -7,25 +7,8 @@
 #ifndef MOZILLA_RESOURCEQUEUE_H_
 #define MOZILLA_RESOURCEQUEUE_H_
 
-#include <algorithm>
 #include "nsDeque.h"
 #include "MediaData.h"
-#include "prlog.h"
-
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* GetSourceBufferResourceLog();
-
-/* Polyfill __func__ on MSVC to pass to the log. */
-#ifdef _MSC_VER
-#define __func__ __FUNCTION__
-#endif
-
-#define SBR_DEBUG(arg, ...) PR_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#define SBR_DEBUGV(arg, ...) PR_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG+1, ("ResourceQueue(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#else
-#define SBR_DEBUG(...)
-#define SBR_DEBUGV(...)
-#endif
 
 namespace mozilla {
 
@@ -41,181 +24,52 @@ namespace mozilla {
 // timepoint.
 
 struct ResourceItem {
-  explicit ResourceItem(MediaLargeByteBuffer* aData)
-  : mData(aData)
-  {
-  }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-    // size including this
-    size_t size = aMallocSizeOf(this);
-
-    // size excluding this
-    size += mData->SizeOfExcludingThis(aMallocSizeOf);
-
-    return size;
-  }
-
+  explicit ResourceItem(MediaLargeByteBuffer* aData);
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
   nsRefPtr<MediaLargeByteBuffer> mData;
-};
-
-class ResourceQueueDeallocator : public nsDequeFunctor {
-  virtual void* operator() (void* aObject) {
-    delete static_cast<ResourceItem*>(aObject);
-    return nullptr;
-  }
 };
 
 class ResourceQueue : private nsDeque {
 public:
-  ResourceQueue()
-    : nsDeque(new ResourceQueueDeallocator())
-    , mLogicalLength(0)
-    , mOffset(0)
-  {
-  }
+  ResourceQueue();
 
   // Returns the logical byte offset of the start of the data.
-  uint64_t GetOffset() {
-    return mOffset;
-  }
+  uint64_t GetOffset();
 
   // Returns the length of all items in the queue plus the offset.
   // This is the logical length of the resource.
-  uint64_t GetLength() {
-    return mLogicalLength;
-  }
+  uint64_t GetLength();
 
   // Copies aCount bytes from aOffset in the queue into aDest.
-  void CopyData(uint64_t aOffset, uint32_t aCount, char* aDest) {
-    uint32_t offset = 0;
-    uint32_t start = GetAtOffset(aOffset, &offset);
-    uint32_t end = std::min(GetAtOffset(aOffset + aCount, nullptr) + 1, uint32_t(GetSize()));
-    for (uint32_t i = start; i < end; ++i) {
-      ResourceItem* item = ResourceAt(i);
-      uint32_t bytes = std::min(aCount, uint32_t(item->mData->Length() - offset));
-      if (bytes != 0) {
-        memcpy(aDest, &(*item->mData)[offset], bytes);
-        offset = 0;
-        aCount -= bytes;
-        aDest += bytes;
-      }
-    }
-  }
+  void CopyData(uint64_t aOffset, uint32_t aCount, char* aDest);
 
-  void AppendItem(MediaLargeByteBuffer* aData) {
-    mLogicalLength += aData->Length();
-    Push(new ResourceItem(aData));
-  }
+  void AppendItem(MediaLargeByteBuffer* aData);
 
   // Tries to evict at least aSizeToEvict from the queue up until
   // aOffset. Returns amount evicted.
-  uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict) {
-    SBR_DEBUG("Evict(aOffset=%llu, aSizeToEvict=%u)",
-              aOffset, aSizeToEvict);
-    return EvictBefore(std::min(aOffset, mOffset + (uint64_t)aSizeToEvict));
-  }
+  uint32_t Evict(uint64_t aOffset, uint32_t aSizeToEvict);
 
-  uint32_t EvictBefore(uint64_t aOffset) {
-    SBR_DEBUG("EvictBefore(%llu)", aOffset);
-    uint32_t evicted = 0;
-    while (ResourceItem* item = ResourceAt(0)) {
-      SBR_DEBUG("item=%p length=%d offset=%llu",
-                item, item->mData->Length(), mOffset);
-      if (item->mData->Length() + mOffset >= aOffset) {
-        if (aOffset <= mOffset) {
-          break;
-        }
-        uint32_t offset = aOffset - mOffset;
-        mOffset += offset;
-        evicted += offset;
-        nsRefPtr<MediaLargeByteBuffer> data = new MediaLargeByteBuffer;
-        data->AppendElements(item->mData->Elements() + offset,
-                             item->mData->Length() - offset);
-        item->mData = data;
-        break;
-      }
-      mOffset += item->mData->Length();
-      evicted += item->mData->Length();
-      delete PopFront();
-    }
-    return evicted;
-  }
+  uint32_t EvictBefore(uint64_t aOffset);
 
-  uint32_t EvictAll() {
-    SBR_DEBUG("EvictAll()");
-    uint32_t evicted = 0;
-    while (ResourceItem* item = ResourceAt(0)) {
-      SBR_DEBUG("item=%p length=%d offset=%llu",
-                item, item->mData->Length(), mOffset);
-      mOffset += item->mData->Length();
-      evicted += item->mData->Length();
-      delete PopFront();
-    }
-    return evicted;
-  }
+  uint32_t EvictAll();
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-    // Calculate the size of the internal deque.
-    size_t size = nsDeque::SizeOfExcludingThis(aMallocSizeOf);
-
-    // Sum the ResourceItems.
-    for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
-      const ResourceItem* item = ResourceAt(i);
-      size += item->SizeOfIncludingThis(aMallocSizeOf);
-    }
-
-    return size;
-  }
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
 #if defined(DEBUG)
-  void Dump(const char* aPath) {
-    for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
-      ResourceItem* item = ResourceAt(i);
-
-      char buf[255];
-      PR_snprintf(buf, sizeof(buf), "%s/%08u.bin", aPath, i);
-      FILE* fp = fopen(buf, "wb");
-      if (!fp) {
-        return;
-      }
-      fwrite(item->mData->Elements(), item->mData->Length(), 1, fp);
-      fclose(fp);
-    }
-  }
+  void Dump(const char* aPath);
 #endif
 
 private:
-  ResourceItem* ResourceAt(uint32_t aIndex) const {
-    return static_cast<ResourceItem*>(ObjectAt(aIndex));
-  }
+  ResourceItem* ResourceAt(uint32_t aIndex) const;
 
   // Returns the index of the resource that contains the given
   // logical offset. aResourceOffset will contain the offset into
   // the resource at the given index returned if it is not null.  If
   // no such resource exists, returns GetSize() and aOffset is
   // untouched.
-  uint32_t GetAtOffset(uint64_t aOffset, uint32_t *aResourceOffset) {
-    MOZ_RELEASE_ASSERT(aOffset >= mOffset);
-    uint64_t offset = mOffset;
-    for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
-      ResourceItem* item = ResourceAt(i);
-      // If the item contains the start of the offset we want to
-      // break out of the loop.
-      if (item->mData->Length() + offset > aOffset) {
-        if (aResourceOffset) {
-          *aResourceOffset = aOffset - offset;
-        }
-        return i;
-      }
-      offset += item->mData->Length();
-    }
-    return GetSize();
-  }
+  uint32_t GetAtOffset(uint64_t aOffset, uint32_t *aResourceOffset);
 
-  ResourceItem* PopFront() {
-    return static_cast<ResourceItem*>(nsDeque::PopFront());
-  }
+  ResourceItem* PopFront();
 
   // Logical length of the resource.
   uint64_t mLogicalLength;
@@ -223,9 +77,6 @@ private:
   // Logical offset into the resource of the first element in the queue.
   uint64_t mOffset;
 };
-
-#undef SBR_DEBUG
-#undef SBR_DEBUGV
 
 } // namespace mozilla
 #endif /* MOZILLA_RESOURCEQUEUE_H_ */
