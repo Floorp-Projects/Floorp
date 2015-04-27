@@ -150,7 +150,8 @@ XPathEvaluator::CreateExpression(const nsAString & aExpression,
     aRv = txExprParser::createExpr(PromiseFlatString(aExpression), aContext,
                                    getter_Transfers(expression));
     if (aRv.Failed()) {
-        if (aRv.ErrorCode() != NS_ERROR_DOM_NAMESPACE_ERR) {
+        if (!aRv.ErrorCodeIs(NS_ERROR_DOM_NAMESPACE_ERR)) {
+            aRv.SuppressException();
             aRv.Throw(NS_ERROR_DOM_INVALID_EXPRESSION_ERR);
         }
 

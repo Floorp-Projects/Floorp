@@ -129,7 +129,7 @@ public:
 
   // StealJSException steals the JS Exception from the object. This method must
   // be called only if IsJSException() returns true. This method also resets the
-  // ErrorCode() to NS_OK.
+  // error code to NS_OK.
   void StealJSException(JSContext* cx, JS::MutableHandle<JS::Value> value);
 
   void MOZ_ALWAYS_INLINE MightThrowJSException()
@@ -162,6 +162,10 @@ public:
 
   nsresult ErrorCode() const {
     return mResult;
+  }
+
+  bool ErrorCodeIs(nsresult rv) const {
+    return mResult == rv;
   }
 
 private:

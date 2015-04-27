@@ -1425,10 +1425,10 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   }
 
   aRv = httpChannel->GetResponseHeader(header, _retval);
-  if (aRv.ErrorCode() == NS_ERROR_NOT_AVAILABLE) {
+  if (aRv.ErrorCodeIs(NS_ERROR_NOT_AVAILABLE)) {
     // Means no header
     _retval.SetIsVoid(true);
-    aRv = NS_OK;
+    aRv.SuppressException();
   }
 }
 
