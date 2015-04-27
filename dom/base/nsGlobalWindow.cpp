@@ -1439,8 +1439,6 @@ nsGlobalWindow::CleanUp()
     return;
   mCleanedUp = true;
 
-  StartDying();
-
   mEventTargetObjects.EnumerateEntries(DisconnectEventTargetObjects, nullptr);
   mEventTargetObjects.Clear();
 

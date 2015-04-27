@@ -26,8 +26,8 @@ public:
 
   PromiseCallback();
 
-  virtual nsresult Call(JSContext* aCx,
-                        JS::Handle<JS::Value> aValue) = 0;
+  virtual void Call(JSContext* aCx,
+                    JS::Handle<JS::Value> aValue) = 0;
 
   // Return the Promise that this callback will end up resolving or
   // rejecting, if any.
@@ -54,8 +54,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WrapperPromiseCallback,
                                                          PromiseCallback)
 
-  nsresult Call(JSContext* aCx,
-                JS::Handle<JS::Value> aValue) override;
+  void Call(JSContext* aCx,
+            JS::Handle<JS::Value> aValue) override;
 
   Promise* GetDependentPromise() override
   {
@@ -82,8 +82,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ResolvePromiseCallback,
                                                          PromiseCallback)
 
-  nsresult Call(JSContext* aCx,
-                JS::Handle<JS::Value> aValue) override;
+  void Call(JSContext* aCx,
+            JS::Handle<JS::Value> aValue) override;
 
   Promise* GetDependentPromise() override
   {
@@ -108,8 +108,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(RejectPromiseCallback,
                                                          PromiseCallback)
 
-  nsresult Call(JSContext* aCx,
-                JS::Handle<JS::Value> aValue) override;
+  void Call(JSContext* aCx,
+            JS::Handle<JS::Value> aValue) override;
 
   Promise* GetDependentPromise() override
   {
@@ -133,8 +133,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(NativePromiseCallback,
                                            PromiseCallback)
 
-  nsresult Call(JSContext* aCx,
-                JS::Handle<JS::Value> aValue) override;
+  void Call(JSContext* aCx,
+            JS::Handle<JS::Value> aValue) override;
 
   Promise* GetDependentPromise() override
   {
