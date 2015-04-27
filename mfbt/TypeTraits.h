@@ -811,6 +811,17 @@ struct AddRvalueReference
   : detail::AddRvalueReferenceHelper<T>
 {};
 
+/* 20.2.4 Function template declval [declval] */
+
+/**
+ * DeclVal simplifies the definition of expressions which occur as unevaluated
+ * operands. It converts T to a reference type, making it possible to use in
+ * decltype expressions even if T does not have a default constructor, e.g.:
+ * decltype(DeclVal<TWithNoDefaultConstructor>().foo())
+ */
+template<typename T>
+typename AddRvalueReference<T>::Type DeclVal();
+
 /* 20.9.7.3 Sign modifications [meta.trans.sign] */
 
 template<bool B, typename T = void>
