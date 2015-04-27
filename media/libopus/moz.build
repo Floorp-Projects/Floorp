@@ -14,8 +14,6 @@ EXPORTS.opus += [
     'include/opus_types.h',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['OPUS_BUILD'] = True

@@ -17,8 +17,6 @@ SOURCES += [
     'transform_util.c',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'gkmedias'
 
 if CONFIG['GNU_CC']:
