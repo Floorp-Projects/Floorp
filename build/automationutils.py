@@ -401,6 +401,16 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
     else:
       log.info(message)
 
+  tsan = bool(mozinfo.info.get("tsan"))
+  if tsan and mozinfo.isLinux:
+    # Symbolizer support.
+    llvmsym = os.path.join(xrePath, "llvm-symbolizer")
+    if os.path.isfile(llvmsym):
+      env["TSAN_OPTIONS"] = "external_symbolizer_path=%s" % llvmsym
+      log.info("INFO | runtests.py | TSan using symbolizer at %s" % llvmsym)
+    else:
+      log.info("TEST-UNEXPECTED-FAIL | runtests.py | Failed to find TSan symbolizer at %s" % llvmsym)
+
   return env
 
 def dumpScreen(utilityPath):

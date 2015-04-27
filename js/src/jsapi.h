@@ -1448,9 +1448,13 @@ class JS_PUBLIC_API(JSAutoCompartment)
     JSContext* cx_;
     JSCompartment* oldCompartment_;
   public:
-    JSAutoCompartment(JSContext* cx, JSObject* target);
-    JSAutoCompartment(JSContext* cx, JSScript* target);
+    JSAutoCompartment(JSContext* cx, JSObject* target
+                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    JSAutoCompartment(JSContext* cx, JSScript* target
+                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~JSAutoCompartment();
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class JS_PUBLIC_API(JSAutoNullableCompartment)
@@ -1458,8 +1462,11 @@ class JS_PUBLIC_API(JSAutoNullableCompartment)
     JSContext* cx_;
     JSCompartment* oldCompartment_;
   public:
-    explicit JSAutoNullableCompartment(JSContext* cx, JSObject* targetOrNull);
+    explicit JSAutoNullableCompartment(JSContext* cx, JSObject* targetOrNull
+                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~JSAutoNullableCompartment();
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* NB: This API is infallible; a nullptr return value does not indicate error. */

@@ -7,4 +7,4 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_tabs"/>
+    android:background="@color/text_and_tabs_tray_grey"/>

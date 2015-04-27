@@ -63,6 +63,23 @@ nsScreenGtk :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth
   
 } // GetAvailRect
 
+gint
+nsScreenGtk :: GetGtkMonitorScaleFactor()
+{
+#if (MOZ_WIDGET_GTK >= 3)
+  // Since GDK 3.10
+  static auto sGdkScreenGetMonitorScaleFactorPtr = (gint (*)(GdkScreen*, gint))
+      dlsym(RTLD_DEFAULT, "gdk_screen_get_monitor_scale_factor");
+  if (sGdkScreenGetMonitorScaleFactorPtr) {
+      // FIXME: In the future, we'll want to fix this for GTK on Wayland which
+      // supports a variable scale factor per display.
+      GdkScreen *screen = gdk_screen_get_default();
+      return sGdkScreenGetMonitorScaleFactorPtr(screen, 0);
+  }
+#endif
+    return 1;
+}
+
 double
 nsScreenGtk :: GetDPIScale()
 {
@@ -127,20 +144,9 @@ nsScreenGtk :: GetColorDepth(int32_t *aColorDepth)
 void
 nsScreenGtk :: Init (GdkWindow *aRootWindow)
 {
-  gint width = gdk_screen_width();
-  gint height = gdk_screen_height();
-
-  // Since GDK 3.10
-  static auto sGdkScreenGetMonitorScaleFactorPtr = (gint (*)(GdkScreen*, gint))
-      dlsym(RTLD_DEFAULT, "gdk_screen_get_monitor_scale_factor");
-  if (sGdkScreenGetMonitorScaleFactorPtr) {
-      // FIXME: In the future, we'll want to fix this for GTK on Wayland which
-      // supports a variable scale factor per display.
-      GdkScreen *screen = gdk_window_get_screen(aRootWindow);
-      gint scale = sGdkScreenGetMonitorScaleFactorPtr(screen, 0);
-      width *= scale;
-      height *= scale;
-  }
+  gint scale = nsScreenGtk::GetGtkMonitorScaleFactor();
+  gint width = gdk_screen_width()*scale;
+  gint height = gdk_screen_height()*scale;
 
   // We listen for configure events on the root window to pick up
   // changes to this rect.  We could listen for "size_changed" signals

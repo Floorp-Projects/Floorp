@@ -197,35 +197,11 @@ function run_test() {
     do_check_false(isExtensionInAddonsList(profileDir, a5.id));
     do_check_false(a5.hasBinaryComponents);
 
-    // addon6 should be installed and compatible and packed unless unpacking is
-    // forced
-    do_check_neq(a6, null);
-    do_check_false(a6.userDisabled);
-    do_check_false(a6.appDisabled);
-    do_check_true(a6.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a6.id));
-    if (Services.prefs.getBoolPref("extensions.alwaysUnpack"))
-      do_check_eq(a6.getResourceURI("install.rdf").scheme, "file");
-    else
-      do_check_eq(a6.getResourceURI("install.rdf").scheme, "jar");
-    do_check_false(a6.hasBinaryComponents);
-
-    // addon7 should be installed and compatible and unpacked
-    do_check_neq(a7, null);
-    do_check_false(a7.userDisabled);
-    do_check_false(a7.appDisabled);
-    do_check_true(a7.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a7.id));
-    do_check_eq(a7.getResourceURI("install.rdf").scheme, "file");
-    do_check_false(a7.hasBinaryComponents);
-
-    // addon8 should be installed and compatible and have binary components
-    do_check_neq(a8, null);
-    do_check_false(a8.userDisabled);
-    do_check_false(a8.appDisabled);
-    do_check_true(a8.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a8.id));
-    do_check_true(a8.hasBinaryComponents);
+    // addon6, addon7 and addon8 will have been lost as they were staged in the
+    // pre-Firefox 4.0 directory
+    do_check_eq(a6, null);
+    do_check_eq(a7, null);
+    do_check_eq(a8, null);
 
     // Theme 1 was previously enabled
     do_check_neq(t1, null);
@@ -242,8 +218,6 @@ function run_test() {
     do_check_false(t2.isActive);
     do_check_false(isThemeInAddonsList(profileDir, t2.id));
     do_check_true(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
-
-    do_check_false(stagedXPIs.exists());
 
     do_execute_soon(do_test_finished);
   });

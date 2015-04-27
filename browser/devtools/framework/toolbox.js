@@ -21,6 +21,7 @@ let Telemetry = require("devtools/shared/telemetry");
 let {getHighlighterUtils} = require("devtools/framework/toolbox-highlighter-utils");
 let HUDService = require("devtools/webconsole/hudservice");
 let {showDoorhanger} = require("devtools/shared/doorhanger");
+let sourceUtils = require("devtools/shared/source-utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -380,11 +381,14 @@ Toolbox.prototype = {
         framesPromise
       ]);
 
+      // Lazily connect to the profiler here and don't wait for it to complete,
+      // used to intercept console.profile calls before the performance tools are open.
       let profilerReady = this._connectProfiler();
 
-      // Only wait for the profiler initialization during tests. Otherwise,
-      // lazily load this. This is to intercept console.profile calls; the performance
-      // tools will explicitly wait for the connection opening when opened.
+      // However, while testing, we must wait for the performance connection to finish,
+      // as most tests shut down without waiting for a toolbox destruction event,
+      // resulting in the shared profiler connection being opened and closed
+      // outside of the test that originally opened the toolbox.
       if (gDevTools.testing) {
         yield profilerReady;
       }
@@ -1708,6 +1712,7 @@ Toolbox.prototype = {
     gDevTools.off("pref-changed", this._prefChanged);
 
     this._lastFocusedElement = null;
+
     if (this.webconsolePanel) {
       this._saveSplitConsoleHeight();
       this.webconsolePanel.removeEventListener("resize",
@@ -1866,7 +1871,9 @@ Toolbox.prototype = {
   }),
 
   /**
-   * Disconnects the underlying Performance Actor Connection.
+   * Disconnects the underlying Performance Actor Connection. If the connection
+   * has not finished initializing, as opening a toolbox does not wait,
+   * the performance connection destroy method will wait for it on its own.
    */
   _disconnectProfiler: Task.async(function*() {
     if (!this._performanceConnection) {
@@ -1875,4 +1882,48 @@ Toolbox.prototype = {
     yield this._performanceConnection.destroy();
     this._performanceConnection = null;
   }),
+
+  /**
+   * Returns gViewSourceUtils for viewing source.
+   */
+  get gViewSourceUtils() {
+    return this.frame.contentWindow.gViewSourceUtils;
+  },
+
+  /**
+   * Opens source in style editor. Falls back to plain "view-source:".
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSourceInStyleEditor: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSourceInStyleEditor(this, sourceURL, sourceLine);
+  },
+
+  /**
+   * Opens source in debugger. Falls back to plain "view-source:".
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSourceInDebugger: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSourceInDebugger(this, sourceURL, sourceLine);
+  },
+
+  /**
+   * Opens source in scratchpad. Falls back to plain "view-source:".
+   * TODO The `sourceURL` for scratchpad instances are like `Scratchpad/1`.
+   * If instances are scoped one-per-browser-window, then we should be able
+   * to infer the URL from this toolbox, or use the built in scratchpad IN
+   * the toolbox.
+   *
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSourceInScratchpad: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSourceInScratchpad(sourceURL, sourceLine);
+  },
+
+  /**
+   * Opens source in plain "view-source:".
+   * @see browser/devtools/shared/source-utils.js
+   */
+  viewSource: function (sourceURL, sourceLine) {
+    return sourceUtils.viewSource(this, sourceURL, sourceLine);
+  },
 };

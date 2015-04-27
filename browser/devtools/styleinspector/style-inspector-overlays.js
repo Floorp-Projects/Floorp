@@ -17,6 +17,7 @@ const {
   Tooltip,
   SwatchColorPickerTooltip,
   SwatchCubicBezierTooltip,
+  CssDocsTooltip,
   SwatchFilterTooltip
 } = require("devtools/shared/widgets/Tooltip");
 const {CssLogic} = require("devtools/styleinspector/css-logic");
@@ -263,6 +264,8 @@ TooltipsOverlay.prototype = {
       this.colorPicker = new SwatchColorPickerTooltip(this.view.inspector.panelDoc);
       // Cubic bezier tooltip
       this.cubicBezier = new SwatchCubicBezierTooltip(this.view.inspector.panelDoc);
+      // MDN CSS help tooltip
+      this.cssDocs = new CssDocsTooltip(this.view.inspector.panelDoc);
       // Filter editor tooltip
       this.filterEditor = new SwatchFilterTooltip(this.view.inspector.panelDoc);
     }
@@ -288,6 +291,10 @@ TooltipsOverlay.prototype = {
 
     if (this.cubicBezier) {
       this.cubicBezier.destroy();
+    }
+
+    if (this.cssDocs) {
+      this.cssDocs.destroy();
     }
 
     if (this.filterEditor) {
@@ -334,13 +341,13 @@ TooltipsOverlay.prototype = {
     let nodeInfo = this.view.getNodeInfo(target);
     if (!nodeInfo) {
       // The hovered node isn't something we care about
-      return promise.reject();
+      return promise.reject(false);
     }
 
     let type = this._getTooltipType(nodeInfo);
     if (!type) {
       // There is no tooltip type defined for the hovered node
-      return promise.reject();
+      return promise.reject(false);
     }
 
     if (this.isRuleView && this.colorPicker.tooltip.isShown()) {
@@ -351,6 +358,10 @@ TooltipsOverlay.prototype = {
     if (this.isRuleView && this.cubicBezier.tooltip.isShown()) {
       this.cubicBezier.revert();
       this.cubicBezier.hide();
+    }
+
+    if (this.isRuleView && this.cssDocs.tooltip.isShown()) {
+      this.cssDocs.hide();
     }
 
     if (this.isRuleView && this.filterEditor.tooltip.isShown()) {
@@ -385,6 +396,10 @@ TooltipsOverlay.prototype = {
 
     if (this.cubicBezier) {
       this.cubicBezier.hide();
+    }
+
+    if (this.cssDocs) {
+      this.cssDocs.hide();
     }
 
     if (this.filterEditor) {

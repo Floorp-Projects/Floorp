@@ -391,7 +391,7 @@ Your actor has great news!
 
 Actors are subclasses of jetpack `EventTarget`, so you can just emit:
 
-    let event = require("sdk/core/event");
+    let event = require("sdk/event/core");
 
     giveGoodNews: method(function(news) {
         event.emit(this, "good-news", news);

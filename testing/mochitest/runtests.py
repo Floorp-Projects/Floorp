@@ -367,6 +367,11 @@ class MochitestServer(object):
         # features.
         env["ASAN_OPTIONS"] = "quarantine_size=1:redzone=32:malloc_context_size=5"
 
+        # Likewise, when running with a TSan build, our xpcshell server will
+        # also be TSan-enabled. Except that in this case, we don't really
+        # care about races in xpcshell. So disable TSan for the server.
+        env["TSAN_OPTIONS"] = "report_bugs=0"
+
         if mozinfo.isWin:
             env["PATH"] = env["PATH"] + ";" + str(self._xrePath)
 
@@ -1281,6 +1286,9 @@ class Mochitest(MochitestUtilsMixin):
         if mozinfo.info["asan"]:
             # Disable leak checking when running these tools
             toolsEnv["ASAN_OPTIONS"] = "detect_leaks=0"
+        if mozinfo.info["tsan"]:
+            # Disable race checking when running these tools
+            toolsEnv["TSAN_OPTIONS"] = "report_bugs=0"
 
         if self.certdbNew:
             # android and b2g use the new DB formats exclusively

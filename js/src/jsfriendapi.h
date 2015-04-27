@@ -92,12 +92,13 @@ extern JS_FRIEND_API(bool)
 JS_IsDeadWrapper(JSObject* obj);
 
 /*
- * Used by the cycle collector to trace through the shape and all
- * shapes it reaches, marking all non-shape children found in the
- * process. Uses bounded stack space.
+ * Used by the cycle collector to trace through a shape or object group and
+ * all cycle-participating data it reaches, using bounded stack space.
  */
 extern JS_FRIEND_API(void)
 JS_TraceShapeCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr shape);
+extern JS_FRIEND_API(void)
+JS_TraceObjectGroupCycleCollectorChildren(JSTracer* trc, JS::GCCellPtr group);
 
 enum {
     JS_TELEMETRY_GC_REASON,
