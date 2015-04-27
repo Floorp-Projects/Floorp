@@ -12,7 +12,10 @@ Cu.import("resource://gre/modules/ReaderMode.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
+const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+if (gIsFirefoxDesktop) {
+  XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
+}
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
@@ -80,9 +83,13 @@ let AboutReader = function(mm, win, articlePromise) {
     // Pref doesn't exist.
   }
 
-  let pocketPlacement = CustomizableUI.getPlacementOfWidget("pocket-button");
-  if (pocketPlacement && pocketPlacement.area) {
-    this._setupButton("pocket-button", this._onPocketToggle.bind(this, "button"));
+  if (gIsFirefoxDesktop) {
+    let pocketPlacement = CustomizableUI.getPlacementOfWidget("pocket-button");
+    if (pocketPlacement && pocketPlacement.area) {
+      this._setupButton("pocket-button", this._onPocketToggle.bind(this, "button"));
+    } else {
+      this._doc.getElementById("pocket-button").hidden = true;
+    }
   } else {
     this._doc.getElementById("pocket-button").hidden = true;
   }
