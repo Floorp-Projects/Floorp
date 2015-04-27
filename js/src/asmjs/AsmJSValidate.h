@@ -67,12 +67,12 @@ static_assert(jit::AsmJSCheckedImmediateRange <= jit::AsmJSImmediateRange,
 // the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-// Then, an additional extent is added to permit folding of small immediate
+// Then, an additional extent is added to permit folding of immediate
 // values into addresses. And finally, unaligned accesses and mask optimizations
 // might also try to access a few bytes after this limit, so just inflate it by
 // AsmJSPageSize.
 static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL +
-                                      jit::AsmJSCheckedImmediateRange +
+                                      jit::AsmJSImmediateRange +
                                       AsmJSPageSize;
 
 #endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)

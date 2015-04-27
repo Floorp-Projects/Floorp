@@ -234,17 +234,8 @@ class MIRGenerator
     Label* outOfBoundsLabel() const {
         return outOfBoundsLabel_;
     }
-    bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const {
-        // A heap access needs a bounds-check branch if we're not relying on signal
-        // handlers to catch errors, and if it's not proven to be within bounds.
-        // We use signal-handlers on x64, but on x86 there isn't enough address
-        // space for a guard region.
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-        if (usesSignalHandlersForAsmJSOOB_)
-            return false;
-#endif
-        return access->needsBoundsCheck();
-    }
+    bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const;
+    size_t foldableOffsetRange(const MAsmJSHeapAccess* access) const;
 };
 
 } // namespace jit
