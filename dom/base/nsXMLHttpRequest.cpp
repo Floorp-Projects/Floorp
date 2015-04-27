@@ -598,7 +598,7 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
   ErrorResult rv;
   nsIDocument* responseXML = GetResponseXML(rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   if (!responseXML) {
@@ -706,7 +706,7 @@ nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
   nsString responseText;
   GetResponseText(responseText, rv);
   aResponseText = responseText;
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -905,7 +905,7 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
 
   ErrorResult rv;
   SetResponseType(responseType, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -952,7 +952,7 @@ nsXMLHttpRequest::GetResponse(JSContext *aCx, JS::MutableHandle<JS::Value> aResu
 {
   ErrorResult rv;
   GetResponse(aCx, aResult, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1363,7 +1363,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& aHeader,
 {
   ErrorResult rv;
   GetResponseHeader(aHeader, aResult, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -1425,10 +1425,10 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   }
 
   aRv = httpChannel->GetResponseHeader(header, _retval);
-  if (aRv.ErrorCode() == NS_ERROR_NOT_AVAILABLE) {
+  if (aRv.ErrorCodeIs(NS_ERROR_NOT_AVAILABLE)) {
     // Means no header
     _retval.SetIsVoid(true);
-    aRv = NS_OK;
+    aRv.SuppressException();
   }
 }
 
@@ -3184,7 +3184,7 @@ nsXMLHttpRequest::SetTimeout(uint32_t aTimeout)
 {
   ErrorResult rv;
   SetTimeout(aTimeout, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -3333,7 +3333,7 @@ nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials)
 {
   ErrorResult rv;
   SetWithCredentials(aWithCredentials, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void

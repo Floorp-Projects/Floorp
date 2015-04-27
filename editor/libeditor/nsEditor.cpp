@@ -1424,7 +1424,7 @@ nsEditor::SplitNode(nsIDOMNode* aNode,
   ErrorResult rv;
   nsCOMPtr<nsIContent> newNode = SplitNode(*node, aOffset, rv);
   *aNewLeftNode = GetAsDOMNode(newNode.forget().take());
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 nsIContent*
@@ -1445,10 +1445,14 @@ nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
 
   mRangeUpdater.SelAdjSplitNode(aNode, aOffset, newNode);
 
+  nsresult result = aResult.StealNSResult();
   for (auto& listener : mActionListeners) {
     listener->DidSplitNode(aNode.AsDOMNode(), aOffset, GetAsDOMNode(newNode),
-                           aResult.ErrorCode());
+                           result);
   }
+  // Note: result might be a success code, so we can't use Throw() to
+  // set it on aResult.
+  aResult = result;
 
   return newNode;
 }
@@ -2624,7 +2628,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
 
   ErrorResult rv;
   parent->InsertBefore(aNewLeftNode, &aExistingRightNode, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  NS_ENSURE_TRUE(!rv.Failed(), rv.StealNSResult());
 
   // Split the children between the two nodes.  At this point,
   // aExistingRightNode has all the children.  Move all the children whose
@@ -2811,7 +2815,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
         // prepend children of aNodeToJoin
         ErrorResult err;
         aNodeToKeep->InsertBefore(*childNode, firstNode, err);
-        NS_ENSURE_SUCCESS(err.ErrorCode(), err.ErrorCode());
+        NS_ENSURE_TRUE(!err.Failed(), err.StealNSResult());
         firstNode = childNode.forget();
       }
     }
@@ -2873,7 +2877,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     selection->Collapse(aNodeToKeep, AssertedCast<int32_t>(firstNodeLength));
   }
 
-  return err.ErrorCode();
+  return err.StealNSResult();
 }
 
 

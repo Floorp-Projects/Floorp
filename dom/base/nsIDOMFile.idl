@@ -54,7 +54,7 @@ interface nsIDOMBlob : nsISupports
   [notxpcom] bool isMemoryFile();
 };
 
-[scriptable, builtinclass, uuid(4e7d1a8b-e2d5-4304-a753-4affb731660c)]
+[scriptable, builtinclass, uuid(74657f92-aa61-492b-8649-fd1cca62e255)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
@@ -69,5 +69,5 @@ interface nsIDOMFile : nsIDOMBlob
   // This performs no security checks!
   [noscript] readonly attribute DOMString mozFullPathInternal;
 
-  [noscript] readonly attribute uint64_t mozLastModifiedDate;
+  [noscript] readonly attribute int64_t mozLastModifiedDate;
 };

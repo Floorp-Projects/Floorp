@@ -295,7 +295,7 @@ inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
   ErrorResult rv;
   nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   uint32_t count = 0;
@@ -334,7 +334,7 @@ inDOMUtils::GetSelectorText(nsIDOMCSSStyleRule* aRule,
   ErrorResult rv;
   nsCSSSelectorList* sel = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
@@ -352,7 +352,7 @@ inDOMUtils::GetSpecificity(nsIDOMCSSStyleRule* aRule,
   ErrorResult rv;
   nsCSSSelectorList* sel = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   *aSpecificity = sel->mWeight;
@@ -372,7 +372,7 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
   ErrorResult rv;
   nsCSSSelectorList* tail = GetSelectorAtIndex(aRule, aSelectorIndex, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
 
   // We want just the one list item, not the whole list tail
