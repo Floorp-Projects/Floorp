@@ -32,6 +32,25 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return dom::AnimationBinding::Wrap(aCx, this, aGivenProto);
 }
 
+// ---------------------------------------------------------------------------
+//
+// Animation interface:
+//
+// ---------------------------------------------------------------------------
+
+void
+Animation::SetEffect(KeyframeEffectReadonly* aEffect)
+{
+  if (mEffect) {
+    mEffect->SetParentTime(Nullable<TimeDuration>());
+  }
+  mEffect = aEffect;
+  if (mEffect) {
+    mEffect->SetParentTime(GetCurrentTime());
+  }
+  UpdateRelevance();
+}
+
 void
 Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 {
@@ -73,6 +92,7 @@ Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
   PostUpdate();
 }
 
+// http://w3c.github.io/web-animations/#current-time
 Nullable<TimeDuration>
 Animation::GetCurrentTime() const
 {
@@ -224,11 +244,10 @@ Animation::Cancel()
   PostUpdate();
 }
 
+// https://w3c.github.io/web-animations/#finish-an-animation
 void
 Animation::Finish(ErrorResult& aRv)
 {
-  // https://w3c.github.io/web-animations/#finish-an-animation
-
   if (mPlaybackRate == 0 ||
       (mPlaybackRate > 0 && EffectEnd() == TimeDuration::Forever())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -260,11 +279,15 @@ Animation::Play(LimitBehavior aLimitBehavior)
 void
 Animation::Pause()
 {
-  // TODO: The DoPause() call should not be synchronous (bug 1109390). See
-  // http://w3c.github.io/web-animations/#pausing-an-animation-section
   DoPause();
   PostUpdate();
 }
+
+// ---------------------------------------------------------------------------
+//
+// JS wrappers for Animation interface:
+//
+// ---------------------------------------------------------------------------
 
 Nullable<double>
 Animation::GetStartTimeAsDouble() const
@@ -298,18 +321,7 @@ Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
   return SetCurrentTime(TimeDuration::FromMilliseconds(aCurrentTime.Value()));
 }
 
-void
-Animation::SetEffect(KeyframeEffectReadonly* aEffect)
-{
-  if (mEffect) {
-    mEffect->SetParentTime(Nullable<TimeDuration>());
-  }
-  mEffect = aEffect;
-  if (mEffect) {
-    mEffect->SetParentTime(GetCurrentTime());
-  }
-  UpdateRelevance();
-}
+// ---------------------------------------------------------------------------
 
 void
 Animation::Tick()
@@ -526,6 +538,7 @@ Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
   }
 }
 
+// http://w3c.github.io/web-animations/#play-an-animation
 void
 Animation::DoPlay(LimitBehavior aLimitBehavior)
 {
@@ -589,6 +602,7 @@ Animation::DoPlay(LimitBehavior aLimitBehavior)
   UpdateTiming();
 }
 
+// http://w3c.github.io/web-animations/#pause-an-animation
 void
 Animation::DoPause()
 {
