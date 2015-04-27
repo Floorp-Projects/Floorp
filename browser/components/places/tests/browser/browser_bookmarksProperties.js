@@ -250,7 +250,6 @@ gTests.push({
 
 //------------------------------------------------------------------------------
 // Bug 475529 -  Add button in new folder dialog not default anymore
-/*
 gTests.push({
   desc: "Bug 475529 - Add button in new folder dialog not default anymore",
   sidebar: SIDEBAR_BOOKMARKS_ID,
@@ -286,6 +285,7 @@ gTests.push({
 
     info("About to focus the namePicker field");
     namePicker.focus();
+    namePicker.select();
     EventUtils.synthesizeKey("n", {}, this.window);
     EventUtils.synthesizeKey("VK_RETURN", {}, this.window);
   },
@@ -305,7 +305,6 @@ gTests.push({
     PlacesUtils.bookmarks.removeItem(this._itemId);
   }
 });
-*/
 
 //------------------------------------------------------------------------------
 // Bug 476020 - Pressing Esc while having the tag autocomplete open closes the bookmarks panel
