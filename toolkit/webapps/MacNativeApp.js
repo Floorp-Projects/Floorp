@@ -294,7 +294,8 @@ NativeApp.prototype = {
   _processIcon: function(aMimeType, aIcon, aDir) {
     let deferred = Promise.defer();
 
-    let tmpIconPath = OS.Path.join(aDir, this.iconFile);
+    let finalIconPath = OS.Path.join(aDir, this.iconFile);
+    let tmpIconPath = OS.Path.join(OS.Constants.Path.tmpDir, "appicon.icns");
 
     function conversionDone(aSubject, aTopic) {
       if (aTopic != "process-finished") {
@@ -306,7 +307,8 @@ NativeApp.prototype = {
       // icon was successfully converted.
       OS.File.exists(tmpIconPath).then((aExists) => {
         if (aExists) {
-          deferred.resolve();
+          OS.File.move(tmpIconPath, finalIconPath).then(
+            deferred.resolve, err => deferred.reject(err));
         } else {
           deferred.reject("Failure converting icon, unrecognized image format");
         }
