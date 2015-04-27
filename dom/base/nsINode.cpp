@@ -551,7 +551,7 @@ nsINode::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   if (!rv.Failed()) {
     NS_ADDREF(*aReturn = aOldChild);
   }
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -2225,7 +2225,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsIDOMNode *aNewChild,
   if (result) {
     NS_ADDREF(*aReturn = result->AsDOMNode());
   }
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 nsresult
@@ -2412,7 +2412,7 @@ nsINode::ParseSelectorList(const nsAString& aSelectorString,
     // We hit this for syntax errors, which are quite common, so don't
     // use NS_ENSURE_SUCCESS.  (For example, jQuery has an extended set
     // of selectors, but it sees if we can parse them first.)
-    MOZ_ASSERT(aRv.ErrorCode() == NS_ERROR_DOM_SYNTAX_ERR,
+    MOZ_ASSERT(aRv.ErrorCodeIs(NS_ERROR_DOM_SYNTAX_ERR),
                "Unexpected error, so cached version won't return it");
     cache.CacheList(aSelectorString, nullptr);
     return nullptr;
@@ -2620,7 +2620,7 @@ nsINode::QuerySelector(const nsAString& aSelector, nsIDOMElement **aReturn)
   ErrorResult rv;
   Element* result = nsINode::QuerySelector(aSelector, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
   nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(result);
   elt.forget(aReturn);
@@ -2632,7 +2632,7 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
 {
   ErrorResult rv;
   *aReturn = nsINode::QuerySelectorAll(aSelector, rv).take();
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 Element*

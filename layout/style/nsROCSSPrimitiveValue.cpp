@@ -428,7 +428,7 @@ nsROCSSPrimitiveValue::GetFloatValue(uint16_t aType, float *aVal)
 {
   ErrorResult rv;
   *aVal = GetFloatValue(aType, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 
@@ -508,7 +508,7 @@ nsROCSSPrimitiveValue::GetRectValue(nsIDOMRect** aRect)
 {
   ErrorResult error;
   NS_IF_ADDREF(*aRect = GetRectValue(error));
-  return error.ErrorCode();
+  return error.StealNSResult();
 }
 
 nsDOMCSSRGBColor*
