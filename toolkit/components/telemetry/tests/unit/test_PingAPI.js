@@ -6,7 +6,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -24,7 +24,7 @@ function run_test() {
 }
 
 add_task(function* test_archivedPings() {
-  yield TelemetryPing.setup();
+  yield TelemetryController.setup();
 
   const PINGS = [
     {
@@ -44,7 +44,7 @@ add_task(function* test_archivedPings() {
 
   for (let data of PINGS) {
     fakeNow(data.dateCreated);
-    data.id = yield TelemetryPing.send(data.type, data.payload);
+    data.id = yield TelemetryController.send(data.type, data.payload);
     let list = yield TelemetryArchive.promiseArchivedPingList();
 
     expectedPingList.push({
@@ -70,7 +70,7 @@ add_task(function* test_archivedPings() {
   yield checkLoadingPings();
 
   // Check that we find the archived pings again by scanning after a restart.
-  yield TelemetryPing.setup();
+  yield TelemetryController.setup();
 
   let pingList = yield TelemetryArchive.promiseArchivedPingList();
   Assert.deepEqual(expectedPingList, pingList,
