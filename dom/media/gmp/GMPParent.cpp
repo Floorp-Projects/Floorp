@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsIRunnable.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/unused.h"
 #include "nsIObserverService.h"
@@ -25,6 +26,7 @@
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
+using mozilla::ipc::GeckoChildProcessHost;
 
 #ifdef MOZ_CRASHREPORTER
 using CrashReporter::AnnotationTable;
@@ -64,9 +66,7 @@ GMPParent::GMPParent()
 #endif
 {
   LOGD("GMPParent ctor");
-  // Use the parent address to identify it.
-  // We could use any unique-to-the-parent value.
-  mPluginId.AppendInt(reinterpret_cast<uint64_t>(this));
+  mPluginId.AppendInt(GeckoChildProcessHost::GetUniqueID());
 }
 
 GMPParent::~GMPParent()
