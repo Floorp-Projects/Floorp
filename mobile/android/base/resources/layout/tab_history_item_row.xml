@@ -50,7 +50,7 @@
             android:paddingRight="@dimen/tab_history_title_margin_right"
             android:text="@+id/tab_history_title"
             android:textSize="@dimen/tab_history_title_text_size"
-            android:textColor="@color/tab_history_title_color"
+            android:textColor="@color/text_and_tabs_tray_grey"
             gecko:fadeWidth="@dimen/tab_history_title_fading_width"/>
 
 </LinearLayout>

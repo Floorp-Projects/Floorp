@@ -1,0 +1,389 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.light-button {
+  color: #333333;
+  background-color: #ffffff;
+}
+
+.dark-button {
+  color: #eeeeee;
+  background-color: #333333;
+}
+
+.sepia-button {
+  color: #333333;
+  background-color: #f0ece7;
+}
+
+.sans-serif-button {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.serif-button {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* Loading/error message */
+
+.message {
+  margin-top: 40px;
+  display: none;
+  text-align: center;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+/* Header */
+
+.header {
+  text-align: start;
+  display: none;
+}
+
+.domain {
+  font-size: 0.9em;
+  line-height: 1.48em;
+  padding-bottom: 4px;
+  font-family: Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  border-bottom: 1px solid;
+  color: #0095dd;
+}
+
+.header > h1 {
+  font-size: 1.33em;
+  line-height: 1.25em;
+  width: 100%;
+  margin: 30px 0;
+  padding: 0;
+}
+
+.header > .credits {
+  font-size: 0.9em;
+  line-height: 1.48em;
+  margin: 0 0 30px 0;
+  padding: 0;
+  font-style: italic;
+}
+
+/*======= Controls toolbar =======*/
+
+.toolbar {
+  font-family: Helvetica, Arial, sans-serif;
+  position: fixed;
+  height: 100%;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background-color: #fbfbfb;
+  -moz-user-select: none;
+  border-right: 1px solid #b5b5b5;
+}
+
+.button {
+  display: block;
+  background-size: 24px 24px;
+  background-repeat: no-repeat;
+  color: #333;
+  background-color: #fbfbfb;
+  height: 40px;
+  padding: 0;
+}
+
+.toolbar .button {
+  width: 40px;
+  background-position: center;
+  margin-right: -1px;
+  border-top: 0;
+  border-left: 0;
+  border-right: 1px solid #b5b5b5;
+  border-bottom: 1px solid #c1c1c1;
+}
+
+.button[hidden] {
+  display: none;
+}
+
+.dropdown {
+  text-align: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown li {
+  margin: 0;
+  padding: 0;
+}
+
+/*======= Font style popup =======*/
+
+.dropdown-popup {
+  min-width: 300px;
+  text-align: start;
+  position: absolute;
+  left: 48px; /* offset to account for toolbar width */
+  z-index: 1000;
+  background-color: #fbfbfb;
+  visibility: hidden;
+  border-radius: 4px;
+  border: 1px solid #b5b5b5;
+  border-bottom-width: 0;
+  box-shadow: 0 1px 12px #666;
+}
+
+.dropdown-popup > hr {
+  display: none;
+}
+
+.open > .dropdown-popup {
+  visibility: visible;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  top: 30px; /* offset arrow from top of popup */
+  left: -16px;
+  width: 24px;
+  height: 24px;
+  background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
+  display: block;
+}
+
+#font-type-buttons,
+#font-size-buttons,
+#color-scheme-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+#font-type-buttons > button:first-child {
+  border-top-left-radius: 3px;
+}
+#font-type-buttons > button:last-child {
+  border-top-right-radius: 3px;
+}
+#color-scheme-buttons > button:first-child {
+  border-bottom-left-radius: 3px;
+}
+#color-scheme-buttons > button:last-child {
+  border-bottom-right-radius: 3px;
+}
+
+#font-type-buttons > button,
+#font-size-buttons > button,
+#color-scheme-buttons > button {
+  text-align: center;
+  border: 0;
+}
+
+#font-type-buttons > button,
+#font-size-buttons > button {
+  width: 50%;
+  background-color: transparent;
+  border-left: 1px solid #B5B5B5;
+  border-bottom: 1px solid #B5B5B5;
+}
+
+#color-scheme-buttons > button {
+  width: 33.33%;
+  font-size: 14px;
+}
+
+#color-scheme-buttons > .dark-button {
+  margin-top: -1px;
+  height: 61px;
+}
+
+#font-type-buttons > button:first-child,
+#font-size-buttons > button:first-child {
+  border-left: 0;
+}
+
+#font-type-buttons > button {
+  display: inline-block;
+  font-size: 62px;
+  height: 100px;
+}
+
+#font-size-buttons > button,
+#color-scheme-buttons > button {
+  height: 60px;
+}
+
+#font-type-buttons > button:active:hover,
+#font-type-buttons > button.selected,
+#color-scheme-buttons > button:active:hover,
+#color-scheme-buttons > button.selected {
+  box-shadow: inset 0 -3px 0 0 #fc6420;
+}
+
+#font-type-buttons > button:active:hover,
+#font-type-buttons > button.selected {
+  border-bottom: 1px solid #FC6420;
+}
+
+/* Make the serif button content the same size as the sans-serif button content. */
+#font-type-buttons > button > .description {
+  color: #666;
+  font-size: 12px;
+  margin-top: -5px;
+}
+
+/* Font sizes are different per-platform, so we need custom CSS to line them up. */
+%ifdef XP_MACOSX
+#font-type-buttons > .sans-serif-button > .name {
+  margin-top: 10px;
+}
+
+#font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
+}
+
+#font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%elifdef XP_WIN
+#font-type-buttons > .sans-serif-button > .name {
+  margin-top: 2px;
+}
+
+#font-type-buttons > .sans-serif-button > .description {
+  margin-top: -4px;
+}
+
+#font-type-buttons > .serif-button > .name {
+  font-size: 63px;
+}
+%else
+#font-type-buttons > .sans-serif-button > .name {
+  margin-top: 5px;
+}
+
+#font-type-buttons > .sans-serif-button > .description {
+  margin-top: -8px;
+}
+
+#font-type-buttons > .serif-button > .name {
+  font-size: 70px;
+}
+%endif
+
+.button:hover,
+#font-size-buttons > button:hover,
+#font-type-buttons > button:hover {
+  background-color: #ebebeb;
+}
+
+.dropdown.open,
+.button:active,
+#font-size-buttons > button:active,
+#font-size-buttons > button.selected {
+  background-color: #dadada;
+}
+
+/* Only used on Android */
+#font-size-sample {
+  display: none;
+}
+
+.minus-button,
+.plus-button {
+  background-color: transparent;
+  border: 0;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.footer {
+  height: 64px;
+  background-color: #ebebeb;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 12px 0;
+  box-sizing: border-box;
+  box-shadow: 0 3px 3px -3px rgba(0, 0, 0, 0.35) inset;
+}
+
+.remove-button {
+  background-image: url("chrome://global/skin/reader/RM-Delete-24x24.svg");
+  margin: 0 auto;
+  border: 1px solid #c1c1c1;
+  background-position: 10px 7px;
+  padding-left: 42px;
+  padding-right: 10px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-size: 18px;
+}
+
+
+/*======= Toolbar icons =======*/
+
+/* Android-only controls */
+.share-button {
+  display: none;
+}
+
+.close-button {
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close");
+  height: 68px;
+  background-position: center 8px;
+}
+
+.close-button:hover {
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close-hover");
+  background-color: #d94141;
+  border-bottom: 1px solid #d94141;
+  border-right: 1px solid #d94141;
+}
+
+.close-button:hover:active {
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close-hover");
+  background-color: #AE2325;
+  border-bottom: 1px solid #AE2325;
+  border-right: 1px solid #AE2325;
+}
+
+.style-button {
+  background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
+}
+
+.toggle-button.on {
+  background-image: url("chrome://global/skin/reader/RM-Delete-24x24.svg");
+}
+
+.toggle-button {
+  background-image: url("chrome://global/skin/reader/RM-Add-24x24.svg");
+}
+
+.list-button {
+  background-image: url("chrome://global/skin/reader/RM-Reading-List-24x24.svg");
+}
+.list-button.on {
+  background-color: #d9d9d9;
+}
+
+.minus-button {
+  background-image: url("chrome://global/skin/reader/RM-Minus-24x24.svg");
+}
+
+.plus-button {
+  background-image: url("chrome://global/skin/reader/RM-Plus-24x24.svg");
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+  .footer {
+    display: none;
+  }
+}

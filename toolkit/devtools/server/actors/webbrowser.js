@@ -860,13 +860,18 @@ TabActor.prototype = {
       response.outerWindowID = windowUtils.outerWindowID;
     }
 
-    // Walk over tab actors added by extensions and add them to a new ActorPool.
-    let actorPool = new ActorPool(this.conn);
-    this._createExtraActors(DebuggerServer.tabActorFactories, actorPool);
-    if (!actorPool.isEmpty()) {
-      this._tabActorPool = actorPool;
+    // Always use the same ActorPool, so existing actor instances
+    // (created in createExtraActors) are not lost.
+    if (!this._tabActorPool) {
+      this._tabActorPool = new ActorPool(this.conn);
       this.conn.addActorPool(this._tabActorPool);
     }
+
+    // Walk over tab actor factories and make sure they are all
+    // instantiated and added into the ActorPool. Note that some
+    // factories can be added dynamically by extensions.
+    this._createExtraActors(DebuggerServer.tabActorFactories,
+      this._tabActorPool);
 
     this._appendExtraActors(response);
     return response;

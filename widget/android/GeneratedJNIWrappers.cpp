@@ -302,6 +302,14 @@ mozilla::jni::ByteArray::LocalRef GeckoAppShell::GetIconForExtensionWrapper(mozi
     return mozilla::jni::Method<GetIconForExtensionWrapper_t>::Call(nullptr, nullptr, a0, a1);
 }
 
+constexpr char GeckoAppShell::GetMaxTouchPoints_t::name[];
+constexpr char GeckoAppShell::GetMaxTouchPoints_t::signature[];
+
+int32_t GeckoAppShell::GetMaxTouchPoints()
+{
+    return mozilla::jni::Method<GetMaxTouchPoints_t>::Call(nullptr, nullptr);
+}
+
 constexpr char GeckoAppShell::GetMessageWrapper_t::name[];
 constexpr char GeckoAppShell::GetMessageWrapper_t::signature[];
 
