@@ -405,21 +405,25 @@ bool ContentParent::sNuwaReady = false;
 class MemoryReportRequestParent : public PMemoryReportRequestParent
 {
 public:
-    MemoryReportRequestParent();
+    explicit MemoryReportRequestParent(uint32_t aGeneration);
+
     virtual ~MemoryReportRequestParent();
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    virtual bool Recv__delete__(const uint32_t& aGeneration, InfallibleTArray<MemoryReport>&& aReport) override;
+    virtual bool Recv__delete__(InfallibleTArray<MemoryReport>&& aReport) override;
 
 private:
+    const uint32_t mGeneration;
+
     ContentParent* Owner()
     {
         return static_cast<ContentParent*>(Manager());
     }
 };
 
-MemoryReportRequestParent::MemoryReportRequestParent()
+MemoryReportRequestParent::MemoryReportRequestParent(uint32_t aGeneration)
+    : mGeneration(aGeneration)
 {
     MOZ_COUNT_CTOR(MemoryReportRequestParent);
 }
@@ -431,13 +435,12 @@ MemoryReportRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-MemoryReportRequestParent::Recv__delete__(const uint32_t& generation,
-                                          nsTArray<MemoryReport>&& childReports)
+MemoryReportRequestParent::Recv__delete__(nsTArray<MemoryReport>&& childReports)
 {
     nsRefPtr<nsMemoryReporterManager> mgr =
         nsMemoryReporterManager::GetOrCreate();
     if (mgr) {
-        mgr->HandleChildReports(generation, childReports);
+        mgr->HandleChildReports(mGeneration, childReports);
     }
     return true;
 }
@@ -3549,7 +3552,8 @@ ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                                const bool &aMinimizeMemoryUsage,
                                                const MaybeFileDesc &aDMDFile)
 {
-    MemoryReportRequestParent* parent = new MemoryReportRequestParent();
+    MemoryReportRequestParent* parent =
+        new MemoryReportRequestParent(aGeneration);
     return parent;
 }
 
