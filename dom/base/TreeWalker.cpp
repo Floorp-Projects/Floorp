@@ -106,7 +106,7 @@ NS_IMETHODIMP TreeWalker::SetCurrentNode(nsIDOMNode * aCurrentNode)
 
     ErrorResult rv;
     SetCurrentNode(*node, rv);
-    return rv.ErrorCode();
+    return rv.StealNSResult();
 }
 
 void

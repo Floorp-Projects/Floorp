@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     'AudioSession.cpp',
     'GfxInfo.cpp',
     'IEnumFE.cpp',
+    'InkCollector.cpp',
     'JumpListItem.cpp',
     'KeyboardLayout.cpp',
     'nsAppShell.cpp',

@@ -137,7 +137,7 @@ SmsService.prototype = {
 
   _updateDebugFlag: function() {
     try {
-      DEBUG = DEBUG ||
+      DEBUG = RIL.DEBUG_RIL ||
               Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
     } catch (e) {}
   },

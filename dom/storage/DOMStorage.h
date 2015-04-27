@@ -109,7 +109,7 @@ public:
   {
     RemoveItem(aKey, aRv);
 
-    aFound = (aRv.ErrorCode() != NS_SUCCESS_DOM_NO_OPERATION);
+    aFound = !aRv.ErrorCodeIs(NS_SUCCESS_DOM_NO_OPERATION);
   }
 
   void Clear(ErrorResult& aRv);

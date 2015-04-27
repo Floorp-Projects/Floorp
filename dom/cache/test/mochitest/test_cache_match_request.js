@@ -6,7 +6,10 @@ var c;
 var responseText;
 var name = "match-request" + context;
 
-function checkResponse(r) {
+function checkResponse(r, expectedBody) {
+  if (expectedBody === undefined) {
+    expectedBody = responseText;
+  }
   ok(r !== response, "The objects should not be the same");
   is(r.url, response.url.replace("#fragment", ""),
      "The URLs should be the same");
@@ -17,7 +20,7 @@ function checkResponse(r) {
      "Both responses should have the same status text");
   return r.text().then(function(text) {
     // Avoid dumping out the large response text to the log if they're equal.
-    if (text !== responseText) {
+    if (text !== expectedBody) {
       is(text, responseText, "The response body should be correct");
     }
   });
@@ -62,6 +65,10 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
     return checkResponse(r);
   }).then(function() {
     return c.match(new Request(request, {method: "HEAD"}));
+  }).then(function(r) {
+    return checkResponse(r, '');
+  }).then(function() {
+    return c.match(new Request(request, {method: "HEAD"}), {ignoreMethod: true});
   }).then(function(r) {
     return checkResponse(r);
   }).then(function() {

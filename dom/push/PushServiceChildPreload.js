@@ -13,6 +13,6 @@ addMessageListener("push", function (aMessage) {
   swm.sendPushEvent(aMessage.data.scope, aMessage.data.payload);
 });
 
-addMessageListener("pushsubscriptionchanged", function (aMessage) {
-  swm.sendPushSubscriptionChangedEvent(aMessage.data);
+addMessageListener("pushsubscriptionchange", function (aMessage) {
+  swm.sendPushSubscriptionChangeEvent(aMessage.data);
 });

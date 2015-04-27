@@ -245,7 +245,7 @@ DOMSVGLength::GetValue(float* aValue)
 {
   ErrorResult rv;
   *aValue = GetValue(rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -299,7 +299,7 @@ DOMSVGLength::SetValue(float aUserUnitValue)
 
   ErrorResult rv;
   SetValue(aUserUnitValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 float
@@ -359,7 +359,7 @@ DOMSVGLength::SetValueInSpecifiedUnits(float aValue)
 
   ErrorResult rv;
   SetValueInSpecifiedUnits(aValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -397,7 +397,7 @@ DOMSVGLength::SetValueAsString(const nsAString& aValue)
 {
   ErrorResult rv;
   SetValueAsString(aValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -464,7 +464,7 @@ DOMSVGLength::NewValueSpecifiedUnits(uint16_t aUnit, float aValue)
 
   ErrorResult rv;
   NewValueSpecifiedUnits(aUnit, aValue, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 void
@@ -514,7 +514,7 @@ DOMSVGLength::ConvertToSpecifiedUnits(uint16_t aUnit)
 {
   ErrorResult rv;
   ConvertToSpecifiedUnits(aUnit, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 JSObject*

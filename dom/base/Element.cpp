@@ -1356,7 +1356,7 @@ Element::GetElementsByTagNameNS(const nsAString& namespaceURI,
   nsCOMPtr<nsIHTMLCollection> list =
     GetElementsByTagNameNS(namespaceURI, localName, rv);
   if (rv.Failed()) {
-    return rv.ErrorCode();
+    return rv.StealNSResult();
   }
   list.forget(aResult);
   return NS_OK;
@@ -3009,7 +3009,7 @@ Element::SetTokenList(nsIAtom* aAtom, nsIVariant* aValue)
   aValue->GetAsAString(string);
   ErrorResult rv;
   itemType->SetValue(string, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 Element*

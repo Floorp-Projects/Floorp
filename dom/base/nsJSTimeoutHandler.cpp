@@ -340,7 +340,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
     ErrorResult error;
     *aAllowEval = CheckCSPForEval(cx, aWindow, error);
     if (error.Failed() || !*aAllowEval) {
-      return error.ErrorCode();
+      return error.StealNSResult();
     }
 
     MOZ_ASSERT(mExpr.IsEmpty());

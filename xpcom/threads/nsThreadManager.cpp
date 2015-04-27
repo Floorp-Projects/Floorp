@@ -430,13 +430,18 @@ nsThreadManager::GetHighestNumberOfThreads()
   return mHighestNumberOfThreads;
 }
 
-#ifdef MOZ_NUWA_PROCESS
-void
+NS_IMETHODIMP
 nsThreadManager::SetIgnoreThreadStatus()
 {
+#ifdef MOZ_NUWA_PROCESS
   GetCurrentThreadStatusInfo()->mIgnored = true;
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
+#ifdef MOZ_NUWA_PROCESS
 void
 nsThreadManager::SetThreadIdle(nsIRunnable **aReturnRunnable)
 {

@@ -3774,7 +3774,7 @@ nsContentUtils::ConvertStringFromEncoding(const nsACString& aEncoding,
 
   decoder->Decode(aInput.BeginReading(), aInput.Length(), false,
                   aOutput, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 /* static */
@@ -4111,7 +4111,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
   ErrorResult rv;
   *aReturn = CreateContextualFragment(aContextNode, aFragment,
                                       aPreventScriptExecution, rv).take();
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 already_AddRefed<DocumentFragment>

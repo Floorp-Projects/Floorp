@@ -166,7 +166,7 @@ FileSystemTaskBase::GetBlobParent(nsIDOMFile* aFile) const
   aFile->GetType(mimeType);
   uint64_t fileSize;
   aFile->GetSize(&fileSize);
-  uint64_t lastModifiedDate;
+  int64_t lastModifiedDate;
   aFile->GetMozLastModifiedDate(&lastModifiedDate);
 
   ContentParent* cp = static_cast<ContentParent*>(mRequestParent->Manager());

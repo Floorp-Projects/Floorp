@@ -204,7 +204,7 @@ HTMLBodyElement::SetBackground(const nsAString& aBackground)
 {
   ErrorResult rv;
   SetBackground(aBackground, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -221,7 +221,7 @@ HTMLBodyElement::SetVLink(const nsAString& aVLink)
 {
   ErrorResult rv;
   SetVLink(aVLink, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -238,7 +238,7 @@ HTMLBodyElement::SetALink(const nsAString& aALink)
 {
   ErrorResult rv;
   SetALink(aALink, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -255,7 +255,7 @@ HTMLBodyElement::SetLink(const nsAString& aLink)
 {
   ErrorResult rv;
   SetLink(aLink, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -272,7 +272,7 @@ HTMLBodyElement::SetText(const nsAString& aText)
 {
   ErrorResult rv;
   SetText(aText, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -289,7 +289,7 @@ HTMLBodyElement::SetBgColor(const nsAString& aBgColor)
 {
   ErrorResult rv;
   SetBgColor(aBgColor, rv);
-  return rv.ErrorCode();
+  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP

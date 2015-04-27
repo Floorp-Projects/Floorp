@@ -447,7 +447,7 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   , mEvents(&mEventsRoot)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
-  , mRunningEvent(0)
+  , mNestedEventLoopDepth(0)
   , mStackSize(aStackSize)
   , mShutdownContext(nullptr)
   , mShutdownRequired(false)
@@ -753,7 +753,8 @@ void canary_alarm_handler(int signum)
 NS_IMETHODIMP
 nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 {
-  LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, aMayWait, mRunningEvent));
+  LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, aMayWait,
+       mNestedEventLoopDepth));
 
 #if !defined(MOZILLA_XPCOMRT_API)
   // If we're on the main thread, we shouldn't be dispatching CPOWs.
@@ -773,7 +774,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   // to block even if something has requested shutdown of the thread. Otherwise
   // we'll just busywait as we endlessly look for an event, fail to find one,
   // and repeat the nested event loop since its state change hasn't happened yet.
-  bool reallyWait = aMayWait && (mRunningEvent > 0 || !ShuttingDown());
+  bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
 #if !defined(MOZILLA_XPCOMRT_API)
   if (MAIN_THREAD == mIsMainThread && reallyWait) {
@@ -827,18 +828,19 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   bool notifyMainThreadObserver =
     (MAIN_THREAD == mIsMainThread) && sMainThreadObserver;
   if (notifyMainThreadObserver) {
-    sMainThreadObserver->OnProcessNextEvent(this, reallyWait, mRunningEvent);
+    sMainThreadObserver->OnProcessNextEvent(this, reallyWait,
+                                            mNestedEventLoopDepth);
   }
 
   nsCOMPtr<nsIThreadObserver> obs = mObserver;
   if (obs) {
-    obs->OnProcessNextEvent(this, reallyWait, mRunningEvent);
+    obs->OnProcessNextEvent(this, reallyWait, mNestedEventLoopDepth);
   }
 
   NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent,
-                         (this, reallyWait, mRunningEvent));
+                         (this, reallyWait, mNestedEventLoopDepth));
 
-  ++mRunningEvent;
+  ++mNestedEventLoopDepth;
 
 #ifdef MOZ_CANARY
   Canary canary;
@@ -847,7 +849,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
   {
     // Scope for |event| to make sure that its destructor fires while
-    // mRunningEvent has been incremented, since that destructor can
+    // mNestedEventLoopDepth has been incremented, since that destructor can
     // also do work.
 
     // If we are shutting down, then do not wait for new events.
@@ -871,13 +873,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     }
   }
 
-  --mRunningEvent;
+  --mNestedEventLoopDepth;
 
 #ifdef MOZ_NUWA_PROCESS
   nsCOMPtr<nsIRunnable> notifyAllIdleRunnable;
   {
     ReentrantMonitorAutoEnter mon(mThreadStatusMonitor);
-    if ((!mEvents->GetEvent(false, nullptr)) && (mRunningEvent == 0)) {
+    if ((!mEvents->GetEvent(false, nullptr)) && (mNestedEventLoopDepth == 0)) {
       nsThreadManager::get()->SetThreadIsWorking(
         static_cast<nsThreadManager::ThreadStatusInfo*>(mThreadStatusInfo),
         false, getter_AddRefs(notifyAllIdleRunnable));
@@ -895,14 +897,15 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 #endif // MOZ_NUWA_PROCESS
 
   NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent,
-                         (this, mRunningEvent, *aResult));
+                         (this, mNestedEventLoopDepth, *aResult));
 
   if (obs) {
-    obs->AfterProcessNextEvent(this, mRunningEvent, *aResult);
+    obs->AfterProcessNextEvent(this, mNestedEventLoopDepth, *aResult);
   }
 
   if (notifyMainThreadObserver && sMainThreadObserver) {
-    sMainThreadObserver->AfterProcessNextEvent(this, mRunningEvent, *aResult);
+    sMainThreadObserver->AfterProcessNextEvent(this, mNestedEventLoopDepth,
+                                               *aResult);
   }
 
   return rv;
@@ -988,7 +991,7 @@ nsThread::GetRecursionDepth(uint32_t* aDepth)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  *aDepth = mRunningEvent;
+  *aDepth = mNestedEventLoopDepth;
   return NS_OK;
 }
 

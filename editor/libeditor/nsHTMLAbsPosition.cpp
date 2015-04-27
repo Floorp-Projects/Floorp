@@ -634,23 +634,23 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
       // from these declarations, get the one we want and that one only
       ErrorResult error;
       nsRefPtr<dom::CSSValue> cssVal = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
-      NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+      NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
 
       nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();
       NS_ENSURE_TRUE(val, NS_ERROR_FAILURE);
 
       if (nsIDOMCSSPrimitiveValue::CSS_RGBCOLOR == val->PrimitiveType()) {
         nsDOMCSSRGBColor* rgbVal = val->GetRGBColorValue(error);
-        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         float r = rgbVal->Red()->
           GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
-        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         float g = rgbVal->Green()->
           GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
-        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         float b = rgbVal->Blue()->
           GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_NUMBER, error);
-        NS_ENSURE_SUCCESS(error.ErrorCode(), error.ErrorCode());
+        NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
         if (r >= BLACK_BG_RGB_TRIGGER &&
             g >= BLACK_BG_RGB_TRIGGER &&
             b >= BLACK_BG_RGB_TRIGGER)

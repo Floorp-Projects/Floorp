@@ -52,13 +52,16 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 
         if(param.IsOut() || !type.IsArithmetic())
         {
-            dp->val.p = (void*) *ap;
+            if (type == nsXPTType::T_JSVAL)
+                dp->val.p = *((void**) *ap);
+            else
+                dp->val.p = (void*) *ap;
             continue;
         }
         // else
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = *((int32_t*)  ap);       break;
+        case nsXPTType::T_I8     : dp->val.i8  = *((int32_t*) ap);       break;
         case nsXPTType::T_I16    : dp->val.i16 = *((int32_t*) ap);       break;
         case nsXPTType::T_I32    : dp->val.i32 = *((int32_t*) ap);       break;
         case nsXPTType::T_DOUBLE :
