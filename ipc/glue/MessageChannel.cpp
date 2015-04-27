@@ -1266,8 +1266,9 @@ MessageChannel::DispatchInterruptMessage(const Message& aMsg, size_t stackDepth)
         // processing of the other side's in-call.
         bool defer;
         const char* winner;
-        switch (mListener->MediateInterruptRace((mSide == ChildSide) ? aMsg : mInterruptStack.top(),
-                                          (mSide != ChildSide) ? mInterruptStack.top() : aMsg))
+        const Message& parentMsg = (mSide == ChildSide) ? aMsg : mInterruptStack.top();
+        const Message& childMsg = (mSide == ChildSide) ? mInterruptStack.top() : aMsg;
+        switch (mListener->MediateInterruptRace(parentMsg, childMsg))
         {
           case RIPChildWins:
             winner = "child";
