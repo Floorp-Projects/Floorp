@@ -219,8 +219,7 @@ function checkPayloadInfo(data) {
     return (Services.appinfo.isOfficial) ? stringCheck(arg) : (typeof arg == "string");
   };
   let uuidCheck = arg => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(arg);
+    return UUID_REGEX.test(arg);
   };
   let isoDateCheck = arg => {
     // We expect use of this version of the ISO format:
