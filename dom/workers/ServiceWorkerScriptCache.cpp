@@ -528,7 +528,7 @@ CompareCache::ManageCacheResult(JSContext* aCx, JS::Handle<JS::Value> aValue)
   CacheQueryOptions params;
   nsRefPtr<Promise> promise = cache->Match(request, params, error);
   if (NS_WARN_IF(error.Failed())) {
-    mManager->CacheFinished(error.ErrorCode(), false);
+    mManager->CacheFinished(error.StealNSResult(), false);
     return;
   }
 

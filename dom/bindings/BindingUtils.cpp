@@ -339,6 +339,14 @@ ErrorResult::ReportNotEnoughArgsError(JSContext* cx,
   ThrowErrorMessage(cx, dom::MSG_MISSING_ARGUMENTS, errorMessage.get());
 }
 
+void
+ErrorResult::ReportGenericError(JSContext* cx)
+{
+  MOZ_ASSERT(!IsErrorWithMessage());
+  MOZ_ASSERT(!IsJSException());
+  dom::Throw(cx, ErrorCode());
+}
+
 ErrorResult&
 ErrorResult::operator=(ErrorResult&& aRHS)
 {

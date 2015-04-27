@@ -1495,8 +1495,7 @@ nsXULElement::GetControllers(ErrorResult& rv)
         rv = NS_NewXULControllers(nullptr, NS_GET_IID(nsIControllers),
                                   reinterpret_cast<void**>(&slots->mControllers));
 
-        NS_ASSERTION(NS_SUCCEEDED(rv.ErrorCode()),
-                     "unable to create a controllers");
+        NS_ASSERTION(!rv.Failed(), "unable to create a controllers");
         if (rv.Failed()) {
             return nullptr;
         }

@@ -176,7 +176,7 @@ HTMLOptionsCollection::SetOption(uint32_t aIndex,
       nsCOMPtr<nsINode> node = do_QueryInterface(aOption);
       ErrorResult res;
       parent->ReplaceChild(*node, *refChild, res);
-      rv = res.ErrorCode();
+      rv = res.StealNSResult();
     }
   }
 
