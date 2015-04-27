@@ -150,8 +150,6 @@ else: # No SIMD support?
         'jsimd_none.c',
     ]
 
-MSVC_ENABLE_PGO = True
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

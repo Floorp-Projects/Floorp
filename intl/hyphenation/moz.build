@@ -20,8 +20,6 @@ SOURCES += [
     'hyphen.c',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'xul'
 
 # Suppress warnings in third-party code.

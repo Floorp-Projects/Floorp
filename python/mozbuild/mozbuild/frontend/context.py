@@ -910,10 +910,6 @@ VARIABLES = {
         """Additional directories to be searched for include files by the compiler.
         """, None),
 
-    'MSVC_ENABLE_PGO': (bool, bool,
-        """Whether profile-guided optimization is enabled for MSVC in this directory.
-        """, None),
-
     'NO_PGO': (bool, bool,
         """Whether profile-guided optimization is disable in this directory.
         """, None),

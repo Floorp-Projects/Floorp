@@ -553,7 +553,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'FAIL_ON_WARNINGS',
             'USE_STATIC_LIBS',
             'IS_GYP_DIR',
-            'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
             'PYTHON_UNIT_TESTS',
             'RCFILE',

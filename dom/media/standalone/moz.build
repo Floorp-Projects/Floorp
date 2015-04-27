@@ -17,8 +17,6 @@ UNIFIED_SOURCES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += ['../systemservices/OSXRunLoopSingleton.cpp']
 
-MSVC_ENABLE_PGO = True
-
 LOCAL_INCLUDES += [
     '/caps',
     '/dom/base',
