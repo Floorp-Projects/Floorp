@@ -4,17 +4,11 @@
 
 <resources>
 
-    <color name="global_background_color">#EBEBF0</color>
-
-    <color name="edit_text_default">#AFB1B3</color>
-
     <!-- card colors -->
     <color name="row_background">#ffffff</color>
     <color name="row_background_pressed">#DCDCE1</color>
 
-    <color name="widget_logo_default">#EBEBF0</color>
     <color name="widget_button_pressed">#33000000</color>
-    <color name="widget_text_color">#5F6368</color>
 
     <!--Facet button colors-->
     <color name="facet_button_background_color_default">@android:color/white</color>

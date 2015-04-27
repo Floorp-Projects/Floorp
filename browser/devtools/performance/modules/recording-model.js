@@ -26,7 +26,9 @@ const RecordingModel = function (options={}) {
     withMemory: options.withMemory || false,
     withAllocations: options.withAllocations || false,
     allocationsSampleProbability: options.allocationsSampleProbability || 0,
-    allocationsMaxLogLength: options.allocationsMaxLogLength || 0
+    allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
+    bufferSize: options.bufferSize || 0,
+    sampleFrequency: options.sampleFrequency || 1
   };
 };
 
@@ -113,16 +115,24 @@ RecordingModel.prototype = {
     this._duration = info.profilerEndTime - this._profilerStartTime;
     this._recording = false;
 
-    // We'll need to filter out all samples that fall out of current profile's
-    // range since the profiler is continuously running. Because of this, sample
-    // times are not guaranteed to have a zero epoch, so offset the timestamps.
-    RecordingUtils.filterSamples(this._profile, this._profilerStartTime);
+    // We filter out all samples that fall out of current profile's range
+    // since the profiler is continuously running. Because of this, sample
+    // times are not guaranteed to have a zero epoch, so offset the
+    // timestamps.
     RecordingUtils.offsetSampleTimes(this._profile, this._profilerStartTime);
 
     // Markers need to be sorted ascending by time, to be properly displayed
     // in a waterfall view.
     this._markers = this._markers.sort((a, b) => (a.start > b.start));
   }),
+
+  /**
+   * Gets the profile's start time.
+   * @return number
+   */
+  getProfilerStartTime: function () {
+    return this._profilerStartTime;
+  },
 
   /**
    * Gets the profile's label, from `console.profile(LABEL)`.

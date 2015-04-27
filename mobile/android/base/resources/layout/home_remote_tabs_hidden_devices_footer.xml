@@ -23,6 +23,6 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:maxLength="1024"
-        android:textColor="@color/home_text_color_disabled" />
+        android:textColor="@color/tabs_tray_icon_grey" />
 
 </LinearLayout>

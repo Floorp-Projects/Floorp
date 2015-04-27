@@ -144,7 +144,9 @@ PerformanceActorsConnection.prototype = {
    */
   destroy: Task.async(function*() {
     if (this._connecting && !this._connected) {
-      console.warn("Attempting to destroy SharedPerformanceActorsConnection before initialization completion. If testing, ensure `gDevTools.testing` is set.");
+      yield this._connecting.promise;
+    } else if (!this._connected) {
+      return;
     }
 
     yield this._unregisterListeners();
@@ -152,26 +154,16 @@ PerformanceActorsConnection.prototype = {
 
     this._memory = this._timeline = this._profiler = this._target = this._client = null;
     this._connected = false;
+    this._connecting = null;
   }),
 
   /**
-   * Initializes a connection to the profiler actor.
+   * Initializes a connection to the profiler actor. Uses a facade around the ProfilerFront
+   * for similarity to the other actors in the shared connection.
    */
   _connectProfilerActor: Task.async(function*() {
-    // Chrome and content process targets already have obtained a reference
-    // to the profiler tab actor. Use it immediately.
-    if (this._target.form && this._target.form.profilerActor) {
-      this._profiler = this._target.form.profilerActor;
-    }
-    // Check if we already have a grip to the `listTabs` response object
-    // and, if we do, use it to get to the profiler actor.
-    else if (this._target.root && this._target.root.profilerActor) {
-      this._profiler = this._target.root.profilerActor;
-    }
-    // Otherwise, call `listTabs`.
-    else {
-      this._profiler = (yield listTabs(this._client)).profilerActor;
-    }
+    this._profiler = new compatibility.ProfilerFront(this._target);
+    yield this._profiler.connect();
   }),
 
   /**
@@ -253,12 +245,7 @@ PerformanceActorsConnection.prototype = {
   _request: function(actor, method, ...args) {
     // Handle requests to the profiler actor.
     if (actor == "profiler") {
-      let deferred = promise.defer();
-      let data = args[0] || {};
-      data.to = this._profiler;
-      data.type = method;
-      this._client.request(data, deferred.resolve);
-      return deferred.promise;
+      return this._profiler._request(method, ...args);
     }
 
     // Handle requests to the timeline actor.
@@ -331,10 +318,20 @@ PerformanceActorsConnection.prototype = {
   /**
    * Invoked whenever `console.profileEnd` is called.
    *
-   * @param object profilerData
-   *        The dump of data from the profiler triggered by this console.profileEnd call.
+   * @param string profileLabel
+   *        The provided string argument if available; undefined otherwise.
+   * @param number currentTime
+   *        The time (in milliseconds) when the call was made, relative to when
+   *        the nsIProfiler module was started.
    */
-  _onConsoleProfileEnd: Task.async(function *(profilerData) {
+  _onConsoleProfileEnd: Task.async(function *(data) {
+    // If no data, abort; can occur if profiler isn't running and we get a surprise
+    // call to console.profileEnd()
+    if (!data) {
+      return;
+    }
+    let { profileLabel, currentTime: endTime } = data;
+
     let pending = this._recordings.filter(r => r.isConsole() && r.isRecording());
     if (pending.length === 0) {
       return;
@@ -343,8 +340,8 @@ PerformanceActorsConnection.prototype = {
     let model;
     // Try to find the corresponding `console.profile` call if
     // a label was used in profileEnd(). If no matches, abort.
-    if (profilerData.profileLabel) {
-      model = pending.find(e => e.getLabel() === profilerData.profileLabel);
+    if (profileLabel) {
+      model = pending.find(e => e.getLabel() === profileLabel);
     }
     // If no label supplied, pop off the most recent pending console recording
     else {
@@ -401,7 +398,7 @@ PerformanceActorsConnection.prototype = {
     let model = new RecordingModel(options);
     // All actors are started asynchronously over the remote debugging protocol.
     // Get the corresponding start times from each one of them.
-    let profilerStartTime = yield this._startProfiler();
+    let profilerStartTime = yield this._startProfiler(options);
     let timelineStartTime = yield this._startTimeline(options);
     let memoryStartTime = yield this._startMemory(options);
 
@@ -445,7 +442,8 @@ PerformanceActorsConnection.prototype = {
     this._recordings.splice(this._recordings.indexOf(model), 1);
 
     let config = model.getConfiguration();
-    let profilerData = yield this._request("profiler", "getProfile");
+    let startTime = model.getProfilerStartTime();
+    let profilerData = yield this._request("profiler", "getProfile", { startTime });
     let memoryEndTime = Date.now();
     let timelineEndTime = Date.now();
 
@@ -485,7 +483,7 @@ PerformanceActorsConnection.prototype = {
   /**
    * Starts the profiler actor, if necessary.
    */
-  _startProfiler: Task.async(function *() {
+  _startProfiler: Task.async(function *(options={}) {
     // Start the profiler only if it wasn't already active. The built-in
     // nsIPerformance module will be kept recording, because it's the same instance
     // for all targets and interacts with the whole platform, so we don't want
@@ -496,10 +494,13 @@ PerformanceActorsConnection.prototype = {
       return profilerStatus.currentTime;
     }
 
-    // If this._customProfilerOptions is defined, use those to pass in
-    // to the profiler actor. The profiler actor handles all the defaults
-    // now, so this should only be used for tests.
-    let profilerOptions = this._customProfilerOptions || {};
+    // Translate options from the recording model into profiler-specific
+    // options for the nsIProfiler
+    let profilerOptions = {
+      entries: options.bufferSize,
+      interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000)) : void 0
+    };
+
     yield this._request("profiler", "startProfiler", profilerOptions);
 
     this.emit("profiler-activated");
@@ -666,16 +667,6 @@ PerformanceFront.prototype = {
     };
   }
 };
-
-/**
- * Returns a promise resolved with a listing of all the tabs in the
- * provided thread client.
- */
-function listTabs(client) {
-  let deferred = promise.defer();
-  client.listTabs(deferred.resolve);
-  return deferred.promise;
-}
 
 /**
  * Creates an object of configurations based off of preferences for a RecordingModel.

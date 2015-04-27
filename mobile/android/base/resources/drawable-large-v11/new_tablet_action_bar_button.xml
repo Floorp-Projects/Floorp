@@ -31,7 +31,7 @@
                android:insetLeft="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal"
                android:insetRight="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal">
             <shape android:shape="rectangle">
-                <solid android:color="@color/new_tablet_highlight_focused_pb"/>
+                <solid android:color="@color/text_and_tabs_tray_grey"/>
                 <corners android:radius="@dimen/new_tablet_browser_toolbar_menu_item_corner_radius"/>
             </shape>
         </inset>
@@ -46,7 +46,7 @@
                android:insetLeft="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal"
                android:insetRight="@dimen/new_tablet_browser_toolbar_menu_item_inset_horizontal">
             <shape android:shape="rectangle">
-                <solid android:color="@color/new_tablet_highlight"/>
+                <solid android:color="@color/toolbar_grey_pressed"/>
                 <corners android:radius="@dimen/new_tablet_browser_toolbar_menu_item_corner_radius"/>
             </shape>
         </inset>

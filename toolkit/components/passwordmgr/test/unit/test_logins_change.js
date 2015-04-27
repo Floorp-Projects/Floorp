@@ -28,7 +28,7 @@ function checkLoginInvalid(aLoginInfo, aExpectedError)
 {
   // Try to add the new login, and verify that no data is stored.
   Assert.throws(() => Services.logins.addLogin(aLoginInfo), aExpectedError);
-  LoginTest.checkLogins([]);
+  LoginTestUtils.checkLogins([]);
 
   // Add a login for the modification tests.
   let testLogin = TestData.formLogin({ hostname: "http://modify.example.com" });
@@ -48,7 +48,7 @@ function checkLoginInvalid(aLoginInfo, aExpectedError)
   })), aExpectedError);
 
   // Verify that no data was stored by the previous calls.
-  LoginTest.checkLogins([testLogin]);
+  LoginTestUtils.checkLogins([testLogin]);
   Services.logins.removeLogin(testLogin);
 }
 
@@ -64,7 +64,7 @@ add_task(function test_addLogin_removeLogin()
   for (let loginInfo of TestData.loginList()) {
     Services.logins.addLogin(loginInfo);
   }
-  LoginTest.checkLogins(TestData.loginList());
+  LoginTestUtils.checkLogins(TestData.loginList());
 
   // Trying to add each login again should result in an error.
   for (let loginInfo of TestData.loginList()) {
@@ -76,7 +76,7 @@ add_task(function test_addLogin_removeLogin()
     Services.logins.removeLogin(loginInfo);
   }
 
-  LoginTest.checkLogins([]);
+  LoginTestUtils.checkLogins([]);
 });
 
 /**
@@ -179,7 +179,7 @@ add_task(function test_removeAllLogins()
     Services.logins.addLogin(loginInfo);
   }
   Services.logins.removeAllLogins();
-  LoginTest.checkLogins([]);
+  LoginTestUtils.checkLogins([]);
 
   // The function should also work when there are no logins to delete.
   Services.logins.removeAllLogins();
@@ -208,25 +208,25 @@ add_task(function test_modifyLogin_nsILoginInfo()
   Services.logins.modifyLogin(loginInfo, updatedLoginInfo);
 
   // The data should now match the second login.
-  LoginTest.checkLogins([updatedLoginInfo]);
+  LoginTestUtils.checkLogins([updatedLoginInfo]);
   Assert.throws(() => Services.logins.modifyLogin(loginInfo, updatedLoginInfo),
                 /No matching logins/);
 
   // The login can be changed to have a different type and hostname.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginInfo);
-  LoginTest.checkLogins([differentLoginInfo]);
+  LoginTestUtils.checkLogins([differentLoginInfo]);
 
   // It is now possible to add a login with the old type and hostname.
   Services.logins.addLogin(loginInfo);
-  LoginTest.checkLogins([loginInfo, differentLoginInfo]);
+  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   // Modifying a login to match an existing one should not be possible.
   Assert.throws(
          () => Services.logins.modifyLogin(loginInfo, differentLoginInfo),
          /already exists/);
-  LoginTest.checkLogins([loginInfo, differentLoginInfo]);
+  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
-  LoginTest.clearData();
+  LoginTestUtils.clearData();
 });
 
 /**
@@ -267,7 +267,7 @@ add_task(function test_modifyLogin_nsIProperyBag()
   }));
 
   // The data should now match the second login.
-  LoginTest.checkLogins([updatedLoginInfo]);
+  LoginTestUtils.checkLogins([updatedLoginInfo]);
   Assert.throws(() => Services.logins.modifyLogin(loginInfo, newPropertyBag()),
                 /No matching logins/);
 
@@ -281,17 +281,17 @@ add_task(function test_modifyLogin_nsIProperyBag()
 
   // The login can be changed to have a different type and hostname.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginProperties);
-  LoginTest.checkLogins([differentLoginInfo]);
+  LoginTestUtils.checkLogins([differentLoginInfo]);
 
   // It is now possible to add a login with the old type and hostname.
   Services.logins.addLogin(loginInfo);
-  LoginTest.checkLogins([loginInfo, differentLoginInfo]);
+  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
   // Modifying a login to match an existing one should not be possible.
   Assert.throws(
          () => Services.logins.modifyLogin(loginInfo, differentLoginProperties),
          /already exists/);
-  LoginTest.checkLogins([loginInfo, differentLoginInfo]);
+  LoginTestUtils.checkLogins([loginInfo, differentLoginInfo]);
 
-  LoginTest.clearData();
+  LoginTestUtils.clearData();
 });

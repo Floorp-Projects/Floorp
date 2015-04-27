@@ -19,8 +19,9 @@
                    android:src="@drawable/larry"
                    android:paddingRight="@dimen/doorhanger_padding"/>
 
-        <FrameLayout android:layout_width="0dip"
+        <LinearLayout android:layout_width="match_parent"
                      android:layout_height="wrap_content"
+                     android:orientation="vertical"
                      android:layout_weight="1.0">
 
             <include layout="@layout/site_identity_unknown" />
@@ -28,6 +29,7 @@
             <LinearLayout android:id="@+id/site_identity_known_container"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
+                          android:visibility="gone"
                           android:orientation="vertical">
 
                 <TextView android:layout_width="wrap_content"
@@ -66,8 +68,15 @@
                           android:paddingTop="12dip"/>
 
             </LinearLayout>
-
-         </FrameLayout>
+            <TextView android:id="@+id/site_settings_link"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:textAppearance="@style/TextAppearance.DoorHanger.Small"
+                      android:textColor="@color/link_blue"
+                      android:paddingTop="@dimen/doorhanger_section_padding_small"
+                      android:paddingBottom="@dimen/doorhanger_section_padding_small"
+                      android:text="@string/contextmenu_site_settings"/>
+         </LinearLayout>
     </LinearLayout>
 
     <View android:id="@+id/divider_doorhanger"

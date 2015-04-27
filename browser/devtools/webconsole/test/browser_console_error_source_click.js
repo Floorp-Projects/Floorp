@@ -52,7 +52,7 @@ function test()
   {
     let viewSource = hud.viewSource;
     let viewSourceCalled = false;
-    hud.viewSource = () => viewSourceCalled = true;
+    hud.viewSourceInDebugger = () => viewSourceCalled = true;
 
     for (let result of results) {
       viewSourceCalled = false;
@@ -67,7 +67,7 @@ function test()
       ok(viewSourceCalled, "view source opened");
     }
 
-    hud.viewSource = viewSource;
+    hud.viewSourceInDebugger = viewSource;
     finishTest();
   }
 }

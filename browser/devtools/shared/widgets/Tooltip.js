@@ -10,6 +10,7 @@ const IOService = Cc["@mozilla.org/network/io-service;1"]
   .getService(Ci.nsIIOService);
 const {Spectrum} = require("devtools/shared/widgets/Spectrum");
 const {CubicBezierWidget} = require("devtools/shared/widgets/CubicBezierWidget");
+const {MdnDocsWidget} = require("devtools/shared/widgets/MdnDocsWidget");
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {colorUtils} = require("devtools/css-color");
@@ -40,6 +41,7 @@ const BORDER_RE = /^border(-(top|bottom|left|right))?$/ig;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const CUBIC_BEZIER_FRAME = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
+const MDN_DOCS_FRAME = "chrome://browser/content/devtools/mdn-docs-frame.xhtml";
 const FILTER_FRAME = "chrome://browser/content/devtools/filter-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
@@ -366,6 +368,8 @@ Tooltip.prototype = {
    *        A function that accepts a node argument and returns true or false
    *        (or a promise that resolves or rejects) to signify if the tooltip
    *        should be shown on that node or not.
+   *        If the promise rejects, it must reject `false` as value.
+   *        Any other value is going to be logged as unexpected error.
    *        Additionally, the function receives a second argument which is the
    *        tooltip instance itself, to be used to add/modify the content of the
    *        tooltip if needed. If omitted, the tooltip will be shown everytime.
@@ -734,29 +738,70 @@ Tooltip.prototype = {
   _getImageDimensionLabel: (w, h) => w + " \u00D7 " + h,
 
   /**
+   * Load a document into an iframe, and set the iframe
+   * to be the tooltip's content.
+   *
+   * Used by tooltips that want to load their interface
+   * into an iframe from a URL.
+   *
+   * @param {string} width
+   *        Width of the iframe.
+   * @param {string} height
+   *        Height of the iframe.
+   * @param {string} url
+   *        URL of the document to load into the iframe.
+   *
+   * @return {promise} A promise which is resolved with
+   * the iframe.
+   *
+   * This function creates an iframe, loads the specified document
+   * into it, sets the tooltip's content to the iframe, and returns
+   * a promise.
+   *
+   * When the document is loaded, the function gets the content window
+   * and resolves the promise with the content window.
+   */
+  setIFrameContent: function({width, height}, url) {
+
+    let def = promise.defer();
+
+    // Create an iframe
+    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
+    iframe.setAttribute("transparent", true);
+    iframe.setAttribute("width", width);
+    iframe.setAttribute("height", height);
+    iframe.setAttribute("flex", "1");
+    iframe.setAttribute("class", "devtools-tooltip-iframe");
+
+    // Wait for the load to initialize the widget
+    function onLoad() {
+      iframe.removeEventListener("load", onLoad, true);
+      def.resolve(iframe);
+    }
+    iframe.addEventListener("load", onLoad, true);
+
+    // load the document from url into the iframe
+    iframe.setAttribute("src", url);
+
+    // Put the iframe in the tooltip
+    this.content = iframe;
+
+    return def.promise;
+  },
+
+  /**
    * Fill the tooltip with a new instance of the spectrum color picker widget
    * initialized with the given color, and return a promise that resolves to
    * the instance of spectrum
    */
   setColorPickerContent: function(color) {
-    let def = promise.defer();
-
-    // Create an iframe to contain spectrum
-    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
-    iframe.setAttribute("transparent", true);
-    iframe.setAttribute("width", "210");
-    iframe.setAttribute("height", "216");
-    iframe.setAttribute("flex", "1");
-    iframe.setAttribute("class", "devtools-tooltip-iframe");
-
+    let dimensions = {width: "210", height: "216"};
     let panel = this.panel;
-    let xulWin = this.doc.ownerGlobal;
+    return this.setIFrameContent(dimensions, SPECTRUM_FRAME).then(onLoaded);
 
-    // Wait for the load to initialize spectrum
-    function onLoad() {
-      iframe.removeEventListener("load", onLoad, true);
+    function onLoaded(iframe) {
       let win = iframe.contentWindow.wrappedJSObject;
-
+      let def = promise.defer();
       let container = win.document.getElementById("spectrum");
       let spectrum = new Spectrum(container, color);
 
@@ -775,14 +820,8 @@ Tooltip.prototype = {
           finalizeSpectrum();
         }, true);
       }
+      return def.promise;
     }
-    iframe.addEventListener("load", onLoad, true);
-    iframe.setAttribute("src", SPECTRUM_FRAME);
-
-    // Put the iframe in the tooltip
-    this.content = iframe;
-
-    return def.promise;
   },
 
   /**
@@ -791,24 +830,13 @@ Tooltip.prototype = {
    * the instance of the widget
    */
   setCubicBezierContent: function(bezier) {
-    let def = promise.defer();
-
-    // Create an iframe to host the cubic-bezier widget
-    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
-    iframe.setAttribute("transparent", true);
-    iframe.setAttribute("width", "410");
-    iframe.setAttribute("height", "360");
-    iframe.setAttribute("flex", "1");
-    iframe.setAttribute("class", "devtools-tooltip-iframe");
-
+    let dimensions = {width: "410", height: "360"};
     let panel = this.panel;
-    let xulWin = this.doc.ownerGlobal;
+    return this.setIFrameContent(dimensions, CUBIC_BEZIER_FRAME).then(onLoaded);
 
-    // Wait for the load to initialize the widget
-    function onLoad() {
-      iframe.removeEventListener("load", onLoad, true);
+    function onLoaded(iframe) {
       let win = iframe.contentWindow.wrappedJSObject;
-
+      let def = promise.defer();
       let container = win.document.getElementById("container");
       let widget = new CubicBezierWidget(container, bezier);
 
@@ -821,14 +849,8 @@ Tooltip.prototype = {
           def.resolve(widget);
         }, true);
       }
+      return def.promise;
     }
-    iframe.addEventListener("load", onLoad, true);
-    iframe.setAttribute("src", CUBIC_BEZIER_FRAME);
-
-    // Put the iframe in the tooltip
-    this.content = iframe;
-
-    return def.promise;
   },
 
   /**
@@ -837,29 +859,21 @@ Tooltip.prototype = {
    * that resolves to the instance of the widget when ready.
    */
   setFilterContent: function(filter) {
-    let def = promise.defer();
-
-    // Create an iframe to host the filter widget
-    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
-    iframe.setAttribute("transparent", true);
-    iframe.setAttribute("width", "350");
-    iframe.setAttribute("flex", "1");
-    iframe.setAttribute("class", "devtools-tooltip-iframe");
-
+    let dimensions = {width: "350", height: "350"};
     let panel = this.panel;
+    return this.setIFrameContent(dimensions, FILTER_FRAME).then(onLoaded);
 
-    function onLoad() {
-      iframe.removeEventListener("load", onLoad, true);
-      let win = iframe.contentWindow.wrappedJSObject,
-          doc = win.document.documentElement;
-
+    function onLoaded(iframe) {
+      let win = iframe.contentWindow.wrappedJSObject;
+      let doc = win.document.documentElement;
+      let def = promise.defer();
       let container = win.document.getElementById("container");
       let widget = new CSSFilterEditorWidget(container, filter);
 
-      iframe.height = doc.offsetHeight
+      iframe.height = doc.offsetHeight;
 
       widget.on("render", e => {
-        iframe.height = doc.offsetHeight
+        iframe.height = doc.offsetHeight;
       });
 
       // Resolve to the widget instance whenever the popup becomes visible
@@ -871,14 +885,8 @@ Tooltip.prototype = {
           def.resolve(widget);
         }, true);
       }
+      return def.promise;
     }
-    iframe.addEventListener("load", onLoad, true);
-    iframe.setAttribute("src", FILTER_FRAME);
-
-    // Put the iframe in the tooltip
-    this.content = iframe;
-
-    return def.promise;
   },
 
   /**
@@ -909,7 +917,33 @@ Tooltip.prototype = {
       let str = yield data.string();
       this.setImageContent(str, { hideDimensionLabel: true, maxDim: size });
     }
-  })
+  }),
+
+  /**
+   * Set the content of this tooltip to the MDN docs widget.
+   *
+   * This is called when the tooltip is first constructed.
+   *
+   * @return {promise} A promise which is resolved with an MdnDocsWidget.
+   *
+   * It loads the tooltip's structure from a separate XHTML file
+   * into an iframe. When the iframe is loaded it constructs
+   * an MdnDocsWidget and passes that into resolve.
+   *
+   * The caller can use the MdnDocsWidget to update the tooltip's
+   * UI with new content each time the tooltip is shown.
+   */
+  setMdnDocsContent: function() {
+    let dimensions = {width: "410", height: "300"};
+    return this.setIFrameContent(dimensions, MDN_DOCS_FRAME).then(onLoaded);
+
+    function onLoaded(iframe) {
+      let win = iframe.contentWindow.wrappedJSObject;
+      // create an MdnDocsWidget, initializing it with the content document
+      let widget = new MdnDocsWidget(win.document);
+      return widget;
+    }
+  }
 };
 
 /**
@@ -1534,6 +1568,46 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     });
   }
 });
+
+/**
+ * Tooltip for displaying docs for CSS properties from MDN.
+ *
+ * @param {XULDocument} doc
+ */
+function CssDocsTooltip(doc) {
+  this.tooltip = new Tooltip(doc, {
+    consumeOutsideClick: true,
+    closeOnKeys: [ESCAPE_KEYCODE, RETURN_KEYCODE],
+    noAutoFocus: false
+  });
+  this.widget = this.tooltip.setMdnDocsContent();
+}
+
+module.exports.CssDocsTooltip = CssDocsTooltip;
+
+CssDocsTooltip.prototype = {
+  /**
+   * Load CSS docs for the given property,
+   * then display the tooltip.
+   */
+  show: function(anchor, propertyName) {
+
+    function loadCssDocs(widget) {
+      return widget.loadCssDocs(propertyName);
+    }
+
+    this.widget.then(loadCssDocs);
+    this.tooltip.show(anchor, "topcenter bottomleft");
+  },
+
+  hide: function() {
+    this.tooltip.hide();
+  },
+
+  destroy: function() {
+    this.tooltip.destroy();
+  }
+};
 
 /**
  * The swatch-based css filter tooltip class is a specific class meant to be used

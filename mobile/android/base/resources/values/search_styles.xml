@@ -6,8 +6,8 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <item name="android:windowBackground">@color/global_background_color</item>
-        <item name="android:colorBackground">@color/global_background_color</item>
+        <item name="android:windowBackground">@color/toolbar_grey</item>
+        <item name="android:colorBackground">@color/toolbar_grey</item>
 
         <!--This attribute is required so that we can create a facet button-->
         <!--pragmatically. The defStyle param used in the View constructor-->
@@ -28,7 +28,7 @@
     </style>
 
     <style name="TextAppearance.EmptyView.Title" parent="@android:style/TextAppearance.Small">
-        <item name="android:textColor">#363B40</item>
+        <item name="android:textColor">@color/text_and_tabs_tray_grey</item>
         <item name="android:textSize">20sp</item>
     </style>
 

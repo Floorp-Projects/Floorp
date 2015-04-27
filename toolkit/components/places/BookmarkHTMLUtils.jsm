@@ -664,13 +664,14 @@ BookmarkImporter.prototype = {
       if (frame.previousFeed) {
         // The is a live bookmark.  We create it here since in HandleLinkBegin we
         // don't know the title.
-        PlacesUtils.livemarks.addLivemark({
+        let lmPromise = PlacesUtils.livemarks.addLivemark({
           "title": frame.previousText,
           "parentId": frame.containerId,
           "index": PlacesUtils.bookmarks.DEFAULT_INDEX,
           "feedURI": frame.previousFeed,
           "siteURI": frame.previousLink,
-        }).then(null, Cu.reportError);
+        });
+        this._importPromises.push(lmPromise);
       } else if (frame.previousLink) {
         // This is a common bookmark.
         PlacesUtils.bookmarks.setItemTitle(frame.previousId,

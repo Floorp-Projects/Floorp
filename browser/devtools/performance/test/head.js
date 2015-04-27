@@ -5,7 +5,7 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-
+let { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
@@ -25,6 +25,8 @@ const SIMPLE_URL = EXAMPLE_URL + "doc_simple-test.html";
 
 const MEMORY_SAMPLE_PROB_PREF = "devtools.performance.memory.sample-probability";
 const MEMORY_MAX_LOG_LEN_PREF = "devtools.performance.memory.max-log-length";
+const PROFILER_BUFFER_SIZE_PREF = "devtools.performance.profiler.buffer-size";
+const PROFILER_SAMPLE_RATE_PREF = "devtools.performance.profiler.sample-frequency-khz";
 
 const FRAMERATE_PREF = "devtools.performance.ui.enable-framerate";
 const MEMORY_PREF = "devtools.performance.ui.enable-memory";
@@ -50,8 +52,12 @@ let DEFAULT_PREFS = [
   "devtools.performance.ui.enable-memory",
   "devtools.performance.ui.enable-framerate",
   "devtools.performance.ui.show-jit-optimizations",
+  "devtools.performance.memory.sample-probability",
+  "devtools.performance.memory.max-log-length",
+  "devtools.performance.profiler.buffer-size",
+  "devtools.performance.profiler.sample-frequency-khz",
 ].reduce((prefs, pref) => {
-  prefs[pref] = Services.prefs.getBoolPref(pref);
+  prefs[pref] = Preferences.get(pref);
   return prefs;
 }, {});
 
@@ -78,7 +84,7 @@ registerCleanupFunction(() => {
 
   // Rollback any pref changes
   Object.keys(DEFAULT_PREFS).forEach(pref => {
-    Services.prefs.setBoolPref(pref, DEFAULT_PREFS[pref]);
+    Preferences.set(pref, DEFAULT_PREFS[pref]);
   });
 
   // Make sure the profiler module is stopped when the test finishes.
@@ -471,11 +477,6 @@ function dragStop(graph, x, y = 1) {
 function dropSelection(graph) {
   graph.dropSelection();
   graph.emit("selecting");
-}
-
-function getSourceActor(aSources, aURL) {
-  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
-  return item && item.value;
 }
 
 /**
