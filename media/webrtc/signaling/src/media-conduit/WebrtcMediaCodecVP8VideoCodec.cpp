@@ -174,9 +174,6 @@ public:
     CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   }
 
-  virtual ~WebrtcAndroidMediaCodec() {
-  }
-
   nsresult Configure(uint32_t width,
                      uint32_t height,
                      const jobject aSurface,
@@ -505,6 +502,10 @@ public:
 
   void SetEncoderCallback(webrtc::EncodedImageCallback* aCallback) {
     mEncoderCallback = aCallback;
+  }
+
+protected:
+  virtual ~WebrtcAndroidMediaCodec() {
   }
 
 private:
