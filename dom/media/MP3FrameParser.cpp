@@ -178,36 +178,67 @@ MP3Parser::GetSamplesPerFrame()
 
 const char sID3Head[3] = { 'I', 'D', '3' };
 const uint32_t ID3_HEADER_LENGTH = 10;
+const uint32_t ID3_FOOTER_LENGTH = 10;
+const uint8_t ID3_FOOTER_PRESENT = 0x10;
 
 ID3Parser::ID3Parser()
   : mCurrentChar(0)
+  , mVersion(0)
+  , mFlags(0)
   , mHeaderLength(0)
 { }
 
 void
 ID3Parser::Reset()
 {
-  mCurrentChar = mHeaderLength = 0;
+  mCurrentChar = mVersion = mFlags = mHeaderLength = 0;
 }
 
 bool
 ID3Parser::ParseChar(char ch)
 {
-  // First three bytes of an ID3v2 header must match the string "ID3".
-  if (mCurrentChar < sizeof(sID3Head) / sizeof(*sID3Head)
-      && ch != sID3Head[mCurrentChar]) {
-    goto fail;
-  }
-
-  // The last four bytes of the header is a 28-bit unsigned integer with the
-  // high bit of each byte unset.
-  if (mCurrentChar >= 6 && mCurrentChar < ID3_HEADER_LENGTH) {
-    if (ch & 0x80) {
-      goto fail;
-    } else {
+  switch (mCurrentChar) {
+    // The first three bytes of an ID3v2 header must match the string "ID3".
+    case 0: case 1: case 2:
+      if (ch != sID3Head[mCurrentChar]) {
+        goto fail;
+      }
+      break;
+    // The fourth and fifth bytes give the version, between 2 and 4.
+    case 3:
+      if (ch < '\2' || ch > '\4') {
+        goto fail;
+      }
+      mVersion = uint8_t(ch);
+      break;
+    case 4:
+      if (ch != '\0') {
+        goto fail;
+      }
+      break;
+    // The sixth byte gives the flags; valid flags depend on the version.
+    case 5:
+      if ((ch & (0xff >> mVersion)) != '\0') {
+        goto fail;
+      }
+      mFlags = uint8_t(ch);
+      break;
+    // Bytes seven through ten give the sum of the byte length of the extended
+    // header, the padding and the frames after unsynchronisation.
+    // These bytes form a 28-bit integer, with the high bit of each byte unset.
+    case 6: case 7: case 8: case 9:
+      if (ch & 0x80) {
+        goto fail;
+      }
       mHeaderLength <<= 7;
       mHeaderLength |= ch;
-    }
+      if (mCurrentChar == 9) {
+        mHeaderLength += ID3_HEADER_LENGTH;
+        mHeaderLength += (mFlags & ID3_FOOTER_PRESENT) ? ID3_FOOTER_LENGTH : 0;
+      }
+      break;
+    default:
+      MOZ_CRASH("Header already fully parsed!");
   }
 
   mCurrentChar++;
@@ -215,6 +246,10 @@ ID3Parser::ParseChar(char ch)
   return IsParsed();
 
 fail:
+  if (mCurrentChar) {
+    Reset();
+    return ParseChar(ch);
+  }
   Reset();
   return false;
 }
