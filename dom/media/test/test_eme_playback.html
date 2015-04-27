@@ -70,11 +70,9 @@ function startTest(test, token)
        + ", actual: " + gotEncrypted);
 
     ok(Math.abs(test.duration - v.duration) < 0.1,
-       TimeStamp(token) + " Duration of video should be " + test.duration
-       + ", got " + v.duration);
+       TimeStamp(token) + " Duration of video should be corrrect");
     ok(Math.abs(test.duration - v.currentTime) < 0.1,
-       TimeStamp(token) + " Current time (" + v.currentTime
-       + ") should be same as duration (" + test.duration + ")");
+       TimeStamp(token) + " Current time should be same as duration");
 
     // Verify all sessions had all keys went sent to the CDM usable, and thus
     // that we received keystatuseschange event(s).
