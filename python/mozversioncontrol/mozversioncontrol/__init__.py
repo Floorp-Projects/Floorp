@@ -16,7 +16,7 @@ def get_hg_version(hg):
     env = os.environ.copy()
     env[b'HGPLAIN'] = b'1'
 
-    info = subprocess.check_output([hg, 'version'], env=env)
+    info = subprocess.check_output([hg, '--version'], env=env)
     match = re.search('version ([^\+\)]+)', info)
     if not match:
         raise Exception('Unable to identify Mercurial version.')
