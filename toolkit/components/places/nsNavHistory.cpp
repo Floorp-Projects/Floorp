@@ -4186,10 +4186,13 @@ nsNavHistory::URIToResultNode(nsIURI* aURI,
                      true, tagsFragment);
   // Should match kGetInfoIndex_*
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT h.id, :page_url, h.title, h.rev_host, h.visit_count, "
-           "h.last_visit_date, f.url, null, null, null, null, "
-           ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid "
+    "SELECT h.id, :page_url, COALESCE(b.title, h.title), "
+           "h.rev_host, h.visit_count, h.last_visit_date, f.url, "
+           "b.id, b.dateAdded, b.lastModified, b.parent, "
+           ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
+           "b.guid, b.position, b.type, b.fk "
     "FROM moz_places h "
+    "LEFT JOIN moz_bookmarks b ON b.fk = h.id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
     "WHERE h.url = :page_url ")
   );
