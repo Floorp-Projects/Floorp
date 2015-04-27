@@ -124,7 +124,9 @@ endef
 $(foreach subtier,$(filter-out compile,$(TIERS)),$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
 ifndef TOPLEVEL_BUILD
+ifdef COMPILE_ENVIRONMENT
 libs:: target host
+endif # COMPILE_ENVIRONMENT
 endif
 
 endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
