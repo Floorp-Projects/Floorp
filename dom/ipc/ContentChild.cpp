@@ -871,43 +871,32 @@ ContentChild::AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
     return actor;
 }
 
-// This is just a wrapper for InfallibleTArray<MemoryReport> that implements
-// nsISupports, so it can be passed to nsIMemoryReporter::CollectReports.
-class MemoryReportsWrapper final : public nsISupports {
-    ~MemoryReportsWrapper() {}
-public:
-    NS_DECL_ISUPPORTS
-    explicit MemoryReportsWrapper(InfallibleTArray<MemoryReport>* r) : mReports(r) { }
-    InfallibleTArray<MemoryReport> *mReports;
-};
-NS_IMPL_ISUPPORTS0(MemoryReportsWrapper)
-
 class MemoryReportCallback final : public nsIMemoryReporterCallback
 {
 public:
     NS_DECL_ISUPPORTS
 
-    explicit MemoryReportCallback(const nsACString& aProcess)
-    : mProcess(aProcess)
+    explicit MemoryReportCallback(MemoryReportRequestChild* aActor,
+                                  const nsACString& aProcess)
+    : mActor(aActor)
+    , mProcess(aProcess)
     {
     }
 
     NS_IMETHOD Callback(const nsACString& aProcess, const nsACString &aPath,
                         int32_t aKind, int32_t aUnits, int64_t aAmount,
                         const nsACString& aDescription,
-                        nsISupports* aiWrappedReports) override
+                        nsISupports* aUnused) override
     {
-        MemoryReportsWrapper *wrappedReports =
-            static_cast<MemoryReportsWrapper *>(aiWrappedReports);
-
         MemoryReport memreport(mProcess, nsCString(aPath), aKind, aUnits,
                                aAmount, nsCString(aDescription));
-        wrappedReports->mReports->AppendElement(memreport);
+        mActor->SendReport(memreport);
         return NS_OK;
     }
 private:
     ~MemoryReportCallback() {}
 
+    nsRefPtr<MemoryReportRequestChild> mActor;
     const nsCString mProcess;
 };
 NS_IMPL_ISUPPORTS(
@@ -943,21 +932,18 @@ NS_IMETHODIMP MemoryReportRequestChild::Run()
     ContentChild *child = static_cast<ContentChild*>(Manager());
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
 
-    InfallibleTArray<MemoryReport> reports;
-
     nsCString process;
     child->GetProcessName(process);
     child->AppendProcessId(process);
 
     // Run the reporters.  The callback will turn each measurement into a
     // MemoryReport.
-    nsRefPtr<MemoryReportsWrapper> wrappedReports =
-        new MemoryReportsWrapper(&reports);
-    nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
-    mgr->GetReportsForThisProcessExtended(cb, wrappedReports, mAnonymize,
+    nsRefPtr<MemoryReportCallback> cb =
+        new MemoryReportCallback(this, process);
+    mgr->GetReportsForThisProcessExtended(cb, nullptr, mAnonymize,
                                           FileDescriptorToFILE(mDMDFile, "wb"));
 
-    bool sent = Send__delete__(this, reports);
+    bool sent = Send__delete__(this);
     return sent ? NS_OK : NS_ERROR_FAILURE;
 }
 
