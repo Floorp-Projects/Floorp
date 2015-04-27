@@ -21,7 +21,8 @@ protocol PMemoryReportRequest {
   manager PContent;
 
 parent:
-  __delete__(MemoryReport[] report);
+  Report(MemoryReport aReport);
+  __delete__();
 };
 
 }

@@ -1486,18 +1486,11 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   return NS_OK;
 }
 
-// This function has no return value.  If something goes wrong, there's no
-// clear place to report the problem to, but that's ok -- we will end up
-// hitting the timeout and executing TimeoutCallback().
-void
-nsMemoryReporterManager::HandleChildReports(
-  const uint32_t& aGeneration,
-  const InfallibleTArray<dom::MemoryReport>& aChildReports)
+nsMemoryReporterManager::GetReportsState*
+nsMemoryReporterManager::GetStateForGeneration(uint32_t aGeneration)
 {
   // Memory reporting only happens on the main thread.
-  if (!NS_IsMainThread()) {
-    MOZ_CRASH();
-  }
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   GetReportsState* s = mGetReportsState;
 
@@ -1516,7 +1509,7 @@ nsMemoryReporterManager::HandleChildReports(
     MEMORY_REPORTING_LOG(
       "HandleChildReports: no request in flight (aGen=%u)\n",
       aGeneration);
-    return;
+    return nullptr;
   }
 
   if (aGeneration != s->mGeneration) {
@@ -1527,29 +1520,61 @@ nsMemoryReporterManager::HandleChildReports(
     MEMORY_REPORTING_LOG(
       "HandleChildReports: gen mismatch (aGen=%u, s->gen=%u)\n",
       aGeneration, s->mGeneration);
+    return nullptr;
+  }
+
+  return s;
+}
+
+// This function has no return value.  If something goes wrong, there's no
+// clear place to report the problem to, but that's ok -- we will end up
+// hitting the timeout and executing TimeoutCallback().
+void
+nsMemoryReporterManager::HandleChildReport(
+  uint32_t aGeneration,
+  const dom::MemoryReport& aChildReport)
+{
+  GetReportsState* s = GetStateForGeneration(aGeneration);
+  if (!s) {
     return;
   }
 
-  // Process the reports from the child process.
-  for (uint32_t i = 0; i < aChildReports.Length(); i++) {
-    const dom::MemoryReport& r = aChildReports[i];
+  // Child reports should have a non-empty process.
+  MOZ_ASSERT(!aChildReport.process().IsEmpty());
 
-    // Child reports should have a non-empty process.
-    MOZ_ASSERT(!r.process().IsEmpty());
+  // If the call fails, ignore and continue.
+  s->mHandleReport->Callback(aChildReport.process(),
+                             aChildReport.path(),
+                             aChildReport.kind(),
+                             aChildReport.units(),
+                             aChildReport.amount(),
+                             aChildReport.desc(),
+                             s->mHandleReportData);
+}
 
-    // If the call fails, ignore and continue.
-    s->mHandleReport->Callback(r.process(), r.path(), r.kind(),
-                               r.units(), r.amount(), r.desc(),
-                               s->mHandleReportData);
+void
+nsMemoryReporterManager::EndChildReport(uint32_t aGeneration, bool aSuccess)
+{
+  GetReportsState* s = GetStateForGeneration(aGeneration);
+  if (!s) {
+    return;
+  }
+
+  s->mNumChildProcessesCompleted++;
+
+  if (aSuccess) {
+    MEMORY_REPORTING_LOG("HandleChildReports (aGen=%u): completed child %d\n",
+                         aGeneration, s->mNumChildProcessesCompleted);
+  } else {
+    // Unfortunately, there's no way to indicate this in the report yet.
+    // (Also, we don't have the child's identifier at this point.)
+    MEMORY_REPORTING_LOG("HandleChildReports (aGen=%u): child %d exited"
+                         " during report\n",
+                         aGeneration, s->mNumChildProcessesCompleted);
   }
 
   // If all the child processes have reported, we can cancel the timer and
   // finish up.  Otherwise, just return.
-
-  s->mNumChildProcessesCompleted++;
-  MEMORY_REPORTING_LOG("HandleChildReports (aGen=%u): completed child %d\n",
-                       aGeneration, s->mNumChildProcessesCompleted);
-
   if (s->mNumChildProcessesCompleted >= s->mNumChildProcesses &&
       s->mParentDone) {
     s->mTimer->Cancel();
