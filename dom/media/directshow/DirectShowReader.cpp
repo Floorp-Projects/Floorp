@@ -409,15 +409,20 @@ void
 DirectShowReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!mMP3FrameParser.NeedsData()) {
+    return;
+  }
+
+  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
   if (!mMP3FrameParser.IsMP3()) {
     return;
   }
-  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
+
   int64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mDuration) {
-    mDuration = duration;
     MOZ_ASSERT(mDecoder);
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mDuration = duration;
     mDecoder->UpdateEstimatedMediaDuration(mDuration);
   }
 }
