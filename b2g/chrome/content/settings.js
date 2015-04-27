@@ -565,6 +565,7 @@ let settingsToObserve = {
   'privacy.donottrackheader.enabled': false,
   'ril.debugging.enabled': false,
   'ril.radio.disabled': false,
+  'mms.debugging.enabled': false,
   'ril.mms.requestReadReport.enabled': {
     prefName: 'dom.mms.requestReadReport',
     defaultValue: true

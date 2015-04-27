@@ -21,12 +21,6 @@ function debug(s) {
   dump("-@- MmsService: " + s + "\n");
 };
 
-// Read debug setting from pref.
-try {
-  let debugPref = Services.prefs.getBoolPref("mms.debugging.enabled");
-  DEBUG = DEBUG || debugPref;
-} catch (e) {}
-
 const kSmsSendingObserverTopic           = "sms-sending";
 const kSmsSentObserverTopic              = "sms-sent";
 const kSmsFailedObserverTopic            = "sms-failed";
@@ -42,6 +36,7 @@ const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkConnStateChangedTopic      = "network-connection-state-changed";
 
 const kPrefRilRadioDisabled              = "ril.radio.disabled";
+const kPrefMmsDebuggingEnabled           = "mms.debugging.enabled";
 
 // HTTP status codes:
 // @see http://tools.ietf.org/html/rfc2616#page-39
@@ -1518,6 +1513,7 @@ ReadRecTransaction.prototype = {
  * MmsService
  */
 function MmsService() {
+  this._updateDebugFlag();
   if (DEBUG) {
     let macro = (MMS.MMS_VERSION >> 4) & 0x0f;
     let minor = MMS.MMS_VERSION & 0x0f;
@@ -1525,6 +1521,7 @@ function MmsService() {
   }
 
   Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
+  Services.prefs.addObserver(kPrefMmsDebuggingEnabled, this, false);
   this.mmsDefaultServiceId = getDefaultServiceId();
 
   // TODO: bug 810084 - support application identifier
@@ -1540,6 +1537,12 @@ MmsService.prototype = {
    * and M-Acknowledge.ind PDU.
    */
   confSendDeliveryReport: CONFIG_SEND_REPORT_DEFAULT_YES,
+
+  _updateDebugFlag: function() {
+    try {
+      DEBUG = Services.prefs.getBoolPref(kPrefMmsDebuggingEnabled);
+    } catch (e) {}
+  },
 
   /**
    * Calculate Whether or not should we enable X-Mms-Report-Allowed.
@@ -2637,6 +2640,8 @@ MmsService.prototype = {
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (aData === kPrefDefaultServiceId) {
           this.mmsDefaultServiceId = getDefaultServiceId();
+        } else if (aData === kPrefMmsDebuggingEnabled) {
+          this._updateDebugFlag();
         }
         break;
     }
