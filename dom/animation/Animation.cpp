@@ -112,27 +112,6 @@ Animation::GetCurrentTime() const
   return result;
 }
 
-// Implements http://w3c.github.io/web-animations/#silently-set-the-current-time
-void
-Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
-{
-  if (!mHoldTime.IsNull() ||
-      mStartTime.IsNull() ||
-      !mTimeline ||
-      mTimeline->GetCurrentTime().IsNull() ||
-      mPlaybackRate == 0.0) {
-    mHoldTime.SetValue(aSeekTime);
-    if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
-      mStartTime.SetNull();
-    }
-  } else {
-    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                          (aSeekTime.MultDouble(1 / mPlaybackRate)));
-  }
-
-  mPreviousCurrentTime.SetNull();
-}
-
 // Implements http://w3c.github.io/web-animations/#set-the-current-time
 void
 Animation::SetCurrentTime(const TimeDuration& aSeekTime)
@@ -159,18 +138,6 @@ Animation::SetPlaybackRate(double aPlaybackRate)
   if (!previousTime.IsNull()) {
     ErrorResult rv;
     SetCurrentTime(previousTime.Value());
-    MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
-  }
-}
-
-void
-Animation::SilentlySetPlaybackRate(double aPlaybackRate)
-{
-  Nullable<TimeDuration> previousTime = GetCurrentTime();
-  mPlaybackRate = aPlaybackRate;
-  if (!previousTime.IsNull()) {
-    ErrorResult rv;
-    SilentlySetCurrentTime(previousTime.Value());
     MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
   }
 }
@@ -392,6 +359,39 @@ Animation::GetCurrentOrPendingStartTime() const
   // need to incorporate the playbackRate when implemented (bug 1127380).
   result.SetValue(mPendingReadyTime.Value() - mHoldTime.Value());
   return result;
+}
+
+// http://w3c.github.io/web-animations/#silently-set-the-current-time
+void
+Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
+{
+  if (!mHoldTime.IsNull() ||
+      mStartTime.IsNull() ||
+      !mTimeline ||
+      mTimeline->GetCurrentTime().IsNull() ||
+      mPlaybackRate == 0.0) {
+    mHoldTime.SetValue(aSeekTime);
+    if (!mTimeline || mTimeline->GetCurrentTime().IsNull()) {
+      mStartTime.SetNull();
+    }
+  } else {
+    mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
+                          (aSeekTime.MultDouble(1 / mPlaybackRate)));
+  }
+
+  mPreviousCurrentTime.SetNull();
+}
+
+void
+Animation::SilentlySetPlaybackRate(double aPlaybackRate)
+{
+  Nullable<TimeDuration> previousTime = GetCurrentTime();
+  mPlaybackRate = aPlaybackRate;
+  if (!previousTime.IsNull()) {
+    ErrorResult rv;
+    SilentlySetCurrentTime(previousTime.Value());
+    MOZ_ASSERT(!rv.Failed(), "Should not assert for non-null time");
+  }
 }
 
 void

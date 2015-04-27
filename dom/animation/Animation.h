@@ -88,11 +88,9 @@ public:
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
   Nullable<TimeDuration> GetCurrentTime() const;
-  void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SetCurrentTime(const TimeDuration& aNewCurrentTime);
   double PlaybackRate() const { return mPlaybackRate; }
   void SetPlaybackRate(double aPlaybackRate);
-  void SilentlySetPlaybackRate(double aPlaybackRate);
   AnimationPlayState PlayState() const;
   virtual Promise* GetReady(ErrorResult& aRv);
   virtual Promise* GetFinished(ErrorResult& aRv);
@@ -277,6 +275,8 @@ public:
                     bool& aNeedsRefreshes);
 
 protected:
+  void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
+  void SilentlySetPlaybackRate(double aPlaybackRate);
   void DoCancel();
   void DoPlay(LimitBehavior aLimitBehavior);
   void DoPause();
