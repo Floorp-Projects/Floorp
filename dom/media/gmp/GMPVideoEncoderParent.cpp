@@ -216,6 +216,12 @@ GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
   return GMPNoErr;
 }
 
+const uint32_t
+GMPVideoEncoderParent::ParentID()
+{
+  return mPlugin ? mPlugin->GetPluginId() : 0;
+}
+
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
 void
 GMPVideoEncoderParent::Shutdown()
