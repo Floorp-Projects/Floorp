@@ -802,7 +802,7 @@ WebGLFramebuffer::CheckAndInitializeAttachments()
     }
 
     // Clear!
-    mContext->ForceClearFramebufferWithDefaultValues(mask, colorAttachmentsMask);
+    mContext->ForceClearFramebufferWithDefaultValues(false, mask, colorAttachmentsMask);
 
     // Mark all the uninitialized images as initialized.
     if (mColorAttachment0.HasUninitializedImageData())
