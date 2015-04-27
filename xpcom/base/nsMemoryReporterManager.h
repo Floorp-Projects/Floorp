@@ -206,17 +206,17 @@ private:
   {
     uint32_t                             mGeneration;
     bool                                 mAnonymize;
+    bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
     uint32_t                             mNumChildProcesses;
     uint32_t                             mNumChildProcessesCompleted;
-    bool                                 mParentDone;
     nsCOMPtr<nsIHandleReportCallback>    mHandleReport;
     nsCOMPtr<nsISupports>                mHandleReportData;
     nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
     nsCOMPtr<nsISupports>                mFinishReportingData;
     nsString                             mDMDDumpIdent;
 
-    GetReportsState(uint32_t aGeneration, bool aAnonymize, nsITimer* aTimer,
+    GetReportsState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
                     uint32_t aNumChildProcesses,
                     nsIHandleReportCallback* aHandleReport,
                     nsISupports* aHandleReportData,
@@ -225,10 +225,9 @@ private:
                     const nsAString& aDMDDumpIdent)
       : mGeneration(aGeneration)
       , mAnonymize(aAnonymize)
-      , mTimer(aTimer)
+      , mMinimize(aMinimize)
       , mNumChildProcesses(aNumChildProcesses)
       , mNumChildProcessesCompleted(0)
-      , mParentDone(false)
       , mHandleReport(aHandleReport)
       , mHandleReportData(aHandleReportData)
       , mFinishReporting(aFinishReporting)
