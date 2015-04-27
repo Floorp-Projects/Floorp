@@ -44,7 +44,7 @@ add_task(function* test_archivedPings() {
 
   for (let data of PINGS) {
     fakeNow(data.dateCreated);
-    data.id = yield TelemetryController.send(data.type, data.payload);
+    data.id = yield TelemetryController.submitExternalPing(data.type, data.payload);
     let list = yield TelemetryArchive.promiseArchivedPingList();
 
     expectedPingList.push({

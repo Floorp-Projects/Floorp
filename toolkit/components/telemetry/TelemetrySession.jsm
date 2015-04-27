@@ -1443,7 +1443,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    return TelemetryController.send(getPingType(payload), payload, options);
+    return TelemetryController.submitExternalPing(getPingType(payload), payload, options);
   },
 
   attachObservers: function attachObservers() {
@@ -1932,7 +1932,7 @@ let Impl = {
       addEnvironment: true,
     };
 
-    let promise = TelemetryController.send(getPingType(payload), payload, options);
+    let promise = TelemetryController.submitExternalPing(getPingType(payload), payload, options);
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
     // If required, also save the payload as an aborted session.
     if (saveAsAborted) {
@@ -2011,7 +2011,7 @@ let Impl = {
       addEnvironment: true,
       overrideEnvironment: oldEnvironment,
     };
-    TelemetryController.send(getPingType(payload), payload, options);
+    TelemetryController.submitExternalPing(getPingType(payload), payload, options);
   },
 
   _isClassicReason: function(reason) {

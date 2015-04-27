@@ -52,7 +52,7 @@ function sendPing(aSendClientId, aSendEnvironment) {
     addEnvironment: aSendEnvironment,
     retentionDays: TEST_PING_RETENTION,
   };
-  return TelemetryController.send(TEST_PING_TYPE, {}, options);
+  return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, options);
 }
 
 function wrapWithExceptionHandler(f) {
