@@ -1445,10 +1445,14 @@ nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
 
   mRangeUpdater.SelAdjSplitNode(aNode, aOffset, newNode);
 
+  nsresult result = aResult.StealNSResult();
   for (auto& listener : mActionListeners) {
     listener->DidSplitNode(aNode.AsDOMNode(), aOffset, GetAsDOMNode(newNode),
-                           aResult.ErrorCode());
+                           result);
   }
+  // Note: result might be a success code, so we can't use Throw() to
+  // set it on aResult.
+  aResult = result;
 
   return newNode;
 }

@@ -145,7 +145,7 @@ ServiceWorkerWindowClient::Focus(ErrorResult& aRv) const
                                                             promiseProxy);
   aRv = NS_DispatchToMainThread(r);
   if (NS_WARN_IF(aRv.Failed())) {
-    promise->MaybeReject(aRv.ErrorCode());
+    promise->MaybeReject(aRv);
   }
 
   return promise.forget();
