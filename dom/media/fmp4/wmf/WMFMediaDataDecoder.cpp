@@ -134,7 +134,7 @@ WMFMediaDataDecoder::Decode()
         PurgeInputQueue();
       }
       mCallback->Error();
-      return;
+      continue; // complete flush if flushing
     }
 
     mLastStreamOffset = input->byte_offset;
