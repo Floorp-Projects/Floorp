@@ -14,7 +14,7 @@ add_task(function flush_on_tabclose() {
   let browser = tab.linkedBrowser;
 
   yield modifySessionStorage(browser, {test: "on-tab-close"});
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 
   let [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://example.com"].test, "on-tab-close",
@@ -59,7 +59,7 @@ add_task(function flush_on_duplicate() {
     "sessionStorage data has been flushed when duplicating tabs");
 
   yield promiseTabRestored(tab2);
-  gBrowser.removeTab(tab2);
+  yield promiseRemoveTab(tab2);
   [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://example.com"].test, "on-duplicate",
     "sessionStorage data has been flushed when duplicating tabs");
@@ -128,7 +128,7 @@ add_task(function flush_on_tabclose_racy() {
   // Flush all data contained in the content script but send it using
   // asynchronous messages.
   TabState.flushAsync(browser);
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 
   let [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://example.com"].test, "on-tab-close-racy",

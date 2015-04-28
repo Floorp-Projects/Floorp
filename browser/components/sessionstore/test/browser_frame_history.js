@@ -32,7 +32,7 @@ add_task(function() {
   yield promise;
 
   info("Close then un-close page, 4 loads should take place");
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   let newTab = ss.undoCloseTab(window, 0);
   yield waitForLoadsInBrowser(newTab.linkedBrowser, 4);
 
@@ -77,7 +77,7 @@ add_task(function() {
   yield promise;
 
   info("iframe: Close then un-close page, 5 loads should take place");
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   let newTab = ss.undoCloseTab(window, 0);
   yield waitForLoadsInBrowser(newTab.linkedBrowser, 5);
 

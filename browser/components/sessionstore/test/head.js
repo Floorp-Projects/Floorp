@@ -527,3 +527,17 @@ for (let name of FORM_HELPERS) {
   let msg = "ss-test:" + name;
   this[name] = (browser, data) => sendMessage(browser, msg, data);
 }
+
+function promiseRemoveTab(tab) {
+  return new Promise(resolve => {
+    let {messageManager: mm, frameLoader} = tab.linkedBrowser;
+    mm.addMessageListener("SessionStore:update", function onMessage(msg) {
+      if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
+        mm.removeMessageListener("SessionStore:update", onMessage);
+        resolve();
+      }
+    }, true);
+
+    tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
+  });
+}
