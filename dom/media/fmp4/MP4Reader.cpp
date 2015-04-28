@@ -89,9 +89,15 @@ MP4Reader::IsVideoAccelerated(LayersBackend aBackend)
   PlatformDecoderModule::Init();
 
   nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform) {
+    return false;
+  }
 
   nsRefPtr<MediaDataDecoder> decoder =
     platform->CreateDecoder(config, nullptr, nullptr, aBackend, nullptr);
+  if (!decoder) {
+    return false;
+  }
   nsresult rv = decoder->Init();
   NS_ENSURE_SUCCESS(rv, false);
 
