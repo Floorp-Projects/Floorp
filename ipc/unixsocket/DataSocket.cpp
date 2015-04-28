@@ -34,8 +34,7 @@ DataSocketIO::HasPendingData() const
   return !mOutgoingQ.IsEmpty();
 }
 
-DataSocketIO::DataSocketIO(size_t aMaxReadSize)
-  : mMaxReadSize(aMaxReadSize)
+DataSocketIO::DataSocketIO()
 { }
 
 //

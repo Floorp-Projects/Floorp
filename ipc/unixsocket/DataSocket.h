@@ -101,6 +101,37 @@ class DataSocketIO : public SocketIOBase
 public:
   virtual ~DataSocketIO();
 
+  /**
+   * Allocates a buffer for receiving data from the socket. The method
+   * shall return the buffer in the arguments. The buffer is owned by the
+   * I/O class. |DataSocketIO| will never ask for more than one buffer
+   * at a time, so I/O classes can handout the same buffer on each invokation
+   * of this method. I/O-thread only.
+   *
+   *  @param[out] aBuffer returns a pointer to the I/O buffer
+   *  @return NS_OK on success, or an error code otherwise
+   */
+  virtual nsresult QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer) = 0;
+
+  /**
+   * Marks the current socket buffer to by consumed by the I/O class. The
+   * class is resonsible for releasing the buffer afterwards. I/O-thread
+   * only.
+   *
+   *  @param aIndex the socket's index
+   *  @param[out] aBuffer the receive buffer
+   *  @param[out] aSize the receive buffer's size
+   */
+  virtual void ConsumeBuffer() = 0;
+
+  /**
+   * Marks the current socket buffer to be discarded. The I/O class is
+   * resonsible for releasing the buffer's memory. I/O-thread only.
+   *
+   *  @param aIndex the socket's index
+   */
+  virtual void DiscardBuffer() = 0;
+
   void EnqueueData(UnixSocketIOBuffer* aBuffer);
   bool HasPendingData() const;
 
@@ -110,17 +141,25 @@ public:
     MOZ_ASSERT(aFd >= 0);
     MOZ_ASSERT(aIO);
 
-    nsAutoPtr<UnixSocketRawData> incoming(
-      new UnixSocketRawData(mMaxReadSize));
+    UnixSocketIOBuffer* incoming;
+    nsresult rv = QueryReceiveBuffer(&incoming);
+    if (NS_FAILED(rv)) {
+      /* an error occured */
+      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
+      NS_DispatchToMainThread(r);
+      return -1;
+    }
 
     ssize_t res = incoming->Receive(aFd);
     if (res < 0) {
       /* an I/O error occured */
+      DiscardBuffer();
       nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
       NS_DispatchToMainThread(r);
       return -1;
     } else if (!res) {
       /* EOF or peer shut down sending */
+      DiscardBuffer();
       nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
       NS_DispatchToMainThread(r);
       return 0;
@@ -132,9 +171,7 @@ public:
     AutoSourceEvent taskTracerEvent(SourceEventType::Unixsocket);
 #endif
 
-    nsRefPtr<nsRunnable> r =
-      new SocketIOReceiveRunnable<T>(aIO, incoming.forget());
-    NS_DispatchToMainThread(r);
+    ConsumeBuffer();
 
     return res;
   }
@@ -168,11 +205,9 @@ public:
   }
 
 protected:
-  DataSocketIO(size_t aMaxReadSize);
+  DataSocketIO();
 
 private:
-  const size_t mMaxReadSize;
-
   /**
    * Raw data queue. Must be pushed/popped from I/O thread only.
    */

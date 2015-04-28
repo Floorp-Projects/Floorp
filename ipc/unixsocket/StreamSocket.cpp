@@ -86,6 +86,13 @@ public:
   void OnSocketCanReceiveWithoutBlocking() override;
   void OnSocketCanSendWithoutBlocking() override;
 
+  // Methods for |DataSocket|
+  //
+
+  nsresult QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer);
+  void ConsumeBuffer();
+  void DiscardBuffer();
+
 private:
   void FireSocketError();
 
@@ -128,6 +135,11 @@ private:
    * Task member for delayed connect task. Should only be access on main thread.
    */
   CancelableTask* mDelayedConnectTask;
+
+  /**
+   * I/O buffer for received data
+   */
+  nsAutoPtr<UnixSocketRawData> mBuffer;
 };
 
 StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop,
@@ -135,7 +147,6 @@ StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop,
                                UnixSocketConnector* aConnector,
                                const nsACString& aAddress)
   : UnixSocketWatcher(mIOLoop)
-  , DataSocketIO(MAX_READ_SIZE)
   , mStreamSocket(aStreamSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
@@ -152,7 +163,6 @@ StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop, int aFd,
                                UnixSocketConnector* aConnector,
                                const nsACString& aAddress)
   : UnixSocketWatcher(mIOLoop, aFd, aConnectionStatus)
-  , DataSocketIO(MAX_READ_SIZE)
   , mStreamSocket(aStreamSocket)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
@@ -496,6 +506,32 @@ StreamSocketIO::SetSocketFlags(int aFd)
   }
 
   return true;
+}
+
+nsresult
+StreamSocketIO::QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer)
+{
+  MOZ_ASSERT(aBuffer);
+
+  if (!mBuffer) {
+    mBuffer = new UnixSocketRawData(MAX_READ_SIZE);
+  }
+  *aBuffer = mBuffer.get();
+
+  return NS_OK;
+}
+
+void
+StreamSocketIO::ConsumeBuffer()
+{
+  NS_DispatchToMainThread(
+    new SocketIOReceiveRunnable<StreamSocketIO>(this, mBuffer.forget()));
+}
+
+void
+StreamSocketIO::DiscardBuffer()
+{
+  // Nothing to do.
 }
 
 //
