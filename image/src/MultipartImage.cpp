@@ -103,13 +103,18 @@ private:
 // Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-MultipartImage::MultipartImage(Image* aImage, ProgressTracker* aTracker)
-  : ImageWrapper(aImage)
+MultipartImage::MultipartImage(Image* aFirstPart)
+  : ImageWrapper(aFirstPart)
   , mDeferNotifications(false)
 {
-  MOZ_ASSERT(aTracker);
-  mProgressTrackerInit = new ProgressTrackerInit(this, aTracker);
   mNextPartObserver = new NextPartObserver(this);
+}
+
+void
+MultipartImage::Init()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mTracker, "Should've called SetProgressTracker() by now");
 
   // Start observing the first part.
   nsRefPtr<ProgressTracker> firstPartTracker =
@@ -119,7 +124,11 @@ MultipartImage::MultipartImage(Image* aImage, ProgressTracker* aTracker)
   InnerImage()->IncrementAnimationConsumers();
 }
 
-MultipartImage::~MultipartImage() { }
+MultipartImage::~MultipartImage()
+{
+  // Ask our ProgressTracker to drop its weak reference to us.
+  mTracker->ResetImage();
+}
 
 NS_IMPL_QUERY_INTERFACE_INHERITED0(MultipartImage, ImageWrapper)
 NS_IMPL_ADDREF(MultipartImage)

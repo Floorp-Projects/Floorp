@@ -289,6 +289,7 @@ public:
 
 protected:
   explicit ImageResource(ImageURL* aURI);
+  ~ImageResource();
 
   // Shared functionality for implementors of imgIContainer. Every
   // implementation of attribute animationMode should forward here.
