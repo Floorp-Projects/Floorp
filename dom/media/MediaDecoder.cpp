@@ -1648,6 +1648,10 @@ void MediaDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
   if (mDecoderStateMachine) {
     mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
   }
+
+  // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
+  // depends on the download rate.
+  mReadyStateWatchTarget->Notify();
 }
 
 // Provide access to the state machine object
