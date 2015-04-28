@@ -54,8 +54,6 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   , mNativeWindow(nullptr)
   , mPendingVideoBuffersLock("GonkVideoDecoderManager::mPendingVideoBuffersLock")
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
-  MOZ_ASSERT(mImageContainer);
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
   mMimeType = aConfig.mMimeType;
   mVideoWidth  = aConfig.mDisplay.width;
