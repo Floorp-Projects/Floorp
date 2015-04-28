@@ -184,7 +184,7 @@ private:
   ~BluetoothAdapter();
 
   /**
-   * Set adapter properties according to properties array
+   * Set adapter properties according to properties array.
    *
    * @param aValue [in] Properties array to set with
    */

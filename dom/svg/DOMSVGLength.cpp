@@ -371,7 +371,7 @@ DOMSVGLength::SetValueAsString(const nsAString& aValue, ErrorResult& aRv)
   }
 
   if (mVal) {
-    mVal->SetBaseValueString(aValue, mSVGElement, true);
+    aRv = mVal->SetBaseValueString(aValue, mSVGElement, true);
     return;
   }
 
