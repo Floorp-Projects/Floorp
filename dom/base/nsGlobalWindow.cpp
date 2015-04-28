@@ -4266,6 +4266,8 @@ nsGlobalWindow::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
 {
   MOZ_ASSERT(IsInnerWindow());
 
+  // Note: Keep this in sync with MayResolve.
+
   // Note: The infallibleInit call in GlobalResolve depends on this check.
   if (!JSID_IS_STRING(aId)) {
     return true;
@@ -4277,6 +4279,44 @@ nsGlobalWindow::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
   }
 
   return true;
+}
+
+/* static */
+bool
+nsGlobalWindow::MayResolve(jsid aId)
+{
+  // Note: This function does not fail and may not have any side-effects.
+  // Note: Keep this in sync with DoResolve.
+  if (!JSID_IS_STRING(aId)) {
+    return false;
+  }
+
+  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
+    return true;
+  }
+
+  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_CONTROLLERS)) {
+    // We only resolve .controllers in release builds and on non-chrome windows,
+    // but let's not worry about any of that stuff.
+    return true;
+  }
+
+  nsScriptNameSpaceManager *nameSpaceManager = PeekNameSpaceManager();
+  if (!nameSpaceManager) {
+    // Really shouldn't happen.  Fail safe.
+    return true;
+  }
+
+  nsAutoString name;
+  AssignJSFlatString(name, JSID_TO_FLAT_STRING(aId));
+
+  const nsGlobalNameStruct *name_struct =
+    nameSpaceManager->LookupName(name);
+
+  // LookupName only returns structs for the global.
+  MOZ_ASSERT_IF(name_struct,
+                name_struct->mType != nsGlobalNameStruct::eTypeNavigatorProperty);
+  return name_struct;
 }
 
 struct GlobalNameEnumeratorClosure
