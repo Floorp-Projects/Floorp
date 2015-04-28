@@ -15,6 +15,8 @@
 #include "nsJSUtils.h"
 #include "nsMemory.h"
 #include "nsServiceManagerUtils.h"
+#include "nsArray.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -125,6 +127,21 @@ EventListenerInfo::ToSource(nsAString& aResult)
     }
   }
   return NS_OK;
+}
+
+EventListenerService*
+EventListenerService::sInstance = nullptr;
+
+EventListenerService::EventListenerService()
+{
+  MOZ_ASSERT(!sInstance);
+  sInstance = this;
+}
+
+EventListenerService::~EventListenerService()
+{
+  MOZ_ASSERT(sInstance == this);
+  sInstance = nullptr;
 }
 
 NS_IMETHODIMP
@@ -286,6 +303,58 @@ EventListenerService::RemoveListenerForAllEvents(nsIDOMEventTarget* aTarget,
     manager->RemoveListenerForAllEvents(aListener, aUseCapture, aSystemEventGroup);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+EventListenerService::AddListenerChangeListener(nsIListenerChangeListener* aListener)
+{
+  if (!mChangeListeners.Contains(aListener)) {
+    mChangeListeners.AppendElement(aListener);
+  }
+  return NS_OK;
+};
+
+NS_IMETHODIMP
+EventListenerService::RemoveListenerChangeListener(nsIListenerChangeListener* aListener)
+{
+  mChangeListeners.RemoveElement(aListener);
+  return NS_OK;
+};
+
+void
+EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarget* aTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mChangeListeners.IsEmpty()) {
+    return;
+  }
+
+  if (!mPendingListenerChanges) {
+    mPendingListenerChanges = nsArrayBase::Create();
+    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableMethod(this,
+      &EventListenerService::NotifyPendingChanges);
+    NS_DispatchToCurrentThread(runnable);
+  }
+
+  if (!mPendingListenerChangesSet.Get(aTarget)) {
+    mPendingListenerChanges->AppendElement(aTarget, false);
+    mPendingListenerChangesSet.Put(aTarget, true);
+  }
+}
+
+void
+EventListenerService::NotifyPendingChanges()
+{
+  nsCOMPtr<nsIMutableArray> changes;
+  mPendingListenerChanges.swap(changes);
+  mPendingListenerChangesSet.Clear();
+
+  nsTObserverArray<nsCOMPtr<nsIListenerChangeListener>>::EndLimitedIterator
+    iter(mChangeListeners);
+  while (iter.HasMore()) {
+    nsCOMPtr<nsIListenerChangeListener> listener = iter.GetNext();
+    listener->ListenersChanged(changes);
+  }
 }
 
 } // namespace mozilla
