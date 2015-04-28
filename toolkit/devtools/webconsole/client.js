@@ -105,6 +105,7 @@ WebConsoleClient.prototype = {
         timings: {},
         updates: [], // track the list of network event updates
         private: actor.private,
+        fromCache: actor.fromCache
       };
       this._networkRequests.set(actor.actor, networkInfo);
 
@@ -144,6 +145,8 @@ WebConsoleClient.prototype = {
         networkInfo.response.status = packet.response.status;
         networkInfo.response.statusText = packet.response.statusText;
         networkInfo.response.headersSize = packet.response.headersSize;
+        networkInfo.response.remoteAddress = packet.response.remoteAddress;
+        networkInfo.response.remotePort = packet.response.remotePort;
         networkInfo.discardResponseBody = packet.response.discardResponseBody;
         break;
       case "responseContent":
@@ -151,10 +154,14 @@ WebConsoleClient.prototype = {
           mimeType: packet.mimeType,
         };
         networkInfo.response.bodySize = packet.contentSize;
+        networkInfo.response.transferredSize = packet.transferredSize;
         networkInfo.discardResponseBody = packet.discardResponseBody;
         break;
       case "eventTimings":
         networkInfo.totalTime = packet.totalTime;
+        break;
+      case "securityInfo":
+        networkInfo.securityInfo = packet.state;
         break;
     }
 
