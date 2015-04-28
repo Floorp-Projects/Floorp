@@ -39,11 +39,11 @@ ImageWrapper::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
   return mInnerImage->SizeOfSourceWithComputedFallback(aMallocSizeOf);
 }
 
-size_t
-ImageWrapper::SizeOfDecoded(gfxMemoryLocation aLocation,
-                            MallocSizeOf aMallocSizeOf) const
+void
+ImageWrapper::CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
+                                    MallocSizeOf aMallocSizeOf) const
 {
-  return mInnerImage->SizeOfDecoded(aLocation, aMallocSizeOf);
+  mInnerImage->CollectSizeOfSurfaces(aCounters, aMallocSizeOf);
 }
 
 void
