@@ -155,7 +155,16 @@ MultipartImage::BeginTransitionToPart(Image* aNextPart)
   mNextPart->IncrementAnimationConsumers();
 }
 
-void MultipartImage::FinishTransition()
+static Progress
+FilterProgress(Progress aProgress)
+{
+  // Filter out onload blocking notifications, since we don't want to block
+  // onload for multipart images.
+  return aProgress & ~(FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED);
+}
+
+void
+MultipartImage::FinishTransition()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mNextPart, "Should have a next part here");
@@ -170,7 +179,8 @@ void MultipartImage::FinishTransition()
     mTracker->ResetForNewRequest();
     nsRefPtr<ProgressTracker> currentPartTracker =
       InnerImage()->GetProgressTracker();
-    mTracker->SyncNotifyProgress(currentPartTracker->GetProgress());
+    mTracker
+      ->SyncNotifyProgress(FilterProgress(currentPartTracker->GetProgress()));
 
     return;
   }
@@ -190,8 +200,9 @@ void MultipartImage::FinishTransition()
 
   // Finally, send all the notifications for the new current part and send a
   // FRAME_UPDATE notification so that observers know to redraw.
-  mTracker->SyncNotifyProgress(newCurrentPartTracker->GetProgress(),
-                               GetMaxSizedIntRect());
+  mTracker
+    ->SyncNotifyProgress(FilterProgress(newCurrentPartTracker->GetProgress()),
+                         GetMaxSizedIntRect());
 }
 
 already_AddRefed<imgIContainer>
