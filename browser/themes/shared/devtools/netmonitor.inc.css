@@ -228,6 +228,16 @@ label.requests-menu-status-code {
   background-color: rgba(143, 161, 178, 1); /* grey */
 }
 
+.theme-dark box.requests-menu-status[code="cached"] {
+  border: 2px solid rgba(95, 115, 135, 1); /* dark grey */
+  background-color: transparent;  
+}
+
+.theme-light box.requests-menu-status[code="cached"] {
+  border: 2px solid rgba(143, 161, 178, 1); /* grey */
+  background-color: transparent;
+}
+
 .theme-dark box.requests-menu-status[code^="1"] {
   background-color: rgba(70, 175, 227, 1); /* light blue */
 }

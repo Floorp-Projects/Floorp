@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** 
+/**
  * The next thing we do is create a test database for us.  Each test runs with
  * its own database (tail_queries.js will clear it after the run).  Take a look
  * at the queryData object in head_queries.js, and you'll see how this object
@@ -70,9 +70,9 @@ add_task(function test_onlyBookmarked()
   // You can use this to compare the data in the array with the result set,
   // if the array's isInQuery: true items are sorted the same way as the result
   // set.
-  LOG("begin first test");
+  do_print("begin first test");
   compareArrayToResult(testData, root);
-  LOG("end first test");
+  do_print("end first test");
 
   /* ******************
   Test live-update
@@ -101,9 +101,9 @@ add_task(function test_onlyBookmarked()
   testData.push(liveUpdateTestData[1]);
 
   // re-query and test
-  LOG("begin live-update test");
+  do_print("begin live-update test");
   compareArrayToResult(testData, root);
-  LOG("end live-update test");
+  do_print("end live-update test");
 /*
   // we are actually not updating during a batch.
   // see bug 432706 for details.
@@ -122,9 +122,9 @@ add_task(function test_onlyBookmarked()
   PlacesUtils.history.runInBatchMode(updateBatch, null);
 
   // re-query and test
-  LOG("begin batched test");
+  do_print("begin batched test");
   compareArrayToResult(testData, root);
-  LOG("end batched test");
+  do_print("end batched test");
 */
   // Close the container when finished
   root.containerOpen = false;

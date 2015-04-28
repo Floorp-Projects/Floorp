@@ -74,6 +74,7 @@ import org.mozilla.gecko.util.PrefUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
+import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.ButtonToast;
 import org.mozilla.gecko.widget.ButtonToast.ToastListener;
 import org.mozilla.gecko.widget.GeckoActionProvider;
@@ -150,6 +151,7 @@ public class BrowserApp extends GeckoApp
                                    BrowserSearch.OnEditSuggestionListener,
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
+                                   AnchoredPopup.OnShowListener,
                                    ActionModeCompat.Presenter,
                                    LayoutInflater.Factory {
     private static final String LOGTAG = "GeckoBrowserApp";
@@ -1347,6 +1349,7 @@ public class BrowserApp extends GeckoApp
         super.initializeChrome();
 
         mDoorHangerPopup.setAnchor(mBrowserToolbar.getDoorHangerAnchor());
+        mDoorHangerPopup.setOnShowListener(this);
 
         mDynamicToolbar.setLayerView(mLayerView);
         setDynamicToolbarEnabled(mDynamicToolbar.isEnabled());
@@ -1359,6 +1362,16 @@ public class BrowserApp extends GeckoApp
             onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, null);
             invalidateOptionsMenu();
         }
+    }
+
+    @Override
+    public void onDoorHangerShow() {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+            }
+        });
     }
 
     private void handleClearHistory(final boolean clearSearchHistory) {
@@ -1436,10 +1449,6 @@ public class BrowserApp extends GeckoApp
                 final float offset = getResources().getDimensionPixelOffset(R.dimen.progress_bar_scroll_offset);
                 final float progressTranslationY = Math.max(marginTop - browserChrome.getHeight(), offset - browserChrome.getHeight());
                 ViewHelper.setTranslationY(progressView, progressTranslationY);
-
-                if (mDoorHangerPopup.isShowing()) {
-                    mDoorHangerPopup.updatePopup();
-                }
             }
         });
 

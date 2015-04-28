@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="../head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      function connectToLocal(win, docRuntime) {
+        let deferred = promise.defer();
+        win.AppManager.connection.once(
+            win.Connection.Events.CONNECTED,
+            () => deferred.resolve());
+        docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
+        return deferred.promise;
+      }
+
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Task.spawn(function* () {
+          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          Services.prefs.setBoolPref("devtools.webide.sidebars", true);
+          let win = yield openWebIDE();
+          let docProject = getProjectDocument(win);
+          let docRuntime = getRuntimeDocument(win);
+          win.AppManager.update("runtime-list");
+
+          yield connectToLocal(win, docRuntime);
+
+          // Select main process
+          yield waitForUpdate(win, "runtime-targets");
+          SimpleTest.executeSoon(() => {
+            docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
+          });
+
+          yield waitForUpdate(win, "project");
+
+          ok(win.UI.toolboxPromise, "Toolbox promise exists");
+          yield win.UI.toolboxPromise;
+
+          ok(win.UI.toolboxIframe, "Toolbox iframe exists");
+
+          let nbox = win.document.querySelector("#notificationbox");
+          ok(nbox.hasAttribute("toolboxfullscreen"), "Toolbox is fullsreen");
+
+          win.Cmds.showRuntimeDetails();
+
+          ok(!nbox.hasAttribute("toolboxfullscreen"), "Toolbox is not fullscreen");
+
+          yield win.Cmds.disconnectRuntime();
+
+          yield closeWebIDE(win);
+
+          const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+          DebuggerServer.destroy();
+
+          SimpleTest.finish();
+        });
+      }
+    </script>
+  </body>
+</html>

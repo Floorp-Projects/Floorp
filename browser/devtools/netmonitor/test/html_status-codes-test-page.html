@@ -40,6 +40,15 @@
           });
         });
       }
+
+      function performCachedRequests() {
+        get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
+          get("sjs_status-codes-test-server.sjs?sts=redirect&cached", function() {
+            // Done.
+          });
+        });
+      }
+
     </script>
   </body>
 

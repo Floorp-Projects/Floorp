@@ -558,8 +558,10 @@ NetworkEventsHandler.prototype = {
       return;
     }
 
-    let { actor, startedDateTime, method, url, isXHR } = aPacket.eventActor;
-    NetMonitorView.RequestsMenu.addRequest(actor, startedDateTime, method, url, isXHR);
+    let { actor, startedDateTime, method, url, isXHR, fromCache } = aPacket.eventActor;
+    NetMonitorView.RequestsMenu.addRequest(
+      actor, startedDateTime, method, url, isXHR, fromCache
+    );
     window.emit(EVENTS.NETWORK_EVENT, actor);
   },
 

@@ -265,10 +265,13 @@ loop.roomViews = (function(mozL10n) {
                 {mozL10n.get("share_button3")}
               </button>
             </div>
-            <SocialShareDropdown dispatcher={this.props.dispatcher}
-                                 roomUrl={this.props.roomData.roomUrl}
-                                 show={this.state.showMenu}
-                                 ref="menu"/>
+            <SocialShareDropdown
+              dispatcher={this.props.dispatcher}
+              roomUrl={this.props.roomData.roomUrl}
+              show={this.state.showMenu}
+              socialShareButtonAvailable={this.props.socialShareButtonAvailable}
+              socialShareProviders={this.props.socialShareProviders}
+              ref="menu" />
           </div>
           <DesktopRoomContextView
             roomData={this.props.roomData}
@@ -443,7 +446,9 @@ loop.roomViews = (function(mozL10n) {
                 error={this.state.error}
                 roomData={roomData}
                 show={shouldRenderInvitationOverlay}
-                showContext={shouldRenderContextView} />
+                showContext={shouldRenderContextView}
+                socialShareButtonAvailable={this.state.socialShareButtonAvailable}
+                socialShareProviders={this.state.socialShareProviders} />
               <div className="video-layout-wrapper">
                 <div className="conversation room-conversation">
                   <div className="media nested">

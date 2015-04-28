@@ -91,8 +91,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
     selection: {
       start: {line: 0, ch: 0},
       end: {line: 0, ch: 0}
-    },
-    topIndex: 0              // the first visible line
+    }
   };
 
   this._styleSheetFilePath = null;
@@ -400,7 +399,6 @@ StyleSheetEditor.prototype = {
         sourceEditor.focus();
       }
 
-      sourceEditor.setFirstVisibleLine(this._state.topIndex);
       sourceEditor.setSelection(this._state.selection.start,
                                 this._state.selection.end);
 
@@ -446,7 +444,9 @@ StyleSheetEditor.prototype = {
    */
   onShow: function() {
     if (this.sourceEditor) {
-      this.sourceEditor.setFirstVisibleLine(this._state.topIndex);
+      // CodeMirror needs refresh to restore scroll position after hiding and
+      // showing the editor.
+      this.sourceEditor.refresh();
     }
     this.focus();
   },

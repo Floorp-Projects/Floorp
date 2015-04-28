@@ -25,6 +25,7 @@ EXTRA_JS_MODULES.devtools.webide += [
     'modules/build.js',
     'modules/config-view.js',
     'modules/project-list.js',
+    'modules/runtime-list.js',
     'modules/runtimes.js',
     'modules/simulator-process.js',
     'modules/simulators.js',

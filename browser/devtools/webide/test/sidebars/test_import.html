@@ -20,7 +20,7 @@
         Task.spawn(function*() {
           Services.prefs.setBoolPref("devtools.webide.sidebars", true);
           let win = yield openWebIDE();
-          let winIframe = win.document.querySelector("#project-listing-panel-details").contentWindow;
+          let docProject = getProjectDocument(win);
           let packagedAppLocation = getTestFilePath("../app");
 
           yield win.AppProjects.load();
@@ -57,7 +57,7 @@
           project = win.AppManager.selectedProject;
           ok(project.location.endsWith('manifest.webapp'), "The manifest was found and the project was updated");
 
-          let panelNode = winIframe.document.querySelector("#project-panel");
+          let panelNode = docProject.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
           // 3 controls, + 2 projects
           is(items.length, 6, "6 projects in panel");

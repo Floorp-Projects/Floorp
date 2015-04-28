@@ -12,7 +12,6 @@ Cu.import("resource://gre/modules/ReaderMode.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Rect", "resource://gre/modules/Geometry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry", "resource://gre/modules/UITelemetry.jsm");
@@ -80,9 +79,9 @@ let AboutReader = function(mm, win, articlePromise) {
     // Pref doesn't exist.
   }
 
-  let pocketPlacement = CustomizableUI.getPlacementOfWidget("pocket-button");
-  if (pocketPlacement && pocketPlacement.area) {
-    this._setupButton("pocket-button", this._onPocketToggle.bind(this, "button"));
+  const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+  if (gIsFirefoxDesktop) {
+    this._setupPocketButton();
   } else {
     this._doc.getElementById("pocket-button").hidden = true;
   }
@@ -609,6 +608,24 @@ AboutReader.prototype = {
   _setSystemUIVisibility: function Reader_setSystemUIVisibility(visible) {
     this._mm.sendAsyncMessage("Reader:SystemUIVisibility", { visible: visible });
   },
+
+  _setupPocketButton: Task.async(function* () {
+    let pocketEnabledPromise = new Promise((resolve, reject) => {
+      let listener = (message) => {
+        this._mm.removeMessageListener("Reader:PocketEnabledData", listener);
+        resolve(message.data.enabled);
+      };
+      this._mm.addMessageListener("Reader:PocketEnabledData", listener);
+      this._mm.sendAsyncMessage("Reader:PocketEnabledGet");
+    });
+
+    let isPocketEnabled = yield pocketEnabledPromise;
+    if (isPocketEnabled) {
+      this._setupButton("pocket-button", this._onPocketToggle.bind(this, "button"));
+    } else {
+      this._doc.getElementById("pocket-button").hidden = true;
+    }
+  }),
 
   _loadArticle: Task.async(function* () {
     let url = this._getOriginalUrl();
