@@ -1184,19 +1184,6 @@ MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind all
 }
 
 void
-MacroAssembler::newGCThing(Register result, Register temp, JSObject* templateObj,
-                           gc::InitialHeap initialHeap, Label* fail)
-{
-    gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
-    MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
-
-    size_t ndynamic = 0;
-    if (templateObj->isNative())
-        ndynamic = templateObj->as<NativeObject>().numDynamicSlots();
-    allocateObject(result, temp, allocKind, ndynamic, initialHeap, fail);
-}
-
-void
 MacroAssembler::createGCObject(Register obj, Register temp, JSObject* templateObj,
                                gc::InitialHeap initialHeap, Label* fail, bool initContents,
                                bool convertDoubleElements)
