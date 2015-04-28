@@ -23,7 +23,7 @@ WEBIDL_FILES = [
     'AnalyserNode.webidl',
     'Animatable.webidl',
     'Animation.webidl',
-    'AnimationEffectReadonly.webidl',
+    'AnimationEffectReadOnly.webidl',
     'AnimationEvent.webidl',
     'AnimationTimeline.webidl',
     'AnonymousContent.webidl',

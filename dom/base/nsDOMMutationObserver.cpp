@@ -345,7 +345,7 @@ void
 nsAnimationReceiver::RecordAnimationMutation(Animation* aAnimation,
                                              AnimationMutation aMutationType)
 {
-  KeyframeEffectReadonly* effect = aAnimation->GetEffect();
+  KeyframeEffectReadOnly* effect = aAnimation->GetEffect();
   if (!effect) {
     return;
   }
