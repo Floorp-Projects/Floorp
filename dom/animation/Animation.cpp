@@ -56,6 +56,23 @@ Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
 }
 
 void
+Animation::SetTimeline(AnimationTimeline* aTimeline)
+{
+  if (mTimeline == aTimeline) {
+    return;
+  }
+
+  mTimeline = aTimeline;
+
+  // FIXME(spec): Once we implement the seeking defined in the spec
+  // surely this should be SeekFlag::DidSeek but the spec says otherwise.
+  UpdateTiming(SeekFlag::NoSeek);
+
+  // FIXME: When we expose this method to script we'll need to call PostUpdate
+  // (but *not* when this method gets called from style).
+}
+
+void
 Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 {
   Nullable<TimeDuration> timelineTime;

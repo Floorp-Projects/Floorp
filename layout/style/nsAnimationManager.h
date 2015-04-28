@@ -58,9 +58,8 @@ class CSSAnimation final : public Animation
 {
 public:
  explicit CSSAnimation(nsIGlobalObject* aGlobal,
-                       dom::AnimationTimeline* aTimeline,
                        const nsSubstring& aAnimationName)
-    : dom::Animation(aGlobal, aTimeline)
+    : dom::Animation(aGlobal)
     , mAnimationName(aAnimationName)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
