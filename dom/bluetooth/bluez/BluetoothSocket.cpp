@@ -35,6 +35,8 @@ public:
   ~BluetoothSocketIO();
 
   void        GetSocketAddr(nsAString& aAddrStr) const;
+
+  BluetoothSocket* GetBluetoothSocket();
   DataSocket* GetDataSocket();
   SocketBase* GetSocketBase();
 
@@ -88,6 +90,8 @@ public:
   void DiscardBuffer();
 
 private:
+  class ReceiveRunnable;
+
   void FireSocketError();
 
   // Set up flags on file descriptor.
@@ -169,10 +173,16 @@ BluetoothSocket::BluetoothSocketIO::GetSocketAddr(nsAString& aAddrStr) const
   mConnector->GetSocketAddr(mAddr, aAddrStr);
 }
 
+BluetoothSocket*
+BluetoothSocket::BluetoothSocketIO::GetBluetoothSocket()
+{
+  return mConsumer.get();
+}
+
 DataSocket*
 BluetoothSocket::BluetoothSocketIO::GetDataSocket()
 {
-  return mConsumer.get();
+  return GetBluetoothSocket();
 }
 
 SocketBase*
@@ -500,11 +510,47 @@ BluetoothSocket::BluetoothSocketIO::QueryReceiveBuffer(
   return NS_OK;
 }
 
+/**
+ * |ReceiveRunnable| transfers data received on the I/O thread
+ * to an instance of |BluetoothSocket| on the main thread.
+ */
+class BluetoothSocket::BluetoothSocketIO::ReceiveRunnable final
+  : public SocketIORunnable<BluetoothSocketIO>
+{
+public:
+  ReceiveRunnable(BluetoothSocketIO* aIO, UnixSocketBuffer* aBuffer)
+    : SocketIORunnable<BluetoothSocketIO>(aIO)
+    , mBuffer(aBuffer)
+  { }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BluetoothSocketIO* io = SocketIORunnable<BluetoothSocketIO>::GetIO();
+
+    if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+      // Since we've already explicitly closed and the close
+      // happened before this, this isn't really an error.
+      return NS_OK;
+    }
+
+    BluetoothSocket* bluetoothSocket = io->GetBluetoothSocket();
+    MOZ_ASSERT(bluetoothSocket);
+
+    bluetoothSocket->ReceiveSocketData(mBuffer);
+
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<UnixSocketBuffer> mBuffer;
+};
+
 void
 BluetoothSocket::BluetoothSocketIO::ConsumeBuffer()
 {
-  NS_DispatchToMainThread(
-    new SocketIOReceiveRunnable<BluetoothSocketIO>(this, mBuffer.forget()));
+  NS_DispatchToMainThread(new ReceiveRunnable(this, mBuffer.forget()));
 }
 
 void

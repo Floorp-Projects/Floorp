@@ -44,13 +44,19 @@ public:
   virtual void OnConnectSuccess() override;
   virtual void OnConnectError() override;
   virtual void OnDisconnect() override;
-  virtual void ReceiveSocketData(
-    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer) override;
 
   inline void GetAddress(nsAString& aDeviceAddress)
   {
     GetSocketAddr(aDeviceAddress);
   }
+
+  /**
+   * Method to be called whenever data is received. This is only called on the
+   * main thread.
+   *
+   * @param aBuffer Data received from the socket.
+   */
+  void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
 
   /**
    * Queue data to be sent to the socket on the IO thread. Can only be called on
