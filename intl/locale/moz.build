@@ -48,8 +48,6 @@ EXTRA_JS_MODULES += [
     'PluralForm.jsm',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [

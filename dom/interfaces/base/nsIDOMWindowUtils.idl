@@ -51,7 +51,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(7ecfd6e7-120a-4567-85f7-14277f4c6d9f)]
+[scriptable, uuid(55d6b97f-0717-449d-ac6c-cdaba0a9b698)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1326,6 +1326,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * error if there is no widget associated with this window.
    */
   readonly attribute boolean layerManagerRemote;
+
+  /**
+   * True if we can initialize a hardware-backed h264 decoder for a simple
+   * test video, does not mean that all h264 video decoding will be done
+   * in hardware.
+   */
+  readonly attribute boolean supportsHardwareH264Decoding;
 
   /**
    * Record (and return) frame-intervals for frames which were presented

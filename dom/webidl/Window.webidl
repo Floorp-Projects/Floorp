@@ -29,8 +29,8 @@ typedef any Transferable;
   // the current browsing context
   [Unforgeable, Constant, StoreInSlot,
    CrossOriginReadable] readonly attribute Window window;
-  [Replaceable, Throws,
-   CrossOriginReadable] readonly attribute WindowProxy self;
+  [Replaceable, Constant, StoreInSlot,
+   CrossOriginReadable] readonly attribute Window self;
   [Unforgeable, StoreInSlot, Pure] readonly attribute Document? document;
   [Throws] attribute DOMString name; 
   [PutForwards=href, Unforgeable, Throws,

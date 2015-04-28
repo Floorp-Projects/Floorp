@@ -36,12 +36,14 @@ SimpleTest.waitForFocus(function() {
     setTimeout(function() {
       synthesizeKey(" ", {});
 
-      var sel = getSpellCheckSelection();
-      is(sel.rangeCount, 2, "We should have two misspelled words");
-      is(String(sel.getRangeAt(0)), "thiss", "Correct misspelled word");
-      is(String(sel.getRangeAt(1)), "onee", "Correct misspelled word");
+      setTimeout(function() {
+        var sel = getSpellCheckSelection();
+        is(sel.rangeCount, 2, "We should have two misspelled words");
+        is(String(sel.getRangeAt(0)), "thiss", "Correct misspelled word");
+        is(String(sel.getRangeAt(1)), "onee", "Correct misspelled word");
 
-      SimpleTest.finish();
+        SimpleTest.finish();
+      },0);
     },0);
   },0);
 

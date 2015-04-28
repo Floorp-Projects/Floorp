@@ -613,7 +613,7 @@ struct JSClass {
 // JSCLASS_GLOBAL_APPLICATION_SLOTS is the number of slots reserved at
 // the beginning of every global object's slots for use by the
 // application.
-#define JSCLASS_GLOBAL_APPLICATION_SLOTS 4
+#define JSCLASS_GLOBAL_APPLICATION_SLOTS 5
 #define JSCLASS_GLOBAL_SLOT_COUNT      (JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProto_LIMIT * 3 + 31)
 #define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
     (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))

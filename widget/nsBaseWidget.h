@@ -154,6 +154,7 @@ public:
   virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void            CreateCompositor();
   virtual void            CreateCompositor(int aWidth, int aHeight);
+  virtual bool            IsMultiProcessWindow();
   virtual void            PrepareWindowEffects() override {}
   virtual void            CleanupWindowEffects() override {}
   virtual bool            PreRender(LayerManagerComposite* aManager) override { return true; }
@@ -481,10 +482,7 @@ protected:
   bool              mUpdateCursor;
   nsBorderStyle     mBorderStyle;
   bool              mUseLayersAcceleration;
-  bool              mForceLayersAcceleration;
-  // Windows with out-of-process tabs always require OMTC. This flag designates
-  // such windows.
-  bool              mRequireOffMainThreadCompositing;
+  bool              mMultiProcessWindow;
   bool              mUseAttachedEvents;
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;

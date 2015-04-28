@@ -12,7 +12,7 @@ function usage() {
 
 clean=1
 platform=""
-TIMEOUT=7200
+TIMEOUT=3h
 while [ $# -gt 1 ]; do
     case "$1" in
         --dep)

@@ -13,6 +13,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jspubtd.h"
 
@@ -142,6 +143,7 @@ namespace JS {
 namespace ubi {
 
 using mozilla::Maybe;
+using mozilla::UniquePtr;
 
 class Edge;
 class EdgeRange;
@@ -206,10 +208,25 @@ class Base {
     // nullptr is returned.
     virtual JSCompartment* compartment() const { return nullptr; }
 
-    // If this node references a JSObject in the live heap, or represents a
-    // previously existing JSObject from some deserialized heap snapshot, return
-    // the object's [[Class]]'s name. Otherwise, return nullptr.
+    // Methods for JSObject Referents
+    //
+    // These methods are only semantically valid if the referent is either a
+    // JSObject in the live heap, or represents a previously existing JSObject
+    // from some deserialized heap snapshot.
+
+    // Return the object's [[Class]]'s name.
     virtual const char* jsObjectClassName() const { return nullptr; }
+
+    // If this object was constructed with `new` and we have the data available,
+    // place the contructor function's display name in the out parameter.
+    // Otherwise, place nullptr in the out parameter. Caller maintains ownership
+    // of the out parameter. True is returned on success, false is returned on
+    // OOM.
+    virtual bool jsObjectConstructorName(JSContext* cx,
+                                         UniquePtr<char16_t[], JS::FreePolicy>& outName) const {
+        outName.reset(nullptr);
+        return true;
+    }
 
   private:
     Base(const Base& rhs) = delete;
@@ -336,6 +353,10 @@ class Node {
     JS::Zone* zone()                const { return base()->zone(); }
     JSCompartment* compartment()    const { return base()->compartment(); }
     const char* jsObjectClassName() const { return base()->jsObjectClassName(); }
+    bool jsObjectConstructorName(JSContext* cx,
+                                 UniquePtr<char16_t[], JS::FreePolicy>& outName) const {
+        return base()->jsObjectConstructorName(cx, outName);
+    }
 
     size_t size(mozilla::MallocSizeOf mallocSizeof) const {
         return base()->size(mallocSizeof);
@@ -574,6 +595,8 @@ template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
 template<>
 class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
     const char* jsObjectClassName() const override;
+    bool jsObjectConstructorName(JSContext* cx,
+                                 UniquePtr<char16_t[], JS::FreePolicy>& outName) const override;
     size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
   protected:

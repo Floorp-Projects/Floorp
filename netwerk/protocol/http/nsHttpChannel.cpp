@@ -41,6 +41,7 @@
 #include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/VisualEventTracer.h"
 #include "nsISSLSocketControl.h"
@@ -82,6 +83,10 @@
 namespace mozilla { namespace net {
 
 namespace {
+
+// Monotonically increasing ID for generating unique cache entries per
+// intercepted channel.
+static uint64_t gNumIntercepted = 0;
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -223,6 +228,7 @@ nsHttpChannel::nsHttpChannel()
     , mRequestTime(0)
     , mOfflineCacheLastModifiedTime(0)
     , mInterceptCache(DO_NOT_INTERCEPT)
+    , mInterceptionID(gNumIntercepted++)
     , mCachedContentIsValid(false)
     , mCachedContentIsPartial(false)
     , mCacheOnlyMetadata(false)
@@ -2782,12 +2788,16 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         extension.Append(nsPrintfCString("%d", mPostID));
     }
     if (PossiblyIntercepted()) {
-        extension.Append('u');
+        extension.Append(nsPrintfCString("u%lld", mInterceptionID));
     }
 
     // If this channel should be intercepted, we do not open a cache entry for this channel
     // until the interception process is complete and the consumer decides what to do with it.
     if (mInterceptCache == MAYBE_INTERCEPT) {
+        DebugOnly<bool> exists;
+        MOZ_ASSERT(NS_FAILED(cacheStorage->Exists(openURI, extension, &exists)) || !exists,
+                   "The entry must not exist in the cache before we create it here");
+
         nsCOMPtr<nsICacheEntry> entry;
         rv = cacheStorage->OpenTruncate(openURI, extension, getter_AddRefs(entry));
         NS_ENSURE_SUCCESS(rv, rv);

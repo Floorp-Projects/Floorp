@@ -1461,8 +1461,13 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
             win = WindowGlobalOrNull(proto);
         }
     }
-    if (!win)
+
+    if (!win) {
+        NS_WARNING("No active window");
         return true;
+    }
+
+    MOZ_ASSERT(!win->IsDying());
 
     if (win->GetIsPrerendered()) {
         // We cannot display a dialog if the page is being prerendered, so
