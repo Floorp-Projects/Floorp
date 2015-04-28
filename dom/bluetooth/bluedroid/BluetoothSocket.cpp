@@ -43,7 +43,7 @@ EnsureBluetoothSocketHalLoad()
 }
 
 class mozilla::dom::bluetooth::DroidSocketImpl : public ipc::UnixFdWatcher
-                                               , protected SocketIOBase
+                                               , protected DataSocketIO
 {
 public:
   /* The connection status in DroidSocketImpl indicates the current
@@ -75,7 +75,7 @@ public:
 
   DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer)
     : ipc::UnixFdWatcher(aIOLoop)
-    , SocketIOBase(MAX_READ_SIZE)
+    , DataSocketIO(MAX_READ_SIZE)
     , mConsumer(aConsumer)
     , mShuttingDownOnIOThread(false)
     , mConnectionStatus(SOCKET_IS_DISCONNECTED)
@@ -135,14 +135,14 @@ public:
     AddWatchers(WRITE_WATCHER, false);
   }
 
-  SocketConsumerBase* GetConsumer()
+  DataSocket* GetDataSocket()
   {
     return mConsumer.get();
   }
 
   SocketBase* GetSocketBase()
   {
-    return GetConsumer();
+    return GetDataSocket();
   }
 
   /**

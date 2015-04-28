@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.ipc += [
     'ConnectionOrientedSocket.h',
+    'DataSocket.h',
     'ListenSocket.h',
     'SocketBase.h',
     'StreamSocket.h',
@@ -14,6 +15,7 @@ EXPORTS.mozilla.ipc += [
 
 SOURCES += [
     'ConnectionOrientedSocket.cpp',
+    'DataSocket.cpp',
     'ListenSocket.cpp',
     'SocketBase.cpp',
     'StreamSocket.cpp',
