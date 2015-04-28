@@ -96,22 +96,18 @@ checkAndLogStatementPerformance(sqlite3_stmt *aStatement)
   if (::strstr(sql, "/* do not warn (bug "))
     return;
 
-  nsAutoCString message;
-  message.AppendInt(count);
-  if (count == 1)
-    message.AppendLiteral(" sort operation has ");
-  else
-    message.AppendLiteral(" sort operations have ");
-  message.AppendLiteral("occurred for the SQL statement '");
+  nsAutoCString message("Suboptimal indexes for the SQL statement ");
 #ifdef MOZ_STORAGE_SORTWARNING_SQL_DUMP
-  message.AppendLiteral("SQL command: ");
+  message.Append('`');
   message.Append(sql);
+  message.AppendLiteral("` [");
+  message.AppendInt(count);
+  message.AppendLiteral(" sort operation(s)]");
 #else
   nsPrintfCString address("0x%p", aStatement);
   message.Append(address);
 #endif
-  message.Append("'.  See https://developer.mozilla.org/En/Storage/Warnings "
-                 "details.");
+  message.AppendLiteral(" (http://mzl.la/1FuID0j).");
   NS_WARNING(message.get());
 }
 
