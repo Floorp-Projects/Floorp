@@ -420,23 +420,6 @@ describe("loop.OTSdkDriver", function () {
       sinon.assert.calledOnce(publisher.destroy);
     });
 
-    it("should dispatch a ConnectionStatus action", function() {
-      driver.session = session;
-      driver._metrics.connections = 1;
-
-      driver.disconnectSession();
-
-      sinon.assert.calledOnce(dispatcher.dispatch);
-      sinon.assert.calledWithExactly(dispatcher.dispatch,
-        new sharedActions.ConnectionStatus({
-          event: "Session.connectionDestroyed",
-          state: "cleanup",
-          connections: 0,
-          sendStreams: 0,
-          recvStreams: 0
-        }));
-    });
-
     it("should call _noteConnectionLengthIfNeeded with connection duration", function() {
       driver.session = session;
       var startTime = 1;
