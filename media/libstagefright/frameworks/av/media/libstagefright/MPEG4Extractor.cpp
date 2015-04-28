@@ -764,6 +764,11 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         return ERROR_MALFORMED;
     }
 
+    if (chunk_size >= (size_t)-1 - 128) {
+        // Could cause an overflow later. Abort.
+        return ERROR_MALFORMED;
+    }
+
     char chunk[5];
     MakeFourCCString(chunk_type, chunk);
     ALOGV("chunk: %s @ %lld, %d", chunk, *offset, depth);
@@ -2197,12 +2202,15 @@ status_t MPEG4Extractor::parseMetaData(off64_t offset, size_t size) {
         return ERROR_MALFORMED;
     }
 
-    uint8_t *buffer = new uint8_t[size + 1];
+    FallibleTArray<uint8_t> bufferBackend;
+    if (!bufferBackend.SetLength(size + 1)) {
+        // OOM ignore metadata.
+        return OK;
+    }
+
+    uint8_t *buffer = bufferBackend.Elements();
     if (mDataSource->readAt(
                 offset, buffer, size) != (ssize_t)size) {
-        delete[] buffer;
-        buffer = NULL;
-
         return ERROR_IO;
     }
 
@@ -2372,9 +2380,6 @@ status_t MPEG4Extractor::parseMetaData(off64_t offset, size_t size) {
                     metadataKey, (const char *)buffer + 8);
         }
     }
-
-    delete[] buffer;
-    buffer = NULL;
 
     return OK;
 }
