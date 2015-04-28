@@ -137,9 +137,15 @@ fi
 RUN_JSTESTS=true
 
 PARENT=$$
-sh -c "sleep $TIMEOUT; kill $PARENT" <&- >&- 2>&- &
+
+# Spawn off a child process, detached from any of our fds, that will kill us after a timeout.
+# To report the timeout, catch the signal in the parent before exiting.
+sh -c "sleep $TIMEOUT; kill -INT $PARENT" <&- >&- 2>&- &
 KILLER=$!
 disown %1
+trap "echo 'TEST-UNEXPECTED-FAIL | autospider.sh $TIMEOUT timeout | ignore later failures' >&2; exit 1" INT
+
+# If we do *not* hit that timeout, kill off the spawned process on a regular exit.
 trap "kill $KILLER" EXIT
 
 if [[ "$VARIANT" = "rootanalysis" ]]; then
