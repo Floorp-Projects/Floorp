@@ -80,9 +80,8 @@ namespace dom {
 class CSSTransition final : public Animation
 {
 public:
- explicit CSSTransition(nsIGlobalObject* aGlobal,
-                        dom::AnimationTimeline* aTimeline)
-    : dom::Animation(aGlobal, aTimeline)
+ explicit CSSTransition(nsIGlobalObject* aGlobal)
+    : dom::Animation(aGlobal)
   {
   }
 
