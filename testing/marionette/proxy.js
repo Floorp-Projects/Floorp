@@ -4,14 +4,19 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("chrome://marionette/content/modal.js");
 
 this.EXPORTED_SYMBOLS = ["proxy"];
 
+const MARIONETTE_OK = "Marionette:ok";
+const MARIONETTE_DONE = "Marionette:done";
+const MARIONETTE_ERROR = "Marionette:error";
+
 const logger = Log.repository.getLogger("Marionette");
+const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 this.proxy = {};
 
@@ -36,8 +41,12 @@ this.proxy = {};
 proxy.toListener = function(mmFn, sendAsyncFn) {
   let sender = new ContentSender(mmFn, sendAsyncFn);
   let handler = {
-    set: (obj, prop, val) => { obj[prop] = val; return true; },
-    get: (obj, prop) => (...args) => obj.send(prop, args),
+    get: (obj, prop) => {
+      if (obj.hasOwnProperty(prop)) {
+        return obj[prop];
+      }
+      return (...args) => obj.send(prop, args);
+    }
   };
   return new Proxy(sender, handler);
 };
@@ -60,7 +69,7 @@ proxy.toListener = function(mmFn, sendAsyncFn) {
  *     Callback for sending async messages to the current listener.
  */
 let ContentSender = function(mmFn, sendAsyncFn) {
-  this.curCmdId = null;
+  this.curId = null;
   this.sendAsync = sendAsyncFn;
   this.mmFn_ = mmFn;
 };
@@ -85,16 +94,15 @@ Object.defineProperty(ContentSender.prototype, "mm", {
  *     A promise that resolves to the result of the command.
  */
 ContentSender.prototype.send = function(name, args) {
-  const ok = "Marionette:ok";
-  const val = "Marionette:done";
-  const err = "Marionette:error";
+  this.curId = uuidgen.generateUUID().toString();
 
   let proxy = new Promise((resolve, reject) => {
-    let removeListeners = (name, fn) => {
+    let removeListeners = (n, fn) => {
       let rmFn = msg => {
-        if (this.isOutOfSync(msg.json.command_id)) {
+        if (this.curId !== msg.json.command_id) {
           logger.warn("Skipping out-of-sync response from listener: " +
-              msg.name + msg.json.toSource());
+              `Expected response to \`${name}' with ID ${this.curId}, ` +
+              "but got: " + msg.name + msg.json.toSource());
           return;
         }
 
@@ -102,18 +110,18 @@ ContentSender.prototype.send = function(name, args) {
         modal.removeHandler(handleDialog);
 
         fn(msg);
-        this.curCmdId = null;
+        this.curId = null;
       };
 
-      listeners.push([name, rmFn]);
+      listeners.push([n, rmFn]);
       return rmFn;
     };
 
     let listeners = [];
     listeners.add = () => {
-      this.mm.addMessageListener(ok, removeListeners(ok, okListener));
-      this.mm.addMessageListener(val, removeListeners(val, valListener));
-      this.mm.addMessageListener(err, removeListeners(err, errListener));
+      this.mm.addMessageListener(MARIONETTE_OK, removeListeners(MARIONETTE_OK, okListener));
+      this.mm.addMessageListener(MARIONETTE_DONE, removeListeners(MARIONETTE_DONE, valListener));
+      this.mm.addMessageListener(MARIONETTE_ERROR, removeListeners(MARIONETTE_ERROR, errListener));
     };
     listeners.remove = () =>
         listeners.map(l => this.mm.removeMessageListener(l[0], l[1]));
@@ -141,14 +149,10 @@ ContentSender.prototype.send = function(name, args) {
       msg = args[0];
     }
 
-    this.sendAsync(name, msg, this.curCmdId);
+    this.sendAsync(name, msg, this.curId);
   });
 
   return proxy;
-};
-
-ContentSender.prototype.isOutOfSync = function(id) {
-  return this.curCmdId !== id;
 };
 
 proxy.ContentSender = ContentSender;
