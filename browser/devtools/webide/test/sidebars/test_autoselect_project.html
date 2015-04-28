@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="../head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Task.spawn(function* () {
+          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+          Services.prefs.setBoolPref("devtools.webide.sidebars", true);
+
+          if (!DebuggerServer.initialized) {
+            DebuggerServer.init();
+            DebuggerServer.addBrowserActors();
+          }
+
+          let win = yield openWebIDE();
+          let docRuntime = getRuntimeDocument(win);
+          let docProject = getProjectDocument(win);
+
+          let panelNode = docRuntime.querySelector("#runtime-panel");
+          let items = panelNode.querySelectorAll(".runtime-panel-item-other");
+          is(items.length, 2, "Found 2 runtime buttons");
+
+          // Connect to local runtime
+          items[1].click();
+
+          yield waitForUpdate(win, "runtime-targets");
+
+          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+
+          ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
+
+          // Select main process
+          yield win.Cmds.showProjectPanel();
+          yield waitForUpdate(win, "runtime-targets");
+          SimpleTest.executeSoon(() => {
+            docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
+          });
+
+          yield waitForUpdate(win, "project");
+
+          let lastProject = Services.prefs.getCharPref("devtools.webide.lastSelectedProject");
+          is(lastProject, "mainProcess:", "Last project is main process");
+
+          yield nextTick();
+          yield closeWebIDE(win);
+
+          is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
+
+          // Re-open, should reselect main process after connection
+          win = yield openWebIDE();
+
+          docRuntime = getRuntimeDocument(win);
+
+          panelNode = docRuntime.querySelector("#runtime-panel");
+          items = panelNode.querySelectorAll(".runtime-panel-item-other");
+          is(items.length, 2, "Found 2 runtime buttons");
+
+          // Connect to local runtime
+          items[1].click();
+
+          yield waitForUpdate(win, "runtime-targets");
+
+          is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+          ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
+          is(win.AppManager.selectedProject.type, "mainProcess", "Main process reselected");
+
+          yield win.Cmds.disconnectRuntime();
+
+          yield closeWebIDE(win);
+
+          DebuggerServer.destroy();
+
+          SimpleTest.finish();
+        });
+      }
+    </script>
+  </body>
+</html>

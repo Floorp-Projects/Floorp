@@ -13,7 +13,7 @@ import json
 
 from collections import OrderedDict
 
-# Keep this in sync with TelemetryPing.
+# Keep this in sync with TelemetryController.
 startup_histogram_re = re.compile("SQLITE|HTTP|SPDY|CACHE|DNS")
 
 def main(argv):

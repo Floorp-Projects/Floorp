@@ -23,7 +23,7 @@ import android.util.Base64;
 
 public class TestTelemetryRecorder extends FakeProfileTestCase {
   private TelemetryRecorder telemetryRecorder;
-  private File telemetryPingDir;
+  private File TelemetryControllerDir;
   private File cacheDir;
 
   private static final String DEST_FILENAME = "dest-filename";
@@ -34,8 +34,8 @@ public class TestTelemetryRecorder extends FakeProfileTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    telemetryPingDir = new File(fakeProfileDirectory, "telemetry-ping");
-    if (!telemetryPingDir.mkdir()) {
+    TelemetryControllerDir = new File(fakeProfileDirectory, "telemetry-ping");
+    if (!TelemetryControllerDir.mkdir()) {
       fail("Could not create directory for telemetry pings.");
     }
     cacheDir = new File(fakeProfileDirectory, "fakeCacheDir");
@@ -45,7 +45,7 @@ public class TestTelemetryRecorder extends FakeProfileTestCase {
   }
 
   public void testConstructorWithoutParentDir() {
-    File fileNotDirectory = new File(telemetryPingDir, "testFile");
+    File fileNotDirectory = new File(TelemetryControllerDir, "testFile");
     try {
       fileNotDirectory.createNewFile();
     } catch (IOException e) {
@@ -68,7 +68,7 @@ public class TestTelemetryRecorder extends FakeProfileTestCase {
     if (destFile.exists()) {
       destFile.delete();
     }
-    telemetryRecorder = new TelemetryRecorder(telemetryPingDir, cacheDir, DEST_FILENAME);
+    telemetryRecorder = new TelemetryRecorder(TelemetryControllerDir, cacheDir, DEST_FILENAME);
     try {
       telemetryRecorder.startPingFile();
     } catch (Exception e) {
@@ -82,7 +82,7 @@ public class TestTelemetryRecorder extends FakeProfileTestCase {
    * verify the checksum.
    */
   public void testFinishedPingFile() {
-    telemetryRecorder = new TelemetryRecorder(telemetryPingDir, cacheDir, DEST_FILENAME);
+    telemetryRecorder = new TelemetryRecorder(TelemetryControllerDir, cacheDir, DEST_FILENAME);
     String charset = telemetryRecorder.getCharset();
     try {
       telemetryRecorder.startPingFile();
@@ -93,7 +93,7 @@ public class TestTelemetryRecorder extends FakeProfileTestCase {
       fail("Error writing payload: " + e);
     }
 
-    File destFile = new File(telemetryPingDir, DEST_FILENAME);
+    File destFile = new File(TelemetryControllerDir, DEST_FILENAME);
     Assert.assertTrue(destFile.exists());
 
     StringBuilder sb = new StringBuilder();

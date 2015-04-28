@@ -12,7 +12,7 @@ Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
@@ -42,9 +42,9 @@ let gClientID = null;
 
 function sendPing(aSendClientId, aSendEnvironment) {
   if (gServerStarted) {
-    TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+    TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
   } else {
-    TelemetryPing.setServer("http://doesnotexist");
+    TelemetryController.setServer("http://doesnotexist");
   }
 
   let options = {
@@ -52,7 +52,7 @@ function sendPing(aSendClientId, aSendEnvironment) {
     addEnvironment: aSendEnvironment,
     retentionDays: TEST_PING_RETENTION,
   };
-  return TelemetryPing.send(TEST_PING_TYPE, {}, options);
+  return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, options);
 }
 
 function wrapWithExceptionHandler(f) {
@@ -137,14 +137,14 @@ function run_test() {
 }
 
 add_task(function* asyncSetup() {
-  yield TelemetryPing.setup();
+  yield TelemetryController.setup();
 
   gClientID = yield ClientID.getClientID();
 
   // We should have cached the client id now. Lets confirm that by
   // checking the client id before the async ping setup is finished.
-  let promisePingSetup = TelemetryPing.reset();
-  do_check_eq(TelemetryPing.clientID, gClientID);
+  let promisePingSetup = TelemetryController.reset();
+  do_check_eq(TelemetryController.clientID, gClientID);
   yield promisePingSetup;
 });
 
@@ -238,7 +238,7 @@ add_task(function* test_archivePings() {
 
   // Check that the ping was archived, even with upload disabled.
   let ping = yield TelemetryArchive.promiseArchivedPingById(pingId);
-  Assert.equal(ping.id, pingId, "TelemetryPing must archive pings if FHR is enabled.");
+  Assert.equal(ping.id, pingId, "TelemetryController must archive pings if FHR is enabled.");
 
   // Check that pings don't get archived if not allowed to.
   now = new Date(2010, 10, 18, 12, 0, 0);
@@ -247,7 +247,7 @@ add_task(function* test_archivePings() {
   pingId = yield sendPing(true, true);
   let promise = TelemetryArchive.promiseArchivedPingById(pingId);
   Assert.ok((yield promiseRejects(promise)),
-            "TelemetryPing must not archive pings if the archive pref is disabled.");
+            "TelemetryController must not archive pings if the archive pref is disabled.");
 
   // Enable archiving and the upload so that pings get sent and archived again.
   Preferences.set(PREF_FHR_UPLOAD_ENABLED, true);
@@ -262,7 +262,7 @@ add_task(function* test_archivePings() {
   // Check that we archive pings when successfully sending them.
   yield gRequestIterator.next();
   ping = yield TelemetryArchive.promiseArchivedPingById(pingId);
-  Assert.equal(ping.id, pingId, "TelemetryPing must archive pings if FHR is enabled.");
+  Assert.equal(ping.id, pingId, "TelemetryController must archive pings if FHR is enabled.");
 });
 
 add_task(function* stopServer(){

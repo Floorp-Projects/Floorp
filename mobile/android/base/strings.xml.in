@@ -38,8 +38,8 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
-  <string name="firstrun_welcome_message">&onboard_start_message2;</string>
-  <string name="firstrun_welcome_subtext">&onboard_start_subtext2;</string>
+  <string name="firstrun_welcome_message">&onboard_start_message3;</string>
+  <string name="firstrun_welcome_subtext">&onboard_start_subtext3;</string>
   <string name="firstrun_welcome_button_account">&onboard_start_button_account;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_empty_contentDescription"></string>

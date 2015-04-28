@@ -118,9 +118,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
-XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
-  "@mozilla.org/parentprocessmessagemanager;1",
-  "nsIMessageListenerManager");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -1521,7 +1518,7 @@ let SessionStoreInternal = {
     // Don't include any deferred initial state.
     delete state.deferredInitialState;
 
-    return this._toJSONString(state);
+    return JSON.stringify(state);
   },
 
   setBrowserState: function ssi_setBrowserState(aState) {
@@ -1574,12 +1571,12 @@ let SessionStoreInternal = {
 
   getWindowState: function ssi_getWindowState(aWindow) {
     if ("__SSi" in aWindow) {
-      return this._toJSONString(this._getWindowState(aWindow));
+      return JSON.stringify(this._getWindowState(aWindow));
     }
 
     if (DyingWindowCache.has(aWindow)) {
       let data = DyingWindowCache.get(aWindow);
-      return this._toJSONString({ windows: [data] });
+      return JSON.stringify({ windows: [data] });
     }
 
     throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
@@ -1600,7 +1597,7 @@ let SessionStoreInternal = {
 
     let tabState = TabState.collect(aTab);
 
-    return this._toJSONString(tabState);
+    return JSON.stringify(tabState);
   },
 
   setTabState: function ssi_setTabState(aTab, aState, aOptions) {
@@ -1635,8 +1632,8 @@ let SessionStoreInternal = {
     if (!aTab.ownerDocument.defaultView.__SSi) {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
-    if (!aWindow.getBrowser) {
-      throw Components.Exception("Invalid window object: no getBrowser", Cr.NS_ERROR_INVALID_ARG);
+    if (!aWindow.gBrowser) {
+      throw Components.Exception("Invalid window object: no gBrowser", Cr.NS_ERROR_INVALID_ARG);
     }
 
     // Flush all data queued in the content script because we will need that
@@ -1674,7 +1671,7 @@ let SessionStoreInternal = {
 
   getClosedTabData: function ssi_getClosedTabDataAt(aWindow) {
     if ("__SSi" in aWindow) {
-      return this._toJSONString(this._windows[aWindow.__SSi]._closedTabs);
+      return JSON.stringify(this._windows[aWindow.__SSi]._closedTabs);
     }
 
     if (!DyingWindowCache.has(aWindow)) {
@@ -1682,7 +1679,7 @@ let SessionStoreInternal = {
     }
 
     let data = DyingWindowCache.get(aWindow);
-    return this._toJSONString(data._closedTabs);
+    return JSON.stringify(data._closedTabs);
   },
 
   undoCloseTab: function ssi_undoCloseTab(aWindow, aIndex) {
@@ -1699,7 +1696,7 @@ let SessionStoreInternal = {
     }
 
     // fetch the data of closed tab, while removing it from the array
-    let closedTab = closedTabs.splice(aIndex, 1).shift();
+    let [closedTab] = closedTabs.splice(aIndex, 1);
     let closedTabState = closedTab.state;
 
     // create a new tab
@@ -1740,7 +1737,7 @@ let SessionStoreInternal = {
   },
 
   getClosedWindowData: function ssi_getClosedWindowData() {
-    return this._toJSONString(this._closedWindows);
+    return JSON.stringify(this._closedWindows);
   },
 
   undoCloseWindow: function ssi_undoCloseWindow(aIndex) {
@@ -2420,7 +2417,7 @@ let SessionStoreInternal = {
       delete this._windows[aWindow.__SSi].extData;
     }
     if (winData.cookies) {
-      this.restoreCookies(winData.cookies);
+      SessionCookies.restore(winData.cookies);
     }
     if (winData.extData) {
       if (!this._windows[aWindow.__SSi].extData) {
@@ -2603,6 +2600,13 @@ let SessionStoreInternal = {
     // It's important to set the window state to dirty so that
     // we collect their data for the first time when saving state.
     DirtyWindows.add(window);
+
+    // In case we didn't collect/receive data for any tabs yet we'll have to
+    // fill the array with at least empty tabData objects until |_tPos| or
+    // we'll end up with |null| entries.
+    for (let tab of Array.slice(tabbrowser.tabs, 0, tab._tPos)) {
+      this._windows[window.__SSi].tabs.push(TabState.collect(tab));
+    }
 
     // Update the tab state in case we shut down without being notified.
     this._windows[window.__SSi].tabs[tab._tPos] = tabData;
@@ -2893,25 +2897,6 @@ let SessionStoreInternal = {
     }
   },
 
-  /**
-   * Restores cookies
-   * @param aCookies
-   *        Array of cookie objects
-   */
-  restoreCookies: function ssi_restoreCookies(aCookies) {
-    // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
-    var MAX_EXPIRY = Math.pow(2, 62);
-    for (let i = 0; i < aCookies.length; i++) {
-      var cookie = aCookies[i];
-      try {
-        Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
-                             cookie.value, !!cookie.secure, !!cookie.httponly, true,
-                             "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
-      }
-      catch (ex) { console.error(ex); } // don't let a single cookie stop recovering
-    }
-  },
-
   /* ........ Disk Access .............. */
 
   /**
@@ -3104,15 +3089,6 @@ let SessionStoreInternal = {
       return dimension;
     }
     return aWindow.document.documentElement.getAttribute(aAttribute) || dimension;
-  },
-
-  /**
-   * Get nsIURI from string
-   * @param string
-   * @returns nsIURI
-   */
-  _getURIFromString: function ssi_getURIFromString(aString) {
-    return Services.io.newURI(aString, null, null);
   },
 
   /**
@@ -3311,19 +3287,6 @@ let SessionStoreInternal = {
       }
       cIndex++;
     }
-  },
-
-  /**
-   * Converts a JavaScript object into a JSON string
-   * (see http://www.json.org/ for more information).
-   *
-   * The inverse operation consists of JSON.parse(JSON_string).
-   *
-   * @param aJSObject is the object to be converted
-   * @returns the object's JSON representation
-   */
-  _toJSONString: function ssi_toJSONString(aJSObject) {
-    return JSON.stringify(aJSObject);
   },
 
   _sendRestoreCompletedNotifications: function ssi_sendRestoreCompletedNotifications() {

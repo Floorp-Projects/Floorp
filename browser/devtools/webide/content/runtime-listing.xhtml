@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://browser/locale/devtools/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/panel-listing.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://webide/content/runtime-listing.js"></script>
+  </head>
+  <body>
+    <div id="runtime-panel">
+      <div id="runtime-panel-box">
+        <label class="panel-header">&runtimePanel_usb;</label>
+        <button class="panel-item" id="runtime-panel-nousbdevice">&runtimePanel_nousbdevice;</button>
+        <button class="panel-item" id="runtime-panel-noadbhelper">&runtimePanel_noadbhelper;</button>
+        <div id="runtime-panel-usb"></div>
+        <label class="panel-header" id="runtime-header-wifi">&runtimePanel_wifi;</label>
+        <div id="runtime-panel-wifi"></div>
+        <label class="panel-header">&runtimePanel_simulator;</label>
+        <div id="runtime-panel-simulator"></div>
+        <button class="panel-item" id="runtime-panel-installsimulator">&runtimePanel_installsimulator;</button>
+        <label class="panel-header">&runtimePanel_other;</label>
+        <div id="runtime-panel-other"></div>
+        <div id="runtime-actions">
+          <button class="panel-item" id="runtime-details">&runtimeMenu_showDetails_label;</button>
+          <button class="panel-item" id="runtime-permissions">&runtimeMenu_showPermissionTable_label;</button>
+          <button class="panel-item" id="runtime-preferences">&runtimeMenu_showDevicePrefs_label;</button>
+          <button class="panel-item" id="runtime-settings">&runtimeMenu_showSettings_label;</button>
+          <button class="panel-item" id="runtime-screenshot">&runtimeMenu_takeScreenshot_label;</button>
+          <button class="panel-item" id="runtime-disconnect">&runtimeMenu_disconnect_label;</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -151,14 +151,14 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   max-width: 400px;
 }
 
-#project-listing-panel {
+.panel-list {
   display: none;
   position: relative;
   max-width: 250px;
   overflow: hidden;
 }
 
-#project-listing-wrapper {
+.panel-list-wrapper {
   height: 100%;
   width: 100%;
   min-width: 100px;
@@ -169,7 +169,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   left: 0;
 }
 
-#project-listing-panel-details {
+.panel-list-wrapper > iframe {
   height: inherit;
   width: 100%;
   position: absolute;
@@ -180,12 +180,14 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 }
 
 /* TODO: remove once Bug 1079347 is complete */
-.project-listing, #project-listing-splitter {
+.project-listing, #project-listing-splitter, #runtime-listing-splitter {
   display: none;
 }
 
 #project-listing-splitter[sidebar-displayed], #project-listing-panel[sidebar-displayed],
-#project-listing-panel[sidebar-displayed] .project-listing {
+#project-listing-panel[sidebar-displayed] .project-listing,
+#runtime-listing-splitter[sidebar-displayed], #runtime-listing-panel[sidebar-displayed],
+#runtime-listing-panel[sidebar-displayed] .runtime-listing {
   display: block;
 }
 
@@ -272,8 +274,9 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-details                { -moz-image-region: rect(156px,438px,182px,412px) }
 #runtime-screenshot             { -moz-image-region: rect(130px,438px,156px,412px) }
 #runtime-permissions            { -moz-image-region: rect(104px,438px,130px,412px) }
-#runtime-preferences            { -moz-image-region: rect(104px,462px,129px,438px) }
-#runtime-settings               { -moz-image-region: rect(104px,462px,129px,438px) }
+#runtime-preferences, #runtime-settings {
+  -moz-image-region: rect(104px,462px,129px,438px);
+}
 #runtime-disconnect             { -moz-image-region: rect(52px,438px,78px,412px) }
 #runtime-panel-nousbdevice      { -moz-image-region: rect(156px,438px,182px,412px) }
 #runtime-panel-noadbhelper      { -moz-image-region: rect(234px,438px,260px,412px) }

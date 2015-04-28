@@ -17,8 +17,8 @@ function test() {
     gDebugger = gPanel.panelWin;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
-    gDebugger.DebuggerView.FilteredSources._autoSelectFirstItem = false;
-    gDebugger.DebuggerView.FilteredFunctions._autoSelectFirstItem = false;
+    gDebugger.DebuggerView.Filtering.FilteredSources._autoSelectFirstItem = false;
+    gDebugger.DebuggerView.Filtering.FilteredFunctions._autoSelectFirstItem = false;
 
     waitForSourceShown(gPanel, "-01.js")
       .then(superGenericFileSearch)

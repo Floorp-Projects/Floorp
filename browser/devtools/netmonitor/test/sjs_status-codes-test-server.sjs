@@ -7,7 +7,8 @@ function handleRequest(request, response) {
   response.processAsync();
 
   let params = request.queryString.split("&");
-  let status = params.filter((s) => s.contains("sts="))[0].split("=")[1];
+  let status = params.filter(s => s.contains("sts="))[0].split("=")[1];
+  let cached = params.filter(s => s === 'cached').length !== 0;
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(() => {
@@ -29,11 +30,24 @@ function handleRequest(request, response) {
       case "500":
         response.setStatusLine(request.httpVersion, 501, "Not Implemented");
         break;
+      case "ok":
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        break;
+      case "redirect":
+        response.setStatusLine(request.httpVersion, 301, "Moved Permanently");
+        response.setHeader("Location", "http://example.com/redirected");
+        break;
     }
 
-    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    response.setHeader("Pragma", "no-cache");
-    response.setHeader("Expires", "0");
+    if(!cached) {
+      response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      response.setHeader("Pragma", "no-cache");
+      response.setHeader("Expires", "0");
+    }
+    else {
+      response.setHeader("Cache-Control", "no-transform,public,max-age=300,s-maxage=900");
+      response.setHeader("Expires", "Thu, 01 Dec 2100 20:00:00 GMT");
+    }
 
     response.setHeader("Content-Type", "text/plain; charset=utf-8", false);
     response.write("Hello status code " + status + "!");
