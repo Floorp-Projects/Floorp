@@ -87,7 +87,6 @@
 #include "nsSimplePageSequenceFrame.h"
 #include "nsTableOuterFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsTransitionManager.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -1803,10 +1802,6 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                             container,
                                             oldStyleContext,
                                             &pseudoStyleContext);
-    } else {
-      aState.mPresContext->TransitionManager()->
-        PruneCompletedTransitions(container, aPseudoElement,
-                                  pseudoStyleContext);
     }
   }
 
@@ -4851,14 +4846,10 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
   if (rsc) {
     nsStyleContext* oldStyleContext =
       rsc->Get(aContent, nsCSSPseudoElements::ePseudo_NotPseudoElement);
-    nsPresContext* presContext = mPresShell->GetPresContext();
     if (oldStyleContext) {
-      RestyleManager::TryStartingTransition(presContext, aContent,
+      RestyleManager::TryStartingTransition(mPresShell->GetPresContext(),
+                                            aContent,
                                             oldStyleContext, &result);
-    } else if (aContent->IsElement()) {
-      presContext->TransitionManager()->
-        PruneCompletedTransitions(aContent->AsElement(),
-          nsCSSPseudoElements::ePseudo_NotPseudoElement, result);
     }
   }
 
