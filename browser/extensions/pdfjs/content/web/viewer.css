@@ -102,12 +102,12 @@
   box-shadow: 0px 2px 10px #ff0;
 }
 
-:-moz-full-screen .pdfViewer .page {
+.pdfPresentationMode:-moz-full-screen .pdfViewer .page {
   margin-bottom: 100%;
   border: 0;
 }
 
-:fullscreen .pdfViewer .page {
+.pdfPresentationMode:fullscreen .pdfViewer .page {
   margin-bottom: 100%;
   border: 0;
 }
@@ -184,7 +184,7 @@ select {
   display: none !important;
 }
 
-#viewerContainer:-moz-full-screen {
+#viewerContainer.pdfPresentationMode:-moz-full-screen {
   top: 0px;
   border-top: 2px solid transparent;
   background-color: #000;
@@ -195,7 +195,7 @@ select {
   -moz-user-select: none;
 }
 
-#viewerContainer:fullscreen {
+#viewerContainer.pdfPresentationMode:fullscreen {
   top: 0px;
   border-top: 2px solid transparent;
   background-color: #000;
@@ -206,24 +206,24 @@ select {
   -moz-user-select: none;
 }
 
-:-moz-full-screen a:not(.internalLink) {
+.pdfPresentationMode:-moz-full-screen a:not(.internalLink) {
   display: none;
 }
 
-:fullscreen a:not(.internalLink) {
+.pdfPresentationMode:fullscreen a:not(.internalLink) {
   display: none;
 }
 
-:-moz-full-screen .textLayer > div {
+.pdfPresentationMode:-moz-full-screen .textLayer > div {
   cursor: none;
 }
 
-:fullscreen .textLayer > div {
+.pdfPresentationMode:fullscreen .textLayer > div {
   cursor: none;
 }
 
-#viewerContainer.presentationControls,
-#viewerContainer.presentationControls .textLayer > div {
+.pdfPresentationMode.pdfPresentationModeControls > *,
+.pdfPresentationMode.pdfPresentationModeControls .textLayer > div {
   cursor: default;
 }
 

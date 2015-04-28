@@ -132,7 +132,7 @@ function toggleCache(aTarget, aDisabled) {
   return reconfigureTab(aTarget, options).then(() => navigationFinished);
 }
 
-function initNetMonitor(aUrl, aWindow) {
+function initNetMonitor(aUrl, aWindow, aEnableCache) {
   info("Initializing a network monitor pane.");
 
   return Task.spawn(function*() {
@@ -144,8 +144,10 @@ function initNetMonitor(aUrl, aWindow) {
     yield target.makeRemote();
     info("Target remoted.");
 
-    yield toggleCache(target, true);
-    info("Cache disabled when the current and all future toolboxes are open.");
+    if(!aEnableCache) {
+      yield toggleCache(target, true);
+      info("Cache disabled when the current and all future toolboxes are open.");
+    }
 
     let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
     info("Netork monitor pane shown successfully.");
@@ -268,7 +270,8 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("Widget index of item: " + widgetIndex);
   info("Visible index of item: " + visibleIndex);
 
-  let { fuzzyUrl, status, statusText, type, fullMimeType, transferred, size, time } = aData;
+  let { fuzzyUrl, status, statusText, type, fullMimeType,
+        transferred, size, time, fromCache } = aData;
   let { attachment, target } = aRequestItem
 
   let uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
@@ -314,7 +317,7 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
     info("Displayed status: " + value);
     info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);
-    is(value, status, "The displayed status is correct.");
+    is(value, fromCache ? "cached" : status, "The displayed status is correct.");
     is(codeValue, status, "The displayed status code is correct.");
     is(tooltip, status + " " + statusText, "The tooltip status is correct.");
   }

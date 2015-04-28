@@ -10,7 +10,7 @@ const Cu = Components.utils;
  * This module's purpose is to collect timestamps for important
  * application-specific events.
  *
- * The TelemetryPing component attaches the timestamps stored by this module to
+ * The TelemetryController component attaches the timestamps stored by this module to
  * the telemetry submission, substracting the process lifetime so that the times
  * are relative to process startup. The overall goal is to produce a basic
  * timeline of the startup process.
@@ -44,7 +44,7 @@ this.TelemetryTimestamps = {
 
   /**
    * Returns a JS object containing all of the timeStamps as properties (can be
-   * easily serialized to JSON). Used by TelemetryPing to retrieve the data
+   * easily serialized to JSON). Used by TelemetryController to retrieve the data
    * to attach to the telemetry submission.
    */
   get: function TT_get() {

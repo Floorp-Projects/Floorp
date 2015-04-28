@@ -18,7 +18,7 @@ function test() {
     gEditor = gDebugger.DebuggerView.editor;
     gSources = gDebugger.DebuggerView.Sources;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
-    gFilteredFunctions = gDebugger.DebuggerView.FilteredFunctions;
+    gFilteredFunctions = gDebugger.DebuggerView.Filtering.FilteredFunctions;
 
     waitForSourceShown(gPanel, "-01.js")
       .then(() => showSource("doc_function-search.html"))

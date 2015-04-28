@@ -62,7 +62,7 @@ var testData = [
    isRedirect: true, uri: "http://mail.foo.com/redirect", lastVisit: jan11_800,
    transType: PlacesUtils.history.TRANSITION_LINK},
 
-  // Test subdomain inclued at the leading time edge 
+  // Test subdomain inclued at the leading time edge
   {isInQuery: true, isVisit: true, isDetails: true,
    uri: "http://mail.foo.com/yiihah", title: "moz", lastVisit: jan6_815},
 
@@ -100,7 +100,7 @@ var testData = [
   // Test bad URI
   {isInQuery: false, isVisit:true, isDetails: true, title: "moz",
    uri: "http://somefoo.com/justwrong.htm", lastVisit: jan11_800},
-  
+
   // Test afterward, one to update
   {isInQuery: false, isVisit:true, isDetails: true, title: "changeme",
    uri: "http://foo.com/changeme1.htm", lastVisit: jan12_1730},
@@ -163,14 +163,14 @@ add_task(function test_abstime_annotation_domain()
   var addItem = [{isInQuery: true, isVisit: true, isDetails: true, title: "moz",
                  uri: "http://www.foo.com/i-am-added.html", lastVisit: jan11_800}];
   yield task_populateDB(addItem);
-  LOG("Adding item foo.com/i-am-added.html");
+  do_print("Adding item foo.com/i-am-added.html");
   do_check_eq(isInResult(addItem, root), true);
 
   // Let's update something by title
   var change1 = [{isDetails: true, uri: "http://foo.com/changeme1",
                   lastVisit: jan12_1730, title: "moz moz mozzie"}];
   yield task_populateDB(change1);
-  LOG("LiveUpdate by changing title");
+  do_print("LiveUpdate by changing title");
   do_check_eq(isInResult(change1, root), true);
 
   // Let's update something by annotation
@@ -182,14 +182,14 @@ add_task(function test_abstime_annotation_domain()
   /*var change2 = [{isPageAnnotation: true, uri: "http://foo.com/badannotaion.html",
                   annoName: "text/mozilla", annoVal: "test"}];
   yield task_populateDB(change2);
-  LOG("LiveUpdate by removing annotation");
+  do_print("LiveUpdate by removing annotation");
   do_check_eq(isInResult(change2, root), true);*/
 
   // Let's update by adding a visit in the time range for an existing URI
   var change3 = [{isDetails: true, uri: "http://foo.com/changeme3.htm",
                   title: "moz", lastVisit: jan15_2045}];
   yield task_populateDB(change3);
-  LOG("LiveUpdate by adding visit within timerange");
+  do_print("LiveUpdate by adding visit within timerange");
   do_check_eq(isInResult(change3, root), true);
 
   // And delete something from the result set - using annotation
@@ -197,13 +197,13 @@ add_task(function test_abstime_annotation_domain()
   /*var change4 = [{isPageAnnotation: true, uri: "ftp://foo.com/ftp",
                   annoVal: "test", annoName: badAnnoName}];
   yield task_populateDB(change4);
-  LOG("LiveUpdate by deleting item from set by adding annotation");
+  do_print("LiveUpdate by deleting item from set by adding annotation");
   do_check_eq(isInResult(change4, root), false);*/
 
   // Delete something by changing the title
   var change5 = [{isDetails: true, uri: "http://foo.com/end.html", title: "deleted"}];
   yield task_populateDB(change5);
-  LOG("LiveUpdate by deleting item by changing title");
+  do_print("LiveUpdate by deleting item by changing title");
   do_check_eq(isInResult(change5, root), false);
 
   root.containerOpen = false;

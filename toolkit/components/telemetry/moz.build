@@ -39,8 +39,8 @@ EXTRA_JS_MODULES += [
 ]
 
 EXTRA_PP_JS_MODULES += [
+    'TelemetryController.jsm',
     'TelemetryEnvironment.jsm',
-    'TelemetryPing.jsm',
     'TelemetrySession.jsm',
 ]
 
