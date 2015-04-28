@@ -174,7 +174,7 @@ Animation::PlayState() const
 }
 
 static inline already_AddRefed<Promise>
-CreatePromise(DocumentTimeline* aTimeline, ErrorResult& aRv)
+CreatePromise(AnimationTimeline* aTimeline, ErrorResult& aRv)
 {
   nsIGlobalObject* global = aTimeline->GetParentObject();
   if (global) {

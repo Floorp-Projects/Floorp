@@ -56,7 +56,7 @@ namespace dom {
 class CSSAnimation final : public Animation
 {
 public:
- explicit CSSAnimation(dom::DocumentTimeline* aTimeline,
+ explicit CSSAnimation(dom::AnimationTimeline* aTimeline,
                        const nsSubstring& aAnimationName)
     : dom::Animation(aTimeline)
     , mAnimationName(aAnimationName)
@@ -309,7 +309,7 @@ protected:
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
-                       mozilla::dom::DocumentTimeline* aTimeline,
+                       mozilla::dom::AnimationTimeline* aTimeline,
                        mozilla::AnimationPtrArray& aAnimations);
   bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,
