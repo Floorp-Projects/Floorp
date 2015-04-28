@@ -703,7 +703,22 @@ ContentParent::GetNewOrPreallocatedAppProcess(mozIApplication* aApp,
                                               /*out*/ bool* aTookPreAllocated)
 {
     MOZ_ASSERT(aApp);
+#ifdef MOZ_NUWA_PROCESS
+    nsRefPtr<ContentParent> process;
+    {
+        nsAutoString manifestURL;
+        if (NS_FAILED(aApp->GetManifestURL(manifestURL))) {
+            NS_ERROR("Failed to get manifest URL");
+            return nullptr;
+        }
+        process = PreallocatedProcessManager::BlockForNewProcess(manifestURL);
+        if (!process) {
+            process = sAppContentParents->Get(manifestURL);
+        }
+    }
+#else
     nsRefPtr<ContentParent> process = PreallocatedProcessManager::Take();
+#endif
 
     if (process) {
         if (!process->SetPriorityAndCheckIsAlive(aInitialPriority)) {
@@ -871,7 +886,11 @@ ContentParent::GetNewOrUsedBrowserProcess(bool aForBrowserElement,
     }
 
     // Try to take and transform the preallocated process into browser.
+#ifdef MOZ_NUWA_PROCESS
+    nsRefPtr<ContentParent> p = PreallocatedProcessManager::BlockForNewProcess(NS_LITERAL_STRING(""));
+#else
     nsRefPtr<ContentParent> p = PreallocatedProcessManager::Take();
+#endif
     if (p) {
         p->TransformPreallocatedIntoBrowser(aOpener);
     } else {
