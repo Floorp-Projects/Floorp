@@ -30,7 +30,7 @@ assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { retu
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { return +(inc() + 1.1) } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { return (+inc() + 1)|0 } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { var i = 0; inc(i>>>0) } return f');
-assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { return inc(); return } return f');
+assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { if (0) return inc(); return } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { inc(inc()) } return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { g(inc()) } function g() {} return f');
 assertAsmTypeFail('glob', 'imp', USE_ASM + 'var inc=imp.inc; function f() { inc()|inc() } return f');
