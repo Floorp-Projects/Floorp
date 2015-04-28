@@ -45,7 +45,7 @@ this.AUSTLMY = {
   CHK_SHOWPROMPT_PREF: 3,
   // Incompatible add-on check disabled by preference (background download)
   CHK_ADDON_PREF_DISABLED: 4,
-  // Incompatible add-on checke not performed due to same app version as the
+  // Incompatible add-on check not performed due to same app version as the
   // update's app version (background download)
   CHK_ADDON_SAME_APP_VER: 5,
   // Incompatible add-ons found and all of them have updates (background download)
