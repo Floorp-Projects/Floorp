@@ -316,7 +316,7 @@
   background-repeat: no-repeat;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .devtools-button::before {
     background-size: 32px;
   }
@@ -437,7 +437,7 @@
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .theme-dark .devtools-searchinput {
     background-image: url(magnifying-glass@2x.png);
   }
@@ -769,7 +769,7 @@
   background-image: url("chrome://browser/skin/devtools/command-rulers.png");
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #command-button-paintflashing > image {
     background-image: url("chrome://browser/skin/devtools/command-paintflashing@2x.png");
   }

@@ -376,7 +376,8 @@ function run_test_pt11() {
 
 function check_test_pt11() {
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  Assert.ok(!bestUpdate);
+  Assert.ok(!bestUpdate,
+            "there should be no update available");
   run_test_pt12();
 }
 
@@ -392,7 +393,8 @@ function run_test_pt12() {
 
 function check_test_pt12() {
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  Assert.ok(!!bestUpdate);
+  Assert.ok(!!bestUpdate,
+            "there should be one update available");
   Assert.equal(bestUpdate.displayVersion, "version 1.0",
                "the update displayVersion attribute" + MSG_SHOULD_EQUAL);
 
