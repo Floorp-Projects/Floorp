@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="Darwin"&&isDebugBuild) -- this takes too long to over-recurse.
+// |reftest| skip-if((xulRuntime.OS=="Darwin"||Android)&&isDebugBuild) -- this takes too long to over-recurse.
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
