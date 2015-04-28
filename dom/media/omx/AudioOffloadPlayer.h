@@ -50,11 +50,11 @@ class WakeLock;
  * it to the sink
  *
  * Also this class passes state changes (play/pause/seek) from
- * MediaOmxCommonDecoder to AudioSink as well as provide AudioSink status
+ * MediaOmxCommonDecoder to GonkAudioSink as well as provide GonkAudioSink status
  * (position changed, playback ended, seek complete, audio tear down) back to
  * MediaOmxCommonDecoder
  *
- * It acts as a bridge between MediaOmxCommonDecoder and AudioSink during
+ * It acts as a bridge between MediaOmxCommonDecoder and GonkAudioSink during
  * offload playback
  */
 
@@ -80,7 +80,7 @@ public:
   // Caller retains ownership of "aSource".
   virtual void SetSource(const android::sp<MediaSource> &aSource) override;
 
-  // Start the source if it's not already started and open the AudioSink to
+  // Start the source if it's not already started and open the GonkAudioSink to
   // create an offloaded audio track
   virtual status_t Start(bool aSourceAlreadyStarted = false) override;
 
@@ -106,7 +106,7 @@ public:
   void Reset();
 
 private:
-  // Set when audio source is started and audioSink is initialized
+  // Set when audio source is started and GonkAudioSink is initialized
   // Used only in main thread
   bool mStarted;
 
@@ -170,7 +170,7 @@ private:
   // Audio sink wrapper to access offloaded audio tracks
   // Used in main thread and offload callback thread
   // Race conditions are protected in underlying Android::AudioTrack class
-  android::sp<AudioSink> mAudioSink;
+  android::sp<GonkAudioSink> mAudioSink;
 
   // Buffer used to get date from audio source. Used in offload callback thread
   MediaBuffer* mInputBuffer;
@@ -183,7 +183,7 @@ private:
   // Timer to trigger position changed events
   nsCOMPtr<nsITimer> mTimeUpdateTimer;
 
-  // Timer to reset AudioSink when audio is paused for OFFLOAD_PAUSE_MAX_USECS.
+  // Timer to reset GonkAudioSink when audio is paused for OFFLOAD_PAUSE_MAX_USECS.
   // It is triggered in Pause() and canceled when there is a Play() within
   // OFFLOAD_PAUSE_MAX_USECS. Used only from main thread so no lock is needed.
   nsCOMPtr<nsITimer> mResetTimer;
@@ -203,12 +203,12 @@ private:
   // case of error
   size_t FillBuffer(void *aData, size_t aSize);
 
-  // Called by AudioSink when it needs data, to notify EOS or tear down event
-  static size_t AudioSinkCallback(AudioSink *aAudioSink,
+  // Called by GonkAudioSink when it needs data, to notify EOS or tear down event
+  static size_t AudioSinkCallback(GonkAudioSink *aAudioSink,
                                   void *aData,
                                   size_t aSize,
                                   void *aMe,
-                                  AudioSink::cb_event_t aEvent);
+                                  GonkAudioSink::cb_event_t aEvent);
 
   bool IsSeeking();
 
@@ -254,8 +254,8 @@ private:
   // MediaDecoder to re-evaluate offloading options
   void NotifyAudioTearDown();
 
-  // Send information from MetaData to the HAL via AudioSink
-  void SendMetaDataToHal(android::sp<AudioSink>& aSink,
+  // Send information from MetaData to the HAL via GonkAudioSink
+  void SendMetaDataToHal(android::sp<GonkAudioSink>& aSink,
                          const android::sp<MetaData>& aMeta);
 
   AudioOffloadPlayer(const AudioOffloadPlayer &);

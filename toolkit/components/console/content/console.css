@@ -13,7 +13,8 @@
 }
 
 .console-row[type="error"],
-.console-row[type="warning"] {
+.console-row[type="warning"],
+.console-row[type="message"][typetext] {
   -moz-binding: url("chrome://global/content/consoleBindings.xml#error");
 }
 

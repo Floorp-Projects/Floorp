@@ -51,7 +51,7 @@ PRLogModuleInfo* gAudioOffloadPlayerLog;
 #endif
 
 // maximum time in paused state when offloading audio decompression.
-// When elapsed, the AudioSink is destroyed to allow the audio DSP to power down.
+// When elapsed, the GonkAudioSink is destroyed to allow the audio DSP to power down.
 static const uint64_t OFFLOAD_PAUSE_MAX_MSECS = 60000ll;
 
 AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
@@ -473,28 +473,28 @@ void AudioOffloadPlayer::NotifyAudioTearDown()
 }
 
 // static
-size_t AudioOffloadPlayer::AudioSinkCallback(AudioSink* aAudioSink,
+size_t AudioOffloadPlayer::AudioSinkCallback(GonkAudioSink* aAudioSink,
                                              void* aBuffer,
                                              size_t aSize,
                                              void* aCookie,
-                                             AudioSink::cb_event_t aEvent)
+                                             GonkAudioSink::cb_event_t aEvent)
 {
   AudioOffloadPlayer* me = (AudioOffloadPlayer*) aCookie;
 
   switch (aEvent) {
 
-    case AudioSink::CB_EVENT_FILL_BUFFER:
+    case GonkAudioSink::CB_EVENT_FILL_BUFFER:
       AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Notify Audio position changed"));
       me->NotifyPositionChanged();
       return me->FillBuffer(aBuffer, aSize);
 
-    case AudioSink::CB_EVENT_STREAM_END:
+    case GonkAudioSink::CB_EVENT_STREAM_END:
       AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Notify Audio EOS"));
       me->mReachedEOS = true;
       me->NotifyAudioEOS();
       break;
 
-    case AudioSink::CB_EVENT_TEAR_DOWN:
+    case GonkAudioSink::CB_EVENT_TEAR_DOWN:
       AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("Notify Tear down event"));
       me->NotifyAudioTearDown();
       break;
@@ -697,7 +697,7 @@ MediaDecoderOwner::NextFrameStatus AudioOffloadPlayer::GetNextFrameStatus()
   }
 }
 
-void AudioOffloadPlayer::SendMetaDataToHal(sp<AudioSink>& aSink,
+void AudioOffloadPlayer::SendMetaDataToHal(sp<GonkAudioSink>& aSink,
                                            const sp<MetaData>& aMeta)
 {
   int32_t sampleRate = 0;
