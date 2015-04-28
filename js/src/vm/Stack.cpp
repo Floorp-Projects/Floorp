@@ -590,10 +590,12 @@ FrameIter::settleOnActivation()
 }
 
 FrameIter::Data::Data(JSContext* cx, SavedOption savedOption,
-                      ContextOption contextOption, JSPrincipals* principals)
+                      ContextOption contextOption, DebuggerEvalOption debuggerEvalOption,
+                      JSPrincipals* principals)
   : cx_(cx),
     savedOption_(savedOption),
     contextOption_(contextOption),
+    debuggerEvalOption_(debuggerEvalOption),
     principals_(principals),
     pc_(nullptr),
     interpFrames_(nullptr),
@@ -608,6 +610,7 @@ FrameIter::Data::Data(const FrameIter::Data& other)
   : cx_(other.cx_),
     savedOption_(other.savedOption_),
     contextOption_(other.contextOption_),
+    debuggerEvalOption_(other.debuggerEvalOption_),
     principals_(other.principals_),
     state_(other.state_),
     pc_(other.pc_),
@@ -620,7 +623,7 @@ FrameIter::Data::Data(const FrameIter::Data& other)
 }
 
 FrameIter::FrameIter(JSContext* cx, SavedOption savedOption)
-  : data_(cx, savedOption, CURRENT_CONTEXT, nullptr),
+  : data_(cx, savedOption, CURRENT_CONTEXT, FOLLOW_DEBUGGER_EVAL_PREV_LINK, nullptr),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
@@ -629,8 +632,8 @@ FrameIter::FrameIter(JSContext* cx, SavedOption savedOption)
 }
 
 FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
-                     SavedOption savedOption)
-  : data_(cx, savedOption, contextOption, nullptr),
+                     SavedOption savedOption, DebuggerEvalOption debuggerEvalOption)
+  : data_(cx, savedOption, contextOption, debuggerEvalOption, nullptr),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     // settleOnActivation can only GC if principals are given.
@@ -639,8 +642,9 @@ FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
 }
 
 FrameIter::FrameIter(JSContext* cx, ContextOption contextOption,
-                     SavedOption savedOption, JSPrincipals* principals)
-  : data_(cx, savedOption, contextOption, principals),
+                     SavedOption savedOption, DebuggerEvalOption debuggerEvalOption,
+                     JSPrincipals* principals)
+  : data_(cx, savedOption, contextOption, debuggerEvalOption, principals),
     ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 {
     settleOnActivation();
@@ -717,7 +721,10 @@ FrameIter::operator++()
       case DONE:
         MOZ_CRASH("Unexpected state");
       case INTERP:
-        if (interpFrame()->isDebuggerEvalFrame() && interpFrame()->evalInFramePrev()) {
+        if (interpFrame()->isDebuggerEvalFrame() &&
+            interpFrame()->evalInFramePrev() &&
+            data_.debuggerEvalOption_ == FOLLOW_DEBUGGER_EVAL_PREV_LINK)
+        {
             AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
 
             // Eval-in-frame can cross contexts and works across saved frame
