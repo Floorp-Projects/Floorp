@@ -668,7 +668,7 @@ function executeWithCallback(msg, useFinish) {
   if (msg.json.inactivityTimeout) {
     let setTimer = function() {
       inactivityTimeoutId = curFrame.setTimeout(function() {
-        sandbox.asyncComplete(new ScriptTimeout("timed out due to inactivity"), asyncTestCommandId);
+        sandbox.asyncComplete(new ScriptTimeoutError("timed out due to inactivity"), asyncTestCommandId);
       }, msg.json.inactivityTimeout);
     };
 
