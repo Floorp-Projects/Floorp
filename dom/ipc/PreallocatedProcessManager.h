@@ -84,7 +84,6 @@ public:
   static bool IsNuwaReady();
   static void OnNuwaReady();
   static bool PreallocatedProcessReady();
-  static already_AddRefed<ContentParent> BlockForNewProcess(const nsAString& aManifestURL);
 #endif
 
 private:
