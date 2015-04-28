@@ -53,7 +53,7 @@ TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
                     void* aReadyTime)
 {
   dom::Animation* animation = aKey->GetKey();
-  dom::AnimationTimeline* timeline = animation->Timeline();
+  dom::AnimationTimeline* timeline = animation->GetTimeline();
 
   // If the animation does not have a timeline, just drop it from the map.
   // The animation will detect that it is not being tracked and will trigger
