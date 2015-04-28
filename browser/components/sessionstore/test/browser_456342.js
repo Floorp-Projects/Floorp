@@ -19,7 +19,7 @@ add_task(function test_restore_nonstandard_input_values() {
   yield setFormElementValues(browser, {value: expectedValue});
 
   // Remove tab and check collected form data.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   let undoItems = JSON.parse(ss.getClosedTabData(window));
   let savedFormData = undoItems[0].state.formdata;
 

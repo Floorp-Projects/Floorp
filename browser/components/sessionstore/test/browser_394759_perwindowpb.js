@@ -2,19 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/** Private Browsing Test for Bug 394759 **/
-
-let closedWindowCount = 0;
-// Prevent VM timers issues, cache now and increment it manually.
-let now = Date.now();
+"use strict";
 
 const TESTS = [
   { url: "about:config",
     key: "bug 394759 Non-PB",
-    value: "uniq" + (++now) },
+    value: "uniq" + r() },
   { url: "about:mozilla",
     key: "bug 394759 PB",
-    value: "uniq" + (++now) },
+    value: "uniq" + r() },
 ];
 
 function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
@@ -33,53 +29,11 @@ function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
 function promiseTestOnWindow(aIsPrivate, aValue) {
   return Task.spawn(function*() {
     let win = yield promiseNewWindowLoaded({ "private": aIsPrivate });
-    yield promiseCheckClosedWindows(aIsPrivate, aValue);
-    registerCleanupFunction(() => promiseWindowClosed(win));
-  });
-}
-
-function promiseCheckClosedWindows(aIsPrivate, aValue) {
-  return Task.spawn(function*() {
     let data = JSON.parse(ss.getClosedWindowData())[0];
     is(ss.getClosedWindowCount(), 1, "Check that the closed window count hasn't changed");
     ok(JSON.stringify(data).indexOf(aValue) > -1,
        "Check the closed window data was stored correctly");
-  });
-}
-
-function promiseBlankState() {
-  return Task.spawn(function*() {
-    // Set interval to a large time so state won't be written while we setup
-    // environment.
-    Services.prefs.setIntPref("browser.sessionstore.interval", 100000);
-    registerCleanupFunction(() =>  Services.prefs.clearUserPref("browser.sessionstore.interval"));
-
-    // Set up the browser in a blank state. Popup windows in previous tests
-    // result in different states on different platforms.
-    let blankState = JSON.stringify({
-      windows: [{
-        tabs: [{ entries: [{ url: "about:blank" }] }],
-        _closedTabs: []
-      }],
-      _closedWindows: []
-    });
-
-    ss.setBrowserState(blankState);
-
-    // Wait for the sessionstore.js file to be written before going on.
-    // Note: we don't wait for the complete event, since if asyncCopy fails we
-    // would timeout.
-
-    yield forceSaveState();
-    closedWindowCount = ss.getClosedWindowCount();
-    is(closedWindowCount, 0, "Correctly set window count");
-
-    // Remove the sessionstore.js file before setting the interval to 0
-    yield SessionFile.wipe();
-
-    // Make sure that sessionstore.js can be forced to be created by setting
-    // the interval pref to 0.
-    yield forceSaveState();
+    registerCleanupFunction(() => promiseWindowClosed(win));
   });
 }
 
