@@ -30,7 +30,7 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(DynamicsCompressorNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(DynamicsCompressorNode, AudioNode)
 
-class DynamicsCompressorNodeEngine : public AudioNodeEngine
+class DynamicsCompressorNodeEngine final : public AudioNodeEngine
 {
 public:
   explicit DynamicsCompressorNodeEngine(AudioNode* aNode,
@@ -151,7 +151,7 @@ private:
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    class Command : public nsRunnable
+    class Command final : public nsRunnable
     {
     public:
       Command(AudioNodeStream* aStream, float aReduction)
@@ -160,7 +160,7 @@ private:
       {
       }
 
-      NS_IMETHODIMP Run()
+      NS_IMETHOD Run() override
       {
         nsRefPtr<DynamicsCompressorNode> node;
         {

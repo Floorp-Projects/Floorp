@@ -18,8 +18,8 @@ namespace dom {
 
 class AudioContext;
 
-class OscillatorNode : public AudioNode,
-                       public MainThreadMediaStreamListener
+class OscillatorNode final : public AudioNode,
+                             public MainThreadMediaStreamListener
 {
 public:
   explicit OscillatorNode(AudioContext* aContext);
