@@ -21,10 +21,29 @@ using namespace mozilla::dom;
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothDevice,
-                                   DOMEventTargetHelper,
-                                   mCod,
-                                   mGatt)
+NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothDevice)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothDevice,
+                                                DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCod)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGatt)
+
+  /**
+   * Unregister the bluetooth signal handler after unlinked.
+   *
+   * This is needed to avoid ending up with exposing a deleted object to JS or
+   * accessing deleted objects while receiving signals from parent process
+   * after unlinked. Please see Bug 1138267 for detail informations.
+   */
+  UnregisterBluetoothSignalHandler(tmp->mAddress, tmp);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothDevice,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCod)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGatt)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothDevice)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
@@ -91,27 +110,19 @@ BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
     SetPropertyByValue(values[i]);
   }
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->RegisterBluetoothSignalHandler(mAddress, this);
+  RegisterBluetoothSignalHandler(mAddress, this);
 }
 
 BluetoothDevice::~BluetoothDevice()
 {
-  BluetoothService* bs = BluetoothService::Get();
-  // bs can be null on shutdown, where destruction might happen.
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(mAddress, this);
+  UnregisterBluetoothSignalHandler(mAddress, this);
 }
 
 void
 BluetoothDevice::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(mAddress, this);
+  UnregisterBluetoothSignalHandler(mAddress, this);
 }
 
 BluetoothDeviceType
@@ -199,6 +210,7 @@ void
 BluetoothDevice::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
+  NS_ENSURE_TRUE_VOID(mSignalRegistered);
 
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("PropertyChanged")) {

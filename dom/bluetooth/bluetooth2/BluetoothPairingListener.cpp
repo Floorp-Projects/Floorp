@@ -4,12 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BluetoothService.h"
+#include "BluetoothUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothPairingListener.h"
 #include "mozilla/dom/bluetooth/BluetoothPairingHandle.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothPairingEvent.h"
 #include "mozilla/dom/BluetoothPairingListenerBinding.h"
-#include "BluetoothService.h"
 
 USING_BLUETOOTH_NAMESPACE
 
@@ -42,11 +43,8 @@ BluetoothPairingListener::Create(nsPIDOMWindow* aWindow)
 
 BluetoothPairingListener::~BluetoothPairingListener()
 {
-  BluetoothService* bs = BluetoothService::Get();
-  // It can be nullptr on shutdown.
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
-                                       this);
+  UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
+                                   this);
 }
 
 void
@@ -118,11 +116,8 @@ void
 BluetoothPairingListener::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
-                                       this);
+  UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
+                                   this);
 }
 
 void
@@ -153,10 +148,8 @@ BluetoothPairingListener::TryListeningToBluetoothSignal()
   }
 
   // Start listening to bluetooth signal to handle pairing requests
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
-                                     this);
+  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_PAIRING_LISTENER),
+                                 this);
 
   mHasListenedToSignal = true;
 }
