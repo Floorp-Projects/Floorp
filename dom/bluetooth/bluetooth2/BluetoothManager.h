@@ -25,6 +25,8 @@ class BluetoothManager final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BluetoothManager,
+                                           DOMEventTargetHelper)
 
   /****************************************************************************
    * Event Handlers
@@ -78,13 +80,6 @@ public:
 private:
   BluetoothManager(nsPIDOMWindow* aWindow);
   ~BluetoothManager();
-
-  /**
-   * Start/Stop listening to bluetooth signal.
-   *
-   * @param aStart [in] Whether to start or stop listening to bluetooth signal
-   */
-  void ListenToBluetoothSignal(bool aStart);
 
   /**
    * Check whether default adapter exists.
