@@ -700,9 +700,17 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      var hostname;
+
+      try {
+        hostname = new URL(this.state.url).hostname;
+      } catch (ex) {
+        // Empty catch - if there's an error, then we won't show the context.
+      }
+
       var contextClasses = React.addons.classSet({
         context: true,
-        hide: !this.state.url ||
+        hide: !hostname ||
           !this.props.mozLoop.getLoopPref("contextInConverations.enabled")
       });
 
@@ -716,7 +724,7 @@ loop.panel = (function(_, mozL10n) {
             </label>
             <img className="context-preview" src={this.state.previewImage}/>
             <span className="context-description">{this.state.description}</span>
-            <span className="context-url">{this.state.url}</span>
+            <span className="context-url">{hostname}</span>
           </div>
           <button className="btn btn-info new-room-button"
                   onClick={this.handleCreateButtonClick}
