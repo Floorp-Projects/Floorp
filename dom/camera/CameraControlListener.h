@@ -89,7 +89,7 @@ public:
 
   virtual void OnAutoFocusComplete(bool aAutoFocusSucceeded) { }
   virtual void OnAutoFocusMoving(bool aIsMoving) { }
-  virtual void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) { }
+  virtual void OnTakePictureComplete(const uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) { }
   virtual void OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces) { }
 
   enum UserContext

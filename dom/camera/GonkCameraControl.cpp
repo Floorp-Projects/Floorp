@@ -1534,14 +1534,10 @@ nsGonkCameraControl::OnTakePictureComplete(uint8_t* aData, uint32_t aLength)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  uint8_t* data = new uint8_t[aLength];
-
-  memcpy(data, aData, aLength);
-
   nsString s(NS_LITERAL_STRING("image/"));
   s.Append(mFileFormat);
   DOM_CAMERA_LOGI("Got picture, type '%s', %u bytes\n", NS_ConvertUTF16toUTF8(s).get(), aLength);
-  OnTakePictureComplete(data, aLength, s);
+  OnTakePictureComplete(aData, aLength, s);
 
   if (mResumePreviewAfterTakingPicture) {
     nsresult rv = StartPreview();
