@@ -6,28 +6,14 @@ add_task(function* () {
     SpecialPowers.pushPrefEnv({"set": [["ui.tooltipDelay", 0]]}, resolve);
   });
 
-  var popup = false;
-  var doc;
-  var win;
-  var p1;
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" },
+                                                 gBrowser.selectedBrowser);
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#p1", { }, gBrowser.selectedBrowser);
 
-  let onPopupShown = function(aEvent) {
-    popup = true;
-  }
-  document.addEventListener("popupshown", onPopupShown, true);
+  // Wait until the tooltip timeout triggers that would normally have opened the popup.
+  yield new Promise(resolve => setTimeout(resolve, 0));
+  is(document.getElementById("aHTMLTooltip").state, "closed", "local tooltip is closed");
+  is(document.getElementById("remoteBrowserTooltip").state, "closed", "remote tooltip is closed");
 
-  // Send a mousemove at a known position to start the test.
-  BrowserTestUtils.synthesizeMouseAtCenter("#p1", { type: "mousemove" },
-                                           gBrowser.selectedBrowser);
-  BrowserTestUtils.synthesizeMouseAtCenter("#p1", { }, gBrowser.selectedBrowser);
-
-  yield new Promise(resolve => {
-    setTimeout(function() {
-      is(popup, false, "shouldn't get tooltip after click");
-      resolve();
-    }, 200);
-  });
-
-  document.removeEventListener("popupshown", onPopupShown, true);
   gBrowser.removeCurrentTab();
 });
