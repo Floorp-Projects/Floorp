@@ -2263,7 +2263,9 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
         return argv_[-2].toObject();
     }
 
-    // Add get() as needed
+    JS::HandleValue get(unsigned i) const {
+        return Base::get(i);
+    }
 };
 
 struct JSJitMethodCallArgsTraits
