@@ -99,6 +99,7 @@ SEReaderImpl.prototype = {
   _sessions: [],
 
   type: null,
+  _isSEPresent: false,
 
   classID: Components.ID("{1c7bdba3-cd35-4f8b-a546-55b3232457d5}"),
   contractID: "@mozilla.org/secureelement/reader;1",
@@ -112,12 +113,21 @@ SEReaderImpl.prototype = {
     }
   },
 
-  initialize: function initialize(win, type) {
+  initialize: function initialize(win, type, isPresent) {
     this._window = win;
     this.type = type;
+    this._isSEPresent = isPresent;
+  },
+
+  _checkPresence: function _checkPresence() {
+    if (!this._isSEPresent) {
+      throw new Error(SE.ERROR_NOTPRESENT);
+    }
   },
 
   openSession: function openSession() {
+    this._checkPresence();
+
     return PromiseHelpers.createSEPromise((resolverId) => {
       let sessionImpl = new SESessionImpl();
       sessionImpl.initialize(this._window, this);
@@ -129,6 +139,8 @@ SEReaderImpl.prototype = {
   },
 
   closeAll: function closeAll() {
+    this._checkPresence();
+
     return PromiseHelpers.createSEPromise((resolverId) => {
       let promises = [];
       for (let session of this._sessions) {
@@ -149,10 +161,24 @@ SEReaderImpl.prototype = {
     });
   },
 
+  updateSEPresence: function updateSEPresence(isSEPresent) {
+    if (!isSEPresent) {
+      this.invalidate();
+      return;
+    }
+
+    this._isSEPresent = isSEPresent;
+  },
+
+  invalidate: function invalidate() {
+    debug("Invalidating SE reader: " + this.type);
+    this._isSEPresent = false;
+    this._sessions.forEach(s => s.invalidate());
+    this._sessions = [];
+  },
+
   get isSEPresent() {
-    // TODO: Bug 1119152 - Implement new idl with interfaces to detect
-    //                     secureelement state changes.
-    return true;
+    return this._isSEPresent;
   }
 };
 
@@ -255,6 +281,12 @@ SESessionImpl.prototype = {
     });
   },
 
+  invalidate: function invlidate() {
+    this._isClosed = true;
+    this._channels.forEach(ch => ch.invalidate());
+    this._channels = [];
+  },
+
   get reader() {
     return this._reader.__DOM_IMPL__;
   },
@@ -262,10 +294,6 @@ SESessionImpl.prototype = {
   get isClosed() {
     return this._isClosed;
   },
-
-  set isClosed(isClosed) {
-    this._isClosed = isClosed;
-  }
 };
 
 /**
@@ -388,6 +416,10 @@ SEChannelImpl.prototype = {
     }, this);
   },
 
+  invalidate: function invalidate() {
+    this._isClosed = true;
+  },
+
   get session() {
     return this._session.__DOM_IMPL__;
   },
@@ -395,10 +427,6 @@ SEChannelImpl.prototype = {
   get isClosed() {
     return this._isClosed;
   },
-
-  set isClosed(isClosed) {
-    this._isClosed = isClosed;
-  }
 };
 
 function SEResponseImpl() {}
@@ -448,6 +476,8 @@ SEManagerImpl.prototype = {
     Ci.nsIObserver
   ]),
 
+  _readers: [],
+
   init: function init(win) {
     this._window = win;
     PromiseHelpers = new PromiseHelpersSubclass(this._window);
@@ -460,7 +490,8 @@ SEManagerImpl.prototype = {
                       "SE:GetSEReadersRejected",
                       "SE:OpenChannelRejected",
                       "SE:CloseChannelRejected",
-                      "SE:TransmitAPDURejected"];
+                      "SE:TransmitAPDURejected",
+                      "SE:ReaderPresenceChanged"];
 
     this.initDOMRequestHelper(win, messages);
   },
@@ -477,13 +508,13 @@ SEManagerImpl.prototype = {
   },
 
   getSEReaders: function getSEReaders() {
+    // invalidate previous readers on new request
+    if (this._readers.length) {
+      this._readers.forEach(r => r.invalidate());
+      this._readers = [];
+    }
+
     return PromiseHelpers.createSEPromise((resolverId) => {
-      /**
-       * @params for 'SE:GetSEReaders'
-       *
-       * resolverId  : Id that identifies this IPC request.
-       * appId       : Current appId obtained from 'Principal' obj
-       */
       cpmm.sendAsyncMessage("SE:GetSEReaders", {
         resolverId: resolverId,
         appId: this._window.document.nodePrincipal.appId
@@ -492,6 +523,8 @@ SEManagerImpl.prototype = {
   },
 
   receiveMessage: function receiveMessage(message) {
+    DEBUG && debug("Message received: " + JSON.stringify(message));
+
     let result = message.data.result;
     let resolver = null;
     let context = null;
@@ -503,16 +536,17 @@ SEManagerImpl.prototype = {
       context = promiseResolver.context;
     }
 
-    debug("receiveMessage(): " + message.name);
     switch (message.name) {
       case "SE:GetSEReadersResolved":
         let readers = new this._window.Array();
-        for (let i = 0; i < result.readerTypes.length; i++) {
+        result.readers.forEach(reader => {
           let readerImpl = new SEReaderImpl();
-          readerImpl.initialize(this._window, result.readerTypes[i]);
+          readerImpl.initialize(this._window, reader.type, reader.isPresent);
           this._window.SEReader._create(this._window, readerImpl);
+
+          this._readers.push(readerImpl);
           readers.push(readerImpl.__DOM_IMPL__);
-        }
+        });
         resolver.resolve(readers);
         break;
       case "SE:OpenChannelResolved":
@@ -551,6 +585,13 @@ SEManagerImpl.prototype = {
       case "SE:TransmitAPDURejected":
         let error = result.error || SE.ERROR_GENERIC;
         resolver.reject(error);
+        break;
+      case "SE:ReaderPresenceChanged":
+        debug("Reader " + result.type + " present: " + result.isPresent);
+        let reader = this._readers.find(r => r.type === result.type);
+        if (reader) {
+          reader.updateSEPresence(result.isPresent);
+        }
         break;
       default:
         debug("Could not find a handler for " + message.name);
