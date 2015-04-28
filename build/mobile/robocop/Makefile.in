@@ -39,14 +39,19 @@ java-tests   := \
   $(wildcard $(TESTPATH)/components/*.java) \
   $(wildcard $(TESTPATH)/helpers/*.java)
 
-PP_TARGETS        += manifest
-manifest          := $(srcdir)/AndroidManifest.xml.in
-manifest_TARGET   := AndroidManifest.xml
+PP_TARGETS += manifest
+manifest := $(srcdir)/AndroidManifest.xml.in
+manifest_TARGET := export
+manifest_FLAGS += \
+  -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
+  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE='$(ANDROID_PACKAGE_NAME)_sync' \
+  $(NULL)
+
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
 # Install robocop configs and helper
 INSTALL_TARGETS += robocop
-robocop_TARGET  := libs
+robocop_TARGET  := export
 robocop_DEST    := $(CURDIR)
 robocop_FILES   := \
   $(TESTPATH)/robocop.ini \
@@ -68,7 +73,8 @@ ROBOCOP_FILES := \
   $(wildcard $(TESTPATH)/reader_mode_pages) \
   $(NULL)
 
-ROBOCOP_DEST = $(DEPTH)/_tests/testing/mochitest/tests/robocop/
+ROBOCOP_DEST := $(DEPTH)/_tests/testing/mochitest/tests/robocop/
+ROBOCOP_TARGET := export
 INSTALL_TARGETS += ROBOCOP
 
 GARBAGE += \
