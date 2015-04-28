@@ -93,15 +93,20 @@ ThreadNode.prototype = {
 
     let sampleFrames = sample.frames;
 
+    if (!options.invertTree) {
+      // Remove the (root) node if the tree is not inverted: we will synthesize
+      // our own root in the view. However, for inverted trees, we wish to be
+      // able to differentiate between (root)->A->B->C and (root)->B->C stacks,
+      // so we need the root node in that case.
+      sampleFrames = sampleFrames.slice(1);
+    }
+
     // Filter out platform frames if only content-related function calls
     // should be taken into consideration.
     if (options.contentOnly) {
-      // The (root) node is not considered a content function, it'll be removed.
       sampleFrames = FrameUtils.filterPlatformData(sampleFrames);
-    } else {
-      // Remove the (root) node manually.
-      sampleFrames = sampleFrames.slice(1);
     }
+
     // If no frames remain after filtering, then this is a leaf node, no need
     // to continue.
     if (!sampleFrames.length) {
