@@ -412,8 +412,15 @@ nsTArray_base<Alloc, Copy>::SwapArrayElements(nsTArray_base<Allocator,
              (Length() == 0 || aOther.mHdr != EmptyHdr()),
              "Don't set sEmptyHdr's length.");
   size_type tempLength = Length();
-  mHdr->mLength = aOther.Length();
-  aOther.mHdr->mLength = tempLength;
+
+  // Avoid writing to EmptyHdr, since it can trigger false
+  // positives with TSan.
+  if (mHdr != EmptyHdr()) {
+    mHdr->mLength = aOther.Length();
+  }
+  if (aOther.mHdr != EmptyHdr()) {
+    aOther.mHdr->mLength = tempLength;
+  }
 
   return Alloc::SuccessResult();
 }
