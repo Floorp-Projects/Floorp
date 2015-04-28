@@ -25,7 +25,7 @@ static const size_t MAX_READ_SIZE = 1 << 16;
 
 class BluetoothSocket::BluetoothSocketIO final
   : public UnixSocketWatcher
-  , protected SocketIOBase
+  , protected DataSocketIO
 {
 public:
   BluetoothSocketIO(MessageLoop* mIOLoop,
@@ -34,9 +34,9 @@ public:
                     const nsACString& aAddress);
   ~BluetoothSocketIO();
 
-  void                GetSocketAddr(nsAString& aAddrStr) const;
-  SocketConsumerBase* GetConsumer();
-  SocketBase*         GetSocketBase();
+  void        GetSocketAddr(nsAString& aAddrStr) const;
+  DataSocket* GetDataSocket();
+  SocketBase* GetSocketBase();
 
   // Shutdown state
   //
@@ -130,7 +130,7 @@ BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
   UnixSocketConnector* aConnector,
   const nsACString& aAddress)
   : UnixSocketWatcher(mIOLoop)
-  , SocketIOBase(MAX_READ_SIZE)
+  , DataSocketIO(MAX_READ_SIZE)
   , mConsumer(aConsumer)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
@@ -158,8 +158,8 @@ BluetoothSocket::BluetoothSocketIO::GetSocketAddr(nsAString& aAddrStr) const
   mConnector->GetSocketAddr(mAddr, aAddrStr);
 }
 
-SocketConsumerBase*
-BluetoothSocket::BluetoothSocketIO::GetConsumer()
+DataSocket*
+BluetoothSocket::BluetoothSocketIO::GetDataSocket()
 {
   return mConsumer.get();
 }
@@ -167,7 +167,7 @@ BluetoothSocket::BluetoothSocketIO::GetConsumer()
 SocketBase*
 BluetoothSocket::BluetoothSocketIO::GetSocketBase()
 {
-  return GetConsumer();
+  return GetDataSocket();
 }
 
 bool
