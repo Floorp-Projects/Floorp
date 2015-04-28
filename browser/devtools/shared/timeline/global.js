@@ -21,7 +21,8 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
  *   - label: the label used in the waterfall to identify the marker
  *   - colorName: the name of the DevTools color used for this marker. If adding
  *                a new color, be sure to check that there's an entry for
- *                `.marker-details-bullet.{COLORNAME}` for the equivilent entry.
+ *                `.marker-details-bullet.{COLORNAME}` for the equivilent entry
+ *                in ./browser/themes/shared/devtools/performance.inc.css
  *                https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
  *
  * Whenever this is changed, browser_timeline_waterfall-styles.js *must* be
@@ -67,6 +68,11 @@ const TIMELINE_BLUEPRINT = {
     group: 2,
     colorName: "highlight-bluegrey",
     label: L10N.getStr("timeline.label.consoleTime")
+  },
+  "GarbageCollection": {
+    group: 1,
+    colorName: "highlight-red",
+    label: L10N.getStr("timeline.label.garbageCollection")
   },
 };
 

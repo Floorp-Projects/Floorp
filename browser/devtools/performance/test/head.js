@@ -497,3 +497,13 @@ function reload (aTarget, aEvent = "navigate") {
   aTarget.activeTab.reload();
   return once(aTarget, aEvent);
 }
+
+/**
+* Forces cycle collection and GC, used in AudioNode destruction tests.
+*/
+function forceCC () {
+  info("Triggering GC/CC...");
+  SpecialPowers.DOMWindowUtils.cycleCollect();
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+}
