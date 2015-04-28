@@ -697,7 +697,7 @@ let gEditItemOverlay = {
         }.bind(this));
       }
       else {
-        let txn = new PlacesMoveItemTransaction(this._itemId,
+        let txn = new PlacesMoveItemTransaction(this._paneInfo.itemId,
                                                 containerId,
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX);
         PlacesUtils.transactionManager.doTransaction(txn);
