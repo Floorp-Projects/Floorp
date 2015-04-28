@@ -12908,6 +12908,9 @@ IonBuilder::addLexicalCheck(MDefinition* input)
 
     // If we're guaranteed to not be JS_UNINITIALIZED_LEXICAL, no need to check.
     if (input->type() == MIRType_MagicUninitializedLexical) {
+        // Mark the input as implicitly used so the JS_UNINITIALIZED_LEXICAL
+        // magic value will be preserved on bailout.
+        input->setImplicitlyUsedUnchecked();
         lexicalCheck = MThrowUninitializedLexical::New(alloc());
         current->add(lexicalCheck);
         if (!resumeAfter(lexicalCheck))
