@@ -920,7 +920,8 @@ public:
         // XHTML1 section C.7).
         bool hasAttr = content->GetAttr(kNameSpaceID_XML, nsGkAtoms::lang,
                                           aResult);
-        if (!hasAttr && (content->IsHTMLElement() || content->IsSVGElement())) {
+        if (!hasAttr && (content->IsHTMLElement() || content->IsSVGElement() ||
+            content->IsXULElement())) {
           hasAttr = content->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
                                      aResult);
         }
