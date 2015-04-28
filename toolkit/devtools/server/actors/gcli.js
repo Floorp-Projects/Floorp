@@ -100,7 +100,9 @@ const GcliActor = ActorClass({
     request: {
       customProps: Arg(0, "nullable:array:string")
     },
-    response: RetVal("json")
+    response: {
+      value: RetVal("array:json")
+    }
   }),
 
   /**
