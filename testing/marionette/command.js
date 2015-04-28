@@ -150,11 +150,6 @@ CommandProcessor.prototype.execute = function(payload, okHandler, respHandler, c
   // yet been converted to use the new form of request dispatching.
   cmd.id = cmdId;
 
-  // For as long as the old form of request dispatching is in use,
-  // we need to tell ListenerProxy what the current command ID is
-  // so that individual commands in driver.js can define it explicitly.
-  this.driver.listener.curCmdId = cmd.id;
-
   let req = Task.spawn(function*() {
     let fn = this.driver.commands[cmd.name];
     if (typeof fn == "undefined") {
