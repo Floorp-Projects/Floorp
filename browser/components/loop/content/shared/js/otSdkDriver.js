@@ -440,7 +440,9 @@ loop.OTSdkDriver = (function() {
         case "Session.connectionDestroyed":
           this._metrics.connections--;
           if (clientType === "local") {
-            state = "cleanup";
+            // Don't log this, as the server doesn't accept it after
+            // the room has been left.
+            return;
           } else if (!this._metrics.connections) {
             state = "waiting";
           }
