@@ -3041,8 +3041,11 @@ CanAttachNativeSetProp(JSContext* cx, HandleObject obj, HandleId id, ConstantOrR
     // a stub to add the property until we do the VM call to add. If the
     // property exists as a data property on the prototype, we should add
     // a new, shadowing property.
-    if (obj->isNative() && (!shape || (obj != holder && shape->hasDefaultSetter() && shape->hasSlot())))
+    if (obj->isNative() && (!shape || (obj != holder && holder->isNative() &&
+                                       shape->hasDefaultSetter() && shape->hasSlot())))
+    {
         return SetPropertyIC::MaybeCanAttachAddSlot;
+    }
 
     if (IsImplicitNonNativeProperty(shape))
         return SetPropertyIC::CanAttachNone;
