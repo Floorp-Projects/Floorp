@@ -21,9 +21,26 @@ using namespace mozilla::dom;
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothGatt,
-                                   DOMEventTargetHelper,
-                                   mServices)
+NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothGatt)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothGatt,
+                                                DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServices)
+
+  /**
+   * Unregister the bluetooth signal handler after unlinked.
+   *
+   * This is needed to avoid ending up with exposing a deleted object to JS or
+   * accessing deleted objects while receiving signals from parent process
+   * after unlinked. Please see Bug 1138267 for detail informations.
+   */
+  UnregisterBluetoothSignalHandler(tmp->mAppUuid, tmp);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothGatt,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServices)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothGatt)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -56,7 +73,7 @@ BluetoothGatt::~BluetoothGatt()
     bs->UnregisterGattClientInternal(mClientIf, result);
   }
 
-  bs->UnregisterBluetoothSignalHandler(mAppUuid, this);
+  UnregisterBluetoothSignalHandler(mAppUuid, this);
 }
 
 void
@@ -94,7 +111,7 @@ BluetoothGatt::DisconnectFromOwner()
     bs->UnregisterGattClientInternal(mClientIf, result);
   }
 
-  bs->UnregisterBluetoothSignalHandler(mAppUuid, this);
+  UnregisterBluetoothSignalHandler(mAppUuid, this);
 }
 
 already_AddRefed<Promise>
@@ -122,7 +139,7 @@ BluetoothGatt::Connect(ErrorResult& aRv)
     BT_ENSURE_TRUE_REJECT(!mAppUuid.IsEmpty(),
                           promise,
                           NS_ERROR_DOM_OPERATION_ERR);
-    bs->RegisterBluetoothSignalHandler(mAppUuid, this);
+    RegisterBluetoothSignalHandler(mAppUuid, this);
   }
 
   UpdateConnectionState(BluetoothConnectionState::Connecting);
@@ -323,6 +340,7 @@ void
 BluetoothGatt::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[D] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
+  NS_ENSURE_TRUE_VOID(mSignalRegistered);
 
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("ClientRegistered")) {
