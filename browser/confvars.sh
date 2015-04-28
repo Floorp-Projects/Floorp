@@ -10,7 +10,6 @@ MOZ_PHOENIX=1
 
 if test "$OS_ARCH" = "WINNT"; then
   MOZ_MAINTENANCE_SERVICE=1
-  MOZ_VERIFY_MAR_SIGNATURE=1
   if ! test "$HAVE_64BIT_BUILD"; then
     if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
             "$MOZ_UPDATE_CHANNEL" = "aurora" -o \
@@ -21,8 +20,6 @@ if test "$OS_ARCH" = "WINNT"; then
       fi
     fi
   fi
-elif test "$OS_ARCH" = "Darwin"; then
-  MOZ_VERIFY_MAR_SIGNATURE=1
 fi
 
 # Enable building ./signmar and running libmar signature tests
