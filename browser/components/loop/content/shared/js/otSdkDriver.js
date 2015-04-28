@@ -223,18 +223,18 @@ loop.OTSdkDriver = (function() {
       this._sendTwoWayMediaTelemetry = !!sessionData.sendTwoWayMediaTelemetry;
       this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
 
-      this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
-      this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
-      this.session.on("streamDestroyed", this._onRemoteStreamDestroyed.bind(this));
-      this.session.on("connectionDestroyed",
-        this._onConnectionDestroyed.bind(this));
       this.session.on("sessionDisconnected",
         this._onSessionDisconnected.bind(this));
+      this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
+      this.session.on("connectionDestroyed",
+        this._onConnectionDestroyed.bind(this));
+      this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
+      this.session.on("streamDestroyed", this._onRemoteStreamDestroyed.bind(this));
       this.session.on("streamPropertyChanged", this._onStreamPropertyChanged.bind(this));
 
       // This starts the actual session connection.
       this.session.connect(sessionData.apiKey, sessionData.sessionToken,
-        this._onConnectionComplete.bind(this));
+        this._onSessionConnectionCompleted.bind(this));
     },
 
     /**
@@ -244,8 +244,7 @@ loop.OTSdkDriver = (function() {
       this.endScreenShare();
 
       if (this.session) {
-        this.session.off("streamCreated streamDestroyed connectionDestroyed " +
-          "sessionDisconnected streamPropertyChanged");
+        this.session.off("sessionDisconnected streamCreated streamDestroyed connectionCreated connectionDestroyed streamPropertyChanged");
         this.session.disconnect();
         delete this.session;
       }
@@ -302,7 +301,7 @@ loop.OTSdkDriver = (function() {
      *
      * @param {Error} error An OT error object, null if there was no error.
      */
-    _onConnectionComplete: function(error) {
+    _onSessionConnectionCompleted: function(error) {
       if (error) {
         console.error("Failed to complete connection", error);
         this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
