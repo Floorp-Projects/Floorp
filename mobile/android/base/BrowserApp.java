@@ -918,8 +918,25 @@ public class BrowserApp extends GeckoApp
                 @Override
                 public void run() {
                     if (TabQueueHelper.shouldOpenTabQueueUrls(BrowserApp.this)) {
-                        TabQueueHelper.openQueuedUrls(BrowserApp.this, mProfile, TabQueueHelper.FILE_NAME, false);
+                        openQueuedTabs();
                     }
+                }
+            });
+        }
+    }
+
+    private void openQueuedTabs() {
+        ThreadUtils.assertNotOnUiThread();
+
+        int queuedTabCount = TabQueueHelper.getTabQueueLength(BrowserApp.this);
+        TabQueueHelper.openQueuedUrls(BrowserApp.this, mProfile, TabQueueHelper.FILE_NAME, false);
+
+        // If there's more than one tab then also show the tabs panel.
+        if (queuedTabCount > 1) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    showNormalTabs();
                 }
             });
         }
@@ -3423,18 +3440,7 @@ public class BrowserApp extends GeckoApp
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
-                    int queuedTabCount = TabQueueHelper.getTabQueueLength(BrowserApp.this);
-                    TabQueueHelper.openQueuedUrls(BrowserApp.this, mProfile, TabQueueHelper.FILE_NAME, false);
-
-                    // If there's more than one tab then also show the tabs panel.
-                    if (queuedTabCount > 1) {
-                        ThreadUtils.postToUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                showNormalTabs();
-                            }
-                        });
-                    }
+                    openQueuedTabs();
                 }
             });
         }

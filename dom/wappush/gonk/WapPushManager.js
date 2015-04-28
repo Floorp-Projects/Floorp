@@ -37,9 +37,9 @@ XPCOMUtils.defineLazyGetter(this, "CP", function () {
 XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
-XPCOMUtils.defineLazyServiceGetter(this, "gRIL",
-                                   "@mozilla.org/ril;1",
-                                   "nsIRadioInterfaceLayer");
+XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
+                                   "@mozilla.org/icc/iccservice;1",
+                                   "nsIIccService");
 
 /**
  * Helpers for WAP PDU processing.
@@ -104,7 +104,8 @@ this.WapPushManager = {
         let mac = params && params.mac;
         authInfo = CP.Authenticator.check(data.array.subarray(data.offset),
                                           sec, mac, function getNetworkPin() {
-          let imsi = gRIL.getRadioInterface(options.serviceId).rilContext.imsi;
+          let icc = gIccService.getIccByServiceId(options.serviceId);
+          let imsi = icc ? icc.imsi : null;
           return CP.Authenticator.formatImsi(imsi);
         });
       }

@@ -171,18 +171,32 @@ this.MobileIdentityManager = {
     this._iccInfo = [];
 
     for (let i = 0; i < this.ril.numRadioInterfaces; i++) {
-      let rilContext = this.ril.getRadioInterface(i).rilContext;
-      if (!rilContext) {
-        log.warn("Tried to get the RIL context for an invalid service ID " + i);
+      let icc = this.iccService.getIccByServiceId(i);
+      if (!icc) {
+        log.warn("Tried to get the Icc instance for an invalid service ID " + i);
         continue;
       }
 
-      let info = rilContext.iccInfo;
+      let info = icc.iccInfo;
       if (!info || !info.iccid ||
           !info.mcc || !info.mcc.length ||
           !info.mnc || !info.mnc.length) {
         log.warn("Absent or invalid ICC info");
         continue;
+      }
+
+      // GSM SIMs may have MSISDN while CDMA SIMs may have MDN
+      let phoneNumber = null;
+      try {
+        if (info.iccType === "sim" || info.iccType === "usim") {
+          let gsmInfo = info.QueryInterface(Ci.nsIGsmIccInfo);
+          phoneNumber = gsmInfo.msisdn;
+        } else if (info.iccType === "ruim" || info.iccType === "csim") {
+          let cdmaInfo = info.QueryInterface(Ci.nsICdmaIccInfo);
+          phoneNumber = cdmaInfo.mdn;
+        }
+      } catch (e) {
+        log.error("Failed to retrieve phoneNumber: " + e);
       }
 
       let connection = this.mobileConnectionService.getItemByServiceId(i);
@@ -208,18 +222,14 @@ this.MobileIdentityManager = {
         iccId: info.iccid,
         mcc: info.mcc,
         mnc: info.mnc,
-        // GSM SIMs may have MSISDN while CDMA SIMs may have MDN
-        msisdn: info.msisdn || info.mdn || null,
+        msisdn: phoneNumber,
         operator: operator,
         roaming: voice && voice.roaming
       });
 
       // We need to subscribe to ICC change notifications so we can refresh
       // the cache if any change is observed.
-      let icc = this.iccService.getIccByServiceId(i);
-      if (icc) {
-        icc.registerListener(iccListener);
-      }
+      icc.registerListener(iccListener);
     }
 
     return this._iccInfo;

@@ -52,7 +52,7 @@ a {
   display: inline-block;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .message > .icon::before {
     background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
   }
@@ -361,7 +361,7 @@ a {
   background-size: 16px 16px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .jsterm-input-node {
     background-image: -moz-image-rect(url('chrome://browser/skin/devtools/commandline-icon@2x.png'), 0, 64, 32, 32);
   }

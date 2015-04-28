@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIGonkMobileConnectionService");
+
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
   dump("IccService: " + s);
@@ -73,7 +77,7 @@ function IccService() {
 
   let numClients = gRadioInterfaceLayer.numRadioInterfaces;
   for (let i = 0; i < numClients; i++) {
-    this._iccs.push(new Icc(gRadioInterfaceLayer.getRadioInterface(i)));
+    this._iccs.push(new Icc(i));
   }
 
   this._updateDebugFlag();
@@ -145,7 +149,7 @@ IccService.prototype = {
     }
 
     let icc = this.getIccByServiceId(aServiceId);
-    icc._imsi = aImsi;
+    icc.imsi = aImsi || null;
   },
 
   /**
@@ -166,15 +170,16 @@ IccService.prototype = {
   }
 };
 
-function Icc(aRadioInterface) {
-  this._radioInterface = aRadioInterface;
+function Icc(aClientId) {
+  this._clientId = aClientId;
+  this._radioInterface = gRadioInterfaceLayer.getRadioInterface(aClientId);
   this._listeners = [];
 }
 Icc.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIIcc]),
 
+  _clientId: 0,
   _radioInterface: null,
-  _imsi: null,
   _listeners: null,
 
   _updateCardState: function(aCardState) {
@@ -193,20 +198,48 @@ Icc.prototype = {
   },
 
   /**
+   * A utility function to compare objects. The srcInfo may contain
+   * "rilMessageType", should ignore it.
+   */
+  _isInfoChanged: function(srcInfo, destInfo) {
+    if (!destInfo) {
+      return true;
+    }
+
+    for (let key in srcInfo) {
+      if (key === "rilMessageType") {
+        continue;
+      }
+      if (srcInfo[key] !== destInfo[key]) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  /**
    * We need to consider below cases when update iccInfo:
    * 1. Should clear iccInfo to null if there is no card detected.
    * 2. Need to create corresponding object based on iccType.
    */
   _updateIccInfo: function(aIccInfo) {
+    let oldSpn = this.iccInfo ? this.iccInfo.spn : null;
+
     // Card is not detected, clear iccInfo to null.
     if (!aIccInfo || !aIccInfo.iccid) {
       if (this.iccInfo) {
         if (DEBUG) {
           debug("Card is not detected, clear iccInfo to null.");
         }
+        this.imsi = null;
         this.iccInfo = null;
         this._deliverListenerEvent("notifyIccInfoChanged");
       }
+      return;
+    }
+
+    if (!this._isInfoChanged(aIccInfo, this.iccInfo)) {
       return;
     }
 
@@ -232,6 +265,23 @@ Icc.prototype = {
         Services.prefs.setCharPref("ril.lastKnownSimMcc",
                                    aIccInfo.mcc.toString());
       } catch (e) {}
+    }
+
+    // Update lastKnownHomeNetwork.
+    if (aIccInfo.mcc && aIccInfo.mnc) {
+      let lastKnownHomeNetwork = aIccInfo.mcc + "-" + aIccInfo.mnc;
+      // Append spn information if available.
+      if (aIccInfo.spn) {
+        lastKnownHomeNetwork += "-" + aIccInfo.spn;
+      }
+
+      gMobileConnectionService.notifyLastHomeNetworkChanged(this._clientId,
+                                                            lastKnownHomeNetwork);
+    }
+
+    // If spn becomes available, we should check roaming again.
+    if (!oldSpn && aIccInfo.spn) {
+      gMobileConnectionService.notifySpnAvailable(this._clientId);
     }
   },
 
@@ -305,6 +355,7 @@ Icc.prototype = {
    */
   iccInfo: null,
   cardState: Ci.nsIIcc.CARD_STATE_UNKNOWN,
+  imsi: null,
 
   registerListener: function(aListener) {
     if (this._listeners.indexOf(aListener) >= 0) {
@@ -379,7 +430,7 @@ Icc.prototype = {
 
     switch (aMvnoType) {
       case Ci.nsIIcc.CARD_MVNO_TYPE_IMSI:
-        let imsi = this._imsi;
+        let imsi = this.imsi;
         if (!imsi) {
           aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
           break;

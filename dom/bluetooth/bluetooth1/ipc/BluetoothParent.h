@@ -37,8 +37,8 @@ class BluetoothService;
  * BluetoothParent
  ******************************************************************************/
 
-class BluetoothParent : public PBluetoothParent,
-                        public mozilla::Observer<BluetoothSignal>
+class BluetoothParent : public PBluetoothParent
+                      , public BluetoothSignalObserver
 {
   friend class mozilla::dom::ContentParent;
 
