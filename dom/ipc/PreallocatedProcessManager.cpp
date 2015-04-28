@@ -59,6 +59,7 @@ public:
   void OnNuwaReady();
   bool PreallocatedProcessReady();
   already_AddRefed<ContentParent> GetSpareProcess();
+  already_AddRefed<ContentParent> BlockForNewProcess(const nsAString& aManifestURL);
 
 private:
   void NuwaFork();
@@ -72,6 +73,7 @@ private:
 
   // Nuwa process is ready for creating new process.
   bool mIsNuwaReady;
+  nsTArray<nsString> mWaitingList;
 #endif
 
 private:
@@ -283,6 +285,44 @@ PreallocatedProcessManagerImpl::GetSpareProcess()
   return process.forget();
 }
 
+already_AddRefed<ContentParent>
+PreallocatedProcessManagerImpl::BlockForNewProcess(const nsAString& aManifestURL)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mEnabled || !IsNuwaReady()) {
+    // If nuwa is not ready, we can't enter the nested loop.
+    return nullptr;
+  }
+
+  if (mSpareProcesses.IsEmpty()) {
+    // a request comes in while there's no preallocated process. fork now.
+    if (aManifestURL.Length() == 0) {
+      // for browser.
+      NuwaFork();
+    } else if (mWaitingList.IndexOf(aManifestURL) == nsTArray<nsString>::NoIndex) {
+      // add the manifest url to waiting list. if there's another request came in while
+      // we are in nested loop, this will prevent later request from forking again.
+      NuwaFork();
+      mWaitingList.AppendElement(aManifestURL);
+    }
+    while (mSpareProcesses.IsEmpty() &&
+           (aManifestURL.Length() != 0 &&
+            mWaitingList.IndexOf(aManifestURL) != nsTArray<nsString>::NoIndex)) {
+      NS_ProcessNextEvent();
+    }
+    // If we are no longer in the waiting list, just return and content parent will
+    // get a process for us.
+    if (aManifestURL.Length() != 0 &&
+        mWaitingList.IndexOf(aManifestURL) == nsTArray<nsString>::NoIndex) {
+      return nullptr;
+    }
+    mWaitingList.RemoveElement(aManifestURL);
+  }
+
+  return GetSpareProcess();
+}
+
+
 /**
  * Publish a ContentParent to spare process list.
  */
@@ -482,6 +522,12 @@ PreallocatedProcessManager::IsNuwaReady()
 PreallocatedProcessManager::PreallocatedProcessReady()
 {
   return GetPPMImpl()->PreallocatedProcessReady();
+}
+
+/* static */ already_AddRefed<ContentParent>
+PreallocatedProcessManager::BlockForNewProcess(const nsAString& aManifestURL)
+{
+  return GetPPMImpl()->BlockForNewProcess(aManifestURL);
 }
 
 #endif
