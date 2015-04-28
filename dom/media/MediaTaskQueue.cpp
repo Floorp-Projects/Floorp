@@ -129,7 +129,7 @@ MediaTaskQueue::AwaitIdle()
 void
 MediaTaskQueue::AwaitIdleLocked()
 {
-  // Make the there are no tasks for this queue waiting in the caller's tail
+  // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
                 !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
@@ -144,7 +144,7 @@ MediaTaskQueue::AwaitIdleLocked()
 void
 MediaTaskQueue::AwaitShutdownAndIdle()
 {
-  // Make the there are no tasks for this queue waiting in the caller's tail
+  // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
                 !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
@@ -159,6 +159,11 @@ MediaTaskQueue::AwaitShutdownAndIdle()
 nsRefPtr<ShutdownPromise>
 MediaTaskQueue::BeginShutdown()
 {
+  // Make sure there are no tasks for this queue waiting in the caller's tail
+  // dispatcher.
+  MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
+                !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
+
   MonitorAutoLock mon(mQueueMonitor);
   mIsShutdown = true;
   nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
@@ -194,7 +199,7 @@ FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
 void
 FlushableMediaTaskQueue::FlushLocked()
 {
-  // Make the there are no tasks for this queue waiting in the caller's tail
+  // Make sure there are no tasks for this queue waiting in the caller's tail
   // dispatcher.
   MOZ_ASSERT_IF(AbstractThread::GetCurrent(),
                 !AbstractThread::GetCurrent()->TailDispatcher().HasTasksFor(this));
