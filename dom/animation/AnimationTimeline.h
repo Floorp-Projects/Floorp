@@ -47,6 +47,29 @@ public:
     return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
   }
 
+  /**
+   * Returns true if the times returned by GetCurrentTime() are convertible
+   * to and from wallclock-based TimeStamp (e.g. from TimeStamp::Now()) values
+   * using ToTimelineTime() and ToTimeStamp().
+   *
+   * Typically this is true, but it will be false in the case when this
+   * timeline has no refresh driver or is tied to a refresh driver under test
+   * control.
+   */
+  virtual bool TracksWallclockTime() const = 0;
+
+  /**
+   * Converts a TimeStamp to the equivalent value in timeline time.
+   * Note that when TracksWallclockTime() is false, there is no correspondence
+   * between timeline time and wallclock time. In such a case, passing a
+   * timestamp from TimeStamp::Now() to this method will not return a
+   * meaningful result.
+   */
+  virtual Nullable<TimeDuration> ToTimelineTime(const TimeStamp&
+                                                  aTimeStamp) const = 0;
+
+  virtual TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const = 0;
+
 protected:
   nsCOMPtr<nsIGlobalObject> mWindow;
 };
