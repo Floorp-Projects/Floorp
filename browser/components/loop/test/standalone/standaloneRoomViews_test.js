@@ -63,13 +63,14 @@ describe("loop.standaloneRoomViews", function() {
       expect(view.getDOMNode().textContent).eql("Mike's room");
     });
 
-    it("should display an unsupported browser message if crypto is unsupported", function() {
+    it("should log an unsupported browser message if crypto is unsupported", function() {
       var view = mountTestComponent({
         roomName: "Mark's room",
         roomInfoFailure: ROOM_INFO_FAILURES.WEB_CRYPTO_UNSUPPORTED
       });
 
-      expect(view.getDOMNode().textContent).match(/unsupported/);
+      sinon.assert.called(console.error);
+      sinon.assert.calledWithMatch(console.error, sinon.match("unsupported"));
     });
 
     it("should display a general error message for any other failure", function() {
@@ -78,7 +79,8 @@ describe("loop.standaloneRoomViews", function() {
         roomInfoFailure: ROOM_INFO_FAILURES.NO_DATA
       });
 
-      expect(view.getDOMNode().textContent).match(/not_available/);
+      sinon.assert.called(console.error);
+      sinon.assert.calledWithMatch(console.error, sinon.match("not_available"));
     });
 
     it("should display context information if a url is supplied", function() {
