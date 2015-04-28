@@ -260,15 +260,15 @@
   -  on the context menu that copies the selected request's url -->
 <!ENTITY netmonitorUI.context.copyUrl     "Copy URL">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl.accesskey): This is the access key
+  -  for the Copy URL menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyUrl.accesskey "C">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyAsCurl): This is the label displayed
   -  on the context menu that copies the selected request as a cURL command.
   -  The capitalization is part of the official name and should be used throughout all languages.
   -  http://en.wikipedia.org/wiki/CURL -->
 <!ENTITY netmonitorUI.context.copyAsCurl    "Copy as cURL">
-
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl.accesskey): This is the access key
-  -  for the Copy URL menu item displayed in the context menu for a request -->
-<!ENTITY netmonitorUI.context.copyUrl.accesskey "C">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri): This is the label displayed
   -  on the context menu that copies the selected image as data uri -->
@@ -282,9 +282,21 @@
   -  on the context menu that copies the selected response as a string -->
 <!ENTITY netmonitorUI.context.copyResponse "Copy Response">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri.accesskey): This is the access key
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRespose.accesskey): This is the access key
   -  for the Copy Response menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyResponse.accesskey  "R">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRequestHeaders): This is the label displayed
+  -  on the context menu that copies the selected item's request headers -->
+<!ENTITY netmonitorUI.context.copyRequestHeaders     "Copy Request Headers">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyRequestHeaders.accesskey): This is the access key
+  -  for the Copy Request Headers menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyRequestHeaders.accesskey  "H">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponseHeaders): This is the label displayed
+  -  on the context menu that copies the selected item's response headers -->
+<!ENTITY netmonitorUI.context.copyResponseHeaders     "Copy Response Headers">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.editAndResend): This is the label displayed
   -  on the button in the headers tab that opens a form to edit and resend the currently

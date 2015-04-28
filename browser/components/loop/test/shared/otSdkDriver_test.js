@@ -35,6 +35,9 @@ describe("loop.OTSdkDriver", function () {
     };
 
     dispatcher = new loop.Dispatcher();
+
+    sandbox.stub(dispatcher, "dispatch");
+
     session = _.extend({
       connect: sinon.stub(),
       disconnect: sinon.stub(),
@@ -108,7 +111,7 @@ describe("loop.OTSdkDriver", function () {
 
   describe("#setupStreamElements", function() {
     it("should call initPublisher", function() {
-      dispatcher.dispatch(new sharedActions.SetupStreamElements({
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
@@ -154,7 +157,7 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       sdk.initPublisher.returns(publisher);
 
-      dispatcher.dispatch(new sharedActions.SetupStreamElements({
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
@@ -162,7 +165,7 @@ describe("loop.OTSdkDriver", function () {
     });
 
     it("should publishAudio with the correct enabled value", function() {
-      dispatcher.dispatch(new sharedActions.SetMute({
+      driver.setMute(new sharedActions.SetMute({
         type: "audio",
         enabled: false
       }));
@@ -172,7 +175,7 @@ describe("loop.OTSdkDriver", function () {
     });
 
     it("should publishVideo with the correct enabled value", function() {
-      dispatcher.dispatch(new sharedActions.SetMute({
+      driver.setMute(new sharedActions.SetMute({
         type: "video",
         enabled: true
       }));
@@ -186,7 +189,6 @@ describe("loop.OTSdkDriver", function () {
     var fakeElement;
 
     beforeEach(function() {
-      sandbox.stub(dispatcher, "dispatch");
       sandbox.stub(driver, "_noteSharingState");
 
       fakeElement = {
@@ -240,7 +242,6 @@ describe("loop.OTSdkDriver", function () {
       driver.getScreenShareElementFunc = function() {
         return fakeScreenElement;
       };
-      sandbox.stub(dispatcher, "dispatch");
 
       driver.startScreenShare(options);
     });
@@ -263,7 +264,6 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       driver.getScreenShareElementFunc = function() {};
 
-      sandbox.stub(dispatcher, "dispatch");
       sandbox.stub(driver, "_noteSharingState");
     });
 
@@ -327,6 +327,32 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledWithExactly(driver._noteSharingState, "browser", false);
     });
+
+    it("should dispatch a ConnectionStatus action", function() {
+      driver.startScreenShare({
+        videoSource: "browser",
+        constraints: {
+          browserWindow: 42
+        }
+      });
+      driver.session = session;
+
+      driver._metrics.connections = 2;
+      driver._metrics.recvStreams = 1;
+      driver._metrics.sendStreams = 2;
+
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.ConnectionStatus({
+          event: "Publisher.streamDestroyed",
+          state: "sendrecv",
+          connections: 2,
+          sendStreams: 1,
+          recvStreams: 1
+        }));
+    });
   });
 
   describe("#connectSession", function() {
@@ -365,7 +391,6 @@ describe("loop.OTSdkDriver", function () {
 
       it("should dispatch connectionFailure if connecting failed", function() {
         session.connect.callsArgWith(2, new Error("Failure"));
-        sandbox.stub(dispatcher, "dispatch");
 
         driver.connectSession(sessionData);
 
@@ -578,14 +603,12 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       driver.connectSession(sessionData);
 
-      dispatcher.dispatch(new sharedActions.SetupStreamElements({
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
         getScreenShareElementFunc: function() {return fakeScreenElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
       }));
-
-      sandbox.stub(dispatcher, "dispatch");
     });
 
     describe("connectionDestroyed", function() {
@@ -595,7 +618,7 @@ describe("loop.OTSdkDriver", function () {
             reason: "clientDisconnected"
           });
 
-          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.called(dispatcher.dispatch);
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "remotePeerDisconnected"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
@@ -608,13 +631,30 @@ describe("loop.OTSdkDriver", function () {
             reason: "networkDisconnected"
           });
 
-          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.called(dispatcher.dispatch);
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("name", "remotePeerDisconnected"));
           sinon.assert.calledWithMatch(dispatcher.dispatch,
             sinon.match.hasOwn("peerHungup", false));
       });
 
+      it("should dispatch a ConnectionStatus action", function() {
+        driver._metrics.connections = 1;
+
+        session.trigger("connectionDestroyed", {
+          reason: "clientDisconnected"
+        });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Session.connectionDestroyed",
+            state: "waiting",
+            connections: 0,
+            sendStreams: 0,
+            recvStreams: 0
+          }));
+      });
 
       it("should call _noteConnectionLengthIfNeeded with connection duration", function() {
         driver.session = session;
@@ -681,21 +721,42 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("streamCreated (publisher/local)", function() {
-      it("should dispatch a VideoDimensionsChanged action", function() {
-        var fakeStream = {
+      var fakeStream;
+
+      beforeEach(function() {
+        fakeStream = {
           hasVideo: true,
           videoType: "camera",
           videoDimensions: {width: 1, height: 2}
         };
+      });
 
+      it("should dispatch a VideoDimensionsChanged action", function() {
         publisher.trigger("streamCreated", {stream: fakeStream});
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.VideoDimensionsChanged({
             isLocal: true,
             videoType: "camera",
             dimensions: {width: 1, height: 2}
+          }));
+      });
+
+      it("should dispatch a ConnectionStatus action", function() {
+        driver._metrics.recvStreams = 1;
+        driver._metrics.connections = 2;
+
+        publisher.trigger("streamCreated", {stream: fakeStream});
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Publisher.streamCreated",
+            state: "sendrecv",
+            connections: 2,
+            recvStreams: 1,
+            sendStreams: 1
           }));
       });
     });
@@ -714,12 +775,28 @@ describe("loop.OTSdkDriver", function () {
       it("should dispatch a VideoDimensionsChanged action", function() {
         session.trigger("streamCreated", {stream: fakeStream});
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.VideoDimensionsChanged({
             isLocal: false,
             videoType: "camera",
             dimensions: {width: 1, height: 2}
+          }));
+      });
+
+      it("should dispatch a ConnectionStatus action", function() {
+        driver._metrics.connections = 1;
+
+        session.trigger("streamCreated", {stream: fakeStream});
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Session.streamCreated",
+            state: "receiving",
+            connections: 1,
+            recvStreams: 1,
+            sendStreams: 0
           }));
       });
 
@@ -747,9 +824,9 @@ describe("loop.OTSdkDriver", function () {
         session.trigger("streamCreated", {stream: fakeStream});
 
         // Called twice due to the VideoDimensionsChanged above.
-        sinon.assert.calledTwice(dispatcher.dispatch);
+        sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("name", "mediaConnected"));
+          new sharedActions.MediaConnected({}));
       });
 
       it("should store the start time when both streams are up and" +
@@ -803,13 +880,33 @@ describe("loop.OTSdkDriver", function () {
           session.trigger("streamCreated", {stream: fakeStream});
 
           // Called twice due to the VideoDimensionsChanged above.
-          sinon.assert.calledTwice(dispatcher.dispatch);
-          sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.assert.called(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
             new sharedActions.ReceivingScreenShare({receiving: true}));
         });
     });
 
-    describe("streamDestroyed", function() {
+    describe("streamDestroyed (publisher/local)", function() {
+      it("should dispatch a ConnectionStatus action", function() {
+        driver._metrics.sendStreams = 1;
+        driver._metrics.recvStreams = 1;
+        driver._metrics.connections = 2;
+
+        publisher.trigger("streamDestroyed");
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Publisher.streamDestroyed",
+            state: "receiving",
+            connections: 2,
+            recvStreams: 1,
+            sendStreams: 0
+          }));
+      });
+    });
+
+    describe("streamDestroyed (session/remote)", function() {
       var fakeStream;
 
       beforeEach(function() {
@@ -821,10 +918,28 @@ describe("loop.OTSdkDriver", function () {
       it("should dispatch a ReceivingScreenShare action", function() {
         session.trigger("streamDestroyed", {stream: fakeStream});
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.ReceivingScreenShare({
             receiving: false
+          }));
+      });
+
+      it("should dispatch a ConnectionStatus action", function() {
+        driver._metrics.connections = 2;
+        driver._metrics.sendStreams = 1;
+        driver._metrics.recvStreams = 1;
+
+        session.trigger("streamDestroyed", {stream: fakeStream});
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Session.streamDestroyed",
+            state: "sending",
+            connections: 2,
+            recvStreams: 0,
+            sendStreams: 1
           }));
       });
 
@@ -833,7 +948,8 @@ describe("loop.OTSdkDriver", function () {
 
         session.trigger("streamDestroyed", {stream: fakeStream});
 
-        sinon.assert.notCalled(dispatcher.dispatch);
+        sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "receivingScreenShare"));
       });
     });
 
@@ -888,25 +1004,75 @@ describe("loop.OTSdkDriver", function () {
             connection: {id: "remoteUser"}
           });
 
-          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.called(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
             new sharedActions.RemotePeerConnected());
-          it("should store the connection details for a remote user", function() {
-            expect(driver.connections).to.include.keys("remoteUser");
-          });
         });
 
-      it("should not dispatch an action if this is for a local user",
+      it("should store the connection details for a remote user", function() {
+        session.trigger("connectionCreated", {
+          connection: {id: "remoteUser"}
+        });
+
+        expect(driver.connections).to.include.keys("remoteUser");
+      });
+
+      it("should dispatch a ConnectionStatus action for a remote user", function() {
+        driver._metrics.connections = 1;
+        driver._metrics.sendStreams = 1;
+
+        session.trigger("connectionCreated", {
+          connection: {id: "remoteUser"}
+        });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+          event: "Session.connectionCreated",
+          state: "sending",
+          connections: 2,
+          recvStreams: 0,
+          sendStreams: 1
+        }));
+      });
+
+      it("should not dispatch an RemotePeerConnected action if this is for a local user",
         function() {
           session.trigger("connectionCreated", {
             connection: {id: "localUser"}
           });
 
-          sinon.assert.notCalled(dispatcher.dispatch);
-          it("should not store the connection details for a local user", function() {
-            expect(driver.connections).to.not.include.keys("localUser");
-          });
+          sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("name", "remotePeerConnected"));
         });
+
+      it("should not store the connection details for a local user", function() {
+        session.trigger("connectionCreated", {
+          connection: {id: "localUser"}
+        });
+
+        expect(driver.connections).to.not.include.keys("localUser");
+      });
+
+      it("should dispatch a ConnectionStatus action for a remote user", function() {
+        driver._metrics.connections = 0;
+        driver._metrics.sendStreams = 0;
+
+        session.trigger("connectionCreated", {
+          connection: {id: "localUser"}
+        });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Session.connectionCreated",
+            state: "waiting",
+            connections: 1,
+            recvStreams: 0,
+            sendStreams: 0
+          }));
+      });
+
     });
 
     describe("accessAllowed", function() {
@@ -989,8 +1155,6 @@ describe("loop.OTSdkDriver", function () {
       driver.startScreenShare({
         videoSource: "window"
       });
-
-      sandbox.stub(dispatcher, "dispatch");
     });
 
     describe("accessAllowed", function() {
@@ -1019,6 +1183,26 @@ describe("loop.OTSdkDriver", function () {
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.ScreenSharingState({
             state: SCREEN_SHARE_STATES.INACTIVE
+          }));
+      });
+    });
+
+    describe("streamCreated", function() {
+      it("should dispatch a ConnectionStatus action", function() {
+        driver._metrics.connections = 2;
+        driver._metrics.recvStreams = 1;
+        driver._metrics.sendStreams = 1;
+
+        publisher.trigger("streamCreated", fakeEvent);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            event: "Publisher.streamCreated",
+            state: "sendrecv",
+            connections: 2,
+            recvStreams: 1,
+            sendStreams: 2
           }));
       });
     });
