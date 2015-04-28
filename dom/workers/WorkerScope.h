@@ -80,10 +80,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerGlobalScope,
                                                          DOMEventTargetHelper)
 
-  already_AddRefed<WorkerGlobalScope>
+  WorkerGlobalScope*
   Self()
   {
-    return nsRefPtr<WorkerGlobalScope>(this).forget();
+    return this;
   }
 
   Console*

@@ -4882,12 +4882,12 @@ ScrollFrameHelper::SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
   DebugOnly<nsWeakPtr> weakShell(
     do_GetWeakReference(mOuter->PresContext()->PresShell()));
   // convert to pixels
-  aSize = nsPresContext::AppUnitsToIntCSSPixels(aSize);
+  int32_t pizelSize = nsPresContext::AppUnitsToIntCSSPixels(aSize);
 
   // only set the attribute if it changed.
 
   nsAutoString newValue;
-  newValue.AppendInt(aSize);
+  newValue.AppendInt(pizelSize);
 
   if (aContent->AttrValueIs(kNameSpaceID_None, aAtom, newValue, eCaseMatters))
     return;

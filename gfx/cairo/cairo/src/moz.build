@@ -185,8 +185,6 @@ UNIFIED_SOURCES += [
     'cairo.c',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['PACKAGE_VERSION'] = '"moz"'

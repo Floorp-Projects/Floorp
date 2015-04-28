@@ -46,8 +46,6 @@ UNIFIED_SOURCES += [
     'nsXULTreeBuilder.cpp',
 ]
 
-MSVC_ENABLE_PGO = True
-
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/xul',

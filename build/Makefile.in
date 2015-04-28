@@ -53,6 +53,13 @@ LLDBINIT_FINAL_TARGET_FILES := $(DEPTH)/.lldbinit
 LLDBINIT_FINAL_TARGET_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += LLDBINIT_FINAL_TARGET
 
+# Put the .ycm_extra_conf.py file at the root of the objdir. It is used by
+# the vim plugin YouCompleteMe.
+YCM_FILES := $(topsrcdir)/.ycm_extra_conf.py
+YCM_DEST := $(abspath $(DEPTH))
+YCM_TARGET := export
+INSTALL_TARGETS += YCM
+
 ifdef MOZTTDIR
 # Install the Firefox OS fonts.
 include $(MOZTTDIR)/fonts.mk

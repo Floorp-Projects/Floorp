@@ -51,6 +51,10 @@ IsAtkVersionAtLeast(int aMajor, int aMinor)
          (aMajor == atkMajorVersion && aMinor <= atkMinorVersion);
 }
 
+// This is or'd with the pointer in MaiAtkObject::accWrap if the wrap-ee is a
+// proxy.
+static const uintptr_t IS_PROXY = 1;
+
 /**
  * This MaiAtkObject is a thin wrapper, in the MAI namespace, for AtkObject
  */
