@@ -7,3 +7,5 @@ fuzzy-if(d2d,16,96) == outline-and-3d-transform-2.html outline-and-3d-transform-
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-ref.html
 == outline-overflow-inlineblock-float.html outline-overflow-inlineblock-ref.html
 pref(layout.css.outline-style-auto.enabled,true) skip-if((!gtk2Widget&&!winWidget&&!cocoaWidget)||Mulet) == outline-auto-001.html outline-auto-001-ref.html # only works on platforms that supports NS_THEME_FOCUS_OUTLINE # bug 1141511:  Disable some gtk2Widget-dependant reftests on Mulet
+== outline-initial-1a.html outline-initial-1-ref.html
+== outline-initial-1b.html outline-initial-1-ref.html

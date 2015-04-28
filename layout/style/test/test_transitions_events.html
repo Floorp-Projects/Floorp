@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
   border-color: black; /* don't derive from color */
   -moz-column-rule-color: black; /* don't derive from color */
   text-decoration-color: black; /* don't derive from color */
+  outline-color: black; /* don't derive from color */
 }
 
 #four {
@@ -72,6 +73,7 @@ var got_one_target_borderbottom = false;
 var got_one_target_borderleft = false;
 var got_one_target_columnrule = false;
 var got_one_target_textdecorationcolor = false;
+var got_one_target_outlinecolor = false;
 var got_two_target = false;
 var got_three_top = false;
 var got_three_right = false;
@@ -182,6 +184,12 @@ $("one").addEventListener("transitionend",
         ok(!got_one_target_textdecorationcolor,
            "transitionend on one on target (text-decoration-color)");
         got_one_target_textdecorationcolor = true;
+        event.stopPropagation();
+        break;
+      case "outline-color":
+        ok(!got_one_target_outlinecolor,
+           "transitionend on one on target (outline-color)");
+        got_one_target_outlinecolor = true;
         event.stopPropagation();
         break;
       default:
