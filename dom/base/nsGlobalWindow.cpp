@@ -1439,6 +1439,8 @@ nsGlobalWindow::CleanUp()
     return;
   mCleanedUp = true;
 
+  StartDying();
+
   mEventTargetObjects.EnumerateEntries(DisconnectEventTargetObjects, nullptr);
   mEventTargetObjects.Clear();
 
@@ -2620,6 +2622,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         NS_ERROR("can't create the 'window' property");
         return NS_ERROR_FAILURE;
       }
+
+      // And same thing for the "self" property.
+      if (!JS_GetProperty(cx, newInnerGlobal, "self", &unused)) {
+        NS_ERROR("can't create the 'self' property");
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
@@ -3533,11 +3541,9 @@ nsGlobalWindow::GetWindow(nsIDOMWindow** aWindow)
   return NS_OK;
 }
 
-nsIDOMWindow*
-nsGlobalWindow::GetSelf(ErrorResult& aError)
+nsGlobalWindow*
+nsGlobalWindow::Self()
 {
-  FORWARD_TO_OUTER_OR_THROW(GetSelf, (aError), aError, nullptr);
-
   return this;
 }
 
@@ -3545,10 +3551,12 @@ NS_IMETHODIMP
 nsGlobalWindow::GetSelf(nsIDOMWindow** aWindow)
 {
   ErrorResult rv;
-  nsCOMPtr<nsIDOMWindow> window = GetSelf(rv);
+  FORWARD_TO_OUTER_OR_THROW(GetSelf, (aWindow), rv, rv.StealNSResult());
+
+  nsCOMPtr<nsIDOMWindow> window = Self();
   window.forget(aWindow);
 
-  return rv.StealNSResult();
+  return NS_OK;
 }
 
 Navigator*

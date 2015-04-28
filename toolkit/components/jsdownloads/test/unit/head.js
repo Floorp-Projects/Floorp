@@ -69,7 +69,7 @@ const TEST_STORE_FILE_NAME = "test-downloads.json";
 const TEST_REFERRER_URL = "http://www.example.com/referrer.html";
 
 const TEST_DATA_SHORT = "This test string is downloaded.";
-// Generate using gzipCompressString in TelemetryPing.jsm.
+// Generate using gzipCompressString in TelemetryController.jsm.
 const TEST_DATA_SHORT_GZIP_ENCODED_FIRST = [
  31,139,8,0,0,0,0,0,0,3,11,201,200,44,86,40,73,45,46,81,40,46,41,202,204
 ];

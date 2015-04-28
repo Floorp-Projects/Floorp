@@ -134,8 +134,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
-                                  "resource://gre/modules/TelemetryPing.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryController",
+                                  "resource://gre/modules/TelemetryController.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStorage",
                                   "resource://gre/modules/TelemetryStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
@@ -967,7 +967,7 @@ let Impl = {
     }
 
     ret.activeTicks = -1;
-    let sr = TelemetryPing.getSessionRecorder();
+    let sr = TelemetryController.getSessionRecorder();
     if (sr) {
       let activeTicks = sr.activeTicks;
       if (isSubsession) {
@@ -1213,9 +1213,9 @@ let Impl = {
     // to measure "explicit" too, but it could cause hangs, and the data was
     // always really noisy anyway.  See bug 859657.
     //
-    // test_TelemetryPing.js relies on some of these histograms being
+    // test_TelemetryController.js relies on some of these histograms being
     // here.  If you remove any of the following histograms from here, you'll
-    // have to modify test_TelemetryPing.js:
+    // have to modify test_TelemetryController.js:
     //
     //   * MEMORY_JS_GC_HEAP, and
     //   * MEMORY_JS_COMPARTMENTS_SYSTEM.
@@ -1443,7 +1443,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    return TelemetryPing.send(getPingType(payload), payload, options);
+    return TelemetryController.submitExternalPing(getPingType(payload), payload, options);
   },
 
   attachObservers: function attachObservers() {
@@ -1508,7 +1508,7 @@ let Impl = {
       return Promise.resolve();
     }
 
-    TelemetryPing.shutdown.addBlocker("TelemetrySession: shutting down",
+    TelemetryController.shutdown.addBlocker("TelemetrySession: shutting down",
                                       () => this.shutdownChromeProcess(),
                                       () => this._getState());
 
@@ -1674,7 +1674,7 @@ let Impl = {
     let shutdownPayload = this.getSessionPayload(REASON_SHUTDOWN, false);
     // Make sure we try to save the pending pings, even though we failed saving the shutdown
     // ping.
-    return TelemetryPing.addPendingPing(getPingType(shutdownPayload), shutdownPayload, options)
+    return TelemetryController.addPendingPing(getPingType(shutdownPayload), shutdownPayload, options)
                         .then(() => this.savePendingPingsClassic(),
                               () => this.savePendingPingsClassic());
 #else
@@ -1683,7 +1683,7 @@ let Impl = {
   },
 
   /**
-   * Save the "saved-session" ping and make TelemetryPing save all the pending pings to disk.
+   * Save the "saved-session" ping and make TelemetryController save all the pending pings to disk.
    */
   savePendingPingsClassic: function savePendingPingsClassic() {
     this._log.trace("savePendingPingsClassic");
@@ -1693,7 +1693,7 @@ let Impl = {
       addClientId: true,
       addEnvironment: true,
     };
-    return TelemetryPing.savePendingPings(getPingType(payload), payload, options);
+    return TelemetryController.savePendingPings(getPingType(payload), payload, options);
   },
 
   testSaveHistograms: function testSaveHistograms(file) {
@@ -1705,7 +1705,7 @@ let Impl = {
       addEnvironment: true,
       overwrite: true,
     };
-    return TelemetryPing.savePing(getPingType(payload), payload, file.path, options);
+    return TelemetryController.savePing(getPingType(payload), payload, file.path, options);
   },
 
   /**
@@ -1825,7 +1825,7 @@ let Impl = {
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       // TODO: This is just a fallback for now. Remove this when we have ping send
       // scheduling properly factored out and driven independently of this module.
-      TelemetryPing.sendPersistedPings();
+      TelemetryController.sendPersistedPings();
       break;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -1853,7 +1853,7 @@ let Impl = {
           addEnvironment: true,
           overwrite: true,
         };
-        TelemetryPing.addPendingPing(getPingType(payload), payload, options);
+        TelemetryController.addPendingPing(getPingType(payload), payload, options);
       }
       break;
 #endif
@@ -1932,7 +1932,7 @@ let Impl = {
       addEnvironment: true,
     };
 
-    let promise = TelemetryPing.send(getPingType(payload), payload, options);
+    let promise = TelemetryController.submitExternalPing(getPingType(payload), payload, options);
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
     // If required, also save the payload as an aborted session.
     if (saveAsAborted) {
@@ -2011,7 +2011,7 @@ let Impl = {
       addEnvironment: true,
       overrideEnvironment: oldEnvironment,
     };
-    TelemetryPing.send(getPingType(payload), payload, options);
+    TelemetryController.submitExternalPing(getPingType(payload), payload, options);
   },
 
   _isClassicReason: function(reason) {
@@ -2054,7 +2054,7 @@ let Impl = {
   },
 
   /**
-   * Check if there's any aborted session ping available. If so, tell TelemetryPing about
+   * Check if there's any aborted session ping available. If so, tell TelemetryController about
    * it.
    */
   _checkAbortedSessionPing: Task.async(function* () {
@@ -2071,7 +2071,7 @@ let Impl = {
     if (abortedExists) {
       this._log.trace("_checkAbortedSessionPing - aborted session found: " + FILE_PATH);
       yield this._abortedSessionSerializer.enqueueTask(
-        () => TelemetryPing.addPendingPingFromFile(FILE_PATH, true));
+        () => TelemetryController.addPendingPingFromFile(FILE_PATH, true));
     }
   }),
 
@@ -2102,6 +2102,6 @@ let Impl = {
       overwrite: true,
     };
     return this._abortedSessionSerializer.enqueueTask(() =>
-      TelemetryPing.savePing(getPingType(payload), payload, FILE_PATH, options));
+      TelemetryController.savePing(getPingType(payload), payload, FILE_PATH, options));
   },
 };

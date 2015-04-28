@@ -27,15 +27,14 @@ def load_mach(topsrcdir):
     return mach_bootstrap.bootstrap(topsrcdir)
 
 
-def check_and_run_mach(dir_path, args):
+def check_and_get_mach(dir_path):
     # If we find the mach bootstrap module, we are in the srcdir.
     mach_path = os.path.join(dir_path, 'build/mach_bootstrap.py')
     if os.path.isfile(mach_path):
-        mach = load_mach(dir_path)
-        sys.exit(mach.run(args))
+        return load_mach(dir_path)
+    return None
 
-
-def main(args):
+def get_mach():
     # Check whether the current directory is within a mach src or obj dir.
     for dir_path in ancestors(os.getcwd()):
         # If we find a "mozinfo.json" file, we are in the objdir.
@@ -56,14 +55,20 @@ def main(args):
                 # Continue searching for mach_bootstrap in the source directory.
                 dir_path = info['topsrcdir']
 
-        check_and_run_mach(dir_path, args)
+        mach = check_and_get_mach(dir_path)
+        if mach:
+            return mach
 
     # If we didn't find a source path by scanning for a mozinfo.json, check
     # whether the directory containing this script is a source directory.
-    check_and_run_mach(os.path.dirname(__file__), args)
+    return check_and_get_mach(os.path.dirname(__file__))
 
-    print('Could not run mach: No mach source directory found.')
-    sys.exit(1)
+def main(args):
+    mach = get_mach()
+    if not mach:
+        print('Could not run mach: No mach source directory found.')
+        sys.exit(1)
+    sys.exit(mach.run(args))
 
 
 if __name__ == '__main__':

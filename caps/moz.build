@@ -30,8 +30,6 @@ UNIFIED_SOURCES += [
     'nsSystemPrincipal.cpp',
 ]
 
-MSVC_ENABLE_PGO = True
-
 LOCAL_INCLUDES += [
     '/dom/base',
     '/js/xpconnect/src',

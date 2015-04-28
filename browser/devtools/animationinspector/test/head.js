@@ -362,7 +362,9 @@ function waitForPlayState(player, playState) {
 let checkPausedAt = Task.async(function*(widget, time) {
   info("Wait for the next auto-refresh");
 
-  yield waitForPlayState(widget.player, "paused");
+  yield waitForStateCondition(widget.player, state => {
+    return state.playState === "paused" && state.currentTime === time;
+  }, "Waiting for animation to pause at " + time + "ms");
 
   ok(widget.el.classList.contains("paused"), "The widget is in paused mode");
   is(widget.player.state.currentTime, time,

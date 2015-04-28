@@ -539,12 +539,16 @@ AppleMP3Reader::NotifyDataArrived(const char* aBuffer,
   }
 
   mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
+  if (!mMP3FrameParser.IsMP3()) {
+    return;
+  }
 
   uint64_t duration = mMP3FrameParser.GetDuration();
   if (duration != mDuration) {
     LOGD("Updating media duration to %lluus\n", duration);
-    mDuration = duration;
+    MOZ_ASSERT(mDecoder);
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mDuration = duration;
     mDecoder->UpdateEstimatedMediaDuration(duration);
   }
 }

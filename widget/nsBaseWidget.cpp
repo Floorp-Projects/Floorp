@@ -129,7 +129,6 @@ nsBaseWidget::nsBaseWidget()
 , mUpdateCursor(true)
 , mBorderStyle(eBorderStyle_none)
 , mUseLayersAcceleration(false)
-, mForceLayersAcceleration(false)
 , mUseAttachedEvents(false)
 , mBounds(0,0,0,0)
 , mOriginalBounds(nullptr)
@@ -295,7 +294,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     mBorderStyle = aInitData->mBorderStyle;
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
-    mRequireOffMainThreadCompositing = aInitData->mRequireOffMainThreadCompositing;
+    mMultiProcessWindow = aInitData->mMultiProcessWindow;
   }
 
   if (aParent) {
@@ -826,35 +825,23 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
 bool
 nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 {
-#if defined(XP_WIN) || defined(ANDROID) || \
-    defined(MOZ_GL_PROVIDER) || defined(XP_MACOSX) || defined(MOZ_WIDGET_QT)
-  bool accelerateByDefault = true;
-#else
-  bool accelerateByDefault = false;
-#endif
+  // Pref to disable acceleration wins:
+  if (gfxPrefs::LayersAccelerationDisabled()) {
+    return false;
+  }
 
-#ifdef XP_MACOSX
-  // 10.6.2 and lower have a bug involving textures and pixel buffer objects
-  // that caused bug 629016, so we don't allow OpenGL-accelerated layers on
-  // those versions of the OS.
-  // This will still let full-screen video be accelerated on OpenGL, because
-  // that XUL widget opts in to acceleration, but that's probably OK.
-  accelerateByDefault = nsCocoaFeatures::AccelerateByDefault();
-#endif
+  // No acceleration in the safe mode:
+  if (gfxPlatform::InSafeMode()) {
+    return false;
+  }
 
-  // we should use AddBoolPrefVarCache
-  bool disableAcceleration = gfxPrefs::LayersAccelerationDisabled();
-  mForceLayersAcceleration = gfxPrefs::LayersAccelerationForceEnabled();
+  // If the pref forces acceleration, no need to check further:
+  if (gfxPrefs::LayersAccelerationForceEnabled()) {
+    return true;
+  }
 
-  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
-  accelerateByDefault = accelerateByDefault ||
-                        (acceleratedEnv && (*acceleratedEnv != '0'));
-
-  nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-  bool safeMode = false;
-  if (xr)
-    xr->GetInSafeMode(&safeMode);
-
+  // Being whitelisted is not enough to accelerate, but not being whitelisted is
+  // enough not to:
   bool whitelisted = false;
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
@@ -873,12 +860,6 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
     }
   }
 
-  if (disableAcceleration || safeMode)
-    return false;
-
-  if (mForceLayersAcceleration)
-    return true;
-
   if (!whitelisted) {
     static int tell_me_once = 0;
     if (!tell_me_once) {
@@ -892,8 +873,26 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
     return false;
   }
 
-  if (accelerateByDefault)
+#if defined (XP_MACOSX)
+  // 10.6.2 and lower have a bug involving textures and pixel buffer objects
+  // that caused bug 629016, so we don't allow OpenGL-accelerated layers on
+  // those versions of the OS.
+  // This will still let full-screen video be accelerated on OpenGL, because
+  // that XUL widget opts in to acceleration, but that's probably OK.
+  bool accelerateByDefault = nsCocoaFeatures::AccelerateByDefault();
+#elif defined(XP_WIN) || defined(ANDROID) || \
+    defined(MOZ_GL_PROVIDER) || defined(MOZ_WIDGET_QT)
+  bool accelerateByDefault = true;
+#else
+  bool accelerateByDefault = false;
+#endif
+
+  // If the platform is accelerated by default or the environment
+  // variable is set, we accelerate:
+  const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+  if (accelerateByDefault || (acceleratedEnv && (*acceleratedEnv != '0'))) {
     return true;
+  }
 
   /* use the window acceleration flag */
   return aDefault;
@@ -953,6 +952,10 @@ private:
   nsRefPtr<APZCTreeManager> mTreeManager;
 };
 
+bool nsBaseWidget::IsMultiProcessWindow()
+{
+  return mMultiProcessWindow;
+}
 
 void nsBaseWidget::ConfigureAPZCTreeManager()
 {
@@ -1145,6 +1148,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mCompositorParent->SetOtherProcessId(base::GetCurrentProcId());
 
   if (gfxPrefs::AsyncPanZoomEnabled() &&
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_GTK)
+      // For desktop platforms we only want to use APZ in e10s-enabled windows.
+      // If we ever get input events off the main thread we can consider
+      // relaxing this requirement.
+      IsMultiProcessWindow() &&
+#endif
       (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child)) {
     ConfigureAPZCTreeManager();
   }

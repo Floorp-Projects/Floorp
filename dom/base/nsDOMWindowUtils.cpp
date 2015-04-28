@@ -25,6 +25,9 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "ClientLayerManager.h"
 #include "nsQueryObject.h"
+#ifdef MOZ_FMP4
+#include "MP4Reader.h"
+#endif
 
 #include "nsIScrollableFrame.h"
 
@@ -2233,6 +2236,27 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval)
     return NS_ERROR_FAILURE;
 
   *retval = !!mgr->AsShadowForwarder();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetSupportsHardwareH264Decoding(bool* retval)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+#ifdef MOZ_FMP4
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  LayerManager *mgr = widget->GetLayerManager();
+  if (!mgr)
+    return NS_ERROR_FAILURE;
+
+  *retval = MP4Reader::IsVideoAccelerated(mgr->GetCompositorBackendType());
+#else
+  *retval = false;
+#endif
   return NS_OK;
 }
 

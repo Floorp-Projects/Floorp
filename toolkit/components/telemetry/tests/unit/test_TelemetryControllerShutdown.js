@@ -1,13 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that TelemetryPing sends close to shutdown don't lead
+// Test that TelemetryController sends close to shutdown don't lead
 // to AsyncShutdown timeouts.
 
 "use strict";
 
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
@@ -58,11 +58,11 @@ add_task(function* test_sendTimeout() {
   httpServer.registerPrefixHandler("/", contentHandler);
   httpServer.start(-1);
 
-  yield TelemetryPing.setup();
-  TelemetryPing.setServer("http://localhost:" + httpServer.identity.primaryPort);
-  TelemetryPing.send("test-ping-type", {});
+  yield TelemetryController.setup();
+  TelemetryController.setServer("http://localhost:" + httpServer.identity.primaryPort);
+  TelemetryController.submitExternalPing("test-ping-type", {});
 
-  // Trigger the AsyncShutdown phase TelemetryPing hangs off.
+  // Trigger the AsyncShutdown phase TelemetryController hangs off.
   AsyncShutdown.profileBeforeChange._trigger();
   AsyncShutdown.sendTelemetry._trigger();
 

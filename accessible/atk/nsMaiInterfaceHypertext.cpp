@@ -22,31 +22,27 @@ static AtkHyperlink*
 getLinkCB(AtkHypertext *aText, gint aLinkIndex)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  AtkObject* atkHyperLink = nullptr;
   if (accWrap) {
     HyperTextAccessible* hyperText = accWrap->AsHyperText();
     NS_ENSURE_TRUE(hyperText, nullptr);
 
     Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
-    if (!hyperLink) {
+    if (!hyperLink || !hyperLink->IsLink()) {
       return nullptr;
     }
 
-    AtkObject* hyperLinkAtkObj = AccessibleWrap::GetAtkObject(hyperLink);
-    NS_ENSURE_TRUE(IS_MAI_OBJECT(hyperLinkAtkObj), nullptr);
-
-    return MAI_ATK_OBJECT(hyperLinkAtkObj)->GetAtkHyperlink();
-  }
-
-  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    atkHyperLink = AccessibleWrap::GetAtkObject(hyperLink);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
     ProxyAccessible* proxyLink = proxy->LinkAt(aLinkIndex);
-    if (proxyLink) {
-      NS_WARNING("IMPLEMENT ME! See bug 1146518.");
-      // We should somehow get from ProxyAccessible* to AtkHyperlink*.
-    }
-    return nullptr;
+    if (!proxyLink)
+      return nullptr;
+
+    atkHyperLink = GetWrapperFor(proxyLink);
   }
 
-  return nullptr;
+    NS_ENSURE_TRUE(IS_MAI_OBJECT(atkHyperLink), nullptr);
+    return MAI_ATK_OBJECT(atkHyperLink)->GetAtkHyperlink();
 }
 
 static gint

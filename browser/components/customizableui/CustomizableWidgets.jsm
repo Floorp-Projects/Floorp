@@ -18,12 +18,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
+  "resource:///modules/Pocket.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
@@ -1128,9 +1132,32 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
 
         let loginView = doc.getElementById("pocket-login-required");
         let pageSavedView = doc.getElementById("pocket-page-saved");
-        let showPageSaved = Math.random() < 0.5;
-        loginView.hidden = !showPageSaved;
-        pageSavedView.hidden = showPageSaved;
+        let showPageSaved = Pocket.isLoggedIn;
+        loginView.hidden = showPageSaved;
+        pageSavedView.hidden = !showPageSaved;
+
+        if (!showPageSaved)
+          return;
+
+        let gBrowser = doc.defaultView.gBrowser;
+        let uri = gBrowser.currentURI;
+        if (uri.schemeIs("about"))
+          uri = ReaderMode.getOriginalUrl(uri.spec);
+        else
+          uri = uri.spec;
+        if (!uri)
+          return; //TODO should prevent the panel from showing
+
+        Pocket.save(uri, gBrowser.contentTitle).then(
+          item => {
+            doc.getElementById("pocket-remove-page").itemId = item.item_id;
+          },
+          error => {dump(error + "\n");}
+        );
+      },
+      onViewHiding(event) {
+        let doc = event.target.ownerDocument;
+        doc.getElementById("pocket-remove-page").itemId = null;
       },
 
       handleEvent: function(event) {
@@ -1142,7 +1169,8 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
             button.disabled = !field.value.trim();
             break;
           case "command":
-            //XXXjaws Send tag to the Pocket server
+            Pocket.tag(doc.getElementById("pocket-remove-page").itemId,
+                       field.value);
             field.value = "";
             break;
         }

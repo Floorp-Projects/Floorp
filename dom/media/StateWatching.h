@@ -70,7 +70,7 @@ void EnsureStateWatchingLog();
 class AbstractWatcher
 {
 public:
-  NS_INLINE_DECL_REFCOUNTING(AbstractWatcher)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractWatcher)
   AbstractWatcher() : mDestroyed(false) {}
   bool IsDestroyed() { return mDestroyed; }
   virtual void Notify() = 0;
@@ -104,11 +104,13 @@ class WatchTarget
 public:
   explicit WatchTarget(const char* aName) : mName(aName) {}
 
-  void AddWatcher(AbstractWatcher* aWatcher)
+  void AddWatcher(AbstractWatcher* aWatcher, bool aSkipInitialNotify)
   {
     MOZ_ASSERT(!mWatchers.Contains(aWatcher));
     mWatchers.AppendElement(aWatcher);
-    aWatcher->Notify();
+    if (!aSkipInitialNotify) {
+      aWatcher->Notify();
+    }
   }
 
   void RemoveWatcher(AbstractWatcher* aWatcher)
@@ -204,7 +206,7 @@ public:
     AbstractThread::GetCurrent()->TailDispatcher().AddDirectTask(r.forget());
   }
 
-  void Watch(WatchTarget& aTarget) { aTarget.AddWatcher(this); }
+  void Watch(WatchTarget& aTarget, bool aSkipInitialNotify = false) { aTarget.AddWatcher(this, aSkipInitialNotify); }
   void Unwatch(WatchTarget& aTarget) { aTarget.RemoveWatcher(this); }
 
   template<typename ThisType>
