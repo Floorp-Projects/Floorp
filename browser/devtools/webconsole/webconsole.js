@@ -1415,6 +1415,8 @@ WebConsoleFrame.prototype = {
     let severity = 'error';
     if (aScriptError.warning || aScriptError.strict) {
       severity = 'warning';
+    } else if (aScriptError.info) {
+      severity = 'log';
     }
 
     let category = 'js';
