@@ -180,6 +180,13 @@ public:
                                    CryptoBuffer& aRetVal,
                                    const nsNSSShutDownPreventionLock& /*proofOfLock*/);
 
+  static SECKEYPublicKey* PublicECKeyFromRaw(CryptoBuffer& aKeyData,
+                                             const nsString& aNamedCurve,
+                                             const nsNSSShutDownPreventionLock& /*proofOfLock*/);
+  static nsresult PublicECKeyToRaw(SECKEYPublicKey* aPubKey,
+                                   CryptoBuffer& aRetVal,
+                                   const nsNSSShutDownPreventionLock& /*proofOfLock*/);
+
   static bool PublicKeyValid(SECKEYPublicKey* aPubKey);
 
   // Structured clone methods use these to clone keys
