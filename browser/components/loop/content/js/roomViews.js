@@ -265,10 +265,13 @@ loop.roomViews = (function(mozL10n) {
                 mozL10n.get("share_button3")
               )
             ), 
-            React.createElement(SocialShareDropdown, {dispatcher: this.props.dispatcher, 
-                                 roomUrl: this.props.roomData.roomUrl, 
-                                 show: this.state.showMenu, 
-                                 ref: "menu"})
+            React.createElement(SocialShareDropdown, {
+              dispatcher: this.props.dispatcher, 
+              roomUrl: this.props.roomData.roomUrl, 
+              show: this.state.showMenu, 
+              socialShareButtonAvailable: this.props.socialShareButtonAvailable, 
+              socialShareProviders: this.props.socialShareProviders, 
+              ref: "menu"})
           ), 
           React.createElement(DesktopRoomContextView, {
             roomData: this.props.roomData, 
@@ -443,7 +446,9 @@ loop.roomViews = (function(mozL10n) {
                 error: this.state.error, 
                 roomData: roomData, 
                 show: shouldRenderInvitationOverlay, 
-                showContext: shouldRenderContextView}), 
+                showContext: shouldRenderContextView, 
+                socialShareButtonAvailable: this.state.socialShareButtonAvailable, 
+                socialShareProviders: this.state.socialShareProviders}), 
               React.createElement("div", {className: "video-layout-wrapper"}, 
                 React.createElement("div", {className: "conversation room-conversation"}, 
                   React.createElement("div", {className: "media nested"}, 

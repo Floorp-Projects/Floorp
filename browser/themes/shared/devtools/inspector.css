@@ -7,12 +7,10 @@
 
 #inspector-toolbar:-moz-locale-dir(ltr) {
   padding-left: 2px;
-  padding-right: 16px; /* use -moz-padding-end when/if bug 631729 gets fixed */
 }
 
 #inspector-toolbar:-moz-locale-dir(rtl) {
   padding-left: 4px;
-  padding-right: 18px; /* use -moz-padding-end when/if bug 631729 gets fixed */
 }
 
 %endif

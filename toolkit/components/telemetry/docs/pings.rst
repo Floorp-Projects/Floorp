@@ -14,7 +14,7 @@ It contains some basic information shared between different ping types, the :doc
 Submission
 ==========
 
-Pings are submitted via a common API on ``TelemetryPing``. It allows callers to choose a custom retention period that determines how long pings are kept on disk if submission wasn't successful.
+Pings are submitted via a common API on ``TelemetryController``. It allows callers to choose a custom retention period that determines how long pings are kept on disk if submission wasn't successful.
 If a ping failed to submit (e.g. because of missing internet connection), Telemetry will retry to submit it until its retention period is up.
 
 *Note:* the :doc:`main pings <main-ping>` are kept locally even after successful submission to enable the HealthReport and SelfSupport features. They will be deleted after their retention period of 180 days.
@@ -37,7 +37,7 @@ Ping types
 Archiving
 =========
 
-When archiving is enabled through the relative preference, pings submitted to ``TelemetryPing`` are also stored locally in the user profile directory, in `<profile-dir>/datareporting/archived`.
+When archiving is enabled through the relative preference, pings submitted to ``TelemetryController`` are also stored locally in the user profile directory, in `<profile-dir>/datareporting/archived`.
 
 To allow for cheaper lookup of archived pings, storage follows a specific naming scheme for both the directory and the ping file name: `<YYYY-MM>/<timestamp>.<UUID>.<type>.json`.
 

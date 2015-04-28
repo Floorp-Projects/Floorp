@@ -49,7 +49,8 @@
           }
 
           win = yield openWebIDE();
-          let winIframe = win.document.querySelector("#project-listing-panel-details").contentWindow;
+          let docRuntime = getRuntimeDocument(win);
+          let docProject = getProjectDocument(win);
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
@@ -64,15 +65,40 @@
             }
           });
 
+          win.AppManager.runtimeList.usb.push({
+            connect: function(connection) {
+              let deferred = promise.defer();
+              return deferred.promise;
+            },
+
+            get name() {
+              return "infiniteRuntime";
+            }
+          });
+
+          win.AppManager.runtimeList.usb.push({
+            connect: function(connection) {
+              let deferred = promise.defer();
+              return deferred.promise;
+            },
+
+            prolongedConnection: true,
+
+            get name() {
+              return "prolongedRuntime";
+            }
+          });
+
           win.AppManager.update("runtime-list");
 
-          let packagedAppLocation = getTestFilePath("app");
+          let packagedAppLocation = getTestFilePath("../app");
 
-          yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield win.projectList.importPackagedApp(packagedAppLocation);
+          yield waitForUpdate(win, "project-validated");
 
-          let panelNode = winIframe.document.querySelector("#runtime-panel");
+          let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
-          is(items.length, 1, "Found one runtime button");
+          is(items.length, 3, "Found 3 runtime buttons");
 
           let deferred = promise.defer();
           win.AppManager.connection.once(
@@ -86,7 +112,7 @@
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
-          yield waitForUpdate(win, "runtime-targets");
+          yield waitForUpdate(win, "runtime-global-actors");
 
           ok(isPlayActive(), "play button is enabled 1");
           ok(!isStopActive(), "stop button is disabled 1");
@@ -113,7 +139,7 @@
           ok(!isPlayActive(), "play button is disabled 4");
           ok(!isStopActive(), "stop button is disabled 4");
 
-          winIframe.document.querySelectorAll(".runtime-panel-item-other")[1].click();
+          docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
 
           yield waitForUpdate(win, "runtime-targets");
 
@@ -122,9 +148,8 @@
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 
           // Select main process
-          yield win.Cmds.showProjectPanel();
           SimpleTest.executeSoon(() => {
-            winIframe.document.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
+            docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
           yield waitForUpdate(win, "project");
@@ -136,6 +161,39 @@
           ok(win.UI.toolboxIframe, "Toolbox iframe exists");
 
           yield win.Cmds.disconnectRuntime();
+
+          Services.prefs.setIntPref("devtools.webide.busyTimeout", 100);
+
+          // Wait for error message since connection never completes
+          let errorDeferred = promise.defer();
+          win.UI.reportError = errorName => {
+            if (errorName === "error_operationTimeout") {
+              errorDeferred.resolve();
+            }
+          };
+
+          // Click the infinite runtime
+          items[1].click();
+          ok(win.document.querySelector("window").className, "busy", "UI is busy");
+          yield errorDeferred.promise;
+
+          // Check for unexpected error message since this is prolonged
+          let noErrorDeferred = promise.defer();
+          win.UI.reportError = errorName => {
+            if (errorName === "error_operationTimeout") {
+              noErrorDeferred.reject();
+            }
+          };
+
+          // Click the prolonged runtime
+          items[2].click();
+          ok(win.document.querySelector("window").className, "busy", "UI is busy");
+
+          setTimeout(() => {
+            noErrorDeferred.resolve();
+          }, 1000);
+
+          yield noErrorDeferred.promise;
 
           SimpleTest.finish();
         });
