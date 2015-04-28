@@ -1885,6 +1885,16 @@ nsChildView::CreateCompositor()
   }
 }
 
+bool
+nsChildView::IsMultiProcessWindow()
+{
+  // On OS X the XULWindowWidget object gets the widget's init-data, which
+  // is what has the electrolysis window flag. So here in the child view
+  // we need to get the flag from that window instead.
+  nsCocoaWindow* parent = GetXULWindowWidget();
+  return parent ? parent->IsMultiProcessWindow() : false;
+}
+
 void
 nsChildView::ConfigureAPZCTreeManager()
 {

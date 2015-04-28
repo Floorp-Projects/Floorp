@@ -163,7 +163,6 @@ class TestEmitterBasic(unittest.TestCase):
             'EXTRA_COMPONENTS': ['dummy.manifest', 'fans.js', 'tans.js'],
             'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
             'FAIL_ON_WARNINGS': True,
-            'MSVC_ENABLE_PGO': True,
             'NO_DIST_INSTALL': True,
             'VISIBILITY_FLAGS': '',
             'RCFILE': 'foo.rc',

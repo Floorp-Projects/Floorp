@@ -6,8 +6,6 @@
 
 @template
 def Libxul(name):
-    MSVC_ENABLE_PGO = True
-
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         # This is going to be a framework named "XUL", not an ordinary library named
         # "libxul.dylib"
@@ -62,8 +60,6 @@ STATIC_LIBRARY_NAME = 'xul_s'
 SOURCES += [
     'StaticXULComponentsStart.cpp',
 ]
-
-MSVC_ENABLE_PGO = True
 
 # This, combined with the fact the file is first, makes the start pointer
 # it contains first in Windows PGO builds.

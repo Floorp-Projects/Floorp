@@ -58,8 +58,6 @@ SOURCES += [
     'pixman.c',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'gkmedias'
 LOCAL_INCLUDES += [
     '../../cairo/src',

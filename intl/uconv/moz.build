@@ -157,8 +157,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsUTF8ToUnicodeSSE2.cpp']
     SOURCES['nsUTF8ToUnicodeSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
-MSVC_ENABLE_PGO = True
-
 LOCAL_INCLUDES += [
     'ucvcn',
     'ucvja',

@@ -843,6 +843,10 @@ private:
     virtual bool RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
                                                PDocAccessibleParent* aParentDoc, const uint64_t& aParentID) override;
 
+    virtual PWebrtcGlobalParent* AllocPWebrtcGlobalParent() override;
+    virtual bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent *aActor) override;
+
+
     virtual bool RecvUpdateDropEffect(const uint32_t& aDragAction,
                                       const uint32_t& aDropEffect) override;
 

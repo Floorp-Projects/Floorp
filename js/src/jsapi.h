@@ -3948,8 +3948,10 @@ extern JS_PUBLIC_API(bool)
 Construct(JSContext* cx, JS::HandleValue fun,
           const JS::HandleValueArray& args,
           MutableHandleValue rval);
-
 } /* namespace JS */
+
+extern JS_PUBLIC_API(bool)
+JS_CheckForInterrupt(JSContext* cx);
 
 /*
  * These functions allow setting an interrupt callback that will be called

@@ -73,8 +73,6 @@ if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
         'vp8/encoder/boolhuff.c',
     ]
 
-MSVC_ENABLE_PGO = True
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

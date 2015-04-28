@@ -38,6 +38,69 @@ using mozilla::IsBaseOf;
 using mozilla::IsSame;
 using mozilla::MakeRange;
 
+// Tracing Overview
+// ================
+//
+// Tracing, in this context, refers to an abstract visitation of some or all of
+// the GC-controlled heap. The effect of tracing an edge of the graph depends
+// on the subclass of the JSTracer on whose behalf we are tracing.
+//
+// Marking
+// -------
+//
+// The primary JSTracer is the GCMarker. The marking tracer causes the target
+// of each traversed edge to be marked black and the target edge's children to
+// be marked either gray (in the gc algorithm sense) or immediately black.
+//
+// Callback
+// --------
+//
+// The secondary JSTracer is the CallbackTracer. This simply invokes a callback
+// on each edge in a child.
+//
+// The following is a rough outline of the general struture of the tracing
+// internals.
+//
+//                                                                                              //
+//   .---------.    .---------.    .--------------------------.       .----------.              //
+//   |TraceEdge|    |TraceRoot|    |TraceManuallyBarrieredEdge|  ...  |TraceRange|   ... etc.   //
+//   '---------'    '---------'    '--------------------------'       '----------'              //
+//        \              \                        /                        /                    //
+//         \              \  .----------------.  /                        /                     //
+//          o------------->o-|DispatchToTracer|-o<-----------------------o                      //
+//                           '----------------'                                                 //
+//                              /          \                                                    //
+//                             /            \                                                   //
+//                       .---------.   .----------.         .-----------------.                 //
+//                       |DoMarking|   |DoCallback|-------> |<JSTraceCallback>|----------->     //
+//                       '---------'   '----------'         '-----------------'                 //
+//                            |                                                                 //
+//                            |                                                                 //
+//                        .--------.                                                            //
+//      o---------------->|traverse| .                                                          //
+//     /_\                '--------'   ' .                                                      //
+//      |                     .     .      ' .                                                  //
+//      |                     .       .        ' .                                              //
+//      |                     .         .          ' .                                          //
+//      |             .-----------.    .-----------.   ' .     .--------------------.           //
+//      |             |markAndScan|    |markAndPush|       ' - |markAndTraceChildren|---->      //
+//      |             '-----------'    '-----------'           '--------------------'           //
+//      |                   |                  \                                                //
+//      |                   |                   \                                               //
+//      |       .----------------------.     .----------------.                                 //
+//      |       |T::eagerlyMarkChildren|     |pushMarkStackTop|<===Oo                           //
+//      |       '----------------------'     '----------------'    ||                           //
+//      |                  |                         ||            ||                           //
+//      |                  |                         ||            ||                           //
+//      |                  |                         ||            ||                           //
+//      o<-----------------o<========================OO============Oo                           //
+//                                                                                              //
+//                                                                                              //
+//   Legend:                                                                                    //
+//     ------  Direct calls                                                                     //
+//     . . .   Static dispatch                                                                  //
+//     ======  Dispatch through a manual stack.                                                 //
+//                                                                                              //
 void * const js::NullPtr::constNullValue = nullptr;
 
 JS_PUBLIC_DATA(void * const) JS::NullPtr::constNullValue = nullptr;
@@ -71,13 +134,6 @@ IsThingPoisoned(T* thing)
     return false;
 }
 #endif
-
-static GCMarker*
-AsGCMarker(JSTracer* trc)
-{
-    MOZ_ASSERT(trc->isMarkingTracer());
-    return static_cast<GCMarker*>(trc);
-}
 
 template <typename T> bool ThingIsPermanentAtomOrWellKnownSymbol(T* thing) { return false; }
 template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JSString>(JSString* str) {
@@ -193,6 +249,56 @@ FOR_EACH_GC_LAYOUT(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
 } // namespace js
 
+static bool
+ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
+{
+    if (!trc->isMarkingTracer())
+        return true;
+
+    uint32_t color = static_cast<GCMarker*>(trc)->markColor();
+    MOZ_ASSERT(color == BLACK || color == GRAY);
+
+    if (!cell->isTenured()) {
+        MOZ_ASSERT(color == BLACK);
+        return false;
+    }
+    TenuredCell& tenured = cell->asTenured();
+
+    JS::Zone* zone = tenured.zone();
+    if (color == BLACK) {
+        /*
+         * Having black->gray edges violates our promise to the cycle
+         * collector. This can happen if we're collecting a compartment and it
+         * has an edge to an uncollected compartment: it's possible that the
+         * source and destination of the cross-compartment edge should be gray,
+         * but the source was marked black by the conservative scanner.
+         */
+        if (tenured.isMarked(GRAY)) {
+            MOZ_ASSERT(!zone->isCollecting());
+            trc->runtime()->gc.setFoundBlackGrayEdges();
+        }
+        return zone->isGCMarking();
+    } else {
+        if (zone->isGCMarkingBlack()) {
+            /*
+             * The destination compartment is being not being marked gray now,
+             * but it will be later, so record the cell so it can be marked gray
+             * at the appropriate time.
+             */
+            if (!tenured.isMarked())
+                DelayCrossCompartmentGrayMarking(src);
+            return false;
+        }
+        return zone->isGCMarkingGray();
+    }
+}
+
+static bool
+ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
+{
+    return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell*)val.toGCThing());
+}
+
 #define JS_ROOT_MARKING_ASSERT(trc) \
     MOZ_ASSERT_IF(trc->isMarkingTracer(), \
                   trc->runtime()->gc.state() == NO_INCREMENTAL || \
@@ -286,8 +392,6 @@ ConvertToBase(T* thingp)
 template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name);
 template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
-static bool ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell);
-static bool ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val);
 
 template <typename T>
 void
@@ -490,20 +594,23 @@ DoMarking<jsid>(GCMarker* gcmarker, jsid id)
     DispatchIdTyped(DoMarkingFunctor<jsid>(), id, gcmarker);
 }
 
-// The default traversal calls out to the fully generic traceChildren function
-// to visit the child edges. In the absense of other traversal mechanisms, this
+// The simplest traversal calls out to the fully generic traceChildren function
+// to visit the child edges. In the absence of other traversal mechanisms, this
 // function will rapidly grow the stack past its bounds and crash the process.
 // Thus, this generic tracing should only be used in cases where subsequent
 // tracing will not recurse.
 template <typename T>
 void
-js::GCMarker::traverse(T* thing)
+js::GCMarker::markAndTraceChildren(T* thing)
 {
-    auto asBase = static_cast<typename BaseGCType<T>::type*>(thing);
-    MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(asBase));
-    if (mark(asBase))
+    MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(thing));
+    if (mark(thing))
         thing->traceChildren(this);
 }
+namespace js {
+template <> void GCMarker::traverse(LazyScript* thing) { markAndTraceChildren(thing); }
+template <> void GCMarker::traverse(JSScript* thing) { markAndTraceChildren(thing); }
+} // namespace js
 
 // Shape, BaseShape, String, and Symbol are extremely common, but have simple
 // patterns of recursion. We traverse trees of these edges immediately, with
@@ -541,6 +648,36 @@ template <> void GCMarker::traverse(ObjectGroup* thing) { markAndPush(GroupTag, 
 template <> void GCMarker::traverse(jit::JitCode* thing) { markAndPush(JitCodeTag, thing); }
 } // namespace js
 
+namespace js {
+template <>
+void
+GCMarker::traverse(AccessorShape* thing) {
+    MOZ_CRASH("AccessorShape must be marked as a Shape");
+}
+} // namespace js
+
+template <typename S, typename T>
+void
+js::GCMarker::traverse(S source, T target)
+{
+    MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target),
+                  runtime()->isAtomsZone(target->zone()) || target->zone() == source->zone());
+    traverse(target);
+}
+
+template <typename V, typename S> struct TraverseFunctor : public VoidDefaultAdaptor<V> {
+    template <typename T> void operator()(T t, GCMarker* gcmarker, S s) {
+        return gcmarker->traverse(s, t);
+    }
+};
+
+template <typename S>
+void
+js::GCMarker::traverse(S source, jsid id)
+{
+    DispatchIdTyped(TraverseFunctor<jsid, S>(), id, this, source);
+}
+
 template <typename T>
 bool
 js::GCMarker::mark(T* thing)
@@ -551,6 +688,39 @@ js::GCMarker::mark(T* thing)
     return gc::ParticipatesInCC<T>::value
            ? gc::TenuredCell::fromPointer(thing)->markIfUnmarked(markColor())
            : gc::TenuredCell::fromPointer(thing)->markIfUnmarked(gc::BLACK);
+}
+
+inline void
+Shape::traceChildren(JSTracer* trc)
+{
+    TraceEdge(trc, &base_, "base");
+    TraceEdge(trc, &propidRef(), "propid");
+    if (parent)
+        TraceEdge(trc, &parent, "parent");
+
+    if (hasGetterObject())
+        TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
+    if (hasSetterObject())
+        TraceManuallyBarrieredEdge(trc, &asAccessorShape().setterObj, "setter");
+}
+inline void
+js::GCMarker::eagerlyMarkChildren(Shape* shape)
+{
+    MOZ_ASSERT(shape->isMarked(this->markColor()));
+    do {
+        traverse(shape, shape->base());
+        traverse(shape, shape->propidRef().get());
+
+        // When triggered between slices on belhalf of a barrier, these
+        // objects may reside in the nursery, so require an extra check.
+        // FIXME: Bug 1157967 - remove the isTenured checks.
+        if (shape->hasGetterObject() && shape->getterObject()->isTenured())
+            traverse(shape, shape->getterObject());
+        if (shape->hasSetterObject() && shape->setterObject()->isTenured())
+            traverse(shape, shape->setterObject());
+
+        shape = shape->previous();
+    } while (shape && mark(shape));
 }
 
 template <typename T>
@@ -833,56 +1003,6 @@ gc::MarkObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t n
     }
 }
 
-static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Cell* cell)
-{
-    if (!trc->isMarkingTracer())
-        return true;
-
-    uint32_t color = AsGCMarker(trc)->markColor();
-    MOZ_ASSERT(color == BLACK || color == GRAY);
-
-    if (IsInsideNursery(cell)) {
-        MOZ_ASSERT(color == BLACK);
-        return false;
-    }
-    TenuredCell& tenured = cell->asTenured();
-
-    JS::Zone* zone = tenured.zone();
-    if (color == BLACK) {
-        /*
-         * Having black->gray edges violates our promise to the cycle
-         * collector. This can happen if we're collecting a compartment and it
-         * has an edge to an uncollected compartment: it's possible that the
-         * source and destination of the cross-compartment edge should be gray,
-         * but the source was marked black by the conservative scanner.
-         */
-        if (tenured.isMarked(GRAY)) {
-            MOZ_ASSERT(!zone->isCollecting());
-            trc->runtime()->gc.setFoundBlackGrayEdges();
-        }
-        return zone->isGCMarking();
-    } else {
-        if (zone->isGCMarkingBlack()) {
-            /*
-             * The destination compartment is being not being marked gray now,
-             * but it will be later, so record the cell so it can be marked gray
-             * at the appropriate time.
-             */
-            if (!tenured.isMarked())
-                DelayCrossCompartmentGrayMarking(src);
-            return false;
-        }
-        return zone->isGCMarkingGray();
-    }
-}
-
-static bool
-ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
-{
-    return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell*)val.toGCThing());
-}
-
 /*** Special Marking ***/
 
 void
@@ -900,22 +1020,6 @@ gc::MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name)
 
 /*** Push Mark Stack ***/
 
-/*
- * GCMarker::traverse for BaseShape unpacks its children directly onto the mark
- * stack. For a pre-barrier between incremental slices, this may result in
- * objects in the nursery getting pushed onto the mark stack. It is safe to
- * ignore these objects because they will be marked by the matching
- * post-barrier during the minor GC at the start of each incremental slice.
- */
-static void
-MaybePushMarkStackBetweenSlices(GCMarker* gcmarker, JSObject* thing)
-{
-    MOZ_ASSERT_IF(gcmarker->runtime()->isHeapBusy(), !IsInsideNursery(thing));
-
-    if (!IsInsideNursery(thing))
-        gcmarker->traverse(thing);
-}
-
 void
 BaseShape::traceChildren(JSTracer* trc)
 {
@@ -926,30 +1030,6 @@ BaseShape::traceChildren(JSTracer* trc)
     if (global)
         TraceManuallyBarrieredEdge(trc, &global, "global");
 }
-
-inline void
-GCMarker::eagerlyMarkChildren(Shape* shape)
-{
-  restart:
-    traverse(shape->base());
-
-    const BarrieredBase<jsid>& id = shape->propidRef();
-    if (JSID_IS_STRING(id))
-        traverse(JSID_TO_STRING(id));
-    else if (JSID_IS_SYMBOL(id))
-        traverse(JSID_TO_SYMBOL(id));
-
-    if (shape->hasGetterObject())
-        MaybePushMarkStackBetweenSlices(this, shape->getterObject());
-
-    if (shape->hasSetterObject())
-        MaybePushMarkStackBetweenSlices(this, shape->setterObject());
-
-    shape = shape->previous();
-    if (shape && shape->markIfUnmarked(this->markColor()))
-        goto restart;
-}
-
 inline void
 GCMarker::eagerlyMarkChildren(BaseShape* base)
 {
@@ -958,7 +1038,7 @@ GCMarker::eagerlyMarkChildren(BaseShape* base)
     base->compartment()->mark();
 
     if (GlobalObject* global = base->compartment()->unsafeUnbarrieredMaybeGlobal())
-        traverse(global);
+        traverse(static_cast<JSObject*>(global));
 
     /*
      * All children of the owned base shape are consistent with its
@@ -1200,7 +1280,7 @@ ScanObjectGroup(GCMarker* gcmarker, ObjectGroup* group)
     group->compartment()->mark();
 
     if (GlobalObject* global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
-        gcmarker->traverse(global);
+        gcmarker->traverse(static_cast<JSObject*>(global));
 
     if (group->newScript())
         group->newScript()->trace(gcmarker);
@@ -1215,10 +1295,10 @@ ScanObjectGroup(GCMarker* gcmarker, ObjectGroup* group)
         gcmarker->traverse(unboxedGroup);
 
     if (TypeDescr* descr = group->maybeTypeDescr())
-        gcmarker->traverse(descr);
+        gcmarker->traverse(static_cast<JSObject*>(descr));
 
     if (JSFunction* fun = group->maybeInterpretedFunction())
-        gcmarker->traverse(fun);
+        gcmarker->traverse(static_cast<JSObject*>(fun));
 }
 
 void
@@ -1437,28 +1517,6 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
     }
 }
 
-MOZ_ALWAYS_INLINE void
-GCMarker::markAndScanString(JSObject* source, JSString* str)
-{
-    if (!str->isPermanentAtom()) {
-        JS_COMPARTMENT_ASSERT(runtime(), str);
-        MOZ_ASSERT(runtime()->isAtomsZone(str->zone()) || str->zone() == source->zone());
-        if (str->markIfUnmarked())
-            eagerlyMarkChildren(str);
-    }
-}
-
-MOZ_ALWAYS_INLINE void
-GCMarker::markAndScanSymbol(JSObject* source, JS::Symbol* sym)
-{
-    if (!sym->isWellKnownSymbol()) {
-        JS_COMPARTMENT_ASSERT(runtime(), sym);
-        MOZ_ASSERT(runtime()->isAtomsZone(sym->zone()) || sym->zone() == source->zone());
-        if (sym->markIfUnmarked())
-            eagerlyMarkChildren(sym);
-    }
-}
-
 inline void
 GCMarker::processMarkStackTop(SliceBudget& budget)
 {
@@ -1511,7 +1569,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
 
         const Value& v = *vp++;
         if (v.isString()) {
-            markAndScanString(obj, v.toString());
+            traverse(obj, v.toString());
         } else if (v.isObject()) {
             JSObject* obj2 = &v.toObject();
             MOZ_ASSERT(obj->compartment() == obj2->compartment());
@@ -1522,7 +1580,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
                 goto scan_obj;
             }
         } else if (v.isSymbol()) {
-            markAndScanSymbol(obj, v.toSymbol());
+            traverse(obj, v.toSymbol());
         }
     }
     return;
@@ -1531,7 +1589,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     {
         while (*unboxedTraceList != -1) {
             JSString* str = *reinterpret_cast<JSString**>(unboxedMemory + *unboxedTraceList);
-            markAndScanString(obj, str);
+            traverse(obj, str);
             unboxedTraceList++;
         }
         unboxedTraceList++;
@@ -1546,14 +1604,14 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         while (*unboxedTraceList != -1) {
             const Value& v = *reinterpret_cast<Value*>(unboxedMemory + *unboxedTraceList);
             if (v.isString()) {
-                markAndScanString(obj, v.toString());
+                traverse(obj, v.toString());
             } else if (v.isObject()) {
                 JSObject* obj2 = &v.toObject();
                 MOZ_ASSERT(obj->compartment() == obj2->compartment());
                 if (mark(obj2))
                     repush(obj2);
             } else if (v.isSymbol()) {
-                markAndScanSymbol(obj, v.toSymbol());
+                traverse(obj, v.toSymbol());
             }
             unboxedTraceList++;
         }

@@ -148,7 +148,6 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // Capture the final choices for the trace settings.
   mozilla::Preferences::SetCString("media.webrtc.debug.log_file", aLogFile);
-  mozilla::Preferences::SetUint("media.webrtc.debug.trace_mask", trace_mask);
   mozilla::Preferences::SetCString("media.webrtc.debug.aec_log_dir", aAECLogDir);
 #endif
   return;

@@ -3279,26 +3279,17 @@ struct LayerManagerPrefs {
 static void
 GetLayerManagerPrefs(LayerManagerPrefs* aManagerPrefs)
 {
-  Preferences::GetBool("layers.acceleration.disabled",
-                       &aManagerPrefs->mDisableAcceleration);
-  Preferences::GetBool("layers.acceleration.force-enabled",
-                       &aManagerPrefs->mForceAcceleration);
-  Preferences::GetBool("layers.prefer-opengl",
-                       &aManagerPrefs->mPreferOpenGL);
-  Preferences::GetBool("layers.prefer-d3d9",
-                       &aManagerPrefs->mPreferD3D9);
+  aManagerPrefs->mDisableAcceleration = gfxPrefs::LayersAccelerationDisabled();
+  aManagerPrefs->mForceAcceleration = gfxPrefs::LayersAccelerationForceEnabled();
+  aManagerPrefs->mPreferOpenGL = gfxPrefs::LayersPreferOpenGL();
+  aManagerPrefs->mPreferD3D9 = gfxPrefs::LayersPreferD3D9();
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
   aManagerPrefs->mAccelerateByDefault =
     aManagerPrefs->mAccelerateByDefault ||
     (acceleratedEnv && (*acceleratedEnv != '0'));
-
-  bool safeMode = false;
-  nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-  if (xr)
-    xr->GetInSafeMode(&safeMode);
   aManagerPrefs->mDisableAcceleration =
-    aManagerPrefs->mDisableAcceleration || safeMode;
+    aManagerPrefs->mDisableAcceleration || gfxPlatform::InSafeMode();
 }
 
 LayerManager*

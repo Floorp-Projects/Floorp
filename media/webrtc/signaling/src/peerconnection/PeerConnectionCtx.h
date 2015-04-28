@@ -7,6 +7,10 @@
 
 #include <string>
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#include "mozilla/media/webrtc/WebrtcGlobalChild.h"
+#endif
+
 #include "mozilla/Attributes.h"
 #include "StaticPtr.h"
 #include "PeerConnectionImpl.h"
@@ -56,6 +60,7 @@ class PeerConnectionCtx {
     mStatsForClosedPeerConnections;
 #endif
 
+  const std::map<const std::string, PeerConnectionImpl *>& mGetPeerConnections();
  private:
   // We could make these available only via accessors but it's too much trouble.
   std::map<const std::string, PeerConnectionImpl *> mPeerConnections;
