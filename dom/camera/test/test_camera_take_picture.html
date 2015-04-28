@@ -156,6 +156,97 @@ suite.test('take-picture-no-config', function() {
     .then(verifyPicture, suite.rejectTakePicture);
 });
 
+
+suite.test('take-picture-with-gps', function() {
+  var data = 'this is a test';
+  var format = 'jpeg';
+
+  suite.hw.params['picture-format-values'] = 'jpeg,png';
+  suite.hw.params['picture-format'] = format;
+
+  function takePicture(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        ok(suite.hw.params['gps-latitude'] == 32.920650, "gps-latitude = " + suite.hw.params['gps-latitude']);
+        ok(suite.hw.params['gps-longitude'] == -117.136894, "gps-longitude = " + suite.hw.params['gps-longitude']);
+        ok(suite.hw.params['gps-altitude'] == 10, "gps-altitude = " + suite.hw.params['gps-altitude']);
+        ok(suite.hw.params['gps-timestamp'] == 1429699895, "gps-timestamp = " + suite.hw.params['gps-timestamp']);
+        suite.hw.fireTakePictureComplete(new window.Blob([data], {'type': format}));
+      }
+    });
+
+    return suite.camera.takePicture({position: {latitude: 32.920650, longitude: -117.136894, altitude: 10, timestamp: 1429699895}});
+  }
+
+  function verifyPicture(blob) {
+    ok(blob.size == data.length, "picture blob is " + blob.size + " bytes");
+  }
+
+  return suite.getCamera()
+    .then(takePicture, suite.rejectGetCamera)
+    .then(verifyPicture, suite.rejectTakePicture);
+});
+
+suite.test('take-picture-without-gps', function() {
+  var data = 'this is a test';
+  var format = 'jpeg';
+
+  suite.hw.params['picture-format-values'] = 'jpeg,png';
+  suite.hw.params['picture-format'] = format;
+
+  function takePicture(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        ok(!('gps-latitude' in suite.hw.params), "gps-latitude not set");
+        ok(!('gps-longitude' in suite.hw.params), "gps-longitude not set");
+        ok(!('gps-altitude' in suite.hw.params), "gps-altitude not set");
+        ok(!('gps-timestamp' in suite.hw.params), "gps-timestamp not set");
+        suite.hw.fireTakePictureComplete(new window.Blob([data], {'type': format}));
+      }
+    });
+
+    return suite.camera.takePicture();
+  }
+
+  function verifyPicture(blob) {
+    ok(blob.size == data.length, "picture blob is " + blob.size + " bytes");
+  }
+
+  return suite.getCamera()
+    .then(takePicture, suite.rejectGetCamera)
+    .then(verifyPicture, suite.rejectTakePicture);
+});
+
+suite.test('take-picture-with-partial-gps', function() {
+  var data = 'this is a test';
+  var format = 'jpeg';
+
+  suite.hw.params['picture-format-values'] = 'jpeg,png';
+  suite.hw.params['picture-format'] = format;
+
+  function takePicture(p) {
+    suite.hw.attach({
+      takePicture: function() {
+        ok(!('gps-latitude' in suite.hw.params), "gps-latitude not set");
+        ok(!('gps-longitude' in suite.hw.params), "gps-longitude not set");
+        ok(!('gps-altitude' in suite.hw.params), "gps-altitude not set");
+        ok(!('gps-timestamp' in suite.hw.params), "gps-timestamp not set");
+        suite.hw.fireTakePictureComplete(new window.Blob([data], {'type': format}));
+      }
+    });
+
+    return suite.camera.takePicture({position: {latitude: 32.920650, longitude: NaN, altitude: 10, timestamp: 1429699895}});
+  }
+
+  function verifyPicture(blob) {
+    ok(blob.size == data.length, "picture blob is " + blob.size + " bytes");
+  }
+
+  return suite.getCamera()
+    .then(takePicture, suite.rejectGetCamera)
+    .then(verifyPicture, suite.rejectTakePicture);
+});
+
 suite.setup()
   .then(suite.run);
 
