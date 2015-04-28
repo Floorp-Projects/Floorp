@@ -86,18 +86,6 @@ InvokeFunction(JSContext* cx, HandleObject obj, uint32_t argc, Value* argv, Valu
     return true;
 }
 
-JSObject*
-NewGCObject(JSContext* cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap,
-            size_t ndynamic, const js::Class* clasp)
-{
-    JSObject* obj = js::Allocate<JSObject>(cx, allocKind, ndynamic, initialHeap, clasp);
-    if (!obj)
-        return nullptr;
-
-    SetNewObjectMetadata(cx, obj);
-    return obj;
-}
-
 bool
 CheckOverRecursed(JSContext* cx)
 {

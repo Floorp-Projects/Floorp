@@ -802,8 +802,6 @@ class MacroAssembler : public MacroAssemblerSpecific
                         gc::InitialHeap initialHeap, Label* fail, bool initContents = true,
                         bool convertDoubleElements = false);
 
-    void newGCThing(Register result, Register temp, JSObject* templateObj,
-                     gc::InitialHeap initialHeap, Label* fail);
     void initGCThing(Register obj, Register temp, JSObject* templateObj,
                      bool initContents = true, bool convertDoubleElements = false);
 
