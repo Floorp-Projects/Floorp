@@ -6,7 +6,7 @@
 
 #include "PendingAnimationTracker.h"
 
-#include "mozilla/dom/DocumentTimeline.h"
+#include "mozilla/dom/AnimationTimeline.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 
@@ -53,7 +53,7 @@ TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
                     void* aReadyTime)
 {
   dom::Animation* animation = aKey->GetKey();
-  dom::DocumentTimeline* timeline = animation->Timeline();
+  dom::AnimationTimeline* timeline = animation->Timeline();
 
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert

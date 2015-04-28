@@ -10,6 +10,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffect.h"
 
 #include "nsPresContext.h"
@@ -569,7 +570,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::Element* aTarget,
-                                    dom::DocumentTimeline* aTimeline,
+                                    dom::AnimationTimeline* aTimeline,
                                     AnimationPtrArray& aAnimations)
 {
   MOZ_ASSERT(aAnimations.IsEmpty(), "expect empty array");
