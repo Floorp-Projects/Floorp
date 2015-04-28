@@ -235,6 +235,14 @@ function test_escapeQueryBrackets()
   do_check_eq(url.spec, "http://[2001::1]/?a%5Bx%5D=1");
 }
 
+function test_apostropheEncoding()
+{
+  // For now, single quote is escaped everywhere _except_ the path.
+  // This policy is controlled by the bitmask in nsEscape.cpp::EscapeChars[]
+  var url = stringToURL("http://example.com/dir'/file'.ext'");
+  do_check_eq(url.spec, "http://example.com/dir'/file'.ext'");
+}
+
 function run_test()
 {
   test_setEmptyPath();
@@ -244,4 +252,5 @@ function run_test()
   test_ipv6_fail();
   test_clearedSpec();
   test_escapeQueryBrackets();
+  test_apostropheEncoding();
 }
