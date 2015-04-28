@@ -929,7 +929,7 @@ Animation::IsPossiblyOrphanedPendingAnimation() const
   // never starting/pausing the animation and is unlikely.
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
-    return false;
+    return true;
   }
 
   PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
