@@ -79,7 +79,7 @@ namespace dom {
 class CSSTransition final : public Animation
 {
 public:
- explicit CSSTransition(dom::DocumentTimeline* aTimeline)
+ explicit CSSTransition(dom::AnimationTimeline* aTimeline)
     : dom::Animation(aTimeline)
   {
   }
