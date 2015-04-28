@@ -43,6 +43,10 @@ class SyntaxParseHandler
         NodeGetProp,
         NodeStringExprStatement,
         NodeLValue,
+        NodeReturn,
+        NodeHoistableDeclaration,
+        NodeBreak,
+        NodeThrow,
 
         // In rare cases a parenthesized |node| doesn't have the same semantics
         // as |node|.  Each such node has a special Node value, and we use a
@@ -214,14 +218,14 @@ class SyntaxParseHandler
     Node newSwitchStatement(uint32_t begin, Node discriminant, Node caseList) { return NodeGeneric; }
     Node newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
     Node newContinueStatement(PropertyName* label, const TokenPos& pos) { return NodeGeneric; }
-    Node newBreakStatement(PropertyName* label, const TokenPos& pos) { return NodeGeneric; }
-    Node newReturnStatement(Node expr, Node genrval, const TokenPos& pos) { return NodeGeneric; }
+    Node newBreakStatement(PropertyName* label, const TokenPos& pos) { return NodeBreak; }
+    Node newReturnStatement(Node expr, Node genrval, const TokenPos& pos) { return NodeReturn; }
 
     Node newLabeledStatement(PropertyName* label, Node stmt, uint32_t begin) {
         return NodeGeneric;
     }
 
-    Node newThrowStatement(Node expr, const TokenPos& pos) { return NodeGeneric; }
+    Node newThrowStatement(Node expr, const TokenPos& pos) { return NodeThrow; }
     Node newTryStatement(uint32_t begin, Node body, Node catchList, Node finallyBlock) {
         return NodeGeneric;
     }
@@ -238,7 +242,7 @@ class SyntaxParseHandler
                        Node catchName, Node catchGuard, Node catchBody) { return true; }
 
     void setLastFunctionArgumentDefault(Node funcpn, Node pn) {}
-    Node newFunctionDefinition() { return NodeGeneric; }
+    Node newFunctionDefinition() { return NodeHoistableDeclaration; }
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox* funbox) {}
     void addFunctionArgument(Node pn, Node argpn) {}
@@ -277,10 +281,22 @@ class SyntaxParseHandler
     }
 
     Node newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind != PNK_VAR);
         return NodeGeneric;
     }
+    Node newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||
+                   kind == PNK_GLOBALCONST);
+        return kind == PNK_VAR ? NodeHoistableDeclaration : NodeGeneric;
+    }
     Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind != PNK_VAR);
         return NodeGeneric;
+    }
+    Node newDeclarationList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||
+                   kind == PNK_GLOBALCONST);
+        return kind == PNK_VAR ? NodeHoistableDeclaration : NodeGeneric;
     }
 
     Node newCatchList() {
@@ -292,7 +308,8 @@ class SyntaxParseHandler
     }
 
     void addList(Node list, Node kid) {
-        MOZ_ASSERT(list == NodeGeneric || list == NodeUnparenthesizedCommaExpr);
+        MOZ_ASSERT(list == NodeGeneric || list == NodeUnparenthesizedCommaExpr ||
+                   list == NodeHoistableDeclaration);
     }
 
     Node newAssignment(ParseNodeKind kind, Node lhs, Node rhs,
@@ -313,6 +330,14 @@ class SyntaxParseHandler
 
     bool isUnparenthesizedAssignment(Node node) {
         return node == NodeUnparenthesizedAssignment;
+    }
+
+    bool isReturnStatement(Node node) {
+        return node == NodeReturn;
+    }
+
+    bool isStatementPermittedAfterReturnStatement(Node pn) {
+        return pn == NodeHoistableDeclaration || pn == NodeBreak || pn == NodeThrow;
     }
 
     void setOp(Node pn, JSOp op) {}

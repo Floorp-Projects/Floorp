@@ -221,12 +221,12 @@
           var row = this.createConsoleRow();
           var nsIScriptError = Components.interfaces.nsIScriptError;
 
-          // Is this error actually just a non-fatal warning?
-          var warning = aObject.flags & nsIScriptError.warningFlag != 0;
+          // nsIConsoleMessage constants: debug, info, warn, error
+          var typetext = ["typeMessage", "typeMessage", "typeWarning", "typeError"][aObject.logLevel];
+          var type = ["message", "message", "warning", "error"][aObject.logLevel];
 
-          var typetext = warning ? "typeWarning" : "typeError";
           row.setAttribute("typetext", this.mStrBundle.getString(typetext));
-          row.setAttribute("type", warning ? "warning" : "error");
+          row.setAttribute("type", type);
           row.setAttribute("msg", aObject.errorMessage);
           row.setAttribute("category", aObject.category);
           row.setAttribute("time", this.properFormatTime(aObject.timeStamp));

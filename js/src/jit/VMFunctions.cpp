@@ -86,18 +86,6 @@ InvokeFunction(JSContext* cx, HandleObject obj, uint32_t argc, Value* argv, Valu
     return true;
 }
 
-JSObject*
-NewGCObject(JSContext* cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap,
-            size_t ndynamic, const js::Class* clasp)
-{
-    JSObject* obj = js::Allocate<JSObject>(cx, allocKind, ndynamic, initialHeap, clasp);
-    if (!obj)
-        return nullptr;
-
-    SetNewObjectMetadata(cx, obj);
-    return obj;
-}
-
 bool
 CheckOverRecursed(JSContext* cx)
 {
@@ -997,6 +985,14 @@ PopBlockScope(JSContext* cx, BaselineFrame* frame)
 }
 
 bool
+DebugLeaveThenPopBlockScope(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
+{
+    MOZ_ALWAYS_TRUE(DebugLeaveBlock(cx, frame, pc));
+    frame->popBlock(cx);
+    return true;
+}
+
+bool
 FreshenBlockScope(JSContext* cx, BaselineFrame* frame)
 {
     return frame->freshenBlock(cx);
@@ -1005,7 +1001,7 @@ FreshenBlockScope(JSContext* cx, BaselineFrame* frame)
 bool
 DebugLeaveThenFreshenBlockScope(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
 {
-    DebugLeaveBlock(cx, frame, pc);
+    MOZ_ALWAYS_TRUE(DebugLeaveBlock(cx, frame, pc));
     return frame->freshenBlock(cx);
 }
 
