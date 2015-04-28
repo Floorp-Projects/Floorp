@@ -8,10 +8,10 @@ html {
   font-weight: normal;
 }
 
-.panel-item, label, #project-panel-projects {
+.panel-item, label, #project-panel-projects, #runtime-panel-projects {
   display: block;
   float: left;
-  width: 100%;
+  width: auto;
 }
 
 .project-image, .panel-item span {
@@ -25,17 +25,22 @@ html {
   max-height: 20px;
 }
 
-label {
-  color: #888;
-  display: block;
-  font-size: 12px;
-  padding: 15px 0 5px;
-  text-shadow: 1px 1px #fff;
+.panel-header {
+  color: #ACACAC;
   text-transform: uppercase;
+  line-height: 200%;
+  margin: 5px 0;
+  font-size: 100%;
+  font-weight: bold;
+  width: 100%;
 }
 
 .panel-item {
   cursor: default;
   padding: 5px 0;
   min-width: 130px;
+}
+
+.panel-header[hidden] {
+  display: none;
 }

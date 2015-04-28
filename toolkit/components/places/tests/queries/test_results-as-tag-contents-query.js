@@ -10,7 +10,7 @@ var testData = [
     title: "bmoz",
     uri: "http://foo.com/",
     isBookmark: true,
-    isTag: true, 
+    isTag: true,
     tagArray: ["bugzilla"] },
 
   { isInQuery: true,
@@ -18,7 +18,7 @@ var testData = [
     title: "C Moz",
     uri: "http://foo.com/changeme1.html",
     isBookmark: true,
-    isTag: true, 
+    isTag: true,
     tagArray: ["moz","bugzilla"] },
 
   { isInQuery: false,
@@ -26,7 +26,7 @@ var testData = [
     title: "amo",
     uri: "http://foo2.com/",
     isBookmark: true,
-    isTag: true, 
+    isTag: true,
     tagArray: ["moz"] },
 
   { isInQuery: false,
@@ -42,7 +42,7 @@ function getIdForTag(aTagName) {
   query.setFolders([PlacesUtils.tagsFolderId], 1);
   var options = PlacesUtils.history.getNewQueryOptions();
   var root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;  
+  root.containerOpen = true;
   var cc = root.childCount;
   do_check_eq(root.childCount, 2);
   for (let i = 0; i < cc; i++) {
@@ -97,14 +97,14 @@ add_task(function test_results_as_tag_contents_query()
                   isBookmark: true,
                   isTag: true,
                   tagArray: ["moz", "bugzilla"] };
-  LOG("Adding item to query")
+  do_print("Adding item to query");
   yield task_populateDB([change1]);
-  LOG("These results should have been LIVE UPDATED with the new addition");
+  do_print("These results should have been LIVE UPDATED with the new addition");
   displayResultSet(root);
   do_check_true(isInResult(change1, root));
 
   // Add one by adding a tag, remove one by removing search term.
-  LOG("Updating items");
+  do_print("Updating items");
   var change2 = [{ isDetails: true,
                    uri: "http://foo3.com/",
                    title: "foo"},
@@ -119,7 +119,7 @@ add_task(function test_results_as_tag_contents_query()
   do_check_true(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 
   // Test removing a tag updates us.
-  LOG("Deleting item");
+  do_print("Deleting item");
   PlacesUtils.tagging.untagURI(uri("http://foo.com/changeme2.html"), ["bugzilla"]);
   do_check_false(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 

@@ -272,7 +272,7 @@ add_task(function* test_addLivemark_lastModified_succeeds() {
     });
   do_check_eq(livemark.dateAdded, now);
   // lastModified is updated when annotations are added to the livemark.
-  do_check_true(livemark.lastModified >= now);
+  do_check_true(is_time_ordered(now, livemark.lastModified));
 });
 
 add_task(function* test_removeLivemark_emptyObject_throws() {

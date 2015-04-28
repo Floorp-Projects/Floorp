@@ -13,8 +13,6 @@ EXPORTS.theora += [
     'include/theora/theoraenc.h',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'gkmedias'
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:

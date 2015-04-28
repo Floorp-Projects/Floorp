@@ -1,0 +1,18 @@
+<script>
+onload = function() {
+  var testContainer = document.createElement("span");
+  testContainer.contentEditable = true;
+  document.body.appendChild(testContainer);
+
+  function queryFormatBlock(content)
+  {
+    testContainer.innerHTML = content;
+    while (testContainer.firstChild)
+        testContainer = testContainer.firstChild;
+    window.getSelection().collapse(testContainer, 0);
+    document.queryCommandValue('formatBlock');
+  }
+
+  queryFormatBlock('<ol>hello</ol>');
+};
+</script>

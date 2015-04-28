@@ -31,7 +31,8 @@ Components.utils.import('resource://pdf.js/PdfjsContentUtils.jsm');
 // init content utils shim pdfjs will use to access privileged apis.
 PdfjsContentUtils.init();
 
-if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
   // register various pdfjs factories that hook us into content loading.
   PdfJs.updateRegistration();
 }
+

@@ -6,7 +6,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webide/test/doc_ta
 
 function test() {
   waitForExplicitFinish();
-  SimpleTest.requestCompleteLog();
+  requestCompleteLog();
 
   Task.spawn(function() {
     const { DebuggerServer } =
@@ -39,6 +39,7 @@ function test() {
     let tabsNode = win.document.querySelector("#project-panel-tabs");
     is(tabsNode.querySelectorAll(".panel-item").length, 2, "2 tabs available");
     yield removeTab(tab);
+    yield waitForUpdate(win, "project");
     yield waitForUpdate(win, "runtime-targets");
     is(tabsNode.querySelectorAll(".panel-item").length, 1, "1 tab available");
 

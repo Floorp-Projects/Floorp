@@ -6035,6 +6035,7 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsTArray<OwningNonNull<nsINode>>& outAr
     // Remove all non-editable nodes.  Leave them be.
     if (!mHTMLEditor->IsEditable(testNode)) {
       outArrayOfNodes.RemoveElementAt(i);
+      continue;
     }
 
     // Scan for table elements.  If we find table elements other than table,

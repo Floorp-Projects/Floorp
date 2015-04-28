@@ -26,6 +26,9 @@
 <style id="test6">
 </style>
 
+<style id="test7">
+</style>
+
 <script>
 var tests = [
   function() {
@@ -90,6 +93,15 @@ var tests = [
     var declaration = test6.sheet.cssRules[0].style;
     test6.style.color = "white";
     is(declaration.getPropertyValue("-x-system-font"), " var(--var6) hangul mongolian");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1154356
+    var test7 = document.getElementById("test7");
+    test7.textContent = "p { --weird\\;name: green; }";
+    is(test7.sheet.cssRules[0].style.cssText, "--weird\\;name:  green;");
+    test7.textContent = "p { --0: green; }";
+    is(test7.sheet.cssRules[0].style.cssText, "--0:  green;");
   },
 ];
 

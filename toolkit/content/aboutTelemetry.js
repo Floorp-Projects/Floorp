@@ -10,7 +10,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm");
-Cu.import("resource://gre/modules/TelemetryPing.jsm");
+Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/TelemetrySession.jsm");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
 
@@ -131,7 +131,7 @@ let GeneralData = {
 
     let row = document.createElement("tr");
     this.appendColumn(row, "td", "Client ID\t");
-    this.appendColumn(row, "td", TelemetryPing.clientID + "\t");
+    this.appendColumn(row, "td", TelemetryController.clientID + "\t");
     table.appendChild(row);
 
     let dataDiv = document.getElementById("general-data");

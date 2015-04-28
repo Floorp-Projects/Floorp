@@ -87,7 +87,9 @@ Cu.import("resource://gre/modules/devtools/event-emitter.js");
 function editableField(aOptions)
 {
   return editableItem(aOptions, function(aElement, aEvent) {
-    new InplaceEditor(aOptions, aEvent);
+    if (!aOptions.element.inplaceEditor) {
+      new InplaceEditor(aOptions, aEvent);
+    }
   });
 }
 
@@ -282,7 +284,7 @@ InplaceEditor.prototype = {
     this.elt.style.display = this.originalDisplay;
     this.elt.focus();
 
-    this.elt.parentNode.removeChild(this.input);
+    this.input.remove();
     this.input = null;
 
     delete this.elt.inplaceEditor;
@@ -327,7 +329,7 @@ InplaceEditor.prototype = {
     if (!this._measurement) {
       return;
     }
-    this._measurement.parentNode.removeChild(this._measurement);
+    this._measurement.remove();
     delete this._measurement;
   },
 

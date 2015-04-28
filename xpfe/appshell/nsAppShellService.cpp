@@ -527,7 +527,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     widgetInitData.mIsAnimationSuppressed = true;
 
   if (aChromeMask & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW)
-    widgetInitData.mRequireOffMainThreadCompositing = true;
+    widgetInitData.mMultiProcessWindow = true;
 
 #ifdef XP_MACOSX
   // Mac OS X sheet support

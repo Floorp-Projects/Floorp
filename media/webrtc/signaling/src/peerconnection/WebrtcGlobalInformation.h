@@ -13,6 +13,7 @@ class PeerConnectionImpl;
 class ErrorResult;
 
 namespace dom {
+
 class GlobalObject;
 class WebrtcGlobalStatisticsCallback;
 class WebrtcGlobalLoggingCallback;
@@ -49,4 +50,3 @@ private:
 } // namespace mozilla
 
 #endif  // _WEBRTC_GLOBAL_INFORMATION_H_
-

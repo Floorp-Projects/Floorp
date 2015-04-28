@@ -16,9 +16,9 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 
 let ProjectList;
 
-module.exports = ProjectList = function(window, parentWindow) {
+module.exports = ProjectList = function(win, parentWindow) {
   EventEmitter.decorate(this);
-  this._doc = window.document;
+  this._doc = win.document;
   this._UI = parentWindow.UI;
   this._parentWindow = parentWindow;
   this._panelNodeEl = "toolbarbutton";
@@ -28,9 +28,12 @@ module.exports = ProjectList = function(window, parentWindow) {
     this._panelNodeEl = "div";
   }
 
-  AppManager.init();
+  this.onWebIDEUpdate = this.onWebIDEUpdate.bind(this);
+  this._UI.on("webide-update", this.onWebIDEUpdate);
 
-  return this;
+  AppManager.init();
+  this.appManagerUpdate = this.appManagerUpdate.bind(this);
+  AppManager.on("app-manager-update", this.appManagerUpdate);
 };
 
 ProjectList.prototype = {
@@ -40,6 +43,29 @@ ProjectList.prototype = {
 
   get sidebarsEnabled() {
     return this._sidebarsEnabled;
+  },
+
+  appManagerUpdate: function(event, what, details) {
+    // Got a message from app-manager.js
+    // See AppManager.update() for descriptions of what these events mean.
+    switch (what) {
+      case "project-removed":
+      case "runtime-apps-icons":
+      case "runtime-targets":
+      case "connection":
+        this.update(details);
+        break;
+      case "project":
+        this.updateCommands();
+        this.update(details);
+        break;
+    };
+  },
+
+  onWebIDEUpdate: function(event, what, details) {
+    if (what == "busy" || what == "unbusy") {
+      this.updateCommands();
+    }
   },
 
   /**
@@ -103,7 +129,7 @@ ProjectList.prototype = {
    * }
    */
   _renderProjectItem: function(opts) {
-    if (this._sidebarsEnabled) {
+    if (this._sidebarsEnabled && this._doc !== this._parentWindow.document) {
       let span = this._doc.createElement("span");
       span.textContent = opts.name;
       let icon = this._doc.createElement("img");
@@ -232,7 +258,7 @@ ProjectList.prototype = {
       this._renderProjectItem({
         panel: panelItemNode,
         name: app.manifest.name,
-        icon: app.iconURL
+        icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON
       });
       runtimeAppsNode.appendChild(panelItemNode);
       panelItemNode.addEventListener("click", () => {
@@ -242,13 +268,45 @@ ProjectList.prototype = {
         AppManager.selectedProject = {
           type: "runtimeApp",
           app: app.manifest,
-          icon: app.iconURL,
+          icon: app.iconURL || AppManager.DEFAULT_PROJECT_ICON,
           name: app.manifest.name
         };
       }, true);
     }
 
     return promise.resolve();
+  },
+
+  updateCommands: function() {
+    let doc = this._doc;
+    let newAppCmd;
+    let packagedAppCmd;
+    let hostedAppCmd;
+
+    if (this._sidebarsEnabled) {
+      newAppCmd = doc.querySelector("#new-app");
+      packagedAppCmd = doc.querySelector("#packaged-app");
+      hostedAppCmd = doc.querySelector("#hosted-app");
+    } else {
+      newAppCmd = doc.querySelector("#cmd_newApp")
+      packagedAppCmd = doc.querySelector("#cmd_importPackagedApp");
+      hostedAppCmd = doc.querySelector("#cmd_importHostedApp");
+    }
+
+    if (!newAppCmd || !packagedAppCmd || !hostedAppCmd) {
+      return;
+    }
+
+    if (this._parentWindow.document.querySelector("window").classList.contains("busy")) {
+      newAppCmd.setAttribute("disabled", "true");
+      packagedAppCmd.setAttribute("disabled", "true");
+      hostedAppCmd.setAttribute("disabled", "true");
+      return;
+    }
+
+    newAppCmd.removeAttribute("disabled");
+    packagedAppCmd.removeAttribute("disabled");
+    hostedAppCmd.removeAttribute("disabled");
   },
 
   /**
@@ -323,5 +381,17 @@ ProjectList.prototype = {
     }
 
     return deferred.promise;
+  },
+
+  destroy: function() {
+    this._doc = null;
+    AppManager.off("app-manager-update", this.appManagerUpdate);
+    if (this._sidebarsEnabled) {
+      this._UI.off("webide-update", this.onWebIDEUpdate);
+    }
+    this._UI = null;
+    this._parentWindow = null;
+    this._panelNodeEl = null;
+    this._sidebarsEnabled = null;
   }
 };

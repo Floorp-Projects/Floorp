@@ -271,17 +271,22 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
     {
-        AllocationSite(HandleObject frame, int64_t when, const char* className)
+        AllocationSite(HandleObject frame, int64_t when)
             : frame(frame),
               when(when),
-              className(className)
+              className(nullptr),
+              ctorName(nullptr)
         {
             MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
 
+        static AllocationSite* create(JSContext* cx, HandleObject frame, int64_t when,
+                                      HandleObject obj);
+
         RelocatablePtrObject frame;
         int64_t when;
         const char* className;
+        RelocatablePtrAtom ctorName;
     };
     typedef mozilla::LinkedList<AllocationSite> AllocationSiteList;
 
