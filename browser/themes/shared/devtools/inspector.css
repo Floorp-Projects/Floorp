@@ -60,7 +60,7 @@
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #inspector-pane-toggle {
     list-style-image: url(debugger-collapse@2x.png);
     -moz-image-region: rect(0px,32px,32px,0px);

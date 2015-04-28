@@ -494,14 +494,6 @@ class MOZ_STACK_CLASS TokenStream
         return true;
     }
 
-    bool nextTokenStartsExpr(bool* startsExpr, Modifier modifier = None) {
-        TokenKind tt;
-        if (!peekToken(&tt, modifier))
-            return false;
-        *startsExpr = isExprStarting[tt];
-        return true;
-    }
-
     bool nextTokenEndsExpr(bool* endsExpr) {
         TokenKind tt;
         if (!peekToken(&tt))
@@ -836,7 +828,6 @@ class MOZ_STACK_CLASS TokenStream
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> displayURL_; // the user's requested source URL or null
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> sourceMapURL_; // source map's filename or null
     CharBuffer          tokenbuf;           // current token string buffer
-    uint8_t             isExprStarting[TOK_LIMIT];// which tokens can start exprs?
     uint8_t             isExprEnding[TOK_LIMIT];// which tokens definitely terminate exprs?
     ExclusiveContext*   const cx;
     bool                mutedErrors;

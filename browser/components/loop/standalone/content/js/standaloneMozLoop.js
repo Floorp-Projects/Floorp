@@ -222,6 +222,29 @@ loop.StandaloneMozLoop = (function(mozL10n) {
       }, null, false, callback);
     },
 
+    /**
+     * Forwards connection status to the server.
+     *
+     * @param {String} roomToken     The room token.
+     * @param {String} sessionToken  The session token for the session that has been
+     *                               joined.
+     * @param {sharedActions.SdkStatus} status  The connection status.
+     */
+    sendConnectionStatus: function(roomToken, sessionToken, status) {
+      this._postToRoom(roomToken, sessionToken, {
+        action: "status",
+        event: status.event,
+        state: status.state,
+        connections: status.connections,
+        sendStreams: status.sendStreams,
+        recvStreams: status.recvStreams
+      }, null, true, function(error) {
+        if (error) {
+          console.error(error);
+        }
+      });
+    },
+
     // Dummy functions to reflect those in the desktop mozLoop.rooms that we
     // don't currently use.
     on: function() {},

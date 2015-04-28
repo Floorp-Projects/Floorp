@@ -107,7 +107,7 @@
 }
 
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .ruleview-warning {
     background-image: url(alerticon-warning@2x.png);
   }
@@ -194,7 +194,7 @@
   background-size: 1em;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .ruleview-bezierswatch {
     background: url("chrome://browser/skin/devtools/cubic-bezier-swatch@2x.png");
     background-size: 1em;

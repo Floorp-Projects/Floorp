@@ -107,7 +107,7 @@
   padding: 0;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .scrollbutton-up > .toolbarbutton-icon,
   .scrollbutton-down > .toolbarbutton-icon {
     background-image: url("breadcrumbs-scrollbutton@2x.png");
@@ -637,7 +637,7 @@
   height: 16px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .variable-or-property-non-writable-icon {
     background-image: url("chrome://browser/skin/devtools/vview-lock@2x.png");
   }
@@ -737,7 +737,7 @@
   height: 16px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .variables-view-delete {
     background-image: url("chrome://browser/skin/devtools/vview-delete@2x.png");
   }
@@ -763,7 +763,7 @@
   cursor: pointer;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .variables-view-edit {
     background-image: url("chrome://browser/skin/devtools/vview-edit@2x.png");
   }
@@ -789,7 +789,7 @@
   cursor: pointer;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .variables-view-open-inspector {
     background-image: url("chrome://browser/skin/devtools/vview-open-inspector@2x.png");
   }
@@ -1437,7 +1437,7 @@
   }
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .tree-widget-item:before {
     background-image: url("chrome://browser/skin/devtools/controls@2x.png");
   }

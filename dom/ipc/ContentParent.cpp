@@ -405,45 +405,65 @@ bool ContentParent::sNuwaReady = false;
 class MemoryReportRequestParent : public PMemoryReportRequestParent
 {
 public:
-    MemoryReportRequestParent();
+    explicit MemoryReportRequestParent(uint32_t aGeneration);
+
     virtual ~MemoryReportRequestParent();
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    virtual bool Recv__delete__(const uint32_t& aGeneration, InfallibleTArray<MemoryReport>&& aReport) override;
+    virtual bool RecvReport(const MemoryReport& aReport) override;
+    virtual bool Recv__delete__() override;
 
 private:
+    const uint32_t mGeneration;
+    // Non-null if we haven't yet called EndChildReport() on it.
+    nsRefPtr<nsMemoryReporterManager> mReporterManager;
+
     ContentParent* Owner()
     {
         return static_cast<ContentParent*>(Manager());
     }
 };
 
-MemoryReportRequestParent::MemoryReportRequestParent()
+MemoryReportRequestParent::MemoryReportRequestParent(uint32_t aGeneration)
+    : mGeneration(aGeneration)
 {
     MOZ_COUNT_CTOR(MemoryReportRequestParent);
+    mReporterManager = nsMemoryReporterManager::GetOrCreate();
+    NS_WARN_IF(!mReporterManager);
+}
+
+bool
+MemoryReportRequestParent::RecvReport(const MemoryReport& aReport)
+{
+    if (mReporterManager) {
+        mReporterManager->HandleChildReport(mGeneration, aReport);
+    }
+    return true;
+}
+
+bool
+MemoryReportRequestParent::Recv__delete__()
+{
+    // Notifying the reporter manager is done in ActorDestroy, because
+    // it needs to happen even if the child process exits mid-report.
+    // (The reporter manager will time out eventually, but let's avoid
+    // that if possible.)
+    return true;
 }
 
 void
 MemoryReportRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  // Implement me! Bug 1005154
-}
-
-bool
-MemoryReportRequestParent::Recv__delete__(const uint32_t& generation,
-                                          nsTArray<MemoryReport>&& childReports)
-{
-    nsRefPtr<nsMemoryReporterManager> mgr =
-        nsMemoryReporterManager::GetOrCreate();
-    if (mgr) {
-        mgr->HandleChildReports(generation, childReports);
+    if (mReporterManager) {
+        mReporterManager->EndChildReport(mGeneration, aWhy == Deletion);
+        mReporterManager = nullptr;
     }
-    return true;
 }
 
 MemoryReportRequestParent::~MemoryReportRequestParent()
 {
+    MOZ_ASSERT(!mReporterManager);
     MOZ_COUNT_DTOR(MemoryReportRequestParent);
 }
 
@@ -3549,7 +3569,8 @@ ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                                const bool &aMinimizeMemoryUsage,
                                                const MaybeFileDesc &aDMDFile)
 {
-    MemoryReportRequestParent* parent = new MemoryReportRequestParent();
+    MemoryReportRequestParent* parent =
+        new MemoryReportRequestParent(aGeneration);
     return parent;
 }
 

@@ -639,6 +639,37 @@ let LoopRoomsInternal = {
   },
 
   /**
+   * Forwards connection status to the server.
+   *
+   * @param {String}                  roomToken The room token.
+   * @param {String}                  sessionToken The session token for the
+   *                                               session that has been
+   *                                               joined.
+   * @param {sharedActions.SdkStatus} status The connection status.
+   * @param {Function} callback Optional. Function that will be invoked once
+   *                            the operation finished. The first argument
+   *                            passed will be an `Error` object or `null`.
+   */
+  sendConnectionStatus: function(roomToken, sessionToken, status, callback) {
+    if (!callback) {
+      callback = function(error) {
+        if (error) {
+          MozLoopService.log.error(error);
+        }
+      };
+    }
+    this._postToRoom(roomToken, {
+      action: "status",
+      event: status.event,
+      state: status.state,
+      connections: status.connections,
+      sendStreams: status.sendStreams,
+      recvStreams: status.recvStreams,
+      sessionToken: sessionToken
+    }, callback);
+  },
+
+  /**
    * Renames a room.
    *
    * @param {String} roomToken   The room token
@@ -778,6 +809,10 @@ this.LoopRooms = {
 
   leave: function(roomToken, sessionToken, callback) {
     return LoopRoomsInternal.leave(roomToken, sessionToken, callback);
+  },
+
+  sendConnectionStatus: function(roomToken, sessionToken, status, callback) {
+    return LoopRoomsInternal.sendConnectionStatus(roomToken, sessionToken, status, callback);
   },
 
   rename: function(roomToken, newRoomName, callback) {

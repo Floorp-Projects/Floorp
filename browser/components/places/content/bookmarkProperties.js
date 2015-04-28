@@ -234,6 +234,7 @@ var BookmarkPropertiesPanel = {
     }
     else { // edit
       this._node = dialogInfo.node;
+      this._title = this._node.title;
       switch (dialogInfo.type) {
         case "bookmark":
           this._itemType = BOOKMARK_ITEM;

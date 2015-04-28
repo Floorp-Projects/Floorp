@@ -11,7 +11,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(d6a8dae2-367f-4939-a843-11e0c48e240c)]
+[scriptable, uuid(248b2c94-2736-4d29-bfdf-bc64a2e60d35)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -26,6 +26,9 @@ interface nsIScriptError : nsIConsoleMessage
     // XXX check how strict is implemented these days.
     /** error or warning is due to strict option */
     const unsigned long strictFlag = 0x4;
+
+    /** just a log message */
+    const unsigned long infoFlag = 0x8;
 
     /**
      * The error message without any context/line number information.

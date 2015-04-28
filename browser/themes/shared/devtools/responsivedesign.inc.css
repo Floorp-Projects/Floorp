@@ -155,7 +155,7 @@
   list-style-image: url("chrome://browser/skin/devtools/responsiveui-rotate.png");
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .devtools-responsiveui-close {
     list-style-image: url("chrome://browser/skin/devtools/close@2x.png");
   }
@@ -174,7 +174,7 @@
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .devtools-responsiveui-touch {
     list-style-image: url("chrome://browser/skin/devtools/responsiveui-touch@2x.png");
     -moz-image-region: rect(0px,32px,32px,0px);
@@ -189,7 +189,7 @@
   list-style-image: url("chrome://browser/skin/devtools/responsiveui-screenshot.png");
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .devtools-responsiveui-screenshot {
     list-style-image: url("chrome://browser/skin/devtools/responsiveui-screenshot@2x.png");
   }
@@ -321,7 +321,7 @@
   border-bottom-left-radius: 12px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .devtools-responsiveui-resizebarV {
     background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer@2x.png");
   }
