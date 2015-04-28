@@ -760,6 +760,10 @@ for var in ('ANDROID_PACKAGE_NAME', 'ANDROID_CPU_ARCH',
 # Mangle our package name to avoid Bug 750548.
 DEFINES['MANGLED_ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME'].replace('fennec', 'f3nn3c')
 DEFINES['MOZ_APP_ABI'] = CONFIG['TARGET_XPCOM_ABI']
+if not CONFIG['COMPILE_ENVIRONMENT']:
+    # These should really come from the included binaries, but that's not easy.
+    DEFINES['MOZ_APP_ABI'] = 'arm-eabi-gcc3' # Observe quote differences here ...
+    DEFINES['TARGET_XPCOM_ABI'] = '"arm-eabi-gcc3"' # ... and here.
 
 if '-march=armv7' in CONFIG['OS_CFLAGS']:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 7
