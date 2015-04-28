@@ -34,6 +34,13 @@
       <menuitem id="request-menu-context-copy-as-curl"
                 label="&netmonitorUI.context.copyAsCurl;"
                 oncommand="NetMonitorView.RequestsMenu.copyAsCurl();"/>
+      <menuitem id="request-menu-context-copy-request-headers"
+                label="&netmonitorUI.context.copyRequestHeaders;"
+                accesskey="&netmonitorUI.context.copyRequestHeaders.accesskey;"
+                oncommand="NetMonitorView.RequestsMenu.copyRequestHeaders();"/>
+      <menuitem id="response-menu-context-copy-response-headers"
+                label="&netmonitorUI.context.copyResponseHeaders;"
+                oncommand="NetMonitorView.RequestsMenu.copyResponseHeaders();"/>
       <menuitem id="request-menu-context-copy-response"
                 label="&netmonitorUI.context.copyResponse;"
                 accesskey="&netmonitorUI.context.copyResponse.accesskey;"/>

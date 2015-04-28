@@ -78,6 +78,32 @@ GeneratePathFromGattId(const BluetoothGattId& aId,
                        nsAString& aPath);
 
 //
+// Register/Unregister bluetooth signal handlers
+//
+
+/**
+ * Register the bluetooth signal handler.
+ *
+ * @param aPath Path of the signal to be registered.
+ * @param aHandler The message handler object to be added into the observer
+ *                 list. Note that this function doesn't take references to it.
+ */
+void
+RegisterBluetoothSignalHandler(const nsAString& aPath,
+                               BluetoothSignalObserver* aHandler);
+
+/**
+ * Unregister the bluetooth signal handler.
+ *
+ * @param aPath Path of the signal to be unregistered.
+ * @param aHandler The message handler object to be removed from the observer
+ *                 list. Note that this function doesn't take references to it.
+ */
+void
+UnregisterBluetoothSignalHandler(const nsAString& aPath,
+                                 BluetoothSignalObserver* aHandler);
+
+//
 // Broadcast system message
 //
 

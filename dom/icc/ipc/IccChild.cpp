@@ -183,6 +183,13 @@ IccChild::GetCardState(uint32_t* aCardState)
 }
 
 NS_IMETHODIMP
+IccChild::GetImsi(nsAString & aImsi)
+{
+  NS_WARNING("IMSI shall not directly be fetched in child process.");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 IccChild::GetCardLockEnabled(uint32_t aLockType,
                              nsIIccCallback* aRequestReply)
 {

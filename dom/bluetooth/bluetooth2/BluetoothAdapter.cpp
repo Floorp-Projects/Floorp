@@ -6,6 +6,7 @@
 
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
+#include "BluetoothUtils.h"
 #include "DOMRequest.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
@@ -29,9 +30,30 @@ using namespace mozilla::dom;
 
 USING_BLUETOOTH_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothAdapter, DOMEventTargetHelper,
-                                   mDevices, mDiscoveryHandleInUse,
-                                   mPairingReqs)
+NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothAdapter)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothAdapter,
+                                                DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDevices)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDiscoveryHandleInUse)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPairingReqs)
+
+  /**
+   * Unregister the bluetooth signal handler after unlinked.
+   *
+   * This is needed to avoid ending up with exposing a deleted object to JS or
+   * accessing deleted objects while receiving signals from parent process
+   * after unlinked. Please see Bug 1138267 for detail informations.
+   */
+  UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), tmp);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothAdapter,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDevices)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDiscoveryHandleInUse)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPairingReqs)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for BluetoothAdapter
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothAdapter)
@@ -210,17 +232,12 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
     SetPropertyByValue(values[i]);
   }
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
+  RegisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
 }
 
 BluetoothAdapter::~BluetoothAdapter()
 {
-  BluetoothService* bs = BluetoothService::Get();
-  // We can be null on shutdown, where this might happen
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
+  UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
 }
 
 void
@@ -228,9 +245,7 @@ BluetoothAdapter::DisconnectFromOwner()
 {
   DOMEventTargetHelper::DisconnectFromOwner();
 
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
+  UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_ADAPTER), this);
 }
 
 void
@@ -321,9 +336,8 @@ BluetoothAdapter::Create(nsPIDOMWindow* aWindow, const BluetoothValue& aValue)
 void
 BluetoothAdapter::Notify(const BluetoothSignal& aData)
 {
-  InfallibleTArray<BluetoothNamedValue> arr;
-
   BT_LOGD("[A] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
+  NS_ENSURE_TRUE_VOID(mSignalRegistered);
 
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("PropertyChanged")) {

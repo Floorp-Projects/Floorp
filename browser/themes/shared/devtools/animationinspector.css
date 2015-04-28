@@ -84,7 +84,7 @@ body {
   background-image: url("debugger-play.png");
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #element-picker::before {
     background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
     background-size: 64px;
@@ -156,7 +156,7 @@ body {
   background-image: url(rewind.png);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .timeline .toggle::before {
     background-image: url(debugger-pause@2x.png);
   }

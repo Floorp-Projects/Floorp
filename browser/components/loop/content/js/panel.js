@@ -432,6 +432,8 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var RoomEntryContextItem = React.createClass({displayName: "RoomEntryContextItem",
+    mixins: [loop.shared.mixins.WindowCloseMixin],
+
     propTypes: {
       mozLoop: React.PropTypes.object.isRequired,
       roomUrls: React.PropTypes.object
@@ -441,6 +443,7 @@ loop.panel = (function(_, mozL10n) {
       event.stopPropagation();
       event.preventDefault();
       this.props.mozLoop.openURL(event.currentTarget.href);
+      this.closeWindow();
     },
 
     render: function() {
@@ -700,9 +703,17 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      var hostname;
+
+      try {
+        hostname = new URL(this.state.url).hostname;
+      } catch (ex) {
+        // Empty catch - if there's an error, then we won't show the context.
+      }
+
       var contextClasses = React.addons.classSet({
         context: true,
-        hide: !this.state.url ||
+        hide: !hostname ||
           !this.props.mozLoop.getLoopPref("contextInConverations.enabled")
       });
 
@@ -716,7 +727,7 @@ loop.panel = (function(_, mozL10n) {
             ), 
             React.createElement("img", {className: "context-preview", src: this.state.previewImage}), 
             React.createElement("span", {className: "context-description"}, this.state.description), 
-            React.createElement("span", {className: "context-url"}, this.state.url)
+            React.createElement("span", {className: "context-url"}, hostname)
           ), 
           React.createElement("button", {className: "btn btn-info new-room-button", 
                   onClick: this.handleCreateButtonClick, 

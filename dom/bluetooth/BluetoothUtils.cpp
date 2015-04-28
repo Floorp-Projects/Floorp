@@ -96,6 +96,34 @@ GeneratePathFromGattId(const BluetoothGattId& aId,
   GeneratePathFromGattId(aId, aPath, uuidStr);
 }
 
+void
+RegisterBluetoothSignalHandler(const nsAString& aPath,
+                               BluetoothSignalObserver* aHandler)
+{
+  MOZ_ASSERT(!aPath.IsEmpty());
+  MOZ_ASSERT(aHandler);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  bs->RegisterBluetoothSignalHandler(aPath, aHandler);
+  aHandler->SetSignalRegistered(true);
+}
+
+void
+UnregisterBluetoothSignalHandler(const nsAString& aPath,
+                                 BluetoothSignalObserver* aHandler)
+{
+  MOZ_ASSERT(!aPath.IsEmpty());
+  MOZ_ASSERT(aHandler);
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  bs->UnregisterBluetoothSignalHandler(aPath, aHandler);
+  aHandler->SetSignalRegistered(false);
+}
+
 /**
  * |SetJsObject| is an internal function used by |BroadcastSystemMessage| only
  */

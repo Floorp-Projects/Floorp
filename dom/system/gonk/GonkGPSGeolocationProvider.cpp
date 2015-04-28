@@ -43,6 +43,7 @@
 #include "nsIMobileCellInfo.h"
 #include "nsIMobileNetworkInfo.h"
 #include "nsIRadioInterfaceLayer.h"
+#include "nsIIccService.h"
 #endif
 
 #ifdef AGPS_TYPE_INVALID
@@ -476,31 +477,35 @@ GonkGPSGeolocationProvider::RequestSetID(uint32_t flags)
 
   AGpsSetIDType type = AGPS_SETID_TYPE_NONE;
 
-  nsCOMPtr<nsIRilContext> rilCtx;
-  mRadioInterface->GetRilContext(getter_AddRefs(rilCtx));
+  nsCOMPtr<nsIIccService> iccService =
+    do_GetService(ICC_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE_VOID(iccService);
 
-  if (rilCtx) {
-    nsAutoString id;
-    if (flags & AGPS_RIL_REQUEST_SETID_IMSI) {
-      type = AGPS_SETID_TYPE_IMSI;
-      rilCtx->GetImsi(id);
-    }
+  nsCOMPtr<nsIIcc> icc;
+  iccService->GetIccByServiceId(mRilDataServiceId, getter_AddRefs(icc));
+  NS_ENSURE_TRUE_VOID(icc);
 
-    if (flags & AGPS_RIL_REQUEST_SETID_MSISDN) {
-      nsCOMPtr<nsIIccInfo> iccInfo;
-      rilCtx->GetIccInfo(getter_AddRefs(iccInfo));
-      if (iccInfo) {
-        nsCOMPtr<nsIGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
-        if (gsmIccInfo) {
-          type = AGPS_SETID_TYPE_MSISDN;
-          gsmIccInfo->GetMsisdn(id);
-        }
+  nsAutoString id;
+
+  if (flags & AGPS_RIL_REQUEST_SETID_IMSI) {
+    type = AGPS_SETID_TYPE_IMSI;
+    icc->GetImsi(id);
+  }
+
+  if (flags & AGPS_RIL_REQUEST_SETID_MSISDN) {
+    nsCOMPtr<nsIIccInfo> iccInfo;
+    icc->GetIccInfo(getter_AddRefs(iccInfo));
+    if (iccInfo) {
+      nsCOMPtr<nsIGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
+      if (gsmIccInfo) {
+        type = AGPS_SETID_TYPE_MSISDN;
+        gsmIccInfo->GetMsisdn(id);
       }
     }
-
-    NS_ConvertUTF16toUTF8 idBytes(id);
-    mAGpsRilInterface->set_set_id(type, idBytes.get());
   }
+
+  NS_ConvertUTF16toUTF8 idBytes(id);
+  mAGpsRilInterface->set_set_id(type, idBytes.get());
 }
 
 void
