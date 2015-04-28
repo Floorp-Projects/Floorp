@@ -15,7 +15,7 @@ namespace dom {
 
 class AudioContext;
 
-class StereoPannerNode : public AudioNode
+class StereoPannerNode final : public AudioNode
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(StereoPannerNode)
