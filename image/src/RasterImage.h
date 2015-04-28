@@ -166,9 +166,6 @@ public:
   virtual nsresult StopAnimation() override;
 
   // Methods inherited from Image
-  nsresult Init(const char* aMimeType,
-                uint32_t aFlags) override;
-
   virtual void OnSurfaceDiscarded() override;
 
   // Raster-specific methods
@@ -288,6 +285,8 @@ public:
   }
 
 private:
+  nsresult Init(const char* aMimeType, uint32_t aFlags);
+
   DrawResult DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
                                           gfxContext* aContext,
                                           const nsIntSize& aSize,
