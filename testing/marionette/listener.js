@@ -456,43 +456,44 @@ function checkForInterrupted() {
 /**
  * Returns a content sandbox that can be used by the execute_foo functions.
  */
-function createExecuteContentSandbox(aWindow, timeout) {
-  let sandbox = new Cu.Sandbox(aWindow, {sandboxPrototype: aWindow});
+function createExecuteContentSandbox(win, timeout) {
+  let mn = new Marionette(
+      this,
+      win,
+      "content",
+      marionetteLogObj,
+      timeout,
+      heartbeatCallback,
+      marionetteTestName);
+  mn.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
+  mn.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
+
+  let sandbox = new Cu.Sandbox(win, {sandboxPrototype: win});
   sandbox.global = sandbox;
-  sandbox.window = aWindow;
+  sandbox.window = win;
   sandbox.document = sandbox.window.document;
   sandbox.navigator = sandbox.window.navigator;
   sandbox.testUtils = utils;
   sandbox.asyncTestCommandId = asyncTestCommandId;
+  sandbox.marionette = mn;
 
-  let marionette = new Marionette(this, aWindow, "content",
-                                  marionetteLogObj, timeout,
-                                  heartbeatCallback,
-                                  marionetteTestName);
-  marionette.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
-  marionette.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
-  sandbox.marionette = marionette;
-  marionette.exports.forEach(function(fn) {
-    try {
-      sandbox[fn] = marionette[fn].bind(marionette);
-    }
-    catch(e) {
-      sandbox[fn] = marionette[fn];
+  mn.exports.forEach(fn => {
+    if (typeof mn[fn] == "function") {
+      sandbox[fn] = mn[fn].bind(mn);
+    } else {
+      sandbox[fn] = mn[fn];
     }
   });
 
-  if (aWindow.wrappedJSObject.SpecialPowers != undefined) {
-    XPCOMUtils.defineLazyGetter(sandbox, 'SpecialPowers', function() {
-      return aWindow.wrappedJSObject.SpecialPowers;
-    });
+  let specialPowersFn;
+  if (typeof win.wrappedJSObject.SpecialPowers != "undefined") {
+    specialPowersFn = () => win.wrappedJSObject.SpecialPowers;
+  } else {
+    specialPowersFn = () => new SpecialPowers(win);
   }
-  else {
-    XPCOMUtils.defineLazyGetter(sandbox, 'SpecialPowers', function() {
-      return new SpecialPowers(aWindow);
-    });
-  }
+  XPCOMUtils.defineLazyGetter(sandbox, "SpecialPowers", specialPowersFn);
 
-  sandbox.asyncComplete = function(obj, id) {
+  sandbox.asyncComplete = (obj, id) => {
     if (id == asyncTestCommandId) {
       curFrame.removeEventListener("unload", onunload, false);
       curFrame.clearTimeout(asyncTestTimeoutId);
@@ -525,9 +526,9 @@ function createExecuteContentSandbox(aWindow, timeout) {
 
   sandbox.finish = function() {
     if (asyncTestRunning) {
-      sandbox.asyncComplete(marionette.generate_results(), sandbox.asyncTestCommandId);
+      sandbox.asyncComplete(mn.generate_results(), sandbox.asyncTestCommandId);
     } else {
-      return marionette.generate_results();
+      return mn.generate_results();
     }
   };
   sandbox.marionetteScriptFinished = val =>
