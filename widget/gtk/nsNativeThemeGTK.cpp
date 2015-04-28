@@ -1159,6 +1159,12 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
       }
     }
   }
+
+  gint scale = nsScreenGtk::GetGtkMonitorScaleFactor();
+  aResult->top *= scale;
+  aResult->right *= scale;
+  aResult->bottom *= scale;
+  aResult->left *= scale;
   return NS_OK;
 }
 
