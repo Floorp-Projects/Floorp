@@ -75,7 +75,6 @@ public:
 
   DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer)
     : ipc::UnixFdWatcher(aIOLoop)
-    , DataSocketIO(MAX_READ_SIZE)
     , mConsumer(aConsumer)
     , mShuttingDownOnIOThread(false)
     , mConnectionStatus(SOCKET_IS_DISCONNECTED)
@@ -145,6 +144,13 @@ public:
     return GetDataSocket();
   }
 
+  // Methods for |DataSocket|
+  //
+
+  nsresult QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer);
+  void ConsumeBuffer();
+  void DiscardBuffer();
+
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from main thread. All non-main-thread accesses should happen with
@@ -180,6 +186,11 @@ private:
   bool mShuttingDownOnIOThread;
 
   ConnectionStatus mConnectionStatus;
+
+  /**
+   * I/O buffer for received data
+   */
+  nsAutoPtr<UnixSocketRawData> mBuffer;
 };
 
 class SocketConnectTask final : public SocketIOTask<DroidSocketImpl>
@@ -490,6 +501,33 @@ DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
   if (HasPendingData()) {
     AddWatchers(WRITE_WATCHER, false);
   }
+}
+
+nsresult
+DroidSocketImpl::QueryReceiveBuffer(
+  UnixSocketIOBuffer** aBuffer)
+{
+  MOZ_ASSERT(aBuffer);
+
+  if (!mBuffer) {
+    mBuffer = new UnixSocketRawData(MAX_READ_SIZE);
+  }
+  *aBuffer = mBuffer.get();
+
+  return NS_OK;
+}
+
+void
+DroidSocketImpl::ConsumeBuffer()
+{
+  NS_DispatchToMainThread(
+    new SocketIOReceiveRunnable<DroidSocketImpl>(this, mBuffer.forget()));
+}
+
+void
+DroidSocketImpl::DiscardBuffer()
+{
+  // Nothing to do.
 }
 
 BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
