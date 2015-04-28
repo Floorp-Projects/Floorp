@@ -1319,21 +1319,6 @@ Shape::searchLinear(jsid id)
     return nullptr;
 }
 
-inline void
-Shape::traceChildren(JSTracer* trc)
-{
-    TraceEdge(trc, &base_, "base");
-    TraceEdge(trc, &propidRef(), "propid");
-    if (parent)
-        TraceEdge(trc, &parent, "parent");
-
-    if (hasGetterObject())
-        TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
-
-    if (hasSetterObject())
-        TraceManuallyBarrieredEdge(trc, &asAccessorShape().setterObj, "setter");
-}
-
 /*
  * Keep this function in sync with search. It neither hashifies the start
  * shape nor increments linear search count.

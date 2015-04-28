@@ -2472,7 +2472,8 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
       return false;
     }
     InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
-    if (aCpows && !cp->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    jsipc::CPOWManager* mgr = cp->GetCPOWManager();
+    if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
       return false;
     }
     return tabParent->SendAsyncMessage(nsString(aMessage), data, cpows,

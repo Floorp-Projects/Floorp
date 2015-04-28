@@ -58,8 +58,6 @@ UNIFIED_SOURCES += [
     'hb-warning.cc',
 ]
 
-MSVC_ENABLE_PGO = True
-
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['PACKAGE_VERSION'] = '"moz"'

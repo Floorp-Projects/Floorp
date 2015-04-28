@@ -17,13 +17,47 @@ class nsIPrincipal;
 
 class nsIGlobalObject : public nsISupports
 {
+  bool mIsDying;
+
+protected:
+  nsIGlobalObject()
+   : mIsDying(false)
+  {}
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGLOBALOBJECT_IID)
+
+  /**
+   * This check is added to deal with Promise microtask queues. On the main
+   * thread, we do not impose restrictions about when script stops running or
+   * when runnables can no longer be dispatched to the main thread. This means
+   * it is possible for a Promise chain to keep resolving an infinite chain of
+   * promises, preventing the browser from shutting down. See Bug 1058695. To
+   * prevent this, the nsGlobalWindow subclass sets this flag when it is
+   * closed. The Promise implementation checks this and prohibits new runnables
+   * from being dispatched.
+   *
+   * We pair this with checks during processing the promise microtask queue
+   * that pops up the slow script dialog when the Promise queue is preventing
+   * a window from going away.
+   */
+  bool
+  IsDying() const
+  {
+    return mIsDying;
+  }
 
   virtual JSObject* GetGlobalJSObject() = 0;
 
   // This method is not meant to be overridden.
   nsIPrincipal* PrincipalOrNull();
+
+protected:
+  void
+  StartDying()
+  {
+    mIsDying = true;
+  }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIGlobalObject,
