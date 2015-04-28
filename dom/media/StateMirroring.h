@@ -155,12 +155,12 @@ public:
     return mValue;
   }
 
-  Canonical& operator=(const T& aNewValue)
+  void Set(const T& aNewValue)
   {
     MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
 
     if (aNewValue == mValue) {
-      return *this;
+      return;
     }
 
     // Notify same-thread watchers. The state watching machinery will make sure
@@ -184,9 +184,11 @@ public:
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &Canonical::DoNotify);
       AbstractThread::GetCurrent()->TailDispatcher().AddDirectTask(r.forget());
     }
-
-    return *this;
   }
+
+  Canonical& operator=(const T& aNewValue) { Set(aNewValue); return *this; }
+  Canonical& operator=(const Canonical& aOther) { Set(aOther); return *this; }
+  Canonical(const Canonical& aOther) = delete;
 
   class Holder
   {
@@ -211,7 +213,10 @@ public:
     // Access to the T.
     const T& Ref() const { return *mCanonical; }
     operator const T&() const { return Ref(); }
-    Holder& operator=(const T& aNewValue) { *mCanonical = aNewValue; return *this; }
+    void Set(const T& aNewValue) { mCanonical->Set(aNewValue); }
+    Holder& operator=(const T& aNewValue) { Set(aNewValue); return *this; }
+    Holder& operator=(const Holder& aOther) { Set(aOther); return *this; }
+    Holder(const Holder& aOther) = delete;
 
   private:
     nsRefPtr<Canonical<T>> mCanonical;
