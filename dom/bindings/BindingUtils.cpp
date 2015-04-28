@@ -2437,6 +2437,12 @@ ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
 }
 
 bool
+MayResolveGlobal(const JSAtomState& aNames, jsid aId, JSObject* aMaybeObj)
+{
+  return JS_MayResolveStandardClass(aNames, aId, aMaybeObj);
+}
+
+bool
 EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
 {
   MOZ_ASSERT(JS_IsGlobalObject(aObj),
