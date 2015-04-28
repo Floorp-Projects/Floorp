@@ -590,7 +590,7 @@ MediaEngineGonkVideoSource::OnUserError(UserContext aContext, nsresult aError)
 }
 
 void
-MediaEngineGonkVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
+MediaEngineGonkVideoSource::OnTakePictureComplete(const uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
 {
   // It needs to start preview because Gonk camera will stop preview while
   // taking picture.
@@ -601,7 +601,7 @@ MediaEngineGonkVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLeng
   class GenerateBlobRunnable : public nsRunnable {
   public:
     GenerateBlobRunnable(nsTArray<nsRefPtr<PhotoCallback>>& aCallbacks,
-                         uint8_t* aData,
+                         const uint8_t* aData,
                          uint32_t aLength,
                          const nsAString& aMimeType)
       : mPhotoDataLength(aLength)
