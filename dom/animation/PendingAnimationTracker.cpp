@@ -60,7 +60,7 @@ TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
   // animation will be started/paused when the refresh driver is next
   // advanced since this will trigger a call to TriggerPendingAnimationsNow.
-  if (timeline->IsUnderTestControl()) {
+  if (!timeline->TracksWallclockTime()) {
     return PL_DHASH_NEXT;
   }
 
