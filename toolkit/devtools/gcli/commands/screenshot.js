@@ -180,15 +180,18 @@ exports.items = [
         throw new Error(l10n.lookup("screenshotSelectorChromeConflict"));
       }
 
+      let capture;
       if (!args.chrome) {
         // Re-execute the command on the server
         const command = context.typed.replace(/^screenshot/, "screenshot_server");
-        return context.updateExec(command).then(output => {
+        capture = context.updateExec(command).then(output => {
           return output.error ? Promise.reject(output.data) : output.data;
         });
+      } else {
+        capture = captureScreenshot(args, context.environment.chromeDocument);
       }
 
-      return processScreenshot(args, context.environment.chromeDocument);
+      return capture.then(saveScreenshot.bind(null, args, context));
     },
   },
   {
@@ -199,53 +202,45 @@ exports.items = [
     returnType: "imageSummary",
     params: [ filenameParam, standardParams ],
     exec: function(args, context) {
-      return processScreenshot(args, context.environment.document);
+      return captureScreenshot(args, context.environment.document);
     },
   }
 ];
 
 /**
  * This function simply handles the --delay argument before calling
- * processScreenshotNow
+ * createScreenshotData
  */
-function processScreenshot(args, document) {
+function captureScreenshot(args, document) {
   if (args.delay > 0) {
     return new Promise((resolve, reject) => {
       document.defaultView.setTimeout(() => {
-        processScreenshotNow(args, document).then(resolve, reject);
+        createScreenshotData(document, args).then(resolve, reject);
       }, args.delay * 1000);
     });
   }
   else {
-    return processScreenshotNow(args, document);
+    return createScreenshotData(document, args);
   }
 }
 
 /**
  * There are several possible destinations for the screenshot, SKIP is used
- * in processScreenshotNow() whenever one of them is not used
+ * in saveScreenshot() whenever one of them is not used
  */
 const SKIP = Promise.resolve();
 
 /**
- * This is just like exec, except the 'delay' has been handled already so
- * this is where we do that actual work of process the screenshot
+ * Save the captured screenshot to one of several destinations.
  */
-function processScreenshotNow(args, document) {
-  const reply = createScreenshotData(document, args);
-
-  const loadContext = document.defaultView
-                            .QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIWebNavigation)
-                            .QueryInterface(Ci.nsILoadContext);
-
+function saveScreenshot(args, context, reply) {
   const fileNeeded = args.filename != FILENAME_DEFAULT_VALUE ||
                       (!args.imgur && !args.clipboard);
 
   return Promise.all([
-    args.clipboard ? saveToClipboard(loadContext, reply) : SKIP,
-    args.imgur     ? uploadToImgur(reply)                : SKIP,
-    fileNeeded     ? saveToFile(loadContext, reply)      : SKIP,
+    args.clipboard ? saveToClipboard(context, reply) : SKIP,
+    args.imgur     ? uploadToImgur(reply)            : SKIP,
+    fileNeeded     ? saveToFile(context, reply)      : SKIP,
   ]).then(() => reply);
 }
 
@@ -300,13 +295,13 @@ function createScreenshotData(document, args) {
     window.scrollTo(currentX, currentY);
   }
 
-  return {
+  return Promise.resolve({
     destinations: [],
     data: data,
     height: height,
     width: width,
     filename: getFilename(args.filename),
-  };
+  });
 }
 
 /**
@@ -339,8 +334,12 @@ function getFilename(defaultName) {
  * be treated exactly like imgur / file processing, but it's really sync
  * for now.
  */
-function saveToClipboard(loadContext, reply) {
+function saveToClipboard(context, reply) {
   try {
+    const loadContext = context.environment.chromeWindow
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsILoadContext);
     const io = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
     const channel = io.newChannel2(reply.data, null, null,
@@ -422,37 +421,21 @@ function uploadToImgur(reply) {
  * Save the screenshot data to disk, returning a promise which
  * is resolved on completion
  */
-function saveToFile(loadContext, reply) {
+function saveToFile(context, reply) {
   return Task.spawn(function*() {
     try {
+      let document = context.environment.chromeDocument;
+      let window = context.environment.chromeWindow;
+
       let filename = reply.filename;
       // Check there is a .png extension to filename
       if (!filename.match(/.png$/i)) {
         filename += ".png";
       }
 
-      // If the filename is relative, tack it onto the download directory
-      if (!filename.match(/[\\\/]/)) {
-        const preferredDir = yield Downloads.getPreferredDownloadsDirectory();
-        filename = OS.Path.join(preferredDir, filename);
-        reply.filename = filename;
-      }
-
-      const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      file.initWithPath(filename);
-
-      const ioService = Cc["@mozilla.org/network/io-service;1"]
-                        .getService(Ci.nsIIOService);
-
-      const Persist = Ci.nsIWebBrowserPersist;
-      const persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                      .createInstance(Persist);
-      persist.persistFlags = Persist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-                             Persist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-
-      // TODO: UTF8? For an image?
-      const source = ioService.newURI(reply.data, "UTF8", null);
-      persist.saveURI(source, null, null, 0, null, null, file, loadContext);
+      window.saveURL(reply.data, filename, null,
+                     true /* aShouldBypassCache */, true /* aSkipPrompt */,
+                     document.documentURIObject, document);
 
       reply.destinations.push(l10n.lookup("screenshotSavedToFile") + " \"" + filename + "\"");
     }

@@ -60,7 +60,7 @@
   border: 0;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .side-menu-widget-item-checkbox .checkbox-check {
     background-image: url(itemToggle@2x.png);
   }

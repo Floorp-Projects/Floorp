@@ -42,7 +42,7 @@
   position: relative;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .breakpoint {
     background-image: url("chrome://browser/skin/devtools/editor-breakpoint@2x.png");
   }
@@ -56,7 +56,7 @@
   background-image: url("chrome://browser/skin/devtools/editor-debug-location.png");
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .debugLocation {
     background-image: url("chrome://browser/skin/devtools/editor-debug-location@2x.png");
   }
@@ -68,7 +68,7 @@
     url("chrome://browser/skin/devtools/editor-breakpoint.png");
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .breakpoint.debugLocation {
     background-image:
       url("chrome://browser/skin/devtools/editor-debug-location@2x.png"),

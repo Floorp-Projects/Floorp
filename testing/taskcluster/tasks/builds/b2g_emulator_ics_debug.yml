@@ -5,6 +5,7 @@ $inherits:
     build_type: 'debug'
 task:
   workerType: emulator-ics-debug
+  provisionerId: aws-provisioner-v1
   scopes:
     - 'docker-worker:cache:workspace-emulator-ics-debug'
   metadata:

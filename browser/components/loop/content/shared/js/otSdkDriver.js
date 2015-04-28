@@ -17,39 +17,47 @@ loop.OTSdkDriver = (function() {
    * actions, and instruct the SDK what to do as a result of actions.
    */
   var OTSdkDriver = function(options) {
-      if (!options.dispatcher) {
-        throw new Error("Missing option dispatcher");
+    if (!options.dispatcher) {
+      throw new Error("Missing option dispatcher");
+    }
+    if (!options.sdk) {
+      throw new Error("Missing option sdk");
+    }
+
+    this.dispatcher = options.dispatcher;
+    this.sdk = options.sdk;
+
+    this._isDesktop = !!options.isDesktop;
+
+    if (this._isDesktop) {
+      if (!options.mozLoop) {
+        throw new Error("Missing option mozLoop");
       }
-      if (!options.sdk) {
-        throw new Error("Missing option sdk");
-      }
+      this.mozLoop = options.mozLoop;
+    }
 
-      this.dispatcher = options.dispatcher;
-      this.sdk = options.sdk;
+    this.connections = {};
 
-      this._isDesktop = !!options.isDesktop;
+    // Metrics object to keep track of the number of connections we have
+    // and the amount of streams.
+    this._metrics = {
+      connections: 0,
+      sendStreams: 0,
+      recvStreams: 0
+    };
 
-      if (this._isDesktop) {
-        if (!options.mozLoop) {
-          throw new Error("Missing option mozLoop");
-        }
-        this.mozLoop = options.mozLoop;
-      }
+    this.dispatcher.register(this, [
+      "setupStreamElements",
+      "setMute"
+    ]);
 
-      this.connections = {};
-
-      this.dispatcher.register(this, [
-        "setupStreamElements",
-        "setMute"
-      ]);
-
-      // Set loop.debug.twoWayMediaTelemetry to true in the browser
-      // by changing the hidden pref loop.debug.twoWayMediaTelemetry using
-      // about:config, or use
-      //
-      // localStorage.setItem("debug.twoWayMediaTelemetry", true);
-      this._debugTwoWayMediaTelemetry =
-        loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry");
+    // Set loop.debug.twoWayMediaTelemetry to true in the browser
+    // by changing the hidden pref loop.debug.twoWayMediaTelemetry using
+    // about:config, or use
+    //
+    // localStorage.setItem("debug.twoWayMediaTelemetry", true);
+    this._debugTwoWayMediaTelemetry =
+      loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry");
 
     /**
      * XXX This is a workaround for desktop machines that do not have a
@@ -104,6 +112,7 @@ loop.OTSdkDriver = (function() {
       this.publisher = this.sdk.initPublisher(this.getLocalElement(),
         this._getCopyPublisherConfig());
       this.publisher.on("streamCreated", this._onLocalStreamCreated.bind(this));
+      this.publisher.on("streamDestroyed", this._onLocalStreamDestroyed.bind(this));
       this.publisher.on("accessAllowed", this._onPublishComplete.bind(this));
       this.publisher.on("accessDenied", this._onPublishDenied.bind(this));
       this.publisher.on("accessDialogOpened",
@@ -164,6 +173,7 @@ loop.OTSdkDriver = (function() {
         config);
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
       this.screenshare.on("accessDenied", this._onScreenShareDenied.bind(this));
+      this.screenshare.on("streamCreated", this._onScreenShareStreamCreated.bind(this));
 
       this._noteSharingState(options.videoSource, true);
     },
@@ -193,8 +203,10 @@ loop.OTSdkDriver = (function() {
         return false;
       }
 
+      this._notifyMetricsEvent("Publisher.streamDestroyed");
+
       this.session.unpublish(this.screenshare);
-      this.screenshare.off("accessAllowed accessDenied");
+      this.screenshare.off("accessAllowed accessDenied streamCreated");
       this.screenshare.destroy();
       delete this.screenshare;
       this._noteSharingState(this._windowId ? "browser" : "window", false);
@@ -223,18 +235,18 @@ loop.OTSdkDriver = (function() {
       this._sendTwoWayMediaTelemetry = !!sessionData.sendTwoWayMediaTelemetry;
       this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
 
-      this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
-      this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
-      this.session.on("streamDestroyed", this._onRemoteStreamDestroyed.bind(this));
-      this.session.on("connectionDestroyed",
-        this._onConnectionDestroyed.bind(this));
       this.session.on("sessionDisconnected",
         this._onSessionDisconnected.bind(this));
+      this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
+      this.session.on("connectionDestroyed",
+        this._onConnectionDestroyed.bind(this));
+      this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
+      this.session.on("streamDestroyed", this._onRemoteStreamDestroyed.bind(this));
       this.session.on("streamPropertyChanged", this._onStreamPropertyChanged.bind(this));
 
       // This starts the actual session connection.
       this.session.connect(sessionData.apiKey, sessionData.sessionToken,
-        this._onConnectionComplete.bind(this));
+        this._onSessionConnectionCompleted.bind(this));
     },
 
     /**
@@ -244,10 +256,11 @@ loop.OTSdkDriver = (function() {
       this.endScreenShare();
 
       if (this.session) {
-        this.session.off("streamCreated streamDestroyed connectionDestroyed " +
-          "sessionDisconnected streamPropertyChanged");
+        this.session.off("sessionDisconnected streamCreated streamDestroyed connectionCreated connectionDestroyed streamPropertyChanged");
         this.session.disconnect();
         delete this.session;
+
+        this._notifyMetricsEvent("Session.connectionDestroyed", "local");
       }
       if (this.publisher) {
         this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
@@ -302,7 +315,7 @@ loop.OTSdkDriver = (function() {
      *
      * @param {Error} error An OT error object, null if there was no error.
      */
-    _onConnectionComplete: function(error) {
+    _onSessionConnectionCompleted: function(error) {
       if (error) {
         console.error("Failed to complete connection", error);
         this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
@@ -327,7 +340,11 @@ loop.OTSdkDriver = (function() {
       if (connection && (connection.id in this.connections)) {
         delete this.connections[connection.id];
       }
+
+      this._notifyMetricsEvent("Session.connectionDestroyed", "peer");
+
       this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), performance.now());
+
       this.dispatcher.dispatch(new sharedActions.RemotePeerDisconnected({
         peerHungup: event.reason === "clientDisconnected"
       }));
@@ -370,10 +387,93 @@ loop.OTSdkDriver = (function() {
     _onConnectionCreated: function(event) {
       var connection = event.connection;
       if (this.session.connection.id === connection.id) {
+        // This is the connection event for our connection.
+        this._notifyMetricsEvent("Session.connectionCreated", "local");
         return;
       }
       this.connections[connection.id] = connection;
+      this._notifyMetricsEvent("Session.connectionCreated", "peer");
       this.dispatcher.dispatch(new sharedActions.RemotePeerConnected());
+    },
+
+    /**
+     * Works out the current connection state based on the streams being
+     * sent or received.
+     */
+    _getConnectionState: function() {
+      if (this._metrics.sendStreams) {
+        return this._metrics.recvStreams ? "sendrecv" : "sending";
+      }
+
+      if (this._metrics.recvStreams) {
+        return "receiving";
+      }
+
+      return "starting";
+    },
+
+    /**
+     * Notifies of a metrics related event for tracking call setup purposes.
+     * See https://wiki.mozilla.org/Loop/Architecture/Rooms#Updating_Session_State
+     *
+     * @param {String} eventName  The name of the event for the update.
+     * @param {String} clientType Used for connection created/destoryed. Indicates
+     *                            if it is for the "peer" or the "local" client.
+     */
+    _notifyMetricsEvent: function(eventName, clientType) {
+      if (!eventName) {
+        return;
+      }
+
+      var state;
+
+      // We intentionally don't bounds check these, in case there's an error
+      // somewhere, if there is, we'll see it in the server metrics and are more
+      // likely to investigate.
+      switch (eventName) {
+        case "Session.connectionCreated":
+          this._metrics.connections++;
+          if (clientType === "local") {
+            state = "waiting";
+          }
+          break;
+        case "Session.connectionDestroyed":
+          this._metrics.connections--;
+          if (clientType === "local") {
+            // Don't log this, as the server doesn't accept it after
+            // the room has been left.
+            return;
+          } else if (!this._metrics.connections) {
+            state = "waiting";
+          }
+          break;
+        case "Publisher.streamCreated":
+          this._metrics.sendStreams++;
+          break;
+        case "Publisher.streamDestroyed":
+          this._metrics.sendStreams--;
+          break;
+        case "Session.streamCreated":
+          this._metrics.recvStreams++;
+          break;
+        case "Session.streamDestroyed":
+          this._metrics.recvStreams--;
+          break;
+        default:
+          console.error("Unexpected event name", eventName);
+          return;
+      }
+      if (!state) {
+        state = this._getConnectionState();
+      }
+
+      this.dispatcher.dispatch(new sharedActions.ConnectionStatus({
+        event: eventName,
+        state: state,
+        connections: this._metrics.connections,
+        sendStreams: this._metrics.sendStreams,
+        recvStreams: this._metrics.recvStreams
+      }));
     },
 
     /**
@@ -407,6 +507,8 @@ loop.OTSdkDriver = (function() {
      * https://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
      */
     _onRemoteStreamCreated: function(event) {
+      this._notifyMetricsEvent("Session.streamCreated");
+
       if (event.stream[STREAM_PROPERTIES.HAS_VIDEO]) {
         this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
           isLocal: false,
@@ -439,6 +541,8 @@ loop.OTSdkDriver = (function() {
      * https://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
      */
     _onLocalStreamCreated: function(event) {
+      this._notifyMetricsEvent("Publisher.streamCreated");
+
       if (event.stream[STREAM_PROPERTIES.HAS_VIDEO]) {
         this.dispatcher.dispatch(new sharedActions.VideoDimensionsChanged({
           isLocal: true,
@@ -506,6 +610,8 @@ loop.OTSdkDriver = (function() {
      * https://tokbox.com/opentok/libraries/client/js/reference/StreamEvent.html
      */
     _onRemoteStreamDestroyed: function(event) {
+      this._notifyMetricsEvent("Session.streamDestroyed");
+
       if (event.stream.videoType !== "screen") {
         return;
       }
@@ -515,6 +621,13 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({
         receiving: false
       }));
+    },
+
+    /**
+     * Handles the event when the remote stream is destroyed.
+     */
+    _onLocalStreamDestroyed: function() {
+      this._notifyMetricsEvent("Publisher.streamDestroyed");
     },
 
     /**
@@ -629,6 +742,13 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
         state: SCREEN_SHARE_STATES.INACTIVE
       }));
+    },
+
+    /**
+     * Called when a screenshare stream is published.
+     */
+    _onScreenShareStreamCreated: function() {
+      this._notifyMetricsEvent("Publisher.streamCreated");
     },
 
     /*
