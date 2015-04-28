@@ -7,11 +7,10 @@
 #include "ListenSocket.h"
 #include <fcntl.h>
 #include "ConnectionOrientedSocket.h"
+#include "DataSocket.h"
 #include "mozilla/RefPtr.h"
 #include "nsXULAppAPI.h"
 #include "UnixSocketConnector.h"
-
-static const size_t MAX_READ_SIZE = 1; /* any small constant */
 
 namespace mozilla {
 namespace ipc {
@@ -32,9 +31,9 @@ public:
                  const nsACString& aAddress);
   ~ListenSocketIO();
 
-  void                GetSocketAddr(nsAString& aAddrStr) const;
-  SocketConsumerBase* GetConsumer();
-  SocketBase*         GetSocketBase();
+  void        GetSocketAddr(nsAString& aAddrStr) const;
+  DataSocket* GetDataSocket();
+  SocketBase* GetSocketBase();
 
   // Shutdown state
   //
@@ -107,13 +106,13 @@ ListenSocketIO::ListenSocketIO(MessageLoop* mIOLoop,
                                ListenSocket* aListenSocket,
                                UnixSocketConnector* aConnector,
                                const nsACString& aAddress)
-: UnixSocketWatcher(mIOLoop)
-, SocketIOBase(MAX_READ_SIZE)
-, mListenSocket(aListenSocket)
-, mConnector(aConnector)
-, mShuttingDownOnIOThread(false)
-, mAddress(aAddress)
-, mCOSocketIO(nullptr)
+  : UnixSocketWatcher(mIOLoop)
+  , SocketIOBase()
+  , mListenSocket(aListenSocket)
+  , mConnector(aConnector)
+  , mShuttingDownOnIOThread(false)
+  , mAddress(aAddress)
+  , mCOSocketIO(nullptr)
 {
   MOZ_ASSERT(mListenSocket);
   MOZ_ASSERT(mConnector);
@@ -134,6 +133,14 @@ ListenSocketIO::GetSocketAddr(nsAString& aAddrStr) const
     return;
   }
   mConnector->GetSocketAddr(mAddr, aAddrStr);
+}
+
+DataSocket*
+ListenSocketIO::GetDataSocket()
+{
+  MOZ_CRASH("Listen sockets cannot transfer data");
+
+  return nullptr;
 }
 
 SocketBase*

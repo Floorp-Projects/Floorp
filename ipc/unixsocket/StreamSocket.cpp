@@ -19,9 +19,10 @@ namespace ipc {
 // StreamSocketIO
 //
 
-class StreamSocketIO final : public UnixSocketWatcher
-                           , protected SocketIOBase
-                           , public ConnectionOrientedSocketIO
+class StreamSocketIO final
+  : public UnixSocketWatcher
+  , protected DataSocketIO
+  , public ConnectionOrientedSocketIO
 {
 public:
   class ConnectTask;
@@ -38,9 +39,9 @@ public:
                  const nsACString& aAddress);
   ~StreamSocketIO();
 
-  void                GetSocketAddr(nsAString& aAddrStr) const;
-  SocketConsumerBase* GetConsumer();
-  SocketBase*         GetSocketBase();
+  void        GetSocketAddr(nsAString& aAddrStr) const;
+  DataSocket* GetDataSocket();
+  SocketBase* GetSocketBase();
 
   // StreamSocketIOBase
   //
@@ -133,13 +134,13 @@ StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop,
                                StreamSocket* aStreamSocket,
                                UnixSocketConnector* aConnector,
                                const nsACString& aAddress)
-: UnixSocketWatcher(mIOLoop)
-, SocketIOBase(MAX_READ_SIZE)
-, mStreamSocket(aStreamSocket)
-, mConnector(aConnector)
-, mShuttingDownOnIOThread(false)
-, mAddress(aAddress)
-, mDelayedConnectTask(nullptr)
+  : UnixSocketWatcher(mIOLoop)
+  , DataSocketIO(MAX_READ_SIZE)
+  , mStreamSocket(aStreamSocket)
+  , mConnector(aConnector)
+  , mShuttingDownOnIOThread(false)
+  , mAddress(aAddress)
+  , mDelayedConnectTask(nullptr)
 {
   MOZ_ASSERT(mStreamSocket);
   MOZ_ASSERT(mConnector);
@@ -150,13 +151,13 @@ StreamSocketIO::StreamSocketIO(MessageLoop* mIOLoop, int aFd,
                                StreamSocket* aStreamSocket,
                                UnixSocketConnector* aConnector,
                                const nsACString& aAddress)
-: UnixSocketWatcher(mIOLoop, aFd, aConnectionStatus)
-, SocketIOBase(MAX_READ_SIZE)
-, mStreamSocket(aStreamSocket)
-, mConnector(aConnector)
-, mShuttingDownOnIOThread(false)
-, mAddress(aAddress)
-, mDelayedConnectTask(nullptr)
+  : UnixSocketWatcher(mIOLoop, aFd, aConnectionStatus)
+  , DataSocketIO(MAX_READ_SIZE)
+  , mStreamSocket(aStreamSocket)
+  , mConnector(aConnector)
+  , mShuttingDownOnIOThread(false)
+  , mAddress(aAddress)
+  , mDelayedConnectTask(nullptr)
 {
   MOZ_ASSERT(mStreamSocket);
   MOZ_ASSERT(mConnector);
@@ -179,8 +180,8 @@ StreamSocketIO::GetSocketAddr(nsAString& aAddrStr) const
   mConnector->GetSocketAddr(mAddr, aAddrStr);
 }
 
-SocketConsumerBase*
-StreamSocketIO::GetConsumer()
+DataSocket*
+StreamSocketIO::GetDataSocket()
 {
   return mStreamSocket.get();
 }
@@ -188,7 +189,7 @@ StreamSocketIO::GetConsumer()
 SocketBase*
 StreamSocketIO::GetSocketBase()
 {
-  return GetConsumer();
+  return GetDataSocket();
 }
 
 bool
