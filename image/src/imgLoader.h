@@ -214,6 +214,38 @@ enum class AcceptedMimeTypes : uint8_t {
   IMAGES_AND_DOCUMENTS,
 };
 
+/**
+ * An ImageLib cache entry key.
+ *
+ * We key the cache on the initial URI (before any redirects), with some
+ * canonicalization applied. See ComputeHash() for the details.
+ */
+class ImageCacheKey final
+{
+public:
+  explicit ImageCacheKey(nsIURI* aURI);
+  explicit ImageCacheKey(mozilla::image::ImageURL* aURI);
+
+  ImageCacheKey(const ImageCacheKey& aOther);
+  ImageCacheKey(ImageCacheKey&& aOther);
+
+  bool operator==(const ImageCacheKey& aOther) const;
+  uint32_t Hash() const { return mHash; }
+
+  /// A weak pointer to the URI spec for this cache entry. For logging only.
+  const char* Spec() const { return mSpec.get(); }
+
+  /// Is this cache entry for a chrome image?
+  bool IsChrome() const { return mIsChrome; }
+
+private:
+  static uint32_t ComputeHash(const nsACString& aSpec);
+
+  nsCString mSpec;
+  uint32_t mHash;
+  bool mIsChrome;
+};
+
 class imgLoader final : public imgILoader,
                         public nsIContentSniffer,
                         public imgICache,
@@ -224,7 +256,8 @@ class imgLoader final : public imgILoader,
 
 public:
   typedef mozilla::image::ImageURL ImageURL;
-  typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
+  typedef nsRefPtrHashtable<nsGenericHashKey<ImageCacheKey>,
+                            imgCacheEntry> imgCacheTable;
   typedef nsTHashtable<nsPtrHashKey<imgRequest>> imgSet;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
   typedef mozilla::Mutex Mutex;
@@ -309,14 +342,10 @@ public:
 
   nsresult InitCache();
 
-  bool RemoveFromCache(nsIURI* aKey);
-  bool RemoveFromCache(ImageURL* aKey);
-  bool RemoveFromCache(nsCString& spec,
-                       imgCacheTable& cache,
-                       imgCacheQueue& queue);
+  bool RemoveFromCache(const ImageCacheKey& aKey);
   bool RemoveFromCache(imgCacheEntry* entry);
 
-  bool PutIntoCache(nsIURI* key, imgCacheEntry* entry);
+  bool PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* aEntry);
 
   void AddToUncachedImages(imgRequest* aRequest);
   void RemoveFromUncachedImages(imgRequest* aRequest);
@@ -400,11 +429,11 @@ private: // methods
   nsresult EvictEntries(imgCacheTable& aCacheToClear);
   nsresult EvictEntries(imgCacheQueue& aQueueToClear);
 
-  imgCacheTable& GetCache(nsIURI* aURI);
-  imgCacheQueue& GetCacheQueue(nsIURI* aURI);
-  imgCacheTable& GetCache(ImageURL* aURI);
-  imgCacheQueue& GetCacheQueue(ImageURL* aURI);
-  void CacheEntriesChanged(ImageURL* aURI, int32_t sizediff = 0);
+  imgCacheTable& GetCache(bool aForChrome);
+  imgCacheTable& GetCache(const ImageCacheKey& aKey);
+  imgCacheQueue& GetCacheQueue(bool aForChrome);
+  imgCacheQueue& GetCacheQueue(const ImageCacheKey& aKey);
+  void CacheEntriesChanged(bool aForChrome, int32_t aSizeDiff = 0);
   void CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue);
 
 private: // data
