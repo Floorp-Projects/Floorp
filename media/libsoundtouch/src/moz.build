@@ -32,7 +32,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
         SOURCES += ['mmx_optimized.cpp']
         SOURCES['mmx_optimized.cpp'].flags += CONFIG['MMX_FLAGS']
 
-MSVC_ENABLE_PGO = True
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

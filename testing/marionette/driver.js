@@ -96,7 +96,7 @@ this.Context.fromString = function(s) {
  * passed literally.  The latter specialisation is temporary to achieve
  * backwards compatibility with listener.js.
  *
- * @param {function(): nsIMessageManager} mmFn
+ * @param {function(): (nsIMessageSender|nsIMessageBroadcaster)} mmFn
  *     Function returning the current message manager.
  * @param {function(string, Object, number)} sendAsyncFn
  *     Callback for sending async messages to the current listener.
@@ -104,6 +104,34 @@ this.Context.fromString = function(s) {
  *     Function that returns the current browser.
  */
 let ListenerProxy = function(mmFn, sendAsyncFn, curBrowserFn) {
+  let sender = new ContentSender(mmFn, sendAsyncFn, curBrowserFn);
+  let handler = {
+    set: (obj, prop, val) => { obj[prop] = val; return true; },
+    get: (obj, prop) => (...args) => obj.send(prop, args),
+  };
+  return new Proxy(sender, handler);
+};
+
+/**
+ * The ContentSender allows one to make synchronous calls to the
+ * message listener of the content frame of the current browsing context.
+ *
+ * Presumptions about the responses from content space are made so we
+ * can provide a nicer API on top of the message listener primitives that
+ * make calls from chrome- to content space seem synchronous by leveraging
+ * promises.
+ *
+ * The promise is guaranteed not to resolve until the execution of the
+ * command in content space is complete.
+ *
+ * @param {function(): (nsIMessageSender|nsIMessageBroadcaster)} mmFn
+ *     Function returning the current message manager.
+ * @param {function(string, Object, number)} sendAsyncFn
+ *     Callback for sending async messages to the current listener.
+ * @param {function(): BrowserObj} curBrowserFn
+ *     Function that returns the current browser.
+ */
+let ContentSender = function(mmFn, sendAsyncFn, curBrowserFn) {
   this.curCmdId = null;
   this.sendAsync = sendAsyncFn;
 
@@ -111,15 +139,30 @@ let ListenerProxy = function(mmFn, sendAsyncFn, curBrowserFn) {
   this.curBrowserFn_ = curBrowserFn;
 };
 
-Object.defineProperty(ListenerProxy.prototype, "mm", {
+Object.defineProperty(ContentSender.prototype, "mm", {
   get: function() { return this.mmFn_(); }
 });
 
-Object.defineProperty(ListenerProxy.prototype, "curBrowser", {
+Object.defineProperty(ContentSender.prototype, "curBrowser", {
   get: function() { return this.curBrowserFn_(); }
 });
 
-ListenerProxy.prototype.__noSuchMethod__ = function*(name, args) {
+/**
+ * Call registered function in the frame script environment of the
+ * current browsing context's content frame.
+ *
+ * @param {string} name
+ *     Function to call in the listener, e.g. for "Marionette:foo8",
+ *     use "foo".
+ * @param {Array} args
+ *     Argument list to pass the function.  If args has a single entry
+ *     that is an object, we assume it's an old style dispatch, and
+ *     the object will passed literally.
+ *
+ * @return {Promise}
+ *     A promise that resolves to the result of the command.
+ */
+ContentSender.prototype.send = function(name, args) {
   const ok = "Marionette:ok";
   const val = "Marionette:done";
   const err = "Marionette:error";
@@ -169,12 +212,11 @@ ListenerProxy.prototype.__noSuchMethod__ = function*(name, args) {
     listeners.add();
     modal.addHandler(handleDialog);
 
-    // convert to array if passed arguments
-    let msg;
-    if (args.length == 1 && typeof args[0] == "object" && args[0] !== null) {
+    // new style dispatches are arrays of arguments, old style dispatches
+    // are key-value objects
+    let msg = args;
+    if (args.length == 1 && typeof args[0] == "object") {
       msg = args[0];
-    } else {
-      msg = Array.prototype.slice.call(args);
     }
 
     this.sendAsync(name, msg, this.curCmdId);
@@ -183,7 +225,7 @@ ListenerProxy.prototype.__noSuchMethod__ = function*(name, args) {
   return proxy;
 };
 
-ListenerProxy.prototype.isOutOfSync = function(id) {
+ContentSender.prototype.isOutOfSync = function(id) {
   return this.curCmdId !== id;
 };
 
@@ -268,7 +310,7 @@ this.GeckoDriver = function(appName, device, emulator) {
   };
 
   this.mm = globalMessageManager;
-  this.listener = new ListenerProxy(
+  this.listener = ListenerProxy(
       () => this.mm,
       this.sendAsync.bind(this),
       () => this.curBrowser);
@@ -1281,7 +1323,7 @@ GeckoDriver.prototype.get = function(cmd, resp) {
       // We need to re-issue this request to correctly poll for readyState and
       // send errors.
       this.curBrowser.pendingCommands.push(() => {
-        cmd.parameters.command_id = this.listener.curCmdId;
+        cmd.parameters.command_id = cmd.id;
         this.mm.broadcastAsyncMessage(
             "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
             cmd.parameters);

@@ -844,7 +844,7 @@ public:
   // NotifyAll on the monitor must be called when the state is changed so
   // that interested threads can wake up and alter behaviour if appropriate
   // Accessed on state machine, audio, main, and AV thread.
-  State mState;
+  Watchable<State> mState;
 
   // The task queue in which we run decode tasks. This is referred to as
   // the "decode thread", though in practise tasks can run on a different
@@ -887,6 +887,7 @@ public:
 
   // The status of our next frame. Mirrored on the main thread and used to
   // compute ready state.
+  WatcherHolder mNextFrameStatusUpdater;
   Canonical<NextFrameStatus>::Holder mNextFrameStatus;
 public:
   AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus() { return &mNextFrameStatus; }
@@ -1155,7 +1156,7 @@ protected:
   // the state machine thread. Synchronised via decoder monitor.
   // When data is being sent to a MediaStream, this is true when all data has
   // been written to the MediaStream.
-  bool mAudioCompleted;
+  Watchable<bool> mAudioCompleted;
 
   // True if mDuration has a value obtained from an HTTP header, or from
   // the media index/metadata. Accessed on the state machine thread.

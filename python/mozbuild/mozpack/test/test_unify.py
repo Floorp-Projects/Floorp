@@ -63,9 +63,19 @@ class TestUnifiedFinder(TestUnified):
 
 class TestUnifiedBuildFinder(TestUnified):
     def test_unified_build_finder(self):
+        finder = UnifiedBuildFinder(FileFinder(self.tmppath('a')),
+                                    FileFinder(self.tmppath('b')))
+
+        # Test chrome.manifest unification
         self.create_both('chrome.manifest', 'a\nb\nc\n')
         self.create_one('a', 'chrome/chrome.manifest', 'a\nb\nc\n')
         self.create_one('b', 'chrome/chrome.manifest', 'b\nc\na\n')
+        self.assertEqual(sorted([(f, c.open().read()) for f, c in
+                                 finder.find('**/chrome.manifest')]),
+                         [('chrome.manifest', 'a\nb\nc\n'),
+                          ('chrome/chrome.manifest', 'a\nb\nc\n')])
+
+        # Test buildconfig.html unification
         self.create_one('a', 'chrome/browser/foo/buildconfig.html',
                         '\n'.join([
                             '<html>',
@@ -84,13 +94,6 @@ class TestUnifiedBuildFinder(TestUnified):
                             '</body>',
                             '</html>',
                         ]))
-        finder = UnifiedBuildFinder(FileFinder(self.tmppath('a')),
-                                    FileFinder(self.tmppath('b')))
-        self.assertEqual(sorted([(f, c.open().read()) for f, c in
-                                 finder.find('**/chrome.manifest')]),
-                         [('chrome.manifest', 'a\nb\nc\n'),
-                          ('chrome/chrome.manifest', 'a\nb\nc\n')])
-
         self.assertEqual(sorted([(f, c.open().read()) for f, c in
                                  finder.find('**/buildconfig.html')]),
                          [('chrome/browser/foo/buildconfig.html', '\n'.join([
@@ -104,6 +107,7 @@ class TestUnifiedBuildFinder(TestUnified):
                              '</html>',
                          ]))])
 
+        # Test xpi file unification
         xpi = MockDest()
         with JarWriter(fileobj=xpi, compress=True) as jar:
             jar.add('foo', 'foo')
@@ -122,6 +126,73 @@ class TestUnifiedBuildFinder(TestUnified):
                               finder.find('*.xpi')],
                              [('foo.xpi', foo_xpi)])
         errors.out = sys.stderr
+
+        # Test install.rdf unification
+        x86_64 = 'Darwin_x86_64-gcc3'
+        x86 = 'Darwin_x86-gcc3'
+        target_tag = '<{em}targetPlatform>{platform}</{em}targetPlatform>'
+        target_attr = '{em}targetPlatform="{platform}" '
+
+        rdf_tag = ''.join([
+            '<{RDF}Description {em}bar="bar" {em}qux="qux">',
+              '<{em}foo>foo</{em}foo>',
+              '{targets}',
+              '<{em}baz>baz</{em}baz>',
+            '</{RDF}Description>'
+        ])
+        rdf_attr = ''.join([
+            '<{RDF}Description {em}bar="bar" {attr}{em}qux="qux">',
+              '{targets}',
+              '<{em}foo>foo</{em}foo><{em}baz>baz</{em}baz>',
+            '</{RDF}Description>'
+        ])
+
+        for descr_ns, target_ns in (('RDF:', ''), ('', 'em:'), ('RDF:', 'em:')):
+            # First we need to infuse the above strings with our namespaces and
+            # platform values.
+            ns = { 'RDF': descr_ns, 'em': target_ns }
+            target_tag_x86_64 = target_tag.format(platform=x86_64, **ns)
+            target_tag_x86 = target_tag.format(platform=x86, **ns)
+            target_attr_x86_64 = target_attr.format(platform=x86_64, **ns)
+            target_attr_x86 = target_attr.format(platform=x86, **ns)
+
+            tag_x86_64 = rdf_tag.format(targets=target_tag_x86_64, **ns)
+            tag_x86 = rdf_tag.format(targets=target_tag_x86, **ns)
+            tag_merged = rdf_tag.format(targets=target_tag_x86_64 + target_tag_x86, **ns)
+            tag_empty = rdf_tag.format(targets="", **ns)
+
+            attr_x86_64 = rdf_attr.format(attr=target_attr_x86_64, targets="", **ns)
+            attr_x86 = rdf_attr.format(attr=target_attr_x86, targets="", **ns)
+            attr_merged = rdf_attr.format(attr="", targets=target_tag_x86_64 + target_tag_x86, **ns)
+
+            # This table defines the test cases, columns "a" and "b" being the
+            # contents of the install.rdf of the respective platform and
+            # "result" the exepected merged content after unification.
+            testcases = (
+              #_____a_____  _____b_____  ___result___#
+              (tag_x86_64,  tag_x86,     tag_merged  ),
+              (tag_x86_64,  tag_empty,   tag_empty   ),
+              (tag_empty,   tag_x86,     tag_empty   ),
+              (tag_empty,   tag_empty,   tag_empty   ),
+
+              (attr_x86_64, attr_x86,    attr_merged ),
+              (tag_x86_64,  attr_x86,    tag_merged  ),
+              (attr_x86_64, tag_x86,     attr_merged ),
+
+              (attr_x86_64, tag_empty,   tag_empty   ),
+              (tag_empty,   attr_x86,    tag_empty   )
+            )
+
+            # Now create the files from the above table and compare
+            results = []
+            for emid, (rdf_a, rdf_b, result) in enumerate(testcases):
+                filename = 'ext/id{0}/install.rdf'.format(emid)
+                self.create_one('a', filename, rdf_a)
+                self.create_one('b', filename, rdf_b)
+                results.append((filename, result))
+
+            self.assertEqual(sorted([(f, c.open().read()) for f, c in
+                                     finder.find('**/install.rdf')]), results)
 
 
 if __name__ == '__main__':

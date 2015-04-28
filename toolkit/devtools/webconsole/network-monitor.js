@@ -353,8 +353,10 @@ NetworkResponseListener.prototype = {
 
     this.receivedData = "";
 
-    this.httpActivity.owner.
-      addResponseContent(response, this.httpActivity.discardResponseBody);
+    this.httpActivity.owner.addResponseContent(
+      response,
+      this.httpActivity.discardResponseBody
+    );
 
     this._wrappedNotificationCallbacks = null;
     this.httpActivity.channel = null;
@@ -507,6 +509,8 @@ NetworkMonitor.prototype = {
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
       Services.obs.addObserver(this._httpResponseExaminer,
                                "http-on-examine-response", false);
+      Services.obs.addObserver(this._httpResponseExaminer,
+                               "http-on-examine-cached-response", false);
     }
   },
 
@@ -526,7 +530,9 @@ NetworkMonitor.prototype = {
     // NetworkResponseListener is responsible with updating the httpActivity
     // object with the data from the new object in openResponses.
 
-    if (!this.owner || aTopic != "http-on-examine-response" ||
+    if (!this.owner ||
+        (aTopic != "http-on-examine-response" &&
+         aTopic != "http-on-examine-cached-response") ||
         !(aSubject instanceof Ci.nsIHttpChannel)) {
       return;
     }
@@ -577,6 +583,26 @@ NetworkMonitor.prototype = {
                                      httpVersionMin.value;
 
     this.openResponses[response.id] = response;
+
+    if(aTopic === "http-on-examine-cached-response") {
+      // If this is a cached response, there never was a request event
+      // so we need to construct one here so the frontend gets all the
+      // expected events.
+      let httpActivity = this._createNetworkEvent(channel, { fromCache: true });
+      httpActivity.owner.addResponseStart({
+        httpVersion: response.httpVersion,
+        remoteAddress: "",
+        remotePort: "",
+        status: response.status,
+        statusText: response.statusText,
+        headersSize: 0,
+      }, "", true);
+
+      // There also is never any timing events, so we can fire this
+      // event with zeroed out values.
+      let timings = this._setupHarTimings(httpActivity, true);
+      httpActivity.owner.addEventTimings(timings.total, timings.timings);
+    }
   },
 
   /**
@@ -692,7 +718,7 @@ NetworkMonitor.prototype = {
         return true;
       }
     }
-    
+
     if (this.topFrame) {
       let topFrame = NetworkHelper.getTopFrameForRequest(aChannel);
       if (topFrame && topFrame === this.topFrame) {
@@ -711,24 +737,9 @@ NetworkMonitor.prototype = {
   },
 
   /**
-   * Handler for ACTIVITY_SUBTYPE_REQUEST_HEADER. When a request starts the
-   * headers are sent to the server. This method creates the |httpActivity|
-   * object where we store the request and response information that is
-   * collected through its lifetime.
    *
-   * @private
-   * @param nsIHttpChannel aChannel
-   * @param number aTimestamp
-   * @param string aExtraStringData
-   * @return void
    */
-  _onRequestHeader:
-  function NM__onRequestHeader(aChannel, aTimestamp, aExtraStringData)
-  {
-    if (!this._matchRequest(aChannel)) {
-      return;
-    }
-
+  _createNetworkEvent: function(aChannel, { timestamp, extraStringData, fromCache }) {
     let win = NetworkHelper.getWindowForRequest(aChannel);
     let httpActivity = this.createActivityObject(aChannel);
 
@@ -738,25 +749,32 @@ NetworkMonitor.prototype = {
     aChannel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
     httpActivity.private = aChannel.isChannelPrivate;
 
-    httpActivity.timings.REQUEST_HEADER = {
-      first: aTimestamp,
-      last: aTimestamp
-    };
+    if(timestamp) {
+      httpActivity.timings.REQUEST_HEADER = {
+        first: timestamp,
+        last: timestamp
+      };
+    }
 
-    let httpVersionMaj = {};
-    let httpVersionMin = {};
     let event = {};
-    event.startedDateTime = new Date(Math.round(aTimestamp / 1000)).toISOString();
-    event.headersSize = aExtraStringData.length;
     event.method = aChannel.requestMethod;
     event.url = aChannel.URI.spec;
     event.private = httpActivity.private;
+    event.headersSize = 0;
+    event.startedDateTime = (timestamp ? new Date(Math.round(timestamp / 1000)) : new Date()).toISOString();
+    event.fromCache = fromCache;
+
+    if(extraStringData) {
+      event.headersSize = extraStringData.length;
+    }
 
     // Determine if this is an XHR request.
     httpActivity.isXHR = event.isXHR =
         (aChannel.loadInfo.contentPolicyType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST);
 
     // Determine the HTTP version.
+    let httpVersionMaj = {};
+    let httpVersionMin = {};
     aChannel.QueryInterface(Ci.nsIHttpChannelInternal);
     aChannel.getRequestVersion(httpVersionMaj, httpVersionMin);
 
@@ -785,14 +803,38 @@ NetworkMonitor.prototype = {
       cookies = NetworkHelper.parseCookieHeader(cookieHeader);
     }
 
-    httpActivity.owner = this.owner.onNetworkEvent(event, aChannel, this);
+    httpActivity.owner = this.owner.onNetworkEvent(event, aChannel);
 
     this._setupResponseListener(httpActivity);
 
-    this.openRequests[httpActivity.id] = httpActivity;
-
-    httpActivity.owner.addRequestHeaders(headers, aExtraStringData);
+    httpActivity.owner.addRequestHeaders(headers, extraStringData);
     httpActivity.owner.addRequestCookies(cookies);
+
+    this.openRequests[httpActivity.id] = httpActivity;
+    return httpActivity;
+  },
+
+  /**
+   * Handler for ACTIVITY_SUBTYPE_REQUEST_HEADER. When a request starts the
+   * headers are sent to the server. This method creates the |httpActivity|
+   * object where we store the request and response information that is
+   * collected through its lifetime.
+   *
+   * @private
+   * @param nsIHttpChannel aChannel
+   * @param number aTimestamp
+   * @param string aExtraStringData
+   * @return void
+   */
+  _onRequestHeader:
+  function NM__onRequestHeader(aChannel, aTimestamp, aExtraStringData)
+  {
+    if (!this._matchRequest(aChannel)) {
+      return;
+    }
+
+    this._createNetworkEvent(aChannel, { timestamp: aTimestamp,
+                                         extraStringData: aExtraStringData });
   },
 
   /**
@@ -975,17 +1017,36 @@ NetworkMonitor.prototype = {
    * Update the HTTP activity object to include timing information as in the HAR
    * spec. The HTTP activity object holds the raw timing information in
    * |timings| - these are timings stored for each activity notification. The
-   * HAR timing information is constructed based on these lower level data.
+   * HAR timing information is constructed based on these lower level
+   * data.
    *
    * @param object aHttpActivity
    *        The HTTP activity object we are working with.
+   * @param boolean fromCache
+   *        Indicates that the result was returned from the browser cache
    * @return object
    *         This object holds two properties:
    *         - total - the total time for all of the request and response.
    *         - timings - the HAR timings object.
    */
-  _setupHarTimings: function NM__setupHarTimings(aHttpActivity)
+  _setupHarTimings: function NM__setupHarTimings(aHttpActivity, fromCache)
   {
+    if(fromCache) {
+      // If it came from the browser cache, we have no timing
+      // information and these should all be 0
+      return {
+        total: 0,
+        timings: {
+          blocked: 0,
+          dns: 0,
+          connect: 0,
+          send: 0,
+          wait: 0,
+          receive: 0
+        }
+      };
+    }
+
     let timings = aHttpActivity.timings;
     let harTimings = {};
 

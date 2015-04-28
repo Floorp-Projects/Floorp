@@ -23,7 +23,7 @@ Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
-const LOGGER_PREFIX = "TelemetryPing::";
+const LOGGER_PREFIX = "TelemetryController::";
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_BRANCH_LOG = PREF_BRANCH + "log.";
@@ -121,9 +121,9 @@ let Policy = {
   now: () => new Date(),
 }
 
-this.EXPORTED_SYMBOLS = ["TelemetryPing"];
+this.EXPORTED_SYMBOLS = ["TelemetryController"];
 
-this.TelemetryPing = Object.freeze({
+this.TelemetryController = Object.freeze({
   Constants: Object.freeze({
     PREF_ENABLED: PREF_ENABLED,
     PREF_LOG_LEVEL: PREF_LOG_LEVEL,
@@ -178,27 +178,26 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
-   * Send payloads to the server.
+   * Submit ping payloads to Telemetry. This will assemble a complete ping, adding
+   * environment data, client id and some general info.
+   * Depending on configuration, the ping will be sent to the server (immediately or later)
+   * and archived locally.
    *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
    * @param {Object} [aOptions] Options object.
-   * @param {Number} [aOptions.retentionDays=14] The number of days to keep the ping on disk
-   *                 if sending fails.
    * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   * @returns {Promise} A promise that resolves when the ping is sent.
+   * @returns {Promise} A promise that resolves with the ping id once the ping is stored or sent.
    */
-  send: function(aType, aPayload, aOptions = {}) {
-    let options = aOptions;
-    options.retentionDays = aOptions.retentionDays || DEFAULT_RETENTION_DAYS;
-    options.addClientId = aOptions.addClientId || false;
-    options.addEnvironment = aOptions.addEnvironment || false;
+  submitExternalPing: function(aType, aPayload, aOptions = {}) {
+    aOptions.addClientId = aOptions.addClientId || false;
+    aOptions.addEnvironment = aOptions.addEnvironment || false;
 
-    return Impl.send(aType, aPayload, options);
+    return Impl.submitExternalPing(aType, aPayload, aOptions);
   },
 
   /**
@@ -304,7 +303,7 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
-   * The AsyncShutdown.Barrier to synchronize with TelemetryPing shutdown.
+   * The AsyncShutdown.Barrier to synchronize with TelemetryController shutdown.
    */
   get shutdown() {
     return Impl._shutdownBarrier.client;
@@ -319,9 +318,9 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
-   * Allows waiting for TelemetryPings delayed initialization to complete.
-   * The returned promise is guaranteed to resolve before TelemetryPing is shutting down.
-   * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
+   * Allows waiting for TelemetryControllers delayed initialization to complete.
+   * The returned promise is guaranteed to resolve before TelemetryController is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   promiseInitialized: function() {
     return Impl.promiseInitialized();
@@ -330,8 +329,8 @@ this.TelemetryPing = Object.freeze({
 
 let Impl = {
   _initialized: false,
-  _initStarted: false, // Whether we started setting up TelemetryPing.
-  _log: null,
+  _initStarted: false, // Whether we started setting up TelemetryController.
+  _logger: null,
   _prevValues: {},
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
@@ -344,16 +343,24 @@ let Impl = {
   // The session recorder, shared with FHR and the Data Reporting Service.
   _sessionRecorder: null,
   // This is a public barrier Telemetry clients can use to add blockers to the shutdown
-  // of TelemetryPing.
+  // of TelemetryController.
   // After this barrier, clients can not submit Telemetry pings anymore.
-  _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for clients."),
+  _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryController: Waiting for clients."),
   // This is a private barrier blocked by pending async ping activity (sending & saving).
-  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for pending ping activity"),
+  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryController: Waiting for pending ping activity"),
   // This is true when running in the test infrastructure.
   _testMode: false,
 
   // This tracks all pending ping requests to the server.
   _pendingPingRequests: new Map(),
+
+  get _log() {
+    if (!this._logger) {
+      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+    }
+
+    return this._logger;
+  },
 
   /**
    * Get the data for the "application" section of the ping.
@@ -469,7 +476,7 @@ let Impl = {
    * @return {Promise} Resolved when the ping is correctly moved to the saved pings directory.
    */
   addPendingPingFromFile: function(aPingPath, aRemoveOriginal) {
-    return TelemetryStorage.addPendingPing(aPingPath).then(() => {
+    return TelemetryStorage.addPendingPingFromFile(aPingPath).then(() => {
         if (aRemoveOriginal) {
           return OS.File.remove(aPingPath);
         }
@@ -477,40 +484,45 @@ let Impl = {
   },
 
   /**
-   * Build a complete ping and send data to the server. Record success/send-time in
-   * histograms. Also archive the ping if allowed to.
+   * Submit ping payloads to Telemetry. This will assemble a complete ping, adding
+   * environment data, client id and some general info.
+   * Depending on configuration, the ping will be sent to the server (immediately or later)
+   * and archived locally.
    *
    * @param {String} aType The type of the ping.
    * @param {Object} aPayload The actual data payload for the ping.
-   * @param {Object} aOptions Options object.
-   * @param {Number} aOptions.retentionDays The number of days to keep the ping on disk
-   *                 if sending fails.
-   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
-   *                  false otherwise.
-   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
+   * @param {Object} [aOptions] Options object.
+   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
+   *                  id, false otherwise.
+   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
-   * @param {Object}  aOptions.overrideEnvironment set to override the environment data.
-   *
-   * @returns {Promise} A promise that resolves with the ping id when the ping is sent or
-   *                    saved to disk.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
+   * @returns {Promise} A promise that is resolved with the ping id once the ping is stored or sent.
    */
-  send: function send(aType, aPayload, aOptions) {
-    this._log.trace("send - Type " + aType + ", Server " + this._server +
-                    ", aOptions " + JSON.stringify(aOptions));
+  submitExternalPing: function send(aType, aPayload, aOptions) {
+    this._log.trace("submitExternalPing - type: " + aType + ", server: " + this._server +
+                    ", aOptions: " + JSON.stringify(aOptions));
 
-    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    const pingData = this.assemblePing(aType, aPayload, aOptions);
+    this._log.trace("submitExternalPing - ping assembled, id: " + pingData.id);
+
     // Always persist the pings if we are allowed to.
     let archivePromise = TelemetryArchive.promiseArchivePing(pingData)
-      .catch(e => this._log.error("send - Failed to archive ping " + pingData.id, e));
+      .catch(e => this._log.error("submitExternalPing - Failed to archive ping " + pingData.id, e));
 
-    // Once ping is assembled, send it along with the persisted pings in the backlog.
-    let p = [
-      archivePromise,
-      // Persist the ping if sending it fails.
-      this.doPing(pingData, false)
-          .catch(() => TelemetryStorage.savePing(pingData, true)),
-      this.sendPersistedPings(),
-    ];
+    let p = [ archivePromise ];
+
+    if (!this._initialized) {
+      // We are still initializing and should not send yet, add this to the pending pings.
+      this._log.trace("submitExternalPing - still initializing, ping is pending");
+      p.push(TelemetryStorage.addPendingPing(pingData));
+    } else {
+      // Try to send the ping, persist it if sending it fails.
+      this._log.trace("submitExternalPing - already initialized, ping will be sent");
+      p.push(this.doPing(pingData, false)
+                 .catch(() => TelemetryStorage.savePing(pingData, true)));
+      p.push(this.sendPersistedPings());
+    }
 
     let promise = Promise.all(p);
     this._trackPendingPingTask(promise);
@@ -837,7 +849,7 @@ let Impl = {
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    *
-   * This delayed initialization means TelemetryPing init can be in the following states:
+   * This delayed initialization means TelemetryController init can be in the following states:
    * 1) setupTelemetry was never called
    * or it was called and
    *   2) _delayedInitTask was scheduled, but didn't run yet.
@@ -847,9 +859,6 @@ let Impl = {
   setupTelemetry: function setupTelemetry(testing) {
     this._initStarted = true;
     this._testMode = testing;
-    if (this._testMode && !this._log) {
-      this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
-    }
 
     this._log.trace("setupTelemetry");
 
@@ -894,15 +903,17 @@ let Impl = {
       try {
         this._initialized = true;
 
+        // If any pings were submitted before the delayed init finished
+        // we will send them now.
+        yield this.sendPersistedPings();
+
+        // Load pending pings from disk.
         yield TelemetryStorage.loadSavedPings();
-        // If we have any TelemetryPings lying around, we'll be aggressive
+        // If we have any overdue pings lying around, we'll be aggressive
         // and try to send them all off ASAP.
         if (TelemetryStorage.pingsOverdue > 0) {
           this._log.trace("setupChromeProcess - Sending " + TelemetryStorage.pingsOverdue +
                           " overdue pings now.");
-          // It doesn't really matter what we pass to this.send as a reason,
-          // since it's never sent to the server. All that this.send does with
-          // the reason is check to make sure it's not a test-ping.
           yield this.sendPersistedPings();
         }
 
@@ -919,7 +930,7 @@ let Impl = {
       }
     }.bind(this), this._testMode ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY);
 
-    AsyncShutdown.sendTelemetry.addBlocker("TelemetryPing: shutting down",
+    AsyncShutdown.sendTelemetry.addBlocker("TelemetryController: shutting down",
                                            () => this.shutdown(),
                                            () => this._getState());
 
@@ -989,11 +1000,10 @@ let Impl = {
    */
   observe: function (aSubject, aTopic, aData) {
     // The logger might still be not available at this point.
-    if (!this._log) {
+    if (aTopic == "profile-after-change" || aTopic == "app-startup") {
       // If we don't have a logger, we need to make sure |Log.repository.getLogger()| is
       // called before |getLoggerWithMessagePrefix|. Otherwise logging won't work.
       configureLogging();
-      this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
     }
 
     this._log.trace("observe - " + aTopic + " notified.");
@@ -1042,9 +1052,9 @@ let Impl = {
   },
 
   /**
-   * Allows waiting for TelemetryPings delayed initialization to complete.
-   * This will complete before TelemetryPing is shutting down.
-   * @return {Promise} Resolved when delayed TelemetryPing initialization completed.
+   * Allows waiting for TelemetryControllers delayed initialization to complete.
+   * This will complete before TelemetryController is shutting down.
+   * @return {Promise} Resolved when delayed TelemetryController initialization completed.
    */
   promiseInitialized: function() {
     return this._delayedInitTaskDeferred.promise;

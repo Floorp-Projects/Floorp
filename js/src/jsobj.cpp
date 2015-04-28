@@ -4106,3 +4106,32 @@ JSObject::traceChildren(JSTracer* trc)
         } while (false);
     }
 }
+
+static JSAtom*
+displayAtomFromObjectGroup(ObjectGroup& group)
+{
+    TypeNewScript* script = group.newScript();
+    if (!script)
+        return nullptr;
+
+    return script->function()->displayAtom();
+}
+
+bool
+JSObject::constructorDisplayAtom(JSContext* cx, js::MutableHandleAtom name)
+{
+    ObjectGroup *g = getGroup(cx);
+    if (!g)
+        return false;
+
+    name.set(displayAtomFromObjectGroup(*g));
+    return true;
+}
+
+JSAtom*
+JSObject::maybeConstructorDisplayAtom() const
+{
+    if (hasLazyGroup())
+        return nullptr;
+    return displayAtomFromObjectGroup(*group());
+}

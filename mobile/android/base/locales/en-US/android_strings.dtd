@@ -6,8 +6,8 @@
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
 <!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
 
-<!ENTITY  onboard_start_message2 "Welcome to &brandShortName;">
-<!ENTITY  onboard_start_subtext2 "More privacy features and ways to customize than ever.">
+<!ENTITY  onboard_start_message3 "Browse with &brandShortName;">
+<!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
 <!ENTITY  onboard_start_button_account "Sign in to &brandShortName;">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
 

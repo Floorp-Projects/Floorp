@@ -30,6 +30,10 @@ this.SessionCookies = Object.freeze({
 
   getHostsForWindow: function (window, checkPrivacy = false) {
     return SessionCookiesInternal.getHostsForWindow(window, checkPrivacy);
+  },
+
+  restore(cookies) {
+    SessionCookiesInternal.restore(cookies);
   }
 });
 
@@ -105,6 +109,18 @@ let SessionCookiesInternal = {
     }
 
     return hosts;
+  },
+
+  /**
+   * Restores a given list of session cookies.
+   */
+  restore(cookies) {
+    for (let cookie of cookies) {
+      let expiry = "expiry" in cookie ? cookie.expiry : MAX_EXPIRY;
+      Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
+                           cookie.value, !!cookie.secure, !!cookie.httponly,
+                           /* isSession = */ true, expiry);
+    }
   },
 
   /**

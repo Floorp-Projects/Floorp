@@ -90,7 +90,7 @@
 
           let packagedAppLocation = getTestFilePath("app");
 
-          yield win.Cmds.importPackagedApp(packagedAppLocation);
+          yield win.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
 
           let panelNode = win.document.querySelector("#runtime-panel");

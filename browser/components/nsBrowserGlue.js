@@ -734,6 +734,7 @@ BrowserGlue.prototype = {
     LightweightThemeManager.addBuiltInTheme({
       id: "firefox-devedition@mozilla.org",
       name: themeName,
+      accentcolor: "transparent",
       headerURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.header.png",
       iconURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.icon.png",
       author: vendorShortName,

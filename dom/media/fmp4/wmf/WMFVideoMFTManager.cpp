@@ -78,8 +78,6 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
   // Init().
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
-  MOZ_ASSERT(mImageContainer);
   MOZ_COUNT_CTOR(WMFVideoMFTManager);
 
   // Need additional checks/params to check vp8/vp9
@@ -165,7 +163,12 @@ WMFVideoMFTManager::InitializeDXVA()
 
   // The DXVA manager must be created on the main thread.
   nsRefPtr<CreateDXVAManagerEvent> event(new CreateDXVAManagerEvent(mLayersBackend));
-  NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+
+  if (NS_IsMainThread()) {
+    event->Run();
+  } else {
+    NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
+  }
   mDXVA2Manager = event->mDXVA2Manager;
 
   return mDXVA2Manager != nullptr;
