@@ -145,7 +145,7 @@
   list-style-image: url(debugger-step-out.png);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #resume {
     list-style-image: url(debugger-play@2x.png);
     -moz-image-region: rect(0px,64px,32px,32px);
@@ -250,7 +250,7 @@
   background-size: 12px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .selected .call-item-gutter {
     background-image: url("editor-debug-location@2x.png");
   }

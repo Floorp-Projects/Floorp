@@ -281,7 +281,7 @@
   background-image: url(magnifying-glass-light.png);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .theme-dark .call-tree-zoom {
     background-image: url(magnifying-glass@2x.png);
   }
@@ -610,7 +610,7 @@
   background-position: -16px -16px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #jit-optimizations-view .opt-icon::before {
     background-image: url(chrome://browser/skin/devtools/webconsole@2x.png);
   }
