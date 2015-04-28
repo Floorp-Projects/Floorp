@@ -83,6 +83,7 @@ using namespace mozilla::layout;
 using namespace mozilla::gfx;
 
 typedef FrameMetrics::ViewID ViewID;
+typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 #ifdef DEBUG
 static bool
@@ -115,7 +116,7 @@ MakeCSSAngle(const nsCSSValue& aValue)
 static void AddTransformFunctions(nsCSSValueList* aList,
                                   nsStyleContext* aContext,
                                   nsPresContext* aPresContext,
-                                  nsRect& aBounds,
+                                  TransformReferenceBox& aRefBox,
                                   InfallibleTArray<TransformFunction>& aFunctions)
 {
   if (aList->mValue.GetUnit() == eCSSUnit_None) {
@@ -200,7 +201,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Width());
+          &aRefBox, &TransformReferenceBox::Width);
         aFunctions.AppendElement(Translation(x, 0, 0));
         break;
       }
@@ -208,7 +209,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Height());
+          &aRefBox, &TransformReferenceBox::Height);
         aFunctions.AppendElement(Translation(0, y, 0));
         break;
       }
@@ -216,7 +217,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          0);
+          nullptr);
         aFunctions.AppendElement(Translation(0, 0, z));
         break;
       }
@@ -224,13 +225,13 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Width());
+          &aRefBox, &TransformReferenceBox::Width);
         // translate(x) is shorthand for translate(x, 0)
         double y = 0;
         if (array->Count() == 3) {
            y = nsStyleTransformMatrix::ProcessTranslatePart(
             array->Item(2), aContext, aPresContext, canStoreInRuleTree,
-            aBounds.Height());
+            &aRefBox, &TransformReferenceBox::Height);
         }
         aFunctions.AppendElement(Translation(x, y, 0));
         break;
@@ -239,13 +240,13 @@ static void AddTransformFunctions(nsCSSValueList* aList,
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(1), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Width());
+          &aRefBox, &TransformReferenceBox::Width);
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(2), aContext, aPresContext, canStoreInRuleTree,
-          aBounds.Height());
+          &aRefBox, &TransformReferenceBox::Height);
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
           array->Item(3), aContext, aPresContext, canStoreInRuleTree,
-          0);
+          nullptr);
 
         aFunctions.AppendElement(Translation(x, y, z));
         break;
@@ -324,7 +325,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
                                                          aContext,
                                                          aPresContext,
                                                          canStoreInRuleTree,
-                                                         aBounds);
+                                                         aRefBox);
         aFunctions.AppendElement(TransformMatrix(gfx::ToMatrix4x4(matrix)));
         break;
       }
@@ -362,7 +363,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
              "Should not be adding an animation without an effect");
   nsStyleContext* styleContext = aFrame->StyleContext();
   nsPresContext* presContext = aFrame->PresContext();
-  nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
+  TransformReferenceBox refBox(aFrame);
 
   layers::Animation* animation =
     aPending ?
@@ -393,11 +394,11 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
       nsCSSValueSharedList* list =
         segment.mFromValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
+      AddTransformFunctions(list->mHead, styleContext, presContext, refBox,
                             animSegment->startState().get_ArrayOfTransformFunction());
 
       list = segment.mToValue.GetCSSValueSharedListValue();
-      AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
+      AddTransformFunctions(list->mHead, styleContext, presContext, refBox,
                             animSegment->endState().get_ArrayOfTransformFunction());
     } else if (aProperty.mProperty == eCSSProperty_opacity) {
       animSegment->startState() = segment.mFromValue.GetFloatValue();
@@ -535,7 +536,13 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
 
   AnimationData data;
   if (aProperty == eCSSProperty_transform) {
-    nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
+    // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
+    // the dimensions of refBox. That said, we only get here if there are CSS
+    // animations or transitions on this element, and that is likely to be a
+    // lot rarer that transforms on SVG (the frequency of which drives the need
+    // for TransformReferenceBox).
+    TransformReferenceBox refBox(aFrame);
+    nsRect bounds(0, 0, refBox.Width(), refBox.Height());
     // all data passed directly to the compositor should be in dev pixels
     int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
     float scale = devPixelsToAppUnits;
@@ -4465,7 +4472,8 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
 // nsDisplayTransform Implementation
 //
 
-// Write #define UNIFIED_CONTINUATIONS here to have the transform property try
+// Write #define UNIFIED_CONTINUATIONS here and in
+// TransformReferenceBox::Initialize to have the transform property try
 // to transform content with continuations as one unified block instead of
 // several smaller ones.  This is currently disabled because it doesn't work
 // correctly, since when the frames are initially being reflowed, their
@@ -4475,63 +4483,6 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
 // detection.
 #undef  UNIFIED_CONTINUATIONS
 #undef  DEBUG_HIT
-
-/* Returns the bounds of a frame as defined for transforms.  If
- * UNIFIED_CONTINUATIONS is not defined, this is simply the frame's bounding
- * rectangle, translated to the origin. Otherwise, returns the smallest
- * rectangle containing a frame and all of its continuations.  For example, if
- * there is a <span> element with several continuations split over several
- * lines, this function will return the rectangle containing all of those
- * continuations.  This rectangle is relative to the origin of the frame's local
- * coordinate space.
- */
-#ifndef UNIFIED_CONTINUATIONS
-
-nsRect
-nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
-
-  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    // TODO: SVG needs to define what percentage translations resolve against.
-    return nsRect();
-  }
-
-  return nsRect(nsPoint(0, 0), aFrame->GetSize());
-}
-
-#else
-
-nsRect
-nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
-
-  nsRect result;
-
-  if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    // TODO: SVG needs to define what percentage translations resolve against.
-    return result;
-  }
-
-  /* Iterate through the continuation list, unioning together all the
-   * bounding rects.
-   */
-  for (const nsIFrame *currFrame = aFrame->FirstContinuation();
-       currFrame != nullptr;
-       currFrame = currFrame->GetNextContinuation())
-    {
-      /* Get the frame rect in local coordinates, then translate back to the
-       * original coordinates.
-       */
-      result.UnionRect(result, nsRect(currFrame->GetOffsetTo(aFrame),
-                                      currFrame->GetSize()));
-    }
-
-  return result;
-}
-
-#endif
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame *aFrame, nsDisplayList *aList,
@@ -4633,13 +4584,17 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
    * a distance, it's already computed for us!
    */
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
-                         nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
+  TransformReferenceBox refBox;
+  if (aBoundsOverride) {
+    refBox.Init(aBoundsOverride->Size());
+  } else {
+    refBox.Init(aFrame);
+  }
 
-  /* Allows us to access named variables by index. */
+  /* Allows us to access dimension getters by index. */
   float coords[3];
-  const nscoord* dimensions[2] =
-    {&boundingRect.width, &boundingRect.height};
+  TransformReferenceBox::DimensionGetter dimensionGetter[] =
+    { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
 
   for (uint8_t index = 0; index < 2; ++index) {
     /* If the -moz-transform-origin specifies a percentage, take the percentage
@@ -4649,12 +4604,12 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
     if (coord.GetUnit() == eStyleUnit_Calc) {
       const nsStyleCoord::Calc *calc = coord.GetCalcValue();
       coords[index] =
-        NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
+        NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
           calc->mPercent +
         NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
     } else if (coord.GetUnit() == eStyleUnit_Percent) {
       coords[index] =
-        NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
+        NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
         coord.GetPercentValue();
     } else {
       MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
@@ -4673,9 +4628,11 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
 
   coords[2] = NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
                                       aAppUnitsPerPixel);
-  /* Adjust based on the origin of the rectangle. */
-  coords[0] += NSAppUnitsToFloatPixels(boundingRect.x, aAppUnitsPerPixel);
-  coords[1] += NSAppUnitsToFloatPixels(boundingRect.y, aAppUnitsPerPixel);
+  if (aBoundsOverride) {
+    // Adjust based on the origin of the override:
+    coords[0] += NSAppUnitsToFloatPixels(aBoundsOverride->x, aAppUnitsPerPixel);
+    coords[1] += NSAppUnitsToFloatPixels(aBoundsOverride->y, aAppUnitsPerPixel);
+  }
 
   return Point3D(coords[0], coords[1], coords[2]);
 }
@@ -4716,14 +4673,14 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
     }
   }
   const nsStyleDisplay* display = psc->StyleDisplay();
-  nsRect boundingRect = nsDisplayTransform::GetFrameBoundsForTransform(parent);
+  TransformReferenceBox refBox(parent);
 
   /* Allows us to access named variables by index. */
   Point3D result;
   result.z = 0.0f;
   gfx::Float* coords[2] = {&result.x, &result.y};
-  const nscoord* dimensions[2] =
-    {&boundingRect.width, &boundingRect.height};
+  TransformReferenceBox::DimensionGetter dimensionGetter[] =
+    { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
 
   for (uint8_t index = 0; index < 2; ++index) {
     /* If the -moz-transform-origin specifies a percentage, take the percentage
@@ -4733,12 +4690,12 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
     if (coord.GetUnit() == eStyleUnit_Calc) {
       const nsStyleCoord::Calc *calc = coord.GetCalcValue();
       *coords[index] =
-        NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
+        NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
           calc->mPercent +
         NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
     } else if (coord.GetUnit() == eStyleUnit_Percent) {
       *coords[index] =
-        NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
+        NSAppUnitsToFloatPixels((refBox.*dimensionGetter[index])(), aAppUnitsPerPixel) *
         coord.GetPercentValue();
     } else {
       MOZ_ASSERT(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
@@ -4821,11 +4778,14 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(frame);
   }
 
-  /* Get the underlying transform matrix.  This requires us to get the
-   * bounds of the frame.
-   */
-  nsRect bounds = (aBoundsOverride ? *aBoundsOverride :
-                   nsDisplayTransform::GetFrameBoundsForTransform(frame));
+  // Get the underlying transform matrix:
+
+  TransformReferenceBox refBox;
+  if (aBoundsOverride) {
+    refBox.Init(aBoundsOverride->Size());
+  } else {
+    refBox.Init(frame);
+  }
 
   /* Get the matrix, then change its basis to factor in the origin. */
   bool dummy;
@@ -4840,7 +4800,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
                                                     frame ? frame->StyleContext() : nullptr,
                                                     frame ? frame->PresContext() : nullptr,
-                                                    dummy, bounds, aAppUnitsPerPixel);
+                                                    dummy, refBox, aAppUnitsPerPixel);
   } else if (hasSVGTransforms) {
     // Correct the translation components for zoom:
     float pixelsPerCSSPx = frame->PresContext()->AppUnitsPerCSSPixel() /
