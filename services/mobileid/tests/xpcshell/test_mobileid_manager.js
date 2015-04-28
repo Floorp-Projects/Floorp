@@ -1003,33 +1003,35 @@ add_test(function() {
   };
 
   MobileIdentityManager._iccService = {
-    _iccs: [],
     _listeners: [],
+    _iccInfos: [ICC_INFO, ANOTHER_ICC_INFO],
     getIccByServiceId: function(aClientId) {
       let self = this;
-      this_iccs.push({
+      return {
+        get iccInfo() {
+          return self._iccInfos[aClientId];
+        },
         registerListener: function(aIccListener) {
           self._listeners.push(aIccListener);
         },
         unregisterListener: function() {
           self._listeners.pop();
         }
-      });
+      };
     }
   };
 
   let ui = new MockUi();
   ui.startFlow = function() {
     // At this point we've already built the ICC cache.
-    let interfaces = MobileIdentityManager._ril._interfaces;
-    for (let i = 0; i < interfaces.length; i++) {
-      let interfaceIccInfo = interfaces[i].rilContext.iccInfo;
+    let mockIccInfo = [ICC_INFO, ANOTHER_ICC_INFO];
+    for (let i = 0; i < mockIccInfo.length; i++) {
       let mIdIccInfo = MobileIdentityManager._iccInfo[i];
-      do_check_eq(interfaceIccInfo.iccid, mIdIccInfo.iccId);
-      do_check_eq(interfaceIccInfo.mcc, mIdIccInfo.mcc);
-      do_check_eq(interfaceIccInfo.mnc, mIdIccInfo.mnc);
-      do_check_eq(interfaceIccInfo.msisdn, mIdIccInfo.msisdn);
-      do_check_eq(interfaceIccInfo.operator, mIdIccInfo.operator);
+      do_check_eq(mockIccInfo[i].iccid, mIdIccInfo.iccId);
+      do_check_eq(mockIccInfo[i].mcc, mIdIccInfo.mcc);
+      do_check_eq(mockIccInfo[i].mnc, mIdIccInfo.mnc);
+      do_check_eq(mockIccInfo[i].msisdn, mIdIccInfo.msisdn);
+      do_check_eq(mockIccInfo[i].operator, mIdIccInfo.operator);
     }
 
     // We should have listeners for each valid icc.
@@ -1111,18 +1113,21 @@ add_test(function() {
   };
 
   MobileIdentityManager._iccService = {
-    _iccs: [],
     _listeners: [],
+    _iccInfos: [INVALID_ICC_INFO],
     getIccByServiceId: function(aClientId) {
       let self = this;
-      this_iccs.push({
+      return {
+        get iccInfo() {
+          return self._iccInfos[aClientId];
+        },
         registerListener: function(aIccListener) {
           self._listeners.push(aIccListener);
         },
         unregisterListener: function() {
           self._listeners.pop();
         }
-      });
+      };
     }
   };
 

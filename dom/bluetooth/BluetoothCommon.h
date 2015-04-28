@@ -497,7 +497,21 @@ enum BluetoothHandsfreeWbsConfig {
 };
 
 class BluetoothSignal;
-typedef mozilla::Observer<BluetoothSignal> BluetoothSignalObserver;
+
+class BluetoothSignalObserver : public mozilla::Observer<BluetoothSignal>
+{
+public:
+  BluetoothSignalObserver() : mSignalRegistered(false)
+  { }
+
+  void SetSignalRegistered(bool aSignalRegistered)
+  {
+    mSignalRegistered = aSignalRegistered;
+  }
+
+protected:
+  bool mSignalRegistered;
+};
 
 // Enums for object types, currently used for shared function lookups
 // (get/setproperty, etc...). Possibly discernable via dbus paths, but this

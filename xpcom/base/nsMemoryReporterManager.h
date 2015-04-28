@@ -54,8 +54,11 @@ public:
   //   (mGetReportsState) for when the child processes report back, including a
   //   timer.  Control then returns to the main event loop.
   //
-  // - HandleChildReports() is called (asynchronously) once per child process
-  //   that reports back.  If all child processes report back before time-out,
+  // - HandleChildReport() is called (asynchronously) once per child process
+  //   reporter callback.
+  //
+  // - EndChildReport() is called (asynchronously) once per child process that
+  //   finishes reporting back.  If all child processes do so before time-out,
   //   the timer is cancelled.  (The number of child processes is part of the
   //   saved request state.)
   //
@@ -63,7 +66,7 @@ public:
   //   don't respond within the time threshold.
   //
   // - FinishReporting() finishes things off.  It is *always* called -- either
-  //   from HandleChildReports() (if all child processes have reported back) or
+  //   from EndChildReport() (if all child processes have reported back) or
   //   from TimeoutCallback() (if time-out occurs).
   //
   // All operations occur on the main thread.
@@ -95,6 +98,11 @@ public:
   //   is reported, because there's nothing sensible to be done about it at
   //   this late stage.
   //
+  // - If the time-out occurs after a child process has sent some reports but
+  //   before it has signaled completion (see bug 1151597), then what it
+  //   successfully sent will be included, with no explicit indication that it
+  //   is incomplete.
+  //
   // Now, what what happens if a child process is created/destroyed in the
   // middle of a request?  Well, GetReportsState contains a copy of
   // mNumChildProcesses which it uses to determine finished-ness.  So...
@@ -103,24 +111,23 @@ public:
   //   and the GetReportsState's mNumChildProcesses won't account for it.  So
   //   the reported data will reflect how things were when the request began.
   //
-  // - If a process is destroyed before reporting back, we'll just hit the
-  //   time-out, because we'll have received reports (barring other errors)
-  //   from N-1 child process.  So the reported data will reflect how things
-  //   are when the request ends.
+  // - If a process is destroyed before it starts reporting back, the reported
+  //   data will reflect how things are when the request ends.
+  //
+  // - If a process is destroyed after it starts reporting back but before it
+  //   finishes, the reported data will contain a partial report for it.
   //
   // - If a process is destroyed after reporting back, but before all other
   //   child processes have reported back, it will be included in the reported
   //   data.  So the reported data will reflect how things were when the
   //   request began.
   //
-  // The inconsistencies between these three cases are unfortunate but
-  // difficult to avoid.  It's enough of an edge case to not be worth doing
-  // more.
+  // The inconsistencies between these cases are unfortunate but difficult to
+  // avoid.  It's enough of an edge case to not be worth doing more.
   //
-  void HandleChildReports(
-    const uint32_t& aGeneration,
-    const InfallibleTArray<mozilla::dom::MemoryReport>& aChildReports);
-  nsresult FinishReporting();
+  void HandleChildReport(uint32_t aGeneration,
+                         const mozilla::dom::MemoryReport& aChildReport);
+  void EndChildReport(uint32_t aGeneration, bool aSuccess);
 
   // Functions that (a) implement distinguished amounts, and (b) are outside of
   // this module.
@@ -175,6 +182,7 @@ private:
   nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter,
                                   bool aForce, bool aStrongRef);
   nsresult StartGettingReports();
+  nsresult FinishReporting();
 
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
   // Note: this timeout needs to be long enough to allow for the
@@ -198,17 +206,17 @@ private:
   {
     uint32_t                             mGeneration;
     bool                                 mAnonymize;
+    bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
     uint32_t                             mNumChildProcesses;
     uint32_t                             mNumChildProcessesCompleted;
-    bool                                 mParentDone;
     nsCOMPtr<nsIHandleReportCallback>    mHandleReport;
     nsCOMPtr<nsISupports>                mHandleReportData;
     nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
     nsCOMPtr<nsISupports>                mFinishReportingData;
     nsString                             mDMDDumpIdent;
 
-    GetReportsState(uint32_t aGeneration, bool aAnonymize, nsITimer* aTimer,
+    GetReportsState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
                     uint32_t aNumChildProcesses,
                     nsIHandleReportCallback* aHandleReport,
                     nsISupports* aHandleReportData,
@@ -217,10 +225,9 @@ private:
                     const nsAString& aDMDDumpIdent)
       : mGeneration(aGeneration)
       , mAnonymize(aAnonymize)
-      , mTimer(aTimer)
+      , mMinimize(aMinimize)
       , mNumChildProcesses(aNumChildProcesses)
       , mNumChildProcessesCompleted(0)
-      , mParentDone(false)
       , mHandleReport(aHandleReport)
       , mHandleReportData(aHandleReportData)
       , mFinishReporting(aFinishReporting)
@@ -234,6 +241,8 @@ private:
   // new/delete for this because its lifetime doesn't match block scope or
   // anything like that.
   GetReportsState* mGetReportsState;
+
+  GetReportsState* GetStateForGeneration(uint32_t aGeneration);
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \
