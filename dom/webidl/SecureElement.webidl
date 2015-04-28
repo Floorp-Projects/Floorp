@@ -15,6 +15,7 @@ enum SEError {
   "SEBadStateError",            // Error occuring as a result of bad state.
   "SEInvalidChannelError",      // Opening a channel failed because no channel is available.
   "SEInvalidApplicationError",  // The requested application was not found on the secure element.
+  "SENotPresentError",          // Secure Element is not present
   "SEGenericError"              // Generic failures.
 };
 
