@@ -119,11 +119,12 @@ SEReaderImpl.prototype = {
 
   openSession: function openSession() {
     return PromiseHelpers.createSEPromise((resolverId) => {
-      let chromeObj = new SESessionImpl();
-      chromeObj.initialize(this._window, this);
-      let contentObj = this._window.SESession._create(this._window, chromeObj);
-      this._sessions.push(contentObj);
-      PromiseHelpers.takePromiseResolver(resolverId).resolve(contentObj);
+      let sessionImpl = new SESessionImpl();
+      sessionImpl.initialize(this._window, this);
+      this._window.SESession._create(this._window, sessionImpl);
+      this._sessions.push(sessionImpl);
+      PromiseHelpers.takePromiseResolver(resolverId)
+                    .resolve(sessionImpl.__DOM_IMPL__);
     });
   },
 
@@ -492,8 +493,6 @@ SEManagerImpl.prototype = {
 
   receiveMessage: function receiveMessage(message) {
     let result = message.data.result;
-    let chromeObj = null;
-    let contentObj = null;
     let resolver = null;
     let context = null;
 
@@ -509,35 +508,35 @@ SEManagerImpl.prototype = {
       case "SE:GetSEReadersResolved":
         let readers = new this._window.Array();
         for (let i = 0; i < result.readerTypes.length; i++) {
-          chromeObj = new SEReaderImpl();
-          chromeObj.initialize(this._window, result.readerTypes[i]);
-          contentObj = this._window.SEReader._create(this._window, chromeObj);
-          readers.push(contentObj);
+          let readerImpl = new SEReaderImpl();
+          readerImpl.initialize(this._window, result.readerTypes[i]);
+          this._window.SEReader._create(this._window, readerImpl);
+          readers.push(readerImpl.__DOM_IMPL__);
         }
         resolver.resolve(readers);
         break;
       case "SE:OpenChannelResolved":
-        chromeObj = new SEChannelImpl();
-        chromeObj.initialize(this._window,
-                             result.channelToken,
-                             result.isBasicChannel,
-                             result.openResponse,
-                             context);
-        contentObj = this._window.SEChannel._create(this._window, chromeObj);
+        let channelImpl = new SEChannelImpl();
+        channelImpl.initialize(this._window,
+                               result.channelToken,
+                               result.isBasicChannel,
+                               result.openResponse,
+                               context);
+        this._window.SEChannel._create(this._window, channelImpl);
         if (context) {
           // Notify context's handler with SEChannel instance
-          context.onChannelOpen(contentObj);
+          context.onChannelOpen(channelImpl);
         }
-        resolver.resolve(contentObj);
+        resolver.resolve(channelImpl.__DOM_IMPL__);
         break;
       case "SE:TransmitAPDUResolved":
-        chromeObj = new SEResponseImpl();
-        chromeObj.initialize(result.sw1,
-                             result.sw2,
-                             result.response,
-                             context);
-        contentObj = this._window.SEResponse._create(this._window, chromeObj);
-        resolver.resolve(contentObj);
+        let responseImpl = new SEResponseImpl();
+        responseImpl.initialize(result.sw1,
+                                result.sw2,
+                                result.response,
+                                context);
+        this._window.SEResponse._create(this._window, responseImpl);
+        resolver.resolve(responseImpl.__DOM_IMPL__);
         break;
       case "SE:CloseChannelResolved":
         if (context) {
