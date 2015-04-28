@@ -25,6 +25,7 @@ class Configuration:
         # |parseData|.
         self.descriptors = []
         self.interfaces = {}
+        self.optimizedOutDescriptorNames = set()
         self.generatedEvents = generatedEvents;
         self.maxProtoChainLength = 0;
         for thing in parseData:
@@ -60,6 +61,7 @@ class Configuration:
                 # if they have no interface object because chances are we
                 # don't need to do anything interesting with them.
                 if iface.isConsequential() and not iface.hasInterfaceObject():
+                    self.optimizedOutDescriptorNames.add(iface.identifier.name)
                     continue
                 entry = {}
             else:
@@ -246,13 +248,23 @@ class Configuration:
         Gets the appropriate descriptor for the given interface name
         and the given workers boolean.
         """
-        for d in self.descriptorsByName[interfaceName]:
+        # We may have optimized out this descriptor, but the chances of anyone
+        # asking about it are then slim.  Put the check for that _after_ we've
+        # done our normal lookups.  But that means we have to do our normal
+        # lookups in a way that will not throw if they fail.
+        for d in self.descriptorsByName.get(interfaceName, []):
             if d.workers == workers:
                 return d
 
         if workers:
-            for d in self.descriptorsByName[interfaceName]:
+            for d in self.descriptorsByName.get(interfaceName, []):
                 return d
+
+        if interfaceName in self.optimizedOutDescriptorNames:
+            raise NoSuchDescriptorError(
+                "No descriptor for '%s', which is a mixin ([NoInterfaceObject] "
+                "and a consequential interface) without an explicit "
+                "Bindings.conf annotation." % interfaceName)
 
         raise NoSuchDescriptorError("For " + interfaceName + " found no matches");
     def getDescriptorProvider(self, workers):
