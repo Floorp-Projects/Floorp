@@ -135,10 +135,13 @@ function CheckLockState() {
 
 function EnableCertApps() {
   let device = AppManager.selectedRuntime.device;
+  // TODO: Remove `network.disable.ipc.security` once bug 1125916 is fixed.
   device.shell(
     "stop b2g && " +
     "cd /data/b2g/mozilla/*.default/ && " +
     "echo 'user_pref(\"devtools.debugger.forbid-certified-apps\", false);' >> prefs.js && " +
+    "echo 'user_pref(\"dom.apps.developer_mode\", true);' >> prefs.js && " +
+    "echo 'user_pref(\"network.disable.ipc.security\", true);' >> prefs.js && " +
     "start b2g"
   );
 }

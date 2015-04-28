@@ -104,6 +104,9 @@ ProcessGlobal.prototype = {
       } else if (params[0] == "root") {
         log("unrestrict devtools");
         Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
+        Services.prefs.setBoolPref("dom.apps.developer_mode", true);
+        // TODO: Remove once bug 1125916 is fixed.
+        Services.prefs.setBoolPref("network.disable.ipc.security", true);
         let lock = settings.createLock();
         lock.set("developer.menu.enabled", true, null);
       }
