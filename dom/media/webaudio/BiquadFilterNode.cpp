@@ -73,7 +73,7 @@ SetParamsOnBiquad(WebCore::Biquad& aBiquad,
   }
 }
 
-class BiquadFilterNodeEngine : public AudioNodeEngine
+class BiquadFilterNodeEngine final : public AudioNodeEngine
 {
 public:
   BiquadFilterNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)

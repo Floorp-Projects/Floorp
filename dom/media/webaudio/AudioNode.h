@@ -74,7 +74,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioNode,
                                            DOMEventTargetHelper)
 
-  virtual AudioBufferSourceNode* AsAudioBufferSourceNode() {
+  virtual AudioBufferSourceNode* AsAudioBufferSourceNode()
+  {
     return nullptr;
   }
 
@@ -137,7 +138,8 @@ public:
     SendChannelMixingParametersToStream();
   }
 
-  struct InputNode {
+  struct InputNode final
+  {
     ~InputNode()
     {
       if (mStreamPort) {

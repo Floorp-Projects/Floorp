@@ -15,7 +15,7 @@ namespace dom {
 
 class AudioContext;
 
-class DynamicsCompressorNode : public AudioNode
+class DynamicsCompressorNode final : public AudioNode
 {
 public:
   explicit DynamicsCompressorNode(AudioContext* aContext);
