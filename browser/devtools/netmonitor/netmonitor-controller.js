@@ -527,8 +527,28 @@ NetworkEventsHandler.prototype = {
    */
   connect: function() {
     dumpn("NetworkEventsHandler is connecting...");
-    this.client.addListener("networkEvent", this._onNetworkEvent);
-    this.client.addListener("networkEventUpdate", this._onNetworkEventUpdate);
+    this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
+    this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
+    this._displayCachedEvents();
+  },
+
+  /**
+   * Display any network events already in the cache.
+   */
+  _displayCachedEvents: function() {
+    for (let cachedEvent of this.webConsoleClient.getNetworkEvents()) {
+      // First add the request to the timeline.
+      this._onNetworkEvent("networkEvent", cachedEvent);
+      // Then replay any updates already received.
+      for (let update of cachedEvent.updates) {
+        this._onNetworkEventUpdate("networkEventUpdate", {
+          packet: {
+            updateType: update
+          },
+          networkInfo: cachedEvent
+        });
+      }
+    }
   },
 
   /**
@@ -539,25 +559,21 @@ NetworkEventsHandler.prototype = {
       return;
     }
     dumpn("NetworkEventsHandler is disconnecting...");
-    this.client.removeListener("networkEvent", this._onNetworkEvent);
-    this.client.removeListener("networkEventUpdate", this._onNetworkEventUpdate);
+    this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
+    this.webConsoleClient.off("networkEventUpdate", this._onNetworkEventUpdate);
   },
 
   /**
    * The "networkEvent" message type handler.
    *
-   * @param string aType
+   * @param string type
    *        Message type.
-   * @param object aPacket
-   *        The message received from the server.
+   * @param object networkInfo
+   *        The network request information.
    */
-  _onNetworkEvent: function(aType, aPacket) {
-    if (aPacket.from != this.webConsoleClient.actor) {
-      // Skip events from different console actors.
-      return;
-    }
+  _onNetworkEvent: function(type, networkInfo) {
+    let { actor, startedDateTime, request: { method, url }, isXHR, fromCache } = networkInfo;
 
-    let { actor, startedDateTime, method, url, isXHR, fromCache } = aPacket.eventActor;
     NetMonitorView.RequestsMenu.addRequest(
       actor, startedDateTime, method, url, isXHR, fromCache
     );
@@ -567,19 +583,17 @@ NetworkEventsHandler.prototype = {
   /**
    * The "networkEventUpdate" message type handler.
    *
-   * @param string aType
+   * @param string type
    *        Message type.
-   * @param object aPacket
+   * @param object packet
    *        The message received from the server.
+   * @param object networkInfo
+   *        The network request information.
    */
-  _onNetworkEventUpdate: function(aType, aPacket) {
-    let actor = aPacket.from;
-    if (!NetMonitorView.RequestsMenu.getItemByValue(actor)) {
-      // Skip events from unknown actors.
-      return;
-    }
+  _onNetworkEventUpdate: function(type, { packet, networkInfo }) {
+    let actor = networkInfo.actor;
 
-    switch (aPacket.updateType) {
+    switch (packet.updateType) {
       case "requestHeaders":
         this.webConsoleClient.getRequestHeaders(actor, this._onRequestHeaders);
         window.emit(EVENTS.UPDATING_REQUEST_HEADERS, actor);
@@ -593,8 +607,8 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_REQUEST_POST_DATA, actor);
         break;
       case "securityInfo":
-        NetMonitorView.RequestsMenu.updateRequest(aPacket.from, {
-          securityState: aPacket.state,
+        NetMonitorView.RequestsMenu.updateRequest(actor, {
+          securityState: networkInfo.securityInfo,
         });
         this.webConsoleClient.getSecurityInfo(actor, this._onSecurityInfo);
         window.emit(EVENTS.UPDATING_SECURITY_INFO, actor);
@@ -608,28 +622,28 @@ NetworkEventsHandler.prototype = {
         window.emit(EVENTS.UPDATING_RESPONSE_COOKIES, actor);
         break;
       case "responseStart":
-        NetMonitorView.RequestsMenu.updateRequest(aPacket.from, {
-          httpVersion: aPacket.response.httpVersion,
-          remoteAddress: aPacket.response.remoteAddress,
-          remotePort: aPacket.response.remotePort,
-          status: aPacket.response.status,
-          statusText: aPacket.response.statusText,
-          headersSize: aPacket.response.headersSize
+        NetMonitorView.RequestsMenu.updateRequest(actor, {
+          httpVersion: networkInfo.response.httpVersion,
+          remoteAddress: networkInfo.response.remoteAddress,
+          remotePort: networkInfo.response.remotePort,
+          status: networkInfo.response.status,
+          statusText: networkInfo.response.statusText,
+          headersSize: networkInfo.response.headersSize
         });
         window.emit(EVENTS.STARTED_RECEIVING_RESPONSE, actor);
         break;
       case "responseContent":
-        NetMonitorView.RequestsMenu.updateRequest(aPacket.from, {
-          contentSize: aPacket.contentSize,
-          transferredSize: aPacket.transferredSize,
-          mimeType: aPacket.mimeType
+        NetMonitorView.RequestsMenu.updateRequest(actor, {
+          contentSize: networkInfo.response.bodySize,
+          transferredSize: networkInfo.response.transferredSize,
+          mimeType: networkInfo.response.content.mimeType
         });
         this.webConsoleClient.getResponseContent(actor, this._onResponseContent);
         window.emit(EVENTS.UPDATING_RESPONSE_CONTENT, actor);
         break;
       case "eventTimings":
-        NetMonitorView.RequestsMenu.updateRequest(aPacket.from, {
-          totalTime: aPacket.totalTime
+        NetMonitorView.RequestsMenu.updateRequest(actor, {
+          totalTime: networkInfo.totalTime
         });
         this.webConsoleClient.getEventTimings(actor, this._onEventTimings);
         window.emit(EVENTS.UPDATING_EVENT_TIMINGS, actor);
