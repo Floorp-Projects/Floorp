@@ -615,16 +615,17 @@ add_task(function* test_prefWatchPolicies() {
   gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
   fakeNow(gNow);
 
-  let prefsToWatch = {};
-  prefsToWatch[PREF_TEST_1] = TelemetryEnvironment.RECORD_PREF_VALUE;
-  prefsToWatch[PREF_TEST_2] = TelemetryEnvironment.RECORD_PREF_STATE;
-  prefsToWatch[PREF_TEST_3] = TelemetryEnvironment.RECORD_PREF_STATE;
-  prefsToWatch[PREF_TEST_4] = TelemetryEnvironment.RECORD_PREF_VALUE;
+  const PREFS_TO_WATCH = new Map([
+    [PREF_TEST_1, TelemetryEnvironment.RECORD_PREF_VALUE],
+    [PREF_TEST_2, TelemetryEnvironment.RECORD_PREF_STATE],
+    [PREF_TEST_3, TelemetryEnvironment.RECORD_PREF_STATE],
+    [PREF_TEST_4, TelemetryEnvironment.RECORD_PREF_VALUE],
+  ]);
 
   Preferences.set(PREF_TEST_4, expectedValue);
 
   // Set the Environment preferences to watch.
-  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
   let deferred = PromiseUtils.defer();
 
   // Check that the pref values are missing or present as expected
@@ -657,9 +658,10 @@ add_task(function* test_prefWatchPolicies() {
 
 add_task(function* test_prefWatch_prefReset() {
   const PREF_TEST = "toolkit.telemetry.test.pref1";
+  const PREFS_TO_WATCH = new Map([
+    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_STATE],
+  ]);
 
-  let prefsToWatch = {};
-  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_STATE;
   // Set the preference to a non-default value.
   Preferences.set(PREF_TEST, false);
 
@@ -667,7 +669,7 @@ add_task(function* test_prefWatch_prefReset() {
   fakeNow(gNow);
 
   // Set the Environment preferences to watch.
-  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
   let deferred = PromiseUtils.defer();
   TelemetryEnvironment.registerChangeListener("testWatchPrefs_reset", deferred.resolve);
 
@@ -896,15 +898,16 @@ add_task(function* test_addonsAndPlugins() {
 
 add_task(function* test_changeThrottling() {
   const PREF_TEST = "toolkit.telemetry.test.pref1";
-  let prefsToWatch = {};
-  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_STATE;
+  const PREFS_TO_WATCH = new Map([
+    [PREF_TEST, TelemetryEnvironment.RECORD_PREF_STATE],
+  ]);
   Preferences.reset(PREF_TEST);
 
   gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
   fakeNow(gNow);
 
   // Set the Environment preferences to watch.
-  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  TelemetryEnvironment._watchPreferences(PREFS_TO_WATCH);
   let deferred = PromiseUtils.defer();
   let changeCount = 0;
   TelemetryEnvironment.registerChangeListener("testWatchPrefs_throttling", () => {

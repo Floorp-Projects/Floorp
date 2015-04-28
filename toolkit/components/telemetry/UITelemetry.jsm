@@ -169,7 +169,7 @@ this.UITelemetry = {
   },
 
   /**
-   * Called by TelemetryPing to populate the simple measurement
+   * Called by TelemetryController to populate the simple measurement
    * blob. This function will iterate over all functions added
    * via addSimpleMeasureFunction and return an object with the
    * results of those functions.

@@ -15,629 +15,106 @@ body {
   margin-right: auto;
 }
 
-.light {
+body.light {
   background-color: #ffffff;
   color: #222222;
 }
 
-.dark {
+body.dark {
   background-color: #222222;
   color: #eeeeee;
 }
 
-.sans-serif {
+body.sans-serif {
   font-family: sans-serif;
 }
 
-.serif {
+body.serif {
   font-family: serif;
 }
 
-.font-size1 {
+#container.font-size1 {
   font-size: 10px;
 }
 
-.font-size2 {
+#container.font-size2 {
   font-size: 12px;
 }
 
-.font-size3 {
+#container.font-size3 {
   font-size: 14px;
 }
 
-.font-size4  {
+#container.font-size4  {
   font-size: 16px;
 }
 
-.font-size5 {
+#container.font-size5 {
   font-size: 18px;
 }
 
-.font-size6 {
+#container.font-size6 {
   font-size: 20px;
 }
 
-.font-size7 {
+#container.font-size7 {
   font-size: 22px;
 }
 
-.font-size8 {
+#container.font-size8 {
   font-size: 24px;
 }
 
-.font-size9 {
+#container.font-size9 {
   font-size: 26px;
 }
 
-.message {
-  margin-top: 40px;
-  display: none;
-  text-align: center;
-  width: 100%;
-  font-size: 0.9em;
-}
+/* Override some controls and content styles based on color scheme */
 
-.header {
-  text-align: start;
-  display: none;
-}
-
-.domain,
-.credits {
-  font-family: sans-serif;
-}
-
-.domain {
-  margin-top: 10px;
-  padding-bottom: 10px;
-  color: #00acff !important;
-  text-decoration: none;
-}
-
-.domain-border {
-  margin-top: 15px;
-  border-bottom: 1.5px solid #777777;
-  width: 50%;
-}
-
-.header > h1 {
-  font-size: 1.33em;
-  font-weight: 700;
-  line-height: 1.1em;
-  width: 100%;
-  margin: 0px;
-  margin-top: 32px;
-  margin-bottom: 16px;
-  padding: 0px;
-}
-
-.header > .credits {
-  padding: 0px;
-  margin: 0px;
-  margin-bottom: 32px;
-}
-
-.light > .container > .header > .domain {
+body.light > .container > .header > .domain {
   color: #ee7600;
   border-bottom-color: #d0d0d0; 
 }
 
-.light > .container > .header > h1 {
+body.light > .container > .header > h1 {
   color: #222222;
 }
 
-.light > .container > .header > .credits {
+body.light > .container > .header > .credits {
   color: #898989;
 }
 
-.dark > .container > .header > .domain {
+body.dark > .container > .header > .domain {
   color: #ff9400;
   border-bottom-color: #777777; 
 }
 
-.dark > .container > .header > h1 {
+body.dark > .container > .header > h1 {
   color: #eeeeee;
 }
 
-.dark > .container > .header > .credits {
+body.dark > .container > .header > .credits {
   color: #aaaaaa;
 }
 
-/* This covers caption, domain, and credits
-   texts in the reader UI */
-
-#moz-reader-content .wp-caption-text,
-#moz-reader-content figcaption,
-.header > .domain,
-.header > .credits {
-  font-size: 0.9em;
-}
-
-#moz-reader-content {
-  display: none;
-  font-size: 1em;
-}
-
-.content a {
-  text-decoration: underline !important;
-  font-weight: normal;
-}
-
-.content a,
-.content a:visited,
-.content a:hover,
-.content a:active {
-  color: #00acff !important;
-}
-
-.content * {
-  max-width: 100% !important;
-  height: auto !important;
-}
-
-#moz-reader-content p {
-  line-height: 1.4em !important;
-  margin: 0px !important;
-  margin-bottom: 20px !important;
-}
-
-/* Covers all images showing edge-to-edge using a 
-   an optional caption text */
-.content .wp-caption,
-.content figure {
-  display: block !important;
-  width: 100% !important;
-  margin: 0px !important;
-  margin-bottom: 32px !important;
-}
-
-/* Images marked to be shown edge-to-edge with an
-   optional captio ntext */
-.content p > img:only-child,
-.content p > a:only-child > img:only-child,
-.content .wp-caption img,
-.content figure img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Account for body padding to make image full width */
-.content img[moz-reader-full-width] {
-  width: calc(100% + 40px);
-  margin-left: -20px;
-  margin-right: -20px;
-  max-width: none !important;
-}
-
-/* Image caption text */
-.content .caption,
-.content .wp-caption-text,
-.content figcaption {
-  font-family: sans-serif;
-  margin: 0px !important;
-  padding-top: 4px !important;
-}
-
-.light > .container > .content .caption,
-.light > .container > .content .wp-caption-text,
-.light > .container > .content figcaption {
+body.light > .container > .content .caption,
+body.light > .container > .content .wp-caption-text,
+body.light > .container > .content figcaption {
   color: #898989;
 }
 
-.dark > .container > .content .caption,
-.dark > .container > .content .wp-caption-text,
-.dark > .container > .content figcaption {
+body.dark > .container > .content .caption,
+body.dark > .container > .content .wp-caption-text,
+body.dark > .container > .content figcaption {
   color: #aaaaaa;
 }
 
-/* Ensure all pre-formatted code inside the reader content
-   are properly wrapped inside content width */
-.content code,
-.content pre {
-  white-space: pre-wrap !important;
-  margin-bottom: 20px !important;
-}
-
-.content blockquote {
-  margin: 0px !important;
-  margin-bottom: 20px !important;
-  padding: 0px !important;
-  -moz-padding-start: 16px !important;
-  border: 0px !important;
-  border-left: 2px solid !important;
-}
-
-.light > .container > .content blockquote {
+body.light > .container > .content blockquote {
   color: #898989 !important;
   border-left-color: #d0d0d0 !important;
 }
 
-.dark > .container > .content blockquote {
+body.dark > .container > .content blockquote {
   color: #aaaaaa !important;
   border-left-color: #777777 !important;
-}
-
-#moz-reader-content ul,
-#moz-reader-content ol {
-  margin: 0px !important;
-  margin-bottom: 20px !important;
-  padding: 0px !important;
-  line-height: 1.5em;
-}
-
-.content ul {
-  -moz-padding-start: 30px !important;
-  list-style: disc !important;
-}
-
-.content ol {
-  -moz-padding-start: 35px !important;
-  list-style: decimal !important;
-}
-
-/* Hide elements with common "hidden" class names */
-#moz-reader-content .visually-hidden,
-#moz-reader-content .visuallyhidden,
-#moz-reader-content .hidden,
-#moz-reader-content .invisible,
-#moz-reader-content .sr-only {
-  display: none;
-}
-
-/*======= Controls toolbar =======*/
-
-.toolbar {
-  font-family: sans-serif;
-  transition-property: bottom;
-  transition-duration: 0.3s;
-  position: fixed;
-  width: 100%;
-  left: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  background-color: #EBEBF0;
-  border-top: 1px solid #D7D9DB;
-  display: none;
-}
-
-.toolbar[visible] {
-  bottom: 0;
-}
-
-.toolbar > * {
-  float: right;
-  width: 33%;
-}
-
-.button {
-  display: block;
-  background-position: center;
-  background-size: 30px 28px;
-  background-repeat: no-repeat;
-  background-color: transparent;
-  border: 0;
-  width: 100%;
-}
-
-.button:active {
-  background-color: #D7D7DC;
-}
-
-/* Remove dotted border when button is focused */
-.button::-moz-focus-inner,
-.dropdown-popup > div > button::-moz-focus-inner {
-  border: 0;
-}
-
-.dropdown {
-  left: 0;
-  text-align: center;
-  display: inline-block;
-  list-style: none;
-  margin: 0px;
-  padding: 0px;
-}
-
-.dropdown li {
-  margin: 0px;
-  padding: 0px;
-}
-
-.dropdown-toggle {
-  margin: 0px;
-  padding: 0px;
-}
-
-/*======= Font style popup =======*/
-
-.dropdown-popup {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-  background: #EBEBF0;
-  visibility: hidden;
-  border-top: 1px solid #D7D9DB;
-}
-
-/* Only used on desktop */
-.dropdown-popup > hr,
-.dropdown-arrow,
-#font-type-buttons > button > .name {
-  display: none;
-}
-
-.open > .dropdown-popup {
-  visibility: visible;
-  bottom: 100%;
-}
-
-#font-type-buttons,
-#font-size-buttons,
-#color-scheme-buttons {
-  display: flex;
-  flex-direction: row;
-}
-
-#font-type-buttons > button,
-#color-scheme-buttons > button {
-  text-align: center;
-}
-
-#font-type-buttons > button,
-#font-size-buttons > button {
-  width: 50%;
-  background-color: transparent;
-  border: 0;
-}
-
-#font-type-buttons > button {
-  font-size: 24px;
-  color: #AFB1B3;
-  padding: 15px 0;
-}
-
-#font-type-buttons > button:active,
-#font-type-buttons > button.selected {
-  color: #222222;
-}
-
-#font-size-sample {
-  flex: 0;
-  font-size: 24px;
-  color: #000000;
-  margin: 0 30px;
-  padding: 0 10px;
-}
-
-.serif-button {
-  font-family: serif;
-}
-
-.minus-button,
-.plus-button {
-  background-color: transparent;
-  border: 0;
-  height: 60px;
-  background-size: 18px 18px;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.minus-button {
-  background-size: 24px 6px;
-  margin-left: 50px;
-  padding: 0 5px;
-}
-
-.plus-button {
-  background-size: 24px 24px;
-  margin-right: 50px;
-  padding: 0 5px;
-}
-
-#color-scheme-buttons > button {
-  width: 33%;
-  border-radius: 4px;
-  border: 1px solid #BFBFBF;
-  padding: 10px;
-  margin: 15px 10px;
-  font-size: 14px;
-}
-
-#color-scheme-buttons > button:active,
-#color-scheme-buttons > button.selected {
-  border: 2px solid #FF9500;
-}
-
-.dark-button {
-  color: #eeeeee;
-  background-color: #333333;
-}
-
-.auto-button {
-  color: #000000;
-  background-color: transparent;
-}
-
-.light-button {
-  color: #333333;
-  background-color: #ffffff;
-}
-
-/*======= Toolbar icons =======*/
-
-/* desktop-only controls */
-.close-button,
-.list-button,
-.footer {
-  display: none;
-}
-
-.toggle-button.on {
-  background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-mdpi.png');
-}
-
-.toggle-button {
-  background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
-}
-
-.share-button {
-  background-image: url('chrome://browser/skin/images/reader-share-icon-mdpi.png');
-}
-
-.style-button {
-  background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
-}
-
-.open .style-button {
-  background-image: url('chrome://browser/skin/images/reader-style-icon-active-mdpi.png');
-}
-
-.minus-button {
-  background-image: url('chrome://browser/skin/images/reader-minus-mdpi.png');
-}
-
-.plus-button {
-  background-image: url('chrome://browser/skin/images/reader-plus-mdpi.png');
-}
-
-@media screen and (min-resolution: 1.25dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-hdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-hdpi.png');
-  }
-
-  .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
-  }
-
-  .open .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-active-hdpi.png');
-  }
-
-  .minus-button {
-    background-image: url('chrome://browser/skin/images/reader-minus-hdpi.png');
-  }
-
-  .plus-button {
-    background-image: url('chrome://browser/skin/images/reader-plus-hdpi.png');
-  }
-}
-
-@media screen and (min-resolution: 2dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xhdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
-  }
-
-  .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
-  }
-
-  .open .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xhdpi.png');
-  }
-
-  .minus-button {
-    background-image: url('chrome://browser/skin/images/reader-minus-xhdpi.png');
-  }
-
-  .plus-button {
-    background-image: url('chrome://browser/skin/images/reader-plus-xhdpi.png');
-  }
-}
-
-@media screen and (min-resolution: 3dppx) {
-  .toggle-button.on {
-    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xxhdpi.png');
-  }
-
-  .toggle-button {
-    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xxhdpi.png');
-  }
-
-  .share-button {
-    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
-  }
-
-  .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-xxhdpi.png');
-  }
-
-  .open .style-button {
-    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xxhdpi.png');
-  }
-
-  .minus-button {
-    background-image: url('chrome://browser/skin/images/reader-minus-xxhdpi.png');
-  }
-
-  .plus-button {
-    background-image: url('chrome://browser/skin/images/reader-plus-xxhdpi.png');
-  }
-}
-
-@media screen and (orientation: portrait) {
-  .button {
-    height: 56px;
-  }
-
-  .toolbar {
-    bottom: -57px;
-  }
-}
-
-@media screen and (orientation: landscape) {
-  .button {
-    height: 40px;
-  }
-
-  .toolbar {
-    bottom: -41px;
-  }
-}
-
-@media screen and (min-width: 960px) {
-  .button {
-    width: 56px;
-    height: 56px;
-  }
-
-  .toolbar {
-    bottom: -57px;
-  }
-
-  .toolbar > * {
-    width: 56px;
-  }
-
-  .dropdown-popup {
-    position: absolute;
-    width: 350px;
-    left: auto;
-    right: 15px;
-    bottom: -12px;
-    z-index: 1000;
-    background: #EBEBF0;
-    border: 1px solid #D7D9DB;
-    border-radius: 4px;
-    box-shadow: 0px 2px 4px 2px #BFBFBF;
-  }
 }

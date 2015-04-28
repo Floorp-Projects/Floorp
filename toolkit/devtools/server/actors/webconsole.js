@@ -1317,7 +1317,7 @@ WebConsoleActor.prototype =
     let packet = {
       from: this.actorID,
       type: "networkEvent",
-      eventActor: actor.grip(),
+      eventActor: actor.grip()
     };
 
     this.conn.send(packet);
@@ -1694,6 +1694,7 @@ NetworkEventActor.prototype =
       url: this._request.url,
       method: this._request.method,
       isXHR: this._isXHR,
+      fromCache: this._fromCache,
       private: this._private,
     };
   },
@@ -1737,6 +1738,7 @@ NetworkEventActor.prototype =
   {
     this._startedDateTime = aNetworkEvent.startedDateTime;
     this._isXHR = aNetworkEvent.isXHR;
+    this._fromCache = aNetworkEvent.fromCache;
 
     for (let prop of ['method', 'url', 'httpVersion', 'headersSize']) {
       this._request[prop] = aNetworkEvent[prop];
@@ -1862,7 +1864,7 @@ NetworkEventActor.prototype =
     return {
       from: this.actorID,
       timings: this._timings,
-      totalTime: this._totalTime,
+      totalTime: this._totalTime
     };
   },
 
@@ -1972,7 +1974,7 @@ NetworkEventActor.prototype =
       from: this.actorID,
       type: "networkEventUpdate",
       updateType: "responseStart",
-      response: aInfo,
+      response: aInfo
     };
 
     this.conn.send(packet);
@@ -2088,7 +2090,7 @@ NetworkEventActor.prototype =
       from: this.actorID,
       type: "networkEventUpdate",
       updateType: "eventTimings",
-      totalTime: aTotal,
+      totalTime: aTotal
     };
 
     this.conn.send(packet);

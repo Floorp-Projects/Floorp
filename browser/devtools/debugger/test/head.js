@@ -727,8 +727,8 @@ function prepareDebugger(aDebugger) {
     let view = aDebugger.panelWin.DebuggerView;
     view.Variables.lazyEmpty = false;
     view.Variables.lazySearch = false;
-    view.FilteredSources._autoSelectFirstItem = true;
-    view.FilteredFunctions._autoSelectFirstItem = true;
+    view.Filtering.FilteredSources._autoSelectFirstItem = true;
+    view.Filtering.FilteredFunctions._autoSelectFirstItem = true;
   } else {
     // Nothing to do here yet.
   }

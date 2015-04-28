@@ -750,17 +750,17 @@ EnvironmentCache.prototype = {
    */
   _getPrefData: function () {
     let prefData = {};
-    for (let pref in this._watchedPrefs) {
+    for (let [pref, policy] of this._watchedPrefs.entries()) {
       // Only record preferences if they are non-default and policy allows recording.
       if (!Preferences.isSet(pref) ||
-          this._watchedPrefs[pref] == TelemetryEnvironment.RECORD_PREF_NOTIFY_ONLY) {
+          policy == TelemetryEnvironment.RECORD_PREF_NOTIFY_ONLY) {
         continue;
       }
 
       // Check the policy for the preference and decide if we need to store its value
       // or whether it changed from the default value.
       let prefValue = undefined;
-      if (this._watchedPrefs[pref] == TelemetryEnvironment.RECORD_PREF_STATE) {
+      if (policy == TelemetryEnvironment.RECORD_PREF_STATE) {
         prefValue = "<user-set>";
       } else {
         prefValue = Preferences.get(pref, null);
@@ -776,7 +776,7 @@ EnvironmentCache.prototype = {
   _startWatchingPrefs: function () {
     this._log.trace("_startWatchingPrefs - " + this._watchedPrefs);
 
-    for (let pref in this._watchedPrefs) {
+    for (let pref of this._watchedPrefs.keys()) {
       Preferences.observe(pref, this._onPrefChanged, this);
     }
   },
@@ -794,7 +794,7 @@ EnvironmentCache.prototype = {
   _stopWatchingPrefs: function () {
     this._log.trace("_stopWatchingPrefs");
 
-    for (let pref in this._watchedPrefs) {
+    for (let pref of this._watchedPrefs.keys()) {
       Preferences.ignore(pref, this._onPrefChanged, this);
     }
   },
