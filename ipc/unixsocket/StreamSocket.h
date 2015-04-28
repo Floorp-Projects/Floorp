@@ -23,6 +23,14 @@ public:
   StreamSocket();
 
   /**
+   * Method to be called whenever data is received. This is only called on the
+   * main thread.
+   *
+   * @param aBuffer Data received from the socket.
+   */
+  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
+
+  /**
    * Queue data to be sent to the socket on the IO thread. Can only be called on
    * originating thread.
    *

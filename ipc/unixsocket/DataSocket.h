@@ -29,62 +29,12 @@ public:
   virtual ~DataSocket();
 
   /**
-   * Function to be called whenever data is received. This is only called on the
-   * main thread.
-   *
-   * @param aBuffer Data received from the socket.
-   */
-  virtual void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
-
-  /**
    * Queue data to be sent to the socket on the IO thread. Can only be called on
    * originating thread.
    *
    * @param aBuffer Data to be sent to socket
    */
   virtual void SendSocketData(UnixSocketIOBuffer* aBuffer) = 0;
-};
-
-//
-// Runnables
-//
-
-/**
- * |SocketReceiveRunnable| transfers data received on the I/O thread
- * to an instance of |DataSocket| on the main thread.
- */
-template <typename T>
-class SocketIOReceiveRunnable final : public SocketIORunnable<T>
-{
-public:
-  SocketIOReceiveRunnable(T* aIO, UnixSocketBuffer* aBuffer)
-    : SocketIORunnable<T>(aIO)
-    , mBuffer(aBuffer)
-  { }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    T* io = SocketIORunnable<T>::GetIO();
-
-    if (io->IsShutdownOnMainThread()) {
-      NS_WARNING("mConsumer is null, aborting receive!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    DataSocket* dataSocket = io->GetDataSocket();
-    MOZ_ASSERT(dataSocket);
-
-    dataSocket->ReceiveSocketData(mBuffer);
-
-    return NS_OK;
-  }
-
-private:
-  nsAutoPtr<UnixSocketBuffer> mBuffer;
 };
 
 //
