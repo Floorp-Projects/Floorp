@@ -4388,7 +4388,8 @@ ContentParent::DoSendAsyncMessage(JSContext* aCx,
         return false;
     }
     InfallibleTArray<CpowEntry> cpows;
-    if (aCpows && !GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    jsipc::CPOWManager* mgr = GetCPOWManager();
+    if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
         return false;
     }
 #ifdef MOZ_NUWA_PROCESS
