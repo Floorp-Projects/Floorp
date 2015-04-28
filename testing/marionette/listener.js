@@ -1794,7 +1794,7 @@ function addCookie(msg) {
 
   var document = curFrame.document;
   if (!document || !document.contentType.match(/html/i)) {
-    sendError(new UnableToSetCookie("You may only set cookies on html documents"), msg.json.command_id);
+    sendError(new UnableToSetCookieError("You may only set cookies on html documents"), msg.json.command_id);
   }
 
   let added = sendSyncMessage("Marionette:addCookie", {value: cookie});
