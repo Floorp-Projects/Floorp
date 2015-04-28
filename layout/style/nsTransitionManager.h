@@ -15,6 +15,7 @@
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
 
+class nsIGlobalObject;
 class nsStyleContext;
 class nsPresContext;
 class nsCSSPropertySet;
@@ -79,8 +80,9 @@ namespace dom {
 class CSSTransition final : public Animation
 {
 public:
- explicit CSSTransition(dom::AnimationTimeline* aTimeline)
-    : dom::Animation(aTimeline)
+ explicit CSSTransition(nsIGlobalObject* aGlobal,
+                        dom::AnimationTimeline* aTimeline)
+    : dom::Animation(aGlobal, aTimeline)
   {
   }
 

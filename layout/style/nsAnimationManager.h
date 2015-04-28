@@ -13,6 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 
+class nsIGlobalObject;
 class nsStyleContext;
 
 namespace mozilla {
@@ -56,9 +57,10 @@ namespace dom {
 class CSSAnimation final : public Animation
 {
 public:
- explicit CSSAnimation(dom::AnimationTimeline* aTimeline,
+ explicit CSSAnimation(nsIGlobalObject* aGlobal,
+                       dom::AnimationTimeline* aTimeline,
                        const nsSubstring& aAnimationName)
-    : dom::Animation(aTimeline)
+    : dom::Animation(aGlobal, aTimeline)
     , mAnimationName(aAnimationName)
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
