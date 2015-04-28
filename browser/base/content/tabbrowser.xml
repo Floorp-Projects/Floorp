@@ -1518,13 +1518,11 @@
             aBrowser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
 
             if (aShouldBeRemote) {
-              tab.setAttribute("remote", "true");
               // Switching the browser to be remote will connect to a new child
               // process so the browser can no longer be considered to be
               // crashed.
               tab.removeAttribute("crashed");
             } else {
-              tab.removeAttribute("remote");
               aBrowser.messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: tab.pinned })
             }
 
@@ -1741,8 +1739,6 @@
             let remote = gMultiProcessBrowser &&
                          !aForceNotRemote &&
                          E10SUtils.canLoadURIInProcess(aURI, Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT);
-            if (remote)
-              t.setAttribute("remote", "true");
 
             this.tabContainer._unlockTabSizing();
 
@@ -3685,9 +3681,11 @@
             event.preventDefault();
             return;
           }
-          event.target.setAttribute("label", tab.mOverCloseButton ?
-                                             tab.getAttribute("closetabtext") :
-                                             tab.getAttribute("label"));
+          event.target.setAttribute("label",
+                                    tab.mOverCloseButton ?
+                                    tab.getAttribute("closetabtext") :
+                                    tab.getAttribute("label") +
+                                      (this.AppConstants.E10S_TESTING_ONLY && tab.linkedBrowser && tab.linkedBrowser.isRemoteBrowser ? " - e10s" : ""));
         ]]></body>
       </method>
 
