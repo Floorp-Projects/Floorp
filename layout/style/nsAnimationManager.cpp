@@ -598,7 +598,9 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    nsRefPtr<CSSAnimation> dest = new CSSAnimation(aTimeline, src.GetName());
+    nsRefPtr<CSSAnimation> dest =
+      new CSSAnimation(mPresContext->Document()->GetScopeObject(), aTimeline,
+                       src.GetName());
     dest->SetOwningElement(
       OwningElementRef(*aTarget, aStyleContext->GetPseudoType()));
     dest->SetAnimationIndex(static_cast<uint64_t>(animIdx));

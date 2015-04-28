@@ -632,7 +632,8 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  nsRefPtr<CSSTransition> animation = new CSSTransition(timeline);
+  nsRefPtr<CSSTransition> animation =
+    new CSSTransition(mPresContext->Document()->GetScopeObject(), timeline);
   animation->SetOwningElement(
     OwningElementRef(*aElement, aNewStyleContext->GetPseudoType()));
   animation->SetCreationSequence(
