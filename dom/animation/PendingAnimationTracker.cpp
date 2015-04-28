@@ -55,6 +55,13 @@ TriggerAnimationAtTime(nsRefPtrHashKey<dom::Animation>* aKey,
   dom::Animation* animation = aKey->GetKey();
   dom::AnimationTimeline* timeline = animation->Timeline();
 
+  // If the animation does not have a timeline, just drop it from the map.
+  // The animation will detect that it is not being tracked and will trigger
+  // itself on the next tick where it has a timeline.
+  if (!timeline) {
+    return PL_DHASH_REMOVE;
+  }
+
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
