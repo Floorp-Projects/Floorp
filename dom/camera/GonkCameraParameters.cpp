@@ -627,29 +627,24 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const ICameraControl::Positio
   MOZ_ASSERT(aKey == CAMERA_PARAM_PICTURE_LOCATION);
 
   // Add any specified location information -- we don't care if these fail.
-  if (!isnan(aPosition.latitude)) {
-    DOM_CAMERA_LOGI("setting picture latitude to %lf\n", aPosition.latitude);
-    SetImpl(CameraParameters::KEY_GPS_LATITUDE, nsPrintfCString("%lf", aPosition.latitude).get());
+  if (!isnan(aPosition.latitude) &&
+      !isnan(aPosition.longitude) &&
+      !isnan(aPosition.altitude) &&
+      !isnan(aPosition.timestamp)) {
+    DOM_CAMERA_LOGI("setting picture gps coordinates to (%lf, %lf, %lf, %lf)\n",
+      aPosition.latitude, aPosition.longitude, aPosition.altitude, aPosition.timestamp);
+    SetImpl(CameraParameters::KEY_GPS_LATITUDE, aPosition.latitude);
+    SetImpl(CameraParameters::KEY_GPS_LONGITUDE, aPosition.longitude);
+    SetImpl(CameraParameters::KEY_GPS_ALTITUDE, aPosition.altitude);
+    SetImpl(CameraParameters::KEY_GPS_TIMESTAMP, aPosition.timestamp);
+    SetImpl(CameraParameters::KEY_GPS_PROCESSING_METHOD, "UNKNOWN");
   } else {
+    DOM_CAMERA_LOGI("clear incomplete gps information\n");
     ClearImpl(CameraParameters::KEY_GPS_LATITUDE);
-  }
-  if (!isnan(aPosition.longitude)) {
-    DOM_CAMERA_LOGI("setting picture longitude to %lf\n", aPosition.longitude);
-    SetImpl(CameraParameters::KEY_GPS_LONGITUDE, nsPrintfCString("%lf", aPosition.longitude).get());
-  } else {
     ClearImpl(CameraParameters::KEY_GPS_LONGITUDE);
-  }
-  if (!isnan(aPosition.altitude)) {
-    DOM_CAMERA_LOGI("setting picture altitude to %lf\n", aPosition.altitude);
-    SetImpl(CameraParameters::KEY_GPS_ALTITUDE, nsPrintfCString("%lf", aPosition.altitude).get());
-  } else {
     ClearImpl(CameraParameters::KEY_GPS_ALTITUDE);
-  }
-  if (!isnan(aPosition.timestamp)) {
-    DOM_CAMERA_LOGI("setting picture timestamp to %lf\n", aPosition.timestamp);
-    SetImpl(CameraParameters::KEY_GPS_TIMESTAMP, nsPrintfCString("%lf", aPosition.timestamp).get());
-  } else {
     ClearImpl(CameraParameters::KEY_GPS_TIMESTAMP);
+    ClearImpl(CameraParameters::KEY_GPS_PROCESSING_METHOD);
   }
 
   return NS_OK;
