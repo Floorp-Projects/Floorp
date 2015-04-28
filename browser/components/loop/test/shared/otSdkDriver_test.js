@@ -35,6 +35,9 @@ describe("loop.OTSdkDriver", function () {
     };
 
     dispatcher = new loop.Dispatcher();
+
+    sandbox.stub(dispatcher, "dispatch");
+
     session = _.extend({
       connect: sinon.stub(),
       disconnect: sinon.stub(),
@@ -108,7 +111,7 @@ describe("loop.OTSdkDriver", function () {
 
   describe("#setupStreamElements", function() {
     it("should call initPublisher", function() {
-      dispatcher.dispatch(new sharedActions.SetupStreamElements({
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
@@ -154,7 +157,7 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       sdk.initPublisher.returns(publisher);
 
-      dispatcher.dispatch(new sharedActions.SetupStreamElements({
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
@@ -162,7 +165,7 @@ describe("loop.OTSdkDriver", function () {
     });
 
     it("should publishAudio with the correct enabled value", function() {
-      dispatcher.dispatch(new sharedActions.SetMute({
+      driver.setMute(new sharedActions.SetMute({
         type: "audio",
         enabled: false
       }));
@@ -172,7 +175,7 @@ describe("loop.OTSdkDriver", function () {
     });
 
     it("should publishVideo with the correct enabled value", function() {
-      dispatcher.dispatch(new sharedActions.SetMute({
+      driver.setMute(new sharedActions.SetMute({
         type: "video",
         enabled: true
       }));
@@ -186,7 +189,6 @@ describe("loop.OTSdkDriver", function () {
     var fakeElement;
 
     beforeEach(function() {
-      sandbox.stub(dispatcher, "dispatch");
       sandbox.stub(driver, "_noteSharingState");
 
       fakeElement = {
@@ -240,7 +242,6 @@ describe("loop.OTSdkDriver", function () {
       driver.getScreenShareElementFunc = function() {
         return fakeScreenElement;
       };
-      sandbox.stub(dispatcher, "dispatch");
 
       driver.startScreenShare(options);
     });
@@ -263,7 +264,6 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       driver.getScreenShareElementFunc = function() {};
 
-      sandbox.stub(dispatcher, "dispatch");
       sandbox.stub(driver, "_noteSharingState");
     });
 
@@ -365,7 +365,6 @@ describe("loop.OTSdkDriver", function () {
 
       it("should dispatch connectionFailure if connecting failed", function() {
         session.connect.callsArgWith(2, new Error("Failure"));
-        sandbox.stub(dispatcher, "dispatch");
 
         driver.connectSession(sessionData);
 
@@ -578,14 +577,12 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       driver.connectSession(sessionData);
 
-      dispatcher.dispatch(new sharedActions.SetupStreamElements({
+      driver.setupStreamElements(new sharedActions.SetupStreamElements({
         getLocalElementFunc: function() {return fakeLocalElement;},
         getScreenShareElementFunc: function() {return fakeScreenElement;},
         getRemoteElementFunc: function() {return fakeRemoteElement;},
         publisherConfig: publisherConfig
       }));
-
-      sandbox.stub(dispatcher, "dispatch");
     });
 
     describe("connectionDestroyed", function() {
@@ -989,8 +986,6 @@ describe("loop.OTSdkDriver", function () {
       driver.startScreenShare({
         videoSource: "window"
       });
-
-      sandbox.stub(dispatcher, "dispatch");
     });
 
     describe("accessAllowed", function() {
