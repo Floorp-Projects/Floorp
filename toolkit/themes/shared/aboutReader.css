@@ -4,8 +4,6 @@
 
 body {
   padding: 64px 0;
-  max-width: 660px;
-  margin: 0 auto;
 }
 
 @media (max-width: 785px) {
@@ -52,6 +50,11 @@ body.sans-serif .remove-button {
 body.serif,
 body.serif .remove-button  {
   font-family: Georgia, "Times New Roman", serif;
+}
+
+#container {
+  max-width: 30em;
+  margin: 0 auto;
 }
 
 #container.font-size1 {
