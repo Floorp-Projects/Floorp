@@ -80,6 +80,13 @@ public:
   void OnSocketCanReceiveWithoutBlocking() override;
   void OnSocketCanSendWithoutBlocking() override;
 
+  // Methods for |DataSocket|
+  //
+
+  nsresult QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer);
+  void ConsumeBuffer();
+  void DiscardBuffer();
+
 private:
   void FireSocketError();
 
@@ -122,6 +129,11 @@ private:
    * Task member for delayed connect task. Should only be access on main thread.
    */
   CancelableTask* mDelayedConnectTask;
+
+  /**
+   * I/O buffer for received data
+   */
+  nsAutoPtr<UnixSocketRawData> mBuffer;
 };
 
 BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
@@ -130,7 +142,6 @@ BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
   UnixSocketConnector* aConnector,
   const nsACString& aAddress)
   : UnixSocketWatcher(mIOLoop)
-  , DataSocketIO(MAX_READ_SIZE)
   , mConsumer(aConsumer)
   , mConnector(aConnector)
   , mShuttingDownOnIOThread(false)
@@ -473,6 +484,33 @@ BluetoothSocket::BluetoothSocketIO::SetSocketFlags(int aFd)
   }
 
   return true;
+}
+
+nsresult
+BluetoothSocket::BluetoothSocketIO::QueryReceiveBuffer(
+  UnixSocketIOBuffer** aBuffer)
+{
+  MOZ_ASSERT(aBuffer);
+
+  if (!mBuffer) {
+    mBuffer = new UnixSocketRawData(MAX_READ_SIZE);
+  }
+  *aBuffer = mBuffer.get();
+
+  return NS_OK;
+}
+
+void
+BluetoothSocket::BluetoothSocketIO::ConsumeBuffer()
+{
+  NS_DispatchToMainThread(
+    new SocketIOReceiveRunnable<BluetoothSocketIO>(this, mBuffer.forget()));
+}
+
+void
+BluetoothSocket::BluetoothSocketIO::DiscardBuffer()
+{
+  // Nothing to do.
 }
 
 //
