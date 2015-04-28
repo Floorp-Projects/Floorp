@@ -127,7 +127,35 @@ ALL_TESTS_JSON = b'''
             "relpath": "src/TestDistribution.java",
             "subsuite": "browser"
         }
-    ]
+    ],
+    "image/test/browser/browser_bug666317.js": [
+        {
+            "dir_relpath": "image/test/browser",
+            "file_relpath": "image/test/browser/browser_bug666317.js",
+            "flavor": "browser-chrome",
+            "here": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/image/test/browser",
+            "manifest": "/home/chris/m-c/image/test/browser/browser.ini",
+            "name": "browser_bug666317.js",
+            "path": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/image/test/browser/browser_bug666317.js",
+            "relpath": "image/test/browser/browser_bug666317.js",
+            "skip-if": "e10s # Bug 948194 - Decoded Images seem to not be discarded on memory-pressure notification with e10s enabled",
+            "subsuite": ""
+        }
+   ],
+   "browser/devtools/markupview/test/browser_markupview_copy_image_data.js": [
+        {
+            "dir_relpath": "browser/devtools/markupview/test",
+            "file_relpath": "browser/devtools/markupview/test/browser_markupview_copy_image_data.js",
+            "flavor": "browser-chrome",
+            "here": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/browser/devtools/markupview/test",
+            "manifest": "/home/chris/m-c/browser/devtools/markupview/test/browser.ini",
+            "name": "browser_markupview_copy_image_data.js",
+            "path": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/browser/devtools/markupview/test/browser_markupview_copy_image_data.js",
+            "relpath": "browser/devtools/markupview/test/browser_markupview_copy_image_data.js",
+            "subsuite": "devtools",
+            "tags": "devtools"
+        }
+   ]
 }'''.strip()
 
 
@@ -153,14 +181,14 @@ class Base(unittest.TestCase):
 class TestTestMetadata(Base):
     def test_load(self):
         t = self._get_test_metadata()
-        self.assertEqual(len(t._tests_by_path), 6)
+        self.assertEqual(len(t._tests_by_path), 8)
 
         self.assertEqual(len(list(t.tests_with_flavor('xpcshell'))), 3)
         self.assertEqual(len(list(t.tests_with_flavor('mochitest-plain'))), 0)
 
     def test_resolve_all(self):
         t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests())), 7)
+        self.assertEqual(len(list(t.resolve_tests())), 9)
 
     def test_resolve_filter_flavor(self):
         t = self._get_test_metadata()
@@ -181,6 +209,11 @@ class TestTestMetadata(Base):
         t = self._get_test_metadata()
         result = list(t.resolve_tests(paths=['services', 'toolkit']))
         self.assertEqual(len(result), 4)
+
+    def test_resolve_path_prefix(self):
+        t = self._get_test_metadata()
+        result = list(t.resolve_tests(paths=['image']))
+        self.assertEqual(len(result), 1)
 
 
 class TestTestResolver(Base):

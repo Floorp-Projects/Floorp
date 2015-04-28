@@ -190,7 +190,7 @@
   background-image: url(newtab.png);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .theme-dark #profile-newtab-button {
     background-image: url(newtab-inverted@2x.png);
   }
@@ -367,7 +367,7 @@
   background-image: url(magnifying-glass-light.png);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .theme-dark .call-tree-zoom {
     background-image: url(magnifying-glass@2x.png);
   }

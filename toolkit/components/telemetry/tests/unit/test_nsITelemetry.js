@@ -360,6 +360,60 @@ function test_privateMode() {
   do_check_neq(uneval(orig), uneval(h.snapshot()));
 }
 
+// Check that telemetry records only when it is suppose to.
+function test_histogramRecording() {
+  // Check that no histogram is recorded if both base and extended recording are off.
+  Telemetry.canRecordBase = false;
+  Telemetry.canRecordExtended = false;
+
+  let h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
+  h.clear();
+  let orig = h.snapshot();
+  h.add(1);
+  Assert.equal(orig.sum, h.snapshot().sum);
+
+  // Check that only base histograms are recorded.
+  Telemetry.canRecordBase = true;
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+               "Histogram value should have incremented by 1 due to recording.");
+
+  // Extended histograms should not be recorded.
+  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTIN");
+  orig = h.snapshot();
+  h.add(1);
+  Assert.equal(orig.sum, h.snapshot().sum,
+               "Histograms should be equal after recording.");
+
+  // Runtime created histograms should not be recorded.
+  h = Telemetry.newHistogram("test::runtime_created_boolean", "never", Telemetry.HISTOGRAM_BOOLEAN);
+  orig = h.snapshot();
+  h.add(1);
+  Assert.equal(orig.sum, h.snapshot().sum,
+               "Histograms should be equal after recording.");
+
+  // Check that extended histograms are recorded when required.
+  Telemetry.canRecordExtended = true;
+
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+               "Runtime histogram value should have incremented by 1 due to recording.");
+
+  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTIN");
+  orig = h.snapshot();
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+               "Histogram value should have incremented by 1 due to recording.");
+
+  // Check that base histograms are still being recorded.
+  h = Telemetry.getHistogramById("TELEMETRY_TEST_RELEASE_OPTOUT");
+  h.clear();
+  orig = h.snapshot();
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+               "Histogram value should have incremented by 1 due to recording.");
+}
+
 // Check that histograms that aren't flagged as needing extended stats
 // don't record extended stats.
 function test_extended_stats() {
@@ -528,6 +582,56 @@ function test_keyed_flag_histogram()
   Assert.deepEqual(h.snapshot(), {});
 }
 
+function test_keyed_histogram_recording() {
+  // Check that no histogram is recorded if both base and extended recording are off.
+  Telemetry.canRecordBase = false;
+  Telemetry.canRecordExtended = false;
+
+  const TEST_KEY = "record_foo";
+  let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
+  h.clear();
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 0);
+
+  // Check that only base histograms are recorded.
+  Telemetry.canRecordBase = true;
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+               "The keyed histogram should record the correct value.");
+
+  // Extended set keyed histograms should not be recorded.
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN");
+  h.clear();
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 0,
+               "The keyed histograms should not record any data.");
+
+  // Runtime created histograms should not be recorded.
+  h = Telemetry.newKeyedHistogram("test::runtime_keyed_boolean", "never", Telemetry.HISTOGRAM_BOOLEAN);
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 0,
+               "The keyed histogram should not record any data.");
+
+  // Check that extended histograms are recorded when required.
+  Telemetry.canRecordExtended = true;
+
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+                  "The runtime keyed histogram should record the correct value.");
+
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTIN");
+  h.clear();
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+               "The keyed histogram should record the correct value.");
+
+  // Check that base histograms are still being recorded.
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
+  h.clear();
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1);
+}
+
 function test_keyed_histogram() {
   // Check that invalid names get rejected.
 
@@ -554,6 +658,7 @@ function test_keyed_histogram() {
   test_keyed_boolean_histogram();
   test_keyed_count_histogram();
   test_keyed_flag_histogram();
+  test_keyed_histogram_recording();
 }
 
 function test_datasets()
@@ -770,6 +875,7 @@ function run_test()
   test_histogramFrom();
   test_getSlowSQL();
   test_privateMode();
+  test_histogramRecording();
   test_addons();
   test_extended_stats();
   test_expired_histogram();

@@ -577,6 +577,26 @@ add_task(function* test_leaveRoom() {
   Assert.equal(leaveData.sessionToken, "fakeLeaveSessionToken");
 });
 
+// Test if sending connection status works as expected.
+add_task(function* test_sendConnectionStatus() {
+  let roomToken = "_nxD4V4FflQ";
+  let extraData = {
+    event: "Session.connectionDestroyed",
+    state: "test",
+    connections: 1,
+    sendStreams: 2,
+    recvStreams: 3
+  };
+  let statusData = yield LoopRooms.promise("sendConnectionStatus", roomToken,
+    "fakeStatusSessionToken", extraData
+  );
+  Assert.equal(statusData.sessionToken, "fakeStatusSessionToken");
+
+  extraData.action = "status";
+  extraData.sessionToken = "fakeStatusSessionToken";
+  Assert.deepEqual(statusData, extraData);
+});
+
 // Test if renaming a room works as expected.
 add_task(function* test_renameRoom() {
   Services.prefs.setBoolPref(kContextEnabledPref, true);

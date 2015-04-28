@@ -61,7 +61,7 @@ body {
   background-size: 5px 8px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .property-value, .other-property-value {
     background-image: url(arrow-e@2x.png);
   }

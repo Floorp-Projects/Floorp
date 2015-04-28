@@ -1,5 +1,4 @@
-// Warning should be shown for expression-like statement after semicolon-less
-// return (bug 1005110).
+// Warning should be shown for unreachable statement after return (bug 1151931).
 
 load(libdir + "class.js");
 
@@ -12,7 +11,7 @@ function testWarn(code, lineNumber, columnNumber) {
     eval(code);
   } catch (e) {
     caught = true;
-    assertEq(e.message, "unreachable expression after semicolon-less return statement", code);
+    assertEq(e.constructor, SyntaxError);
     assertEq(e.lineNumber, lineNumber);
     assertEq(e.columnNumber, columnNumber);
   }
@@ -23,7 +22,7 @@ function testWarn(code, lineNumber, columnNumber) {
     Reflect.parse(code);
   } catch (e) {
     caught = true;
-    assertEq(e.message, "unreachable expression after semicolon-less return statement", code);
+    assertEq(e.constructor, SyntaxError);
   }
   assertEq(caught, true, "warning should be caught for " + code);
 }
@@ -46,8 +45,6 @@ function testPass(code) {
   assertEq(caught, false, "warning should not be caught for " + code);
 }
 
-// not EOL
-
 testPass(`
 function f() {
   return (
@@ -55,16 +52,8 @@ function f() {
   );
 }
 `);
-testPass(`
-function f() {
-  return;
-  1 + 2;
-}
-`);
 
-// starts expression
-
-// TOK_INC
+// unary expression
 testWarn(`
 function f() {
   var i = 0;
@@ -72,8 +61,6 @@ function f() {
     ++i;
 }
 `, 5, 4);
-
-// TOK_DEC
 testWarn(`
 function f() {
   var i = 0;
@@ -82,7 +69,7 @@ function f() {
 }
 `, 5, 4);
 
-// TOK_LB
+// array
 testWarn(`
 function f() {
   return
@@ -90,7 +77,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_LC
+// block (object)
 testWarn(`
 function f() {
   return
@@ -109,7 +96,7 @@ function f() {
 }
 `, 4, 2);
 
-// TOK_LP
+// expression in paren
 testWarn(`
 function f() {
   return
@@ -117,7 +104,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_NAME
+// name
 testWarn(`
 function f() {
   return
@@ -125,7 +112,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_NUMBER
+// binary expression
 testWarn(`
 function f() {
   return
@@ -139,7 +126,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_STRING
+// string
 testWarn(`
 function f() {
   return
@@ -159,15 +146,13 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_TEMPLATE_HEAD
+// template string
 testWarn(`
 function f() {
   return
     \`foo\${1 + 2}\`;
 }
 `, 4, 4);
-
-// TOK_NO_SUBS_TEMPLATE
 testWarn(`
 function f() {
   return
@@ -175,7 +160,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_REGEXP
+// RegExp
 testWarn(`
 function f() {
   return
@@ -183,15 +168,13 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_TRUE
+// boolean
 testWarn(`
 function f() {
   return
     true;
 }
 `, 4, 4);
-
-// TOK_FALSE
 testWarn(`
 function f() {
   return
@@ -199,7 +182,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_NULL
+// null
 testWarn(`
 function f() {
   return
@@ -207,7 +190,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_THIS
+// this
 testWarn(`
 function f() {
   return
@@ -215,7 +198,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_NEW
+// new
 testWarn(`
 function f() {
   return
@@ -223,7 +206,7 @@ function f() {
 }
 `, 4, 4);
 
-// TOK_DELETE
+// delete
 testWarn(`
 function f() {
   var a = {x: 10};
@@ -232,7 +215,7 @@ function f() {
 }
 `, 5, 4);
 
-// TOK_YIELD
+// yield
 testWarn(`
 function* f() {
   return
@@ -240,7 +223,7 @@ function* f() {
 }
 `, 4, 4);
 
-// TOK_CLASS
+// class
 if (classesEnabled()) {
   testWarn(`
 function f() {
@@ -250,31 +233,25 @@ function f() {
 `, 4, 4);
 }
 
-// TOK_ADD
+// unary expression
 testWarn(`
 function f() {
   return
     +1;
 }
 `, 4, 4);
-
-// TOK_SUB
 testWarn(`
 function f() {
   return
     -1;
 }
 `, 4, 4);
-
-// TOK_NOT
 testWarn(`
 function f() {
   return
     !1;
 }
 `, 4, 4);
-
-// TOK_BITNOT
 testWarn(`
 function f() {
   return
@@ -282,14 +259,12 @@ function f() {
 }
 `, 4, 4);
 
-// don't start expression
-
-// TOK_EOF
+// eof
 testPass(`
 var f = new Function("return\\n");
 `);
 
-// TOK_SEMI
+// empty statement
 testPass(`
 function f() {
   return
@@ -297,7 +272,7 @@ function f() {
 }
 `);
 
-// TOK_RC
+// end of block
 testPass(`
 function f() {
   {
@@ -306,7 +281,7 @@ function f() {
 }
 `);
 
-// TOK_FUNCTION
+// function (hosted)
 testPass(`
 function f() {
   g();
@@ -315,16 +290,16 @@ function f() {
 }
 `);
 
-// TOK_IF
-testPass(`
+// if
+testWarn(`
 function f() {
   return
   if (true)
     1 + 2;
 }
-`);
+`, 4, 2);
 
-// TOK_ELSE
+// else
 testPass(`
 function f() {
   if (true)
@@ -334,8 +309,8 @@ function f() {
 }
 `);
 
-// TOK_SWITCH
-testPass(`
+// switch
+testWarn(`
 function f() {
   return
   switch (1) {
@@ -343,9 +318,32 @@ function f() {
       break;
   }
 }
+`, 4, 2);
+
+// return in switch
+testWarn(`
+function f() {
+  switch (1) {
+    case 1:
+      return;
+      1 + 2;
+      break;
+  }
+}
+`, 6, 6);
+
+// break in switch
+testPass(`
+function f() {
+  switch (1) {
+    case 1:
+      return;
+      break;
+  }
+}
 `);
 
-// TOK_CASE
+// case
 testPass(`
 function f() {
   switch (1) {
@@ -357,7 +355,7 @@ function f() {
 }
 `);
 
-// TOK_DEFAULT
+// default
 testPass(`
 function f() {
   switch (1) {
@@ -369,14 +367,14 @@ function f() {
 }
 `);
 
-// TOK_WHILE
-testPass(`
+// while
+testWarn(`
 function f() {
   return
   while (false)
     1 + 2;
 }
-`);
+`, 4, 2);
 testPass(`
 function f() {
   do
@@ -385,27 +383,27 @@ function f() {
 }
 `);
 
-// TOK_DO
-testPass(`
+// do
+testWarn(`
 function f() {
   return
   do {
     1 + 2;
   } while (false);
 }
-`);
+`, 4, 2);
 
-// TOK_FOR
-testPass(`
+// for
+testWarn(`
 function f() {
   return
   for (;;) {
     break;
   }
 }
-`);
+`, 4, 2);
 
-// TOK_BREAK
+// break in for
 testPass(`
 function f() {
   for (;;) {
@@ -413,19 +411,19 @@ function f() {
     break;
   }
 }
-`);
+`, 5, 4);
 
-// TOK_CONTINUE
-testPass(`
+// continue
+testWarn(`
 function f() {
   for (;;) {
     return
     continue;
   }
 }
-`);
+`, 5, 4);
 
-// TOK_VAR
+// var (hosted)
 testPass(`
 function f() {
   return
@@ -433,43 +431,43 @@ function f() {
 }
 `);
 
-// TOK_CONST
-testPass(`
+// const
+testWarn(`
 function f() {
   return
   const a = 1;
 }
-`);
+`, 4, 2);
 
-// TOK_WITH
-testPass(`
+// with
+testWarn(`
 function f() {
   return
   with ({}) {
     1;
   }
 }
-`);
+`, 4, 2);
 
-// TOK_RETURN
-testPass(`
+// return
+testWarn(`
 function f() {
   return
   return;
 }
-`);
+`, 4, 2);
 
-// TOK_TRY
-testPass(`
+// try
+testWarn(`
 function f() {
   return
   try {
   } catch (e) {
   }
 }
-`);
+`, 4, 2);
 
-// TOK_THROW
+// throw
 testPass(`
 function f() {
   return
@@ -477,29 +475,37 @@ function f() {
 }
 `);
 
-// TOK_DEBUGGER
-testPass(`
+// debugger
+testWarn(`
 function f() {
   return
   debugger;
 }
-`);
+`, 4, 2);
 
-// TOK_LET
-testPass(`
+// let
+testWarn(`
 function f() {
   return
   let a = 1;
 }
-`);
+`, 4, 2);
 
-// exceptional case
+// skip hoisted
 
-// It's not possible to distinguish between a label statement and an expression
-// starts with identifier, by checking a token next to return.
 testWarn(`
 function f() {
   return
-  a: 1;
+  var a = 0;
+  (1 + 2);
 }
-`, 4, 2);
+`, 5, 2);
+
+testWarn(`
+function f() {
+  return
+  function f() {}
+  var a = 0;
+  (1 + 2);
+}
+`, 6, 2);
