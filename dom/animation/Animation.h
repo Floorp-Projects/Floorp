@@ -54,9 +54,8 @@ protected:
   virtual ~Animation() {}
 
 public:
-  explicit Animation(nsIGlobalObject* aGlobal, AnimationTimeline* aTimeline)
+  explicit Animation(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal)
-    , mTimeline(aTimeline)
     , mPlaybackRate(1.0)
     , mPendingState(PendingState::NotPending)
     , mSequenceNum(kUnsequenced)
@@ -95,6 +94,7 @@ public:
   KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
   void SetEffect(KeyframeEffectReadOnly* aEffect);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
+  void SetTimeline(AnimationTimeline* aTimeline);
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
   Nullable<TimeDuration> GetCurrentTime() const;
