@@ -134,9 +134,14 @@ public:
     AddWatchers(WRITE_WATCHER, false);
   }
 
-  DataSocket* GetDataSocket()
+  BluetoothSocket* GetBluetoothSocket()
   {
     return mConsumer.get();
+  }
+
+  DataSocket* GetDataSocket()
+  {
+    return GetBluetoothSocket();
   }
 
   SocketBase* GetSocketBase()
@@ -159,6 +164,8 @@ public:
   RefPtr<BluetoothSocket> mConsumer;
 
 private:
+  class ReceiveRunnable;
+
   /**
    * libevent triggered functions that reads data from socket when available and
    * guarenteed non-blocking. Only to be called on IO thread.
@@ -517,11 +524,47 @@ DroidSocketImpl::QueryReceiveBuffer(
   return NS_OK;
 }
 
+/**
+ * |ReceiveRunnable| transfers data received on the I/O thread
+ * to an instance of |BluetoothSocket| on the main thread.
+ */
+class DroidSocketImpl::ReceiveRunnable final
+  : public SocketIORunnable<DroidSocketImpl>
+{
+public:
+  ReceiveRunnable(DroidSocketImpl* aIO, UnixSocketBuffer* aBuffer)
+    : SocketIORunnable<DroidSocketImpl>(aIO)
+    , mBuffer(aBuffer)
+  { }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    DroidSocketImpl* io = SocketIORunnable<DroidSocketImpl>::GetIO();
+
+    if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+      // Since we've already explicitly closed and the close
+      // happened before this, this isn't really an error.
+      return NS_OK;
+    }
+
+    BluetoothSocket* bluetoothSocket = io->GetBluetoothSocket();
+    MOZ_ASSERT(bluetoothSocket);
+
+    bluetoothSocket->ReceiveSocketData(mBuffer);
+
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<UnixSocketBuffer> mBuffer;
+};
+
 void
 DroidSocketImpl::ConsumeBuffer()
 {
-  NS_DispatchToMainThread(
-    new SocketIOReceiveRunnable<DroidSocketImpl>(this, mBuffer.forget()));
+  NS_DispatchToMainThread(new ReceiveRunnable(this, mBuffer.forget()));
 }
 
 void

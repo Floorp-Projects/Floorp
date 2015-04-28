@@ -27,6 +27,7 @@ class StreamSocketIO final
 public:
   class ConnectTask;
   class DelayedConnectTask;
+  class ReceiveRunnable;
 
   StreamSocketIO(MessageLoop* mIOLoop,
                  StreamSocket* aStreamSocket,
@@ -39,7 +40,9 @@ public:
                  const nsACString& aAddress);
   ~StreamSocketIO();
 
-  void        GetSocketAddr(nsAString& aAddrStr) const;
+  void GetSocketAddr(nsAString& aAddrStr) const;
+
+  StreamSocket* GetStreamSocket();
   DataSocket* GetDataSocket();
   SocketBase* GetSocketBase();
 
@@ -188,6 +191,12 @@ StreamSocketIO::GetSocketAddr(nsAString& aAddrStr) const
     return;
   }
   mConnector->GetSocketAddr(mAddr, aAddrStr);
+}
+
+StreamSocket*
+StreamSocketIO::GetStreamSocket()
+{
+  return mStreamSocket.get();
 }
 
 DataSocket*
@@ -521,11 +530,47 @@ StreamSocketIO::QueryReceiveBuffer(UnixSocketIOBuffer** aBuffer)
   return NS_OK;
 }
 
+/**
+ * |ReceiveRunnable| transfers data received on the I/O thread
+ * to an instance of |StreamSocket| on the main thread.
+ */
+class StreamSocketIO::ReceiveRunnable final
+  : public SocketIORunnable<StreamSocketIO>
+{
+public:
+  ReceiveRunnable(StreamSocketIO* aIO, UnixSocketBuffer* aBuffer)
+    : SocketIORunnable<StreamSocketIO>(aIO)
+    , mBuffer(aBuffer)
+  { }
+
+  NS_IMETHOD Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    StreamSocketIO* io = SocketIORunnable<StreamSocketIO>::GetIO();
+
+    if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+      // Since we've already explicitly closed and the close
+      // happened before this, this isn't really an error.
+      return NS_OK;
+    }
+
+    StreamSocket* streamSocket = io->GetStreamSocket();
+    MOZ_ASSERT(streamSocket);
+
+    streamSocket->ReceiveSocketData(mBuffer);
+
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<UnixSocketBuffer> mBuffer;
+};
+
 void
 StreamSocketIO::ConsumeBuffer()
 {
-  NS_DispatchToMainThread(
-    new SocketIOReceiveRunnable<StreamSocketIO>(this, mBuffer.forget()));
+  NS_DispatchToMainThread(new ReceiveRunnable(this, mBuffer.forget()));
 }
 
 void
