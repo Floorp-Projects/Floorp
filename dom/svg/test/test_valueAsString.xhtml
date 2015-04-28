@@ -3,7 +3,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=539697 
 -->
 <head>
-  <title>Test SVGTransform behavior</title>
+  <title>Test valueAsString behavior</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -35,6 +35,7 @@ function run()
 
   try {
     c.r.baseVal.valueAsString = 'rubbish';
+    ok(false, 'setting a length to rubbish should fail');
   } catch (e) {
     is(e.name, 'SyntaxError', 'syntax error expected');
     is(e.code, DOMException.SYNTAX_ERR, 'syntax error expected');
@@ -46,6 +47,7 @@ function run()
 
   try {
     m.orientAngle.baseVal.valueAsString = 'rubbish';
+    ok(false, 'setting an angle to rubbish should fail');
   } catch (e) {
     is(e.name, 'SyntaxError', 'syntax error expected');
     is(e.code, DOMException.SYNTAX_ERR, 'syntax error expected');
