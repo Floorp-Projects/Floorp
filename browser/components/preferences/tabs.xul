@@ -16,9 +16,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <prefpane id="paneTabs"
-#ifdef XP_WIN
             onpaneload="gTabsPane.init();"
-#endif
             helpTopic="prefs-tabs">
 
     <preferences id="tabsPreferences">
