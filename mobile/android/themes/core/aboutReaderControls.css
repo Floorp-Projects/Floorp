@@ -2,4 +2,412 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* TODO: Move reader view controls styles out of aboutReader.css */
+.message {
+  margin-top: 40px;
+  display: none;
+  text-align: center;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.header {
+  text-align: start;
+  display: none;
+}
+
+.domain,
+.credits {
+  font-size: 0.9em;
+  font-family: sans-serif;
+}
+
+.domain {
+  margin-top: 10px;
+  padding-bottom: 10px;
+  color: #00acff !important;
+  text-decoration: none;
+}
+
+.domain-border {
+  margin-top: 15px;
+  border-bottom: 1.5px solid #777777;
+  width: 50%;
+}
+
+.header > h1 {
+  font-size: 1.33em;
+  font-weight: 700;
+  line-height: 1.1em;
+  width: 100%;
+  margin: 0px;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  padding: 0px;
+}
+
+.header > .credits {
+  padding: 0px;
+  margin: 0px;
+  margin-bottom: 32px;
+}
+
+/*======= Controls toolbar =======*/
+
+.toolbar {
+  font-family: sans-serif;
+  transition-property: bottom;
+  transition-duration: 0.3s;
+  position: fixed;
+  width: 100%;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background-color: #EBEBF0;
+  border-top: 1px solid #D7D9DB;
+  display: none;
+}
+
+.toolbar[visible] {
+  bottom: 0;
+}
+
+.toolbar > * {
+  float: right;
+  width: 33%;
+}
+
+.button {
+  display: block;
+  background-position: center;
+  background-size: 30px 28px;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  border: 0;
+  width: 100%;
+}
+
+.button:active {
+  background-color: #D7D7DC;
+}
+
+/* Remove dotted border when button is focused */
+.button::-moz-focus-inner,
+.dropdown-popup > div > button::-moz-focus-inner {
+  border: 0;
+}
+
+.button[hidden] {
+  display: none;
+}
+
+.dropdown {
+  left: 0;
+  text-align: center;
+  display: inline-block;
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.dropdown li {
+  margin: 0px;
+  padding: 0px;
+}
+
+.dropdown-toggle {
+  margin: 0px;
+  padding: 0px;
+}
+
+/*======= Font style popup =======*/
+
+.dropdown-popup {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: #EBEBF0;
+  visibility: hidden;
+  border-top: 1px solid #D7D9DB;
+}
+
+/* Only used on desktop */
+.dropdown-popup > hr,
+.dropdown-arrow,
+#font-type-buttons > button > .name {
+  display: none;
+}
+
+.open > .dropdown-popup {
+  visibility: visible;
+  bottom: 100%;
+}
+
+#font-type-buttons,
+#font-size-buttons,
+#color-scheme-buttons {
+  display: flex;
+  flex-direction: row;
+}
+
+#font-type-buttons > button,
+#color-scheme-buttons > button {
+  text-align: center;
+}
+
+#font-type-buttons > button,
+#font-size-buttons > button {
+  width: 50%;
+  background-color: transparent;
+  border: 0;
+}
+
+#font-type-buttons > button {
+  font-size: 24px;
+  color: #AFB1B3;
+  padding: 15px 0;
+}
+
+#font-type-buttons > button:active,
+#font-type-buttons > button.selected {
+  color: #222222;
+}
+
+#font-size-sample {
+  flex: 0;
+  font-size: 24px;
+  color: #000000;
+  margin: 0 30px;
+  padding: 0 10px;
+}
+
+.serif-button {
+  font-family: serif;
+}
+
+.minus-button,
+.plus-button {
+  background-color: transparent;
+  border: 0;
+  height: 60px;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.minus-button {
+  background-size: 24px 6px;
+  margin-left: 50px;
+  padding: 0 5px;
+}
+
+.plus-button {
+  background-size: 24px 24px;
+  margin-right: 50px;
+  padding: 0 5px;
+}
+
+#color-scheme-buttons > button {
+  width: 33%;
+  border-radius: 4px;
+  border: 1px solid #BFBFBF;
+  padding: 10px;
+  margin: 15px 10px;
+  font-size: 14px;
+}
+
+#color-scheme-buttons > button:active,
+#color-scheme-buttons > button.selected {
+  border: 2px solid #FF9500;
+}
+
+.dark-button {
+  color: #eeeeee;
+  background-color: #333333;
+}
+
+.auto-button {
+  color: #000000;
+  background-color: transparent;
+}
+
+.light-button {
+  color: #333333;
+  background-color: #ffffff;
+}
+
+/*======= Toolbar icons =======*/
+
+/* desktop-only controls */
+.close-button,
+.list-button,
+.footer {
+  display: none;
+}
+
+.toggle-button.on {
+  background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-mdpi.png');
+}
+
+.toggle-button {
+  background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-mdpi.png');
+}
+
+.share-button {
+  background-image: url('chrome://browser/skin/images/reader-share-icon-mdpi.png');
+}
+
+.style-button {
+  background-image: url('chrome://browser/skin/images/reader-style-icon-mdpi.png');
+}
+
+.open .style-button {
+  background-image: url('chrome://browser/skin/images/reader-style-icon-active-mdpi.png');
+}
+
+.minus-button {
+  background-image: url('chrome://browser/skin/images/reader-minus-mdpi.png');
+}
+
+.plus-button {
+  background-image: url('chrome://browser/skin/images/reader-plus-mdpi.png');
+}
+
+@media screen and (min-resolution: 1.25dppx) {
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-hdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-hdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-hdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-hdpi.png');
+  }
+
+  .open .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-active-hdpi.png');
+  }
+
+  .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-hdpi.png');
+  }
+
+  .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-hdpi.png');
+  }
+}
+
+@media screen and (min-resolution: 2dppx) {
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xhdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xhdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-xhdpi.png');
+  }
+
+  .open .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xhdpi.png');
+  }
+
+  .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-xhdpi.png');
+  }
+
+  .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-xhdpi.png');
+  }
+}
+
+@media screen and (min-resolution: 3dppx) {
+  .toggle-button.on {
+    background-image: url('chrome://browser/skin/images/reader-toggle-on-icon-xxhdpi.png');
+  }
+
+  .toggle-button {
+    background-image: url('chrome://browser/skin/images/reader-toggle-off-icon-xxhdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-xhdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-xxhdpi.png');
+  }
+
+  .open .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-active-xxhdpi.png');
+  }
+
+  .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-xxhdpi.png');
+  }
+
+  .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-xxhdpi.png');
+  }
+}
+
+@media screen and (orientation: portrait) {
+  .button {
+    height: 56px;
+  }
+
+  .toolbar {
+    bottom: -57px;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  .button {
+    height: 40px;
+  }
+
+  .toolbar {
+    bottom: -41px;
+  }
+}
+
+@media screen and (min-width: 960px) {
+  .button {
+    width: 56px;
+    height: 56px;
+  }
+
+  .toolbar {
+    bottom: -57px;
+  }
+
+  .toolbar > * {
+    width: 56px;
+  }
+
+  .dropdown-popup {
+    position: absolute;
+    width: 350px;
+    left: auto;
+    right: 15px;
+    bottom: -12px;
+    z-index: 1000;
+    background: #EBEBF0;
+    border: 1px solid #D7D9DB;
+    border-radius: 4px;
+    box-shadow: 0px 2px 4px 2px #BFBFBF;
+  }
+}

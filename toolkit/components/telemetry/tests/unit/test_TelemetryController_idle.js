@@ -8,7 +8,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
-Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 
 const PREF_ENABLED = "toolkit.telemetry.enabled";
@@ -42,8 +42,8 @@ add_task(function* testSendPendingOnIdleDaily() {
   yield TelemetryStorage.savePing(PENDING_PING, true);
 
   // Telemetry will not send this ping at startup, because it's not overdue.
-  yield TelemetryPing.setup();
-  TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
+  yield TelemetryController.setup();
+  TelemetryController.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
 
   let pendingPromise = new Promise(resolve =>
     gHttpServer.registerPrefixHandler("/submit/telemetry/", request => resolve(request)));

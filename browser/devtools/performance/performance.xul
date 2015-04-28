@@ -184,27 +184,33 @@
                     <label class="plain call-tree-header"
                            type="duration"
                            crop="end"
-                           value="&profilerUI.table.totalDuration2;"/>
+                           value="&profilerUI.table.totalDuration2;"
+                           tooltiptext="&profilerUI.table.totalDuration.tooltip;"/>
                     <label class="plain call-tree-header"
                            type="percentage"
                            crop="end"
-                           value="&profilerUI.table.totalPercentage;"/>
+                           value="&profilerUI.table.totalPercentage;"
+                           tooltiptext="&profilerUI.table.totalPercentage.tooltip;"/>
                     <label class="plain call-tree-header"
                            type="self-duration"
                            crop="end"
-                           value="&profilerUI.table.selfDuration2;"/>
+                           value="&profilerUI.table.selfDuration2;"
+                           tooltiptext="&profilerUI.table.selfDuration.tooltip;"/>
                     <label class="plain call-tree-header"
                            type="self-percentage"
                            crop="end"
-                           value="&profilerUI.table.selfPercentage;"/>
+                           value="&profilerUI.table.selfPercentage;"
+                           tooltiptext="&profilerUI.table.selfPercentage.tooltip;"/>
                     <label class="plain call-tree-header"
                            type="samples"
                            crop="end"
-                           value="&profilerUI.table.samples;"/>
+                           value="&profilerUI.table.samples;"
+                           tooltiptext="&profilerUI.table.samples.tooltip;"/>
                     <label class="plain call-tree-header"
                            type="function"
                            crop="end"
-                           value="&profilerUI.table.function;"/>
+                           value="&profilerUI.table.function;"
+                           tooltiptext="&profilerUI.table.function.tooltip;"/>
                   </hbox>
                   <vbox class="call-tree-cells-container" flex="1"/>
                 </vbox>
@@ -231,12 +237,12 @@
                          type="allocations"
                          crop="end"
                          value="&profilerUI.table.totalAlloc1;"
-                         tooltiptext="&profilerUI.table.totalAllocTooltip;"/>
+                         tooltiptext="&profilerUI.table.totalAlloc.tooltip;"/>
                   <label class="plain call-tree-header"
                          type="self-allocations"
                          crop="end"
                          value="&profilerUI.table.selfAlloc1;"
-                         tooltiptext="&profilerUI.table.selfAllocTooltip;"/>
+                         tooltiptext="&profilerUI.table.selfAlloc.tooltip;"/>
                   <label class="plain call-tree-header"
                          type="function"
                          crop="end"
