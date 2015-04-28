@@ -1644,7 +1644,7 @@ public:
                   const ObjectOrString& aAlgorithm, bool aExtractable,
                   const Sequence<nsString>& aKeyUsages)
   {
-    ImportKeyTask::Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+    Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
   }
 
   ImportEcKeyTask(JSContext* aCx, const nsAString& aFormat,
@@ -1652,13 +1652,37 @@ public:
                   const ObjectOrString& aAlgorithm, bool aExtractable,
                   const Sequence<nsString>& aKeyUsages)
   {
-    ImportKeyTask::Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+    Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
 
     SetKeyData(aCx, aKeyData);
     NS_ENSURE_SUCCESS_VOID(mEarlyRv);
+  }
+
+  void Init(JSContext* aCx, const nsAString& aFormat,
+            const ObjectOrString& aAlgorithm, bool aExtractable,
+            const Sequence<nsString>& aKeyUsages)
+  {
+    ImportKeyTask::Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+      RootedDictionary<EcKeyImportParams> params(aCx);
+      mEarlyRv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(mEarlyRv) || !params.mNamedCurve.WasPassed()) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      if (!NormalizeToken(params.mNamedCurve.Value(), mNamedCurve)) {
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
+      }
+    }
   }
 
 private:
@@ -1680,14 +1704,19 @@ private:
 
       mKey->SetPrivateKey(privKey.get());
       mKey->SetType(CryptoKey::PRIVATE);
-    } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI) ||
+    } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW) ||
+               mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI) ||
                (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
                 !mJwk.mD.WasPassed())) {
       // Public key import
-      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
+      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
+        pubKey = CryptoKey::PublicECKeyFromRaw(mKeyData, mNamedCurve, locker);
+      } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
         pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
-      } else {
+      } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
         pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
+      } else {
+        MOZ_ASSERT(false);
       }
 
       if (!pubKey) {
@@ -1895,6 +1924,14 @@ private:
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
       if (mPublicKey && mPublicKey->keyType == dhKey) {
         nsresult rv = CryptoKey::PublicDhKeyToRaw(mPublicKey, mResult, locker);
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_DOM_OPERATION_ERR;
+        }
+        return NS_OK;
+      }
+
+      if (mPublicKey && mPublicKey->keyType == ecKey) {
+        nsresult rv = CryptoKey::PublicECKeyToRaw(mPublicKey, mResult, locker);
         if (NS_FAILED(rv)) {
           return NS_ERROR_DOM_OPERATION_ERR;
         }
