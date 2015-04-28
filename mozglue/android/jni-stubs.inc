@@ -77,16 +77,16 @@ Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread(JNIEnv * arg0, jclass 
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_nativeInit_t)(JNIEnv *, jclass, jobject);
+typedef void (*Java_org_mozilla_gecko_GeckoAppShell_nativeInit_t)(JNIEnv *, jclass, jobject, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_nativeInit_t f_Java_org_mozilla_gecko_GeckoAppShell_nativeInit;
 extern "C" NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv * arg0, jclass arg1, jobject arg2) {
+Java_org_mozilla_gecko_GeckoAppShell_nativeInit(JNIEnv * arg0, jclass arg1, jobject arg2, jobject arg3) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_nativeInit) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
         return ;
     }
-     f_Java_org_mozilla_gecko_GeckoAppShell_nativeInit(arg0, arg1, arg2);
+     f_Java_org_mozilla_gecko_GeckoAppShell_nativeInit(arg0, arg1, arg2, arg3);
 }
 #endif
 
@@ -111,25 +111,6 @@ Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv * arg0, jclass arg1) {
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_onResume", &f_Java_org_mozilla_gecko_GeckoAppShell_onResume);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef jobject (*Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue_t)(JNIEnv *, jclass, jobject);
-static Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue_t f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue;
-extern "C" NS_EXPORT jobject JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv * arg0, jclass arg1, jobject arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return nullptr;
-    }
-    return f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue", &f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue);
 #endif
 
 #ifdef JNI_STUBS
