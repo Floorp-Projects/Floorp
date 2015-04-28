@@ -1504,12 +1504,8 @@
 
             // Change the "remote" attribute.
             let parent = aBrowser.parentNode;
-            let permanentKey = aBrowser.permanentKey;
             parent.removeChild(aBrowser);
             aBrowser.setAttribute("remote", aShouldBeRemote ? "true" : "false");
-            // Tearing down the browser gives a new permanentKey but we want to
-            // keep the old one. Re-set it explicitly after unbinding from DOM.
-            aBrowser._permanentKey = permanentKey;
             parent.appendChild(aBrowser);
 
             // Restore the progress listener.
@@ -1628,6 +1624,7 @@
             let isPreloadBrowser = aParams && aParams.isPreloadBrowser;
 
             let b = document.createElementNS(NS_XUL, "browser");
+            b.permanentKey = {};
             b.setAttribute("type", "content-targetable");
             b.setAttribute("message", "true");
             b.setAttribute("messagemanagergroup", "browsers");
@@ -2490,6 +2487,11 @@
 
             // Swap the docshells
             ourBrowser.swapDocShells(aOtherBrowser);
+
+            // Swap permanentKey properties.
+            let ourPermanentKey = ourBrowser.permanentKey;
+            ourBrowser.permanentKey = aOtherBrowser.permanentKey;
+            aOtherBrowser.permanentKey = ourPermanentKey;
 
             // Restore the progress listener
             this.mTabListeners[index] = tabListener =
@@ -3876,6 +3878,7 @@
         <![CDATA[
           let browserStack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
+          this.mCurrentBrowser.permanentKey = {};
 
           this.mCurrentTab = this.tabContainer.firstChild;
           const nsIEventListenerService =
