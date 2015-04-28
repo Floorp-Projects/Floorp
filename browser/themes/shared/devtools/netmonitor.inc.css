@@ -470,7 +470,7 @@ label.requests-menu-status-code {
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #details-pane-toggle {
     list-style-image: url("chrome://browser/skin/devtools/debugger-collapse@2x.png");
     -moz-image-region: rect(0px,32px,32px,0px);
@@ -603,7 +603,7 @@ label.requests-menu-status-code {
   height: 12px;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .security-warning-icon {
     background-image: url(alerticon-warning@2x.png);
   }

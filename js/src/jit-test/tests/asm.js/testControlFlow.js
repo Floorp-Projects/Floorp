@@ -12,7 +12,7 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; if ((i|0) == 0) i 
 assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; if (i) return 0; } return f");
 assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; if (i) return 0; else return 1 } return f");
 assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; if (i) return 0; return 1.0 } return f");
-assertAsmTypeFail(USE_ASM + "function f() { return 0; 1 } return f");
+assertAsmTypeFail(USE_ASM + "function f() { if (0) return 0; 1 } return f");
 
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { while (0) {} return 0} return f"))(), 0);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { for (;0;) {} return 0} return f"))(), 0);

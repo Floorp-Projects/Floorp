@@ -37,7 +37,7 @@ assertEq(asmLink(asmCompile(USE_ASM + 'function f(){;} return f'))(), undefined)
 assertAsmTypeFail(USE_ASM + 'function f(i,j){;} return f');
 assertEq(asmLink(asmCompile('"use asm";; function f(){};;; return f;;'))(), undefined);
 assertAsmTypeFail(USE_ASM + 'function f(x){} return f');
-assertAsmTypeFail(USE_ASM + 'function f(){return; return 1} return f');
+assertAsmTypeFail(USE_ASM + 'function f(){if (0) return; return 1} return f');
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(x){x=x|0} return f'))(42), undefined);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(x){x=x|0; return x|0} return f'))(42), 42);
 assertEq(asmLink(asmCompile(USE_ASM + 'function f(x){x=x|0; return x|0;;;} return f'))(42), 42);

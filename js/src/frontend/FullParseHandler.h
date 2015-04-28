@@ -633,6 +633,15 @@ class FullParseHandler
         return false;
     }
 
+    bool isReturnStatement(ParseNode* node) {
+        return node->isKind(PNK_RETURN);
+    }
+
+    bool isStatementPermittedAfterReturnStatement(ParseNode *node) {
+        ParseNodeKind kind = node->getKind();
+        return kind == PNK_FUNCTION || kind == PNK_VAR || kind == PNK_BREAK || kind == PNK_THROW;
+    }
+
     inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op);
 
     void setBeginPosition(ParseNode* pn, ParseNode* oth) {
@@ -659,11 +668,23 @@ class FullParseHandler
     }
 
     ParseNode* newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind != PNK_VAR);
+        return new_<ListNode>(kind, op, pos());
+    }
+    ParseNode* newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||
+                   kind == PNK_GLOBALCONST);
         return new_<ListNode>(kind, op, pos());
     }
 
     /* New list with one initial child node. kid must be non-null. */
     ParseNode* newList(ParseNodeKind kind, ParseNode* kid, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind != PNK_VAR);
+        return new_<ListNode>(kind, op, kid);
+    }
+    ParseNode* newDeclarationList(ParseNodeKind kind, ParseNode* kid, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||
+                   kind == PNK_GLOBALCONST);
         return new_<ListNode>(kind, op, kid);
     }
 

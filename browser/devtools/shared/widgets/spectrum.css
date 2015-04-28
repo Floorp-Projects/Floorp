@@ -33,7 +33,7 @@
   background-position: -48px center;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #eyedropper-button {
     background-image: url("chrome://browser/skin/devtools/command-eyedropper@2x.png");
   }
