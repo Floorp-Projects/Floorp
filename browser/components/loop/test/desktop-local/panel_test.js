@@ -833,6 +833,24 @@ describe("loop.panel", function() {
       var contextInfo = view.getDOMNode().querySelector(".context");
       expect(contextInfo.classList.contains("hide")).to.equal(true);
     });
+
+    it("should show only the hostname of the url", function() {
+      fakeMozLoop.getSelectedTabMetadata = function (callback) {
+        callback({
+          url: "https://www.example.com:1234",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent();
+
+      // Simulate being visible
+      view.onDocumentVisible();
+
+      var contextHostname = view.getDOMNode().querySelector(".context-url");
+      expect(contextHostname.textContent).eql("www.example.com");
+    });
   });
 
   describe('loop.panel.ToSView', function() {
