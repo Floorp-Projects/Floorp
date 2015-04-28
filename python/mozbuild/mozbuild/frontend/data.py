@@ -160,19 +160,17 @@ class XPIDLFile(ContextDerived):
     """Describes an XPIDL file to be compiled."""
 
     __slots__ = (
-        'add_to_manifest',
         'basename',
         'install_target',
         'source_path',
     )
 
-    def __init__(self, context, source, module, add_to_manifest):
+    def __init__(self, context, source, module):
         ContextDerived.__init__(self, context)
 
         self.source_path = source
         self.basename = mozpath.basename(source)
         self.module = module
-        self.add_to_manifest = add_to_manifest
 
         self.install_target = context['FINAL_TARGET']
 
