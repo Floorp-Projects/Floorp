@@ -94,7 +94,7 @@ public:
 
   KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
   void SetEffect(KeyframeEffectReadOnly* aEffect);
-  AnimationTimeline* Timeline() const { return mTimeline; }
+  AnimationTimeline* GetTimeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
   Nullable<TimeDuration> GetCurrentTime() const;

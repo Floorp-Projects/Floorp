@@ -17,7 +17,7 @@ interface Animation {
   // Bug 1049975: Make 'effect' writeable
   [Pure]
   readonly attribute AnimationEffectReadOnly? effect;
-  readonly attribute AnimationTimeline timeline;
+  readonly attribute AnimationTimeline? timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;
   [SetterThrows, BinaryName="currentTimeAsDouble"]
