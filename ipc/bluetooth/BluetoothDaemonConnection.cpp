@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include "mozilla/ipc/DataSocket.h"
 #include "mozilla/ipc/UnixSocketWatcher.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"

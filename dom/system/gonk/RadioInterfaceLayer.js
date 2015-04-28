@@ -89,24 +89,16 @@ const NETWORK_TYPE_MOBILE_DUN  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
 
 // TODO: Bug 815526, deprecate RILContentHelper.
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
-  "RIL:GetRilContext",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
   "RIL:SendStkEventDownload",
-  "RIL:GetCardLockEnabled",
-  "RIL:UnlockCardLock",
-  "RIL:SetCardLockEnabled",
-  "RIL:ChangeCardLockPassword",
-  "RIL:GetCardLockRetryCount",
   "RIL:IccOpenChannel",
   "RIL:IccExchangeAPDU",
   "RIL:IccCloseChannel",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
   "RIL:RegisterIccMsg",
-  "RIL:MatchMvno",
-  "RIL:GetServiceState"
 ];
 
 // set to true in ril_consts.js to see debug messages
@@ -169,7 +161,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
                                    "nsIGonkMobileConnectionService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
-                                   "@mozilla.org/cellbroadcast/gonkservice;1",
+                                   "@mozilla.org/cellbroadcast/cellbroadcastservice;1",
                                    "nsIGonkCellBroadcastService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
@@ -881,44 +873,6 @@ try {
   })());
 } catch (e) {}
 
-function IccInfo() {}
-IccInfo.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIccInfo]),
-
-  // nsIIccInfo
-
-  iccType: null,
-  iccid: null,
-  mcc: null,
-  mnc: null,
-  spn: null,
-  isDisplayNetworkNameRequired: false,
-  isDisplaySpnRequired: false
-};
-
-function GsmIccInfo() {}
-GsmIccInfo.prototype = {
-  __proto__: IccInfo.prototype,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGsmIccInfo,
-                                         Ci.nsIIccInfo]),
-
-  // nsIGsmIccInfo
-
-  msisdn: null
-};
-
-function CdmaIccInfo() {}
-CdmaIccInfo.prototype = {
-  __proto__: IccInfo.prototype,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICdmaIccInfo,
-                                         Ci.nsIIccInfo]),
-
-  // nsICdmaIccInfo
-
-  mdn: null,
-  prlVersion: 0
-};
-
 function DataConnectionHandler(clientId, radioInterface) {
   // Initial owning attributes.
   this.clientId = clientId;
@@ -1441,7 +1395,6 @@ RadioInterfaceLayer.prototype = {
                                     interfaces: [Ci.nsIRadioInterfaceLayer]}),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
-                                         Ci.nsIRadioInterfaceLayer_new, // TODO: Bug 815526, deprecate RILContentHelper.
                                          Ci.nsIObserver]),
 
   /**
@@ -1689,12 +1642,6 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   };
   aWorkerMessenger.registerClient(aClientId, this);
 
-  this.rilContext = {
-    cardState:      Ci.nsIIcc.CARD_STATE_UNKNOWN,
-    iccInfo:        null,
-    imsi:           null
-  };
-
   this.operatorInfo = {};
 
   let lock = gSettingsService.createLock();
@@ -1752,42 +1699,14 @@ RadioInterface.prototype = {
     Services.obs.removeObserver(this, kNetworkConnStateChangedTopic);
   },
 
-  /**
-   * A utility function to copy objects. The srcInfo may contain
-   * "rilMessageType", should ignore it.
-   */
-  updateInfo: function(srcInfo, destInfo) {
-    for (let key in srcInfo) {
-      if (key === "rilMessageType") {
-        continue;
-      }
-      destInfo[key] = srcInfo[key];
-    }
-  },
-
-  /**
-   * A utility function to compare objects. The srcInfo may contain
-   * "rilMessageType", should ignore it.
-   */
-  isInfoChanged: function(srcInfo, destInfo) {
-    if (!destInfo) {
-      return true;
-    }
-
-    for (let key in srcInfo) {
-      if (key === "rilMessageType") {
-        continue;
-      }
-      if (srcInfo[key] !== destInfo[key]) {
-        return true;
-      }
-    }
-
-    return false;
+  getIccInfo: function() {
+    let icc = gIccService.getIccByServiceId(this.clientId);
+    return icc ? icc.iccInfo : null;
   },
 
   isCardPresent: function() {
-    let cardState = this.rilContext.cardState;
+    let icc = gIccService.getIccByServiceId(this.clientId);
+    let cardState = icc ? icc.cardState : Ci.nsIIcc.CARD_STATE_UNKNOWN;
     return cardState !== Ci.nsIIcc.CARD_STATE_UNDETECTED &&
       cardState !== Ci.nsIIcc.CARD_STATE_UNKNOWN;
   },
@@ -1799,29 +1718,6 @@ RadioInterface.prototype = {
    */
   receiveMessage: function(msg) {
     switch (msg.name) {
-      case "RIL:GetRilContext":
-        // This message is sync.
-        return this.rilContext;
-      case "RIL:GetCardLockEnabled":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockEnabled",
-                                                "RIL:GetCardLockResult");
-        break;
-      case "RIL:UnlockCardLock":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccUnlockCardLock",
-                                                "RIL:SetUnlockCardLockResult");
-        break;
-      case "RIL:SetCardLockEnabled":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccSetCardLockEnabled",
-                                                "RIL:SetUnlockCardLockResult");
-        break;
-      case "RIL:ChangeCardLockPassword":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccChangeCardLockPassword",
-                                                "RIL:SetUnlockCardLockResult");
-        break;
-      case "RIL:GetCardLockRetryCount":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockRetryCount",
-                                                "RIL:CardLockRetryCount");
-        break;
       case "RIL:SendStkResponse":
         this.workerMessenger.send("sendStkTerminalResponse", msg.json.data);
         break;
@@ -1848,12 +1744,6 @@ RadioInterface.prototype = {
         break;
       case "RIL:UpdateIccContact":
         this.workerMessenger.sendWithIPCMessage(msg, "updateICCContact");
-        break;
-      case "RIL:MatchMvno":
-        this.matchMvno(msg.target, msg.json.data);
-        break;
-      case "RIL:GetServiceState":
-        this.workerMessenger.sendWithIPCMessage(msg, "getIccServiceState");
         break;
     }
     return null;
@@ -1924,13 +1814,9 @@ RadioInterface.prototype = {
                                                         message.radioState);
         break;
       case "cardstatechange":
-        this.rilContext.cardState = message.cardState;
-        gRadioEnabledController.receiveCardState(this.clientId);
         gIccService.notifyCardStateChanged(this.clientId,
-                                           this.rilContext.cardState);
-        // TODO: Bug 815526, deprecate RILContentHelper.
-        gMessageManager.sendIccMessage("RIL:CardStateChanged",
-                                       this.clientId, message);
+                                           message.cardState);
+        gRadioEnabledController.receiveCardState(this.clientId);
         break;
       case "sms-received":
         this.handleSmsReceived(message);
@@ -1942,11 +1828,11 @@ RadioInterface.prototype = {
         this.handleNitzTime(message);
         break;
       case "iccinfochange":
-        this.handleIccInfoChange(message);
+        gIccService.notifyIccInfoChanged(this.clientId,
+                                         message.iccid ? message : null);
         break;
       case "iccimsi":
-        this.rilContext.imsi = message.imsi;
-        gIccService.notifyImsiChanged(this.clientId, this.rilContext.imsi);
+        gIccService.notifyImsiChanged(this.clientId, message.imsi);
         break;
       case "iccmbdn":
         this.handleIccMbdn(message);
@@ -1968,85 +1854,6 @@ RadioInterface.prototype = {
         throw new Error("Don't know about this message type: " +
                         message.rilMessageType);
     }
-  },
-
-  // Matches the mvnoData pattern with imsi. Characters 'x' and 'X' are skipped
-  // and not compared. E.g., if the mvnoData passed is '310260x10xxxxxx',
-  // then the function returns true only if imsi has the same first 6 digits,
-  // 8th and 9th digit.
-  // TODO: Bug 815526, deprecate RILContentHelper.
-  isImsiMatches: function(mvnoData) {
-    let imsi = this.rilContext.imsi;
-
-    // This should not be an error, but a mismatch.
-    if (mvnoData.length > imsi.length) {
-      return false;
-    }
-
-    for (let i = 0; i < mvnoData.length; i++) {
-      let c = mvnoData[i];
-      if ((c !== 'x') && (c !== 'X') && (c !== imsi[i])) {
-        return false;
-      }
-    }
-    return true;
-  },
-
-  // TODO: Bug 815526, deprecate RILContentHelper.
-  matchMvno: function(target, message) {
-    if (DEBUG) this.debug("matchMvno: " + JSON.stringify(message));
-
-    if (!message || !message.mvnoData) {
-      message.errorMsg = RIL.GECKO_ERROR_INVALID_PARAMETER;
-    }
-
-    if (!message.errorMsg) {
-      switch (message.mvnoType) {
-        case RIL.GECKO_CARDMVNO_TYPE_IMSI:
-          if (!this.rilContext.imsi) {
-            message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
-            break;
-          }
-          message.result = this.isImsiMatches(message.mvnoData);
-          break;
-        case RIL.GECKO_CARDMVNO_TYPE_SPN:
-          let spn = this.rilContext.iccInfo && this.rilContext.iccInfo.spn;
-          if (!spn) {
-            message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
-            break;
-          }
-          message.result = spn == message.mvnoData;
-          break;
-        case RIL.GECKO_CARDMVNO_TYPE_GID:
-          this.workerMessenger.send("getGID1", null, (function(response) {
-            let gid = response.gid1;
-            let mvnoDataLength = message.mvnoData.length;
-
-            if (!gid) {
-              message.errorMsg = RIL.GECKO_ERROR_GENERIC_FAILURE;
-            } else if (mvnoDataLength > gid.length) {
-              message.result = false;
-            } else {
-              message.result =
-                gid.substring(0, mvnoDataLength).toLowerCase() ==
-                message.mvnoData.toLowerCase();
-            }
-
-            target.sendAsyncMessage("RIL:MatchMvno", {
-              clientId: this.clientId,
-              data: message
-            });
-          }).bind(this));
-          return;
-        default:
-          message.errorMsg = RIL.GECKO_ERROR_MODE_NOT_SUPPORTED;
-      }
-    }
-
-    target.sendAsyncMessage("RIL:MatchMvno", {
-      clientId: this.clientId,
-      data: message
-    });
   },
 
   setDataRegistration: function(attach) {
@@ -2227,71 +2034,12 @@ RadioInterface.prototype = {
                                 null, null);
   },
 
-  handleIccInfoChange: function(message) {
-    let oldSpn = this.rilContext.iccInfo ? this.rilContext.iccInfo.spn : null;
-
-    // TODO: Bug 815526, deprecate RILContentHelper:
-    //       Move the logic of updating iccInfo to IccService.js.
-    if (!message || !message.iccid) {
-      // If iccInfo is already `null`, don't have to clear it and send
-      // RIL:IccInfoChanged.
-      if (!this.rilContext.iccInfo) {
-        return;
-      }
-
-      // Card is not detected, clear iccInfo to null.
-      this.rilContext.iccInfo = null;
-    } else {
-      if (!this.rilContext.iccInfo) {
-        if (message.iccType === "ruim" || message.iccType === "csim") {
-          this.rilContext.iccInfo = new CdmaIccInfo();
-        } else if (message.iccType === "sim" || message.iccType === "usim") {
-          this.rilContext.iccInfo = new GsmIccInfo();
-        } else {
-          this.rilContext.iccInfo = new IccInfo();
-        }
-      }
-
-      if (!this.isInfoChanged(message, this.rilContext.iccInfo)) {
-        return;
-      }
-
-      this.updateInfo(message, this.rilContext.iccInfo);
-    }
-
-    // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
-    // when iccInfo has changed.
-    // TODO: Bug 815526, deprecate RILContentHelper.
-    gMessageManager.sendIccMessage("RIL:IccInfoChanged",
-                                   this.clientId,
-                                   message.iccid ? message : null);
-    gIccService.notifyIccInfoChanged(this.clientId,
-                                     message.iccid ? message : null);
-
-    // Update lastKnownHomeNetwork.
-    if (message.mcc && message.mnc) {
-      let lastKnownHomeNetwork = message.mcc + "-" + message.mnc;
-      // Append spn information if available.
-      if (message.spn) {
-        lastKnownHomeNetwork += "-" + message.spn;
-      }
-
-      gMobileConnectionService.notifyLastHomeNetworkChanged(this.clientId,
-                                                            lastKnownHomeNetwork);
-    }
-
-    // If spn becomes available, we should check roaming again.
-    if (!oldSpn && message.spn) {
-      gMobileConnectionService.notifySpnAvailable(this.clientId);
-    }
-  },
-
   handleStkProactiveCommand: function(message) {
     if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
-    let iccId = this.rilContext.iccInfo && this.rilContext.iccInfo.iccid;
-    if (iccId) {
+    let iccInfo = this.getIccInfo();
+    if (iccInfo && iccInfo.iccid) {
       gIccMessenger
-        .notifyStkProactiveCommand(iccId,
+        .notifyStkProactiveCommand(iccInfo.iccid,
                                    gStkCmdFactory.createCommand(message));
     }
     // TODO: Bug 815526, deprecate RILContentHelper.
@@ -2588,8 +2336,6 @@ RadioInterface.prototype = {
   },
 
   // nsIRadioInterface
-
-  rilContext: null,
 
   // TODO: Bug 928861 - B2G NetworkManager: Provide a more generic function
   //                    for connecting
@@ -3226,8 +2972,8 @@ RILNetworkInterface.prototype = {
   },
 
   get iccId() {
-    let iccInfo = this.dataConnectionHandler.radioInterface.rilContext.iccInfo;
-    return iccInfo && iccInfo.iccid;
+    let iccInfo = this.dataConnectionHandler.radioInterface.getIccInfo();
+    return iccInfo ? iccInfo.iccid : null;
   },
 
   get mmsc() {

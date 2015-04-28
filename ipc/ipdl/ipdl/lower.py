@@ -1838,12 +1838,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         if usesend or userecv:
             transitionfunc.addstmt(Whitespace.NL)
 
-        transitionfunc.addstmts([
-            fromswitch,
-            # all --> Error transitions break to here
-            StmtExpr(ExprAssn(ExprDeref(nextvar), _errorState())),
-            StmtReturn(ExprLiteral.FALSE)
-        ])
+        transitionfunc.addstmt(fromswitch)
+        # all --> Error transitions break to here.  But only insert this
+        # block if there is any possibility of such transitions.
+        if self.protocol.transitionStmts:
+            transitionfunc.addstmts([
+                StmtExpr(ExprAssn(ExprDeref(nextvar), _errorState())),
+                StmtReturn(ExprLiteral.FALSE),
+            ])
+
         return transitionfunc
 
 ##--------------------------------------------------

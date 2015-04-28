@@ -76,8 +76,12 @@ XPCOMUtils.defineLazyGetter(this, "gWAP", function() {
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
-                                   "@mozilla.org/cellbroadcast/gonkservice;1",
+                                   "@mozilla.org/cellbroadcast/cellbroadcastservice;1",
                                    "nsIGonkCellBroadcastService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
+                                   "@mozilla.org/icc/iccservice;1",
+                                   "nsIIccService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
@@ -158,7 +162,7 @@ SmsService.prototype = {
     // Get the proper IccInfo based on the current card type.
     try {
       let iccInfo = null;
-      let baseIccInfo = gRadioInterfaces[aServiceId].rilContext.iccInfo;
+      let baseIccInfo = this._getIccInfo(aServiceId);
       if (baseIccInfo.iccType === 'ruim' || baseIccInfo.iccType === 'csim') {
         iccInfo = baseIccInfo.QueryInterface(Ci.nsICdmaIccInfo);
         number = iccInfo.mdn;
@@ -176,8 +180,18 @@ SmsService.prototype = {
     return number;
   },
 
+  _getIccInfo: function(aServiceId) {
+    let icc = gIccService.getIccByServiceId(aServiceId);
+    return icc ? icc.iccInfo : null;
+  },
+
+  _getCardState: function(aServiceId) {
+    let icc = gIccService.getIccByServiceId(aServiceId);
+    return icc ? icc.cardState : Ci.nsIIcc.CARD_STATE_UNKNOWN;
+  },
+
   _getIccId: function(aServiceId) {
-    let iccInfo = gRadioInterfaces[aServiceId].rilContext.iccInfo;
+    let iccInfo = this._getIccInfo(aServiceId);
 
     if (!iccInfo) {
       return null;
@@ -887,8 +901,7 @@ SmsService.prototype = {
                  radioState == Ci.nsIMobileConnection.MOBILE_RADIO_STATE_DISABLED) {
         if (DEBUG) debug("Error! Radio is disabled when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
-      } else if (gRadioInterfaces[aServiceId].rilContext.cardState !=
-                 Ci.nsIIcc.CARD_STATE_READY) {
+      } else if (this._getCardState(aServiceId) != Ci.nsIIcc.CARD_STATE_READY) {
         if (DEBUG) debug("Error! SIM card is not ready when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
       }
