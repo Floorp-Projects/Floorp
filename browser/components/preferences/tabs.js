@@ -26,11 +26,8 @@ var gTabsPane = {
    * - true if tabs are to be shown in the Windows 7 taskbar
    */
 
-#ifdef XP_WIN
-  /**
-   * Initialize any platform-specific UI.
-   */
   init: function () {
+#ifdef XP_WIN
     const Cc = Components.classes;
     const Ci = Components.interfaces;
     try {
@@ -40,8 +37,20 @@ var gTabsPane = {
       let showTabsInTaskbar = document.getElementById("showTabsInTaskbar");
       showTabsInTaskbar.hidden = ver < 6.1;
     } catch (ex) {}
-  },
 #endif
+
+    // The "closing multiple tabs" and "opening multiple tabs might slow down
+    // &brandShortName;" warnings provide options for not showing these
+    // warnings again. When the user disabled them, we provide checkboxes to
+    // re-enable the warnings.
+    let TransientPrefs =
+      Components.utils.import("resource:///modules/TransientPrefs.jsm", {})
+                .TransientPrefs;
+    if (!TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnClose"))
+      document.getElementById("warnCloseMultiple").hidden = true;
+    if (!TransientPrefs.prefShouldBeVisible("browser.tabs.warnOnOpen"))
+      document.getElementById("warnOpenMany").hidden = true;
+  },
 
   /**
    * Determines where a link which opens a new window will open.
