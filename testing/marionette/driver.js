@@ -216,7 +216,7 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
  */
 GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
   let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
-  name = `Marionette:${name}`;
+  name = "Marionette:" + name;
 
   if (cmdId) {
     msg.command_id = cmdId;
@@ -888,7 +888,7 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
     };
 
     if (!directInject) {
-      script = `let func = function() { ${script} }; func.apply(null, __marionetteParams);`;
+      script = "let func = function() { " + script + " }; func.apply(null, __marionetteParams);";
     }
     this.executeScriptInSandbox(
         resp,
