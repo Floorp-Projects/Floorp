@@ -243,6 +243,15 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
         curEvent = PopNextEvent();
         if (!curEvent && mayWait) {
+            // This processes messages in the Android Looper. Note that we only
+            // get here if the normal Gecko event loop has been awoken
+            // (bug 750713). Looper messages effectively have the lowest
+            // priority because we only process them before we're about to
+            // wait for new events.
+            if (widget::GeckoAppShell::PumpMessageLoop()) {
+                return true;
+            }
+
             PROFILER_LABEL("nsAppShell", "ProcessNextNativeEvent::Wait",
                 js::ProfileEntry::Category::EVENTS);
             mozilla::HangMonitor::Suspend();
