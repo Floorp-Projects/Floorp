@@ -1,21 +1,20 @@
-function test() {
-  waitForExplicitFinish();
+"use strict";
 
-  var tab1 = gBrowser.addTab("data:text/plain;charset=utf-8,foo");
+add_task(function* () {
+  let tab1 = gBrowser.addTab("data:text/plain;charset=utf-8,foo");
   gBrowser.pinTab(tab1);
 
-  promiseBrowserLoaded(tab1.linkedBrowser).then(() => {
-    var tab2 = gBrowser.addTab();
-    gBrowser.pinTab(tab2);
+  yield promiseBrowserLoaded(tab1.linkedBrowser);
+  let tab2 = gBrowser.addTab();
+  gBrowser.pinTab(tab2);
 
-    is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 is at the first position");
-    gBrowser.removeTab(tab1);
-    tab1 = undoCloseTab();
-    ok(tab1.pinned, "pinned tab 1 has been restored as a pinned tab");
-    is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 has been restored to the first position");
+  is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 is at the first position");
+  yield promiseRemoveTab(tab1);
 
-    gBrowser.removeTab(tab1);
-    gBrowser.removeTab(tab2);
-    finish();
-  });
-}
+  tab1 = undoCloseTab();
+  ok(tab1.pinned, "pinned tab 1 has been restored as a pinned tab");
+  is(Array.indexOf(gBrowser.tabs, tab1), 0, "pinned tab 1 has been restored to the first position");
+
+  gBrowser.removeTab(tab1);
+  gBrowser.removeTab(tab2);
+});
