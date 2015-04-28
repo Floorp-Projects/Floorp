@@ -1991,15 +1991,7 @@ ThreadActor.prototype = {
     // scripts to the ScriptStore yet.
     this.scripts.addScripts(this.dbg.findScripts({ source: aScript.source }));
 
-    this._addScript(aScript);
-
-    // `onNewScript` is only fired for top-level scripts (AKA staticLevel == 0),
-    // but top-level scripts have the wrong `lineCount` sometimes (bug 979094),
-    // so iterate over the immediate children to activate breakpoints for now
-    // (TODO bug 1124258: don't do this when `lineCount` bug is fixed)
-    for (let s of aScript.getChildScripts()) {
-      this._addScript(s);
-    }
+    this._addSource(aScript.source);
   },
 
   onNewSource: function (aSource) {
@@ -2011,34 +2003,33 @@ ThreadActor.prototype = {
   },
 
   /**
-   * Restore any pre-existing breakpoints to the scripts that we have access to.
+   * Restore any pre-existing breakpoints to the sources that we have access to.
    */
   _restoreBreakpoints: function () {
     if (this.breakpointActorMap.size === 0) {
       return;
     }
 
-    for (let s of this.scripts.getAllScripts()) {
-      this._addScript(s);
+    for (let s of this.scripts.getSources()) {
+      this._addSource(s);
     }
   },
 
   /**
-   * Add the provided script to the server cache.
+   * Add the provided source to the server cache.
    *
-   * @param aScript Debugger.Script
-   *        The source script that will be stored.
-   * @returns true, if the script was added; false otherwise.
+   * @param aSource Debugger.Source
+   *        The source that will be stored.
+   * @returns true, if the source was added; false otherwise.
    */
-  _addScript: function (aScript) {
-    if (!this.sources.allowSource(aScript.source)) {
+  _addSource: function (aSource) {
+    if (!this.sources.allowSource(aSource)) {
       return false;
     }
 
     // Set any stored breakpoints.
     let promises = [];
-    let sourceActor = this.sources.createNonSourceMappedActor(aScript.source);
-    let endLine = aScript.startLine + aScript.lineCount - 1;
+    let sourceActor = this.sources.createNonSourceMappedActor(aSource);
     for (let _actor of this.breakpointActorMap.findActors()) {
       // XXX bug 1142115: We do async work in here, so we need to
       // create a fresh binding because for/of does not yet do that in
@@ -2050,10 +2041,7 @@ ThreadActor.prototype = {
       } else {
         promises.push(this.sources.getGeneratedLocation(actor.originalLocation)
                                   .then((generatedLocation) => {
-          // Limit the search to the line numbers contained in the new script.
-          if (generatedLocation.generatedSourceActor.actorID === sourceActor.actorID &&
-              generatedLocation.generatedLine >= aScript.startLine &&
-              generatedLocation.generatedLine <= endLine) {
+          if (generatedLocation.generatedSourceActor.actorID === sourceActor.actorID) {
             sourceActor._setBreakpointAtGeneratedLocation(
               actor,
               generatedLocation
@@ -2070,7 +2058,7 @@ ThreadActor.prototype = {
     // Go ahead and establish the source actors for this script, which
     // fetches sourcemaps if available and sends onNewSource
     // notifications
-    this.sources.createSourceActors(aScript.source);
+    this.sources.createSourceActors(aSource);
 
     return true;
   },
