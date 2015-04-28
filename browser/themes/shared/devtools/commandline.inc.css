@@ -82,7 +82,7 @@
   -moz-image-region: rect(0px, 64px, 16px, 48px);
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #developer-toolbar-toolbox-button {
     list-style-image: url("chrome://browser/skin/devtools/toggle-tools@2x.png");
     -moz-image-region: rect(0px, 32px, 32px, 0px);
@@ -111,7 +111,7 @@
   opacity: 0.6;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   #developer-toolbar-closebutton {
     list-style-image: url("chrome://browser/skin/devtools/close@2x.png");
   }
@@ -199,7 +199,7 @@ html|*#gcli-output-frame {
   background-position: -16px center;
 }
 
-@media (min-resolution: 2dppx) {
+@media (min-resolution: 1.25dppx) {
   .gclitoolbar-input-node::before {
     background-image: url("chrome://browser/skin/devtools/commandline-icon@2x.png");
   }
