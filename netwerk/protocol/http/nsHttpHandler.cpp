@@ -382,8 +382,7 @@ nsHttpHandler::MakeNewRequestTokenBucket()
         return;
 
     nsRefPtr<EventTokenBucket> tokenBucket =
-        new EventTokenBucket(RequestTokenBucketHz(),
-                                           RequestTokenBucketBurst());
+        new EventTokenBucket(RequestTokenBucketHz(), RequestTokenBucketBurst());
     mConnMgr->UpdateRequestTokenBucket(tokenBucket);
 }
 
@@ -1452,23 +1451,20 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             }
         }
     }
-    if (requestTokenBucketUpdated) {
-        MakeNewRequestTokenBucket();
-    }
 
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.enabled"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("pacing.requests.enabled"),
-                                &cVar);
-        if (NS_SUCCEEDED(rv)){
-            requestTokenBucketUpdated = true;
+        rv = prefs->GetBoolPref(HTTP_PREF("pacing.requests.enabled"), &cVar);
+        if (NS_SUCCEEDED(rv)) {
             mRequestTokenBucketEnabled = cVar;
+            requestTokenBucketUpdated = true;
         }
     }
-
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.min-parallelism"))) {
         rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.min-parallelism"), &val);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mRequestTokenBucketMinParallelism = static_cast<uint16_t>(clamped(val, 1, 1024));
+            requestTokenBucketUpdated = true;
+        }
     }
     if (PREF_CHANGED(HTTP_PREF("pacing.requests.hz"))) {
         rv = prefs->GetIntPref(HTTP_PREF("pacing.requests.hz"), &val);
@@ -1485,9 +1481,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         }
     }
     if (requestTokenBucketUpdated) {
-        mRequestTokenBucket =
-            new EventTokenBucket(RequestTokenBucketHz(),
-                                 RequestTokenBucketBurst());
+        MakeNewRequestTokenBucket();
     }
 
     // Keepalive values for initial and idle connections.
