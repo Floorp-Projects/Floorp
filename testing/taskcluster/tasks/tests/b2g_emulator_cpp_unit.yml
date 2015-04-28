@@ -7,6 +7,7 @@ task:
     description: CPP Unit Tests test run
 
   workerType: b2gtest-emulator
+  provisionerId: aws-provisioner-v1
   payload:
     command:
       - entrypoint
