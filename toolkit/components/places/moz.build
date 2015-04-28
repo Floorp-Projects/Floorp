@@ -14,8 +14,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'places'
 
 if CONFIG['MOZ_PLACES']:
-    MSVC_ENABLE_PGO = True
-
     XPIDL_SOURCES += [
         'mozIAsyncFavicons.idl',
         'mozIAsyncHistory.idl',

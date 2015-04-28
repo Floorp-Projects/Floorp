@@ -47,8 +47,6 @@ UNIFIED_SOURCES += [
     'woff2.cc',
 ]
 
-MSVC_ENABLE_PGO = True
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 

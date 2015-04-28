@@ -595,7 +595,6 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
 
   // Don't add the entry if the buffer is full
   if (mEntries.Length() >= mPrimaryBufferSize) {
-    NS_WARNING("Performance Entry buffer size maximum reached!");
     return;
   }
 

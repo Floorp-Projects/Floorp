@@ -51,7 +51,7 @@ elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
         'signmar',
         'updatecommon',
     ]
-    OS_LIBS += CONFIG['nspr']
+    OS_LIBS += CONFIG['NSPR_LIBS']
 else:
     USE_LIBS += [
         'updatecommon',

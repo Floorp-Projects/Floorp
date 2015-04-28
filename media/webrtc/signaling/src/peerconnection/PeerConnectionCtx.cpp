@@ -100,6 +100,12 @@ PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
 StaticRefPtr<PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
 
+const std::map<const std::string, PeerConnectionImpl *>&
+PeerConnectionCtx::mGetPeerConnections()
+{
+  return mPeerConnections;
+}
+
 nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
   nsIEventTarget* stsThread) {
   if (!gMainThread) {
@@ -319,6 +325,10 @@ nsresult PeerConnectionCtx::Initialize() {
   NS_ENSURE_SUCCESS(rv, rv);
   mTelemetryTimer->InitWithFuncCallback(EverySecondTelemetryCallback_m, this, 1000,
                                         nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    WebrtcGlobalChild::Create();
+  }
 #endif // MOZILLA_INTERNAL_API
 
   return NS_OK;

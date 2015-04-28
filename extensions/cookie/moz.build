@@ -22,8 +22,6 @@ UNIFIED_SOURCES += [
     'nsPopupWindowManager.cpp',
 ]
 
-MSVC_ENABLE_PGO = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

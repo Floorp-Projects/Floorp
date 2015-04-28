@@ -468,8 +468,6 @@ else:
         'perf/pm_stub.cpp'
     ]
 
-MSVC_ENABLE_PGO = True
-
 HostSimplePrograms([
     'host_jskwgen',
 ])
