@@ -33,6 +33,12 @@
  * TaskDispatcher implementations) to that tail dispatcher. This ensures that
  * state changes are always atomic from the perspective of observing threads.
  *
+ * Given that state-mirroring is an automatic background process, we try to avoid
+ * burdening the caller with worrying too much about teardown. To that end, we
+ * don't assert dispatch success for any of the notifications, and assume that
+ * any canonical or mirror owned by a thread for whom dispatch fails will soon
+ * be disconnected by its holder anyway.
+ *
  * Given that semantics may change and comments tend to go out of date, we
  * deliberately don't provide usage examples here. Grep around to find them.
  */
@@ -121,7 +127,7 @@ public:
     MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
     MOZ_ASSERT(!mMirrors.Contains(aMirror));
     mMirrors.AppendElement(aMirror);
-    aMirror->OwnerThread()->Dispatch(MakeNotifier(aMirror));
+    aMirror->OwnerThread()->Dispatch(MakeNotifier(aMirror), AbstractThread::DontAssertDispatchSuccess);
   }
 
   void RemoveMirror(AbstractMirror<T>* aMirror) override
@@ -138,7 +144,7 @@ public:
     for (size_t i = 0; i < mMirrors.Length(); ++i) {
       nsCOMPtr<nsIRunnable> r =
         NS_NewRunnableMethod(mMirrors[i], &AbstractMirror<T>::NotifyDisconnected);
-      mMirrors[i]->OwnerThread()->Dispatch(r.forget());
+      mMirrors[i]->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
     }
     mMirrors.Clear();
   }
@@ -300,7 +306,7 @@ public:
 
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
                                 (aCanonical, &AbstractCanonical<T>::AddMirror, this);
-    aCanonical->OwnerThread()->Dispatch(r.forget());
+    aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
     mCanonical = aCanonical;
   }
 
@@ -314,7 +320,7 @@ public:
     MIRROR_LOG("%s [%p] Disconnecting from %p", mName, this, mCanonical.get());
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
                                 (mCanonical, &AbstractCanonical<T>::RemoveMirror, this);
-    mCanonical->OwnerThread()->Dispatch(r.forget());
+    mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
     mCanonical = nullptr;
   }
 
