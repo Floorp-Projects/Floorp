@@ -432,6 +432,8 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var RoomEntryContextItem = React.createClass({
+    mixins: [loop.shared.mixins.WindowCloseMixin],
+
     propTypes: {
       mozLoop: React.PropTypes.object.isRequired,
       roomUrls: React.PropTypes.object
@@ -441,6 +443,7 @@ loop.panel = (function(_, mozL10n) {
       event.stopPropagation();
       event.preventDefault();
       this.props.mozLoop.openURL(event.currentTarget.href);
+      this.closeWindow();
     },
 
     render: function() {

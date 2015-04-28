@@ -614,6 +614,20 @@ describe("loop.panel", function() {
         sinon.assert.calledOnce(fakeMozLoop.openURL);
         sinon.assert.calledWithExactly(fakeMozLoop.openURL, "http://invalid/");
       });
+
+      it("should call close the panel after opening a url", function() {
+        roomData.decryptedContext.urls = [{
+          description: "invalid entry",
+          location: "http://invalid/",
+          thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        }];
+
+        roomEntry = mountEntryForContext();
+
+        TestUtils.Simulate.click(roomEntry.getDOMNode().querySelector("a"));
+
+        sinon.assert.calledOnce(fakeWindow.close);
+      });
     });
 
     describe("Room Entry click", function() {
