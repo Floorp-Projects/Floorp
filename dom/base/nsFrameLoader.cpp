@@ -2276,12 +2276,7 @@ nsFrameLoader::TryRemoteBrowser()
   NS_ENSURE_TRUE(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
-  TabParent* browser = ContentParent::CreateBrowserOrApp(context, ownerElement, openerContentParent);
-  if (mRemoteBrowser) {
-    MOZ_ASSERT(mRemoteBrowser == browser, "Must be the same as that obtained from another call");
-    return false;
-  }
-  mRemoteBrowser = browser;
+  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement, openerContentParent);
   if (!mRemoteBrowser) {
     return false;
   }
