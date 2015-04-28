@@ -173,15 +173,6 @@ public:
   static const uint32_t INIT_FLAG_TRANSIENT                = 0x8;
   static const uint32_t INIT_FLAG_DOWNSCALE_DURING_DECODE  = 0x10;
 
-  /**
-   * Creates a new image container.
-   *
-   * @param aMimeType The mimetype of the image.
-   * @param aFlags Initialization flags of the INIT_FLAG_* variety.
-   */
-  virtual nsresult Init(const char* aMimeType,
-                        uint32_t aFlags) = 0;
-
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() = 0;
   virtual void SetProgressTracker(ProgressTracker* aProgressTracker) {}
 

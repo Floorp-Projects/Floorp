@@ -34,9 +34,6 @@ public:
   // (no public constructor - use ImageFactory)
 
   // Methods inherited from Image
-  nsresult Init(const char* aMimeType,
-                uint32_t aFlags) override;
-
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf)
     const override;
   virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
@@ -84,6 +81,8 @@ protected:
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
 private:
+  nsresult Init(const char* aMimeType, uint32_t aFlags);
+
   /**
    * In catastrophic circumstances like a GPU driver crash, we may lose our
    * surfaces even if they're locked. RecoverFromLossOfSurfaces discards all
