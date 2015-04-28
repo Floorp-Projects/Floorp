@@ -49,8 +49,12 @@ WMFMediaDataDecoder::Init()
 nsresult
 WMFMediaDataDecoder::Shutdown()
 {
-  mTaskQueue->Dispatch(
-    NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
+  if (mTaskQueue) {
+    mTaskQueue->Dispatch(
+      NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
+  } else {
+    ProcessShutdown();
+  }
 #ifdef DEBUG
   {
     MonitorAutoLock mon(mMonitor);
