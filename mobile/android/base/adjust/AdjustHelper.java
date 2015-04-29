@@ -17,15 +17,18 @@ public class AdjustHelper implements AdjustHelperInterface {
     public void onCreate(final Context context, final String maybeAppToken) {
         final String environment;
         final String appToken;
+        final LogLevel logLevel;
         if (maybeAppToken != null) {
             environment = AdjustConfig.ENVIRONMENT_PRODUCTION;
             appToken = maybeAppToken;
+            logLevel = LogLevel.WARN;
         } else {
             environment = AdjustConfig.ENVIRONMENT_SANDBOX;
             appToken = "ABCDEFGHIJKL";
+            logLevel = LogLevel.VERBOSE;
         }
         AdjustConfig config = new AdjustConfig(context, appToken, environment);
-        config.setLogLevel(LogLevel.VERBOSE);
+        config.setLogLevel(logLevel);
         Adjust.onCreate(config);
     }
 
