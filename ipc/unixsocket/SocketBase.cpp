@@ -362,5 +362,31 @@ SocketIODeleteInstanceRunnable::Run()
   return NS_OK;
 }
 
+//
+// SocketIOShutdownTask
+//
+
+SocketIOShutdownTask::SocketIOShutdownTask(SocketIOBase* aIO)
+  : SocketIOTask<SocketIOBase>(aIO)
+{ }
+
+void
+SocketIOShutdownTask::Run()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  SocketIOBase* io = SocketIOTask<SocketIOBase>::GetIO();
+
+  // At this point, there should be no new events on the I/O thread
+  // after this one with the possible exception of an accept task,
+  // which ShutdownOnIOThread will cancel for us. We are now fully
+  // shut down, so we can send a message to the main thread to delete
+  // |io| safely knowing that it's not reference any longer.
+  MOZ_ASSERT(!io->IsShutdownOnIOThread());
+  io->ShutdownOnIOThread();
+
+  NS_DispatchToMainThread(new SocketIODeleteInstanceRunnable(io));
+}
+
 }
 }

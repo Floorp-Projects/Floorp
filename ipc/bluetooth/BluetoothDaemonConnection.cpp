@@ -561,8 +561,7 @@ BluetoothDaemonConnection::CloseSocket()
     return;
   }
 
-  XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOShutdownTask<BluetoothDaemonConnectionIO>(mIO));
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
 
   mIO = nullptr;
 
