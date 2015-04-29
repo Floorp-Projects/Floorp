@@ -1013,7 +1013,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   // this is important because resizing our buffers when mimised will fail and
   // cause a crash when we're restored.
   NS_ASSERTION(mHwnd, "Couldn't find an HWND when initialising?");
-  if (::IsIconic(mHwnd) || gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+  if (::IsIconic(mHwnd) || mDevice->GetDeviceRemovedReason() != S_OK) {
     *aRenderBoundsOut = Rect();
     return;
   }
@@ -1086,6 +1086,10 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 CompositorD3D11::EndFrame()
 {
+  if (!mDefaultRT) {
+    return;
+  }
+
   nsIntSize oldSize = mSize;
   EnsureSize();
   UINT presentInterval = 0;
@@ -1217,6 +1221,13 @@ CompositorD3D11::UpdateRenderTarget()
   nsRefPtr<ID3D11Texture2D> backBuf;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
+  if (hr == DXGI_ERROR_INVALID_CALL) {
+    // This happens on some GPUs/drivers when there's a TDR.
+    if (mDevice->GetDeviceRemovedReason() != S_OK) {
+      gfxCriticalError() << "GetBuffer returned invalid call!";
+      return;
+    }
+  }
   if (Failed(hr)) {
     return;
   }
