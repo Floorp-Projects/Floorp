@@ -337,7 +337,7 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnIOThread);
 
-  ssize_t res = ReceiveData(aFd, this);
+  ssize_t res = ReceiveData(aFd);
   if (res < 0) {
     /* I/O error */
     RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
@@ -475,7 +475,7 @@ DroidSocketImpl::OnSocketCanSendWithoutBlocking(int aFd)
   MOZ_ASSERT(!mShuttingDownOnIOThread);
   MOZ_ASSERT(aFd >= 0);
 
-  nsresult rv = SendPendingData(aFd, this);
+  nsresult rv = SendPendingData(aFd);
   if (NS_FAILED(rv)) {
     return;
   }

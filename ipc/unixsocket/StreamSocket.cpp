@@ -433,7 +433,7 @@ StreamSocketIO::OnSocketCanReceiveWithoutBlocking()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED); // see bug 990984
 
-  ssize_t res = ReceiveData(GetFd(), this);
+  ssize_t res = ReceiveData(GetFd());
   if (res < 0) {
     /* I/O error */
     RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
@@ -449,7 +449,7 @@ StreamSocketIO::OnSocketCanSendWithoutBlocking()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED); // see bug 990984
 
-  nsresult rv = SendPendingData(GetFd(), this);
+  nsresult rv = SendPendingData(GetFd());
   if (NS_FAILED(rv)) {
     return;
   }
