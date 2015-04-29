@@ -407,25 +407,18 @@ public:
   NS_IMETHOD Run() override;
 };
 
-/* |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
+/**
+ * |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
  */
-template<class T>
 class SocketIODeleteInstanceRunnable final : public nsRunnable
 {
 public:
-  SocketIODeleteInstanceRunnable(T* aInstance)
-  : mInstance(aInstance)
-  { }
+  SocketIODeleteInstanceRunnable(SocketIOBase* aIO);
 
-  NS_IMETHOD Run() override
-  {
-    mInstance = nullptr; // delete instance
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 
 private:
-  nsAutoPtr<T> mInstance;
+  nsAutoPtr<SocketIOBase> mIO;
 };
 
 //
@@ -492,9 +485,7 @@ public:
     // |io| safely knowing that it's not reference any longer.
     io->ShutdownOnIOThread();
 
-    nsRefPtr<nsRunnable> r = new SocketIODeleteInstanceRunnable<Tio>(io);
-    nsresult rv = NS_DispatchToMainThread(r);
-    NS_ENSURE_SUCCESS_VOID(rv);
+    NS_DispatchToMainThread(new SocketIODeleteInstanceRunnable(io));
   }
 };
 
