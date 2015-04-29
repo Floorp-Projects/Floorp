@@ -3,6 +3,33 @@
 
 const { classes: Cc, interfaces: Ci } = Components;
 
+function gzipCompressString(string, obs) {
+
+  let scs = Cc["@mozilla.org/streamConverters;1"]
+           .getService(Ci.nsIStreamConverterService);
+  let listener = Cc["@mozilla.org/network/stream-loader;1"]
+                .createInstance(Ci.nsIStreamLoader);
+  listener.init(obs);
+  let converter = scs.asyncConvertData("uncompressed", "gzip",
+                                        listener, null);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                    .createInstance(Ci.nsIStringInputStream);
+  stringStream.data = string;
+  converter.onStartRequest(null, null);
+  converter.onDataAvailable(null, null, stringStream, 0, string.length);
+  converter.onStopRequest(null, null, null);
+}
+
+function doubleGzipCompressString(string, observer) {
+  let observer2 = {
+    onStreamComplete: function(loader, context, status, length, result) {
+      let buffer = String.fromCharCode.apply(this, result);
+      gzipCompressString(buffer, observer);
+    }
+  };
+  gzipCompressString(string, observer2);
+}
+
 function handleRequest(request, response) {
   response.processAsync();
 
@@ -176,6 +203,25 @@ function handleRequest(request, response) {
         response.setHeader("Content-Type", "application/x-shockwave-flash", false);
         setCacheHeaders();
         response.finish();
+        break;
+      }
+      case "gzip": {
+        // Note: we're doing a double gzip encoding to test multiple
+        // converters in network monitor.
+        response.setStatusLine(request.httpVersion, status, "OK");
+        response.setHeader("Content-Type", "text/plain", false);
+        response.setHeader("Content-Encoding", "gzip\t ,gzip", false);
+        setCacheHeaders();
+        let observer = {
+          onStreamComplete: function(loader, context, status, length, result) {
+            let buffer = String.fromCharCode.apply(this, result);
+            response.setHeader("Content-Length", "" + buffer.length, false);
+            response.write(buffer);
+            response.finish();
+          }
+        };
+        let data = new Array(1000).join("Hello gzip!");
+        doubleGzipCompressString(data, observer);
         break;
       }
       default: {
