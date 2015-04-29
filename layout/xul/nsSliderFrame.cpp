@@ -1317,7 +1317,9 @@ float
 nsSliderFrame::GetThumbRatio() const
 {
   // mRatio is in thumb app units per scrolled css pixels. Convert it to a
-  // a true unitless ratio.
+  // ratio of the thumb's CSS pixels per scrolled CSS pixels. (Note the thumb
+  // is in the scrollframe's parent's space whereas the scrolled CSS pixels
+  // are in the scrollframe's space).
   return mRatio / mozilla::AppUnitsPerCSSPixel();
 }
 
