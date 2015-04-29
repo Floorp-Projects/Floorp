@@ -203,9 +203,42 @@ NetworkResponseListener.prototype = {
    */
   onStartRequest: function NRL_onStartRequest(aRequest)
   {
+    // Converter will call this again, we should just ignore that.
+    if (this.request)
+      return;
+
     this.request = aRequest;
     this._getSecurityInfo();
     this._findOpenResponse();
+    // We need to track the offset for the onDataAvailable calls where we pass the data
+    // from our pipe to the coverter.
+    this.offset = 0;
+
+    // In the multi-process mode, the conversion happens on the child side while we can
+    // only monitor the channel on the parent side. If the content is gzipped, we have
+    // to unzip it ourself. For that we use the stream converter services.
+    let channel = this.request;
+    if (channel instanceof Ci.nsIEncodedChannel &&
+        channel.contentEncodings &&
+        !channel.applyConversion) {
+      let encodingHeader = channel.getResponseHeader("Content-Encoding");
+      let scs = Cc["@mozilla.org/streamConverters;1"].
+        getService(Ci.nsIStreamConverterService);
+      let encodings = encodingHeader.split(/\s*\t*,\s*\t*/);
+      let nextListener = this;
+      let acceptedEncodings = ["gzip", "deflate", "x-gzip", "x-deflate"];
+      for (let i in encodings) {
+        // There can be multiple conversions applied
+        let enc = encodings[i].toLowerCase();
+        if (acceptedEncodings.indexOf(enc) > -1) {
+          this.converter = scs.asyncConvertData(enc, "uncompressed", nextListener, null);
+          nextListener = this.converter;
+        }
+      }
+      if (this.converter) {
+        this.converter.onStartRequest(this.request, null);
+      }
+    }
     // Asynchronously wait for the data coming from the request.
     this.setAsyncListener(this.sink.inputStream, this);
   },
@@ -364,6 +397,7 @@ NetworkResponseListener.prototype = {
     this.httpActivity = null;
     this.sink = null;
     this.inputStream = null;
+    this.converter = null;
     this.request = null;
     this.owner = null;
   },
@@ -391,15 +425,18 @@ NetworkResponseListener.prototype = {
 
     if (available != -1) {
       if (available != 0) {
-        // Note that passing 0 as the offset here is wrong, but the
-        // onDataAvailable() method does not use the offset, so it does not
-        // matter.
-        this.onDataAvailable(this.request, null, aStream, 0, available);
+        if (this.converter) {
+          this.converter.onDataAvailable(this.request, null, aStream, this.offset, available);
+        } else {
+          this.onDataAvailable(this.request, null, aStream, this.offset, available);
+        }
       }
+      this.offset += available;
       this.setAsyncListener(aStream, this);
     }
     else {
       this.onStreamClose();
+      this.offset = 0;
     }
   },
 }; // NetworkResponseListener.prototype
