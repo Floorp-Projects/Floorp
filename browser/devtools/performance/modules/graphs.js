@@ -110,7 +110,7 @@ FramerateGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
   mainColor: FRAMERATE_GRAPH_COLOR_NAME,
   setPerformanceData: function ({ duration, ticks }, resolution) {
     this.dataDuration = duration;
-    return this.setDataFromTimestamps(ticks, resolution);
+    return this.setDataFromTimestamps(ticks, resolution, duration);
   }
 });
 
