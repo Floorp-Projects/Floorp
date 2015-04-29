@@ -51,13 +51,16 @@ function testFloat32x4reciprocalApproximation() {
 
 function testFloat32x4reciprocalSqrtApproximation() {
   function reciprocalsqrtf(a) {
-    return Math.fround(1 / Math.sqrt(a));
+    assertEq(Math.fround(a), a);
+    return Math.fround(1 / Math.fround(Math.sqrt(a)));
   }
 
   var vals = [
     [[1, 1, 0.25, 0.25], [1, 1, 2, 2]],
     [[25, 16, 6.25, 1.5625], [25, 16, 6.25, 1.5625].map(reciprocalsqrtf)],
-    [[NaN, -0, Infinity, -Infinity], [NaN, -0, Infinity, -Infinity].map(reciprocalsqrtf)]
+    [[NaN, -0, Infinity, -Infinity], [NaN, -0, Infinity, -Infinity].map(reciprocalsqrtf)],
+    [[Math.pow(2, 32), Math.pow(2, -32), +0, Math.pow(2, -148)],
+     [Math.pow(2, -16), Math.pow(2, 16), Infinity, Math.pow(2, 74)]]
   ];
 
   for (var [v,w] of vals) {
