@@ -7,7 +7,6 @@ task:
     description: JSReftest test run {{chunk}}
 
   workerType: b2gtest-emulator
-  provisionerId: aws-provisioner-v1
   payload:
     command:
       - entrypoint
