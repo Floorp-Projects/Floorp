@@ -377,18 +377,19 @@ JSTracer::JSTracer(JSRuntime* rt, TracerKindTag kindTag,
 {
 }
 
-const char*
+void
 JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
 {
+    MOZ_ASSERT(bufferSize > 0);
     if (contextFunctor_) {
         (*contextFunctor_)(this, buffer, bufferSize);
-        return buffer;
+        return;
     }
     if (contextIndex_ != InvalidIndex) {
         JS_snprintf(buffer, bufferSize, "%s[%lu]", contextName_, contextIndex_);
-        return buffer;
+        return;
     }
-    return contextName_;
+    JS_snprintf(buffer, bufferSize, "%s", contextName_);
 }
 
 void

@@ -41,7 +41,7 @@ function checkResults(histIdFocus, Telemetry) {
 
   for (let [histId, value] of Iterator(result)) {
     if (histId.startsWith("DEVTOOLS_INSPECTOR_") ||
-        !histId.contains(histIdFocus)) {
+        !histId.includes(histIdFocus)) {
       // Inspector stats are tested in
       // browser_telemetry_toolboxtabs_{toolname}.js so we skip them here
       // because we only open the inspector once for this test.

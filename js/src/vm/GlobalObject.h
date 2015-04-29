@@ -99,9 +99,8 @@ class GlobalObject : public NativeObject
     static const unsigned NUMBER_FORMAT_PROTO     = COLLATOR_PROTO + 1;
     static const unsigned DATE_TIME_FORMAT_PROTO  = NUMBER_FORMAT_PROTO + 1;
     static const unsigned REGEXP_STATICS          = DATE_TIME_FORMAT_PROTO + 1;
-    static const unsigned WARNED_WATCH_DEPRECATED = REGEXP_STATICS + 1;
-    static const unsigned WARNED_PROTO_SETTING_SLOW = WARNED_WATCH_DEPRECATED + 1;
-    static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_PROTO_SETTING_SLOW + 1;
+    static const unsigned WARNED_ONCE_FLAGS       = REGEXP_STATICS + 1;
+    static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_ONCE_FLAGS + 1;
     static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
     static const unsigned FLOAT32X4_TYPE_DESCR    = INTRINSICS + 1;
@@ -120,12 +119,18 @@ class GlobalObject : public NativeObject
     static_assert(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS,
                   "global object slot counts are inconsistent");
 
+    enum WarnOnceFlag : int32_t {
+        WARN_WATCH_DEPRECATED = 0x00000001,
+        WARN_PROTO_SETTING_SLOW = 0x00000002,
+        WARN_STRING_CONTAINS_DEPRECATED = 0x00000004
+    };
+
     // Emit the specified warning if the given slot in |obj|'s global isn't
     // true, then set the slot to true.  Thus calling this method warns once
     // for each global object it's called on, and every other call does
     // nothing.
     static bool
-    warnOnceAbout(JSContext* cx, HandleObject obj, uint32_t slot, unsigned errorNumber);
+    warnOnceAbout(JSContext* cx, HandleObject obj, WarnOnceFlag slot, unsigned errorNumber);
 
 
   public:
@@ -644,14 +649,20 @@ class GlobalObject : public NativeObject
     static bool warnOnceAboutWatch(JSContext* cx, HandleObject obj) {
         // Temporarily disabled until we've provided a watch/unwatch workaround for
         // debuggers like Firebug (bug 934669).
-        //return warnOnceAbout(cx, obj, WARNED_WATCH_DEPRECATED, JSMSG_OBJECT_WATCH_DEPRECATED);
+        //return warnOnceAbout(cx, obj, WARN_WATCH_DEPRECATED, JSMSG_OBJECT_WATCH_DEPRECATED);
         return true;
     }
 
     // Warn about use of the given __proto__ setter to attempt to mutate an
     // object's [[Prototype]], if no prior warning was given.
     static bool warnOnceAboutPrototypeMutation(JSContext* cx, HandleObject protoSetter) {
-        return warnOnceAbout(cx, protoSetter, WARNED_PROTO_SETTING_SLOW, JSMSG_PROTO_SETTING_SLOW);
+        return warnOnceAbout(cx, protoSetter, WARN_PROTO_SETTING_SLOW, JSMSG_PROTO_SETTING_SLOW);
+    }
+
+    // Warn about use of the deprecated String.prototype.contains method
+    static bool warnOnceAboutStringContains(JSContext *cx, HandleObject strContains) {
+        return warnOnceAbout(cx, strContains, WARN_STRING_CONTAINS_DEPRECATED,
+                             JSMSG_DEPRECATED_STRING_CONTAINS);
     }
 
     static bool getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
@@ -690,7 +701,7 @@ class GlobalObject : public NativeObject
      * The collection of Debugger objects debugging this global. If this global
      * is not a debuggee, this returns either nullptr or an empty vector.
      */
-    DebuggerVector* getDebuggers();
+    DebuggerVector* getDebuggers() const;
 
     /*
      * The same, but create the empty vector if one does not already

@@ -418,8 +418,8 @@ HistoryDownloadElementShell.prototype = {
       return true;
     }
     aTerm = aTerm.toLowerCase();
-    return this.displayName.toLowerCase().contains(aTerm) ||
-           this.download.source.url.toLowerCase().contains(aTerm);
+    return this.displayName.toLowerCase().includes(aTerm) ||
+           this.download.source.url.toLowerCase().includes(aTerm);
   },
 
   // Handles return keypress on the element (the keypress listener is

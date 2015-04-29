@@ -1198,10 +1198,15 @@ pref("dom.ipc.plugins.sandbox-level.default", 0);
 // purposes. This will require a restart.
 // On windows these levels are:
 // 0 - sandbox with USER_NON_ADMIN access token level
-// 1 - a more strict sandbox, which causes problems in specific areas
+// 1 - level 0 plus low integrity
 // 2 - a policy that we can reasonably call an effective sandbox
 // 3 - an equivalent basic policy to the Chromium renderer processes
+#if defined(NIGHTLY_BUILD)
+pref("security.sandbox.content.level", 1);
+#else
 pref("security.sandbox.content.level", 0);
+#endif
+
 
 #if defined(MOZ_STACKWALKING)
 // This controls the depth of stack trace that is logged when Windows sandbox

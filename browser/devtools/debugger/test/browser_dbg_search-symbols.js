@@ -73,7 +73,7 @@ function htmlSearch() {
             "Shouldn't create empty label nodes.");
         }
         if (value) {
-          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
             "The corect value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
@@ -144,7 +144,7 @@ function firstJsSearch() {
             "Shouldn't create empty label nodes.");
         }
         if (value) {
-          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
             "The corect value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
@@ -215,7 +215,7 @@ function secondJsSearch() {
             "Shouldn't create empty label nodes.");
         }
         if (value) {
-          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
             "The corect value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
@@ -286,7 +286,7 @@ function thirdJsSearch() {
             "Shouldn't create empty label nodes.");
         }
         if (value) {
-          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
             "The corect value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
@@ -354,7 +354,7 @@ function filterSearch() {
             "Shouldn't create empty label nodes.");
         }
         if (value) {
-          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
             "The corect value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),

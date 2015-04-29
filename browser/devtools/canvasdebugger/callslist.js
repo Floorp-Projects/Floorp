@@ -353,10 +353,10 @@ let CallsListView = Heritage.extend(WidgetMethods, {
       let line = call.line.toString().toLowerCase();
       let args = call.argsPreview.toLowerCase();
 
-      return name.contains(lowerCaseSearchToken) ||
-             file.contains(lowerCaseSearchToken) ||
-             line.contains(lowerCaseSearchToken) ||
-             args.contains(lowerCaseSearchToken);
+      return name.includes(lowerCaseSearchToken) ||
+             file.includes(lowerCaseSearchToken) ||
+             line.includes(lowerCaseSearchToken) ||
+             args.includes(lowerCaseSearchToken);
     });
   },
 

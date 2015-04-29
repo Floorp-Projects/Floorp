@@ -1711,8 +1711,10 @@ protected:
   nsAutoPtr<StickyPositionData> mStickyPositionData;
   FrameMetrics::ViewID mScrollbarTargetId;
   ScrollDirection mScrollbarDirection;
-  float mScrollbarThumbRatio; // Ratio of the thumb position to the scroll
-                              // position, in app units.
+  // The scrollbar thumb ratio is the ratio of the thumb position (in the CSS
+  // pixels of the scrollframe's parent's space) to the scroll position (in the
+  // CSS pixels of the scrollframe's space).
+  float mScrollbarThumbRatio;
   bool mIsScrollbarContainer;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we

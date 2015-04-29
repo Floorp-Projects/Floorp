@@ -88,6 +88,54 @@ already_AddRefed<nsIRunnable> newCompletionEvent(
   mozIStorageCompletionCallback *aCallback
 );
 
+/**
+ * Utility method to get a Blob as a string value.  The string expects
+ * the interface exposed by nsAString/nsACString/etc.
+ */
+template<class T, class V>
+nsresult
+DoGetBlobAsString(T* aThis, uint32_t aIndex, V& aValue)
+{
+  typedef typename V::char_type char_type;
+
+  uint32_t size;
+  char_type* blob;
+  nsresult rv =
+    aThis->GetBlob(aIndex, &size, reinterpret_cast<uint8_t**>(&blob));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aValue.Adopt(blob, size / sizeof(char_type));
+  return NS_OK;
+}
+
+/**
+ * Utility method to bind a string value as a Blob.  The string expects
+ * the interface exposed by nsAString/nsACString/etc.
+ */
+template<class T, class V>
+nsresult
+DoBindStringAsBlobByName(T* aThis, const nsACString& aName, const V& aValue)
+{
+  typedef typename V::char_type char_type;
+  return aThis->BindBlobByName(aName,
+                        reinterpret_cast<const uint8_t*>(aValue.BeginReading()),
+                        aValue.Length() * sizeof(char_type));
+}
+
+/**
+ * Utility method to bind a string value as a Blob.  The string expects
+ * the interface exposed by nsAString/nsACString/etc.
+ */
+template<class T, class V>
+nsresult
+DoBindStringAsBlobByIndex(T* aThis, uint32_t aIndex, const V& aValue)
+{
+  typedef typename V::char_type char_type;
+  return aThis->BindBlobByIndex(aIndex,
+                        reinterpret_cast<const uint8_t*>(aValue.BeginReading()),
+                        aValue.Length() * sizeof(char_type));
+}
+
 } // namespace storage
 } // namespace mozilla
 

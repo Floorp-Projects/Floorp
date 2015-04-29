@@ -592,7 +592,7 @@
           let cs = getComputedStyle(container);
           let transitionProp = cs.transitionProperty;
           let transitionTime = parseFloat(cs.transitionDuration);
-          disablePointerEvents = (transitionProp.contains("transform") ||
+          disablePointerEvents = (transitionProp.includes("transform") ||
                                   transitionProp == "all") &&
                                  transitionTime > 0;
           this.setAttribute("disablepointereventsfortransition", disablePointerEvents);

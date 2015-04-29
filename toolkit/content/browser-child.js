@@ -21,22 +21,6 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
-let FocusSyncHandler = {
-  init: function() {
-    sendAsyncMessage("SetSyncHandler", {}, {handler: this});
-  },
-
-  getFocusedElementAndWindow: function() {
-    let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-
-    let focusedWindow = {};
-    let elt = fm.getFocusedElementForWindow(content, true, focusedWindow);
-    return [elt, focusedWindow.value];
-  },
-};
-
-FocusSyncHandler.init();
-
 let WebProgressListener = {
   init: function() {
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
@@ -386,6 +370,8 @@ const ZoomManager = {
    */
   _refreshZoomValue: function(valueName) {
     let actualZoomValue = this._markupViewer[valueName];
+    // Round to remove any floating-point error.
+    actualZoomValue = Number(actualZoomValue.toFixed(2));
     if (actualZoomValue != this._cache[valueName]) {
       this._cache[valueName] = actualZoomValue;
       return true;

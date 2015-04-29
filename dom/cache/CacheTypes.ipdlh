@@ -108,11 +108,6 @@ struct CacheMatchAllArgs
   CacheQueryParams params;
 };
 
-struct CacheAddAllArgs
-{
-  CacheRequest[] requestList;
-};
-
 struct CachePutAllArgs
 {
   CacheRequestResponse[] requestResponseList;
@@ -159,7 +154,6 @@ union CacheOpArgs
 {
   CacheMatchArgs;
   CacheMatchAllArgs;
-  CacheAddAllArgs;
   CachePutAllArgs;
   CacheDeleteArgs;
   CacheKeysArgs;
@@ -178,10 +172,6 @@ struct CacheMatchResult
 struct CacheMatchAllResult
 {
   CacheResponse[] responseList;
-};
-
-struct CacheAddAllResult
-{
 };
 
 struct CachePutAllResult
@@ -228,7 +218,6 @@ union CacheOpResult
   void_t;
   CacheMatchResult;
   CacheMatchAllResult;
-  CacheAddAllResult;
   CachePutAllResult;
   CacheDeleteResult;
   CacheKeysResult;

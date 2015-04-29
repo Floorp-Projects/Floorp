@@ -1150,7 +1150,7 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
         let body = "";
         // If there's a return statement explicitly written, always use the
         // standard function definition syntax
-        if (aCurrentString.contains("return ")) {
+        if (aCurrentString.includes("return ")) {
           body = "{" + aCurrentString + "}";
         }
         // If block syntax is used, use the whole string as the function body.
@@ -1925,8 +1925,8 @@ Scope.prototype = {
       let lowerCaseValue = variable._valueString.toLowerCase();
 
       // Non-matched variables or properties require a corresponding attribute.
-      if (!lowerCaseName.contains(aLowerCaseQuery) &&
-          !lowerCaseValue.contains(aLowerCaseQuery)) {
+      if (!lowerCaseName.includes(aLowerCaseQuery) &&
+          !lowerCaseValue.includes(aLowerCaseQuery)) {
         variable._matched = false;
       }
       // Variable or property is matched.

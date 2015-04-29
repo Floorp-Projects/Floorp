@@ -432,8 +432,7 @@ CacheStorage::MaybeRunPendingRequests()
     nsAutoPtr<Entry> entry(mPendingRequests[i].forget());
     AutoChildOpArgs args(this, entry->mArgs);
     if (entry->mRequest) {
-      args.Add(entry->mRequest, IgnoreBody, PassThroughReferrer,
-               IgnoreInvalidScheme, rv);
+      args.Add(entry->mRequest, IgnoreBody, IgnoreInvalidScheme, rv);
     }
     if (rv.Failed()) {
       entry->mPromise->MaybeReject(rv);

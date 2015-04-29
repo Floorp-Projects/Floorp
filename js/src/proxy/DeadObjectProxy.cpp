@@ -15,14 +15,6 @@ using namespace js;
 using namespace js::gc;
 
 bool
-DeadObjectProxy::getPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id,
-                                       MutableHandle<PropertyDescriptor> desc) const
-{
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-    return false;
-}
-
-bool
 DeadObjectProxy::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id,
                                           MutableHandle<PropertyDescriptor> desc) const
 {

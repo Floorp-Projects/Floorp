@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
+#include <algorithm>
 #include <math.h>
 
 #include "jsapi.h"
@@ -1162,22 +1163,19 @@ SavedStacks::chooseSamplingProbability(JSContext* cx)
     if (!dbgs || dbgs->empty())
         return;
 
-    Debugger* allocationTrackingDbg = nullptr;
     mozilla::DebugOnly<Debugger**> begin = dbgs->begin();
 
+    allocationSamplingProbability = 0;
     for (Debugger** dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
         // The set of debuggers had better not change while we're iterating,
         // such that the vector gets reallocated.
         MOZ_ASSERT(dbgs->begin() == begin);
 
-        if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled)
-            allocationTrackingDbg = *dbgp;
+        if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled) {
+            allocationSamplingProbability = std::max((*dbgp)->allocationSamplingProbability,
+                                                     allocationSamplingProbability);
+        }
     }
-
-    if (!allocationTrackingDbg)
-        return;
-
-    allocationSamplingProbability = allocationTrackingDbg->allocationSamplingProbability;
 }
 
 JSObject*

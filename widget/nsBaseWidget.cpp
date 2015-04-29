@@ -223,6 +223,12 @@ void nsBaseWidget::DestroyCompositor()
     nsRefPtr<CompositorParent> compositorParent = mCompositorParent;
     mCompositorChild->Destroy();
   }
+
+  // Can have base widgets that are things like tooltips
+  // which don't have CompositorVsyncDispatchers
+  if (mCompositorVsyncDispatcher) {
+    mCompositorVsyncDispatcher->Shutdown();
+  }
 }
 
 void nsBaseWidget::DestroyLayerManager()
@@ -264,11 +270,6 @@ nsBaseWidget::~nsBaseWidget()
 #endif
 
   delete mOriginalBounds;
-
-  // Can have base widgets that are things like tooltips which don't have CompositorVsyncDispatchers
-  if (mCompositorVsyncDispatcher) {
-    mCompositorVsyncDispatcher->Shutdown();
-  }
 }
 
 //-------------------------------------------------------------------------

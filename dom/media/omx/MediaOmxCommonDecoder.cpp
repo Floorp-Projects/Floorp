@@ -61,6 +61,11 @@ MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                         MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShuttingDown) {
+    return;
+  }
+
   MediaDecoder::FirstFrameLoaded(aInfo, aEventVisibility);
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -98,6 +103,11 @@ MediaOmxCommonDecoder::PauseStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   DECODER_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
+
+  if (mShuttingDown) {
+    return;
+  }
+
   if (!GetStateMachine()) {
     return;
   }
@@ -118,6 +128,10 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   DECODER_LOG(PR_LOG_DEBUG, ("%s current time %f", __PRETTY_FUNCTION__,
       mCurrentTime));
 
+  if (mShuttingDown) {
+    return;
+  }
+
   if (!GetStateMachine()) {
     return;
   }
@@ -129,10 +143,19 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   mRequestedSeekTarget = SeekTarget(timeUsecs,
                                     SeekTarget::Accurate,
                                     MediaDecoderEventVisibility::Suppressed);
+  // Call Seek of MediaDecoderStateMachine to suppress seek events.
+  RefPtr<nsRunnable> event =
+    NS_NewRunnableMethodWithArg<SeekTarget>(
+      GetStateMachine(),
+      &MediaDecoderStateMachine::Seek,
+      mRequestedSeekTarget);
+  GetStateMachine()->TaskQueue()->Dispatch(event);
+  mRequestedSeekTarget.Reset();
+
   mNextState = mPlayState;
   ChangeState(PLAY_STATE_LOADING);
   // exit dormant state
-  RefPtr<nsRunnable> event =
+  event =
     NS_NewRunnableMethodWithArg<bool>(
       GetStateMachine(),
       &MediaDecoderStateMachine::SetDormant,

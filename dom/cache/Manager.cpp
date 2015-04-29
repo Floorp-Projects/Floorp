@@ -1621,7 +1621,6 @@ Manager::ExecuteCacheOp(Listener* aListener, CacheId aCacheId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  MOZ_ASSERT(aOpArgs.type() != CacheOpArgs::TCacheAddAllArgs);
   MOZ_ASSERT(aOpArgs.type() != CacheOpArgs::TCachePutAllArgs);
 
   if (mState == Closing) {

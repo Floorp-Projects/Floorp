@@ -3482,33 +3482,6 @@ JSScript::traceChildren(JSTracer* trc)
 }
 
 void
-LazyScript::traceChildren(JSTracer* trc)
-{
-    if (function_)
-        TraceEdge(trc, &function_, "function");
-
-    if (sourceObject_)
-        TraceEdge(trc, &sourceObject_, "sourceObject");
-
-    if (enclosingScope_)
-        TraceEdge(trc, &enclosingScope_, "enclosingScope");
-
-    if (script_)
-        TraceEdge(trc, &script_, "realScript");
-
-    // We rely on the fact that atoms are always tenured.
-    FreeVariable* freeVariables = this->freeVariables();
-    for (size_t i = 0; i < numFreeVariables(); i++) {
-        JSAtom* atom = freeVariables[i].atom();
-        TraceManuallyBarrieredEdge(trc, &atom, "lazyScriptFreeVariable");
-    }
-
-    HeapPtrFunction* innerFunctions = this->innerFunctions();
-    for (size_t i = 0; i < numInnerFunctions(); i++)
-        TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
-}
-
-void
 LazyScript::finalize(FreeOp* fop)
 {
     if (table_)

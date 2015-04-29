@@ -885,6 +885,22 @@ public:
   // as mStartTime and mEndTime could have been set separately.
   bool mDurationSet;
 
+  // The current play state and next play state, mirrored from the main thread.
+  Mirror<MediaDecoder::PlayState>::Holder mPlayState;
+  Mirror<MediaDecoder::PlayState>::Holder mNextPlayState;
+
+  // Returns true if we're logically playing, that is, if the Play() has
+  // been called and Pause() has not or we have not yet reached the end
+  // of media. This is irrespective of the seeking state; if the owner
+  // calls Play() and then Seek(), we still count as logically playing.
+  // The decoder monitor must be held.
+  bool IsLogicallyPlaying()
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    return mPlayState == MediaDecoder::PLAY_STATE_PLAYING ||
+           mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
+  }
+
   // The status of our next frame. Mirrored on the main thread and used to
   // compute ready state.
   WatcherHolder mNextFrameStatusUpdater;

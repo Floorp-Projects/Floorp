@@ -1156,7 +1156,7 @@ function getCSSKeywords() {
   let cssColors = {};
   let cssValues = {};
   cssProperties.forEach(property => {
-    if (property.contains("color")) {
+    if (property.includes("color")) {
       domUtils.getCSSValuesForProperty(property).forEach(value => {
         cssColors[value] = true;
       });

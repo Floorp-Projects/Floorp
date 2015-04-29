@@ -668,7 +668,7 @@ function executeWithCallback(msg, useFinish) {
   if (msg.json.inactivityTimeout) {
     let setTimer = function() {
       inactivityTimeoutId = curFrame.setTimeout(function() {
-        sandbox.asyncComplete(new ScriptTimeout("timed out due to inactivity"), asyncTestCommandId);
+        sandbox.asyncComplete(new ScriptTimeoutError("timed out due to inactivity"), asyncTestCommandId);
       }, msg.json.inactivityTimeout);
     };
 
@@ -1794,7 +1794,7 @@ function addCookie(msg) {
 
   var document = curFrame.document;
   if (!document || !document.contentType.match(/html/i)) {
-    sendError(new UnableToSetCookie("You may only set cookies on html documents"), msg.json.command_id);
+    sendError(new UnableToSetCookieError("You may only set cookies on html documents"), msg.json.command_id);
   }
 
   let added = sendSyncMessage("Marionette:addCookie", {value: cookie});

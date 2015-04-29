@@ -3595,11 +3595,12 @@ private:
 };
 
 /**
- * This class adds basic support for limiting the rendering to the part inside
- * the specified edges.  It's a base class for the display item classes that
- * does the actual work.  The two members, mLeftEdge and mRightEdge, are
- * relative to the edges of the frame's scrollable overflow rectangle and is
- * the amount to suppress on each side.
+ * This class adds basic support for limiting the rendering (in the inline axis
+ * of the writing mode) to the part inside the specified edges.  It's a base
+ * class for the display item classes that do the actual work.
+ * The two members, mVisIStartEdge and mVisIEndEdge, are relative to the edges
+ * of the frame's scrollable overflow rectangle and are the amount to suppress
+ * on each side.
  *
  * Setting none, both or only one edge is allowed.
  * The values must be non-negative.
@@ -3608,7 +3609,7 @@ private:
 class nsCharClipDisplayItem : public nsDisplayItem {
 public:
   nsCharClipDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame), mLeftEdge(0), mRightEdge(0) {}
+    : nsDisplayItem(aBuilder, aFrame), mVisIStartEdge(0), mVisIEndEdge(0) {}
 
   explicit nsCharClipDisplayItem(nsIFrame* aFrame)
     : nsDisplayItem(aFrame) {}
@@ -3621,22 +3622,33 @@ public:
 
   struct ClipEdges {
     ClipEdges(const nsDisplayItem& aItem,
-              nscoord aLeftEdge, nscoord aRightEdge) {
+              nscoord aVisIStartEdge, nscoord aVisIEndEdge) {
       nsRect r = aItem.Frame()->GetScrollableOverflowRect() +
                  aItem.ToReferenceFrame();
-      mX = aLeftEdge > 0 ? r.x + aLeftEdge : nscoord_MIN;
-      mXMost = aRightEdge > 0 ? std::max(r.XMost() - aRightEdge, mX) : nscoord_MAX;
+      if (aItem.Frame()->GetWritingMode().IsVertical()) {
+        mVisIStart = aVisIStartEdge > 0 ? r.y + aVisIStartEdge : nscoord_MIN;
+        mVisIEnd =
+          aVisIEndEdge > 0 ? std::max(r.YMost() - aVisIEndEdge, mVisIStart)
+                           : nscoord_MAX;
+      } else {
+        mVisIStart = aVisIStartEdge > 0 ? r.x + aVisIStartEdge : nscoord_MIN;
+        mVisIEnd =
+          aVisIEndEdge > 0 ? std::max(r.XMost() - aVisIEndEdge, mVisIStart)
+                           : nscoord_MAX;
+      }
     }
-    void Intersect(nscoord* aX, nscoord* aWidth) const {
-      nscoord xmost1 = *aX + *aWidth;
-      *aX = std::max(*aX, mX);
-      *aWidth = std::max(std::min(xmost1, mXMost) - *aX, 0);
+    void Intersect(nscoord* aVisIStart, nscoord* aVisISize) const {
+      nscoord end = *aVisIStart + *aVisISize;
+      *aVisIStart = std::max(*aVisIStart, mVisIStart);
+      *aVisISize = std::max(std::min(end, mVisIEnd) - *aVisIStart, 0);
     }
-    nscoord mX;
-    nscoord mXMost;
+    nscoord mVisIStart;
+    nscoord mVisIEnd;
   };
 
-  ClipEdges Edges() const { return ClipEdges(*this, mLeftEdge, mRightEdge); }
+  ClipEdges Edges() const {
+    return ClipEdges(*this, mVisIStartEdge, mVisIEndEdge);
+  }
 
   static nsCharClipDisplayItem* CheckCast(nsDisplayItem* aItem) {
     nsDisplayItem::Type t = aItem->GetType();
@@ -3646,8 +3658,11 @@ public:
       ? static_cast<nsCharClipDisplayItem*>(aItem) : nullptr;
   }
 
-  nscoord mLeftEdge;  // length from the left side
-  nscoord mRightEdge; // length from the right side
+  // Lengths measured from the visual inline start and end sides
+  // (i.e. left and right respectively in horizontal writing modes,
+  // regardless of bidi directionality; top and bottom in vertical modes).
+  nscoord mVisIStartEdge;
+  nscoord mVisIEndEdge;
 };
 
 /**

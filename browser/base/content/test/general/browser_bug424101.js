@@ -1,53 +1,52 @@
 /* Make sure that the context menu appears on form elements */
 
-function test() {
-  waitForExplicitFinish();
+add_task(function *() {
+  yield BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,test");
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
-    let doc = gBrowser.contentDocument;
-    let testInput = function(type, expected) {
-      let element = doc.createElement("input");
-      element.setAttribute("type", type);
-      doc.body.appendChild(element);
-      document.popupNode = element;
+  let tests = [
+    { element: "input", type: "text" },
+    { element: "input", type: "password" },
+    { element: "input", type: "image" },
+    { element: "input", type: "button" },
+    { element: "input", type: "submit" },
+    { element: "input", type: "reset" },
+    { element: "input", type: "checkbox" },
+    { element: "input", type: "radio" },
+    { element: "button" },
+    { element: "select" },
+    { element: "option" },
+    { element: "optgroup" }
+  ];
 
-      let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-      let contextMenu = new nsContextMenu(contentAreaContextMenu);
+  for (let index = 0; index < tests.length; index++) {
+    let test = tests[index];
 
-      is(contextMenu.shouldDisplay, expected, "context menu behavior for <input type=" + type + "> is wrong");
-    };
-    let testElement = function(tag, expected) {
-      let element = doc.createElement(tag);
-      doc.body.appendChild(element);
-      document.popupNode = element;
+    yield ContentTask.spawn(gBrowser.selectedBrowser,
+                            { element: test.element, type: test.type, index: index },
+                            function* (arg) {
+      let element = content.document.createElement(arg.element);
+      element.id = "element" + arg.index;
+      if (arg.type) {
+        element.setAttribute("type", arg.type);
+      }
+      content.document.body.appendChild(element);
+    });
 
-      let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-      let contextMenu = new nsContextMenu(contentAreaContextMenu);
+    let popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+    yield BrowserTestUtils.synthesizeMouseAtCenter("#element" + index,
+          { type: "contextmenu", button: 2}, gBrowser.selectedBrowser);
+    yield popupShownPromise;
 
-      is(contextMenu.shouldDisplay, expected, "context menu behavior for <" + tag + "> is wrong");
-    };
+    let typeAttr = test.type ? "type=" + test.type + " " : "";
+    is(gContextMenu.shouldDisplay, true,
+        "context menu behavior for <" + test.element + " " + typeAttr + "> is wrong");
 
-    testInput("text", true);
-    testInput("password", true);
-    testInput("image", true);
-    testInput("button", true);
-    testInput("submit", true);
-    testInput("reset", true);
-    testInput("checkbox", true);
-    testInput("radio", true);
-    testElement("button", true);
-    testElement("select", true);
-    testElement("option", true);
-    testElement("optgroup", true);
+    let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");
+    contentAreaContextMenu.hidePopup();
+    yield popupHiddenPromise;
+  }
 
-    // cleanup
-    document.popupNode = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  }, true);
-  content.location = "data:text/html,test";
-}
+  gBrowser.removeCurrentTab();
+});

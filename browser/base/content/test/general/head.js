@@ -470,8 +470,9 @@ let FullZoomHelper = {
       throw new Error("tab must be given.");
     if (gBrowser.selectedTab == tab)
       return Promise.resolve();
-    gBrowser.selectedTab = tab;
-    return this.waitForLocationChange();
+
+    return Promise.all([BrowserTestUtils.switchTab(gBrowser, tab),
+                        this.waitForLocationChange()]);
   },
 
   removeTabAndWaitForLocationChange: function removeTabAndWaitForLocationChange(tab) {
@@ -484,34 +485,33 @@ let FullZoomHelper = {
   },
 
   waitForLocationChange: function waitForLocationChange() {
-    let deferred = Promise.defer();
-    Services.obs.addObserver(function obs(subj, topic, data) {
-      Services.obs.removeObserver(obs, topic);
-      deferred.resolve();
-    }, "browser-fullZoom:location-change", false);
-    return deferred.promise;
+    return new Promise(resolve => {
+      Services.obs.addObserver(function obs(subj, topic, data) {
+        Services.obs.removeObserver(obs, topic);
+        resolve();
+      }, "browser-fullZoom:location-change", false);
+    });
   },
 
   load: function load(tab, url) {
-    let deferred = Promise.defer();
-    let didLoad = false;
-    let didZoom = false;
+    return new Promise(resolve => {
+      let didLoad = false;
+      let didZoom = false;
 
-    promiseTabLoadEvent(tab).then(event => {
-      didLoad = true;
-      if (didZoom)
-        deferred.resolve();
-    }, true);
+      promiseTabLoadEvent(tab).then(event => {
+        didLoad = true;
+        if (didZoom)
+          resolve();
+      }, true);
 
-    this.waitForLocationChange().then(function () {
-      didZoom = true;
-      if (didLoad)
-        deferred.resolve();
+      this.waitForLocationChange().then(function () {
+        didZoom = true;
+        if (didLoad)
+          resolve();
+      });
+
+      tab.linkedBrowser.loadURI(url);
     });
-
-    tab.linkedBrowser.loadURI(url);
-
-    return deferred.promise;
   },
 
   zoomTest: function zoomTest(tab, val, msg) {
@@ -519,48 +519,42 @@ let FullZoomHelper = {
   },
 
   enlarge: function enlarge() {
-    let deferred = Promise.defer();
-    FullZoom.enlarge(function () deferred.resolve());
-    return deferred.promise;
+    return new Promise(resolve => FullZoom.enlarge(resolve));
   },
 
   reduce: function reduce() {
-    let deferred = Promise.defer();
-    FullZoom.reduce(function () deferred.resolve());
-    return deferred.promise;
+    return new Promise(resolve => FullZoom.reduce(resolve));
   },
 
   reset: function reset() {
-    let deferred = Promise.defer();
-    FullZoom.reset(function () deferred.resolve());
-    return deferred.promise;
+    return new Promise(resolve => FullZoom.reset(resolve));
   },
 
   BACK: 0,
   FORWARD: 1,
   navigate: function navigate(direction) {
-    let deferred = Promise.defer();
-    let didPs = false;
-    let didZoom = false;
+    return new Promise(resolve => {
+      let didPs = false;
+      let didZoom = false;
 
-    gBrowser.addEventListener("pageshow", function (event) {
-      gBrowser.removeEventListener("pageshow", arguments.callee, true);
-      didPs = true;
-      if (didZoom)
-        deferred.resolve();
-    }, true);
+      gBrowser.addEventListener("pageshow", function (event) {
+        gBrowser.removeEventListener("pageshow", arguments.callee, true);
+        didPs = true;
+        if (didZoom)
+          resolve();
+      }, true);
 
-    if (direction == this.BACK)
-      gBrowser.goBack();
-    else if (direction == this.FORWARD)
-      gBrowser.goForward();
+      if (direction == this.BACK)
+        gBrowser.goBack();
+      else if (direction == this.FORWARD)
+        gBrowser.goForward();
 
-    this.waitForLocationChange().then(function () {
-      didZoom = true;
-      if (didPs)
-        deferred.resolve();
+      this.waitForLocationChange().then(function () {
+        didZoom = true;
+        if (didPs)
+          resolve();
+      });
     });
-    return deferred.promise;
   },
 
   failAndContinue: function failAndContinue(func) {

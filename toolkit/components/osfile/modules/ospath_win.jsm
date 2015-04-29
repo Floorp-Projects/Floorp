@@ -306,7 +306,7 @@ exports.split = split;
  * Return the file:// URI file path of the given local file path.
  */
 // The case of %3b is designed to match Services.io, but fundamentally doesn't matter.
-let toFileURIExtraEncodings = {';': '%3b', '?': '%3F', "'": '%27', '#': '%23'};
+let toFileURIExtraEncodings = {';': '%3b', '?': '%3F', '#': '%23'};
 let toFileURI = function toFileURI(path) {
   // URI-escape forward slashes and convert backward slashes to forward
   path = this.normalize(path).replace(/[\\\/]/g, m => (m=='\\')? '/' : '%2F');
@@ -315,7 +315,7 @@ let toFileURI = function toFileURI(path) {
   // add a prefix, and encodeURI doesn't escape a few characters that we do
   // want to escape, so fix that up
   let prefix = "file:///";
-  uri = prefix + uri.replace(/[;?'#]/g, match => toFileURIExtraEncodings[match]);
+  uri = prefix + uri.replace(/[;?#]/g, match => toFileURIExtraEncodings[match]);
 
   // turn e.g., file:///C: into file:///C:/
   if (uri.charAt(uri.length - 1) === ':') {

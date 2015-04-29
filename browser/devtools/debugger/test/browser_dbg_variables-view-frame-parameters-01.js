@@ -38,9 +38,9 @@ function initialChecks() {
   is(scopeNodes.length, 2,
     "There should be 2 scopes available.");
 
-  ok(scopeNodes[0].querySelector(".name").getAttribute("value").contains("[test]"),
+  ok(scopeNodes[0].querySelector(".name").getAttribute("value").includes("[test]"),
     "The local scope should be properly identified.");
-  ok(scopeNodes[1].querySelector(".name").getAttribute("value").contains("[Window]"),
+  ok(scopeNodes[1].querySelector(".name").getAttribute("value").includes("[Window]"),
     "The global scope should be properly identified.");
 
   is(gVariables.getScopeAtIndex(0).target, scopeNodes[0],
@@ -89,7 +89,7 @@ function testExpandVariables() {
     is(thisVar.get("window").target.querySelector(".value").getAttribute("value"),
       "Window \u2192 doc_frame-parameters.html",
       "Should have the right property value for 'window'.");
-    ok(thisVar.get("window").target.querySelector(".value").className.contains("token-other"),
+    ok(thisVar.get("window").target.querySelector(".value").className.includes("token-other"),
       "Should have the right token class for 'window'.");
 
     is(thisVar.get("document").target.querySelector(".name").getAttribute("value"), "document",
@@ -97,7 +97,7 @@ function testExpandVariables() {
     is(thisVar.get("document").target.querySelector(".value").getAttribute("value"),
       "HTMLDocument \u2192 doc_frame-parameters.html",
       "Should have the right property value for 'document'.");
-    ok(thisVar.get("document").target.querySelector(".value").className.contains("token-domnode"),
+    ok(thisVar.get("document").target.querySelector(".value").className.includes("token-domnode"),
       "Should have the right token class for 'document'.");
 
     let argsProps = argsVar.target.querySelectorAll(".variables-view-property");
@@ -108,35 +108,35 @@ function testExpandVariables() {
       "Should have the right property name for '0'.");
     is(argsProps[0].querySelector(".value").getAttribute("value"), "Object",
       "Should have the right property value for '0'.");
-    ok(argsProps[0].querySelector(".value").className.contains("token-other"),
+    ok(argsProps[0].querySelector(".value").className.includes("token-other"),
       "Should have the right token class for '0'.");
 
     is(argsProps[1].querySelector(".name").getAttribute("value"), "1",
       "Should have the right property name for '1'.");
     is(argsProps[1].querySelector(".value").getAttribute("value"), "\"beta\"",
       "Should have the right property value for '1'.");
-    ok(argsProps[1].querySelector(".value").className.contains("token-string"),
+    ok(argsProps[1].querySelector(".value").className.includes("token-string"),
       "Should have the right token class for '1'.");
 
     is(argsProps[2].querySelector(".name").getAttribute("value"), "2",
       "Should have the right property name for '2'.");
     is(argsProps[2].querySelector(".value").getAttribute("value"), "3",
       "Should have the right property name for '2'.");
-    ok(argsProps[2].querySelector(".value").className.contains("token-number"),
+    ok(argsProps[2].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for '2'.");
 
     is(argsProps[3].querySelector(".name").getAttribute("value"), "3",
       "Should have the right property name for '3'.");
     is(argsProps[3].querySelector(".value").getAttribute("value"), "false",
       "Should have the right property value for '3'.");
-    ok(argsProps[3].querySelector(".value").className.contains("token-boolean"),
+    ok(argsProps[3].querySelector(".value").className.includes("token-boolean"),
       "Should have the right token class for '3'.");
 
     is(argsProps[4].querySelector(".name").getAttribute("value"), "4",
       "Should have the right property name for '4'.");
     is(argsProps[4].querySelector(".value").getAttribute("value"), "null",
       "Should have the right property name for '4'.");
-    ok(argsProps[4].querySelector(".value").className.contains("token-null"),
+    ok(argsProps[4].querySelector(".value").className.includes("token-null"),
       "Should have the right token class for '4'.");
 
     is(gVariables.getItemForNode(argsProps[0]).target,
@@ -171,42 +171,42 @@ function testExpandVariables() {
       "Should have the right property name for 'a'.");
     is(cProps[0].querySelector(".value").getAttribute("value"), "1",
       "Should have the right property value for 'a'.");
-    ok(cProps[0].querySelector(".value").className.contains("token-number"),
+    ok(cProps[0].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'a'.");
 
     is(cProps[1].querySelector(".name").getAttribute("value"), "b",
       "Should have the right property name for 'b'.");
     is(cProps[1].querySelector(".value").getAttribute("value"), "\"beta\"",
       "Should have the right property value for 'b'.");
-    ok(cProps[1].querySelector(".value").className.contains("token-string"),
+    ok(cProps[1].querySelector(".value").className.includes("token-string"),
       "Should have the right token class for 'b'.");
 
     is(cProps[2].querySelector(".name").getAttribute("value"), "c",
       "Should have the right property name for 'c'.");
     is(cProps[2].querySelector(".value").getAttribute("value"), "3",
       "Should have the right property value for 'c'.");
-    ok(cProps[2].querySelector(".value").className.contains("token-number"),
+    ok(cProps[2].querySelector(".value").className.includes("token-number"),
       "Should have the right token class for 'c'.");
 
     is(cProps[3].querySelector(".name").getAttribute("value"), "d",
       "Should have the right property name for 'd'.");
     is(cProps[3].querySelector(".value").getAttribute("value"), "false",
       "Should have the right property value for 'd'.");
-    ok(cProps[3].querySelector(".value").className.contains("token-boolean"),
+    ok(cProps[3].querySelector(".value").className.includes("token-boolean"),
       "Should have the right token class for 'd'.");
 
     is(cProps[4].querySelector(".name").getAttribute("value"), "e",
       "Should have the right property name for 'e'.");
     is(cProps[4].querySelector(".value").getAttribute("value"), "null",
       "Should have the right property value for 'e'.");
-    ok(cProps[4].querySelector(".value").className.contains("token-null"),
+    ok(cProps[4].querySelector(".value").className.includes("token-null"),
       "Should have the right token class for 'e'.");
 
     is(cProps[5].querySelector(".name").getAttribute("value"), "f",
       "Should have the right property name for 'f'.");
     is(cProps[5].querySelector(".value").getAttribute("value"), "undefined",
       "Should have the right property value for 'f'.");
-    ok(cProps[5].querySelector(".value").className.contains("token-undefined"),
+    ok(cProps[5].querySelector(".value").className.includes("token-undefined"),
       "Should have the right token class for 'f'.");
 
     is(gVariables.getItemForNode(cProps[0]).target,

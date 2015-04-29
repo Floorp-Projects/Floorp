@@ -429,16 +429,16 @@ add_task(function log_message_with_params() {
    */
   let err = Components.Exception("test exception", Components.results.NS_ERROR_FAILURE);
   let str = formatMessage("Exception is ${}", err);
-  do_check_true(str.contains('Exception is [Exception... "test exception"'));
-  do_check_true(str.contains("(NS_ERROR_FAILURE)"));
+  do_check_true(str.includes('Exception is [Exception... "test exception"'));
+  do_check_true(str.includes("(NS_ERROR_FAILURE)"));
   str = formatMessage("Exception is", err);
-  do_check_true(str.contains('Exception is: [Exception... "test exception"'));
+  do_check_true(str.includes('Exception is: [Exception... "test exception"'));
   str = formatMessage("Exception is ${error}", {error: err});
-  do_check_true(str.contains('Exception is [Exception... "test exception"'));
+  do_check_true(str.includes('Exception is [Exception... "test exception"'));
   str = formatMessage("Exception is", {_error: err});
   do_print(str);
   // Exceptions buried inside objects are formatted badly.
-  do_check_true(str.contains('Exception is: {"_error":{}'));
+  do_check_true(str.includes('Exception is: {"_error":{}'));
   // If the message text is null, the message contains only the formatted params object.
   str = formatMessage(null, err);
   do_check_true(str.startsWith('[Exception... "test exception"'));
@@ -525,14 +525,14 @@ add_task(function test_structured_basic() {
   // except the 'action' field is added to the object.
   log.logStructured("action", {data: "structure"});
   do_check_eq(appender.messages.length, 1);
-  do_check_true(appender.messages[0].contains('{"data":"structure","action":"action"}'));
+  do_check_true(appender.messages[0].includes('{"data":"structure","action":"action"}'));
 
   // A structured entry with _message and substitution is treated the same as
   // log./level/(null, params).
   log.logStructured("action", {_message: "Structured sub ${data}", data: "structure"});
   do_check_eq(appender.messages.length, 2);
   do_print(appender.messages[1]);
-  do_check_true(appender.messages[1].contains('Structured sub structure'));
+  do_check_true(appender.messages[1].includes('Structured sub structure'));
 });
 
 /*
@@ -568,9 +568,9 @@ add_task(function format_errors() {
   // Test that subclasses of Error are recognized as errors.
   err = new ReferenceError("Ref Error", "ERROR_FILE", 28);
   str = pFormat.format(err);
-  do_check_true(str.contains("ReferenceError"));
-  do_check_true(str.contains("ERROR_FILE:28"));
-  do_check_true(str.contains("Ref Error"));
+  do_check_true(str.includes("ReferenceError"));
+  do_check_true(str.includes("ERROR_FILE:28"));
+  do_check_true(str.includes("Ref Error"));
 
   // Test that JS-generated Errors are recognized and formatted.
   try {
@@ -579,14 +579,14 @@ add_task(function format_errors() {
   }
   catch (e) {
     str = pFormat.format(e);
-    do_check_true(str.contains("SyntaxError: missing ;"));
+    do_check_true(str.includes("SyntaxError: missing ;"));
     // Make sure we identified it as an Error and formatted the error location as
     // lineNumber:columnNumber.
-    do_check_true(str.contains(":1:11)"));
+    do_check_true(str.includes(":1:11)"));
     // Make sure that we use human-readable stack traces
     // Check that the error doesn't contain any reference to "Promise.jsm" or "Task.jsm"
-    do_check_false(str.contains("Promise.jsm"));
-    do_check_false(str.contains("Task.jsm"));
-    do_check_true(str.contains("format_errors"));
+    do_check_false(str.includes("Promise.jsm"));
+    do_check_false(str.includes("Task.jsm"));
+    do_check_true(str.includes("format_errors"));
   }
 });

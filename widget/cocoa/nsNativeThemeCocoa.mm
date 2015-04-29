@@ -2761,9 +2761,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       int32_t min = 0;
       int32_t max = 1000;
       bool isVertical = !IsRangeHorizontal(aFrame);
-      bool reverseDir =
-        isVertical ||
-        rangeFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
+      bool reverseDir = isVertical || rangeFrame->IsRightToLeft();
       DrawScale(cgContext, macRect, eventState, isVertical, reverseDir,
                 value, min, max, aFrame);
       break;

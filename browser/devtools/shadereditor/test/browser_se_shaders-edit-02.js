@@ -33,9 +33,9 @@ function ifWebGLSupported() {
     "The one of the compile or link info logs should not be empty.");
   is(infoLog.split("ERROR").length - 1, 2,
     "The info log status contains two errors.");
-  ok(infoLog.contains("ERROR: 0:8: 'constructor'"),
+  ok(infoLog.includes("ERROR: 0:8: 'constructor'"),
     "A constructor error is contained in the info log.");
-  ok(infoLog.contains("ERROR: 0:8: 'assign'"),
+  ok(infoLog.includes("ERROR: 0:8: 'assign'"),
     "An assignment error is contained in the info log.");
 
 
@@ -51,7 +51,7 @@ function ifWebGLSupported() {
     "The one of the compile or link info logs should not be empty.");
   is(infoLog.split("ERROR").length - 1, 1,
     "The info log contains one error.");
-  ok(infoLog.contains("ERROR: 0:6: 'constructor'"),
+  ok(infoLog.includes("ERROR: 0:6: 'constructor'"),
     "A constructor error is contained in the info log.");
 
 

@@ -733,7 +733,7 @@ struct TextRenderedRun
    * a selection mechanism for which glyphs will be painted, rather
    * than a geometric clip.
    */
-  void GetClipEdges(nscoord& aLeftEdge, nscoord& aRightEdge) const;
+  void GetClipEdges(nscoord& aVisIStartEdge, nscoord& aVisIEndEdge) const;
 
   /**
    * Returns the advance width of the whole rendered run.
@@ -837,12 +837,12 @@ TextRenderedRun::GetTransformFromUserSpaceForPainting(
   if (IsVertical()) {
     t = nsPoint(-mBaseline,
                 IsRightToLeft()
-                  ? -mFrame->GetRect().height + aItem.mRightEdge
-                  : -aItem.mLeftEdge);
+                  ? -mFrame->GetRect().height + aItem.mVisIEndEdge
+                  : -aItem.mVisIStartEdge);
   } else {
     t = nsPoint(IsRightToLeft()
-                  ? -mFrame->GetRect().width + aItem.mRightEdge
-                  : -aItem.mLeftEdge,
+                  ? -mFrame->GetRect().width + aItem.mVisIEndEdge
+                  : -aItem.mVisIStartEdge,
                 -mBaseline);
   }
   m.Translate(AppUnitsToGfxUnits(t, aContext));
@@ -862,8 +862,8 @@ TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
   float cssPxPerDevPx = aContext->
     AppUnitsToFloatCSSPixels(aContext->AppUnitsPerDevPixel());
 
-  nscoord left, right;
-  GetClipEdges(left, right);
+  nscoord start, end;
+  GetClipEdges(start, end);
 
   // Glyph position in user space.
   m.Translate(mPosition);
@@ -879,11 +879,11 @@ TextRenderedRun::GetTransformFromRunUserSpaceToUserSpace(
   if (IsVertical()) {
     t = nsPoint(-mBaseline,
                 IsRightToLeft()
-                  ? -mFrame->GetRect().height + left + right
+                  ? -mFrame->GetRect().height + start + end
                   : 0);
   } else {
     t = nsPoint(IsRightToLeft()
-                  ? -mFrame->GetRect().width + left + right
+                  ? -mFrame->GetRect().width + start + end
                   : 0,
                 -mBaseline);
   }
@@ -902,14 +902,14 @@ TextRenderedRun::GetTransformFromRunUserSpaceToFrameUserSpace(
     return m;
   }
 
-  nscoord left, right;
-  GetClipEdges(left, right);
+  nscoord start, end;
+  GetClipEdges(start, end);
 
   // Translate by the horizontal distance into the text frame this
   // rendered run is.
   gfxFloat appPerCssPx = aContext->AppUnitsPerCSSPixel();
-  gfxPoint t = IsVertical() ? gfxPoint(0, left / appPerCssPx)
-                            : gfxPoint(left / appPerCssPx, 0);
+  gfxPoint t = IsVertical() ? gfxPoint(0, start / appPerCssPx)
+                            : gfxPoint(start / appPerCssPx, 0);
   return m.Translate(t);
 }
 
@@ -1041,15 +1041,16 @@ TextRenderedRun::GetUserSpaceRect(nsPresContext* aContext,
 }
 
 void
-TextRenderedRun::GetClipEdges(nscoord& aLeftEdge, nscoord& aRightEdge) const
+TextRenderedRun::GetClipEdges(nscoord& aVisIStartEdge,
+                              nscoord& aVisIEndEdge) const
 {
   uint32_t contentLength = mFrame->GetContentLength();
   if (mTextFrameContentOffset == 0 &&
       mTextFrameContentLength == contentLength) {
     // If the rendered run covers the entire content, we know we don't need
     // to clip without having to measure anything.
-    aLeftEdge = 0;
-    aRightEdge = 0;
+    aVisIStartEdge = 0;
+    aVisIEndEdge = 0;
     return;
   }
 
@@ -1079,22 +1080,22 @@ TextRenderedRun::GetClipEdges(nscoord& aLeftEdge, nscoord& aRightEdge) const
 
   // Measure the advance width in the text run between the start of
   // frame's content and the start of the rendered run's content,
-  nscoord leftEdge =
+  nscoord startEdge =
     textRun->GetAdvanceWidth(frameOffset, runOffset - frameOffset, nullptr);
 
   // and between the end of the rendered run's content and the end
   // of the frame's content.
-  nscoord rightEdge =
+  nscoord endEdge =
     textRun->GetAdvanceWidth(runOffset + runLength,
                              frameOffset + frameLength - (runOffset + runLength),
                              nullptr);
 
   if (textRun->IsRightToLeft()) {
-    aLeftEdge  = rightEdge;
-    aRightEdge = leftEdge;
+    aVisIStartEdge = endEdge;
+    aVisIEndEdge = startEdge;
   } else {
-    aLeftEdge  = leftEdge;
-    aRightEdge = rightEdge;
+    aVisIStartEdge = startEdge;
+    aVisIEndEdge = endEdge;
   }
 }
 
@@ -2740,7 +2741,7 @@ public:
   explicit SVGCharClipDisplayItem(const TextRenderedRun& aRun)
     : nsCharClipDisplayItem(aRun.mFrame)
   {
-    aRun.GetClipEdges(mLeftEdge, mRightEdge);
+    aRun.GetClipEdges(mVisIStartEdge, mVisIEndEdge);
   }
 
   NS_DISPLAY_DECL_NAME("SVGText", TYPE_TEXT)
@@ -4771,36 +4772,37 @@ ConvertLogicalTextAnchorToPhysical(uint8_t aTextAnchor, bool aIsRightToLeft)
  *   character's initial position is the anchor point.
  * @param aChunkEnd The character index just after the end of the anchored
  *   chunk.
- * @param aLeftEdge The left-most edge of any of the glyphs within the
+ * @param aVisIStartEdge The left/top-most edge of any of the glyphs within the
  *   anchored chunk.
- * @param aRightEdge The right-most edge of any of the glyphs within the
- *   anchored chunk.
+ * @param aVisIEndEdge The right/bottom-most edge of any of the glyphs within
+ *   the anchored chunk.
  * @param aAnchorSide The direction to anchor.
  */
 static void
 ShiftAnchoredChunk(nsTArray<mozilla::CharPosition>& aCharPositions,
                    uint32_t aChunkStart,
                    uint32_t aChunkEnd,
-                   gfxFloat aLeftEdge,
-                   gfxFloat aRightEdge,
+                   gfxFloat aVisIStartEdge,
+                   gfxFloat aVisIEndEdge,
                    TextAnchorSide aAnchorSide,
                    bool aVertical)
 {
-  NS_ASSERTION(aLeftEdge <= aRightEdge, "unexpected anchored chunk edges");
-  NS_ASSERTION(aChunkStart < aChunkEnd, "unexpected values for aChunkStart and "
-                                        "aChunkEnd");
+  NS_ASSERTION(aVisIStartEdge <= aVisIEndEdge,
+               "unexpected anchored chunk edges");
+  NS_ASSERTION(aChunkStart < aChunkEnd,
+               "unexpected values for aChunkStart and aChunkEnd");
 
   gfxFloat shift = aVertical ? aCharPositions[aChunkStart].mPosition.y
                              : aCharPositions[aChunkStart].mPosition.x;
   switch (aAnchorSide) {
     case eAnchorLeft:
-      shift -= aLeftEdge;
+      shift -= aVisIStartEdge;
       break;
     case eAnchorMiddle:
-      shift -= (aLeftEdge + aRightEdge) / 2;
+      shift -= (aVisIStartEdge + aVisIEndEdge) / 2;
       break;
     case eAnchorRight:
-      shift -= aRightEdge;
+      shift -= aVisIEndEdge;
       break;
     default:
       NS_NOTREACHED("unexpected value for aAnchorSide");

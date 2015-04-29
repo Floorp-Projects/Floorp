@@ -126,8 +126,8 @@ function test() {
           output: [ /zap=zep/, /zup=banana/, /Edit/ ]
         },
         post: function(output, text) {
-          ok(!text.contains("zip"), "");
-          ok(!text.contains("zop"), "");
+          ok(!text.includes("zip"), "");
+          ok(!text.includes("zop"), "");
         }
       },
       {
@@ -140,10 +140,10 @@ function test() {
           output: [ /zup=banana/, /Edit/ ]
         },
         post: function(output, text) {
-          ok(!text.contains("zap"), "");
-          ok(!text.contains("zep"), "");
-          ok(!text.contains("zip"), "");
-          ok(!text.contains("zop"), "");
+          ok(!text.includes("zap"), "");
+          ok(!text.includes("zep"), "");
+          ok(!text.includes("zip"), "");
+          ok(!text.includes("zop"), "");
         }
       },
       {
@@ -156,13 +156,13 @@ function test() {
           output: 'No cookies found for host example.com'
         },
         post: function(output, text) {
-          ok(!text.contains("zap"), "");
-          ok(!text.contains("zep"), "");
-          ok(!text.contains("zip"), "");
-          ok(!text.contains("zop"), "");
-          ok(!text.contains("zup"), "");
-          ok(!text.contains("banana"), "");
-          ok(!text.contains("Edit"), "");
+          ok(!text.includes("zap"), "");
+          ok(!text.includes("zep"), "");
+          ok(!text.includes("zip"), "");
+          ok(!text.includes("zop"), "");
+          ok(!text.includes("zup"), "");
+          ok(!text.includes("banana"), "");
+          ok(!text.includes("Edit"), "");
         }
       },
     ]);

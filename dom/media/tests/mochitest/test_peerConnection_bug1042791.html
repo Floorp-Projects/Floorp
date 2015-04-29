@@ -21,9 +21,9 @@
 
     test.chain.append([
       function PC_LOCAL_VERIFY_H264_OFFER(test) {
-        ok(!test.pcLocal._latest_offer.sdp.toLowerCase().contains("profile-level-id=0x42e0"),
+        ok(!test.pcLocal._latest_offer.sdp.toLowerCase().includes("profile-level-id=0x42e0"),
            "H264 offer does not contain profile-level-id=0x42e0");
-        ok(test.pcLocal._latest_offer.sdp.toLowerCase().contains("profile-level-id=42e0"),
+        ok(test.pcLocal._latest_offer.sdp.toLowerCase().includes("profile-level-id=42e0"),
            "H264 offer contains profile-level-id=42e0");
       }
     ]);

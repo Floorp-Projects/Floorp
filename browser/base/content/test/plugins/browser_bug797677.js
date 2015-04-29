@@ -19,7 +19,7 @@ function test() {
                          .getService(Ci.nsIConsoleService);
   var errorListener = {
     observe: function(aMessage) {
-      if (aMessage.message.contains("NS_ERROR"))
+      if (aMessage.message.includes("NS_ERROR"))
         gConsoleErrors++;
     }
   };

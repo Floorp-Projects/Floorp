@@ -124,7 +124,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        "TIP1.beginInputTransaction(window) should cause throwing an exception because it's composing with different purpose");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
        description + "TIP1.beginInputTransaction(window) should cause throwing an exception including NS_ERROR_ALREADY_INITIALIZED because it's composing for tests");
   }
   try {
@@ -132,7 +132,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        "TIP1.beginInputTransactionForTests(otherWindow) should cause throwing an exception because it's composing on different window");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
        description + "TIP1.beginInputTransaction(otherWindow) should cause throwing an exception including NS_ERROR_ALREADY_INITIALIZED because it's composing on this window");
   }
   ok(TIP1.beginInputTransactionForTests(window),
@@ -614,7 +614,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during startComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during startComposition()");
     }
   }, false);
@@ -634,7 +634,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -646,7 +646,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -658,7 +658,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -670,7 +670,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -704,7 +704,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition()");
     }
   }, false);
@@ -716,7 +716,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition()");
     }
   }, false);
@@ -728,7 +728,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition()");
     }
   }, false);
@@ -752,7 +752,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -764,7 +764,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -776,7 +776,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -788,7 +788,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -800,7 +800,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -833,7 +833,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -845,7 +845,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -857,7 +857,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -869,7 +869,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -896,7 +896,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"keydown\" should throw an exception during keydown()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"keydown\" should cause NS_ERROR_ALREADY_INITIALIZED during keydown()");
     }
   }, false);
@@ -908,7 +908,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"keypress\" should throw an exception during keydown()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"keypress\" should cause NS_ERROR_ALREADY_INITIALIZED during keydown()");
     }
   }, false);
@@ -920,7 +920,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should throw an exception during keydown()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during keydown()");
     }
   }, false);
@@ -932,7 +932,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"keyup\" should throw an exception during keyup()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransaction(otherWindow, simpleCallback) called from \"keyup\" should cause NS_ERROR_ALREADY_INITIALIZED during keyup()");
     }
   }, false);
@@ -960,7 +960,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during startComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during startComposition()");
     }
   }, false);
@@ -980,7 +980,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -992,7 +992,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -1004,7 +1004,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -1016,7 +1016,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during flushPendingComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during flushPendingComposition()");
     }
   }, false);
@@ -1050,7 +1050,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition()");
     }
   }, false);
@@ -1062,7 +1062,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition()");
     }
   }, false);
@@ -1074,7 +1074,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitComposition()");
     }
   }, false);
@@ -1098,7 +1098,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionstart\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -1110,7 +1110,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -1122,7 +1122,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -1134,7 +1134,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -1146,7 +1146,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during commitCompositionWith(\"bar\")");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during commitCompositionWith(\"bar\")");
     }
   }, false);
@@ -1179,7 +1179,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionupdate\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -1191,7 +1191,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"text\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -1203,7 +1203,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"compositionend\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -1215,7 +1215,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during cancelComposition()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during cancelComposition()");
     }
   }, false);
@@ -1242,7 +1242,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"keydown\" should throw an exception during keydown()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"keydown\" should cause NS_ERROR_ALREADY_INITIALIZED during keydown()");
     }
   }, false);
@@ -1254,7 +1254,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"keypress\" should throw an exception during keydown()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"keypress\" should cause NS_ERROR_ALREADY_INITIALIZED during keydown()");
     }
   }, false);
@@ -1266,7 +1266,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should throw an exception during keydown()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"input\" should cause NS_ERROR_ALREADY_INITIALIZED during keydown()");
     }
   }, false);
@@ -1278,7 +1278,7 @@ function runBeginInputTransactionMethodTests()
       ok(false,
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"keyup\" should throw an exception during keyup()");
     } catch (e) {
-      ok(e.message.contains("NS_ERROR_ALREADY_INITIALIZED"),
+      ok(e.message.includes("NS_ERROR_ALREADY_INITIALIZED"),
          description + "TIP1.beginInputTransactionForTests(otherWindow, simpleCallback) called from \"keyup\" should cause NS_ERROR_ALREADY_INITIALIZED during keyup()");
     }
   }, false);
@@ -1308,7 +1308,7 @@ function runBeginInputTransactionMethodTests()
        description + "TIP1.startComposition() should cause throwing an exception because TIP2 took the ownership");
     TIP1.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_NOT_INITIALIZED"),
        description + "TIP1.startComposition() should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
   } finally {
     is(input.value, "",
@@ -1329,7 +1329,7 @@ function runBeginInputTransactionMethodTests()
        description + "TIP1.flushPendingComposition() should cause throwing an exception because TIP2 took the ownership");
     TIP1.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_NOT_INITIALIZED"),
        description + "TIP1.flushPendingComposition() should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
   } finally {
     is(input.value, "",
@@ -1347,7 +1347,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        description + "TIP1.commitCompositionWith(\"bar\") should cause throwing an exception because TIP2 took the ownership");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_NOT_INITIALIZED"),
        description + "TIP1.commitCompositionWith(\"bar\") should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
   } finally {
     is(input.value, "",
@@ -1366,7 +1366,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        description + "TIP1.keydown(keyF) should cause throwing an exception because TIP2 took the ownership");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_NOT_INITIALIZED"),
        description + "TIP1.keydown(keyF) should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
   } finally {
     is(input.value, "",
@@ -1385,7 +1385,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        description + "TIP1.keyup(keyF) should cause throwing an exception because TIP2 took the ownership");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_NOT_INITIALIZED"),
+    ok(e.message.includes("NS_ERROR_NOT_INITIALIZED"),
        description + "TIP1.keyup(keyF) should cause throwing an exception including NS_ERROR_NOT_INITIALIZED");
   } finally {
     is(input.value, "",
@@ -1398,7 +1398,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        description + "TIP1.beginInputTransaction(window) should be failed since aCallback is omitted");
   } catch (e) {
-    ok(e.message.contains("Not enough arguments"),
+    ok(e.message.includes("Not enough arguments"),
        description + "TIP1.beginInputTransaction(window) should cause throwing an exception including \"Not enough arguments\" since aCallback is omitted");
   }
 
@@ -1408,7 +1408,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        description + "TIP1.beginInputTransaction(window, undefined) should be failed since aCallback is undefined");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "TIP1.beginInputTransaction(window, undefined) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE since aCallback is undefined");
   }
 
@@ -1418,7 +1418,7 @@ function runBeginInputTransactionMethodTests()
     ok(false,
        description + "TIP1.beginInputTransaction(window, null) should be failed since aCallback is null");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "TIP1.beginInputTransaction(window, null) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE since aCallback is null");
   }
 }
@@ -3348,7 +3348,7 @@ function runErrorTests()
     ok(false,
        description + "startComposition() should fail if it was already called");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_FAILURE"),
+    ok(e.message.includes("NS_ERROR_FAILURE"),
        description + "startComposition() should cause NS_ERROR_FAILURE if there is already composition");
   } finally {
     TIP.cancelComposition();
@@ -3360,7 +3360,7 @@ function runErrorTests()
     ok(false,
        description + "cancelComposition() should fail if there is no composition");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_FAILURE"),
+    ok(e.message.includes("NS_ERROR_FAILURE"),
        description + "cancelComposition() should cause NS_ERROR_FAILURE if there is no composition");
   }
 
@@ -3370,7 +3370,7 @@ function runErrorTests()
     ok(false,
        description + "commitComposition() should fail if there is no composition");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_FAILURE"),
+    ok(e.message.includes("NS_ERROR_FAILURE"),
        description + "commitComposition() should cause NS_ERROR_FAILURE if there is no composition");
   }
 
@@ -3380,7 +3380,7 @@ function runErrorTests()
     ok(false,
        description + "commitCompositionWith(\"\") should fail if there is no composition");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_FAILURE"),
+    ok(e.message.includes("NS_ERROR_FAILURE"),
        description + "commitCompositionWith(\"\") should cause NS_ERROR_FAILURE if there is no composition");
   }
 
@@ -3405,7 +3405,7 @@ function runErrorTests()
        description + "flushPendingComposition() should fail if appendClauseToPendingComposition() doesn't fill all composition string");
     TIP.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if appendClauseToPendingComposition() doesn't fill all composition string");
   }
 
@@ -3418,7 +3418,7 @@ function runErrorTests()
        description + "flushPendingComposition() should fail if appendClauseToPendingComposition() appends longer clause information");
     TIP.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if appendClauseToPendingComposition() appends longer clause information");
   }
 
@@ -3430,7 +3430,7 @@ function runErrorTests()
        description + "flushPendingComposition() should fail if there is a clause with empty string");
     TIP.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if there is a clause with empty string");
   }
 
@@ -3442,7 +3442,7 @@ function runErrorTests()
     TIP.flushPendingComposition();
     TIP.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "appendClauseToPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if the length is 0");
   }
 
@@ -3455,7 +3455,7 @@ function runErrorTests()
     TIP.flushPendingComposition();
     TIP.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "appendClauseToPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if the attribute is invalid");
   }
 
@@ -3469,7 +3469,7 @@ function runErrorTests()
        description + "flushPendingComposition() should fail if caret position is out of composition string");
     TIP.cancelComposition();
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "flushPendingComposition() should cause NS_ERROR_ILLEGAL_VALUE if caret position is out of composition string");
   }
 
@@ -3481,7 +3481,7 @@ function runErrorTests()
     ok(false,
        description + "TIP.keydown(keyInvalidCode) should cause throwing an exception because its code value is not registered");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "TIP.keydown(keyInvalidCode) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
   } finally {
     is(input.value, "",
@@ -3496,7 +3496,7 @@ function runErrorTests()
     ok(false,
        description + "TIP.keyup(keyInvalidCode) should cause throwing an exception because its code value is not registered");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "TIP.keyup(keyInvalidCode) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
   } finally {
     is(input.value, "",
@@ -3511,7 +3511,7 @@ function runErrorTests()
     ok(false,
        description + "TIP.keydown(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception because its key value is not registered");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keydown(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
   } finally {
     is(input.value, "",
@@ -3526,7 +3526,7 @@ function runErrorTests()
     ok(false,
        description + "TIP.keyup(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception because its key value is not registered");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keyup(keyInvalidKey, TIP.KEY_NON_PRINTABLE_KEY) should cause throwing an exception including NS_ERROR_ILLEGAL_VALUE");
   } finally {
     is(input.value, "",
@@ -3540,7 +3540,7 @@ function runErrorTests()
     ok(false,
        description + "keydown(KEY_KEEP_KEY_LOCATION_STANDARD) should fail if the .location of the key event is initialized with non-zero value");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keydown(KEY_KEEP_KEY_LOCATION_STANDARD) should cause NS_ERROR_ILLEGAL_VALUE if the .location of the key event is initialized with nonzero value");
   }
   try {
@@ -3549,7 +3549,7 @@ function runErrorTests()
     ok(false,
        description + "keyup(KEY_KEEP_KEY_LOCATION_STANDARD) should fail if the .location of the key event is initialized with non-zero value");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keyup(KEY_KEEP_KEY_LOCATION_STANDARD) should cause NS_ERROR_ILLEGAL_VALUE if the .location of the key event is initialized with nonzero value");
   }
 
@@ -3560,7 +3560,7 @@ function runErrorTests()
     ok(false,
        description + "keydown(KEY_KEEP_KEYCODE_ZERO) should fail if the .keyCode of the key event is initialized with non-zero value");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keydown(KEY_KEEP_KEYCODE_ZERO) should cause NS_ERROR_ILLEGAL_VALUE if the .keyCode of the key event is initialized with nonzero value");
   }
   try {
@@ -3569,7 +3569,7 @@ function runErrorTests()
     ok(false,
        description + "keyup(KEY_KEEP_KEYCODE_ZERO) should fail if the .keyCode of the key event is initialized with non-zero value");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keyup(KEY_KEEP_KEYCODE_ZERO) should cause NS_ERROR_ILLEGAL_VALUE if the .keyCode of the key event is initialized with nonzero value");
   }
 
@@ -3580,7 +3580,7 @@ function runErrorTests()
     ok(false,
        description + "keydown(KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT) should fail if the .key value isn't a modifier key");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keydown(KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT) should cause NS_ERROR_ILLEGAL_VALUE if the .key value isn't a modifier key");
   }
   try {
@@ -3589,7 +3589,7 @@ function runErrorTests()
     ok(false,
        description + "keydown(KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT) should fail if the .key value isn't a modifier key");
   } catch (e) {
-    ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+    ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
        description + "keydown(KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT) should cause NS_ERROR_ILLEGAL_VALUE if the .key value isn't a modifier key");
   }
 
@@ -3614,7 +3614,7 @@ function runErrorTests()
     } catch (e) {
       ok(!kKeyEventTypes[i].valid,
          testDescription + "TIP.startComposition(keyEvent) should not throw an exception for the event type");
-      ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+      ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
          testDescription + "TIP.startComposition(keyEvent) should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
     }
     try {
@@ -3628,7 +3628,7 @@ function runErrorTests()
     } catch (e) {
       ok(!kKeyEventTypes[i].valid,
          testDescription + "TIP.flushPendingComposition(keyEvent) should not throw an exception for the event type");
-      ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+      ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
          testDescription + "TIP.flushPendingComposition(keyEvent) should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
     }
     try {
@@ -3639,7 +3639,7 @@ function runErrorTests()
     } catch (e) {
       ok(!kKeyEventTypes[i].valid,
          testDescription + "TIP.commitComposition(keyEvent) should not throw an exception for the event type");
-      ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+      ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
          testDescription + "TIP.commitComposition(keyEvent) should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
       TIP.cancelComposition();
     }
@@ -3650,7 +3650,7 @@ function runErrorTests()
     } catch (e) {
       ok(!kKeyEventTypes[i].valid,
          testDescription + "TIP.commitCompositionWith(\"foo\", keyEvent) should not throw an exception for the event type");
-      ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+      ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
          testDescription + "TIP.commitCompositionWith(\"foo\", keyEvent) should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
     }
     try {
@@ -3661,7 +3661,7 @@ function runErrorTests()
     } catch (e) {
       ok(!kKeyEventTypes[i].valid,
          testDescription + "TIP.cancelComposition(keyEvent) should not throw an exception for the event type");
-      ok(e.message.contains("NS_ERROR_ILLEGAL_VALUE"),
+      ok(e.message.includes("NS_ERROR_ILLEGAL_VALUE"),
          testDescription + "TIP.cancelComposition(keyEvent) should cause NS_ERROR_ILLEGAL_VALUE if the key event type isn't valid");
       TIP.cancelComposition();
     }

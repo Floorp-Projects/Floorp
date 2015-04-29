@@ -21,5 +21,5 @@ try {
     g.f();
     assertEq(0, 2);
 } catch(e) {
-    assertEq(e.toString().contains("555"), true);
+    assertEq(e.toString().includes("555"), true);
 }

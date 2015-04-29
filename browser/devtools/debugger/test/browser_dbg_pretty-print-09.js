@@ -66,7 +66,7 @@ function disablePrettyPrint() {
 
 function testUgly({ error, source }) {
   ok(!error);
-  ok(!source.contains("\n  "));
+  ok(!source.includes("\n  "));
   getFrame();
 }
 

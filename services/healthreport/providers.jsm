@@ -1314,7 +1314,7 @@ UpdateHotfixMeasurement1.prototype = Object.freeze({
   // Our fields have dynamic names from the hotfix version that supplied them.
   // We need to override the default behavior to deal with unknown fields.
   shouldIncludeField: function (name) {
-    return name.contains(".");
+    return name.includes(".");
   },
 
   fieldType: function (name) {
@@ -1563,7 +1563,7 @@ SearchCountMeasurementBase.prototype = Object.freeze({
    * data.
    */
   shouldIncludeField: function (name) {
-    return name.contains(".");
+    return name.includes(".");
   },
 
   /**

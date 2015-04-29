@@ -48,6 +48,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Preferences.h"
 #include "nsParserConstants.h"
+#include "nsSandboxFlags.h"
 
 using namespace mozilla;
 
@@ -765,10 +766,16 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
   nsAutoString header;
   aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
+    // Ignore META REFRESH when document is sandboxed from automatic features.
+    nsContentUtils::ASCIIToLower(header);
+    if (nsGkAtoms::refresh->Equals(header) &&
+        (mDocument->GetSandboxFlags() & SANDBOXED_AUTOMATIC_FEATURES)) {
+      return NS_OK;
+    }
+
     nsAutoString result;
     aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
-      nsContentUtils::ASCIIToLower(header);
       nsCOMPtr<nsIAtom> fieldAtom(do_GetAtom(header));
       rv = ProcessHeaderData(fieldAtom, result, aContent); 
     }

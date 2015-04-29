@@ -26,7 +26,7 @@
 #include "gmp-task-utils.h"
 #if defined(ENABLE_WMF)
 #include "WMFUtils.h"
-#include <VersionHelpers.h>
+#include <versionhelpers.h>
 #endif
 
 #include <assert.h>

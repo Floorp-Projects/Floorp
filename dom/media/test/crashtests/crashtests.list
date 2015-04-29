@@ -75,6 +75,8 @@ load offline-buffer-source-ended-1.html
 load oscillator-ended-1.html
 load oscillator-ended-2.html
 load 1080986.html
+load 1158427.html
+load 1157994.html
 include ../../mediasource/test/crashtests/crashtests.list
 
 # This needs to run at the end to avoid leaking busted state into other tests.

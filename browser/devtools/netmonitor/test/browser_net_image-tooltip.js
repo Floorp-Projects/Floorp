@@ -13,7 +13,7 @@ function test() {
     let { RequestsMenu } = NetMonitorView;
 
     promise.all([
-      waitForNetworkEvents(aMonitor, 6),
+      waitForNetworkEvents(aMonitor, 7),
       waitFor(aMonitor.panelWin, EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED)
     ]).then(() => {
       info("Checking the image thumbnail after a few requests were made...");

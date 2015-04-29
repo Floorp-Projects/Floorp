@@ -146,7 +146,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
   var version = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).version;
   var isNightlyBuild = version.endsWith("a1");
-  var isReleaseBuild = !version.contains("a");
+  var isReleaseBuild = !version.includes("a");
   var gPrototypeProperties = {};
   gPrototypeProperties['Date'] =
     ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",

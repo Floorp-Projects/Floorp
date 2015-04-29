@@ -33,6 +33,12 @@
  * TaskDispatcher implementations) to that tail dispatcher. This ensures that
  * state changes are always atomic from the perspective of observing threads.
  *
+ * Given that state-mirroring is an automatic background process, we try to avoid
+ * burdening the caller with worrying too much about teardown. To that end, we
+ * don't assert dispatch success for any of the notifications, and assume that
+ * any canonical or mirror owned by a thread for whom dispatch fails will soon
+ * be disconnected by its holder anyway.
+ *
  * Given that semantics may change and comments tend to go out of date, we
  * deliberately don't provide usage examples here. Grep around to find them.
  */
@@ -121,7 +127,7 @@ public:
     MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
     MOZ_ASSERT(!mMirrors.Contains(aMirror));
     mMirrors.AppendElement(aMirror);
-    aMirror->OwnerThread()->Dispatch(MakeNotifier(aMirror));
+    aMirror->OwnerThread()->Dispatch(MakeNotifier(aMirror), AbstractThread::DontAssertDispatchSuccess);
   }
 
   void RemoveMirror(AbstractMirror<T>* aMirror) override
@@ -138,7 +144,7 @@ public:
     for (size_t i = 0; i < mMirrors.Length(); ++i) {
       nsCOMPtr<nsIRunnable> r =
         NS_NewRunnableMethod(mMirrors[i], &AbstractMirror<T>::NotifyDisconnected);
-      mMirrors[i]->OwnerThread()->Dispatch(r.forget());
+      mMirrors[i]->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
     }
     mMirrors.Clear();
   }
@@ -149,12 +155,12 @@ public:
     return mValue;
   }
 
-  Canonical& operator=(const T& aNewValue)
+  void Set(const T& aNewValue)
   {
     MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
 
     if (aNewValue == mValue) {
-      return *this;
+      return;
     }
 
     // Notify same-thread watchers. The state watching machinery will make sure
@@ -178,9 +184,11 @@ public:
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &Canonical::DoNotify);
       AbstractThread::GetCurrent()->TailDispatcher().AddDirectTask(r.forget());
     }
-
-    return *this;
   }
+
+  Canonical& operator=(const T& aNewValue) { Set(aNewValue); return *this; }
+  Canonical& operator=(const Canonical& aOther) { Set(aOther); return *this; }
+  Canonical(const Canonical& aOther) = delete;
 
   class Holder
   {
@@ -203,9 +211,12 @@ public:
     Canonical<T>* operator&() { return mCanonical; }
 
     // Access to the T.
-    const T& Ref() { return *mCanonical; }
-    operator const T&() { return Ref(); }
-    Holder& operator=(const T& aNewValue) { *mCanonical = aNewValue; return *this; }
+    const T& Ref() const { return *mCanonical; }
+    operator const T&() const { return Ref(); }
+    void Set(const T& aNewValue) { mCanonical->Set(aNewValue); }
+    Holder& operator=(const T& aNewValue) { Set(aNewValue); return *this; }
+    Holder& operator=(const Holder& aOther) { Set(aOther); return *this; }
+    Holder(const Holder& aOther) = delete;
 
   private:
     nsRefPtr<Canonical<T>> mCanonical;
@@ -262,10 +273,15 @@ class Mirror : public AbstractMirror<T>, public WatchTarget
 public:
   using AbstractMirror<T>::OwnerThread;
 
-  Mirror(AbstractThread* aThread, const T& aInitialValue, const char* aName)
+  Mirror(AbstractThread* aThread, const T& aInitialValue, const char* aName,
+         AbstractCanonical<T>* aCanonical)
     : AbstractMirror<T>(aThread), WatchTarget(aName), mValue(aInitialValue)
   {
     MIRROR_LOG("%s [%p] initialized", mName, this);
+
+    if (aCanonical) {
+      ConnectInternal(aCanonical);
+    }
   }
 
   operator const T&()
@@ -294,15 +310,24 @@ public:
 
   void Connect(AbstractCanonical<T>* aCanonical)
   {
-    MIRROR_LOG("%s [%p] Connecting to %p", mName, this, aCanonical);
     MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
+    ConnectInternal(aCanonical);
+  }
+
+private:
+  // We separate the guts of Connect into a helper so that we can call it from
+  // initialization while not necessarily on the owner thread.
+  void ConnectInternal(AbstractCanonical<T>* aCanonical)
+  {
+    MIRROR_LOG("%s [%p] Connecting to %p", mName, this, aCanonical);
     MOZ_ASSERT(!IsConnected());
 
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
                                 (aCanonical, &AbstractCanonical<T>::AddMirror, this);
-    aCanonical->OwnerThread()->Dispatch(r.forget());
+    aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
     mCanonical = aCanonical;
   }
+public:
 
   void DisconnectIfConnected()
   {
@@ -314,7 +339,7 @@ public:
     MIRROR_LOG("%s [%p] Disconnecting from %p", mName, this, mCanonical.get());
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
                                 (mCanonical, &AbstractCanonical<T>::RemoveMirror, this);
-    mCanonical->OwnerThread()->Dispatch(r.forget());
+    mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
     mCanonical = nullptr;
   }
 
@@ -325,14 +350,22 @@ public:
     ~Holder()
     {
       MOZ_DIAGNOSTIC_ASSERT(mMirror, "Should have initialized me");
-      mMirror->DisconnectIfConnected();
+      if (mMirror->OwnerThread()->IsCurrentThreadIn()) {
+        mMirror->DisconnectIfConnected();
+      } else {
+        // If holder destruction happens on a thread other than the mirror's
+        // owner thread, manual disconnection is mandatory. We should make this
+        // more automatic by hooking it up to task queue shutdown.
+        MOZ_DIAGNOSTIC_ASSERT(!mMirror->IsConnected());
+      }
     }
 
     // NB: Because mirror-initiated disconnection can race with canonical-
     // initiated disconnection, a mirror should never be reinitialized.
-    void Init(AbstractThread* aThread, const T& aInitialValue, const char* aName)
+    void Init(AbstractThread* aThread, const T& aInitialValue, const char* aName,
+              AbstractCanonical<T>* aCanonical = nullptr)
     {
-      mMirror = new Mirror<T>(aThread, aInitialValue, aName);
+      mMirror = new Mirror<T>(aThread, aInitialValue, aName, aCanonical);
     }
 
     // Forward control operations to the Mirror<T>.
@@ -344,8 +377,8 @@ public:
     Mirror<T>* operator&() { return mMirror; }
 
     // Access to the T.
-    const T& Ref() { return *mMirror; }
-    operator const T&() { return Ref(); }
+    const T& Ref() const { return *mMirror; }
+    operator const T&() const { return Ref(); }
 
   private:
     nsRefPtr<Mirror<T>> mMirror;

@@ -317,20 +317,51 @@ FrameAnimator::GetTimeoutForFrame(uint32_t aFrameNum) const
   return data.mRawTimeout;
 }
 
-size_t
-FrameAnimator::SizeOfCompositingFrames(gfxMemoryLocation aLocation,
-                                       MallocSizeOf aMallocSizeOf) const
+static void
+DoCollectSizeOfCompositingSurfaces(const RawAccessFrameRef& aSurface,
+                                   SurfaceMemoryCounterType aType,
+                                   nsTArray<SurfaceMemoryCounter>& aCounters,
+                                   MallocSizeOf aMallocSizeOf)
 {
-  size_t n = 0;
+  // Concoct a SurfaceKey for this surface.
+  SurfaceKey key = RasterSurfaceKey(aSurface->GetImageSize(),
+                                    imgIContainer::DECODE_FLAGS_DEFAULT,
+                                    /* aFrameNum = */ 0);
 
+  // Create a counter for this surface.
+  SurfaceMemoryCounter counter(key, /* aIsLocked = */ true, aType);
+
+  // Extract the surface's memory usage information.
+  size_t heap = aSurface
+    ->SizeOfExcludingThis(gfxMemoryLocation::IN_PROCESS_HEAP, aMallocSizeOf);
+  counter.Values().SetDecodedHeap(heap);
+
+  size_t nonHeap = aSurface
+    ->SizeOfExcludingThis(gfxMemoryLocation::IN_PROCESS_NONHEAP, nullptr);
+  counter.Values().SetDecodedNonHeap(nonHeap);
+
+  // Record it.
+  aCounters.AppendElement(counter);
+}
+
+void
+FrameAnimator::CollectSizeOfCompositingSurfaces(
+    nsTArray<SurfaceMemoryCounter>& aCounters,
+    MallocSizeOf aMallocSizeOf) const
+{
   if (mCompositingFrame) {
-    n += mCompositingFrame->SizeOfExcludingThis(aLocation, aMallocSizeOf);
-  }
-  if (mCompositingPrevFrame) {
-    n += mCompositingPrevFrame->SizeOfExcludingThis(aLocation, aMallocSizeOf);
+    DoCollectSizeOfCompositingSurfaces(mCompositingFrame,
+                                       SurfaceMemoryCounterType::COMPOSITING,
+                                       aCounters,
+                                       aMallocSizeOf);
   }
 
-  return n;
+  if (mCompositingPrevFrame) {
+    DoCollectSizeOfCompositingSurfaces(mCompositingPrevFrame,
+                                       SurfaceMemoryCounterType::COMPOSITING_PREV,
+                                       aCounters,
+                                       aMallocSizeOf);
+  }
 }
 
 RawAccessFrameRef

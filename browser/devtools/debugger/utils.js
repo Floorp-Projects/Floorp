@@ -49,7 +49,7 @@ const SourceUtils = {
    */
   isJavaScript: function(aUrl, aContentType = "") {
     return (aUrl && /\.jsm?$/.test(this.trimUrlQuery(aUrl))) ||
-           aContentType.contains("javascript");
+           aContentType.includes("javascript");
   },
 
   /**

@@ -5,7 +5,7 @@
 const { uri } = module;
 const prefix = uri.substr(0, uri.lastIndexOf("/") + 1) + "fixtures/";
 
-exports.url = (path="") => path && path.contains(":")
+exports.url = (path="") => path && path.includes(":")
   ? path
   : prefix + path.replace(/^\.\//, "");
 

@@ -358,6 +358,20 @@ BindingParams::BindBlobByName(const nsACString &aName,
   return BindByName(aName, value);
 }
 
+NS_IMETHODIMP
+BindingParams::BindStringAsBlobByName(const nsACString& aName,
+                                      const nsAString& aValue)
+{
+  return DoBindStringAsBlobByName(this, aName, aValue);
+}
+
+NS_IMETHODIMP
+BindingParams::BindUTF8StringAsBlobByName(const nsACString& aName,
+                                          const nsACString& aValue)
+{
+  return DoBindStringAsBlobByName(this, aName, aValue);
+}
+
 
 NS_IMETHODIMP
 BindingParams::BindAdoptedBlobByName(const nsACString &aName,
@@ -491,6 +505,19 @@ BindingParams::BindBlobByIndex(uint32_t aIndex,
   NS_ENSURE_TRUE(value, NS_ERROR_OUT_OF_MEMORY);
 
   return BindByIndex(aIndex, value);
+}
+
+NS_IMETHODIMP
+BindingParams::BindStringAsBlobByIndex(uint32_t aIndex, const nsAString& aValue)
+{
+  return DoBindStringAsBlobByIndex(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
+BindingParams::BindUTF8StringAsBlobByIndex(uint32_t aIndex,
+                                           const nsACString& aValue)
+{
+  return DoBindStringAsBlobByIndex(this, aIndex, aValue);
 }
 
 NS_IMETHODIMP

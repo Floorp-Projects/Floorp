@@ -28,7 +28,7 @@ const permissions = metadata.permissions || {};
 const isPacked = rootURI && rootURI.indexOf("jar:") === 0;
 
 const uri = (path="") =>
-  path.contains(":") ? path : addonDataURI + path.replace(/^\.\//, "");
+  path.includes(":") ? path : addonDataURI + path.replace(/^\.\//, "");
 
 let preferencesBranch = ("preferences-branch" in metadata)
                             ? metadata["preferences-branch"]
