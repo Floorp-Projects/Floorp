@@ -10,17 +10,23 @@ function usage() {
   echo "Usage: $0 [--dep] <variant>"
 }
 
-clean=""
+clean=1
 platform=""
+TIMEOUT=3h
 while [ $# -gt 1 ]; do
     case "$1" in
-        --clobber)
+        --dep)
             shift
-            clean=1
+            clean=""
             ;;
         --platform)
             shift
             platform="$1"
+            shift
+            ;;
+        --timeout)
+            shift
+            TIMEOUT="$1"
             shift
             ;;
         *)
@@ -32,19 +38,26 @@ while [ $# -gt 1 ]; do
 done
 
 VARIANT=$1
-if [ ! -f "$ABSDIR/$VARIANT" ]; then
+
+# 'generational' is being retired in favor of 'compacting', but we need to
+# decouple the landings.
+if [[ "$VARIANT" = "generational" ]]; then
+    VARIANT=compacting
+fi
+
+if [ ! -f "$ABSDIR/variants/$VARIANT" ]; then
     echo "Could not find variant '$VARIANT'"
     usage
     exit 1
 fi
 
-(cd "$SOURCE/js/src"; autoconf-2.13 || autoconf2.13)
+(cd "$SOURCE/js/src"; autoconf-2.13 || autoconf2.13 || autoconf213)
 
 TRY_OVERRIDE=$SOURCE/js/src/config.try
 if [ -r $TRY_OVERRIDE ]; then
   CONFIGURE_ARGS="$(cat "$TRY_OVERRIDE")"
 else
-  CONFIGURE_ARGS="$(cat "$ABSDIR/$VARIANT")"
+  CONFIGURE_ARGS="$(cat "$ABSDIR/variants/$VARIANT")"
 fi
 
 OBJDIR="${OBJDIR:-$SOURCE/obj-spider}"
@@ -63,6 +76,9 @@ USE_64BIT=false
 
 if [[ "$OSTYPE" == darwin* ]]; then
   USE_64BIT=true
+  if [ "$VARIANT" = "arm-sim-osx" ]; then
+    USE_64BIT=false
+  fi
 elif [ "$OSTYPE" = "linux-gnu" ]; then
   if [ -n "$AUTOMATION" ]; then
       GCCDIR="${GCCDIR:-/tools/gcc-4.7.2-0moz1}"
@@ -120,11 +136,16 @@ fi
 
 RUN_JSTESTS=true
 
+PARENT=$$
+sh -c "sleep $TIMEOUT; kill $PARENT" <&- >&- 2>&- &
+KILLER=$!
+disown %1
+trap "kill $KILLER" EXIT
+
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
 
-elif [[ "$VARIANT" = "generational" ]]; then
-    # Generational is currently being used for compacting GC
+elif [[ "$VARIANT" = "compacting" ]]; then
     export JS_GC_ZEAL=14
 
     # Ignore timeouts from tests that are known to take too long with this zeal mode

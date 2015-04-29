@@ -660,8 +660,10 @@ VCMFrameBufferEnum VCMJitterBuffer::GetFrame(const VCMPacket& packet,
     LOG(LS_WARNING) << "Unable to get empty frame; Recycling.";
     bool found_key_frame = RecycleFramesUntilKeyFrame();
     *frame = GetEmptyFrame();
-    assert(*frame);
-    if (!found_key_frame) {
+    if (!*frame) {
+      LOG(LS_ERROR) << "GetEmptyFrame returned NULL.";
+      return kGeneralError;
+    } else if (!found_key_frame) {
       ret = kFlushIndicator;
     }
   }
