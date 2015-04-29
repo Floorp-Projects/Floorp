@@ -220,12 +220,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
            this.rawNode.ownerDocument.documentElement === this.rawNode;
   },
 
-  destroy: function () {
-    protocol.Actor.prototype.destroy.call(this);
-    this.rawNode = null;
-    this.walker = null;
-  },
-
   // Returns the JSON representation of this object over the wire.
   form: function(detail) {
     if (detail === "actorid") {
@@ -1225,9 +1219,6 @@ var WalkerActor = protocol.ActorClass({
 
   destroy: function() {
     try {
-      if (this._destroyed) {
-        return;
-      }
       this._destroyed = true;
 
       this.clearPseudoClassLocks();
@@ -1235,17 +1226,6 @@ var WalkerActor = protocol.ActorClass({
 
       this._hoveredNode = null;
       this.rootDoc = null;
-      this.rootWin = null;
-      this.rootNode = null;
-      this.tabActor = null;
-      this.layoutHelpers = null;
-      this._orphaned = null;
-      this._retainedOrphans = null;
-      this._refMap.forEach(actor => {
-        this.unmanage(actor);
-        actor.destroy();
-      });
-      this._refMap = null;
 
       this.reflowObserver.off("reflows", this._onReflows);
       this.reflowObserver = null;
@@ -3332,30 +3312,6 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     this.tabActor = tabActor;
   },
 
-  destroy: function () {
-    protocol.Actor.prototype.destroy.call(this);
-    this._highlighterPromise = null;
-    this._pageStylePromise = null;
-    this._walkerPromise = null;
-    if (this.walker) {
-      this.walker.destroy();
-    }
-    this.walker = null;
-    if (this.pageStyle) {
-      this.pageStyle.destroy();
-    }
-    this.pageStyle = null;
-    if (this.highlighter) {
-      this.highlighter.destroy();
-    }
-    this.highlighter = null;
-    this.tabActor = null;
-  },
-
-  disconnect: function () {
-    this.destroy();
-  },
-
   get window() this.tabActor.window,
 
   getWalker: method(function(options={}) {
@@ -3400,7 +3356,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     }
 
     this._pageStylePromise = this.getWalker().then(walker => {
-      return this.pageStyle = PageStyleActor(this);
+      return PageStyleActor(this);
     });
     return this._pageStylePromise;
   }, {
@@ -3429,7 +3385,7 @@ var InspectorActor = exports.InspectorActor = protocol.ActorClass({
     }
 
     this._highlighterPromise = this.getWalker().then(walker => {
-      return this.highlighter = HighlighterActor(this, autohide);
+      return HighlighterActor(this, autohide);
     });
     return this._highlighterPromise;
   }, {
