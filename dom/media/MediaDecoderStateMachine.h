@@ -775,6 +775,9 @@ public:
   // Task queue for running the state machine.
   nsRefPtr<MediaTaskQueue> mTaskQueue;
 
+  // State-watching manager.
+  WatchManager<MediaDecoderStateMachine> mWatchManager;
+
   // True is we are decoding a realtime stream, like a camera stream.
   bool mRealTime;
 
@@ -903,7 +906,6 @@ public:
 
   // The status of our next frame. Mirrored on the main thread and used to
   // compute ready state.
-  WatcherHolder mNextFrameStatusUpdater;
   Canonical<NextFrameStatus>::Holder mNextFrameStatus;
 public:
   AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus() { return &mNextFrameStatus; }
