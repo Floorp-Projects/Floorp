@@ -130,6 +130,7 @@ const LEVELS = {
   table: SEVERITY_LOG,
   debug: SEVERITY_LOG,
   dir: SEVERITY_LOG,
+  dirxml: SEVERITY_LOG,
   group: SEVERITY_LOG,
   groupCollapsed: SEVERITY_LOG,
   groupEnd: SEVERITY_LOG,
@@ -1285,7 +1286,11 @@ WebConsoleFrame.prototype = {
         clipboardText = clipboardArray.join(" ");
         break;
       }
-
+      case "dirxml": {
+        // We just alias console.dirxml() with console.log().
+        aMessage.level = "log";
+        return WCF_logConsoleAPIMessage.call(this, aMessage);
+      }
       case "group":
       case "groupCollapsed":
         clipboardText = body = aMessage.groupName;
