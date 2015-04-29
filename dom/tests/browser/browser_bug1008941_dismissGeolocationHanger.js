@@ -25,7 +25,7 @@ add_task(function testDismissHanger() {
 
   let result = gBrowser.getBrowserForTab(gBrowser.selectedTab)
                        .contentDocument.body.innerHTML;
-  ok(result.contains("location..."), "Location is not shared");
+  ok(result.includes("location..."), "Location is not shared");
 });
 
 add_task(function asyncCleanup() {

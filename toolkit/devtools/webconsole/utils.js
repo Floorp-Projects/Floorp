@@ -597,7 +597,7 @@ let WebConsoleUtils = {
 
       function pasteKeyUpHandler(aEvent2) {
         let value = inputField.value || inputField.textContent;
-        if (value.contains(okstring)) {
+        if (value.includes(okstring)) {
           notificationBox.removeNotification(notification);
           inputField.removeEventListener("keyup", pasteKeyUpHandler);
           WebConsoleUtils.usageCount = CONSOLE_ENTRY_THRESHOLD;

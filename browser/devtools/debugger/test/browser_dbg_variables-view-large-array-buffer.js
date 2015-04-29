@@ -46,21 +46,21 @@ function initialChecks() {
     "Should have the right property name for 'buffer'.");
   is(bufferVar.target.querySelector(".value").getAttribute("value"), "ArrayBuffer",
     "Should have the right property value for 'buffer'.");
-  ok(bufferVar.target.querySelector(".value").className.contains("token-other"),
+  ok(bufferVar.target.querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'buffer'.");
 
   is(arrayVar.target.querySelector(".name").getAttribute("value"), "largeArray",
     "Should have the right property name for 'largeArray'.");
   is(arrayVar.target.querySelector(".value").getAttribute("value"), "Int8Array[10000]",
     "Should have the right property value for 'largeArray'.");
-  ok(arrayVar.target.querySelector(".value").className.contains("token-other"),
+  ok(arrayVar.target.querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'largeArray'.");
 
   is(objectVar.target.querySelector(".name").getAttribute("value"), "largeObject",
     "Should have the right property name for 'largeObject'.");
   is(objectVar.target.querySelector(".value").getAttribute("value"), "Object[10000]",
     "Should have the right property value for 'largeObject'.");
-  ok(objectVar.target.querySelector(".value").className.contains("token-other"),
+  ok(objectVar.target.querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'largeObject'.");
 
   is(bufferVar.expanded, false,

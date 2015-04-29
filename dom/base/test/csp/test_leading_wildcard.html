@@ -50,11 +50,11 @@ examiner.prototype  = {
 
    // allowed requests
    if (topic === "specialpowers-http-notify-request") {
-      if (data.contains("leading_wildcard_allowed.js")) {
+      if (data.includes("leading_wildcard_allowed.js")) {
         ok (true, "CSP should allow file_leading_wildcard_allowed.js!");
         finishTest();
       }
-      if (data.contains("leading_wildcard_blocked.js")) {
+      if (data.includes("leading_wildcard_blocked.js")) {
         ok(false, "CSP should not allow file_leading_wildcard_blocked.js!");
         finishTest();
       }
@@ -66,11 +66,11 @@ examiner.prototype  = {
                         SpecialPowers.do_QueryInterface(subject, "nsIURI"),
                         "asciiSpec");
 
-      if (asciiSpec.contains("leading_wildcard_allowed.js")) {
+      if (asciiSpec.includes("leading_wildcard_allowed.js")) {
         ok (false, "CSP should not block file_leading_wildcard_allowed.js!");
         finishTest();
       }
-      if (asciiSpec.contains("leading_wildcard_blocked.js")) {
+      if (asciiSpec.includes("leading_wildcard_blocked.js")) {
         ok (true, "CSP should block file_leading_wildcard_blocked.js!");
         finishTest();
       }

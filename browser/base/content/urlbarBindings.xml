@@ -523,7 +523,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return selectedVal;
           // The selection doesn't span the full domain if it doesn't contain a slash and is
           // followed by some character other than a slash.
-          if (!selectedVal.contains("/")) {
+          if (!selectedVal.includes("/")) {
             let remainder = inputVal.replace(selectedVal, "");
             if (remainder != "" && remainder[0] != "/")
               return selectedVal;

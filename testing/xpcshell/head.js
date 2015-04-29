@@ -787,7 +787,7 @@ function todo_check_neq(left, right, stack) {
 }
 
 function do_report_result(passed, text, stack, todo) {
-  while (stack.filename.contains("head.js") && stack.caller) {
+  while (stack.filename.includes("head.js") && stack.caller) {
     stack = stack.caller;
   }
 

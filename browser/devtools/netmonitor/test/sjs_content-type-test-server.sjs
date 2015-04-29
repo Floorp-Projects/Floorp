@@ -34,8 +34,8 @@ function handleRequest(request, response) {
   response.processAsync();
 
   let params = request.queryString.split("&");
-  let format = (params.filter((s) => s.contains("fmt="))[0] || "").split("=")[1];
-  let status = (params.filter((s) => s.contains("sts="))[0] || "").split("=")[1] || 200;
+  let format = (params.filter((s) => s.includes("fmt="))[0] || "").split("=")[1];
+  let status = (params.filter((s) => s.includes("sts="))[0] || "").split("=")[1] || 200;
 
   let cachedCount = 0;
   let cacheExpire = 60; // seconds
@@ -78,7 +78,7 @@ function handleRequest(request, response) {
         break;
       }
       case "html": {
-        let content = params.filter((s) => s.contains("res="))[0].split("=")[1];
+        let content = params.filter((s) => s.includes("res="))[0].split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/html; charset=utf-8", false);
         setCacheHeaders();
@@ -120,7 +120,7 @@ function handleRequest(request, response) {
         break;
       }
       case "jsonp": {
-        let fun = params.filter((s) => s.contains("jsonp="))[0].split("=")[1];
+        let fun = params.filter((s) => s.includes("jsonp="))[0].split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/json; charset=utf-8", false);
         setCacheHeaders();
@@ -129,7 +129,7 @@ function handleRequest(request, response) {
         break;
       }
       case "jsonp2": {
-        let fun = params.filter((s) => s.contains("jsonp="))[0].split("=")[1];
+        let fun = params.filter((s) => s.includes("jsonp="))[0].split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/json; charset=utf-8", false);
         setCacheHeaders();

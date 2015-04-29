@@ -292,7 +292,7 @@ let LoopCallsInternal = {
         EMAIL_OR_PHONE_RE.test(callData.callerId)) {
       LoopContacts.search({
         q: callData.callerId,
-        field: callData.callerId.contains("@") ? "email" : "tel"
+        field: callData.callerId.includes("@") ? "email" : "tel"
       }, (err, contacts) => {
         if (err) {
           // Database error, helas!

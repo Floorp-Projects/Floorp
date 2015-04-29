@@ -75,8 +75,8 @@ add_task(function* () {
 
   // Ensure that the notification is showing information about
   // the x-second-test plugin.
-  ok(notification.label.contains("Second Test"), "Should mention the second plugin");
-  ok(!notification.label.contains("127.0.0.1"), "Should not refer to old principal");
-  ok(notification.label.contains("null"), "Should refer to the new principal");
+  ok(notification.label.includes("Second Test"), "Should mention the second plugin");
+  ok(!notification.label.includes("127.0.0.1"), "Should not refer to old principal");
+  ok(notification.label.includes("null"), "Should refer to the new principal");
   gBrowser.removeTab(newTab);
 });

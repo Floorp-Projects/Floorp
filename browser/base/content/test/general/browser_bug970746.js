@@ -107,7 +107,7 @@ add_task(function *() {
         "search context menu item is shown for  '#" + test.id + "' and selected is '" + test.isSelected + "'");
 
     if (test.shouldBeShown) {
-      ok(menuItem.label.contains(test.expectedLabelContents),
+      ok(menuItem.label.includes(test.expectedLabelContents),
          "Menu item text '" + menuItem.label  + "' contains the correct search terms '" + test.expectedLabelContents  + "'");
     }
 

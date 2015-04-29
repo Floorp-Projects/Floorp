@@ -40,7 +40,7 @@ let test = asyncTest(function* () {
 
   let clickable = result.clickableElements[0];
   ok(clickable, "clickable object found");
-  ok(body.textContent.contains('{ hello: "world!",'), "message text check");
+  ok(body.textContent.includes('{ hello: "world!",'), "message text check");
 
   executeSoon(() => {
     EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow)

@@ -199,7 +199,7 @@ add_test(function test_checkForAddons_bad_ssl() {
   promise.then(() => {
     do_throw("Defensive timeout should reject");
   }, err => {
-    do_check_true(err.message.contains("SSL is required and URI scheme is " +
+    do_check_true(err.message.includes("SSL is required and URI scheme is " +
                                        "not https."));
     installManager.uninit();
     if (PREF_KEY_URL_OVERRIDE_BACKUP) {
