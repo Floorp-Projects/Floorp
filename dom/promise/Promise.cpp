@@ -956,6 +956,26 @@ NS_IMPL_CYCLE_COLLECTION(AllResolveHandler, mCountdownHolder)
 Promise::All(const GlobalObject& aGlobal,
              const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
 {
+  JSContext* cx = aGlobal.Context();
+
+  nsTArray<nsRefPtr<Promise>> promiseList;
+
+  for (uint32_t i = 0; i < aIterable.Length(); ++i) {
+    JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
+    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
+
+    MOZ_ASSERT(!aRv.Failed());
+
+    promiseList.AppendElement(Move(nextPromise));
+  }
+
+  return Promise::All(aGlobal, promiseList, aRv);
+}
+
+/* static */ already_AddRefed<Promise>
+Promise::All(const GlobalObject& aGlobal,
+             const nsTArray<nsRefPtr<Promise>>& aPromiseList, ErrorResult& aRv)
+{
   nsCOMPtr<nsIGlobalObject> global =
     do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
@@ -965,7 +985,7 @@ Promise::All(const GlobalObject& aGlobal,
 
   JSContext* cx = aGlobal.Context();
 
-  if (aIterable.Length() == 0) {
+  if (aPromiseList.IsEmpty()) {
     JS::Rooted<JSObject*> empty(cx, JS_NewArrayObject(cx, 0));
     if (!empty) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -982,7 +1002,7 @@ Promise::All(const GlobalObject& aGlobal,
     return nullptr;
   }
   nsRefPtr<CountdownHolder> holder =
-    new CountdownHolder(aGlobal, promise, aIterable.Length());
+    new CountdownHolder(aGlobal, promise, aPromiseList.Length());
 
   JS::Rooted<JSObject*> obj(cx, JS::CurrentGlobalOrNull(cx));
   if (!obj) {
@@ -992,20 +1012,16 @@ Promise::All(const GlobalObject& aGlobal,
 
   nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
 
-  for (uint32_t i = 0; i < aIterable.Length(); ++i) {
-    JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
-    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
-
-    MOZ_ASSERT(!aRv.Failed());
-
+  for (uint32_t i = 0; i < aPromiseList.Length(); ++i) {
     nsRefPtr<PromiseNativeHandler> resolveHandler =
       new AllResolveHandler(holder, i);
 
     nsRefPtr<PromiseCallback> resolveCb =
       new NativePromiseCallback(resolveHandler, Resolved);
+
     // Every promise gets its own resolve callback, which will set the right
     // index in the array to the resolution value.
-    nextPromise->AppendCallbacks(resolveCb, rejectCb);
+    aPromiseList[i]->AppendCallbacks(resolveCb, rejectCb);
   }
 
   return promise.forget();
