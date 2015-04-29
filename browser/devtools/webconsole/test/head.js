@@ -1474,7 +1474,8 @@ function checkOutputForInputs(hud, inputTests)
 
     if (typeof entry.inspectorIcon == "boolean") {
       let msg = [...result.matched][0];
-      yield checkLinkToInspector(entry, msg);
+      info("Checking Inspector Link: " + entry.input);
+      yield checkLinkToInspector(entry.inspectorIcon, msg);
     }
   }
 
@@ -1516,7 +1517,8 @@ function checkOutputForInputs(hud, inputTests)
       yield checkObjectClick(entry, msg);
     }
     if (typeof entry.inspectorIcon == "boolean") {
-      yield checkLinkToInspector(entry, msg);
+      info("Checking Inspector Link: " + entry.input);
+      yield checkLinkToInspector(entry.inspectorIcon, msg);
     }
   }
 
@@ -1554,30 +1556,6 @@ function checkOutputForInputs(hud, inputTests)
     }
 
     yield promise.resolve(null);
-  }
-
-  function checkLinkToInspector(entry, msg)
-  {
-    info("Checking Inspector Link: " + entry.input);
-    let elementNodeWidget = [...msg._messageObject.widgets][0];
-    if (!elementNodeWidget) {
-      ok(!entry.inspectorIcon, "The message has no ElementNode widget");
-      return;
-    }
-
-    return elementNodeWidget.linkToInspector().then(() => {
-      // linkToInspector resolved, check for the .open-inspector element
-      if (entry.inspectorIcon) {
-        ok(msg.querySelectorAll(".open-inspector").length,
-          "The ElementNode widget is linked to the inspector");
-      } else {
-        ok(!msg.querySelectorAll(".open-inspector").length,
-          "The ElementNode widget isn't linked to the inspector");
-      }
-    }, () => {
-      // linkToInspector promise rejected, node not linked to inspector
-      ok(!entry.inspectorIcon, "The ElementNode widget isn't linked to the inspector");
-    });
   }
 
   function onVariablesViewOpen(entry, {resolve, reject}, event, view, options)
@@ -1644,6 +1622,36 @@ function once(target, eventName, useCapture=false) {
   }
 
   return deferred.promise;
+}
+
+/**
+ * Checks a link to the inspector
+ *
+ * @param {boolean} hasLinkToInspector Set to true if the message should
+ *  link to the inspector panel.
+ * @param {element} msg The message to test.
+ */
+function checkLinkToInspector(hasLinkToInspector, msg)
+{
+  let elementNodeWidget = [...msg._messageObject.widgets][0];
+  if (!elementNodeWidget) {
+    ok(!hasLinkToInspector, "The message has no ElementNode widget");
+    return;
+  }
+
+  return elementNodeWidget.linkToInspector().then(() => {
+    // linkToInspector resolved, check for the .open-inspector element
+    if (hasLinkToInspector) {
+      ok(msg.querySelectorAll(".open-inspector").length,
+        "The ElementNode widget is linked to the inspector");
+    } else {
+      ok(!msg.querySelectorAll(".open-inspector").length,
+        "The ElementNode widget isn't linked to the inspector");
+    }
+  }, () => {
+    // linkToInspector promise rejected, node not linked to inspector
+    ok(!hasLinkToInspector, "The ElementNode widget isn't linked to the inspector");
+  });
 }
 
 function getSourceActor(aSources, aURL) {

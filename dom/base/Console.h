@@ -75,6 +75,9 @@ public:
   Dir(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
+  Dirxml(JSContext* aCx, const Sequence<JS::Value>& aData);
+
+  void
   Group(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
@@ -116,6 +119,7 @@ private:
     MethodTable,
     MethodTrace,
     MethodDir,
+    MethodDirxml,
     MethodGroup,
     MethodGroupCollapsed,
     MethodGroupEnd,
