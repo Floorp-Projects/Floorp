@@ -18,6 +18,9 @@ class nsIInputStream;
 class nsIThread;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 namespace cache {
 

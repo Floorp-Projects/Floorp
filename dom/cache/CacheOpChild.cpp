@@ -116,7 +116,6 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
       HandleResponseList(aResult.get_CacheMatchAllResult().responseList());
       break;
     }
-    case CacheOpResult::TCacheAddAllResult:
     case CacheOpResult::TCachePutAllResult:
     {
       mPromise->MaybeResolve(JS::UndefinedHandleValue);
