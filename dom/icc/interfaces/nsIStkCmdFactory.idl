@@ -10,12 +10,15 @@
 %}
 
 interface nsIStkProactiveCmd;
+interface nsIStkTerminalResponse;
+interface nsIStkDownloadEvent;
+interface nsIStkTimer;
 
 /**
- * This StkCmdFactory provides series factory methods to create instances of
- * MozStkCommand and nsIStkProactiveCmd.
+ * This StkCmdFactory provides series factory methods to create objects defined
+ * in nsIStkProactiveCmd.idl and MozStkCommandEvent.webidl.
  */
-[scriptable, uuid(3b64fdec-e333-11e4-9602-9bd4d4283b56)]
+[scriptable, uuid(c507a2fc-0057-11e5-a245-63b36b054bcc)]
 interface nsIStkCmdFactory : nsISupports
 {
   /**
@@ -35,4 +38,52 @@ interface nsIStkCmdFactory : nsISupports
    *         in MozStkCommandEvent.webidl
    */
   jsval createCommandMessage(in nsIStkProactiveCmd aStkProactiveCmd);
+
+  /**
+   * @param aResponseMessage
+   *        A JS object which complies with 'dictionary MozStkResponse'
+   *        in MozStkCommandEvent.webidl
+   *
+   * @return a nsIStkTerminalResponse instance.
+   */
+  nsIStkTerminalResponse createResponse(in jsval aResponseMessage);
+
+  /**
+   * @param  aStkTerminalResponse
+   *         a nsIStkTerminalResponse instance.
+   *
+   * @return a JS object which complies with 'dictionary MozStkResponse'
+   *         in MozStkCommandEvent.webidl
+   */
+  jsval createResponseMessage(in nsIStkTerminalResponse aStkTerminalResponse);
+
+  /**
+   * @param aEventMessage
+   *        A JS object which complies with 'dictionary MozStkXxxEvent'
+   *        in MozStkCommandEvent.webidl
+   *
+   * @return a nsIStkDownloadEvent instance.
+   */
+  nsIStkDownloadEvent createEvent(in jsval aEventMessage);
+
+  /**
+   * @param  aStkDownloadEvent
+   *         a nsIStkDownloadEvent instance.
+   *
+   * @return a JS object which complies with 'dictionary MozStkXxxEvent'
+   *         in MozStkCommandEvent.webidl
+   */
+  jsval createEventMessage(in nsIStkDownloadEvent aStkDownloadEvent);
+
+  /**
+   * @param aStkTimerMessage
+   *        a JS object which complies with 'dictionary MozStkTimer'
+   *        in MozStkCommandEvent.webidl
+   *
+   * @return an instance of nsIStkTimer with the same timerId and timerValue
+   *         from aStkTimerMessage.
+   *
+   * Note: This API is specific to nsIIcc::sendStkTimerExpiration().
+   */
+   nsIStkTimer createTimer(in jsval aStkTimerMessage);
 };

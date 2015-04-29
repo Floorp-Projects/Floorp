@@ -180,7 +180,23 @@ StkTimer.prototype = {
   // nsIStkTimer
   timerId: 0,
   timerValue: Ci.nsIStkTimer.TIMER_VALUE_INVALID,
-  timerAction: 0
+  timerAction: Ci.nsIStkTimer.TIMER_ACTION_INVALID
+};
+
+function StkLocationInfo(aMcc, aMnc, aGsmLocationAreaCode, aGsmCellId) {
+  this.mcc = aMcc;
+  this.mnc = aMnc;
+  this.gsmLocationAreaCode = aGsmLocationAreaCode;
+  this.gsmCellId = aGsmCellId;
+}
+StkLocationInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStkLocationInfo]),
+
+  // nsIStkLocationInfo
+  mcc: null,
+  mnc: null,
+  gsmLocationAreaCode: -1,
+  gsmCellId: -1
 };
 
 /**
@@ -999,6 +1015,417 @@ QueriedIFs[RIL.STK_CMD_SEND_DATA] = Ci.nsIStkTextMessageCmd;
 QueriedIFs[RIL.STK_CMD_RECEIVE_DATA] = Ci.nsIStkTextMessageCmd;
 
 /**
+ * The implementation of nsIStkTerminalResponse set and paired JS object set.
+ */
+function StkTerminalResponse(aResponseMessage) {
+  this.resultCode = aResponseMessage.resultCode;
+  if (aResponseMessage.additionalInformation != undefined) {
+    this.additionalInformation = aResponseMessage.additionalInformation;
+  }
+}
+StkTerminalResponse.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStkTerminalResponse]),
+
+  // nsIStkTerminalResponse
+  resultCode: 0,
+  additionalInformation: Ci.nsIStkTerminalResponse.ADDITIONAL_INFO_INVALID
+};
+
+function StkResponseMessage(aStkTerminalResponse) {
+  this.resultCode = aStkTerminalResponse.resultCode;
+  if (aStkTerminalResponse.additionalInformation
+      !== Ci.nsIStkTerminalResponse.ADDITIONAL_INFO_INVALID) {
+    this.additionalInformation = aStkTerminalResponse.additionalInformation;
+  }
+}
+StkResponseMessage.prototype = {
+  resultCode: Ci.nsIStkTerminalResponse.RESULT_OK
+};
+
+function StkSelectItemResponse(aStkSelectItemResponseMessage) {
+  // Call |StkTerminalResponse| constructor.
+  StkTerminalResponse.call(this, aStkSelectItemResponseMessage);
+  this.itemIdentifier = aStkSelectItemResponseMessage.itemIdentifier;
+}
+StkSelectItemResponse.prototype = Object.create(StkTerminalResponse.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkTerminalResponse,
+                                  Ci.nsIStkSelectItemResponse])
+  },
+
+  // nsIStkSelectItemResponse
+  itemIdentifier: { value: 0, writable: true }
+});
+
+function StkSelectItemResponseMessage(aStkSelectItemResponse) {
+  // Call |StkResponseMessage| constructor.
+  StkResponseMessage.call(this, aStkSelectItemResponse);
+
+  this.itemIdentifier = aStkSelectItemResponse.itemIdentifier;
+}
+StkSelectItemResponseMessage.prototype = Object.create(StkResponseMessage.prototype);
+
+function StkGetInputResponse(aStkGetInputResponseMessage) {
+  // Call |StkTerminalResponse| constructor.
+  StkTerminalResponse.call(this, aStkGetInputResponseMessage);
+  if (aStkGetInputResponseMessage.isYesNo !== undefined) {
+    this.isYesNo = (aStkGetInputResponseMessage.isYesNo)
+      ? Ci.nsIStkGetInputResponse.YES
+      : Ci.nsIStkGetInputResponse.NO;
+  }
+
+  if (aStkGetInputResponseMessage.input !== undefined) {
+    // We expect input to be "" if user confirmed the input with nothing,
+    // and we use null to present 'undefined' internally for the conversion
+    // between nsIStkTerminalResponse and JS objects.
+    this.input = aStkGetInputResponseMessage.input || "";
+  }
+
+}
+StkGetInputResponse.prototype = Object.create(StkTerminalResponse.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkTerminalResponse,
+                                  Ci.nsIStkGetInputResponse])
+  },
+
+  // nsIStkGetInputResponse
+  isYesNo: { value: Ci.nsIStkGetInputResponse.YES_NO_INVALID, writable: true },
+  input: { value: null, writable: true }
+});
+
+function StkGetInputResponseMessage(aStkGetInputResponse) {
+  // Call |StkResponseMessage| constructor.
+  StkResponseMessage.call(this, aStkGetInputResponse);
+
+  if (aStkGetInputResponse.isYesNo !== Ci.nsIStkGetInputResponse.YES_NO_INVALID) {
+    this.isYesNo = !!aStkGetInputResponse.isYesNo;
+  }
+
+  if (aStkGetInputResponse.input !== null) {
+    this.input = aStkGetInputResponse.input;
+  }
+}
+StkGetInputResponseMessage.prototype = Object.create(StkResponseMessage.prototype);
+
+function StkCallSetupResponse(aStkCallSetupResponseMessage) {
+  // Call |StkTerminalResponse| constructor.
+  StkTerminalResponse.call(this, aStkCallSetupResponseMessage);
+  this.hasConfirmed = !! aStkCallSetupResponseMessage.hasConfirmed;
+}
+StkCallSetupResponse.prototype = Object.create(StkTerminalResponse.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkTerminalResponse,
+                                  Ci.nsIStkCallSetupResponse])
+  },
+
+  // nsIStkCallSetupResponse
+  hasConfirmed: { value: false, writable: true }
+});
+
+function StkCallSetupResponseMessage(aStkCallSetupResponse) {
+  // Call |StkResponseMessage| constructor.
+  StkResponseMessage.call(this, aStkCallSetupResponse);
+
+  this.hasConfirmed = aStkCallSetupResponse.hasConfirmed;
+}
+StkCallSetupResponseMessage.prototype = Object.create(StkResponseMessage.prototype);
+
+function StkLocalInfoResponse(aStkLocalInfoResponseMessage) {
+  // Call |StkTerminalResponse| constructor.
+  StkTerminalResponse.call(this, aStkLocalInfoResponseMessage);
+
+  let localInfo = aStkLocalInfoResponseMessage.localInfo;
+
+  if (localInfo.imei) {
+    this.imei = localInfo.imei;
+    return;
+  }
+
+  if (localInfo.locationInfo) {
+    let info = localInfo.locationInfo;
+
+    this.locationInfo = new StkLocationInfo(info.mcc,
+                                            info.mnc,
+                                            info.gsmLocationAreaCode,
+                                            info.gsmCellId);
+    return;
+  }
+
+  if (localInfo.date) {
+    this.date = localInfo.date.getTime();
+    return;
+  }
+
+  if (localInfo.language) {
+    this.language = localInfo.language;
+    return;
+  }
+}
+StkLocalInfoResponse.prototype = Object.create(StkTerminalResponse.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkTerminalResponse,
+                                  Ci.nsIStkLocalInfoResponse])
+  },
+
+  // nsIStkLocalInfoResponse
+  imei: { value: null, writable: true },
+  locationInfo: { value: null, writable: true },
+  date: { value: Ci.nsIStkLocalInfoResponse.DATE_INVALID, writable: true },
+  language: { value: null, writable: true },
+});
+
+function StkLocalInfoResponseMessage(aStkLocalInfoResponse) {
+  // Call |StkResponseMessage| constructor.
+  StkResponseMessage.call(this, aStkLocalInfoResponse);
+
+  let localInfo = this.localInfo = {};
+
+  if (aStkLocalInfoResponse.imei) {
+    localInfo.imei = aStkLocalInfoResponse.imei;
+    return;
+  }
+
+  if (aStkLocalInfoResponse.locationInfo) {
+    let srcInfo = aStkLocalInfoResponse.locationInfo;
+    let destInfo = localInfo.locationInfo = {};
+
+    destInfo.mcc = srcInfo.mcc;
+    destInfo.mnc = srcInfo.mnc;
+    destInfo.gsmLocationAreaCode = srcInfo.gsmLocationAreaCode;
+    destInfo.gsmCellId = srcInfo.gsmCellId;
+
+    return;
+  }
+
+  if (aStkLocalInfoResponse.date !== Ci.nsIStkLocalInfoResponse.DATE_INVALID) {
+    localInfo.date = new Date(aStkLocalInfoResponse.date);
+    return;
+  }
+
+  if (aStkLocalInfoResponse.language) {
+    localInfo.language = aStkLocalInfoResponse.language;
+    return;
+  }
+}
+StkLocalInfoResponseMessage.prototype = Object.create(StkResponseMessage.prototype);
+
+function StkTimerResponse(aStkTimerResponseMessage) {
+  // Call |StkTerminalResponse| constructor.
+  StkTerminalResponse.call(this, aStkTimerResponseMessage);
+  let timer = aStkTimerResponseMessage.timer;
+  // timerAction is useless in Terminal Response,
+  // so we always set it to TIMER_ACTION_INVALID.
+  this.timer = new StkTimer(timer.timerId,
+                            Math.floor(timer.timerValue),
+                            Ci.nsIStkTimer.TIMER_ACTION_INVALID);
+}
+StkTimerResponse.prototype = Object.create(StkTerminalResponse.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkTerminalResponse,
+                                  Ci.nsIStkTimerResponse])
+  },
+
+  // nsIStkTimerResponse
+  timer: { value: null, writable: true }
+});
+
+function StkTimerResponseMessage(aStkTimerResponse) {
+  // Call |StkResponseMessage| constructor.
+  StkResponseMessage.call(this, aStkTimerResponse);
+
+  let timer = this.timer = {};
+  // timerAction is meaningless for terminal response.
+  timer.timerId = aStkTimerResponse.timer.timerId;
+  timer.timerValue = aStkTimerResponse.timer.timerValue;
+}
+StkTimerResponseMessage.prototype = Object.create(StkResponseMessage.prototype);
+
+/**
+ * The implementation of nsIStkDownloadEvent set and paired JS object set.
+ */
+function StkDownloadEvent(aEventMessage) {
+  this.eventType = aEventMessage.eventType;
+}
+StkDownloadEvent.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIStkDownloadEvent]),
+
+  // nsIStkDownloadEvent
+  eventType: 0
+};
+
+function StkEventMessage(aStkDownloadEvent) {
+  this.eventType = aStkDownloadEvent.eventType;
+}
+StkEventMessage.prototype = {
+  eventType: 0
+};
+
+function StkLocationEvent(aStkLocationEventMessage) {
+  // Call |StkDownloadEvent| constructor.
+  StkDownloadEvent.call(this, aStkLocationEventMessage);
+  this.locationStatus = aStkLocationEventMessage.locationStatus;
+
+  if (this.locationStatus == Ci.nsIStkLocationEvent.SERVICE_STATE_NORMAL &&
+      aStkLocationEventMessage.locationInfo) {
+    let info = aStkLocationEventMessage.locationInfo;
+
+    this.locationInfo = new StkLocationInfo(info.mcc,
+                                            info.mnc,
+                                            info.gsmLocationAreaCode,
+                                            info.gsmCellId);
+  }
+}
+StkLocationEvent.prototype = Object.create(StkDownloadEvent.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkDownloadEvent,
+                                  Ci.nsIStkLocationEvent])
+  },
+
+  // nsIStkLocationEvent
+  locationStatus: { value: Ci.nsIStkLocationEvent.SERVICE_STATE_UNAVAILABLE, writable: true },
+  locationInfo: { value: null, writable: true }
+});
+
+function StkLocationEventMessage(aStkLocationEvent) {
+  // Call |StkEventMessage| constructor.
+  StkEventMessage.call(this, aStkLocationEvent);
+  this.locationStatus = aStkLocationEvent.locationStatus;
+  if (aStkLocationEvent.locationInfo) {
+    let info = aStkLocationEvent.locationInfo;
+
+    this.locationInfo = new StkLocationInfo(info.mcc,
+                                            info.mnc,
+                                            info.gsmLocationAreaCode,
+                                            info.gsmCellId);
+  }
+}
+StkLocationEventMessage.prototype = Object.create(StkEventMessage.prototype);
+
+function StkCallEvent(aStkCallEventMessage) {
+  // Call |StkDownloadEvent| constructor.
+  StkDownloadEvent.call(this, aStkCallEventMessage);
+
+  if (aStkCallEventMessage.number) {
+    this.number = aStkCallEventMessage.number;
+  }
+
+  this.isIssuedByRemote = !!aStkCallEventMessage.isIssuedByRemote;
+
+  if (aStkCallEventMessage.error) {
+    this.error = aStkCallEventMessage.error;
+  }
+}
+StkCallEvent.prototype = Object.create(StkDownloadEvent.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkDownloadEvent,
+                                  Ci.nsIStkCallEvent])
+  },
+
+  // nsIStkCallEvent
+  number: { value: null, writable: true },
+  isIssuedByRemote: { value: false, writable: true },
+  error: { value: null, writable: true }
+});
+
+function StkCallEventMessage(aStkCallEvent) {
+  // Call |StkEventMessage| constructor.
+  StkEventMessage.call(this, aStkCallEvent);
+  this.number = aStkCallEvent.number;
+  this.isIssuedByRemote = aStkCallEvent.isIssuedByRemote;
+  this.error = aStkCallEvent.error;
+}
+StkCallEventMessage.prototype = Object.create(StkEventMessage.prototype);
+
+function StkLanguageSelectionEvent(aStkLanguageSelectionEventMessage) {
+  // Call |StkDownloadEvent| constructor.
+  StkDownloadEvent.call(this, aStkLanguageSelectionEventMessage);
+
+  if (aStkLanguageSelectionEventMessage.language) {
+    this.language = aStkLanguageSelectionEventMessage.language;
+  }
+}
+StkLanguageSelectionEvent.prototype = Object.create(StkDownloadEvent.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkDownloadEvent,
+                                  Ci.nsIStkLanguageSelectionEvent])
+  },
+
+  // nsIStkLanguageSelectionEvent
+  language: { value: null, writable: true }
+});
+
+function StkLanguageSelectionEventMessage(aStkLanguageSelectionEvent) {
+  // Call |StkEventMessage| constructor.
+  StkEventMessage.call(this, aStkLanguageSelectionEvent);
+  this.language = aStkLanguageSelectionEvent.language;
+}
+StkLanguageSelectionEventMessage.prototype = Object.create(StkEventMessage.prototype);
+
+function StkBrowserTerminationEvent(aStkBrowserTerminationEventMessage) {
+  // Call |StkDownloadEvent| constructor.
+  StkDownloadEvent.call(this, aStkBrowserTerminationEventMessage);
+
+  if (aStkBrowserTerminationEventMessage.terminationCause) {
+    this.terminationCause = aStkBrowserTerminationEventMessage.terminationCause;
+  }
+}
+StkBrowserTerminationEvent.prototype = Object.create(StkDownloadEvent.prototype, {
+  QueryInterface: {
+    value: XPCOMUtils.generateQI([Ci.nsIStkDownloadEvent,
+                                  Ci.nsIStkBrowserTerminationEvent])
+  },
+
+  // nsIStkBrowserTerminationEvent
+  terminationCause: { value: Ci.nsIStkBrowserTerminationEvent.BROWSER_TERMINATION_CAUSE_USER, writable: true }
+});
+
+function StkBrowserTerminationEventMessage(aStkBrowserTerminationEvent) {
+  // Call |StkEventMessage| constructor.
+  StkEventMessage.call(this, aStkBrowserTerminationEvent);
+  this.terminationCause = aStkBrowserTerminationEvent.terminationCause;
+}
+StkBrowserTerminationEventMessage.prototype = Object.create(StkEventMessage.prototype);
+
+/**
+ * Event Prototype Mappings.
+ */
+let EventPrototypes = {};
+EventPrototypes[RIL.STK_EVENT_TYPE_USER_ACTIVITY] = StkDownloadEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE] = StkDownloadEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_MT_CALL] = StkCallEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_CALL_CONNECTED] = StkCallEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_CALL_DISCONNECTED] = StkCallEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_LOCATION_STATUS] = StkLocationEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_LANGUAGE_SELECTION] = StkLanguageSelectionEvent;
+EventPrototypes[RIL.STK_EVENT_TYPE_BROWSER_TERMINATION] = StkBrowserTerminationEvent;
+
+/**
+ * Event Message Prototype Mappings.
+ */
+let EventMsgPrototypes = {};
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_USER_ACTIVITY] = StkEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE] = StkEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_MT_CALL] = StkCallEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_CALL_CONNECTED] = StkCallEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_CALL_DISCONNECTED] = StkCallEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_LOCATION_STATUS] = StkLocationEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_LANGUAGE_SELECTION] = StkLanguageSelectionEventMessage;
+EventMsgPrototypes[RIL.STK_EVENT_TYPE_BROWSER_TERMINATION] = StkBrowserTerminationEventMessage;
+
+/**
+ * Event QueryInterface Mappings.
+ */
+let QueriedEventIFs = {};
+QueriedEventIFs[RIL.STK_EVENT_TYPE_USER_ACTIVITY] = Ci.nsIStkDownloadEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE] = Ci.nsIStkDownloadEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_MT_CALL] = Ci.nsIStkCallEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_CALL_CONNECTED] = Ci.nsIStkCallEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_CALL_DISCONNECTED] = Ci.nsIStkCallEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_LOCATION_STATUS] = Ci.nsIStkLocationEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_LANGUAGE_SELECTION] = Ci.nsIStkLanguageSelectionEvent;
+QueriedEventIFs[RIL.STK_EVENT_TYPE_BROWSER_TERMINATION] = Ci.nsIStkBrowserTerminationEvent;
+
+/**
  * StkProactiveCmdFactory
  */
 function StkProactiveCmdFactory() {
@@ -1046,6 +1473,111 @@ StkProactiveCmdFactory.prototype = {
 
     return new msgType(cmd);
   },
+
+  createResponse: function(aResponseMessage) {
+    if (!aResponseMessage || aResponseMessage.resultCode === undefined) {
+      throw new Error("Invalid response message: " + JSON.stringify(aResponseMessage));
+    }
+
+    if (aResponseMessage.itemIdentifier !== undefined) {
+      return new StkSelectItemResponse(aResponseMessage);
+    }
+
+    if (aResponseMessage.input !== undefined ||
+        aResponseMessage.isYesNo !== undefined) {
+      return new StkGetInputResponse(aResponseMessage);
+    }
+
+    if (aResponseMessage.hasConfirmed !== undefined) {
+      return new StkCallSetupResponse(aResponseMessage);
+    }
+
+    if (aResponseMessage.localInfo !== undefined) {
+      return new StkLocalInfoResponse(aResponseMessage);
+    }
+
+    if (aResponseMessage.timer !== undefined) {
+      return new StkTimerResponse(aResponseMessage);
+    }
+
+    return new StkTerminalResponse(aResponseMessage);
+  },
+
+  createResponseMessage: function(aStkTerminalResponse) {
+    if (!aStkTerminalResponse) {
+      throw new Error("Invalid terminal response: " + JSON.stringify(aStkTerminalResponse));
+    }
+
+    let response;
+    if (aStkTerminalResponse instanceof Ci.nsIStkSelectItemResponse) {
+      response = aStkTerminalResponse.QueryInterface(Ci.nsIStkSelectItemResponse);
+      return new StkSelectItemResponseMessage(response);
+    }
+
+    if (aStkTerminalResponse instanceof Ci.nsIStkGetInputResponse) {
+      response = aStkTerminalResponse.QueryInterface(Ci.nsIStkGetInputResponse);
+      return new StkGetInputResponseMessage(response);
+    }
+
+    if (aStkTerminalResponse instanceof Ci.nsIStkCallSetupResponse) {
+      response = aStkTerminalResponse.QueryInterface(Ci.nsIStkCallSetupResponse);
+      return new StkCallSetupResponseMessage(response);
+    }
+
+    if (aStkTerminalResponse instanceof Ci.nsIStkLocalInfoResponse) {
+      response = aStkTerminalResponse.QueryInterface(Ci.nsIStkLocalInfoResponse);
+      return new StkLocalInfoResponseMessage(response);
+    }
+
+    if (aStkTerminalResponse instanceof Ci.nsIStkTimerResponse) {
+      response = aStkTerminalResponse.QueryInterface(Ci.nsIStkTimerResponse);
+      return new StkTimerResponseMessage(response);
+    }
+
+    return new StkResponseMessage(aStkTerminalResponse);
+  },
+
+  createEvent: function(aEventMessage) {
+    let eventType = EventPrototypes[aEventMessage.eventType];
+
+    if (typeof eventType != "function") {
+      throw new Error("Unknown Event Type: " + aEventMessage.eventType);
+    }
+
+    return new eventType(aEventMessage);
+  },
+
+  createEventMessage: function(aStkDownloadEvent) {
+    let event = null;
+
+    let eventType = EventMsgPrototypes[aStkDownloadEvent.eventType];
+
+    if (typeof eventType != "function") {
+      throw new Error("Unknown Event Type: " + aStkDownloadEvent.eventType);
+    }
+
+    // convert aStkDownloadEvent to it's concrete interface before creating message.
+    try {
+      event = aStkDownloadEvent.QueryInterface(QueriedEventIFs[aStkDownloadEvent.eventType]);
+    } catch (e) {
+      throw new Error("Failed to convert event into concrete class: " + e);
+    }
+
+    return new eventType(event);
+  },
+
+  createTimer: function(aStkTimerMessage) {
+    if (!aStkTimerMessage ||
+        aStkTimerMessage.timerId === undefined) {
+      throw new Error("Invalid timer object: " + JSON.stringify(aStkTimerMessage));
+    }
+
+    // timerAction is useless in TIMER EXPIRATION envelope,
+    // so we always set it to TIMER_ACTION_INVALID.
+    return new StkTimer(aStkTimerMessage.timerId,
+                        Math.floor(aStkTimerMessage.timerValue),
+                        Ci.nsIStkTimer.TIMER_ACTION_INVALID);
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([StkProactiveCmdFactory]);

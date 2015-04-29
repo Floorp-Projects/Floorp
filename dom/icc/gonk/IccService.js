@@ -33,6 +33,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
                                    "@mozilla.org/ril/system-messenger-helper;1",
                                    "nsIIccMessenger");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gStkCmdFactory",
+                                   "@mozilla.org/icc/stkcmdfactory;1",
+                                   "nsIStkCmdFactory");
+
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
   dump("IccService: " + s);
@@ -561,6 +565,36 @@ Icc.prototype = {
 
       aCallback.notifyCloseChannelSuccess();
     });
+  },
+
+  sendStkResponse: function(aCommand, aResponse) {
+    let response = gStkCmdFactory.createResponseMessage(aResponse);
+    response.command = gStkCmdFactory.createCommandMessage(aCommand);
+    this._radioInterface.sendWorkerMessage("sendStkTerminalResponse", response);
+  },
+
+  sendStkMenuSelection: function(aItemIdentifier, aHelpRequested) {
+    this._radioInterface
+      .sendWorkerMessage("sendStkMenuSelection", {
+        itemIdentifier: aItemIdentifier,
+        helpRequested: aHelpRequested
+      });
+  },
+
+  sendStkTimerExpiration: function(aTimerId, aTimerValue) {
+    this._radioInterface
+      .sendWorkerMessage("sendStkTimerExpiration",{
+        timer: {
+          timerId: aTimerId,
+          timerValue: aTimerValue
+        }
+      });
+  },
+
+  sendStkEventDownload: function(aEvent) {
+    this._radioInterface
+      .sendWorkerMessage("sendStkEventDownload",
+                         { event: gStkCmdFactory.createEventMessage(aEvent) });
   }
 };
 

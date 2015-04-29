@@ -10,27 +10,9 @@ interface nsIDOMWindow;
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(b331eb34-006e-11e5-aabc-1341ac30c5f9)]
+[scriptable, uuid(09f29ef0-006f-11e5-a0e1-fbef06958398)]
 interface nsIIccProvider : nsISupports
 {
-  /**
-   * STK interfaces.
-   */
-  void sendStkResponse(in unsigned long clientId,
-                       in nsIDOMWindow window,
-                       in jsval command,
-                       in jsval response);
-  void sendStkMenuSelection(in unsigned long clientId,
-                            in nsIDOMWindow window,
-                            in unsigned short itemIdentifier,
-                            in boolean helpRequested);
-  void sendStkTimerExpiration(in unsigned long clientId,
-                              in nsIDOMWindow window,
-                              in jsval timer);
-  void sendStkEventDownload(in unsigned long clientId,
-                            in nsIDOMWindow window,
-                            in jsval event);
-
   /**
    * Phonebook interfaces.
    */
