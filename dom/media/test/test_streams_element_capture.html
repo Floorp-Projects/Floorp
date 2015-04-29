@@ -9,6 +9,18 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+function isSlowPlatform() {
+  return SpecialPowers.Services.appinfo.name == "B2G" ||
+         navigator.userAgent.indexOf("Mobile") != -1 && androidVersion == 10;
+}
+
+// longer timeout for slow platforms
+if (isSlowPlatform()) {
+  SimpleTest.requestLongerTimeout(3);
+  SimpleTest.requestCompleteLog();
+}
+
 var manager = new MediaTestManager;
 
 function checkDrawImage(vout) {
@@ -60,7 +72,7 @@ function startTest(test, token) {
                 "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
                 "waiting", "pause"];
   function logEvent(e) {
-    info(e.target.name + ": got " + e.type);
+    Log(e.target.name, "got " + e.type);
   }
   events.forEach(function(e) {
     v.addEventListener(e, logEvent, false);
