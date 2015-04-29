@@ -3235,7 +3235,6 @@ MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
     }
     virtual void RunDuringShutdown()
     {
-      MOZ_ASSERT(false, "We should be reviving the graph?");
     }
   };
 
