@@ -825,9 +825,12 @@ meter {
 input[type=range] {
   -moz-appearance: range;
   display: inline-block;
-  width: 12em; /* XXX how does orient attribute relate to vertical mode? */
-  height: 1.3em;
-  margin: 0 0.7em;
+  inline-size: 12em;
+  block-size: 1.3em;
+  margin-inline-start: 0.7em;
+  margin-inline-end: 0.7em;
+  margin-block-start: 0;
+  margin-block-end: 0;
   /* Override some rules that apply on all input types: */
   cursor: default;
   background: none;
@@ -837,9 +840,25 @@ input[type=range] {
   -moz-user-select: none ! important;
 }
 
+input[type=range][orient=block] {
+  inline-size: 1.3em;
+  block-size: 12em;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  margin-block-start: 0.7em;
+  margin-block-end: 0.7em;
+}
+
+input[type=range][orient=horizontal] {
+  width: 12em;
+  height: 1.3em;
+  margin: 0 0.7em;
+}
+
 input[type=range][orient=vertical] {
   width: 1.3em;
   height: 12em;
+  margin: 0.7em 0;
 }
 
 /**
@@ -868,15 +887,23 @@ input[type=range]::-moz-range-track {
   position: static !important;
   border: none;
   background-color: #999;
-  width: 100%;
-  height: 0.2em;
+  inline-size: 100%;
+  block-size: 0.2em;
   /* Prevent nsFrame::HandlePress setting mouse capture to this element. */
   -moz-user-select: none ! important;
 }
 
+input[type=range][orient=block]::-moz-range-track {
+  inline-size: 0.2em;
+  block-size: 100%;
+}
+
+input[type=range][orient=horizontal]::-moz-range-track {
+  width: 100%;
+  height: 0.2em;
+}
+
 input[type=range][orient=vertical]::-moz-range-track {
-  border-top: none;
-  border-bottom: none;
   width: 0.2em;
   height: 100%;
 }
