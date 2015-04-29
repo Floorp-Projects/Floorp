@@ -647,8 +647,13 @@ public:
     : AsyncPanZoomAnimation(TimeDuration::Forever())
     , mApzc(aApzc)
   {
-    mApzc.mX.SetVelocity(aVelocity.x);
-    mApzc.mY.SetVelocity(aVelocity.y);
+    mApzc.mX.StartOverscrollAnimation(aVelocity.x);
+    mApzc.mY.StartOverscrollAnimation(aVelocity.y);
+  }
+  ~OverscrollAnimation()
+  {
+    mApzc.mX.EndOverscrollAnimation();
+    mApzc.mY.EndOverscrollAnimation();
   }
 
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
