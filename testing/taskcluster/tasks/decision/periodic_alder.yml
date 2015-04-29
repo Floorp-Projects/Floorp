@@ -10,7 +10,7 @@ task:
       Decision task for testing purposes for alder.
 
   workerType: gecko-decision
-  provisionerId: aws-provisioner
+  provisionerId: aws-provisioner-v1
 
   scopes:
     - 'docker-worker:cache:tc-vcs-public-sources'
