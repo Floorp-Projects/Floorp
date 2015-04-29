@@ -933,7 +933,10 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
                                             kAppUpdaterIOPrioLevelDefault);
   nsPrintfCString prioEnv("MOZ_UPDATER_PRIO=%d/%d/%d/%d",
                           prioVal, oomScoreAdj, ioprioClass, ioprioLevel);
-  PR_SetEnv(prioEnv.get());
+  // Note: we allocate a new string on heap and pass that to PR_SetEnv, since
+  // the string can be used after this function returns.  This means that we
+  // will intentionally leak this buffer.
+  PR_SetEnv(ToNewCString(prioEnv));
 #endif
 
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
