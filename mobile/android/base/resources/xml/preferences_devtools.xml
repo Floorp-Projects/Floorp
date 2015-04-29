@@ -8,10 +8,6 @@
                   android:title="@string/pref_category_devtools"
                   android:enabled="false">
 
-       <org.mozilla.gecko.preferences.CustomCheckBoxPreference
-                           android:key="nglayout.debug.paint_flashing"
-                           android:title="@string/pref_developer_paint_flashing" />
-
        <CheckBoxPreference android:key="devtools.debugger.remote-enabled"
                            android:title="@string/pref_developer_remotedebugging" />
 

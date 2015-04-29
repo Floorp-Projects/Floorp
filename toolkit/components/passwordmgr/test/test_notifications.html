@@ -51,6 +51,8 @@ var subtests = [
                    "subtst_notifications_2pw_0un.html",  // 24
                    "subtst_notifications_2pw_0un.html",  // 25
                    "subtst_notifications_2pw_0un.html",  // 26
+                   "subtst_notifications_2pw_0un.html",  // 27
+                   "subtst_notifications_2pw_0un.html",  // 28
                ];
 
 
@@ -147,7 +149,7 @@ function checkTest() {
         ok(!popup, "checking for no notification popup");
 
         // Check to make sure we updated the timestamps and use count on the
-        // existing loging that was submitted for this form.
+        // existing login that was submitted for this form.
         var logins = pwmgr.getAllLogins();
         is(logins.length, 1, "Should only have 1 login");
         ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
@@ -385,25 +387,25 @@ function checkTest() {
         // Check for notification popup when a form with 2 password fields (no username) is
         // submitted and there are no saved logins.
         is(gotUser, "null", "Checking submitted username");
-        is(gotPass, "notifyp2", "Checking submitted password");
+        is(gotPass, "notifyp1", "Checking submitted password");
         popup = getPopup(popupNotifications, "password-save");
         ok(popup, "got notification popup");
         popup.remove();
 
         // Add login for the next test
-        pwmgr.addLogin(login1);
+        pwmgr.addLogin(login1B);
         break;
 
       case 25:
         // Check for notification popup when a form with 2 password fields (no username) is
         // submitted and there is a saved login with a username and different password.
         is(gotUser, "null", "Checking submitted username");
-        is(gotPass, "notifyp2", "Checking submitted password");
+        is(gotPass, "notifyp1", "Checking submitted password");
         popup = getPopup(popupNotifications, "password-change");
         ok(popup, "got notification popup");
         popup.remove();
         // remove that login
-        pwmgr.removeLogin(login1);
+        pwmgr.removeLogin(login1B);
 
         // Add login for the next test
         pwmgr.addLogin(login2B);
@@ -413,12 +415,61 @@ function checkTest() {
         // Check for notification popup when a form with 2 password fields (no username) is
         // submitted and there is a saved login with no username and a different password.
         is(gotUser, "null", "Checking submitted username");
-        is(gotPass, "notifyp2", "Checking submitted password");
+        is(gotPass, "notifyp1", "Checking submitted password");
         popup = getPopup(popupNotifications, "password-change");
         ok(popup, "got notification popup");
         popup.remove();
         // remove that login
         pwmgr.removeLogin(login2B);
+
+        // Add login for the next test
+        pwmgr.addLogin(login1);
+
+        break;
+
+      case 27:
+        // Check for no notification popup when a form with 2 password fields (no username) is
+        // submitted and there is a saved login with a username and the same password.
+        is(gotUser, "null", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-change");
+        ok(!popup, "checking for no notification popup");
+
+        // Check to make sure we updated the timestamps and use count on the
+        // existing login that was submitted for this form.
+        var logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
+        is(logins[0].timesUsed, 2, "check .timesUsed for existing login submission");
+        ok(logins[0].timeLastUsed > logins[0].timeCreated, "timeLastUsed bumped");
+        ok(logins[0].timeCreated == logins[0].timePasswordChanged, "timeChanged not updated");
+
+        // remove that login
+        pwmgr.removeLogin(login1);
+
+        // Add login for the next test
+        pwmgr.addLogin(login2);
+        break;
+
+      case 28:
+        // Check for no notification popup when a form with 2 password fields (no username) is
+        // submitted and there is a saved login with no username and the same password.
+        is(gotUser, "null", "Checking submitted username");
+        is(gotPass, "notifyp1", "Checking submitted password");
+        popup = getPopup(popupNotifications, "password-change");
+        ok(!popup, "checking for no notification popup");
+
+        // Check to make sure we updated the timestamps and use count on the
+        // existing login that was submitted for this form.
+        var logins = pwmgr.getAllLogins();
+        is(logins.length, 1, "Should only have 1 login");
+        ok(SpecialPowers.call_Instanceof(logins[0], Ci.nsILoginMetaInfo), "metainfo QI");
+        is(logins[0].timesUsed, 2, "check .timesUsed for existing login submission");
+        ok(logins[0].timeLastUsed > logins[0].timeCreated, "timeLastUsed bumped");
+        ok(logins[0].timeCreated == logins[0].timePasswordChanged, "timeChanged not updated");
+
+        // remove that login
+        pwmgr.removeLogin(login2);
         break;
 
       default:

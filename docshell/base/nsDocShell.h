@@ -277,6 +277,11 @@ public:
   // timeline markers
   static unsigned long gProfileTimelineRecordingsCount;
 
+  // Tell the favicon service that aNewURI has the same favicon as aOldURI.
+  static void CopyFavicon(nsIURI* aOldURI,
+                          nsIURI* aNewURI,
+                          bool aInPrivateBrowsing);
+
 protected:
   // Object Management
   virtual ~nsDocShell();

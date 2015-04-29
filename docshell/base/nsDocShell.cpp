@@ -9415,8 +9415,11 @@ class nsCopyFaviconCallback final : public nsIFaviconDataCallback
 public:
   NS_DECL_ISUPPORTS
 
-  nsCopyFaviconCallback(nsIURI* aNewURI, bool aInPrivateBrowsing)
-    : mNewURI(aNewURI)
+  nsCopyFaviconCallback(mozIAsyncFavicons* aSvc,
+                        nsIURI* aNewURI,
+                        bool aInPrivateBrowsing)
+    : mSvc(aSvc)
+    , mNewURI(aNewURI)
     , mInPrivateBrowsing(aInPrivateBrowsing)
   {
   }
@@ -9430,13 +9433,10 @@ public:
       return NS_OK;
     }
 
-    NS_ASSERTION(aDataLen == 0,
-                 "We weren't expecting the callback to deliver data.");
-    nsCOMPtr<mozIAsyncFavicons> favSvc =
-      do_GetService("@mozilla.org/browser/favicon-service;1");
-    NS_ENSURE_STATE(favSvc);
+    MOZ_ASSERT(aDataLen == 0,
+               "We weren't expecting the callback to deliver data.");
 
-    return favSvc->SetAndFetchFaviconForPage(
+    return mSvc->SetAndFetchFaviconForPage(
       mNewURI, aFaviconURI, false,
       mInPrivateBrowsing ? nsIFaviconService::FAVICON_LOAD_PRIVATE :
                            nsIFaviconService::FAVICON_LOAD_NON_PRIVATE,
@@ -9446,6 +9446,7 @@ public:
 private:
   ~nsCopyFaviconCallback() {}
 
+  nsCOMPtr<mozIAsyncFavicons> mSvc;
   nsCOMPtr<nsIURI> mNewURI;
   bool mInPrivateBrowsing;
 };
@@ -9453,22 +9454,34 @@ private:
 NS_IMPL_ISUPPORTS(nsCopyFaviconCallback, nsIFaviconDataCallback)
 #endif
 
-// Tell the favicon service that aNewURI has the same favicon as aOldURI.
+} // anonymous namespace
+
 void
-CopyFavicon(nsIURI* aOldURI, nsIURI* aNewURI, bool aInPrivateBrowsing)
+nsDocShell::CopyFavicon(nsIURI* aOldURI,
+                        nsIURI* aNewURI,
+                        bool aInPrivateBrowsing)
 {
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+    if (contentChild) {
+      mozilla::ipc::URIParams oldURI, newURI;
+      SerializeURI(aOldURI, oldURI);
+      SerializeURI(aNewURI, newURI);
+      contentChild->SendCopyFavicon(oldURI, newURI, aInPrivateBrowsing);
+    }
+    return;
+  }
+
 #ifdef MOZ_PLACES
   nsCOMPtr<mozIAsyncFavicons> favSvc =
     do_GetService("@mozilla.org/browser/favicon-service;1");
   if (favSvc) {
     nsCOMPtr<nsIFaviconDataCallback> callback =
-      new nsCopyFaviconCallback(aNewURI, aInPrivateBrowsing);
+      new nsCopyFaviconCallback(favSvc, aNewURI, aInPrivateBrowsing);
     favSvc->GetFaviconURLForPage(aOldURI, callback);
   }
 #endif
 }
-
-} // anonymous namespace
 
 class InternalLoadEvent : public nsRunnable
 {
