@@ -227,6 +227,81 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
   return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
+size_t
+Matrix4x4::TransformAndClipRect(const Rect& aRect, const Rect& aClip,
+                                Point* aVerts) const
+{
+  // Initialize a double-buffered array of points in homogenous space with
+  // the input rectangle, aRect.
+  Point4D points[2][kTransformAndClipRectMaxVerts];
+  Point4D* dstPoint = points[0];
+  *dstPoint++ = *this * Point4D(aRect.x, aRect.y, 0, 1);
+  *dstPoint++ = *this * Point4D(aRect.XMost(), aRect.y, 0, 1);
+  *dstPoint++ = *this * Point4D(aRect.XMost(), aRect.YMost(), 0, 1);
+  *dstPoint++ = *this * Point4D(aRect.x, aRect.YMost(), 0, 1);
+
+  // View frustum clipping planes are described as normals originating from
+  // the 0,0,0,0 origin.
+  Point4D planeNormals[4];
+  planeNormals[0] = Point4D(1.0, 0.0, 0.0, -aClip.x);
+  planeNormals[1] = Point4D(-1.0, 0.0, 0.0, aClip.XMost());
+  planeNormals[2] = Point4D(0.0, 1.0, 0.0, -aClip.y);
+  planeNormals[3] = Point4D(0.0, -1.0, 0.0, aClip.YMost());
+
+  // Iterate through each clipping plane and clip the polygon.
+  // In each pass, we double buffer, alternating between points[0] and
+  // points[1].
+  for (int plane=0; plane < 4; plane++) {
+    planeNormals[plane].Normalize();
+
+    Point4D* srcPoint = points[plane & 1];
+    Point4D* srcPointEnd = dstPoint;
+    dstPoint = points[~plane & 1];
+
+    Point4D* prevPoint = srcPointEnd - 1;
+    float prevDot = planeNormals[plane].DotProduct(*prevPoint);
+    while (srcPoint < srcPointEnd) {
+      float nextDot = planeNormals[plane].DotProduct(*srcPoint);
+
+      if ((nextDot >= 0.0) != (prevDot >= 0.0)) {
+        // An intersection with the clipping plane has been detected.
+        // Interpolate to find the intersecting point and emit it.
+        float t = -prevDot / (nextDot - prevDot);
+        *dstPoint++ = *srcPoint * t + *prevPoint * (1.0 - t);
+      }
+
+      if (nextDot >= 0.0) {
+        // Emit any source points that are on the positive side of the
+        // clipping plane.
+        *dstPoint++ = *srcPoint;
+      }
+
+      prevPoint = srcPoint++;
+      prevDot = nextDot;
+    }
+  }
+
+  size_t dstPointCount = 0;
+  size_t srcPointCount = dstPoint - points[0];
+  for (Point4D* srcPoint = points[0]; srcPoint < points[0] + srcPointCount; srcPoint++) {
+
+    Point p;
+    if (srcPoint->w == 0.0) {
+      // If a point lies on the intersection of the clipping planes at
+      // (0,0,0,0), we must avoid a division by zero w component.
+      p = Point(0.0, 0.0);
+    } else {
+      p = srcPoint->As2DPoint();
+    }
+    // Emit only unique points
+    if (dstPointCount == 0 || p != aVerts[dstPointCount - 1]) {
+      aVerts[dstPointCount++] = p;
+    }
+  }
+
+  return dstPointCount;
+}
+
 bool
 Matrix4x4::Invert()
 {
