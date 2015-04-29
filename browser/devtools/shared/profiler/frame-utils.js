@@ -117,14 +117,20 @@ exports.filterPlatformData = function filterPlatformData (frames) {
  */
 function nsIURL(url) {
   let cached = gNSURLStore.get(url);
-  if (cached) {
+  // If we cached a valid URI, or `null` in the case
+  // of a failure, return it.
+  if (cached !== void 0) {
     return cached;
   }
   let uri = null;
   try {
     uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+    // Access the host, because the constructor doesn't necessarily throw
+    // if it's invalid, but accessing the host can throw as well
+    uri.host;
   } catch(e) {
     // The passed url string is invalid.
+    uri = null;
   }
   gNSURLStore.set(url, uri);
   return uri;
