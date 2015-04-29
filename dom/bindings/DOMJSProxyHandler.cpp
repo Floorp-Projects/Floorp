@@ -159,31 +159,6 @@ DOMProxyHandler::isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *
 }
 
 bool
-BaseDOMProxyHandler::getPropertyDescriptor(JSContext* cx,
-                                           JS::Handle<JSObject*> proxy,
-                                           JS::Handle<jsid> id,
-                                           MutableHandle<JSPropertyDescriptor> desc) const
-{
-  if (!getOwnPropertyDescriptor(cx, proxy, id, desc)) {
-    return false;
-  }
-  if (desc.object()) {
-    return true;
-  }
-
-  JS::Rooted<JSObject*> proto(cx);
-  if (!js::GetObjectProto(cx, proxy, &proto)) {
-    return false;
-  }
-  if (!proto) {
-    desc.object().set(nullptr);
-    return true;
-  }
-
-  return JS_GetPropertyDescriptorById(cx, proto, id, desc);
-}
-
-bool
 BaseDOMProxyHandler::getOwnPropertyDescriptor(JSContext* cx,
                                               JS::Handle<JSObject*> proxy,
                                               JS::Handle<jsid> id,
