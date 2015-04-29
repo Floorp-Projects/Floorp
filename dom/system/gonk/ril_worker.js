@@ -1910,34 +1910,6 @@ RilObject.prototype = {
       return;
     }
 
-    function _isValidPINPUKRequest() {
-      // The only allowed MMI procedure for ICC PIN, PIN2, PUK and PUK2 handling
-      // is "Registration" (**).
-      if (mmi.procedure != MMI_PROCEDURE_REGISTRATION ) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_ACTION);
-        return false;
-      }
-
-      if (!mmi.sia || !mmi.sib || !mmi.sic) {
-        _sendMMIError(MMI_ERROR_KS_ERROR);
-        return false;
-      }
-
-      if (mmi.sia.length < 4 || mmi.sia.length > 8 ||
-          mmi.sib.length < 4 || mmi.sib.length > 8 ||
-          mmi.sic.length < 4 || mmi.sic.length > 8) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_PIN);
-        return false;
-      }
-
-      if (mmi.sib != mmi.sic) {
-        _sendMMIError(MMI_ERROR_KS_MISMATCH_PIN);
-        return false;
-      }
-
-      return true;
-    }
-
     function _isValidChangePasswordRequest() {
       if (mmi.procedure !== MMI_PROCEDURE_REGISTRATION &&
           mmi.procedure !== MMI_PROCEDURE_ACTIVATION) {
@@ -1977,66 +1949,6 @@ RilObject.prototype = {
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
     switch (sc) {
-      // Change the current ICC PIN number.
-      case MMI_SC_PIN:
-        // As defined in TS.122.030 6.6.2 to change the ICC PIN we should expect
-        // an MMI code of the form **04*OLD_PIN*NEW_PIN*NEW_PIN#, where old PIN
-        // should be entered as the SIA parameter and the new PIN as SIB and
-        // SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPassword = mmi.sib;
-        this.changeICCPIN(options);
-        return;
-
-      // Change the current ICC PIN2 number.
-      case MMI_SC_PIN2:
-        // As defined in TS.122.030 6.6.2 to change the ICC PIN2 we should
-        // enter and MMI code of the form **042*OLD_PIN2*NEW_PIN2*NEW_PIN2#,
-        // where the old PIN2 should be entered as the SIA parameter and the
-        // new PIN2 as SIB and SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPassword = mmi.sib;
-        this.changeICCPIN2(options);
-        return;
-
-      // Unblock ICC PIN.
-      case MMI_SC_PUK:
-        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN we should
-        // enter an MMI code of the form **05*PUK*NEW_PIN*NEW_PIN#, where PUK
-        // should be entered as the SIA parameter and the new PIN as SIB and
-        // SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPin = mmi.sib;
-        this.enterICCPUK(options);
-        return;
-
-      // Unblock ICC PIN2.
-      case MMI_SC_PUK2:
-        // As defined in TS.122.030 6.6.3 to unblock the ICC PIN2 we should
-        // enter an MMI code of the form **052*PUK2*NEW_PIN2*NEW_PIN2#, where
-        // PUK2 should be entered as the SIA parameter and the new PIN2 as SIB
-        // and SIC.
-        if (!_isRadioAvailable() || !_isValidPINPUKRequest()) {
-          return;
-        }
-
-        options.password = mmi.sia;
-        options.newPin = mmi.sib;
-        this.enterICCPUK2(options);
-        return;
-
       // IMEI
       case MMI_SC_IMEI:
         // A device's IMEI can't change, so we only need to request it once.
@@ -2907,47 +2819,6 @@ RilObject.prototype = {
    */
   _processEnterAndChangeICCResponses: function(length, options) {
     options.retryCount = length ? this.context.Buf.readInt32List()[0] : -1;
-    if (options.rilMessageType != "sendMMI") {
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    let serviceCode = options.mmi.serviceCode;
-
-    if (!options.errorMsg) {
-      switch (serviceCode) {
-        case MMI_SC_PIN:
-          options.statusMessage = MMI_SM_KS_PIN_CHANGED;
-          break;
-        case MMI_SC_PIN2:
-          options.statusMessage = MMI_SM_KS_PIN2_CHANGED;
-          break;
-        case MMI_SC_PUK:
-          options.statusMessage = MMI_SM_KS_PIN_UNBLOCKED;
-          break;
-        case MMI_SC_PUK2:
-          options.statusMessage = MMI_SM_KS_PIN2_UNBLOCKED;
-          break;
-      }
-    } else {
-      if (options.retryCount <= 0) {
-        if (serviceCode === MMI_SC_PUK) {
-          options.errorMsg = MMI_ERROR_KS_SIM_BLOCKED;
-        } else if (serviceCode === MMI_SC_PIN) {
-          options.errorMsg = MMI_ERROR_KS_NEEDS_PUK;
-        }
-      } else {
-        if (serviceCode === MMI_SC_PIN || serviceCode === MMI_SC_PIN2) {
-          options.errorMsg = MMI_ERROR_KS_BAD_PIN;
-        } else if (serviceCode === MMI_SC_PUK || serviceCode === MMI_SC_PUK2) {
-          options.errorMsg = MMI_ERROR_KS_BAD_PUK;
-        }
-        if (options.retryCount !== undefined) {
-          options.additionalInformation = options.retryCount;
-        }
-      }
-    }
-
     this.sendChromeMessage(options);
   },
 
