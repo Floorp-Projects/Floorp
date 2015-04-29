@@ -38,12 +38,12 @@ public:
 
   BluetoothSocket* GetBluetoothSocket();
   DataSocket* GetDataSocket();
-  SocketBase* GetSocketBase();
+  SocketBase* GetSocketBase() override;
 
   // Shutdown state
   //
 
-  bool IsShutdownOnMainThread() const;
+  bool IsShutdownOnMainThread() const override;
   void ShutdownOnMainThread();
 
   bool IsShutdownOnIOThread() const;
@@ -352,10 +352,8 @@ BluetoothSocket::BluetoothSocketIO::OnAccepted(
   }
   SetSocket(aFd, SOCKET_IS_CONNECTED);
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<BluetoothSocketIO>(
-      this, SocketIOEventRunnable<BluetoothSocketIO>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -381,10 +379,8 @@ BluetoothSocket::BluetoothSocketIO::OnConnected()
     return;
   }
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<BluetoothSocketIO>(
-      this, SocketIOEventRunnable<BluetoothSocketIO>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -457,11 +453,9 @@ BluetoothSocket::BluetoothSocketIO::FireSocketError()
   Close();
 
   // Tell the main thread we've errored
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<BluetoothSocketIO>(
-      this, SocketIOEventRunnable<BluetoothSocketIO>::CONNECT_ERROR);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR));
 
-  NS_DispatchToMainThread(r);
 }
 
 bool
