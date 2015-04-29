@@ -394,34 +394,17 @@ private:
   SocketEvent mEvent;
 };
 
-template <typename T>
-class SocketIORequestClosingRunnable final : public SocketIORunnable<T>
+/**
+ * |SocketIORequestClosingRunnable| closes an instance of |SocketBase|
+ * to the main thread.
+ */
+class SocketIORequestClosingRunnable final
+  : public SocketIORunnable<SocketIOBase>
 {
 public:
-  SocketIORequestClosingRunnable(T* aImpl)
-  : SocketIORunnable<T>(aImpl)
-  { }
+  SocketIORequestClosingRunnable(SocketIOBase* aIO);
 
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    T* io = SocketIORunnable<T>::GetIO();
-
-    if (io->IsShutdownOnMainThread()) {
-      NS_WARNING("CloseSocket has already been called!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    SocketBase* base = io->GetSocketBase();
-    MOZ_ASSERT(base);
-
-    base->CloseSocket();
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 };
 
 /* |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
