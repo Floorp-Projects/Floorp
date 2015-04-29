@@ -95,8 +95,7 @@ public:
     nsresult rv = QueryReceiveBuffer(&incoming);
     if (NS_FAILED(rv)) {
       /* an error occured */
-      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-      NS_DispatchToMainThread(r);
+      NS_DispatchToMainThread(new SocketIORequestClosingRunnable(aIO));
       return -1;
     }
 
@@ -104,14 +103,12 @@ public:
     if (res < 0) {
       /* an I/O error occured */
       DiscardBuffer();
-      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-      NS_DispatchToMainThread(r);
+      NS_DispatchToMainThread(new SocketIORequestClosingRunnable(aIO));
       return -1;
     } else if (!res) {
       /* EOF or peer shut down sending */
       DiscardBuffer();
-      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-      NS_DispatchToMainThread(r);
+      NS_DispatchToMainThread(new SocketIORequestClosingRunnable(aIO));
       return 0;
     }
 
@@ -138,8 +135,7 @@ public:
       ssize_t res = outgoing->Send(aFd);
       if (res < 0) {
         /* an I/O error occured */
-        nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-        NS_DispatchToMainThread(r);
+        NS_DispatchToMainThread(new SocketIORequestClosingRunnable(aIO));
         return NS_ERROR_FAILURE;
       } else if (!res && outgoing->GetSize()) {
         /* I/O is currently blocked; try again later */

@@ -43,7 +43,7 @@ EnsureBluetoothSocketHalLoad()
 }
 
 class mozilla::dom::bluetooth::DroidSocketImpl : public ipc::UnixFdWatcher
-                                               , protected DataSocketIO
+                                               , public DataSocketIO
 {
 public:
   /* The connection status in DroidSocketImpl indicates the current

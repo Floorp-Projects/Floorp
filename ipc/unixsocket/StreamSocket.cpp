@@ -21,7 +21,7 @@ namespace ipc {
 
 class StreamSocketIO final
   : public UnixSocketWatcher
-  , protected DataSocketIO
+  , public DataSocketIO
   , public ConnectionOrientedSocketIO
 {
 public:

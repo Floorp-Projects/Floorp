@@ -315,5 +315,35 @@ SocketIOEventRunnable::Run()
   return NS_OK;
 }
 
+//
+// SocketIORequestClosingRunnable
+//
+
+SocketIORequestClosingRunnable::SocketIORequestClosingRunnable(
+  SocketIOBase* aIO)
+  : SocketIORunnable<SocketIOBase>(aIO)
+{ }
+
+NS_METHOD
+SocketIORequestClosingRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  SocketIOBase* io = SocketIORunnable<SocketIOBase>::GetIO();
+
+  if (NS_WARN_IF(io->IsShutdownOnMainThread())) {
+    // Since we've already explicitly closed and the close
+    // happened before this, this isn't really an error.
+    return NS_OK;
+  }
+
+  SocketBase* socketBase = io->GetSocketBase();
+  MOZ_ASSERT(socketBase);
+
+  socketBase->CloseSocket();
+
+  return NS_OK;
+}
+
 }
 }
