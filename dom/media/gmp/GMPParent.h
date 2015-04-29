@@ -199,8 +199,6 @@ private:
   bool mAbnormalShutdownInProgress;
   bool mIsBlockingDeletion;
 
-  bool mCanDecrypt;
-
   nsTArray<nsRefPtr<GMPTimerParent>> mTimers;
   nsTArray<nsRefPtr<GMPStorageParent>> mStorage;
   nsCOMPtr<nsIThread> mGMPThread;
