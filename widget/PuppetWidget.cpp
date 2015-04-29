@@ -118,6 +118,11 @@ PuppetWidget::Create(nsIWidget        *aParent,
   else {
     Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
   }
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    mMemoryPressureObserver = new MemoryPressureObserver(this);
+    obs->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
+  }
 
   return NS_OK;
 }
@@ -153,6 +158,9 @@ PuppetWidget::Destroy()
   Base::OnDestroy();
   Base::Destroy();
   mPaintTask.Revoke();
+  if (mMemoryPressureObserver) {
+    mMemoryPressureObserver->Remove();
+  }
   mChild = nullptr;
   if (mLayerManager) {
     mLayerManager->Destroy();
@@ -173,10 +181,6 @@ PuppetWidget::Show(bool aState)
 
   if (mChild) {
     mChild->mVisible = aState;
-  }
-
-  if (!mVisible && mLayerManager) {
-    mLayerManager->ClearCachedResources();
   }
 
   if (!wasVisible && mVisible) {
@@ -1028,6 +1032,35 @@ PuppetWidget::PaintTask::Run()
     mWidget->Paint();
   }
   return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(PuppetWidget::MemoryPressureObserver, nsIObserver)
+
+NS_IMETHODIMP
+PuppetWidget::MemoryPressureObserver::Observe(nsISupports* aSubject,
+                                              const char* aTopic,
+                                              const char16_t* aData)
+{
+  if (!mWidget) {
+    return NS_OK;
+  }
+
+  if (strcmp("memory-pressure", aTopic) == 0) {
+    if (!mWidget->mVisible && mWidget->mLayerManager) {
+      mWidget->mLayerManager->ClearCachedResources();
+    }
+  }
+  return NS_OK;
+}
+
+void
+PuppetWidget::MemoryPressureObserver::Remove()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "memory-pressure");
+  }
+  mWidget = nullptr;
 }
 
 bool
