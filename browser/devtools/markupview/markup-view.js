@@ -1829,7 +1829,15 @@ MarkupContainer.prototype = {
     this.hovered = false;
     this.markup.navigate(this);
     event.stopPropagation();
-    event.preventDefault();
+
+    // Preventing the default behavior will avoid the body to gain focus on
+    // mouseup (through bubbling) when clicking on a non focusable node in the
+    // line. So, if the click happened outside of a focusable element, do
+    // prevent the default behavior, so that the tagname or textcontent gains
+    // focus.
+    if (!target.closest(".open [tabindex]")) {
+      event.preventDefault();
+    }
 
     // Start dragging the container after a delay.
     this.markup._dragStartEl = target;
