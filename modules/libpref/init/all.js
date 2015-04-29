@@ -132,7 +132,10 @@ pref("dom.workers.maxPerDomain", 20);
 // Whether or not Shared Web Workers are enabled.
 pref("dom.workers.sharedWorkers.enabled", true);
 
-// WebSocket in workers are disabled by default.
+// Whether or not WebSockets in workers are enabled.
+// Note: we need this pref because WebSocket in Workers is a new implementation
+// and we want to be able to disable it quickly in case of regressions.
+// When this feature is stable enough we can get rid of this pref: Bug 1159792
 pref("dom.workers.websocket.enabled", true);
 
 // Service workers
