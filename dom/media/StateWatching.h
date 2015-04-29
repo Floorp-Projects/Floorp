@@ -104,13 +104,10 @@ class WatchTarget
 public:
   explicit WatchTarget(const char* aName) : mName(aName) {}
 
-  void AddWatcher(AbstractWatcher* aWatcher, bool aSkipInitialNotify)
+  void AddWatcher(AbstractWatcher* aWatcher)
   {
     MOZ_ASSERT(!mWatchers.Contains(aWatcher));
     mWatchers.AppendElement(aWatcher);
-    if (!aSkipInitialNotify) {
-      aWatcher->Notify();
-    }
   }
 
   void RemoveWatcher(AbstractWatcher* aWatcher)
@@ -206,7 +203,7 @@ public:
     AbstractThread::GetCurrent()->TailDispatcher().AddDirectTask(r.forget());
   }
 
-  void Watch(WatchTarget& aTarget, bool aSkipInitialNotify = false) { aTarget.AddWatcher(this, aSkipInitialNotify); }
+  void Watch(WatchTarget& aTarget) { aTarget.AddWatcher(this); }
   void Unwatch(WatchTarget& aTarget) { aTarget.RemoveWatcher(this); }
 
   template<typename ThisType>
