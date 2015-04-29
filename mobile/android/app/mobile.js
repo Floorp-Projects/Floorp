@@ -47,6 +47,9 @@ pref("browser.viewport.defaultZoom", -1);
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
+/* turn off the caret blink after 10 cycles */
+pref("ui.caretBlinkCount", 10);
+
 /* cache prefs */
 pref("browser.cache.disk.enable", true);
 pref("browser.cache.disk.capacity", 20480); // kilobytes
