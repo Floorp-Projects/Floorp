@@ -1,9 +1,9 @@
 var BUGNUMBER = 1054755;
-var summary = 'String.prototype.{startsWith,endsWith,contains} should call IsRegExp.';
+var summary = 'String.prototype.{startsWith,endsWith,includes} should call IsRegExp.';
 
 print(BUGNUMBER + ": " + summary);
 
-for (var method of ["startsWith", "endsWith", "contains"]) {
+for (var method of ["startsWith", "endsWith", "includes"]) {
   for (var re of [/foo/, new RegExp()]) {
     assertThrowsInstanceOf(() => "foo"[method](re), TypeError);
 

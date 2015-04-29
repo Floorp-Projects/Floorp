@@ -11,8 +11,8 @@ function hasGname(f, v) {
     try {
 	var b = bytecode(f);
 	if (b != "unavailable") {
-	    assertEq(b.contains(`getgname "${v}"`), true);
-	    assertEq(b.contains(`getname "${v}"`), false);
+	    assertEq(b.includes(`getgname "${v}"`), true);
+	    assertEq(b.includes(`getname "${v}"`), false);
 	}
     } catch (e) {
 	print(e.stack);
