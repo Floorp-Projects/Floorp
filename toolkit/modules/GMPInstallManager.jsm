@@ -736,7 +736,7 @@ GMPExtractor.prototype = {
       // Extract each of the entries
       entries.forEach(entry => {
         // We don't need these types of files
-        if (entry.contains("__MACOSX")) {
+        if (entry.includes("__MACOSX")) {
           return;
         }
         let outFile = Cc["@mozilla.org/file/local;1"].

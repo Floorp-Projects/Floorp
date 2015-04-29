@@ -15,7 +15,6 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -30,85 +29,16 @@
 #include "nsCRT.h"
 #include "nsHttp.h"
 
-namespace {
+namespace mozilla {
+namespace dom {
+namespace cache {
 
-using mozilla::ErrorResult;
-using mozilla::unused;
-using mozilla::void_t;
-using mozilla::dom::InternalHeaders;
-using mozilla::dom::cache::CacheReadStream;
-using mozilla::dom::cache::HeadersEntry;
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::PFileDescriptorSetChild;
 
-// Utility function to remove the fragment from a URL, check its scheme, and optionally
-// provide a URL without the query.  We're not using nsIURL or URL to do this because
-// they require going to the main thread.
-static void
-ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
-           nsAString* aUrlWithoutQueryOut, ErrorResult& aRv)
-{
-  NS_ConvertUTF16toUTF8 flatURL(aUrl);
-  const char* url = flatURL.get();
-
-  // off the main thread URL parsing using nsStdURLParser.
-  nsCOMPtr<nsIURLParser> urlParser = new nsStdURLParser();
-
-  uint32_t pathPos;
-  int32_t pathLen;
-  uint32_t schemePos;
-  int32_t schemeLen;
-  aRv = urlParser->ParseURL(url, flatURL.Length(), &schemePos, &schemeLen,
-                            nullptr, nullptr,       // ignore authority
-                            &pathPos, &pathLen);
-  if (NS_WARN_IF(aRv.Failed())) { return; }
-
-  if (aSchemeValidOut) {
-    nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
-    *aSchemeValidOut = scheme.LowerCaseEqualsLiteral("http") ||
-                       scheme.LowerCaseEqualsLiteral("https") ||
-                       scheme.LowerCaseEqualsLiteral("app");
-  }
-
-  uint32_t queryPos;
-  int32_t queryLen;
-  uint32_t refPos;
-  int32_t refLen;
-
-  aRv = urlParser->ParsePath(url + pathPos, flatURL.Length() - pathPos,
-                             nullptr, nullptr,               // ignore filepath
-                             &queryPos, &queryLen,
-                             &refPos, &refLen);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  // TODO: Remove this once Request/Response properly strip the fragment (bug 1110476)
-  if (refLen >= 0) {
-    // ParsePath gives us ref position relative to the start of the path
-    refPos += pathPos;
-
-    aUrl = Substring(aUrl, 0, refPos - 1);
-  }
-
-  if (!aUrlWithoutQueryOut) {
-    return;
-  }
-
-  if (queryLen < 0) {
-    *aUrlWithoutQueryOut = aUrl;
-    return;
-  }
-
-  // ParsePath gives us query position relative to the start of the path
-  queryPos += pathPos;
-
-  // We want everything before the query sine we already removed the trailing
-  // fragment
-  *aUrlWithoutQueryOut = Substring(aUrl, 0, queryPos - 1);
-}
+namespace {
 
 static bool
 HasVaryStar(mozilla::dom::InternalHeaders* aHeaders)
@@ -174,18 +104,6 @@ ToHeadersEntryList(nsTArray<HeadersEntry>& aOut, InternalHeaders* aHeaders)
 
 } // anonymous namespace
 
-namespace mozilla {
-namespace dom {
-namespace cache {
-
-using mozilla::ipc::BackgroundChild;
-using mozilla::ipc::FileDescriptor;
-using mozilla::ipc::FileDescriptorSetChild;
-using mozilla::ipc::PFileDescriptorSetChild;
-using mozilla::ipc::PBackgroundChild;
-using mozilla::ipc::OptionalFileDescriptorSet;
-
-
 already_AddRefed<InternalRequest>
 TypeUtils::ToInternalRequest(const RequestOrUSVString& aIn,
                              BodyAction aBodyAction, ErrorResult& aRv)
@@ -225,9 +143,8 @@ TypeUtils::ToInternalRequest(const OwningRequestOrUSVString& aIn,
 
 void
 TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
-                          BodyAction aBodyAction,
-                          ReferrerAction aReferrerAction,
-                          SchemeAction aSchemeAction, ErrorResult& aRv)
+                          BodyAction aBodyAction, SchemeAction aSchemeAction,
+                          ErrorResult& aRv)
 {
   MOZ_ASSERT(aIn);
 
@@ -249,16 +166,8 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
       aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &aOut.url());
       return;
     }
-
-    if (aSchemeAction == NetworkErrorOnInvalidScheme) {
-      aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
-      return;
-    }
   }
 
-  if (aReferrerAction == ExpandReferrer) {
-    UpdateRequestReferrer(GetGlobalObject(), aIn);
-  }
   aIn->GetReferrer(aOut.referrer());
 
   nsRefPtr<InternalHeaders> headers = aIn->Headers();
@@ -463,6 +372,73 @@ TypeUtils::ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
 
   nsRefPtr<InternalHeaders> ref = new InternalHeaders(Move(entryList), aGuard);
   return ref.forget();
+}
+
+// Utility function to remove the fragment from a URL, check its scheme, and optionally
+// provide a URL without the query.  We're not using nsIURL or URL to do this because
+// they require going to the main thread.
+// static
+void
+TypeUtils::ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
+                      nsAString* aUrlWithoutQueryOut, ErrorResult& aRv)
+{
+  NS_ConvertUTF16toUTF8 flatURL(aUrl);
+  const char* url = flatURL.get();
+
+  // off the main thread URL parsing using nsStdURLParser.
+  nsCOMPtr<nsIURLParser> urlParser = new nsStdURLParser();
+
+  uint32_t pathPos;
+  int32_t pathLen;
+  uint32_t schemePos;
+  int32_t schemeLen;
+  aRv = urlParser->ParseURL(url, flatURL.Length(), &schemePos, &schemeLen,
+                            nullptr, nullptr,       // ignore authority
+                            &pathPos, &pathLen);
+  if (NS_WARN_IF(aRv.Failed())) { return; }
+
+  if (aSchemeValidOut) {
+    nsAutoCString scheme(Substring(flatURL, schemePos, schemeLen));
+    *aSchemeValidOut = scheme.LowerCaseEqualsLiteral("http") ||
+                       scheme.LowerCaseEqualsLiteral("https");
+  }
+
+  uint32_t queryPos;
+  int32_t queryLen;
+  uint32_t refPos;
+  int32_t refLen;
+
+  aRv = urlParser->ParsePath(url + pathPos, flatURL.Length() - pathPos,
+                             nullptr, nullptr,               // ignore filepath
+                             &queryPos, &queryLen,
+                             &refPos, &refLen);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  // TODO: Remove this once Request/Response properly strip the fragment (bug 1110476)
+  if (refLen >= 0) {
+    // ParsePath gives us ref position relative to the start of the path
+    refPos += pathPos;
+
+    aUrl = Substring(aUrl, 0, refPos - 1);
+  }
+
+  if (!aUrlWithoutQueryOut) {
+    return;
+  }
+
+  if (queryLen < 0) {
+    *aUrlWithoutQueryOut = aUrl;
+    return;
+  }
+
+  // ParsePath gives us query position relative to the start of the path
+  queryPos += pathPos;
+
+  // We want everything before the query sine we already removed the trailing
+  // fragment
+  *aUrlWithoutQueryOut = Substring(aUrl, 0, queryPos - 1);
 }
 
 void

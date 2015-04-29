@@ -38,7 +38,7 @@
     // by window.open.  We do not expect this to have transparency...
     // except on B2G.  (This is *probably* a bug in B2G.)
     var isB2G = /Mobile|Tablet/.test(navigator.userAgent) &&
-                !navigator.userAgent.contains("Android");
+                !navigator.userAgent.includes("Android");
     runDrawWindowTests(sourceWindow, 0, isB2G);
 
     sourceWindow.close();

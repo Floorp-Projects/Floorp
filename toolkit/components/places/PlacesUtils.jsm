@@ -1614,7 +1614,7 @@ this.PlacesUtils = {
     }
     let width  = Math.round(aWidth * aWindow.devicePixelRatio);
     let height = Math.round(aHeight * aWindow.devicePixelRatio);
-    return aURL + (aURL.contains("#") ? "&" : "#") +
+    return aURL + (aURL.includes("#") ? "&" : "#") +
            "-moz-resolution=" + width + "," + height;
   },
 

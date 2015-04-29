@@ -41,8 +41,10 @@ var ZoomManager = {
   },
 
   getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
-    return (this.useFullZoom || aBrowser.isSyntheticDocument)
-           ? aBrowser.fullZoom : aBrowser.textZoom;
+    let zoom = (this.useFullZoom || aBrowser.isSyntheticDocument)
+               ? aBrowser.fullZoom : aBrowser.textZoom;
+    // Round to remove any floating-point error.
+    return Number(zoom.toFixed(2));
   },
 
   set zoom(aVal) {

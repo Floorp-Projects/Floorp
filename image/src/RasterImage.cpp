@@ -888,16 +888,14 @@ RasterImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
   return mSourceBuffer->SizeOfIncludingThisWithComputedFallback(aMallocSizeOf);
 }
 
-size_t
-RasterImage::SizeOfDecoded(gfxMemoryLocation aLocation,
-                           MallocSizeOf aMallocSizeOf) const
+void
+RasterImage::CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
+                                   MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = 0;
-  n += SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
+  SurfaceCache::CollectSizeOfSurfaces(ImageKey(this), aCounters, aMallocSizeOf);
   if (mAnim) {
-    n += mAnim->SizeOfCompositingFrames(aLocation, aMallocSizeOf);
+    mAnim->CollectSizeOfCompositingSurfaces(aCounters, aMallocSizeOf);
   }
-  return n;
 }
 
 class OnAddedFrameRunnable : public nsRunnable

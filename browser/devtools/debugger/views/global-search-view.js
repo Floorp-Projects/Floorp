@@ -150,7 +150,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
       }
 
       // Verify that the search token is found anywhere in the source.
-      if (!text.toLowerCase().contains(lowerCaseToken)) {
+      if (!text.toLowerCase().includes(lowerCaseToken)) {
         continue;
       }
       // ...and if so, create a Map containing search details for each line.
@@ -164,7 +164,7 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
         let lowerCaseLine = aString.toLowerCase();
 
         // Verify that the search token is found anywhere in this line.
-        if (!lowerCaseLine.contains(lowerCaseToken)) {
+        if (!lowerCaseLine.includes(lowerCaseToken)) {
           return;
         }
         // ...and if so, create a Map containing search details for each word.

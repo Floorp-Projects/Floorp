@@ -40,6 +40,9 @@
 #include <utils/String8.h>
 #include "nsTArray.h"
 
+static const uint32_t kMAX_ALLOCATION =
+    (SIZE_MAX < INT32_MAX ? SIZE_MAX : INT32_MAX) - 128;
+
 namespace stagefright {
 
 class MPEG4Source : public MediaSource {
@@ -717,18 +720,18 @@ static bool underMetaDataPath(const Vector<uint32_t> &path) {
 }
 
 // Given a time in seconds since Jan 1 1904, produce a human-readable string.
-static void convertTimeToDate(int64_t time_1904, String8 *s) {
+static bool convertTimeToDate(int64_t time_1904, String8 *s) {
     time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
 
     if (time_1970 < 0) {
-        s->clear();
-        return;
+        return false;
     }
 
     char tmp[32];
     strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", gmtime(&time_1970));
 
     s->setTo(tmp);
+    return true;
 }
 
 static bool ValidInputSize(int32_t size) {
@@ -761,6 +764,11 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         }
     } else if (chunk_size < 8) {
         // The smallest valid chunk is 8 bytes long.
+        return ERROR_MALFORMED;
+    }
+
+    if (chunk_size >= kMAX_ALLOCATION) {
+        // Could cause an overflow later. Abort.
         return ERROR_MALFORMED;
     }
 
@@ -1748,8 +1756,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
 
             String8 s;
-            convertTimeToDate(creationTime, &s);
-            if (s.length()) {
+            if (convertTimeToDate(creationTime, &s)) {
                 mFileMetaData->setCString(kKeyDate, s.string());
             }
 
@@ -1844,7 +1851,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
 
             // Make sure (size + chunk_size) isn't going to overflow.
-            if (size > (size_t)-1 - chunk_size) {
+            if (size >= kMAX_ALLOCATION - chunk_size) {
                 return ERROR_MALFORMED;
             }
             uint8_t *buffer = new uint8_t[size + chunk_size];
@@ -2197,12 +2204,15 @@ status_t MPEG4Extractor::parseMetaData(off64_t offset, size_t size) {
         return ERROR_MALFORMED;
     }
 
-    uint8_t *buffer = new uint8_t[size + 1];
+    FallibleTArray<uint8_t> bufferBackend;
+    if (!bufferBackend.SetLength(size + 1)) {
+        // OOM ignore metadata.
+        return OK;
+    }
+
+    uint8_t *buffer = bufferBackend.Elements();
     if (mDataSource->readAt(
                 offset, buffer, size) != (ssize_t)size) {
-        delete[] buffer;
-        buffer = NULL;
-
         return ERROR_IO;
     }
 
@@ -2372,9 +2382,6 @@ status_t MPEG4Extractor::parseMetaData(off64_t offset, size_t size) {
                     metadataKey, (const char *)buffer + 8);
         }
     }
-
-    delete[] buffer;
-    buffer = NULL;
 
     return OK;
 }
@@ -2693,7 +2700,7 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
         return ERROR_MALFORMED;
     }
 
-    if (chunk_size >= INT32_MAX - 128) {
+    if (chunk_size >= kMAX_ALLOCATION) {
         // Could cause an overflow later. Abort.
         return ERROR_MALFORMED;
     }

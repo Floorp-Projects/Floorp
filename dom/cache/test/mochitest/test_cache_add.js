@@ -10,10 +10,10 @@ caches.open(name).then(function(openCache) {
   cache = openCache;
   return cache.add('ftp://example.com/invalid' + context);
 }).catch(function (err) {
-  is(err.name, 'NetworkError', 'add() should throw NetworkError for invalid scheme');
+  is(err.name, 'TypeError', 'add() should throw TypeError for invalid scheme');
   return cache.addAll(['http://example.com/valid' + context, 'ftp://example.com/invalid' + context]);
 }).catch(function (err) {
-  is(err.name, 'NetworkError', 'addAll() should throw NetworkError for invalid scheme');
+  is(err.name, 'TypeError', 'addAll() should throw TypeError for invalid scheme');
   var promiseList = urlList.map(function(url) {
     return cache.match(url);
   });

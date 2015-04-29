@@ -179,6 +179,14 @@ nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                  const nsRect&           aDirtyRect,
                                  const nsDisplayListSet& aLists)
 {
+  if (mContent && mContent->GetProperty(nsGkAtoms::DisplayPortMargins)) {
+    // The XUL document's root element may have displayport margins set in
+    // ChromeProcessController::InitializeRoot, and we should to supply the
+    // base rect.
+    nsRect displayPortBase = aDirtyRect.Intersect(nsRect(nsPoint(0, 0), GetSize()));
+    nsLayoutUtils::SetDisplayPortBase(mContent, displayPortBase);
+  }
+
   // root boxes don't need a debug border/outline or a selection overlay...
   // They *may* have a background propagated to them, so force creation
   // of a background display list element.

@@ -550,7 +550,7 @@ js::Nursery::traceObject(MinorCollectionTracer* trc, JSObject* obj)
             JSObject** pexpando = obj->as<UnboxedPlainObject>().addressOfExpando();
             if (*pexpando)
                 markObject(trc, pexpando);
-            const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
+            const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layoutDontCheckGeneration();
             if (layout.traceList()) {
                 markTraceList(trc, layout.traceList(),
                               obj->as<UnboxedPlainObject>().data());

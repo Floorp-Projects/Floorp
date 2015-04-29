@@ -73,7 +73,7 @@ examiner.prototype  = {
       // skip checks on the test harness -- can't do this skipping for
       // cross-origin blocking since the observer doesn't get the URI.  This
       // can cause this test to over-succeed (but only in specific cases).
-      if (asciiSpec.contains("test_CSP_frameancestors.html")) {
+      if (asciiSpec.includes("test_CSP_frameancestors.html")) {
         return;
       }
     } catch (ex) {

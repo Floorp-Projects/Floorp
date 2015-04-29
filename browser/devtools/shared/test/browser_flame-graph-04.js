@@ -55,7 +55,7 @@ function testGraph(graph) {
   isnot(text50px, text,
     "The fitted text for 50px width is correct (1).");
 
-  ok(text50px.contains(L10N.ellipsis),
+  ok(text50px.includes(L10N.ellipsis),
     "The fitted text for 50px width is correct (2).");
 
   is(graph._getFittedText(text, 10), L10N.ellipsis,

@@ -3613,6 +3613,18 @@ nsDOMWindowUtils::GetCompositorAPZTestData(JSContext* aContext,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::PostRestyleSelfEvent(nsIDOMElement* aElement)
+{
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  if (!element) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsLayoutUtils::PostRestyleEvent(element, eRestyle_Self, nsChangeHint(0));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetAudioMuted(bool* aMuted)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());

@@ -5539,8 +5539,8 @@ nsCharClipDisplayItem::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   bool snap;
   nsRect newRect = geometry->mBounds;
   nsRect oldRect = GetBounds(aBuilder, &snap);
-  if (mLeftEdge != geometry->mLeftEdge ||
-      mRightEdge != geometry->mRightEdge ||
+  if (mVisIStartEdge != geometry->mVisIStartEdge ||
+      mVisIEndEdge != geometry->mVisIEndEdge ||
       !oldRect.IsEqualInterior(newRect) ||
       !geometry->mBorderRect.IsEqualInterior(GetBorderRect())) {
     aInvalidRegion->Or(oldRect, newRect);

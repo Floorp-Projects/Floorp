@@ -351,7 +351,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
         } else {
           match = !child->GetStyleIfVisited();
         }
-        if (match) {
+        if (match && !(child->mBits & NS_STYLE_INELIGIBLE_FOR_SHARING)) {
           result = child;
           break;
         }
@@ -1402,6 +1402,29 @@ nsStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
   }
 
   ClearCachedInheritedStyleDataOnDescendants(aStructs);
+}
+
+void
+nsStyleContext::SetIneligibleForSharing()
+{
+  if (mBits & NS_STYLE_INELIGIBLE_FOR_SHARING) {
+    return;
+  }
+  mBits |= NS_STYLE_INELIGIBLE_FOR_SHARING;
+  if (mChild) {
+    nsStyleContext* child = mChild;
+    do {
+      child->SetIneligibleForSharing();
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  if (mEmptyChild) {
+    nsStyleContext* child = mEmptyChild;
+    do {
+      child->SetIneligibleForSharing();
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
+  }
 }
 
 #ifdef RESTYLE_LOGGING

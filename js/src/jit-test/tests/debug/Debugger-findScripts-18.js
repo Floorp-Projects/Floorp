@@ -42,5 +42,5 @@ try {
   assertEq(true, false);
 } catch(e) {
   assertEq(e.name, "TypeError");
-  assertEq(e.message.contains("displayURL"), true);
+  assertEq(e.message.includes("displayURL"), true);
 }

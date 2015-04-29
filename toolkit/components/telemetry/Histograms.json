@@ -3350,12 +3350,14 @@
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of no updates were found for a background update check (externally initiated)"
   },
   "UPDATE_CHECK_NO_UPDATE_NOTIFY" : {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of no updates were found for a background update check (timer initiated)"
   },
   "UPDATE_CHECK_CODE_EXTERNAL": {
@@ -3363,6 +3365,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: background update check result code except for no updates found (externally initiated)"
   },
   "UPDATE_CHECK_CODE_NOTIFY": {
@@ -3370,6 +3373,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: background update check result code except for no updates found (timer initiated)"
   },
   "UPDATE_CHECK_EXTENDED_ERROR_EXTERNAL": {
@@ -3377,6 +3381,7 @@
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: keyed count (key names are prefixed with AUS_CHECK_EX_ERR_) of background update check extended error code (externally initiated)"
   },
   "UPDATE_CHECK_EXTENDED_ERROR_NOTIFY": {
@@ -3384,18 +3389,21 @@
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: keyed count (key names are prefixed with AUS_CHECK_EX_ERR_) of background update check extended error code (timer initiated)"
   },
   "UPDATE_INVALID_LASTUPDATETIME_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that have a last update time greater than the current time (externally initiated)"
   },
   "UPDATE_INVALID_LASTUPDATETIME_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that have a last update time greater than the current time (timer initiated)"
   },
   "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
@@ -3404,6 +3412,7 @@
     "kind": "exponential",
     "n_buckets": 60,
     "high": "365",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: interval in days since the last background update check (externally initiated)"
   },
   "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
@@ -3412,78 +3421,91 @@
     "kind": "exponential",
     "n_buckets": 30,
     "high": "180",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: interval in days since the last background update check (timer initiated)"
   },
   "UPDATE_PING_COUNT_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems for this ping for comparison with other pings (externally initiated)"
   },
   "UPDATE_PING_COUNT_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems for this ping for comparison with other pings (timer initiated)"
   },
   "UPDATE_SERVICE_INSTALLED_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: whether the service is installed (externally initiated)"
   },
   "UPDATE_SERVICE_INSTALLED_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: whether the service is installed (timer initiated)"
   },
   "UPDATE_SERVICE_MANUALLY_UNINSTALLED_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that manually uninstalled the service (externally initiated)"
   },
   "UPDATE_SERVICE_MANUALLY_UNINSTALLED_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that manually uninstalled the service (timer initiated)"
   },
   "UPDATE_UNABLE_TO_APPLY_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that cannot apply updates (externally initiated)"
   },
   "UPDATE_UNABLE_TO_APPLY_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that cannot apply updates (timer initiated)"
   },
   "UPDATE_CANNOT_STAGE_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that cannot stage updates (externally initiated)"
   },
   "UPDATE_CANNOT_STAGE_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that cannot stage updates (timer initiated)"
   },
   "UPDATE_HAS_PREF_URL_OVERRIDE_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that have an app.update.url.override preference (externally initiated)"
   },
   "UPDATE_HAS_PREF_URL_OVERRIDE_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of systems that have an app.update.url.override preference (timer initiated)"
   },
   "UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL": {
@@ -3491,6 +3513,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: number of sequential update elevation request cancelations greater than 0 (externally initiated)"
   },
   "UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY": {
@@ -3498,6 +3521,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: number of sequential update elevation request cancelations greater than 0 (timer initiated)"
   },
   "UPDATE_PREF_SERVICE_ERRORS_EXTERNAL": {
@@ -3505,6 +3529,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: number of sequential update service errors greater than 0 (externally initiated)"
   },
   "UPDATE_PREF_SERVICE_ERRORS_NOTIFY": {
@@ -3512,54 +3537,63 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: number of sequential update service errors greater than 0 (timer initiated)"
   },
   "UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.auto boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.auto boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_ENABLED_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.enabled boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_ENABLED_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.enabled boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.staging.enabled boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.staging.enabled boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_EXTERNAL": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.service.enabled boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_NOTIFY": {
     "alert_emails": ["application-update-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
     "description": "Update: count of when the app.update.service.enabled boolean preference is not the default value of true (true values are not submitted)"
   },
   "UPDATE_DOWNLOAD_CODE_COMPLETE": {
@@ -3567,6 +3601,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: complete patch download result code"
   },
   "UPDATE_DOWNLOAD_CODE_PARTIAL": {
@@ -3574,6 +3609,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: complete patch download result code"
   },
   "UPDATE_STATE_CODE_COMPLETE_STARTUP": {
@@ -3581,6 +3617,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the state of a complete update from update.status on startup"
   },
   "UPDATE_STATE_CODE_PARTIAL_STARTUP": {
@@ -3588,6 +3625,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the state of a partial patch update from update.status on startup"
   },
   "UPDATE_STATE_CODE_UNKNOWN_STARTUP": {
@@ -3595,6 +3633,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the state of an unknown patch update from update.status on startup"
   },
   "UPDATE_STATE_CODE_COMPLETE_STAGE": {
@@ -3602,6 +3641,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the state of a complete patch update from update.status after staging"
   },
   "UPDATE_STATE_CODE_PARTIAL_STAGE": {
@@ -3609,6 +3649,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the state of a partial patch update from update.status after staging"
   },
   "UPDATE_STATE_CODE_UNKNOWN_STAGE": {
@@ -3616,6 +3657,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the state of an unknown patch update from update.status after staging"
   },
   "UPDATE_STATUS_ERROR_CODE_COMPLETE_STARTUP": {
@@ -3623,6 +3665,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the status error code for a failed complete patch update from update.status on startup"
   },
   "UPDATE_STATUS_ERROR_CODE_PARTIAL_STARTUP": {
@@ -3630,6 +3673,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the status error code for a failed partial patch update from update.status on startup"
   },
   "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STARTUP": {
@@ -3637,6 +3681,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the status error code for a failed unknown patch update from update.status on startup"
   },
   "UPDATE_STATUS_ERROR_CODE_COMPLETE_STAGE": {
@@ -3644,6 +3689,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the status error code for a failed complete patch update from update.status after staging"
   },
   "UPDATE_STATUS_ERROR_CODE_PARTIAL_STAGE": {
@@ -3651,6 +3697,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the status error code for a failed partial patch update from update.status after staging"
   },
   "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STAGE": {
@@ -3658,6 +3705,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the status error code for a failed unknown patch update from update.status after staging"
   },
   "UPDATE_WIZ_LAST_PAGE_CODE": {
@@ -3665,6 +3713,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
+    "releaseChannelCollection": "opt-out",
     "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
   "THUNDERBIRD_GLODA_SIZE_MB": {

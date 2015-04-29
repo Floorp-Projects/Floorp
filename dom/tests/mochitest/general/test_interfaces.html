@@ -1388,10 +1388,10 @@ function createInterfaceMap(isXBLScope) {
   var prefs = SpecialPowers.Services.prefs;
   var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
   var isNightly = version.endsWith("a1");
-  var isRelease = !version.contains("a");
+  var isRelease = !version.includes("a");
   var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
-  var isB2G = !isDesktop && !navigator.userAgent.contains("Android");
-  var isAndroid = navigator.userAgent.contains("Android");
+  var isB2G = !isDesktop && !navigator.userAgent.includes("Android");
+  var isAndroid = navigator.userAgent.includes("Android");
   var hasPermission = function (aPermissions) {
     var result = false;
     for (var p of aPermissions) {

@@ -189,7 +189,7 @@ add_task(function* uninstall_bootstrap() {
          ]);
   pe.uninstall();
   let xpiState = Services.prefs.getCharPref("extensions.xpiState");
-  do_check_false(xpiState.contains("\"packed-enabled@tests.mozilla.org\""));
+  do_check_false(xpiState.includes("\"packed-enabled@tests.mozilla.org\""));
 });
 
 /*

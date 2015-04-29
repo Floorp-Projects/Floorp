@@ -1662,13 +1662,13 @@ Toolbox.prototype = {
   },
 
   _getOsCpu: function() {
-    if (oscpu.contains("NT 5.1") || oscpu.contains("NT 5.2")) return 0;
-    if (oscpu.contains("NT 6.0")) return 1;
-    if (oscpu.contains("NT 6.1")) return 2;
-    if (oscpu.contains("NT 6.2")) return 3;
-    if (oscpu.contains("NT 6.3")) return 4;
-    if (oscpu.contains("OS X"))   return 5;
-    if (oscpu.contains("Linux"))  return 6;
+    if (oscpu.includes("NT 5.1") || oscpu.includes("NT 5.2")) return 0;
+    if (oscpu.includes("NT 6.0")) return 1;
+    if (oscpu.includes("NT 6.1")) return 2;
+    if (oscpu.includes("NT 6.2")) return 3;
+    if (oscpu.includes("NT 6.3")) return 4;
+    if (oscpu.includes("OS X"))   return 5;
+    if (oscpu.includes("Linux"))  return 6;
 
     return 12; // Other OS.
   },

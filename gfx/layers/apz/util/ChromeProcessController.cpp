@@ -59,6 +59,8 @@ ChromeProcessController::InitializeRoot()
   uint32_t presShellId;
   FrameMetrics::ViewID viewId;
   if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(content, &presShellId, &viewId)) {
+    // Note that the base rect that goes with these margins is set in
+    // nsRootBoxFrame::BuildDisplayList.
     nsLayoutUtils::SetDisplayPortMargins(content, presShell, ScreenMargin(), 0,
         nsLayoutUtils::RepaintMode::DoNotRepaint);
   }

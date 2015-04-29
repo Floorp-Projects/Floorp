@@ -8,7 +8,7 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(7d8763ad-79d9-4674-ada1-37fd702af68c)]
+[scriptable, uuid(2d09f42f-966e-4663-b4b3-b0c8676bf2bf)]
 interface mozIStorageBindingParams : nsISupports {
   /**
    * Binds aValue to the parameter with the name aName.
@@ -34,6 +34,11 @@ interface mozIStorageBindingParams : nsISupports {
    void bindBlobByName(in AUTF8String aName,
                        [array, const, size_is(aValueSize)] in octet aValue,
                        in unsigned long aValueSize);
+
+   // Convenience routines for storing strings as blobs.
+   void bindStringAsBlobByName(in AUTF8String aName, in AString aValue);
+   void bindUTF8StringAsBlobByName(in AUTF8String aName, in AUTF8String aValue);
+
    // The function adopts the storage for the provided blob.  After calling
    // this function, mozStorage will ensure that NS_Free is called on the
    // underlying pointer.
@@ -66,6 +71,11 @@ interface mozIStorageBindingParams : nsISupports {
    void bindBlobByIndex(in unsigned long aIndex,
                         [array, const, size_is(aValueSize)] in octet aValue,
                         in unsigned long aValueSize);
+
+   // Convenience routines for storing strings as blobs.
+   void bindStringAsBlobByIndex(in unsigned long aIndex, in AString aValue);
+   void bindUTF8StringAsBlobByIndex(in unsigned long aIndex, in AUTF8String aValue);
+
    // The function adopts the storage for the provided blob.  After calling
    // this function, mozStorage will ensure that NS_Free is called on the
    // underlying pointer.

@@ -28,7 +28,7 @@ function test()
     let body = msg.querySelector(".message-body");
     ok(anchor, "object anchor");
     ok(body, "message body");
-    ok(body.textContent.contains('testProp: "testValue"'), "message text check");
+    ok(body.textContent.includes('testProp: "testValue"'), "message text check");
 
     msg.scrollIntoView();
     executeSoon(() => {
@@ -62,7 +62,7 @@ function test()
     ok(body, "message body");
     anchor = msg.querySelector("a");
     ok(anchor, "object anchor");
-    ok(body.textContent.contains("Location \u2192 http://example.com/browser/"),
+    ok(body.textContent.includes("Location \u2192 http://example.com/browser/"),
        "message text check");
 
     msg.scrollIntoView();

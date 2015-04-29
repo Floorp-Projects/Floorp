@@ -255,8 +255,8 @@ class nsCharClipGeometry : public nsDisplayItemGenericGeometry
 public:
   nsCharClipGeometry(nsCharClipDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
 
-  nscoord mLeftEdge;
-  nscoord mRightEdge;
+  nscoord mVisIStartEdge;
+  nscoord mVisIEndEdge;
 };
 
 class nsDisplayTableItemGeometry

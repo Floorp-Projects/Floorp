@@ -687,14 +687,14 @@ TextOverflow::PruneDisplayListContents(nsDisplayList* aList,
           aInsideMarkersArea.IStart(mBlockWM) - rect.IStart(mBlockWM);
         if (istart > 0) {
           (mBlockWM.IsBidiLTR() ?
-           charClip->mLeftEdge : charClip->mRightEdge) = istart;
+           charClip->mVisIStartEdge : charClip->mVisIEndEdge) = istart;
         }
       }
       if (mIEnd.IsNeeded()) {
         nscoord iend = rect.IEnd(mBlockWM) - aInsideMarkersArea.IEnd(mBlockWM);
         if (iend > 0) {
           (mBlockWM.IsBidiLTR() ?
-           charClip->mRightEdge : charClip->mLeftEdge) = iend;
+           charClip->mVisIEndEdge : charClip->mVisIStartEdge) = iend;
         }
       }
     }

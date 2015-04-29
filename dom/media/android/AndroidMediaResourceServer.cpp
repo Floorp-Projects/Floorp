@@ -398,6 +398,7 @@ AndroidMediaResourceServer::AndroidMediaResourceServer() :
 NS_IMETHODIMP
 AndroidMediaResourceServer::Run()
 {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
 
   nsresult rv;
@@ -420,13 +421,9 @@ AndroidMediaResourceServer::Run()
 already_AddRefed<AndroidMediaResourceServer>
 AndroidMediaResourceServer::Start()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsRefPtr<AndroidMediaResourceServer> server = new AndroidMediaResourceServer();
-  // We should fix this up - see bug 1157476.
-  if (NS_IsMainThread()) {
-    server->Run();
-  } else {
-    NS_DispatchToMainThread(server, NS_DISPATCH_SYNC);
-  }
+  server->Run();
   return server.forget();
 }
 

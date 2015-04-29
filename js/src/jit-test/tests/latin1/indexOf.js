@@ -62,35 +62,35 @@ function testIndexOf() {
 }
 testIndexOf();
 
-function testContains() {
+function testincludes() {
     var s1 = toLatin1("abcdefgh123456defghi\u00EEj");
     var s2 = toLatin1("456defghi\u00EE");
 
     // Latin1 + Latin1
-    assertEq(s1.contains(s1), true);
-    assertEq(s1.contains(s2), true);
-    assertEq(s1.contains(s2, 12), false);
-    assertEq(s2.contains(s1), false);
+    assertEq(s1.includes(s1), true);
+    assertEq(s1.includes(s2), true);
+    assertEq(s1.includes(s2, 12), false);
+    assertEq(s2.includes(s1), false);
 
     // Latin1 + TwoByte
-    assertEq(s1.contains("abc\u1234"), false);
-    assertEq(s1.contains("def\u1234".substring(0, 3)), true);
-    assertEq(s1.contains("def\u1234".substring(0, 3), 9), true);
+    assertEq(s1.includes("abc\u1234"), false);
+    assertEq(s1.includes("def\u1234".substring(0, 3)), true);
+    assertEq(s1.includes("def\u1234".substring(0, 3), 9), true);
 
     // TwoByte + Latin1
     var s3 = "123456defg\u1123a456defghi\u00EEj";
     assertEq(isLatin1(s2), true);
-    assertEq(s3.contains(s2), true);
-    assertEq(s3.contains(s2, 13), false);
-    assertEq(s3.contains(toLatin1("defg8")), false);
+    assertEq(s3.includes(s2), true);
+    assertEq(s3.includes(s2, 13), false);
+    assertEq(s3.includes(toLatin1("defg8")), false);
 
     // TwoByte + TwoByte
-    assertEq(s3.contains("\u1123a4"), true);
-    assertEq(s3.contains("\u1123a4", 11), false);
-    assertEq(s3.contains("\u1123a\u1098"), false);
-    assertEq(s3.contains(s3), true);
+    assertEq(s3.includes("\u1123a4"), true);
+    assertEq(s3.includes("\u1123a4", 11), false);
+    assertEq(s3.includes("\u1123a\u1098"), false);
+    assertEq(s3.includes(s3), true);
 }
-testContains();
+testincludes();
 
 function testIndexOfBMH() {
     // BoyerMooreHorspool algorithm is used for large strings.

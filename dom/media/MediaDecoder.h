@@ -703,12 +703,6 @@ public:
   }
   layers::ImageContainer* GetImageContainer() override;
 
-  // Return the current state. Can be called on any thread. If called from
-  // a non-main thread, the decoder monitor must be held.
-  PlayState GetState() {
-    return mPlayState;
-  }
-
   // Fire timeupdate events if needed according to the time constraints
   // outlined in the specification.
   void FireTimeUpdate();
@@ -846,13 +840,6 @@ public:
   void UpdateSameOriginStatus(bool aSameOrigin);
 
   MediaDecoderOwner* GetOwner() override;
-
-  // Returns true if we're logically playing, that is, if the Play() has
-  // been called and Pause() has not or we have not yet reached the end
-  // of media. This is irrespective of the seeking state; if the owner
-  // calls Play() and then Seek(), we still count as logically playing.
-  // The decoder monitor must be held.
-  bool IsLogicallyPlaying();
 
 #ifdef MOZ_EME
   // This takes the decoder monitor.
@@ -1149,15 +1136,18 @@ protected:
   // OR on the main thread.
   // Any change to the state on the main thread must call NotifyAll on the
   // monitor so the decode thread can wake up.
-  Watchable<PlayState> mPlayState;
+  Canonical<PlayState>::Holder mPlayState;
 
-  // The state to change to after a seek or load operation.
   // This can only be changed on the main thread while holding the decoder
   // monitor. Thus, it can be safely read while holding the decoder monitor
   // OR on the main thread.
   // Any change to the state must call NotifyAll on the monitor.
   // This can only be PLAY_STATE_PAUSED or PLAY_STATE_PLAYING.
-  PlayState mNextState;
+  Canonical<PlayState>::Holder mNextState;
+public:
+  AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
+  AbstractCanonical<PlayState>* CanonicalNextPlayState() { return &mNextState; }
+protected:
 
   // Position to seek to when the seek notification is received by the
   // decode thread.

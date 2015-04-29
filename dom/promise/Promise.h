@@ -188,6 +188,10 @@ public:
       const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
+  All(const GlobalObject& aGlobal,
+      const nsTArray<nsRefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
+
+  static already_AddRefed<Promise>
   Race(const GlobalObject& aGlobal,
        const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 

@@ -208,7 +208,7 @@
             var learnMoreLink = document.getElementById("learnMoreLink");
             // nssFailure2 also gets us other non-overrideable errors. Choose
             // a "learn more" link based on description:
-            if (getDescription().contains("mozilla_pkix_error_key_pinning_failure")) {
+            if (getDescription().includes("mozilla_pkix_error_key_pinning_failure")) {
               learnMoreLink.href = "https://support.mozilla.org/kb/certificate-pinning-reports";
             }
 

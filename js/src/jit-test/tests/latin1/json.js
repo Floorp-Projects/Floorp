@@ -20,7 +20,7 @@ function testErrorPos() {
 	assertEq(0, 1);
     } catch(e) {
 	assertEq(e instanceof SyntaxError, true);
-	assertEq(e.toString().contains("line 2 column 3"), true);
+	assertEq(e.toString().includes("line 2 column 3"), true);
     }
 
     s = '[1, "\u1300",\n2,';
@@ -29,7 +29,7 @@ function testErrorPos() {
 	assertEq(0, 1);
     } catch(e) {
 	assertEq(e instanceof SyntaxError, true);
-	assertEq(e.toString().contains("line 2 column 3"), true);
+	assertEq(e.toString().includes("line 2 column 3"), true);
     }
 }
 testErrorPos();

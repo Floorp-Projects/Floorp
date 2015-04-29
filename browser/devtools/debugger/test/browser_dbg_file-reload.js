@@ -22,7 +22,7 @@ function test() {
         "There should be one source displayed in the view.")
       is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is currently selected in the view.");
-      ok(gEditor.getText().contains("bacon"),
+      ok(gEditor.getText().includes("bacon"),
         "The currently shown source contains bacon. Mmm, delicious!");
 
       let { source } = gSources.selectedItem.attachment;
@@ -40,7 +40,7 @@ function test() {
         "There should be one source displayed in the view after reloading.")
       is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is currently selected in the view after reloading.");
-      ok(gEditor.getText().contains("bacon"),
+      ok(gEditor.getText().includes("bacon"),
         "The newly shown source contains bacon. Mmm, delicious!");
 
       ({ source } = gSources.selectedItem.attachment);

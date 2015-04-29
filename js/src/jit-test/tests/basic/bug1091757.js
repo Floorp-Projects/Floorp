@@ -7,5 +7,5 @@ try {
     assertEq(0, 1);
 } catch(e) {
     assertEq(e instanceof ReferenceError, true);
-    assertEq(e.message.contains("XY"), true);
+    assertEq(e.message.includes("XY"), true);
 }

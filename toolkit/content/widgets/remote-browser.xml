@@ -163,12 +163,6 @@
                 onget="return this.contentWindowAsCPOW ? this.contentWindowAsCPOW.document : null"
                 readonly="true"/>
 
-      <field name="_syncHandler">null</field>
-
-      <property name="syncHandler"
-                onget="return this._syncHandler"
-                readonly="true"/>
-
       <field name="_imageDocument">null</field>
 
       <property name="imageDocument"
@@ -244,7 +238,6 @@
           this.messageManager.addMessageListener("Browser:Init", this);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
-          this.messageManager.addMessageListener("SetSyncHandler", this);
           this.messageManager.addMessageListener("DocumentInserted", this);
           this.messageManager.addMessageListener("FullZoomChange", this);
           this.messageManager.addMessageListener("TextZoomChange", this);
@@ -308,10 +301,6 @@
                 width: data.width,
                 height: data.height
               };
-              break;
-
-            case "SetSyncHandler":
-              this._syncHandler = aMessage.objects.handler;
               break;
 
             case "Forms:ShowDropDown": {

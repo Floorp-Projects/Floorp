@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=524674
+-->
+<window title="Mozilla Bug 524674"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=524674"
+     target="_blank">Mozilla Bug 524674</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 524674 **/
+
+  var els = Components.classes["@mozilla.org/eventlistenerservice;1"]
+                      .getService(Components.interfaces.nsIEventListenerService);
+
+  function dummyListener() {}
+
+  var runningTest = null;
+  var d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  var xhr = new XMLHttpRequest();
+
+  // Test also double removals and such.
+  var tests = [
+    function() {
+      els.addListenerChangeListener(changeListener);
+      d.addEventListener("foo", dummyListener);
+      d.addEventListener("foo", dummyListener);
+      xhr.addEventListener("foo", dummyListener);
+      tests[0] = [d, xhr];
+    },
+    function() {
+      d.onclick = dummyListener;
+      d.onclick = dummyListener;
+      xhr.onload = dummyListener;
+      tests[0] = [d, xhr];
+    },
+    function() {
+      d.onclick = function() {};
+      tests[0] = [d];
+    },
+    function() {
+      d.removeEventListener("foo", dummyListener);
+      d.removeEventListener("foo", dummyListener);
+      xhr.removeEventListener("foo", dummyListener);
+      tests[0] = [d, xhr];
+    },
+    function() {
+      d.onclick = null;
+      d.onclick = null;
+      xhr.onload = null;
+      tests[0] = [d, xhr];
+    },
+    function() {
+      els.removeListenerChangeListener(changeListener);
+      // Check that once we've removed the change listener, it isn't called anymore.
+      d.addEventListener("foo", dummyListener);
+      xhr.addEventListener("foo", dummyListener);
+      SimpleTest.executeSoon(function() {
+        SimpleTest.finish();
+      });
+    }
+  ];
+
+  SimpleTest.executeSoon(tests[0]);
+
+  function changeListener(array) {
+    if (typeof tests[0] == "function") {
+      return;
+    }
+    var expectedEventTargets = tests[0];
+    var e = array.enumerate();
+    var i = 0;
+    while (e.hasMoreElements()) {
+      var current = e.getNext();
+      var expected = expectedEventTargets[i];
+      if (current == expected) {
+        is(current, expected, current + " = " + expected);
+        // We may get random other event listener changes here too, not just the one from the
+        // test.
+        ++i
+      }
+    }
+    if (expectedEventTargets.length != i) {
+      return;
+    }
+
+    is(expectedEventTargets.length, i, "Should have got notification for all the changes.");
+    tests.shift();
+
+    ok(tests.length);
+    SimpleTest.executeSoon(tests[0]);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

@@ -27,6 +27,7 @@ namespace image {
 class DrawableFrameRef;
 class Image;
 class imgFrame;
+struct SurfaceMemoryCounter;
 
 /*
  * ImageKey contains the information we need to look up all cached surfaces for
@@ -392,21 +393,19 @@ struct SurfaceCache
   static void DiscardAll();
 
   /**
-   * Computes the size of the surfaces stored for the given image at the given
-   * memory location.
+   * Collects an accounting of the surfaces contained in the SurfaceCache for
+   * the given image, along with their size and various other metadata.
    *
    * This is intended for use with memory reporting.
    *
    * @param aImageKey     The image to report memory usage for.
-   * @param aLocation     The location (heap, nonheap, etc.) of the memory to
-   *                      report on.
-   * @param aMallocSizeOf A fallback malloc memory reporting function. This
-   *                      should be null unless we're reporting on in-process
-   *                      heap memory.
+   * @param aCounters     An array into which the report for each surface will
+   *                      be written.
+   * @param aMallocSizeOf A fallback malloc memory reporting function.
    */
-  static size_t SizeOfSurfaces(const ImageKey    aImageKey,
-                               gfxMemoryLocation aLocation,
-                               MallocSizeOf      aMallocSizeOf);
+  static void CollectSizeOfSurfaces(const ImageKey    aImageKey,
+                                    nsTArray<SurfaceMemoryCounter>& aCounters,
+                                    MallocSizeOf      aMallocSizeOf);
 
 private:
   virtual ~SurfaceCache() = 0;  // Forbid instantiation.

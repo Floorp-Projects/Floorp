@@ -7,6 +7,13 @@
 
 interface nsIDOMEventListener;
 interface nsIDOMEventTarget;
+interface nsIArray;
+
+[scriptable, function, uuid(8d5b5a6b-dec0-473d-86c4-591801dfaac1)]
+interface nsIListenerChangeListener : nsISupports
+{
+  void listenersChanged(in nsIArray aEventTargets);
+};
 
 /**
  * An instance of this interface describes how an event listener
@@ -39,7 +46,7 @@ interface nsIEventListenerInfo : nsISupports
   AString toSource();
 };
 
-[scriptable, uuid(f6964bfb-dabe-4cab-9733-be0ee2bf8171)]
+[scriptable, uuid(77aab5f7-213d-4db4-9f22-e46dfb774f15)]
 interface nsIEventListenerService : nsISupports
 {
   /**
@@ -96,5 +103,8 @@ interface nsIEventListenerService : nsISupports
                                   in nsIDOMEventListener listener,
                                   [optional] in boolean aUseCapture,
                                   [optional] in boolean aSystemEventGroup);
+
+  void addListenerChangeListener(in nsIListenerChangeListener aListener);
+  void removeListenerChangeListener(in nsIListenerChangeListener aListener);
 };
 

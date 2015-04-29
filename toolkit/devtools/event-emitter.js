@@ -155,7 +155,7 @@ EventEmitter.prototype = {
         caller = components.stack.caller.caller;
         func = caller.name;
         let file = caller.filename;
-        if (file.contains(" -> ")) {
+        if (file.includes(" -> ")) {
           file = caller.filename.split(/ -> /)[1];
         }
         path = file + ":" + caller.lineNumber;

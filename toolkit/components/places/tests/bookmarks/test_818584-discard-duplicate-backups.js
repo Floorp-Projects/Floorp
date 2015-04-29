@@ -33,7 +33,7 @@ add_task(function() {
   do_check_eq(backupFiles.length, 1);
   
   let matches = OS.Path.basename(backupFiles[0]).match(PlacesBackups.filenamesRegex);
-  do_check_eq(matches[1], new Date().toLocaleFormat("%Y-%m-%d"));
+  do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
   do_check_eq(matches[2], count);
   do_check_eq(matches[3], hash);
 
@@ -49,7 +49,7 @@ add_task(function() {
   recentBackup = yield PlacesBackups.getMostRecentBackup();
   do_check_neq(recentBackup, OS.Path.join(backupFolder, oldBackupName));
   matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
-  do_check_eq(matches[1], new Date().toLocaleFormat("%Y-%m-%d"));
+  do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
   do_check_eq(matches[2], count + 1);
   do_check_neq(matches[3], hash);
 

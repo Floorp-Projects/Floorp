@@ -49,7 +49,6 @@ CacheParent::AllocPCacheOpParent(const CacheOpArgs& aOpArgs)
 {
   if (aOpArgs.type() != CacheOpArgs::TCacheMatchArgs &&
       aOpArgs.type() != CacheOpArgs::TCacheMatchAllArgs &&
-      aOpArgs.type() != CacheOpArgs::TCacheAddAllArgs &&
       aOpArgs.type() != CacheOpArgs::TCachePutAllArgs &&
       aOpArgs.type() != CacheOpArgs::TCacheDeleteArgs &&
       aOpArgs.type() != CacheOpArgs::TCacheKeysArgs)

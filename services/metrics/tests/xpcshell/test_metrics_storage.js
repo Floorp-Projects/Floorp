@@ -343,7 +343,7 @@ add_task(function test_enqueue_operation_throw_exception() {
   backend.enqueueOperation(function bad() {
     throw new Error("I failed.");
   }).then(do_throw, function onError(error) {
-    do_check_true(error.message.contains("I failed."));
+    do_check_true(error.message.includes("I failed."));
     deferred.resolve();
   });
 
