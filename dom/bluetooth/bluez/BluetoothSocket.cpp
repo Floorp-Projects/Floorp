@@ -25,7 +25,7 @@ static const size_t MAX_READ_SIZE = 1 << 16;
 
 class BluetoothSocket::BluetoothSocketIO final
   : public UnixSocketWatcher
-  , protected DataSocketIO
+  , public DataSocketIO
 {
 public:
   BluetoothSocketIO(MessageLoop* mIOLoop,
