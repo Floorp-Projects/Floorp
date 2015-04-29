@@ -475,12 +475,20 @@
         <xul:image class="popup-notification-icon"
                    xbl:inherits="popupid,src=icon"/>
       </xul:vbox>
-      <xul:vbox flex="1">
-        <xul:label class="popup-notification-originHost header"
-                   xbl:inherits="value=originhost"
-                   crop="end"/>
-        <xul:description class="popup-notification-description"
-                         xbl:inherits="xbl:text=label,popupid"/>
+      <xul:vbox>
+        <xul:hbox align="start">
+          <xul:vbox flex="1">
+            <xul:label class="popup-notification-originHost header"
+                       xbl:inherits="value=originhost"
+                       crop="end"/>
+            <xul:description class="popup-notification-description"
+                             xbl:inherits="xbl:text=label,popupid"/>
+          </xul:vbox>
+          <xul:toolbarbutton anonid="closebutton"
+                             class="messageCloseButton close-icon popup-notification-closebutton tabbable"
+                             xbl:inherits="oncommand=closebuttoncommand"
+                             tooltiptext="&closeNotification.tooltip;"/>
+        </xul:hbox>
         <children includes="popupnotificationcontent"/>
         <xul:label class="text-link popup-notification-learnmore-link"
                xbl:inherits="href=learnmoreurl">&learnMore;</xul:label>
@@ -501,12 +509,6 @@
             </xul:menupopup>
           </xul:button>
         </xul:hbox>
-      </xul:vbox>
-      <xul:vbox pack="start">
-        <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton close-icon popup-notification-closebutton tabbable"
-                           xbl:inherits="oncommand=closebuttoncommand"
-                           tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
     </content>
     <resources>
