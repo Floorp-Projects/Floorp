@@ -121,7 +121,8 @@ class GlobalObject : public NativeObject
 
     enum WarnOnceFlag : int32_t {
         WARN_WATCH_DEPRECATED = 0x00000001,
-        WARN_PROTO_SETTING_SLOW = 0x00000002
+        WARN_PROTO_SETTING_SLOW = 0x00000002,
+        WARN_STRING_CONTAINS_DEPRECATED = 0x00000004
     };
 
     // Emit the specified warning if the given slot in |obj|'s global isn't
@@ -656,6 +657,12 @@ class GlobalObject : public NativeObject
     // object's [[Prototype]], if no prior warning was given.
     static bool warnOnceAboutPrototypeMutation(JSContext* cx, HandleObject protoSetter) {
         return warnOnceAbout(cx, protoSetter, WARN_PROTO_SETTING_SLOW, JSMSG_PROTO_SETTING_SLOW);
+    }
+
+    // Warn about use of the deprecated String.prototype.contains method
+    static bool warnOnceAboutStringContains(JSContext *cx, HandleObject strContains) {
+        return warnOnceAbout(cx, strContains, WARN_STRING_CONTAINS_DEPRECATED,
+                             JSMSG_DEPRECATED_STRING_CONTAINS);
     }
 
     static bool getOrCreateEval(JSContext* cx, Handle<GlobalObject*> global,
