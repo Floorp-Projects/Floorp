@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<title>Test for bug 1157097</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<style>
+.blue { color: blue; }
+.red { color: red; }
+.inline-block { display: inline-block; }
+</style>
+<body onload=run()>
+<p><span id=s1 class=blue><b></b></span><span id=s2 class=red><b></b></span></p>
+<script>
+var Ci = Components.interfaces;
+var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils);
+
+function run() {
+  windowUtils.postRestyleSelfEvent(document.querySelector("p"));
+  document.querySelectorAll("span")[0].className = "";
+  document.querySelectorAll("b")[0].className = "inline-block";
+  document.querySelectorAll("span")[1].className = "blue";
+  windowUtils.postRestyleSelfEvent(document.querySelectorAll("b")[1]);
+
+  document.body.offsetTop;
+
+  ok(true, "finished (hopefully we didn't assert)");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>

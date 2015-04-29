@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1156059
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 1156059</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  // Tests for Bug 1156059
+  // See ok messages in iframes for test cases.
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("We cannot detect when the sandbox blocks the META REFRESH, so we need to allow a reasonable amount of time for them to fail.");
+
+  var testCases = [
+    {
+      desc: "Meta refresh without allow-scripts should be ignored.",
+      numberOfLoads: 0,
+      numberOfLoadsExpected: 1
+    },
+    {
+      desc: "Meta refresh check should be case insensitive.",
+      numberOfLoads: 0,
+      numberOfLoadsExpected: 1
+    },
+    {
+      desc: "Meta refresh with allow-scripts should work.",
+      numberOfLoads: 0,
+      numberOfLoadsExpected: 2
+    },
+    {
+      desc: "Refresh HTTP headers should not be affected by sandbox.",
+      numberOfLoads: 0,
+      numberOfLoadsExpected: 2
+    }
+  ];
+
+  var totalLoads = 0;
+  var totalLoadsExpected = testCases.reduce(function(partialSum, testCase) {
+    return partialSum + testCase.numberOfLoadsExpected;
+  }, 0);
+
+  function processLoad(testCaseIndex) {
+    testCases[testCaseIndex].numberOfLoads++;
+
+    if (++totalLoads == totalLoadsExpected) {
+      // Give the tests that should block the refresh a bit of extra time to
+      // fail. The worst that could happen here is that we get a false pass.
+      window.setTimeout(processResults, 500);
+    }
+  }
+
+  function processResults() {
+    testCases.forEach(function(testCase, index) {
+      var msg = "Test Case " + index + ": " + testCase.desc;
+      is(testCase.numberOfLoads, testCase.numberOfLoadsExpected, msg);
+    });
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1156059">Mozilla Bug 1156059</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<iframe
+  onload="processLoad(0)"
+  srcdoc="<meta http-equiv='refresh' content='0; url=data:text/html,Refreshed'>"
+  sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-top-navigation"
+></iframe>
+
+<iframe
+  onload="processLoad(1)"
+  srcdoc="<meta http-equiv='rEfReSh' content='0; url=data:text/html,Refreshed'>"
+  sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-top-navigation"
+></iframe>
+
+<iframe
+  onload="processLoad(2)"
+  srcdoc="<meta http-equiv='refresh' content='0; url=data:text/html,Refreshed'>"
+  sandbox="allow-scripts"
+></iframe>
+
+<iframe
+  onload="processLoad(3)"
+  src="file_iframe_sandbox_refresh.html"
+  sandbox
+></iframe>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

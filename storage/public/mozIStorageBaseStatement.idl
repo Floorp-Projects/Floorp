@@ -19,7 +19,7 @@ interface mozIStorageBindingParamsArray;
  * (mozIStorageStatement) that can be used for both synchronous and asynchronous
  * purposes.
  */
-[scriptable, uuid(5d34f333-ed3f-4aa2-ba51-f2a8b0cfa33a)]
+[scriptable, uuid(16ca67aa-1325-43e2-aac7-859afd1590b2)]
 interface mozIStorageBaseStatement : mozIStorageBindingParams {
   /**
    * Finalizes a statement so you can successfully close a database connection.
@@ -67,6 +67,12 @@ interface mozIStorageBaseStatement : mozIStorageBindingParams {
     in unsigned long aParamIndex,
     [array,const,size_is(aValueSize)] in octet aValue,
     in unsigned long aValueSize);
+  [deprecated] void bindStringAsBlobParameter(
+    in unsigned long aParamIndex,
+    in AString aValue);
+  [deprecated] void bindUTF8StringAsBlobParameter(
+    in unsigned long aParamIndex,
+    in AUTF8String aValue);
   [deprecated] void bindAdoptedBlobParameter(
     in unsigned long aParamIndex,
     [array,size_is(aValueSize)] in octet aValue,

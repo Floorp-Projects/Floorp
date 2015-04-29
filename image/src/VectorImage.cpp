@@ -397,11 +397,11 @@ VectorImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
   return windowSizes.getTotalSize();
 }
 
-size_t
-VectorImage::SizeOfDecoded(gfxMemoryLocation aLocation,
-                           MallocSizeOf aMallocSizeOf) const
+void
+VectorImage::CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
+                                   MallocSizeOf aMallocSizeOf) const
 {
-  return SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
+  SurfaceCache::CollectSizeOfSurfaces(ImageKey(this), aCounters, aMallocSizeOf);
 }
 
 nsresult

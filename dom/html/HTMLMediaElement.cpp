@@ -3892,7 +3892,7 @@ void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize)
 
 void HTMLMediaElement::UpdateInitialMediaSize(const nsIntSize& aSize)
 {
-  if (mMediaInfo.mVideo.mDisplay == nsIntSize(0, 0)) {
+  if (!mMediaInfo.HasVideo()) {
     UpdateMediaSize(aSize);
   }
 }

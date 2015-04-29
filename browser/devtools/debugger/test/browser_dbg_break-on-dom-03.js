@@ -52,7 +52,7 @@ function test() {
       let item = gEvents.items[index];
       let node = item.target;
 
-      ok(item.attachment.url.contains(label),
+      ok(item.attachment.url.includes(label),
         "The event at index " + index + " has the correct url.");
       is(item.attachment.type, type,
         "The event at index " + index + " has the correct type.");

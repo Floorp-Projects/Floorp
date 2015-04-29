@@ -27,9 +27,9 @@ function ifWebGLSupported() {
 
   let vertSource = yield vertexShader.getText();
   let fragSource = yield fragmentShader.getText();
-  ok(vertSource.contains("vFragmentColor = vec3(0, 0, 1);"),
+  ok(vertSource.includes("vFragmentColor = vec3(0, 0, 1);"),
     "The vertex shader source is correct after changing it.");
-  ok(fragSource.contains("gl_FragColor = vec4(vFragmentColor, 1.0);"),
+  ok(fragSource.includes("gl_FragColor = vec4(vFragmentColor, 1.0);"),
     "The fragment shader source is correct after changing the vertex shader.");
 
   yield removeTab(target.tab);

@@ -32,6 +32,28 @@ BaseProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) 
 }
 
 bool
+BaseProxyHandler::getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
+                                        MutableHandle<PropertyDescriptor> desc) const
+{
+    assertEnteredPolicy(cx, proxy, id, GET | SET | GET_PROPERTY_DESCRIPTOR);
+
+    if (!getOwnPropertyDescriptor(cx, proxy, id, desc))
+        return false;
+    if (desc.object())
+        return true;
+
+    RootedObject proto(cx);
+    if (!GetPrototype(cx, proxy, &proto))
+        return false;
+    if (!proto) {
+        MOZ_ASSERT(!desc.object());
+        return true;
+    }
+    return GetPropertyDescriptor(cx, proto, id, desc);
+}
+
+
+bool
 BaseProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);

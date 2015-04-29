@@ -603,12 +603,14 @@ template <typename T>
 void
 js::GCMarker::markAndTraceChildren(T* thing)
 {
-    MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(thing));
+    if (ThingIsPermanentAtomOrWellKnownSymbol(thing))
+        return;
     if (mark(thing))
         thing->traceChildren(this);
 }
 namespace js {
-template <> void GCMarker::traverse(LazyScript* thing) { markAndTraceChildren(thing); }
+template <> void GCMarker::traverse(BaseShape* thing) { markAndTraceChildren(thing); }
+template <> void GCMarker::traverse(JS::Symbol* thing) { markAndTraceChildren(thing); }
 template <> void GCMarker::traverse(JSScript* thing) { markAndTraceChildren(thing); }
 } // namespace js
 
@@ -625,10 +627,9 @@ js::GCMarker::markAndScan(T* thing)
         eagerlyMarkChildren(thing);
 }
 namespace js {
-template <> void GCMarker::traverse(Shape* thing) { markAndScan(thing); }
-template <> void GCMarker::traverse(BaseShape* thing) { markAndScan(thing); }
 template <> void GCMarker::traverse(JSString* thing) { markAndScan(thing); }
-template <> void GCMarker::traverse(JS::Symbol* thing) { markAndScan(thing); }
+template <> void GCMarker::traverse(LazyScript* thing) { markAndScan(thing); }
+template <> void GCMarker::traverse(Shape* thing) { markAndScan(thing); }
 } // namespace js
 
 // Object and ObjectGroup are extremely common and can contain arbitrarily
@@ -688,6 +689,57 @@ js::GCMarker::mark(T* thing)
     return gc::ParticipatesInCC<T>::value
            ? gc::TenuredCell::fromPointer(thing)->markIfUnmarked(markColor())
            : gc::TenuredCell::fromPointer(thing)->markIfUnmarked(gc::BLACK);
+}
+
+void
+LazyScript::traceChildren(JSTracer* trc)
+{
+    if (function_)
+        TraceEdge(trc, &function_, "function");
+
+    if (sourceObject_)
+        TraceEdge(trc, &sourceObject_, "sourceObject");
+
+    if (enclosingScope_)
+        TraceEdge(trc, &enclosingScope_, "enclosingScope");
+
+    if (script_)
+        TraceEdge(trc, &script_, "realScript");
+
+    // We rely on the fact that atoms are always tenured.
+    FreeVariable* freeVariables = this->freeVariables();
+    for (auto i : MakeRange(numFreeVariables())) {
+        JSAtom* atom = freeVariables[i].atom();
+        TraceManuallyBarrieredEdge(trc, &atom, "lazyScriptFreeVariable");
+    }
+
+    HeapPtrFunction* innerFunctions = this->innerFunctions();
+    for (auto i : MakeRange(numInnerFunctions()))
+        TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
+}
+inline void
+js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
+{
+    if (thing->function_)
+        traverse(thing, static_cast<JSObject*>(thing->function_));
+
+    if (thing->sourceObject_)
+        traverse(thing, static_cast<JSObject*>(thing->sourceObject_));
+
+    if (thing->enclosingScope_)
+        traverse(thing, static_cast<JSObject*>(thing->enclosingScope_));
+
+    if (thing->script_)
+        traverse(thing, static_cast<JSScript*>(thing->script_));
+
+    // We rely on the fact that atoms are always tenured.
+    LazyScript::FreeVariable* freeVariables = thing->freeVariables();
+    for (auto i : MakeRange(thing->numFreeVariables()))
+        traverse(thing, static_cast<JSString*>(freeVariables[i].atom()));
+
+    HeapPtrFunction* innerFunctions = thing->innerFunctions();
+    for (auto i : MakeRange(thing->numInnerFunctions()))
+        traverse(thing, static_cast<JSObject*>(innerFunctions[i]));
 }
 
 inline void
@@ -1020,38 +1072,6 @@ gc::MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name)
 
 /*** Push Mark Stack ***/
 
-void
-BaseShape::traceChildren(JSTracer* trc)
-{
-    if (isOwned())
-        TraceEdge(trc, &unowned_, "base");
-
-    JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
-    if (global)
-        TraceManuallyBarrieredEdge(trc, &global, "global");
-}
-inline void
-GCMarker::eagerlyMarkChildren(BaseShape* base)
-{
-    base->assertConsistency();
-
-    base->compartment()->mark();
-
-    if (GlobalObject* global = base->compartment()->unsafeUnbarrieredMaybeGlobal())
-        traverse(static_cast<JSObject*>(global));
-
-    /*
-     * All children of the owned base shape are consistent with its
-     * unowned one, thus we do not need to trace through children of the
-     * unowned base shape.
-     */
-    if (base->isOwned()) {
-        UnownedBaseShape* unowned = base->baseUnowned();
-        MOZ_ASSERT(base->compartment() == unowned->compartment());
-        unowned->markIfUnmarked(markColor());
-    }
-}
-
 static inline void
 ScanLinearString(GCMarker* gcmarker, JSLinearString* str)
 {
@@ -1136,13 +1156,6 @@ GCMarker::eagerlyMarkChildren(JSString* str)
         ScanLinearString(this, &str->asLinear());
     else
         ScanRope(this, &str->asRope());
-}
-
-inline void
-GCMarker::eagerlyMarkChildren(JS::Symbol* sym)
-{
-    if (JSString* desc = sym->description())
-        traverse(desc);
 }
 
 /*

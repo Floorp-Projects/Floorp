@@ -20,7 +20,7 @@ add_task(function* test_same_date_same_hash() {
 
   // Save JSON file in backup folder with hash appended
   let dateObj = new Date();
-  let filename = "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + "_" +
+  let filename = "bookmarks-" + PlacesBackups.toISODateString(dateObj) + "_" +
                   count + "_" + hash + ".json";
   let backupFile = OS.Path.join(backupFolder, filename);
   yield OS.File.move(tempPath, backupFile);
@@ -53,7 +53,7 @@ add_task(function* test_same_date_diff_hash() {
                               "bug10169583_bookmarks.json");
   let {count, hash} = yield BookmarkJSONUtils.exportToFile(tempPath);
   let dateObj = new Date();
-  let filename = "bookmarks-" + dateObj.toLocaleFormat("%Y-%m-%d") + "_" +
+  let filename = "bookmarks-" + PlacesBackups.toISODateString(dateObj) + "_" +
                   count + "_" + "differentHash==" + ".json";
   let backupFile = OS.Path.join(backupFolder, filename);
   yield OS.File.move(tempPath, backupFile);
@@ -84,9 +84,9 @@ add_task(function* test_diff_date_same_hash() {
   let {count, hash} = yield BookmarkJSONUtils.exportToFile(tempPath);
   let oldDate = new Date(2014, 1, 1);
   let curDate = new Date();
-  let oldFilename = "bookmarks-" + oldDate.toLocaleFormat("%Y-%m-%d") + "_" +
+  let oldFilename = "bookmarks-" + PlacesBackups.toISODateString(oldDate) + "_" +
                   count + "_" + hash + ".json";
-  let newFilename = "bookmarks-" + curDate.toLocaleFormat("%Y-%m-%d") + "_" +
+  let newFilename = "bookmarks-" + PlacesBackups.toISODateString(curDate) + "_" +
                   count + "_" + hash + ".json";
   let backupFile = OS.Path.join(backupFolder, oldFilename);
   let newBackupFile = OS.Path.join(backupFolder, newFilename);

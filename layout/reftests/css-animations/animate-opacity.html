@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<title>Reftest, bug 1156456</title>
+<style>
+
+body {
+  background: #2a4;
+}
+
+@keyframes HoldOpacity {
+  from, to {
+    opacity: 0.6;
+  }
+}
+
+div {
+  width: 200px; height: 200px;
+  background: #c37;
+  animation: 10s HoldOpacity infinite;
+}
+
+</style>
+<div></div>

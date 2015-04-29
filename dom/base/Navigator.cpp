@@ -2087,6 +2087,7 @@ Navigator::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                      JS::Handle<jsid> aId,
                      JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
+  // Note: Keep this in sync with MayResolve.
   if (!JSID_IS_STRING(aId)) {
     return true;
   }
@@ -2236,6 +2237,28 @@ Navigator::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   FillPropertyDescriptor(aDesc, aObject, prop_val, false);
   return true;
+}
+
+/* static */
+bool
+Navigator::MayResolve(jsid aId)
+{
+  // Note: This function does not fail and may not have any side-effects.
+  // Note: Keep this in sync with DoResolve.
+  if (!JSID_IS_STRING(aId)) {
+    return false;
+  }
+
+  nsScriptNameSpaceManager *nameSpaceManager = PeekNameSpaceManager();
+  if (!nameSpaceManager) {
+    // Really shouldn't happen here.  Fail safe.
+    return true;
+  }
+
+  nsAutoString name;
+  AssignJSFlatString(name, JSID_TO_FLAT_STRING(aId));
+
+  return nameSpaceManager->LookupNavigatorName(name);
 }
 
 struct NavigatorNameEnumeratorClosure

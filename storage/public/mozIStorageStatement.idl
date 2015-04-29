@@ -15,7 +15,7 @@
  * A SQL statement that can be used for both synchronous and asynchronous
  * purposes.
  */
-[scriptable, uuid(b3c4476e-c490-4e3b-9db1-e2d3a6f0287c)]
+[scriptable, uuid(5f567c35-6c32-4140-828c-683ea49cfd3a)]
 interface mozIStorageStatement : mozIStorageBaseStatement {
   /**
    * Create a clone of this statement, by initializing a new statement
@@ -207,6 +207,29 @@ interface mozIStorageStatement : mozIStorageBaseStatement {
    *             The contents of the BLOB.  This will be NULL if aDataSize == 0.
    */
   void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
+
+  /**
+   * Retrieve the contents of a Blob column from the current result row as a
+   * string.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return The value for the result Blob column interpreted as a String.
+   *         No encoding conversion is performed.
+   */
+  AString getBlobAsString(in unsigned long aIndex);
+
+  /**
+   * Retrieve the contents of a Blob column from the current result row as a
+   * UTF8 string.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @return The value for the result Blob column interpreted as a UTF8 String.
+   *         No encoding conversion is performed.
+   */
+  AUTF8String getBlobAsUTF8String(in unsigned long aIndex);
+
   /**
    * Check whether the given column in the current result row is NULL.
    *

@@ -99,14 +99,25 @@ public:
   /**
    * Returns true if the slider's thumb moves horizontally, or else false if it
    * moves vertically.
-   *
-   * aOverrideFrameSize If specified, this will be used instead of the size of
-   *   the frame's rect (i.e. the frame's border-box size) if the frame's
-   *   rect would have otherwise been examined. This should only be specified
-   *   during reflow when the frame's [new] border-box size has not yet been
-   *   stored in its mRect.
    */
-  bool IsHorizontal(const nsSize *aFrameSizeOverride = nullptr) const;
+  bool IsHorizontal() const;
+
+  /**
+   * Returns true if the slider is oriented along the inline axis.
+   */
+  bool IsInlineOriented() const {
+    return IsHorizontal() != GetWritingMode().IsVertical();
+  }
+
+  /**
+   * Returns true if the slider's thumb moves right-to-left for increasing
+   * values; only relevant when IsHorizontal() is true.
+   */
+  bool IsRightToLeft() const {
+    MOZ_ASSERT(IsHorizontal());
+    mozilla::WritingMode wm = GetWritingMode();
+    return wm.IsVertical() ? wm.IsVerticalRL() : !wm.IsBidiLTR();
+  }
 
   double GetMin() const;
   double GetMax() const;

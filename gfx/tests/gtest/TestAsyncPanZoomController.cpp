@@ -246,6 +246,7 @@ protected:
   {
     gfxPrefs::GetSingleton();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
+    APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     testStartTime = TimeStamp::Now();
     AsyncPanZoomController::SetFrameTime(testStartTime);
@@ -1758,6 +1759,7 @@ protected:
   virtual void SetUp() {
     gfxPrefs::GetSingleton();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
+    APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     testStartTime = TimeStamp::Now();
     AsyncPanZoomController::SetFrameTime(testStartTime);

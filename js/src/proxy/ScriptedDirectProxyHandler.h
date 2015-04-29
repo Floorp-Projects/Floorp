@@ -52,8 +52,6 @@ class ScriptedDirectProxyHandler : public BaseProxyHandler {
     virtual bool construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const override;
 
     /* SpiderMonkey extensions. */
-    virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
-                                       MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override {
         return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
     }

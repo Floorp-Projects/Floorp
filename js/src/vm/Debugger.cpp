@@ -1681,6 +1681,8 @@ bool
 Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                int64_t when)
 {
+    MOZ_ASSERT(trackingAllocationSites);
+
     AutoCompartment ac(cx, object);
     RootedObject wrappedFrame(cx, frame);
     if (!cx->compartment()->wrap(cx, &wrappedFrame))
@@ -2151,6 +2153,96 @@ Debugger::updateObservesAsmJSOnDebuggees(IsObserving observing)
 
 
 
+/*** Allocations Tracking *************************************************************************/
+
+/* static */ bool
+Debugger::cannotTrackAllocations(const GlobalObject& global)
+{
+    auto existingCallback = global.compartment()->getObjectMetadataCallback();
+    return existingCallback && existingCallback != SavedStacksMetadataCallback;
+}
+
+/* static */ bool
+Debugger::isObservedByDebuggerTrackingAllocations(const GlobalObject& debuggee)
+{
+    if (auto* v = debuggee.getDebuggers()) {
+        Debugger** p;
+        for (p = v->begin(); p != v->end(); p++) {
+            if ((*p)->trackingAllocationSites) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/* static */ bool
+Debugger::addAllocationsTracking(JSContext* cx, GlobalObject& debuggee)
+{
+    // Precondition: the given global object is being observed by at least one
+    // Debugger that is tracking allocations.
+    MOZ_ASSERT(isObservedByDebuggerTrackingAllocations(debuggee));
+
+    if (Debugger::cannotTrackAllocations(debuggee)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
+        return false;
+    }
+
+    debuggee.compartment()->setObjectMetadataCallback(SavedStacksMetadataCallback);
+    return true;
+}
+
+/* static */ void
+Debugger::removeAllocationsTracking(GlobalObject& global)
+{
+    // If there are still Debuggers that are observing allocations, we cannot
+    // remove the metadata callback yet.
+    if (isObservedByDebuggerTrackingAllocations(global))
+        return;
+
+    global.compartment()->forgetObjectMetadataCallback();
+}
+
+bool
+Debugger::addAllocationsTrackingForAllDebuggees(JSContext* cx)
+{
+    MOZ_ASSERT(trackingAllocationSites);
+
+    // We don't want to end up in a state where we added allocations
+    // tracking to some of our debuggees, but failed to do so for
+    // others. Before attempting to start tracking allocations in *any* of
+    // our debuggees, ensure that we will be able to track allocations for
+    // *all* of our debuggees.
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        if (Debugger::cannotTrackAllocations(*r.front().get())) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                                 JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
+            return false;
+        }
+    }
+
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        // This should always succeed, since we already checked for the
+        // error case above.
+        MOZ_ALWAYS_TRUE(Debugger::addAllocationsTracking(cx, *r.front().get()));
+    }
+
+    return true;
+}
+
+void
+Debugger::removeAllocationsTrackingForAllDebuggees()
+{
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+        Debugger::removeAllocationsTracking(*r.front().get());
+    }
+    emptyAllocationsLog();
+}
+
+
+
 /*** Debugger JSObjects **************************************************************************/
 
 void
@@ -2489,6 +2581,17 @@ Debugger::setEnabled(JSContext* cx, unsigned argc, Value* vp)
     dbg->enabled = ToBoolean(args[0]);
 
     if (wasEnabled != dbg->enabled) {
+        if (dbg->trackingAllocationSites) {
+            if (wasEnabled) {
+                dbg->removeAllocationsTrackingForAllDebuggees();
+            } else {
+                if (!dbg->addAllocationsTrackingForAllDebuggees(cx)) {
+                    dbg->enabled = false;
+                    return false;
+                }
+            }
+        }
+
         for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
             if (!wasEnabled)
                 bp->site->inc(cx->runtime()->defaultFreeOp());
@@ -3077,27 +3180,13 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     /*
-     * If we are tracking allocation sites, we need to add the object metadata
-     * callback to this debuggee compartment.
-     */
-    bool setMetadataCallback = false;
-    if (trackingAllocationSites) {
-        if (debuggeeCompartment->hasObjectMetadataCallback()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
-            return false;
-        }
-
-        debuggeeCompartment->setObjectMetadataCallback(SavedStacksMetadataCallback);
-        setMetadataCallback = true;
-    }
-
-    /*
      * For global to become this js::Debugger's debuggee:
      * - global must be in this->debuggees,
      * - this js::Debugger must be in global->getDebuggers(), and
      * - JSCompartment::isDebuggee()'s bit must be set.
-     * All three indications must be kept consistent.
+     * - If we are tracking allocations, the SavedStacksMetadataCallback must be
+     *   installed for this compartment.
+     * All four indications must be kept consistent.
      */
     AutoCompartment ac(cx, global);
     GlobalObject::DebuggerVector* v = GlobalObject::getOrCreateDebuggers(cx, global);
@@ -3107,12 +3196,14 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
         if (!debuggees.put(global)) {
             ReportOutOfMemory(cx);
         } else {
-            debuggeeCompartment->setIsDebuggee();
-            debuggeeCompartment->updateDebuggerObservesAsmJS();
-            if (!observesAllExecution())
-                return true;
-            if (ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
-                return true;
+            if (!trackingAllocationSites || Debugger::addAllocationsTracking(cx, *global)) {
+                debuggeeCompartment->setIsDebuggee();
+                debuggeeCompartment->updateDebuggerObservesAsmJS();
+                if (!observesAllExecution())
+                    return true;
+                if (ensureExecutionObservabilityOfCompartment(cx, debuggeeCompartment))
+                    return true;
+            }
 
             /* Maintain consistency on error. */
             debuggees.remove(global);
@@ -3121,10 +3212,6 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
         MOZ_ASSERT(v->back() == this);
         v->popBack();
     }
-
-    /* Don't leave the object metadata hook set if we OOM'd. */
-    if (setMetadataCallback)
-        debuggeeCompartment->forgetObjectMetadataCallback();
 
     return false;
 }
@@ -3192,10 +3279,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
      * metadata callback from this global's compartment.
      */
     if (trackingAllocationSites)
-        global->compartment()->forgetObjectMetadataCallback();
-
-    // Clear out all object metadata in the compartment.
-    global->compartment()->clearObjectMetadata();
+        Debugger::removeAllocationsTracking(*global);
 
     if (global->getDebuggers()->empty()) {
         global->compartment()->unsetIsDebuggee();
@@ -3204,6 +3288,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
         global->compartment()->updateDebuggerObservesAsmJS();
     }
 }
+
 
 static inline ScriptSourceObject* GetSourceReferent(JSObject* obj);
 
@@ -6713,14 +6798,28 @@ DebuggerObject_getGlobal(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+null(CallArgs& args)
+{
+    args.rval().setNull();
+    return true;
+}
+
+static bool
 DebuggerObject_getAllocationSite(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get allocationSite", args, obj);
 
     RootedObject metadata(cx, GetObjectMetadata(obj));
+    if (!metadata)
+        return null(args);
+
+    metadata = CheckedUnwrap(metadata);
+    if (!metadata || !SavedFrame::isSavedFrameAndNotProto(*metadata))
+        return null(args);
+
     if (!cx->compartment()->wrap(cx, &metadata))
         return false;
-    args.rval().setObjectOrNull(metadata);
+    args.rval().setObject(*metadata);
     return true;
 }
 

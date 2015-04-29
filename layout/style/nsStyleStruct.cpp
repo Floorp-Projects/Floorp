@@ -608,6 +608,8 @@ nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 
   mHasCachedOutline = false;
   mTwipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
+
+  SetOutlineInitialColor();
 }
 
 nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc)

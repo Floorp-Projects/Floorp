@@ -236,7 +236,7 @@ public:
    */
   void WaitUntilComplete() const;
 
-  IntSize GetImageSize() { return mImageSize; }
+  IntSize GetImageSize() const { return mImageSize; }
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
   bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }

@@ -179,7 +179,7 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
     // heap. On the other hand, the description provided by this method may be
     // substantially more accurate and useful than those provided by only the
     // contextName and contextIndex.
-    const char* getTracingEdgeName(char* buffer, size_t bufferSize);
+    void getTracingEdgeName(char* buffer, size_t bufferSize);
 
     // The trace implementation may associate a callback with one or more edges
     // using AutoTracingDetails. This functor is called by getTracingEdgeName

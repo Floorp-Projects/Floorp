@@ -161,7 +161,7 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
     return false;
   }
 
-  nestegg_packet* packet = holder->mPacket;
+  nestegg_packet* packet = holder->Packet();
   unsigned int track = 0;
   int r = nestegg_packet_track(packet, &track);
   if (r == -1) {
@@ -174,23 +174,16 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
     return false;
   }
 
-  uint64_t tstamp = 0;
-  r = nestegg_packet_tstamp(packet, &tstamp);
-  if (r == -1) {
-    return false;
-  }
+  int64_t tstamp = holder->Timestamp();
 
   // The end time of this frame is the start time of the next frame.  Fetch
   // the timestamp of the next packet for this track.  If we've reached the
   // end of the resource, use the file's duration as the end time of this
   // video frame.
-  uint64_t next_tstamp = 0;
+  int64_t next_tstamp = 0;
   nsRefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
   if (next_holder) {
-    r = nestegg_packet_tstamp(next_holder->mPacket, &next_tstamp);
-    if (r == -1) {
-      return false;
-    }
+    next_tstamp = holder->Timestamp();
     mReader->PushVideoPacket(next_holder.forget());
   } else {
     next_tstamp = tstamp;
@@ -198,7 +191,6 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
   }
   mReader->SetLastVideoFrameTime(tstamp);
 
-  int64_t tstamp_usecs = tstamp / NS_PER_USEC;
   for (uint32_t i = 0; i < count; ++i) {
     unsigned char* data;
     size_t length;
@@ -218,8 +210,8 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
 
     MOZ_ASSERT(mPlatform && mMediaDataDecoder);
 
-    aSample = new VP8Sample(tstamp_usecs,
-                            (next_tstamp/NS_PER_USEC) - tstamp_usecs,
+    aSample = new VP8Sample(tstamp,
+                            next_tstamp - tstamp,
                             0,
                             data,
                             length,

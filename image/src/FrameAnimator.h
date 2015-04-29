@@ -148,8 +148,14 @@ public:
   void SetLoopCount(int32_t aLoopCount) { mLoopCount = aLoopCount; }
   int32_t LoopCount() const { return mLoopCount; }
 
-  size_t SizeOfCompositingFrames(gfxMemoryLocation aLocation,
-                                 MallocSizeOf aMallocSizeOf) const;
+  /**
+   * Collect an accounting of the memory occupied by the compositing surfaces we
+   * use during animation playback. All of the actual animation frames are
+   * stored in the SurfaceCache, so we don't need to report them here.
+   */
+  void CollectSizeOfCompositingSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
+                                        MallocSizeOf aMallocSizeOf) const;
+
 private: // methods
   /**
    * Gets the length of a single loop of this image, in milliseconds.

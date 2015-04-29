@@ -78,7 +78,7 @@ examiner.prototype  = {
    if (topic === "specialpowers-http-notify-request") {
       // making sure we do not bubble a result for something other
       // then the request in question.
-      if (!data.contains("file_csp_testserver.sjs?foo")) {
+      if (!data.includes("file_csp_testserver.sjs?foo")) {
         return;
       }
       checkResult("allowed");
@@ -91,7 +91,7 @@ examiner.prototype  = {
                         SpecialPowers.do_QueryInterface(subject, "nsIURI"),
                         "asciiSpec");
 
-      if (!asciiSpec.contains("file_csp_testserver.sjs?foo")) {
+      if (!asciiSpec.includes("file_csp_testserver.sjs?foo")) {
         return;
       }
       checkResult("blocked");

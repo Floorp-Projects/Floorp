@@ -33,7 +33,7 @@ let test = asyncTest(function*() {
 
   let clickable = result.clickableElements[0];
   ok(clickable, "the console.log() object anchor was found");
-  ok(body.textContent.contains('{ abba: "omgBug676722" }'),
+  ok(body.textContent.includes('{ abba: "omgBug676722" }'),
      "clickable node content is correct");
 
   executeSoon(() => {

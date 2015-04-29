@@ -7,7 +7,7 @@ function handleRequest(request, response) {
   response.processAsync();
 
   let params = request.queryString.split("&");
-  let status = params.filter(s => s.contains("sts="))[0].split("=")[1];
+  let status = params.filter(s => s.includes("sts="))[0].split("=")[1];
   let cached = params.filter(s => s === 'cached').length !== 0;
 
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

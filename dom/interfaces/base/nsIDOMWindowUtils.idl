@@ -51,7 +51,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(55d6b97f-0717-449d-ac6c-cdaba0a9b698)]
+[scriptable, uuid(9bb4a34f-de8f-43d3-a58c-10757cac95a0)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1742,6 +1742,11 @@ interface nsIDOMWindowUtils : nsISupports {
     */
    [implicit_jscontext] jsval getContentAPZTestData();
    [implicit_jscontext] jsval getCompositorAPZTestData();
+
+   /**
+    * Posts an eRestyle_Self restyle event for the given element.
+    */
+   void postRestyleSelfEvent(in nsIDOMElement aElement);
 
    /**
     * With this it's possible to mute all the MediaElements in this window.

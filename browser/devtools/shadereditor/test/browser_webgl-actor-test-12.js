@@ -17,9 +17,9 @@ function ifWebGLSupported() {
   let vertSource = yield vertexShader.getText();
   let fragSource = yield fragmentShader.getText();
 
-  ok(vertSource.contains("I'm a vertex shader!"),
+  ok(vertSource.includes("I'm a vertex shader!"),
     "The correct vertex shader text was retrieved.");
-  ok(fragSource.contains("I'm a fragment shader!"),
+  ok(fragSource.includes("I'm a fragment shader!"),
     "The correct fragment shader text was retrieved.");
 
   yield removeTab(target.tab);

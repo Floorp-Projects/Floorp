@@ -31,9 +31,9 @@ function ifWebGLSupported() {
       "The one of the compile or link info logs should not be empty.");
     is(infoLog.split("ERROR").length - 1, 2,
       "The info log contains two errors.");
-    ok(infoLog.contains("ERROR: 0:8: 'constructor'"),
+    ok(infoLog.includes("ERROR: 0:8: 'constructor'"),
       "A constructor error is contained in the info log.");
-    ok(infoLog.contains("ERROR: 0:8: 'assign'"),
+    ok(infoLog.includes("ERROR: 0:8: 'assign'"),
       "An assignment error is contained in the info log.");
   }
 
@@ -42,7 +42,7 @@ function ifWebGLSupported() {
   ok(true, "The shader was reverted to the old source.");
 
   let vertSource = yield vertexShader.getText();
-  ok(vertSource.contains("vec4(aVertexPosition, 1.0);"),
+  ok(vertSource.includes("vec4(aVertexPosition, 1.0);"),
     "The previous correct vertex shader source was preserved.");
 
   let oldFragSource = yield fragmentShader.getText();
@@ -62,7 +62,7 @@ function ifWebGLSupported() {
       "The one of the compile or link info logs should not be empty.");
     is(infoLog.split("ERROR").length - 1, 1,
       "The info log contains one error.");
-    ok(infoLog.contains("ERROR: 0:6: 'constructor'"),
+    ok(infoLog.includes("ERROR: 0:6: 'constructor'"),
       "A constructor error is contained in the info log.");
   }
 
@@ -71,7 +71,7 @@ function ifWebGLSupported() {
   ok(true, "The shader was reverted to the old source.");
 
   let fragSource = yield fragmentShader.getText();
-  ok(fragSource.contains("vec3 vFragmentColor;"),
+  ok(fragSource.includes("vec3 vFragmentColor;"),
     "The previous correct fragment shader source was preserved.");
 
   yield programActor.highlight([0, 1, 0, 1]);

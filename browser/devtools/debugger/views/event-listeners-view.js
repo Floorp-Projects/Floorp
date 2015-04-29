@@ -84,7 +84,7 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
     // There's no easy way of grouping event types into higher-level groups,
     // so we need to do this by hand.
     let is = (...args) => args.indexOf(type) != -1;
-    let has = str => type.contains(str);
+    let has = str => type.includes(str);
     let starts = str => type.startsWith(str);
     let group;
 

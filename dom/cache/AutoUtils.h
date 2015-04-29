@@ -47,18 +47,15 @@ class MOZ_STACK_CLASS AutoChildOpArgs final
 {
 public:
   typedef TypeUtils::BodyAction BodyAction;
-  typedef TypeUtils::ReferrerAction ReferrerAction;
   typedef TypeUtils::SchemeAction SchemeAction;
 
   AutoChildOpArgs(TypeUtils* aTypeUtils, const CacheOpArgs& aOpArgs);
   ~AutoChildOpArgs();
 
   void Add(InternalRequest* aRequest, BodyAction aBodyAction,
-           ReferrerAction aReferrerAction, SchemeAction aSchemeAction,
-           ErrorResult& aRv);
+           SchemeAction aSchemeAction, ErrorResult& aRv);
   void Add(InternalRequest* aRequest, BodyAction aBodyAction,
-           ReferrerAction aReferrerAction, SchemeAction aSchemeAction,
-           Response& aResponse, ErrorResult& aRv);
+           SchemeAction aSchemeAction, Response& aResponse, ErrorResult& aRv);
 
   const CacheOpArgs& SendAsOpArgs();
 

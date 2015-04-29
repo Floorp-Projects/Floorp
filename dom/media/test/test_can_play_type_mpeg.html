@@ -144,7 +144,6 @@ check_mp4(document.getElementById('v'), haveMp4);
 
 var haveMp3 = getPref("media.directshow.enabled") ||
               (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
-               getPref("media.omx.enabled") ||
                getPref("media.gstreamer.enabled") ||
                getPref("media.apple.mp3.enabled");
 check_mp3(document.getElementById('v'), haveMp3);

@@ -2177,6 +2177,26 @@ PluginModuleChild::AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
     return true;
 }
 
+class AsyncNewResultSender : public ChildAsyncCall
+{
+public:
+    AsyncNewResultSender(PluginInstanceChild* aInstance, NPError aResult)
+        : ChildAsyncCall(aInstance, nullptr, nullptr)
+        , mResult(aResult)
+    {
+    }
+
+    void Run() override
+    {
+        RemoveFromAsyncList();
+        DebugOnly<bool> sendOk = mInstance->SendAsyncNPP_NewResult(mResult);
+        MOZ_ASSERT(sendOk);
+    }
+
+private:
+    NPError  mResult;
+};
+
 bool
 PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
 {
@@ -2185,7 +2205,8 @@ PluginModuleChild::RecvAsyncNPP_New(PPluginInstanceChild* aActor)
         reinterpret_cast<PluginInstanceChild*>(aActor);
     AssertPluginThread();
     NPError rv = childInstance->DoNPP_New();
-    childInstance->SendAsyncNPP_NewResult(rv);
+    AsyncNewResultSender* task = new AsyncNewResultSender(childInstance, rv);
+    childInstance->PostChildAsyncCall(task);
     return true;
 }
 

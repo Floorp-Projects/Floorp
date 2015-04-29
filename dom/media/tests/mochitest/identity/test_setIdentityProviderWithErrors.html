@@ -27,9 +27,9 @@ runNetworkTest(function () {
 
   test.chain.append([
     function ONLY_REMOTE_SDP_INCLUDES_IDENTITY_ASSERTION(t) {
-      ok(!t.originalOffer.sdp.contains('a=identity'),
+      ok(!t.originalOffer.sdp.includes('a=identity'),
          'a=identity not contained in the offer SDP');
-      ok(t.originalAnswer.sdp.contains('a=identity'),
+      ok(t.originalAnswer.sdp.includes('a=identity'),
          'a=identity is contained in the answer SDP');
     },
     function PEER_IDENTITY_IS_EMPTY(t) {
