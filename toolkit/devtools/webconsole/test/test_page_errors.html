@@ -72,7 +72,7 @@ let pageErrors = [];
 
 function onPageError(aState, aType, aPacket)
 {
-  if (!aPacket.pageError.sourceName.contains("test_page_errors")) {
+  if (!aPacket.pageError.sourceName.includes("test_page_errors")) {
     info("Ignoring error from unknown source: " + aPacket.pageError.sourceName);
     return;
   }

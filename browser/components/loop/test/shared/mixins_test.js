@@ -229,9 +229,9 @@ describe("loop.shared.mixins", function() {
 
       sandbox.stub(view, "getDOMNode").returns({
         querySelector: function(classSelector) {
-          if (classSelector.contains("local")) {
+          if (classSelector.includes("local")) {
             return localElement;
-          } else if (classSelector.contains("screen")) {
+          } else if (classSelector.includes("screen")) {
             return screenShareElement;
           }
           return remoteElement;
