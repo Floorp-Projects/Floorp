@@ -6,6 +6,38 @@
 const FEED_URI = NetUtil.newURI("http://feed.rss/");
 const SITE_URI = NetUtil.newURI("http://site.org/");
 
+// This test must be the first one, since it's testing the cache.
+add_task(function* test_livemark_cache() {
+  // Add a livemark through other APIs.
+  let folder = yield PlacesUtils.bookmarks.insert({
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    title: "test",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+  });
+  let id = yield PlacesUtils.promiseItemId(folder.guid);
+  PlacesUtils.annotations
+             .setItemAnnotation(id, PlacesUtils.LMANNO_FEEDURI,
+                                "http://example.com/feed",
+                                0, PlacesUtils.annotations.EXPIRE_NEVER);
+  PlacesUtils.annotations
+             .setItemAnnotation(id, PlacesUtils.LMANNO_SITEURI,
+                                "http://example.com/site",
+                                0, PlacesUtils.annotations.EXPIRE_NEVER);
+
+  let livemark = yield PlacesUtils.livemarks.getLivemark({ guid: folder.guid });
+  Assert.equal(folder.guid, livemark.guid);
+  Assert.equal(folder.dateAdded * 1000, livemark.dateAdded);
+  Assert.equal(folder.parentGuid, livemark.parentGuid);
+  Assert.equal(folder.index, livemark.index);
+  Assert.equal(folder.title, livemark.title);
+  Assert.equal(id, livemark.id);
+  Assert.equal(PlacesUtils.unfiledBookmarksFolderId, livemark.parentId);
+  Assert.equal("http://example.com/feed", livemark.feedURI.spec);
+  Assert.equal("http://example.com/site", livemark.siteURI.spec);
+
+  yield PlacesUtils.livemarks.removeLivemark(livemark);
+});
+
 add_task(function* test_addLivemark_noArguments_throws() {
   try {
     yield PlacesUtils.livemarks.addLivemark();

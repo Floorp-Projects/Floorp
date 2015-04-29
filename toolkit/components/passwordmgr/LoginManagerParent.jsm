@@ -1,4 +1,3 @@
-/* vim: set ts=2 sts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -408,6 +407,15 @@ var LoginManagerParent = {
       return prompterSvc;
     }
 
+    function recordLoginUse(login) {
+      // Update the lastUsed timestamp and increment the use count.
+      let propBag = Cc["@mozilla.org/hash-property-bag;1"].
+                    createInstance(Ci.nsIWritablePropertyBag);
+      propBag.setProperty("timeLastUsed", Date.now());
+      propBag.setProperty("timesUsedIncrement", 1);
+      Services.logins.modifyLogin(login, propBag);
+    }
+
     if (!Services.logins.getLoginSavingEnabled(hostname)) {
       log("(form submission ignored -- saving is disabled for:", hostname, ")");
       return;
@@ -431,6 +439,14 @@ var LoginManagerParent = {
 
       if (logins.length == 1) {
         var oldLogin = logins[0];
+
+        if (oldLogin.password == formLogin.password) {
+          recordLoginUse(oldLogin);
+          log("(Not prompting to save/change since we have no username and the " +
+              "only saved password matches the new password)");
+          return;
+        }
+
         formLogin.username      = oldLogin.username;
         formLogin.usernameField = oldLogin.usernameField;
 
@@ -481,12 +497,7 @@ var LoginManagerParent = {
         prompter = getPrompter();
         prompter.promptToChangePassword(existingLogin, formLogin);
       } else {
-        // Update the lastUsed timestamp.
-        var propBag = Cc["@mozilla.org/hash-property-bag;1"].
-                      createInstance(Ci.nsIWritablePropertyBag);
-        propBag.setProperty("timeLastUsed", Date.now());
-        propBag.setProperty("timesUsedIncrement", 1);
-        Services.logins.modifyLogin(existingLogin, propBag);
+        recordLoginUse(existingLogin);
       }
 
       return;
