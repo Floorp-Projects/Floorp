@@ -153,6 +153,18 @@ ArgValueArray::GetBlob(uint32_t aIndex,
 }
 
 NS_IMETHODIMP
+ArgValueArray::GetBlobAsString(uint32_t aIndex, nsAString& aValue)
+{
+  return DoGetBlobAsString(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
+ArgValueArray::GetBlobAsUTF8String(uint32_t aIndex, nsACString& aValue)
+{
+  return DoGetBlobAsString(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
 ArgValueArray::GetIsNull(uint32_t aIndex,
                          bool *_isNull)
 {

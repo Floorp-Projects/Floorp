@@ -833,6 +833,18 @@ Statement::GetBlob(uint32_t aIndex,
 }
 
 NS_IMETHODIMP
+Statement::GetBlobAsString(uint32_t aIndex, nsAString& aValue)
+{
+  return DoGetBlobAsString(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
+Statement::GetBlobAsUTF8String(uint32_t aIndex, nsACString& aValue)
+{
+  return DoGetBlobAsString(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
 Statement::GetSharedUTF8String(uint32_t aIndex,
                                uint32_t *_length,
                                const char **_value)

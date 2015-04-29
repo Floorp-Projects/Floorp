@@ -195,6 +195,18 @@ Row::GetBlob(uint32_t aIndex,
 }
 
 NS_IMETHODIMP
+Row::GetBlobAsString(uint32_t aIndex, nsAString& aValue)
+{
+  return DoGetBlobAsString(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
+Row::GetBlobAsUTF8String(uint32_t aIndex, nsACString& aValue)
+{
+  return DoGetBlobAsString(this, aIndex, aValue);
+}
+
+NS_IMETHODIMP
 Row::GetIsNull(uint32_t aIndex,
                bool *_isNull)
 {

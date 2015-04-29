@@ -14,7 +14,7 @@
  * mozIStorageValueArray wraps an array of SQL values, such as a single database
  * row.
  */
-[scriptable, uuid(07b5b93e-113c-4150-863c-d247b003a55d)]
+[scriptable, uuid(6e6306f4-ffa7-40f5-96ca-36159ce8f431)]
 interface mozIStorageValueArray : nsISupports {
   /**
    * These type values are returned by getTypeOfIndex
@@ -62,6 +62,8 @@ interface mozIStorageValueArray : nsISupports {
 
   // data will be NULL if dataSize = 0
   void getBlob(in unsigned long aIndex, out unsigned long aDataSize, [array,size_is(aDataSize)] out octet aData);
+  AString getBlobAsString(in unsigned long aIndex);
+  AUTF8String getBlobAsUTF8String(in unsigned long aIndex);
   boolean getIsNull(in unsigned long aIndex);
 
   /**
