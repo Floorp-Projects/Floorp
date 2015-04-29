@@ -2088,25 +2088,6 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function(cmd, resp) {
 };
 
 /**
- * Submit a form on a content page by either using form or element in
- * a form.
- *
- * @param {string} id
- *     Reference to the elemen that will be checked.
- */
-GeckoDriver.prototype.submitElement = function(cmd, resp) {
-  switch (this.context) {
-    case Context.CHROME:
-      throw new WebDriverError(
-          "Command 'submitElement' is not available in chrome context");
-
-    case Context.CONTENT:
-      yield this.listener.submitElement({id: cmd.parameters.id});
-      break;
-  }
-};
-
-/**
  * Check if element is enabled.
  *
  * @param {string} id
@@ -2952,7 +2933,6 @@ GeckoDriver.prototype.commands = {
   "getElementTagName": GeckoDriver.prototype.getElementTagName,
   "isElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
   "getElementValueOfCssProperty": GeckoDriver.prototype.getElementValueOfCssProperty,
-  "submitElement": GeckoDriver.prototype.submitElement,
   "getElementSize": GeckoDriver.prototype.getElementSize,  //deprecated
   "getElementRect": GeckoDriver.prototype.getElementRect,
   "isElementEnabled": GeckoDriver.prototype.isElementEnabled,

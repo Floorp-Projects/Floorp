@@ -221,7 +221,6 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
-  addMessageListenerId("Marionette:submitElement", submitElement);
   addMessageListenerId("Marionette:getElementSize", getElementSizeFn);  // deprecated
   addMessageListenerId("Marionette:getElementRect", getElementRectFn);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
@@ -326,7 +325,6 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
-  removeMessageListenerId("Marionette:submitElement", submitElement);
   removeMessageListenerId("Marionette:getElementSize", getElementSizeFn); // deprecated
   removeMessageListenerId("Marionette:getElementRect", getElementRectFn);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
@@ -1449,29 +1447,6 @@ function getElementValueOfCssProperty(msg) {
     let el = elementManager.getKnownElement(msg.json.id, curFrame);
     sendResponse({value: curFrame.document.defaultView.getComputedStyle(el, null).getPropertyValue(propertyName)},
                  command_id);
-  } catch (e) {
-    sendError(e, command_id);
-  }
-}
-
-/**
-  * Submit a form on a content page by either using form or element in a form
-  * @param object msg
-  *               'json' JSON object containing 'id' member of the element
-  */
-function submitElement (msg) {
-  let command_id = msg.json.command_id;
-  try {
-    let el = elementManager.getKnownElement(msg.json.id, curFrame);
-    while (el.parentNode != null && el.tagName.toLowerCase() != 'form') {
-      el = el.parentNode;
-    }
-    if (el.tagName && el.tagName.toLowerCase() == 'form') {
-      el.submit();
-      sendOk(command_id);
-    } else {
-      sendError(new NoSuchElementError("Element is not a form element or in a form"), command_id);
-    }
   } catch (e) {
     sendError(e, command_id);
   }
