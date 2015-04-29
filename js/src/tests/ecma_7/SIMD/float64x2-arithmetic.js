@@ -52,7 +52,8 @@ function test() {
   for ([v, w] of [[float64x2(1, 2), float64x2(3, 4)],
                   [float64x2(1.894, 2.8909), float64x2(100.764, 200.987)],
                   [float64x2(-1, -2), float64x2(-14.54, 57)],
-                  [float64x2(+Infinity, -Infinity), float64x2(NaN, -0)]])
+                  [float64x2(+Infinity, -Infinity), float64x2(NaN, -0)],
+                  [float64x2(Math.pow(2, 31), Math.pow(2, -31)), float64x2(Math.pow(2, -1047), Math.pow(2, -149))]])
   {
       testAdd(v, w);
       testSub(v, w);
