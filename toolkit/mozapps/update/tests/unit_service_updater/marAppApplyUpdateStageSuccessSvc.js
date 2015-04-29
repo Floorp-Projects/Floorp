@@ -202,7 +202,7 @@ function finishCheckUpdateApplied() {
 
   checkPostUpdateRunningFile(true);
   checkAppBundleModTime();
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   gSwitchApp = true;
   checkUpdateLogContents();
   gSwitchApp = false;
