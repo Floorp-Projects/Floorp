@@ -61,6 +61,11 @@ MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                         MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShuttingDown) {
+    return;
+  }
+
   MediaDecoder::FirstFrameLoaded(aInfo, aEventVisibility);
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -98,6 +103,11 @@ MediaOmxCommonDecoder::PauseStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   DECODER_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
+
+  if (mShuttingDown) {
+    return;
+  }
+
   if (!GetStateMachine()) {
     return;
   }
@@ -117,6 +127,10 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   DECODER_LOG(PR_LOG_DEBUG, ("%s current time %f", __PRETTY_FUNCTION__,
       mCurrentTime));
+
+  if (mShuttingDown) {
+    return;
+  }
 
   if (!GetStateMachine()) {
     return;
