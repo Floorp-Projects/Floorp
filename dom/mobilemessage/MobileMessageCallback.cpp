@@ -17,6 +17,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsTArrayHelpers.h"
 #include "DOMMobileMessageError.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {
@@ -77,6 +78,11 @@ NS_INTERFACE_MAP_END
 
 MobileMessageCallback::MobileMessageCallback(DOMRequest* aDOMRequest)
   : mDOMRequest(aDOMRequest)
+{
+}
+
+MobileMessageCallback::MobileMessageCallback(Promise* aPromise)
+  : mPromise(aPromise)
 {
 }
 
@@ -278,6 +284,21 @@ NS_IMETHODIMP
 MobileMessageCallback::NotifyGetSmscAddressFailed(int32_t aError)
 {
   return NotifyError(aError);
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifySetSmscAddress()
+{
+  mPromise->MaybeResolve(JS::UndefinedHandleValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifySetSmscAddressFailed(int32_t aError)
+{
+  const nsAString& errorStr = ConvertErrorCodeToErrorString(aError);
+  mPromise->MaybeRejectBrokenly(errorStr);
+  return NS_OK;
 }
 
 } // namesapce mobilemessage
