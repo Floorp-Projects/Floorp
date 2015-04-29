@@ -3625,9 +3625,17 @@ public:
               nscoord aVisIStartEdge, nscoord aVisIEndEdge) {
       nsRect r = aItem.Frame()->GetScrollableOverflowRect() +
                  aItem.ToReferenceFrame();
-      mVisIStart = aVisIStartEdge > 0 ? r.x + aVisIStartEdge : nscoord_MIN;
-      mVisIEnd = aVisIEndEdge > 0
-                 ? std::max(r.XMost() - aVisIEndEdge, mVisIStart) : nscoord_MAX;
+      if (aItem.Frame()->GetWritingMode().IsVertical()) {
+        mVisIStart = aVisIStartEdge > 0 ? r.y + aVisIStartEdge : nscoord_MIN;
+        mVisIEnd =
+          aVisIEndEdge > 0 ? std::max(r.YMost() - aVisIEndEdge, mVisIStart)
+                           : nscoord_MAX;
+      } else {
+        mVisIStart = aVisIStartEdge > 0 ? r.x + aVisIStartEdge : nscoord_MIN;
+        mVisIEnd =
+          aVisIEndEdge > 0 ? std::max(r.XMost() - aVisIEndEdge, mVisIStart)
+                           : nscoord_MAX;
+      }
     }
     void Intersect(nscoord* aVisIStart, nscoord* aVisISize) const {
       nscoord end = *aVisIStart + *aVisISize;
