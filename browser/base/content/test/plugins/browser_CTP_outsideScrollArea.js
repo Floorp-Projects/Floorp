@@ -1,120 +1,125 @@
-let rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-let gTestBrowser = null;
-let gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+var rootDir = getRootDirectory(gTestPath);
+const gTestRoot = rootDir;
+const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
-add_task(function* () {
-  registerCleanupFunction(function () {
+var gTestBrowser = null;
+var gNextTest = null;
+var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+var gRunNextTestAfterPluginRemoved = false;
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+function test() {
+  waitForExplicitFinish();
+  registerCleanupFunction(function() {
     clearAllPluginPermissions();
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
-    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
-    gBrowser.removeCurrentTab();
-    window.focus();
-    gTestBrowser = null;
   });
-});
-
-add_task(function* () {
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
-  let newTab = gBrowser.addTab();
+  var newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
+  gTestBrowser.addEventListener("load", pageLoad, true);
 
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 1, Should not have a click-to-play notification");
-});
+  prepareTest(test1, gHttpTestRoot + "plugin_outsideScrollArea.html");
+}
+
+function finishTest() {
+  clearAllPluginPermissions();
+  gTestBrowser.removeEventListener("load", pageLoad, true);
+  gBrowser.removeCurrentTab();
+  window.focus();
+  finish();
+}
+
+function pageLoad() {
+  // The plugin events are async dispatched and can come after the load event
+  // This just allows the events to fire before we then go on to test the states
+  executeSoon(gNextTest);
+}
+
+function prepareTest(nextTest, url) {
+  gNextTest = nextTest;
+  gTestBrowser.contentWindow.location = url;
+}
+
+// Due to layout being async, "PluginBindAttached" may trigger later.
+// This wraps a function to force a layout flush, thus triggering it,
+// and schedules the function execution so they're definitely executed
+// afterwards.
+function runAfterPluginBindingAttached(func) {
+  return function() {
+    let doc = gTestBrowser.contentDocument;
+    let elems = doc.getElementsByTagName('embed');
+    if (elems.length < 1) {
+      elems = doc.getElementsByTagName('object');
+    }
+    elems[0].clientTop;
+    executeSoon(func);
+  };
+}
+
+// Add plugin relative to bottom-left corner of #container.
+function addPlugin(x, y) {
+  let doc = gTestBrowser.contentDocument;
+  let p = doc.createElement('embed');
+
+  p.setAttribute('id', 'test');
+  p.setAttribute('type', 'application/x-test');
+  p.style.left = x.toString() + 'px';
+  p.style.bottom = y.toString() + 'px';
+
+  doc.getElementById('container').appendChild(p);
+}
 
 // Test that the click-to-play overlay is not hidden for elements
 // partially or fully outside the viewport.
 
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
+function test1() {
+  addPlugin(0, -200);
+  executeSoon(runAfterPluginBindingAttached(test2));
+}
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let doc = content.document;
-    let p = doc.createElement('embed');
+function test2() {
+  let doc = gTestBrowser.contentDocument;
+  let plugin = doc.getElementById("test");
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(overlay, "Test 2, Should have an overlay.");
+  ok(overlay.classList.contains("visible"), "Test 2, Overlay should be visible");
 
-    p.setAttribute('id', 'test');
-    p.setAttribute('type', 'application/x-test');
-    p.style.left = "0";
-    p.style.bottom = "200px";
+  prepareTest(test3, gHttpTestRoot + "plugin_outsideScrollArea.html");
+}
 
-    doc.getElementById('container').appendChild(p);
-  });
+function test3() {
+  addPlugin(0, -410);
+  executeSoon(runAfterPluginBindingAttached(test4));
+}
 
-  // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
+function test4() {
+  let doc = gTestBrowser.contentDocument;
+  let plugin = doc.getElementById("test");
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(overlay, "Test 4, Should have an overlay.");
+  ok(overlay.classList.contains("visible"), "Test 4, Overlay should be visible");
 
-  yield promisePopupNotification("click-to-play-plugins");
+  prepareTest(test5, gHttpTestRoot + "plugin_outsideScrollArea.html");
+}
 
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let plugin = content.document.getElementById("test");
-    let doc = content.document;
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
-  });
-  ok(result, "Test 2, overlay should be visible.");
-});
+function test5() {
+  addPlugin(-600, 0);
+  executeSoon(runAfterPluginBindingAttached(test6));
+}
 
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
+function test6() {
+  let doc = gTestBrowser.contentDocument;
+  let plugin = doc.getElementById("test");
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(overlay, "Test 6, Should have an overlay.");
+  ok(!overlay.classList.contains("visible"), "Test 6, Overlay should be hidden");
 
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let doc = content.document;
-    let p = doc.createElement('embed');
-
-    p.setAttribute('id', 'test');
-    p.setAttribute('type', 'application/x-test');
-    p.style.left = "0";
-    p.style.bottom = "-410px";
-
-    doc.getElementById('container').appendChild(p);
-  });
-
-  // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
-
-  yield promisePopupNotification("click-to-play-plugins");
-
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let plugin = content.document.getElementById("test");
-    let doc = content.document;
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
-  });
-  ok(result, "Test 3, overlay should be visible.");
-});
-
-add_task(function* () {
-  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_outsideScrollArea.html");
-
-  yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let doc = content.document;
-    let p = doc.createElement('embed');
-
-    p.setAttribute('id', 'test');
-    p.setAttribute('type', 'application/x-test');
-    p.style.left = "-600px";
-    p.style.bottom = "0";
-
-    doc.getElementById('container').appendChild(p);
-  });
-
-  // Work around for delayed PluginBindingAttached
-  yield promiseUpdatePluginBindings(gTestBrowser);
-
-  yield promisePopupNotification("click-to-play-plugins");
-  let result = yield ContentTask.spawn(gTestBrowser, {}, function* () {
-    let plugin = content.document.getElementById("test");
-    let doc = content.document;
-    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-    return overlay && overlay.classList.contains("visible");
-  });
-  ok(!result, "Test 4, overlay should be hidden.");
-});
+  finishTest();
+}
