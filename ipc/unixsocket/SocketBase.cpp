@@ -345,5 +345,22 @@ SocketIORequestClosingRunnable::Run()
   return NS_OK;
 }
 
+//
+// SocketIODeleteInstanceRunnable
+//
+
+SocketIODeleteInstanceRunnable::SocketIODeleteInstanceRunnable(
+  SocketIOBase* aIO)
+  : mIO(aIO)
+{ }
+
+NS_METHOD
+SocketIODeleteInstanceRunnable::Run()
+{
+  mIO = nullptr; // delete instance
+
+  return NS_OK;
+}
+
 }
 }
