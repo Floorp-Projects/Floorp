@@ -10,7 +10,7 @@
         "@mozilla.org/sms/gonksmsservice;1"
 %}
 
-[scriptable, uuid(4dda515e-05ec-47b1-b750-e42c74576c43)]
+[scriptable, uuid(76681431-8261-4540-bab8-24ef3866e8b6)]
 interface nsIGonkSmsService : nsISmsService
 {
   const unsigned short SMS_MESSAGE_ENCODING_7BITS_ALPHABET = 0x00;
