@@ -60,8 +60,6 @@ public:
 
   virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) override;
 
-  void InitWith(MaybeMagicGrallocBufferHandle aDesc, gfx::IntSize aSize);
-
   void SetTextureFlags(TextureFlags aFlags) { AddFlags(aFlags); }
 
   gfx::IntSize GetSize() const override { return mSize; }
