@@ -2383,7 +2383,7 @@ pref("dom.ipc.plugins.timeoutSecs", 45);
 pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 // How long a plugin in e10s is allowed to process a synchronous IPC
 // message before we notify the chrome process of a hang.
-pref("dom.ipc.plugins.contentTimeoutSecs", 45);
+pref("dom.ipc.plugins.contentTimeoutSecs", 10);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
