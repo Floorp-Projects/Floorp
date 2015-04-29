@@ -723,8 +723,6 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     // |metrics.CalculateCompositedSizeInCssPixels()| would not give a correct
     // result.
     const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().yScale * asyncZoomY);
-    const CSSCoord compositedHeight = (metrics.mCompositionBounds / effectiveZoom).height;
-    const CSSCoord scrollableHeight = metrics.GetScrollableRect().height;
 
     const LayoutDeviceToParentLayerScale nonLayoutScale = effectiveZoom /
         metrics.GetDevPixelsPerCSSPixel();
@@ -745,7 +743,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     // a change of basis. We have a method to help with that,
     // Matrix4x4::ChangeBasis(), but it wouldn't necessarily make the code
     // cleaner in this case).
-    const CSSCoord thumbOrigin = (metrics.GetScrollOffset().y / scrollableHeight) * compositedHeight;
+    const CSSCoord thumbOrigin = (metrics.GetScrollOffset().y * ratio);
     const CSSCoord thumbOriginScaled = thumbOrigin * yScale;
     const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
     const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
@@ -774,15 +772,13 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const float xScale = 1.f / asyncZoomX;
 
     const CSSToParentLayerScale effectiveZoom(metrics.GetZoom().xScale * asyncZoomX);
-    const CSSCoord compositedWidth = (metrics.mCompositionBounds / effectiveZoom).width;
-    const CSSCoord scrollableWidth = metrics.GetScrollableRect().width;
 
     const LayoutDeviceToParentLayerScale nonLayoutScale = effectiveZoom /
         metrics.GetDevPixelsPerCSSPixel();
     const float ratio = aScrollbar->GetScrollbarThumbRatio() / nonLayoutScale.scale;
     ParentLayerCoord xTranslation = -asyncScrollX * ratio;
 
-    const CSSCoord thumbOrigin = (metrics.GetScrollOffset().x / scrollableWidth) * compositedWidth;
+    const CSSCoord thumbOrigin = (metrics.GetScrollOffset().x * ratio);
     const CSSCoord thumbOriginScaled = thumbOrigin * xScale;
     const CSSCoord thumbOriginDelta = thumbOriginScaled - thumbOrigin;
     const ParentLayerCoord thumbOriginDeltaPL = thumbOriginDelta * effectiveZoom;
