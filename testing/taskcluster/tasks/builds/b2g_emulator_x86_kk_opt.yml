@@ -5,7 +5,6 @@ $inherits:
     build_type: 'opt'
 task:
   workerType: emualtor-x86-kk
-  provisionerId: aws-provisioner-v1
   scopes:
     - 'docker-worker:cache:workspace-emulator-kk-x86-opt'
   metadata:

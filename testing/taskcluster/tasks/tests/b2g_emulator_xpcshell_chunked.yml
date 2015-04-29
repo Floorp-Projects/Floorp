@@ -7,7 +7,6 @@ task:
     description: XPCShell test run {{chunk}}
 
   workerType: b2gtest-emulator
-  provisionerId: aws-provisioner-v1
   payload:
     maxRunTime: 6000
     command:
