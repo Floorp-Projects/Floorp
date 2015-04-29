@@ -14,11 +14,6 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
-using namespace mozilla::tasktracer;
-#endif
-
 namespace mozilla {
 namespace ipc {
 
