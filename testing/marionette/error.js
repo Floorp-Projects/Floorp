@@ -9,8 +9,6 @@ const {results: Cr, utils: Cu} = Components;
 const errors = [
   "ElementNotAccessibleError",
   "ElementNotVisibleError",
-  "FrameSendFailureError",
-  "FrameSendNotInitializedError",
   "InvalidArgumentError",
   "InvalidElementStateError",
   "InvalidSelectorError",
@@ -168,26 +166,6 @@ this.ElementNotVisibleError = function(msg) {
   this.status = "element not visible";
 };
 ElementNotVisibleError.prototype = Object.create(WebDriverError.prototype);
-
-this.FrameSendFailureError = function(frame) {
-  this.message = "Error sending message to frame (NS_ERROR_FAILURE)";
-  WebDriverError.call(this, this.message);
-  this.name = "FrameSendFailureError";
-  this.status = "frame send failure error";
-  this.frame = frame;
-  this.errMsg = `${this.message} ${this.frame}; frame not responding.`;
-};
-FrameSendFailureError.prototype = Object.create(WebDriverError.prototype);
-
-this.FrameSendNotInitializedError = function(frame) {
-  this.message = "Error sending message to frame (NS_ERROR_NOT_INITIALIZED)";
-  WebDriverError.call(this, this.message);
-  this.name = "FrameSendNotInitializedError";
-  this.status = "frame send not initialized error";
-  this.frame = frame;
-  this.errMsg = `${this.message} ${this.frame}; frame has closed.`;
-};
-FrameSendNotInitializedError.prototype = Object.create(WebDriverError.prototype);
 
 this.InvalidArgumentError = function(msg) {
   WebDriverError.call(this, msg);

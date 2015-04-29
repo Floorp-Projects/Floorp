@@ -233,9 +233,8 @@ GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
     } catch (e) {
       switch(e.result) {
         case Components.results.NS_ERROR_FAILURE:
-          throw new FrameSendFailureError(curRemoteFrame);
         case Components.results.NS_ERROR_NOT_INITIALIZED:
-          throw new FrameSendNotInitializedError(curRemoteFrame);
+          throw new NoSuchWindowError();
         default:
           throw new WebDriverError(e.toString());
       }
@@ -283,8 +282,7 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
     if (e.target.id == this.oopFrameId) {
       win.removeEventListener("mozbrowserclose", this.mozBrowserClose, true);
       this.switchToGlobalMessageManager();
-      throw new FrameSendFailureError(
-          `The frame closed during the ${action}, recovering to allow further communications`);
+      throw new NoSuchWindowError("The window closed during action: " + action);
     }
   };
   win.addEventListener("mozbrowserclose", this.mozBrowserClose, true);
