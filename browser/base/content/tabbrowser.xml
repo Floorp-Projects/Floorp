@@ -3763,6 +3763,7 @@
                                           contentType: aMessage.data.contentType,
                                           contentDisposition: aMessage.data.contentDisposition,
                                           frameOuterWindowID: aMessage.data.frameOuterWindowID,
+                                          selectionInfo: aMessage.data.selectionInfo,
                                         };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;

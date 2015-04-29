@@ -114,6 +114,8 @@ let handleContentContextMenu = function (event) {
     }
   }
 
+  let selectionInfo = BrowserUtils.getSelectionDetails(content);
+
   if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
     let editFlags = SpellCheckHelper.isEditable(event.target, content);
     let spellInfo;
@@ -136,7 +138,7 @@ let handleContentContextMenu = function (event) {
                     { editFlags, spellInfo, customMenuItems, addonInfo,
                       principal, docLocation, charSet, baseURI, referrer,
                       referrerPolicy, contentType, contentDisposition,
-                      frameOuterWindowID },
+                      frameOuterWindowID, selectionInfo },
                     { event, popupNode: event.target });
   }
   else {
@@ -156,6 +158,7 @@ let handleContentContextMenu = function (event) {
       referrerPolicy: referrerPolicy,
       contentType: contentType,
       contentDisposition: contentDisposition,
+      selectionInfo: selectionInfo,
     };
   }
 }
