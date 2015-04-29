@@ -105,5 +105,19 @@ add_task(function* test_notification_incomplete() {
   let storeRecords = yield promiseDB.getAllChannelIDs();
   storeRecords.sort(({pushEndpoint: a}, {pushEndpoint: b}) =>
     compareAscending(a, b));
-  deepEqual(records, storeRecords, 'Should not update malformed records');
+  recordsAreEqual(records, storeRecords);
 });
+
+function recordIsEqual(a, b) {
+  strictEqual(a.channelID, b.channelID, 'Wrong channel ID in record');
+  strictEqual(a.pushEndpoint, b.pushEndpoint, 'Wrong push endpoint in record');
+  strictEqual(a.scope, b.scope, 'Wrong scope in record');
+  strictEqual(a.version, b.version, 'Wrong version in record');
+}
+
+function recordsAreEqual(a, b) {
+  equal(a.length, b.length, 'Mismatched record count');
+  for (let i = 0; i < a.length; i++) {
+    recordIsEqual(a[i], b[i]);
+  }
+}
