@@ -5278,51 +5278,17 @@ function UpdateDynamicShortcutTooltipText(aTooltip) {
   aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
 }
 
-/**
- * Gets the selected text in the active browser. Leading and trailing
- * whitespace is removed, and consecutive whitespace is replaced by a single
- * space. A maximum of 150 characters will be returned, regardless of the value
- * of aCharLen.
- *
- * @param aCharLen
- *        The maximum number of characters to return.
- */
 function getBrowserSelection(aCharLen) {
-  // selections of more than 150 characters aren't useful
-  const kMaxSelectionLen = 150;
-  const charLen = Math.min(aCharLen || kMaxSelectionLen, kMaxSelectionLen);
+  Deprecated.warning("getBrowserSelection",
+                     "https://bugzilla.mozilla.org/show_bug.cgi?id=1134769");
 
-  let [element, focusedWindow] = BrowserUtils.getFocusSync(document);
-  var selection = focusedWindow.getSelection().toString();
-  // try getting a selected text in text input.
-  if (!selection) {
-    var isOnTextInput = function isOnTextInput(elem) {
-      // we avoid to return a value if a selection is in password field.
-      // ref. bug 565717
-      return elem instanceof HTMLTextAreaElement ||
-             (elem instanceof HTMLInputElement && elem.mozIsTextField(true));
-    };
-
-    if (isOnTextInput(element)) {
-      selection = element.QueryInterface(Ci.nsIDOMNSEditableElement)
-                         .editor.selection.toString();
-    }
+  let focusedElement = document.activeElement;
+  if (focusedElement && focusedElement.localName == "browser" &&
+      focusedElement.isRemoteBrowser) {
+    throw "getBrowserSelection doesn't support child process windows";
   }
 
-  if (selection) {
-    if (selection.length > charLen) {
-      // only use the first charLen important chars. see bug 221361
-      var pattern = new RegExp("^(?:\\s*.){0," + charLen + "}");
-      pattern.test(selection);
-      selection = RegExp.lastMatch;
-    }
-
-    selection = selection.trim().replace(/\s+/g, " ");
-
-    if (selection.length > charLen)
-      selection = selection.substr(0, charLen);
-  }
-  return selection;
+  return BrowserUtils.getSelectionDetails(window, aCharLen).text;
 }
 
 var gWebPanelURI;
