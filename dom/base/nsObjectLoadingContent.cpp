@@ -3258,9 +3258,8 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   }
 
   // Before we check permissions, get the blocklist state of this plugin to set
-  // the fallback reason correctly. In the content process this will involve
-  // an ipc call to chrome.
-  uint32_t blocklistState = nsIBlocklistService::STATE_BLOCKED;
+  // the fallback reason correctly.
+  uint32_t blocklistState = nsIBlocklistService::STATE_NOT_BLOCKED;
   pluginHost->GetBlocklistStateForType(mContentType,
                                        nsPluginHost::eExcludeNone,
                                        &blocklistState);
