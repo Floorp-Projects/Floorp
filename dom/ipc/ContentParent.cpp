@@ -160,9 +160,6 @@
 #include "private/pprio.h"
 #include "ContentProcessManager.h"
 #include "mozilla/psm/PSMContentListener.h"
-#include "nsPluginHost.h"
-#include "nsPluginTags.h"
-#include "nsIBlocklistService.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -1083,25 +1080,6 @@ ContentParent::RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv)
     // pointer and just throw it away.
     uint32_t dummy = 0;
     return mozilla::plugins::SetupBridge(aPluginId, this, true, aRv, &dummy);
-}
-
-bool
-ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
-                                     uint32_t* aState)
-{
-    *aState = nsIBlocklistService::STATE_BLOCKED;
-
-    nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-    if (!pluginHost) {
-        return false;
-    }
-    nsPluginTag* tag =  pluginHost->PluginWithId(aPluginId);
-
-    if (!tag) {
-        return false;
-    }
-
-    return NS_SUCCEEDED(tag->GetBlocklistState(aState));
 }
 
 bool

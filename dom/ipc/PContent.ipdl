@@ -700,11 +700,6 @@ parent:
     sync ConnectPluginBridge(uint32_t aPluginId) returns (nsresult rv);
 
     /**
-     * Return the current blocklist state for a particular plugin.
-     */
-    sync GetBlocklistState(uint32_t aPluginId) returns (uint32_t aState);
-
-    /**
      * This call returns the set of plugins loaded in the chrome
      * process. However, in many cases this set will not have changed since the
      * last FindPlugins message. Consequently, the chrome process increments an
