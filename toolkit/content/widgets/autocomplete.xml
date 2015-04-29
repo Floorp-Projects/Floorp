@@ -713,9 +713,9 @@
 
           var height = rows * bx.rowHeight;
 
-          if (height == 0)
+          if (height == 0) {
             this.tree.setAttribute("collapsed", "true");
-          else {
+          } else {
             if (this.tree.hasAttribute("collapsed"))
               this.tree.removeAttribute("collapsed");
 
