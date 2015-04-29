@@ -46,17 +46,10 @@ public:
     ReadBody
   };
 
-  enum ReferrerAction
-  {
-    PassThroughReferrer,
-    ExpandReferrer
-  };
-
   enum SchemeAction
   {
     IgnoreInvalidScheme,
-    TypeErrorOnInvalidScheme,
-    NetworkErrorOnInvalidScheme
+    TypeErrorOnInvalidScheme
   };
 
   ~TypeUtils() { }
@@ -80,8 +73,8 @@ public:
 
   void
   ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
-                 BodyAction aBodyAction, ReferrerAction aReferrerAction,
-                 SchemeAction aSchemeAction, ErrorResult& aRv);
+                 BodyAction aBodyAction, SchemeAction aSchemeAction,
+                 ErrorResult& aRv);
 
   void
   ToCacheResponseWithoutBody(CacheResponse& aOut, InternalResponse& aIn,
@@ -106,6 +99,10 @@ public:
   static already_AddRefed<InternalHeaders>
   ToInternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
                     HeadersGuardEnum aGuard = HeadersGuardEnum::None);
+
+  static void
+  ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
+             nsAString* aUrlWithoutQueryOut, ErrorResult& aRv);
 
 private:
   void

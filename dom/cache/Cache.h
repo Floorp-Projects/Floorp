@@ -50,10 +50,11 @@ public:
   MatchAll(const Optional<RequestOrUSVString>& aRequest,
            const CacheQueryOptions& aOptions, ErrorResult& aRv);
   already_AddRefed<Promise>
-  Add(const RequestOrUSVString& aRequest, ErrorResult& aRv);
+  Add(JSContext* aContext, const RequestOrUSVString& aRequest,
+      ErrorResult& aRv);
   already_AddRefed<Promise>
-  AddAll(const Sequence<OwningRequestOrUSVString>& aRequests,
-         ErrorResult& aRv);
+  AddAll(JSContext* aContext,
+         const Sequence<OwningRequestOrUSVString>& aRequests, ErrorResult& aRv);
   already_AddRefed<Promise>
   Put(const RequestOrUSVString& aRequest, Response& aResponse,
       ErrorResult& aRv);
@@ -85,6 +86,8 @@ public:
   CreatePushStream(nsIAsyncInputStream* aStream) override;
 
 private:
+  class FetchHandler;
+
   ~Cache();
 
   // Called when we're destroyed or CCed.
@@ -92,6 +95,15 @@ private:
 
   already_AddRefed<Promise>
   ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  AddAll(const GlobalObject& aGlobal, nsTArray<nsRefPtr<Request>>&& aRequestList,
+         ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  PutAll(const nsTArray<nsRefPtr<Request>>& aRequestList,
+         const nsTArray<nsRefPtr<Response>>& aResponseList,
+         ErrorResult& aRv);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   CacheChild* mActor;
