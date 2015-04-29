@@ -23,7 +23,7 @@ function init()
 {
     description('Verify npot video');
 
-    if (navigator.userAgent.contains("Android")) {
+    if (navigator.userAgent.includes("Android")) {
         SimpleTest.expectAssertions(4); // bug 1143227
     }
 

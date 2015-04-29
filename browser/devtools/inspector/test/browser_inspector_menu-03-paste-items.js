@@ -60,7 +60,7 @@ add_task(function* () {
     info("Waiting for inspector selection to update");
     yield onNodeReselected;
 
-    ok(content.document.body.outerHTML.contains(clipboard.get()),
+    ok(content.document.body.outerHTML.includes(clipboard.get()),
        "Clipboard content was pasted into the node's outer HTML.");
     ok(!getNode(outerHTMLSelector, { expectNoMatch: true }),
       "The original node was removed.");

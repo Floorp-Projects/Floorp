@@ -2,7 +2,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 function serviceWorkerTestExec(testFile) {
-  var isB2G = !navigator.userAgent.contains("Android") &&
+  var isB2G = !navigator.userAgent.includes("Android") &&
               /Mobile|Tablet/.test(navigator.userAgent);
   if (isB2G) {
     // TODO B2G doesn't support running service workers for now due to bug 1137683.
