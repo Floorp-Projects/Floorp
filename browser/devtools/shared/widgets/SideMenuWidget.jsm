@@ -400,6 +400,15 @@ SideMenuWidget.prototype = {
       return;
     }
 
+    // Don't show the menu if a descendant node is going to be visible also.
+    let node = e.originalTarget;
+    while (node && node !== this._list) {
+      if (node.hasAttribute("contextmenu")) {
+        return;
+      }
+      node = node.parentNode;
+    }
+
     this._contextMenu.openPopupAtScreen(e.screenX, e.screenY, true);
   },
 

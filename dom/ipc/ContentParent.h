@@ -793,6 +793,10 @@ private:
     virtual bool RecvNotifyKeywordSearchLoading(const nsString &aProvider,
                                                 const nsString &aKeyword) override;
 
+    virtual bool RecvCopyFavicon(const URIParams& aOldURI,
+                                 const URIParams& aNewURI,
+                                 const bool& aInPrivateBrowsing) override;
+
     virtual void ProcessingError(Result aCode, const char* aMsgName) override;
 
     virtual bool RecvAllocateLayerTreeId(uint64_t* aId) override;

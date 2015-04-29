@@ -101,7 +101,7 @@ function test() {
     return finished;
   }
 
-  function initialChecks() {
+  let initialChecks = Task.async(function*() {
     for (let source of gSources) {
       for (let breakpoint of source) {
         ok(gBreakpoints._getAdded(breakpoint.attachment),
@@ -118,6 +118,17 @@ function test() {
         let enableSelfId = prefix + "enableSelf-" + identifier + "-menuitem";
         let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
 
+        // Check to make sure that only the bp context menu is shown when right clicking
+        // this node (Bug 1159276).
+        let menu = gDebugger.document.getElementById("bp-mPop-" + identifier);
+        let contextMenuShown = once(gDebugger.document, "popupshown");
+        EventUtils.synthesizeMouseAtCenter(breakpoint.prebuiltNode, {type: 'contextmenu', button: 2}, gDebugger);
+        let event = yield contextMenuShown;
+        is (event.originalTarget.id, menu.id, "The correct context menu was shown");
+        let contextMenuHidden = once(gDebugger.document, "popuphidden");
+        menu.hidePopup();
+        yield contextMenuHidden;
+
         is(gDebugger.document.getElementById(enableSelfId).getAttribute("hidden"), "true",
           "The 'Enable breakpoint' context menu item should initially be hidden'.");
         ok(!gDebugger.document.getElementById(disableSelfId).hasAttribute("hidden"),
@@ -126,7 +137,7 @@ function test() {
           "All breakpoints should initially have a checked checkbox.");
       }
     }
-  }
+  });
 
   function checkBreakpointToggleSelf(aIndex) {
     let deferred = promise.defer();

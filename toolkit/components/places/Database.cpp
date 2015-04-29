@@ -28,6 +28,8 @@
 #include "mozilla/Services.h"
 #include "prtime.h"
 
+#include "nsXULAppAPI.h"
+
 // Time between corrupt database backups.
 #define RECENT_BACKUP_TIME_MICROSEC (int64_t)86400 * PR_USEC_PER_SEC // 24H
 
@@ -346,6 +348,8 @@ Database::Database()
   , mShuttingDown(false)
   , mClosed(false)
 {
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Content,
+             "Cannot instantiate Places in the content process");
   // Attempting to create two instances of the service?
   MOZ_ASSERT(!gDatabase);
   gDatabase = this;

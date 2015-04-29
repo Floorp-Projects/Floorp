@@ -39,6 +39,7 @@ EXTRA_JS_MODULES += [
     'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
+    'TransientPrefs.jsm',
     'WebappManager.jsm',
     'webrtcUI.jsm',
 ]

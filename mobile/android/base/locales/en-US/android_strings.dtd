@@ -149,8 +149,6 @@
      it is applicable. -->
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
 <!ENTITY pref_category_devtools "Developer tools">
-<!ENTITY pref_category_devtools_summary "Remote debugging, paint flashing">
-<!ENTITY pref_developer_paint_flashing "Paint flashing">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_category_logins "Logins">
 <!ENTITY pref_remember_signons "Remember passwords">
