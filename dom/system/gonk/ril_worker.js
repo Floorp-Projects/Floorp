@@ -1977,34 +1977,6 @@ RilObject.prototype = {
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
     switch (sc) {
-      // Call forwarding
-      case MMI_SC_CFU:
-      case MMI_SC_CF_BUSY:
-      case MMI_SC_CF_NO_REPLY:
-      case MMI_SC_CF_NOT_REACHABLE:
-      case MMI_SC_CF_ALL:
-      case MMI_SC_CF_ALL_CONDITIONAL:
-        if (!_isRadioAvailable()) {
-          return;
-        }
-        // Call forwarding requires at least an action, given by the MMI
-        // procedure, and a reason, given by the MMI service code, but there
-        // is no way that we get this far without a valid procedure or service
-        // code.
-        options.action = MMI_PROC_TO_CF_ACTION[mmi.procedure];
-        options.reason = MMI_SC_TO_CF_REASON[sc];
-        options.number = mmi.sia;
-        options.serviceClass = this._siToServiceClass(mmi.sib);
-        if (options.action == CALL_FORWARD_ACTION_QUERY_STATUS) {
-          this.queryCallForwardStatus(options);
-          return;
-        }
-
-        options.isSetCallForward = true;
-        options.timeSeconds = mmi.sic;
-        this.setCallForward(options);
-        return;
-
       // Change the current ICC PIN number.
       case MMI_SC_PIN:
         // As defined in TS.122.030 6.6.2 to change the ICC PIN we should expect
@@ -3614,7 +3586,7 @@ RilObject.prototype = {
       case 25:
         return ICC_SERVICE_CLASS_DATA_ASYNC;
       case 26:
-        return ICC_SERVICE_CLASS_DATA_SYNC + SERVICE_CLASS_VOICE;
+        return ICC_SERVICE_CLASS_DATA_SYNC + ICC_SERVICE_CLASS_VOICE;
       case 99:
         return ICC_SERVICE_CLASS_PACKET;
       default:
@@ -4891,33 +4863,10 @@ RilObject.prototype[REQUEST_QUERY_CALL_FORWARD_STATUS] =
     rules[i] = rule;
   }
   options.rules = rules;
-  if (options.rilMessageType === "sendMMI") {
-    options.statusMessage = MMI_SM_KS_SERVICE_INTERROGATED;
-    // MMI query call forwarding options request returns a set of rules that
-    // will be exposed in the form of an array of MozCallForwardingOptions
-    // instances.
-    options.additionalInformation = rules;
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_CALL_FORWARD] =
     function REQUEST_SET_CALL_FORWARD(length, options) {
-  if (!options.errorMsg && options.rilMessageType === "sendMMI") {
-    switch (options.action) {
-      case CALL_FORWARD_ACTION_ENABLE:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      case CALL_FORWARD_ACTION_DISABLE:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-      case CALL_FORWARD_ACTION_REGISTRATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_REGISTERED;
-        break;
-      case CALL_FORWARD_ACTION_ERASURE:
-        options.statusMessage = MMI_SM_KS_SERVICE_ERASED;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_QUERY_CALL_WAITING] =
