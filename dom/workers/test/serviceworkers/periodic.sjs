@@ -1,4 +1,8 @@
 function handleRequest(request, response) {
+  if (request.queryString == 'clearcounter') {
+    setState('periodiccounter', '');
+    return;
+  }
   if (!getState('periodiccounter')) {
     setState('periodiccounter', '1');
   } else {
