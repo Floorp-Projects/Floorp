@@ -28,7 +28,7 @@ tasks:
           get built.
 
       workerType: "gecko-decision"
-      provisionerId: "aws-provisioner"
+      provisionerId: "aws-provisioner-v1"
 
       tags:
         createdForUser: {{owner}}

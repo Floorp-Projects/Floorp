@@ -14,7 +14,7 @@ task:
     createdForUser: {{owner}}
 
   workerType: b2gbuild
-  provisionerId: aws-provisioner
+  provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
   routes:
