@@ -50,6 +50,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'Assertions.cpp',
     'Constants.cpp',
     'DeletedMessageInfo.cpp',
     'DOMMobileMessageError.cpp',
