@@ -50,6 +50,16 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor)
   VariantInit(aAnchor);
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
+  if (thisObj->IsProxy()) {
+    ProxyAccessible* anchor = thisObj->Proxy()->AnchorAt(aIndex);
+    if (!anchor)
+      return S_FALSE;
+
+    aAnchor->punkVal = static_cast<IAccessibleHyperlink*>(WrapperFor(anchor));
+    aAnchor->vt = VT_UNKNOWN;
+    return S_OK;
+  }
+
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -88,32 +98,34 @@ ia2AccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT* aAnchorTarget)
   VariantInit(aAnchorTarget);
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
-  if (thisObj->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  nsAutoCString uriStr;
+  if (thisObj->IsProxy()) {
+    bool ok;
+    thisObj->Proxy()->AnchorURIAt(aIndex, uriStr, &ok);
+    if (!ok)
+      return S_FALSE;
 
-  if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
-    return E_INVALIDARG;
+  } else {
+    if (thisObj->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  if (!thisObj->IsLink())
-    return S_FALSE;
+    if (aIndex < 0 || aIndex >= static_cast<long>(thisObj->AnchorCount()))
+      return E_INVALIDARG;
 
-  nsCOMPtr<nsIURI> uri = thisObj->AnchorURIAt(aIndex);
-  if (!uri)
-    return S_FALSE;
+    if (!thisObj->IsLink())
+      return S_FALSE;
 
-  nsAutoCString prePath;
-  nsresult rv = uri->GetPrePath(prePath);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+    nsCOMPtr<nsIURI> uri = thisObj->AnchorURIAt(aIndex);
+    if (!uri)
+      return S_FALSE;
 
-  nsAutoCString path;
-  rv = uri->GetPath(path);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+    nsresult rv = uri->GetSpec(uriStr);
+    if (NS_FAILED(rv))
+      return GetHRESULT(rv);
+  }
 
   nsAutoString stringURI;
-  AppendUTF8toUTF16(prePath, stringURI);
-  AppendUTF8toUTF16(path, stringURI);
+  AppendUTF8toUTF16(uriStr, stringURI);
 
   aAnchorTarget->vt = VT_BSTR;
   aAnchorTarget->bstrVal = ::SysAllocStringLen(stringURI.get(),
@@ -132,6 +144,12 @@ ia2AccessibleHyperlink::get_startIndex(long* aIndex)
     return E_INVALIDARG;
 
   *aIndex = 0;
+
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    bool valid;
+    *aIndex = proxy->StartOffset(&valid);
+    return valid ? S_OK : S_FALSE;
+  }
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
   if (thisObj->IsDefunct())
@@ -156,6 +174,12 @@ ia2AccessibleHyperlink::get_endIndex(long* aIndex)
 
   *aIndex = 0;
 
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    bool valid;
+    *aIndex = proxy->EndOffset(&valid);
+    return valid ? S_OK : S_FALSE;
+  }
+
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -178,6 +202,11 @@ ia2AccessibleHyperlink::get_valid(boolean* aValid)
     return E_INVALIDARG;
 
   *aValid = false;
+
+  if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
+    *aValid = proxy->IsLinkValid();
+    return S_OK;
+  }
 
   Accessible* thisObj = static_cast<AccessibleWrap*>(this);
   if (thisObj->IsDefunct())
