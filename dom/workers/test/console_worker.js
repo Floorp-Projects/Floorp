@@ -51,6 +51,10 @@ onmessage = function(event) {
     console.timeEnd(timer);
   }
 
+  function timeStamp(label) {
+    console.timeStamp(label);
+  }
+
   function testGroups() {
     console.groupCollapsed("a", "group");
     console.group("b", "group");
@@ -59,6 +63,8 @@ onmessage = function(event) {
 
   foobar585956a('omg');
   foobar646025('omg');
+  timeStamp();
+  timeStamp('foo');
   testGroups();
   startTimer('foo');
   setTimeout(function() {
