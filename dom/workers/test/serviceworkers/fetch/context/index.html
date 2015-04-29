@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <script>
-  var isAndroid = navigator.userAgent.contains("Android");
+  var isAndroid = navigator.userAgent.includes("Android");
   var isB2G = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
 
   function ok(v, msg) {

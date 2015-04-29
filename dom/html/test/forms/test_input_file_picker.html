@@ -216,10 +216,10 @@ function runTests() {
           // Mixing mime type and file extension filters ("image/jpeg" and
           // ".jpg" here) shouldn't restrict the list but only extend it, if file
           // extension filter isn't a duplicate
-          ok(filters[0].contains(mixRefExtensionList),
+          ok(filters[0].includes(mixRefExtensionList),
              "Mixing mime types and file extension filters shouldn't restrict extension list: " +
              mixRefExtensionList + " | " + filters[0]);
-          ok(filters[0].contains("*.jpg"),
+          ok(filters[0].includes("*.jpg"),
              "Filter should contain '.jpg' extension", filters[0]);
         } else {
           is(filters[0], testData[currentTest][2],
