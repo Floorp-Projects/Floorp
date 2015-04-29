@@ -299,7 +299,6 @@ function Blocklist() {
   this.wrappedJSObject = this;
   // requests from child processes come in here, see receiveMessage.
   Services.ppmm.addMessageListener("Blocklist:getPluginBlocklistState", this);
-  Services.ppmm.addMessageListener("Blocklist:content-blocklist-updated", this);
 }
 
 Blocklist.prototype = {
@@ -324,7 +323,6 @@ Blocklist.prototype = {
   shutdown: function () {
     Services.obs.removeObserver(this, "xpcom-shutdown");
     Services.ppmm.removeMessageListener("Blocklist:getPluginBlocklistState", this);
-    Services.ppmm.removeMessageListener("Blocklist:content-blocklist-updated", this);
     gPref.removeObserver("extensions.blocklist.", this);
     gPref.removeObserver(PREF_EM_LOGGING_ENABLED, this);
   },
@@ -365,9 +363,6 @@ Blocklist.prototype = {
         return this.getPluginBlocklistState(aMsg.data.addonData,
                                             aMsg.data.appVersion,
                                             aMsg.data.toolkitVersion);
-      case "Blocklist:content-blocklist-updated":
-        Services.obs.notifyObservers(null, "content-blocklist-updated", null);
-        break;
       default:
         throw new Error("Unknown blocklist message received from content: " + aMsg.name);
     }

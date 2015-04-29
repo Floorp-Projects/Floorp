@@ -27,8 +27,7 @@ function Blocklist() {
 Blocklist.prototype = {
   classID: Components.ID("{e0a106ed-6ad4-47a4-b6af-2f1c8aa4712d}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIBlocklistService]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistService]),
 
   init: function () {
     Services.cpmm.addMessageListener("Blocklist:blocklistInvalidated", this);
@@ -53,7 +52,6 @@ Blocklist.prototype = {
     switch (aMsg.name) {
       case "Blocklist:blocklistInvalidated":
         Services.obs.notifyObservers(null, "blocklist-updated", null);
-        Services.cpmm.sendAsyncMessage("Blocklist:content-blocklist-updated");
         break;
       default:
         throw new Error("Unknown blocklist message received from content: " + aMsg.name);
@@ -81,14 +79,13 @@ Blocklist.prototype = {
   // only calls getPluginBlocklistState.
 
   isAddonBlocklisted: function (aAddon, aAppVersion, aToolkitVersion) {
-    return true;
+    throw new Error(kMissingAPIMessage);
   },
 
   getAddonBlocklistState: function (aAddon, aAppVersion, aToolkitVersion) {
-    return Components.interfaces.nsIBlocklistService.STATE_BLOCKED;
+    throw new Error(kMissingAPIMessage);
   },
 
-  // There are a few callers in layout that rely on this.
   getPluginBlocklistState: function (aPluginTag, aAppVersion, aToolkitVersion) {
     return Services.cpmm.sendSyncMessage("Blocklist:getPluginBlocklistState", {
       addonData: this.flattenObject(aPluginTag),
