@@ -1494,6 +1494,8 @@ WorkerMessenger.prototype = {
           libcutils.property_get("ro.moz.ril.query_icc_count", "false") == "true",
         sendStkProfileDownload:
           libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true",
+        smscAddressFormat:
+          libcutils.property_get("ro.moz.ril.smsc_address_format", "text"),
         dataRegistrationOnDemand: RILQUIRKS_DATA_REGISTRATION_ON_DEMAND,
         subscriptionControl: RILQUIRKS_SUBSCRIPTION_CONTROL,
         signalExtraInt: RILQUIRKS_SIGNAL_EXTRA_INT32
