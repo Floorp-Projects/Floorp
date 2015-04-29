@@ -27,6 +27,18 @@ InterfacesFor(Accessible* aAcc)
   if (aAcc->IsHyperText() && aAcc->AsHyperText()->IsTextRole())
     interfaces |= Interfaces::HYPERTEXT;
 
+  if (aAcc->IsLink())
+    interfaces |= Interfaces::HYPERLINK;
+
+  if (aAcc->HasNumericValue())
+    interfaces |= Interfaces::VALUE;
+
+  if (aAcc->IsImage())
+    interfaces |= Interfaces::IMAGE;
+
+  if (aAcc->IsTableCell())
+    interfaces |= Interfaces::TABLECELL;
+
   return interfaces;
 }
 
