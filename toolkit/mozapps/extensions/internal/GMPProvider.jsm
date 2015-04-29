@@ -54,7 +54,7 @@ const GMP_PLUGINS = [
     name:            "eme-adobe_name",
     description:     "eme-adobe_description",
     licenseURL:      "http://help.adobe.com/en_US/primetime/drm/HTML5_CDM_EULA/index.html",
-    homepageURL:     "https://www.adobe.com/marketing-cloud/primetime-tv-platform.html",
+    homepageURL:     "http://help.adobe.com/en_US/primetime/drm/HTML5_CDM",
     optionsURL:      "chrome://mozapps/content/extensions/gmpPrefs.xul",
     isEME:           true
   }];
