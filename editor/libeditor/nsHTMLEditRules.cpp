@@ -488,6 +488,8 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
       
       // also do this for original selection endpoints. 
       NS_ENSURE_STATE(mHTMLEditor);
+      NS_ENSURE_STATE(mRangeItem->startNode);
+      NS_ENSURE_STATE(mRangeItem->endNode);
       nsWSRunObject(mHTMLEditor, mRangeItem->startNode,
                     mRangeItem->startOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
