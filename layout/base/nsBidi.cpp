@@ -17,7 +17,7 @@ using namespace mozilla::unicode;
 /*  Comparing the description of the Bidi algorithm with this implementation
     is easier with the same names for the Bidi types in the code as there.
 */
-enum { 
+enum {
     L =   eCharType_LeftToRight,
     R =   eCharType_RightToLeft,
     EN =  eCharType_EuropeanNumber,
@@ -89,7 +89,9 @@ static Flags flagO[2]={ DIRPROP_FLAG(LRO), DIRPROP_FLAG(RLO) };
  * do not matter.
  *
  * Note that this implementation never modifies the dirProps
- * after the initial setup.
+ * after the initial setup, except for FSI which is changed to either
+ * LRI or RLI in GetDirProps(), and paired brackets which may be changed
+ * to L or R according to N0.
  *
  *
  * In this implementation, the resolution of weak types (Wn),
@@ -158,19 +160,23 @@ void nsBidi::Init()
   mDirPropsSize = 0;
   mLevelsSize = 0;
   mRunsSize = 0;
+  mIsolatesSize = 0;
+
   mRunCount = -1;
+  mIsolateCount = -1;
 
   mDirProps=nullptr;
   mLevels=nullptr;
   mRuns=nullptr;
+  mIsolates=nullptr;
 
   mDirPropsMemory=nullptr;
   mLevelsMemory=nullptr;
   mRunsMemory=nullptr;
+  mIsolatesMemory=nullptr;
 
   mMayAllocateText=false;
   mMayAllocateRuns=false;
-  
 }
 
 /*
@@ -235,6 +241,8 @@ void nsBidi::Free()
   mLevelsMemory = nullptr;
   free(mRunsMemory);
   mRunsMemory = nullptr;
+  free(mIsolatesMemory);
+  mIsolatesMemory = nullptr;
 }
 
 /* SetPara ------------------------------------------------------------ */
@@ -257,9 +265,9 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
   }
 
   /* initialize member data */
-  mLength=aLength;
+  mLength = aLength;
   mParaLevel=aParaLevel;
-  mDirection=NSBIDI_LTR;
+  mDirection=aParaLevel & 1 ? NSBIDI_RTL : NSBIDI_LTR;
   mTrailingWSStart=aLength;  /* the levels[] will reflect the WS run */
 
   mDirProps=nullptr;
@@ -275,14 +283,7 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
     if(IS_DEFAULT_LEVEL(aParaLevel)) {
       mParaLevel&=1;
     }
-    if(aParaLevel&1) {
-      mFlags=DIRPROP_FLAG(R);
-      mDirection=NSBIDI_RTL;
-    } else {
-      mFlags=DIRPROP_FLAG(L);
-      mDirection=NSBIDI_LTR;
-    }
-
+    mFlags=DIRPROP_FLAG_LR(aParaLevel);
     mRunCount=0;
     return NS_OK;
   }
@@ -306,7 +307,7 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
     /* no: determine explicit levels according to the (Xn) rules */\
     if(GETLEVELSMEMORY(aLength)) {
       mLevels=mLevelsMemory;
-      direction=ResolveExplicitLevels();
+      ResolveExplicitLevels(&direction);
     } else {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -319,10 +320,27 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
     }
   }
 
+  /* allocate isolate memory */
+  if (mIsolateCount <= SIMPLE_ISOLATES_SIZE) {
+    mIsolates = mSimpleIsolates;
+  } else {
+    if (mIsolateCount <= (int32_t) mIsolatesSize) {
+      mIsolates = mIsolatesMemory;
+    } else {
+      if (GETINITIALISOLATESMEMORY(mIsolateCount)) {
+        mIsolates = mIsolatesMemory;
+      } else {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+  mIsolateCount = -1;  /* current isolates stack entry == none */
+
   /*
    * The steps after (X9) in the Bidi algorithm are performed only if
    * the paragraph text has mixed directionality!
    */
+  mDirection = direction;
   switch(direction) {
     case NSBIDI_LTR:
       /* make sure paraLevel is even */
@@ -399,6 +417,10 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
           are no implicit types to be resolved */
           if(!(level&NSBIDI_LEVEL_OVERRIDE)) {
             ResolveImplicitLevels(start, limit, sor, eor);
+          } else {
+            do {
+              levels[start++] &= ~NSBIDI_LEVEL_OVERRIDE;
+            } while (start < limit);
           }
         } while(limit<aLength);
       }
@@ -408,7 +430,6 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
       break;
   }
 
-  mDirection=direction;
   return NS_OK;
 }
 
@@ -428,54 +449,140 @@ void nsBidi::GetDirProps(const char16_t *aText)
   char16_t uchar;
   DirProp dirProp;
 
-  if(IS_DEFAULT_LEVEL(mParaLevel)) {
-    /* determine the paragraph level (P2..P3) */
-    for(;;) {
-      uchar=aText[i];
-      if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
-        /* not a surrogate pair */
-        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetBidiCat((uint32_t)uchar));
-      } else {
-        /* a surrogate pair */
-        dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
-        flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetBidiCat(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
-      }
-      ++i;
-      if(dirProp==L) {
-        mParaLevel=0;
-        break;
-      } else if(dirProp==R || dirProp==AL) {
-        mParaLevel=1;
-        break;
-      } else if(i==length) {
-        /*
-         * see comment in nsIBidi.h:
-         * the DEFAULT_XXX values are designed so that
-         * their bit 0 alone yields the intended default
-         */
-        mParaLevel&=1;
-        break;
-      }
-    }
+  bool isDefaultLevel = IS_DEFAULT_LEVEL(mParaLevel);
+
+  enum State {
+    NOT_SEEKING_STRONG,       /* 0: not after FSI */
+    SEEKING_STRONG_FOR_PARA,  /* 1: looking for first strong char in para */
+    SEEKING_STRONG_FOR_FSI,   /* 2: looking for first strong after FSI */
+    LOOKING_FOR_PDI           /* 3: found strong after FSI, looking for PDI */
+  };
+  State state;
+
+  /* The following stacks are used to manage isolate sequences. Those
+     sequences may be nested, but obviously never more deeply than the
+     maximum explicit embedding level.
+     lastStack is the index of the last used entry in the stack. A value of -1
+     means that there is no open isolate sequence. */
+  /* The following stack contains the position of the initiator of
+     each open isolate sequence */
+  int32_t isolateStartStack[NSBIDI_MAX_EXPLICIT_LEVEL + 1];
+  /* The following stack contains the last known state before
+     encountering the initiator of an isolate sequence */
+  State previousStateStack[NSBIDI_MAX_EXPLICIT_LEVEL + 1];
+  int32_t stackLast = -1;
+
+  if(isDefaultLevel) {
+    /*
+     * see comment in nsBidi.h:
+     * the DEFAULT_XXX values are designed so that
+     * their bit 0 alone yields the intended default
+     */
+    mParaLevel &= 1;
+    state = SEEKING_STRONG_FOR_PARA;
+  } else {
+    state = NOT_SEEKING_STRONG;
   }
 
-  /* get the rest of the directional properties and the flags bits */
-  while(i<length) {
+  /* determine the paragraph level (P2..P3) */
+  for(/* i = 0 above */; i < length;) {
     uchar=aText[i];
     if(!IS_FIRST_SURROGATE(uchar) || i+1==length || !IS_SECOND_SURROGATE(aText[i+1])) {
       /* not a surrogate pair */
-      flags|=DIRPROP_FLAG(dirProps[i]=GetBidiCat((uint32_t)uchar));
+      flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetBidiCat((uint32_t)uchar));
     } else {
       /* a surrogate pair */
-      dirProps[i++]=BN;   /* second surrogate in the pair gets the BN type */
-      flags|=DIRPROP_FLAG(dirProps[i]=GetBidiCat(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
+      dirProps[i++]=BN;   /* first surrogate in the pair gets the BN type */
+      flags|=DIRPROP_FLAG(dirProps[i]=dirProp=GetBidiCat(GET_UTF_32(uchar, aText[i])))|DIRPROP_FLAG(BN);
     }
     ++i;
+
+    switch (dirProp) {
+    case L:
+      if (state == SEEKING_STRONG_FOR_PARA) {
+        mParaLevel = 0;
+        state = NOT_SEEKING_STRONG;
+      } else if  (state == SEEKING_STRONG_FOR_FSI) {
+        if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
+          dirProps[isolateStartStack[stackLast]] = LRI;
+          flags |= LRI;
+        }
+        state = LOOKING_FOR_PDI;
+      }
+      break;
+
+    case R: case AL:
+      if (state == SEEKING_STRONG_FOR_PARA) {
+        mParaLevel = 1;
+        state = NOT_SEEKING_STRONG;
+      } else if  (state == SEEKING_STRONG_FOR_FSI) {
+        if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
+          dirProps[isolateStartStack[stackLast]] = RLI;
+          flags |= RLI;
+        }
+        state = LOOKING_FOR_PDI;
+      }
+      break;
+
+    case FSI: case LRI: case RLI:
+      stackLast++;
+      if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
+        isolateStartStack[stackLast] = i - 1;
+        previousStateStack[stackLast] = state;
+      }
+      if (dirProp == FSI) {
+        state = SEEKING_STRONG_FOR_FSI;
+      } else {
+        state = LOOKING_FOR_PDI;
+      }
+      break;
+
+    case PDI:
+      if (state == SEEKING_STRONG_FOR_FSI) {
+        if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
+          dirProps[isolateStartStack[stackLast]] = LRI;
+          flags |= DIRPROP_FLAG(LRI);
+        }
+      }
+      if (stackLast >= 0) {
+        if (stackLast <= NSBIDI_MAX_EXPLICIT_LEVEL) {
+          state = previousStateStack[stackLast];
+        }
+        stackLast--;
+      }
+      break;
+
+    case B:
+      // This shouldn't happen, since we don't support multiple paragraphs.
+      NS_NOTREACHED("Unexpected paragraph separator");
+      break;
+
+    default:
+      break;
+    }
   }
-  if(flags&MASK_EMBEDDING) {
-    flags|=DIRPROP_FLAG_LR(mParaLevel);
+
+  /* Ignore still open isolate sequences with overflow */
+  if (stackLast > NSBIDI_MAX_EXPLICIT_LEVEL) {
+    stackLast = NSBIDI_MAX_EXPLICIT_LEVEL;
+    if (dirProps[previousStateStack[NSBIDI_MAX_EXPLICIT_LEVEL]] != FSI) {
+      state = LOOKING_FOR_PDI;
+    }
   }
-  mFlags=flags;
+
+  /* Resolve direction of still unresolved open FSI sequences */
+  while (stackLast >= 0) {
+    if (state == SEEKING_STRONG_FOR_FSI) {
+      dirProps[isolateStartStack[stackLast]] = LRI;
+      flags |= DIRPROP_FLAG(LRI);
+    }
+    state = previousStateStack[stackLast];
+    stackLast--;
+  }
+
+  flags|=DIRPROP_FLAG_LR(mParaLevel);
+
+  mFlags = flags;
 }
 
 /* perform (X1)..(X9) ------------------------------------------------------- */
@@ -487,14 +594,14 @@ void nsBidi::GetDirProps(const char16_t *aText)
  *
  * The Bidi algorithm is designed to result in the same behavior whether embedding
  * levels are externally specified (from "styled text", supposedly the preferred
- * method) or set by explicit embedding codes (LRx, RLx, PDF) in the plain text.
- * That is why (X9) instructs to remove all explicit codes (and BN).
+ * method) or set by explicit embedding codes (LRx, RLx, PDF, FSI, PDI) in the plain text.
+ * That is why (X9) instructs to remove all not-isolate explicit codes (and BN).
  * However, in a real implementation, this removal of these codes and their index
  * positions in the plain text is undesirable since it would result in
  * reallocated, reindexed text.
  * Instead, this implementation leaves the codes in there and just ignores them
  * in the subsequent processing.
- * In order to get the same reordering behavior, positions with a BN or an
+ * In order to get the same reordering behavior, positions with a BN or a not-isolate
  * explicit embedding code just get the same level assigned as the last "real"
  * character.
  *
@@ -517,33 +624,29 @@ void nsBidi::GetDirProps(const char16_t *aText)
  *
  * Handling the stack of explicit levels (Xn):
  *
- * With the Bidi stack of explicit levels,
- * as pushed with each LRE, RLE, LRO, and RLO and popped with each PDF,
- * the explicit level must never exceed NSBIDI_MAX_EXPLICIT_LEVEL==61.
+ * With the Bidi stack of explicit levels, as pushed with each
+ * LRE, RLE, LRO, and RLO, LRI, RLI, and FSI and popped with each PDF and PDI,
+ * the explicit level must never exceed NSBIDI_MAX_EXPLICIT_LEVEL.
  *
  * In order to have a correct push-pop semantics even in the case of overflows,
- * there are two overflow counters:
- * - countOver60 is incremented with each LRx at level 60
- * - from level 60, one RLx increases the level to 61
- * - countOver61 is incremented with each LRx and RLx at level 61
- *
- * Popping levels with PDF must work in the opposite order so that level 61
- * is correct at the correct point. Underflows (too many PDFs) must be checked.
+ * overflow counters and a valid isolate counter are used as described in UAX#9
+ * section 3.3.2 "Explicit Levels and Direction".
  *
  * This implementation assumes that NSBIDI_MAX_EXPLICIT_LEVEL is odd.
  */
 
-nsBidiDirection nsBidi::ResolveExplicitLevels()
+void nsBidi::ResolveExplicitLevels(nsBidiDirection *aDirection)
 {
-  const DirProp *dirProps=mDirProps;
+  DirProp *dirProps=mDirProps;
   nsBidiLevel *levels=mLevels;
 
   int32_t i=0, length=mLength;
   Flags flags=mFlags;       /* collect all directionalities in the text */
   DirProp dirProp;
   nsBidiLevel level=mParaLevel;
-
   nsBidiDirection direction;
+
+  mIsolateCount = 0;
 
   /* determine if the text is mixed-directional or single-directional */
   direction=DirectionFromFlags(flags);
@@ -551,9 +654,8 @@ nsBidiDirection nsBidi::ResolveExplicitLevels()
   /* we may not need to resolve any explicit levels */
   if(direction!=NSBIDI_MIXED) {
     /* not mixed directionality: levels don't matter - trailingWSStart will be 0 */
-  } else if(!(flags&MASK_EXPLICIT)) {
-    /* mixed, but all characters are at the same embedding level */
-    /* set all levels to the paragraph level */
+  } else if(!(flags&(MASK_EXPLICIT|MASK_ISO))) {
+    /* no embeddings, set all levels to the paragraph level */
     for(i=0; i<length; ++i) {
       levels[i]=level;
     }
@@ -562,10 +664,17 @@ nsBidiDirection nsBidi::ResolveExplicitLevels()
 
     /* (X1) level is set for all codes, embeddingLevel keeps track of the push/pop operations */
     /* both variables may carry the NSBIDI_LEVEL_OVERRIDE flag to indicate the override status */
-    nsBidiLevel embeddingLevel=level, newLevel, stackTop=0;
+    nsBidiLevel embeddingLevel = level, newLevel;
+    nsBidiLevel previousLevel = level;     /* previous level for regular (not CC) characters */
 
-    nsBidiLevel stack[NSBIDI_MAX_EXPLICIT_LEVEL];        /* we never push anything >=NSBIDI_MAX_EXPLICIT_LEVEL */
-    uint32_t countOver60=0, countOver61=0;  /* count overflows of explicit levels */
+    uint16_t stack[NSBIDI_MAX_EXPLICIT_LEVEL + 2];   /* we never push anything >=NSBIDI_MAX_EXPLICIT_LEVEL
+                                                        but we need one more entry as base */
+    uint32_t stackLast = 0;
+    int32_t overflowIsolateCount = 0;
+    int32_t overflowEmbeddingCount = 0;
+    int32_t validIsolateCount = 0;
+
+    stack[0] = level;
 
     /* recalculate the flags */
     flags=0;
@@ -575,87 +684,130 @@ nsBidiDirection nsBidi::ResolveExplicitLevels()
       dirProp=dirProps[i];
       switch(dirProp) {
         case LRE:
-        case LRO:
-          /* (X3, X5) */
-          newLevel=(embeddingLevel+2)&~(NSBIDI_LEVEL_OVERRIDE|1);    /* least greater even level */
-          if(newLevel<=NSBIDI_MAX_EXPLICIT_LEVEL) {
-            stack[stackTop]=embeddingLevel;
-            ++stackTop;
-            embeddingLevel=newLevel;
-            if(dirProp==LRO) {
-              embeddingLevel|=NSBIDI_LEVEL_OVERRIDE;
-            } else {
-              embeddingLevel&=~NSBIDI_LEVEL_OVERRIDE;
-            }
-          } else if((embeddingLevel&~NSBIDI_LEVEL_OVERRIDE)==NSBIDI_MAX_EXPLICIT_LEVEL) {
-            ++countOver61;
-          } else /* (embeddingLevel&~NSBIDI_LEVEL_OVERRIDE)==NSBIDI_MAX_EXPLICIT_LEVEL-1 */ {
-            ++countOver60;
-          }
-          flags|=DIRPROP_FLAG(BN);
-          break;
         case RLE:
+        case LRO:
         case RLO:
-          /* (X2, X4) */
-          newLevel=((embeddingLevel&~NSBIDI_LEVEL_OVERRIDE)+1)|1;    /* least greater odd level */
-          if(newLevel<=NSBIDI_MAX_EXPLICIT_LEVEL) {
-            stack[stackTop]=embeddingLevel;
-            ++stackTop;
-            embeddingLevel=newLevel;
-            if(dirProp==RLO) {
-              embeddingLevel|=NSBIDI_LEVEL_OVERRIDE;
-            } else {
-              embeddingLevel&=~NSBIDI_LEVEL_OVERRIDE;
-            }
+          /* (X2, X3, X4, X5) */
+          flags |= DIRPROP_FLAG(BN);
+          if (dirProp == LRE || dirProp == LRO) {
+            newLevel = (embeddingLevel + 2) & ~(NSBIDI_LEVEL_OVERRIDE | 1);    /* least greater even level */
           } else {
-            ++countOver61;
+            newLevel = ((embeddingLevel & ~NSBIDI_LEVEL_OVERRIDE) + 1) | 1;    /* least greater odd level */
           }
-          flags|=DIRPROP_FLAG(BN);
+          if(newLevel <= NSBIDI_MAX_EXPLICIT_LEVEL && overflowIsolateCount == 0 && overflowEmbeddingCount == 0) {
+            embeddingLevel = newLevel;
+            if (dirProp == LRO || dirProp == RLO) {
+              embeddingLevel |= NSBIDI_LEVEL_OVERRIDE;
+            }
+            stackLast++;
+            stack[stackLast] = embeddingLevel;
+            /* we don't need to set UBIDI_LEVEL_OVERRIDE off for LRE and RLE
+               since this has already been done for newLevel which is
+               the source for embeddingLevel.
+             */
+          } else {
+            dirProps[i] |= IGNORE_CC;
+            if (overflowIsolateCount == 0) {
+              overflowEmbeddingCount++;
+            }
+          }
           break;
+
         case PDF:
           /* (X7) */
+          flags |= DIRPROP_FLAG(BN);
           /* handle all the overflow cases first */
-          if(countOver61>0) {
-            --countOver61;
-          } else if(countOver60>0 && (embeddingLevel&~NSBIDI_LEVEL_OVERRIDE)!=NSBIDI_MAX_EXPLICIT_LEVEL) {
-            /* handle LRx overflows from level 60 */
-            --countOver60;
-          } else if(stackTop>0) {
-            /* this is the pop operation; it also pops level 61 while countOver60>0 */
-            --stackTop;
-            embeddingLevel=stack[stackTop];
-            /* } else { (underflow) */
+          if (overflowIsolateCount) {
+            dirProps[i] |= IGNORE_CC;
+            break;
           }
-          flags|=DIRPROP_FLAG(BN);
+          if (overflowEmbeddingCount) {
+            dirProps[i] |= IGNORE_CC;
+            overflowEmbeddingCount--;
+            break;
+          }
+          if (stackLast > 0 && stack[stackLast] < ISOLATE) {   /* not an isolate entry */
+            stackLast--;
+            embeddingLevel = stack[stackLast];
+          } else {
+            dirProps[i] |= IGNORE_CC;
+          }
           break;
+
+        case LRI:
+        case RLI:
+          if (embeddingLevel != previousLevel) {
+            previousLevel = embeddingLevel;
+          }
+          /* (X5a, X5b) */
+          flags |= DIRPROP_FLAG(O_N) | DIRPROP_FLAG(BN) | DIRPROP_FLAG_LR(embeddingLevel);
+          level = embeddingLevel;
+          if (dirProp == LRI) {
+            newLevel = (embeddingLevel + 2) & ~(NSBIDI_LEVEL_OVERRIDE | 1); /* least greater even level */
+          } else {
+            newLevel = ((embeddingLevel & ~NSBIDI_LEVEL_OVERRIDE) + 1) | 1;  /* least greater odd level */
+          }
+          if (newLevel <= NSBIDI_MAX_EXPLICIT_LEVEL && overflowIsolateCount == 0 && overflowEmbeddingCount == 0) {
+            previousLevel = embeddingLevel;
+            validIsolateCount++;
+            if (validIsolateCount > mIsolateCount) {
+              mIsolateCount = validIsolateCount;
+            }
+            embeddingLevel = newLevel;
+            stackLast++;
+            stack[stackLast] = embeddingLevel + ISOLATE;
+          } else {
+            dirProps[i] |= IGNORE_CC;
+            overflowIsolateCount++;
+          }
+          break;
+
+        case PDI:
+          /* (X6a) */
+          if (overflowIsolateCount) {
+            dirProps[i] |= IGNORE_CC;
+            overflowIsolateCount--;
+          } else if (validIsolateCount) {
+            overflowEmbeddingCount = 0;
+            while (stack[stackLast] < ISOLATE) {
+              /* pop embedding entries        */
+              /* until the last isolate entry */
+              stackLast--;
+            }
+            stackLast--;  /* pop also the last isolate entry */
+            validIsolateCount--;
+          } else {
+            dirProps[i] |= IGNORE_CC;
+          }
+          embeddingLevel = stack[stackLast] & ~ISOLATE;
+          previousLevel = level = embeddingLevel;
+          flags |= DIRPROP_FLAG(O_N) | DIRPROP_FLAG(BN) | DIRPROP_FLAG_LR(embeddingLevel);
+          break;
+
         case B:
           /*
-           * We do not really expect to see a paragraph separator (B),
-           * but we should do something reasonable with it,
-           * especially at the end of the text.
+           * We do not expect to see a paragraph separator (B),
            */
-          stackTop=0;
-          countOver60=countOver61=0;
-          embeddingLevel=level=mParaLevel;
-          flags|=DIRPROP_FLAG(B);
+          NS_NOTREACHED("Unexpected paragraph separator");
           break;
+
         case BN:
           /* BN, LRE, RLE, and PDF are supposed to be removed (X9) */
           /* they will get their levels set correctly in AdjustWSLevels() */
           flags|=DIRPROP_FLAG(BN);
           break;
+
         default:
           /* all other types get the "real" level */
-          if(level!=embeddingLevel) {
-            level=embeddingLevel;
-            if(level&NSBIDI_LEVEL_OVERRIDE) {
-              flags|=DIRPROP_FLAG_O(level)|DIRPROP_FLAG_MULTI_RUNS;
-            } else {
-              flags|=DIRPROP_FLAG_E(level)|DIRPROP_FLAG_MULTI_RUNS;
-            }
+          level = embeddingLevel;
+          if(embeddingLevel != previousLevel) {
+            previousLevel = embeddingLevel;
           }
-          if(!(level&NSBIDI_LEVEL_OVERRIDE)) {
-            flags|=DIRPROP_FLAG(dirProp);
+
+          if (level & NSBIDI_LEVEL_OVERRIDE) {
+            flags |= DIRPROP_FLAG_LR(level);
+          } else {
+            flags |= DIRPROP_FLAG(dirProp);
           }
           break;
       }
@@ -665,7 +817,19 @@ nsBidiDirection nsBidi::ResolveExplicitLevels()
        * explicit codes because we will later look at same-level runs (X10).
        */
       levels[i]=level;
+      if (i > 0 && levels[i - 1] != level) {
+        flags |= DIRPROP_FLAG_MULTI_RUNS;
+        if (level & NSBIDI_LEVEL_OVERRIDE) {
+          flags |= DIRPROP_FLAG_O(level);
+        } else {
+          flags |= DIRPROP_FLAG_E(level);
+        }
+      }
+      if (DIRPROP_FLAG(dirProp) & MASK_ISO) {
+        level = embeddingLevel;
+      }
     }
+
     if(flags&MASK_EMBEDDING) {
       flags|=DIRPROP_FLAG_LR(mParaLevel);
     }
@@ -676,7 +840,8 @@ nsBidiDirection nsBidi::ResolveExplicitLevels()
     mFlags=flags;
     direction=DirectionFromFlags(flags);
   }
-  return direction;
+
+  *aDirection = direction;
 }
 
 /*
@@ -692,21 +857,33 @@ nsBidiDirection nsBidi::ResolveExplicitLevels()
 nsresult nsBidi::CheckExplicitLevels(nsBidiDirection *aDirection)
 {
   const DirProp *dirProps=mDirProps;
+  DirProp dirProp;
   nsBidiLevel *levels=mLevels;
+  int32_t isolateCount = 0;
 
   int32_t i, length=mLength;
   Flags flags=0;  /* collect all directionalities in the text */
   nsBidiLevel level, paraLevel=mParaLevel;
+  mIsolateCount = 0;
 
   for(i=0; i<length; ++i) {
     level=levels[i];
+    dirProp = dirProps[i];
+    if (dirProp == LRI || dirProp == RLI) {
+      isolateCount++;
+      if (isolateCount > mIsolateCount) {
+        mIsolateCount = isolateCount;
+      }
+    } else if (dirProp == PDI) {
+      isolateCount--;
+    }
     if(level&NSBIDI_LEVEL_OVERRIDE) {
       /* keep the override flag in levels[i] but adjust the flags */
       level&=~NSBIDI_LEVEL_OVERRIDE;     /* make the range check below simpler */
       flags|=DIRPROP_FLAG_O(level);
     } else {
       /* set the flags */
-      flags|=DIRPROP_FLAG_E(level)|DIRPROP_FLAG(dirProps[i]);
+      flags|=DIRPROP_FLAG_E(level)|DIRPROP_FLAG(dirProp);
     }
     if(level<paraLevel || NSBIDI_MAX_EXPLICIT_LEVEL<level) {
       /* level out of bounds */
@@ -737,6 +914,200 @@ nsBidiDirection nsBidi::DirectionFromFlags(Flags aFlags)
   }
 }
 
+/******************************************************************
+ The Properties state machine table
+*******************************************************************
+
+ All table cells are 8 bits:
+      bits 0..4:  next state
+      bits 5..7:  action to perform (if > 0)
+
+ Cells may be of format "n" where n represents the next state
+ (except for the rightmost column).
+ Cells may also be of format "s(x,y)" where x represents an action
+ to perform and y represents the next state.
+
+*******************************************************************
+ Definitions and type for properties state table
+*******************************************************************
+*/
+#define IMPTABPROPS_COLUMNS 16
+#define IMPTABPROPS_RES (IMPTABPROPS_COLUMNS - 1)
+#define GET_STATEPROPS(cell) ((cell)&0x1f)
+#define GET_ACTIONPROPS(cell) ((cell)>>5)
+#undef s
+#define s(action, newState) ((uint8_t)(newState+(action<<5)))
+
+static const uint8_t groupProp[] =          /* dirProp regrouped */
+{
+/*  L   R   EN  ES  ET  AN  CS  B   S   WS  ON  LRE LRO AL  RLE RLO PDF NSM BN  FSI LRI RLI PDI ENL ENR */
+    0,  1,  2,  7,  8,  3,  9,  6,  5,  4,  4,  10, 10, 12, 10, 10, 10, 11, 10, 4,  4,  4,  4,  13, 14
+};
+
+/******************************************************************
+
+      PROPERTIES  STATE  TABLE
+
+ In table impTabProps,
+      - the ON column regroups ON and WS, FSI, RLI, LRI and PDI
+      - the BN column regroups BN, LRE, RLE, LRO, RLO, PDF
+      - the Res column is the reduced property assigned to a run
+
+ Action 1: process current run1, init new run1
+        2: init new run2
+        3: process run1, process run2, init new run1
+        4: process run1, set run1=run2, init new run2
+
+ Notes:
+  1) This table is used in ResolveImplicitLevels().
+  2) This table triggers actions when there is a change in the Bidi
+     property of incoming characters (action 1).
+  3) Most such property sequences are processed immediately (in
+     fact, passed to ProcessPropertySeq().
+  4) However, numbers are assembled as one sequence. This means
+     that undefined situations (like CS following digits, until
+     it is known if the next char will be a digit) are held until
+     following chars define them.
+     Example: digits followed by CS, then comes another CS or ON;
+              the digits will be processed, then the CS assigned
+              as the start of an ON sequence (action 3).
+  5) There are cases where more than one sequence must be
+     processed, for instance digits followed by CS followed by L:
+     the digits must be processed as one sequence, and the CS
+     must be processed as an ON sequence, all this before starting
+     assembling chars for the opening L sequence.
+
+
+*/
+static const uint8_t impTabProps[][IMPTABPROPS_COLUMNS] =
+{
+/*                        L ,     R ,    EN ,    AN ,    ON ,     S ,     B ,    ES ,    ET ,    CS ,    BN ,   NSM ,    AL ,   ENL ,   ENR , Res */
+/* 0 Init        */ {     1 ,     2 ,     4 ,     5 ,     7 ,    15 ,    17 ,     7 ,     9 ,     7 ,     0 ,     7 ,     3 ,    18 ,    21 , DirProp_ON },
+/* 1 L           */ {     1 , s(1,2), s(1,4), s(1,5), s(1,7),s(1,15),s(1,17), s(1,7), s(1,9), s(1,7),     1 ,     1 , s(1,3),s(1,18),s(1,21),  DirProp_L },
+/* 2 R           */ { s(1,1),     2 , s(1,4), s(1,5), s(1,7),s(1,15),s(1,17), s(1,7), s(1,9), s(1,7),     2 ,     2 , s(1,3),s(1,18),s(1,21),  DirProp_R },
+/* 3 AL          */ { s(1,1), s(1,2), s(1,6), s(1,6), s(1,8),s(1,16),s(1,17), s(1,8), s(1,8), s(1,8),     3 ,     3 ,     3 ,s(1,18),s(1,21),  DirProp_R },
+/* 4 EN          */ { s(1,1), s(1,2),     4 , s(1,5), s(1,7),s(1,15),s(1,17),s(2,10),    11 ,s(2,10),     4 ,     4 , s(1,3),    18 ,    21 , DirProp_EN },
+/* 5 AN          */ { s(1,1), s(1,2), s(1,4),     5 , s(1,7),s(1,15),s(1,17), s(1,7), s(1,9),s(2,12),     5 ,     5 , s(1,3),s(1,18),s(1,21), DirProp_AN },
+/* 6 AL:EN/AN    */ { s(1,1), s(1,2),     6 ,     6 , s(1,8),s(1,16),s(1,17), s(1,8), s(1,8),s(2,13),     6 ,     6 , s(1,3),    18 ,    21 , DirProp_AN },
+/* 7 ON          */ { s(1,1), s(1,2), s(1,4), s(1,5),     7 ,s(1,15),s(1,17),     7 ,s(2,14),     7 ,     7 ,     7 , s(1,3),s(1,18),s(1,21), DirProp_ON },
+/* 8 AL:ON       */ { s(1,1), s(1,2), s(1,6), s(1,6),     8 ,s(1,16),s(1,17),     8 ,     8 ,     8 ,     8 ,     8 , s(1,3),s(1,18),s(1,21), DirProp_ON },
+/* 9 ET          */ { s(1,1), s(1,2),     4 , s(1,5),     7 ,s(1,15),s(1,17),     7 ,     9 ,     7 ,     9 ,     9 , s(1,3),    18 ,    21 , DirProp_ON },
+/*10 EN+ES/CS    */ { s(3,1), s(3,2),     4 , s(3,5), s(4,7),s(3,15),s(3,17), s(4,7),s(4,14), s(4,7),    10 , s(4,7), s(3,3),    18 ,    21 , DirProp_EN },
+/*11 EN+ET       */ { s(1,1), s(1,2),     4 , s(1,5), s(1,7),s(1,15),s(1,17), s(1,7),    11 , s(1,7),    11 ,    11 , s(1,3),    18 ,    21 , DirProp_EN },
+/*12 AN+CS       */ { s(3,1), s(3,2), s(3,4),     5 , s(4,7),s(3,15),s(3,17), s(4,7),s(4,14), s(4,7),    12 , s(4,7), s(3,3),s(3,18),s(3,21), DirProp_AN },
+/*13 AL:EN/AN+CS */ { s(3,1), s(3,2),     6 ,     6 , s(4,8),s(3,16),s(3,17), s(4,8), s(4,8), s(4,8),    13 , s(4,8), s(3,3),    18 ,    21 , DirProp_AN },
+/*14 ON+ET       */ { s(1,1), s(1,2), s(4,4), s(1,5),     7 ,s(1,15),s(1,17),     7 ,    14 ,     7 ,    14 ,    14 , s(1,3),s(4,18),s(4,21), DirProp_ON },
+/*15 S           */ { s(1,1), s(1,2), s(1,4), s(1,5), s(1,7),    15 ,s(1,17), s(1,7), s(1,9), s(1,7),    15 , s(1,7), s(1,3),s(1,18),s(1,21),  DirProp_S },
+/*16 AL:S        */ { s(1,1), s(1,2), s(1,6), s(1,6), s(1,8),    16 ,s(1,17), s(1,8), s(1,8), s(1,8),    16 , s(1,8), s(1,3),s(1,18),s(1,21),  DirProp_S },
+/*17 B           */ { s(1,1), s(1,2), s(1,4), s(1,5), s(1,7),s(1,15),    17 , s(1,7), s(1,9), s(1,7),    17 , s(1,7), s(1,3),s(1,18),s(1,21),  DirProp_B },
+/*18 ENL         */ { s(1,1), s(1,2),    18 , s(1,5), s(1,7),s(1,15),s(1,17),s(2,19),    20 ,s(2,19),    18 ,    18 , s(1,3),    18 ,    21 ,  DirProp_L },
+/*19 ENL+ES/CS   */ { s(3,1), s(3,2),    18 , s(3,5), s(4,7),s(3,15),s(3,17), s(4,7),s(4,14), s(4,7),    19 , s(4,7), s(3,3),    18 ,    21 ,  DirProp_L },
+/*20 ENL+ET      */ { s(1,1), s(1,2),    18 , s(1,5), s(1,7),s(1,15),s(1,17), s(1,7),    20 , s(1,7),    20 ,    20 , s(1,3),    18 ,    21 ,  DirProp_L },
+/*21 ENR         */ { s(1,1), s(1,2),    21 , s(1,5), s(1,7),s(1,15),s(1,17),s(2,22),    23 ,s(2,22),    21 ,    21 , s(1,3),    18 ,    21 , DirProp_AN },
+/*22 ENR+ES/CS   */ { s(3,1), s(3,2),    21 , s(3,5), s(4,7),s(3,15),s(3,17), s(4,7),s(4,14), s(4,7),    22 , s(4,7), s(3,3),    18 ,    21 , DirProp_AN },
+/*23 ENR+ET      */ { s(1,1), s(1,2),    21 , s(1,5), s(1,7),s(1,15),s(1,17), s(1,7),    23 , s(1,7),    23 ,    23 , s(1,3),    18 ,    21 , DirProp_AN }
+};
+
+/*  we must undef macro s because the levels table have a different
+ *  structure (4 bits for action and 4 bits for next state.
+ */
+#undef s
+
+/******************************************************************
+ The levels state machine tables
+*******************************************************************
+
+ All table cells are 8 bits:
+      bits 0..3:  next state
+      bits 4..7:  action to perform (if > 0)
+
+ Cells may be of format "n" where n represents the next state
+ (except for the rightmost column).
+ Cells may also be of format "s(x,y)" where x represents an action
+ to perform and y represents the next state.
+
+ This format limits each table to 16 states each and to 15 actions.
+
+*******************************************************************
+ Definitions and type for levels state tables
+*******************************************************************
+*/
+#define IMPTABLEVELS_RES (IMPTABLEVELS_COLUMNS - 1)
+#define GET_STATE(cell) ((cell)&0x0f)
+#define GET_ACTION(cell) ((cell)>>4)
+#define s(action, newState) ((uint8_t)(newState+(action<<4)))
+
+/******************************************************************
+
+      LEVELS  STATE  TABLES
+
+ In all levels state tables,
+      - state 0 is the initial state
+      - the Res column is the increment to add to the text level
+        for this property sequence.
+
+ The impAct arrays for each table of a pair map the local action
+ numbers of the table to the total list of actions. For instance,
+ action 2 in a given table corresponds to the action number which
+ appears in entry [2] of the impAct array for that table.
+ The first entry of all impAct arrays must be 0.
+
+ Action 1: init conditional sequence
+        2: prepend conditional sequence to current sequence
+        3: set ON sequence to new level - 1
+        4: init EN/AN/ON sequence
+        5: fix EN/AN/ON sequence followed by R
+        6: set previous level sequence to level 2
+
+ Notes:
+  1) These tables are used in ProcessPropertySeq(). The input
+     is property sequences as determined by ResolveImplicitLevels.
+  2) Most such property sequences are processed immediately
+     (levels are assigned).
+  3) However, some sequences cannot be assigned a final level till
+     one or more following sequences are received. For instance,
+     ON following an R sequence within an even-level paragraph.
+     If the following sequence is R, the ON sequence will be
+     assigned basic run level+1, and so will the R sequence.
+  4) S is generally handled like ON, since its level will be fixed
+     to paragraph level in AdjustWSLevels().
+
+*/
+
+static const ImpTab impTabL =   /* Even paragraph level */
+/*  In this table, conditional sequences receive the higher possible level
+    until proven otherwise.
+*/
+{
+/*                         L ,     R ,    EN ,    AN ,    ON ,     S ,     B , Res */
+/* 0 : init       */ {     0 ,     1 ,     0 ,     2 ,     0 ,     0 ,     0 ,  0 },
+/* 1 : R          */ {     0 ,     1 ,     3 ,     3 , s(1,4), s(1,4),     0 ,  1 },
+/* 2 : AN         */ {     0 ,     1 ,     0 ,     2 , s(1,5), s(1,5),     0 ,  2 },
+/* 3 : R+EN/AN    */ {     0 ,     1 ,     3 ,     3 , s(1,4), s(1,4),     0 ,  2 },
+/* 4 : R+ON       */ { s(2,0),     1 ,     3 ,     3 ,     4 ,     4 , s(2,0),  1 },
+/* 5 : AN+ON      */ { s(2,0),     1 , s(2,0),     2 ,     5 ,     5 , s(2,0),  1 }
+};
+static const ImpTab impTabR =   /* Odd  paragraph level */
+/*  In this table, conditional sequences receive the lower possible level
+    until proven otherwise.
+*/
+{
+/*                         L ,     R ,    EN ,    AN ,    ON ,     S ,     B , Res */
+/* 0 : init       */ {     1 ,     0 ,     2 ,     2 ,     0 ,     0 ,     0 ,  0 },
+/* 1 : L          */ {     1 ,     0 ,     1 ,     3 , s(1,4), s(1,4),     0 ,  1 },
+/* 2 : EN/AN      */ {     1 ,     0 ,     2 ,     2 ,     0 ,     0 ,     0 ,  1 },
+/* 3 : L+AN       */ {     1 ,     0 ,     1 ,     3 ,     5 ,     5 ,     0 ,  1 },
+/* 4 : L+ON       */ { s(2,1),     0 , s(2,1),     3 ,     4 ,     4 ,     0 ,  0 },
+/* 5 : L+AN+ON    */ {     1 ,     0 ,     1 ,     3 ,     5 ,     5 ,     0 ,  0 }
+};
+
+#undef s
+
+static ImpAct impAct0 = {0,1,2,3,4,5,6};
+static PImpTab impTab[2] = {impTabL, impTabR};
+
+/*------------------------------------------------------------------------*/
+
 /* perform rules (Wn), (Nn), and (In) on a run of the text ------------------ */
 
 /*
@@ -745,16 +1116,6 @@ nsBidiDirection nsBidi::DirectionFromFlags(Flags aFlags)
  * (except for W5: sequences of ET) and keeps track of changes
  * in a rule Wp that affect a later Wq (p<q).
  *
- * historyOfEN is a variable-saver: it contains 4 boolean states;
- * a bit in it set to 1 means:
- *  bit 0: the current code is an EN after W2
- *  bit 1: the current code is an EN after W4
- *  bit 2: the previous code was an EN after W2
- *  bit 3: the previous code was an EN after W4
- * In other words, b0..1 have transitions of EN in the current iteration,
- * while b2..3 have the transitions of EN in the previous iteration.
- * A simple historyOfEN<<=2 suffices for the propagation.
- *
  * The (Nn) and (In) rules are also performed in that same single loop,
  * but effectively one iteration behind for white space.
  *
@@ -762,286 +1123,159 @@ nsBidiDirection nsBidi::DirectionFromFlags(Flags aFlags)
  * to actually store the intermediate directional properties in dirProps[].
  */
 
-#define EN_SHIFT 2
-#define EN_AFTER_W2 1
-#define EN_AFTER_W4 2
-#define EN_ALL 3
-#define PREV_EN_AFTER_W2 4
-#define PREV_EN_AFTER_W4 8
+void nsBidi::ProcessPropertySeq(LevState *pLevState, uint8_t _prop, int32_t start, int32_t limit)
+{
+  uint8_t cell, oldStateSeq, actionSeq;
+  PImpTab pImpTab = pLevState->pImpTab;
+  PImpAct pImpAct = pLevState->pImpAct;
+  nsBidiLevel* levels = mLevels;
+  nsBidiLevel level, addLevel;
+  int32_t start0, k;
+
+  start0 = start;                         /* save original start position */
+  oldStateSeq = (uint8_t)pLevState->state;
+  cell = pImpTab[oldStateSeq][_prop];
+  pLevState->state = GET_STATE(cell);       /* isolate the new state */
+  actionSeq = pImpAct[GET_ACTION(cell)]; /* isolate the action */
+  addLevel = pImpTab[pLevState->state][IMPTABLEVELS_RES];
+
+  if(actionSeq) {
+    switch(actionSeq) {
+    case 1:                         /* init ON seq */
+      pLevState->startON = start0;
+      break;
+
+    case 2:                         /* prepend ON seq to current seq */
+      start = pLevState->startON;
+      break;
+
+    default:                        /* we should never get here */
+      MOZ_ASSERT(false);
+      break;
+    }
+  }
+  if(addLevel || (start < start0)) {
+    level = pLevState->runLevel + addLevel;
+    if (start >= pLevState->runStart) {
+      for (k = start; k < limit; k++) {
+        levels[k] = level;
+      }
+    } else {
+      DirProp *dirProps = mDirProps, dirProp;
+      int32_t isolateCount = 0;
+      for (k = start; k < limit; k++) {
+        dirProp = dirProps[k];
+        if (dirProp == PDI) {
+          isolateCount--;
+        }
+        if (isolateCount == 0) {
+          levels[k]=level;
+        }
+        if (dirProp == LRI || dirProp == RLI) {
+          isolateCount++;
+        }
+      }
+    }
+  }
+}
 
 void nsBidi::ResolveImplicitLevels(int32_t aStart, int32_t aLimit,
                    DirProp aSOR, DirProp aEOR)
 {
-  const DirProp *dirProps=mDirProps;
-  nsBidiLevel *levels=mLevels;
+  const DirProp *dirProps = mDirProps;
+  DirProp dirProp;
+  LevState levState;
+  int32_t i, start1, start2;
+  uint16_t oldStateImp, stateImp, actionImp;
+  uint8_t gprop, resProp, cell;
 
-  int32_t i, next, neutralStart=-1;
-  DirProp prevDirProp, dirProp, nextDirProp, lastStrong, beforeNeutral;
-  uint8_t historyOfEN;
+  /* initialize for property and levels state tables */
+  levState.startON = -1;
+  levState.runStart = aStart;
+  levState.runLevel = mLevels[aStart];
+  levState.pImpTab = impTab[levState.runLevel & 1];
+  levState.pImpAct = impAct0;
 
-  /* initialize: current at aSOR, next at aStart (it is aStart<aLimit) */
-  next=aStart;
-  beforeNeutral=dirProp=lastStrong=aSOR;
-  nextDirProp=dirProps[next];
-  historyOfEN=0;
-
-  /*
-   * In all steps of this implementation, BN and explicit embedding codes
-   * must be treated as if they didn't exist (X9).
-   * They will get levels set before a non-neutral character, and remain
-   * undefined before a neutral one, but AdjustWSLevels() will take care
-   * of all of them.
-   */
-  while(DIRPROP_FLAG(nextDirProp)&MASK_BN_EXPLICIT) {
-    if(++next<aLimit) {
-      nextDirProp=dirProps[next];
+  /* The isolates[] entries contain enough information to
+     resume the bidi algorithm in the same state as it was
+     when it was interrupted by an isolate sequence. */
+  if (dirProps[aStart] == PDI) {
+    start1 = mIsolates[mIsolateCount].start1;
+    stateImp = mIsolates[mIsolateCount].stateImp;
+    levState.state = mIsolates[mIsolateCount].state;
+    mIsolateCount--;
+  } else {
+    start1 = aStart;
+    if (dirProps[aStart] == NSM) {
+      stateImp = 1 + aSOR;
     } else {
-      nextDirProp=aEOR;
-      break;
+      stateImp = 0;
     }
+    levState.state = 0;
+    ProcessPropertySeq(&levState, aSOR, aStart, aStart);
   }
+  start2 = aStart;
 
-  /* loop for entire run */
-  while(next<aLimit) {
-    /* advance */
-    prevDirProp=dirProp;
-    dirProp=nextDirProp;
-    i=next;
-    do {
-      if(++next<aLimit) {
-        nextDirProp=dirProps[next];
-      } else {
-        nextDirProp=aEOR;
-        break;
+  for (i = aStart; i <= aLimit; i++) {
+    if (i >= aLimit) {
+      if (aLimit > aStart) {
+        dirProp = mDirProps[aLimit - 1];
+        if (dirProp == LRI || dirProp == RLI) {
+          break;  /* no forced closing for sequence ending with LRI/RLI */
+        }
       }
-    } while(DIRPROP_FLAG(nextDirProp)&MASK_BN_EXPLICIT);
-    historyOfEN<<=EN_SHIFT;
-
-    /* (W1..W7) */
-    switch(dirProp) {
-      case L:
-        lastStrong=L;
-        break;
-      case R:
-        lastStrong=R;
-        break;
-      case AL:
-        /* (W3) */
-        lastStrong=AL;
-        dirProp=R;
-        break;
-      case EN:
-        /* we have to set historyOfEN correctly */
-        if(lastStrong==AL) {
-          /* (W2) */
-          dirProp=AN;
-        } else {
-          if(lastStrong==L) {
-            /* (W7) */
-            dirProp=L;
-          }
-          /* this EN stays after (W2) and (W4) - at least before (W7) */
-          historyOfEN|=EN_ALL;
-        }
-        break;
-      case ES:
-        if( historyOfEN&PREV_EN_AFTER_W2 &&     /* previous was EN before (W4) */
-            nextDirProp==EN && lastStrong!=AL   /* next is EN and (W2) won't make it AN */
-          ) {
-          /* (W4) */
-          if(lastStrong!=L) {
-            dirProp=EN;
-          } else {
-            /* (W7) */
-            dirProp=L;
-          }
-          historyOfEN|=EN_AFTER_W4;
-        } else {
-          /* (W6) */
-          dirProp=O_N;
-        }
-        break;
-      case CS:
-        if( historyOfEN&PREV_EN_AFTER_W2 &&     /* previous was EN before (W4) */
-            nextDirProp==EN && lastStrong!=AL   /* next is EN and (W2) won't make it AN */
-          ) {
-          /* (W4) */
-          if(lastStrong!=L) {
-            dirProp=EN;
-          } else {
-            /* (W7) */
-            dirProp=L;
-          }
-          historyOfEN|=EN_AFTER_W4;
-        } else if(prevDirProp==AN &&                    /* previous was AN */
-              (nextDirProp==AN ||                   /* next is AN */
-               (nextDirProp==EN && lastStrong==AL))   /* or (W2) will make it one */
-             ) {
-          /* (W4) */
-          dirProp=AN;
-        } else {
-          /* (W6) */
-          dirProp=O_N;
-        }
-        break;
-      case ET:
-        /* get sequence of ET; advance only next, not current, previous or historyOfEN */
-        while(next<aLimit && DIRPROP_FLAG(nextDirProp)&MASK_ET_NSM_BN /* (W1), (X9) */) {
-          if(++next<aLimit) {
-            nextDirProp=dirProps[next];
-          } else {
-            nextDirProp=aEOR;
-            break;
-          }
-        }
-
-        if( historyOfEN&PREV_EN_AFTER_W4 ||     /* previous was EN before (W5) */
-            (nextDirProp==EN && lastStrong!=AL)   /* next is EN and (W2) won't make it AN */
-          ) {
-          /* (W5) */
-          if(lastStrong!=L) {
-            dirProp=EN;
-          } else {
-            /* (W7) */
-            dirProp=L;
-          }
-        } else {
-          /* (W6) */
-          dirProp=O_N;
-        }
-
-        /* apply the result of (W1), (W5)..(W7) to the entire sequence of ET */
-        break;
-      case NSM:
-        /* (W1) */
-        dirProp=prevDirProp;
-        /* set historyOfEN back to prevDirProp's historyOfEN */
-        historyOfEN>>=EN_SHIFT;
-        /*
-         * Technically, this should be done before the switch() in the form
-         *      if(nextDirProp==NSM) {
-         *          dirProps[next]=nextDirProp=dirProp;
-         *      }
-         *
-         * - effectively one iteration ahead.
-         * However, whether the next dirProp is NSM or is equal to the current dirProp
-         * does not change the outcome of any condition in (W2)..(W7).
-         */
-        break;
-      default:
-        break;
+      gprop = aEOR;
+    } else {
+      DirProp prop;
+      prop = PURE_DIRPROP(dirProps[i]);
+      gprop = groupProp[prop];
     }
-
-    /* here, it is always [prev,this,next]dirProp!=BN; it may be next>i+1 */
-
-    /* perform (Nn) - here, only L, R, EN, AN, and neutrals are left */
-    /* this is one iteration late for the neutrals */
-    if(DIRPROP_FLAG(dirProp)&MASK_N) {
-      if(neutralStart<0) {
-        /* start of a sequence of neutrals */
-        neutralStart=i;
-        beforeNeutral=prevDirProp;
-      }
-    } else /* not a neutral, can be only one of { L, R, EN, AN } */ {
-      /*
-       * Note that all levels[] values are still the same at this
-       * point because this function is called for an entire
-       * same-level run.
-       * Therefore, we need to read only one actual level.
-       */
-      nsBidiLevel level=levels[i];
-
-      if(neutralStart>=0) {
-        nsBidiLevel final;
-        /* end of a sequence of neutrals (dirProp is "afterNeutral") */
-        if(beforeNeutral==L) {
-          if(dirProp==L) {
-            final=0;                /* make all neutrals L (N1) */
-          } else {
-            final=level;            /* make all neutrals "e" (N2) */
-          }
-        } else /* beforeNeutral is one of { R, EN, AN } */ {
-          if(dirProp==L) {
-            final=level;            /* make all neutrals "e" (N2) */
-          } else {
-            final=1;                /* make all neutrals R (N1) */
-          }
-        }
-        /* perform (In) on the sequence of neutrals */
-        if((level^final)&1) {
-          /* do something only if we need to _change_ the level */
-          do {
-            ++levels[neutralStart];
-          } while(++neutralStart<i);
-        }
-        neutralStart=-1;
-      }
-
-      /* perform (In) on the non-neutral character */
-      /*
-       * in the cases of (W5), processing a sequence of ET,
-       * and of (X9), skipping BN,
-       * there may be multiple characters from i to <next
-       * that all get (virtually) the same dirProp and (really) the same level
-       */
-      if(dirProp==L) {
-        if(level&1) {
-          ++level;
-        } else {
-          i=next;     /* we keep the levels */
-        }
-      } else if(dirProp==R) {
-        if(!(level&1)) {
-          ++level;
-        } else {
-          i=next;     /* we keep the levels */
-        }
-      } else /* EN or AN */ {
-        level=(level+2)&~1;     /* least greater even level */
-      }
-
-      /* apply the new level to the sequence, if necessary */
-      while(i<next) {
-        levels[i++]=level;
+    oldStateImp = stateImp;
+    cell = impTabProps[oldStateImp][gprop];
+    stateImp = GET_STATEPROPS(cell);      /* isolate the new state */
+    actionImp = GET_ACTIONPROPS(cell);    /* isolate the action */
+    if ((i == aLimit) && (actionImp == 0)) {
+      /* there is an unprocessed sequence if its property == eor   */
+      actionImp = 1;                      /* process the last sequence */
+    }
+    if (actionImp) {
+      resProp = impTabProps[oldStateImp][IMPTABPROPS_RES];
+      switch (actionImp) {
+      case 1:             /* process current seq1, init new seq1 */
+        ProcessPropertySeq(&levState, resProp, start1, i);
+        start1 = i;
+        break;
+      case 2:             /* init new seq2 */
+        start2 = i;
+        break;
+      case 3:             /* process seq1, process seq2, init new seq1 */
+        ProcessPropertySeq(&levState, resProp, start1, start2);
+        ProcessPropertySeq(&levState, DirProp_ON, start2, i);
+        start1 = i;
+        break;
+      case 4:             /* process seq1, set seq1=seq2, init new seq2 */
+        ProcessPropertySeq(&levState, resProp, start1, start2);
+        start1 = start2;
+        start2 = i;
+        break;
+      default:            /* we should never get here */
+        MOZ_ASSERT(false);
+        break;
       }
     }
   }
 
-  /* perform (Nn) - here,
-  the character after the neutrals is aEOR, which is either L or R */
-  /* this is one iteration late for the neutrals */
-  if(neutralStart>=0) {
-    /*
-     * Note that all levels[] values are still the same at this
-     * point because this function is called for an entire
-     * same-level run.
-     * Therefore, we need to read only one actual level.
-     */
-    nsBidiLevel level=levels[neutralStart], final;
-
-    /* end of a sequence of neutrals (aEOR is "afterNeutral") */
-    if(beforeNeutral==L) {
-      if(aEOR==L) {
-        final=0;                /* make all neutrals L (N1) */
-      } else {
-        final=level;            /* make all neutrals "e" (N2) */
-      }
-    } else /* beforeNeutral is one of { R, EN, AN } */ {
-      if(aEOR==L) {
-        final=level;            /* make all neutrals "e" (N2) */
-      } else {
-        final=1;                /* make all neutrals R (N1) */
-      }
-    }
-    /* perform (In) on the sequence of neutrals */
-    if((level^final)&1) {
-      /* do something only if we need to _change_ the level */
-      do {
-        ++levels[neutralStart];
-      } while(++neutralStart<aLimit);
-    }
+  dirProp = dirProps[aLimit - 1];
+  if ((dirProp == LRI || dirProp == RLI) && aLimit < mLength) {
+    mIsolateCount++;
+    mIsolates[mIsolateCount].stateImp = stateImp;
+    mIsolates[mIsolateCount].state = levState.state;
+    mIsolates[mIsolateCount].start1 = start1;
+  } else {
+    ProcessPropertySeq(&levState, aEOR, aLimit, aLimit);
   }
 }
+
 
 /* perform (L1) and (X9) ---------------------------------------------------- */
 
@@ -1064,14 +1298,14 @@ void nsBidi::AdjustWSLevels()
     i=mTrailingWSStart;
     while(i>0) {
       /* reset a sequence of WS/BN before eop and B/S to the paragraph paraLevel */
-      while(i>0 && DIRPROP_FLAG(dirProps[--i])&MASK_WS) {
+      while (i > 0 && DIRPROP_FLAG(PURE_DIRPROP(dirProps[--i])) & MASK_WS) {
         levels[i]=paraLevel;
       }
 
       /* reset BN to the next character's paraLevel until B/S, which restarts above loop */
       /* here, i+1 is guaranteed to be <length */
       while(i>0) {
-        flag=DIRPROP_FLAG(dirProps[--i]);
+        flag = DIRPROP_FLAG(PURE_DIRPROP(dirProps[--i]));
         if(flag&MASK_BN_EXPLICIT) {
           levels[i]=levels[i+1];
         } else if(flag&MASK_B_S) {
@@ -1079,14 +1313,6 @@ void nsBidi::AdjustWSLevels()
           break;
         }
       }
-    }
-  }
-
-  /* now remove the NSBIDI_LEVEL_OVERRIDE flags, if any */
-  /* (a separate loop can be optimized more easily by a compiler) */
-  if(mFlags&MASK_OVERRIDE) {
-    for(i=mTrailingWSStart; i>0;) {
-      levels[--i]&=~NSBIDI_LEVEL_OVERRIDE;
     }
   }
 }
@@ -1118,9 +1344,9 @@ nsresult nsBidi::GetLength(int32_t* aLength)
  * These functions deal with the aspects of potentially mixed-directional
  * text in a single paragraph or in a line of a single paragraph
  * which has already been processed according to
- * the Unicode 3.0 Bidi algorithm as defined in
- * http://www.unicode.org/unicode/reports/tr9/ , version 5,
- * also described in The Unicode Standard, Version 3.0 .
+ * the Unicode 6.3 Bidi algorithm as defined in
+ * http://www.unicode.org/unicode/reports/tr9/ , version 28,
+ * also described in The Unicode Standard, Version 6.3.0 .
  *
  * This means that there is a nsBidi object with a levels
  * and a dirProps array.
@@ -1161,7 +1387,7 @@ nsresult nsBidi::GetLength(int32_t* aLength)
  * a pointer into them, not by copying. This again saves memory and forbids to
  * change the now shared levels for (L1).
  */
-nsresult nsBidi::SetLine(nsIBidi* aParaBidi, int32_t aStart, int32_t aLimit)
+nsresult nsBidi::SetLine(const nsBidi* aParaBidi, int32_t aStart, int32_t aLimit)
 {
   nsBidi* pParent = (nsBidi*)aParaBidi;
   int32_t length;
@@ -1169,102 +1395,92 @@ nsresult nsBidi::SetLine(nsIBidi* aParaBidi, int32_t aStart, int32_t aLimit)
   /* check the argument values */
   if(pParent==nullptr) {
     return NS_ERROR_INVALID_POINTER;
-  } else if(aStart<0 || aStart>aLimit || aLimit>pParent->mLength) {
+  } else if(aStart < 0 || aStart >= aLimit || aLimit > pParent->mLength) {
     return NS_ERROR_INVALID_ARG;
   }
 
   /* set members from our aParaBidi parent */
-  length=mLength=aLimit-aStart;
+  length = mLength = aLimit - aStart;
   mParaLevel=pParent->mParaLevel;
 
   mRuns=nullptr;
   mFlags=0;
 
-  if(length>0) {
-    mDirProps=pParent->mDirProps+aStart;
-    mLevels=pParent->mLevels+aStart;
-    mRunCount=-1;
+  mDirProps=pParent->mDirProps+aStart;
+  mLevels=pParent->mLevels+aStart;
+  mRunCount=-1;
 
-    if(pParent->mDirection!=NSBIDI_MIXED) {
-      /* the parent is already trivial */
-      mDirection=pParent->mDirection;
+  if(pParent->mDirection!=NSBIDI_MIXED) {
+    /* the parent is already trivial */
+    mDirection=pParent->mDirection;
 
-      /*
-       * The parent's levels are all either
-       * implicitly or explicitly ==paraLevel;
-       * do the same here.
-       */
-      if(pParent->mTrailingWSStart<=aStart) {
-        mTrailingWSStart=0;
-      } else if(pParent->mTrailingWSStart<aLimit) {
-        mTrailingWSStart=pParent->mTrailingWSStart-aStart;
-      } else {
-        mTrailingWSStart=length;
-      }
+    /*
+     * The parent's levels are all either
+     * implicitly or explicitly ==paraLevel;
+     * do the same here.
+     */
+    if(pParent->mTrailingWSStart<=aStart) {
+      mTrailingWSStart=0;
+    } else if(pParent->mTrailingWSStart<aLimit) {
+      mTrailingWSStart=pParent->mTrailingWSStart-aStart;
     } else {
-      const nsBidiLevel *levels=mLevels;
-      int32_t i, trailingWSStart;
-      nsBidiLevel level;
-      Flags flags=0;
-
-      SetTrailingWSStart();
-      trailingWSStart=mTrailingWSStart;
-
-      /* recalculate pLineBidi->direction */
-      if(trailingWSStart==0) {
-        /* all levels are at paraLevel */
-        mDirection=(nsBidiDirection)(mParaLevel&1);
-      } else {
-        /* get the level of the first character */
-        level=levels[0]&1;
-
-        /* if there is anything of a different level, then the line is mixed */
-        if(trailingWSStart<length && (mParaLevel&1)!=level) {
-          /* the trailing WS is at paraLevel, which differs from levels[0] */
-          mDirection=NSBIDI_MIXED;
-        } else {
-          /* see if levels[1..trailingWSStart-1] have the same direction as levels[0] and paraLevel */
-          i=1;
-          for(;;) {
-            if(i==trailingWSStart) {
-              /* the direction values match those in level */
-              mDirection=(nsBidiDirection)level;
-              break;
-            } else if((levels[i]&1)!=level) {
-              mDirection=NSBIDI_MIXED;
-              break;
-            }
-            ++i;
-          }
-        }
-      }
-
-      switch(mDirection) {
-        case NSBIDI_LTR:
-          /* make sure paraLevel is even */
-          mParaLevel=(mParaLevel+1)&~1;
-
-          /* all levels are implicitly at paraLevel (important for GetLevels()) */
-          mTrailingWSStart=0;
-          break;
-        case NSBIDI_RTL:
-          /* make sure paraLevel is odd */
-          mParaLevel|=1;
-
-          /* all levels are implicitly at paraLevel (important for GetLevels()) */
-          mTrailingWSStart=0;
-          break;
-        default:
-          break;
-      }
+      mTrailingWSStart=length;
     }
   } else {
-    /* create an object for a zero-length line */
-    mDirection=mParaLevel&1 ? NSBIDI_RTL : NSBIDI_LTR;
-    mTrailingWSStart=mRunCount=0;
+    const nsBidiLevel *levels=mLevels;
+    int32_t i, trailingWSStart;
+    nsBidiLevel level;
 
-    mDirProps=nullptr;
-    mLevels=nullptr;
+    SetTrailingWSStart();
+    trailingWSStart=mTrailingWSStart;
+
+    /* recalculate pLineBidi->direction */
+    if(trailingWSStart==0) {
+      /* all levels are at paraLevel */
+      mDirection=(nsBidiDirection)(mParaLevel&1);
+   } else {
+      /* get the level of the first character */
+      level=levels[0]&1;
+
+      /* if there is anything of a different level, then the line is mixed */
+      if(trailingWSStart<length && (mParaLevel&1)!=level) {
+        /* the trailing WS is at paraLevel, which differs from levels[0] */
+        mDirection=NSBIDI_MIXED;
+      } else {
+        /* see if levels[1..trailingWSStart-1] have the same direction as levels[0] and paraLevel */
+        i=1;
+        for(;;) {
+          if(i==trailingWSStart) {
+            /* the direction values match those in level */
+            mDirection=(nsBidiDirection)level;
+            break;
+          } else if((levels[i]&1)!=level) {
+            mDirection=NSBIDI_MIXED;
+            break;
+          }
+          ++i;
+        }
+      }
+    }
+
+    switch(mDirection) {
+      case NSBIDI_LTR:
+        /* make sure paraLevel is even */
+        mParaLevel=(mParaLevel+1)&~1;
+
+        /* all levels are implicitly at paraLevel (important for GetLevels()) */
+        mTrailingWSStart=0;
+      break;
+      case NSBIDI_RTL:
+        /* make sure paraLevel is odd */
+        mParaLevel|=1;
+
+        /* all levels are implicitly at paraLevel (important for GetLevels()) */
+        mTrailingWSStart=0;
+        break;
+      default:
+        break;
+    }
   }
   return NS_OK;
 }
@@ -1376,26 +1592,35 @@ nsresult nsBidi::GetLogicalRun(int32_t aLogicalStart, int32_t *aLogicalLimit, ns
     return NS_ERROR_INVALID_ARG;
   }
 
-  if(mDirection!=NSBIDI_MIXED || aLogicalStart>=mTrailingWSStart) {
-    if(aLogicalLimit!=nullptr) {
-      *aLogicalLimit=length;
-    }
-    if(aLevel!=nullptr) {
-      *aLevel=mParaLevel;
-    }
-  } else {
-    nsBidiLevel *levels=mLevels;
-    nsBidiLevel level=levels[aLogicalStart];
+  int32_t runCount, visualStart, logicalLimit, logicalFirst, i;
+  Run iRun;
 
-    /* search for the end of the run */
-    length=mTrailingWSStart;
-    while(++aLogicalStart<length && level==levels[aLogicalStart]) {}
+  /* CountRuns will check VALID_PARA_OR_LINE */
+  nsresult rv = CountRuns(&runCount);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-    if(aLogicalLimit!=nullptr) {
-      *aLogicalLimit=aLogicalStart;
+  visualStart = logicalLimit = 0;
+  iRun = mRuns[0];
+
+  for (i = 0; i < runCount; i++) {
+    iRun = mRuns[i];
+    logicalFirst = GET_INDEX(iRun.logicalStart);
+    logicalLimit = logicalFirst + iRun.visualLimit - visualStart;
+    if ((aLogicalStart >= logicalFirst) && (aLogicalStart < logicalLimit)) {
+       break;
     }
-    if(aLevel!=nullptr) {
-      *aLevel=level;
+    visualStart = iRun.visualLimit;
+  }
+  if (aLogicalLimit) {
+    *aLogicalLimit = logicalLimit;
+  }
+  if (aLevel) {
+    if (mDirection != NSBIDI_MIXED || aLogicalStart >= mTrailingWSStart) {
+      *aLevel = mParaLevel;
+    } else {
+      *aLevel = mLevels[aLogicalStart];
     }
   }
   return NS_OK;
@@ -1451,6 +1676,14 @@ nsresult nsBidi::GetVisualRun(int32_t aRunIndex, int32_t *aLogicalStart, int32_t
  */
 bool nsBidi::GetRuns()
 {
+  /*
+   * This method returns immediately if the runs are already set. This
+   * includes the case of length==0 (handled in setPara)..
+   */
+  if (mRunCount >= 0) {
+    return true;
+  }
+
   if(mDirection!=NSBIDI_MIXED) {
     /* simple, single-run case - this covers length==0 */
     GetSingleRun(mParaLevel);
@@ -1469,57 +1702,56 @@ bool nsBidi::GetRuns()
      * In other words, for the trailing WS, it may be
      * levels[]!=paraLevel but we have to treat it like it were so.
      */
-    if(limit==0) {
-      /* there is only WS on this line */
-      GetSingleRun(mParaLevel);
-    } else {
-      nsBidiLevel *levels=mLevels;
-      int32_t i, runCount;
-      nsBidiLevel level=NSBIDI_DEFAULT_LTR;   /* initialize with no valid level */
+    nsBidiLevel *levels=mLevels;
+    int32_t i, runCount;
+    nsBidiLevel level=NSBIDI_DEFAULT_LTR;   /* initialize with no valid level */
 
-      /* count the runs, there is at least one non-WS run, and limit>0 */
-      runCount=0;
-      for(i=0; i<limit; ++i) {
-        /* increment runCount at the start of each run */
-        if(levels[i]!=level) {
-          ++runCount;
-          level=levels[i];
-        }
+    /* count the runs, there is at least one non-WS run, and limit>0 */
+    runCount=0;
+    for(i=0; i<limit; ++i) {
+      /* increment runCount at the start of each run */
+      if(levels[i]!=level) {
+        ++runCount;
+        level=levels[i];
+      }
+    }
+
+    /*
+     * We don't need to see if the last run can be merged with a trailing
+     * WS run because SetTrailingWSStart() would have done that.
+     */
+    if(runCount==1 && limit==length) {
+      /* There is only one non-WS run and no trailing WS-run. */
+      GetSingleRun(levels[0]);
+    } else /* runCount>1 || limit<length */ {
+      /* allocate and set the runs */
+      Run *runs;
+      int32_t runIndex, start;
+      nsBidiLevel minLevel=NSBIDI_MAX_EXPLICIT_LEVEL+1, maxLevel=0;
+
+      /* now, count a (non-mergable) WS run */
+      if(limit<length) {
+        ++runCount;
       }
 
-      /*
-       * We don't need to see if the last run can be merged with a trailing
-       * WS run because SetTrailingWSStart() would have done that.
-       */
-      if(runCount==1 && limit==length) {
-        /* There is only one non-WS run and no trailing WS-run. */
-        GetSingleRun(levels[0]);
-      } else /* runCount>1 || limit<length */ {
-        /* allocate and set the runs */
-        Run *runs;
-        int32_t runIndex, start;
-        nsBidiLevel minLevel=NSBIDI_MAX_EXPLICIT_LEVEL+1, maxLevel=0;
+      /* runCount>1 */
+      if(GETRUNSMEMORY(runCount)) {
+        runs=mRunsMemory;
+      } else {
+        return false;
+      }
 
-        /* now, count a (non-mergable) WS run */
-        if(limit<length) {
-          ++runCount;
-        }
+      /* set the runs */
+      /* this could be optimized, e.g.: 464->444, 484->444, 575->555, 595->555 */
+      /* however, that would take longer and make other functions more complicated */
+      runIndex=0;
 
-        /* runCount>1 */
-        if(GETRUNSMEMORY(runCount)) {
-          runs=mRunsMemory;
-        } else {
-          return false;
-        }
-
-        /* set the runs */
-        /* this could be optimized, e.g.: 464->444, 484->444, 575->555, 595->555 */
-        /* however, that would take longer and make other functions more complicated */
-        runIndex=0;
-
-        /* search for the run ends */
-        start=0;
-        level=levels[0];
+      /* search for the run ends */
+      i = 0;
+      do {
+        /* prepare this run */
+        start = i;
+        level = levels[i];
         if(level<minLevel) {
           minLevel=level;
         }
@@ -1527,61 +1759,49 @@ bool nsBidi::GetRuns()
           maxLevel=level;
         }
 
-        /* initialize visualLimit values with the run lengths */
-        for(i=1; i<limit; ++i) {
-          if(levels[i]!=level) {
-            /* i is another run limit */
-            runs[runIndex].logicalStart=start;
-            runs[runIndex].visualLimit=i-start;
-            start=i;
-
-            level=levels[i];
-            if(level<minLevel) {
-              minLevel=level;
-            }
-            if(level>maxLevel) {
-              maxLevel=level;
-            }
-            ++runIndex;
-          }
+        /* look for the run limit */
+        while (++i < limit && levels[i] == level) {
         }
 
-        /* finish the last run at i==limit */
-        runs[runIndex].logicalStart=start;
-        runs[runIndex].visualLimit=limit-start;
+        /* i is another run limit */
+        runs[runIndex].logicalStart = start;
+        runs[runIndex].visualLimit = i - start;
         ++runIndex;
+      } while (i < limit);
 
-        if(limit<length) {
-          /* there is a separate WS run */
-          runs[runIndex].logicalStart=limit;
-          runs[runIndex].visualLimit=length-limit;
-          if(mParaLevel<minLevel) {
-            minLevel=mParaLevel;
-          }
+      if(limit<length) {
+        /* there is a separate WS run */
+        runs[runIndex].logicalStart=limit;
+        runs[runIndex].visualLimit=length-limit;
+        if(mParaLevel<minLevel) {
+          minLevel=mParaLevel;
         }
+      }
 
-        /* set the object fields */
-        mRuns=runs;
-        mRunCount=runCount;
+      /* set the object fields */
+      mRuns=runs;
+      mRunCount=runCount;
 
-        ReorderLine(minLevel, maxLevel);
+      ReorderLine(minLevel, maxLevel);
 
-        /* now add the direction flags and adjust the visualLimit's to be just that */
-        ADD_ODD_BIT_FROM_LEVEL(runs[0].logicalStart, levels[runs[0].logicalStart]);
-        limit=runs[0].visualLimit;
-        for(i=1; i<runIndex; ++i) {
-          ADD_ODD_BIT_FROM_LEVEL(runs[i].logicalStart, levels[runs[i].logicalStart]);
-          limit=runs[i].visualLimit+=limit;
-        }
+      /* now add the direction flags and adjust the visualLimit's to be just that */
+      /* this loop will also handling the trailing WS run */
+      limit = 0;
+      for (i = 0; i < runCount; ++i) {
+        ADD_ODD_BIT_FROM_LEVEL(runs[i].logicalStart, levels[runs[i].logicalStart]);
+        limit += runs[i].visualLimit;
+        runs[i].visualLimit = limit;
+      }
 
-        /* same for the trailing WS run */
-        if(runIndex<runCount) {
-          ADD_ODD_BIT_FROM_LEVEL(runs[i].logicalStart, mParaLevel);
-          runs[runIndex].visualLimit+=limit;
-        }
+      /* Set the "odd" bit for the trailing WS run. */
+      /* For a RTL paragraph, it will be the *first* run in visual order. */
+      if (runIndex < runCount) {
+        int32_t trailingRun = (mParaLevel & 1) ? 0 : runIndex;
+        ADD_ODD_BIT_FROM_LEVEL(runs[trailingRun].logicalStart, mParaLevel);
       }
     }
   }
+
   return true;
 }
 
@@ -1632,9 +1852,9 @@ void nsBidi::GetSingleRun(nsBidiLevel aLevel)
  */
 void nsBidi::ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel)
 {
-  Run *runs;
+  Run *runs, tempRun;
   nsBidiLevel *levels;
-  int32_t firstRun, endRun, limitRun, runCount, temp;
+  int32_t firstRun, endRun, limitRun, runCount;
 
   /* nothing to do? */
   if(aMaxLevel<=(aMinLevel|1)) {
@@ -1677,14 +1897,9 @@ void nsBidi::ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel)
       /* Swap the entire sequence of runs from firstRun to limitRun-1. */
       endRun=limitRun-1;
       while(firstRun<endRun) {
-        temp=runs[firstRun].logicalStart;
-        runs[firstRun].logicalStart=runs[endRun].logicalStart;
-        runs[endRun].logicalStart=temp;
-
-        temp=runs[firstRun].visualLimit;
-        runs[firstRun].visualLimit=runs[endRun].visualLimit;
-        runs[endRun].visualLimit=temp;
-
+        tempRun = runs[firstRun];
+        runs[firstRun] = runs[endRun];
+        runs[endRun] = tempRun;
         ++firstRun;
         --endRun;
       }
@@ -1708,14 +1923,9 @@ void nsBidi::ReorderLine(nsBidiLevel aMinLevel, nsBidiLevel aMaxLevel)
 
     /* Swap the entire sequence of all runs. (endRun==runCount) */
     while(firstRun<runCount) {
-      temp=runs[firstRun].logicalStart;
-      runs[firstRun].logicalStart=runs[runCount].logicalStart;
-      runs[runCount].logicalStart=temp;
-
-      temp=runs[firstRun].visualLimit;
-      runs[firstRun].visualLimit=runs[runCount].visualLimit;
-      runs[runCount].visualLimit=temp;
-
+      tempRun = runs[firstRun];
+      runs[firstRun] = runs[runCount];
+      runs[runCount] = tempRun;
       ++firstRun;
       --runCount;
     }
@@ -1827,119 +2037,149 @@ bool nsBidi::PrepareReorder(const nsBidiLevel *aLevels, int32_t aLength,
 /* API functions for logical<->visual mapping ------------------------------- */
 
 nsresult nsBidi::GetVisualIndex(int32_t aLogicalIndex, int32_t* aVisualIndex) {
+  int32_t visualIndex = NSBIDI_MAP_NOWHERE;
+
   if(aLogicalIndex<0 || mLength<=aLogicalIndex) {
     return NS_ERROR_INVALID_ARG;
   } else {
     /* we can do the trivial cases without the runs array */
     switch(mDirection) {
-      case NSBIDI_LTR:
-        *aVisualIndex = aLogicalIndex;
-        return NS_OK;
-      case NSBIDI_RTL:
-        *aVisualIndex = mLength-aLogicalIndex-1;
-        return NS_OK;
-      default:
-        if(mRunCount<0 && !GetRuns()) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        } else {
-          Run *runs=mRuns;
-          int32_t i, visualStart=0, offset, length;
+    case NSBIDI_LTR:
+      *aVisualIndex = aLogicalIndex;
+      return NS_OK;
+    case NSBIDI_RTL:
+      *aVisualIndex = mLength-aLogicalIndex-1;
+      return NS_OK;
+    default:
+      if(mRunCount<0 && !GetRuns()) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        Run *runs=mRuns;
+        int32_t i, visualStart=0, offset, length;
 
-          /* linear search for the run, search on the visual runs */
-          for(i=0;; ++i) {
-            length=runs[i].visualLimit-visualStart;
-            offset=aLogicalIndex-GET_INDEX(runs[i].logicalStart);
-            if(offset>=0 && offset<length) {
-              if(IS_EVEN_RUN(runs[i].logicalStart)) {
-                /* LTR */
-                *aVisualIndex = visualStart+offset;
-                return NS_OK;
-              } else {
-                /* RTL */
-                *aVisualIndex = visualStart+length-offset-1;
-                return NS_OK;
-              }
+        /* linear search for the run, search on the visual runs */
+        for (i = 0; i < mRunCount; ++i) {
+          length=runs[i].visualLimit-visualStart;
+          offset=aLogicalIndex-GET_INDEX(runs[i].logicalStart);
+          if(offset>=0 && offset<length) {
+            if(IS_EVEN_RUN(runs[i].logicalStart)) {
+              /* LTR */
+              visualIndex = visualStart + offset;
+            } else {
+              /* RTL */
+              visualIndex = visualStart + length - offset - 1;
             }
-            visualStart+=length;
+            break;
           }
+          visualStart+=length;
         }
+        if (i >= mRunCount) {
+          *aVisualIndex = NSBIDI_MAP_NOWHERE;
+          return NS_OK;
+        }
+      }
     }
   }
+
+  *aVisualIndex = visualIndex;
+  return NS_OK;
 }
 
 nsresult nsBidi::GetLogicalIndex(int32_t aVisualIndex, int32_t *aLogicalIndex)
 {
   if(aVisualIndex<0 || mLength<=aVisualIndex) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  /* we can do the trivial cases without the runs array */
+  if (mDirection == NSBIDI_LTR) {
+    *aLogicalIndex = aVisualIndex;
+    return NS_OK;
+  } else if (mDirection == NSBIDI_RTL) {
+    *aLogicalIndex = mLength - aVisualIndex - 1;
+    return NS_OK;
+  }
+
+  if(mRunCount<0 && !GetRuns()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  Run *runs=mRuns;
+  int32_t i, runCount=mRunCount, start;
+
+  if(runCount<=10) {
+    /* linear search for the run */
+    for(i=0; aVisualIndex>=runs[i].visualLimit; ++i) {}
   } else {
-    /* we can do the trivial cases without the runs array */
-    switch(mDirection) {
-      case NSBIDI_LTR:
-        *aLogicalIndex = aVisualIndex;
-        return NS_OK;
-      case NSBIDI_RTL:
-        *aLogicalIndex = mLength-aVisualIndex-1;
-        return NS_OK;
-      default:
-        if(mRunCount<0 && !GetRuns()) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        } else {
-          Run *runs=mRuns;
-          int32_t i, runCount=mRunCount, start;
+    /* binary search for the run */
+    int32_t start=0, limit=runCount;
 
-          if(runCount<=10) {
-            /* linear search for the run */
-            for(i=0; aVisualIndex>=runs[i].visualLimit; ++i) {}
-          } else {
-            /* binary search for the run */
-            int32_t start=0, limit=runCount;
-
-            /* the middle if() will guaranteed find the run, we don't need a loop limit */
-            for(;;) {
-              i=(start+limit)/2;
-              if(aVisualIndex>=runs[i].visualLimit) {
-                start=i+1;
-              } else if(i==0 || aVisualIndex>=runs[i-1].visualLimit) {
-                break;
-              } else {
-                limit=i;
-              }
-            }
-          }
-
-          start=runs[i].logicalStart;
-          if(IS_EVEN_RUN(start)) {
-            /* LTR */
-            /* the offset in runs[i] is aVisualIndex-runs[i-1].visualLimit */
-            if(i>0) {
-              aVisualIndex-=runs[i-1].visualLimit;
-            }
-            *aLogicalIndex = GET_INDEX(start)+aVisualIndex;
-            return NS_OK;
-          } else {
-            /* RTL */
-            *aLogicalIndex = GET_INDEX(start)+runs[i].visualLimit-aVisualIndex-1;
-            return NS_OK;
-          }
-        }
+    /* the middle if() will guaranteed find the run, we don't need a loop limit */
+    for(;;) {
+      i=(start+limit)/2;
+      if(aVisualIndex>=runs[i].visualLimit) {
+        start=i+1;
+      } else if(i==0 || aVisualIndex>=runs[i-1].visualLimit) {
+        break;
+      } else {
+        limit=i;
+      }
     }
+  }
+
+  start=runs[i].logicalStart;
+  if(IS_EVEN_RUN(start)) {
+    /* LTR */
+    /* the offset in runs[i] is aVisualIndex-runs[i-1].visualLimit */
+    if(i>0) {
+      aVisualIndex-=runs[i-1].visualLimit;
+    }
+    *aLogicalIndex = GET_INDEX(start)+aVisualIndex;
+    return NS_OK;
+  } else {
+    /* RTL */
+    *aLogicalIndex = GET_INDEX(start)+runs[i].visualLimit-aVisualIndex-1;
+    return NS_OK;
   }
 }
 
 nsresult nsBidi::GetLogicalMap(int32_t *aIndexMap)
 {
-  nsBidiLevel *levels;
   nsresult rv;
 
-  /* GetLevels() checks all of its and our arguments */
-  rv = GetLevels(&levels);
+  /* CountRuns() checks for VALID_PARA_OR_LINE */
+  rv = CountRuns(nullptr);
   if(NS_FAILED(rv)) {
     return rv;
   } else if(aIndexMap==nullptr) {
     return NS_ERROR_INVALID_ARG;
   } else {
-    return ReorderLogical(levels, mLength, aIndexMap);
+    /* fill a logical-to-visual index map using the runs[] */
+    int32_t visualStart, visualLimit, j;
+    int32_t logicalStart;
+    Run *runs = mRuns;
+    if (mLength <= 0) {
+      return NS_OK;
+    }
+
+    visualStart = 0;
+    for (j = 0; j < mRunCount; ++j) {
+      logicalStart = GET_INDEX(runs[j].logicalStart);
+      visualLimit = runs[j].visualLimit;
+      if (IS_EVEN_RUN(runs[j].logicalStart)) {
+        do { /* LTR */
+          aIndexMap[logicalStart++] = visualStart++;
+        } while (visualStart < visualLimit);
+      } else {
+        logicalStart += visualLimit-visualStart;  /* logicalLimit */
+        do { /* RTL */
+          aIndexMap[--logicalStart] = visualStart++;
+        } while (visualStart < visualLimit);
+      }
+      /* visualStart==visualLimit; */
+    }
   }
+  return NS_OK;
 }
 
 nsresult nsBidi::GetVisualMap(int32_t *aIndexMap)
@@ -1947,12 +2187,14 @@ nsresult nsBidi::GetVisualMap(int32_t *aIndexMap)
   int32_t* runCount=nullptr;
   nsresult rv;
 
+  if(aIndexMap==nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   /* CountRuns() checks all of its and our arguments */
   rv = CountRuns(runCount);
   if(NS_FAILED(rv)) {
     return rv;
-  } else if(aIndexMap==nullptr) {
-    return NS_ERROR_INVALID_ARG;
   } else {
     /* fill a visual-to-logical index map using the runs[] */
     Run *runs=mRuns, *runsLimit=runs+mRunCount;
@@ -2049,10 +2291,31 @@ nsresult nsBidi::ReorderLogical(const nsBidiLevel *aLevels, int32_t aLength, int
 
 nsresult nsBidi::InvertMap(const int32_t *aSrcMap, int32_t *aDestMap, int32_t aLength)
 {
-  if(aSrcMap!=nullptr && aDestMap!=nullptr) {
-    aSrcMap+=aLength;
-    while(aLength>0) {
-      aDestMap[*--aSrcMap]=--aLength;
+  if(aSrcMap!=nullptr && aDestMap!=nullptr && aLength > 0) {
+    const int32_t *pi;
+    int32_t destLength = -1, count = 0;
+    /* find highest value and count positive indexes in srcMap */
+    pi = aSrcMap + aLength;
+    while (pi > aSrcMap) {
+      if (*--pi > destLength) {
+        destLength = *pi;
+      }
+      if (*pi >= 0) {
+        count++;
+      }
+    }
+    destLength++;  /* add 1 for origin 0 */
+    if (count < destLength) {
+      /* we must fill unmatched destMap entries with -1 */
+      memset(aDestMap, 0xFF, destLength * sizeof(int32_t));
+    }
+    pi = aSrcMap + aLength;
+    while (aLength > 0) {
+      if (*--pi >= 0) {
+        aDestMap[*pi] = --aLength;
+      } else {
+        --aLength;
+      }
     }
   }
   return NS_OK;
@@ -2084,7 +2347,7 @@ int32_t nsBidi::doWriteReverse(const char16_t *src, int32_t srcLength,
   /* optimize for several combinations of options */
   switch(options&(NSBIDI_REMOVE_BIDI_CONTROLS|NSBIDI_DO_MIRRORING|NSBIDI_KEEP_BASE_COMBINING)) {
     case 0:
-    /*
+        /*
          * With none of the "complicated" options set, the destination
          * run will have the same length as the source run,
          * and there is no mirroring and no keeping combining characters
@@ -2124,7 +2387,7 @@ int32_t nsBidi::doWriteReverse(const char16_t *src, int32_t srcLength,
       /* collect code units and modifier letters for one base character */
         do {
           UTF_PREV_CHAR(src, 0, srcLength, c);
-        } while(srcLength>0 && IsBidiCategory(c, eBidiCat_NSM));
+        } while(srcLength>0 && GetBidiCat(c) == eCharType_DirNonSpacingMark);
 
       /* copy this "user character" */
         j=srcLength;
@@ -2169,7 +2432,7 @@ int32_t nsBidi::doWriteReverse(const char16_t *src, int32_t srcLength,
         UTF_PREV_CHAR(src, 0, srcLength, c);
         if(options&NSBIDI_KEEP_BASE_COMBINING) {
         /* collect modifier letters for this base character */
-          while(srcLength>0 && IsBidiCategory(c, eBidiCat_NSM)) {
+          while(srcLength>0 && GetBidiCat(c) == eCharType_DirNonSpacingMark) {
             UTF_PREV_CHAR(src, 0, srcLength, c);
           }
         }
@@ -2183,7 +2446,7 @@ int32_t nsBidi::doWriteReverse(const char16_t *src, int32_t srcLength,
         j=srcLength;
         if(options&NSBIDI_DO_MIRRORING) {
           /* mirror only the base character */
-          c = SymmSwap(c);
+          c = GetMirroredChar(c);
 
           int32_t k=0;
           UTF_APPEND_CHAR_UNSAFE(dest, k, c);

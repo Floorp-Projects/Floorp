@@ -16,7 +16,7 @@
  * http://www.zib.de/Visual/software/doc++/index.html .
  *
  * The HTML documentation is created with
- *  doc++ -H nsIBidi.h
+ *  doc++ -H nsBidi.h
  */
 
 /**
@@ -61,7 +61,7 @@
  * pseudo-level values <code>NSBIDI_DEFAULT_LTR</code>
  * and <code>NSBIDI_DEFAULT_RTL</code>.</li></ul>
  *
- * @see nsIBidi::SetPara
+ * @see nsBidi::SetPara
  *
  * <p>The related constants are not real, valid level values.
  * <code>NSBIDI_DEFAULT_XXX</code> can be used to specify
@@ -98,12 +98,22 @@ typedef uint8_t nsBidiLevel;
  * (The maximum resolved level can be up to <code>NSBIDI_MAX_EXPLICIT_LEVEL+1</code>).
  *
  */
-#define NSBIDI_MAX_EXPLICIT_LEVEL 61
+#define NSBIDI_MAX_EXPLICIT_LEVEL 125
 
-/** Bit flag for level input. 
- *  Overrides directional properties. 
+/** Bit flag for level input.
+ *  Overrides directional properties.
  */
 #define NSBIDI_LEVEL_OVERRIDE 0x80
+
+/**
+ * Special value which can be returned by the mapping functions when a logical
+ * index has no corresponding visual index or vice-versa.
+ * @see GetVisualIndex
+ * @see GetVisualMap
+ * @see GetLogicalIndex
+ * @see GetLogicalMap
+ */
+#define NSBIDI_MAP_NOWHERE (-1)
 
 /**
  * <code>nsBidiDirection</code> values indicate the text direction.
@@ -172,6 +182,10 @@ typedef enum nsBidiDirection nsBidiDirection;
                                      GetMemory((void **)&mRunsMemory, &mRunsSize, \
                                      true, (length)*sizeof(Run))
 
+#define GETINITIALISOLATESMEMORY(length) \
+                                     GetMemory((void **)&mIsolatesMemory, &mIsolatesSize, \
+                                     true, (length)*sizeof(Isolate))
+
 /*
  * Sometimes, bit values are more appropriate
  * to deal with directionality properties.
@@ -186,29 +200,26 @@ typedef uint8_t DirProp;
 #define DIRPROP_FLAG_MULTI_RUNS (1UL<<31)
 
 /* are there any characters that are LTR or RTL? */
-#define MASK_LTR (DIRPROP_FLAG(L)|DIRPROP_FLAG(EN)|DIRPROP_FLAG(AN)|DIRPROP_FLAG(LRE)|DIRPROP_FLAG(LRO))
-#define MASK_RTL (DIRPROP_FLAG(R)|DIRPROP_FLAG(AL)|DIRPROP_FLAG(RLE)|DIRPROP_FLAG(RLO))
+#define MASK_LTR (DIRPROP_FLAG(L)|DIRPROP_FLAG(EN)|DIRPROP_FLAG(AN)|DIRPROP_FLAG(LRE)|DIRPROP_FLAG(LRO)|DIRPROP_FLAG(LRI))
+#define MASK_RTL (DIRPROP_FLAG(R)|DIRPROP_FLAG(AL)|DIRPROP_FLAG(RLE)|DIRPROP_FLAG(RLO)|DIRPROP_FLAG(RLI))
+#define MASK_R_AL (DIRPROP_FLAG(R)|DIRPROP_FLAG(AL))
 
 /* explicit embedding codes */
-#define MASK_LRX (DIRPROP_FLAG(LRE)|DIRPROP_FLAG(LRO))
-#define MASK_RLX (DIRPROP_FLAG(RLE)|DIRPROP_FLAG(RLO))
-#define MASK_OVERRIDE (DIRPROP_FLAG(LRO)|DIRPROP_FLAG(RLO))
+#define MASK_EXPLICIT (DIRPROP_FLAG(LRE)|DIRPROP_FLAG(LRO)|DIRPROP_FLAG(RLE)|DIRPROP_FLAG(RLO)|DIRPROP_FLAG(PDF))
 
-#define MASK_EXPLICIT (MASK_LRX|MASK_RLX|DIRPROP_FLAG(PDF))
+/* explicit isolate codes */
+#define MASK_ISO (DIRPROP_FLAG(LRI)|DIRPROP_FLAG(RLI)|DIRPROP_FLAG(FSI)|DIRPROP_FLAG(PDI))
+
 #define MASK_BN_EXPLICIT (DIRPROP_FLAG(BN)|MASK_EXPLICIT)
 
 /* paragraph and segment separators */
 #define MASK_B_S (DIRPROP_FLAG(B)|DIRPROP_FLAG(S))
 
 /* all types that are counted as White Space or Neutral in some steps */
-#define MASK_WS (MASK_B_S|DIRPROP_FLAG(WS)|MASK_BN_EXPLICIT)
-#define MASK_N (DIRPROP_FLAG(O_N)|MASK_WS)
-
-/* all types that are included in a sequence of European Terminators for (W5) */
-#define MASK_ET_NSM_BN (DIRPROP_FLAG(ET)|DIRPROP_FLAG(NSM)|MASK_BN_EXPLICIT)
+#define MASK_WS (MASK_B_S|DIRPROP_FLAG(WS)|MASK_BN_EXPLICIT|MASK_ISO)
 
 /* types that are neutrals or could becomes neutrals in (Wn) */
-#define MASK_POSSIBLE_N (DIRPROP_FLAG(CS)|DIRPROP_FLAG(ES)|DIRPROP_FLAG(ET)|MASK_N)
+#define MASK_POSSIBLE_N (DIRPROP_FLAG(O_N)|DIRPROP_FLAG(CS)|DIRPROP_FLAG(ES)|DIRPROP_FLAG(ET)|MASK_WS)
 
 /*
  * These types may be changed to "e",
@@ -221,6 +232,24 @@ typedef uint8_t DirProp;
 #define GET_LR_FROM_LEVEL(level) ((DirProp)((level)&1))
 
 #define IS_DEFAULT_LEVEL(level) (((level)&0xfe)==0xfe)
+
+/*
+ * The following bit is ORed to the property of directional control
+ * characters which are ignored: unmatched PDF or PDI; LRx, RLx or FSI
+ * which would exceed the maximum explicit bidi level.
+ */
+#define IGNORE_CC 0x40
+
+#define PURE_DIRPROP(prop) ((prop)&~IGNORE_CC)
+
+/*
+ * The following bit is used for the directional isolate status.
+ * Stack entries corresponding to isolate sequences are greater than ISOLATE.
+ */
+#define ISOLATE 0x0100
+
+/* number of isolate entries allocated initially without malloc */
+#define SIMPLE_ISOLATES_SIZE 5
 
 /* handle surrogate pairs --------------------------------------------------- */
 
@@ -355,11 +384,17 @@ typedef uint8_t DirProp;
 #define UTF_BACK_N(s, start, i, n)                   UTF_BACK_N_SAFE(s, start, i, n)
 #define UTF_APPEND_CHAR(s, i, length, c)             UTF_APPEND_CHAR_SAFE(s, i, length, c)
 
+struct Isolate {
+  int32_t start1;
+  int16_t stateImp;
+  int16_t state;
+};
+
 /* Run structure for reordering --------------------------------------------- */
 
 typedef struct Run {
-  int32_t logicalStart,  /* first character of the run; b31 indicates even/odd level */
-  visualLimit;  /* last visual position of the run +1 */
+  int32_t logicalStart;  /* first character of the run; b31 indicates even/odd level */
+  int32_t visualLimit;   /* last visual position of the run +1 */
 } Run;
 
 /* in a Run, logicalStart will get this bit set if the run level is odd */
@@ -369,12 +404,30 @@ typedef struct Run {
 #define ADD_ODD_BIT_FROM_LEVEL(x, level)  ((x)|=((uint32_t)level<<31))
 #define REMOVE_ODD_BIT(x)          ((x)&=~INDEX_ODD_BIT)
 
-#define GET_INDEX(x)   (x&~INDEX_ODD_BIT)
-#define GET_ODD_BIT(x) ((uint32_t)x>>31)
-#define IS_ODD_RUN(x)  ((x&INDEX_ODD_BIT)!=0)
-#define IS_EVEN_RUN(x) ((x&INDEX_ODD_BIT)==0)
+#define GET_INDEX(x)   ((x)&~INDEX_ODD_BIT)
+#define GET_ODD_BIT(x) ((uint32_t)(x)>>31)
+#define IS_ODD_RUN(x)  (((x)&INDEX_ODD_BIT)!=0)
+#define IS_EVEN_RUN(x) (((x)&INDEX_ODD_BIT)==0)
 
 typedef uint32_t Flags;
+
+enum { DirProp_L=0, DirProp_R=1, DirProp_EN=2, DirProp_AN=3, DirProp_ON=4, DirProp_S=5, DirProp_B=6 }; /* reduced dirProp */
+
+#define IMPTABLEVELS_COLUMNS (DirProp_B + 2)
+typedef const uint8_t ImpTab[][IMPTABLEVELS_COLUMNS];
+typedef const uint8_t (*PImpTab)[IMPTABLEVELS_COLUMNS];
+
+typedef const uint8_t ImpAct[];
+typedef const uint8_t *PImpAct;
+
+struct LevState {
+    PImpTab pImpTab;                    /* level table pointer          */
+    PImpAct pImpAct;                    /* action map array             */
+    int32_t startON;                    /* start of ON sequence         */
+    int32_t state;                      /* current state                */
+    int32_t runStart;                   /* start position of the run    */
+    nsBidiLevel runLevel;               /* run level before implicit solving */
+};
 
 /**
  * This class holds information about a paragraph of text
@@ -394,9 +447,9 @@ typedef uint32_t Flags;
  */
 class nsBidi
 {
-public: 
+public:
   /** @brief Default constructor.
-   * 
+   *
    * The nsBidi object is initially empty. It is assigned
    * the Bidi properties of a paragraph by <code>SetPara()</code>
    * or the Bidi properties of a line of a paragraph by
@@ -529,7 +582,7 @@ public:
    *
    * @see SetPara
    */
-  nsresult SetLine(nsIBidi* aParaBidi, int32_t aStart, int32_t aLimit);  
+  nsresult SetLine(const nsBidi* aParaBidi, int32_t aStart, int32_t aLimit);
 
   /**
    * Get the length of the text.
@@ -822,16 +875,18 @@ protected:
 
   /** memory sizes in bytes */
   size_t mDirPropsSize, mLevelsSize, mRunsSize;
+  size_t mIsolatesSize;
 
   /** allocated memory */
   DirProp* mDirPropsMemory;
   nsBidiLevel* mLevelsMemory;
   Run* mRunsMemory;
+  Isolate* mIsolatesMemory;
 
   /** indicators for whether memory may be allocated after construction */
   bool mMayAllocateText, mMayAllocateRuns;
 
-  const DirProp* mDirProps;
+  DirProp* mDirProps;
   nsBidiLevel* mLevels;
 
   /** the paragraph level */
@@ -854,6 +909,17 @@ protected:
   /** for non-mixed text, we only need a tiny array of runs (no malloc()) */
   Run mSimpleRuns[1];
 
+  /* maxium of current nesting depth of isolate sequences */
+  /* Within ResolveExplicitLevels() and checkExpicitLevels(), this is the maximal
+     nesting encountered.
+     Within ResolveImplicitLevels(), this is the index of the current isolates
+     stack entry. */
+  int32_t mIsolateCount;
+  Isolate* mIsolates;
+
+  /** for simple text, have a small stack (no malloc()) */
+  Isolate mSimpleIsolates[SIMPLE_ISOLATES_SIZE];
+
 private:
 
   void Init();
@@ -864,11 +930,13 @@ private:
 
   void GetDirProps(const char16_t *aText);
 
-  nsBidiDirection ResolveExplicitLevels();
+  void ResolveExplicitLevels(nsBidiDirection *aDirection);
 
   nsresult CheckExplicitLevels(nsBidiDirection *aDirection);
 
   nsBidiDirection DirectionFromFlags(Flags aFlags);
+
+  void ProcessPropertySeq(LevState *pLevState, uint8_t _prop, int32_t start, int32_t limit);
 
   void ResolveImplicitLevels(int32_t aStart, int32_t aLimit, DirProp aSOR, DirProp aEOR);
 
