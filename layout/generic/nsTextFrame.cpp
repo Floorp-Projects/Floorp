@@ -6311,8 +6311,9 @@ nsTextFrame::DrawTextRunAndDecorations(
     const nsSize frameSize = GetSize();
     nscoord measure = verticalRun ? frameSize.height : frameSize.width;
 
-    // XXX todo: probably should have a vertical version of this...
-    if (!verticalRun) {
+    if (verticalRun) {
+      aClipEdges.Intersect(&y, &measure);
+    } else {
       aClipEdges.Intersect(&x, &measure);
     }
 
