@@ -261,6 +261,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0x2e32);
       APPEND_DEVICE(0x2a02);
       break;
+    case Bug1155608:
+      APPEND_DEVICE(0x2e22); /* IntelG45_1 */
+      break;
     case AMDRadeonHD5800:
       APPEND_DEVICE(0x6899);
       break;
