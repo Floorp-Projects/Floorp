@@ -1869,9 +1869,9 @@ void
 MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread(), "main thread only");
-  NS_ASSERTION(!aMessage->GetStream() ||
-               !aMessage->GetStream()->IsDestroyed(),
-               "Stream already destroyed");
+  MOZ_ASSERT(!aMessage->GetStream() ||
+             !aMessage->GetStream()->IsDestroyed(),
+             "Stream already destroyed");
 
   if (mDetectedNotRunning &&
       mLifecycleState > LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
@@ -3207,6 +3207,8 @@ private:
 void
 MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   class GraphStartedNotificationControlMessage : public ControlMessage
   {
   public:
@@ -3237,8 +3239,10 @@ MediaStreamGraph::NotifyWhenGraphStarted(AudioNodeStream* aStream)
     }
   };
 
-  MediaStreamGraphImpl* graphImpl = static_cast<MediaStreamGraphImpl*>(this);
-  graphImpl->AppendMessage(new GraphStartedNotificationControlMessage(aStream));
+  if (!aStream->IsDestroyed()) {
+    MediaStreamGraphImpl* graphImpl = static_cast<MediaStreamGraphImpl*>(this);
+    graphImpl->AppendMessage(new GraphStartedNotificationControlMessage(aStream));
+  }
 }
 
 void
