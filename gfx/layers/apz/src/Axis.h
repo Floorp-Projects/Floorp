@@ -106,10 +106,20 @@ public:
   ParentLayerCoord GetOverscroll() const;
 
   /**
+   * Start an overscroll animation with the given initial velocity.
+   */
+  void StartOverscrollAnimation(float aVelocity);
+
+  /**
    * Sample the snap-back animation to relieve overscroll.
    * |aDelta| is the time since the last sample.
    */
   bool SampleOverscrollAnimation(const TimeDuration& aDelta);
+
+  /**
+   * Stop an overscroll animation.
+   */
+  void EndOverscrollAnimation();
 
   /**
    * Return whether this axis is overscrolled in either direction.
@@ -275,9 +285,8 @@ protected:
   // actual overscroll amount.
   ParentLayerCoord ApplyResistance(ParentLayerCoord aOverscroll) const;
 
-  // Helper function to disable overscroll transformations triggered by
-  // SampleOverscrollAnimation().
-  void StopSamplingOverscrollAnimation();
+  // Clear the state associated with an overscroll animation.
+  void ClearOverscrollAnimationState();
 
   // Helper function for SampleOverscrollAnimation().
   void StepOverscrollAnimation(double aStepDurationMilliseconds);
