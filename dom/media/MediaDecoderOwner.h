@@ -24,6 +24,9 @@ public:
   // Dispatch an asynchronous event to the decoder owner
   virtual nsresult DispatchAsyncEvent(const nsAString& aName) = 0;
 
+  // Triggers a recomputation of readyState.
+  virtual void UpdateReadyState() = 0;
+
   /**
    * Fires a timeupdate event. If aPeriodic is true, the event will only
    * be fired if we've not fired a timeupdate event (for any reason) in the

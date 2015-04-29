@@ -217,6 +217,9 @@ public:
   // Dispatch events
   virtual nsresult DispatchAsyncEvent(const nsAString& aName) final override;
 
+  // Triggers a recomputation of readyState.
+  void UpdateReadyState() override { UpdateReadyStateInternal(); }
+
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
 
@@ -642,17 +645,7 @@ protected:
   class StreamSizeListener;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
-
-  void SetDecoder(MediaDecoder* aDecoder)
-  {
-    if (mDecoder) {
-      mReadyStateUpdater->Unwatch(mDecoder->ReadyStateWatchTarget());
-    }
-    mDecoder = aDecoder;
-    if (mDecoder) {
-      mReadyStateUpdater->Watch(mDecoder->ReadyStateWatchTarget());
-    }
-  }
+  void SetDecoder(MediaDecoder* aDecoder) { mDecoder = aDecoder; }
 
   virtual void GetItemValueText(DOMString& text) override;
   virtual void SetItemValueText(const nsAString& text) override;
@@ -1032,6 +1025,9 @@ protected:
   // At most one of mDecoder and mSrcStream can be non-null.
   nsRefPtr<MediaDecoder> mDecoder;
 
+  // State-watching manager.
+  WatchManager<HTMLMediaElement> mWatchManager;
+
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.
   nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
@@ -1101,8 +1097,6 @@ protected:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState;
   Watchable<nsMediaReadyState> mReadyState;
-
-  WatcherHolder mReadyStateUpdater;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the

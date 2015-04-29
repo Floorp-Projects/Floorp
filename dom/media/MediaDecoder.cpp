@@ -585,7 +585,7 @@ bool MediaDecoder::IsInfinite()
 }
 
 MediaDecoder::MediaDecoder() :
-  mReadyStateWatchTarget("MediaDecoder::mReadyStateWatchTarget"),
+  mWatchManager(this),
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
@@ -636,8 +636,8 @@ MediaDecoder::MediaDecoder() :
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 
   // Initialize watchers.
-  mReadyStateWatchTarget->Watch(mPlayState);
-  mReadyStateWatchTarget->Watch(mNextFrameStatus);
+  mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
+  mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);
 }
 
 bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
@@ -1648,7 +1648,7 @@ void MediaDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
 
   // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
   // depends on the download rate.
-  mReadyStateWatchTarget->Notify();
+  UpdateReadyState();
 }
 
 // Provide access to the state machine object
