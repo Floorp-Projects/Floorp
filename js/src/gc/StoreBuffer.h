@@ -15,7 +15,6 @@
 
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
-#include "gc/Tracer.h"
 #include "js/MemoryMetrics.h"
 
 namespace js {
