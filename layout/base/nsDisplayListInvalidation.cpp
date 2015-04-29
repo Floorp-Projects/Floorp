@@ -118,8 +118,8 @@ nsDisplaySVGEffectsGeometry::MoveBy(const nsPoint& aOffset)
 
 nsCharClipGeometry::nsCharClipGeometry(nsCharClipDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGenericGeometry(aItem, aBuilder)
-  , mLeftEdge(aItem->mLeftEdge)
-  , mRightEdge(aItem->mRightEdge)
+  , mVisIStartEdge(aItem->mVisIStartEdge)
+  , mVisIEndEdge(aItem->mVisIEndEdge)
 {}
 
 nsDisplayTableItemGeometry::nsDisplayTableItemGeometry(nsDisplayTableItem* aItem,

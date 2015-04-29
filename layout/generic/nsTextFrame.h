@@ -273,15 +273,15 @@ public:
 
   /**
    * Calculate the horizontal bounds of the grapheme clusters that fit entirely
-   * inside the given left/right edges (which are positive lengths from the
-   * respective frame edge).  If an input value is zero it is ignored and the
-   * result for that edge is zero.  All out parameter values are undefined when
-   * the method returns false.
+   * inside the given left[top]/right[bottom] edges (which are positive lengths
+   * from the respective frame edge).  If an input value is zero it is ignored
+   * and the result for that edge is zero.  All out parameter values are
+   * undefined when the method returns false.
    * @return true if at least one whole grapheme cluster fit between the edges
    */
-  bool MeasureCharClippedText(nscoord aLeftEdge, nscoord aRightEdge,
-                              nscoord* aSnappedLeftEdge,
-                              nscoord* aSnappedRightEdge);
+  bool MeasureCharClippedText(nscoord aVisIStartEdge, nscoord aVisIEndEdge,
+                              nscoord* aSnappedStartEdge,
+                              nscoord* aSnappedEndEdge);
   /**
    * Same as above; this method also the returns the corresponding text run
    * offset and number of characters that fit.  All out parameter values are
@@ -289,10 +289,10 @@ public:
    * @return true if at least one whole grapheme cluster fit between the edges
    */
   bool MeasureCharClippedText(PropertyProvider& aProvider,
-                              nscoord aLeftEdge, nscoord aRightEdge,
+                              nscoord aVisIStartEdge, nscoord aVisIEndEdge,
                               uint32_t* aStartOffset, uint32_t* aMaxLength,
-                              nscoord* aSnappedLeftEdge,
-                              nscoord* aSnappedRightEdge);
+                              nscoord* aSnappedStartEdge,
+                              nscoord* aSnappedEndEdge);
 
   /**
    * Object with various callbacks for PaintText() to invoke for different parts
