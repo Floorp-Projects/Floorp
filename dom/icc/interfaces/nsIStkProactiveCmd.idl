@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+#include "domstubs.idl"
 
 [scriptable, uuid(1510cf0c-5db6-11e4-9869-6bf419e26642)]
 interface nsIStkDuration : nsISupports
@@ -113,7 +113,7 @@ interface nsIStkItem : nsISupports
   readonly attribute nsIStkIconInfo iconInfo;
 };
 
-[scriptable, uuid(222651f0-6976-11e4-accf-736a9c6e7d19)]
+[scriptable, uuid(1ec0d430-eeec-11e4-8566-df81b6d562c8)]
 interface nsIStkTimer : nsISupports
 {
   /**
@@ -146,12 +146,37 @@ interface nsIStkTimer : nsISupports
   const unsigned short TIMER_ACTION_START             = 0x00;
   const unsigned short TIMER_ACTION_DEACTIVATE        = 0x01;
   const unsigned short TIMER_ACTION_GET_CURRENT_VALUE = 0x02;
+  const unsigned short TIMER_ACTION_INVALID           = 0xFF;
 
   /**
    * The action requested from UICC.
    * It shall be one of TIMER_ACTION_*.
    */
   readonly attribute unsigned short timerAction;
+};
+
+[scriptable, uuid(09903cfe-f3bf-11e4-a029-23d988cd1a82)]
+interface nsIStkLocationInfo : nsISupports
+{
+  /**
+   * Mobile Country Code (MCC) of the current serving operator.
+   */
+  readonly attribute DOMString mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the current serving operator.
+   */
+  readonly attribute DOMString mnc;
+
+  /**
+   * Mobile Location Area Code (LAC) for the current serving operator.
+   */
+  readonly attribute unsigned short gsmLocationAreaCode;
+
+  /**
+   * Mobile Cell ID for the current serving operator.
+   */
+  readonly attribute unsigned long gsmCellId;
 };
 
 /**
@@ -642,4 +667,351 @@ interface nsIStkTimerManagementCmd : nsIStkProactiveCmd
    * Timer Information.
    */
   readonly attribute nsIStkTimer timerInfo;
+};
+
+/**
+ * The base class of all STK Terminal Respones.
+ *
+ * This interface is to be applied by the responses that provide info no more
+ * than |resultCode| and |additionalInformation|.
+ *
+ * @see |6.8 Structure of Terminal Response| and |12.12 Result| in TS 11.14 for
+ * for the common structure of the response.
+ */
+[scriptable, uuid(8e9f94de-0059-11e5-8608-67b08648d3d9)]
+interface nsIStkTerminalResponse : nsISupports
+{
+  /**
+   * STK result code.
+   *
+   * @see TS 11.14, clause 12.12
+   *
+   * Results '0X' and '1X' indicate that the command has been performed.
+   */
+  /** Command performed successfully */
+  const unsigned short RESULT_OK                                = 0x00;
+
+  /** Command performed with partial comprehension */
+  const unsigned short RESULT_PRFRMD_WITH_PARTIAL_COMPREHENSION = 0x01;
+
+  /** Command performed, with missing information */
+  const unsigned short RESULT_PRFRMD_WITH_MISSING_INFO          = 0x02;
+
+  /** REFRESH performed with additional EFs read */
+  const unsigned short RESULT_PRFRMD_WITH_ADDITIONAL_EFS_READ   = 0x03;
+
+  /** Command performed successfully, but icon could not be displayed */
+  const unsigned short RESULT_PRFRMD_ICON_NOT_DISPLAYED         = 0x04;
+
+  /** Command performed successfully, limited service */
+  const unsigned short RESULT_PRFRMD_LIMITED_SERVICE            = 0x06;
+
+  /** Proactive UICC session terminated by the user */
+  const unsigned short RESULT_UICC_SESSION_TERM_BY_USER         = 0x10;
+
+  /** Backward move in the proactive UICC session requested by the user */
+  const unsigned short RESULT_BACKWARD_MOVE_BY_USER             = 0x11;
+
+  /** No response from user */
+  const unsigned short RESULT_NO_RESPONSE_FROM_USER             = 0x12;
+
+  /** Help information required by the user */
+  const unsigned short RESULT_HELP_INFO_REQUIRED                = 0x13;
+
+  /** USSD or SS transaction terminated by the user */
+  const unsigned short RESULT_USSD_SS_SESSION_TERM_BY_USER      = 0x14;
+
+  /**
+   * Results '2X' indicate to the UICC that it may be worth re-trying the
+   * command at a later opportunity.
+   */
+  /** Terminal currently unable to process command */
+  const unsigned short RESULT_TERMINAL_CRNTLY_UNABLE_TO_PROCESS = 0x20;
+
+  /** Network currently unable to process command */
+  const unsigned short RESULT_NETWORK_CRNTLY_UNABLE_TO_PROCESS  = 0x21;
+
+  /** User did not accept the proactive command */
+  const unsigned short RESULT_USER_NOT_ACCEPT                   = 0x22;
+
+  /** User cleared down call before connection or network release */
+  const unsigned short RESULT_USER_CLEAR_DOWN_CALL              = 0x23;
+
+  /** Action in contradiction with the current timer state */
+  const unsigned short RESULT_ACTION_CONTRADICTION_TIMER_STATE  = 0x24;
+
+  /** Launch browser generic error code */
+  const unsigned short RESULT_LAUNCH_BROWSER_ERROR              = 0x26;
+
+  /**
+   * Results '3X' indicate that it is not worth the UICC re-trying with an
+   * identical command, as it will only get the same response. However, the
+   * decision to retry lies with the application.
+   */
+  /** Command beyond terminal's capabilities */
+  const unsigned short RESULT_BEYOND_TERMINAL_CAPABILITY        = 0x30;
+
+  /** Command type not understood by terminal */
+  const unsigned short RESULT_CMD_TYPE_NOT_UNDERSTOOD           = 0x31;
+
+  /** Command data not understood by terminal */
+  const unsigned short RESULT_CMD_DATA_NOT_UNDERSTOOD           = 0x32;
+
+  /** Command number not known by terminal */
+  const unsigned short RESULT_CMD_NUM_NOT_KNOWN                 = 0x33;
+
+  /** SS return error */
+  const unsigned short RESULT_SS_RETURN_ERROR                   = 0x34;
+
+  /** SMS RP-ERROR */
+  const unsigned short RESULT_SMS_RP_ERROR                      = 0x35;
+
+  /** Error, required values are missing */
+  const unsigned short RESULT_REQUIRED_VALUES_MISSING           = 0x36;
+
+  /** USSD return error */
+  const unsigned short RESULT_USSD_RETURN_ERROR                 = 0x37;
+
+  /** MultipleCard commands error */
+  const unsigned short RESULT_MULTI_CARDS_CMD_ERROR             = 0x38;
+
+  /**
+   * Interaction with call control by USIM or MO short message control by
+   * USIM, permanent problem.
+   */
+  const unsigned short RESULT_USIM_CALL_CONTROL_PERMANENT       = 0x39;
+
+  /** Bearer independent protocol error */
+  const unsigned short RESULT_BIP_ERROR                         = 0x3a;
+
+  /**
+   * 12.12.2 Additional information for ME problem:
+   */
+  const unsigned short ADDITIONAL_INFO_ME_PROBLEM_SCREEN_IS_BUSY = 0x01;
+
+  const unsigned short ADDITIONAL_INFO_INVALID = 0xFFFF;
+
+  /**
+   * The general result of the response.
+   * One of RESULT_*.
+   */
+  readonly attribute unsigned short resultCode;
+
+  /**
+   * (Optional)
+   * The additional info of the response.
+   *
+   * One of ADDITIONAL_INFO_*.
+   * Set to ADDITIONAL_INFO_INVALID if not available.
+   */
+  readonly attribute unsigned short additionalInformation;
+};
+
+/**
+ * This interface is to be applied by the response of STK_CMD_SELECT_ITEM.
+ */
+[scriptable, uuid(8eaa2496-ed7e-11e4-9aff-bfcf22a78770)]
+interface nsIStkSelectItemResponse : nsIStkTerminalResponse
+{
+  /**
+   * The selected menu item.
+   */
+  readonly attribute unsigned short itemIdentifier;
+};
+
+/**
+ * This interface is to be applied by the response of STK_CMD_GET_INKEY and
+ * STK_CMD_GET_INPUT.
+ *
+ * Note: Either |isYesNo| or |input| shall be valid.
+ */
+[scriptable, uuid(f39d9cd8-ee33-11e4-a55b-ef2489a0707d)]
+interface nsIStkGetInputResponse : nsIStkTerminalResponse
+{
+  const unsigned short YES_NO_INVALID = 0xFFFF;
+  const unsigned short YES = 1;
+  const unsigned short NO = 0;
+
+  /**
+   * (Optional)
+   * The response if Yes/No response is requested.
+   * Set to YES_NO_INVALID if not available.
+   */
+  readonly attribute unsigned short isYesNo;
+
+  /**
+   * (Optional)
+   * The response of user input.
+   */
+  readonly attribute DOMString input;
+};
+
+/**
+ * This interface is to be applied for the response of STK_CMD_CALL_SET_UP.
+ */
+[scriptable, uuid(dbf61506-ed7f-11e4-93ea-233485a1bac9)]
+interface nsIStkCallSetupResponse : nsIStkTerminalResponse
+{
+  /**
+   * True if user confirm to set up call.
+   */
+  readonly attribute boolean hasConfirmed;
+};
+
+/**
+ * This interface is to be applied by the response of STK_CMD_PROVIDE_LOCAL_INFO.
+ */
+[scriptable, uuid(24fd4ece-ee37-11e4-8ac4-af876b1ce771)]
+interface nsIStkLocalInfoResponse : nsIStkTerminalResponse
+{
+  const unsigned short DATE_INVALID = 0;
+
+  /**
+   * (Optional)
+   * IMEI information
+   */
+  readonly attribute DOMString imei;
+
+  /**
+   * (Optional)
+   * Location Information
+   */
+  readonly attribute nsIStkLocationInfo locationInfo;
+
+  /**
+   * (Optional)
+   * Date information
+   */
+  readonly attribute DOMTimeStamp date;
+
+  /**
+   * (Optional)
+   * Language Information
+   *
+   * @see ISO 639-1, Alpha-2 code
+   */
+  readonly attribute DOMString language;
+};
+
+/**
+ * This interface is to be applied by the response of STK_CMD_TIMER_MANAGEMENT.
+ */
+[scriptable, uuid(19f37a02-ed84-11e4-8316-0fde52ecfba6)]
+interface nsIStkTimerResponse : nsIStkTerminalResponse
+{
+  /**
+   * Timer Info.
+   *
+   * Note: Only timer.timerId and timer.timerValue will be used in response.
+   */
+  readonly attribute nsIStkTimer timer;
+};
+
+/**
+ * The base class of events used by Event Download.
+ *
+ * This interface is to be applied by the event that provide info no more
+ * than |eventType|. e.g. STK_EVENT_TYPE_USER_ACTIVITY,
+ * STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE.
+ *
+ * @see TS 102 223, clause 8.25 Event List, caluse 7.5 Event download
+ * for all structures of the event download.
+ */
+[scriptable, uuid(0215d918-ee4a-11e4-9dcf-ab2c197c9211)]
+interface nsIStkDownloadEvent : nsISupports
+{
+  /**
+   * The event type of this download event.
+   *
+   * @see TS 102 223, clause 8.25 Event List.
+   */
+  readonly attribute unsigned short eventType;
+};
+
+/**
+ * This interface is to be applied by STK_EVENT_TYPE_LOCATION_STATUS.
+ */
+[scriptable, uuid(807b14f0-0059-11e5-aff7-1f8b4e659dbc)]
+interface nsIStkLocationEvent : nsIStkDownloadEvent
+{
+  const unsigned short SERVICE_STATE_NORMAL      = 0x00;
+  const unsigned short SERVICE_STATE_LIMITED     = 0x01;
+  const unsigned short SERVICE_STATE_UNAVAILABLE = 0x02;
+
+  /**
+   * Indicate current service state of the MS with one of the values listed
+   * One of SERVICE_STATE_*.
+   */
+  readonly attribute unsigned short locationStatus;
+
+  /**
+   * (Optional)
+   * Location Information
+   *
+   * Note: This object shall be included only if locationStatus is equal to
+   * SERVICE_STATE_NORMAL.
+   *
+   * @See TS 102 223, clause 7.5.4 Location status event.
+   */
+  readonly attribute nsIStkLocationInfo locationInfo;
+};
+
+/**
+ * This interface is to be applied by STK_EVENT_TYPE_MT_CALL,
+ * STK_EVENT_TYPE_CALL_CONNECTED and STK_EVENT_TYPE_CALL_DISCONNECTED.
+ */
+[scriptable, uuid(e47dfc98-ee51-11e4-a672-43216a0b375a)]
+interface nsIStkCallEvent : nsIStkDownloadEvent
+{
+  /**
+   * Remote party number.
+   */
+  readonly attribute DOMString number;
+
+  /**
+   * For the STK_EVENT_TYPE_CALL_CONNECTED event, setting this to true means
+   * the connection is answered by remote end, that is, this is an outgoing call.
+   * For the STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true
+   * indicates the connection is hung up by remote.
+   * For the STK_EVENT_TYPE_MT_CALL event, this flag is ignored.
+   */
+  readonly attribute boolean isIssuedByRemote;
+
+  /**
+   * Indicate the cause of disconnection.
+   * The cause string is the one passed to gaia through the error listener of
+   * CallEvent.
+   * Set to null if there's no error.
+   */
+  readonly attribute DOMString error;
+};
+
+/**
+ * This interface is to be applied by STK_EVENT_TYPE_LANGUAGE_SELECTION.
+ */
+[scriptable, uuid(d185f0dc-ee51-11e4-912a-933874ee6cec)]
+interface nsIStkLanguageSelectionEvent : nsIStkDownloadEvent
+{
+  /**
+   * Language Information
+   *
+   * @see ISO 639-1, Alpha-2 code
+   *      "de" for German, "en" for English, "zh" for Chinese, etc.
+   */
+  readonly attribute DOMString language;
+};
+
+/**
+ * This interface is to be applied by STK_EVENT_TYPE_LANGUAGE_SELECTION.
+ */
+[scriptable, uuid(7ae84bde-0059-11e5-8238-8ba12036dc26)]
+interface nsIStkBrowserTerminationEvent : nsIStkDownloadEvent
+{
+  const unsigned short BROWSER_TERMINATION_CAUSE_USER  = 0x00;
+  const unsigned short BROWSER_TERMINATION_CAUSE_ERROR = 0x01;
+  /**
+   * The browser termination cause.
+   * One of BROWSER_TERMINATION_CAUSE_*
+   */
+  readonly attribute unsigned short terminationCause;
 };
