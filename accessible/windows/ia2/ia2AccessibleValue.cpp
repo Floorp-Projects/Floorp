@@ -54,10 +54,16 @@ ia2AccessibleValue::get_currentValue(VARIANT* aCurrentValue)
   VariantInit(aCurrentValue);
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
-  if (valueAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  double currentValue;
+  if (valueAcc->IsProxy()) {
+    currentValue = valueAcc->Proxy()->CurValue();
+  } else {
+    if (valueAcc->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  double currentValue = valueAcc->CurValue();
+    currentValue = valueAcc->CurValue();
+  }
+
   if (IsNaN(currentValue))
     return S_FALSE;
 
@@ -73,12 +79,15 @@ ia2AccessibleValue::setCurrentValue(VARIANT aValue)
 {
   A11Y_TRYBLOCK_BEGIN
 
-  AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
-  if (valueAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
-
   if (aValue.vt != VT_R8)
     return E_INVALIDARG;
+
+  AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
+  if (valueAcc->IsProxy())
+    return valueAcc->Proxy()->SetCurValue(aValue.dblVal) ? S_OK : E_FAIL;
+
+  if (valueAcc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
 
   return valueAcc->SetCurValue(aValue.dblVal) ? S_OK : E_FAIL;
 
@@ -96,10 +105,16 @@ ia2AccessibleValue::get_maximumValue(VARIANT* aMaximumValue)
   VariantInit(aMaximumValue);
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
-  if (valueAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  double maximumValue;
+  if (valueAcc->IsProxy()) {
+    maximumValue = valueAcc->Proxy()->MaxValue();
+  } else {
+    if (valueAcc->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  double maximumValue = valueAcc->MaxValue();
+    maximumValue = valueAcc->MaxValue();
+  }
+
   if (IsNaN(maximumValue))
     return S_FALSE;
 
@@ -121,10 +136,16 @@ ia2AccessibleValue::get_minimumValue(VARIANT* aMinimumValue)
   VariantInit(aMinimumValue);
 
   AccessibleWrap* valueAcc = static_cast<AccessibleWrap*>(this);
-  if (valueAcc->IsDefunct())
-    return CO_E_OBJNOTCONNECTED;
+  double minimumValue;
+  if (valueAcc->IsProxy()) {
+    minimumValue = valueAcc->Proxy()->MinValue();
+  } else {
+    if (valueAcc->IsDefunct())
+      return CO_E_OBJNOTCONNECTED;
 
-  double minimumValue = valueAcc->MinValue();
+    minimumValue = valueAcc->MinValue();
+  }
+
   if (IsNaN(minimumValue))
     return S_FALSE;
 
