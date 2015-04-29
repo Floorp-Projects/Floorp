@@ -473,7 +473,7 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(mozLoop.telemetryAddValue);
       sinon.assert.calledWith(mozLoop.telemetryAddValue,
-        "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+        "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
         mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.SHORTER_THAN_10S);
     });
 
@@ -485,7 +485,7 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.calledOnce(mozLoop.telemetryAddValue);
         sinon.assert.calledWith(mozLoop.telemetryAddValue,
-          "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+          "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
           mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_10S_AND_30S);
       });
 
@@ -497,7 +497,7 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.calledOnce(mozLoop.telemetryAddValue);
         sinon.assert.calledWith(mozLoop.telemetryAddValue,
-          "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+          "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
           mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_30S_AND_5M);
       });
 
@@ -508,7 +508,7 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(mozLoop.telemetryAddValue);
       sinon.assert.calledWith(mozLoop.telemetryAddValue,
-        "LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
+        "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
         mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M);
     });
 
@@ -530,7 +530,7 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(mozLoop.telemetryAddValue);
       sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
-        "LOOP_SHARING_STATE_CHANGE",
+        "LOOP_SHARING_STATE_CHANGE_1",
         mozLoop.SHARING_STATE_CHANGE.WINDOW_ENABLED);
     });
 
@@ -539,7 +539,7 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(mozLoop.telemetryAddValue);
       sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
-        "LOOP_SHARING_STATE_CHANGE",
+        "LOOP_SHARING_STATE_CHANGE_1",
         mozLoop.SHARING_STATE_CHANGE.BROWSER_ENABLED);
     });
 
@@ -548,7 +548,7 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(mozLoop.telemetryAddValue);
       sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
-        "LOOP_SHARING_STATE_CHANGE",
+        "LOOP_SHARING_STATE_CHANGE_1",
         mozLoop.SHARING_STATE_CHANGE.WINDOW_DISABLED);
     });
 
@@ -557,7 +557,7 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(mozLoop.telemetryAddValue);
       sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
-        "LOOP_SHARING_STATE_CHANGE",
+        "LOOP_SHARING_STATE_CHANGE_1",
         mozLoop.SHARING_STATE_CHANGE.BROWSER_DISABLED);
     });
   });
