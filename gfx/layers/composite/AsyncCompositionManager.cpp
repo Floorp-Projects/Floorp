@@ -726,8 +726,12 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const CSSCoord compositedHeight = (metrics.mCompositionBounds / effectiveZoom).height;
     const CSSCoord scrollableHeight = metrics.GetScrollableRect().height;
 
-    // The scrollbar thumb ratio is in AppUnits.
-    const float ratio = aScrollbar->GetScrollbarThumbRatio();
+    const LayoutDeviceToParentLayerScale nonLayoutScale = effectiveZoom /
+        metrics.GetDevPixelsPerCSSPixel();
+    // Here we convert the scrollbar thumb ratio into a true unitless ratio by
+    // dividing out the conversion factor from the scrollframe's parent's space
+    // to the scrollframe's space.
+    const float ratio = aScrollbar->GetScrollbarThumbRatio() / nonLayoutScale.scale;
     ParentLayerCoord yTranslation = -asyncScrollY * ratio;
 
     // The scroll thumb additionally needs to be translated to compensate for
@@ -773,8 +777,9 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     const CSSCoord compositedWidth = (metrics.mCompositionBounds / effectiveZoom).width;
     const CSSCoord scrollableWidth = metrics.GetScrollableRect().width;
 
-    // The scrollbar thumb ratio is in AppUnits.
-    const float ratio = aScrollbar->GetScrollbarThumbRatio();
+    const LayoutDeviceToParentLayerScale nonLayoutScale = effectiveZoom /
+        metrics.GetDevPixelsPerCSSPixel();
+    const float ratio = aScrollbar->GetScrollbarThumbRatio() / nonLayoutScale.scale;
     ParentLayerCoord xTranslation = -asyncScrollX * ratio;
 
     const CSSCoord thumbOrigin = (metrics.GetScrollOffset().x / scrollableWidth) * compositedWidth;
