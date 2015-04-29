@@ -103,9 +103,6 @@ interface inIDOMUtils : nsISupports
   // For shorthands, checks whether there's a corresponding longhand property
   // that accepts values of this type.  Throws on unsupported properties or
   // unknown types.
-  //
-  // This function may incorrectly return false for properties that use custom
-  // parsing functions instead of table-driven parsing.
   const unsigned long TYPE_LENGTH = 0;
   const unsigned long TYPE_PERCENTAGE = 1;
   const unsigned long TYPE_COLOR = 2;
