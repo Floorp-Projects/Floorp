@@ -8,7 +8,7 @@ task:
   tags:
     createdForUser: {{owner}}
   workerType: b2gtest
-  provisionerId: aws-provisioner
+  provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
   scopes:
