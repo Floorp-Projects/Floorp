@@ -22,6 +22,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/EMEUtils.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -156,9 +157,11 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       return MediaKeySystemStatus::Cdm_disabled;
     }
-    if (!WMFDecoderModule::HasH264() || !WMFDecoderModule::HasAAC()) {
+    if ((!WMFDecoderModule::HasH264() || !WMFDecoderModule::HasAAC()) ||
+        !EMEVoucherFileExists()) {
       // The system doesn't have the codecs that Adobe EME relies
-      // on installed.
+      // on installed, or doesn't have a voucher for the plugin-container.
+      // Adobe EME isn't going to work, so don't advertise that it will.
       return MediaKeySystemStatus::Cdm_not_supported;
     }
     if (!HaveGMPFor(mps,

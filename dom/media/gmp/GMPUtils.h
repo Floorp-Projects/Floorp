@@ -24,6 +24,10 @@ struct GMPUnique {
   typedef mozilla::UniquePtr<T, DestroyPolicy<T>> Ptr;
 };
 
+bool GetEMEVoucherPath(nsIFile** aPath);
+
+bool EMEVoucherFileExists();
+
 } // namespace mozilla
 
 #endif
