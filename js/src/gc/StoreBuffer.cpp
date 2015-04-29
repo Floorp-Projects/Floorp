@@ -42,7 +42,7 @@ StoreBuffer::SlotsEdge::mark(JSTracer* trc) const
         int32_t start = Min(uint32_t(start_), obj->slotSpan());
         int32_t end = Min(uint32_t(start_) + count_, obj->slotSpan());
         MOZ_ASSERT(end >= start);
-        MarkObjectSlots(trc, obj, start, end - start);
+        TraceObjectSlots(trc, obj, start, end - start);
     }
 }
 

@@ -21,6 +21,7 @@
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 
+#include "vm/Shape.h"
 #include "vm/Symbol.h"
 
 #include "jsgcinlines.h"
@@ -34,6 +35,9 @@ template<typename T>
 void
 CheckTracedThing(JSTracer* trc, T thing);
 } // namespace js
+
+
+/*** Callback Tracer Dispatch ********************************************************************/
 
 template <typename T>
 T
@@ -72,6 +76,24 @@ DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
     *idp = DispatchIdTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
     return *idp;
 }
+
+void
+JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
+{
+    MOZ_ASSERT(bufferSize > 0);
+    if (contextFunctor_) {
+        (*contextFunctor_)(this, buffer, bufferSize);
+        return;
+    }
+    if (contextIndex_ != InvalidIndex) {
+        JS_snprintf(buffer, bufferSize, "%s[%lu]", contextName_, contextIndex_);
+        return;
+    }
+    JS_snprintf(buffer, bufferSize, "%s", contextName_);
+}
+
+
+/*** Public Tracing API **************************************************************************/
 
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredValueTracer(JSTracer* trc, Value* valuep, const char* name)
@@ -158,6 +180,21 @@ JS_TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind)
     js::TraceChildren(trc, thing, kind);
 }
 
+struct TraceChildrenFunctor {
+    template <typename T>
+    void operator()(JSTracer* trc, void* thing) {
+        static_cast<T*>(thing)->traceChildren(trc);
+    }
+};
+
+void
+js::TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind)
+{
+    MOZ_ASSERT(thing);
+    TraceChildrenFunctor f;
+    CallTyped(f, kind, trc, thing);
+}
+
 JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer* trc)
 {
@@ -218,6 +255,9 @@ JS_TraceIncomingCCWs(JSTracer* trc, const JS::ZoneSet& zones)
         }
     }
 }
+
+
+/*** Traced Edge Printer *************************************************************************/
 
 static size_t
 CountDecimalDigits(size_t num)
@@ -367,278 +407,4 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
         }
     }
     buf[bufsize - 1] = '\0';
-}
-
-JSTracer::JSTracer(JSRuntime* rt, TracerKindTag kindTag,
-                   WeakMapTraceKind weakTraceKind /* = TraceWeakMapValues */)
-  : runtime_(rt)
-  , tag(kindTag)
-  , eagerlyTraceWeakMaps_(weakTraceKind)
-{
-}
-
-void
-JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
-{
-    MOZ_ASSERT(bufferSize > 0);
-    if (contextFunctor_) {
-        (*contextFunctor_)(this, buffer, bufferSize);
-        return;
-    }
-    if (contextIndex_ != InvalidIndex) {
-        JS_snprintf(buffer, bufferSize, "%s[%lu]", contextName_, contextIndex_);
-        return;
-    }
-    JS_snprintf(buffer, bufferSize, "%s", contextName_);
-}
-
-void
-JS::CallbackTracer::setTraceCallback(JSTraceCallback traceCallback)
-{
-    callback = traceCallback;
-}
-
-bool
-MarkStack::init(JSGCMode gcMode)
-{
-    setBaseCapacity(gcMode);
-
-    MOZ_ASSERT(!stack_);
-    uintptr_t* newStack = js_pod_malloc<uintptr_t>(baseCapacity_);
-    if (!newStack)
-        return false;
-
-    setStack(newStack, 0, baseCapacity_);
-    return true;
-}
-
-void
-MarkStack::setBaseCapacity(JSGCMode mode)
-{
-    switch (mode) {
-      case JSGC_MODE_GLOBAL:
-      case JSGC_MODE_COMPARTMENT:
-        baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-        break;
-      case JSGC_MODE_INCREMENTAL:
-        baseCapacity_ = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-        break;
-      default:
-        MOZ_CRASH("bad gc mode");
-    }
-
-    if (baseCapacity_ > maxCapacity_)
-        baseCapacity_ = maxCapacity_;
-}
-
-void
-MarkStack::setMaxCapacity(size_t maxCapacity)
-{
-    MOZ_ASSERT(isEmpty());
-    maxCapacity_ = maxCapacity;
-    if (baseCapacity_ > maxCapacity_)
-        baseCapacity_ = maxCapacity_;
-
-    reset();
-}
-
-void
-MarkStack::reset()
-{
-    if (capacity() == baseCapacity_) {
-        // No size change; keep the current stack.
-        setStack(stack_, 0, baseCapacity_);
-        return;
-    }
-
-    uintptr_t* newStack = (uintptr_t*)js_realloc(stack_, sizeof(uintptr_t) * baseCapacity_);
-    if (!newStack) {
-        // If the realloc fails, just keep using the existing stack; it's
-        // not ideal but better than failing.
-        newStack = stack_;
-        baseCapacity_ = capacity();
-    }
-    setStack(newStack, 0, baseCapacity_);
-}
-
-bool
-MarkStack::enlarge(unsigned count)
-{
-    size_t newCapacity = Min(maxCapacity_, capacity() * 2);
-    if (newCapacity < capacity() + count)
-        return false;
-
-    size_t tosIndex = position();
-
-    uintptr_t* newStack = (uintptr_t*)js_realloc(stack_, sizeof(uintptr_t) * newCapacity);
-    if (!newStack)
-        return false;
-
-    setStack(newStack, tosIndex, newCapacity);
-    return true;
-}
-
-void
-MarkStack::setGCMode(JSGCMode gcMode)
-{
-    // The mark stack won't be resized until the next call to reset(), but
-    // that will happen at the end of the next GC.
-    setBaseCapacity(gcMode);
-}
-
-size_t
-MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    return mallocSizeOf(stack_);
-}
-
-/*
- * DoNotTraceWeakMaps: the GC is recomputing the liveness of WeakMap entries,
- * so we delay visting entries.
- */
-GCMarker::GCMarker(JSRuntime* rt)
-  : JSTracer(rt, JSTracer::MarkingTracer, DoNotTraceWeakMaps),
-    stack(size_t(-1)),
-    color(BLACK),
-    unmarkedArenaStackTop(nullptr),
-    markLaterArenas(0),
-    started(false),
-    strictCompartmentChecking(false)
-{
-}
-
-bool
-GCMarker::init(JSGCMode gcMode)
-{
-    return stack.init(gcMode);
-}
-
-void
-GCMarker::start()
-{
-    MOZ_ASSERT(!started);
-    started = true;
-    color = BLACK;
-
-    MOZ_ASSERT(!unmarkedArenaStackTop);
-    MOZ_ASSERT(markLaterArenas == 0);
-
-}
-
-void
-GCMarker::stop()
-{
-    MOZ_ASSERT(isDrained());
-
-    MOZ_ASSERT(started);
-    started = false;
-
-    MOZ_ASSERT(!unmarkedArenaStackTop);
-    MOZ_ASSERT(markLaterArenas == 0);
-
-    /* Free non-ballast stack memory. */
-    stack.reset();
-}
-
-void
-GCMarker::reset()
-{
-    color = BLACK;
-
-    stack.reset();
-    MOZ_ASSERT(isMarkStackEmpty());
-
-    while (unmarkedArenaStackTop) {
-        ArenaHeader* aheader = unmarkedArenaStackTop;
-        MOZ_ASSERT(aheader->hasDelayedMarking);
-        MOZ_ASSERT(markLaterArenas);
-        unmarkedArenaStackTop = aheader->getNextDelayedMarking();
-        aheader->unsetDelayedMarking();
-        aheader->markOverflow = 0;
-        aheader->allocatedDuringIncremental = 0;
-        markLaterArenas--;
-    }
-    MOZ_ASSERT(isDrained());
-    MOZ_ASSERT(!markLaterArenas);
-}
-
-void
-GCMarker::markDelayedChildren(ArenaHeader* aheader)
-{
-    if (aheader->markOverflow) {
-        bool always = aheader->allocatedDuringIncremental;
-        aheader->markOverflow = 0;
-
-        for (ArenaCellIterUnderGC i(aheader); !i.done(); i.next()) {
-            TenuredCell* t = i.getCell();
-            if (always || t->isMarked()) {
-                t->markIfUnmarked();
-                JS_TraceChildren(this, t, MapAllocToTraceKind(aheader->getAllocKind()));
-            }
-        }
-    } else {
-        MOZ_ASSERT(aheader->allocatedDuringIncremental);
-        PushArena(this, aheader);
-    }
-    aheader->allocatedDuringIncremental = 0;
-    /*
-     * Note that during an incremental GC we may still be allocating into
-     * aheader. However, prepareForIncrementalGC sets the
-     * allocatedDuringIncremental flag if we continue marking.
-     */
-}
-
-bool
-GCMarker::markDelayedChildren(SliceBudget& budget)
-{
-    GCRuntime& gc = runtime()->gc;
-    gcstats::AutoPhase ap(gc.stats, gc.state() == MARK, gcstats::PHASE_MARK_DELAYED);
-
-    MOZ_ASSERT(unmarkedArenaStackTop);
-    do {
-        /*
-         * If marking gets delayed at the same arena again, we must repeat
-         * marking of its things. For that we pop arena from the stack and
-         * clear its hasDelayedMarking flag before we begin the marking.
-         */
-        ArenaHeader* aheader = unmarkedArenaStackTop;
-        MOZ_ASSERT(aheader->hasDelayedMarking);
-        MOZ_ASSERT(markLaterArenas);
-        unmarkedArenaStackTop = aheader->getNextDelayedMarking();
-        aheader->unsetDelayedMarking();
-        markLaterArenas--;
-        markDelayedChildren(aheader);
-
-        budget.step(150);
-        if (budget.isOverBudget())
-            return false;
-    } while (unmarkedArenaStackTop);
-    MOZ_ASSERT(!markLaterArenas);
-
-    return true;
-}
-
-#ifdef DEBUG
-void
-GCMarker::checkZone(void* p)
-{
-    MOZ_ASSERT(started);
-    DebugOnly<Cell*> cell = static_cast<Cell*>(p);
-    MOZ_ASSERT_IF(cell->isTenured(), cell->asTenured().zone()->isCollecting());
-}
-#endif
-
-size_t
-GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
-    for (ZonesIter zone(runtime(), WithAtoms); !zone.done(); zone.next())
-        size += zone->gcGrayRoots.sizeOfExcludingThis(mallocSizeOf);
-    return size;
-}
-
-void
-js::SetMarkStackLimit(JSRuntime* rt, size_t limit)
-{
-    rt->gc.setMarkStackLimit(limit);
 }
