@@ -21,7 +21,7 @@ interface nsITabParent;
 interface nsIURI;
 interface nsIWebBrowserChrome;
 
-[scriptable, uuid(e28f810b-9b49-4927-a4be-62a74fadfe21)]
+[scriptable, uuid(b6c44689-f97e-4f32-a723-29eeddfbdc53)]
 
 interface nsIWindowCreator2 : nsIWindowCreator {
 
@@ -59,4 +59,14 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                                           in nsIURI uri,
                                           in nsITabParent aOpeningTab,
                                           out boolean cancel);
+
+  /**
+   * B2G multi-screen support. When open another top-level window on b2g,
+   * a screen ID is needed for identifying which screen this window is
+   * opened to.
+   * @param aScreenId Differentiate screens of windows. It is platform-
+   *                  specific due to the hardware limitation for now.
+   */
+  [noscript]
+  void setScreenId(in uint32_t aScreenId);
 };
