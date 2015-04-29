@@ -1082,7 +1082,7 @@ void AudioCallbackDriver::CompleteAudioContextOperations(AsyncCubebOperation aOp
     array.SwapElements(mPromisesForOperation);
   }
 
-  for (int32_t i = array.Length() - 1; i >= 0; i--) {
+  for (uint32_t i = 0; i < array.Length(); i++) {
     StreamAndPromiseForOperation& s = array[i];
     if ((aOperation == AsyncCubebOperation::INIT &&
          s.mOperation == AudioContextOperation::Resume) ||
@@ -1093,6 +1093,7 @@ void AudioCallbackDriver::CompleteAudioContextOperations(AsyncCubebOperation aOp
                                                   s.mPromise,
                                                   s.mOperation);
       array.RemoveElementAt(i);
+      i--;
     }
   }
 
