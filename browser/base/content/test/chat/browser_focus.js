@@ -10,12 +10,16 @@ const CHAT_URL = "https://example.com/browser/browser/base/content/test/chat/cha
 // Is the currently opened tab focused?
 function isTabFocused() {
   let tabb = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-  return Services.focus.focusedWindow == tabb.contentWindow;
+  // focus sucks in tests - our window may have lost focus.
+  let elt = Services.focus.getFocusedElementForWindow(window, false, {});
+  return elt == tabb;
 }
 
 // Is the specified chat focused?
 function isChatFocused(chat) {
-  return chat.chatbar._isChatFocused(chat);
+  // focus sucks in tests - our window may have lost focus.
+  let elt = Services.focus.getFocusedElementForWindow(window, false, {});
+  return elt == chat.content;
 }
 
 let chatbar = document.getElementById("pinnedchats");
