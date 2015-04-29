@@ -2666,19 +2666,6 @@ fi
 
 if test -n "$gonkdir" ; then
 
-        if test -z "$HOST_CPPFLAGS" ; then
-        HOST_CPPFLAGS=" "
-    fi
-    if test -z "$HOST_CFLAGS" ; then
-        HOST_CFLAGS=" "
-    fi
-    if test -z "$HOST_CXXFLAGS" ; then
-        HOST_CXXFLAGS=" "
-    fi
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
-
     $as_echo "#define ANDROID 1" >>confdefs.h
 
 else
@@ -2762,19 +2749,6 @@ $as_echo "$android_platform" >&6; }
     CFLAGS="-mandroid -I$android_platform/usr/include -fno-short-enums -fno-exceptions $CFLAGS"
     CXXFLAGS="-mandroid -I$android_platform/usr/include -fpic -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
-
-        if test -z "$HOST_CPPFLAGS" ; then
-        HOST_CPPFLAGS=" "
-    fi
-    if test -z "$HOST_CFLAGS" ; then
-        HOST_CFLAGS=" "
-    fi
-    if test -z "$HOST_CXXFLAGS" ; then
-        HOST_CXXFLAGS=" "
-    fi
-    if test -z "$HOST_LDFLAGS" ; then
-        HOST_LDFLAGS=" "
-    fi
 
     $as_echo "#define ANDROID 1" >>confdefs.h
 
@@ -4621,12 +4595,6 @@ test -n "$HOST_CC" || HOST_CC=""""
     fi
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $HOST_CC" >&5
 $as_echo "$HOST_CC" >&6; }
-    if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
-    fi
-    if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
-    fi
 
     CC="$HOST_CC"
     CFLAGS="$HOST_CFLAGS"
