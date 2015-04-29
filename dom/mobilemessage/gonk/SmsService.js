@@ -802,7 +802,7 @@ SmsService.prototype = {
     }
   },
 
-  // An array of slient numbers.
+  // An array of silent numbers.
   _silentNumbers: null,
   _isSilentNumber: function(aNumber) {
     return this._silentNumbers.indexOf(aNumber) >= 0;
@@ -986,6 +986,30 @@ SmsService.prototype = {
       } else {
         aRequest.notifyGetSmscAddressFailed(
           Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
+      }
+    });
+  },
+
+  setSmscAddress: function(aServiceId, aNumber, aTypeOfNumber,
+                      aNumberPlanIdentification, aRequest) {
+    if (aServiceId > (gRadioInterfaces.length - 1)) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let options = {
+      smscAddress: aNumber,
+      typeOfNumber: aTypeOfNumber,
+      numberPlanIdentification: aNumberPlanIdentification
+    };
+
+    gRadioInterfaces[aServiceId].sendWorkerMessage("setSmscAddress",
+                                                   options,
+                                                   (aResponse) => {
+      if (!aResponse.errorMsg) {
+        aRequest.notifySetSmscAddress();
+      } else {
+        aRequest.notifySetSmscAddressFailed(
+          Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR);
       }
     });
   },
