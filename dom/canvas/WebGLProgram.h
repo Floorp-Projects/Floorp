@@ -29,6 +29,7 @@ struct LinkedProgramInfo final
     , public SupportsWeakPtr<LinkedProgramInfo>
 {
     MOZ_DECLARE_REFCOUNTED_TYPENAME(LinkedProgramInfo)
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(LinkedProgramInfo)
 
     WebGLProgram* const prog;
     std::vector<nsRefPtr<WebGLActiveInfo>> activeAttribs;
