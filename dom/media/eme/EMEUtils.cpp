@@ -5,9 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EMEUtils.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsIFile.h"
-#include "nsCOMPtr.h"
 
 namespace mozilla {
 
@@ -114,30 +111,6 @@ ParseKeySystem(const nsAString& aInputKeySystem,
     }
   }
   return false;
-}
-
-bool
-GetEMEVoucherPath(nsIFile** aPath)
-{
-  nsCOMPtr<nsIFile> path;
-  NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(path));
-  if (!path) {
-    NS_WARNING("GetEMEVoucherPath can't get NS_GRE_DIR!");
-    return false;
-  }
-  path->AppendNative(NS_LITERAL_CSTRING("voucher.bin"));
-  path.forget(aPath);
-  return true;
-}
-
-bool
-EMEVoucherFileExists()
-{
-  nsCOMPtr<nsIFile> path;
-  bool exists;
-  return GetEMEVoucherPath(getter_AddRefs(path)) &&
-         NS_SUCCEEDED(path->Exists(&exists)) &&
-         exists;
 }
 
 } // namespace mozilla
