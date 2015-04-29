@@ -120,6 +120,7 @@ IsBidiUI()
 nsCaret::nsCaret()
 : mOverrideOffset(0)
 , mIsBlinkOn(false)
+, mBlinkCount(-1)
 , mVisible(false)
 , mReadOnly(false)
 , mShowDuringSelection(false)
@@ -594,6 +595,7 @@ void nsCaret::ResetBlinking()
   uint32_t blinkRate = static_cast<uint32_t>(
     LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
   if (blinkRate > 0) {
+    mBlinkCount = Preferences::GetInt("ui.caretBlinkCount", -1);
     mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
                                       nsITimer::TYPE_REPEATING_SLACK);
   }
@@ -913,6 +915,19 @@ void nsCaret::CaretBlinkCallback(nsITimer* aTimer, void* aClosure)
   }
   theCaret->mIsBlinkOn = !theCaret->mIsBlinkOn;
   theCaret->SchedulePaint();
+
+  // mBlinkCount of -1 means blink count is not enabled.
+  if (theCaret->mBlinkCount == -1) {
+    return;
+  }
+
+  // Track the blink count, but only at end of a blink cycle.
+  if (!theCaret->mIsBlinkOn) {
+    // If we exceeded the blink count, stop the timer.
+    if (--theCaret->mBlinkCount <= 0) {
+      theCaret->StopBlinking();
+    }
+  }
 }
 
 void
