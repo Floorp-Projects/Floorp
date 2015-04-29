@@ -1201,6 +1201,12 @@
     "kind": "boolean",
     "description": "Whether a WAP content type response is served to the browser."
   },
+  "HTTP_SCHEME_UPGRADE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Was the URL upgraded to HTTPS?  (0=already HTTPS, 1=no reason to upgrade, 2=STS upgrade blocked by pref, 3=upgraded with STS)"
+  },
   "SSL_HANDSHAKE_VERSION": {
     "expires_in_version": "never",
     "kind": "enumerated",
