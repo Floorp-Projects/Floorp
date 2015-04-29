@@ -53,6 +53,10 @@
       function nativeCallback() {
         new Promise(function(resolve, reject) { resolve(42); }).then(console.log.bind(console));
       }
+
+      function timeStamp(val) {
+        console.timeStamp(val);
+      }
     </script>
   </head>
   <body>
@@ -65,5 +69,7 @@
     <button id="test-time" onclick="startTimer('foo');">Test time</button>
     <button id="test-timeEnd" onclick="stopTimer('foo');">Test timeEnd</button>
     <button id="test-namelessTimer" onclick="namelessTimer();">Test namelessTimer</button>
+    <button id="test-timeStamp" onclick="timeStamp('!!!')">Test timeStamp</button>
+    <button id="test-emptyTimeStamp" onclick="timeStamp();">Test emptyTimeStamp</button>
   </body>
 </html>
