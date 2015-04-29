@@ -1239,6 +1239,15 @@ RilObject.prototype = {
   },
 
   getIMEI: function(options) {
+    // A device's IMEI can't change, so we only need to request it once.
+    if (this.IMEI) {
+      if (options && options.rilMessageType) {
+        options.imei = this.IMEI;
+        this.sendChromeMessage(options);
+      }
+      return;
+    }
+
     this.context.Buf.simpleRequest(REQUEST_GET_IMEI, options);
   },
 
@@ -1949,18 +1958,6 @@ RilObject.prototype = {
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
     switch (sc) {
-      // IMEI
-      case MMI_SC_IMEI:
-        // A device's IMEI can't change, so we only need to request it once.
-        if (this.IMEI == null) {
-          this.getIMEI(options);
-          return;
-        }
-        // If we already had the device's IMEI, we just send it to chrome.
-        options.statusMessage = this.IMEI;
-        this.sendChromeMessage(options);
-        return;
-
       // CLIP
       case MMI_SC_CLIP:
         options.procedure = mmi.procedure;
@@ -4785,17 +4782,18 @@ RilObject.prototype[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITIN
 RilObject.prototype[REQUEST_SMS_ACKNOWLEDGE] = null;
 RilObject.prototype[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
   this.IMEI = this.context.Buf.readString();
-  let rilMessageType = options.rilMessageType;
-  // So far we only send the IMEI back to chrome if it was requested via MMI.
-  if (rilMessageType !== "sendMMI") {
-    return;
-  }
 
-  if (!options.errorMsg && this.IMEI == null) {
-    options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
+  // If the request wasn't made by ril_worker itself, we send the IMEI back to
+  // chrome.
+  if (options.rilMessageType) {
+    if (options.errorMsg) {
+      this.sendChromeMessage(options);
+      return;
+    }
+
+    options.imei = this.IMEI;
+    this.sendChromeMessage(options);
   }
-  options.statusMessage = this.IMEI;
-  this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV(length, options) {
   if (options.errorMsg) {
