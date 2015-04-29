@@ -12,8 +12,8 @@ const cssTokenizer  = require("devtools/sourceeditor/css-tokenizer");
  * Returns the string enclosed in quotes
  */
 function quoteString(string) {
-  let hasDoubleQuotes = string.contains('"');
-  let hasSingleQuotes = string.contains("'");
+  let hasDoubleQuotes = string.includes('"');
+  let hasSingleQuotes = string.includes("'");
 
   let quote = '"';
   if (hasDoubleQuotes && !hasSingleQuotes) {

@@ -36,20 +36,20 @@ function theTest() {
     },
 
     function OFFER_AND_ANSWER_INCLUDES_IDENTITY(test) {
-      ok(test.originalOffer.sdp.contains("a=identity"), "a=identity is in the offer SDP");
-      ok(test.originalAnswer.sdp.contains("a=identity"), "a=identity is in the answer SDP");
+      ok(test.originalOffer.sdp.includes("a=identity"), "a=identity is in the offer SDP");
+      ok(test.originalAnswer.sdp.includes("a=identity"), "a=identity is in the answer SDP");
     },
 
     function PC_LOCAL_DESCRIPTIONS_CONTAIN_IDENTITY(test) {
-      ok(test.pcLocal.localDescription.sdp.contains("a=identity"),
+      ok(test.pcLocal.localDescription.sdp.includes("a=identity"),
          "a=identity is in the local copy of the offer");
-      ok(test.pcLocal.remoteDescription.sdp.contains("a=identity"),
+      ok(test.pcLocal.remoteDescription.sdp.includes("a=identity"),
          "a=identity is in the local copy of the answer");
     },
     function PC_REMOTE_DESCRIPTIONS_CONTAIN_IDENTITY(test) {
-      ok(test.pcRemote.localDescription.sdp.contains("a=identity"),
+      ok(test.pcRemote.localDescription.sdp.includes("a=identity"),
                          "a=identity is in the remote copy of the offer");
-      ok(test.pcRemote.remoteDescription.sdp.contains("a=identity"),
+      ok(test.pcRemote.remoteDescription.sdp.includes("a=identity"),
                          "a=identity is in the remote copy of the answer");
     }
   ]);

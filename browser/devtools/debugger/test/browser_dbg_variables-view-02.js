@@ -27,7 +27,7 @@ function test() {
 
     ok(testVar,
       "Should have created a variable.");
-    ok(testVar.id.contains("something"),
+    ok(testVar.id.includes("something"),
       "The newly created variable should have the default id set.");
     is(testVar.name, "something",
       "The newly created variable should have the desired name set.");
@@ -39,7 +39,7 @@ function test() {
 
     ok(testVar.target,
       "The newly created scope should point to a target node.");
-    ok(testVar.target.id.contains("something"),
+    ok(testVar.target.id.includes("something"),
       "Should have the correct variable id on the element.");
 
     is(testVar.target.querySelector(".name").getAttribute("value"), "something",
@@ -157,7 +157,7 @@ function test() {
     let testChild = testVar.get("child");
     ok(testChild,
       "Should have created a child property.");
-    ok(testChild.id.contains("child"),
+    ok(testChild.id.includes("child"),
       "The newly created property should have the default id set.");
     is(testChild.name, "child",
       "The newly created property should have the desired name set.");
@@ -169,7 +169,7 @@ function test() {
 
     ok(testChild.target,
       "The newly created scope should point to a target node.");
-    ok(testChild.target.id.contains("child"),
+    ok(testChild.target.id.includes("child"),
       "Should have the correct property id on the element.");
 
     is(testChild.target.querySelector(".name").getAttribute("value"), "child",

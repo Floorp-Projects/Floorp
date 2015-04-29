@@ -54,8 +54,8 @@ function ifWebGLSupported() {
 
       let vertSource = yield newVertexShader.getText();
       let fragSource = yield newFragmentShader.getText();
-      ok(vertSource.contains("I'm special!") &&
-         fragSource.contains("I'm also special!"), aMessage);
+      ok(vertSource.includes("I'm special!") &&
+         fragSource.includes("I'm also special!"), aMessage);
     });
   }
 

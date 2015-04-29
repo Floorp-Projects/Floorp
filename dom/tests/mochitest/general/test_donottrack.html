@@ -31,7 +31,7 @@ function nextTest() {
 
 tests.push(function testDefaultValues() {
   // The default pref values depend on the OS it seems.
-  var isAndroid = !!navigator.userAgent.contains("Android");
+  var isAndroid = !!navigator.userAgent.includes("Android");
   var isB2G = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
 
   is(SpecialPowers.getBoolPref(dntPref), false,

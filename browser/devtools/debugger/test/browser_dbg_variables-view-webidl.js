@@ -61,14 +61,14 @@ function performTest() {
     "Should have the right property name for 'button'.");
   is(buttonVar.target.querySelector(".value").getAttribute("value"), "<button>",
     "Should have the right property value for 'button'.");
-  ok(buttonVar.target.querySelector(".value").className.contains("token-domnode"),
+  ok(buttonVar.target.querySelector(".value").className.includes("token-domnode"),
     "Should have the right token class for 'button'.");
 
   is(buttonAsProtoVar.target.querySelector(".name").getAttribute("value"), "buttonAsProto",
     "Should have the right property name for 'buttonAsProto'.");
   is(buttonAsProtoVar.target.querySelector(".value").getAttribute("value"), "Object",
     "Should have the right property value for 'buttonAsProto'.");
-  ok(buttonAsProtoVar.target.querySelector(".value").className.contains("token-other"),
+  ok(buttonAsProtoVar.target.querySelector(".value").className.includes("token-other"),
     "Should have the right token class for 'buttonAsProto'.");
 
   is(documentVar.target.querySelector(".name").getAttribute("value"), "document",
@@ -76,7 +76,7 @@ function performTest() {
   is(documentVar.target.querySelector(".value").getAttribute("value"),
     "HTMLDocument \u2192 doc_frame-parameters.html",
     "Should have the right property value for 'document'.");
-  ok(documentVar.target.querySelector(".value").className.contains("token-domnode"),
+  ok(documentVar.target.querySelector(".value").className.includes("token-domnode"),
     "Should have the right token class for 'document'.");
 
   is(buttonVar.expanded, false,
@@ -91,42 +91,42 @@ function performTest() {
       "Should have the right property name for 'type'.");
     is(buttonVar.get("type").target.querySelector(".value").getAttribute("value"), "\"submit\"",
       "Should have the right property value for 'type'.");
-    ok(buttonVar.get("type").target.querySelector(".value").className.contains("token-string"),
+    ok(buttonVar.get("type").target.querySelector(".value").className.includes("token-string"),
       "Should have the right token class for 'type'.");
 
     is(buttonVar.get("childNodes").target.querySelector(".name").getAttribute("value"), "childNodes",
       "Should have the right property name for 'childNodes'.");
     is(buttonVar.get("childNodes").target.querySelector(".value").getAttribute("value"), "NodeList[1]",
       "Should have the right property value for 'childNodes'.");
-    ok(buttonVar.get("childNodes").target.querySelector(".value").className.contains("token-other"),
+    ok(buttonVar.get("childNodes").target.querySelector(".value").className.includes("token-other"),
       "Should have the right token class for 'childNodes'.");
 
     is(buttonVar.get("onclick").target.querySelector(".name").getAttribute("value"), "onclick",
       "Should have the right property name for 'onclick'.");
     is(buttonVar.get("onclick").target.querySelector(".value").getAttribute("value"), "onclick(event)",
       "Should have the right property value for 'onclick'.");
-    ok(buttonVar.get("onclick").target.querySelector(".value").className.contains("token-other"),
+    ok(buttonVar.get("onclick").target.querySelector(".value").className.includes("token-other"),
       "Should have the right token class for 'onclick'.");
 
     is(documentVar.get("title").target.querySelector(".name").getAttribute("value"), "title",
       "Should have the right property name for 'title'.");
     is(documentVar.get("title").target.querySelector(".value").getAttribute("value"), "\"Debugger test page\"",
       "Should have the right property value for 'title'.");
-    ok(documentVar.get("title").target.querySelector(".value").className.contains("token-string"),
+    ok(documentVar.get("title").target.querySelector(".value").className.includes("token-string"),
       "Should have the right token class for 'title'.");
 
     is(documentVar.get("childNodes").target.querySelector(".name").getAttribute("value"), "childNodes",
       "Should have the right property name for 'childNodes'.");
     is(documentVar.get("childNodes").target.querySelector(".value").getAttribute("value"), "NodeList[3]",
       "Should have the right property value for 'childNodes'.");
-    ok(documentVar.get("childNodes").target.querySelector(".value").className.contains("token-other"),
+    ok(documentVar.get("childNodes").target.querySelector(".value").className.includes("token-other"),
       "Should have the right token class for 'childNodes'.");
 
     is(documentVar.get("onclick").target.querySelector(".name").getAttribute("value"), "onclick",
       "Should have the right property name for 'onclick'.");
     is(documentVar.get("onclick").target.querySelector(".value").getAttribute("value"), "null",
       "Should have the right property value for 'onclick'.");
-    ok(documentVar.get("onclick").target.querySelector(".value").className.contains("token-null"),
+    ok(documentVar.get("onclick").target.querySelector(".value").className.includes("token-null"),
       "Should have the right token class for 'onclick'.");
 
     let buttonProtoVar = buttonVar.get("__proto__");
@@ -137,21 +137,21 @@ function performTest() {
       "Should have the right property name for '__proto__'.");
     is(buttonProtoVar.target.querySelector(".value").getAttribute("value"), "HTMLButtonElementPrototype",
       "Should have the right property value for '__proto__'.");
-    ok(buttonProtoVar.target.querySelector(".value").className.contains("token-other"),
+    ok(buttonProtoVar.target.querySelector(".value").className.includes("token-other"),
       "Should have the right token class for '__proto__'.");
 
     is(buttonAsProtoProtoVar.target.querySelector(".name").getAttribute("value"), "__proto__",
       "Should have the right property name for '__proto__'.");
     is(buttonAsProtoProtoVar.target.querySelector(".value").getAttribute("value"), "<button>",
       "Should have the right property value for '__proto__'.");
-    ok(buttonAsProtoProtoVar.target.querySelector(".value").className.contains("token-domnode"),
+    ok(buttonAsProtoProtoVar.target.querySelector(".value").className.includes("token-domnode"),
       "Should have the right token class for '__proto__'.");
 
     is(documentProtoVar.target.querySelector(".name").getAttribute("value"), "__proto__",
       "Should have the right property name for '__proto__'.");
     is(documentProtoVar.target.querySelector(".value").getAttribute("value"), "HTMLDocumentPrototype",
       "Should have the right property value for '__proto__'.");
-    ok(documentProtoVar.target.querySelector(".value").className.contains("token-other"),
+    ok(documentProtoVar.target.querySelector(".value").className.includes("token-other"),
       "Should have the right token class for '__proto__'.");
 
     is(buttonProtoVar.expanded, false,
@@ -166,21 +166,21 @@ function performTest() {
         "Should have the right property name for 'type'.");
       is(buttonAsProtoProtoVar.get("type").target.querySelector(".value").getAttribute("value"), "\"submit\"",
         "Should have the right property value for 'type'.");
-      ok(buttonAsProtoProtoVar.get("type").target.querySelector(".value").className.contains("token-string"),
+      ok(buttonAsProtoProtoVar.get("type").target.querySelector(".value").className.includes("token-string"),
         "Should have the right token class for 'type'.");
 
       is(buttonAsProtoProtoVar.get("childNodes").target.querySelector(".name").getAttribute("value"), "childNodes",
         "Should have the right property name for 'childNodes'.");
       is(buttonAsProtoProtoVar.get("childNodes").target.querySelector(".value").getAttribute("value"), "NodeList[1]",
         "Should have the right property value for 'childNodes'.");
-      ok(buttonAsProtoProtoVar.get("childNodes").target.querySelector(".value").className.contains("token-other"),
+      ok(buttonAsProtoProtoVar.get("childNodes").target.querySelector(".value").className.includes("token-other"),
         "Should have the right token class for 'childNodes'.");
 
       is(buttonAsProtoProtoVar.get("onclick").target.querySelector(".name").getAttribute("value"), "onclick",
         "Should have the right property name for 'onclick'.");
       is(buttonAsProtoProtoVar.get("onclick").target.querySelector(".value").getAttribute("value"), "onclick(event)",
         "Should have the right property value for 'onclick'.");
-      ok(buttonAsProtoProtoVar.get("onclick").target.querySelector(".value").className.contains("token-other"),
+      ok(buttonAsProtoProtoVar.get("onclick").target.querySelector(".value").className.includes("token-other"),
         "Should have the right token class for 'onclick'.");
 
       let buttonProtoProtoVar = buttonProtoVar.get("__proto__");
@@ -191,21 +191,21 @@ function performTest() {
         "Should have the right property name for '__proto__'.");
       is(buttonProtoProtoVar.target.querySelector(".value").getAttribute("value"), "HTMLElementPrototype",
         "Should have the right property value for '__proto__'.");
-      ok(buttonProtoProtoVar.target.querySelector(".value").className.contains("token-other"),
+      ok(buttonProtoProtoVar.target.querySelector(".value").className.includes("token-other"),
         "Should have the right token class for '__proto__'.");
 
       is(buttonAsProtoProtoProtoVar.target.querySelector(".name").getAttribute("value"), "__proto__",
         "Should have the right property name for '__proto__'.");
       is(buttonAsProtoProtoProtoVar.target.querySelector(".value").getAttribute("value"), "HTMLButtonElementPrototype",
         "Should have the right property value for '__proto__'.");
-      ok(buttonAsProtoProtoProtoVar.target.querySelector(".value").className.contains("token-other"),
+      ok(buttonAsProtoProtoProtoVar.target.querySelector(".value").className.includes("token-other"),
         "Should have the right token class for '__proto__'.");
 
       is(documentProtoProtoVar.target.querySelector(".name").getAttribute("value"), "__proto__",
         "Should have the right property name for '__proto__'.");
       is(documentProtoProtoVar.target.querySelector(".value").getAttribute("value"), "DocumentPrototype",
         "Should have the right property value for '__proto__'.");
-      ok(documentProtoProtoVar.target.querySelector(".value").className.contains("token-other"),
+      ok(documentProtoProtoVar.target.querySelector(".value").className.includes("token-other"),
         "Should have the right token class for '__proto__'.")
 
       is(buttonAsProtoProtoProtoVar.expanded, false,

@@ -107,7 +107,7 @@ WeaveService.prototype = {
       // Old sync guarantees '@' will never appear in the username while FxA
       // uses the FxA email address - so '@' is the flag we use.
       let username = Services.prefs.getCharPref(SYNC_PREFS_BRANCH + "username");
-      return !username || username.contains('@');
+      return !username || username.includes('@');
     } catch (_) {
       return true; // No username == only allow FxA to be configured.
     }

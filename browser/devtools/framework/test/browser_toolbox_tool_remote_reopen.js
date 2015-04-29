@@ -114,12 +114,12 @@ function test() {
         // Bug 1056342: Profiler fails today because of framerate actor, but
         // this appears more complex to rework, so leave it for that bug to
         // resolve.
-        if (actor.contains("framerateActor")) {
+        if (actor.includes("framerateActor")) {
           todo(false, "Front for " + actor + " still held in pool!");
           continue;
         }
         // gcliActor is for the commandline which is separate to the toolbox
-        if (actor.contains("gcliActor")) {
+        if (actor.includes("gcliActor")) {
           continue;
         }
         ok(false, "Front for " + actor + " still held in pool!");
