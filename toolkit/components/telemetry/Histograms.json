@@ -4192,70 +4192,20 @@
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
   },
   "CHARSET_OVERRIDE_SITUATION": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 8,
     "description": "Labeling status of top-level page when overriding charset (0: unlabeled file URL without detection, 1: unlabeled non-TLD-guessed non-file URL without detection, 2: unlabeled file URL with detection, 3: unlabeled non-file URL with detection, 4: labeled, 5: already overridden, 6: bug, 7: unlabeled with TLD guessing)"
   },
   "CHARSET_OVERRIDE_USED": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the character encoding menu was used to override an encoding in this session."
   },
-  "DECODER_INSTANTIATED_HZ": {
-    "expires_in_version": "default",
-    "kind": "flag",
-    "description": "Whether the decoder for HZ has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_ISO2022CN": {
-    "expires_in_version": "40",
-    "kind": "flag",
-    "description": "Whether the decoder for ISO-2022-CN has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_ISO2022KR": {
-    "expires_in_version": "40",
-    "kind": "flag",
-    "description": "Whether the decoder for ISO-2022-KR has been instantiated in this session."
-  },
   "DECODER_INSTANTIATED_ISO2022JP": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for ISO-2022-JP has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_JOHAB": {
-    "expires_in_version": "32",
-    "kind": "flag",
-    "description": "Whether the decoder for JOHAB has been instantiated in this session. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "DECODER_INSTANTIATED_T61": {
-    "expires_in_version": "32",
-    "kind": "flag",
-    "description": "Whether the decoder for T.61 has been instantiated in this session. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "DECODER_INSTANTIATED_IBM850": {
-    "expires_in_version": "38",
-    "kind": "flag",
-    "description": "Whether the decoder for IBM850 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_IBM852": {
-    "expires_in_version": "38",
-    "kind": "flag",
-    "description": "Whether the decoder for IBM852 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_IBM855": {
-    "expires_in_version": "38",
-    "kind": "flag",
-    "description": "Whether the decoder for IBM855 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_IBM857": {
-    "expires_in_version": "38",
-    "kind": "flag",
-    "description": "Whether the decoder for IBM857 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_IBM862": {
-    "expires_in_version": "38",
-    "kind": "flag",
-    "description": "Whether the decoder for IBM862 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM866": {
     "expires_in_version": "never",
@@ -4263,107 +4213,82 @@
     "description": "Whether the decoder for IBM866 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACGREEK": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACGREEK has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACICELANDIC": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACICELANDIC has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACCE": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACCE has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACHEBREW": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACHEBREW has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACARABIC": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACARABIC has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACFARSI": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACFARSI has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACCROATIAN": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACCROATIAN has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACCYRILLIC": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACCYRILLIC has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACROMANIAN": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACROMANIAN has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACTURKISH": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACTURKISH has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACDEVANAGARI": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACDEVANAGARI has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACGUJARATI": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACGUJARATI has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACGURMUKHI": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for MACGURMUKHI has been instantiated in this session."
   },
-  "DECODER_INSTANTIATED_ISOIR111": {
-    "expires_in_version": "38",
-    "kind": "flag",
-    "description": "Whether the decoder for ISOIR111 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_ARMSCII8": {
-    "expires_in_version": "default",
-    "kind": "flag",
-    "description": "Whether the decoder for ARMSCII8 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_VISCII": {
-    "expires_in_version": "40",
-    "kind": "flag",
-    "description": "Whether the decoder for VISCII has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_VIETTCVN5712": {
-    "expires_in_version": "40",
-    "kind": "flag",
-    "description": "Whether the decoder for VIETTCVN5712 has been instantiated in this session."
-  },
-  "DECODER_INSTANTIATED_VIETVPS": {
-    "expires_in_version": "40",
-    "kind": "flag",
-    "description": "Whether the decoder for VIETVPS has been instantiated in this session."
-  },
   "DECODER_INSTANTIATED_KOI8R": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for KOI8R has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_KOI8U": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for KOI8U has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_ISO_8859_5": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for ISO-8859-5 has been instantiated in this session."
   },
