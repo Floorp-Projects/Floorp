@@ -7,120 +7,33 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
-// The blocklist shim running in the content process does not initialize at
-// start up, so it's not active until we load content that needs to do a
-// check. This helper bypasses the delay to get the svc up and running
-// immediately. Note, call this after remote content has loaded.
-function promiseInitContentBlocklistSvc(aBrowser)
-{
-  return ContentTask.spawn(aBrowser, {}, function* () {
-    try {
-      let bls = Cc["@mozilla.org/extensions/blocklist;1"]
-                          .getService(Ci.nsIBlocklistService);
-    } catch (ex) {
-      return ex.message;
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      executeSoon(aCallback);
     }
-    return null;
-  });
+  }, "browser-delayed-startup-finished", false);
 }
 
-/**
-  * Waits a specified number of miliseconds.
-  *
-  * Usage:
-  *    let wait = yield waitForMs(2000);
-  *    ok(wait, "2 seconds should now have elapsed");
-  *
-  * @param aMs the number of miliseconds to wait for
-  * @returns a Promise that resolves to true after the time has elapsed
-  */
-function waitForMs(aMs) {
-  let deferred = Promise.defer();
-  let startTime = Date.now();
-  setTimeout(done, aMs);
-  function done() {
-    deferred.resolve(true);
+function findChromeWindowByURI(aURI) {
+  let windows = Services.wm.getEnumerator(null);
+  while (windows.hasMoreElements()) {
+    let win = windows.getNext();
+    if (win.location.href == aURI)
+      return win;
   }
-  return deferred.promise;
-}
-
-
-// DOM Promise fails for unknown reasons here, so we're using
-// resource://gre/modules/Promise.jsm.
-function waitForEvent(subject, eventName, checkFn, useCapture, useUntrusted) {
-  return new Promise((resolve, reject) => {
-    subject.addEventListener(eventName, function listener(event) {
-      try {
-        if (checkFn && !checkFn(event)) {
-          return;
-        }
-        subject.removeEventListener(eventName, listener, useCapture);
-        resolve(event);
-      } catch (ex) {
-        try {
-          subject.removeEventListener(eventName, listener, useCapture);
-        } catch (ex2) {
-          // Maybe the provided object does not support removeEventListener.
-        }
-        reject(ex);
-      }
-    }, useCapture, useUntrusted);
-  });
-}
-
-
-/**
- * Waits for a load (or custom) event to finish in a given tab. If provided
- * load an uri into the tab.
- *
- * @param tab
- *        The tab to load into.
- * @param [optional] url
- *        The url to load, or the current url.
- * @param [optional] event
- *        The load event type to wait for.  Defaults to "load".
- * @return {Promise} resolved when the event is handled.
- * @resolves to the received event
- * @rejects if a valid load event is not received within a meaningful interval
- */
-function promiseTabLoadEvent(tab, url, eventType="load") {
-  let deferred = Promise.defer();
-  info("Wait tab event: " + eventType);
-
-  function handle(event) {
-    if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank" ||
-        (url && event.target.location.href != url)) {
-      info("Skipping spurious '" + eventType + "'' event" +
-            " for " + event.target.location.href);
-      return;
-    }
-    clearTimeout(timeout);
-    tab.linkedBrowser.removeEventListener(eventType, handle, true);
-    info("Tab event received: " + eventType);
-    deferred.resolve(event);
-  }
-
-  let timeout = setTimeout(() => {
-    tab.linkedBrowser.removeEventListener(eventType, handle, true);
-    deferred.reject(new Error("Timed out while waiting for a '" + eventType + "'' event"));
-  }, 30000);
-
-  tab.linkedBrowser.addEventListener(eventType, handle, true, true);
-  if (url) {
-    tab.linkedBrowser.loadURI(url);
-  }
-  return deferred.promise;
+  return null;
 }
 
 function waitForCondition(condition, nextTest, errorMsg) {
-  let tries = 0;
-  let interval = setInterval(function() {
-    if (tries >= 100) {
+  var tries = 0;
+  var interval = setInterval(function() {
+    if (tries >= 30) {
       ok(false, errorMsg);
       moveOn();
     }
-    let conditionPassed;
+    var conditionPassed;
     try {
       conditionPassed = condition();
     } catch (e) {
@@ -132,24 +45,16 @@ function waitForCondition(condition, nextTest, errorMsg) {
     }
     tries++;
   }, 100);
-  let moveOn = function() { clearInterval(interval); nextTest(); };
+  var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
-// Waits for a conditional function defined by the caller to return true.
-function promiseForCondition(aConditionFn) {
-  let deferred = Promise.defer();
-  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.");
-  return deferred.promise;
-}
-
-// Returns the chrome side nsIPluginTag for this plugin
 function getTestPlugin(aName) {
-  let pluginName = aName || "Test Plug-in";
-  let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  let tags = ph.getPluginTags();
+  var pluginName = aName || "Test Plug-in";
+  var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+  var tags = ph.getPluginTags();
 
   // Find the test plugin
-  for (let i = 0; i < tags.length; i++) {
+  for (var i = 0; i < tags.length; i++) {
     if (tags[i].name == pluginName)
       return tags[i];
   }
@@ -157,73 +62,15 @@ function getTestPlugin(aName) {
   return null;
 }
 
-// Set the 'enabledState' on the nsIPluginTag stored in the main or chrome
-// process.
+// call this to set the test plugin(s) initially expected enabled state.
+// it will automatically be reset to it's previous value after the test
+// ends
 function setTestPluginEnabledState(newEnabledState, pluginName) {
-  let name = pluginName || "Test Plug-in";
-  let plugin = getTestPlugin(name);
+  var plugin = getTestPlugin(pluginName);
+  var oldEnabledState = plugin.enabledState;
   plugin.enabledState = newEnabledState;
-}
-
-// Get the 'enabledState' on the nsIPluginTag stored in the main or chrome
-// process.
-function getTestPluginEnabledState(pluginName) {
-  let name = pluginName || "Test Plug-in";
-  let plugin = getTestPlugin(name);
-  return plugin.enabledState;
-}
-
-// Returns a promise for nsIObjectLoadingContent props data.
-function promiseForPluginInfo(aId, aBrowser) {
-  let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
-    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-      throw new Error("no plugin found");
-    return {
-      pluginFallbackType: plugin.pluginFallbackType,
-      activated: plugin.activated,
-      hasRunningPlugin: plugin.hasRunningPlugin,
-      displayedType: plugin.displayedType,
-    };
-  });
-}
-
-// Return a promise and call the plugin's nsIObjectLoadingContent
-// playPlugin() method.
-function promisePlayObject(aId, aBrowser) {
-  let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    objLoadingContent.playPlugin();
-  });
-}
-
-function promiseCrashObject(aId, aBrowser) {
-  let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Components.utils.waiveXrays(plugin).crash();
-  });
-}
-
-// Return a promise and call the plugin's getObjectValue() method.
-function promiseObjectValueResult(aId, aBrowser) {
-  let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
-    return Components.utils.waiveXrays(plugin).getObjectValue();
-  });
-}
-
-// Return a promise and reload the target plugin in the page
-function promiseReloadPlugin(aId, aBrowser) {
-  let browser = aBrowser || gTestBrowser;
-  return ContentTask.spawn(browser, aId, function* (aId) {
-    let plugin = content.document.getElementById(aId);
-    plugin.src = plugin.src;
+  SimpleTest.registerCleanupFunction(function() {
+    getTestPlugin(pluginName).enabledState = oldEnabledState;
   });
 }
 
@@ -234,16 +81,15 @@ function clearAllPluginPermissions() {
   while (perms.hasMoreElements()) {
     let perm = perms.getNext();
     if (perm.type.startsWith('plugin')) {
-      info("removing permission:" + perm.host + " " + perm.type + "\n");
       Services.perms.remove(perm.host, perm.type);
     }
   }
 }
 
 function updateBlocklist(aCallback) {
-  let blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
+  var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
                           .getService(Ci.nsITimerCallback);
-  let observer = function() {
+  var observer = function() {
     Services.obs.removeObserver(observer, "blocklist-updated");
     SimpleTest.executeSoon(aCallback);
   };
@@ -251,77 +97,28 @@ function updateBlocklist(aCallback) {
   blocklistNotifier.notify(null);
 }
 
-let _originalTestBlocklistURL = null;
+var _originalTestBlocklistURL = null;
 function setAndUpdateBlocklist(aURL, aCallback) {
-  if (!_originalTestBlocklistURL) {
+  if (!_originalTestBlocklistURL)
     _originalTestBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
-  }
   Services.prefs.setCharPref("extensions.blocklist.url", aURL);
   updateBlocklist(aCallback);
 }
 
-// A generator that insures a new blocklist is loaded (in both
-// processes if applicable).
-function* asyncSetAndUpdateBlocklist(aURL, aBrowser) {
-  info("*** loading new blocklist: " + aURL);
-  let doTestRemote = aBrowser ? aBrowser.isRemoteBrowser : false;
-  if (!_originalTestBlocklistURL) {
-    _originalTestBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
-  }
-  Services.prefs.setCharPref("extensions.blocklist.url", aURL);
-  let localPromise = TestUtils.topicObserved("blocklist-updated");
-  let remotePromise;
-  if (doTestRemote) {
-    remotePromise = TestUtils.topicObserved("content-blocklist-updated");
-  }
-  let blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
-                            .getService(Ci.nsITimerCallback);
-  blocklistNotifier.notify(null);
-  info("*** waiting on local load");
-  yield localPromise;
-  if (doTestRemote) {
-    info("*** waiting on remote load");
-    yield remotePromise;
-  }
-  info("*** blocklist loaded.");
-}
-
-// Reset back to the blocklist we had at the start of the test run.
 function resetBlocklist() {
   Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
 }
 
-// Insure there's a popup notification present. This test does not indicate
-// open state. aBrowser can be undefined.
-function promisePopupNotification(aName, aBrowser) {
-  let deferred = Promise.defer();
-
-  waitForCondition(() => PopupNotifications.getNotification(aName, aBrowser),
-                   () => {
-    ok(!!PopupNotifications.getNotification(aName, aBrowser),
-       aName + " notification appeared");
-
-    deferred.resolve();
-  }, "timeout waiting for popup notification " + aName);
-
-  return deferred.promise;
-}
-
-/**
- * Allows setting focus on a window, and waiting for that window to achieve
- * focus.
- *
- * @param aWindow
- *        The window to focus and wait for.
- *
- * @return {Promise}
- * @resolves When the window is focused.
- * @rejects Never.
- */
-function promiseWaitForFocus(aWindow) {
-  return new Promise((resolve) => {
-    waitForFocus(resolve, aWindow);
-  });
+function waitForNotificationPopup(notificationID, browser, callback) {
+  let notification;
+  waitForCondition(
+    () => (notification = PopupNotifications.getNotification(notificationID, browser)),
+    () => {
+      ok(notification, `Successfully got the ${notificationID} notification popup`);
+      callback(notification);
+    },
+    `Waited too long for the ${notificationID} notification popup`
+  );
 }
 
 /**
@@ -356,12 +153,6 @@ function waitForNotificationBar(notificationID, browser, callback) {
   });
 }
 
-function promiseForNotificationBar(notificationID, browser) {
-  let deferred = Promise.defer();
-  waitForNotificationBar(notificationID, browser, deferred.resolve);
-  return deferred.promise;
-}
-
 /**
  * Reshow a notification and call a callback when it is reshown.
  * @param notification
@@ -369,7 +160,8 @@ function promiseForNotificationBar(notificationID, browser) {
  * @param callback
  *        A function to be called when the notification has been reshown
  */
-function waitForNotificationShown(notification, callback) {
+function waitForNotificationShown(notification, callback)
+{
   if (PopupNotifications.panel.state == "open") {
     executeSoon(callback);
     return;
@@ -381,30 +173,46 @@ function waitForNotificationShown(notification, callback) {
   notification.reshow();
 }
 
-function promiseForNotificationShown(notification) {
-  let deferred = Promise.defer();
-  waitForNotificationShown(notification, deferred.resolve);
-  return deferred.promise;
+/**
+ * Due to layout being async, "PluginBindAttached" may trigger later.
+ * This returns a Promise that resolves once we've forced a layout
+ * flush, which triggers the PluginBindAttached event to fire.
+ *
+ * @param browser
+ *        The browser to force plugin bindings in.
+ *
+ * @return Promise
+ */
+function forcePluginBindingAttached(browser) {
+  return new Promise((resolve, reject) => {
+    let doc = browser.contentDocument;
+    let elems = doc.getElementsByTagName('embed');
+    if (elems.length < 1) {
+      elems = doc.getElementsByTagName('object');
+    }
+    elems[0].clientTop;
+    executeSoon(resolve);
+  });
 }
 
 /**
- * Due to layout being async, "PluginBindAttached" may trigger later. This
- * returns a Promise that resolves once we've forced a layout flush, which
- * triggers the PluginBindAttached event to fire. This trick only works if
- * there is some sort of plugin in the page.
+ * Loads a page in a browser, and returns a Promise that
+ * resolves once the "load" event has been fired for that
+ * browser.
+ *
  * @param browser
- *        The browser to force plugin bindings in.
+ *        The browser to load the page in.
+ * @param uri
+ *        The URI to load.
+ *
  * @return Promise
  */
-function promiseUpdatePluginBindings(browser) {
-  return ContentTask.spawn(browser, {}, function* () {
-    let doc = content.document;
-    let elems = doc.getElementsByTagName('embed');
-    if (!elems || elems.length < 1) {
-      elems = doc.getElementsByTagName('object');
-    }
-    if (elems && elems.length > 0) {
-      elems[0].clientTop;
-    }
+function loadPage(browser, uri) {
+  return new Promise((resolve, reject) => {
+    browser.addEventListener("load", function onLoad(event) {
+      browser.removeEventListener("load", onLoad, true);
+      resolve();
+    }, true);
+    browser.loadURI(uri);
   });
 }
