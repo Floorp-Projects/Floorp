@@ -1,61 +1,73 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+let gTestBrowser = null;
+let gNumPluginBindingsAttached = 0;
 
-var gTestBrowser = null;
-var gNumPluginBindingsAttached = 0;
-
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
+add_task(function* () {
+  registerCleanupFunction(function () {
+    clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
-    gTestBrowser.removeEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
     gBrowser.removeCurrentTab();
     window.focus();
+    gTestBrowser = null;
   });
+});
 
+add_task(function* () {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
-  var gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-  gTestBrowser.contentWindow.location = gHttpTestRoot + "plugin_bug820497.html";
-}
 
-function pluginBindingAttached() {
-  gNumPluginBindingsAttached++;
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
-  if (gNumPluginBindingsAttached == 1) {
-    var doc = gTestBrowser.contentDocument;
-    var testplugin = doc.getElementById("test");
+  gTestBrowser.addEventListener("PluginBindingAttached", function () { gNumPluginBindingsAttached++ }, true, true);
+
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug820497.html");
+
+  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 1; });  
+
+  // cpows
+  {
+    // Note we add the second plugin in the code farther down, so there's
+    // no way we got here with anything but one plugin loaded.
+    let doc = gTestBrowser.contentDocument;
+    let testplugin = doc.getElementById("test");
     ok(testplugin, "should have test plugin");
-    var secondtestplugin = doc.getElementById("secondtest");
+    let secondtestplugin = doc.getElementById("secondtest");
     ok(!secondtestplugin, "should not yet have second test plugin");
-    var notification;
-    waitForNotificationPopup("click-to-play-plugins", gTestBrowser, (notification => {
-      ok(notification, "should have popup notification");
-      // We don't set up the action list until the notification is shown
-      notification.reshow();
-      is(notification.options.pluginData.size, 1, "should be 1 type of plugin in the popup notification");
-      XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addSecondPlugin();
-    }));
-  } else if (gNumPluginBindingsAttached == 2) {
-    var doc = gTestBrowser.contentDocument;
-    var testplugin = doc.getElementById("test");
-    ok(testplugin, "should have test plugin");
-    var secondtestplugin = doc.getElementById("secondtest");
-    ok(secondtestplugin, "should have second test plugin");
-    var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-    ok(notification, "should have popup notification");
-    notification.reshow();
-    let condition = () => (notification.options.pluginData.size == 2);
-    waitForCondition(condition, finish, "Waited too long for 2 types of plugins in popup notification");
-  } else {
-    ok(false, "if we've gotten here, something is quite wrong");
   }
-}
+
+  yield promisePopupNotification("click-to-play-plugins");
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "should have a click-to-play notification");
+
+  yield promiseForNotificationShown(notification);
+
+  is(notification.options.pluginData.size, 1, "should be 1 type of plugin in the popup notification");
+
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    XPCNativeWrapper.unwrap(content).addSecondPlugin();
+  });
+
+  yield promiseForCondition(function () { return gNumPluginBindingsAttached == 2; });  
+
+  // cpows
+  {
+    let doc = gTestBrowser.contentDocument;
+    let testplugin = doc.getElementById("test");
+    ok(testplugin, "should have test plugin");
+    let secondtestplugin = doc.getElementById("secondtest");
+    ok(secondtestplugin, "should have second test plugin");
+  }
+
+  notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+
+  ok(notification, "should have popup notification");
+
+  yield promiseForNotificationShown(notification);
+
+  is(notification.options.pluginData.size, 2, "aited too long for 2 types of plugins in popup notification");
+});
