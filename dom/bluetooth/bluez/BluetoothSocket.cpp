@@ -44,10 +44,10 @@ public:
   //
 
   bool IsShutdownOnMainThread() const override;
-  void ShutdownOnMainThread();
+  void ShutdownOnMainThread() override;
 
-  bool IsShutdownOnIOThread() const;
-  void ShutdownOnIOThread();
+  bool IsShutdownOnIOThread() const override;
+  void ShutdownOnIOThread() override;
 
   // Delayed-task handling
   //
@@ -756,8 +756,7 @@ BluetoothSocket::CloseSocket()
   // will create a new implementation.
   mIO->ShutdownOnMainThread();
 
-  XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOShutdownTask<BluetoothSocketIO>(mIO));
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
 
   mIO = nullptr;
 

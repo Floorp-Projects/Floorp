@@ -332,12 +332,31 @@ public:
   virtual SocketBase* GetSocketBase() = 0;
 
   /**
+   * Implemented by socket I/O classes to signal that the socket I/O class has
+   * been shut down.
+   *
+   * @return True if the socket I/O class has been shut down, false otherwise.
+   */
+  virtual bool IsShutdownOnIOThread() const = 0;
+
+  /**
    * Implemented by socket I/O classes to signal that socket class has
    * been shut down.
    *
    * @return True if the socket class has been shut down, false otherwise.
    */
   virtual bool IsShutdownOnMainThread() const = 0;
+
+  /**
+   * Signals to the socket I/O classes that it has been shut down.
+   */
+  virtual void ShutdownOnIOThread() = 0;
+
+  /**
+   * Signals to the socket I/O classes that the socket class has been
+   * shut down.
+   */
+  virtual void ShutdownOnMainThread() = 0;
 
 protected:
   SocketIOBase();
@@ -452,7 +471,7 @@ public:
 
 protected:
   SocketIOTask(Tio* aIO)
-  : mIO(aIO)
+    : mIO(aIO)
   {
     MOZ_ASSERT(mIO);
   }
@@ -461,32 +480,16 @@ private:
   Tio* mIO;
 };
 
-/* |SocketIOShutdownTask| signals shutdown to the Socket I/O object on
+/**
+ * |SocketIOShutdownTask| signals shutdown to the socket I/O class on
  * the I/O thread and sends it to the main thread for destruction.
  */
-template<typename Tio>
-class SocketIOShutdownTask final : public SocketIOTask<Tio>
+class SocketIOShutdownTask final : public SocketIOTask<SocketIOBase>
 {
 public:
-  SocketIOShutdownTask(Tio* aIO)
-  : SocketIOTask<Tio>(aIO)
-  { }
+  SocketIOShutdownTask(SocketIOBase* aIO);
 
-  void Run() override
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    Tio* io = SocketIOTask<Tio>::GetIO();
-
-    // At this point, there should be no new events on the I/O thread
-    // after this one with the possible exception of an accept task,
-    // which ShutdownOnIOThread will cancel for us. We are now fully
-    // shut down, so we can send a message to the main thread to delete
-    // |io| safely knowing that it's not reference any longer.
-    io->ShutdownOnIOThread();
-
-    NS_DispatchToMainThread(new SocketIODeleteInstanceRunnable(io));
-  }
+  void Run() override;
 };
 
 }
