@@ -91,13 +91,13 @@ public:
     AddWatchers(WRITE_WATCHER, false);
   }
 
-  bool IsShutdownOnMainThread()
+  bool IsShutdownOnMainThread() const override
   {
     MOZ_ASSERT(NS_IsMainThread());
     return mConsumer == nullptr;
   }
 
-  bool IsShutdownOnIOThread()
+  bool IsShutdownOnIOThread() const
   {
     return mShuttingDownOnIOThread;
   }
@@ -144,7 +144,7 @@ public:
     return GetBluetoothSocket();
   }
 
-  SocketBase* GetSocketBase()
+  SocketBase* GetSocketBase() override
   {
     return GetDataSocket();
   }
@@ -310,10 +310,8 @@ DroidSocketImpl::Accept(int aFd)
   SetFd(aFd);
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<DroidSocketImpl>(
-      this, SocketIOEventRunnable<DroidSocketImpl>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -499,10 +497,8 @@ DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
 
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<DroidSocketImpl>(
-      this, SocketIOEventRunnable<DroidSocketImpl>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {

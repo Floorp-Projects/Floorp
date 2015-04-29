@@ -311,6 +311,39 @@ private:
 };
 
 //
+// SocketIOBase
+//
+
+/**
+ * |SocketIOBase| is a base class for Socket I/O classes that
+ * perform operations on the I/O thread.
+ */
+class SocketIOBase
+{
+public:
+  virtual ~SocketIOBase();
+
+  /**
+   * Implemented by socket I/O classes to return the current instance of
+   * |SocketBase|.
+   *
+   * @return The current instance of |SocketBase|
+   */
+  virtual SocketBase* GetSocketBase() = 0;
+
+  /**
+   * Implemented by socket I/O classes to signal that socket class has
+   * been shut down.
+   *
+   * @return True if the socket class has been shut down, false otherwise.
+   */
+  virtual bool IsShutdownOnMainThread() const = 0;
+
+protected:
+  SocketIOBase();
+};
+
+//
 // Socket I/O runnables
 //
 
@@ -340,11 +373,11 @@ private:
   T* mIO;
 };
 
-/* |SocketIOEventRunnable| reports the connection state on the
- * I/O thrad back to the main thread.
+/**
+ * |SocketIOEventRunnable| reports the connection state on the
+ * I/O thread back to the main thread.
  */
-template <typename T>
-class SocketIOEventRunnable final : public SocketIORunnable<T>
+class SocketIOEventRunnable final : public SocketIORunnable<SocketIOBase>
 {
 public:
   enum SocketEvent {
@@ -353,37 +386,9 @@ public:
     DISCONNECT
   };
 
-  SocketIOEventRunnable(T* aIO, SocketEvent e)
-  : SocketIORunnable<T>(aIO)
-  , mEvent(e)
-  { }
+  SocketIOEventRunnable(SocketIOBase* aIO, SocketEvent aEvent);
 
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    T* io = SocketIORunnable<T>::GetIO();
-
-    if (io->IsShutdownOnMainThread()) {
-      NS_WARNING("I/O consumer has already been closed!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    SocketBase* base = io->GetSocketBase();
-    MOZ_ASSERT(base);
-
-    if (mEvent == CONNECT_SUCCESS) {
-      base->NotifySuccess();
-    } else if (mEvent == CONNECT_ERROR) {
-      base->NotifyError();
-    } else if (mEvent == DISCONNECT) {
-      base->NotifyDisconnect();
-    }
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 
 private:
   SocketEvent mEvent;
@@ -438,23 +443,6 @@ public:
 
 private:
   nsAutoPtr<T> mInstance;
-};
-
-//
-// SocketIOBase
-//
-
-/**
- * |SocketIOBase| is a base class for Socket I/O classes that
- * perform operations on the I/O thread.
- */
-class SocketIOBase
-{
-public:
-  virtual ~SocketIOBase();
-
-protected:
-  SocketIOBase();
 };
 
 //

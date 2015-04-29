@@ -192,6 +192,7 @@ BluetoothDaemonPDUConsumer::~BluetoothDaemonPDUConsumer()
 //
 
 class BluetoothDaemonConnectionIO final : public UnixSocketWatcher
+                                        , public SocketIOBase
                                         , public ConnectionOrientedSocketIO
 {
 public:
@@ -478,11 +479,8 @@ BluetoothDaemonConnectionIO::OnConnected()
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<BluetoothDaemonConnectionIO>(
-      this,
-      SocketIOEventRunnable<BluetoothDaemonConnectionIO>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -501,11 +499,8 @@ BluetoothDaemonConnectionIO::OnError(const char* aFunction, int aErrno)
   Close();
 
   // Tell the main thread we've errored
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<BluetoothDaemonConnectionIO>(
-      this,
-      SocketIOEventRunnable<BluetoothDaemonConnectionIO>::CONNECT_ERROR);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR));
 }
 
 //
