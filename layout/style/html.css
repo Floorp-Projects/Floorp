@@ -587,6 +587,7 @@ ol {
 
 li {
   display: list-item;
+  text-align: match-parent;
 }
 
 /* nested lists have no top/bottom margins */
