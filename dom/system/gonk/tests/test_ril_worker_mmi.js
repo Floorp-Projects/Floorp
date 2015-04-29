@@ -69,50 +69,6 @@ add_test(function test_sendMMI_short_code() {
   run_next_test();
 });
 
-add_test(function test_sendMMI_get_IMEI() {
-  let workerhelper = newInterceptWorker();
-  let worker = workerhelper.worker;
-  let context = worker.ContextPool._contexts[0];
-  let mmiOptions;
-
-  context.RIL.getIMEI = function getIMEI(options) {
-    mmiOptions = options;
-    context.RIL[REQUEST_SEND_USSD](0, {});
-  };
-
-  context.RIL.sendMMI({mmi: createMMIOptions("*#", "06")});
-
-  let postedMessage = workerhelper.postedMessage;
-
-  notEqual(mmiOptions.mmi, null);
-  equal(postedMessage.errorMsg, undefined);
-
-  run_next_test();
-});
-
-add_test(function test_sendMMI_get_IMEI_error() {
-  let workerhelper = newInterceptWorker();
-  let worker = workerhelper.worker;
-  let context = worker.ContextPool._contexts[0];
-  let mmiOptions;
-
-  context.RIL.getIMEI = function getIMEI(options){
-    mmiOptions = options;
-    context.RIL[REQUEST_SEND_USSD](0, {
-      errorMsg: GECKO_ERROR_RADIO_NOT_AVAILABLE
-    });
-  };
-
-  context.RIL.sendMMI({mmi: createMMIOptions("*#", "06")});
-
-  let postedMessage = workerhelper.postedMessage;
-
-  notEqual(mmiOptions.mmi, null);
-  equal (postedMessage.errorMsg, GECKO_ERROR_RADIO_NOT_AVAILABLE);
-
-  run_next_test();
-});
-
 add_test(function test_sendMMI_call_barring_BAIC_interrogation_voice() {
   let workerhelper = newInterceptWorker();
   let worker = workerhelper.worker;

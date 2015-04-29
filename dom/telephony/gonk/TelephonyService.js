@@ -868,6 +868,11 @@ TelephonyService.prototype = {
         this._iccUnlockMMI(aClientId, aMmi, aCallback);
         break;
 
+      // IMEI
+      case RIL.MMI_KS_SC_IMEI:
+        this._getImeiMMI(aClientId, aMmi, aCallback);
+        break;
+
       // Fall back to "sendMMI".
       default:
         this._sendMMI(aClientId, aMmi, aCallback);
@@ -887,15 +892,6 @@ TelephonyService.prototype = {
         } else {
           aCallback.notifyDialMMIError(response.errorMsg);
         }
-        return;
-      }
-
-      // We expect to have an IMEI at this point if the request was supposed
-      // to query for the IMEI, so getting a successful reply from the RIL
-      // without containing an actual IMEI number is considered an error.
-      if (mmiServiceCode === RIL.MMI_KS_SC_IMEI &&
-          !response.statusMessage) {
-        aCallback.notifyDialMMIError(RIL.GECKO_ERROR_GENERIC_FAILURE);
         return;
       }
 
@@ -1061,6 +1057,35 @@ TelephonyService.prototype = {
         aCallback.notifyDialMMIErrorWithInfo(RIL.MMI_ERROR_KS_BAD_PUK,
                                              aRetryCount);
       },
+    });
+  },
+
+  /**
+   * Handle IMEI MMI code.
+   *
+   * @param aClientId
+   *        Client id.
+   * @param aMmi
+   *        Parsed MMI structure.
+   * @param aCallback
+   *        A nsITelephonyDialCallback object.
+   */
+  _getImeiMMI: function(aClientId, aMmi, aCallback) {
+    this._sendToRilWorker(aClientId, "getIMEI", {}, aResponse => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyDialMMIError(aResponse.errorMsg);
+        return;
+      }
+
+      // We expect to have an IMEI at this point if the request was supposed
+      // to query for the IMEI, so getting a successful reply from the RIL
+       // without containing an actual IMEI number is considered an error.
+      if (!aResponse.imei) {
+        aCallback.notifyDialMMIError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+        return;
+      }
+
+      aCallback.notifyDialMMISuccess(aResponse.imei);
     });
   },
 
