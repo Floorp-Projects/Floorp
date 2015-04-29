@@ -174,11 +174,6 @@ class HTMLElement(object):
         return self.marionette._send_message('getElementValueOfCssProperty', 'value',
                                              id=self.id,
                                              propertyName=property_name)
-    def submit(self):
-        '''
-        Submits if the element is a form or is within a form
-        '''
-        return self.marionette._send_message('submitElement', 'ok', id=self.id)
 
 class MouseButton(object):
     '''
