@@ -16,7 +16,7 @@ function test() {
 
     RequestsMenu.lazyUpdate = false;
 
-    waitForNetworkEvents(aMonitor, 6).then(() => {
+    waitForNetworkEvents(aMonitor, 7).then(() => {
       let requestItem = RequestsMenu.getItemAtIndex(3);
       RequestsMenu.selectedItem = requestItem;
 
