@@ -16,7 +16,7 @@
 
 #include "WMFUtils.h"
 #include "ClearKeyUtils.h"
-#include <VersionHelpers.h>
+#include <versionhelpers.h>
 
 #include <stdio.h>
 
