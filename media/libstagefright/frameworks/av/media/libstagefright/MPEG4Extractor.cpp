@@ -720,18 +720,18 @@ static bool underMetaDataPath(const Vector<uint32_t> &path) {
 }
 
 // Given a time in seconds since Jan 1 1904, produce a human-readable string.
-static void convertTimeToDate(int64_t time_1904, String8 *s) {
+static bool convertTimeToDate(int64_t time_1904, String8 *s) {
     time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
 
     if (time_1970 < 0) {
-        s->clear();
-        return;
+        return false;
     }
 
     char tmp[32];
     strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", gmtime(&time_1970));
 
     s->setTo(tmp);
+    return true;
 }
 
 static bool ValidInputSize(int32_t size) {
@@ -1756,8 +1756,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
 
             String8 s;
-            convertTimeToDate(creationTime, &s);
-            if (s.length()) {
+            if (convertTimeToDate(creationTime, &s)) {
                 mFileMetaData->setCString(kKeyDate, s.string());
             }
 
