@@ -108,7 +108,7 @@ let runTest = Task.async(function*() {
     is(WebappOSUtils.getInstallPath(app), null, "getInstallPath == null");
   } else {
     testAppInfo.trashDir = WebappOSUtils.getInstallPath(app);
-    ok(testAppInfo.trashDir.contains(".Trash"), "App moved to Trash");
+    ok(testAppInfo.trashDir.includes(".Trash"), "App moved to Trash");
   }
 
   is(WebappOSUtils.launch(app), false, "Launch fails");

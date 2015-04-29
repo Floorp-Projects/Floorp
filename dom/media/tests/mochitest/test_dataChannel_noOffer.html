@@ -18,7 +18,7 @@
     var options = { offerToReceiveAudio: true };
 
     pc.createOffer(options).then(offer => {
-      ok(!offer.sdp.contains("m=application"),
+      ok(!offer.sdp.includes("m=application"),
         "m=application is not contained in the SDP");
 
       networkTestFinished();

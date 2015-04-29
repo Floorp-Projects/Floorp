@@ -59,10 +59,10 @@ function test() {
 
         function checkVisibility(aBox) {
           is(tabpanel.querySelector("#request-params-box")
-            .hasAttribute("hidden"), !aBox.contains("params"),
+            .hasAttribute("hidden"), !aBox.includes("params"),
             "The request params box doesn't have the indended visibility.");
           is(tabpanel.querySelector("#request-post-data-textarea-box")
-            .hasAttribute("hidden"), !aBox.contains("textarea"),
+            .hasAttribute("hidden"), !aBox.includes("textarea"),
             "The request post data textarea box doesn't have the indended visibility.");
         }
 
@@ -127,19 +127,19 @@ function test() {
             "There should be 0 param values displayed in the post scope.");
 
           return NetMonitorView.editor("#request-post-data-textarea").then((aEditor) => {
-            ok(aEditor.getText().contains("Content-Disposition: form-data; name=\"text\""),
+            ok(aEditor.getText().includes("Content-Disposition: form-data; name=\"text\""),
               "The text shown in the source editor is incorrect (1.1).");
-            ok(aEditor.getText().contains("Content-Disposition: form-data; name=\"email\""),
+            ok(aEditor.getText().includes("Content-Disposition: form-data; name=\"email\""),
               "The text shown in the source editor is incorrect (2.1).");
-            ok(aEditor.getText().contains("Content-Disposition: form-data; name=\"range\""),
+            ok(aEditor.getText().includes("Content-Disposition: form-data; name=\"range\""),
               "The text shown in the source editor is incorrect (3.1).");
-            ok(aEditor.getText().contains("Content-Disposition: form-data; name=\"Custom field\""),
+            ok(aEditor.getText().includes("Content-Disposition: form-data; name=\"Custom field\""),
               "The text shown in the source editor is incorrect (4.1).");
-            ok(aEditor.getText().contains("Some text..."),
+            ok(aEditor.getText().includes("Some text..."),
               "The text shown in the source editor is incorrect (2.2).");
-            ok(aEditor.getText().contains("42"),
+            ok(aEditor.getText().includes("42"),
               "The text shown in the source editor is incorrect (3.2).");
-            ok(aEditor.getText().contains("Extra data"),
+            ok(aEditor.getText().includes("Extra data"),
               "The text shown in the source editor is incorrect (4.2).");
             is(aEditor.getMode(), Editor.modes.text,
               "The mode active in the source editor is incorrect.");

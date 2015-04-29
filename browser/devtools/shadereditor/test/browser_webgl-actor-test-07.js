@@ -19,9 +19,9 @@ function ifWebGLSupported() {
 
   let vertSource = yield vertexShader.getText();
   let fragSource = yield fragmentShader.getText();
-  ok(!vertSource.contains("2.0"),
+  ok(!vertSource.includes("2.0"),
     "The vertex shader source is correct before changing it.");
-  ok(!fragSource.contains("0.5"),
+  ok(!fragSource.includes("0.5"),
     "The fragment shader source is correct before changing it.");
 
   let newVertSource = vertSource.replace("1.0", "2.0");
@@ -35,9 +35,9 @@ function ifWebGLSupported() {
 
   vertSource = yield vertexShader.getText();
   fragSource = yield fragmentShader.getText();
-  ok(vertSource.contains("2.0"),
+  ok(vertSource.includes("2.0"),
     "The vertex shader source is correct after changing it.");
-  ok(!fragSource.contains("0.5"),
+  ok(!fragSource.includes("0.5"),
     "The fragment shader source is correct after changing the vertex shader.");
 
   let newFragSource = fragSource.replace("1.0", "0.5");
@@ -51,9 +51,9 @@ function ifWebGLSupported() {
 
   vertSource = yield vertexShader.getText();
   fragSource = yield fragmentShader.getText();
-  ok(vertSource.contains("2.0"),
+  ok(vertSource.includes("2.0"),
     "The vertex shader source is correct after changing the fragment shader.");
-  ok(fragSource.contains("0.5"),
+  ok(fragSource.includes("0.5"),
     "The fragment shader source is correct after changing it.");
 
   yield removeTab(target.tab);

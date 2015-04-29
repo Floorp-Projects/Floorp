@@ -24,7 +24,7 @@ function* testPrefs(test) {
 }
 
 function isNightly() {
-  return Services.appinfo.version.contains("a1");
+  return Services.appinfo.version.includes("a1");
 }
 
 add_task(function* test_default_values() {

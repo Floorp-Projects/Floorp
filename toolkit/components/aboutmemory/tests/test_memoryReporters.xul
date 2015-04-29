@@ -106,16 +106,16 @@
       // A system compartment with a location (such as a sandbox) should
       // show that location.
       present.sandboxLocation = true;
-    } else if (aPath.contains(bigStringPrefix)) {
+    } else if (aPath.includes(bigStringPrefix)) {
       present.bigString = true;
-    } else if (aPath.contains("!)(*&")) {
+    } else if (aPath.includes("!)(*&")) {
       present.smallString1 = true;
-    } else if (aPath.contains("@)(*&")) {
+    } else if (aPath.includes("@)(*&")) {
       present.smallString2 = true;
     }
 
     // Shouldn't get any anonymized paths.
-    if (aPath.contains('<anonymized')) {
+    if (aPath.includes('<anonymized')) {
         present.anonymizedWhenUnnecessary = aPath;
     }
   }
@@ -124,7 +124,7 @@
                                   aDescription)
   {
     // Shouldn't get http: or https: in any paths.
-    if (aPath.contains('http:')) {
+    if (aPath.includes('http:')) {
         present.httpWhenAnonymized = aPath;
     }
 

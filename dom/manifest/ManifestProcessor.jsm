@@ -361,7 +361,7 @@ IconsProcessor.process = function(aManifest, aBaseURL, console) {
       if (IconsProcessor.anyRegEx.test(aSize)) {
         return true;
       }
-      if (!size.contains('x') || size.indexOf('x') !== size.lastIndexOf('x')) {
+      if (!size.includes('x') || size.indexOf('x') !== size.lastIndexOf('x')) {
         return false;
       }
       // Split left of x for width, after x for height.

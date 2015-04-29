@@ -21,7 +21,7 @@ let test = asyncTest(function* () {
   let msg = yield gJSTerm.execute("fooObj");
 
   ok(msg, "output message found");
-  ok(msg.textContent.contains('{ testProp: "testValue" }'), "message text check");
+  ok(msg.textContent.includes('{ testProp: "testValue" }'), "message text check");
 
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");

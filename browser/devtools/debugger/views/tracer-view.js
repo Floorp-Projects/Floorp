@@ -297,7 +297,7 @@ TracerView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onSearch: function() {
     const query = this._search.value.trim().toLowerCase();
-    const predicate = name => name.toLowerCase().contains(query);
+    const predicate = name => name.toLowerCase().includes(query);
     this.filterContents(item => predicate(item.attachment.trace.name));
   },
 

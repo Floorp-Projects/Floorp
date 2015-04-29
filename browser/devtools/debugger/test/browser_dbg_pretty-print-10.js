@@ -32,7 +32,7 @@ function test() {
 }
 
 function testSourceIsUgly() {
-  ok(!gEditor.getText().contains("\n    "),
+  ok(!gEditor.getText().includes("\n    "),
      "The source shouldn't be pretty printed yet.");
 }
 
@@ -48,7 +48,7 @@ function clickPrettyPrintButton() {
 function testSourceIsStillUgly() {
   const { source } = gSources.selectedItem.attachment;
   return gDebugger.DebuggerController.SourceScripts.getText(source).then(([, text]) => {
-    ok(!text.contains("\n    "));
+    ok(!text.includes("\n    "));
   });
 }
 

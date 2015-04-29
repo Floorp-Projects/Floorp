@@ -182,8 +182,8 @@ add_task(function* test_state() {
   Assert.equal(state.filename, filename);
   Assert.equal(state.lineNumber, lineNumber + 1);
   Assert.equal(state.name, BLOCKER_NAME);
-  Assert.ok(state.stack.some(x => x.contains("test_state")), "The stack contains the caller function's name");
-  Assert.ok(state.stack.some(x => x.contains(filename)), "The stack contains the calling file's name");
+  Assert.ok(state.stack.some(x => x.includes("test_state")), "The stack contains the caller function's name");
+  Assert.ok(state.stack.some(x => x.includes(filename)), "The stack contains the calling file's name");
 
   deferred.resolve();
   yield promiseDone;

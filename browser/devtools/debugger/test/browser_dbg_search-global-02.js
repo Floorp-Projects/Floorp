@@ -56,7 +56,7 @@ function firstSearch() {
 
       ok(isCaretPos(gPanel, 6),
         "The editor shouldn't have jumped to a matching line yet.");
-      ok(getSelectedSourceURL(gSources).contains("-02.js"),
+      ok(getSelectedSourceURL(gSources).includes("-02.js"),
         "The current source shouldn't have changed after a global search.");
       is(gSources.visibleItems.length, 2,
         "Not all the sources are shown after the global search.");
@@ -77,7 +77,7 @@ function doFirstJump() {
     info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(getSelectedSourceURL(gSources).contains("-01.js"),
+    ok(getSelectedSourceURL(gSources).includes("-01.js"),
       "The currently shown source is incorrect (1).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (1).");
@@ -105,7 +105,7 @@ function doSecondJump() {
     info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(getSelectedSourceURL(gSources).contains("-02.js"),
+    ok(getSelectedSourceURL(gSources).includes("-02.js"),
       "The currently shown source is incorrect (2).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (2).");
@@ -133,7 +133,7 @@ function doWrapAroundJump() {
     info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(getSelectedSourceURL(gSources).contains("-01.js"),
+    ok(getSelectedSourceURL(gSources).includes("-01.js"),
       "The currently shown source is incorrect (3).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (3).");
@@ -162,7 +162,7 @@ function doBackwardsWrapAroundJump() {
     info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(getSelectedSourceURL(gSources).contains("-02.js"),
+    ok(getSelectedSourceURL(gSources).includes("-02.js"),
       "The currently shown source is incorrect (4).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (4).");
@@ -189,7 +189,7 @@ function testSearchTokenEmpty() {
   info("Current source url:\n" + getSelectedSourceURL(gSources));
   info("Debugger editor text:\n" + gEditor.getText());
 
-  ok(getSelectedSourceURL(gSources).contains("-02.js"),
+  ok(getSelectedSourceURL(gSources).includes("-02.js"),
     "The currently shown source is incorrect (4).");
   is(gSources.visibleItems.length, 2,
     "Not all the sources are shown after the global search (4).");

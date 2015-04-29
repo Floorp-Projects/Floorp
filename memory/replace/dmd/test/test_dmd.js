@@ -21,7 +21,7 @@ function getExecutable(aFilename) {
   let file = FileUtils.getFile("CurProcD", [aFilename]);
   if (!file.exists()) {
     file = FileUtils.getFile("CurWorkD", []);
-    while (file.path.contains("xpcshell")) {
+    while (file.path.includes("xpcshell")) {
       file = file.parent;
     }
     file.append("bin");

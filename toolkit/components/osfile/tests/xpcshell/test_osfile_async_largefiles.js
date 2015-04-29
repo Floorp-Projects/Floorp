@@ -83,7 +83,7 @@ function test_setPosition_failures() {
         yield file.setPosition(0.5, OS.File.POS_START);
         do_throw("Shouldn't have succeeded");
       } catch (ex) {
-        do_check_true(ex.toString().contains("can't pass"));
+        do_check_true(ex.toString().includes("can't pass"));
       }
       // Since setPosition should have bailed, it shouldn't have moved the
       // file pointer at all.
@@ -94,7 +94,7 @@ function test_setPosition_failures() {
         yield file.setPosition(0xffffffff + 0.5, OS.File.POS_START);
         do_throw("Shouldn't have succeeded");
       } catch (ex) {
-        do_check_true(ex.toString().contains("can't pass"));
+        do_check_true(ex.toString().includes("can't pass"));
       }
       // Since setPosition should have bailed, it shouldn't have moved the
       // file pointer at all.

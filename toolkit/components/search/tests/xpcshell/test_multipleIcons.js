@@ -21,10 +21,10 @@ add_task(function* test_multipleIcons() {
   ]);
 
   do_print("The default should be the 16x16 icon");
-  do_check_true(engine.iconURI.spec.contains("ico16"));
+  do_check_true(engine.iconURI.spec.includes("ico16"));
 
-  do_check_true(engine.getIconURLBySize(32,32).contains("ico32"));
-  do_check_true(engine.getIconURLBySize(74,74).contains("ico74"));
+  do_check_true(engine.getIconURLBySize(32,32).includes("ico32"));
+  do_check_true(engine.getIconURLBySize(74,74).includes("ico74"));
 
   do_print("Invalid dimensions should return null.");
   do_check_null(engine.getIconURLBySize(50,50));

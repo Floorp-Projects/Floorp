@@ -988,51 +988,51 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *         True if the item should be visible, false otherwise.
    */
   isHtml: function({ attachment: { mimeType } })
-    mimeType && mimeType.contains("/html"),
+    mimeType && mimeType.includes("/html"),
 
   isCss: function({ attachment: { mimeType } })
-    mimeType && mimeType.contains("/css"),
+    mimeType && mimeType.includes("/css"),
 
   isJs: function({ attachment: { mimeType } })
     mimeType && (
-      mimeType.contains("/ecmascript") ||
-      mimeType.contains("/javascript") ||
-      mimeType.contains("/x-javascript")),
+      mimeType.includes("/ecmascript") ||
+      mimeType.includes("/javascript") ||
+      mimeType.includes("/x-javascript")),
 
   isXHR: function({ attachment: { isXHR } })
     isXHR,
 
   isFont: function({ attachment: { url, mimeType } }) // Fonts are a mess.
     (mimeType && (
-      mimeType.contains("font/") ||
-      mimeType.contains("/font"))) ||
-    url.contains(".eot") ||
-    url.contains(".ttf") ||
-    url.contains(".otf") ||
-    url.contains(".woff"),
+      mimeType.includes("font/") ||
+      mimeType.includes("/font"))) ||
+    url.includes(".eot") ||
+    url.includes(".ttf") ||
+    url.includes(".otf") ||
+    url.includes(".woff"),
 
   isImage: function({ attachment: { mimeType } })
-    mimeType && mimeType.contains("image/"),
+    mimeType && mimeType.includes("image/"),
 
   isMedia: function({ attachment: { mimeType } }) // Not including images.
     mimeType && (
-      mimeType.contains("audio/") ||
-      mimeType.contains("video/") ||
-      mimeType.contains("model/")),
+      mimeType.includes("audio/") ||
+      mimeType.includes("video/") ||
+      mimeType.includes("model/")),
 
   isFlash: function({ attachment: { url, mimeType } }) // Flash is a mess.
     (mimeType && (
-      mimeType.contains("/x-flv") ||
-      mimeType.contains("/x-shockwave-flash"))) ||
-    url.contains(".swf") ||
-    url.contains(".flv"),
+      mimeType.includes("/x-flv") ||
+      mimeType.includes("/x-shockwave-flash"))) ||
+    url.includes(".swf") ||
+    url.includes(".flv"),
 
   isOther: function(e)
     !this.isHtml(e) && !this.isCss(e) && !this.isJs(e) && !this.isXHR(e) &&
     !this.isFont(e) && !this.isImage(e) && !this.isMedia(e) && !this.isFlash(e),
 
   isFreetextMatch: function({ attachment: { url } }, text) //no text is a positive match
-    !text || url.contains(text),
+    !text || url.includes(text),
 
   /**
    * Predicates used when sorting items.
@@ -1494,7 +1494,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let { mimeType } = aItem.attachment;
         let { text, encoding } = aValue.content;
 
-        if (mimeType.contains("image/")) {
+        if (mimeType.includes("image/")) {
           let responseBody = yield gNetwork.getString(text);
           let node = $(".requests-menu-icon", aItem.target);
           node.src = "data:" + mimeType + ";" + encoding + "," + responseBody;
@@ -1783,7 +1783,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let { url } = hovered;
     let { mimeType, text, encoding } = hovered.responseContent.content;
 
-    if (mimeType && mimeType.contains("image/") && (
+    if (mimeType && mimeType.includes("image/") && (
       aTarget.classList.contains("requests-menu-icon") ||
       aTarget.classList.contains("requests-menu-file")))
     {
@@ -1848,7 +1848,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let copyImageAsDataUriElement = $("#request-menu-context-copy-image-as-data-uri");
     copyImageAsDataUriElement.hidden = !selectedItem ||
       !selectedItem.attachment.responseContent ||
-      !selectedItem.attachment.responseContent.content.mimeType.contains("image/");
+      !selectedItem.attachment.responseContent.content.mimeType.includes("image/");
 
     let separator = $("#request-menu-context-separator");
     separator.hidden = !selectedItem;
@@ -2603,7 +2603,7 @@ NetworkDetailsView.prototype = {
     let contentType = yield gNetwork.getString(contentTypeLongString);
 
     // Handle query strings (e.g. "?foo=bar&baz=42").
-    if (contentType.contains("x-www-form-urlencoded")) {
+    if (contentType.includes("x-www-form-urlencoded")) {
       for (let section of postData.split(/\r\n|\r|\n/)) {
         // Before displaying it, make sure this section of the POST data
         // isn't a line containing upload stream headers.
@@ -2733,7 +2733,7 @@ NetworkDetailsView.prototype = {
       }
     }
     // Handle images.
-    else if (mimeType.contains("image/")) {
+    else if (mimeType.includes("image/")) {
       $("#response-content-image-box").setAttribute("align", "center");
       $("#response-content-image-box").setAttribute("pack", "center");
       $("#response-content-image-box").hidden = false;
@@ -2766,7 +2766,7 @@ NetworkDetailsView.prototype = {
       // Maybe set a more appropriate mode in the Source Editor if possible,
       // but avoid doing this for very large files.
       if (responseBody.length < SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
-        let mapping = Object.keys(CONTENT_MIME_TYPE_MAPPINGS).find(key => mimeType.contains(key));
+        let mapping = Object.keys(CONTENT_MIME_TYPE_MAPPINGS).find(key => mimeType.includes(key));
         if (mapping) {
           editor.setMode(CONTENT_MIME_TYPE_MAPPINGS[mapping]);
         }

@@ -65,7 +65,7 @@ function test() {
     "The .A node's function cell displays the correct name.");
   is($$fun(".call-tree-url")[1].getAttribute("value"), "baz",
     "The .A node's function cell displays the correct url.");
-  ok($$fun(".call-tree-url")[1].getAttribute("tooltiptext").contains("http://foo/bar/baz"),
+  ok($$fun(".call-tree-url")[1].getAttribute("tooltiptext").includes("http://foo/bar/baz"),
     "The .A node's function cell displays the correct url tooltiptext.");
   is($$fun(".call-tree-line")[1].getAttribute("value"), ":12",
     "The .A node's function cell displays the correct line.");
@@ -94,7 +94,7 @@ function test() {
     "The .A.B node's function cell displays the correct name.");
   is($$fun(".call-tree-url")[2].getAttribute("value"), "baz",
     "The .A.B node's function cell displays the correct url.");
-  ok($$fun(".call-tree-url")[2].getAttribute("tooltiptext").contains("http://foo/bar/baz"),
+  ok($$fun(".call-tree-url")[2].getAttribute("tooltiptext").includes("http://foo/bar/baz"),
     "The .A.B node's function cell displays the correct url tooltiptext.");
   is($$fun(".call-tree-line")[2].getAttribute("value"), ":34",
     "The .A.B node's function cell displays the correct line.");
@@ -113,7 +113,7 @@ function test() {
     "The .A.E node's function cell displays the correct name.");
   is($$fun(".call-tree-url")[3].getAttribute("value"), "baz",
     "The .A.E node's function cell displays the correct url.");
-  ok($$fun(".call-tree-url")[3].getAttribute("tooltiptext").contains("http://foo/bar/baz"),
+  ok($$fun(".call-tree-url")[3].getAttribute("tooltiptext").includes("http://foo/bar/baz"),
     "The .A.E node's function cell displays the correct url tooltiptext.");
   is($$fun(".call-tree-line")[3].getAttribute("value"), ":90",
     "The .A.E node's function cell displays the correct line.");

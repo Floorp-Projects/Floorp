@@ -42,7 +42,7 @@ function testTabActor([aGrip, aResponse]) {
 
   ok(aGrip.testTabActor1,
     "Found the test tab actor.");
-  ok(aGrip.testTabActor1.contains("test_one"),
+  ok(aGrip.testTabActor1.includes("test_one"),
     "testTabActor1's actorPrefix should be used.");
 
   gClient.request({ to: aGrip.testTabActor1, type: "ping" }, aResponse => {
