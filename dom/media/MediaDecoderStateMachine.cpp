@@ -267,8 +267,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
 
   // Skip the initial notification we get when we Watch the value, since we're
   // not on the right thread yet.
-  mNextFrameStatusUpdater->Watch(mState, /* aSkipInitialNotify = */ true);
-  mNextFrameStatusUpdater->Watch(mAudioCompleted, /* aSkipInitialNotify = */ true);
+  mNextFrameStatusUpdater->Watch(mState);
+  mNextFrameStatusUpdater->Watch(mAudioCompleted);
   mNextFrameStatusUpdater->AddWeakCallback(this, &MediaDecoderStateMachine::UpdateNextFrameStatus);
 
   static bool sPrefCacheInit = false;
