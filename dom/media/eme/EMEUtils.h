@@ -64,6 +64,10 @@ bool ParseKeySystem(const nsAString& aKeySystem,
                     nsAString& aOutKeySystem,
                     int32_t& aOutMinCDMVersion);
 
+bool GetEMEVoucherPath(nsIFile** aPath);
+
+bool EMEVoucherFileExists();
+
 } // namespace mozilla
 
 #endif // EME_LOG_H_
