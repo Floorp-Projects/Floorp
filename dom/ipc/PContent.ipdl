@@ -898,6 +898,8 @@ parent:
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 
+    async CopyFavicon(URIParams oldURI, URIParams newURI, bool isPrivate);
+
     // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
     sync AllocateLayerTreeId()
         returns (uint64_t id);
