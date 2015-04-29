@@ -21,7 +21,11 @@ public:
 
   virtual ~MacIOSurfaceTextureClientOGL();
 
-  void InitWith(MacIOSurface* aSurface);
+  // Creates a TextureClient and init width.
+  static TemporaryRef<MacIOSurfaceTextureClientOGL>
+  Create(ISurfaceAllocator* aAllocator,
+         TextureFlags aFlags,
+         MacIOSurface* aSurface);
 
   virtual bool Lock(OpenMode aMode) override;
 
