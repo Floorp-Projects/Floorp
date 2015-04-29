@@ -143,10 +143,19 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   mRequestedSeekTarget = SeekTarget(timeUsecs,
                                     SeekTarget::Accurate,
                                     MediaDecoderEventVisibility::Suppressed);
+  // Call Seek of MediaDecoderStateMachine to suppress seek events.
+  RefPtr<nsRunnable> event =
+    NS_NewRunnableMethodWithArg<SeekTarget>(
+      GetStateMachine(),
+      &MediaDecoderStateMachine::Seek,
+      mRequestedSeekTarget);
+  GetStateMachine()->TaskQueue()->Dispatch(event);
+  mRequestedSeekTarget.Reset();
+
   mNextState = mPlayState;
   ChangeState(PLAY_STATE_LOADING);
   // exit dormant state
-  RefPtr<nsRunnable> event =
+  event =
     NS_NewRunnableMethodWithArg<bool>(
       GetStateMachine(),
       &MediaDecoderStateMachine::SetDormant,
