@@ -911,6 +911,11 @@ TelephonyService.prototype = {
         this._callBarringMMI(aClientId, aMmi, aCallback);
         break;
 
+      // Call waiting
+      case RIL.MMI_KS_SC_CALL_WAITING:
+        this._callWaitingMMI(aClientId, aMmi, aCallback);
+        break;
+
       // Fall back to "sendMMI".
       default:
         this._sendMMI(aClientId, aMmi, aCallback);
@@ -1353,18 +1358,10 @@ TelephonyService.prototype = {
               return;
             }
 
-            let services = [];
-            for (let mask = 1;
-                 mask <= Ci.nsIMobileConnection.ICC_SERVICE_CLASS_MAX;
-                 mask <<= 1) {
-              if (mask & aServiceClass) {
-                services.push(RIL.MMI_KS_SERVICE_CLASS_MAPPING[mask]);
-              }
-            }
-
+            let services = this._serviceClassToStringArray(aServiceClass);
             aCallback.notifyDialMMISuccessWithStrings(RIL.MMI_SM_KS_SERVICE_ENABLED_FOR,
                                                       services.length, services);
-          },
+          }.bind(this),
           notifyError: function(aErrorMsg) {
             aCallback.notifyDialMMIError(aErrorMsg);
           },
@@ -1374,6 +1371,67 @@ TelephonyService.prototype = {
       case RIL.MMI_PROCEDURE_DEACTIVATION: {
         let enabled = (aMmi.procedure === RIL.MMI_PROCEDURE_ACTIVATION);
         connection.setCallBarring(program, enabled, password, serviceClass, {
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+          notifySuccess: function() {
+            aCallback.notifyDialMMISuccess(
+              enabled ? RIL.MMI_SM_KS_SERVICE_ENABLED
+                      : RIL.MMI_SM_KS_SERVICE_DISABLED
+            );
+          },
+          notifyError: function(aErrorMsg) {
+            aCallback.notifyDialMMIError(aErrorMsg);
+          },
+        });
+        break;
+      }
+      default:
+        aCallback.notifyDialMMIError(RIL.MMI_ERROR_KS_NOT_SUPPORTED);
+        break;
+    }
+  },
+
+  /**
+   * Handle call waiting MMI code.
+   *
+   * @param aClientId
+   *        Client id.
+   * @param aMmi
+   *        Parsed MMI structure.
+   * @param aCallback
+   *        A nsITelephonyDialCallback object.
+   */
+  _callWaitingMMI: function(aClientId, aMmi, aCallback) {
+    if (!this._isRadioOn(aClientId)) {
+      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE);
+      return;
+    }
+
+    let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
+
+    switch (aMmi.procedure) {
+      case RIL.MMI_PROCEDURE_INTERROGATION:
+        connection.getCallWaiting({
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+          notifyGetCallWaitingSuccess: function(aServiceClass) {
+            if (aServiceClass === Ci.nsIMobileConnection.ICC_SERVICE_CLASS_NONE) {
+              aCallback.notifyDialMMISuccess(RIL.MMI_SM_KS_SERVICE_DISABLED);
+              return;
+            }
+
+            let services = this._serviceClassToStringArray(aServiceClass);
+            aCallback.notifyDialMMISuccessWithStrings(RIL.MMI_SM_KS_SERVICE_ENABLED_FOR,
+                                                      services.length, services);
+          }.bind(this),
+          notifyError: function(aErrorMsg) {
+            aCallback.notifyDialMMIError(aErrorMsg);
+          },
+        });
+        break;
+      case RIL.MMI_PROCEDURE_ACTIVATION:
+      case RIL.MMI_PROCEDURE_DEACTIVATION: {
+        let enabled = (aMmi.procedure === RIL.MMI_PROCEDURE_ACTIVATION);
+        let serviceClass = this._siToServiceClass(aMmi.sia);
+        connection.setCallWaiting(enabled, serviceClass, {
           QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
           notifySuccess: function() {
             aCallback.notifyDialMMISuccess(
@@ -1476,6 +1534,18 @@ TelephonyService.prototype = {
       default:
         return Ci.nsIMobileConnection.ICC_SERVICE_CLASS_NONE;
     }
+  },
+
+  _serviceClassToStringArray: function(aServiceClass) {
+    let services = [];
+    for (let mask = Ci.nsIMobileConnection.ICC_SERVICE_CLASS_VOICE;
+         mask <= Ci.nsIMobileConnection.ICC_SERVICE_CLASS_MAX;
+         mask <<= 1) {
+      if (mask & aServiceClass) {
+        services.push(RIL.MMI_KS_SERVICE_CLASS_MAPPING[mask]);
+      }
+    }
+    return services;
   },
 
   _getIccLockMMIError: function(aMmi) {
