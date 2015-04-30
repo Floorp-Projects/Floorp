@@ -13,6 +13,7 @@
 #endif
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
+#include "WMFDecoderModule.h"
 #endif
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
@@ -158,6 +159,11 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     }
     if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
       return MediaKeySystemStatus::Cdm_disabled;
+    }
+    if (!WMFDecoderModule::HasH264() || !WMFDecoderModule::HasAAC()) {
+      // The system doesn't have the codecs that Adobe EME relies
+      // on installed.
+      return MediaKeySystemStatus::Cdm_not_supported;
     }
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, true);
   }
