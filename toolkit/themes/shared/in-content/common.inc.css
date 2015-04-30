@@ -333,20 +333,30 @@ xul|button[type="menu"] > xul|menupopup xul|menuitem {
   -moz-padding-end: 30px;
 }
 
-xul|menulist > xul|menupopup > xul|menu[_moz-menuactive="true"],
-xul|menulist > xul|menupopup > xul|menuitem[_moz-menuactive="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menu[_moz-menuactive="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menuitem[_moz-menuactive="true"] {
+xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
+xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"],
+xul|button[type="menu"] > xul|menupopup > xul|menu:not([disabled="true"])[_moz-menuactive="true"],
+xul|button[type="menu"] > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuactive="true"] {
   color: #333;
   background-color: rgba(0,149,221,0.25);
 }
 
-xul|menulist > xul|menupopup > xul|menu[selected="true"],
-xul|menulist > xul|menupopup > xul|menuitem[selected="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menu[selected="true"],
-xul|button[type="menu"] > xul|menupopup > xul|menuitem[selected="true"] {
+xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
+xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"],
+xul|button[type="menu"] > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
+xul|button[type="menu"] > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"] {
   color: #fff;
-  background-color: #0095DD;
+  background-color: #0095dd;
+}
+
+xul|menulist > xul|menupopup > xul|menu[disabled="true"],
+xul|menulist > xul|menupopup > xul|menuitem[disabled="true"],
+xul|button[type="menu"] > xul|menupopup > xul|menu[disabled="true"],
+xul|button[type="menu"] > xul|menupopup > xul|menuitem[disabled="true"] {
+  color: #999;
+  /* override the [_moz-menuactive="true"] background color from
+     global/menu.css */
+  background-color: transparent;
 }
 
 xul|menulist > xul|menupopup xul|menuseparator,
