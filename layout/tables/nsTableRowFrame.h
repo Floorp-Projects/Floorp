@@ -9,8 +9,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTablePainter.h"
+#include "nsTableRowGroupFrame.h"
 
-class  nsTableFrame;
 class  nsTableCellFrame;
 struct nsTableCellReflowState;
 
