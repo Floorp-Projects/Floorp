@@ -69,6 +69,10 @@ protected:
   nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
 
   RefPtr<MediaTaskQueue> mTaskQueue;
+
+  nsRefPtr<MediaByteBuffer> mCodecSpecificData;
+
+  nsAutoCString mMimeType;
 };
 
 // Samples are decoded using the GonkDecoder (MediaCodec)

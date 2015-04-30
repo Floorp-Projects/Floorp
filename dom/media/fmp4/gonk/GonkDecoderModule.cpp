@@ -65,6 +65,7 @@ bool
 GonkDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 {
   return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+    aMimeType.EqualsLiteral("audio/3gpp") ||
     aMimeType.EqualsLiteral("video/mp4") ||
     aMimeType.EqualsLiteral("video/mp4v-es") ||
     aMimeType.EqualsLiteral("video/avc");
