@@ -122,7 +122,7 @@ protected:
     void ResolveAutoPosition(int32_t aStart)
     {
       MOZ_ASSERT(IsAuto(), "Why call me?");
-      MOZ_ASSERT(aStart > 0, "expected a 1-based line number");
+      MOZ_ASSERT(aStart >= 0, "expected a zero-based line number");
       mStart = aStart;
       mEnd += aStart;
     }
@@ -130,7 +130,7 @@ protected:
      * Return the contribution of this line range for step 2 in
      * http://dev.w3.org/csswg/css-grid/#auto-placement-algo
      */
-    uint32_t HypotheticalEnd() const { return IsAuto() ? mEnd + 1 : mEnd; }
+    uint32_t HypotheticalEnd() const { return mEnd; }
     /**
      * Given an array of track sizes, return the starting position and length
      * of the tracks in this line range.
@@ -356,9 +356,9 @@ protected:
     mGridColEnd = std::max(mGridColEnd, aArea.mCols.HypotheticalEnd());
     mGridRowEnd = std::max(mGridRowEnd, aArea.mRows.HypotheticalEnd());
     MOZ_ASSERT(mGridColEnd <= uint32_t(nsStyleGridLine::kMaxLine -
-                                       nsStyleGridLine::kMinLine) &&
+                                       nsStyleGridLine::kMinLine - 1) &&
                mGridRowEnd <= uint32_t(nsStyleGridLine::kMaxLine -
-                                       nsStyleGridLine::kMinLine));
+                                       nsStyleGridLine::kMinLine - 1));
   }
 
   /**
@@ -468,15 +468,17 @@ private:
    * (i.e. the number of explicit rows + 1)
    */
   uint32_t mExplicitGridRowEnd;
-  // Same for the implicit grid
-  uint32_t mGridColEnd; // always >= mExplicitGridColEnd
-  uint32_t mGridRowEnd; // always >= mExplicitGridRowEnd
+  // Same for the implicit grid, except these become zero-based after
+  // resolving definite lines.
+  uint32_t mGridColEnd;
+  uint32_t mGridRowEnd;
 
   /**
    * Offsets from the start of the implicit grid to the start of the translated
    * explicit grid.  They are zero if there are no implicit lines before 1,1.
    * e.g. "grid-column: span 3 / 1" makes mExplicitGridOffsetCol = 3 and the
-   * corresponding GridArea::mCols will be 1 / 4 in the translated grid.
+   * corresponding GridArea::mCols will be 0 / 3 in the zero-based translated
+   * grid.
    */
   uint32_t mExplicitGridOffsetCol;
   uint32_t mExplicitGridOffsetRow;
