@@ -14,6 +14,7 @@
 #include <algorithm>
 
 #include "nsTableFrame.h"
+#include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
