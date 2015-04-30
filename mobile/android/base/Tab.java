@@ -50,7 +50,7 @@ public class Tab {
     private String mTitle;
     private Bitmap mFavicon;
     private String mFaviconUrl;
-    private String mApplicationId;
+    private String mApplicationId; // Intended to be null after explicit user action.
 
     // The set of all available Favicons for this tab, sorted by attractiveness.
     final TreeSet<RemoteFavicon> mAvailableFavicons = new TreeSet<>();
