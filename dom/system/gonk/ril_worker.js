@@ -245,16 +245,6 @@ RilObject.prototype = {
     this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
 
     /**
-     * USSD session flag.
-     * Only one USSD session may exist at a time, and the session is assumed
-     * to exist until:
-     *    a) There's a call to cancelUSSD()
-     *    b) The implementation sends a UNSOLICITED_ON_USSD with a type code
-     *       of "0" (USSD-Notify/no further action) or "2" (session terminated)
-     */
-    this._ussdSession = null;
-
-    /**
      * Cell Broadcast Search Lists.
      */
     let cbmmi = this.cellBroadcastConfigs && this.cellBroadcastConfigs.MMI;
@@ -1845,67 +1835,13 @@ RilObject.prototype = {
     this.context.Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE, options);
   },
 
-  sendMMI: function(options) {
-    if (DEBUG) {
-      this.context.debug("SendMMI " + JSON.stringify(options));
-    }
-
-    let _sendMMIError = (function(errorMsg) {
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this);
-
-    // It's neither a valid mmi code nor an ongoing ussd.
-    let mmi = options.mmi;
-    if (!mmi && !this._ussdSession) {
-      _sendMMIError(MMI_ERROR_KS_ERROR);
-      return;
-    }
-
-    let _isRadioAvailable = (function() {
-      if (this.radioState !== GECKO_RADIOSTATE_ENABLED) {
-        _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-        return false;
-      }
-      return true;
-    }).bind(this);
-
-    // If the MMI code is not a known code, it is treated as an ussd.
-    if (!_isRadioAvailable()) {
-      return;
-    }
-
-    options.ussd = mmi.fullMMI;
-
-    if (this._ussdSession) {
-      if (DEBUG) this.context.debug("Cancel existing ussd session.");
-      this.cachedUSSDRequest = options;
-      this.cancelUSSD({});
-      return;
-    }
-
-    this.sendUSSD(options, false);
-  },
-
-  /**
-   * Cache the request for send out a new ussd when there is an existing
-   * session. We should do cancelUSSD first.
-   */
-  cachedUSSDRequest : null,
-
   /**
    * Send USSD.
    *
    * @param ussd
    *        String containing the USSD code.
    */
-  sendUSSD: function(options, checkSession = true) {
-    if (checkSession && !this._ussdSession) {
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
+  sendUSSD: function(options) {
     let Buf = this.context.Buf;
     Buf.newParcel(REQUEST_SEND_USSD, options);
     Buf.writeString(options.ussd);
@@ -4360,24 +4296,12 @@ RilObject.prototype[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, opti
   if (DEBUG) {
     this.context.debug("REQUEST_SEND_USSD " + JSON.stringify(options));
   }
-  this._ussdSession = !options.errorMsg;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
   if (DEBUG) {
     this.context.debug("REQUEST_CANCEL_USSD" + JSON.stringify(options));
   }
-
-  this._ussdSession = !!options.errorMsg;
-
-  // The cancelUSSD is triggered by ril_worker itself.
-  if (this.cachedUSSDRequest) {
-    if (DEBUG) this.context.debug("Send out the cached ussd request");
-    this.sendUSSD(this.cachedUSSDRequest);
-    this.cachedUSSDRequest = null;
-    return;
-  }
-
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, options) {
@@ -5166,18 +5090,12 @@ RilObject.prototype[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
     this.context.debug("On USSD. Type Code: " + typeCode + " Message: " + message);
   }
 
-  let oldSession = this._ussdSession;
-
-  // Per ril.h the USSD session is assumed to persist if the type code is "1".
-  this._ussdSession = typeCode == "1";
-
-  if (!oldSession && !this._ussdSession && !message) {
-    return;
-  }
-
   this.sendChromeMessage({rilMessageType: "ussdreceived",
                           message: message,
-                          sessionEnded: !this._ussdSession});
+                          // Per ril.h the USSD session is assumed to persist if
+                          // the type code is "1", otherwise the current session
+                          // (if any) is assumed to have terminated.
+                          sessionEnded: typeCode !== "1"});
 };
 RilObject.prototype[UNSOLICITED_ON_USSD_REQUEST] = null;
 RilObject.prototype[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
