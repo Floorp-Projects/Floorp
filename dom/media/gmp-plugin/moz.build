@@ -11,6 +11,8 @@ SOURCES += [
         'gmp-test-storage.cpp',
 ]
 
+DEFINES['GMP_FAKE_SUPPORT_DECRYPT'] = True
+
 SharedLibrary("fake")
 
 if CONFIG['OS_ARCH'] == 'WINNT':

@@ -394,7 +394,7 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     }
     case -EAGAIN:
     {
-      GVDM_LOG("Need to try again!");
+//      GVDM_LOG("Need to try again!");
       return NS_ERROR_NOT_AVAILABLE;
     }
     case android::ERROR_END_OF_STREAM:
@@ -492,7 +492,7 @@ GonkVideoDecoderManager::codecReserved()
   GVDM_LOG("codecReserved");
   sp<AMessage> format = new AMessage;
   sp<Surface> surface;
-
+  status_t rv = OK;
   // Fixed values
   GVDM_LOG("Configure mime type: %s, widht:%d, height:%d", mMimeType.get(), mVideoWidth, mVideoHeight);
   format->setString("mime", mMimeType.get());
@@ -503,8 +503,13 @@ GonkVideoDecoderManager::codecReserved()
   }
   mDecoder->configure(format, surface, nullptr, 0);
   mDecoder->Prepare();
-  status_t rv = mDecoder->Input(mCodecSpecificData->Elements(), mCodecSpecificData->Length(), 0,
-                                android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
+
+  if (mMimeType.EqualsLiteral("video/mp4v-es")) {
+    rv = mDecoder->Input(mCodecSpecificData->Elements(),
+                         mCodecSpecificData->Length(), 0,
+                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
+  }
+
   if (rv != OK) {
     GVDM_LOG("Failed to configure codec!!!!");
     mReaderCallback->Error();

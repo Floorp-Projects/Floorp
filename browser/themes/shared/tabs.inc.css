@@ -42,10 +42,6 @@
   -moz-box-align: stretch;
 }
 
-.tabbrowser-tab[remote] {
-  text-decoration: underline;
-}
-
 /* The selected tab should appear above adjacent tabs, .tabs-newtab-button and the highlight of #nav-bar */
 .tabbrowser-tab[visuallyselected=true] {
   position: relative;
