@@ -156,6 +156,7 @@ TabSources.prototype = {
       source: source,
       originalUrl: originalUrl,
       generatedSource: generatedSource,
+      isInlineSource: isInlineSource,
       contentType: contentType
     });
 
