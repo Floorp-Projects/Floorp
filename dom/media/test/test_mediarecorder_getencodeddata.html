@@ -58,7 +58,6 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
       is(mediaRecorder.stream, stream,
          'Media recorder stream = element stream at the start of recording');
       mediaRecorder.requestData();
-      mediaRecorder.stop();
     }, 100);
   }
 );
