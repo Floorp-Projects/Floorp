@@ -9,7 +9,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS.mozilla.dom += [
     'Animation.h',
-    'AnimationEffectReadOnly.h',
+    'AnimationEffectReadonly.h',
     'AnimationTimeline.h',
     'DocumentTimeline.h',
     'KeyframeEffect.h',
@@ -22,7 +22,7 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'Animation.cpp',
-    'AnimationEffectReadOnly.cpp',
+    'AnimationEffectReadonly.cpp',
     'AnimationTimeline.cpp',
     'DocumentTimeline.cpp',
     'KeyframeEffect.cpp',
