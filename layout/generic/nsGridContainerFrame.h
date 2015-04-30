@@ -242,7 +242,8 @@ protected:
   /**
    * As above but for an abs.pos. child.  Any 'auto' lines will be represented
    * by kAutoLine in the LineRange result.
-   * @param aGridEnd the last line in the (final) implicit grid
+   * @param aGridStart the first line in the final, but untranslated grid
+   * @param aGridEnd the last line in the final, but untranslated grid
    */
   LineRange
   ResolveAbsPosLineRange(const nsStyleGridLine& aStart,
@@ -251,7 +252,8 @@ protected:
                          uint32_t GridNamedArea::* aAreaStart,
                          uint32_t GridNamedArea::* aAreaEnd,
                          uint32_t aExplicitGridEnd,
-                         uint32_t aGridEnd,
+                         int32_t aGridStart,
+                         int32_t aGridEnd,
                          const nsStylePosition* aStyle);
 
   /**
