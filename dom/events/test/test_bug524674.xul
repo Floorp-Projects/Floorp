@@ -80,7 +80,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
     var e = array.enumerate();
     var i = 0;
     while (e.hasMoreElements()) {
-      var current = e.getNext();
+      var current;
+      try {
+        current = e.getNext();
+      } catch(ex) {
+        continue;
+      }
       var expected = expectedEventTargets[i];
       if (current == expected) {
         is(current, expected, current + " = " + expected);
