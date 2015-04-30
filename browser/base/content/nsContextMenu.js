@@ -100,7 +100,7 @@ nsContextMenu.prototype = {
         this.linkURI = makeURI(this.linkURL);
       } catch (ex) {}
 
-      this.linkText = this.selectionInfo.linkText;
+      this.linkTextStr = this.selectionInfo.linkText;
       this.onPlainTextLink = true;
     }
 
@@ -524,7 +524,7 @@ nsContextMenu.prototype = {
     this.link              = null;
     this.linkURL           = "";
     this.linkURI           = null;
-    this.linkText          = "";
+    this.linkTextStr       = "";
     this.linkProtocol      = "";
     this.linkDownload      = "";
     this.linkHasNoReferrer = false;
@@ -700,7 +700,7 @@ nsContextMenu.prototype = {
           this.link = elem;
           this.linkURL = this.getLinkURL();
           this.linkURI = this.getLinkURI();
-          this.linkText = this.getLinkText();
+          this.linkTextStr = this.getLinkText();
           this.linkProtocol = this.getLinkProtocol();
           this.onMailtoLink = (this.linkProtocol == "mailto");
           this.onSaveableLink = this.isLinkSaveable( this.link );
@@ -1281,7 +1281,7 @@ nsContextMenu.prototype = {
   // Save URL of clicked-on link.
   saveLink: function() {
     urlSecurityCheck(this.linkURL, this.principal);
-    this.saveHelper(this.linkURL, this.linkText, null, true, this.ownerDoc,
+    this.saveHelper(this.linkURL, this.linkTextStr, null, true, this.ownerDoc,
                     gContextMenuContentData.documentURIObject,
                     gContextMenuContentData.frameOuterWindowID,
                     this.linkDownload);
@@ -1496,6 +1496,11 @@ nsContextMenu.prototype = {
     return text;
   },
 
+  // Kept for addon compat
+  linkText: function() {
+    return this.linkTextStr;
+  },
+
   isMediaURLReusable: function(aURL) {
     return !/^(?:blob|mediasource):/.test(aURL);
   },
@@ -1563,7 +1568,7 @@ nsContextMenu.prototype = {
 
   bookmarkLink: function CM_bookmarkLink() {
     window.top.PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksMenuFolderId,
-                                              this.linkURL, this.linkText);
+                                              this.linkURL, this.linkTextStr);
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
@@ -1657,7 +1662,7 @@ nsContextMenu.prototype = {
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
   formatSearchContextItem: function() {
     var menuItem = document.getElementById("context-searchselect");
-    let selectedText = this.isTextSelected ? this.textSelected : this.linkText;
+    let selectedText = this.isTextSelected ? this.textSelected : this.linkTextStr;
 
     // Store searchTerms in context menu item so we know what to search onclick
     menuItem.searchTerms = selectedText;
