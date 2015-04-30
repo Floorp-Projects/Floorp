@@ -1247,6 +1247,18 @@
               this._errorLink.value = gStrings.ext.GetStringFromName("notification.blocked.link");
               this._errorLink.href = this.mAddon.blocklistURL;
               this._errorLink.hidden = false;
+            } else if (!isUpgrade &&
+                       this.mAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+              this.setAttribute("notification", this.mAddon.appDisabled ? "error" : "warning");
+              let msg = this.mAddon.appDisabled ? this._error : this._warning;
+              msg.textContent = gStrings.ext.formatStringFromName(
+                "notification.unsigned" + (this.mAddon.appDisabled ? "AndDisabled" : ""),
+                [this.mAddon.name, gStrings.brandShortName], 2
+              );
+              let infoLink = this.mAddon.appDisabled ? this._errorLink : this._warningLink;
+              infoLink.value = gStrings.ext.GetStringFromName("notification.unsigned.link");
+              infoLink.href = Services.prefs.getCharPref("xpinstall.signatures.infoURL");
+              infoLink.hidden = false;
             } else if ((!isUpgrade && !this.mAddon.isCompatible) && (AddonManager.checkCompatibility
             || (this.mAddon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
               this.setAttribute("notification", "warning");
@@ -1647,6 +1659,7 @@
         <parameter name="aProperties"/>
         <body><![CDATA[
           if (aProperties.indexOf("appDisabled") != -1 ||
+              aProperties.indexOf("signedState") != -1 ||
               aProperties.indexOf("userDisabled") != -1)
             this._updateState();
         ]]></body>
