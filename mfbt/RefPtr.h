@@ -399,6 +399,28 @@ byRef(RefPtr<T>& aPtr)
   return OutParamRef<T>(aPtr);
 }
 
+/**
+ * Helper function to be able to conveniently write things like:
+ *
+ *   TemporaryRef<T>
+ *   f(...)
+ *   {
+ *     return MakeAndAddRef<T>(...);
+ *   }
+ *
+ * since explicitly constructing TemporaryRef is unsightly.  Having an
+ * explicit construction of TemporaryRef from T* also inhibits a future
+ * auto-conversion from TemporaryRef to already_AddRefed, since the semantics
+ * of TemporaryRef(T*) differ from already_AddRefed(T*).
+ */
+template<typename T, typename... Args>
+TemporaryRef<T>
+MakeAndAddRef(Args&&... aArgs)
+{
+  RefPtr<T> p(new T(Forward<Args>(aArgs)...));
+  return p.forget();
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_RefPtr_h */
