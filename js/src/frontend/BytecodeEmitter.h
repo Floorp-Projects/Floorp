@@ -427,7 +427,7 @@ struct BytecodeEmitter
     bool emitAtomOp(JSAtom* atom, JSOp op);
     bool emitAtomOp(ParseNode* pn, JSOp op);
 
-    bool emitArray(ParseNode* pn, uint32_t count);
+    bool emitArray(ParseNode* pn, uint32_t count, JSOp op);
     bool emitArrayComp(ParseNode* pn);
 
     bool emitInternedObjectOp(uint32_t index, JSOp op);
