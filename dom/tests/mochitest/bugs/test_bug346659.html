@@ -18,12 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346659
 <script type="application/javascript">
 
 /** Test for Bug 346659 **/
-// do the tests in two batches, because otherwise the popup blocker kills off
-// our test because it opens too many windows.
-var numTestsSet1 = 6;
-var numTestsSet2 = 2;
-var numTestsSet3 = 2;
-var complete = 0;
+var numTests = 10;
 SimpleTest.waitForExplicitFinish();
 
 var wins = [];
@@ -134,22 +129,7 @@ function messageReceiver(evt) {
 }
 
 function handleTestEnd() {
-  function gc() {
-    SpecialPowers.DOMWindowUtils.garbageCollect();
-  }
-  if (numTestsSet1) {
-    if (!--numTestsSet1) {
-      // gc to get rid of all the old windows
-      gc(); gc(); gc();
-      setTimeout(startSecondBatch, 0);
-    }
-  } else if (numTestsSet2) {
-    if (!--numTestsSet2) {
-      // gc to get rid of all the old windows
-      gc(); gc(); gc();
-      setTimeout(startThirdBatch, 0);
-    }
-  } else if (!--numTestsSet3) {
+  if (!--numTests) {
     SimpleTest.finish();
   }
 }
@@ -170,17 +150,12 @@ wins[6] = window.open('bug346659-parent.html?{"write":6}');
 
 is(location.host, "mochi.test:8888", "Unexpected host");
 
-function startSecondBatch() {
-  var baseurl = window.location.href.replace(/mochi\.test:8888/, "example.com");
-  wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
-  wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
-}
+var baseurl = window.location.href.replace(/mochi\.test:8888/, "example.com");
+wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
+wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
 
-function startThirdBatch() {
-  var baseurl = window.location.href.replace(/mochi\.test:8888/, "example.com");
-  wins[11] = window.open(r(baseurl, 'bug346659-opener.html?{"load":11,"xsite":true}'));
-  wins[12] = window.open(r(baseurl, 'bug346659-parent.html?{"load":12,"xsite":true}'));
-}
+wins[11] = window.open(r(baseurl, 'bug346659-opener.html?{"load":11,"xsite":true}'));
+wins[12] = window.open(r(baseurl, 'bug346659-parent.html?{"load":12,"xsite":true}'));
 </script>
 </pre>
 </body>
