@@ -39,6 +39,20 @@ protected:
           OptionalIccInfoData* aInfoData,
           uint32_t* aCardState) override;
 
+  virtual bool
+  RecvStkResponse(const nsString& aCmd, const nsString& aResponse) override;
+
+  virtual bool
+  RecvStkMenuSelection(const uint16_t& aItemIdentifier,
+                       const bool& aHelpRequested) override;
+
+  virtual bool
+  RecvStkTimerExpiration(const uint16_t& aTimerId,
+                         const uint32_t& aTimerValue) override;
+
+  virtual bool
+  RecvStkEventDownload(const nsString& aEvent) override;
+
   virtual PIccRequestParent*
   AllocPIccRequestParent(const IccRequest& aRequest) override;
 
