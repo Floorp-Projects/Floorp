@@ -122,6 +122,10 @@ public class GeckoView extends LayerView
         // Perform common initialization for Fennec/GeckoView.
         GeckoAppShell.setLayerView(this);
 
+        initializeView(EventDispatcher.getInstance());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
+                GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, getLayerClientObject()));
+
         // TODO: Fennec currently takes care of its own initialization, so this
         // flag is a hack used in Fennec to prevent GeckoView initialization.
         // This should go away once Fennec also uses GeckoView for
@@ -181,13 +185,9 @@ public class GeckoView extends LayerView
             "Accessibility:Ready",
             "GeckoView:Message");
 
-        initializeView(EventDispatcher.getInstance());
-
         if (GeckoThread.launch()) {
             // This is the first launch, so finish initialization and go.
             GeckoProfile profile = GeckoProfile.get(context).forceCreate();
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
-                GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, getLayerClientObject()));
 
         } else if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             // If Gecko is already running, that means the Activity was
