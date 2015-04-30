@@ -426,7 +426,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     if (!anim->IsPlaying()) {
       continue;
     }
-    dom::KeyframeEffectReadonly* effect = anim->GetEffect();
+    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
     MOZ_ASSERT(effect, "A playing animation should have an effect");
     const AnimationProperty* property =
       effect->GetAnimationOfProperty(aProperty);
