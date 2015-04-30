@@ -814,18 +814,54 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
-  for (; !aIter.AtEnd(); aIter.Next()) {
-    nsIFrame* child = *aIter;
-    const GridArea& area = PlaceDefinite(child, aStyle);
-    GridArea* prop = GetGridAreaForChild(child);
-    if (prop) {
-      *prop = area;
-    } else {
-      child->Properties().Set(GridAreaProperty(), new GridArea(area));
+  {
+    nsAutoTArray<GridArea*, 100> areasToAdjust;
+    int32_t minCol = 1;
+    int32_t minRow = 1;
+    for (; !aIter.AtEnd(); aIter.Next()) {
+      nsIFrame* child = *aIter;
+      const GridArea& area = PlaceDefinite(child, aStyle);
+      bool adjust = false;
+      if (area.mCols.IsDefinite()) {
+        minCol = std::min(minCol, area.mCols.mStart);
+        adjust = true;
+      }
+      if (area.mRows.IsDefinite()) {
+        minRow = std::min(minRow, area.mRows.mStart);
+        adjust = true;
+      }
+      GridArea* prop = GetGridAreaForChild(child);
+      if (prop) {
+        *prop = area;
+      } else {
+        prop = new GridArea(area);
+        child->Properties().Set(GridAreaProperty(), prop);
+      }
+      if (adjust) {
+        areasToAdjust.AppendElement(prop);
+      }
     }
-    if (area.IsDefinite()) {
-      mCellMap.Fill(area);
-      InflateGridFor(area);
+
+    // Translate the whole grid so that the top-/left-most area is at 1,1.
+    const uint32_t explicitGridOffsetCol = 1 - minCol;
+    const uint32_t explicitGridOffsetRow = 1 - minRow;
+    mGridColEnd += explicitGridOffsetCol;
+    mGridRowEnd += explicitGridOffsetRow;
+    mExplicitGridOffsetCol = explicitGridOffsetCol;
+    mExplicitGridOffsetRow = explicitGridOffsetRow;
+    for (GridArea* area : areasToAdjust) {
+      if (explicitGridOffsetCol != 0 && area->mCols.IsDefinite()) {
+        area->mCols.mStart += explicitGridOffsetCol;
+        area->mCols.mEnd += explicitGridOffsetCol;
+      }
+      if (explicitGridOffsetRow != 0 && area->mRows.IsDefinite()) {
+        area->mRows.mStart += explicitGridOffsetRow;
+        area->mRows.mEnd += explicitGridOffsetRow;
+      }
+      if (area->IsDefinite()) {
+        mCellMap.Fill(*area);
+        InflateGridFor(*area);
+      }
     }
   }
 
@@ -929,9 +965,28 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
     // We only resolve definite lines here; we'll align auto positions to the
     // grid container later during reflow.
     nsFrameList children(GetChildList(GetAbsoluteListID()));
+    const uint32_t explicitGridOffsetCol = mExplicitGridOffsetCol;
+    const uint32_t explicitGridOffsetRow = mExplicitGridOffsetRow;
+    // Untranslate the grid again temporarily while resolving abs.pos. lines.
+    AutoRestore<uint32_t> save1(mGridColEnd);
+    AutoRestore<uint32_t> save2(mGridRowEnd);
+    mGridColEnd -= explicitGridOffsetCol;
+    mGridRowEnd -= explicitGridOffsetRow;
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       GridArea area(PlaceAbsPos(child, aStyle));
+      if (area.mCols.mStart != kAutoLine) {
+        area.mCols.mStart += explicitGridOffsetCol;
+      }
+      if (area.mCols.mEnd != kAutoLine) {
+        area.mCols.mEnd += explicitGridOffsetCol;
+      }
+      if (area.mRows.mStart != kAutoLine) {
+        area.mRows.mStart += explicitGridOffsetRow;
+      }
+      if (area.mRows.mEnd != kAutoLine) {
+        area.mRows.mEnd += explicitGridOffsetRow;
+      }
       GridArea* prop = GetGridAreaForChild(child);
       if (prop) {
         *prop = area;
@@ -980,17 +1035,24 @@ InitializeTrackSizes(nscoord aPercentageBasis,
                      const nsTArray<nsStyleCoord>& aMaxSizingFunctions,
                      const nsStyleCoord& aAutoMinFunction,
                      const nsStyleCoord& aAutoMaxFunction,
+                     uint32_t aExplicitGridOffset,
                      nsTArray<TrackSize>& aResults)
 {
-  MOZ_ASSERT(aResults.Length() >= aMinSizingFunctions.Length());
+  MOZ_ASSERT(aResults.Length() >= aExplicitGridOffset + aMinSizingFunctions.Length());
   MOZ_ASSERT(aMinSizingFunctions.Length() == aMaxSizingFunctions.Length());
-  const size_t len = aMinSizingFunctions.Length();
   size_t i = 0;
-  for (; i < len; ++i) {
+  for (; i < aExplicitGridOffset; ++i) {
     InitializeTrackSize(aPercentageBasis,
-                        aMinSizingFunctions[i], aMaxSizingFunctions[i],
+                        aAutoMinFunction, aAutoMaxFunction,
                         &aResults[i]);
   }
+  size_t j = 0;
+  for (const size_t len = aMinSizingFunctions.Length(); j < len; ++j) {
+    InitializeTrackSize(aPercentageBasis,
+                        aMinSizingFunctions[j], aMaxSizingFunctions[j],
+                        &aResults[i + j]);
+  }
+  i += j;
   for (; i < aResults.Length(); ++i) {
     InitializeTrackSize(aPercentageBasis,
                         aAutoMinFunction, aAutoMaxFunction,
@@ -1012,12 +1074,14 @@ nsGridContainerFrame::CalculateTrackSizes(const LogicalSize& aPercentageBasis,
                        aStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
                        aStyle->mGridAutoColumnsMin,
                        aStyle->mGridAutoColumnsMax,
+                       mExplicitGridOffsetCol,
                        aColSizes);
   InitializeTrackSizes(aPercentageBasis.BSize(wm),
                        aStyle->mGridTemplateRows.mMinTrackSizingFunctions,
                        aStyle->mGridTemplateRows.mMaxTrackSizingFunctions,
                        aStyle->mGridAutoRowsMin,
                        aStyle->mGridAutoRowsMax,
+                       mExplicitGridOffsetRow,
                        aRowSizes);
 }
 
