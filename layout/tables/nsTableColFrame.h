@@ -10,13 +10,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTArray.h"
-
-enum nsTableColType {
-  eColContent            = 0, // there is real col content associated
-  eColAnonymousCol       = 1, // the result of a span on a col
-  eColAnonymousColGroup  = 2, // the result of a span on a col group
-  eColAnonymousCell      = 3  // the result of a cell alone
-};
+#include "nsTableColGroupFrame.h"
 
 class nsTableColFrame : public nsSplittableFrame {
 public:

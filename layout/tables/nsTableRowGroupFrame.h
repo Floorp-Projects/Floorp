@@ -12,8 +12,8 @@
 #include "nsILineIterator.h"
 #include "nsTablePainter.h"
 #include "nsTArray.h"
+#include "nsTableFrame.h"
 
-class nsTableFrame;
 class nsTableRowFrame;
 
 struct nsRowGroupReflowState {

@@ -16,8 +16,7 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsTArray.h"
-
-class nsTableFrame;
+#include "nsTableRowFrame.h"
 
 /**
  * nsTableCellFrame
