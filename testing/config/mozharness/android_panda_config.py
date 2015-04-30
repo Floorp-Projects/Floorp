@@ -8,7 +8,7 @@ config = {
             "options": [
                 "--symbols-path=%(symbols_path)s",
                 "--xre-path=tests/bin",
-                "--dm_trans=SUT",
+                "--dm_trans=sut",
                 "--deviceIP=%(device_ip)s",
                 "--localBinDir=../tests/bin",
                 "--apk=%(apk_path)s",
@@ -74,7 +74,6 @@ config = {
                 "--utility-path=../hostutils/bin",
                 "--certificate-path=certs",
                 "--app=%(app_name)s",
-                "--console-level=INFO",
                 "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s",
                 "--symbols-path=%(symbols_path)s",
@@ -111,7 +110,7 @@ config = {
                 "--http-port=%(http_port)s",
                 "--ssl-port=%(ssl_port)s",
                 "--symbols-path=%(symbols_path)s",
-                "--robocop=mochitest/robocop.ini"
+                "--robocop-ini=mochitest/robocop.ini"
             ],
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest"
