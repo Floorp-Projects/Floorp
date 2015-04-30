@@ -574,46 +574,6 @@ date_msecFromDate(double year, double mon, double mday, double hour,
     return MakeDate(MakeDay(year, mon, mday), MakeTime(hour, min, sec, msec));
 }
 
-/* compute the time in msec (unclipped) from the given args */
-#define MAXARGS        7
-
-static bool
-date_msecFromArgs(JSContext* cx, CallArgs args, double* rval)
-{
-    unsigned loop;
-    double array[MAXARGS];
-    double msec_time;
-
-    for (loop = 0; loop < MAXARGS; loop++) {
-        if (loop < args.length()) {
-            double d;
-            if (!ToNumber(cx, args[loop], &d))
-                return false;
-            /* return NaN if any arg is not finite */
-            if (!IsFinite(d)) {
-                *rval = GenericNaN();
-                return true;
-            }
-            array[loop] = ToInteger(d);
-        } else {
-            if (loop == 2) {
-                array[loop] = 1; /* Default the date argument to 1. */
-            } else {
-                array[loop] = 0;
-            }
-        }
-    }
-
-    /* adjust 2-digit years into the 20th century */
-    if (array[0] >= 0 && array[0] <= 99)
-        array[0] += 1900;
-
-    msec_time = date_msecFromDate(array[0], array[1], array[2],
-                                  array[3], array[4], array[5], array[6]);
-    *rval = msec_time;
-    return true;
-}
-
 /* ES6 20.3.3.4. */
 static bool
 date_UTC(JSContext* cx, unsigned argc, Value* vp)
@@ -2947,7 +2907,7 @@ js::date_valueOf(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec date_static_methods[] = {
-    JS_FN("UTC",                 date_UTC,                MAXARGS,0),
+    JS_FN("UTC",                 date_UTC,                7,0),
     JS_FN("parse",               date_parse,              1,0),
     JS_FN("now",                 date_now,                0,0),
     JS_FS_END
@@ -3079,17 +3039,76 @@ DateMultipleArguments(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(args.length() >= 2);
 
+    // Step 3.
     if (args.isConstructing()) {
-        double millis;
-        if (!date_msecFromArgs(cx, args, &millis))
+        // Steps 3a-b.
+        double y;
+        if (!ToNumber(cx, args[0], &y))
             return false;
 
-        if (IsFinite(millis)) {
-            millis = UTC(millis, &cx->runtime()->dateTimeInfo);
-            millis = TimeClip(millis);
+        // Steps 3c-d.
+        double m;
+        if (!ToNumber(cx, args[1], &m))
+            return false;
+
+        // Steps 3e-f.
+        double dt;
+        if (args.length() >= 3) {
+            if (!ToNumber(cx, args[2], &dt))
+                return false;
+        } else {
+            dt = 1;
         }
 
-        return NewDateObject(cx, args, millis);
+        // Steps 3g-h.
+        double h;
+        if (args.length() >= 4) {
+            if (!ToNumber(cx, args[3], &h))
+                return false;
+        } else {
+            h = 0;
+        }
+
+        // Steps 3i-j.
+        double min;
+        if (args.length() >= 5) {
+            if (!ToNumber(cx, args[4], &min))
+                return false;
+        } else {
+            min = 0;
+        }
+
+        // Steps 3k-l.
+        double s;
+        if (args.length() >= 6) {
+            if (!ToNumber(cx, args[5], &s))
+                return false;
+        } else {
+            s = 0;
+        }
+
+        // Steps 3m-n.
+        double milli;
+        if (args.length() >= 7) {
+            if (!ToNumber(cx, args[6], &milli))
+                return false;
+        } else {
+            milli = 0;
+        }
+
+        // Step 3o.
+        double yr = y;
+        if (!IsNaN(y)) {
+            double yint = ToInteger(y);
+            if (0 <= yint && yint <= 99)
+                yr = 1900 + yint;
+        }
+
+        // Step 3p.
+        double finalDate = MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli));
+
+        // Steps 3q-t.
+        return NewDateObject(cx, args, TimeClip(UTC(finalDate, &cx->runtime()->dateTimeInfo)));
     }
 
     return ToDateString(cx, args, NowAsMillis());
@@ -3144,7 +3163,7 @@ const Class DateObject::class_ = {
     nullptr, /* construct */
     nullptr, /* trace */
     {
-        GenericCreateConstructor<DateConstructor, MAXARGS, JSFunction::FinalizeKind>,
+        GenericCreateConstructor<DateConstructor, 7, JSFunction::FinalizeKind>,
         GenericCreatePrototype,
         date_static_methods,
         nullptr,
