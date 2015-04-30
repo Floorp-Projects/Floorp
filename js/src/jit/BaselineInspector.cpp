@@ -21,9 +21,9 @@ SetElemICInspector::sawOOBDenseWrite() const
     if (!icEntry_)
         return false;
 
-    // Check for an element adding stub.
+    // Check for a SetElem_DenseAdd stub.
     for (ICStub* stub = icEntry_->firstStub(); stub; stub = stub->next()) {
-        if (stub->isSetElem_DenseOrUnboxedArrayAdd())
+        if (stub->isSetElem_DenseAdd())
             return true;
     }
 
@@ -59,7 +59,7 @@ SetElemICInspector::sawDenseWrite() const
 
     // Check for a SetElem_DenseAdd or SetElem_Dense stub.
     for (ICStub* stub = icEntry_->firstStub(); stub; stub = stub->next()) {
-        if (stub->isSetElem_DenseOrUnboxedArrayAdd() || stub->isSetElem_DenseOrUnboxedArray())
+        if (stub->isSetElem_DenseAdd() || stub->isSetElem_Dense())
             return true;
     }
     return false;

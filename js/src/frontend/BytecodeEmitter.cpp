@@ -6430,7 +6430,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
                 return false;
         }
     } else {
-        if (!emitArray(pn2->pn_next, argc, JSOP_SPREADCALLARRAY))
+        if (!emitArray(pn2->pn_next, argc))
             return false;
     }
     emittingForInit = oldEmittingForInit;
@@ -6897,7 +6897,7 @@ BytecodeEmitter::emitSpread()
 }
 
 bool
-BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
+BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count)
 {
     /*
      * Emit code for [a, b, c] that is equivalent to constructing a new
@@ -6907,7 +6907,6 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
      * to avoid dup'ing and popping the array as each element is added, as
      * JSOP_SETELEM/JSOP_SETPROP would do.
      */
-    MOZ_ASSERT(op == JSOP_NEWARRAY || op == JSOP_SPREADCALLARRAY);
 
     int32_t nspread = 0;
     for (ParseNode* elt = pn; elt; elt = elt->pn_next) {
@@ -6916,9 +6915,9 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
     }
 
     ptrdiff_t off;
-    if (!emitN(op, 3, &off))                                        // ARRAY
+    if (!emitN(JSOP_NEWARRAY, 3, &off))                             // ARRAY
         return false;
-    checkTypeSet(op);
+    checkTypeSet(JSOP_NEWARRAY);
     jsbytecode* pc = code(off);
 
     // For arrays with spread, this is a very pessimistic allocation, the
@@ -7576,7 +7575,7 @@ BytecodeEmitter::emitTree(ParseNode* pn)
             }
         }
 
-        ok = emitArray(pn->pn_head, pn->pn_count, JSOP_NEWARRAY);
+        ok = emitArray(pn->pn_head, pn->pn_count);
         break;
 
        case PNK_ARRAYCOMP:

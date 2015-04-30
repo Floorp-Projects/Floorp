@@ -283,20 +283,8 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
             if (!enumerate(cx, pobj, properties))
                  return false;
 
-            RootedId id(cx);
             for (size_t n = 0; n < properties.length(); n++) {
-                id = properties[n];
-                bool enumerable = true;
-
-                // The enumerate hook does not indicate whether the properties
-                // it returns are enumerable or not. There is no non-effectful
-                // way to determine this from the object, so carve out
-                // exceptions here for places where the property is not
-                // enumerable.
-                if (pobj->is<UnboxedArrayObject>() && id == NameToId(cx->names().length))
-                    enumerable = false;
-
-                if (!Enumerate(cx, pobj, id, enumerable, flags, ht, props))
+                if (!Enumerate(cx, pobj, properties[n], true, flags, ht, props))
                     return false;
             }
 
