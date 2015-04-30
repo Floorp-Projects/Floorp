@@ -66,6 +66,9 @@ public:
       mDocShell->AddProfileTimelineMarker(mName, TRACING_INTERVAL_END);
     }
   }
+
+  AutoTimelineMarker(const AutoTimelineMarker& aOther) = delete;
+  void operator=(const AutoTimelineMarker& aOther) = delete;
 };
 
 } // namespace mozilla
