@@ -1109,22 +1109,22 @@ Recompile(JSContext* cx)
 }
 
 bool
-SetDenseOrUnboxedArrayElement(JSContext* cx, HandleObject obj, int32_t index,
-                              HandleValue value, bool strict)
+SetDenseElement(JSContext* cx, HandleNativeObject obj, int32_t index, HandleValue value,
+                bool strict)
 {
     // This function is called from Ion code for StoreElementHole's OOL path.
-    // In this case we know the object is native or an unboxed array and we can
-    // use setDenseElement instead of setDenseElementWithType.
+    // In this case we know the object is native and we can use setDenseElement
+    // instead of setDenseElementWithType.
 
     NativeObject::EnsureDenseResult result = NativeObject::ED_SPARSE;
     do {
-        if (index < 0 || obj->is<UnboxedArrayObject>())
+        if (index < 0)
             break;
         bool isArray = obj->is<ArrayObject>();
         if (isArray && !obj->as<ArrayObject>().lengthIsWritable())
             break;
         uint32_t idx = uint32_t(index);
-        result = obj->as<NativeObject>().ensureDenseElements(cx, idx, 1);
+        result = obj->ensureDenseElements(cx, idx, 1);
         if (result != NativeObject::ED_OK)
             break;
         if (isArray) {
@@ -1132,7 +1132,7 @@ SetDenseOrUnboxedArrayElement(JSContext* cx, HandleObject obj, int32_t index,
             if (idx >= arr.length())
                 arr.setLengthInt32(idx + 1);
         }
-        obj->as<NativeObject>().setDenseElement(idx, value);
+        obj->setDenseElement(idx, value);
         return true;
     } while (false);
 
