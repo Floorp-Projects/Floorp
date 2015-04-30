@@ -69,10 +69,14 @@ function getInstallItem() {
 }
 
 function openDetailsView(aId) {
+  let view = gManagerWindow.document.getElementById("view-port").selectedPanel
+  Assert.equal(view.id, "list-view", "Should be in the list view to use this function");
+
   let item = get_addon_element(gManagerWindow, aId);
   Assert.ok(item, "Should have got add-on element.");
   is_element_visible(item, "Add-on element should be visible.");
 
+  item.scrollIntoView();
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
   EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
 
@@ -165,13 +169,12 @@ add_task(function* testNotInstalledDisabledDetails() {
     el = doc.getElementById("detail-warning");
     is_element_hidden(el, "Warning notification is hidden.");
     el = doc.getElementsByTagName("setting")[0];
+
+    yield gCategoryUtilities.openType("plugin");
   }
 });
 
 add_task(function* testNotInstalled() {
-  Assert.ok(gCategoryUtilities.isTypeVisible("plugin"), "Plugin tab visible.");
-  yield gCategoryUtilities.openType("plugin");
-
   for (let addon of gMockAddons) {
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_ENABLED, addon.id), true);
     let item = get_addon_element(gManagerWindow, addon.id);
@@ -208,6 +211,8 @@ add_task(function* testNotInstalledDetails() {
     el = doc.getElementById("detail-warning");
     is_element_visible(el, "Warning notification is visible.");
     el = doc.getElementsByTagName("setting")[0];
+
+    yield gCategoryUtilities.openType("plugin");
   }
 });
 
@@ -217,8 +222,6 @@ add_task(function* testInstalled() {
                       TEST_DATE.getTime());
     gPrefs.setBoolPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE, addon.id), false);
     gPrefs.setCharPref(getKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id), "1.2.3.4");
-
-    yield gCategoryUtilities.openType("plugin");
 
     let item = get_addon_element(gManagerWindow, addon.id);
     Assert.ok(item, "Got add-on element.");
@@ -269,14 +272,14 @@ add_task(function* testInstalledDetails() {
     let menuSep = doc.getElementById("addonitem-menuseparator");
     is_element_hidden(menuSep, "Menu separator is hidden.");
     contextMenu.hidePopup();
+
+    yield gCategoryUtilities.openType("plugin");
   }
 });
 
 add_task(function* testInstalledGlobalEmeDisabled() {
   gPrefs.setBoolPref(GMPScope.GMPPrefs.KEY_EME_ENABLED, false);
   for (let addon of gMockAddons) {
-    yield gCategoryUtilities.openType("plugin");
-
     let item = get_addon_element(gManagerWindow, addon.id);
     if (addon.isEME) {
       Assert.ok(!item, "Couldn't get add-on element.");
