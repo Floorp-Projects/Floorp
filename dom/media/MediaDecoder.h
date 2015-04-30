@@ -1056,7 +1056,7 @@ protected:
   WatchManager<MediaDecoder> mWatchManager;
 
   // NextFrameStatus, mirrored from the state machine.
-  Mirror<MediaDecoderOwner::NextFrameStatus>::Holder mNextFrameStatus;
+  Mirror<MediaDecoderOwner::NextFrameStatus> mNextFrameStatus;
 
   /******
    * The following members should be accessed with the decoder lock held.
