@@ -2,14 +2,20 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
+<style>
+@keyframes anim { }
+</style>
 <script>
 'use strict';
-setup({explicit_done: true});
-SpecialPowers.pushPrefEnv(
-  { "set": [["dom.animations-api.core.enabled", true]]},
-  function() {
-    window.open("file_effect-target.html");
-  });
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim 100s';
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.effect.target, div,
+    'Animation.target is the animatable div');
+}, 'Returned CSS animations have the correct Animation.target');
+
 </script>
-</html>
