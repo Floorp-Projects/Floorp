@@ -127,6 +127,8 @@ class JavaPanZoomController
     private boolean mDefaultPrevented;
     /* Whether longpress events are enabled, or suppressed by robocop tests. */
     private boolean isLongpressEnabled;
+    /* Whether longpress detection should be ignored */
+    private boolean mIgnoreLongPress;
 
     // Handler to be notified when overscroll occurs
     private Overscroll mOverscroll;
@@ -393,11 +395,22 @@ class JavaPanZoomController
     public void startingNewEventBlock(MotionEvent event, boolean waitingForTouchListeners) {
         checkMainThread();
         mSubscroller.cancel();
-        if (waitingForTouchListeners && (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
-            // this is the first touch point going down, so we enter the pending state
-            // setting the state will kill any animations in progress, possibly leaving
-            // the page in overscroll
-            setState(PanZoomState.WAITING_LISTENERS);
+        mIgnoreLongPress = false;
+        if (waitingForTouchListeners) {
+            if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
+                // this is the first touch point going down, so we enter the pending state
+                // setting the state will kill any animations in progress, possibly leaving
+                // the page in overscroll
+                setState(PanZoomState.WAITING_LISTENERS);
+            } else if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN) {
+                // this is a second (or more) touch point going down, and we're waiting for
+                // the content listeners to respond. while we're waiting though we might end
+                // up triggering a long-press from the first touch point, which would be bad
+                // because from the user's point of view they are already in a multi-touch
+                // gesture. to prevent this from happening we set a flag that discards long-press
+                // gesture detections.
+                mIgnoreLongPress = true;
+            }
         }
     }
 
@@ -1357,7 +1370,7 @@ class JavaPanZoomController
 
     @Override
     public void onLongPress(MotionEvent motionEvent) {
-        if (!isLongpressEnabled) {
+        if (!isLongpressEnabled || mIgnoreLongPress) {
             return;
         }
 
