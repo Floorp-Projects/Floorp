@@ -4,16 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-NO_DIST_INSTALL = True
+# largely a copy of dom/media/gmp-fake/moz.build
+
+FINAL_TARGET = 'dist/bin/gmp-fakeopenh264/1.0'
 SOURCES += [
-        'gmp-fake.cpp',
-        'gmp-test-decryptor.cpp',
-        'gmp-test-storage.cpp',
+    '../gmp-plugin/gmp-fake.cpp',
 ]
 
-DEFINES['GMP_FAKE_SUPPORT_DECRYPT'] = True
-
-SharedLibrary("fake")
+SharedLibrary("fakeopenh264")
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
