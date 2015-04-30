@@ -70,12 +70,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'server.js',
 ]
 
-if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
-    TEST_HARNESS_FILES.testing.mochitest += [
-        '/mobile/android/base/tests/robocop.ini',
-        '/mobile/android/base/tests/robocop_autophone.ini',
-    ]
-
 TEST_HARNESS_FILES.testing.mochitest.pywebsocket += [
     'pywebsocket/standalone.py',
 ]
