@@ -3012,34 +3012,49 @@ static const JSFunctionSpec date_methods[] = {
     JS_FS_END
 };
 
-bool
-js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
+static bool
+NewDateObject(JSContext* cx, const CallArgs& args, double d)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject* obj = NewDateObjectMsec(cx, d);
+    if (!obj)
+        return false;
 
-    /* Date called as function. */
-    if (!args.isConstructing())
-        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, args.rval());
+    args.rval().setObject(*obj);
+    return true;
+}
 
-    /* Date called as constructor. */
-    double d;
-    if (args.length() == 0) {
-        /* ES5 15.9.3.3. */
-        d = NowAsMillis();
-    } else if (args.length() == 1) {
-        /* ES5 15.9.3.2. */
+static bool
+ToDateString(JSContext* cx, const CallArgs& args, double d)
+{
+    return date_format(cx, d, FORMATSPEC_FULL, args.rval());
+}
 
-        /* Step 1. */
+static bool
+DateNoArguments(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() == 0);
+
+    double now = NowAsMillis();
+
+    if (args.isConstructing())
+        return NewDateObject(cx, args, now);
+
+    return ToDateString(cx, args, now);
+}
+
+static bool
+DateOneArgument(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() == 1);
+
+    if (args.isConstructing()) {
+        double d;
+
         if (!ToPrimitive(cx, args[0]))
             return false;
 
         if (args[0].isString()) {
-            /* Step 2. */
-            JSString* str = args[0].toString();
-            if (!str)
-                return false;
-
-            JSLinearString* linearStr = str->ensureLinear(cx);
+            JSLinearString* linearStr = args[0].toString()->ensureLinear(cx);
             if (!linearStr)
                 return false;
 
@@ -3048,29 +3063,50 @@ js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
             else
                 d = TimeClip(d);
         } else {
-            /* Step 3. */
             if (!ToNumber(cx, args[0], &d))
                 return false;
             d = TimeClip(d);
         }
-    } else {
-        double msec_time;
-        if (!date_msecFromArgs(cx, args, &msec_time))
-            return false;
 
-        if (IsFinite(msec_time)) {
-            msec_time = UTC(msec_time, &cx->runtime()->dateTimeInfo);
-            msec_time = TimeClip(msec_time);
-        }
-        d = msec_time;
+        return NewDateObject(cx, args, d);
     }
 
-    JSObject* obj = NewDateObjectMsec(cx, d);
-    if (!obj)
-        return false;
+    return ToDateString(cx, args, NowAsMillis());
+}
 
-    args.rval().setObject(*obj);
-    return true;
+static bool
+DateMultipleArguments(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() >= 2);
+
+    if (args.isConstructing()) {
+        double millis;
+        if (!date_msecFromArgs(cx, args, &millis))
+            return false;
+
+        if (IsFinite(millis)) {
+            millis = UTC(millis, &cx->runtime()->dateTimeInfo);
+            millis = TimeClip(millis);
+        }
+
+        return NewDateObject(cx, args, millis);
+    }
+
+    return ToDateString(cx, args, NowAsMillis());
+}
+
+bool
+js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() == 0)
+        return DateNoArguments(cx, args);
+
+    if (args.length() == 1)
+        return DateOneArgument(cx, args);
+
+    return DateMultipleArguments(cx, args);
 }
 
 static bool
