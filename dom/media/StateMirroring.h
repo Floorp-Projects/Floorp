@@ -264,134 +264,135 @@ private:
  * and may be set up to trigger other routines (on the same thread) when the
  * mirrored value changes.
  *
- * Do not instantiate a Mirror<T> directly as a member. Instead, instantiate a
- * Mirror<T>::Holder, which handles lifetime issues and whose destructor
- * initiates an asynchronous teardown of the reference-counted Mirror<T>,
- * breaking the inherent cycle between Mirror<T> and Canonical<T>.
+ * Mirror<T> is intended to be used as a member variable, so it doesn't actually
+ * inherit AbstractMirror<T> (a refcounted type). Rather, it contains an inner
+ * class called |Impl| that implements most of the interesting logic.
  */
 template<typename T>
-class Mirror : public AbstractMirror<T>, public WatchTarget
+class Mirror
 {
 public:
-  using AbstractMirror<T>::OwnerThread;
-
-  Mirror(AbstractThread* aThread, const T& aInitialValue, const char* aName,
-         AbstractCanonical<T>* aCanonical)
-    : AbstractMirror<T>(aThread), WatchTarget(aName), mValue(aInitialValue)
+  Mirror() {}
+  ~Mirror()
   {
-    MIRROR_LOG("%s [%p] initialized", mName, this);
-
-    if (aCanonical) {
-      ConnectInternal(aCanonical);
+    MOZ_DIAGNOSTIC_ASSERT(mImpl, "Should have initialized me");
+    if (mImpl->OwnerThread()->IsCurrentThreadIn()) {
+      mImpl->DisconnectIfConnected();
+    } else {
+      // If holder destruction happens on a thread other than the mirror's
+      // owner thread, manual disconnection is mandatory. We should make this
+      // more automatic by hooking it up to task queue shutdown.
+      MOZ_DIAGNOSTIC_ASSERT(!mImpl->IsConnected());
     }
-  }
-
-  operator const T&()
-  {
-    MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
-    return mValue;
-  }
-
-  virtual void UpdateValue(const T& aNewValue) override
-  {
-    MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
-    if (mValue != aNewValue) {
-      mValue = aNewValue;
-      WatchTarget::NotifyWatchers();
-    }
-  }
-
-  virtual void NotifyDisconnected() override
-  {
-    MIRROR_LOG("%s [%p] Notifed of disconnection from %p", mName, this, mCanonical.get());
-    MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
-    mCanonical = nullptr;
-  }
-
-  bool IsConnected() const { return !!mCanonical; }
-
-  void Connect(AbstractCanonical<T>* aCanonical)
-  {
-    MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
-    ConnectInternal(aCanonical);
   }
 
 private:
-  // We separate the guts of Connect into a helper so that we can call it from
-  // initialization while not necessarily on the owner thread.
-  void ConnectInternal(AbstractCanonical<T>* aCanonical)
-  {
-    MIRROR_LOG("%s [%p] Connecting to %p", mName, this, aCanonical);
-    MOZ_ASSERT(!IsConnected());
-
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
-                                (aCanonical, &AbstractCanonical<T>::AddMirror, this);
-    aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
-    mCanonical = aCanonical;
-  }
-public:
-
-  void DisconnectIfConnected()
-  {
-    MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
-    if (!IsConnected()) {
-      return;
-    }
-
-    MIRROR_LOG("%s [%p] Disconnecting from %p", mName, this, mCanonical.get());
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
-                                (mCanonical, &AbstractCanonical<T>::RemoveMirror, this);
-    mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
-    mCanonical = nullptr;
-  }
-
-  class Holder
+  class Impl : public AbstractMirror<T>, public WatchTarget
   {
   public:
-    Holder() {}
-    ~Holder()
+    using AbstractMirror<T>::OwnerThread;
+
+    Impl(AbstractThread* aThread, const T& aInitialValue, const char* aName,
+         AbstractCanonical<T>* aCanonical)
+      : AbstractMirror<T>(aThread), WatchTarget(aName), mValue(aInitialValue)
     {
-      MOZ_DIAGNOSTIC_ASSERT(mMirror, "Should have initialized me");
-      if (mMirror->OwnerThread()->IsCurrentThreadIn()) {
-        mMirror->DisconnectIfConnected();
-      } else {
-        // If holder destruction happens on a thread other than the mirror's
-        // owner thread, manual disconnection is mandatory. We should make this
-        // more automatic by hooking it up to task queue shutdown.
-        MOZ_DIAGNOSTIC_ASSERT(!mMirror->IsConnected());
+      MIRROR_LOG("%s [%p] initialized", mName, this);
+
+      if (aCanonical) {
+        ConnectInternal(aCanonical);
       }
     }
 
-    // NB: Because mirror-initiated disconnection can race with canonical-
-    // initiated disconnection, a mirror should never be reinitialized.
-    void Init(AbstractThread* aThread, const T& aInitialValue, const char* aName,
-              AbstractCanonical<T>* aCanonical = nullptr)
+    operator const T&()
     {
-      mMirror = new Mirror<T>(aThread, aInitialValue, aName, aCanonical);
+      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
+      return mValue;
     }
 
-    // Forward control operations to the Mirror<T>.
-    void Connect(AbstractCanonical<T>* aCanonical) { mMirror->Connect(aCanonical); }
-    void DisconnectIfConnected() { mMirror->DisconnectIfConnected(); }
+    virtual void UpdateValue(const T& aNewValue) override
+    {
+      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
+      if (mValue != aNewValue) {
+        mValue = aNewValue;
+        WatchTarget::NotifyWatchers();
+      }
+    }
 
-    // Access to the Mirror<T>.
-    operator Mirror<T>&() { return *mMirror; }
-    Mirror<T>* operator&() { return mMirror; }
+    virtual void NotifyDisconnected() override
+    {
+      MIRROR_LOG("%s [%p] Notifed of disconnection from %p", mName, this, mCanonical.get());
+      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
+      mCanonical = nullptr;
+    }
 
-    // Access to the T.
-    const T& Ref() const { return *mMirror; }
-    operator const T&() const { return Ref(); }
+    bool IsConnected() const { return !!mCanonical; }
+
+    void Connect(AbstractCanonical<T>* aCanonical)
+    {
+      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
+      ConnectInternal(aCanonical);
+    }
 
   private:
-    nsRefPtr<Mirror<T>> mMirror;
-  };
+    // We separate the guts of Connect into a helper so that we can call it from
+    // initialization while not necessarily on the owner thread.
+    void ConnectInternal(AbstractCanonical<T>* aCanonical)
+    {
+      MIRROR_LOG("%s [%p] Connecting to %p", mName, this, aCanonical);
+      MOZ_ASSERT(!IsConnected());
 
-protected:
-  ~Mirror() { MOZ_DIAGNOSTIC_ASSERT(!IsConnected()); }
+      nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
+                                  (aCanonical, &AbstractCanonical<T>::AddMirror, this);
+      aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+      mCanonical = aCanonical;
+    }
+  public:
+
+    void DisconnectIfConnected()
+    {
+      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
+      if (!IsConnected()) {
+        return;
+      }
+
+      MIRROR_LOG("%s [%p] Disconnecting from %p", mName, this, mCanonical.get());
+      nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
+                                  (mCanonical, &AbstractCanonical<T>::RemoveMirror, this);
+      mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
+      mCanonical = nullptr;
+    }
+
+  protected:
+    ~Impl() { MOZ_DIAGNOSTIC_ASSERT(!IsConnected()); }
+
+  private:
+    T mValue;
+    nsRefPtr<AbstractCanonical<T>> mCanonical;
+  };
+public:
+
+  // NB: Because mirror-initiated disconnection can race with canonical-
+  // initiated disconnection, a mirror should never be reinitialized.
+  void Init(AbstractThread* aThread, const T& aInitialValue, const char* aName,
+            AbstractCanonical<T>* aCanonical = nullptr)
+  {
+    mImpl = new Impl(aThread, aInitialValue, aName, aCanonical);
+  }
+
+  // Forward control operations to the Impl<T>.
+  void Connect(AbstractCanonical<T>* aCanonical) { mImpl->Connect(aCanonical); }
+  void DisconnectIfConnected() { mImpl->DisconnectIfConnected(); }
+
+  // Access to the Impl<T>.
+  operator Impl&() { return *mImpl; }
+  Impl* operator&() { return mImpl; }
+
+  // Access to the T.
+  const T& Ref() const { return *mImpl; }
+  operator const T&() const { return Ref(); }
 
 private:
-  T mValue;
-  nsRefPtr<AbstractCanonical<T>> mCanonical;
+  nsRefPtr<Impl> mImpl;
 };
 
 #undef MIRROR_LOG
