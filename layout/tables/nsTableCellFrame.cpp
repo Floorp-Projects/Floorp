@@ -131,7 +131,7 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
     // both this cell and the sibling cell span exactly 1 row.)
 
     if (nsTableFrame::AncestorsHaveStyleHeight(*cellRS) ||
-        (nsTableFrame::GetTableFrame(this)->GetEffectiveRowSpan(*this) == 1 &&
+        (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
          (cellRS->parentReflowState->frame->GetStateBits() &
           NS_ROW_HAS_CELL_WITH_STYLE_HEIGHT))) {
 
@@ -220,8 +220,7 @@ nsTableCellFrame::AttributeChanged(int32_t         aNameSpaceID,
       FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
   }
   // let the table frame decide what to do
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  tableFrame->AttributeChangedFor(this, mContent, aAttribute);
+  GetTableFrame()->AttributeChangedFor(this, mContent, aAttribute);
   return NS_OK;
 }
 
@@ -233,7 +232,7 @@ nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (!aOldStyleContext) //avoid this on init
     return;
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     int32_t colIndex, rowIndex;
@@ -479,7 +478,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTableCellFrame");
   if (IsVisibleInSelection(aBuilder)) {
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    nsTableFrame* tableFrame = GetTableFrame();
     int32_t emptyCellStyle = GetContentEmpty() && !tableFrame->IsBorderCollapse() ?
                                 StyleTableBorder()->mEmptyCells
                                 : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
@@ -901,7 +900,7 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   SetPriorAvailWidth(aReflowState.AvailableWidth());
   nsIFrame* firstKid = mFrames.FirstChild();
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
 
   if (aReflowState.mFlags.mSpecialHeightReflow) {
     const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(mRect.height - topInset - bottomInset);
