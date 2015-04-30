@@ -31,6 +31,19 @@ public:
     */
   friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
                                               nsStyleContext*  aContext);
+
+  nsTableColGroupFrame* GetTableColGroupFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableColGroupFrame);
+    return static_cast<nsTableColGroupFrame*>(parent);
+  }
+
+  nsTableFrame* GetTableFrame() const
+  {
+    return GetTableColGroupFrame()->GetTableFrame();
+  }
+
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 

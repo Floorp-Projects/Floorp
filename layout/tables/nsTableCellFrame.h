@@ -45,6 +45,18 @@ public:
   explicit nsTableCellFrame(nsStyleContext* aContext);
   ~nsTableCellFrame();
 
+  nsTableRowFrame* GetTableRowFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableRowFrame);
+    return static_cast<nsTableRowFrame*>(parent);
+  }
+
+  nsTableFrame* GetTableFrame() const
+  {
+    return GetTableRowFrame()->GetTableFrame();
+  }
+
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;

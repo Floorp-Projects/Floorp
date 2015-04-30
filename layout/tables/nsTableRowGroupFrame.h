@@ -68,6 +68,13 @@ public:
                                                         nsStyleContext* aContext);
   virtual ~nsTableRowGroupFrame();
 
+  nsTableFrame* GetTableFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableFrame);
+    return static_cast<nsTableFrame*>(parent);
+  }
+
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   /** @see nsIFrame::DidSetStyleContext */
