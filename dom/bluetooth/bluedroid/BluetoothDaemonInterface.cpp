@@ -24,6 +24,8 @@ using namespace mozilla::ipc;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+static const int sRetryInterval = 100; // ms
+
 //
 // Protocol initialization and setup
 //
@@ -1749,6 +1751,20 @@ BluetoothDaemonChannel::GetIO()
 #define container(_t, _v, _m) \
   ( (_t*)( ((const unsigned char*)(_v)) - offsetof(_t, _m) ) )
 
+
+static bool
+IsDaemonRunning()
+{
+  char value[PROPERTY_VALUE_MAX];
+  NS_WARN_IF(property_get("init.svc.bluetoothd", value, "") < 0);
+  if (strcmp(value, "running")) {
+    BT_LOGR("[RESTART] Bluetooth daemon state <%s>", value);
+    return false;
+  }
+
+  return true;
+}
+
 BluetoothDaemonInterface*
 BluetoothDaemonInterface::GetInstance()
 {
@@ -1768,6 +1784,42 @@ BluetoothDaemonInterface::BluetoothDaemonInterface()
 
 BluetoothDaemonInterface::~BluetoothDaemonInterface()
 { }
+
+class BluetoothDaemonInterface::StartDaemonTask final : public Task
+{
+public:
+  StartDaemonTask(BluetoothDaemonInterface* aInterface,
+                  const nsACString& aCommand)
+    : mInterface(aInterface)
+    , mCommand(aCommand)
+  {
+    MOZ_ASSERT(mInterface);
+  }
+
+  void Run() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_LOGR("Start Daemon Task");
+    // Start Bluetooth daemon again
+    if (NS_WARN_IF(property_set("ctl.start", mCommand.get()) < 0)) {
+      mInterface->OnConnectError(CMD_CHANNEL);
+    }
+
+    // We're done if Bluetooth daemon is already running
+    if (IsDaemonRunning()) {
+      return;
+    }
+
+    // Otherwise try again later
+    MessageLoop::current()->PostDelayedTask(FROM_HERE,
+      new StartDaemonTask(mInterface, mCommand), sRetryInterval);
+  }
+
+private:
+  BluetoothDaemonInterface* mInterface;
+  nsCString mCommand;
+};
 
 class BluetoothDaemonInterface::InitResultHandler final
   : public BluetoothSetupResultHandler
@@ -1831,6 +1883,19 @@ BluetoothDaemonInterface::OnConnectSuccess(enum Channel aChannel)
         if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
           OnConnectError(CMD_CHANNEL);
         }
+
+        /*
+         * If Bluetooth daemon is not running, retry to start it later.
+         *
+         * This condition happens when when we restart Bluetooth daemon
+         * immediately after it crashed, as the daemon state remains 'stopping'
+         * instead of 'stopped'. Due to the limitation of property service,
+         * hereby add delay. See Bug 1143925 Comment 41.
+         */
+        if (!IsDaemonRunning()) {
+          MessageLoop::current()->PostDelayedTask(FROM_HERE,
+              new StartDaemonTask(this, value), sRetryInterval);
+        }
       }
       break;
     case CMD_CHANNEL:
@@ -1890,19 +1955,26 @@ BluetoothDaemonInterface::OnConnectError(enum Channel aChannel)
   }
 }
 
+/*
+ * Three cases for restarting:
+ * a) during startup
+ * b) during regular service
+ * c) during shutdown
+ * For (a)/(c) cases, mResultHandlerQ contains an element, but case (b)
+ * mResultHandlerQ shall be empty. The following procedure to recover from crashed
+ * consists of several steps for case (b).
+ * 1) Close listen socket.
+ * 2) Wait for all sockets disconnected and inform BluetoothServiceBluedroid to
+ * perform the regular stop bluetooth procedure.
+ * 3) When stop bluetooth procedures complete, fire
+ * AdapterStateChangedNotification to cleanup all necessary data members and
+ * deinit ProfileManagers.
+ * 4) After all resources cleanup, call |StartBluetooth|
+ */
 void
 BluetoothDaemonInterface::OnDisconnect(enum Channel aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (mResultHandlerQ.IsEmpty()) {
-    if (sNotificationHandler) {
-      // Bluetooth daemon crashed; clear state
-      sNotificationHandler->AdapterStateChangedNotification(false);
-      sNotificationHandler = nullptr;
-    }
-    return;
-  }
 
   switch (aChannel) {
     case CMD_CHANNEL:
@@ -1910,19 +1982,33 @@ BluetoothDaemonInterface::OnDisconnect(enum Channel aChannel)
       // by the daemon.
       break;
     case NTF_CHANNEL:
-      // Cleanup, step 4: Close listen socket
+      // Cleanup, step 4 (Recovery, step 1): Close listen socket
       mListenSocket->Close();
       break;
-    case LISTEN_SOCKET: {
+    case LISTEN_SOCKET:
+      if (!mResultHandlerQ.IsEmpty()) {
         nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
         mResultHandlerQ.RemoveElementAt(0);
-
         // Cleanup, step 5: Signal success to caller
         if (res) {
           res->Cleanup();
         }
       }
       break;
+  }
+
+  /* For recovery make sure all sockets disconnected, in order to avoid
+   * the remaining disconnects interfere with the restart procedure.
+   */
+  if (sNotificationHandler && mResultHandlerQ.IsEmpty()) {
+    if (mListenSocket->GetConnectionStatus() == SOCKET_DISCONNECTED &&
+        mCmdChannel->GetConnectionStatus() == SOCKET_DISCONNECTED &&
+        mNtfChannel->GetConnectionStatus() == SOCKET_DISCONNECTED) {
+      // Assume daemon crashed during regular service; notify
+      // BluetoothServiceBluedroid to prepare restart-daemon procedure
+      sNotificationHandler->BackendErrorNotification(true);
+      sNotificationHandler = nullptr;
+    }
   }
 }
 
@@ -2198,16 +2284,18 @@ private:
 void
 BluetoothDaemonInterface::Cleanup(BluetoothResultHandler* aRes)
 {
-  sNotificationHandler = nullptr;
 
-  mResultHandlerQ.AppendElement(aRes);
+  sNotificationHandler = nullptr;
 
   // Cleanup, step 1: Unregister Socket module
   nsresult rv = mProtocol->UnregisterModuleCmd(
     0x02, new CleanupResultHandler(this));
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
+    return;
   }
+
+  mResultHandlerQ.AppendElement(aRes);
 }
 
 void
