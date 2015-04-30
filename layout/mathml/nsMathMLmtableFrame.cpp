@@ -230,7 +230,7 @@ ComputeBorderOverflow(nsMathMLmtdFrame* aFrame, nsStyleBorder aStyleBorder)
   nsMargin overflow;
   int32_t rowIndex;
   int32_t columnIndex;
-  nsTableFrame* table = nsTableFrame::GetTableFrame(aFrame);
+  nsTableFrame* table = aFrame->GetTableFrame();
   aFrame->GetCellIndexes(rowIndex, columnIndex);
   if (!columnIndex) {
     overflow.left = table->GetColSpacing(-1);

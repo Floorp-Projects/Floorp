@@ -75,7 +75,7 @@ nsTableColGroupFrame::AddColsToTable(int32_t                   aFirstColIndex,
                                      bool                      aResetSubsequentColIndices,
                                      const nsFrameList::Slice& aCols)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
 
   tableFrame->InvalidateFrameSubtree();
 
@@ -141,9 +141,8 @@ nsTableColGroupFrame::SetInitialChildList(ChildListID     aListID,
              "unexpected second call to SetInitialChildList");
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
   if (aChildList.IsEmpty()) { 
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-    tableFrame->AppendAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
-                                         false);
+    GetTableFrame()->AppendAnonymousColFrames(this, GetSpan(),
+                                              eColAnonymousColGroup, false);
     return; 
   }
 
@@ -158,7 +157,7 @@ nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (!aOldStyleContext) //avoid this on init
     return;
      
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     int32_t colCount = GetColCount();
@@ -317,7 +316,7 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
     // The RemoveChild call handles calling FrameNeedsReflow on us.
     RemoveChild(*colFrame, true);
     
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    nsTableFrame* tableFrame = GetTableFrame();
     tableFrame->RemoveCol(this, colIndex, true, true);
     if (mFrames.IsEmpty() && contentRemoval && 
         GetColType() == eColGroupContent) {
@@ -362,8 +361,7 @@ nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-    tableFrame->SetNeedToCollapse(true);
+    GetTableFrame()->SetNeedToCollapse(true);
   }
   // for every content child that (is a column thingy and does not already have a frame)
   // create a frame and adjust it's style
@@ -436,8 +434,8 @@ void nsTableColGroupFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
 void nsTableColGroupFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
-  nsTableColFrame* col = table->GetColFrame(mStartColIndex + mColCount - 1);
+  nsTableColFrame* col = GetTableFrame()->
+    GetColFrame(mStartColIndex + mColCount - 1);
   col->GetContinuousBCBorderWidth(aBorder);
   aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,
                                             mTopContBorderWidth);
