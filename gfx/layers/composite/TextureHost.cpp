@@ -188,7 +188,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
       return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
 
     case SurfaceDescriptor::TSharedSurfaceDescriptor:
-      return new SharedSurfaceTextureHost(aFlags, aDesc.get_SharedSurfaceDescriptor());
+      return MakeAndAddRef<SharedSurfaceTextureHost>(aFlags, aDesc.get_SharedSurfaceDescriptor());
 
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface:
       if (Compositor::GetBackend() == LayersBackend::LAYERS_OPENGL) {

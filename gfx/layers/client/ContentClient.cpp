@@ -91,9 +91,9 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   }
 
   if (useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
-    return new ContentClientDoubleBuffered(aForwarder);
+    return MakeAndAddRef<ContentClientDoubleBuffered>(aForwarder);
   }
-  return new ContentClientSingleBuffered(aForwarder);
+  return MakeAndAddRef<ContentClientSingleBuffered>(aForwarder);
 }
 
 void

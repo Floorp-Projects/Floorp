@@ -45,7 +45,9 @@ public:
      
   virtual DrawTargetType GetType() const override { return mA->GetType(); }
   virtual BackendType GetBackendType() const override { return mA->GetBackendType(); }
-  virtual TemporaryRef<SourceSurface> Snapshot() override { return new SourceSurfaceDual(mA, mB); }
+  virtual TemporaryRef<SourceSurface> Snapshot() override {
+    return MakeAndAddRef<SourceSurfaceDual>(mA, mB);
+  }
   virtual IntSize GetSize() override { return mA->GetSize(); }
      
   FORWARD_FUNCTION(Flush)

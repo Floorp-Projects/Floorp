@@ -40,16 +40,18 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
 #ifndef MOZ_WIDGET_GONK
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     NS_WARNING("Most platforms still need an optimized way to share GL cross process.");
-    return new CanvasClient2D(aForwarder, aFlags);
+    return MakeAndAddRef<CanvasClient2D>(aForwarder, aFlags);
   }
 #endif
 
   switch (aType) {
   case CanvasClientTypeShSurf:
-    return new CanvasClientSharedSurface(aForwarder, aFlags);
+    return MakeAndAddRef<CanvasClientSharedSurface>(aForwarder, aFlags);
+    break;
 
   default:
-    return new CanvasClient2D(aForwarder, aFlags);
+    return MakeAndAddRef<CanvasClient2D>(aForwarder, aFlags);
+    break;
   }
 }
 
@@ -167,7 +169,7 @@ TexClientFromShSurf(ISurfaceAllocator* aAllocator, SharedSurface* surf,
 #endif
 
     default:
-      return new SharedSurfaceTextureClient(aAllocator, flags, surf);
+      return MakeAndAddRef<SharedSurfaceTextureClient>(aAllocator, flags, surf);
   }
 }
 
