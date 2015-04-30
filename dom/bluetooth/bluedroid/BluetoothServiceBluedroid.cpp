@@ -102,6 +102,8 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sFetchUuidsRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
+static bool sIsRestart(false);
+static bool sIsFirstTimeToggleOffBt(false);
 
 /**
  *  Static callback functions
@@ -3101,7 +3103,11 @@ BluetoothServiceBluedroid::BackendErrorNotification(bool aCrashed)
   BT_LOGR("Set aRestart = true");
   sIsRestart = true;
   BT_LOGR("Reocvery step2: stop bluetooth");
+#ifdef MOZ_B2G_BT_API_V2
+  StopBluetooth(false, nullptr);
+#else
   StopBluetooth(false);
+#endif
  }
 }
 
@@ -3123,4 +3129,3 @@ BluetoothServiceBluedroid::CompleteToggleBt(bool aEnabled)
     BluetoothService::CompleteToggleBt(aEnabled);
   }
 }
-
