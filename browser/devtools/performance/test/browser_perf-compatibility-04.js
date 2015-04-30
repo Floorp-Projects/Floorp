@@ -16,9 +16,9 @@ let test = Task.async(function*() {
   let { EVENTS, $, gFront, PerformanceController, PerformanceView, DetailsView, WaterfallView } = panel.panelWin;
 
 
-  let { memory: memoryMock, timeline: timelineMock } = gFront.getMocksInUse();
-  ok(memoryMock, "memory should be mocked.");
-  ok(!timelineMock, "timeline should not be mocked.");
+  let { memory: memorySupport, timeline: timelineSupport } = gFront.getActorSupport();
+  ok(!memorySupport, "memory should be mocked.");
+  ok(timelineSupport, "timeline should not be mocked.");
 
   yield startRecording(panel);
   yield busyWait(100);

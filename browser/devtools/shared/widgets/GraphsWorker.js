@@ -21,10 +21,11 @@ self.onmessage = e => {
  * @param number id
  * @param array timestamps
  * @param number interval
+ * @param number duration
  */
 function plotTimestampsGraph(id, args) {
   let plottedData = plotTimestamps(args.timestamps, args.interval);
-  let plottedMinMaxSum = getMinMaxSum(plottedData);
+  let plottedMinMaxSum = getMinMaxAvg(plottedData, args.timestamps, args.duration);
 
   let response = { id, plottedData, plottedMinMaxSum };
   self.postMessage(response);
@@ -33,21 +34,25 @@ function plotTimestampsGraph(id, args) {
 /**
  * Gets the min, max and average of the values in an array.
  * @param array source
+ * @param array timestamps
+ * @param number duration
  * @return object
  */
-function getMinMaxSum(source) {
+function getMinMaxAvg(source, timestamps, duration) {
   let totalTicks = source.length;
+  let totalFrames = timestamps.length;
   let maxValue = Number.MIN_SAFE_INTEGER;
   let minValue = Number.MAX_SAFE_INTEGER;
-  let avgValue = 0;
-  let sumValues = 0;
+  // Calculate the average by counting how many frames occurred
+  // in the duration of the recording, rather than average the frame points
+  // we have, as that weights higher FPS, as there'll be more timestamps for those
+  // values
+  let avgValue = totalFrames / (duration / 1000);
 
   for (let { value } of source) {
     maxValue = Math.max(value, maxValue);
     minValue = Math.min(value, minValue);
-    sumValues += value;
   }
-  avgValue = sumValues / totalTicks;
 
   return { minValue, maxValue, avgValue };
 }
