@@ -4173,7 +4173,7 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
                                InfallibleTArray<CpowEntry>&& aCpows,
                                const IPC::Principal& aPrincipal,
-                               InfallibleTArray<nsString>* aRetvals)
+                               nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals)
 {
     return nsIContentParent::RecvSyncMessage(aMsg, aData, Move(aCpows),
                                              aPrincipal, aRetvals);
@@ -4184,7 +4184,7 @@ ContentParent::RecvRpcMessage(const nsString& aMsg,
                               const ClonedMessageData& aData,
                               InfallibleTArray<CpowEntry>&& aCpows,
                               const IPC::Principal& aPrincipal,
-                              InfallibleTArray<nsString>* aRetvals)
+                              nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals)
 {
     return nsIContentParent::RecvRpcMessage(aMsg, aData, Move(aCpows), aPrincipal,
                                             aRetvals);

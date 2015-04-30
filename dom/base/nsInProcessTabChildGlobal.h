@@ -35,6 +35,8 @@ class nsInProcessTabChildGlobal : public mozilla::DOMEventTargetHelper,
                                   public nsSupportsWeakReference,
                                   public mozilla::dom::ipc::MessageManagerCallback
 {
+  typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
+
 public:
   nsInProcessTabChildGlobal(nsIDocShell* aShell, nsIContent* aOwner,
                             nsFrameMessageManager* aChrome);
@@ -84,7 +86,7 @@ public:
                                       const mozilla::dom::StructuredCloneData& aData,
                                       JS::Handle<JSObject *> aCpows,
                                       nsIPrincipal* aPrincipal,
-                                      InfallibleTArray<nsString>* aJSONRetVal,
+                                      nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
                                       bool aIsSync) override;
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,

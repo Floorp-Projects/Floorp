@@ -688,7 +688,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     objects = &aObjects.toObject();
   }
 
-  InfallibleTArray<nsString> retval;
+  nsTArray<OwningSerializedStructuredCloneBuffer> retval;
 
   sSendingSyncMessage |= aIsSync;
   bool rv = mCallback->DoSendBlockingMessage(aCx, aMessageName, data, objects,
@@ -706,15 +706,13 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
   NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < len; ++i) {
-    if (retval[i].IsEmpty()) {
-      continue;
-    }
-
     JS::Rooted<JS::Value> ret(aCx);
-    if (!JS_ParseJSON(aCx, static_cast<const char16_t*>(retval[i].get()),
-                      retval[i].Length(), &ret)) {
+    if (!JS_ReadStructuredClone(aCx, retval[i].data, retval[i].dataLength,
+                                JS_STRUCTURED_CLONE_VERSION, &ret, nullptr, nullptr)) {
+      MOZ_ASSERT(false, "Unable to read structured clone in SendMessage");
       return NS_ERROR_UNEXPECTED;
     }
+
     NS_ENSURE_TRUE(JS_DefineElement(aCx, dataArray, i, ret, JSPROP_ENUMERATE),
                    NS_ERROR_OUT_OF_MEMORY);
   }
@@ -1002,10 +1000,10 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const StructuredCloneData* aCloneData,
                                       mozilla::jsipc::CpowHolder* aCpows,
                                       nsIPrincipal* aPrincipal,
-                                      InfallibleTArray<nsString>* aJSONRetVal)
+                                      nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal)
 {
   return ReceiveMessage(aTarget, aTargetFrameLoader, mClosed, aMessage, aIsSync,
-                        aCloneData, aCpows, aPrincipal, aJSONRetVal);
+                        aCloneData, aCpows, aPrincipal, aRetVal);
 }
 
 nsresult
@@ -1017,7 +1015,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const StructuredCloneData* aCloneData,
                                       mozilla::jsipc::CpowHolder* aCpows,
                                       nsIPrincipal* aPrincipal,
-                                      InfallibleTArray<nsString>* aJSONRetVal)
+                                      nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal)
 {
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
     mListeners.Get(aMessage);
@@ -1191,13 +1189,25 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                   JS::HandleValueArray(argv), &rval)) {
           continue;
         }
-        if (aJSONRetVal) {
-          nsString json;
-          if (!JS_Stringify(cx, &rval, JS::NullPtr(), JS::NullHandleValue,
-                           JSONCreator, &json)) {
+        if (aRetVal) {
+          JSAutoStructuredCloneBuffer buffer;
+          if (!buffer.write(cx, rval)) {
+            nsString msg = aMessage + NS_LITERAL_STRING(": message reply cannot be cloned. Are you trying to send an XPCOM object?");
+
+            nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+            if (console) {
+              nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+              error->Init(msg, EmptyString(), EmptyString(),
+                          0, 0, nsIScriptError::warningFlag, "chrome javascript");
+              console->LogMessage(error);
+            }
+
+            JS_ClearPendingException(cx);
             continue;
           }
-          aJSONRetVal->AppendElement(json);
+
+          OwningSerializedStructuredCloneBuffer* data = aRetVal->AppendElement();
+          buffer.steal(&data->data, &data->dataLength);
         }
       }
     }
@@ -1207,7 +1217,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                                          aTargetClosed, aMessage,
                                                          aIsSync, aCloneData,
                                                          aCpows, aPrincipal,
-                                                         aJSONRetVal) : NS_OK;
+                                                         aRetVal) : NS_OK;
 }
 
 void
@@ -1872,7 +1882,7 @@ public:
                                      const mozilla::dom::StructuredCloneData& aData,
                                      JS::Handle<JSObject *> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     InfallibleTArray<nsString>* aJSONRetVal,
+                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
                                      bool aIsSync) override
   {
     mozilla::dom::ContentChild* cc =
@@ -1890,10 +1900,10 @@ public:
     }
     if (aIsSync) {
       return cc->SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
-                                 IPC::Principal(aPrincipal), aJSONRetVal);
+                                 IPC::Principal(aPrincipal), aRetVal);
     }
     return cc->SendRpcMessage(PromiseFlatString(aMessage), data, cpows,
-                              IPC::Principal(aPrincipal), aJSONRetVal);
+                              IPC::Principal(aPrincipal), aRetVal);
   }
 
   virtual bool DoSendAsyncMessage(JSContext* aCx,
@@ -1963,7 +1973,7 @@ public:
                                      const mozilla::dom::StructuredCloneData& aData,
                                      JS::Handle<JSObject *> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     InfallibleTArray<nsString>* aJSONRetVal,
+                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
                                      bool aIsSync) override
   {
     SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
@@ -1973,7 +1983,7 @@ public:
       SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
       nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr, aMessage,
-                          true, &aData, &cpows, aPrincipal, aJSONRetVal);
+                          true, &aData, &cpows, aPrincipal, aRetVal);
     }
     return true;
   }
