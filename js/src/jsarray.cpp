@@ -2287,13 +2287,8 @@ TryReuseArrayGroup(JSObject* obj, ArrayObject* narr)
      */
     MOZ_ASSERT(ObjectGroup::hasDefaultNewGroup(narr->getProto(), &ArrayObject::class_, narr->group()));
 
-    if (obj->is<ArrayObject>() &&
-        !obj->isSingleton() &&
-        !obj->group()->hasUnanalyzedPreliminaryObjects() &&
-        obj->getProto() == narr->getProto())
-    {
+    if (obj->is<ArrayObject>() && !obj->isSingleton() && obj->getProto() == narr->getProto())
         narr->setGroup(obj->group());
-    }
 }
 
 /*

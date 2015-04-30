@@ -4018,17 +4018,17 @@ MArrayState::Copy(TempAllocator& alloc, MArrayState* state)
 }
 
 MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, AllocatingBehaviour allocating, jsbytecode* pc)
+                     gc::InitialHeap initialHeap, AllocatingBehaviour allocating)
   : MUnaryInstruction(templateConst),
     count_(count),
     initialHeap_(initialHeap),
     allocating_(allocating),
-    convertDoubleElements_(false),
-    pc_(pc)
+    convertDoubleElements_(false)
 {
+    ArrayObject* obj = templateObject();
     setResultType(MIRType_Object);
-    if (templateObject()) {
-        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, templateObject());
+    if (!obj->isSingleton()) {
+        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, obj);
         setResultTypeSet(types);
         if (types->convertDoubleElements(constraints) == TemporaryTypeSet::AlwaysConvertToDoubles)
             convertDoubleElements_ = true;
@@ -4038,25 +4038,16 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConst
 bool
 MNewArray::shouldUseVM() const
 {
-    if (!templateObject())
-        return true;
-
-    // Allocate space using the VMCall when mir hints it needs to get allocated
-    // immediately, but only when data doesn't fit the available array slots.
-    if (allocatingBehaviour() == NewArray_Unallocating)
-        return false;
-
-    if (templateObject()->is<UnboxedArrayObject>()) {
-        MOZ_ASSERT(templateObject()->as<UnboxedArrayObject>().capacity() >= count());
-        return !templateObject()->as<UnboxedArrayObject>().hasInlineElements();
-    }
-
     MOZ_ASSERT(count() < NativeObject::NELEMENTS_LIMIT);
 
     size_t arraySlots =
         gc::GetGCKindSlots(templateObject()->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
-    return count() > arraySlots;
+    // Allocate space using the VMCall when mir hints it needs to get allocated
+    // immediately, but only when data doesn't fit the available array slots.
+    bool allocating = allocatingBehaviour() != NewArray_Unallocating && count() > arraySlots;
+
+    return templateObject()->isSingleton() || allocating;
 }
 
 bool
@@ -4703,48 +4694,6 @@ jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
     // Typed arrays are native classes but do not have dense elements.
     const Class* clasp = types->getKnownClass(constraints);
     return clasp && clasp->isNative() && !IsAnyTypedArrayClass(clasp);
-}
-
-JSValueType
-jit::UnboxedArrayElementType(CompilerConstraintList* constraints, MDefinition* obj,
-                             MDefinition* id)
-{
-    if (obj->mightBeType(MIRType_String))
-        return JSVAL_TYPE_MAGIC;
-
-    if (id && id->type() != MIRType_Int32 && id->type() != MIRType_Double)
-        return JSVAL_TYPE_MAGIC;
-
-    TemporaryTypeSet* types = obj->resultTypeSet();
-    if (!types || types->unknownObject())
-        return JSVAL_TYPE_MAGIC;
-
-    JSValueType elementType = JSVAL_TYPE_MAGIC;
-    for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        TypeSet::ObjectKey* key = types->getObject(i);
-        if (!key)
-            continue;
-
-        if (key->unknownProperties() || !key->isGroup())
-            return JSVAL_TYPE_MAGIC;
-
-        if (key->clasp() != &UnboxedArrayObject::class_)
-            return JSVAL_TYPE_MAGIC;
-
-        const UnboxedLayout &layout = key->group()->unboxedLayout();
-
-        if (layout.nativeGroup())
-            return JSVAL_TYPE_MAGIC;
-
-        if (elementType == layout.elementType() || elementType == JSVAL_TYPE_MAGIC)
-            elementType = layout.elementType();
-        else
-            return JSVAL_TYPE_MAGIC;
-
-        key->watchStateChangeForUnboxedConvertedToNative(constraints);
-    }
-
-    return elementType;
 }
 
 bool

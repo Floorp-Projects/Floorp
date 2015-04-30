@@ -397,13 +397,12 @@ class ICEntry
     _(GetElem_NativePrototypeCallScripted) \
     _(GetElem_String)           \
     _(GetElem_Dense)            \
-    _(GetElem_UnboxedArray)     \
     _(GetElem_TypedArray)       \
     _(GetElem_Arguments)        \
                                 \
     _(SetElem_Fallback)         \
-    _(SetElem_DenseOrUnboxedArray) \
-    _(SetElem_DenseOrUnboxedArrayAdd) \
+    _(SetElem_Dense)            \
+    _(SetElem_DenseAdd)         \
     _(SetElem_TypedArray)       \
                                 \
     _(In_Fallback)              \
@@ -429,7 +428,6 @@ class ICEntry
                                 \
     _(GetProp_Fallback)         \
     _(GetProp_ArrayLength)      \
-    _(GetProp_UnboxedArrayLength) \
     _(GetProp_Primitive)        \
     _(GetProp_StringLength)     \
     _(GetProp_Native)           \
@@ -1739,32 +1737,30 @@ class ICNewArray_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObject templateObject_;
+    HeapPtrArrayObject templateObject_;
 
-    explicit ICNewArray_Fallback(JitCode* stubCode)
-      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode), templateObject_(nullptr)
+    ICNewArray_Fallback(JitCode* stubCode, ArrayObject* templateObject)
+      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode), templateObject_(templateObject)
     {}
 
   public:
     class Compiler : public ICStubCompiler {
+        RootedArrayObject templateObject;
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::NewArray_Fallback)
+        Compiler(JSContext* cx, ArrayObject* templateObject)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback),
+            templateObject(cx, templateObject)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
-            return ICStub::New<ICNewArray_Fallback>(space, getStubCode());
+            return ICStub::New<ICNewArray_Fallback>(space, getStubCode(), templateObject);
         }
     };
 
-    HeapPtrObject& templateObject() {
+    HeapPtrArrayObject& templateObject() {
         return templateObject_;
-    }
-
-    void setTemplateObject(JSObject* obj) {
-        templateObject_ = obj;
     }
 };
 
@@ -3030,54 +3026,6 @@ class ICGetElem_Dense : public ICMonitoredStub
     };
 };
 
-class ICGetElem_UnboxedArray : public ICMonitoredStub
-{
-    friend class ICStubSpace;
-
-    HeapPtrObjectGroup group_;
-
-    ICGetElem_UnboxedArray(JitCode* stubCode, ICStub* firstMonitorStub, ObjectGroup* group);
-
-  public:
-    static ICGetElem_UnboxedArray* Clone(ICStubSpace* space, ICStub* firstMonitorStub,
-                                         ICGetElem_UnboxedArray& other);
-
-    static size_t offsetOfGroup() {
-        return offsetof(ICGetElem_UnboxedArray, group_);
-    }
-
-    HeapPtrObjectGroup& group() {
-        return group_;
-    }
-
-    class Compiler : public ICStubCompiler {
-      ICStub* firstMonitorStub_;
-      RootedObjectGroup group_;
-      JSValueType elementType_;
-
-      protected:
-        bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) |
-                   (static_cast<int32_t>(elementType_) << 16);
-        }
-
-      public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, ObjectGroup* group)
-          : ICStubCompiler(cx, ICStub::GetElem_UnboxedArray),
-            firstMonitorStub_(firstMonitorStub),
-            group_(cx, group),
-            elementType_(group->unboxedLayout().elementType())
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return ICStub::New<ICGetElem_UnboxedArray>(space, getStubCode(), firstMonitorStub_,
-                                                       group_);
-        }
-    };
-};
-
 // Enum for stubs handling a combination of typed arrays and typed objects.
 enum TypedThingLayout {
     Layout_TypedArray,
@@ -3235,21 +3183,21 @@ class ICSetElem_Fallback : public ICFallbackStub
     };
 };
 
-class ICSetElem_DenseOrUnboxedArray : public ICUpdatedStub
+class ICSetElem_Dense : public ICUpdatedStub
 {
     friend class ICStubSpace;
 
-    HeapPtrShape shape_; // null for unboxed arrays
+    HeapPtrShape shape_;
     HeapPtrObjectGroup group_;
 
-    ICSetElem_DenseOrUnboxedArray(JitCode* stubCode, Shape* shape, ObjectGroup* group);
+    ICSetElem_Dense(JitCode* stubCode, Shape* shape, ObjectGroup* group);
 
   public:
     static size_t offsetOfShape() {
-        return offsetof(ICSetElem_DenseOrUnboxedArray, shape_);
+        return offsetof(ICSetElem_Dense, shape_);
     }
     static size_t offsetOfGroup() {
-        return offsetof(ICSetElem_DenseOrUnboxedArray, group_);
+        return offsetof(ICSetElem_Dense, group_);
     }
 
     HeapPtrShape& shape() {
@@ -3261,41 +3209,33 @@ class ICSetElem_DenseOrUnboxedArray : public ICUpdatedStub
 
     class Compiler : public ICStubCompiler {
         RootedShape shape_;
-        RootedObjectGroup group_;
-        JSValueType unboxedType_;
+
+        // Compiler is only live on stack during compilation, it should
+        // outlive any RootedObjectGroup it's passed.  So it can just
+        // use the handle.
+        HandleObjectGroup group_;
 
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) |
-                   (static_cast<int32_t>(unboxedType_) << 16);
-        }
-
         Compiler(JSContext* cx, Shape* shape, HandleObjectGroup group)
-          : ICStubCompiler(cx, ICStub::SetElem_DenseOrUnboxedArray),
+          : ICStubCompiler(cx, ICStub::SetElem_Dense),
             shape_(cx, shape),
-            group_(cx, group),
-            unboxedType_(shape ? JSVAL_TYPE_MAGIC : group->unboxedLayout().elementType())
+            group_(group)
         {}
 
         ICUpdatedStub* getStub(ICStubSpace* space) {
-            ICSetElem_DenseOrUnboxedArray* stub =
-                ICStub::New<ICSetElem_DenseOrUnboxedArray>(space, getStubCode(), shape_, group_);
+            ICSetElem_Dense* stub = ICStub::New<ICSetElem_Dense>(space, getStubCode(), shape_, group_);
             if (!stub || !stub->initUpdatingChain(cx, space))
                 return nullptr;
             return stub;
         }
-
-        bool needsUpdateStubs() {
-            return unboxedType_ == JSVAL_TYPE_MAGIC || unboxedType_ == JSVAL_TYPE_OBJECT;
-        }
     };
 };
 
-template <size_t ProtoChainDepth> class ICSetElem_DenseOrUnboxedArrayAddImpl;
+template <size_t ProtoChainDepth> class ICSetElem_DenseAddImpl;
 
-class ICSetElem_DenseOrUnboxedArrayAdd : public ICUpdatedStub
+class ICSetElem_DenseAdd : public ICUpdatedStub
 {
     friend class ICStubSpace;
 
@@ -3305,11 +3245,11 @@ class ICSetElem_DenseOrUnboxedArrayAdd : public ICUpdatedStub
   protected:
     HeapPtrObjectGroup group_;
 
-    ICSetElem_DenseOrUnboxedArrayAdd(JitCode* stubCode, ObjectGroup* group, size_t protoChainDepth);
+    ICSetElem_DenseAdd(JitCode* stubCode, ObjectGroup* group, size_t protoChainDepth);
 
   public:
     static size_t offsetOfGroup() {
-        return offsetof(ICSetElem_DenseOrUnboxedArrayAdd, group_);
+        return offsetof(ICSetElem_DenseAdd, group_);
     }
 
     HeapPtrObjectGroup& group() {
@@ -3321,29 +3261,28 @@ class ICSetElem_DenseOrUnboxedArrayAdd : public ICUpdatedStub
     }
 
     template <size_t ProtoChainDepth>
-    ICSetElem_DenseOrUnboxedArrayAddImpl<ProtoChainDepth>* toImplUnchecked() {
-        return static_cast<ICSetElem_DenseOrUnboxedArrayAddImpl<ProtoChainDepth>*>(this);
+    ICSetElem_DenseAddImpl<ProtoChainDepth>* toImplUnchecked() {
+        return static_cast<ICSetElem_DenseAddImpl<ProtoChainDepth>*>(this);
     }
 
     template <size_t ProtoChainDepth>
-    ICSetElem_DenseOrUnboxedArrayAddImpl<ProtoChainDepth>* toImpl() {
+    ICSetElem_DenseAddImpl<ProtoChainDepth>* toImpl() {
         MOZ_ASSERT(ProtoChainDepth == protoChainDepth());
         return toImplUnchecked<ProtoChainDepth>();
     }
 };
 
 template <size_t ProtoChainDepth>
-class ICSetElem_DenseOrUnboxedArrayAddImpl : public ICSetElem_DenseOrUnboxedArrayAdd
+class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
 {
     friend class ICStubSpace;
 
-    // Note: for unboxed arrays, the first shape is null.
     static const size_t NumShapes = ProtoChainDepth + 1;
     mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
-    ICSetElem_DenseOrUnboxedArrayAddImpl(JitCode* stubCode, ObjectGroup* group,
-                                         const AutoShapeVector* shapes)
-      : ICSetElem_DenseOrUnboxedArrayAdd(stubCode, group, ProtoChainDepth)
+    ICSetElem_DenseAddImpl(JitCode* stubCode, ObjectGroup* group,
+                           const AutoShapeVector* shapes)
+      : ICSetElem_DenseAdd(stubCode, group, ProtoChainDepth)
     {
         MOZ_ASSERT(shapes->length() == NumShapes);
         for (size_t i = 0; i < NumShapes; i++)
@@ -3352,52 +3291,40 @@ class ICSetElem_DenseOrUnboxedArrayAddImpl : public ICSetElem_DenseOrUnboxedArra
 
   public:
     void traceShapes(JSTracer* trc) {
-        for (size_t i = 0; i < NumShapes; i++) {
-            if (shapes_[i])
-                TraceEdge(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
-        }
+        for (size_t i = 0; i < NumShapes; i++)
+            TraceEdge(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
     }
     Shape* shape(size_t i) const {
         MOZ_ASSERT(i < NumShapes);
         return shapes_[i];
     }
     static size_t offsetOfShape(size_t idx) {
-        return offsetof(ICSetElem_DenseOrUnboxedArrayAddImpl, shapes_) + idx * sizeof(HeapPtrShape);
+        return offsetof(ICSetElem_DenseAddImpl, shapes_) + idx * sizeof(HeapPtrShape);
     }
 };
 
-class ICSetElemDenseOrUnboxedArrayAddCompiler : public ICStubCompiler {
+class ICSetElemDenseAddCompiler : public ICStubCompiler {
     RootedObject obj_;
     size_t protoChainDepth_;
-    JSValueType unboxedType_;
 
     bool generateStubCode(MacroAssembler& masm);
 
   protected:
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind) |
-               (static_cast<int32_t>(protoChainDepth_) << 16) |
-               (static_cast<int32_t>(unboxedType_) << 19);
+        return static_cast<int32_t>(kind) | (static_cast<int32_t>(protoChainDepth_) << 16);
     }
 
   public:
-    ICSetElemDenseOrUnboxedArrayAddCompiler(JSContext* cx, HandleObject obj, size_t protoChainDepth)
-        : ICStubCompiler(cx, ICStub::SetElem_DenseOrUnboxedArrayAdd),
+    ICSetElemDenseAddCompiler(JSContext* cx, HandleObject obj, size_t protoChainDepth)
+        : ICStubCompiler(cx, ICStub::SetElem_DenseAdd),
           obj_(cx, obj),
-          protoChainDepth_(protoChainDepth),
-          unboxedType_(obj->is<UnboxedArrayObject>()
-                       ? obj->as<UnboxedArrayObject>().elementType()
-                       : JSVAL_TYPE_MAGIC)
+          protoChainDepth_(protoChainDepth)
     {}
 
     template <size_t ProtoChainDepth>
     ICUpdatedStub* getStubSpecific(ICStubSpace* space, const AutoShapeVector* shapes);
 
     ICUpdatedStub* getStub(ICStubSpace* space);
-
-    bool needsUpdateStubs() {
-        return unboxedType_ == JSVAL_TYPE_MAGIC || unboxedType_ == JSVAL_TYPE_OBJECT;
-    }
 };
 
 // Accesses scalar elements of a typed array or typed object.
@@ -4045,30 +3972,6 @@ class ICGetProp_ArrayLength : public ICStub
 
         ICStub* getStub(ICStubSpace* space) {
             return ICStub::New<ICGetProp_ArrayLength>(space, getStubCode());
-        }
-    };
-};
-
-// Stub for accessing an unboxed array's length.
-class ICGetProp_UnboxedArrayLength : public ICStub
-{
-    friend class ICStubSpace;
-
-    explicit ICGetProp_UnboxedArrayLength(JitCode* stubCode)
-      : ICStub(GetProp_UnboxedArrayLength, stubCode)
-    {}
-
-  public:
-    class Compiler : public ICStubCompiler {
-        bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetProp_UnboxedArrayLength)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return ICStub::New<ICGetProp_UnboxedArrayLength>(space, getStubCode());
         }
     };
 };

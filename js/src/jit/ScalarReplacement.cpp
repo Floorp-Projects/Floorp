@@ -612,10 +612,6 @@ IsArrayEscaped(MInstruction* ins)
         return true;
     }
 
-    JSObject* obj = ins->toNewArray()->templateObject();
-    if (!obj || obj->is<UnboxedArrayObject>())
-        return true;
-
     if (count >= 16) {
         JitSpewDef(JitSpew_Escape, "Array has too many elements\n", ins);
         return true;
