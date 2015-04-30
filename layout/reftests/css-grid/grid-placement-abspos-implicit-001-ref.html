@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>CSS Test: Testing placement of abs.pos. grid items in negative implicit grid</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1107783">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#abspos-items">
+
+  <meta charset="utf-8">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ /*display: grid;*/
+ position: relative;
+ border: 0 dashed blue;
+ border-width: 7px 11px 13px 17px;
+ grid-auto-flow: row;
+ grid-auto-columns: 23px;
+ grid-auto-rows: 17px;
+ padding: 17px 7px 11px 13px;
+ width: 200px;
+ height: 200px;
+}
+
+.a {
+  position: absolute;
+  left: 59px; top: 68px;
+  height: 32px; width: 44px;
+}
+
+.abs {
+  position: absolute;
+  opacity: 0.7;
+  width: 21px;
+  height: 15px;
+}
+.b {
+  left: 14px; top: 3px; bottom: 1px;
+  width: 61px; height: auto;
+}
+.c {
+  left: 14px; top: 20px;
+  width: 38px; height: 11px;
+}
+.d {
+  left: 1px; top: 54px;
+  width: 5px; height: 11px;
+}
+.e {
+  right: 5px; bottom: 1px;
+  width: 199px; height: 205px;
+}
+.f {
+  right: 5px; top: 3px;
+  width: 199px; height: 11px;
+}
+span {
+  background: lime;
+  border: 1px solid;
+}
+  </style>
+</head>
+<body>
+
+<div class="grid">
+<span class="a">a</span>
+<span class="b abs">b</span>
+<span class="c abs">c</span>
+<span class="d abs">d</span>
+<span class="e abs">e</span>
+<span class="f abs">f</span>
+</div>
+
+<div class="grid">
+<span class="b abs" style="width:38px">b</span>
+<span class="c abs">c</span>
+<span class="d abs">d</span>
+<span class="e abs">e</span>
+<span class="f abs">f</span>
+</div>
+
+</body>
+</html>
