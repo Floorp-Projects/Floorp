@@ -505,7 +505,7 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
     if (!anim->GetEffect() || anim->GetEffect()->IsFinishedTransition()) {
       continue;
     }
-    dom::KeyframeEffectReadonly* effect = anim->GetEffect();
+    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
     for (size_t propIdx = effect->Properties().Length(); propIdx-- != 0; ) {
       AnimationProperty& prop = effect->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
