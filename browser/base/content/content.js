@@ -101,17 +101,19 @@ let handleContentContextMenu = function (event) {
       event.target instanceof Ci.nsIImageLoadingContent &&
       event.target.currentURI) {
     try {
-      let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
-                                                       .getImgCacheForDocument(doc);
+      let imageCache = 
+        Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                        .getImgCacheForDocument(doc);
       let props =
         imageCache.findEntryProperties(event.target.currentURI);
-      if (props) {
+      try {
         contentType = props.get("type", Ci.nsISupportsCString).data;
-        contentDisposition = props.get("content-disposition", Ci.nsISupportsCString).data;
-      }
-    } catch (e) {
-      Cu.reportError(e);
-    }
+      } catch(e) {}
+      try {
+        contentDisposition =
+          props.get("content-disposition", Ci.nsISupportsCString).data;
+      } catch(e) {}
+    } catch(e) {}
   }
 
   let selectionInfo = BrowserUtils.getSelectionDetails(content);
