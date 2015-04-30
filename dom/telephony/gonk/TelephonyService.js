@@ -873,6 +873,11 @@ TelephonyService.prototype = {
         this._getImeiMMI(aClientId, aMmi, aCallback);
         break;
 
+      // CLIP
+      case RIL.MMI_KS_SC_CLIP:
+        this._clipMMI(aClientId, aMmi, aCallback);
+        break;
+
       // Fall back to "sendMMI".
       default:
         this._sendMMI(aClientId, aMmi, aCallback);
@@ -1086,6 +1091,47 @@ TelephonyService.prototype = {
       }
 
       aCallback.notifyDialMMISuccess(aResponse.imei);
+    });
+  },
+
+  /**
+   * Handle CLIP MMI code.
+   *
+   * @param aClientId
+   *        Client id.
+   * @param aMmi
+   *        Parsed MMI structure.
+   * @param aCallback
+   *        A nsITelephonyDialCallback object.
+   */
+  _clipMMI: function(aClientId, aMmi, aCallback) {
+    if (aMmi.procedure !== RIL.MMI_PROCEDURE_INTERROGATION) {
+      aCallback.notifyDialMMIError(RIL.MMI_ERROR_KS_NOT_SUPPORTED);
+      return;
+    }
+
+    this._sendToRilWorker(aClientId, "queryCLIP", {}, aResponse => {
+      if (aResponse.errorMsg) {
+        aCallback.notifyDialMMIError(aResponse.errorMsg);
+        return;
+      }
+
+      // aResponse.provisioned informs about the called party receives the
+      // calling party's address information:
+      // 0 for CLIP not provisioned
+      // 1 for CLIP provisioned
+      // 2 for unknown
+      switch (aResponse.provisioned) {
+        case 0:
+          aCallback.notifyDialMMISuccess(RIL.MMI_SM_KS_SERVICE_DISABLED);
+          break;
+        case 1:
+          aCallback.notifyDialMMISuccess(RIL.MMI_SM_KS_SERVICE_ENABLED);
+          break;
+        default:
+          aCallback.notifyDialMMIError(RIL.MMI_ERROR_KS_ERROR);
+          break;
+      }
     });
   },
 
