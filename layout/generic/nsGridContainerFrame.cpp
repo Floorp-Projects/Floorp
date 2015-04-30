@@ -333,7 +333,8 @@ nsGridContainerFrame::AddImplicitNamedAreas(
   // (x-start) 0 (x-start) 0 (x-end)
   // (x-end) 0 (x-start) 0 (x-end)
   // (x-start) 0 (x-end) 0 (x-start) 0 (x-end)
-  const uint32_t len = aLineNameLists.Length();
+  const uint32_t len =
+    std::min(aLineNameLists.Length(), size_t(nsStyleGridLine::kMaxLine));
   nsTHashtable<nsStringHashKey> currentStarts;
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
@@ -460,7 +461,7 @@ nsGridContainerFrame::ResolveLine(
   // <custom-ident> (without <integer> or 'span') which wasn't found.
   MOZ_ASSERT(line != 0 || (!aLine.mHasSpan && aLine.mInteger == 0),
              "Given a <integer> or 'span' the result should never be auto");
-  return line;
+  return clamped(line, nsStyleGridLine::kMinLine, nsStyleGridLine::kMaxLine);
 }
 
 nsGridContainerFrame::LinePair
@@ -549,8 +550,16 @@ nsGridContainerFrame::ResolveLineRange(
                                       aAreaEnd, aExplicitGridEnd, aStyle);
   MOZ_ASSERT(r.second != 0);
 
-  // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-  if (r.second <= r.first) {
+  if (r.first == 0) {
+    // r.second is a span, clamp it to kMaxLine - 1 so that the returned
+    // range has a HypotheticalEnd <= kMaxLine.
+    // http://dev.w3.org/csswg/css-grid/#overlarge-grids
+    r.second = std::min(r.second, nsStyleGridLine::kMaxLine - 1);
+  } else if (r.second <= r.first) {
+    // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
+    if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
+      r.first = nsStyleGridLine::kMaxLine - 1;
+    }
     r.second = r.first + 1;
   }
   return LineRange(r.first, r.second);
@@ -788,6 +797,10 @@ nsGridContainerFrame::InitializeGridBounds(const nsStylePosition* aStyle)
   auto areas = aStyle->mGridTemplateAreas.get();
   mExplicitGridColEnd = std::max(colEnd, areas ? areas->mNColumns + 1 : 1);
   mExplicitGridRowEnd = std::max(rowEnd, areas ? areas->NRows() + 1 : 1);
+  mExplicitGridColEnd =
+    std::min(mExplicitGridColEnd, uint32_t(nsStyleGridLine::kMaxLine));
+  mExplicitGridRowEnd =
+    std::min(mExplicitGridRowEnd, uint32_t(nsStyleGridLine::kMaxLine));
   mGridColEnd = mExplicitGridColEnd;
   mGridRowEnd = mExplicitGridRowEnd;
 }
