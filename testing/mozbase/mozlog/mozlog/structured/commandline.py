@@ -179,6 +179,8 @@ def setup_logging(suite, args, defaults=None):
     formatters = defaultdict(list)
     found = False
     found_stdout_logger = False
+    if args is None:
+        args = {}
     if not hasattr(args, 'iteritems'):
         args = vars(args)
 
