@@ -565,7 +565,7 @@ private:
   }
 
   NS_IMETHOD
-  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+  OnStartRequest(nsIRequest* aRequest, nsISupports* aContext) override
   {
     AssertIsOnMainThread();
 
@@ -631,7 +631,7 @@ private:
 
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                nsresult aStatusCode)
+                nsresult aStatusCode) override
   {
     // Nothing to do here!
     return NS_OK;
