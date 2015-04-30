@@ -16,7 +16,7 @@ enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 interface Animation {
   // Bug 1049975: Make 'effect' writeable
   [Pure]
-  readonly attribute AnimationEffectReadonly? effect;
+  readonly attribute AnimationEffectReadOnly? effect;
   readonly attribute AnimationTimeline timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;

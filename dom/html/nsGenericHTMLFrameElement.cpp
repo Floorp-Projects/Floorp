@@ -479,6 +479,20 @@ bool WidgetsEnabled()
   return sMozWidgetsEnabled;
 }
 
+bool NestedEnabled()
+{
+  static bool sMozNestedEnabled = false;
+  static bool sBoolVarCacheInitialized = false;
+
+  if (!sBoolVarCacheInitialized) {
+    sBoolVarCacheInitialized = true;
+    Preferences::AddBoolVarCache(&sMozNestedEnabled,
+                                 "dom.ipc.tabs.nested.enabled");
+  }
+
+  return sMozNestedEnabled;
+}
+
 } // anonymous namespace
 
 /* [infallible] */ NS_IMETHODIMP
@@ -581,8 +595,12 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
     return NS_OK;
   }
 
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    NS_WARNING("Can't embed-apps. Embed-apps is restricted to in-proc apps, see bug 1059662");
+  // Only allow content process to embed an app when nested content
+  // process is enabled.
+  if (XRE_GetProcessType() != GeckoProcessType_Default &&
+      !(GetBoolAttr(nsGkAtoms::Remote) && NestedEnabled())){
+    NS_WARNING("Can't embed-apps. Embed-apps is restricted to in-proc apps "
+               "or content processes with nested pref enabled, see bug 1097479");
     return NS_OK;
   }
 

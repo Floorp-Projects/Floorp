@@ -171,7 +171,7 @@ nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (!aOldStyleContext) //avoid this on init
     return;
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     nsIntRect damageArea(0, GetRowIndex(), tableFrame->GetColCount(), 1);
@@ -189,7 +189,7 @@ nsTableRowFrame::AppendFrames(ChildListID     aListID,
   const nsFrameList::Slice& newCells = mFrames.AppendFrames(nullptr, aFrameList);
 
   // Add the new cell frames to the table
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   for (nsFrameList::Enumerator e(newCells) ; !e.AtEnd(); e.Next()) {
     nsIFrame *childFrame = e.get();
     NS_ASSERTION(IS_TABLE_CELL(childFrame->GetType()),"Not a table cell frame/pseudo frame construction failure");
@@ -215,7 +215,7 @@ nsTableRowFrame::InsertFrames(ChildListID     aListID,
   const nsFrameList::Slice& newCells = mFrames.InsertFrames(nullptr, aPrevFrame, aFrameList);
 
   // Get the table frame
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   nsIAtom* cellFrameType = tableFrame->IsBorderCollapse() ? nsGkAtoms::bcTableCellFrame : nsGkAtoms::tableCellFrame;
   nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsTArray<nsTableCellFrame*> cellChildren;
@@ -245,7 +245,7 @@ nsTableRowFrame::RemoveFrame(ChildListID     aListID,
   MOZ_ASSERT((nsTableCellFrame*)do_QueryFrame(aOldFrame));
   nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(aOldFrame);
   // remove the cell from the cell map
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   tableFrame->RemoveCell(cellFrame, GetRowIndex());
 
   // Remove the frame and destroy it
@@ -316,7 +316,7 @@ void
 nsTableRowFrame::DidResize()
 {
   // Resize and re-align the cell frames based on our row height
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   nsTableIterator iter(*this);
   nsIFrame* childFrame = iter.First();
 
@@ -482,7 +482,7 @@ nsTableRowFrame::UpdateHeight(nscoord           aHeight,
 nscoord
 nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   nscoord computedHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight())
                             ? 0 : aReflowState.ComputedHeight();
   ResetHeight(computedHeight);
@@ -546,16 +546,14 @@ void
 nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
                                    nsRenderingContext* aCtx)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
-  TableBackgroundPainter painter(tableFrame,
+  auto rowFrame = static_cast<nsTableRowFrame*>(mFrame);
+  TableBackgroundPainter painter(rowFrame->GetTableFrame(),
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->PresContext(), *aCtx,
                                  mVisibleRect, ToReferenceFrame(),
                                  aBuilder->GetBackgroundPaintFlags());
 
-  DrawResult result =
-    painter.PaintRow(static_cast<nsTableRowFrame*>(mFrame));
-
+  DrawResult result = painter.PaintRow(rowFrame);
   nsDisplayTableItemGeometry::UpdateDrawResult(this, result);
 }
 
@@ -611,8 +609,7 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
   // Get the height specified in the style information
   const nsStylePosition* position = aCellFrame->StylePosition();
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  int32_t rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
+  int32_t rowSpan = GetTableFrame()->GetEffectiveRowSpan(*aCellFrame);
 
   switch (position->mHeight.GetUnit()) {
     case eStyleUnit_Calc: {
@@ -1043,7 +1040,7 @@ nsTableRowFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTableRowFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   const nsStyleVisibility* rowVis = StyleVisibility();
   bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
   if (collapseRow) {
@@ -1099,8 +1096,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   nsRect cellVisualOverflow = aCellFrame->GetVisualOverflowRect();
 
   nsSize availSize(cellRect.width, aAvailableHeight);
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-  bool borderCollapse = tableFrame->IsBorderCollapse();
+  bool borderCollapse = GetTableFrame()->IsBorderCollapse();
   nsTableCellReflowState
     cellReflowState(aPresContext, aReflowState, aCellFrame,
                     LogicalSize(aCellFrame->GetWritingMode(),
@@ -1144,8 +1140,8 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 {
   const nsStyleVisibility* rowVis = StyleVisibility();
   bool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
-  nsTableFrame* tableFrame = static_cast<nsTableFrame*>(
-    nsTableFrame::GetTableFrame(this)->FirstInFlow());
+  nsTableFrame* tableFrame =
+    static_cast<nsTableFrame*>(GetTableFrame()->FirstInFlow());
   if (collapseRow) {
     tableFrame->SetNeedToCollapse(true);
   }

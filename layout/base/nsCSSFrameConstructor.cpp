@@ -1394,18 +1394,6 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
   }
 }
 
-static
-bool IsBorderCollapse(nsIFrame* aFrame)
-{
-  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
-    if (nsGkAtoms::tableFrame == frame->GetType()) {
-      return ((nsTableFrame*)frame)->IsBorderCollapse();
-    }
-  }
-  NS_ASSERTION(false, "program error");
-  return false;
-}
-
 /**
  * Moves aFrameList from aOldParent to aNewParent.  This updates the parent
  * pointer of the frames in the list, and reparents their views as needed.
@@ -2187,7 +2175,8 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   nsStyleContext* const styleContext = aItem.mStyleContext;
   const uint32_t nameSpaceID = aItem.mNameSpaceID;
 
-  bool borderCollapse = IsBorderCollapse(aParentFrame);
+  nsTableFrame* tableFrame =
+    static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
   nsContainerFrame* newFrame;
   // <mtable> is border separate in mathml.css and the MathML code doesn't implement
   // border collapse. For those users who style <mtable> with border collapse,
@@ -2196,13 +2185,14 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   // table code, and so we can freely mix <mtable> with <mtr> or <tr>, <mtd> or <td>.
   // What will happen is just that non-MathML frames won't understand MathML attributes
   // and will therefore miss the special handling that the MathML code does.
-  if (kNameSpaceID_MathML == nameSpaceID && !borderCollapse)
-    newFrame = NS_NewMathMLmtdFrame(mPresShell, styleContext);
-  else
+  if (kNameSpaceID_MathML == nameSpaceID && !tableFrame->IsBorderCollapse()) {
+    newFrame = NS_NewMathMLmtdFrame(mPresShell, styleContext, tableFrame);
+  } else {
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
-    newFrame = NS_NewTableCellFrame(mPresShell, styleContext, borderCollapse);
+    newFrame = NS_NewTableCellFrame(mPresShell, styleContext, tableFrame);
+  }
 
   // Initialize the table cell frame
   InitAndRestoreFrame(aState, content, aParentFrame, newFrame);
@@ -8699,8 +8689,10 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext*    aPresContext,
     // Warning: If you change this and add a wrapper frame around table cell
     // frames, make sure Bug 368554 doesn't regress!
     // See IsInAutoWidthTableCellForQuirk() in nsImageFrame.cpp.
+    nsTableFrame* tableFrame =
+      static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
     nsTableCellFrame* cellFrame =
-      NS_NewTableCellFrame(shell, styleContext, IsBorderCollapse(aParentFrame));
+      NS_NewTableCellFrame(shell, styleContext, tableFrame);
 
     cellFrame->Init(content, aParentFrame, aFrame);
     if (cellFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {

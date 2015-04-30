@@ -26,7 +26,7 @@ using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayState;
-using mozilla::dom::KeyframeEffectReadonly;
+using mozilla::dom::KeyframeEffectReadOnly;
 using mozilla::CSSAnimation;
 
 mozilla::dom::Promise*
@@ -352,8 +352,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         // Update the old from the new so we can keep the original object
         // identity (and any expando properties attached to it).
         if (oldAnim->GetEffect() && newAnim->GetEffect()) {
-          KeyframeEffectReadonly* oldEffect = oldAnim->GetEffect();
-          KeyframeEffectReadonly* newEffect = newAnim->GetEffect();
+          KeyframeEffectReadOnly* oldEffect = oldAnim->GetEffect();
+          KeyframeEffectReadOnly* newEffect = newAnim->GetEffect();
           animationChanged =
             oldEffect->Timing() != newEffect->Timing() ||
             oldEffect->Properties() != newEffect->Properties();
@@ -526,8 +526,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mDirection = src.GetDirection();
     timing.mFillMode = src.GetFillMode();
 
-    nsRefPtr<KeyframeEffectReadonly> destEffect =
-      new KeyframeEffectReadonly(mPresContext->Document(), aTarget,
+    nsRefPtr<KeyframeEffectReadOnly> destEffect =
+      new KeyframeEffectReadOnly(mPresContext->Document(), aTarget,
                                  aStyleContext->GetPseudoType(), timing,
                                  src.GetName());
     dest->SetEffect(destEffect);
@@ -754,7 +754,7 @@ nsAnimationManager::UpdateCascadeResults(
     for (size_t animIdx = aElementAnimations->mAnimations.Length();
          animIdx-- != 0; ) {
       const Animation* anim = aElementAnimations->mAnimations[animIdx];
-      const KeyframeEffectReadonly* effect = anim->GetEffect();
+      const KeyframeEffectReadOnly* effect = anim->GetEffect();
       if (!effect) {
         continue;
       }
@@ -802,7 +802,7 @@ nsAnimationManager::UpdateCascadeResults(
        animIdx-- != 0; ) {
     CSSAnimation* anim =
       aElementAnimations->mAnimations[animIdx]->AsCSSAnimation();
-    KeyframeEffectReadonly* effect = anim->GetEffect();
+    KeyframeEffectReadOnly* effect = anim->GetEffect();
 
     anim->mInEffectForCascadeResults = anim->IsInEffect();
 

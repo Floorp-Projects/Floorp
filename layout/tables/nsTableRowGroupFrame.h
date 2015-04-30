@@ -12,8 +12,8 @@
 #include "nsILineIterator.h"
 #include "nsTablePainter.h"
 #include "nsTArray.h"
+#include "nsTableFrame.h"
 
-class nsTableFrame;
 class nsTableRowFrame;
 
 struct nsRowGroupReflowState {
@@ -68,6 +68,13 @@ public:
                                                         nsStyleContext* aContext);
   virtual ~nsTableRowGroupFrame();
 
+  nsTableFrame* GetTableFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableFrame);
+    return static_cast<nsTableFrame*>(parent);
+  }
+
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   /** @see nsIFrame::DidSetStyleContext */
@@ -117,6 +124,9 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
+
+  virtual mozilla::WritingMode GetWritingMode() const override
+    { return GetTableFrame()->GetWritingMode(); }
 
   /** return the number of child rows (not necessarily == number of child frames) */
   int32_t GetRowCount();

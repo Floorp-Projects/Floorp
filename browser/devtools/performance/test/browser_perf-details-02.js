@@ -9,6 +9,9 @@ function spawnTest () {
   let { EVENTS, DetailsView } = panel.panelWin;
   let { WaterfallView, JsCallTreeView, JsFlameGraphView } = panel.panelWin;
 
+  yield startRecording(panel);
+  yield stopRecording(panel);
+
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is selected by default in the details view.");
 
@@ -18,7 +21,7 @@ function spawnTest () {
   yield Promise.all([selected, notified]);
 
   ok(DetailsView.isViewSelected(JsCallTreeView),
-    "The waterfall view is now selected in the details view.");
+    "The jscalltree view is now selected in the details view.");
 
   selected = DetailsView.whenViewSelected(JsFlameGraphView);
   notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);

@@ -19,7 +19,10 @@ static void
 UpdateUpperBound(uint32_t* const out_upperBound, uint32_t newBound)
 {
     MOZ_ASSERT(out_upperBound);
-    *out_upperBound = std::max(*out_upperBound, newBound);
+    // Move *out_upperBound to a local variable to work around a false positive
+    // -Wuninitialized gcc warning about std::max() in PGO builds.
+    uint32_t upperBound = *out_upperBound;
+    *out_upperBound = std::max(upperBound, newBound);
 }
 
 /* WebGLElementArrayCacheTree contains most of the implementation of
