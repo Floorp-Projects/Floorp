@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<style>
+@keyframes anim { }
+</style>
+<body>
+<script>
+'use strict';
+
+test(function(t) {
+  var div = addDiv(t);
+  div.style.animation = 'anim 100s';
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.effect.target, div,
+    'Animation.target is the animatable div');
+}, 'Returned CSS animations have the correct Animation.target');
+
+done();
+</script>
+</body>
