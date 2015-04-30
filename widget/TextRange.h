@@ -174,16 +174,6 @@ struct TextRange
            mRangeType == aOther.mRangeType &&
            mRangeStyle == aOther.mRangeStyle;
   }
-
-  void RemoveCharacter(uint32_t aOffset)
-  {
-    if (mStartOffset > aOffset) {
-      --mStartOffset;
-      --mEndOffset;
-    } else if (mEndOffset > aOffset) {
-      --mEndOffset;
-    }
-  }
 };
 
 /******************************************************************************
@@ -232,13 +222,6 @@ public:
       }
     }
     return true;
-  }
-
-  void RemoveCharacter(uint32_t aOffset)
-  {
-    for (size_t i = 0, len = Length(); i < len; i++) {
-      ElementAt(i).RemoveCharacter(aOffset);
-    }
   }
 };
 
