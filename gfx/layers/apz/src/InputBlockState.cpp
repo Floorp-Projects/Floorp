@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InputBlockState.h"
-#include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
 #include "AsyncPanZoomController.h"         // for AsyncPanZoomController
 #include "gfxPrefs.h"                       // for gfxPrefs
+#include "mozilla/SizePrintfMacros.h"       // for PRIuSIZE
+#include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
 #include "OverscrollHandoffState.h"
 
 #define TBS_LOG(...)
@@ -247,7 +248,7 @@ WheelBlockState::HasEvents() const
 void
 WheelBlockState::DropEvents()
 {
-  TBS_LOG("%p dropping %lu events\n", this, mEvents.Length());
+  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
   mEvents.Clear();
 }
 
@@ -255,7 +256,7 @@ void
 WheelBlockState::HandleEvents()
 {
   while (HasEvents()) {
-    TBS_LOG("%p returning first of %lu events\n", this, mEvents.Length());
+    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     ScrollWheelInput event = mEvents[0];
     mEvents.RemoveElementAt(0);
     GetTargetApzc()->HandleInputEvent(event, mTransformToApzc);
@@ -416,7 +417,7 @@ TouchBlockState::SetAllowedTouchBehaviors(const nsTArray<TouchBehaviorFlags>& aB
   if (mAllowedTouchBehaviorSet) {
     return false;
   }
-  TBS_LOG("%p got allowed touch behaviours for %lu points\n", this, aBehaviors.Length());
+  TBS_LOG("%p got allowed touch behaviours for %" PRIuSIZE " points\n", this, aBehaviors.Length());
   mAllowedTouchBehaviors.AppendElements(aBehaviors);
   mAllowedTouchBehaviorSet = true;
   return true;
@@ -516,7 +517,7 @@ TouchBlockState::Type()
 void
 TouchBlockState::DropEvents()
 {
-  TBS_LOG("%p dropping %lu events\n", this, mEvents.Length());
+  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
   mEvents.Clear();
 }
 
@@ -524,7 +525,7 @@ void
 TouchBlockState::HandleEvents()
 {
   while (HasEvents()) {
-    TBS_LOG("%p returning first of %lu events\n", this, mEvents.Length());
+    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
     MultiTouchInput event = mEvents[0];
     mEvents.RemoveElementAt(0);
     GetTargetApzc()->HandleInputEvent(event, mTransformToApzc);
