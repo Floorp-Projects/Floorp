@@ -52,7 +52,3 @@ cat 4-patched.txt | comm -23 - 0-special | $SPELLER/make-hunspell-dict -one en_U
 #comm -13 1-base.txt 3-upstream.txt > 3-upstream-add
 #comm -23 2-mozilla.txt 3-upstream-rem | cat - 3-upstream-add | sort -u > 4-patched-v2.txt
 
-expand ../en-US.aff < mozilla-specific.txt > 5-mozilla-specific
-
-comm -12 3-upstream.txt 2-mozilla-rem > 5-mozilla-removed
-comm -13 3-upstream.txt 2-mozilla-add > 5-mozilla-added
