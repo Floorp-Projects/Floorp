@@ -1035,8 +1035,12 @@
 
             if (!aForceUpdate) {
               TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
-              window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
-                                                             .beginTabSwitch();
+              if (!Services.appinfo.browserTabsRemoteAutostart) {
+                // old way of measuring tab paint which is not
+                // valid with e10s.
+                window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils)
+                                                               .beginTabSwitch();
+              }
             }
 
             var oldTab = this.mCurrentTab;
@@ -2985,8 +2989,6 @@
             STATE_LOADED: 2,
             STATE_UNLOADING: 3,
 
-            logging: false,
-
             getTabState: function(tab) {
               let state = this.tabState.get(tab);
               if (state === undefined) {
@@ -3088,6 +3090,7 @@
               // Show or hide the spinner as needed.
               let needSpinner = this.getTabState(showTab) != this.STATE_LOADED;
               if (!needSpinner && this.spinnerTab) {
+                this.spinnerHidden();
                 this.tabbrowser.removeAttribute("pendingpaint");
                 this.spinnerTab.linkedBrowser.removeAttribute("pendingpaint");
                 this.spinnerTab = null;
@@ -3098,6 +3101,7 @@
                 this.spinnerTab = showTab;
                 this.tabbrowser.setAttribute("pendingpaint", "true");
                 this.spinnerTab.linkedBrowser.setAttribute("pendingpaint", "true");
+                this.spinnerDisplayed();
               }
 
               // Switch to the tab we've decided to make visible.
@@ -3280,6 +3284,7 @@
             // around.
             onPaint: function() {
               this.maybeVisibleTabs.clear();
+              this.finishTabSwitch();
             },
 
             // Called when we're done clearing the layers for a tab.
@@ -3313,6 +3318,7 @@
               }
 
               this.logState("requestTab " + this.tinfo(tab));
+              this.startTabSwitch();
 
               this.requestedTab = tab;
 
@@ -3340,6 +3346,62 @@
               this.postActions();
             },
 
+            /*
+             * Telemetry related helpers for recording tab switch timing.
+             */
+
+            startTabSwitch: function () {
+              TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
+            },
+
+            finishTabSwitch: function () {
+              if (this.requestedTab && this.getTabState(this.requestedTab) == this.STATE_LOADED) {
+                let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
+                if (time != -1) {
+                  TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
+                  this.log("DEBUG: tab switch time = " + time);
+                }
+              }
+            },
+
+            spinnerDisplayed: function () {
+              if (this.spinnerTab) {
+                TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
+              }
+            },
+
+            spinnerHidden: function () {
+              if (this.spinnerTab) {
+                this.log("DEBUG: spinner time = " +
+                         TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window));
+                TelemetryStopwatch.finish("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
+                // we do not get a onPaint after displaying the spinner
+                this.finishTabSwitch();
+              }
+            },
+
+            /*
+             * Debug related logging for switcher.
+             */
+
+            _useDumpForLogging: false,
+            _logInit: false,
+
+            logging: function () {
+              if (this._useDumpForLogging)
+                return true;
+              if (this._logInit)
+                return this._shouldLog;
+              let result = false;
+              try {
+                result = Services.prefs.getBoolPref("browser.tabs.remote.logSwitchTiming");
+              } catch (ex) {
+              }
+              this._shouldLog = result;
+              this._logInit = true;
+              return this._shouldLog;
+            },
+
             tinfo: function(tab) {
               if (tab) {
                 return tab._tPos + "(" + tab.linkedBrowser.currentURI.spec + ")";
@@ -3349,21 +3411,25 @@
             },
 
             log: function(s) {
-              if (!this.logging)
+              if (!this.logging())
                 return;
-              dump(s + "\n");
+              if (this._useDumpForLogging) {
+                dump(s + "\n");
+              } else {
+                Services.console.logStringMessage(s);
+              }
             },
 
             logState: function(prefix) {
-              if (!this.logging)
+              if (!this.logging())
                 return;
 
-              dump(prefix + " ");
+              let accum = prefix + " ";
               for (let i = 0; i < this.tabbrowser.tabs.length; i++) {
                 let tab = this.tabbrowser.tabs[i];
                 let state = this.getTabState(tab);
 
-                dump(i + ":");
+                accum += i + ":";
                 if (tab === this.lastVisibleTab) dump("V");
                 if (tab === this.loadingTab) dump("L");
                 if (tab === this.requestedTab) dump("R");
@@ -3371,9 +3437,13 @@
                 if (state == this.STATE_LOADING) dump("(+?)");
                 if (state == this.STATE_UNLOADED) dump("(-)");
                 if (state == this.STATE_UNLOADING) dump("(-?)");
-                dump(" ");
+                accum += " ";
               }
-              dump("\n");
+              if (this._useDumpForLogging) {
+                dump(accum + "\n");
+              } else {
+                Services.console.logStringMessage(accum);
+              }
             },
           };
           this._switcher = switcher;
