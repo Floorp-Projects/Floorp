@@ -1150,7 +1150,7 @@ private:
 
     nsresult
     operator () (nsString& aArg1, nsString& aArg2, uint32_t& aArg3,
-                 BluetoothSspVariant aArg4, uint32_t& aArg5) const
+                 BluetoothSspVariant& aArg4, uint32_t& aArg5) const
     {
       BluetoothDaemonPDU& pdu = GetPDU();
 
