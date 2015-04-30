@@ -218,7 +218,7 @@ public:
   // helper to restyle and reflow the table -- @see nsMathMLmtableFrame.
   void RestyleTable()
   {
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    nsTableFrame* tableFrame = GetTableFrame();
     if (tableFrame && tableFrame->IsFrameOfType(nsIFrame::eMathML)) {
       // relayout the table
       ((nsMathMLmtableFrame*)tableFrame)->RestyleTable();
