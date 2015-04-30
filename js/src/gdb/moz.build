@@ -20,10 +20,7 @@ UNIFIED_SOURCES += [
     'tests/typedef-printers.cpp',
 ]
 
-# Building against js_static requires that we declare mfbt sybols "exported"
-# on its behalf.
-for var in ('EXPORT_JS_API', 'IMPL_MFBT'):
-    DEFINES[var] = True
+DEFINES['EXPORT_JS_API'] = True
 
 LOCAL_INCLUDES += ['..']
 GENERATED_INCLUDES += ['..']
