@@ -290,10 +290,7 @@ void MediaDecoder::Pause()
 void MediaDecoder::SetVolume(double aVolume)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mInitialVolume = aVolume;
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetVolume(aVolume);
-  }
+  mVolume = aVolume;
 }
 
 void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
@@ -602,7 +599,7 @@ MediaDecoder::MediaDecoder() :
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
-  mInitialVolume(0.0),
+  mVolume(AbstractThread::MainThread(), 0.0, "MediaDecoder::mVolume (Canonical)"),
   mInitialPlaybackRate(1.0),
   mInitialPreservesPitch(true),
   mDuration(-1),
@@ -750,7 +747,6 @@ void MediaDecoder::SetStateMachineParameters()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mDecoderStateMachine->SetDuration(mDuration);
-  mDecoderStateMachine->SetVolume(mInitialVolume);
   if (GetDecodedStream()) {
     mDecoderStateMachine->SetAudioCaptured();
   }

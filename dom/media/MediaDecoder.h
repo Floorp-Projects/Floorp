@@ -1079,9 +1079,11 @@ protected:
   // It is read and written from the main thread only.
   double mCurrentTime;
 
-  // Volume that playback should start at.  0.0 = muted. 1.0 = full
-  // volume.  Readable/Writeable from the main thread.
-  double mInitialVolume;
+  // Volume of playback.  0.0 = muted. 1.0 = full volume.
+  Canonical<double> mVolume;
+public:
+  AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
+protected:
 
   // PlaybackRate and pitch preservation status we should start at.
   // Readable/Writeable from the main thread.
