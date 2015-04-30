@@ -1510,7 +1510,9 @@ BluetoothDaemonProtocol::Send(BluetoothDaemonPDU* aPDU, void* aUserData)
   aPDU->SetConsumer(this);
   aPDU->SetUserData(aUserData);
   aPDU->UpdateHeader();
-  return mConnection->Send(aPDU); // Forward PDU to command channel
+  mConnection->SendSocketData(aPDU); // Forward PDU to command channel
+
+  return NS_OK;
 }
 
 void
