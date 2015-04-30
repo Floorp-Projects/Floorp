@@ -18,6 +18,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsRefreshDriver.h"
+#include "nsView.h"
 
 #define APZCCH_LOG(...)
 // #define APZCCH_LOG(...) printf_stderr("APZCCH: " __VA_ARGS__)
@@ -499,6 +500,21 @@ GetDisplayportElementFor(nsIScrollableFrame* aScrollableFrame)
   return content->AsElement();
 }
 
+
+static dom::Element*
+GetRootDocumentElementFor(nsIWidget* aWidget)
+{
+  // This returns the root element that ChromeProcessController sets the
+  // displayport on during initialization.
+  if (nsView* view = nsView::GetViewFor(aWidget)) {
+    if (nsIPresShell* shell = view->GetPresShell()) {
+      MOZ_ASSERT(shell->GetDocument());
+      return shell->GetDocument()->GetDocumentElement();
+    }
+  }
+  return nullptr;
+}
+
 // Determine the scrollable target frame for the given point and add it to
 // the target list. If the frame doesn't have a displayport, set one.
 // Return whether or not a displayport was set.
@@ -515,7 +531,11 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
   nsIFrame* target =
     nsLayoutUtils::GetFrameForPoint(aRootFrame, point, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
   nsIScrollableFrame* scrollAncestor = GetScrollableAncestorFrame(target);
-  nsCOMPtr<dom::Element> dpElement = GetDisplayportElementFor(scrollAncestor);
+
+  // Assuming that if there's no scrollAncestor, there's already a displayPort.
+  nsCOMPtr<dom::Element> dpElement = scrollAncestor
+    ? GetDisplayportElementFor(scrollAncestor)
+    : GetRootDocumentElementFor(aWidget);
 
   nsAutoString dpElementDesc;
   if (dpElement) {
@@ -534,6 +554,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
   }
 
   APZCCH_LOG("%p didn't have a displayport, so setting one...\n", dpElement.get());
+  MOZ_ASSERT(scrollAncestor);
   return nsLayoutUtils::CalculateAndSetDisplayPortMargins(
       scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
 }
