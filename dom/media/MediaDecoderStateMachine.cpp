@@ -203,7 +203,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    bool aRealTime) :
   mDecoder(aDecoder),
   mTaskQueue(new MediaTaskQueue(GetMediaThreadPool(), /* aAssertTailDispatch = */ true)),
-  mWatchManager(this),
+  mWatchManager(this, mTaskQueue),
   mRealTime(aRealTime),
   mDispatchedStateMachine(false),
   mDelayedScheduler(this),
@@ -2528,6 +2528,9 @@ MediaDecoderStateMachine::FinishShutdown()
   mPlayState.DisconnectIfConnected();
   mNextPlayState.DisconnectIfConnected();
   mNextFrameStatus.DisconnectAll();
+
+  // Shut down the watch manager before shutting down our task queue.
+  mWatchManager.Shutdown();
 
   MOZ_ASSERT(mState == DECODER_STATE_SHUTDOWN,
              "How did we escape from the shutdown state?");
