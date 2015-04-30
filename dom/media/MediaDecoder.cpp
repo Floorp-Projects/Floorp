@@ -596,6 +596,9 @@ bool MediaDecoder::IsInfinite()
 
 MediaDecoder::MediaDecoder() :
   mWatchManager(this),
+  mNextFrameStatus(AbstractThread::MainThread(),
+                   MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
+                   "MediaDecoder::mNextFrameStatus (Mirror)"),
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
@@ -606,6 +609,10 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
+  mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
+             "MediaDecoder::mPlayState (Canonical)"),
+  mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
+             "MediaDecoder::mNextState (Canonical)"),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
   mOwner(nullptr),
@@ -627,15 +634,6 @@ MediaDecoder::MediaDecoder() :
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
   MediaMemoryTracker::AddMediaDecoder(this);
-
-  // Initialize canonicals.
-  mPlayState.Init(AbstractThread::MainThread(), PLAY_STATE_LOADING, "MediaDecoder::mPlayState (Canonical)");
-  mNextState.Init(AbstractThread::MainThread(), PLAY_STATE_PAUSED, "MediaDecoder::mNextState (Canonical)");
-
-  // Initialize mirrors.
-  mNextFrameStatus.Init(AbstractThread::MainThread(), MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
-                        "MediaDecoder::mNextFrameStatus (Mirror)");
-
 
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 
