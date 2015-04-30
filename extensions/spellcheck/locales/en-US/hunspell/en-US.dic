@@ -1,4 +1,4 @@
-54817
+54728
 0/nm
 0th/pt
 1/n1
@@ -57,7 +57,6 @@ ANZUS/M
 AOL/M
 AP/M
 APB
-APC
 API/SM
 APO
 APR
@@ -72,7 +71,6 @@ ATP/M
 ATPase/M
 ATV
 AV
-AVI
 AWACS/M
 AWOL/M
 AZ/M
@@ -939,7 +937,6 @@ Arabist/MS
 Araby/M
 Araceli/M
 Arafat/M
-Aragon
 Araguaya/M
 Aral/M
 Araldo/M
@@ -1178,7 +1175,6 @@ Atari/M
 Ataturk/M
 Athabasca/M
 Athabaskan/SM
-Athanasius
 Athena/M
 Athene/M
 Athenian/SM
@@ -1488,8 +1484,7 @@ Barbra/M
 Barbuda/M
 Barby/M
 Barcelona/M
-Barclay/SM
-Barclays/M
+Barclay/M
 Bard/M
 Barde/M
 Bardeen/M
@@ -1576,7 +1571,6 @@ Batu/M
 Baudelaire/M
 Baudoin/M
 Baudouin/M
-Baudrillard/M
 Bauer/M
 Bauhaus/M
 Baum/M
@@ -1617,7 +1611,6 @@ Beatrice/M
 Beatrisa/M
 Beatrix/M
 Beatriz/M
-Beatty/M
 Beau/M
 Beaufort/M
 Beaujolais/M
@@ -2014,7 +2007,6 @@ Bobinette/M
 Boccaccio/M
 Bodhidharma/M
 Bodhisattva/M
-Bodleian
 Boeing/M
 Boeotia/M
 Boeotian/M
@@ -2311,7 +2303,7 @@ Bronte/M
 Brontosaurus
 Bronx/M
 Brook/MS
-Brooke/MS
+Brooke/M
 Brooklyn/M
 Brooks/M
 Bros
@@ -2479,7 +2471,6 @@ CEO/SM
 CF
 CFC/SM
 CFO
-CGI
 CIA/M
 CID
 CNN/M
@@ -2809,7 +2800,6 @@ Cassatt/M
 Cassaundra/M
 Cassey/M
 Cassi/M
-Cassidy/M
 Cassie/M
 Cassini/M
 Cassiopeia/M
@@ -3662,7 +3652,6 @@ Courtney/M
 Cousteau/M
 Coventry/SM
 Coward/M
-Cowell/M
 Cowley/M
 Cowper/M
 Cox/M
@@ -4054,7 +4043,6 @@ Davine/M
 Davis/M
 Davy/SM
 Dawes/M
-Dawkins
 Dawn/M
 Dawna/M
 Dawson/M
@@ -4653,7 +4641,6 @@ ESE/M
 ESL
 ESP/M
 ESPN/M
-ESR
 EST/M
 ET
 ETA
@@ -5730,7 +5717,6 @@ Frisian/MS
 Frito/M
 Fritz/M
 Frobisher/M
-Frodo/M
 Froissart/M
 Fromm/M
 Fronde/M
@@ -5768,7 +5754,6 @@ GA
 GAO
 GATT/M
 GB/M
-GCC/M
 GDP/M
 GE/M
 GED
@@ -5873,7 +5858,6 @@ GameFAQs/M
 GameSpot/M
 Gamow/M
 Gan/M
-Gandalf/M
 Gandhi/M
 Gandhian/M
 Ganesha/M
@@ -6559,7 +6543,6 @@ HMO/M
 HMS
 HOV
 HP/M
-HPV
 HQ/M
 HR
 HRH
@@ -6778,7 +6761,6 @@ Hay/SM
 Hayden/M
 Haydn/M
 Haydon/M
-Hayek/M
 Hayes/M
 Hayley/M
 Haynes/M
@@ -7211,7 +7193,7 @@ Humfrey/M
 Humfrid/M
 Humfried/M
 Hummer/M
-Humphrey/SM
+Humphrey/M
 Humvee/M
 Hun/SM
 Hunfredo/M
@@ -7297,7 +7279,6 @@ IRS/M
 ISBN
 ISO/M
 ISP
-ISS
 IT
 IUD
 IV/SM
@@ -7528,8 +7509,6 @@ Islamabad/M
 Islamic/M
 Islamism/M
 Islamist/M
-Islamophobia
-Islamophobic
 Ismael/M
 Ismail/M
 Isobel/M
@@ -8931,7 +8910,6 @@ Lat/M
 Latasha/M
 Latashia/M
 Lateran/M
-Latham/M
 Latia/M
 Latin/MRS
 Latina
@@ -10884,7 +10862,6 @@ Motorola/M
 Motown/M
 Motrin/M
 Mott/M
-Moulton/M
 Mount/M
 Mountbatten/M
 Mountie/MS
@@ -11995,7 +11972,6 @@ Parkinson/M
 Parkman/M
 Parks/M
 Parliament/M
-Parmenides
 Parmesan/MS
 Parnassus/MS
 Parnell/M
@@ -12583,7 +12559,6 @@ Pythagorean/M
 Pythias/M
 Python/M
 Q
-QA
 QB
 QC
 QED
@@ -12659,7 +12634,6 @@ RFD
 RI
 RIF
 RIP
-RISC
 RN/M
 RNA/M
 ROFL
@@ -12770,7 +12744,6 @@ Ransom/M
 Raoul/M
 Raphael/M
 Raphaela/M
-Rappaport/M
 Rapunzel/M
 Raquel/M
 Raquela/M
@@ -12782,7 +12755,7 @@ Rasmussen/M
 Rasputin/M
 Rasta
 Rastaban/M
-Rastafarian/MS
+Rastafarian/M
 Rastafarianism
 Rather/M
 Ratliff/M
@@ -16685,7 +16658,6 @@ abstractness/MS
 abstruse/YP
 abstruseness/M
 absurd/TPRY
-absurdist/MS
 absurdity/SM
 absurdness/M
 abundance/SM
@@ -16868,7 +16840,6 @@ acrophobia/M
 acropolis/MS
 across
 acrostic/SM
-acrylamide
 acrylic/MS
 act/ASMDG
 actin
@@ -17627,7 +17598,6 @@ amortization/SM
 amortize/DSGB
 amount/GMDS
 amour/MS
-amoxicillin
 amp/SMY
 amperage/M
 ampere/MS
@@ -17638,7 +17608,6 @@ amphibious/Y
 amphitheater/SM
 amphora/M
 amphorae
-ampicillin
 ample/TR
 amplification/M
 amplifier/M
@@ -17766,7 +17735,6 @@ angstrom/MS
 anguish/GMDS
 angular
 angularity/SM
-angulation
 anhydrous
 aniline/M
 animadversion/MS
@@ -18046,7 +18014,6 @@ apology/SM
 apoplectic
 apoplexy/SM
 apoptosis
-apoptotic
 apostasy/SM
 apostate/SM
 apostatize/GDS
@@ -19861,7 +19828,6 @@ biophysicist/MS
 biophysics/M
 biopic/MS
 biopsy/GDSM
-bioreactor/S
 biorhythm/MS
 biosphere/SM
 biosyntheses
@@ -20459,7 +20425,6 @@ bottleneck/MS
 bottler/M
 bottom/SMDG
 bottomless
-botulinum
 botulism/M
 boudoir/SM
 bouffant/SM
@@ -21526,7 +21491,6 @@ cardiograph/M
 cardiographs
 cardiologist/MS
 cardiology/M
-cardiomyopathy
 cardiopulmonary
 cardiovascular
 cardsharp/MRZS
@@ -22306,7 +22270,6 @@ chitchatted
 chitchatting
 chitin/M
 chitinous
-chitosan
 chitterlings/M
 chivalrous/PY
 chivalrousness/M
@@ -22339,7 +22302,6 @@ choirmaster/SM
 choke/MZGDRS
 chokecherry/SM
 choker/M
-cholecystitis
 choler/M
 cholera/M
 choleric
@@ -23208,7 +23170,6 @@ committeewomen
 committer/S
 committing/A
 commode/IEMS
-commodification
 commodious/Y
 commodity/SM
 commodore/SM
@@ -23817,8 +23778,6 @@ contraindication/M
 contralto/SM
 contraption/SM
 contrapuntal/Y
-contrarian/SM
-contrarianism
 contrariety/M
 contrarily
 contrariness/M
@@ -24118,7 +24077,6 @@ cosmonaut/SM
 cosmopolitan/MS
 cosmopolitanism/M
 cosmos/MS
-cosplay
 cosponsor/GSMD
 cosset/SGD
 cossetted
@@ -25454,7 +25412,6 @@ denier/M
 denigrate/DSGN
 denigration/M
 denim/MS
-denitrification
 denizen/MS
 denominational
 denotative
@@ -25879,7 +25836,6 @@ digestive/S
 digger/SM
 digging/S
 diggings/M
-digicam/S
 digit/SM
 digital/Y
 digitalis/M
@@ -26315,7 +26271,6 @@ dobbed
 dobbin/SM
 dobbing
 doberman/MS
-dobro
 doc/SM
 docent/SM
 docile/Y
@@ -26928,7 +26883,6 @@ dyslexic/SM
 dyspepsia/M
 dyspeptic/MS
 dysprosium/M
-dystonia
 dz
 e'en
 e'er
@@ -27017,7 +26971,6 @@ eccentric/SM
 eccentrically
 eccentricity/SM
 eccl
-ecclesial
 ecclesiastic/SM
 ecclesiastical/Y
 echelon/SM
@@ -27382,7 +27335,6 @@ embodiment/EM
 embody/AEGSD
 embolden/DGS
 embolism/MS
-embolization
 emboss/DRSZG
 embosser/M
 embouchure/M
@@ -27760,8 +27712,6 @@ enzymatic
 enzyme/SM
 eolian
 eon/SM
-eosinophil/S
-eosinophilic
 epaulet/SM
 epee/MS
 ephedrine/M
@@ -27910,7 +27860,6 @@ erupt/SDGV
 eruption/MS
 erysipelas/M
 erythrocyte/SM
-erythromycin
 escalate/CDSGN
 escalation/CM
 escalations
@@ -28161,7 +28110,6 @@ except/GSD
 exception/BSM
 exceptionable/U
 exceptional/UY
-exceptionalism
 excerpt/MDGS
 excess/VMS
 excessive/Y
@@ -29547,7 +29495,6 @@ foldaway
 folder/SM
 foldout/MS
 foliage/M
-folic
 folio/SM
 folk/MS
 folklore/M
@@ -29823,7 +29770,6 @@ forward/MDRYZTGSP
 forwarder/M
 forwardness/M
 forwent
-fossa
 fossil/SM
 fossilization/M
 fossilize/GDS
@@ -30802,8 +30748,6 @@ glee/M
 gleeful/YP
 gleefulness/M
 glen/MS
-glenohumeral
-glenoid
 glib/YP
 glibber
 glibbest
@@ -30864,7 +30808,6 @@ glow/MDRZGS
 glower/GMD
 glowing/Y
 glowworm/MS
-glucagon
 glucose/M
 glue/MGDS
 glued/U
@@ -32195,7 +32138,6 @@ hep
 heparin/M
 hepatic
 hepatitis/M
-hepatocyte/S
 hepper
 heppest
 heptagon/MS
@@ -32708,7 +32650,6 @@ hosepipe/S
 hosier/MS
 hosiery/M
 hosp
-hospholipase
 hospice/MS
 hospitable/I
 hospitably/I
@@ -33222,7 +33163,6 @@ image/DSMG
 imagery/M
 imaginable/U
 imaginably/U
-imaginal
 imaginary
 imagination/MS
 imaginative/UY
@@ -33295,7 +33235,6 @@ immunization/SM
 immunize/GDS
 immunodeficiency/M
 immunodeficient
-immunoglobulin/S
 immunologic
 immunological
 immunologist/MS
@@ -34033,7 +33972,6 @@ instance/GD
 instant/MRYS
 instantaneous/Y
 instantiate/DSG
-instar
 instate/AGDS
 instead
 instigate/DSGN
@@ -36411,8 +36349,6 @@ lyric/SM
 lyrical/Y
 lyricism/M
 lyricist/SM
-lysosomal
-lysosomes
 m/KAS
 mRNA
 ma'am
@@ -36568,8 +36504,6 @@ majolica/M
 major/SGMDY
 majordomo/MS
 majorette/MS
-majoritarian/SM
-majoritarianism
 majority/SM
 make/AUSGM
 makeover/MS
@@ -37098,8 +37032,6 @@ meditative/Y
 medium/MS
 medley/MS
 medulla/SM
-medusa
-medusae
 meed/M
 meek/RYPT
 meekness/M
@@ -37359,7 +37291,6 @@ methodical/YP
 methodicalness/M
 methodological/Y
 methodology/SM
-methotrexate
 methought
 methoxy
 meths
@@ -38389,7 +38320,6 @@ multitudinous
 multivariate
 multiverse/SM
 multivitamin/MS
-multiyear
 mum/SM
 mumble/MZGDRS
 mumbler/M
@@ -38692,7 +38622,6 @@ neap/MS
 near/DRYSPTG
 nearby
 nearness/M
-nearshore
 nearside
 nearsighted/YP
 nearsightedness/M
@@ -38877,7 +38806,6 @@ newborn/SM
 newcomer/SM
 newel/SM
 newfangled
-newfound
 newline/S
 newlywed/SM
 newness/M
@@ -39860,7 +39788,7 @@ oligarchical
 oligarchs
 oligarchy/SM
 oligo
-oligonucleotide/S
+oligonucleotide
 oligopoly/SM
 olive/SM
 om/SMNX
@@ -40758,7 +40686,6 @@ pancake/DSMG
 panchromatic
 pancreas/MS
 pancreatic
-pancreatitis
 panda/SM
 pandemic/SM
 pandemonium/M
@@ -41042,7 +40969,6 @@ passivity/M
 passivization
 passivize/DSG
 passkey/MS
-passphrase/S
 passport/MS
 password/MS
 past/AMS
@@ -41449,7 +41375,6 @@ perfunctory
 pergola/SM
 perhaps
 pericardia
-pericardial
 pericardium/M
 perigee/SM
 perihelia
@@ -41766,7 +41691,6 @@ phonology/M
 phony/PTGDRSM
 phooey
 phosphate/MS
-phosphodiesterase
 phosphor/MS
 phosphorescence/M
 phosphorescent/Y
@@ -42419,7 +42343,6 @@ polonium/M
 poltergeist/MS
 poltroon/SM
 poly
-polyacrylamide
 polyamory/S
 polyandrous
 polyandry/M
@@ -43227,7 +43150,6 @@ profuseness/M
 progenitor/SM
 progeny/M
 progesterone/M
-progestin/S
 prognathous
 prognoses
 prognosis/M
@@ -45042,7 +44964,6 @@ reveler/M
 revelry/SM
 revenge/MGDS
 revenuer/SM
-reverb
 reverberate/DSGNX
 reverberation/M
 revere/DSG
@@ -46339,7 +46260,6 @@ seam/GMDNS
 seaman/M
 seamanship/M
 seamless/Y
-seamount/MS
 seamstress/MS
 seamy/RT
 seance/SM
@@ -49397,7 +49317,6 @@ subculture/MS
 subcutaneous/Y
 subdivide/GDS
 subdivision/SM
-subdominant
 subdue/DSG
 subeditor/S
 subfamily/SM
@@ -50966,7 +50885,6 @@ throbbed
 throbbing
 throe/SM
 thrombi
-thrombolytic
 thromboses
 thrombosis/M
 thrombotic
@@ -51470,9 +51388,6 @@ toxin/SM
 toy/SGMD
 toyboy/S
 tr
-trabecula
-trabecular
-trabecule
 trace/JDRSMZG
 traceable/U
 tracer/M
@@ -51622,7 +51537,6 @@ translation/M
 translator/SM
 transliterate/DSGNX
 transliteration/M
-translocation
 translucence/M
 translucency/M
 translucent/Y
@@ -52462,7 +52376,6 @@ underwear/M
 underweight/M
 underwent
 underwhelm/DGS
-underwire/DS
 underworld/MS
 underwrite/ZGRS
 underwriter/M
@@ -53121,7 +53034,6 @@ versify/ZGNDRS
 version/AFIMS
 verso/SM
 versus
-vert/A
 vertebra/M
 vertebrae
 vertebral
@@ -53636,7 +53548,6 @@ wartime/M
 warty/TR
 wary/UPRT
 was
-wasabi
 wash/BMDRSZG
 washable/SM
 washbasin/SM

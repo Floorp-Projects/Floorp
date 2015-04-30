@@ -1,6 +1,6 @@
 en_US Hunspell Dictionary
-Generated from SCOWL Version 2015.04.24
-Wed Apr 29 20:51:21 EDT 2015
+Generated from SCOWL Version 2015.02.15
+Thu Apr 23 19:31:37 EDT 2015
 
 http://wordlist.sourceforge.net
 
@@ -33,7 +33,7 @@ only found in the large dictionary for American English:
 
   Bermejo Freyr's Guenevere Hatshepsut Nottinghamshire arrestment
   crassitudes crural dogwatches errorless fetial flaxseeds godroon
-  incretion jalapeño's kelpie kishkes neuroglias pietisms pullulation
+  incretion jalapeÃ±o's kelpie kishkes neuroglias pietisms pullulation
   stemwinder stenoses syce thalassic zees
 
 The en_US and en_CA are the official dictionaries for Hunspell.  The
@@ -57,17 +57,12 @@ kevina@gnu.org or to the wordlist-devel mailing lists
 have specific issues with any of these dictionaries please file a bug
 report at https://github.com/kevina/wordlist/issues.
 
-IMPORTANT CHANGES FROM 2015.02.15:
-
-The dictionaries are now in UTF-8 format instead of ISO-8859-1.  This
-was required to handle smart quotes correctly.
-
 ADDITIONAL NOTES:
 
 The NOSUGGEST flag was added to certain taboo words.  While I made an
 honest attempt to flag the strongest taboo words with the NOSUGGEST
 flag, I MAKE NO GUARANTEE THAT I FLAGGED EVERY POSSIBLE TABOO WORD.
-The list was originally derived from Németh László, however I removed
+The list was originally derived from NÃ©meth LÃ¡szlÃ³, however I removed
 some words which, while being considered taboo by some dictionaries,
 are not really considered swear words in today's society.
 
@@ -311,5 +306,5 @@ from the Ispell distribution they are under the Ispell copyright:
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
-Build Date: Wed Apr 29 20:51:21 EDT 2015
+Build Date: Thu Apr 23 19:31:37 EDT 2015
 Wordlist Command: mk-list --accents=strip en_US 60
