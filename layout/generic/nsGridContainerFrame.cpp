@@ -844,54 +844,48 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
-  {
-    nsAutoTArray<GridArea*, 100> areasToAdjust;
-    int32_t minCol = 1;
-    int32_t minRow = 1;
-    for (; !aIter.AtEnd(); aIter.Next()) {
-      nsIFrame* child = *aIter;
-      const GridArea& area = PlaceDefinite(child, aStyle);
-      bool adjust = false;
-      if (area.mCols.IsDefinite()) {
-        minCol = std::min(minCol, area.mCols.mUntranslatedStart);
-        adjust = true;
-      }
-      if (area.mRows.IsDefinite()) {
-        minRow = std::min(minRow, area.mRows.mUntranslatedStart);
-        adjust = true;
-      }
-      GridArea* prop = GetGridAreaForChild(child);
-      if (prop) {
-        *prop = area;
-      } else {
-        prop = new GridArea(area);
-        child->Properties().Set(GridAreaProperty(), prop);
-      }
-      if (adjust) {
-        areasToAdjust.AppendElement(prop);
-      }
+  int32_t minCol = 1;
+  int32_t minRow = 1;
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
+    const GridArea& area = PlaceDefinite(child, aStyle);
+    if (area.mCols.IsDefinite()) {
+      minCol = std::min(minCol, area.mCols.mUntranslatedStart);
     }
+    if (area.mRows.IsDefinite()) {
+      minRow = std::min(minRow, area.mRows.mUntranslatedStart);
+    }
+    GridArea* prop = GetGridAreaForChild(child);
+    if (prop) {
+      *prop = area;
+    } else {
+      prop = new GridArea(area);
+      child->Properties().Set(GridAreaProperty(), prop);
+    }
+  }
 
-    // Translate the whole grid so that the top-/left-most area is at 0,0.
-    mExplicitGridOffsetCol = 1 - minCol;
-    mExplicitGridOffsetRow = 1 - minRow;
-    const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
-    const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
-    mGridColEnd += offsetToColZero;
-    mGridRowEnd += offsetToRowZero;
-    for (GridArea* area : areasToAdjust) {
-      if (area->mCols.IsDefinite()) {
-        area->mCols.mStart = area->mCols.mUntranslatedStart + offsetToColZero;
-        area->mCols.mEnd = area->mCols.mUntranslatedEnd + offsetToColZero;
-      }
-      if (area->mRows.IsDefinite()) {
-        area->mRows.mStart = area->mRows.mUntranslatedStart + offsetToRowZero;
-        area->mRows.mEnd = area->mRows.mUntranslatedEnd + offsetToRowZero;
-      }
-      if (area->IsDefinite()) {
-        mCellMap.Fill(*area);
-        InflateGridFor(*area);
-      }
+  // Translate the whole grid so that the top-/left-most area is at 0,0.
+  mExplicitGridOffsetCol = 1 - minCol; // minCol/Row is always <= 1, see above
+  mExplicitGridOffsetRow = 1 - minRow;
+  const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
+  const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
+  mGridColEnd += offsetToColZero;
+  mGridRowEnd += offsetToRowZero;
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
+    GridArea* area = GetGridAreaForChild(child);
+    if (area->mCols.IsDefinite()) {
+      area->mCols.mStart = area->mCols.mUntranslatedStart + offsetToColZero;
+      area->mCols.mEnd = area->mCols.mUntranslatedEnd + offsetToColZero;
+    }
+    if (area->mRows.IsDefinite()) {
+      area->mRows.mStart = area->mRows.mUntranslatedStart + offsetToRowZero;
+      area->mRows.mEnd = area->mRows.mUntranslatedEnd + offsetToRowZero;
+    }
+    if (area->IsDefinite()) {
+      mCellMap.Fill(*area);
+      InflateGridFor(*area);
     }
   }
 
