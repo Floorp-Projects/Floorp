@@ -85,13 +85,8 @@ const NETWORK_TYPE_MOBILE_DUN  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
 
 // TODO: Bug 815526, deprecate RILContentHelper.
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
-  "RIL:SendStkResponse",
-  "RIL:SendStkMenuSelection",
-  "RIL:SendStkTimerExpiration",
-  "RIL:SendStkEventDownload",
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
-  "RIL:RegisterIccMsg",
 ];
 
 // set to true in ril_consts.js to see debug messages
@@ -330,12 +325,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       } else {
         if (DEBUG) debug("Ignoring unknown message type: " + msg.name);
         return null;
-      }
-
-      switch (msg.name) {
-        case "RIL:RegisterIccMsg":
-          this._registerMessageTarget("icc", msg.target);
-          return null;
       }
 
       let clientId = msg.json.clientId || 0;
@@ -976,18 +965,6 @@ RadioInterface.prototype = {
    */
   receiveMessage: function(msg) {
     switch (msg.name) {
-      case "RIL:SendStkResponse":
-        this.workerMessenger.send("sendStkTerminalResponse", msg.json.data);
-        break;
-      case "RIL:SendStkMenuSelection":
-        this.workerMessenger.send("sendStkMenuSelection", msg.json.data);
-        break;
-      case "RIL:SendStkTimerExpiration":
-        this.workerMessenger.send("sendStkTimerExpiration", msg.json.data);
-        break;
-      case "RIL:SendStkEventDownload":
-        this.workerMessenger.send("sendStkEventDownload", msg.json.data);
-        break;
       case "RIL:ReadIccContacts":
         this.workerMessenger.sendWithIPCMessage(msg, "readICCContacts");
         break;
