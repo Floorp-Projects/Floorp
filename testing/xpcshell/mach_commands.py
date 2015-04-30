@@ -82,7 +82,7 @@ class XPCShellRunner(MozbuildObject):
         if not os.path.isfile(os.path.join(self.topsrcdir, 'build', 'automationutils.py')):
             sys.path.append(os.path.join(self.topsrcdir, 'mozilla', 'build'))
 
-        if test_paths == ['all']:
+        if test_paths == 'all':
             self.run_suite(interactive=interactive,
                            keep_going=keep_going, shuffle=shuffle, sequential=sequential,
                            debugger=debugger, debuggerArgs=debuggerArgs,
