@@ -2,13 +2,49 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <script>
 'use strict';
-setup({explicit_done: true});
-SpecialPowers.pushPrefEnv(
-  { "set": [["dom.animations-api.core.enabled", true]]},
-  function() {
-    window.open("file_animation-pausing.html");
-  });
+
+function getMarginLeft(cs) {
+  return parseFloat(cs.marginLeft);
+}
+
+async_test(function(t) {
+  var div = addDiv(t);
+  var cs = window.getComputedStyle(div);
+
+  div.style.marginLeft = '0px';
+  cs.marginLeft; // Flush style to set up transition start point
+  div.style.transition = 'margin-left 100s';
+  div.style.marginLeft = '10000px';
+  cs.marginLeft;
+
+  var animation = div.getAnimations()[0];
+  assert_equals(getMarginLeft(cs), 0,
+                'Initial value of margin-left is zero');
+  var previousAnimVal = getMarginLeft(cs);
+
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
+    assert_true(getMarginLeft(cs) > previousAnimVal,
+                'margin-left is initially increasing');
+    animation.pause();
+    return animation.ready;
+  })).then(t.step_func(function() {
+    previousAnimVal = getMarginLeft(cs);
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(getMarginLeft(cs), previousAnimVal,
+                  'margin-left does not increase after calling pause()');
+    previousAnimVal = getMarginLeft(cs);
+    animation.play();
+    return animation.ready.then(waitForFrame);
+  })).then(t.step_func(function() {
+    assert_true(getMarginLeft(cs) > previousAnimVal,
+                'margin-left increases after calling play()');
+    t.done();
+  }));
+}, 'pause() and play() a transition');
+
 </script>
