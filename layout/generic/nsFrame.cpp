@@ -1990,9 +1990,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   bool usingSVGEffects = nsSVGIntegrationUtils::UsingEffectsForFrame(this);
   nsRect dirtyRectOutsideSVGEffects = dirtyRect;
+  nsDisplayList hoistedScrollInfoItemsStorage;
   if (usingSVGEffects) {
     dirtyRect =
       nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(this, dirtyRect);
+    aBuilder->EnterSVGEffectsContents(&hoistedScrollInfoItemsStorage);
   }
 
   bool useOpacity = HasVisualOpacity() && !nsSVGUtils::CanOptimizeOpacity(this);
@@ -2126,6 +2128,10 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     /* List now emptied, so add the new list to the top. */
     resultList.AppendNewToTop(
         new (aBuilder) nsDisplaySVGEffects(aBuilder, this, &resultList));
+    // Also add the hoisted scroll info items. We need those for APZ scrolling
+    // because nsDisplaySVGEffects items can't build active layers.
+    aBuilder->ExitSVGEffectsContents();
+    resultList.AppendToTop(&hoistedScrollInfoItemsStorage);
   }
   /* Else, if the list is non-empty and there is CSS group opacity without SVG
    * effects, wrap it up in an opacity item.
