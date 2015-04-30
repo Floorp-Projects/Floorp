@@ -541,7 +541,7 @@ TemporaryRef<FilterNode>
 FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
 {
   if (aType == FilterType::CONVOLVE_MATRIX) {
-    return new FilterNodeConvolveD2D1(aDC);
+    return MakeAndAddRef<FilterNodeConvolveD2D1>(aDC);
   }
 
   RefPtr<ID2D1Effect> effect;
