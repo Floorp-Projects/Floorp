@@ -41,10 +41,6 @@ public:
     CloseSocket();
   }
 
-  virtual void OnConnectSuccess() override;
-  virtual void OnConnectError() override;
-  virtual void OnDisconnect() override;
-
   inline void GetAddress(nsAString& aDeviceAddress)
   {
     GetSocketAddr(aDeviceAddress);
@@ -57,14 +53,6 @@ public:
    * @param aBuffer Data received from the socket.
    */
   void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
-
-  /**
-   * Queue data to be sent to the socket on the IO thread. Can only be called on
-   * originating thread.
-   *
-   * @param aBuffer Data to be sent to socket
-   */
-  void SendSocketData(mozilla::ipc::UnixSocketIOBuffer* aBuffer) override;
 
   /**
    * Convenience function for sending strings to the socket (common in bluetooth
@@ -102,15 +90,23 @@ public:
   bool ListenSocket(BluetoothUnixSocketConnector* aConnector);
 
   /**
-   * Queues the internal representation of socket for deletion. Can be called
-   * from main thread.
-   */
-  void CloseSocket() override;
-
-  /**
    * Get the current sockaddr for the socket
    */
   void GetSocketAddr(nsAString& aAddrStr);
+
+  // Methods for |DataSocket|
+  //
+
+  void SendSocketData(mozilla::ipc::UnixSocketIOBuffer* aBuffer) override;
+
+  // Methods for |SocketBase|
+  //
+
+  void CloseSocket() override;
+
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
   class BluetoothSocketIO;
