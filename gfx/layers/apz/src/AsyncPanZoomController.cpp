@@ -2961,7 +2961,7 @@ APZCTreeManager* AsyncPanZoomController::GetApzcTreeManager() const {
 
 void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
   if (!aRect.IsFinite()) {
-    NS_WARNING("ZoomToRect got called with a non-finite rect; ignoring...\n");
+    NS_WARNING("ZoomToRect got called with a non-finite rect; ignoring...");
     return;
   }
 
@@ -3130,7 +3130,7 @@ void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConst
   APZC_LOG("%p updating zoom constraints to %d %d %f %f\n", this, aConstraints.mAllowZoom,
     aConstraints.mAllowDoubleTapZoom, aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
   if (IsNaN(aConstraints.mMinZoom.scale) || IsNaN(aConstraints.mMaxZoom.scale)) {
-    NS_WARNING("APZC received zoom constraints with NaN values; dropping...\n");
+    NS_WARNING("APZC received zoom constraints with NaN values; dropping...");
     return;
   }
   // inf float values and other bad cases should be sanitized by the code below.
