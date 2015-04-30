@@ -1,0 +1,73 @@
+#!/bin/bash
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#
+# merge-dictionaries
+# 15/Apr/2010, Matt Caywood (caywood@gmail.com)
+
+# input files:
+CHROMIUM_START=chromium_en_US.dic_delta
+CHROMIUM_DIFF=upstream-chromium.diff
+CHROMIUM_PATCHED=$CHROMIUM_START-patched
+CHROMIUM_AFFIX_CONVERTED=$CHROMIUM_START-affix-converted
+
+HUNSPELL_START=hunspell-en_US-20081205.dic
+HUNSPELL_DIFF=upstream-hunspell.diff
+HUNSPELL_PATCHED=$HUNSPELL_START-patched
+HUNSPELL_PATCHED_STRIPPED=$HUNSPELL_PATCHED-stripped
+
+MOZILLA_START=mozilla-specific.txt
+
+MERGED_SORTED=merged-list-sorted
+MERGED_FINISH=en-US.dic
+
+rm -f $CHROMIUM_PATCHED $CHROMIUM_AFFIX_CONVERTED $HUNSPELL_PATCHED $HUNSPELL_PATCHED_STRIPPED $MERGED_SORTED
+rm -f $MERGED_FINISH
+
+# Patch Chromium ($CHROMIUM_START --> $CHROMIUM_PATCHED)
+echo Patching Chromium dictionary
+cp $CHROMIUM_START $CHROMIUM_PATCHED
+patch $CHROMIUM_PATCHED $CHROMIUM_DIFF
+
+# Patch Hunspell ($HUNSPELL_START --> $HUNSPELL_PATCHED)
+echo Patching Hunspell dictionary
+cp $HUNSPELL_START $HUNSPELL_PATCHED
+patch $HUNSPELL_PATCHED $HUNSPELL_DIFF
+
+# Chromium's dictionary uses numeric shortcuts from en-US.aff, so that /7 stands in for /MS etc.
+# We need to replace these with the full alphabetic affix rules.
+#
+# This line just does affix conversions for the 4 rules of over 800(!) they are currently using. 
+# If in the future more are added, those affixes will need to be converted or else they will not be handled.
+
+echo Updating Chromium affixes
+sed -e 's/6/M/g;s/7/MS/g;s/12/U/g;s/30/MS\!/g;s/251/\!/g' $CHROMIUM_PATCHED > $CHROMIUM_AFFIX_CONVERTED
+
+# To check that conversion was correct, just search chromium-affix-converted for any numbers that are left over after conversion.
+
+if (grep [0123456789] $CHROMIUM_AFFIX_CONVERTED); then 
+	warn 'Some affix rules may not have been converted\n\n'; 
+fi
+
+# Strip old word count (first line) from $HUNSPELL_PATCHED
+sed '1d' $HUNSPELL_PATCHED > $HUNSPELL_PATCHED_STRIPPED
+
+# Combine dictionaries and sort
+echo Combining dictionaries
+export LC_ALL=C
+sort $CHROMIUM_AFFIX_CONVERTED $HUNSPELL_PATCHED_STRIPPED $MOZILLA_START > $MERGED_SORTED
+
+# Display any dupes. 
+perl dupe-dictionary.pl $MERGED_SORTED
+
+# If that completed OK, add line count
+if [ "$?" = "0" ]; then
+  linecount=`cat $MERGED_SORTED | wc -l`
+  echo Adding line count $linecount
+  echo $linecount | cat - $MERGED_SORTED > $MERGED_FINISH
+fi  
+
+# Clean up
+rm -f $CHROMIUM_PATCHED $CHROMIUM_AFFIX_CONVERTED $HUNSPELL_PATCHED $HUNSPELL_PATCHED_STRIPPED $MERGED_SORTED
