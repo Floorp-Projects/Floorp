@@ -866,6 +866,10 @@ pref("reader.toolbar.vertical", false);
 // Whether or not to display buttons related to reading list in reader view.
 pref("browser.readinglist.enabled", true);
 
+// Telemetry settings.
+// Whether to use the unified telemetry behavior, requires a restart.
+pref("toolkit.telemetry.unified", false);
+
 // Selection carets never fall-back to internal LongTap detector.
 pref("selectioncaret.detects.longtap", false);
 
