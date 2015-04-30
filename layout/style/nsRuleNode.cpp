@@ -17,7 +17,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 
-#include "nsDeviceContext.h"
+#include "nsAlgorithm.h" // for clamped()
 #include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIWidget.h"
@@ -7555,7 +7555,9 @@ SetGridLine(const nsCSSValue& aValue,
       if (item->mValue.GetUnit() == eCSSUnit_Enumerated) {
         aResult.mHasSpan = true;
       } else if (item->mValue.GetUnit() == eCSSUnit_Integer) {
-        aResult.mInteger = item->mValue.GetIntValue();
+        aResult.mInteger = clamped(item->mValue.GetIntValue(),
+                                   nsStyleGridLine::kMinLine,
+                                   nsStyleGridLine::kMaxLine);
       } else if (item->mValue.GetUnit() == eCSSUnit_Ident) {
         item->mValue.GetStringValue(aResult.mLineName);
       } else {

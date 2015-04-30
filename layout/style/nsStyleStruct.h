@@ -1266,9 +1266,14 @@ struct nsStyleGridTemplate {
 
 struct nsStyleGridLine {
   // http://dev.w3.org/csswg/css-grid/#typedef-grid-line
+  // XXXmats we could optimize memory size here
   bool mHasSpan;
   int32_t mInteger;  // 0 means not provided
   nsString mLineName;  // Empty string means not provided.
+
+  // mInteger is clamped to this range:
+  static const int32_t kMinLine;
+  static const int32_t kMaxLine;
 
   nsStyleGridLine()
     : mHasSpan(false)
