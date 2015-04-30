@@ -61,6 +61,7 @@ GMPParent::GMPParent()
   , mDeleteProcessOnlyOnUnload(false)
   , mAbnormalShutdownInProgress(false)
   , mIsBlockingDeletion(false)
+  , mCanDecrypt(false)
   , mAsyncShutdownRequired(false)
   , mAsyncShutdownInProgress(false)
 {
@@ -994,16 +995,20 @@ GMPParent::ReadGMPMetaData()
       }
     }
 
+    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR) ||
+        cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_COMPAT)) {
+      mCanDecrypt = true;
+
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-    if (cap->mAPIName.EqualsLiteral(GMP_API_DECRYPTOR) &&
-        !mozilla::SandboxInfo::Get().CanSandboxMedia()) {
-      printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
-                    " but this system can't sandbox it; not loading.\n",
-                    mDisplayName.get());
-      delete cap;
-      return NS_ERROR_FAILURE;
-    }
+      if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
+        printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
+                      " but this system can't sandbox it; not loading.\n",
+                      mDisplayName.get());
+        delete cap;
+        return NS_ERROR_FAILURE;
+      }
 #endif
+    }
 
     mCapabilities.AppendElement(cap);
   }
@@ -1018,7 +1023,12 @@ GMPParent::ReadGMPMetaData()
 bool
 GMPParent::CanBeSharedCrossNodeIds() const
 {
-  return mNodeId.IsEmpty();
+  return mNodeId.IsEmpty() &&
+    // XXX bug 1159300 hack -- maybe remove after openh264 1.4
+    // We don't want to use CDM decoders for non-encrypted playback
+    // just yet; especially not for WebRTC. Don't allow CDMs to be used
+    // without a node ID.
+    !mCanDecrypt;
 }
 
 bool
