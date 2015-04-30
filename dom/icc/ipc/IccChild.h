@@ -49,6 +49,12 @@ protected:
   virtual bool
   RecvNotifyIccInfoChanged(const OptionalIccInfoData& aInfoData) override;
 
+  virtual bool
+  RecvNotifyStkCommand(const nsString& aStkProactiveCmd) override;
+
+  virtual bool
+  RecvNotifyStkSessionEnd() override;
+
 private:
   ~IccChild();
 
