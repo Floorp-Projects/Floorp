@@ -1107,9 +1107,10 @@ nsMathMLmtrFrame::AttributeChanged(int32_t  aNameSpaceID,
 // implementation of nsMathMLmtdFrame
 
 nsContainerFrame*
-NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                     nsTableFrame* aTableFrame)
 {
-  return new (aPresShell) nsMathMLmtdFrame(aContext);
+  return new (aPresShell) nsMathMLmtdFrame(aContext, aTableFrame);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdFrame)
