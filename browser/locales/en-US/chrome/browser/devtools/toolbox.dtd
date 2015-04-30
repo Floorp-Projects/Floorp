@@ -6,6 +6,9 @@
 <!-- LOCALIZATION NOTE : FILE Do not translate key -->
 
 <!ENTITY closeCmd.key  "W">
+<!ENTITY toggleToolbox.key  "I">
+<!ENTITY toggleToolboxF12.keycode          "VK_F12">
+<!ENTITY toggleToolboxF12.keytext          "F12">
 
 <!ENTITY toolboxCloseButton.tooltip    "Close Developer Tools">
 <!ENTITY toolboxOptionsButton.key      "O">

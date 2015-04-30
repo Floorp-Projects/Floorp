@@ -118,7 +118,7 @@ browser.jar:
     content/browser/devtools/commandlineoutput.xhtml                   (commandline/commandlineoutput.xhtml)
     content/browser/devtools/commandlinetooltip.xhtml                  (commandline/commandlinetooltip.xhtml)
     content/browser/devtools/commandline/commands-index.js             (commandline/commands-index.js)
-    content/browser/devtools/framework/toolbox-window.xul              (framework/toolbox-window.xul)
+*   content/browser/devtools/framework/toolbox-window.xul              (framework/toolbox-window.xul)
     content/browser/devtools/framework/toolbox-options.xul             (framework/toolbox-options.xul)
     content/browser/devtools/framework/toolbox-options.js              (framework/toolbox-options.js)
     content/browser/devtools/framework/toolbox.xul                     (framework/toolbox.xul)
