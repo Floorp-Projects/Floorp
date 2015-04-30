@@ -42,7 +42,8 @@ NewFoo()
 TemporaryRef<Foo>
 NewBar()
 {
-  return new Bar();
+  RefPtr<Bar> bar = new Bar();
+  return bar.forget();
 }
 
 void
