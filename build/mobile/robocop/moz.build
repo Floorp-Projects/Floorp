@@ -18,3 +18,18 @@ main.add_classpathentry('harness', SRCDIR,
     dstdir='harness/org/mozilla/gecko')
 main.add_classpathentry('src', TOPSRCDIR + '/mobile/android/base/tests',
     dstdir='src/org/mozilla/gecko/tests')
+
+TEST_HARNESS_FILES.testing.mochitest.tests.robocop += ['/mobile/android/base/tests/' + x for x in [
+    '*.html',
+    '*.jpg',
+    '*.mp4',
+    '*.ogg',
+    '*.sjs',
+    '*.swf',
+    '*.webm',
+    '*.xml',
+    'robocop*.js',
+    'test*.js',
+]]
+# The ** below preserves directory structure.
+TEST_HARNESS_FILES.testing.mochitest.tests.robocop.reader_mode_pages += ['/mobile/android/base/tests/reader_mode_pages/**']

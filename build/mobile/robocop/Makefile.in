@@ -59,24 +59,6 @@ robocop_FILES   := \
   $(NULL)
 robocop-deps := $(notdir $(robocop_FILES))
 
-ROBOCOP_FILES := \
-  $(wildcard $(TESTPATH)/*.html) \
-  $(wildcard $(TESTPATH)/*.jpg) \
-  $(wildcard $(TESTPATH)/*.sjs) \
-  $(wildcard $(TESTPATH)/test*.js) \
-  $(wildcard $(TESTPATH)/robocop*.js) \
-  $(wildcard $(TESTPATH)/*.xml) \
-  $(wildcard $(TESTPATH)/*.ogg) \
-  $(wildcard $(TESTPATH)/*.mp4) \
-  $(wildcard $(TESTPATH)/*.webm) \
-  $(wildcard $(TESTPATH)/*.swf) \
-  $(wildcard $(TESTPATH)/reader_mode_pages) \
-  $(NULL)
-
-ROBOCOP_DEST := $(DEPTH)/_tests/testing/mochitest/tests/robocop/
-ROBOCOP_TARGET := export
-INSTALL_TARGETS += ROBOCOP
-
 GARBAGE += \
   AndroidManifest.xml \
   $(robocop-deps) \
