@@ -10,8 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/ConnectionOrientedSocket.h"
-#include "mozilla/ipc/DataSocket.h"
-#include "nsError.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {
@@ -112,8 +110,7 @@ protected:
  * Bluetooth daemon. It offers connection establishment and sending
  * PDUs. PDU receiving is performed by |BluetoothDaemonPDUConsumer|.
  */
-class BluetoothDaemonConnection : public DataSocket
-                                , public ConnectionOrientedSocket
+class BluetoothDaemonConnection : public ConnectionOrientedSocket
 {
 public:
   BluetoothDaemonConnection();

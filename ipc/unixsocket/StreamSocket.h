@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_streamsocket_h
 #define mozilla_ipc_streamsocket_h
 
-#include "mozilla/ipc/DataSocket.h"
 #include "ConnectionOrientedSocket.h"
 
 namespace mozilla {
@@ -16,8 +15,7 @@ namespace ipc {
 class StreamSocketIO;
 class UnixSocketConnector;
 
-class StreamSocket : public DataSocket
-                   , public ConnectionOrientedSocket
+class StreamSocket : public ConnectionOrientedSocket
 {
 public:
   StreamSocket();
