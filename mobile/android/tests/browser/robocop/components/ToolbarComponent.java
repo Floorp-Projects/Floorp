@@ -56,8 +56,8 @@ public class ToolbarComponent extends BaseComponent {
         final String expected;
         final String absoluteURL = NavigationHelper.adjustUrl(url);
 
-        if (StringHelper.get().ABOUT_HOME_URL.equals(absoluteURL)) {
-            expected = StringHelper.get().ABOUT_HOME_TITLE;
+        if (mStringHelper.ABOUT_HOME_URL.equals(absoluteURL)) {
+            expected = mStringHelper.ABOUT_HOME_TITLE;
         } else if (absoluteURL.startsWith(URL_HTTP_PREFIX)) {
             expected = absoluteURL.substring(URL_HTTP_PREFIX.length());
         } else {
@@ -134,7 +134,7 @@ public class ToolbarComponent extends BaseComponent {
 
         for (int i = 0; i < count; i++) {
             final View view = pageActionLayout.getChildAt(i);
-            if (StringHelper.get().CONTENT_DESCRIPTION_READER_MODE_BUTTON.equals(view.getContentDescription())) {
+            if (mStringHelper.CONTENT_DESCRIPTION_READER_MODE_BUTTON.equals(view.getContentDescription())) {
                 return (ImageButton) view;
             }
         }
