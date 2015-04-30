@@ -42,9 +42,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext) :
-  nsContainerFrame(aContext)
-  , mDesiredSize(WritingMode())
+nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext,
+                                   nsTableFrame* aTableFrame)
+  : nsContainerFrame(aContext)
+  , mDesiredSize(aTableFrame->GetWritingMode())
 {
   mColIndex = 0;
   mPriorAvailWidth = 0;
@@ -1069,12 +1070,12 @@ nsTableCellFrame::GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex)
 nsTableCellFrame*
 NS_NewTableCellFrame(nsIPresShell*   aPresShell,
                      nsStyleContext* aContext,
-                     bool            aIsBorderCollapse)
+                     nsTableFrame* aTableFrame)
 {
-  if (aIsBorderCollapse)
-    return new (aPresShell) nsBCTableCellFrame(aContext);
+  if (aTableFrame->IsBorderCollapse())
+    return new (aPresShell) nsBCTableCellFrame(aContext, aTableFrame);
   else
-    return new (aPresShell) nsTableCellFrame(aContext);
+    return new (aPresShell) nsTableCellFrame(aContext, aTableFrame);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
@@ -1102,8 +1103,9 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 
 // nsBCTableCellFrame
 
-nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext)
-:nsTableCellFrame(aContext)
+nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext,
+                                       nsTableFrame* aTableFrame)
+  : nsTableCellFrame(aContext, aTableFrame)
 {
   mTopBorder = mRightBorder = mBottomBorder = mLeftBorder = 0;
 }

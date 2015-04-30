@@ -42,7 +42,7 @@ public:
 
   // default constructor supplied by the compiler
 
-  explicit nsTableCellFrame(nsStyleContext* aContext);
+  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame);
   ~nsTableCellFrame();
 
   nsTableRowFrame* GetTableRowFrame() const
@@ -95,13 +95,6 @@ public:
   virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) override;
 
   virtual bool NeedsToObserve(const nsHTMLReflowState& aReflowState) override;
-
-  /** instantiate a new instance of nsTableRowFrame.
-    * @param aPresShell the pres shell for this frame
-    *
-    * @return           the frame that was created
-    */
-  friend nsIFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -315,7 +308,7 @@ class nsBCTableCellFrame final : public nsTableCellFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  explicit nsBCTableCellFrame(nsStyleContext* aContext);
+  nsBCTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame);
 
   ~nsBCTableCellFrame();
 
