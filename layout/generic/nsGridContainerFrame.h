@@ -90,14 +90,14 @@ protected:
 #ifdef DEBUG
       if (!IsAutoAuto()) {
         if (IsAuto()) {
-          MOZ_ASSERT(mEnd >= 1 && mEnd <= nsStyleGridLine::kMaxLine,
-                     "invalid span");
+          MOZ_ASSERT(mEnd >= nsStyleGridLine::kMinLine &&
+                     mEnd <= nsStyleGridLine::kMaxLine, "invalid span");
         } else {
-          MOZ_ASSERT(mStart >= 1 && mStart <= nsStyleGridLine::kMaxLine,
-                     "invalid start line");
+          MOZ_ASSERT(mStart >= nsStyleGridLine::kMinLine &&
+                     mStart <= nsStyleGridLine::kMaxLine, "invalid start line");
           MOZ_ASSERT(mEnd == kAutoLine ||
-                     (mEnd >= 1 && mEnd <= nsStyleGridLine::kMaxLine),
-                     "invalid end line");
+                     (mEnd >= nsStyleGridLine::kMinLine &&
+                      mEnd <= nsStyleGridLine::kMaxLine), "invalid end line");
         }
       }
 #endif
