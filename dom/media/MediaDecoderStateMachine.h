@@ -889,8 +889,8 @@ public:
   bool mDurationSet;
 
   // The current play state and next play state, mirrored from the main thread.
-  Mirror<MediaDecoder::PlayState>::Holder mPlayState;
-  Mirror<MediaDecoder::PlayState>::Holder mNextPlayState;
+  Mirror<MediaDecoder::PlayState> mPlayState;
+  Mirror<MediaDecoder::PlayState> mNextPlayState;
 
   // Returns true if we're logically playing, that is, if the Play() has
   // been called and Pause() has not or we have not yet reached the end
