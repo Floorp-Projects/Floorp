@@ -1955,30 +1955,6 @@ RilObject.prototype = {
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
     switch (sc) {
-      // CLIR (non-temporary ones)
-      // TODO: Both dial() and sendMMI() functions should be unified at some
-      // point in the future. In the mean time we handle temporary CLIR MMI
-      // commands through the dial() function. Please see bug 889737.
-      case MMI_SC_CLIR:
-        options.procedure = mmi.procedure;
-        switch (options.procedure) {
-          case MMI_PROCEDURE_INTERROGATION:
-            this.getCLIR(options);
-            return;
-          case MMI_PROCEDURE_ACTIVATION:
-            options.clirMode = CLIR_INVOCATION;
-            break;
-          case MMI_PROCEDURE_DEACTIVATION:
-            options.clirMode = CLIR_SUPPRESSION;
-            break;
-          default:
-            _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-            return;
-        }
-        options.isSetCLIR = true;
-        this.setCLIR(options);
-        return;
-
       // Change call barring password
       case MMI_SC_CHANGE_PASSWORD:
         if (!_isRadioAvailable() || !_isValidChangePasswordRequest()) {
@@ -4608,66 +4584,6 @@ RilObject.prototype[REQUEST_GET_CLIR] = function REQUEST_GET_CLIR(length, option
 
   options.n = Buf.readInt32(); // Will be TS 27.007 +CLIR parameter 'n'.
   options.m = Buf.readInt32(); // Will be TS 27.007 +CLIR parameter 'm'.
-
-  if (options.rilMessageType === "sendMMI") {
-    // TS 27.007 +CLIR parameter 'm'.
-    switch (options.m) {
-      // CLIR not provisioned.
-      case 0:
-        options.statusMessage = MMI_SM_KS_SERVICE_NOT_PROVISIONED;
-        break;
-      // CLIR provisioned in permanent mode.
-      case 1:
-        options.statusMessage = MMI_SM_KS_CLIR_PERMANENT;
-        break;
-      // Unknown (e.g. no network, etc.).
-      case 2:
-        options.errorMsg = MMI_ERROR_KS_ERROR;
-        break;
-      // CLIR temporary mode presentation restricted.
-      case 3:
-        // TS 27.007 +CLIR parameter 'n'.
-        switch (options.n) {
-          // Default.
-          case 0:
-          // CLIR invocation.
-          case 1:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_ON;
-            break;
-          // CLIR suppression.
-          case 2:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_ON_NEXT_CALL_OFF;
-            break;
-          default:
-            options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-            break;
-        }
-        break;
-      // CLIR temporary mode presentation allowed.
-      case 4:
-        // TS 27.007 +CLIR parameter 'n'.
-        switch (options.n) {
-          // Default.
-          case 0:
-          // CLIR suppression.
-          case 2:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_OFF;
-            break;
-          // CLIR invocation.
-          case 1:
-            options.statusMessage = MMI_SM_KS_CLIR_DEFAULT_OFF_NEXT_CALL_ON;
-            break;
-          default:
-            options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-            break;
-        }
-        break;
-      default:
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        break;
-    }
-  }
-
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, options) {
@@ -4676,16 +4592,6 @@ RilObject.prototype[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, option
     return;
   }
 
-  if (!options.errorMsg && options.rilMessageType === "sendMMI") {
-    switch (options.procedure) {
-      case MMI_PROCEDURE_ACTIVATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      case MMI_PROCEDURE_DEACTIVATION:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 
