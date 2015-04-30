@@ -493,15 +493,10 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     auto end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
                            aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                            aStyle);
-    if (end == kAutoLine) {
-      // span * / <custom-ident> that can't be found
-      return LinePair(kAutoLine, aStart.mInteger);
-    }
     int32_t span = aStart.mInteger == 0 ? 1 : aStart.mInteger;
     auto start = ResolveLine(aStart, -span, end, aLineNameList, aAreaStart,
                              aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
                              aStyle);
-    MOZ_ASSERT(start != kAutoLine, "A start span can never resolve to 'auto'");
     return LinePair(start, end);
   }
 
@@ -517,23 +512,20 @@ nsGridContainerFrame::ResolveLineRangeHelper(
   }
   if (start == kAutoLine && aEnd.mHasSpan) {
     if (aEnd.mLineName.IsEmpty()) {
-      // auto (or not found <custom-ident>) / span <integer>
+      // auto / span <integer>
       MOZ_ASSERT(aEnd.mInteger != 0);
       return LinePair(start, aEnd.mInteger);
     }
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-    // auto (or not found <custom-ident>) / span <custom-ident>
+    // auto / span <custom-ident>
     return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
   }
 
   uint32_t from = aEnd.mHasSpan ? start : 0;
   auto end = ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
                          aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
-  if (end == kAutoLine) {
-    // * (except span) / not found <custom-ident>
-    end = 1; // XXX subgrid explicit size instead of 1?
-  } else if (start == kAutoLine) {
-    // auto (or not found <custom-ident>) / definite line
+  if (start == kAutoLine) {
+    // auto / definite line
     start = std::max(1, end - 1);
   }
   return LinePair(start, end);
@@ -602,7 +594,6 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     int32_t end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
                               aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                               aStyle);
-    MOZ_ASSERT(end != kAutoLine, "resolving non-auto line shouldn't result in auto");
     if (aEnd.mHasSpan) {
       ++end;
     }
@@ -613,7 +604,6 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     int32_t start =
       ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
                   aAreaEnd, aExplicitGridEnd, eLineRangeSideStart, aStyle);
-    MOZ_ASSERT(start != kAutoLine, "resolving non-auto line shouldn't result in auto");
     if (aStart.mHasSpan) {
       start = std::max(int32_t(aGridEnd) - start, 1);
     }
