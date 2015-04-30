@@ -5,22 +5,22 @@
  * Tests if the waterfall is properly built after finishing a recording.
  */
 
-add_task(function*() {
-  let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
-  let { $, $$, EVENTS, TimelineController } = panel.panelWin;
+function spawnTest () {
+  let { target, panel } = yield initPerformance(SIMPLE_URL);
+  let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
 
-  yield TimelineController.toggleRecording();
+  yield startRecording(panel);
   ok(true, "Recording has started.");
 
   let updated = 0;
-  panel.panelWin.on(EVENTS.OVERVIEW_UPDATED, () => updated++);
+  OverviewView.on(EVENTS.OVERVIEW_RENDERED, () => updated++);
 
   ok((yield waitUntil(() => updated > 0)),
     "The overview graphs were updated a bunch of times.");
-  ok((yield waitUntil(() => TimelineController.getMarkers().length > 0)),
+  ok((yield waitUntil(() => PerformanceController.getCurrentRecording().getMarkers().length > 0)),
     "There are some markers available.");
 
-  yield TimelineController.toggleRecording();
+  yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
   // Test the header container.
@@ -62,4 +62,6 @@ add_task(function*() {
     "Some marker waterfall nodes should have been created.");
   ok($$(".waterfall-marker-item:not(spacer) > .waterfall-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
-});
+  yield teardown(panel);
+  finish();
+}
