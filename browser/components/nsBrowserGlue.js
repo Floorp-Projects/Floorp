@@ -2811,7 +2811,8 @@ let E10SUINotification = {
       // e10s doesn't work with accessibility, so we prompt to disable
       // e10s if a11y is enabled, now or in the future.
       Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
-      if (Services.appinfo.accessibilityIsBlacklistedForE10S) {
+      if (Services.appinfo.accessibilityEnabled &&
+          !Services.appinfo.accessibilityIsUIA) {
         this._showE10sAccessibilityWarning();
       }
     } else {
