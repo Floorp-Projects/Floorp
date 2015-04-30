@@ -195,6 +195,8 @@ private:
   bool mAbnormalShutdownInProgress;
   bool mIsBlockingDeletion;
 
+  bool mCanDecrypt;
+
   nsTArray<nsRefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;
   nsTArray<nsRefPtr<GMPDecryptorParent>> mDecryptors;
