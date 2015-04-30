@@ -5751,6 +5751,8 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "max-content",
       "calc(20px + 10%)",
       "minmax(20px, max-content)",
+      "minmax(min-content, auto)",
+      "minmax(auto, max-content)",
       "m\\69nmax(20px, 4Fr)",
       "MinMax(min-content, calc(20px + 10%))",
     ],
@@ -5767,7 +5769,6 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "mİnmax(20px, 100px)",
       "minmax(20px, 100px, 200px)",
       "maxmin(100px, 20px)",
-      "minmax(min-content, auto)",
       "minmax(min-content, minmax(30px, max-content))",
     ]
   };
@@ -5792,6 +5793,8 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "(normal) 40px () auto ( ) 12%",
       "(foo) 40px min-content ( bar ) calc(20px + 10%) max-content",
       "40px min-content calc(20px + 10%) max-content",
+      "minmax(min-content, auto)",
+      "minmax(auto, max-content)",
       "m\\69nmax(20px, 4Fr)",
       "40px MinMax(min-content, calc(20px + 10%)) max-content",
       "40px 2em",
@@ -5838,7 +5841,6 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
       "mİnmax(20px, 100px)",
       "minmax(20px, 100px, 200px)",
       "maxmin(100px, 20px)",
-      "minmax(min-content, auto)",
       "minmax(min-content, minmax(30px, max-content))",
       "repeat(0, 20px)",
       "repeat(-3, 20px)",
