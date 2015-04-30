@@ -60,6 +60,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
 
 protected:
+  static const int32_t kAutoLine;
   typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::WritingMode WritingMode;
@@ -84,10 +85,36 @@ protected:
    */
   struct LineRange {
    LineRange(int32_t aStart, int32_t aEnd)
-      : mStart(aStart), mEnd(aEnd) {}
-    bool IsAuto() const { return mStart == 0; }
-    bool IsDefinite() const { return mStart != 0; }
-    uint32_t Extent() const { return mEnd - mStart; }
+     : mStart(aStart), mEnd(aEnd)
+    {
+#ifdef DEBUG
+      if (!IsAutoAuto()) {
+        if (IsAuto()) {
+          MOZ_ASSERT(mEnd >= 1 && mEnd <= nsStyleGridLine::kMaxLine,
+                     "invalid span");
+        } else {
+          MOZ_ASSERT(mStart >= 1 && mStart <= nsStyleGridLine::kMaxLine,
+                     "invalid start line");
+          MOZ_ASSERT(mEnd == kAutoLine ||
+                     (mEnd >= 1 && mEnd <= nsStyleGridLine::kMaxLine),
+                     "invalid end line");
+        }
+      }
+#endif
+    }
+    bool IsAutoAuto() const { return mStart == kAutoLine && mEnd == kAutoLine; }
+    bool IsAuto() const { return mStart == kAutoLine; }
+    bool IsDefinite() const { return mStart != kAutoLine; }
+    uint32_t Extent() const
+    {
+      MOZ_ASSERT(mEnd != kAutoLine, "Extent is undefined for abs.pos. 'auto'");
+      if (IsAuto()) {
+        MOZ_ASSERT(mEnd >= 1 && mEnd < nsStyleGridLine::kMaxLine,
+                   "invalid span");
+        return mEnd;
+      }
+      return mEnd - mStart;
+    }
     /**
      * Resolve this auto range to start at aStart, making it definite.
      * Precondition: this range IsAuto()
@@ -96,7 +123,6 @@ protected:
     {
       MOZ_ASSERT(IsAuto(), "Why call me?");
       MOZ_ASSERT(aStart > 0, "expected a 1-based line number");
-      MOZ_ASSERT(int32_t(Extent()) == mEnd, "'auto' representation changed?");
       mStart = aStart;
       mEnd += aStart;
     }
@@ -121,7 +147,7 @@ protected:
                                       nscoord aGridOrigin,
                                       nscoord* aPos, nscoord* aLength) const;
 
-    int32_t mStart;  // the start line, or zero for 'auto'
+    int32_t mStart;  // the start line, or kAutoLine for 'auto'
     int32_t mEnd;    // the end line, or the span length for 'auto'
   };
 
@@ -215,7 +241,7 @@ protected:
 
   /**
    * As above but for an abs.pos. child.  Any 'auto' lines will be represented
-   * by zero in the LineRange result.
+   * by kAutoLine in the LineRange result.
    * @param aGridEnd the last line in the (final) implicit grid
    */
   LineRange
@@ -294,7 +320,7 @@ protected:
   /**
    * Place an abs.pos. child and return its grid area.
    * @note the resulting area may still have 'auto' lines in one or both
-   * dimensions (represented as zero).
+   * dimensions (represented as kAutoLine).
    * @param aChild the abs.pos. grid item to place
    * @param aStyle the StylePosition() for the grid container
    */
