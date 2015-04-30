@@ -287,6 +287,13 @@ gAnim.addEventListener("beginEvent", handleOnBegin, false);
 gAnim.addEventListener("repeatEvent", handleOnRepeat, false);
 gAnim.addEventListener("endEvent", handleOnEnd, false);
 gCircle.addEventListener("beginEvent", parentHandler, false);
+
+var expectedEvents =
+  ["begin", "beginEvent", "repeat", "repeatEvent", "end", "endEvent", "SVGZoom", "zoom"];
+
+for (var i = 0; i < expectedEvents.length; ++i) {
+  is((new Event(expectedEvents[i])).type, expectedEvents[i], "Unexpected event type!");
+}
 ]]>
 </script>
 </pre>
