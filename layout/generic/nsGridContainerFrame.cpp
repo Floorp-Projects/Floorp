@@ -27,6 +27,8 @@
 using namespace mozilla;
 typedef nsGridContainerFrame::TrackSize TrackSize;
 const int32_t nsGridContainerFrame::kAutoLine = 12345;
+const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
+  uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine - 1);
 
 class nsGridContainerFrame::GridItemCSSOrderIterator
 {
