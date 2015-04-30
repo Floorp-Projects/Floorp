@@ -8,7 +8,7 @@
 #define mozilla_ipc_connectionorientedsocket_h
 
 #include <sys/socket.h>
-#include "nsError.h"
+#include "DataSocket.h"
 
 namespace mozilla {
 namespace ipc {
@@ -21,7 +21,7 @@ union sockaddr_any;
  * |ListenSocket| uses these classes to handle accepted sockets.
  */
 
-class ConnectionOrientedSocketIO
+class ConnectionOrientedSocketIO : public DataSocketIO
 {
 public:
   virtual nsresult Accept(int aFd,
@@ -32,7 +32,7 @@ protected:
   virtual ~ConnectionOrientedSocketIO();
 };
 
-class ConnectionOrientedSocket
+class ConnectionOrientedSocket : public DataSocket
 {
 public:
   virtual ConnectionOrientedSocketIO* GetIO() = 0;
