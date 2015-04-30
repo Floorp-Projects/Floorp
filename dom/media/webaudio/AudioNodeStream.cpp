@@ -95,13 +95,15 @@ void
 AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
                                         double aStreamTime)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex, MediaStream* aRelativeToStream,
             double aStreamTime)
       : ControlMessage(aStream), mStreamTime(aStreamTime),
-        mRelativeToStream(aRelativeToStream), mIndex(aIndex) {}
-    virtual void Run()
+        mRelativeToStream(aRelativeToStream), mIndex(aIndex)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->
           SetStreamTimeParameterImpl(mIndex, mRelativeToStream, mStreamTime);
@@ -127,11 +129,13 @@ AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelat
 void
 AudioNodeStream::SetDoubleParameter(uint32_t aIndex, double aValue)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex, double aValue)
-      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
-    virtual void Run()
+      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
           SetDoubleParameter(mIndex, mValue);
@@ -146,11 +150,13 @@ AudioNodeStream::SetDoubleParameter(uint32_t aIndex, double aValue)
 void
 AudioNodeStream::SetInt32Parameter(uint32_t aIndex, int32_t aValue)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex, int32_t aValue)
-      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
-    virtual void Run()
+      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
           SetInt32Parameter(mIndex, mValue);
@@ -166,15 +172,17 @@ void
 AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
                                       const AudioParamTimeline& aValue)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex,
             const AudioParamTimeline& aValue)
       : ControlMessage(aStream),
         mValue(aValue),
         mSampleRate(aStream->SampleRate()),
-        mIndex(aIndex) {}
-    virtual void Run()
+        mIndex(aIndex)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
           SetTimelineParameter(mIndex, mValue, mSampleRate);
@@ -189,11 +197,13 @@ AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
 void
 AudioNodeStream::SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aValue)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex, const ThreeDPoint& aValue)
-      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex) {}
-    virtual void Run()
+      : ControlMessage(aStream), mValue(aValue), mIndex(aIndex)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
           SetThreeDPointParameter(mIndex, mValue);
@@ -208,12 +218,14 @@ AudioNodeStream::SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aVa
 void
 AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& aBuffer)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream,
             already_AddRefed<ThreadSharedFloatArrayBufferList>& aBuffer)
-      : ControlMessage(aStream), mBuffer(aBuffer) {}
-    virtual void Run()
+      : ControlMessage(aStream), mBuffer(aBuffer)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
           SetBuffer(mBuffer.forget());
@@ -227,7 +239,8 @@ AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& 
 void
 AudioNodeStream::SetRawArrayData(nsTArray<float>& aData)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream,
             nsTArray<float>& aData)
@@ -235,7 +248,7 @@ AudioNodeStream::SetRawArrayData(nsTArray<float>& aData)
     {
       mData.SwapElements(aData);
     }
-    virtual void Run()
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->SetRawArrayData(mData);
     }
@@ -250,7 +263,8 @@ AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
                                             ChannelCountMode aChannelCountMode,
                                             ChannelInterpretation aChannelInterpretation)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream,
             uint32_t aNumberOfChannels,
@@ -261,7 +275,7 @@ AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
         mChannelCountMode(aChannelCountMode),
         mChannelInterpretation(aChannelInterpretation)
     {}
-    virtual void Run()
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->
         SetChannelMixingParametersImpl(mNumberOfChannels, mChannelCountMode,
@@ -280,11 +294,13 @@ AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
 void
 AudioNodeStream::SetPassThrough(bool aPassThrough)
 {
-  class Message : public ControlMessage {
+  class Message final : public ControlMessage
+  {
   public:
     Message(AudioNodeStream* aStream, bool aPassThrough)
-      : ControlMessage(aStream), mPassThrough(aPassThrough) {}
-    virtual void Run()
+      : ControlMessage(aStream), mPassThrough(aPassThrough)
+    {}
+    virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->mPassThrough = mPassThrough;
     }

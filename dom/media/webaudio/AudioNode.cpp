@@ -325,7 +325,8 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
   // ADDREF message to this (main) thread.  Wait for a round trip before
   // releasing nodes, to give engines receiving sound now time to keep their
   // nodes alive.
-  class RunnableRelease : public nsRunnable {
+  class RunnableRelease final : public nsRunnable
+  {
   public:
     explicit RunnableRelease(already_AddRefed<AudioNode> aNode)
       : mNode(aNode) {}

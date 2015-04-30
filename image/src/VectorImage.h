@@ -34,9 +34,6 @@ public:
   // (no public constructor - use ImageFactory)
 
   // Methods inherited from Image
-  nsresult Init(const char* aMimeType,
-                uint32_t aFlags) override;
-
   virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf)
     const override;
   virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
@@ -72,8 +69,7 @@ public:
   void OnSVGDocumentError();
 
 protected:
-  explicit VectorImage(ProgressTracker* aProgressTracker = nullptr,
-                       ImageURL* aURI = nullptr);
+  explicit VectorImage(ImageURL* aURI = nullptr);
   virtual ~VectorImage();
 
   virtual nsresult StartAnimation() override;
@@ -84,6 +80,8 @@ protected:
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
 private:
+  nsresult Init(const char* aMimeType, uint32_t aFlags);
+
   /**
    * In catastrophic circumstances like a GPU driver crash, we may lose our
    * surfaces even if they're locked. RecoverFromLossOfSurfaces discards all
@@ -111,9 +109,6 @@ private:
                                           // (Only set after mIsFullyLoaded.)
   bool           mHasPendingInvalidation; // Invalidate observers next refresh
                                           // driver tick.
-
-  // Initializes ProgressTracker and resets it on RasterImage destruction.
-  nsAutoPtr<ProgressTrackerInit> mProgressTrackerInit;
 
   friend class ImageFactory;
 };

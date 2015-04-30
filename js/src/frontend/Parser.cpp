@@ -4804,7 +4804,6 @@ Parser<FullParseHandler>::forStatement()
          * rhs of 'in'.
          */
         if (headKind == PNK_FOROF) {
-            forStmt.type = STMT_FOR_OF_LOOP;
             forStmt.type = (headKind == PNK_FOROF) ? STMT_FOR_OF_LOOP : STMT_FOR_IN_LOOP;
             if (isForEach) {
                 report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);

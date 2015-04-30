@@ -16,9 +16,9 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS_INHERITED0(AnalyserNode, AudioNode)
 
-class AnalyserNodeEngine : public AudioNodeEngine
+class AnalyserNodeEngine final : public AudioNodeEngine
 {
-  class TransferBuffer : public nsRunnable
+  class TransferBuffer final : public nsRunnable
   {
   public:
     TransferBuffer(AudioNodeStream* aStream,

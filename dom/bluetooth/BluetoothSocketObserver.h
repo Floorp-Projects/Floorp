@@ -40,8 +40,15 @@ public:
     * changes from CONNECTED/LISTENING to DISCONNECTED.
     */
   virtual void OnSocketDisconnect(BluetoothSocket* aSocket) = 0;
-
 };
+
+#define BT_DECL_SOCKET_OBSERVER                                             \
+public:                                                                     \
+  virtual void ReceiveSocketData(BluetoothSocket* aSocket,                  \
+    nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aMessage) override;          \
+  virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) override;   \
+  virtual void OnSocketConnectError(BluetoothSocket* aSocket) override;     \
+  virtual void OnSocketDisconnect(BluetoothSocket* aSocket) override;
 
 END_BLUETOOTH_NAMESPACE
 

@@ -14,11 +14,6 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
-using namespace mozilla::tasktracer;
-#endif
-
 namespace mozilla {
 namespace ipc {
 
@@ -311,6 +306,58 @@ private:
 };
 
 //
+// SocketIOBase
+//
+
+/**
+ * |SocketIOBase| is a base class for Socket I/O classes that
+ * perform operations on the I/O thread.
+ */
+class SocketIOBase
+{
+public:
+  virtual ~SocketIOBase();
+
+  /**
+   * Implemented by socket I/O classes to return the current instance of
+   * |SocketBase|.
+   *
+   * @return The current instance of |SocketBase|
+   */
+  virtual SocketBase* GetSocketBase() = 0;
+
+  /**
+   * Implemented by socket I/O classes to signal that the socket I/O class has
+   * been shut down.
+   *
+   * @return True if the socket I/O class has been shut down, false otherwise.
+   */
+  virtual bool IsShutdownOnIOThread() const = 0;
+
+  /**
+   * Implemented by socket I/O classes to signal that socket class has
+   * been shut down.
+   *
+   * @return True if the socket class has been shut down, false otherwise.
+   */
+  virtual bool IsShutdownOnMainThread() const = 0;
+
+  /**
+   * Signals to the socket I/O classes that it has been shut down.
+   */
+  virtual void ShutdownOnIOThread() = 0;
+
+  /**
+   * Signals to the socket I/O classes that the socket class has been
+   * shut down.
+   */
+  virtual void ShutdownOnMainThread() = 0;
+
+protected:
+  SocketIOBase();
+};
+
+//
 // Socket I/O runnables
 //
 
@@ -340,11 +387,11 @@ private:
   T* mIO;
 };
 
-/* |SocketIOEventRunnable| reports the connection state on the
- * I/O thrad back to the main thread.
+/**
+ * |SocketIOEventRunnable| reports the connection state on the
+ * I/O thread back to the main thread.
  */
-template <typename T>
-class SocketIOEventRunnable final : public SocketIORunnable<T>
+class SocketIOEventRunnable final : public SocketIORunnable<SocketIOBase>
 {
 public:
   enum SocketEvent {
@@ -353,108 +400,39 @@ public:
     DISCONNECT
   };
 
-  SocketIOEventRunnable(T* aIO, SocketEvent e)
-  : SocketIORunnable<T>(aIO)
-  , mEvent(e)
-  { }
+  SocketIOEventRunnable(SocketIOBase* aIO, SocketEvent aEvent);
 
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    T* io = SocketIORunnable<T>::GetIO();
-
-    if (io->IsShutdownOnMainThread()) {
-      NS_WARNING("I/O consumer has already been closed!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    SocketBase* base = io->GetSocketBase();
-    MOZ_ASSERT(base);
-
-    if (mEvent == CONNECT_SUCCESS) {
-      base->NotifySuccess();
-    } else if (mEvent == CONNECT_ERROR) {
-      base->NotifyError();
-    } else if (mEvent == DISCONNECT) {
-      base->NotifyDisconnect();
-    }
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 
 private:
   SocketEvent mEvent;
 };
 
-template <typename T>
-class SocketIORequestClosingRunnable final : public SocketIORunnable<T>
+/**
+ * |SocketIORequestClosingRunnable| closes an instance of |SocketBase|
+ * to the main thread.
+ */
+class SocketIORequestClosingRunnable final
+  : public SocketIORunnable<SocketIOBase>
 {
 public:
-  SocketIORequestClosingRunnable(T* aImpl)
-  : SocketIORunnable<T>(aImpl)
-  { }
+  SocketIORequestClosingRunnable(SocketIOBase* aIO);
 
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    T* io = SocketIORunnable<T>::GetIO();
-
-    if (io->IsShutdownOnMainThread()) {
-      NS_WARNING("CloseSocket has already been called!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    SocketBase* base = io->GetSocketBase();
-    MOZ_ASSERT(base);
-
-    base->CloseSocket();
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 };
 
-/* |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
+/**
+ * |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
  */
-template<class T>
 class SocketIODeleteInstanceRunnable final : public nsRunnable
 {
 public:
-  SocketIODeleteInstanceRunnable(T* aInstance)
-  : mInstance(aInstance)
-  { }
+  SocketIODeleteInstanceRunnable(SocketIOBase* aIO);
 
-  NS_IMETHOD Run() override
-  {
-    mInstance = nullptr; // delete instance
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run() override;
 
 private:
-  nsAutoPtr<T> mInstance;
-};
-
-//
-// SocketIOBase
-//
-
-/**
- * |SocketIOBase| is a base class for Socket I/O classes that
- * perform operations on the I/O thread.
- */
-class SocketIOBase
-{
-public:
-  virtual ~SocketIOBase();
-
-protected:
-  SocketIOBase();
+  nsAutoPtr<SocketIOBase> mIO;
 };
 
 //
@@ -488,7 +466,7 @@ public:
 
 protected:
   SocketIOTask(Tio* aIO)
-  : mIO(aIO)
+    : mIO(aIO)
   {
     MOZ_ASSERT(mIO);
   }
@@ -497,34 +475,16 @@ private:
   Tio* mIO;
 };
 
-/* |SocketIOShutdownTask| signals shutdown to the Socket I/O object on
+/**
+ * |SocketIOShutdownTask| signals shutdown to the socket I/O class on
  * the I/O thread and sends it to the main thread for destruction.
  */
-template<typename Tio>
-class SocketIOShutdownTask final : public SocketIOTask<Tio>
+class SocketIOShutdownTask final : public SocketIOTask<SocketIOBase>
 {
 public:
-  SocketIOShutdownTask(Tio* aIO)
-  : SocketIOTask<Tio>(aIO)
-  { }
+  SocketIOShutdownTask(SocketIOBase* aIO);
 
-  void Run() override
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    Tio* io = SocketIOTask<Tio>::GetIO();
-
-    // At this point, there should be no new events on the I/O thread
-    // after this one with the possible exception of an accept task,
-    // which ShutdownOnIOThread will cancel for us. We are now fully
-    // shut down, so we can send a message to the main thread to delete
-    // |io| safely knowing that it's not reference any longer.
-    io->ShutdownOnIOThread();
-
-    nsRefPtr<nsRunnable> r = new SocketIODeleteInstanceRunnable<Tio>(io);
-    nsresult rv = NS_DispatchToMainThread(r);
-    NS_ENSURE_SUCCESS_VOID(rv);
-  }
+  void Run() override;
 };
 
 }

@@ -1400,14 +1400,12 @@ BluetoothOppManager::ReplyError(uint8_t aError)
 void
 BluetoothOppManager::SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize)
 {
-  SetObexPacketInfo(aData, aOpcode, aSize);
-
   if (!mIsServer) {
     mLastCommand = aOpcode;
   }
 
-  UnixSocketRawData* s = new UnixSocketRawData(aData, aSize);
-  mSocket->SendSocketData(s);
+  SetObexPacketInfo(aData, aOpcode, aSize);
+  mSocket->SendSocketData(new UnixSocketRawData(aData, aSize));
 }
 
 void

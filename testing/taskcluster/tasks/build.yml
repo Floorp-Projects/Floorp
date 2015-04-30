@@ -32,8 +32,8 @@ task:
   payload:
     image: '{{#docker_image}}builder{{/docker_image}}'
 
-    # One hour is a good value for most builds
-    maxRunTime: 3600
+    # Two hours is long but covers edge cases (and matches bb based infra)
+    maxRunTime: 7200
 
     cache:
       tc-vcs: '/home/worker/.tc-vcs'

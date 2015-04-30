@@ -85,74 +85,9 @@ public:
   void EnqueueData(UnixSocketIOBuffer* aBuffer);
   bool HasPendingData() const;
 
-  template <typename T>
-  ssize_t ReceiveData(int aFd, T* aIO)
-  {
-    MOZ_ASSERT(aFd >= 0);
-    MOZ_ASSERT(aIO);
+  ssize_t ReceiveData(int aFd);
 
-    UnixSocketIOBuffer* incoming;
-    nsresult rv = QueryReceiveBuffer(&incoming);
-    if (NS_FAILED(rv)) {
-      /* an error occured */
-      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-      NS_DispatchToMainThread(r);
-      return -1;
-    }
-
-    ssize_t res = incoming->Receive(aFd);
-    if (res < 0) {
-      /* an I/O error occured */
-      DiscardBuffer();
-      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-      NS_DispatchToMainThread(r);
-      return -1;
-    } else if (!res) {
-      /* EOF or peer shut down sending */
-      DiscardBuffer();
-      nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-      NS_DispatchToMainThread(r);
-      return 0;
-    }
-
-#ifdef MOZ_TASK_TRACER
-    // Make unix socket creation events to be the source events of TaskTracer,
-    // and originate the rest correlation tasks from here.
-    AutoSourceEvent taskTracerEvent(SourceEventType::Unixsocket);
-#endif
-
-    ConsumeBuffer();
-
-    return res;
-  }
-
-  template <typename T>
-  nsresult SendPendingData(int aFd, T* aIO)
-  {
-    MOZ_ASSERT(aFd >= 0);
-    MOZ_ASSERT(aIO);
-
-    while (HasPendingData()) {
-      UnixSocketIOBuffer* outgoing = mOutgoingQ.ElementAt(0);
-
-      ssize_t res = outgoing->Send(aFd);
-      if (res < 0) {
-        /* an I/O error occured */
-        nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
-        NS_DispatchToMainThread(r);
-        return NS_ERROR_FAILURE;
-      } else if (!res && outgoing->GetSize()) {
-        /* I/O is currently blocked; try again later */
-        return NS_OK;
-      }
-      if (!outgoing->GetSize()) {
-        mOutgoingQ.RemoveElementAt(0);
-        delete outgoing;
-      }
-    }
-
-    return NS_OK;
-  }
+  nsresult SendPendingData(int aFd);
 
 protected:
   DataSocketIO();

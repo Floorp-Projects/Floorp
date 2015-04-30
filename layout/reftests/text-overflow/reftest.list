@@ -24,3 +24,13 @@ skip-if(B2G||Mulet) HTTP(..) == single-value.html single-value-ref.html  # Initi
 skip-if(B2G||Mulet) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fuzzy(1,702) skip-if(Android||B2G||Mulet) fuzzy-if(asyncPanZoom&&!layersGPUAccelerated,102,12352) HTTP(..) == xulscroll.html xulscroll-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == combobox-zoom.html combobox-zoom-ref.html
+
+# The vertical-text pref setting can be removed after bug 1138384 lands
+pref(layout.css.vertical-text.enabled,true) == vertical-decorations-1.html vertical-decorations-1-ref.html
+pref(layout.css.vertical-text.enabled,true) == vertical-decorations-2.html vertical-decorations-2-ref.html
+pref(layout.css.vertical-text.enabled,true) != vertical-decorations-1.html vertical-decorations-1-2-notref.html
+pref(layout.css.vertical-text.enabled,true) != vertical-decorations-2.html vertical-decorations-1-2-notref.html
+pref(layout.css.vertical-text.enabled,true) == vertical-decorations-3.html vertical-decorations-3-ref.html
+pref(layout.css.vertical-text.enabled,true) == vertical-decorations-4.html vertical-decorations-4-ref.html
+pref(layout.css.vertical-text.enabled,true) != vertical-decorations-3.html vertical-decorations-3-4-notref.html
+pref(layout.css.vertical-text.enabled,true) != vertical-decorations-4.html vertical-decorations-3-4-notref.html

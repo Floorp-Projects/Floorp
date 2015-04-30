@@ -10,14 +10,13 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/ConnectionOrientedSocket.h"
-#include "mozilla/ipc/SocketBase.h"
-#include "nsError.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace ipc {
 
 class BluetoothDaemonConnectionIO;
+class BluetoothDaemonPDUConsumer;
 
 /*
  * |BlutoothDaemonPDU| represents a single PDU that is transfered from or to
@@ -55,6 +54,11 @@ public:
                      uint16_t aPayloadSize);
   BluetoothDaemonPDU(size_t aPayloadSize);
 
+  void SetConsumer(BluetoothDaemonPDUConsumer* aConsumer)
+  {
+    mConsumer = aConsumer;
+  }
+
   void SetUserData(void* aUserData)
   {
     mUserData = aUserData;
@@ -79,6 +83,7 @@ private:
   size_t GetPayloadSize() const;
   void OnError(const char* aFunction, int aErrno);
 
+  BluetoothDaemonPDUConsumer* mConsumer;
   void* mUserData;
   ScopedClose mReceivedFd;
 };
@@ -105,25 +110,28 @@ protected:
  * Bluetooth daemon. It offers connection establishment and sending
  * PDUs. PDU receiving is performed by |BluetoothDaemonPDUConsumer|.
  */
-class BluetoothDaemonConnection : public SocketBase
-                                , public ConnectionOrientedSocket
+class BluetoothDaemonConnection : public ConnectionOrientedSocket
 {
 public:
   BluetoothDaemonConnection();
   virtual ~BluetoothDaemonConnection();
 
-  // SocketBase
-  //
-
   nsresult ConnectSocket(BluetoothDaemonPDUConsumer* aConsumer);
-  void     CloseSocket();
 
-  nsresult Send(BluetoothDaemonPDU* aPDU);
-
-  // ConnectionOrientedSocket
+  // Methods for |ConnectionOrientedSocket|
   //
 
   virtual ConnectionOrientedSocketIO* GetIO() override;
+
+  // Methods for |DataSocket|
+  //
+
+  void SendSocketData(UnixSocketIOBuffer* aBuffer) override;
+
+  // Methods for |SocketBase|
+  //
+
+  void CloseSocket() override;
 
 protected:
 

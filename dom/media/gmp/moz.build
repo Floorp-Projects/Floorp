@@ -98,6 +98,7 @@ UNIFIED_SOURCES += [
     'GMPStorageParent.cpp',
     'GMPTimerChild.cpp',
     'GMPTimerParent.cpp',
+    'GMPUtils.cpp',
     'GMPVideoDecoderChild.cpp',
     'GMPVideoDecoderParent.cpp',
     'GMPVideoEncodedFrameImpl.cpp',

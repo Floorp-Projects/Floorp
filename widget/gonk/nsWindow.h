@@ -22,13 +22,14 @@
 #include "nsIIdleServiceInternal.h"
 #include "Units.h"
 
-extern nsIntRect gScreenBounds;
 class ANativeWindowBuffer;
 
 namespace widget {
 struct InputContext;
 struct InputContextAction;
 }
+
+class nsScreenGonk;
 
 class nsWindow : public nsBaseWidget
 {
@@ -154,6 +155,8 @@ private:
     // This is used by SynthesizeNativeTouchPoint to maintain state between
     // multiple synthesized points
     nsAutoPtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
+
+    nsRefPtr<nsScreenGonk> mScreen;
 };
 
 #endif /* nsWindow_h */

@@ -16,7 +16,7 @@ namespace dom {
 
 class AudioContext;
 
-class WaveShaperNode : public AudioNode
+class WaveShaperNode final : public AudioNode
 {
 public:
   explicit WaveShaperNode(AudioContext *aContext);

@@ -1704,6 +1704,11 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     MFR->RecordScript(MOZ_SCRIPT_MATHEMATICAL_NOTATION);
   }
 
+  // If the scale_stretchy_operators option is disabled, we are done.
+  if (!Preferences::GetBool("mathml.scale_stretchy_operators.enabled", true)) {
+    return NS_OK;
+  }
+  
   // stretchy character
   if (stretchy) {
     if (isVertical) {

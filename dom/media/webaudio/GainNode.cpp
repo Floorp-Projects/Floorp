@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(GainNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(GainNode, AudioNode)
 
-class GainNodeEngine : public AudioNodeEngine
+class GainNodeEngine final : public AudioNodeEngine
 {
 public:
   GainNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)

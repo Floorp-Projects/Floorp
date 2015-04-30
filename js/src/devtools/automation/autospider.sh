@@ -1,6 +1,9 @@
 #!/bin/bash
-set -e
+
+# Note that the -x will be temporarily cancelled and reinstated below, so if
+# you want to eliminate this, you'll need to eliminate it there too.
 set -x
+set -e
 
 DIR="$(dirname $0)"
 ABSDIR="$(cd $DIR; pwd)"
@@ -143,7 +146,9 @@ PARENT=$$
 sh -c "sleep $TIMEOUT; kill -INT $PARENT" <&- >&- 2>&- &
 KILLER=$!
 disown %1
+set +x
 trap "echo 'TEST-UNEXPECTED-FAIL | autospider.sh $TIMEOUT timeout | ignore later failures' >&2; exit 1" INT
+set -x
 
 # If we do *not* hit that timeout, kill off the spawned process on a regular exit.
 trap "kill $KILLER" EXIT

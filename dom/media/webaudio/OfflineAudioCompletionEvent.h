@@ -15,7 +15,7 @@ namespace dom {
 
 class AudioContext;
 
-class OfflineAudioCompletionEvent : public Event
+class OfflineAudioCompletionEvent final : public Event
 {
 public:
   OfflineAudioCompletionEvent(AudioContext* aOwner,

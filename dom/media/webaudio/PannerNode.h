@@ -21,8 +21,8 @@ namespace dom {
 class AudioContext;
 class AudioBufferSourceNode;
 
-class PannerNode : public AudioNode,
-                   public SupportsWeakPtr<PannerNode>
+class PannerNode final : public AudioNode,
+                         public SupportsWeakPtr<PannerNode>
 {
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PannerNode)

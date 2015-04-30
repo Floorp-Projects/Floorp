@@ -1,0 +1,26 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# largely a copy of dom/media/gmp-fake/moz.build
+
+FINAL_TARGET = 'dist/bin/gmp-fakeopenh264/1.0'
+SOURCES += [
+    '../gmp-plugin/gmp-fake.cpp',
+]
+
+SharedLibrary("fakeopenh264")
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'ole32',
+    ]
+
+USE_STATIC_LIBS = True
+NO_VISIBILITY_FLAGS = True
+# Don't use STL wrappers; this isn't Gecko code
+DISABLE_STL_WRAPPING = True
+
+FAIL_ON_WARNINGS = True

@@ -19,8 +19,9 @@ namespace ipc {
 // ListenSocketIO
 //
 
-class ListenSocketIO final : public UnixSocketWatcher
-                           , protected SocketIOBase
+class ListenSocketIO final
+  : public UnixSocketWatcher
+  , public SocketIOBase
 {
 public:
   class ListenTask;
@@ -31,18 +32,7 @@ public:
                  const nsACString& aAddress);
   ~ListenSocketIO();
 
-  void        GetSocketAddr(nsAString& aAddrStr) const;
-  DataSocket* GetDataSocket();
-  SocketBase* GetSocketBase();
-
-  // Shutdown state
-  //
-
-  bool IsShutdownOnMainThread() const;
-  void ShutdownOnMainThread();
-
-  bool IsShutdownOnIOThread() const;
-  void ShutdownOnIOThread();
+  void GetSocketAddr(nsAString& aAddrStr) const;
 
   // Task callback methods
   //
@@ -60,6 +50,17 @@ public:
   void OnConnected() override;
   void OnError(const char* aFunction, int aErrno) override;
   void OnListening() override;
+
+  // Methods for |SocketIOBase|
+  //
+
+  SocketBase* GetSocketBase() override;
+
+  bool IsShutdownOnMainThread() const override;
+  bool IsShutdownOnIOThread() const override;
+
+  void ShutdownOnMainThread() override;
+  void ShutdownOnIOThread() override;
 
 private:
   void FireSocketError();
@@ -133,53 +134,6 @@ ListenSocketIO::GetSocketAddr(nsAString& aAddrStr) const
     return;
   }
   mConnector->GetSocketAddr(mAddr, aAddrStr);
-}
-
-DataSocket*
-ListenSocketIO::GetDataSocket()
-{
-  MOZ_CRASH("Listen sockets cannot transfer data");
-
-  return nullptr;
-}
-
-SocketBase*
-ListenSocketIO::GetSocketBase()
-{
-  return mListenSocket.get();
-}
-
-bool
-ListenSocketIO::IsShutdownOnMainThread() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  return mListenSocket == nullptr;
-}
-
-void
-ListenSocketIO::ShutdownOnMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IsShutdownOnMainThread());
-
-  mListenSocket = nullptr;
-}
-
-bool
-ListenSocketIO::IsShutdownOnIOThread() const
-{
-  return mShuttingDownOnIOThread;
-}
-
-void
-ListenSocketIO::ShutdownOnIOThread()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!mShuttingDownOnIOThread);
-
-  Close(); // will also remove fd from I/O loop
-  mShuttingDownOnIOThread = true;
 }
 
 void
@@ -258,10 +212,8 @@ ListenSocketIO::OnListening()
   AddWatchers(READ_WATCHER, true);
 
   /* We signal a successful 'connection' to a local address for listening. */
-  nsRefPtr<nsRunnable> runnable =
-      new SocketIOEventRunnable<ListenSocketIO>(
-        this, SocketIOEventRunnable<ListenSocketIO>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(runnable);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 }
 
 void
@@ -282,11 +234,8 @@ ListenSocketIO::FireSocketError()
   Close();
 
   // Tell the main thread we've errored
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<ListenSocketIO>(
-      this, SocketIOEventRunnable<ListenSocketIO>::CONNECT_ERROR);
-
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_ERROR));
 }
 
 bool
@@ -322,6 +271,47 @@ ListenSocketIO::SetSocketFlags(int aFd)
   }
 
   return true;
+}
+
+// |SocketIOBase|
+
+SocketBase*
+ListenSocketIO::GetSocketBase()
+{
+  return mListenSocket.get();
+}
+
+bool
+ListenSocketIO::IsShutdownOnMainThread() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return mListenSocket == nullptr;
+}
+
+bool
+ListenSocketIO::IsShutdownOnIOThread() const
+{
+  return mShuttingDownOnIOThread;
+}
+
+void
+ListenSocketIO::ShutdownOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsShutdownOnMainThread());
+
+  mListenSocket = nullptr;
+}
+
+void
+ListenSocketIO::ShutdownOnIOThread()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!mShuttingDownOnIOThread);
+
+  Close(); // will also remove fd from I/O loop
+  mShuttingDownOnIOThread = true;
 }
 
 //
@@ -379,8 +369,7 @@ ListenSocket::Close()
   // will create a new implementation.
   mIO->ShutdownOnMainThread();
 
-  XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOShutdownTask<ListenSocketIO>(mIO));
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mIO));
 
   mIO = nullptr;
 
@@ -433,6 +422,14 @@ ListenSocket::GetSocketAddr(nsAString& aAddrStr)
     return;
   }
   mIO->GetSocketAddr(aAddrStr);
+}
+
+// |SocketBase|
+
+void
+ListenSocket::CloseSocket()
+{
+  Close();
 }
 
 } // namespace ipc

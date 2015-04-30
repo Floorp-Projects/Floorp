@@ -16,7 +16,7 @@ namespace dom {
 
 class AudioContext;
 
-class BiquadFilterNode : public AudioNode
+class BiquadFilterNode final : public AudioNode
 {
 public:
   explicit BiquadFilterNode(AudioContext* aContext);
