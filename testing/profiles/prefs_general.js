@@ -292,7 +292,6 @@ user_pref("browser.search.countryCode", "US");
 user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
 
 user_pref("media.eme.enabled", true);
-user_pref("media.eme.apiVisible", true);
 
 #if defined(XP_WIN)
 user_pref("media.decoder.heuristic.dormant.timeout", 0);
