@@ -387,6 +387,8 @@ function SetupEME(test, token, params)
 
 function SetupEMEPref(callback) {
   var prefs = [
+    [ "media.mediasource.enabled", true ],
+    [ "media.mediasource.whitelist", false ],
     [ "media.fragmented-mp4.exposed", true ],
   ];
 
