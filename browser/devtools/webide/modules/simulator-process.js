@@ -71,9 +71,11 @@ SimulatorProcess.prototype = {
     let environment;
     if (OS.indexOf("linux") > -1) {
       environment = ["TMPDIR=" + Services.dirsvc.get("TmpD", Ci.nsIFile).path];
-      if ("DISPLAY" in Environment) {
-        environment.push("DISPLAY=" + Environment.DISPLAY);
-      }
+      ["DISPLAY", "XAUTHORITY"].forEach(key => {
+        if (key in Environment) {
+          environment.push(key + "=" + Environment[key]);
+        }
+      });
     }
 
     // Spawn a B2G instance.
