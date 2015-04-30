@@ -538,6 +538,7 @@ void
 BluetoothA2dpManager::OnDisconnectError()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE_VOID(mController);
 
   mController->NotifyCompletion(NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
 }
@@ -582,7 +583,9 @@ BluetoothA2dpManager::Disconnect(BluetoothProfileController* aController)
 
   if (!sBtA2dpInterface) {
     BT_LOGR("sBluetoothA2dpInterface is null");
-    aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    if (aController) {
+      aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    }
     return;
   }
 
