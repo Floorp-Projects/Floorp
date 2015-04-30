@@ -39,11 +39,6 @@ const CONTENT_URL = "http://accounts.example.com/";
 Services.prefs.setCharPref("identity.fxaccounts.remote.profile.uri", PROFILE_SERVER_URL);
 Services.prefs.setCharPref("identity.fxaccounts.settings.uri", CONTENT_URL);
 
-
-function run_test() {
-  run_next_test();
-}
-
 /*
  * The FxAccountsClient communicates with the remote Firefox
  * Accounts auth server.  Mock the server calls, with a little
@@ -264,8 +259,6 @@ add_task(function* test_getCertificate() {
 
 // Sanity-check that our mocked client is working correctly
 add_test(function test_client_mock() {
-  do_test_pending();
-
   let fxa = new MockFxAccounts();
   let client = fxa.internal.fxAccountsClient;
   do_check_eq(client._verified, false);
@@ -275,7 +268,6 @@ add_test(function test_client_mock() {
   client.recoveryEmailStatus()
     .then(response => {
       do_check_eq(response.verified, false);
-      do_test_finished();
       run_next_test();
     });
 });
@@ -285,8 +277,6 @@ add_test(function test_client_mock() {
 // Polling should detect that the email is verified, and eventually
 // 'onverified' should be observed
 add_test(function test_verification_poll() {
-  do_test_pending();
-
   let fxa = new MockFxAccounts();
   let test_user = getTestUser("francine");
   let login_notification_received = false;
@@ -299,7 +289,6 @@ add_test(function test_verification_poll() {
       do_check_eq(user.verified, true);
       do_check_eq(user.email, test_user.email);
       do_check_true(login_notification_received);
-      do_test_finished();
       run_next_test();
     });
   });
@@ -326,8 +315,6 @@ add_test(function test_verification_poll() {
 // poll should time out.  No verifiedlogin event should be observed, and the
 // internal whenVerified promise should be rejected
 add_test(function test_polling_timeout() {
-  do_test_pending();
-
   // This test could be better - the onverified observer might fire on
   // somebody else's stack, and we're not making sure that we're not receiving
   // such a message. In other words, this tests either failure, or success, but
@@ -351,15 +338,13 @@ add_test(function test_polling_timeout() {
       },
       (fail) => {
         removeObserver();
-        do_test_finished();
-        run_next_test();
+        fxa.signOut().then(run_next_test);
       }
     );
   });
 });
 
 add_test(function test_getKeys() {
-  do_test_pending();
   let fxa = new MockFxAccounts();
   let user = getTestUser("eusebius");
 
@@ -384,7 +369,6 @@ add_test(function test_getKeys() {
           do_check_eq(user.kB, expandHex("66"));
           do_check_eq(user.keyFetchToken, undefined);
           do_check_eq(user.unwrapBKey, undefined);
-          do_test_finished();
           run_next_test();
         });
       });
@@ -394,8 +378,6 @@ add_test(function test_getKeys() {
 
 //  fetchAndUnwrapKeys with no keyFetchToken should trigger signOut
 add_test(function test_fetchAndUnwrapKeys_no_token() {
-  do_test_pending();
-
   let fxa = new MockFxAccounts();
   let user = getTestUser("lettuce.protheroe");
   delete user.keyFetchToken
@@ -403,7 +385,6 @@ add_test(function test_fetchAndUnwrapKeys_no_token() {
   makeObserver(ONLOGOUT_NOTIFICATION, function() {
     log.debug("test_fetchAndUnwrapKeys_no_token observed logout");
     fxa.internal.getUserAccountData().then(user => {
-      do_test_finished();
       run_next_test();
     });
   });
@@ -424,8 +405,6 @@ add_test(function test_fetchAndUnwrapKeys_no_token() {
 // signs in with a verified email.  Ensure that no sign-in events are triggered
 // on Alice's behalf.  In the end, Bob should be the signed-in user.
 add_test(function test_overlapping_signins() {
-  do_test_pending();
-
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   let bob = getTestUser("bob");
@@ -436,7 +415,6 @@ add_test(function test_overlapping_signins() {
     fxa.internal.getUserAccountData().then(user => {
       do_check_eq(user.email, bob.email);
       do_check_eq(user.verified, true);
-      do_test_finished();
       run_next_test();
     });
   });
@@ -614,7 +592,7 @@ add_test(function test_accountStatus() {
                  (result) => {
                    do_check_false(result);
                    fxa.internal.fxAccountsClient._deletedOnServer = false;
-                   run_next_test();
+                   fxa.signOut().then(run_next_test);
                  }
                );
             }
@@ -667,7 +645,6 @@ add_test(function test_resend_email() {
 });
 
 add_test(function test_sign_out() {
-  do_test_pending();
   let fxa = new MockFxAccounts();
   let remoteSignOutCalled = false;
   let client = fxa.internal.fxAccountsClient;
@@ -678,7 +655,6 @@ add_test(function test_sign_out() {
     fxa.internal.getUserAccountData().then(user => {
       do_check_eq(user, null);
       do_check_true(remoteSignOutCalled);
-      do_test_finished();
       run_next_test();
     });
   });
@@ -686,7 +662,6 @@ add_test(function test_sign_out() {
 });
 
 add_test(function test_sign_out_with_remote_error() {
-  do_test_pending();
   let fxa = new MockFxAccounts();
   let client = fxa.internal.fxAccountsClient;
   let remoteSignOutCalled = false;
@@ -698,7 +673,6 @@ add_test(function test_sign_out_with_remote_error() {
     fxa.internal.getUserAccountData().then(user => {
       do_check_eq(user, null);
       do_check_true(remoteSignOutCalled);
-      do_test_finished();
       run_next_test();
     });
   });
@@ -848,7 +822,7 @@ add_test(function test_getOAuthToken_invalid_param() {
   fxa.getOAuthToken()
     .then(null, err => {
        do_check_eq(err.message, "INVALID_PARAMETER");
-       run_next_test();
+       fxa.signOut().then(run_next_test);
     });
 });
 
@@ -858,7 +832,7 @@ add_test(function test_getOAuthToken_invalid_scope_array() {
   fxa.getOAuthToken({scope: []})
     .then(null, err => {
        do_check_eq(err.message, "INVALID_PARAMETER");
-       run_next_test();
+       fxa.signOut().then(run_next_test);
     });
 });
 
@@ -872,7 +846,7 @@ add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
        do_check_eq(err.message, "INVALID_PARAMETER");
        // revert the pref
        Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
-       run_next_test();
+       fxa.signOut().then(run_next_test);
     });
 });
 
@@ -886,7 +860,7 @@ add_test(function test_getOAuthToken_no_account() {
   fxa.getOAuthToken({ scope: "profile" })
     .then(null, err => {
        do_check_eq(err.message, "NO_ACCOUNT");
-       run_next_test();
+       fxa.signOut().then(run_next_test);
     });
 });
 
@@ -898,7 +872,7 @@ add_test(function test_getOAuthToken_unverified() {
     fxa.getOAuthToken({ scope: "profile" })
       .then(null, err => {
          do_check_eq(err.message, "UNVERIFIED_ACCOUNT");
-         run_next_test();
+         fxa.signOut().then(run_next_test);
       });
   });
 });
@@ -1071,7 +1045,7 @@ add_test(function test_getSignedInUserProfile_error_uses_account_data() {
     fxa.getSignedInUserProfile()
       .catch(error => {
          do_check_eq(error.message, "UNKNOWN_ERROR");
-         run_next_test();
+         fxa.signOut().then(run_next_test);
       });
   });
 
@@ -1087,7 +1061,7 @@ add_test(function test_getSignedInUserProfile_unverified_account() {
     fxa.getSignedInUserProfile()
       .catch(error => {
          do_check_eq(error.message, "UNVERIFIED_ACCOUNT");
-         run_next_test();
+         fxa.signOut().then(run_next_test);
       });
   });
 
@@ -1103,7 +1077,7 @@ add_test(function test_getSignedInUserProfile_no_account_data() {
   fxa.getSignedInUserProfile()
     .catch(error => {
        do_check_eq(error.message, "NO_ACCOUNT");
-       run_next_test();
+       fxa.signOut().then(run_next_test);
     });
 
 });
