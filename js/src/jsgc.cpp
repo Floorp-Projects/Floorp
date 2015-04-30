@@ -7101,7 +7101,7 @@ JS::IncrementalReferenceBarrier(GCCellPtr thing)
     if (!thing)
         return;
 
-    if (thing.isString() && StringIsPermanentAtom(thing.toString()))
+    if (thing.isString() && thing.toString()->isPermanentAtom())
         return;
 
 #ifdef DEBUG

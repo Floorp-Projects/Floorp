@@ -232,12 +232,6 @@ Zone::createJitZone(JSContext* cx)
     return jitZone_;
 }
 
-JS::Zone*
-js::ZoneOfObjectFromAnyThread(const JSObject& obj)
-{
-    return obj.zoneFromAnyThread();
-}
-
 bool
 Zone::hasMarkedCompartments()
 {
