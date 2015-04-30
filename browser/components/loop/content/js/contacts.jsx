@@ -222,7 +222,7 @@ loop.contacts = (function(_, mozL10n) {
                               "disabled": !this.props.canEdit })}
               onClick={this.onItemClick} data-action="remove">
             <i className="icon icon-remove" />
-            {mozL10n.get("remove_contact_menu_button")}
+            {mozL10n.get("remove_contact_menu_button2")}
           </li>
         </ul>
       );
