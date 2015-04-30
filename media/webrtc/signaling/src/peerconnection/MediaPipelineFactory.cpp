@@ -365,6 +365,20 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<MediaSessionConduit> conduit;
+  if (aTrack.GetMediaType() == SdpMediaSection::kAudio) {
+    rv = GetOrCreateAudioConduit(aTrackPair, aTrack, &conduit);
+    if (NS_FAILED(rv))
+      return rv;
+  } else if (aTrack.GetMediaType() == SdpMediaSection::kVideo) {
+    rv = GetOrCreateVideoConduit(aTrackPair, aTrack, &conduit);
+    if (NS_FAILED(rv))
+      return rv;
+  } else {
+    // We've created the TransportFlow, nothing else to do here.
+    return NS_OK;
+  }
+
   RefPtr<MediaPipeline> pipeline =
     stream->GetPipelineByTrackId_m(aTrack.GetTrackId());
 
@@ -390,20 +404,6 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
                 << " m-line index=" << aTrackPair.mLevel
                 << " type=" << aTrack.GetMediaType()
                 << " direction=" << aTrack.GetDirection());
-
-  RefPtr<MediaSessionConduit> conduit;
-  if (aTrack.GetMediaType() == SdpMediaSection::kAudio) {
-    rv = GetOrCreateAudioConduit(aTrackPair, aTrack, &conduit);
-    if (NS_FAILED(rv))
-      return rv;
-  } else if (aTrack.GetMediaType() == SdpMediaSection::kVideo) {
-    rv = GetOrCreateVideoConduit(aTrackPair, aTrack, &conduit);
-    if (NS_FAILED(rv))
-      return rv;
-  } else {
-    // We've created the TransportFlow, nothing else to do here.
-    return NS_OK;
-  }
 
   if (receiving) {
     rv = CreateMediaPipelineReceiving(aTrackPair, aTrack,
@@ -619,6 +619,15 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
       MOZ_MTLOG(ML_ERROR, "ConfigureRecvMediaCodecs failed: " << error);
       return NS_ERROR_FAILURE;
     }
+
+    if (!aTrackPair.mSending) {
+      // No send track, but we still need to configure an SSRC for receiver
+      // reports.
+      if (!conduit->SetLocalSSRC(aTrackPair.mRecvonlySsrc)) {
+        MOZ_MTLOG(ML_ERROR, "SetLocalSSRC failed");
+        return NS_ERROR_FAILURE;
+      }
+    }
   } else {
     // For now we only expect to have one ssrc per local track.
     auto ssrcs = aTrack.GetSsrcs();
@@ -739,6 +748,15 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
     if (error) {
       MOZ_MTLOG(ML_ERROR, "ConfigureRecvMediaCodecs failed: " << error);
       return NS_ERROR_FAILURE;
+    }
+
+    if (!aTrackPair.mSending) {
+      // No send track, but we still need to configure an SSRC for receiver
+      // reports.
+      if (!conduit->SetLocalSSRC(aTrackPair.mRecvonlySsrc)) {
+        MOZ_MTLOG(ML_ERROR, "SetLocalSSRC failed");
+        return NS_ERROR_FAILURE;
+      }
     }
   } else {
     // For now we only expect to have one ssrc per local track.
