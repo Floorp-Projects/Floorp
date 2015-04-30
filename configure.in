@@ -367,12 +367,6 @@ dnl ========================================================
 dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
 AR_FLAGS='crs $@'
 
-if test -z "$COMPILE_ENVIRONMENT"; then
-if test "$target" != "$host"; then
-    MOZ_CROSS_COMPILER
-fi
-fi # !COMPILE_ENVIRONMENT
-
 if test "$COMPILE_ENVIRONMENT"; then
 
 if test "$target" != "$host"; then
@@ -1971,7 +1965,7 @@ case "$target" in
             TARGET_COMPILER_ABI="ibmc"
             CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
             CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
-        fi # COMPILE_ENVIRONMENT
+        fi
     fi
     case "${target_os}" in
     aix4.1*)
@@ -1980,7 +1974,7 @@ case "$target" in
     esac
     if test "$COMPILE_ENVIRONMENT"; then
         MOZ_CHECK_HEADERS(sys/inttypes.h)
-    fi # COMPILE_ENVIRONMENT
+    fi
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     ;;
 
@@ -2107,9 +2101,7 @@ ia64*-hpux*)
         MOZ_SYNTH_PICO=1
     else
         _PLATFORM_DEFAULT_TOOLKIT=cairo-android
-        if test "$COMPILE_ENVIRONMENT"; then
-            MOZ_LINKER=1
-        fi
+        MOZ_LINKER=1
     fi
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
@@ -2595,7 +2587,7 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 else
     MOZ_COMPILER_OPTS
-fi # COMPILE_ENVIRONMENT
+fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -3927,9 +3919,7 @@ case "${target}" in
         NSS_DISABLE_DBM=1
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
-        if test "$COMPILE_ENVIRONMENT"; then
-            MOZ_MEMORY=1
-        fi
+        MOZ_MEMORY=1
         MOZ_RAW=1
         ;;
 
@@ -5461,7 +5451,7 @@ if test -n "$MOZ_VPX" -a -z "$MOZ_NATIVE_LIBVPX"; then
         VPX_ASFLAGS="-f win32 -rnasm -pnasm -DPIC"
         VPX_X86_ASM=1
         dnl The encoder needs obj_int_extract to get asm offsets.
-      fi # COMPILE_ENVIRONMENT and others
+      fi
     ;;
     *:arm*)
       if test -n "$GNU_AS" ; then
@@ -5491,7 +5481,7 @@ if test -n "$MOZ_VPX" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     if test -n "$COMPILE_ENVIRONMENT" -a -n "$VPX_X86_ASM" -a -z "$VPX_AS"; then
       AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
-    fi # COMPILE_ENVIRONMENT and others
+    fi
 
     if test -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
       dnl We prefer to get asm offsets using inline assembler, which the above
@@ -7349,7 +7339,7 @@ if test -n "$COMPILE_ENVIRONMENT" -a -n "$USE_ELF_HACK"; then
             USE_ELF_HACK=
         fi
     fi
-fi # COMPILE_ENVIRONMENT and others.
+fi
 
 dnl ========================================================
 dnl = libstdc++ compatibility hacks
