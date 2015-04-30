@@ -61,6 +61,8 @@ public:
 
 protected:
   static const int32_t kAutoLine;
+  // The maximum line number, in the zero-based translated grid.
+  static const uint32_t kTranslatedMaxLine;
   typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::WritingMode WritingMode;
@@ -125,6 +127,13 @@ protected:
       MOZ_ASSERT(aStart >= 0, "expected a zero-based line number");
       mStart = aStart;
       mEnd += aStart;
+      // Clamping per http://dev.w3.org/csswg/css-grid/#overlarge-grids :
+      if (MOZ_UNLIKELY(mStart >= kTranslatedMaxLine)) {
+        mEnd = kTranslatedMaxLine;
+        mStart = mEnd - 1;
+      } else if (MOZ_UNLIKELY(mEnd > kTranslatedMaxLine)) {
+        mEnd = kTranslatedMaxLine;
+      }
     }
     /**
      * Return the contribution of this line range for step 2 in
@@ -355,10 +364,8 @@ protected:
   {
     mGridColEnd = std::max(mGridColEnd, aArea.mCols.HypotheticalEnd());
     mGridRowEnd = std::max(mGridRowEnd, aArea.mRows.HypotheticalEnd());
-    MOZ_ASSERT(mGridColEnd <= uint32_t(nsStyleGridLine::kMaxLine -
-                                       nsStyleGridLine::kMinLine - 1) &&
-               mGridRowEnd <= uint32_t(nsStyleGridLine::kMaxLine -
-                                       nsStyleGridLine::kMinLine - 1));
+    MOZ_ASSERT(mGridColEnd <= kTranslatedMaxLine &&
+               mGridRowEnd <= kTranslatedMaxLine);
   }
 
   /**
