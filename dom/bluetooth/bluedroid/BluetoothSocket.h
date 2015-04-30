@@ -16,7 +16,7 @@ class BluetoothSocketObserver;
 class BluetoothSocketResultHandler;
 class DroidSocketImpl;
 
-class BluetoothSocket : public mozilla::ipc::DataSocket
+class BluetoothSocket final : public mozilla::ipc::DataSocket
 {
 public:
   BluetoothSocket(BluetoothSocketObserver* aObserver,
@@ -32,8 +32,6 @@ public:
                     const BluetoothUuid& aServiceUuid,
                     int aChannel);
 
-  void CloseSocket() override;
-
   /**
    * Method to be called whenever data is received. This is only called on the
    * main thread.
@@ -41,12 +39,6 @@ public:
    * @param aBuffer Data received from the socket.
    */
   void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
-
-  void SendSocketData(mozilla::ipc::UnixSocketIOBuffer* aBuffer) override;
-
-  virtual void OnConnectSuccess() override;
-  virtual void OnConnectError() override;
-  virtual void OnDisconnect() override;
 
   inline void GetAddress(nsAString& aDeviceAddress)
   {
@@ -62,6 +54,20 @@ public:
   {
     mCurrentRes = aRes;
   }
+
+  // Methods for |DataSocket|
+  //
+
+  void SendSocketData(mozilla::ipc::UnixSocketIOBuffer* aBuffer) override;
+
+  // Methods for |SocketBase|
+  //
+
+  void CloseSocket() override;
+
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
   BluetoothSocketObserver* mObserver;
