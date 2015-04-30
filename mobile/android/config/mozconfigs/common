@@ -4,6 +4,7 @@
 
 # This file is included at the top of all native android mozconfigs
 
+MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
 # Set the most aggressive settings for szip. Not the default because it's
