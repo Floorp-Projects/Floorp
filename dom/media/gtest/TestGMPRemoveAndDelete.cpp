@@ -275,6 +275,7 @@ GMPRemoveTest::gmp_GetVideoDecoder(nsCString aNodeId,
 {
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  tags.AppendElement(NS_LITERAL_CSTRING("fake"));
 
   class Callback : public GetGMPVideoDecoderCallback
   {
