@@ -12,7 +12,7 @@
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
 #include "mozilla/dom/DocumentTimeline.h" // for DocumentTimeline
-#include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadonly
+#include "mozilla/dom/KeyframeEffect.h" // for KeyframeEffectReadOnly
 #include "mozilla/dom/Promise.h" // for Promise
 #include "nsCSSProperty.h" // for nsCSSProperty
 
@@ -86,8 +86,8 @@ public:
 
   // Animation interface methods
 
-  KeyframeEffectReadonly* GetEffect() const { return mEffect; }
-  void SetEffect(KeyframeEffectReadonly* aEffect);
+  KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
+  void SetEffect(KeyframeEffectReadOnly* aEffect);
   DocumentTimeline* Timeline() const { return mTimeline; }
   Nullable<TimeDuration> GetStartTime() const { return mStartTime; }
   void SetStartTime(const Nullable<TimeDuration>& aNewStartTime);
@@ -318,7 +318,7 @@ protected:
   AnimationCollection* GetCollection() const;
 
   nsRefPtr<DocumentTimeline> mTimeline;
-  nsRefPtr<KeyframeEffectReadonly> mEffect;
+  nsRefPtr<KeyframeEffectReadOnly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Animation timescale

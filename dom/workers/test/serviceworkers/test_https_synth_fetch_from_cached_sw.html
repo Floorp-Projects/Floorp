@@ -1,0 +1,68 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1156847 - test fetch event generating a synthesized response in HTTPS origins from a cached SW</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" tyle="display: none">
+<iframe></iframe>
+</div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  var iframe;
+  function runTest() {
+    iframe = document.querySelector("iframe");
+    iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/register.html";
+    var ios;
+    window.onmessage = function(e) {
+      if (e.data.status == "ok") {
+        ok(e.data.result, e.data.message);
+      } else if (e.data.status == "registrationdone") {
+        ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                           .getService(SpecialPowers.Ci.nsIIOService);
+        ios.offline = true;
+
+        // In order to load synth.html from a cached service worker, we first
+        // remove the existing window that is keeping the service worker alive,
+        // and do a GC to ensure that the SW is destroyed.  This way, when we
+        // load synth.html for the second time, we will first recreate the
+        // service worker from the cache.  This is intended to test that we
+        // properly store and retrieve the security info from the cache.
+        iframe.parentNode.removeChild(iframe);
+        iframe = null;
+        SpecialPowers.exactGC(window, function() {
+          iframe = document.createElement("iframe");
+          iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth.html";
+          document.body.appendChild(iframe);
+        });
+      } else if (e.data.status == "done-synth") {
+        ios.offline = false;
+        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/unregister.html";
+      } else if (e.data.status == "unregistrationdone") {
+        window.onmessage = null;
+        ok(true, "Test finished successfully");
+        SimpleTest.finish();
+      }
+    };
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  onload = function() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.caches.enabled", true]
+    ]}, runTest);
+  };
+</script>
+</pre>
+</body>
+</html>

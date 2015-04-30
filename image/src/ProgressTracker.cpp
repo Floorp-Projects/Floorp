@@ -22,26 +22,6 @@ using mozilla::WeakPtr;
 namespace mozilla {
 namespace image {
 
-ProgressTrackerInit::ProgressTrackerInit(Image* aImage,
-                                         ProgressTracker* aTracker)
-{
-  MOZ_ASSERT(aImage);
-
-  if (aTracker) {
-    mTracker = aTracker;
-  } else {
-    mTracker = new ProgressTracker();
-  }
-  mTracker->SetImage(aImage);
-  aImage->SetProgressTracker(mTracker);
-  MOZ_ASSERT(mTracker);
-}
-
-ProgressTrackerInit::~ProgressTrackerInit()
-{
-  mTracker->ResetImage();
-}
-
 static void
 CheckProgressConsistency(Progress aProgress)
 {

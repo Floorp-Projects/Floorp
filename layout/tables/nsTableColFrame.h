@@ -10,13 +10,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTArray.h"
-
-enum nsTableColType {
-  eColContent            = 0, // there is real col content associated
-  eColAnonymousCol       = 1, // the result of a span on a col
-  eColAnonymousColGroup  = 2, // the result of a span on a col group
-  eColAnonymousCell      = 3  // the result of a cell alone
-};
+#include "nsTableColGroupFrame.h"
+#include "mozilla/WritingModes.h"
 
 class nsTableColFrame : public nsSplittableFrame {
 public:
@@ -37,6 +32,19 @@ public:
     */
   friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
                                               nsStyleContext*  aContext);
+
+  nsTableColGroupFrame* GetTableColGroupFrame() const
+  {
+    nsIFrame* parent = GetParent();
+    MOZ_ASSERT(parent && parent->GetType() == nsGkAtoms::tableColGroupFrame);
+    return static_cast<nsTableColGroupFrame*>(parent);
+  }
+
+  nsTableFrame* GetTableFrame() const
+  {
+    return GetTableColGroupFrame()->GetTableFrame();
+  }
+
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
@@ -70,6 +78,9 @@ public:
 #endif
 
   virtual nsSplittableType GetSplittableType() const override;
+
+  virtual mozilla::WritingMode GetWritingMode() const override
+    { return GetTableFrame()->GetWritingMode(); }
 
   /** return the number of the columns the col represents.  always >= 1 */
   int32_t GetSpan();

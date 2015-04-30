@@ -464,18 +464,22 @@
       </div>
 
       <div id="certificateErrorReportingPanel">
-        <p>&errorReporting.longDesc;</p>
-        <p>
-          <input type="checkbox" id="automaticallyReportInFuture" />
-          <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic;</label>
-        </p>
-        <a href="https://support.mozilla.org/kb/tls-error-reports" id="learnMoreLink" target="new">&errorReporting.learnMore;</a>
-        <span id="reportingState">
-          <button id="reportCertificateError">&errorReporting.report;</button>
-          <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
-          <span id="reportSendingMessage">&errorReporting.sending;</span>
-          <span id="reportSentMessage">&errorReporting.sent;</span>
-        </span>
+        <div id="certificateErrorReportingDescription">
+          <p>&errorReporting.longDesc;</p>
+          <p>
+            <input type="checkbox" id="automaticallyReportInFuture" />
+            <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic;</label>
+          </p>
+        </div>
+        <div id="errorStatePanel">
+          <a href="https://support.mozilla.org/kb/tls-error-reports" id="learnMoreLink" target="new">&errorReporting.learnMore;</a>
+          <span id="reportingState">
+            <button id="reportCertificateError">&errorReporting.report;</button>
+            <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
+            <span id="reportSendingMessage">&errorReporting.sending;</span>
+            <span id="reportSentMessage">&errorReporting.sent;</span>
+          </span>
+        </div>
       </div>
 
     </div>

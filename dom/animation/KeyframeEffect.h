@@ -15,7 +15,7 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/dom/AnimationEffectReadonly.h"
+#include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
@@ -185,15 +185,15 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
-class KeyframeEffectReadonly : public AnimationEffectReadonly
+class KeyframeEffectReadOnly : public AnimationEffectReadOnly
 {
 public:
-  KeyframeEffectReadonly(nsIDocument* aDocument,
+  KeyframeEffectReadOnly(nsIDocument* aDocument,
                          Element* aTarget,
                          nsCSSPseudoElements::Type aPseudoType,
                          const AnimationTiming &aTiming,
                          const nsSubstring& aName)
-    : AnimationEffectReadonly(aDocument)
+    : AnimationEffectReadOnly(aDocument)
     , mTarget(aTarget)
     , mTiming(aTiming)
     , mName(aName)
@@ -204,8 +204,8 @@ public:
   }
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadonly,
-                                                        AnimationEffectReadonly)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadOnly,
+                                                        AnimationEffectReadOnly)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -215,7 +215,7 @@ public:
     return nullptr;
   }
 
-  // KeyframeEffectReadonly interface
+  // KeyframeEffectReadOnly interface
   Element* GetTarget() const {
     // Currently we only implement Element.getAnimations() which only
     // returns animations targetting Elements so this should never
@@ -332,7 +332,7 @@ public:
                     nsCSSPropertySet& aSetProperties);
 
 protected:
-  virtual ~KeyframeEffectReadonly() { }
+  virtual ~KeyframeEffectReadOnly() { }
 
   nsCOMPtr<Element> mTarget;
   Nullable<TimeDuration> mParentTime;
