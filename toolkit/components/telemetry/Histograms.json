@@ -8000,5 +8000,39 @@
     "expires_in_version": "50",
     "kind": "count",
     "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit"
+  },
+  "READER_MODE_SERIALIZE_DOM_MS": {
+    "expires_in_version": "42",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 15,
+    "description": "Time (ms) to serialize a DOM to send to the reader worker"
+  },
+  "READER_MODE_WORKER_PARSE_MS": {
+    "expires_in_version": "42",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 30,
+    "description": "Time (ms) for the reader worker to parse a document"
+  },
+  "READER_MODE_DOWNLOAD_MS": {
+    "expires_in_version": "42",
+    "kind": "exponential",
+    "low": 50,
+    "high": "40000",
+    "n_buckets": 60,
+    "description": "Time (ms) to download a document to show in reader mode"
+  },
+  "READER_MODE_PARSE_RESULT" : {
+    "expires_in_version": "42",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "The result of trying to parse a document to show in reader view (0=Success, 1=Error too many elements, 2=Error in worker, 3=Error no article)"
+  },
+  "READER_MODE_DOWNLOAD_RESULT" : {
+    "expires_in_version": "42",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "The result of trying to download a document to show in reader view (0=Success, 1=Error XHR, 2=Error no document)"
   }
 }
