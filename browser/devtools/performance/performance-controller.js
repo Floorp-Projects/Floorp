@@ -284,11 +284,16 @@ let PerformanceController = {
    * when the front has started to record.
    */
   startRecording: Task.async(function *() {
+    // Store retro-mode here so we can easily list true/false
+    // values for reverting.
+    // TODO bug 1160313
+    let superMode = !this.getOption("retro-mode");
+
     let options = {
-      withMarkers: true,
-      withMemory: this.getOption("enable-memory"),
+      withMarkers: superMode ? true : false,
+      withMemory: superMode ? this.getOption("enable-memory") : false,
       withTicks: this.getOption("enable-framerate"),
-      withAllocations: this.getOption("enable-memory"),
+      withAllocations: superMode ? this.getOption("enable-memory") : false,
       allocationsSampleProbability: this.getPref("memory-sample-probability"),
       allocationsMaxLogLength: this.getPref("memory-max-log-length"),
       bufferSize: this.getPref("profiler-buffer-size"),
