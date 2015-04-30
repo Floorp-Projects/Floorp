@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 SET ISO8859-1
 TRY esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'
 NOSUGGEST !
@@ -110,13 +114,14 @@ SFX B   e     able       [^aeiou]e
 SFX L Y 1
 SFX L   0     ment       .
 
-REP 88
+REP 90
 REP a ei
 REP ei a
 REP a ey
 REP ey a
 REP ai ie
 REP ie ai
+REP alot a_lot
 REP are air
 REP are ear
 REP are eir
@@ -199,3 +204,4 @@ REP ss z
 REP shun tion
 REP shun sion
 REP shun cion
+REP size cise
