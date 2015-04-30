@@ -24,11 +24,13 @@ class BluetoothDaemonInterface final : public BluetoothInterface
 public:
   class CleanupResultHandler;
   class InitResultHandler;
+  class StartDaemonTask;
 
   friend class BluetoothDaemonListenSocket;
   friend class BluetoothDaemonChannel;
   friend class CleanupResultHandler;
   friend class InitResultHandler;
+  friend class StartDaemonTask;
 
   static BluetoothDaemonInterface* GetInstance();
 
