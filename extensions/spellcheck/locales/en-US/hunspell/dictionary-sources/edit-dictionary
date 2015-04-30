@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -6,26 +6,29 @@
 #
 # edit-dictionary
 
-set -e
+# input files:
+HUNSPELL_START=hunspell-en_US-20081205.dic
+HUNSPELL_DIFF=upstream-hunspell.diff
+HUNSPELL_PATCHED=$HUNSPELL_START-patched
+HUNSPELL_PATCHED_STRIPPED=$HUNSPELL_PATCHED-stripped
 
 if [ -z "$EDITOR" ]; then
   echo 'Need to set the $EDITOR environment variable to your favorite editor!'
   exit 1
 fi
 
-# Strip the first line that contains the count
-tail -n +2 ../en-US.dic > en-US.stripped
+# Patch Hunspell ($HUNSPELL_START --> $HUNSPELL_PATCHED)
+echo Patching Hunspell dictionary
+cp $HUNSPELL_START $HUNSPELL_PATCHED
+patch $HUNSPELL_PATCHED $HUNSPELL_DIFF
 
 # Open the patched hunspell editor and let the user edit it
 echo "Now the dictionary is going to be opened for you to edit.  When you're done, just quit the editor"
 echo -n "Press Enter to begin."
 read foo
-$EDITOR en-US.stripped
-
-# Add back the line count
-wc -l < en-US.stripped > en-US.dic
-LC_ALL=C sort en-US.stripped >> en-US.dic
+$EDITOR $HUNSPELL_PATCHED
+# Now, store the hunspell diff in the original diff file
+diff $HUNSPELL_START $HUNSPELL_PATCHED > $HUNSPELL_DIFF
 
 # Clean up
-rm -f en-US.stripped
-
+rm -f $HUNSPELL_PATCHED
