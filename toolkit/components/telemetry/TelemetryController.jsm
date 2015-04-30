@@ -35,6 +35,11 @@ const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
 const PREF_FHR_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_SESSIONS_BRANCH = "datareporting.sessions.";
+const PREF_UNIFIED = PREF_BRANCH + "unified";
+
+// Whether the FHR/Telemetry unification features are enabled.
+// Changing this pref requires a restart.
+const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
 
@@ -816,13 +821,10 @@ let Impl = {
    *                   false otherwise.
    */
   enableTelemetryRecording: function enableTelemetryRecording() {
+    const enabled = Preferences.get(PREF_ENABLED, false);
+
     // Enable base Telemetry recording, if needed.
-#if !defined(MOZ_WIDGET_ANDROID)
-    Telemetry.canRecordBase = Preferences.get(PREF_FHR_ENABLED, false);
-#else
-    // FHR recording is always "enabled" on Android (data upload is not).
-    Telemetry.canRecordBase = true;
-#endif
+    Telemetry.canRecordBase = enabled || IS_UNIFIED_TELEMETRY;
 
 #ifdef MOZILLA_OFFICIAL
     if (!Telemetry.isOfficialTelemetry && !this._testMode) {
@@ -834,7 +836,6 @@ let Impl = {
     }
 #endif
 
-    let enabled = Preferences.get(PREF_ENABLED, false);
     this._server = Preferences.get(PREF_SERVER, undefined);
     if (!enabled || !Telemetry.canRecordBase) {
       // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
@@ -874,15 +875,12 @@ let Impl = {
 
     // Only initialize the session recorder if FHR is enabled.
     // TODO: move this after the |enableTelemetryRecording| block and drop the
-    // PREF_FHR_ENABLED check after bug 1137252 lands.
-    if (!this._sessionRecorder && Preferences.get(PREF_FHR_ENABLED, true)) {
+    // PREF_FHR_ENABLED check once we permanently switch over to unified Telemetry.
+    if (!this._sessionRecorder &&
+        (Preferences.get(PREF_FHR_ENABLED, true) || IS_UNIFIED_TELEMETRY)) {
       this._sessionRecorder = new SessionRecorder(PREF_SESSIONS_BRANCH);
       this._sessionRecorder.onStartup();
     }
-
-    // Initialize some probes that are kept in their own modules
-    this._thirdPartyCookies = new ThirdPartyCookieProbe();
-    this._thirdPartyCookies.init();
 
     if (!this.enableTelemetryRecording()) {
       this._log.config("setupChromeProcess - Telemetry recording is disabled, skipping Chrome process setup.");
@@ -1031,11 +1029,13 @@ let Impl = {
   /**
    * Check if pings can be sent to the server. If FHR is not allowed to upload,
    * pings are not sent to the server (Telemetry is a sub-feature of FHR).
+   * If unified telemetry is off, don't send pings if Telemetry is disabled.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
    */
   _canSend: function() {
     return (Telemetry.isOfficialTelemetry || this._testMode) &&
-           Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
+           Preferences.get(PREF_FHR_UPLOAD_ENABLED, false) &&
+           (IS_UNIFIED_TELEMETRY || Preferences.get(PREF_ENABLED));
   },
 
   /**
