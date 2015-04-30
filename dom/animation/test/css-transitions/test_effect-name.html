@@ -2,13 +2,23 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
 <div id="log"></div>
 <script>
 'use strict';
-setup({explicit_done: true});
-SpecialPowers.pushPrefEnv(
-  { "set": [["dom.animations-api.core.enabled", true]]},
-  function() {
-    window.open("file_effect-name.html");
-  });
+
+test(function(t) {
+  var div = addDiv(t);
+
+  // Add a transition
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'all 100s';
+  div.style.left = '100px';
+
+  assert_equals(div.getAnimations()[0].effect.name, 'left',
+                'The name for the transitions corresponds to the property ' +
+                'being transitioned');
+}, 'Effect name for transitions');
+
 </script>
