@@ -8,6 +8,7 @@ DIRS += [
     'encoder',
     'gmp',
     'gmp-plugin',
+    'gmp-plugin-openh264',
     'imagecapture',
     'mediasource',
     'ogg',
