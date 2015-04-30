@@ -1,8 +1,8 @@
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
-if (getJitCompilerOptions()["ion.warmup.trigger"] <= 20)
-    setJitCompilerOption("ion.warmup.trigger", 20);
+if (getJitCompilerOptions()["ion.warmup.trigger"] <= 100)
+    setJitCompilerOption("ion.warmup.trigger", 100);
 
 // This function is used to force a bailout when it is inlined, and to recover
 // the frame which is inlining this function.

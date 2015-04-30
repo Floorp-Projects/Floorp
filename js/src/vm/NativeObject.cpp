@@ -329,8 +329,11 @@ NativeObject::setLastPropertyMakeNonNative(Shape* shape)
     MOZ_ASSERT(shape->compartment() == compartment());
     MOZ_ASSERT(shape->slotSpan() == 0);
     MOZ_ASSERT(shape->numFixedSlots() == 0);
-    MOZ_ASSERT(!hasDynamicElements());
-    MOZ_ASSERT(!hasDynamicSlots());
+
+    if (hasDynamicElements())
+        js_free(getElementsHeader());
+    if (hasDynamicSlots())
+        js_free(slots_);
 
     shape_ = shape;
 }
@@ -711,6 +714,9 @@ ReallocateElements(ExclusiveContext* cx, JSObject* obj, ObjectElements* oldHeade
 // exceptional resizings will at most triple the capacity, as opposed to the
 // usual doubling.
 //
+// Note: the structure and behavior of this method follow along with
+// UnboxedArrayObject::chooseCapacityIndex. Changes to the allocation strategy
+// in one should generally be matched by the other.
 /* static */ uint32_t
 NativeObject::goodAllocated(uint32_t reqAllocated, uint32_t length = 0)
 {

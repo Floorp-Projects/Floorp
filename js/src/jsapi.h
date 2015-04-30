@@ -433,6 +433,13 @@ class MOZ_STACK_CLASS AutoValueVector : public AutoVectorRooter<Value>
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
+    explicit AutoValueVector(js::ContextFriendFields* cx
+                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<Value>(cx, VALVECTOR)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -1183,6 +1190,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
         asmJS_(false),
         nativeRegExp_(false),
         unboxedObjects_(false),
+        unboxedArrays_(false),
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
@@ -1232,6 +1240,12 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool unboxedArrays() const { return unboxedArrays_; }
+    RuntimeOptions& setUnboxedArrays(bool flag) {
+        unboxedArrays_ = flag;
+        return *this;
+    }
+
     bool werror() const { return werror_; }
     RuntimeOptions& setWerror(bool flag) {
         werror_ = flag;
@@ -1278,6 +1292,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool asmJS_ : 1;
     bool nativeRegExp_ : 1;
     bool unboxedObjects_ : 1;
+    bool unboxedArrays_ : 1;
     bool werror_ : 1;
     bool strictMode_ : 1;
     bool extraWarnings_ : 1;
