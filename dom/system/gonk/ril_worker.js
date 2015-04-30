@@ -1916,33 +1916,6 @@ RilObject.prototype = {
       return;
     }
 
-    function _isValidChangePasswordRequest() {
-      if (mmi.procedure !== MMI_PROCEDURE_REGISTRATION &&
-          mmi.procedure !== MMI_PROCEDURE_ACTIVATION) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_ACTION);
-        return false;
-      }
-
-      if (mmi.sia !== "" && mmi.sia !== MMI_ZZ_BARRING_SERVICE) {
-        _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-        return false;
-      }
-
-      let validPassword = si => /^[0-9]{4}$/.test(si);
-      if (!validPassword(mmi.sib) || !validPassword(mmi.sic) ||
-          !validPassword(mmi.pwd)) {
-        _sendMMIError(MMI_ERROR_KS_INVALID_PASSWORD);
-        return false;
-      }
-
-      if (mmi.sic != mmi.pwd) {
-        _sendMMIError(MMI_ERROR_KS_MISMATCH_PASSWORD);
-        return false;
-      }
-
-      return true;
-    }
-
     let _isRadioAvailable = (function() {
       if (this.radioState !== GECKO_RADIOSTATE_ENABLED) {
         _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE);
@@ -1955,17 +1928,6 @@ RilObject.prototype = {
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
     switch (sc) {
-      // Change call barring password
-      case MMI_SC_CHANGE_PASSWORD:
-        if (!_isRadioAvailable() || !_isValidChangePasswordRequest()) {
-          return;
-        }
-
-        options.pin = mmi.sib;
-        options.newPin = mmi.sic;
-        this.changeCallBarringPassword(options);
-        return;
-
       // Call barring
       case MMI_SC_BAOC:
       case MMI_SC_BAOIC:
@@ -4759,12 +4721,6 @@ RilObject.prototype[REQUEST_SET_FACILITY_LOCK] = function REQUEST_SET_FACILITY_L
 };
 RilObject.prototype[REQUEST_CHANGE_BARRING_PASSWORD] =
   function REQUEST_CHANGE_BARRING_PASSWORD(length, options) {
-  if (options.rilMessageType != "sendMMI") {
-    this.sendChromeMessage(options);
-    return;
-  }
-
-  options.statusMessage = MMI_SM_KS_PASSWORD_CHANGED;
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELECTION_MODE(length, options) {
