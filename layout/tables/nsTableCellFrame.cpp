@@ -44,7 +44,7 @@ using namespace mozilla::image;
 
 nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext) :
   nsContainerFrame(aContext)
-  , mDesiredSize(GetWritingMode())
+  , mDesiredSize(WritingMode())
 {
   mColIndex = 0;
   mPriorAvailWidth = 0;

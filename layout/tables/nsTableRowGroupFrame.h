@@ -125,6 +125,9 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
+  virtual mozilla::WritingMode GetWritingMode() const override
+    { return GetTableFrame()->GetWritingMode(); }
+
   /** return the number of child rows (not necessarily == number of child frames) */
   int32_t GetRowCount();
 

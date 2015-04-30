@@ -10,6 +10,7 @@
 #include "nsContainerFrame.h"
 #include "nsTablePainter.h"
 #include "nsTableRowGroupFrame.h"
+#include "mozilla/WritingModes.h"
 
 class  nsTableCellFrame;
 struct nsTableCellReflowState;
@@ -110,6 +111,9 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
+
+  virtual mozilla::WritingMode GetWritingMode() const override
+    { return GetTableFrame()->GetWritingMode(); }
  
   void UpdateHeight(nscoord           aHeight,
                     nscoord           aAscent,
