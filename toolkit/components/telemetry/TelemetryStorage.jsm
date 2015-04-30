@@ -443,8 +443,7 @@ let TelemetryStorageImpl = {
     return this.loadPingFile(pingPath).then(ping => {
       // Since we read a ping successfully, update the related histogram.
       Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS").add(1);
-      this.addPendingPing(ping);
-      return this.savePing(ping, false);
+      return this.addPendingPing(ping);
     });
   },
 
