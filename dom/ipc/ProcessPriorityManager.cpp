@@ -1012,9 +1012,7 @@ ParticularProcessPriorityManager::ComputePriority()
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
-  return HasAppType("homescreen") ?
-         PROCESS_PRIORITY_BACKGROUND_HOMESCREEN :
-         PROCESS_PRIORITY_BACKGROUND;
+  return PROCESS_PRIORITY_BACKGROUND;
 }
 
 void
