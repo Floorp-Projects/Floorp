@@ -108,11 +108,12 @@ AppleVDADecoder::Input(MediaRawData* aSample)
       aSample->mKeyframe ? " keyframe" : "",
       aSample->mSize);
 
-  mTaskQueue->Dispatch(
+  nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
           this,
           &AppleVDADecoder::SubmitFrame,
-          nsRefPtr<MediaRawData>(aSample)));
+          nsRefPtr<MediaRawData>(aSample));
+  mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
 
