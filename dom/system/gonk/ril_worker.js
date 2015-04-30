@@ -957,9 +957,6 @@ RilObject.prototype = {
 
   /**
    * Queries current CLIP status.
-   *
-   * (MMI request for code "*#30#")
-   *
    */
   queryCLIP: function(options) {
     this.context.Buf.simpleRequest(REQUEST_QUERY_CLIP, options);
@@ -1958,16 +1955,6 @@ RilObject.prototype = {
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
     switch (sc) {
-      // CLIP
-      case MMI_SC_CLIP:
-        options.procedure = mmi.procedure;
-        if (options.procedure === MMI_PROCEDURE_INTERROGATION) {
-          this.queryCLIP(options);
-        } else {
-          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
-        }
-        return;
-
       // CLIR (non-temporary ones)
       // TODO: Both dial() and sendMMI() functions should be unified at some
       // point in the future. In the mean time we handle temporary CLIR MMI
@@ -4947,25 +4934,7 @@ RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, op
     return;
   }
 
-  // options.provisioned informs about the called party receives the calling
-  // party's address information:
-  // 0 for CLIP not provisioned
-  // 1 for CLIP provisioned
-  // 2 for unknown
   options.provisioned = Buf.readInt32();
-  if (options.rilMessageType === "sendMMI") {
-    switch (options.provisioned) {
-      case 0:
-        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
-        break;
-      case 1:
-        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
-        break;
-      default:
-        options.errorMsg = MMI_ERROR_KS_ERROR;
-        break;
-    }
-  }
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
