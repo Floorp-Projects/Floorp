@@ -1004,12 +1004,14 @@ let gEditItemOverlay = {
                 aLastModified, aItemType) {
     if (aProperty == "tags" && this._paneInfo.visibleRows.has("tagsRow"))
       this._onTagsChange(aItemId);
-    else if (this._paneInfo.isItem && aProperty == "title")
-      this._onItemTitleChange(aItemId, aValue);
-    else (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId)
+    else if (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId)
       return;
 
     switch (aProperty) {
+    case "title":
+      if (this._paneInfo.isItem)
+        this._onItemTitleChange(aItemId, aValue);
+      break;
     case "uri":
       let newURI = NetUtil.newURI(aValue);
       if (!newURI.equals(this._paneInfo.uri)) {
