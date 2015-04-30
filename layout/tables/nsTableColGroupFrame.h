@@ -9,6 +9,7 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 #include "nsTableFrame.h"
+#include "mozilla/WritingModes.h"
 
 class nsTableColFrame;
 
@@ -112,6 +113,9 @@ public:
    * @see nsGkAtoms::tableColGroupFrame
    */
   virtual nsIAtom* GetType() const override;
+
+  virtual mozilla::WritingMode GetWritingMode() const override
+    { return GetTableFrame()->GetWritingMode(); }
 
   /** Add column frames to the table storages: colframe cache and cellmap
     * this doesn't change the mFrames of the colgroup frame.

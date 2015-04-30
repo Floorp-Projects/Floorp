@@ -11,6 +11,7 @@
 #include "nsContainerFrame.h"
 #include "nsTArray.h"
 #include "nsTableColGroupFrame.h"
+#include "mozilla/WritingModes.h"
 
 class nsTableColFrame : public nsSplittableFrame {
 public:
@@ -77,6 +78,9 @@ public:
 #endif
 
   virtual nsSplittableType GetSplittableType() const override;
+
+  virtual mozilla::WritingMode GetWritingMode() const override
+    { return GetTableFrame()->GetWritingMode(); }
 
   /** return the number of the columns the col represents.  always >= 1 */
   int32_t GetSpan();
