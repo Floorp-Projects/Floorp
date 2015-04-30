@@ -76,7 +76,7 @@ ContentBridgeParent::RecvSyncMessage(const nsString& aMsg,
                                      const ClonedMessageData& aData,
                                      InfallibleTArray<jsipc::CpowEntry>&& aCpows,
                                      const IPC::Principal& aPrincipal,
-                                     InfallibleTArray<nsString>* aRetvals)
+                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals)
 {
   return nsIContentParent::RecvSyncMessage(aMsg, aData, Move(aCpows),
                                            aPrincipal, aRetvals);
