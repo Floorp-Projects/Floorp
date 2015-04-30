@@ -63,6 +63,16 @@ const MMI_PROC_TO_CLIR_ACTION = {};
 MMI_PROC_TO_CLIR_ACTION[RIL.MMI_PROCEDURE_ACTIVATION] = Ci.nsIMobileConnection.CLIR_INVOCATION;
 MMI_PROC_TO_CLIR_ACTION[RIL.MMI_PROCEDURE_DEACTIVATION] =  Ci.nsIMobileConnection.CLIR_SUPPRESSION;
 
+const MMI_SC_TO_CB_PROGRAM = {};
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BAOC] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BAOIC] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BAOICxH] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_INTERNATIONAL_EXCEPT_HOME;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BAIC] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_ALL_INCOMING;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BAICr] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_INCOMING_ROAMING;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BA_ALL] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_ALL_SERVICE;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BA_MO] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_OUTGOING_SERVICE;
+MMI_SC_TO_CB_PROGRAM[RIL.MMI_SC_BA_MT] = Ci.nsIMobileConnection.CALL_BARRING_PROGRAM_INCOMING_SERVICE;
+
 const CF_ACTION_TO_STATUS_MESSAGE = {};
 CF_ACTION_TO_STATUS_MESSAGE[Ci.nsIMobileConnection.CALL_FORWARD_ACTION_ENABLE] = RIL.MMI_SM_KS_SERVICE_ENABLED;
 CF_ACTION_TO_STATUS_MESSAGE[Ci.nsIMobileConnection.CALL_FORWARD_ACTION_DISABLE] = RIL.MMI_SM_KS_SERVICE_DISABLED;
@@ -896,6 +906,11 @@ TelephonyService.prototype = {
         this._callBarringPasswordMMI(aClientId, aMmi, aCallback);
         break;
 
+      // Call barring
+      case RIL.MMI_KS_SC_CALL_BARRING:
+        this._callBarringMMI(aClientId, aMmi, aCallback);
+        break;
+
       // Fall back to "sendMMI".
       default:
         this._sendMMI(aClientId, aMmi, aCallback);
@@ -1310,6 +1325,72 @@ TelephonyService.prototype = {
         aCallback.notifyDialMMIError(aErrorMsg);
       },
     });
+  },
+
+  /**
+   * Handle call barring MMI code.
+   *
+   * @param aClientId
+   *        Client id.
+   * @param aMmi
+   *        Parsed MMI structure.
+   * @param aCallback
+   *        A nsITelephonyDialCallback object.
+   */
+  _callBarringMMI: function(aClientId, aMmi, aCallback) {
+    let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
+    let program = MMI_SC_TO_CB_PROGRAM[aMmi.serviceCode];
+    let password = aMmi.sia || "";
+    let serviceClass = this._siToServiceClass(aMmi.sib);
+
+    switch (aMmi.procedure) {
+      case RIL.MMI_PROCEDURE_INTERROGATION:
+        connection.getCallBarring(program, password, serviceClass, {
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+          notifyGetCallBarringSuccess: function(aProgram, aEnabled, aServiceClass) {
+            if (!aEnabled) {
+              aCallback.notifyDialMMISuccess(RIL.MMI_SM_KS_SERVICE_DISABLED);
+              return;
+            }
+
+            let services = [];
+            for (let mask = 1;
+                 mask <= Ci.nsIMobileConnection.ICC_SERVICE_CLASS_MAX;
+                 mask <<= 1) {
+              if (mask & aServiceClass) {
+                services.push(RIL.MMI_KS_SERVICE_CLASS_MAPPING[mask]);
+              }
+            }
+
+            aCallback.notifyDialMMISuccessWithStrings(RIL.MMI_SM_KS_SERVICE_ENABLED_FOR,
+                                                      services.length, services);
+          },
+          notifyError: function(aErrorMsg) {
+            aCallback.notifyDialMMIError(aErrorMsg);
+          },
+        });
+        break;
+      case RIL.MMI_PROCEDURE_ACTIVATION:
+      case RIL.MMI_PROCEDURE_DEACTIVATION: {
+        let enabled = (aMmi.procedure === RIL.MMI_PROCEDURE_ACTIVATION);
+        connection.setCallBarring(program, enabled, password, serviceClass, {
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+          notifySuccess: function() {
+            aCallback.notifyDialMMISuccess(
+              enabled ? RIL.MMI_SM_KS_SERVICE_ENABLED
+                      : RIL.MMI_SM_KS_SERVICE_DISABLED
+            );
+          },
+          notifyError: function(aErrorMsg) {
+            aCallback.notifyDialMMIError(aErrorMsg);
+          },
+        });
+        break;
+      }
+      default:
+        aCallback.notifyDialMMIError(RIL.MMI_ERROR_KS_NOT_SUPPORTED);
+        break;
+    }
   },
 
   _serviceCodeToKeyString: function(aServiceCode) {
