@@ -1030,6 +1030,7 @@ InitializeTrackSize(nscoord aPercentageBasis,
   // http://dev.w3.org/csswg/css-grid/#algo-init
   nscoord& base = aTrackSize->mBase;
   switch (aMinCoord.GetUnit()) {
+    case eStyleUnit_Auto:
     case eStyleUnit_Enumerated:
     case eStyleUnit_FlexFraction:
       base = 0;
@@ -1039,6 +1040,7 @@ InitializeTrackSize(nscoord aPercentageBasis,
   }
   nscoord& limit = aTrackSize->mLimit;
   switch (aMaxCoord.GetUnit()) {
+    case eStyleUnit_Auto:
     case eStyleUnit_Enumerated:
       limit = NS_UNCONSTRAINEDSIZE;
       break;

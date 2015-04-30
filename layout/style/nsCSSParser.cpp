@@ -8055,17 +8055,17 @@ CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
   }
 }
 
-// Parse a <track-breadth>
+// Parse a <track-breadth>.
 bool
 CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
 {
   if (ParseNonNegativeVariant(aValue,
-                              VARIANT_LPCALC | VARIANT_KEYWORD,
+                              VARIANT_AUTO | VARIANT_LPCALC | VARIANT_KEYWORD,
                               nsCSSProps::kGridTrackBreadthKTable)) {
     return true;
   }
 
-  // Attempt to parse <flex> (a dimension with the "fr" unit)
+  // Attempt to parse <flex> (a dimension with the "fr" unit).
   if (!GetToken(true)) {
     return false;
   }
@@ -8079,17 +8079,16 @@ CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
   return true;
 }
 
-// Parse a <track-size>
+// Parse a <track-size>.
 CSSParseResult
 CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue)
 {
-  // Attempt to parse 'auto' or a single <track-breadth>
-  if (ParseGridTrackBreadth(aValue) ||
-      ParseVariant(aValue, VARIANT_AUTO, nullptr)) {
+  // Attempt to parse a single <track-breadth>.
+  if (ParseGridTrackBreadth(aValue)) {
     return CSSParseResult::Ok;
   }
 
-  // Attempt to parse a minmax() function
+  // Attempt to parse a minmax() function.
   if (!GetToken(true)) {
     return CSSParseResult::NotFound;
   }
