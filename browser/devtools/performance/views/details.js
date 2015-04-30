@@ -16,7 +16,8 @@ let DetailsView = {
     "waterfall": {
       id: "waterfall-view",
       view: WaterfallView,
-      requires: ["timeline"]
+      actors: ["timeline"],
+      features: ["withMarkers"]
     },
     "js-calltree": {
       id: "js-profile-view",
@@ -25,19 +26,19 @@ let DetailsView = {
     "js-flamegraph": {
       id: "js-flamegraph-view",
       view: JsFlameGraphView,
-      requires: ["timeline"]
+      actors: ["timeline"]
     },
     "memory-calltree": {
       id: "memory-calltree-view",
       view: MemoryCallTreeView,
-      requires: ["memory"],
-      pref: "enable-memory"
+      actors: ["memory"],
+      features: ["withAllocations"]
     },
     "memory-flamegraph": {
       id: "memory-flamegraph-view",
       view: MemoryFlameGraphView,
-      requires: ["memory", "timeline"],
-      pref: "enable-memory"
+      actors: ["memory", "timeline"],
+      features: ["withAllocations"]
     }
   },
 
@@ -56,7 +57,6 @@ let DetailsView = {
       button.addEventListener("command", this._onViewToggle);
     }
 
-    yield this.selectDefaultView();
     yield this.setAvailableViews();
 
     PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
@@ -84,31 +84,52 @@ let DetailsView = {
   }),
 
   /**
-   * Sets the possible views based off of prefs and server actor support by hiding/showing the
-   * buttons that select them and going to default view if currently selected.
-   * Called when a preference changes in `devtools.performance.ui.`.
+   * Sets the possible views based off of recording features and server actor support
+   * by hiding/showing the buttons that select them and going to default view
+   * if currently selected. Called when a preference changes in `devtools.performance.ui.`.
    */
   setAvailableViews: Task.async(function* () {
-    let mocks = gFront.getMocksInUse();
+    let recording = PerformanceController.getCurrentRecording();
+    let isRecording = recording && recording.isRecording();
+    let invalidCurrentView = false;
 
-    for (let [name, { view, pref, requires }] of Iterator(this.components)) {
-      let recording = PerformanceController.getCurrentRecording();
+    for (let [name, { view }] of Iterator(this.components)) {
+      let isSupported = this._isViewSupported(name, false);
 
-      let isRecorded = recording && !recording.isRecording();
-      // View is enabled by its corresponding pref
-      let isEnabled = !pref || PerformanceController.getOption(pref);
-      // View is supported by the server actor, and the requried actor is not being mocked
-      let isSupported = !requires || requires.every(r => !mocks[r]);
+      $(`toolbarbutton[data-view=${name}]`).hidden = !isSupported;
 
-      $(`toolbarbutton[data-view=${name}]`).hidden = !isRecorded || !(isEnabled && isSupported);
-
-      // If the view is currently selected and not enabled, go back to the
+      // If the view is currently selected and not supported, go back to the
       // default view.
-      if (!isEnabled && this.isViewSelected(view)) {
-        yield this.selectDefaultView();
+      if (!isSupported && this.isViewSelected(view)) {
+        invalidCurrentView = true;
       }
     }
+
+    // Two scenarios in which we select the default view.
+    //
+    // 1: If we currently have selected a view that is no longer valid due
+    // to feature support, and this isn't the first view, and the current recording
+    // is not recording.
+    //
+    // 2. If we have a finished recording and no panel was selected yet,
+    // use a default now that we have the recording configurations
+    if ((this._initialized  && !isRecording && invalidCurrentView) ||
+        (!this._initialized && !isRecording && recording)) {
+      yield this.selectDefaultView();
+    }
   }),
+
+  /**
+   * Takes a view name and optionally if there must be a currently recording in progress.
+   *
+   * @param {string} viewName
+   * @param {boolean?} isRecording
+   * @return {boolean}
+   */
+  _isViewSupported: function (viewName, isRecording) {
+    let { features, actors } = this.components[viewName];
+    return PerformanceController.isFeatureSupported({ features, actors, isRecording });
+  },
 
   /**
    * Select one of the DetailView's subviews to be rendered,
@@ -131,6 +152,10 @@ let DetailsView = {
       }
     }
 
+    // Set a flag indicating that a view was explicitly set based on a
+    // recording's features.
+    this._initialized = true;
+
     this.emit(EVENTS.DETAILS_VIEW_SELECTED, viewName);
   }),
 
@@ -139,14 +164,15 @@ let DetailsView = {
    * and preferences enabled.
    */
   selectDefaultView: function () {
-    let { timeline: mockTimeline } = gFront.getMocksInUse();
-    // If timelines are mocked, the first view available is the js-calltree.
-    if (mockTimeline) {
-      return this.selectView("js-calltree");
-    } else {
-      // In every other scenario with preferences and mocks, waterfall will
-      // be the default view.
+    // We want the waterfall to be default view in almost all cases, except when
+    // timeline actor isn't supported, or we have markers disabled (which should only
+    // occur temporarily via bug 1156499
+    if (this._isViewSupported("waterfall")) {
       return this.selectView("waterfall");
+    } else {
+      // The JS CallTree should always be supported since the profiler
+      // actor is as old as the world.
+      return this.selectView("js-calltree");
     }
   },
 
@@ -157,6 +183,12 @@ let DetailsView = {
    * @return boolean
    */
   isViewSelected: function(viewObject) {
+    // If not initialized, and we have no recordings,
+    // no views are selected (even though there's a selected panel)
+    if (!this._initialized) {
+      return false;
+    }
+
     let selectedPanel = this.el.selectedPanel;
     let selectedId = selectedPanel.id;
 

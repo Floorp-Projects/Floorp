@@ -15,7 +15,7 @@ namespace dom {
 
 class AudioContext;
 
-class DelayNode : public AudioNode
+class DelayNode final : public AudioNode
 {
 public:
   DelayNode(AudioContext* aContext, double aMaxDelay);

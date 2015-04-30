@@ -63,6 +63,12 @@ ImageResource::ImageResource(ImageURL* aURI) :
   mError(false)
 { }
 
+ImageResource::~ImageResource()
+{
+  // Ask our ProgressTracker to drop its weak reference to us.
+  mProgressTracker->ResetImage();
+}
+
 // Translates a mimetype into a concrete decoder
 Image::eDecoderType
 Image::GetDecoderType(const char* aMimeType)

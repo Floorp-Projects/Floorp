@@ -10,13 +10,12 @@ function spawnTest () {
 
   Services.prefs.setBoolPref(FLATTEN_PREF, true);
 
-  yield DetailsView.selectView("js-flamegraph");
-
   yield startRecording(panel);
   yield busyWait(100);
 
-  let rendered = once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED);
   yield stopRecording(panel);
+  let rendered = once(JsFlameGraphView, EVENTS.JS_FLAMEGRAPH_RENDERED);
+  yield DetailsView.selectView("js-flamegraph");
   yield rendered;
 
   let samples1 = PerformanceController.getCurrentRecording().getProfile().threads[0].samples;

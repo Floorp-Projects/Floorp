@@ -447,6 +447,13 @@
 .waterfall-marker-bullet.highlight-lightorange {
   background-color: var(--theme-highlight-lightorange);
 }
+#performance-filter-menupopup > menuitem.highlight-red:before,
+.marker-details-bullet.highlight-red,
+.waterfall-marker-bar.highlight-red,
+.waterfall-marker-bullet.highlight-red {
+  background-color: var(--theme-highlight-red);
+}
+
 
 #waterfall-details > * {
   padding-top: 3px;

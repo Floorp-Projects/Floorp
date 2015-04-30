@@ -34,6 +34,7 @@ PerformancePanel.prototype = {
   open: Task.async(function*() {
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
+    this._onRecordingStartOrStop = this._onRecordingStartOrStop.bind(this);
 
     // Connection is already created in the toolbox; reuse
     // the same connection.
@@ -43,6 +44,8 @@ PerformancePanel.prototype = {
     yield this._connection.open();
 
     this.panelWin.gFront = new PerformanceFront(this._connection);
+    this.panelWin.gFront.on("recording-started", this._onRecordingStartOrStop);
+    this.panelWin.gFront.on("recording-stopped", this._onRecordingStartOrStop);
 
     yield this.panelWin.startupPerformance();
 
@@ -61,8 +64,19 @@ PerformancePanel.prototype = {
       return;
     }
 
+    this.panelWin.gFront.off("recording-started", this._onRecordingStartOrStop);
+    this.panelWin.gFront.off("recording-stopped", this._onRecordingStartOrStop);
     yield this.panelWin.shutdownPerformance();
     this.emit("destroyed");
     this._destroyed = true;
-  })
+  }),
+
+  _onRecordingStartOrStop: function () {
+    let front = this.panelWin.gFront;
+    if (front.isRecording()) {
+      this._toolbox.highlightTool("performance");
+    } else {
+      this._toolbox.unhighlightTool("performance");
+    }
+  }
 };

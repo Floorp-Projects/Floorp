@@ -29,9 +29,7 @@ function spawnTest () {
   yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
   yield once(OverviewView, EVENTS.OVERVIEW_RENDERED);
 
-  let detailsRendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
   yield consoleProfileEnd(panel.panelWin, "rust");
-  yield detailsRendered;
 
   recordings = PerformanceController.getRecordings();
   is(recordings.length, 2, "two recordings found in the performance panel.");
@@ -40,7 +38,7 @@ function spawnTest () {
   is(RecordingsView.selectedItem.attachment.isRecording(), false,
     "The first console recording should no longer be recording.");
 
-  detailsRendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
+  let detailsRendered = once(WaterfallView, EVENTS.WATERFALL_RENDERED);
   yield consoleProfileEnd(panel.panelWin, "golang");
   yield detailsRendered;
 

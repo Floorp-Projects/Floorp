@@ -10,13 +10,12 @@ function spawnTest () {
 
   Services.prefs.setBoolPref(PLATFORM_DATA_PREF, true);
 
-  yield DetailsView.selectView("js-calltree");
-
   yield startRecording(panel);
   yield busyWait(100);
+  yield stopRecording(panel);
 
   let rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);
-  yield stopRecording(panel);
+  yield DetailsView.selectView("js-calltree");
   yield rendered;
 
   rendered = once(JsCallTreeView, EVENTS.JS_CALL_TREE_RENDERED);

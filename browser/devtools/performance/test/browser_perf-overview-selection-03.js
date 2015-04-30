@@ -22,9 +22,9 @@ function spawnTest () {
 
   yield stopRecording(panel);
 
-  let framerateGraph = OverviewView.framerateGraph;
-  let markersOverview = OverviewView.markersOverview;
-  let memoryOverview = OverviewView.memoryOverview;
+  let framerateGraph = OverviewView.graphs.get("framerate");
+  let markersOverview = OverviewView.graphs.get("timeline");
+  let memoryOverview = OverviewView.graphs.get("memory");
   let MAX = framerateGraph.width;
 
   // Perform a selection inside the framerate graph.
