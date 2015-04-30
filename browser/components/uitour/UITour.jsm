@@ -1468,6 +1468,12 @@ this.UITour = {
                                        showInfoPanel.bind(this, this._correctAnchor(aAnchor.node)));
   },
 
+  isInfoOnTarget(aChromeWindow, aTargetName) {
+    let document = aChromeWindow.document;
+    let tooltip = document.getElementById("UITourTooltip");
+    return tooltip.getAttribute("targetName") == aTargetName && tooltip.state != "closed";
+  },
+
   hideInfo: function(aWindow) {
     let document = aWindow.document;
 
