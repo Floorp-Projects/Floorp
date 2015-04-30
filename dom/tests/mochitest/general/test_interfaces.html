@@ -685,7 +685,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MediaRecorder",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "MediaSource", pref: "media.mediasource.enabled"},
+    {name: "MediaSource", desktop: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MediaStream",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -929,9 +929,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SimpleTest", xbl: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SourceBuffer", pref: "media.mediasource.enabled"},
+    {name: "SourceBuffer", desktop: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "SourceBufferList", pref: "media.mediasource.enabled"},
+    {name: "SourceBufferList", desktop: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "SpeechSynthesisEvent", b2g: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1289,7 +1289,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ValidityState",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VideoPlaybackQuality", pref: "media.mediasource.enabled"},
+    {name: "VideoPlaybackQuality", desktop: true, linux: false, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "VideoStreamTrack",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1391,6 +1391,9 @@ function createInterfaceMap(isXBLScope) {
   var isRelease = !version.includes("a");
   var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
   var isB2G = !isDesktop && !navigator.userAgent.includes("Android");
+  var isMac = /Mac OS/.test(navigator.oscpu);
+  var isWindows = /Windows/.test(navigator.oscpu);
+  var isLinux = /Linux/.test(navigator.oscpu);
   var isAndroid = navigator.userAgent.includes("Android");
   var hasPermission = function (aPermissions) {
     var result = false;
@@ -1411,6 +1414,9 @@ function createInterfaceMap(isXBLScope) {
                  (entry.xbl === !isXBLScope) ||
                  (entry.desktop === !isDesktop) ||
                  (entry.b2g === !isB2G) ||
+                 (entry.windows === !isWindows) ||
+                 (entry.mac === !isMac) ||
+                 (entry.linux === !isLinux) ||
                  (entry.android === !isAndroid) ||
                  (entry.release === !isRelease) ||
                  (entry.pref && !prefs.getBoolPref(entry.pref))  ||
