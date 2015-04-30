@@ -145,6 +145,31 @@ describe("loop.shared.utils", function() {
     });
   });
 
+  describe("#formatURL", function() {
+    it("should decode encoded URIs", function() {
+      expect(sharedUtils.formatURL("http://invalid.com/?a=Foo%20Bar"))
+        .eql({
+          location: "http://invalid.com/?a=Foo Bar",
+          hostname: "invalid.com"
+        });
+    });
+
+    it("should change some idn urls to ascii encoded", function() {
+      // Note, this is based on the browser's list of what does/doesn't get
+      // altered for punycode, so if the list changes this could change in the
+      // future.
+      expect(sharedUtils.formatURL("http://\u0261oogle.com/"))
+        .eql({
+          location: "http://xn--oogle-qmc.com/",
+          hostname: "xn--oogle-qmc.com"
+        });
+    });
+
+    it("should return null if it the url is not valid", function() {
+      expect(sharedUtils.formatURL("hinvalid//url")).eql(null);
+    });
+  });
+
   describe("#composeCallUrlEmail", function() {
     var composeEmail;
 
