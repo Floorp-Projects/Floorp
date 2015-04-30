@@ -29,14 +29,6 @@ public:
   virtual void ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer) = 0;
 
   /**
-   * Queue data to be sent to the socket on the IO thread. Can only be called on
-   * originating thread.
-   *
-   * @param aBuffer Data to be sent to socket
-   */
-  void SendSocketData(UnixSocketIOBuffer* aBuffer);
-
-  /**
    * Convenience function for sending strings to the socket (common in bluetooth
    * profile usage). Converts to a UnixSocketRawData struct. Can only be called
    * on originating thread.
@@ -74,6 +66,16 @@ public:
    */
   void GetSocketAddr(nsAString& aAddrStr);
 
+  // Methods for |DataSocket|
+  //
+
+  void SendSocketData(UnixSocketIOBuffer* aBuffer) override;
+
+  // Methods for |SocketBase|
+  //
+
+  void CloseSocket() override;
+
 protected:
   virtual ~StreamSocket();
 
@@ -83,13 +85,6 @@ protected:
   ConnectionOrientedSocketIO* PrepareAccept(UnixSocketConnector* aConnector);
 
 private:
-
-  // Legacy interface from |SocketBase|; should be replaced by |Close|.
-  void CloseSocket() override
-  {
-    Close();
-  }
-
   StreamSocketIO* mIO;
 };
 
