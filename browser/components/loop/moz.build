@@ -13,18 +13,18 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES.loop += [
-    'CardDavImporter.jsm',
     'content/shared/js/crypto.js',
     'content/shared/js/utils.js',
-    'GoogleImporter.jsm',
-    'LoopCalls.jsm',
-    'LoopContacts.jsm',
-    'LoopRooms.jsm',
-    'LoopStorage.jsm',
-    'MozLoopAPI.jsm',
-    'MozLoopPushHandler.jsm',
-    'MozLoopService.jsm',
-    'MozLoopWorker.js',
+    'modules/CardDavImporter.jsm',
+    'modules/GoogleImporter.jsm',
+    'modules/LoopCalls.jsm',
+    'modules/LoopContacts.jsm',
+    'modules/LoopRooms.jsm',
+    'modules/LoopStorage.jsm',
+    'modules/MozLoopAPI.jsm',
+    'modules/MozLoopPushHandler.jsm',
+    'modules/MozLoopService.jsm',
+    'modules/MozLoopWorker.js',
 ]
 
 with Files('**'):

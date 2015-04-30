@@ -1,3 +1,5 @@
+// Note: there are extra allowances for files used solely in Firefox desktop,
+// see content/js/.eslintrc and modules/.eslintrc
 {
   "plugins": [
     "react"
@@ -5,18 +7,6 @@
   "ecmaFeatures": {
     "forOf": true,
     "jsx": true,
-    // These are on for this directory for .jsm and content/js files.
-    // If adding more items here, consider turning them off for the following
-    // files if they aren't supported by all browsers.
-    // content/shared/.eslintrc
-    // content/standalone/.eslintrc
-    "blockBindings": true,
-    "arrowFunctions": true,
-    "destructuring": true,
-    "generators": true,
-    "spread": true,
-    "restParams": true,
-    "objectLiteralShorthandMethods": true
   },
   "env": {
     "browser": true,
@@ -43,49 +33,50 @@
     // problems they find, one at a time.
 
     // Eslint built-in rules are documented at <http://eslint.org/docs/rules/>
-    "camelcase": 0,
-    "comma-dangle": 0,
-    "comma-spacing": 0,
-    "consistent-return": 0,
-    "curly": 0,
-    "dot-notation": 0,
-    "eol-last": 0,
-    "eqeqeq": 0,
-    "global-strict": 0,
-    "key-spacing": 0,
-    "new-cap": 0,
-    "no-catch-shadow": 0,
-    "no-console": 0,
-    "no-empty": 0,
-    "no-extra-bind": 0,
-    "no-extra-boolean-cast": 0,
-    "no-extra-semi": 0,
-    "no-multi-spaces": 0,
-    "no-new": 0,
-    "no-redeclare": 0,
-    "no-return-assign": 0,
-    "no-shadow": 0,
-    "no-spaced-func": 0,
-    "no-trailing-spaces": 0,
-    "no-undef": 0,
-    "no-underscore-dangle": 0,
-    "no-unused-expressions": 0,
-    "no-unused-vars": 0,
-    "no-use-before-define": 0,
-    "no-wrap-func": 0,
-    "quotes": 0,
-    "semi": 0,
-    "semi-spacing": 0,
-    "space-infix-ops": 0,
-    "space-return-throw-case": 0,
-    "strict": 0,
-    "yoda": 0,
+    "camelcase": 0,               // TODO: Remove (use default)
+    "comma-dangle": 0,            // TODO: Remove (use default)
+    "comma-spacing": 0,           // TODO: Remove (use default)
+    "consistent-return": 0,       // TODO: Remove (use default)
+    "curly": 0,                   // TODO: Remove (use default)
+    "dot-notation": 0,            // TODO: Remove (use default)
+    "eol-last": 0,                // TODO: Remove (use default)
+    "eqeqeq": 0,                  // TBD. Might need to be separate for content & chrome
+    "global-strict": 0,           // Leave as zero (this will be unsupported in eslint 1.0.0)
+    "key-spacing": 0,             // TODO: Remove (use default)
+    "new-cap": 0,                 // TODO: Remove (use default)
+    "no-catch-shadow": 0,         // TODO: Remove (use default)
+    "no-console": 0,              // Leave as 0. We use console logging in content code.
+    "no-empty": 0,                // TODO: Remove (use default)
+    "no-extra-bind": 0,           // Leave as 0
+    "no-extra-boolean-cast": 0,   // TODO: Remove (use default)
+    "no-extra-semi": 0,           // TODO: Remove (use default)
+    "no-multi-spaces": 0,         // TBD.
+    "no-new": 0,                  // TODO: Remove (use default)
+    "no-redeclare": 0,            // TODO: Remove (use default)
+    "no-return-assign": 0,        // TODO: Remove (use default)
+    "no-shadow": 0,               // TODO: Remove (use default)
+    "no-spaced-func": 0,          // TODO: Remove (use default)
+    "no-trailing-spaces": 0,      // TODO: Remove (use default)
+    "no-undef": 0,                // TODO: Remove (use default)
+    "no-underscore-dangle": 0,    // Leave as 0. Commonly used for private variables.
+    "no-unused-expressions": 0,   // TODO: Remove (use default)
+    "no-unused-vars": 0,          // TODO: Remove (use default)
+    "no-use-before-define": 0,    // TODO: Remove (use default)
+    "no-wrap-func": 0,            // TODO: Remove (use default)
+    "quotes": 0,                  // [2, "double", "avoid-escape"],
+    "semi": 0,                    // TODO: Remove (use default)
+    "semi-spacing": 0,            // TODO: Remove (use default)
+    "space-infix-ops": 0,         // TODO: Remove (use default)
+    "space-return-throw-case": 0, // TODO: Remove (use default)
+    "strict": 0,                  // [2, "function"],
+    "yoda": 0,                    // [2, "never"],
     // eslint-plugin-react rules. These are documented at
     // <https://github.com/yannickcr/eslint-plugin-react#list-of-supported-rules>
     "react/jsx-quotes": [2, "double", "avoid-escape"],
     "react/jsx-no-undef": 2,
     // Need to fix instances where this is failing.
     "react/jsx-sort-props": 0,
+    "react/jsx-sort-prop-types": 0,
     "react/jsx-uses-vars": 2,
     // Need to fix the couple of instances which don't
     // currently pass this rule.
@@ -101,6 +92,7 @@
     "react/react-in-jsx-scope": 0,
     // These ones we don't want to ever enable
     "react/display-name": 0,
+    "react/jsx-boolean-value": 0,
     "react/no-multi-comp": 0
   }
 }
