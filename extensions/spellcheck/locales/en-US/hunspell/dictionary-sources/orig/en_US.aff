@@ -1,7 +1,5 @@
-SET UTF8
+SET ISO8859-1
 TRY esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'
-ICONV 1
-ICONV ’ '
 NOSUGGEST !
 
 # ordinal numbers
