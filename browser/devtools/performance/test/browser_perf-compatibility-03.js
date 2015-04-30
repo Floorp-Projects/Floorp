@@ -13,12 +13,13 @@ function spawnTest () {
   });
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
-  let { memory, timeline } = front.getMocksInUse();
-  ok(memory, "memory should be mocked.");
-  ok(!timeline, "timeline should not be mocked.");
+  let { memory, timeline } = front.getActorSupport();
+  ok(!memory, "memory should be mocked.");
+  ok(timeline, "timeline should not be mocked.");
 
   let recording = yield front.startRecording({
     withTicks: true,
+    withMarkers: true,
     withMemory: true,
     withAllocations: true,
     allocationsSampleProbability: +Services.prefs.getCharPref(MEMORY_SAMPLE_PROB_PREF),

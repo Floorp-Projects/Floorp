@@ -5192,6 +5192,7 @@ if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
   MOZ_APPLEMEDIA=1
 fi
 
+if test "$COMPILE_ENVIRONMENT"; then
 if test -n "$MOZ_APPLEMEDIA"; then
   AC_DEFINE(MOZ_APPLEMEDIA)
   # hack in frameworks for fmp4 - see bug 1029974
@@ -5201,6 +5202,7 @@ if test -n "$MOZ_APPLEMEDIA"; then
   AC_CHECK_HEADER([CoreMedia/CoreMedia.h], [],
     [AC_MSG_ERROR([MacOS X 10.7 SDK or later is required])])
 fi
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl = DirectShow support

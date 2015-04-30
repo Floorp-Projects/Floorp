@@ -25,7 +25,7 @@ function spawnTest () {
 
   front.on("timeline-data", handler);
 
-  yield front.startRecording({ withMemory: true, withTicks: true });
+  yield front.startRecording({ withMarkers: true, withMemory: true, withTicks: true });
   yield Promise.all(Object.keys(deferreds).map(type => deferreds[type].promise));
   yield front.stopRecording();
   front.off("timeline-data", handler);

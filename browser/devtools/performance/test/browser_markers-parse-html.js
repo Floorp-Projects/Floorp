@@ -16,7 +16,7 @@ function* getMarkers(front) {
   };
   front.on("timeline-data", handler);
 
-  yield front.startRecording({ withTicks: true });
+  yield front.startRecording({ withMarkers: true, withTicks: true });
 
   const markers = yield promise;
   front.off("timeline-data", handler);
