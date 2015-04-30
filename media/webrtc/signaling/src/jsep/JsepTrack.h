@@ -162,6 +162,7 @@ struct JsepTrackPair {
   size_t mLevel;
   // Is this track pair sharing a transport with another?
   Maybe<size_t> mBundleLevel;
+  uint32_t mRecvonlySsrc;
   RefPtr<JsepTrack> mSending;
   RefPtr<JsepTrack> mReceiving;
   RefPtr<JsepTransport> mRtpTransport;
