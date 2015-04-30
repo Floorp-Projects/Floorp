@@ -74,6 +74,11 @@ let WaterfallView = Heritage.extend(DetailsSubview, {
    */
   _onMarkerSelected: function (event, marker) {
     let recording = PerformanceController.getCurrentRecording();
+    // Race condition in tests due to lazy rendering of markers in the
+    // waterfall? intermittent bug 1157523
+    if (!recording) {
+      return;
+    }
     let frames = recording.getFrames();
 
     if (event === "selected") {
