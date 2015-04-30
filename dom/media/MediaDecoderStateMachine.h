@@ -163,6 +163,11 @@ public:
   void SetDormant(bool aDormant);
 
 private:
+  // Initialization that needs to happen on the task queue. This is the first
+  // task that gets run on the task queue, and is dispatched from the MDSM
+  // constructor immediately after the task queue is created.
+  void InitializationTask();
+
   void Shutdown();
 public:
 

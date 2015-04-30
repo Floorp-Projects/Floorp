@@ -272,10 +272,9 @@ template<typename T>
 class Mirror
 {
 public:
-  Mirror(AbstractThread* aThread, const T& aInitialValue, const char* aName,
-         AbstractCanonical<T>* aCanonical = nullptr)
+  Mirror(AbstractThread* aThread, const T& aInitialValue, const char* aName)
   {
-    mImpl = new Impl(aThread, aInitialValue, aName, aCanonical);
+    mImpl = new Impl(aThread, aInitialValue, aName);
   }
 
   ~Mirror()
@@ -296,15 +295,10 @@ private:
   public:
     using AbstractMirror<T>::OwnerThread;
 
-    Impl(AbstractThread* aThread, const T& aInitialValue, const char* aName,
-         AbstractCanonical<T>* aCanonical)
+    Impl(AbstractThread* aThread, const T& aInitialValue, const char* aName)
       : AbstractMirror<T>(aThread), WatchTarget(aName), mValue(aInitialValue)
     {
       MIRROR_LOG("%s [%p] initialized", mName, this);
-
-      if (aCanonical) {
-        ConnectInternal(aCanonical);
-      }
     }
 
     operator const T&()
@@ -333,16 +327,8 @@ private:
 
     void Connect(AbstractCanonical<T>* aCanonical)
     {
-      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
-      ConnectInternal(aCanonical);
-    }
-
-  private:
-    // We separate the guts of Connect into a helper so that we can call it from
-    // initialization while not necessarily on the owner thread.
-    void ConnectInternal(AbstractCanonical<T>* aCanonical)
-    {
       MIRROR_LOG("%s [%p] Connecting to %p", mName, this, aCanonical);
+      MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       MOZ_ASSERT(!IsConnected());
 
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<StorensRefPtrPassByPtr<AbstractMirror<T>>>
