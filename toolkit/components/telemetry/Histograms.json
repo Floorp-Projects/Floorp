@@ -3834,6 +3834,20 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms till a tab switch is complete including the first paint"
   },
+  "FX_TAB_SWITCH_TOTAL_E10S_MS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 20,
+    "description": "Firefox: Time in ms between tab selection and tab content paint."
+  },
+  "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 20,
+    "description": "Firefox: If the spinner interstitial displays during tab switching, records the time in ms the graphic is visible"
+  },
   "FX_TAB_CLICK_MS": {
     "expires_in_version": "default",
     "kind": "exponential",
