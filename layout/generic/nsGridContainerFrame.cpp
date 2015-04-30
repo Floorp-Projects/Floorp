@@ -133,77 +133,83 @@ private:
  * the zero-based aFromIndex, and return the 1-based index (line number).
  * Also take into account there is an unconditional match at aImplicitLine
  * unless it's zero.
- * Return the last match if aNth occurrences can't be found, or zero if no
- * occurrence can be found.
+ * Return zero if aNth occurrences can't be found.  In that case, aNth has
+ * been decremented with the number of occurrences that were found (if any).
  */
 static uint32_t
-FindLine(const nsString& aName, uint32_t aNth,
+FindLine(const nsString& aName, int32_t* aNth,
          uint32_t aFromIndex, uint32_t aImplicitLine,
          const nsTArray<nsTArray<nsString>>& aNameList)
 {
-  MOZ_ASSERT(aNth != 0);
+  MOZ_ASSERT(aNth && *aNth > 0);
+  int32_t nth = *aNth;
   const uint32_t len = aNameList.Length();
-  uint32_t lastFound = 0;
   uint32_t line;
   uint32_t i = aFromIndex;
   for (; i < len; i = line) {
     line = i + 1;
     if (line == aImplicitLine || aNameList[i].Contains(aName)) {
-      lastFound = line;
-      if (--aNth == 0) {
-        return lastFound;
+      if (--nth == 0) {
+        return line;
       }
     }
   }
   if (aImplicitLine > i) {
     // aImplicitLine is after the lines we searched above so it's last.
     // (grid-template-areas has more tracks than grid-template-[rows|columns])
-    lastFound = aImplicitLine;
+    if (--nth == 0) {
+      return aImplicitLine;
+    }
   }
-  return lastFound;
+  MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
+  *aNth = nth;
+  return 0;
 }
 
 /**
  * @see FindLine, this function does the same but searches in reverse.
  */
 static uint32_t
-RFindLine(const nsString& aName, uint32_t aNth,
+RFindLine(const nsString& aName, int32_t* aNth,
           uint32_t aFromIndex, uint32_t aImplicitLine,
           const nsTArray<nsTArray<nsString>>& aNameList)
 {
-  MOZ_ASSERT(aNth != 0);
+  MOZ_ASSERT(aNth && *aNth > 0);
+  int32_t nth = *aNth;
   const uint32_t len = aNameList.Length();
-  uint32_t lastFound = 0;
   // The implicit line may be beyond the length of aNameList so we match this
-  // line first if it's within the 0..aFromIndex range.
+  // line first if it's within the len..aFromIndex range.
   if (aImplicitLine > len && aImplicitLine < aFromIndex) {
-    lastFound = aImplicitLine;
-    if (--aNth == 0) {
-      return lastFound;
+    if (--nth == 0) {
+      return aImplicitLine;
     }
   }
   uint32_t i = aFromIndex == 0 ? len : std::min(aFromIndex, len);
   for (; i; --i) {
     if (i == aImplicitLine || aNameList[i - 1].Contains(aName)) {
-      lastFound = i;
-      if (--aNth == 0) {
-        break;
+      if (--nth == 0) {
+        return i;
       }
     }
   }
-  return lastFound;
+  MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
+  *aNth = nth;
+  return 0;
 }
 
 static uint32_t
-FindNamedLine(const nsString& aName, int32_t aNth,
+FindNamedLine(const nsString& aName, int32_t* aNth,
               uint32_t aFromIndex, uint32_t aImplicitLine,
               const nsTArray<nsTArray<nsString>>& aNameList)
 {
-  MOZ_ASSERT(aNth != 0);
-  if (aNth > 0) {
+  MOZ_ASSERT(aNth && *aNth != 0);
+  if (*aNth > 0) {
     return ::FindLine(aName, aNth, aFromIndex, aImplicitLine, aNameList);
   }
-  return ::RFindLine(aName, -aNth, aFromIndex, aImplicitLine, aNameList);
+  int32_t nth = -*aNth;
+  int32_t line = ::RFindLine(aName, &nth, aFromIndex, aImplicitLine, aNameList);
+  *aNth = -nth;
+  return line;
 }
 
 /**
@@ -392,7 +398,7 @@ nsGridContainerFrame::ResolveLine(
   int32_t line = 0;
   if (aLine.mLineName.IsEmpty()) {
     MOZ_ASSERT(aNth != 0, "css-grid 9.2: <integer> must not be zero.");
-    line = std::max(int32_t(aFromIndex) + aNth, 1);
+    line = int32_t(aFromIndex) + aNth;
   } else {
     if (aNth == 0) {
       // <integer> was omitted; treat it as 1.
@@ -416,7 +422,7 @@ nsGridContainerFrame::ResolveLine(
         }
         // XXX must Implicit Named Areas have all four lines?
         // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
-        line = ::FindNamedLine(lineName, aNth, aFromIndex, implicitLine,
+        line = ::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
                                aLineNameList);
       }
     }
@@ -439,29 +445,27 @@ nsGridContainerFrame::ResolveLine(
           implicitLine = area->*areaEdge;
         }
       }
-      line = ::FindNamedLine(aLine.mLineName, aNth, aFromIndex, implicitLine,
+      line = ::FindNamedLine(aLine.mLineName, &aNth, aFromIndex, implicitLine,
                              aLineNameList);
     }
 
     if (line == 0) {
-      // No line matching <custom-ident> exists.
+      MOZ_ASSERT(aNth != 0, "we found all N named lines but 'line' is zero!");
+      int32_t edgeLine;
       if (aLine.mHasSpan) {
         // http://dev.w3.org/csswg/css-grid/#grid-placement-span-int
-        // Treat 'span <custom-ident> N' as 'span N'.
-        line = std::max(int32_t(aFromIndex) + aNth, 1);
+        // 'span <custom-ident> N'
+        edgeLine = aSide == eLineRangeSideStart ? 1 : aExplicitGridEnd;
       } else {
         // http://dev.w3.org/csswg/css-grid/#grid-placement-int
-        // Treat '<custom-ident> N' as first/last line depending on N's sign.
-        // XXX this is wrong due to a spec change, see bug 1009776 comment 17.
-        // XXX we want to possibly expand the implicit grid here.
-        line = aNth >= 0 ? 1 : aExplicitGridEnd;
+        // '<custom-ident> N'
+        edgeLine = aNth < 0 ? 1 : aExplicitGridEnd;
       }
+      // "If not enough lines with that name exist, all lines in the implicit
+      // grid are assumed to have that name..."
+      line = edgeLine + aNth;
     }
   }
-  // The only case which can result in "auto" (line == 0) is a plain
-  // <custom-ident> (without <integer> or 'span') which wasn't found.
-  MOZ_ASSERT(line != 0 || (!aLine.mHasSpan && aLine.mInteger == 0),
-             "Given a <integer> or 'span' the result should never be auto");
   return clamped(line, nsStyleGridLine::kMinLine, nsStyleGridLine::kMaxLine);
 }
 
@@ -494,6 +498,12 @@ nsGridContainerFrame::ResolveLineRangeHelper(
                            aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                            aStyle);
     int32_t span = aStart.mInteger == 0 ? 1 : aStart.mInteger;
+    if (end <= 1) {
+      // The end is at or before the first explicit line, thus all lines before
+      // it match <custom-ident> since they're implicit.
+      int32_t start = std::max(end - span, nsStyleGridLine::kMinLine);
+      return LinePair(start, end);
+    }
     auto start = ResolveLine(aStart, -span, end, aLineNameList, aAreaStart,
                              aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
                              aStyle);
@@ -528,12 +538,28 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     }
   }
 
-  uint32_t from = aEnd.mHasSpan ? start : 0;
-  auto end = ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
+  uint32_t from = 0;
+  int32_t nth = aEnd.mInteger == 0 ? 1 : aEnd.mInteger;
+  if (aEnd.mHasSpan) {
+    if (MOZ_UNLIKELY(start < 0)) {
+      if (aEnd.mLineName.IsEmpty()) {
+        return LinePair(start, start + nth);
+      }
+      // Fall through and start searching from the start of the grid (from=0).
+    } else {
+      if (start >= int32_t(aExplicitGridEnd)) {
+        // The start is at or after the last explicit line, thus all lines
+        // after it match <custom-ident> since they're implicit.
+        return LinePair(start, std::min(start + nth, nsStyleGridLine::kMaxLine));
+      }
+      from = start;
+    }
+  }
+  auto end = ResolveLine(aEnd, nth, from, aLineNameList, aAreaStart,
                          aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
   if (start == kAutoLine) {
     // auto / definite line
-    start = std::max(1, end - 1);
+    start = std::max(nsStyleGridLine::kMinLine, end - 1);
   }
   return LinePair(start, end);
 }
