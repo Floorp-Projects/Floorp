@@ -501,24 +501,31 @@ nsGridContainerFrame::ResolveLineRangeHelper(
   }
 
   int32_t start = kAutoLine;
-  if (!aStart.IsAuto()) {
+  if (aStart.IsAuto()) {
+    if (aEnd.IsAuto()) {
+      // auto / auto
+      return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
+    }
+    if (aEnd.mHasSpan) {
+      if (aEnd.mLineName.IsEmpty()) {
+        // auto / span <integer>
+        MOZ_ASSERT(aEnd.mInteger != 0);
+        return LinePair(start, aEnd.mInteger);
+      }
+      // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
+      // auto / span <custom-ident>
+      return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
+    }
+  } else {
     start = ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
                         aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
                         aStyle);
-  }
-  if (aEnd.IsAuto()) {
-    // * (except span) / auto
-    return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
-  }
-  if (start == kAutoLine && aEnd.mHasSpan) {
-    if (aEnd.mLineName.IsEmpty()) {
-      // auto / span <integer>
-      MOZ_ASSERT(aEnd.mInteger != 0);
-      return LinePair(start, aEnd.mInteger);
+    if (aEnd.IsAuto()) {
+      // A "definite line / auto" should resolve the auto to 'span 1'.
+      // The error handling in ResolveLineRange will make that happen and also
+      // clamp the end line correctly if we return "start / start".
+      return LinePair(start, start);
     }
-    // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-    // auto / span <custom-ident>
-    return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
   }
 
   uint32_t from = aEnd.mHasSpan ? start : 0;
@@ -555,7 +562,7 @@ nsGridContainerFrame::ResolveLineRange(
     if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
       r.first = nsStyleGridLine::kMaxLine - 1;
     }
-    r.second = r.first + 1;
+    r.second = r.first + 1; // XXX subgrid explicit size instead of 1?
   }
   return LineRange(r.first, r.second);
 }
