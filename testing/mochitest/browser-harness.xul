@@ -248,9 +248,40 @@
       var testWin = windowMediator.getMostRecentWindow(winType);
 
       setStatus("Running...");
-      testWin.focus();
-      var Tester = new testWin.Tester(links, gDumper, testsFinished);
-      Tester.start();
+
+      // It's possible that the test harness window is not yet focused when this
+      // function runs (in which case testWin is already focused, and focusing it
+      // will be a no-op, and then the test harness window will steal focus later,
+      // which will mess up tests). So wait for the test harness window to be
+      // focused before trying to focus testWin.
+      waitForFocus(() => {
+        // Focus the test window and start tests.
+        waitForFocus(() => {
+          var Tester = new testWin.Tester(links, gDumper, testsFinished);
+          Tester.start();
+        }, testWin);
+      }, window);
+    }
+
+    function executeSoon(callback) {
+      let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
+      tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+    }
+
+    function waitForFocus(callback, win) {
+      // If "win" is already focused, just call the callback.
+      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+      if (fm.focusedWindow == win) {
+        executeSoon(callback);
+        return;
+      }
+
+      // Otherwise focus it, and wait for the focus event.
+      win.addEventListener("focus", function listener() {
+        win.removeEventListener("focus", listener, true);
+        executeSoon(callback);
+      }, true);
+      win.focus();
     }
 
     function sum(a, b) {
