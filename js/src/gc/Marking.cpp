@@ -526,19 +526,6 @@ js::TraceObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t 
     }
 }
 
-void
-gc::MarkValueForBarrier(JSTracer* trc, Value* valuep, const char* name)
-{
-    MOZ_ASSERT(!trc->runtime()->isHeapCollecting());
-    TraceManuallyBarrieredEdge(trc, valuep, name);
-}
-
-void
-gc::MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name)
-{
-    TraceManuallyBarrieredEdge(trc, idp, name);
-}
-
 // A typed functor adaptor for TraceRoot.
 struct TraceRootFunctor {
     template <typename T>
