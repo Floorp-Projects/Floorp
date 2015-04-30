@@ -28,7 +28,7 @@ class nsIWidget;
 
 namespace mozilla {
 namespace layers {
-class CompositorVsyncObserver;
+class CompositorVsyncScheduler;
 }
 
 // Used to resample touch events whenever a vsync event occurs. It batches
@@ -52,7 +52,7 @@ public:
   void DispatchTouchNonMoveEvent(MultiTouchInput aInput);
   void DispatchTouchMoveEvents(TimeStamp aVsyncTime);
   void NotifyVsync(TimeStamp aVsyncTimestamp);
-  void SetCompositorVsyncObserver(layers::CompositorVsyncObserver* aObserver);
+  void SetCompositorVsyncScheduler(layers::CompositorVsyncScheduler* aObserver);
 
 protected:
   ~GeckoTouchDispatcher() {}
@@ -90,7 +90,7 @@ private:
   // How far ahead can vsync events get ahead of touch events.
   TimeDuration mOldTouchThreshold;
 
-  nsRefPtr<layers::CompositorVsyncObserver> mCompositorVsyncObserver;
+  nsRefPtr<layers::CompositorVsyncScheduler> mCompositorVsyncScheduler;
 };
 
 } // namespace mozilla
