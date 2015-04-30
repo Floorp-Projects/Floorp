@@ -374,7 +374,7 @@ nsGridContainerFrame::InitImplicitNamedAreas(const nsStylePosition* aStyle)
   }
 }
 
-uint32_t
+int32_t
 nsGridContainerFrame::ResolveLine(
   const nsStyleGridLine& aLine,
   int32_t aNth,
@@ -387,7 +387,7 @@ nsGridContainerFrame::ResolveLine(
   const nsStylePosition* aStyle)
 {
   MOZ_ASSERT(!aLine.IsAuto());
-  uint32_t line = 0;
+  int32_t line = 0;
   if (aLine.mLineName.IsEmpty()) {
     MOZ_ASSERT(aNth != 0, "css-grid 9.2: <integer> must not be zero.");
     line = std::max(int32_t(aFromIndex) + aNth, 1);
@@ -501,7 +501,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     return LinePair(start, end);
   }
 
-  uint32_t start = 0;
+  int32_t start = 0;
   if (!aStart.IsAuto()) {
     start = ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
                         aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
@@ -530,7 +530,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     end = 1; // XXX subgrid explicit size instead of 1?
   } else if (start == 0) {
     // auto (or not found <custom-ident>) / definite line
-    start = std::max(1U, end - 1);
+    start = std::max(1, end - 1);
   }
   return LinePair(start, end);
 }
@@ -587,25 +587,25 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     if (aEnd.IsAuto()) {
       return LineRange(0, 0);
     }
-    uint32_t end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
-                               aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
-                               aStyle);
+    int32_t end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
+                              aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
+                              aStyle);
     MOZ_ASSERT(end != 0, "resolving non-auto line shouldn't result in auto");
     if (aEnd.mHasSpan) {
       ++end;
     }
-    return LineRange(0, clamped(end, 1U, aGridEnd));
+    return LineRange(0, clamped(end, 1, int32_t(aGridEnd)));
   }
 
   if (aEnd.IsAuto()) {
-    uint32_t start =
+    int32_t start =
       ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
                   aAreaEnd, aExplicitGridEnd, eLineRangeSideStart, aStyle);
     MOZ_ASSERT(start != 0, "resolving non-auto line shouldn't result in auto");
     if (aStart.mHasSpan) {
-      start = std::max(int32_t(aGridEnd) - int32_t(start), 1);
+      start = std::max(int32_t(aGridEnd) - start, 1);
     }
-    return LineRange(clamped(start, 1U, aGridEnd), 0);
+    return LineRange(clamped(start, 1, int32_t(aGridEnd)), 0);
   }
 
   LineRange r = ResolveLineRange(aStart, aEnd, aLineNameList, aAreaStart,
@@ -613,8 +613,8 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
   MOZ_ASSERT(!r.IsAuto(), "resolving definite lines shouldn't result in auto");
   // Clamp definite lines to be within the implicit grid.
   // Note that this implies mStart may be equal to mEnd.
-  r.mStart = clamped(r.mStart, 1U, aGridEnd);
-  r.mEnd = clamped(r.mEnd, 1U, aGridEnd);
+  r.mStart = clamped(r.mStart, 1, int32_t(aGridEnd));
+  r.mEnd = clamped(r.mEnd, 1, int32_t(aGridEnd));
   MOZ_ASSERT(r.mStart <= r.mEnd);
   return r;
 }
@@ -875,7 +875,7 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
       if (minor.IsDefinite()) {
         // Items with 'auto' in the major dimension only.
         if (isSparse) {
-          if (minor.mStart < cursorMinor) {
+          if (minor.mStart < int32_t(cursorMinor)) {
             ++cursorMajor;
           }
           cursorMinor = minor.mStart;

@@ -83,7 +83,7 @@ protected:
    * i.e. the invariant is slightly relaxed compared to normal flow items.
    */
   struct LineRange {
-   LineRange(uint32_t aStart, uint32_t aEnd)
+   LineRange(int32_t aStart, int32_t aEnd)
       : mStart(aStart), mEnd(aEnd) {}
     bool IsAuto() const { return mStart == 0; }
     bool IsDefinite() const { return mStart != 0; }
@@ -92,11 +92,11 @@ protected:
      * Resolve this auto range to start at aStart, making it definite.
      * Precondition: this range IsAuto()
      */
-    void ResolveAutoPosition(uint32_t aStart)
+    void ResolveAutoPosition(int32_t aStart)
     {
       MOZ_ASSERT(IsAuto(), "Why call me?");
       MOZ_ASSERT(aStart > 0, "expected a 1-based line number");
-      MOZ_ASSERT(Extent() == mEnd, "'auto' representation changed?");
+      MOZ_ASSERT(int32_t(Extent()) == mEnd, "'auto' representation changed?");
       mStart = aStart;
       mEnd += aStart;
     }
@@ -121,8 +121,8 @@ protected:
                                       nscoord aGridOrigin,
                                       nscoord* aPos, nscoord* aLength) const;
 
-    uint32_t mStart;  // the start line, or zero for 'auto'
-    uint32_t mEnd;    // the end line, or the span length for 'auto'
+    int32_t mStart;  // the start line, or zero for 'auto'
+    int32_t mEnd;    // the end line, or the span length for 'auto'
   };
 
   /**
@@ -181,15 +181,15 @@ protected:
    * @return a definite line number, or zero in case aLine is a <custom-ident>
    * that can't be found.
    */
-  uint32_t ResolveLine(const nsStyleGridLine& aLine,
-                       int32_t aNth,
-                       uint32_t aFromIndex,
-                       const nsTArray<nsTArray<nsString>>& aLineNameList,
-                       uint32_t GridNamedArea::* aAreaStart,
-                       uint32_t GridNamedArea::* aAreaEnd,
-                       uint32_t aExplicitGridEnd,
-                       LineRangeSide aEdge,
-                       const nsStylePosition* aStyle);
+  int32_t ResolveLine(const nsStyleGridLine& aLine,
+                      int32_t aNth,
+                      uint32_t aFromIndex,
+                      const nsTArray<nsTArray<nsString>>& aLineNameList,
+                      uint32_t GridNamedArea::* aAreaStart,
+                      uint32_t GridNamedArea::* aAreaEnd,
+                      uint32_t aExplicitGridEnd,
+                      LineRangeSide aEdge,
+                      const nsStylePosition* aStyle);
   /**
    * Return a LineRange based on the given style data. Non-auto lines
    * are resolved to a definite line number per:
@@ -342,7 +342,7 @@ protected:
    * @see ResolveLineRange
    * @return a pair (start,end) of lines
    */
-  typedef std::pair<uint32_t, uint32_t> LinePair;
+  typedef std::pair<int32_t, int32_t> LinePair;
   LinePair ResolveLineRangeHelper(const nsStyleGridLine& aStart,
                                   const nsStyleGridLine& aEnd,
                                   const nsTArray<nsTArray<nsString>>& aLineNameList,
