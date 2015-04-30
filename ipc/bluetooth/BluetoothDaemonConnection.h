@@ -18,6 +18,7 @@ namespace mozilla {
 namespace ipc {
 
 class BluetoothDaemonConnectionIO;
+class BluetoothDaemonPDUConsumer;
 
 /*
  * |BlutoothDaemonPDU| represents a single PDU that is transfered from or to
@@ -55,6 +56,11 @@ public:
                      uint16_t aPayloadSize);
   BluetoothDaemonPDU(size_t aPayloadSize);
 
+  void SetConsumer(BluetoothDaemonPDUConsumer* aConsumer)
+  {
+    mConsumer = aConsumer;
+  }
+
   void SetUserData(void* aUserData)
   {
     mUserData = aUserData;
@@ -79,6 +85,7 @@ private:
   size_t GetPayloadSize() const;
   void OnError(const char* aFunction, int aErrno);
 
+  BluetoothDaemonPDUConsumer* mConsumer;
   void* mUserData;
   ScopedClose mReceivedFd;
 };

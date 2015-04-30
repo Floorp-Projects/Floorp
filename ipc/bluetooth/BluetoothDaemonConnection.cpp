@@ -42,8 +42,9 @@ static const char sBluetoothdSocketName[] = "bluez_hal_socket";
 
 BluetoothDaemonPDU::BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
                                        uint16_t aPayloadSize)
-: UnixSocketIOBuffer(HEADER_SIZE + aPayloadSize)
-, mUserData(nullptr)
+  : UnixSocketIOBuffer(HEADER_SIZE + aPayloadSize)
+  , mConsumer(nullptr)
+  , mUserData(nullptr)
 {
   uint8_t* data = Append(HEADER_SIZE);
   MOZ_ASSERT(data);
@@ -55,8 +56,9 @@ BluetoothDaemonPDU::BluetoothDaemonPDU(uint8_t aService, uint8_t aOpcode,
 }
 
 BluetoothDaemonPDU::BluetoothDaemonPDU(size_t aPayloadSize)
-: UnixSocketIOBuffer(HEADER_SIZE + aPayloadSize)
-, mUserData(nullptr)
+  : UnixSocketIOBuffer(HEADER_SIZE + aPayloadSize)
+  , mConsumer(nullptr)
+  , mUserData(nullptr)
 { }
 
 void
@@ -91,6 +93,12 @@ BluetoothDaemonPDU::Send(int aFd)
   }
 
   Consume(res);
+
+  if (mConsumer) {
+    // We successfully sent a PDU, now store the
+    // result runnable in the consumer.
+    mConsumer->StoreUserData(*this);
+  }
 
   return res;
 }
@@ -376,7 +384,6 @@ BluetoothDaemonConnectionIO::Send(BluetoothDaemonPDU* aPDU)
   MOZ_ASSERT(mConsumer);
   MOZ_ASSERT(aPDU);
 
-  mConsumer->StoreUserData(*aPDU); // Store user data for reply
   EnqueueData(aPDU);
   AddWatchers(WRITE_WATCHER, false);
 }
