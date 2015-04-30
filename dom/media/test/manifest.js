@@ -2,6 +2,26 @@
 // be ignored. To make sure tests respect that, we include a file of type
 // "bogus/duh" in each list.
 
+// Make sure to not touch navigator in here, since we want to push prefs that
+// will affect the APIs it exposes, but the set of exposed APIs is determined
+// when Navigator.prototype is created.  So if we touch navigator before pushing
+// the prefs, the APIs it exposes will not take those prefs into account.  We
+// work around this by using a navigator object from a different global for our
+// UA string testing.
+var gManifestNavigatorSource = document.documentElement.appendChild(document.createElement("iframe"));
+gManifestNavigatorSource.style.display = "none";
+function manifestNavigator() {
+  return gManifestNavigatorSource.contentWindow.navigator;
+}
+
+// Similarly, use a <video> element from a different global for canPlayType or
+// other feature testing.  If we used one from our global and did so before our
+// prefs are pushed, then we'd instantiate HTMLMediaElement.prototype before the
+// prefs are pushed and APIs we expect to be on that object would not be there.
+function manifestVideo() {
+  return gManifestNavigatorSource.contentDocument.createElement('video');
+}
+
 // These are small test files, good for just seeing if something loads. We
 // really only need one test file per backend here.
 var gSmallTests = [
@@ -334,7 +354,7 @@ var gOggTrackInfoResults = {
 // we've specified.
 function fileUriToSrc(path, mustExist) {
   // android mochitest doesn't support file://
-  if (navigator.appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G")
+  if (manifestNavigator().appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G")
     return path;
 
   const Ci = SpecialPowers.Ci;
@@ -458,7 +478,7 @@ var gFastSeekTests = [
 
 function IsWindows8OrLater() {
   var re = /Windows NT (\d.\d)/;
-  var winver = navigator.userAgent.match(re);
+  var winver = manifestNavigator().userAgent.match(re);
   return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.2;
 }
 
@@ -473,7 +493,7 @@ var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
                                   .getService(SpecialPowers.Ci.nsIPropertyBag2)
                                   .getProperty('version');
 // Fragmented MP4.
-if (navigator.userAgent.indexOf("Mobile") != -1 && androidVersion >= 18) {
+if (manifestNavigator().userAgent.indexOf("Mobile") != -1 && androidVersion >= 18) {
   gUnseekableTests = gUnseekableTests.concat([
     { name:"street.mp4", type:"video/mp4" }
   ]);
