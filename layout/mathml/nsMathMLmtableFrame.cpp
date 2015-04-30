@@ -230,7 +230,7 @@ ComputeBorderOverflow(nsMathMLmtdFrame* aFrame, nsStyleBorder aStyleBorder)
   nsMargin overflow;
   int32_t rowIndex;
   int32_t columnIndex;
-  nsTableFrame* table = nsTableFrame::GetTableFrame(aFrame);
+  nsTableFrame* table = aFrame->GetTableFrame();
   aFrame->GetCellIndexes(rowIndex, columnIndex);
   if (!columnIndex) {
     overflow.left = table->GetColSpacing(-1);
@@ -1107,9 +1107,10 @@ nsMathMLmtrFrame::AttributeChanged(int32_t  aNameSpaceID,
 // implementation of nsMathMLmtdFrame
 
 nsContainerFrame*
-NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                     nsTableFrame* aTableFrame)
 {
-  return new (aPresShell) nsMathMLmtdFrame(aContext);
+  return new (aPresShell) nsMathMLmtdFrame(aContext, aTableFrame);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdFrame)

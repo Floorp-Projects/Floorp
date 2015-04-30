@@ -21,12 +21,6 @@ namespace image {
 
 // Inherited methods from Image.
 
-nsresult
-ImageWrapper::Init(const char* aMimeType, uint32_t aFlags)
-{
-  return mInnerImage->Init(aMimeType, aFlags);
-}
-
 already_AddRefed<ProgressTracker>
 ImageWrapper::GetProgressTracker()
 {

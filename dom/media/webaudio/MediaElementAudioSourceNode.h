@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class MediaElementAudioSourceNode : public MediaStreamAudioSourceNode
+class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode
 {
 public:
   MediaElementAudioSourceNode(AudioContext* aContext,

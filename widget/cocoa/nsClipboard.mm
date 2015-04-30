@@ -5,6 +5,8 @@
 
 #include "prlog.h"
 
+#include "mozilla/unused.h"
+
 #include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsClipboard.h"
@@ -48,17 +50,18 @@ nsClipboard::~nsClipboard()
 }
 
 // We separate this into its own function because after an @try, all local
-// variables within that function get marked as volatile, and our C++ type 
+// variables within that function get marked as volatile, and our C++ type
 // system doesn't like volatile things.
-static NSData* 
+static NSData*
 GetDataFromPasteboard(NSPasteboard* aPasteboard, NSString* aType)
 {
   NSData *data = nil;
   @try {
     data = [aPasteboard dataForType:aType];
   } @catch (NSException* e) {
-    NS_WARNING(nsPrintfCString("Exception raised while getting data from the pasteboard: \"%s - %s\"", 
+    NS_WARNING(nsPrintfCString("Exception raised while getting data from the pasteboard: \"%s - %s\"",
                                [[e name] UTF8String], [[e reason] UTF8String]).get());
+    mozilla::unused << e;
   }
   return data;
 }

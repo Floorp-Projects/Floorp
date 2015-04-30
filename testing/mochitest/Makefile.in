@@ -86,6 +86,7 @@ DIST_BIN = $(DIST)/bin
 
 GMP_TEST_PLUGIN_DIRS := \
   $(DIST_BIN)/gmp-fake \
+  $(DIST_BIN)/gmp-fakeopenh264 \
   $(DIST_BIN)/gmp-clearkey \
   $(NULL)
 

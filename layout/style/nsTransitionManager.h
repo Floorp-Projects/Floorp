@@ -29,13 +29,13 @@ struct StyleTransition;
 
 namespace mozilla {
 
-struct ElementPropertyTransition : public dom::KeyframeEffectReadonly
+struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
 {
   ElementPropertyTransition(nsIDocument* aDocument,
                             dom::Element* aTarget,
                             nsCSSPseudoElements::Type aPseudoType,
                             const AnimationTiming &aTiming)
-    : dom::KeyframeEffectReadonly(aDocument, aTarget, aPseudoType,
+    : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType,
                                   aTiming, EmptyString())
   { }
 

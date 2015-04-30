@@ -31,6 +31,8 @@
         ios.offline = true;
         iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/index.html";
       } else if (e.data.status == "done") {
+        iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/synth.html";
+      } else if (e.data.status == "done-synth") {
         ios.offline = false;
         iframe.src = "https://example.com/tests/dom/workers/test/serviceworkers/fetch/https/unregister.html";
       } else if (e.data.status == "unregistrationdone") {

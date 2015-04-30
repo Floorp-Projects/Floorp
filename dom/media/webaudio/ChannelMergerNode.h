@@ -14,7 +14,7 @@ namespace dom {
 
 class AudioContext;
 
-class ChannelMergerNode : public AudioNode
+class ChannelMergerNode final : public AudioNode
 {
 public:
   ChannelMergerNode(AudioContext* aContext,

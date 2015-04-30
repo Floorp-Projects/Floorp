@@ -17,10 +17,13 @@ function newURI(spec)
                                                     .newURI(spec, null, null);
 }
 
-function RemoteWebProgressRequest(spec, originalSpec)
+function RemoteWebProgressRequest(spec, originalSpec, requestCPOW)
 {
+  this.wrappedJSObject = this;
+
   this._uri = newURI(spec);
   this._originalURI = newURI(originalSpec);
+  this._requestCPOW = requestCPOW;
 }
 
 RemoteWebProgressRequest.prototype = {
@@ -31,6 +34,8 @@ RemoteWebProgressRequest.prototype = {
 };
 
 function RemoteWebProgress(aManager, aIsTopLevel) {
+  this.wrappedJSObject = this;
+
   this._manager = aManager;
 
   this._isLoadingDocument = false;
@@ -74,6 +79,35 @@ function RemoteWebProgressManager (aBrowser) {
 
   this.swapBrowser(aBrowser);
 }
+
+RemoteWebProgressManager.argumentsForAddonListener = function(kind, args) {
+  function checkType(arg, typ) {
+    if (!arg) {
+      return false;
+    }
+    return (arg instanceof typ) ||
+      (arg instanceof Ci.nsISupports && arg.wrappedJSObject instanceof typ);
+  }
+
+  // Arguments for a tabs listener are shifted over one since the
+  // <browser> element is passed as the first argument.
+  let webProgressIndex = 0;
+  let requestIndex = 1;
+  if (kind == "tabs") {
+    webProgressIndex = 1;
+    requestIndex = 2;
+  }
+
+  if (checkType(args[webProgressIndex], RemoteWebProgress)) {
+    args[webProgressIndex] = args[webProgressIndex].wrappedJSObject._webProgressCPOW;
+  }
+
+  if (checkType(args[requestIndex], RemoteWebProgressRequest)) {
+    args[requestIndex] = args[requestIndex].wrappedJSObject._requestCPOW;
+  }
+
+  return args;
+};
 
 RemoteWebProgressManager.prototype = {
   swapBrowser: function(aBrowser) {
@@ -163,13 +197,15 @@ RemoteWebProgressManager.prototype = {
       webProgress._DOMWindow = objects.DOMWindow;
       webProgress._DOMWindowID = json.webProgress.DOMWindowID;
       webProgress._loadType = json.webProgress.loadType;
+      webProgress._webProgressCPOW = objects.webProgress;
     }
 
     // The WebProgressRequest object however is always dynamic.
     let request = null;
     if (json.requestURI) {
       request = new RemoteWebProgressRequest(json.requestURI,
-                                             json.originalRequestURI);
+                                             json.originalRequestURI,
+                                             objects.request);
     }
 
     if (isTopLevel) {
@@ -226,5 +262,5 @@ RemoteWebProgressManager.prototype = {
       this._callProgressListeners("onProgressChange", webProgress, request, json.curSelf, json.maxSelf, json.curTotal, json.maxTotal);
       break;
     }
-  }
+  },
 };

@@ -1,5 +1,5 @@
 Name: fake
 Description: Fake GMP Plugin
 Version: 1.0
-APIs: encode-video[h264], decode-video[h264], eme-decrypt-v7[fake]
+APIs: encode-video[h264:fake], decode-video[h264:fake], eme-decrypt-v7[fake]
 Libraries: dxva2.dll

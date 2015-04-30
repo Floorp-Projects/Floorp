@@ -14,6 +14,8 @@
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
 
+class JSLinearString;
+class JSRope;
 namespace js {
 class BaseShape;
 class GCMarker;
@@ -245,9 +247,12 @@ class GCMarker : public JSTracer
     template <typename T> void markAndTraceChildren(T* thing);
     template <typename T> void markAndPush(StackTag tag, T* thing);
     template <typename T> void markAndScan(T* thing);
-    void eagerlyMarkChildren(Shape* shape);
+    void eagerlyMarkChildren(JSLinearString* str);
+    void eagerlyMarkChildren(JSRope* rope);
     void eagerlyMarkChildren(JSString* str);
     void eagerlyMarkChildren(LazyScript *thing);
+    void eagerlyMarkChildren(Shape* shape);
+    void lazilyMarkChildren(ObjectGroup* group);
 
     // We may not have concrete types yet, so this has to be out of the header.
     template <typename T>
@@ -289,7 +294,6 @@ class GCMarker : public JSTracer
     bool restoreValueArray(NativeObject* obj, void** vpp, void** endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget& budget);
-    void processMarkStackOther(uintptr_t tag, uintptr_t addr);
 
     /* The color is only applied to objects and functions. */
     uint32_t color;

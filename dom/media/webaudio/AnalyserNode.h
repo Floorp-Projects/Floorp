@@ -15,7 +15,7 @@ namespace dom {
 
 class AudioContext;
 
-class AnalyserNode : public AudioNode
+class AnalyserNode final : public AudioNode
 {
 public:
   explicit AnalyserNode(AudioContext* aContext);

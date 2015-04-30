@@ -59,35 +59,35 @@ const double ComputedTiming::kNullTimeFraction = PositiveInfinity<double>();
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadonly,
-                                   AnimationEffectReadonly,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadOnly,
+                                   AnimationEffectReadOnly,
                                    mTarget)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadonly,
-                                               AnimationEffectReadonly)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadOnly,
+                                               AnimationEffectReadOnly)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadonly)
-NS_INTERFACE_MAP_END_INHERITING(AnimationEffectReadonly)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadOnly)
+NS_INTERFACE_MAP_END_INHERITING(AnimationEffectReadOnly)
 
-NS_IMPL_ADDREF_INHERITED(KeyframeEffectReadonly, AnimationEffectReadonly)
-NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadonly, AnimationEffectReadonly)
+NS_IMPL_ADDREF_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
+NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
 
 JSObject*
-KeyframeEffectReadonly::WrapObject(JSContext* aCx,
+KeyframeEffectReadOnly::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto)
 {
-  return KeyframeEffectReadonlyBinding::Wrap(aCx, this, aGivenProto);
+  return KeyframeEffectReadOnlyBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
-KeyframeEffectReadonly::SetParentTime(Nullable<TimeDuration> aParentTime)
+KeyframeEffectReadOnly::SetParentTime(Nullable<TimeDuration> aParentTime)
 {
   mParentTime = aParentTime;
 }
 
 ComputedTiming
-KeyframeEffectReadonly::GetComputedTimingAt(
+KeyframeEffectReadOnly::GetComputedTimingAt(
                           const Nullable<TimeDuration>& aLocalTime,
                           const AnimationTiming& aTiming)
 {
@@ -217,7 +217,7 @@ KeyframeEffectReadonly::GetComputedTimingAt(
 }
 
 StickyTimeDuration
-KeyframeEffectReadonly::ActiveDuration(const AnimationTiming& aTiming)
+KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming)
 {
   if (aTiming.mIterationCount == mozilla::PositiveInfinity<float>()) {
     // An animation that repeats forever has an infinite active duration
@@ -234,7 +234,7 @@ KeyframeEffectReadonly::ActiveDuration(const AnimationTiming& aTiming)
 
 // http://w3c.github.io/web-animations/#in-play
 bool
-KeyframeEffectReadonly::IsInPlay(const Animation& aAnimation) const
+KeyframeEffectReadOnly::IsInPlay(const Animation& aAnimation) const
 {
   if (IsFinishedTransition() ||
       aAnimation.PlayState() == AnimationPlayState::Finished) {
@@ -246,7 +246,7 @@ KeyframeEffectReadonly::IsInPlay(const Animation& aAnimation) const
 
 // http://w3c.github.io/web-animations/#current
 bool
-KeyframeEffectReadonly::IsCurrent(const Animation& aAnimation) const
+KeyframeEffectReadOnly::IsCurrent(const Animation& aAnimation) const
 {
   if (IsFinishedTransition() ||
       aAnimation.PlayState() == AnimationPlayState::Finished) {
@@ -259,7 +259,7 @@ KeyframeEffectReadonly::IsCurrent(const Animation& aAnimation) const
 }
 
 bool
-KeyframeEffectReadonly::IsInEffect() const
+KeyframeEffectReadOnly::IsInEffect() const
 {
   if (IsFinishedTransition()) {
     return false;
@@ -270,7 +270,7 @@ KeyframeEffectReadonly::IsInEffect() const
 }
 
 const AnimationProperty*
-KeyframeEffectReadonly::GetAnimationOfProperty(nsCSSProperty aProperty) const
+KeyframeEffectReadOnly::GetAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
@@ -286,7 +286,7 @@ KeyframeEffectReadonly::GetAnimationOfProperty(nsCSSProperty aProperty) const
 }
 
 bool
-KeyframeEffectReadonly::HasAnimationOfProperties(
+KeyframeEffectReadOnly::HasAnimationOfProperties(
                           const nsCSSProperty* aProperties,
                           size_t aPropertyCount) const
 {
@@ -299,7 +299,7 @@ KeyframeEffectReadonly::HasAnimationOfProperties(
 }
 
 void
-KeyframeEffectReadonly::ComposeStyle(
+KeyframeEffectReadOnly::ComposeStyle(
                           nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
                           nsCSSPropertySet& aSetProperties)
 {

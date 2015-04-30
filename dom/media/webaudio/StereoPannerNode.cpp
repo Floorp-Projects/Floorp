@@ -27,7 +27,7 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(StereoPannerNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(StereoPannerNode, AudioNode)
 
-class StereoPannerNodeEngine : public AudioNodeEngine
+class StereoPannerNodeEngine final : public AudioNodeEngine
 {
 public:
   StereoPannerNodeEngine(AudioNode* aNode,

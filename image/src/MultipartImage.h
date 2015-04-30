@@ -27,8 +27,6 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(MultipartImage)
   NS_DECL_ISUPPORTS
 
-  MultipartImage(Image* aImage, ProgressTracker* aTracker);
-
   void BeginTransitionToPart(Image* aNextPart);
 
   // Overridden ImageWrapper methods:
@@ -73,12 +71,15 @@ protected:
   virtual ~MultipartImage();
 
 private:
+  friend class ImageFactory;
   friend class NextPartObserver;
+
+  explicit MultipartImage(Image* aFirstPart);
+  void Init();
 
   void FinishTransition();
 
   nsRefPtr<ProgressTracker> mTracker;
-  nsAutoPtr<ProgressTrackerInit> mProgressTrackerInit;
   nsRefPtr<NextPartObserver> mNextPartObserver;
   nsRefPtr<Image> mNextPart;
   bool mDeferNotifications : 1;

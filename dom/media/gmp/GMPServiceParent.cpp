@@ -673,21 +673,23 @@ GeckoMediaPluginServiceParent::ClonePlugin(const GMPParent* aOriginal)
 
 class NotifyObserversTask final : public nsRunnable {
 public:
-  explicit NotifyObserversTask(const char* aTopic)
+  explicit NotifyObserversTask(const char* aTopic, nsString aData = EmptyString())
     : mTopic(aTopic)
+    , mData(aData)
   {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
     MOZ_ASSERT(obsService);
     if (obsService) {
-      obsService->NotifyObservers(nullptr, mTopic, nullptr);
+      obsService->NotifyObservers(nullptr, mTopic, mData.get());
     }
     return NS_OK;
   }
 private:
   ~NotifyObserversTask() {}
   const char* mTopic;
+  const nsString mData;
 };
 
 void
@@ -737,6 +739,11 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     return;
   }
 
+  // Plugin destruction can modify |mPlugins|. Put them aside for now and
+  // destroy them once we're done with |mPlugins|.
+  nsTArray<nsRefPtr<GMPParent>> deadPlugins;
+
+  bool inUse = false;
   MutexAutoLock lock(mMutex);
   for (size_t i = mPlugins.Length() - 1; i < mPlugins.Length(); i--) {
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
@@ -749,6 +756,7 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
     if (aDeleteFromDisk && gmp->State() != GMPStateNotLoaded) {
       // We have to wait for the child process to release its lib handle
       // before we can delete the GMP.
+      inUse = true;
       gmp->MarkForDeletion();
 
       if (!mPluginsWaitingForDeletion.Contains(aDirectory)) {
@@ -758,15 +766,25 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
 
     if (gmp->State() == GMPStateNotLoaded || !aCanDefer) {
       // GMP not in use or shutdown is being forced; can shut it down now.
-      gmp->AbortAsyncShutdown();
-      gmp->CloseActive(true);
+      deadPlugins.AppendElement(gmp);
       mPlugins.RemoveElementAt(i);
     }
   }
 
-  if (aDeleteFromDisk) {
+  {
+    MutexAutoUnlock unlock(mMutex);
+    for (auto& gmp : deadPlugins) {
+      gmp->AbortAsyncShutdown();
+      gmp->CloseActive(true);
+    }
+  }
+
+  if (aDeleteFromDisk && !inUse) {
     if (NS_SUCCEEDED(directory->Remove(true))) {
       mPluginsWaitingForDeletion.RemoveElement(aDirectory);
+      NS_DispatchToMainThread(new NotifyObserversTask("gmp-directory-deleted",
+                                                      nsString(aDirectory)),
+                              NS_DISPATCH_NORMAL);
     }
   }
 }

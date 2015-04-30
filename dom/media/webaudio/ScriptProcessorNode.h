@@ -16,7 +16,7 @@ namespace dom {
 class AudioContext;
 class SharedBuffers;
 
-class ScriptProcessorNode : public AudioNode
+class ScriptProcessorNode final : public AudioNode
 {
 public:
   ScriptProcessorNode(AudioContext* aContext,

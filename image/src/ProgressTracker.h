@@ -158,21 +158,20 @@ public:
   // probably be improved, but it's too scary to mess with at the moment.
   bool FirstObserverIs(IProgressObserver* aObserver);
 
+  // Resets our weak reference to our image. Image subclasses should call this
+  // in their destructor.
+  void ResetImage();
+
 private:
   typedef nsTObserverArray<mozilla::WeakPtr<IProgressObserver>> ObserverArray;
   friend class AsyncNotifyRunnable;
   friend class AsyncNotifyCurrentStateRunnable;
-  friend class ProgressTrackerInit;
+  friend class ImageFactory;
 
   ProgressTracker(const ProgressTracker& aOther) = delete;
 
-  // This method should only be called once, and only on an ProgressTracker
-  // that was initialized without an image. ProgressTrackerInit automates this.
+  // Sets our weak reference to our image. Only ImageFactory should call this.
   void SetImage(Image* aImage);
-
-  // Resets our weak reference to our image, for when mImage is about to go out
-  // of scope.  ProgressTrackerInit automates this.
-  void ResetImage();
 
   // Send some notifications that would be necessary to make |aObserver| believe
   // the request is finished downloading and decoding.  We only send
@@ -199,15 +198,6 @@ private:
   ObserverArray mObservers;
 
   Progress mProgress;
-};
-
-class ProgressTrackerInit
-{
-public:
-  ProgressTrackerInit(Image* aImage, ProgressTracker* aTracker);
-  ~ProgressTrackerInit();
-private:
-  ProgressTracker* mTracker;
 };
 
 } // namespace image

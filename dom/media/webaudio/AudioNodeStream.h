@@ -31,7 +31,8 @@ class AudioNodeEngine;
  * actual audio processing. AudioNodeStream contains the glue code that
  * integrates audio processing with the MediaStreamGraph.
  */
-class AudioNodeStream : public ProcessedMediaStream {
+class AudioNodeStream : public ProcessedMediaStream
+{
   typedef dom::ChannelCountMode ChannelCountMode;
   typedef dom::ChannelInterpretation ChannelInterpretation;
 

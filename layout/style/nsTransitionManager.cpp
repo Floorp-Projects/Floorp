@@ -34,7 +34,7 @@
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 using mozilla::dom::Animation;
-using mozilla::dom::KeyframeEffectReadonly;
+using mozilla::dom::KeyframeEffectReadOnly;
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -46,7 +46,7 @@ ElementPropertyTransition::Name() const
      const_cast<ElementPropertyTransition*>(this)->mName =
        NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(TransitionProperty()));
    }
-   return dom::KeyframeEffectReadonly::Name();
+   return dom::KeyframeEffectReadOnly::Name();
 }
 
 double
@@ -321,7 +321,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     do {
       --i;
       Animation* anim = animations[i];
-      dom::KeyframeEffectReadonly* effect = anim->GetEffect();
+      dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
       MOZ_ASSERT(effect && effect->Properties().Length() == 1,
                  "Should have one animation property for a transition");
       MOZ_ASSERT(effect && effect->Properties()[0].mSegments.Length() == 1,
@@ -633,7 +633,7 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
   do {
     --i;
     Animation* anim = animations[i];
-    dom::KeyframeEffectReadonly* effect = anim->GetEffect();
+    dom::KeyframeEffectReadOnly* effect = anim->GetEffect();
 
     if (!effect->IsFinishedTransition()) {
       continue;

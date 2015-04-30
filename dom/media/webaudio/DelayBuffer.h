@@ -13,7 +13,8 @@
 
 namespace mozilla {
 
-class DelayBuffer {
+class DelayBuffer final
+{
   typedef dom::ChannelInterpretation ChannelInterpretation;
 
 public:
