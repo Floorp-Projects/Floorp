@@ -1178,11 +1178,11 @@ namespace JS {
 class JS_PUBLIC_API(RuntimeOptions) {
   public:
     RuntimeOptions()
-      : baseline_(false),
-        ion_(false),
-        asmJS_(false),
-        nativeRegExp_(false),
-        unboxedObjects_(false),
+      : baseline_(true),
+        ion_(true),
+        asmJS_(true),
+        nativeRegExp_(true),
+        unboxedObjects_(false), // Not enabled by default yet
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
