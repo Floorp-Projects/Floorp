@@ -98,11 +98,12 @@ AppleVTDecoder::Input(MediaRawData* aSample)
   LOG("    sha1 %s", digest.get());
 #endif // LOG_MEDIA_SHA1
 
-  mTaskQueue->Dispatch(
+  nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
           this,
           &AppleVTDecoder::SubmitFrame,
-          nsRefPtr<MediaRawData>(aSample)));
+          nsRefPtr<MediaRawData>(aSample));
+  mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
 

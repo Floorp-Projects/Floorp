@@ -187,8 +187,10 @@ ZipCollection::GetZip(const char *path)
   /* Search the list of Zips we already have for a match */
   for (std::vector<Zip *>::iterator it = Singleton.zips.begin();
        it < Singleton.zips.end(); ++it) {
-    if ((*it)->GetName() && (strcmp((*it)->GetName(), path) == 0))
-      return *it;
+    if ((*it)->GetName() && (strcmp((*it)->GetName(), path) == 0)) {
+      mozilla::RefPtr<Zip> zip = *it;
+      return zip.forget();
+    }
   }
   return Zip::Create(path);
 }
