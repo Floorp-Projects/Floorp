@@ -11,14 +11,13 @@ function spawnTest () {
   // Enable memory to test.
   Services.prefs.setBoolPref(MEMORY_PREF, true);
 
-  yield DetailsView.selectView("memory-flamegraph");
-  ok(DetailsView.isViewSelected(MemoryFlameGraphView), "The flamegraph is now selected.");
-
   yield startRecording(panel);
   yield busyWait(100);
+  yield stopRecording(panel);
 
   let rendered = once(MemoryFlameGraphView, EVENTS.MEMORY_FLAMEGRAPH_RENDERED);
-  yield stopRecording(panel);
+  yield DetailsView.selectView("memory-flamegraph");
+  ok(DetailsView.isViewSelected(MemoryFlameGraphView), "The flamegraph is now selected.");
   yield rendered;
 
   ok(true, "MemoryFlameGraphView rendered after recording is stopped.");

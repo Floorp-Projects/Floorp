@@ -2,17 +2,23 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the details view hides the memory buttons when `enable-memory` is toggled,
- * and that it switches to default panel if toggling while a memory panel is selected.
+ * Tests that the details view hides the memory buttons when a recording does not
+ * have memory data (withMemory: false), and that when a memory panel is selected,
+ * switching to a panel that does not have memory goes to a default panel instead.
  */
 function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { EVENTS, PerformanceController, OverviewView, DetailsView } = panel.panelWin;
-  let { $, WaterfallView, MemoryCallTreeView, MemoryFlameGraphView } = panel.panelWin;
+  let { $, RecordingsView, WaterfallView, MemoryCallTreeView, MemoryFlameGraphView } = panel.panelWin;
+
+  Services.prefs.setBoolPref(MEMORY_PREF, false);
+  yield startRecording(panel);
+  yield stopRecording(panel);
 
   ok(DetailsView.isViewSelected(WaterfallView),
     "The waterfall view is selected by default in the details view.");
 
+  Services.prefs.setBoolPref(MEMORY_PREF, true);
   // The toolbar buttons will always be hidden when a recording isn't available,
   // so make sure we have one that's finished.
   yield startRecording(panel);
@@ -21,13 +27,8 @@ function spawnTest () {
   let flameBtn = $("toolbarbutton[data-view='memory-flamegraph']");
   let callBtn = $("toolbarbutton[data-view='memory-calltree']");
 
-  Services.prefs.setBoolPref(MEMORY_PREF, false);
-  is(flameBtn.hidden, true, "memory-flamegraph button hidden when enable-memory=false");
-  is(callBtn.hidden, true, "memory-calltree button hidden when enable-memory=false");
-
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
-  is(flameBtn.hidden, false, "memory-flamegraph button shown when enable-memory=true");
-  is(callBtn.hidden, false, "memory-calltree button shown when enable-memory=true");
+  is(flameBtn.hidden, false, "memory-flamegraph button shown when recording has memory data");
+  is(callBtn.hidden, false, "memory-calltree button shown when recording has memory data");
 
   let selected = DetailsView.whenViewSelected(MemoryCallTreeView);
   let notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
@@ -45,15 +46,21 @@ function spawnTest () {
   ok(DetailsView.isViewSelected(MemoryFlameGraphView),
     "The memory flamegraph view can now be selected.");
 
+  // Select the first recording with no memory data
   selected = DetailsView.whenViewSelected(WaterfallView);
   notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  Services.prefs.setBoolPref(MEMORY_PREF, false);
+  RecordingsView.selectedIndex = 0;
   yield Promise.all([selected, notified]);
 
   ok(DetailsView.isViewSelected(WaterfallView),
-    "The waterfall view is now selected when toggling off enable-memory when a memory panel is selected.");
+    "The waterfall view is now selected when switching back to a recording that does not have memory data");
+  is(flameBtn.hidden, true, "memory-flamegraph button hidden when recording does not have memory data");
+  is(callBtn.hidden, true, "memory-calltree button hidden when recording does not have memory data");
 
-  Services.prefs.setBoolPref(MEMORY_PREF, true);
+  // Go back to the recording with memory data
+  let render = WaterfallView.once(EVENTS.WATERFALL_RENDERED);
+  RecordingsView.selectedIndex = 1;
+  yield render;
 
   selected = DetailsView.whenViewSelected(MemoryCallTreeView);
   notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
@@ -61,23 +68,9 @@ function spawnTest () {
   yield Promise.all([selected, notified]);
 
   ok(DetailsView.isViewSelected(MemoryCallTreeView),
-    "The memory call tree view can be selected again after re-enabling memory.");
-
-  selected = DetailsView.whenViewSelected(MemoryFlameGraphView);
-  notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  DetailsView.selectView("memory-flamegraph");
-  yield Promise.all([selected, notified]);
-
-  ok(DetailsView.isViewSelected(MemoryFlameGraphView),
-    "The memory flamegraph view can be selected again after re-enabling memory.");
-
-  selected = DetailsView.whenViewSelected(WaterfallView);
-  notified = DetailsView.once(EVENTS.DETAILS_VIEW_SELECTED);
-  Services.prefs.setBoolPref(MEMORY_PREF, false);
-  yield Promise.all([selected, notified]);
-
-  ok(DetailsView.isViewSelected(WaterfallView),
-    "The waterfall view is now selected when toggling off enable-memory when a memory panel is selected.");
+    "The memory call tree view can be selected again after going back to the view with memory data");
+  is(flameBtn.hidden, false, "memory-flamegraph button shown when recording has memory data");
+  is(callBtn.hidden, false, "memory-calltree button shown when recording has memory data");
 
   yield teardown(panel);
   finish();

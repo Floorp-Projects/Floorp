@@ -37,7 +37,8 @@ const DEFAULT_ALLOCATION_SITES_PULL_TIMEOUT = 200; // ms
 // Events to pipe from PerformanceActorsConnection to the PerformanceFront
 const CONNECTION_PIPE_EVENTS = [
   "console-profile-start", "console-profile-ending", "console-profile-end",
-  "timeline-data", "profiler-already-active", "profiler-activated"
+  "timeline-data", "profiler-already-active", "profiler-activated",
+  "recording-started", "recording-stopped"
 ];
 
 // Events to listen to from the profiler actor
@@ -100,9 +101,9 @@ function PerformanceActorsConnection(target) {
 
 PerformanceActorsConnection.prototype = {
 
-  // Properties set when mocks are being used
-  _usingMockMemory: false,
-  _usingMockTimeline: false,
+  // Properties set based off of server actor support
+  _memorySupported: true,
+  _timelineSupported: true,
 
   /**
    * Initializes a connection to the profiler and other miscellaneous actors.
@@ -174,9 +175,9 @@ PerformanceActorsConnection.prototype = {
     if (supported) {
       this._timeline = new TimelineFront(this._target.client, this._target.form);
     } else {
-      this._usingMockTimeline = true;
       this._timeline = new compatibility.MockTimelineFront();
     }
+    this._timelineSupported = supported;
   },
 
   /**
@@ -187,9 +188,9 @@ PerformanceActorsConnection.prototype = {
     if (supported) {
       this._memory = new MemoryFront(this._target.client, this._target.form);
     } else {
-      this._usingMockMemory = true;
       this._memory = new compatibility.MockMemoryFront();
     }
+    this._memorySupported = supported;
   }),
 
   /**
@@ -413,6 +414,7 @@ PerformanceActorsConnection.prototype = {
     model.populate(data);
     this._recordings.push(model);
 
+    this.emit("recording-started", model);
     return model;
   }),
 
@@ -467,6 +469,7 @@ PerformanceActorsConnection.prototype = {
       memoryEndTime: memoryEndTime
     });
 
+    this.emit("recording-stopped", model);
     return model;
   }),
 
@@ -620,8 +623,8 @@ function PerformanceFront(connection) {
   this._request = connection._request;
 
   // Set when mocks are being used
-  this._usingMockMemory = connection._usingMockMemory;
-  this._usingMockTimeline = connection._usingMockTimeline;
+  this._memorySupported = connection._memorySupported;
+  this._timelineSupported = connection._timelineSupported;
 
   // Pipe the console profile events from the connection
   // to the front so that the UI can listen.
@@ -636,7 +639,8 @@ PerformanceFront.prototype = {
    *
    * @param object options
    *        An options object to pass to the actors. Supported properties are
-   *        `withTicks`, `withMemory` and `withAllocations`, `probability` and `maxLogLength`.
+   *        `withTicks`, `withMemory` and `withAllocations`,
+   *        `probability` and `maxLogLength`.
    * @return object
    *         A promise that is resolved once recording has started.
    */
@@ -658,13 +662,24 @@ PerformanceFront.prototype = {
   },
 
   /**
-   * Returns an object indicating if mock actors are being used or not.
+   * Returns an object indicating what server actors are available and
+   * initialized. A falsy value indicates that the server does not support
+   * that feature, or that mock actors were explicitly requested (tests).
    */
-  getMocksInUse: function () {
+  getActorSupport: function () {
     return {
-      memory: this._usingMockMemory,
-      timeline: this._usingMockTimeline
+      memory: this._memorySupported,
+      timeline: this._timelineSupported
     };
+  },
+
+  /**
+   * Returns a boolean indicating whether or not the current performance connection is recording.
+   *
+   * @return Boolean
+   */
+  isRecording: function () {
+    return this._connection.isRecording();
   }
 };
 
@@ -673,6 +688,7 @@ PerformanceFront.prototype = {
  */
 function getRecordingModelPrefs () {
   return {
+    withMarkers: true,
     withMemory: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),
     withTicks: Services.prefs.getBoolPref("devtools.performance.ui.enable-framerate"),
     withAllocations: Services.prefs.getBoolPref("devtools.performance.ui.enable-memory"),

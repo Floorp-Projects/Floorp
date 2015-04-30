@@ -20,9 +20,9 @@ function spawnTest () {
     once(OverviewView, EVENTS.OVERVIEW_RENDERED),
   ]);
 
-  let markersOverview = OverviewView.markersOverview;
-  let memoryOverview = OverviewView.memoryOverview;
-  let framerateGraph = OverviewView.framerateGraph;
+  let markersOverview = OverviewView.graphs.get("timeline");
+  let memoryOverview = OverviewView.graphs.get("memory");
+  let framerateGraph = OverviewView.graphs.get("framerate");
 
   ok(markersOverview,
     "The markers graph should have been created now.");
