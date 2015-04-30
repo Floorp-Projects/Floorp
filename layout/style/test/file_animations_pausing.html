@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style type="text/css">
+    @keyframes anim {
+      0% { transform: translate(0px) }
+      100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+  <script>
+    var ok = opener.ok.bind(opener);
+    var is = opener.is.bind(opener);
+    var okOrTodo = opener.okOrTodo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<div id="display"></div>
+<script type="application/javascript">
+"use strict";
+
+runOMTATest(function() {
+  runAllAsyncAnimTests().then(function() {
+    finish();
+  });
+}, finish);
+
+addAsyncAnimTest(function *() {
+  var [ div, cs ] = new_div("animation: anim 10s 2 linear alternate");
+
+  // Animation is initially running on compositor
+  yield waitForPaintsFlushed();
+  advance_clock(1000);
+  omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
+          "Animation is initally animating on compositor");
+
+  // pause() means it is no longer on the compositor
+  var animation = div.getAnimations()[0];
+  animation.pause();
+  // pause() should set up the changes to animations for the next layer
+  // transaction but it won't schedule a paint immediately so we need to tick
+  // the refresh driver before we can wait on the next paint.
+  advance_clock(0);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 10 }, RunningOn.MainThread,
+          "After pausing, animation is removed from compositor");
+
+  // Animation remains paused
+  advance_clock(1000);
+  omta_is(div, "transform", { tx: 10 }, RunningOn.MainThread,
+          "Animation remains paused");
+
+  // play() puts the animation back on the compositor
+  animation.play();
+  // As with pause(), play() will set up pending animations for the next layer
+  // transaction but won't schedule a paint so we need to tick the refresh
+  // driver before waiting on the next paint.
+  advance_clock(0);
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 10 }, RunningOn.Compositor,
+          "After playing, animation is sent to compositor");
+
+  // Where it continues to run
+  advance_clock(1000);
+  omta_is(div, "transform", { tx: 20 }, RunningOn.Compositor,
+          "Animation continues playing on compositor");
+
+  done_div();
+});
+</script>
+</body>
+</html>

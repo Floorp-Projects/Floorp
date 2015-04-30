@@ -1239,7 +1239,7 @@ SpecialPowersAPI.prototype = {
     var val = this._sendSyncMessage('SPPrefService', msg);
 
     if (val == null || val[0] == null)
-      throw "Error getting pref";
+      throw "Error getting pref '" + aPrefName + "'";
     return val[0];
   },
   _setPref: function(aPrefName, aPrefType, aValue, aIid) {
