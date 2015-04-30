@@ -49,27 +49,13 @@ manifest_FLAGS += \
 
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
-# Install robocop configs and helper
-INSTALL_TARGETS += robocop
-robocop_TARGET  := export
-robocop_DEST    := $(CURDIR)
-robocop_FILES   := \
-  $(TESTPATH)/robocop.ini \
-  $(TESTPATH)/robocop_autophone.ini \
-  $(NULL)
-robocop-deps := $(notdir $(robocop_FILES))
-
 GARBAGE += \
   AndroidManifest.xml \
-  $(robocop-deps) \
-  $(testconstants-dep) \
   $(NULL)
 
 JAVAFILES += \
   $(java-harness) \
   $(java-tests) \
-  $(robocop-deps) \
-  $(testconstants-dep) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
