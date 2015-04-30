@@ -1914,7 +1914,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED148)
 CASE(JSOP_BACKPATCH)
 CASE(JSOP_UNUSED150)
@@ -3500,41 +3499,25 @@ CASE(JSOP_NEWINIT)
 {
     uint8_t i = GET_UINT8(REGS.pc);
     MOZ_ASSERT(i == JSProto_Array || i == JSProto_Object);
-    RootedObject& obj = rootObject0;
 
-    if (i == JSProto_Array) {
-        NewObjectKind newKind = GenericObject;
-        if (ObjectGroup::useSingletonForAllocationSite(script, REGS.pc, &ArrayObject::class_))
-            newKind = SingletonObject;
-        obj = NewDenseEmptyArray(cx, NullPtr(), newKind);
-        if (!obj || !ObjectGroup::setAllocationSiteObjectGroup(cx, script, REGS.pc, obj,
-                                                               newKind == SingletonObject))
-        {
-            goto error;
-        }
-    } else {
+    JSObject* obj;
+    if (i == JSProto_Array)
+        obj = NewArrayOperation(cx, script, REGS.pc, 0);
+    else
         obj = NewObjectOperation(cx, script, REGS.pc);
-        if (!obj)
-            goto error;
-    }
+
+    if (!obj)
+        goto error;
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_NEWINIT)
 
 CASE(JSOP_NEWARRAY)
+CASE(JSOP_SPREADCALLARRAY)
 {
-    unsigned count = GET_UINT24(REGS.pc);
-    RootedObject& obj = rootObject0;
-    NewObjectKind newKind = GenericObject;
-    if (ObjectGroup::useSingletonForAllocationSite(script, REGS.pc, &ArrayObject::class_))
-        newKind = SingletonObject;
-    obj = NewDenseFullyAllocatedArray(cx, count, NullPtr(), newKind);
-    if (!obj || !ObjectGroup::setAllocationSiteObjectGroup(cx, script, REGS.pc, obj,
-                                                           newKind == SingletonObject))
-    {
+    JSObject* obj = NewArrayOperation(cx, script, REGS.pc, GET_UINT24(REGS.pc));
+    if (!obj)
         goto error;
-    }
-
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_NEWARRAY)
@@ -3636,8 +3619,6 @@ CASE(JSOP_INITELEM_ARRAY)
 
     RootedObject& obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
-
-    MOZ_ASSERT(obj->is<ArrayObject>());
 
     uint32_t index = GET_UINT24(REGS.pc);
     if (!InitArrayElemOperation(cx, REGS.pc, obj, index, val))
@@ -4703,16 +4684,75 @@ js::NewObjectOperationWithTemplate(JSContext* cx, HandleObject templateObject)
 
     if (templateObject->group()->maybeUnboxedLayout()) {
         RootedObjectGroup group(cx, templateObject->group());
-        JSObject* obj = UnboxedPlainObject::create(cx, group, newKind);
-        if (!obj)
-            return nullptr;
-        return obj;
+        return UnboxedPlainObject::create(cx, group, newKind);
     }
 
     JSObject* obj = CopyInitializerObject(cx, templateObject.as<PlainObject>(), newKind);
     if (!obj)
         return nullptr;
 
+    obj->setGroup(templateObject->group());
+    return obj;
+}
+
+JSObject*
+js::NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc, uint32_t length,
+                      NewObjectKind newKind /* = GenericObject */)
+{
+    MOZ_ASSERT(newKind != SingletonObject);
+
+    RootedObjectGroup group(cx);
+    if (ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Array)) {
+        newKind = SingletonObject;
+    } else {
+        group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
+        if (!group)
+            return nullptr;
+        if (group->maybePreliminaryObjects())
+            group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
+
+        if (group->shouldPreTenure() || group->maybePreliminaryObjects())
+            newKind = TenuredObject;
+
+        if (group->maybeUnboxedLayout())
+            return UnboxedArrayObject::create(cx, group, length, newKind);
+    }
+
+    ArrayObject* obj = NewDenseFullyAllocatedArray(cx, length, NullPtr(), newKind);
+    if (!obj)
+        return nullptr;
+
+    if (newKind == SingletonObject) {
+        MOZ_ASSERT(obj->isSingleton());
+    } else {
+        obj->setGroup(group);
+
+        if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
+            preliminaryObjects->registerNewObject(obj);
+    }
+
+    return obj;
+}
+
+JSObject*
+js::NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject)
+{
+    MOZ_ASSERT(!templateObject->isSingleton());
+
+    NewObjectKind newKind = templateObject->group()->shouldPreTenure() ? TenuredObject : GenericObject;
+
+    if (templateObject->is<UnboxedArrayObject>()) {
+        uint32_t length = templateObject->as<UnboxedArrayObject>().length();
+        RootedObjectGroup group(cx, templateObject->group());
+        return UnboxedArrayObject::create(cx, group, length, newKind);
+    }
+
+    ArrayObject* obj = NewDenseFullyAllocatedArray(cx, templateObject->as<ArrayObject>().length(),
+                                                   NullPtr(), newKind);
+    if (!obj)
+        return nullptr;
+
+    MOZ_ASSERT(obj->lastProperty() == templateObject->as<ArrayObject>().lastProperty());
     obj->setGroup(templateObject->group());
     return obj;
 }

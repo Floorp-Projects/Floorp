@@ -52,6 +52,8 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
     // on the templateObj, which is not a GC thing and can't use runtimeFromAnyThread.
     ObjectGroup* group = templateObj->group_;
 
+    MOZ_ASSERT(!group->hasUnanalyzedPreliminaryObjects());
+
     if (group->shouldPreTenure())
         heap = gc::TenuredHeap;
 
