@@ -12,10 +12,10 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="ef937d1aca7c4cf89ecb5cc43ae8c21c2000a9db">
+  <project name="platform_build" path="build" remote="b2g" revision="2eda36a4795012a5d1275b77ebb20ac377c8cd26">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="db8ea705c0fd1b1684807f5a8e837bb9a36a6f96"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="ef9afb09ae1140c7c92cd3c1657d39bc8f7914b5"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="d3868ff4bb3a4b81382795e2784258c210fe6cb8"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -23,7 +23,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="bdd03caf084e1b9279155bd232bc718a38c47cbc"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0627790166dccd8dd370fa7d9f434ed9fc027fb4"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
