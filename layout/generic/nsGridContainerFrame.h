@@ -60,7 +60,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
 
 protected:
-  static const int32_t kAutoLine;
+  static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
   static const uint32_t kTranslatedMaxLine;
   typedef mozilla::LogicalPoint LogicalPoint;
@@ -74,32 +74,32 @@ protected:
 
   /**
    * A LineRange can be definite or auto - when it's definite it represents
-   * a consecutive set of tracks between a starting line and an ending line
-   * (both 1-based) where mStart < mEnd.  Before it's definite it can also
-   * represent an auto position with a span, where mStart == 0 and mEnd is
-   * the (non-zero positive) span.
-   * In both states the invariant mEnd > mStart holds (for normal flow items).
+   * a consecutive set of tracks between a starting line and an ending line.
+   * Before it's definite it can also represent an auto position with a span,
+   * where mStart == kAutoLine and mEnd is the (non-zero positive) span.
+   * For normal-flow items, the invariant mStart < mEnd holds when both
+   * lines are definite.
    *
-   * For abs.pos. grid items, mStart and mEnd may both be zero, meaning
+   * For abs.pos. grid items, mStart and mEnd may both be kAutoLine, meaning
    * "attach this side to the grid container containing block edge".
-   * Additionally, mEnd >= mStart holds when both are definite (non-zero),
+   * Additionally, mStart <= mEnd holds when both are definite (non-kAutoLine),
    * i.e. the invariant is slightly relaxed compared to normal flow items.
    */
   struct LineRange {
    LineRange(int32_t aStart, int32_t aEnd)
-     : mStart(aStart), mEnd(aEnd)
+     : mUntranslatedStart(aStart), mUntranslatedEnd(aEnd)
     {
 #ifdef DEBUG
       if (!IsAutoAuto()) {
         if (IsAuto()) {
-          MOZ_ASSERT(mEnd >= nsStyleGridLine::kMinLine &&
-                     mEnd <= nsStyleGridLine::kMaxLine, "invalid span");
+          MOZ_ASSERT(aEnd >= nsStyleGridLine::kMinLine &&
+                     aEnd <= nsStyleGridLine::kMaxLine, "invalid span");
         } else {
-          MOZ_ASSERT(mStart >= nsStyleGridLine::kMinLine &&
-                     mStart <= nsStyleGridLine::kMaxLine, "invalid start line");
-          MOZ_ASSERT(mEnd == kAutoLine ||
-                     (mEnd >= nsStyleGridLine::kMinLine &&
-                      mEnd <= nsStyleGridLine::kMaxLine), "invalid end line");
+          MOZ_ASSERT(aStart >= nsStyleGridLine::kMinLine &&
+                     aStart <= nsStyleGridLine::kMaxLine, "invalid start line");
+          MOZ_ASSERT(aEnd == int32_t(kAutoLine) ||
+                     (aEnd >= nsStyleGridLine::kMinLine &&
+                      aEnd <= nsStyleGridLine::kMaxLine), "invalid end line");
         }
       }
 #endif
@@ -111,7 +111,7 @@ protected:
     {
       MOZ_ASSERT(mEnd != kAutoLine, "Extent is undefined for abs.pos. 'auto'");
       if (IsAuto()) {
-        MOZ_ASSERT(mEnd >= 1 && mEnd < nsStyleGridLine::kMaxLine,
+        MOZ_ASSERT(mEnd >= 1 && mEnd < uint32_t(nsStyleGridLine::kMaxLine),
                    "invalid span");
         return mEnd;
       }
@@ -121,10 +121,9 @@ protected:
      * Resolve this auto range to start at aStart, making it definite.
      * Precondition: this range IsAuto()
      */
-    void ResolveAutoPosition(int32_t aStart)
+    void ResolveAutoPosition(uint32_t aStart)
     {
       MOZ_ASSERT(IsAuto(), "Why call me?");
-      MOZ_ASSERT(aStart >= 0, "expected a zero-based line number");
       mStart = aStart;
       mEnd += aStart;
       // Clamping per http://dev.w3.org/csswg/css-grid/#overlarge-grids :
@@ -156,8 +155,21 @@ protected:
                                       nscoord aGridOrigin,
                                       nscoord* aPos, nscoord* aLength) const;
 
-    int32_t mStart;  // the start line, or kAutoLine for 'auto'
-    int32_t mEnd;    // the end line, or the span length for 'auto'
+    /**
+     * @note We'll use the signed member while resolving definite positions
+     * to line numbers (1-based), which may become negative for implicit lines
+     * to the top/left of the explicit grid.  PlaceGridItems() then translates
+     * the whole grid to a 0,0 origin and we'll use the unsigned member from
+     * there on.
+     */
+    union {
+      uint32_t mStart;
+      int32_t mUntranslatedStart;
+    };
+    union {
+      uint32_t mEnd;
+      int32_t mUntranslatedEnd;
+    };
   };
 
   /**
@@ -213,8 +225,7 @@ protected:
    * @param aExplicitGridEnd the last line in the explicit grid
    * @param aEdge indicates whether we are resolving a start or end line
    * @param aStyle the StylePosition() for the grid container
-   * @return a definite line number, or zero in case aLine is a <custom-ident>
-   * that can't be found.
+   * @return a definite line (1-based), clamped to the kMinLine..kMaxLine range
    */
   int32_t ResolveLine(const nsStyleGridLine& aLine,
                       int32_t aNth,
@@ -227,7 +238,7 @@ protected:
                       const nsStylePosition* aStyle);
   /**
    * Return a LineRange based on the given style data. Non-auto lines
-   * are resolved to a definite line number per:
+   * are resolved to a definite line number (1-based) per:
    * http://dev.w3.org/csswg/css-grid/#line-placement
    * with placement errors corrected per:
    * http://dev.w3.org/csswg/css-grid/#grid-placement-errors
@@ -266,9 +277,9 @@ protected:
                          const nsStylePosition* aStyle);
 
   /**
-   * Return a GridArea with non-auto lines placed at a definite line number
-   * and with placement errors resolved.  One or both positions may still be
-   * 'auto'.
+   * Return a GridArea with non-auto lines placed at a definite line (1-based)
+   * with placement errors resolved.  One or both positions may still
+   * be 'auto'.
    * @param aChild the grid item
    * @param aStyle the StylePosition() for the grid container
    */
@@ -329,9 +340,9 @@ protected:
                                GridArea* aArea) const;
 
   /**
-   * Place an abs.pos. child and return its grid area.
-   * @note the resulting area may still have 'auto' lines in one or both
-   * dimensions (represented as kAutoLine).
+   * Return a GridArea for abs.pos. item with non-auto lines placed at
+   * a definite line (1-based) with placement errors resolved.  One or both
+   * positions may still be 'auto'.
    * @param aChild the abs.pos. grid item to place
    * @param aStyle the StylePosition() for the grid container
    */
