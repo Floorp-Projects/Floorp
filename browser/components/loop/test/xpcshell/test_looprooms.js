@@ -182,6 +182,13 @@ const kCreateRoomData = {
 const kChannelGuest = MozLoopService.channelIDs.roomsGuest;
 const kChannelFxA = MozLoopService.channelIDs.roomsFxA;
 
+const extend = function(target, source) {
+  for (let key of Object.getOwnPropertyNames(source)) {
+    target[key] = source[key];
+  }
+  return target;
+};
+
 const normalizeRoom = function(room) {
   let newRoom = extend({}, room);
   let name = newRoom.decryptedContext.roomName;
