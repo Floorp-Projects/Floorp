@@ -163,7 +163,7 @@ nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     int32_t colCount = GetColCount();
     if (!colCount)
       return; // this is a degenerated colgroup 
-    nsIntRect damageArea(GetFirstColumn()->GetColIndex(), 0, colCount,
+    TableArea damageArea(GetFirstColumn()->GetColIndex(), 0, colCount,
                          tableFrame->GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);
   }

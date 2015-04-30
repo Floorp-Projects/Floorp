@@ -19,6 +19,8 @@
                                        NS_FRAME_STATE_BIT(31))
 #define COL_TYPE_OFFSET               28
 
+using namespace mozilla;
+
 nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) :
   nsSplittableFrame(aContext)
 {
@@ -62,7 +64,7 @@ nsTableColFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
-    nsIntRect damageArea(GetColIndex(), 0, 1, tableFrame->GetRowCount());
+    TableArea damageArea(GetColIndex(), 0, 1, tableFrame->GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);
   }
 }
