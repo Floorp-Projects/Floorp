@@ -1327,8 +1327,8 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
-pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
-pref("browser.devedition.theme.enabled", true);
+sticky_pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
+sticky_pref("browser.devedition.theme.enabled", true);
 #endif
 
 // Developer edition promo preferences
@@ -1507,9 +1507,9 @@ pref("devtools.webaudioeditor.inspectorWidth", 300);
 
 // Default theme ("dark" or "light")
 #ifdef MOZ_DEV_EDITION
-pref("devtools.theme", "dark");
+sticky_pref("devtools.theme", "dark");
 #else
-pref("devtools.theme", "light");
+sticky_pref("devtools.theme", "light");
 #endif
 
 // Display the introductory text
