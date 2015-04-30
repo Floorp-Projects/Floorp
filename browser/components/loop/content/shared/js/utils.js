@@ -272,6 +272,33 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   /**
+   * Formats a url for display purposes. This includes converting the
+   * domain to punycode, and then decoding the url.
+   *
+   * @param {String} url The url to format.
+   * @return {Object}    An object containing the hostname and full location.
+   */
+  function formatURL(url) {
+    // We're using new URL to pass this through the browser's ACE/punycode
+    // processing system. If the browser considers a url to need to be
+    // punycode encoded for it to be displayed, then new URL will do that for
+    // us. This saves us needing our own punycode library.
+    var urlObject;
+    try {
+      urlObject = new URL(url);
+    } catch (ex) {
+      console.error("Error occurred whilst parsing URL:", ex);
+      return null;
+    }
+
+    // Finally, ensure we look good.
+    return {
+      hostname: urlObject.hostname,
+      location: decodeURI(urlObject.href)
+    };
+  }
+
+  /**
    * Generates and opens a mailto: url with call URL information prefilled.
    * Note: This only works for Desktop.
    *
@@ -536,6 +563,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     ROOM_INFO_FAILURES: ROOM_INFO_FAILURES,
     composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,
+    formatURL: formatURL,
     getBoolPreference: getBoolPreference,
     getOS: getOS,
     getOSVersion: getOSVersion,
