@@ -6,8 +6,8 @@
 EXTRA_JS_MODULES.devtools.performance += [
     'modules/compatibility.js',
     'modules/front.js',
+    'modules/graphs.js',
     'modules/io.js',
-    'modules/performance-graphs.js',
     'modules/recording-model.js',
     'modules/recording-utils.js',
     'panel.js'

@@ -39,7 +39,7 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 // ---------------------------------------------------------------------------
 
 void
-Animation::SetEffect(KeyframeEffectReadonly* aEffect)
+Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
 {
   if (mEffect) {
     mEffect->SetParentTime(Nullable<TimeDuration>());

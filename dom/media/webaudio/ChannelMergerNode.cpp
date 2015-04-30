@@ -14,7 +14,7 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS_INHERITED0(ChannelMergerNode, AudioNode)
 
-class ChannelMergerNodeEngine : public AudioNodeEngine
+class ChannelMergerNodeEngine final : public AudioNodeEngine
 {
 public:
   explicit ChannelMergerNodeEngine(ChannelMergerNode* aNode)

@@ -14,6 +14,7 @@
 #include "nsMimeTypes.h"
 #include "nsIRequest.h"
 
+#include "MultipartImage.h"
 #include "RasterImage.h"
 #include "VectorImage.h"
 #include "Image.h"
@@ -149,8 +150,28 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
 
   nsRefPtr<RasterImage> newImage = new RasterImage();
 
+  nsRefPtr<ProgressTracker> newTracker = new ProgressTracker();
+  newTracker->SetImage(newImage);
+  newImage->SetProgressTracker(newTracker);
+
   rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_NONE);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
+
+  return newImage.forget();
+}
+
+/* static */ already_AddRefed<MultipartImage>
+ImageFactory::CreateMultipartImage(Image* aFirstPart,
+                                   ProgressTracker* aProgressTracker)
+{
+  MOZ_ASSERT(aFirstPart);
+  MOZ_ASSERT(aProgressTracker);
+
+  nsRefPtr<MultipartImage> newImage = new MultipartImage(aFirstPart);
+  aProgressTracker->SetImage(newImage);
+  newImage->SetProgressTracker(aProgressTracker);
+
+  newImage->Init();
 
   return newImage.forget();
 }
@@ -206,9 +227,13 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
                                 uint32_t aImageFlags,
                                 uint32_t aInnerWindowId)
 {
+  MOZ_ASSERT(aProgressTracker);
+
   nsresult rv;
 
-  nsRefPtr<RasterImage> newImage = new RasterImage(aProgressTracker, aURI);
+  nsRefPtr<RasterImage> newImage = new RasterImage(aURI);
+  aProgressTracker->SetImage(newImage);
+  newImage->SetProgressTracker(aProgressTracker);
 
   rv = newImage->Init(aMimeType.get(), aImageFlags);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));
@@ -268,9 +293,13 @@ ImageFactory::CreateVectorImage(nsIRequest* aRequest,
                                 uint32_t aImageFlags,
                                 uint32_t aInnerWindowId)
 {
+  MOZ_ASSERT(aProgressTracker);
+
   nsresult rv;
 
-  nsRefPtr<VectorImage> newImage = new VectorImage(aProgressTracker, aURI);
+  nsRefPtr<VectorImage> newImage = new VectorImage(aURI);
+  aProgressTracker->SetImage(newImage);
+  newImage->SetProgressTracker(aProgressTracker);
 
   rv = newImage->Init(aMimeType.get(), aImageFlags);
   NS_ENSURE_SUCCESS(rv, BadImage(newImage));

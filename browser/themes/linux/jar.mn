@@ -367,6 +367,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-styleeditor.svg        (../shared/devtools/images/tool-styleeditor.svg)
   skin/classic/browser/devtools/tool-storage.svg            (../shared/devtools/images/tool-storage.svg)
   skin/classic/browser/devtools/tool-profiler.svg           (../shared/devtools/images/tool-profiler.svg)
+  skin/classic/browser/devtools/tool-profiler-active.svg    (../shared/devtools/images/tool-profiler-active.svg)
   skin/classic/browser/devtools/tool-network.svg            (../shared/devtools/images/tool-network.svg)
   skin/classic/browser/devtools/tool-scratchpad.svg         (../shared/devtools/images/tool-scratchpad.svg)
   skin/classic/browser/devtools/tool-webaudio.svg           (../shared/devtools/images/tool-webaudio.svg)

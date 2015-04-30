@@ -3423,7 +3423,7 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
 
 
 void
-WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
+WebGLContext::TexSubImage2D_base(GLenum rawImageTarget, GLint level,
                                  GLint xoffset, GLint yoffset,
                                  GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
                                  GLenum format, GLenum type,
@@ -3436,6 +3436,11 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
 
     if (type == LOCAL_GL_HALF_FLOAT_OES)
         type = LOCAL_GL_HALF_FLOAT;
+
+    if (!ValidateTexImageTarget(rawImageTarget, func, dims))
+        return;
+
+    TexImageTarget texImageTarget(rawImageTarget);
 
     WebGLTexture* tex = ActiveBoundTextureForTexImageTarget(texImageTarget);
     if (!tex)

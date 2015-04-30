@@ -12,8 +12,6 @@
 #include "nsContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
-#include "nsTableColFrame.h"
-#include "nsTableColGroupFrame.h"
 #include "nsCellMap.h"
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
@@ -99,6 +97,19 @@ private:
 };
 
 /* ============================================================================ */
+
+enum nsTableColGroupType {
+  eColGroupContent            = 0, // there is real col group content associated
+  eColGroupAnonymousCol       = 1, // the result of a col
+  eColGroupAnonymousCell      = 2  // the result of a cell alone
+};
+
+enum nsTableColType {
+  eColContent            = 0, // there is real col content associated
+  eColAnonymousCol       = 1, // the result of a span on a col
+  eColAnonymousColGroup  = 2, // the result of a span on a col group
+  eColAnonymousCell      = 3  // the result of a cell alone
+};
 
 /**
   * nsTableFrame maps the inner portion of a table (everything except captions.)

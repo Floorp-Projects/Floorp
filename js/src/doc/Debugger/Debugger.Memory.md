@@ -155,7 +155,7 @@ compartment.
         and end events.
 
     `reason`
-    :   A very short string describing th reason why the collection was
+    :   A very short string describing the reason why the collection was
         triggered. Known values include the following:
 
         * "API"
@@ -199,7 +199,13 @@ compartment.
     :   If SpiderMonkey's collector determined it could not incrementally
         collect garbage, and had to do a full GC all at once, this is a short
         string describing the reason it determined the full GC was necessary.
-        Otherwise, `null` is returned.
+        Otherwise, `null` is returned. Known values include the following:
+
+        * "GC mode"
+        * "malloc bytes trigger"
+        * "allocation trigger"
+        * "requested"
+
 
 Function Properties of the `Debugger.Memory.prototype` Object
 -------------------------------------------------------------
