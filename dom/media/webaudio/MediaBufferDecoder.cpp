@@ -50,7 +50,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebAudioDecodeJob, Release)
 
 using namespace dom;
 
-class ReportResultTask : public nsRunnable
+class ReportResultTask final : public nsRunnable
 {
 public:
   ReportResultTask(WebAudioDecodeJob& aDecodeJob,
@@ -82,13 +82,14 @@ private:
   WebAudioDecodeJob::ErrorCode mErrorCode;
 };
 
-enum class PhaseEnum : int {
+enum class PhaseEnum : int
+{
   Decode,
   AllocateBuffer,
   Done
 };
 
-class MediaDecodeTask : public nsRunnable
+class MediaDecodeTask final : public nsRunnable
 {
 public:
   MediaDecodeTask(const char* aContentType, uint8_t* aBuffer,
@@ -214,7 +215,8 @@ MediaDecodeTask::CreateReader()
   return true;
 }
 
-class AutoResampler {
+class AutoResampler final
+{
 public:
   AutoResampler()
     : mResampler(nullptr)

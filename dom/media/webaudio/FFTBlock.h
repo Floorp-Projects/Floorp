@@ -16,7 +16,8 @@ namespace mozilla {
 // This class defines an FFT block, loosely modeled after Blink's FFTFrame
 // class to make sharing code with Blink easy.
 // Currently it's implemented on top of KissFFT on all platforms.
-class FFTBlock {
+class FFTBlock final
+{
 public:
   explicit FFTBlock(uint32_t aFFTSize)
     : mFFT(nullptr)

@@ -14,7 +14,7 @@ namespace dom {
 
 class AudioContext;
 
-class ChannelSplitterNode : public AudioNode
+class ChannelSplitterNode final : public AudioNode
 {
 public:
   ChannelSplitterNode(AudioContext* aContext,

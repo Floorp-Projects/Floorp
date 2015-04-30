@@ -637,6 +637,10 @@ public:
                        GLint yoffset, GLenum format, GLenum type,
                        ElementType& elt, ErrorResult& rv)
     {
+        // TODO: Consolidate all the parameter validation
+        // checks. Instead of spreading out the cheks in multple
+        // places, consolidate into one spot.
+
         if (IsContextLost())
             return;
 
@@ -1308,7 +1312,7 @@ protected:
                          GLenum format, GLenum type, void* data,
                          uint32_t byteLength, js::Scalar::Type jsArrayType,
                          WebGLTexelFormat srcFormat, bool srcPremultiplied);
-    void TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
+    void TexSubImage2D_base(GLenum texImageTarget, GLint level,
                             GLint xoffset, GLint yoffset, GLsizei width,
                             GLsizei height, GLsizei srcStrideOrZero,
                             GLenum format, GLenum type, void* pixels,

@@ -208,6 +208,15 @@ let AboutNetErrorListener = {
     if (automatic) {
       this.onSendReport(evt);
     }
+    // hide parts of the UI we don't need yet
+    let contentDoc = content.document;
+
+    let reportSendingMsg = contentDoc.getElementById("reportSendingMessage");
+    let reportSentMsg = contentDoc.getElementById("reportSentMessage");
+    let retryBtn = contentDoc.getElementById("reportCertificateErrorRetry");
+    reportSendingMsg.style.display = "none";
+    reportSentMsg.style.display = "none";
+    retryBtn.style.display = "none";
   },
 
   onSetAutomatic: function(evt) {
@@ -234,22 +243,21 @@ let AboutNetErrorListener = {
           reportBtn.style.display = "none";
           retryBtn.style.display = "none";
           reportSentMsg.style.display = "none";
-          reportSendingMsg.style.display = "inline";
+          reportSendingMsg.style.removeProperty("display");
           break;
         case "error":
           // show the retry button
-          retryBtn.style.display = "inline";
+          retryBtn.style.removeProperty("display");
           reportSendingMsg.style.display = "none";
           break;
         case "complete":
           // Show a success indicator
-          reportSentMsg.style.display = "inline";
+          reportSentMsg.style.removeProperty("display");
           reportSendingMsg.style.display = "none";
           break;
         }
       }
     });
-
 
     let failedChannel = docShell.failedChannel;
     let location = contentDoc.location.href;

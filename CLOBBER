@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1154356: escape variable name in Declaration::AppendVariableAndValueToString;
+Bug 1159082 - Renaming *Readonly animation interfaces to *ReadOnly causes
+build bustage on case-insensitive filesystems.

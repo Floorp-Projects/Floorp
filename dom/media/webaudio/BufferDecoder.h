@@ -18,7 +18,7 @@ namespace mozilla {
  * This class provides a decoder object which decodes a media file that lives in
  * a memory buffer.
  */
-class BufferDecoder : public AbstractMediaDecoder
+class BufferDecoder final : public AbstractMediaDecoder
 {
 public:
   // This class holds a weak pointer to MediaResource.  It's the responsibility

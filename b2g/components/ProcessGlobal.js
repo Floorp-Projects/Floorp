@@ -107,6 +107,7 @@ ProcessGlobal.prototype = {
         Services.prefs.setBoolPref("dom.apps.developer_mode", true);
         // TODO: Remove once bug 1125916 is fixed.
         Services.prefs.setBoolPref("network.disable.ipc.security", true);
+        Services.prefs.setBoolPref("dom.webcomponents.enabled", true);
         let lock = settings.createLock();
         lock.set("developer.menu.enabled", true, null);
       }

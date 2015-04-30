@@ -15,7 +15,7 @@ namespace dom {
 
 class AudioContext;
 
-class GainNode : public AudioNode
+class GainNode final : public AudioNode
 {
 public:
   explicit GainNode(AudioContext* aContext);

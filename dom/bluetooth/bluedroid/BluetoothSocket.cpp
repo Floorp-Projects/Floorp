@@ -42,8 +42,9 @@ EnsureBluetoothSocketHalLoad()
   return true;
 }
 
-class mozilla::dom::bluetooth::DroidSocketImpl : public ipc::UnixFdWatcher
-                                               , protected DataSocketIO
+class mozilla::dom::bluetooth::DroidSocketImpl
+  : public ipc::UnixFdWatcher
+  , public DataSocketIO
 {
 public:
   /* The connection status in DroidSocketImpl indicates the current
@@ -91,33 +92,6 @@ public:
     AddWatchers(WRITE_WATCHER, false);
   }
 
-  bool IsShutdownOnMainThread()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mConsumer == nullptr;
-  }
-
-  bool IsShutdownOnIOThread()
-  {
-    return mShuttingDownOnIOThread;
-  }
-
-  void ShutdownOnMainThread()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!IsShutdownOnMainThread());
-    mConsumer = nullptr;
-  }
-
-  void ShutdownOnIOThread()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!mShuttingDownOnIOThread);
-
-    Close(); // will also remove fd from I/O loop
-    mShuttingDownOnIOThread = true;
-  }
-
   void Connect(int aFd);
   void Listen(int aFd);
   void Accept(int aFd);
@@ -144,10 +118,12 @@ public:
     return GetBluetoothSocket();
   }
 
-  SocketBase* GetSocketBase()
-  {
-    return GetDataSocket();
-  }
+  /**
+   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
+   * directly from main thread. All non-main-thread accesses should happen with
+   * mImpl as container.
+   */
+  RefPtr<BluetoothSocket> mConsumer;
 
   // Methods for |DataSocket|
   //
@@ -156,12 +132,40 @@ public:
   void ConsumeBuffer();
   void DiscardBuffer();
 
-  /**
-   * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
-   * directly from main thread. All non-main-thread accesses should happen with
-   * mImpl as container.
-   */
-  RefPtr<BluetoothSocket> mConsumer;
+  // Methods for |SocketIOBase|
+  //
+
+  SocketBase* GetSocketBase() override
+  {
+    return GetDataSocket();
+  }
+
+  bool IsShutdownOnMainThread() const override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mConsumer == nullptr;
+  }
+
+  bool IsShutdownOnIOThread() const override
+  {
+    return mShuttingDownOnIOThread;
+  }
+
+  void ShutdownOnMainThread() override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(!IsShutdownOnMainThread());
+    mConsumer = nullptr;
+  }
+
+  void ShutdownOnIOThread() override
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!mShuttingDownOnIOThread);
+
+    Close(); // will also remove fd from I/O loop
+    mShuttingDownOnIOThread = true;
+  }
 
 private:
   class ReceiveRunnable;
@@ -310,10 +314,8 @@ DroidSocketImpl::Accept(int aFd)
   SetFd(aFd);
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<DroidSocketImpl>(
-      this, SocketIOEventRunnable<DroidSocketImpl>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
@@ -339,7 +341,7 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnIOThread);
 
-  ssize_t res = ReceiveData(aFd, this);
+  ssize_t res = ReceiveData(aFd);
   if (res < 0) {
     /* I/O error */
     RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
@@ -477,7 +479,7 @@ DroidSocketImpl::OnSocketCanSendWithoutBlocking(int aFd)
   MOZ_ASSERT(!mShuttingDownOnIOThread);
   MOZ_ASSERT(aFd >= 0);
 
-  nsresult rv = SendPendingData(aFd, this);
+  nsresult rv = SendPendingData(aFd);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -499,16 +501,16 @@ DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
 
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  nsRefPtr<nsRunnable> r =
-    new SocketIOEventRunnable<DroidSocketImpl>(
-      this, SocketIOEventRunnable<DroidSocketImpl>::CONNECT_SUCCESS);
-  NS_DispatchToMainThread(r);
+  NS_DispatchToMainThread(
+    new SocketIOEventRunnable(this, SocketIOEventRunnable::CONNECT_SUCCESS));
 
   AddWatchers(READ_WATCHER, true);
   if (HasPendingData()) {
     AddWatchers(WRITE_WATCHER, false);
   }
 }
+
+// |DataSocketIO|
 
 nsresult
 DroidSocketImpl::QueryReceiveBuffer(
@@ -572,6 +574,10 @@ DroidSocketImpl::DiscardBuffer()
 {
   // Nothing to do.
 }
+
+//
+// |BluetoothSocket|
+//
 
 BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
                                  BluetoothSocketType aType,
@@ -712,6 +718,31 @@ BluetoothSocket::ListenSocket(const nsAString& aServiceName,
 }
 
 void
+BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mObserver);
+
+  mObserver->ReceiveSocketData(this, aBuffer);
+}
+
+// |DataSocket|
+
+void
+BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mImpl);
+  MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
+
+  XRE_GetIOMessageLoop()->PostTask(
+    FROM_HERE,
+    new SocketIOSendTask<DroidSocketImpl, UnixSocketIOBuffer>(mImpl, aBuffer));
+}
+
+// |SocketBase|
+
+void
 BluetoothSocket::CloseSocket()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -729,33 +760,12 @@ BluetoothSocket::CloseSocket()
   // We sever the relationship here so any future calls to listen or connect
   // will create a new implementation.
   mImpl->ShutdownOnMainThread();
-  XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOShutdownTask<DroidSocketImpl>(mImpl));
+
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new SocketIOShutdownTask(mImpl));
 
   mImpl = nullptr;
 
   NotifyDisconnect();
-}
-
-void
-BluetoothSocket::SendSocketData(UnixSocketIOBuffer* aBuffer)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mImpl);
-  MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
-
-  XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE,
-    new SocketIOSendTask<DroidSocketImpl, UnixSocketIOBuffer>(mImpl, aBuffer));
-}
-
-void
-BluetoothSocket::ReceiveSocketData(nsAutoPtr<UnixSocketBuffer>& aBuffer)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mObserver);
-
-  mObserver->ReceiveSocketData(this, aBuffer);
 }
 
 void

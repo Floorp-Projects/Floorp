@@ -61,14 +61,12 @@ public:
    */
   void GetSocketAddr(nsAString& aAddrStr);
 
+  // Methods for |SocketBase|
+  //
+
+  void CloseSocket() override;
+
 private:
-
-  // Legacy interface from |SocketBase|; should be replaced by |Close|.
-  void CloseSocket() override
-  {
-    Close();
-  }
-
   ListenSocketIO* mIO;
 };
 

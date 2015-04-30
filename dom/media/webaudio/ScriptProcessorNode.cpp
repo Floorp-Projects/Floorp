@@ -28,10 +28,10 @@ NS_IMPL_ISUPPORTS_INHERITED0(ScriptProcessorNode, AudioNode)
 
 // This class manages a queue of output buffers shared between
 // the main thread and the Media Stream Graph thread.
-class SharedBuffers
+class SharedBuffers final
 {
 private:
-  class OutputQueue
+  class OutputQueue final
   {
   public:
     explicit OutputQueue(const char* aName)
@@ -237,7 +237,7 @@ private:
   bool mDroppingBuffers;
 };
 
-class ScriptProcessorNodeEngine : public AudioNodeEngine
+class ScriptProcessorNodeEngine final : public AudioNodeEngine
 {
 public:
   typedef nsAutoTArray<nsAutoArrayPtr<float>, 2> InputChannels;
@@ -361,7 +361,7 @@ private:
     double playbackTime =
       mSource->DestinationTimeFromTicks(mDestination, playbackTick);
 
-    class Command : public nsRunnable
+    class Command final : public nsRunnable
     {
     public:
       Command(AudioNodeStream* aStream,
@@ -380,7 +380,7 @@ private:
         }
       }
 
-      NS_IMETHODIMP Run()
+      NS_IMETHOD Run() override
       {
         nsRefPtr<ScriptProcessorNode> node = static_cast<ScriptProcessorNode*>
           (mStream->Engine()->NodeMainThread());

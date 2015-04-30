@@ -23,12 +23,15 @@
 #include "nsBaseScreen.h"
 #include "nsIScreenManager.h"
 
+class nsRunnable;
+class nsWindow;
+
 class nsScreenGonk : public nsBaseScreen
 {
     typedef mozilla::hal::ScreenConfiguration ScreenConfiguration;
 
 public:
-    nsScreenGonk(void* nativeScreen);
+    nsScreenGonk();
     ~nsScreenGonk();
 
     NS_IMETHOD GetId(uint32_t* aId);
@@ -39,8 +42,25 @@ public:
     NS_IMETHOD GetRotation(uint32_t* aRotation);
     NS_IMETHOD SetRotation(uint32_t  aRotation);
 
-    static uint32_t GetRotation();
-    static ScreenConfiguration GetConfiguration();
+    nsIntRect GetNaturalBounds();
+    uint32_t EffectiveScreenRotation();
+    ScreenConfiguration GetConfiguration();
+
+    void RegisterWindow(nsWindow* aWindow);
+    void UnregisterWindow(nsWindow* aWindow);
+    void BringToTop(nsWindow* aWindow);
+
+    const nsTArray<nsWindow*>& GetTopWindows() const
+    {
+        return mTopWindows;
+    }
+
+protected:
+    nsIntRect mScreenBounds;
+    nsIntRect mVirtualBounds;
+    uint32_t mScreenRotation;
+    uint32_t mPhysicalScreenRotation;
+    nsTArray<nsWindow*> mTopWindows;
 };
 
 class nsScreenManagerGonk final : public nsIScreenManager
@@ -51,10 +71,19 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCREENMANAGER
 
+    static already_AddRefed<nsScreenManagerGonk> GetInstance();
+    static already_AddRefed<nsScreenGonk> GetPrimaryScreen();
+
+    void Initialize();
+    void DisplayEnabled(bool aEnabled);
+
 protected:
     ~nsScreenManagerGonk();
 
+    bool mInitialized;
     nsCOMPtr<nsIScreen> mOneScreen;
+    nsRefPtr<nsRunnable> mScreenOnEvent;
+    nsRefPtr<nsRunnable> mScreenOffEvent;
 };
 
 #endif /* nsScreenManagerGonk_h___ */

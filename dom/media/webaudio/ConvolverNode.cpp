@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(ConvolverNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(ConvolverNode, AudioNode)
 
-class ConvolverNodeEngine : public AudioNodeEngine
+class ConvolverNodeEngine final : public AudioNodeEngine
 {
   typedef PlayingRefChangeHandler PlayingRefChanged;
 public:

@@ -8,6 +8,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "GMPTestMonitor.h"
 #include "GMPVideoDecoderProxy.h"
 #include "GMPVideoEncoderProxy.h"
 #include "GMPDecryptorProxy.h"
@@ -27,40 +28,6 @@ using namespace std;
 
 using namespace mozilla;
 using namespace mozilla::gmp;
-
-class GMPTestMonitor
-{
-public:
-  GMPTestMonitor()
-    : mFinished(false)
-  {
-  }
-
-  void AwaitFinished()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    while (!mFinished) {
-      NS_ProcessNextEvent(nullptr, true);
-    }
-    mFinished = false;
-  }
-
-private:
-  void MarkFinished()
-  {
-    mFinished = true;
-  }
-
-public:
-  void SetFinished()
-  {
-    NS_DispatchToMainThread(NS_NewNonOwningRunnableMethod(this,
-                                                          &GMPTestMonitor::MarkFinished));
-  }
-
-private:
-  bool mFinished;
-};
 
 struct GMPTestRunner
 {

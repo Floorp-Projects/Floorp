@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class ConvolverNode : public AudioNode
+class ConvolverNode final : public AudioNode
 {
 public:
   explicit ConvolverNode(AudioContext* aContext);
