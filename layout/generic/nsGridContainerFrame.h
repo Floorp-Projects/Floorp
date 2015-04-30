@@ -353,6 +353,10 @@ protected:
   {
     mGridColEnd = std::max(mGridColEnd, aArea.mCols.HypotheticalEnd());
     mGridRowEnd = std::max(mGridRowEnd, aArea.mRows.HypotheticalEnd());
+    MOZ_ASSERT(mGridColEnd <= uint32_t(nsStyleGridLine::kMaxLine -
+                                       nsStyleGridLine::kMinLine) &&
+               mGridRowEnd <= uint32_t(nsStyleGridLine::kMaxLine -
+                                       nsStyleGridLine::kMinLine));
   }
 
   /**
@@ -465,6 +469,16 @@ private:
   // Same for the implicit grid
   uint32_t mGridColEnd; // always >= mExplicitGridColEnd
   uint32_t mGridRowEnd; // always >= mExplicitGridRowEnd
+
+  /**
+   * Offsets from the start of the implicit grid to the start of the translated
+   * explicit grid.  They are zero if there are no implicit lines before 1,1.
+   * e.g. "grid-column: span 3 / 1" makes mExplicitGridOffsetCol = 3 and the
+   * corresponding GridArea::mCols will be 1 / 4 in the translated grid.
+   */
+  uint32_t mExplicitGridOffsetCol;
+  uint32_t mExplicitGridOffsetRow;
+
   /**
    * True iff the normal flow children are already in CSS 'order' in the
    * order they occur in the child frame list.
