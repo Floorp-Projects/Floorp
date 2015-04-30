@@ -337,7 +337,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   }
 
   if (mRecorder && retVal) {
-    return new DrawTargetRecording(mRecorder, retVal);
+    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal);
   }
 
   if (!retVal) {
@@ -351,7 +351,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
 TemporaryRef<DrawTarget>
 Factory::CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT)
 {
-  return new DrawTargetRecording(aRecorder, aDT);
+  return MakeAndAddRef<DrawTargetRecording>(aRecorder, aDT);
 }
 
 TemporaryRef<DrawTarget>
@@ -406,7 +406,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   if (mRecorder && retVal) {
-    return new DrawTargetRecording(mRecorder, retVal, true);
+    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal, true);
   }
 
   if (!retVal) {
@@ -478,25 +478,25 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 #ifdef WIN32
   case NativeFontType::DWRITE_FONT_FACE:
     {
-      return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontDWrite>(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
     }
 #if defined(USE_CAIRO) || defined(USE_SKIA)
   case NativeFontType::GDI_FONT_FACE:
     {
-      return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontWin>(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
     }
 #endif
 #endif
 #ifdef XP_MACOSX
   case NativeFontType::MAC_FONT_FACE:
     {
-      return new ScaledFontMac(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontMac>(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
     }
 #endif
 #if defined(USE_CAIRO) || defined(USE_SKIA_FREETYPE)
   case NativeFontType::CAIRO_FONT_FACE:
     {
-      return new ScaledFontCairo(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont), aSize);
+      return MakeAndAddRef<ScaledFontCairo>(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont), aSize);
     }
 #endif
   default:
@@ -514,7 +514,7 @@ Factory::CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize,
 #ifdef WIN32
   case FontType::DWRITE:
     {
-      return new ScaledFontDWrite(aData, aSize, aFaceIndex, aGlyphSize);
+      return MakeAndAddRef<ScaledFontDWrite>(aData, aSize, aFaceIndex, aGlyphSize);
     }
 #endif
   default:
@@ -706,7 +706,7 @@ Factory::SupportsD2D1()
 TemporaryRef<GlyphRenderingOptions>
 Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
 {
-  return new GlyphRenderingOptionsDWrite(aParams);
+  return MakeAndAddRef<GlyphRenderingOptionsDWrite>(aParams);
 }
 
 uint64_t
@@ -780,8 +780,7 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
-    return recordDT.forget();
+    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal, true);
   }
 #endif
   return retVal.forget();
@@ -800,7 +799,7 @@ Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize
   }
 
   if (mRecorder && retVal) {
-    return new DrawTargetRecording(mRecorder, retVal);
+    return MakeAndAddRef<DrawTargetRecording>(mRecorder, retVal);
   }
   return retVal.forget();
 }
@@ -808,7 +807,7 @@ Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize
 TemporaryRef<GlyphRenderingOptions>
 Factory::CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor)
 {
-  return new GlyphRenderingOptionsCG(aFontSmoothingBackgroundColor);
+  return MakeAndAddRef<GlyphRenderingOptionsCG>(aFontSmoothingBackgroundColor);
 }
 #endif
 
@@ -873,7 +872,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
 TemporaryRef<DrawEventRecorder>
 Factory::CreateEventRecorderForFile(const char *aFilename)
 {
-  return new DrawEventRecorderFile(aFilename);
+  return MakeAndAddRef<DrawEventRecorderFile>(aFilename);
 }
 
 void

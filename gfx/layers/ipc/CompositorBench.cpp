@@ -135,10 +135,10 @@ public:
       red = modf(i * 0.03f, &tmp);
       EffectChain effects;
       gfxRGBA color(red, 0.4f, 0.4f, 1.0f);
-      return new EffectSolidColor(gfx::Color(color.r,
-                                             color.g,
-                                             color.b,
-                                             color.a));
+      return MakeAndAddRef<EffectSolidColor>(gfx::Color(color.r,
+                                                        color.g,
+                                                        color.b,
+                                                        color.a));
   }
 };
 
@@ -161,10 +161,10 @@ public:
       red = modf(i * 0.03f, &tmp);
       EffectChain effects;
       gfxRGBA color(red, 0.4f, 0.4f, 1.0f);
-      return new EffectSolidColor(gfx::Color(color.r,
-                                             color.g,
-                                             color.b,
-                                             color.a));
+      return MakeAndAddRef<EffectSolidColor>(gfx::Color(color.r,
+                                                        color.g,
+                                                        color.b,
+                                                        color.a));
   }
 };
 

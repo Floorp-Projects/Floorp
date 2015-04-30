@@ -192,7 +192,7 @@ DrawTargetDual::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
     return nullptr;
   }
 
-  return new DrawTargetDual(dtA, dtB);
+  return MakeAndAddRef<DrawTargetDual>(dtA, dtB);
 }
 
 }
