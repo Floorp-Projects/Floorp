@@ -26,15 +26,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1135764
     SimpleTest.finish();
   }
   addLoadEvent(function() {
-    startTimelineValue = frames[0].document.timeline.currentTime;
-    frames[0].requestAnimationFrame(waitATick);
+    SpecialPowers.pushPrefEnv(
+      { "set": [[ "dom.animations-api.core.enabled", true]] },
+      function() {
+        var ifr = document.querySelector("iframe");
+        ifr.onload = function() {
+          startTimelineValue = frames[0].document.timeline.currentTime;
+          frames[0].requestAnimationFrame(waitATick);
+        }
+        ifr.src = "file_bug1135764.xml";
+     })
   })
   </script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1135764">Mozilla Bug 1135764</a>
 <p id="display">
-  <iframe src="file_bug1135764.xml"></iframe>
+  <iframe></iframe>
 </p>
 <div id="content" style="display: none">
 
