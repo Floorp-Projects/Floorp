@@ -2,128 +2,13 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="../testcommon.js"></script>
 <div id="log"></div>
 <script>
 'use strict';
-
-async_test(function(t) {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
-  flushComputedStyle(div);
-
-  div.style.transition = 'margin-left 100s';
-  div.style.marginLeft = '1000px';
-  flushComputedStyle(div);
-
-  var animation = div.getAnimations()[0];
-  animation.ready.then(waitForFrame).then(t.step_func(function() {
-    assert_not_equals(getComputedStyle(div).marginLeft, '1000px',
-                      'transform style is animated before cancelling');
-    animation.cancel();
-    assert_equals(getComputedStyle(div).marginLeft, div.style.marginLeft,
-                  'transform style is no longer animated after cancelling');
-    t.done();
-  }));
-}, 'Animated style is cleared after cancelling a running CSS transition');
-
-async_test(function(t) {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
-  flushComputedStyle(div);
-
-  div.style.transition = 'margin-left 100s';
-  div.style.marginLeft = '1000px';
-  flushComputedStyle(div);
-
-  div.addEventListener('transitionend', t.step_func(function() {
-    assert_unreached('Got unexpected end event on cancelled transition');
-  }));
-
-  var animation = div.getAnimations()[0];
-  animation.ready.then(t.step_func(function() {
-    // Seek to just before the end then cancel
-    animation.currentTime = 99.9 * 1000;
-    animation.cancel();
-
-    // Then wait a couple of frames and check that no event was dispatched
-    return waitForAnimationFrames(2);
-  })).then(t.step_func(function() {
-    t.done();
-  }));
-}, 'Cancelled CSS transitions do not dispatch events');
-
-async_test(function(t) {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
-  flushComputedStyle(div);
-
-  div.style.transition = 'margin-left 100s';
-  div.style.marginLeft = '1000px';
-  flushComputedStyle(div);
-
-  var animation = div.getAnimations()[0];
-  animation.ready.then(t.step_func(function() {
-    animation.cancel();
-    assert_equals(getComputedStyle(div).marginLeft, '1000px',
-                  'margin-left style is not animated after cancelling');
-    animation.play();
-    assert_equals(getComputedStyle(div).marginLeft, '0px',
-                  'margin-left style is animated after re-starting transition');
-    return animation.ready;
-  })).then(t.step_func(function() {
-    assert_equals(animation.playState, 'running',
-                  'Transition succeeds in running after being re-started');
-    t.done();
-  }));
-}, 'After cancelling a transition, it can still be re-used');
-
-async_test(function(t) {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
-  flushComputedStyle(div);
-
-  div.style.transition = 'margin-left 100s';
-  div.style.marginLeft = '1000px';
-  flushComputedStyle(div);
-
-  var animation = div.getAnimations()[0];
-  animation.ready.then(t.step_func(function() {
-    animation.finish();
-    animation.cancel();
-    assert_equals(getComputedStyle(div).marginLeft, '1000px',
-                  'margin-left style is not animated after cancelling');
-    animation.play();
-    assert_equals(getComputedStyle(div).marginLeft, '0px',
-                  'margin-left style is animated after re-starting transition');
-    return animation.ready;
-  })).then(t.step_func(function() {
-    assert_equals(animation.playState, 'running',
-                  'Transition succeeds in running after being re-started');
-    t.done();
-  }));
-}, 'After cancelling a finished transition, it can still be re-used');
-
-test(function(t) {
-  var div = addDiv(t, { style: 'margin-left: 0px' });
-  flushComputedStyle(div);
-
-  div.style.transition = 'margin-left 100s';
-  div.style.marginLeft = '1000px';
-  flushComputedStyle(div);
-
-  var animation = div.getAnimations()[0];
-  animation.cancel();
-  assert_equals(getComputedStyle(div).marginLeft, '1000px',
-                'margin-left style is not animated after cancelling');
-
-  // Trigger a change to a transition property and check that this
-  // doesn't cause the animation to become live again
-  div.style.transitionDuration = '200s';
-  flushComputedStyle(div);
-  assert_equals(getComputedStyle(div).marginLeft, '1000px',
-                'margin-left style is still not animated after updating'
-                + ' transition-duration');
-  assert_equals(animation.playState, 'idle',
-                'Transition is still idle after updating transition-duration');
-}, 'After cancelling a transition, updating transition properties doesn\'t make'
-   + ' it live again');
-
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  { "set": [["dom.animations-api.core.enabled", true]]},
+  function() {
+    window.open("file_animation-cancel.html");
+  });
 </script>
-</html>

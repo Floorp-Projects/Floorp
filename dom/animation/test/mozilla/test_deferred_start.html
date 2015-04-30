@@ -2,122 +2,13 @@
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="../testcommon.js"></script>
 <div id="log"></div>
-<style>
-@keyframes empty { }
-@keyframes animTransform {
-  from { transform: translate(0px); }
-  to { transform: translate(100px); }
-}
-.target {
-  /* Element needs geometry to be eligible for layerization */
-  width: 100px;
-  height: 100px;
-  background-color: white;
-}
-</style>
 <script>
 'use strict';
-
-function waitForDocLoad() {
-  return new Promise(function(resolve, reject) {
-    if (document.readyState === 'complete') {
-      resolve();
-    } else {
-      window.addEventListener('load', resolve);
-    }
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  { "set": [["dom.animations-api.core.enabled", true]]},
+  function() {
+    window.open("file_deferred_start.html");
   });
-}
-
-async_test(function(t) {
-  var div = addDiv(t);
-  var cs = window.getComputedStyle(div);
-
-  // Test that empty animations actually start.
-  //
-  // Normally we tie the start of animations to when their first frame of
-  // the animation is rendered. However, for animations that don't actually
-  // trigger a paint (e.g. because they are empty, or are animating something
-  // that doesn't render or is offscreen) we want to make sure they still
-  // start.
-  //
-  // Before we start, wait for the document to finish loading. This is because
-  // during loading we will have other paint events taking place which might,
-  // by luck, happen to trigger animations that otherwise would not have been
-  // triggered, leading to false positives.
-  //
-  // As a result, it's better to wait until we have a more stable state before
-  // continuing.
-  var promiseCallbackDone = false;
-  waitForDocLoad().then(function() {
-    div.style.animation = 'empty 1000s';
-    var animation = div.getAnimations()[0];
-
-    animation.ready.then(function() {
-      promiseCallbackDone = true;
-    }).catch(function() {
-      assert_unreached('ready promise was rejected');
-    });
-
-  // We need to wait for up to three frames. This is because in some
-  // cases it can take up to two frames for the initial layout
-  // to take place. Even after that happens we don't actually resolve the
-  // ready promise until the following tick.
-  })
-  .then(waitForFrame)
-  .then(waitForFrame)
-  .then(waitForFrame)
-  .then(t.step_func(function() {
-    assert_true(promiseCallbackDone,
-                'ready promise for an empty animation was resolved'
-                + ' within three animation frames');
-    t.done();
-  }));
-}, 'Animation.ready is resolved for an empty animation');
-
-// Test that compositor animations with delays get synced correctly
-//
-// NOTE: It is important that we DON'T use
-// SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh here since that takes
-// us through a different code path.
-async_test(function(t) {
-  // This test only applies to compositor animations
-  const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
-  var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
-                    SpecialPowers.getBoolPref(OMTAPrefKey);
-  if (!omtaEnabled) {
-    t.done();
-    return;
-  }
-
-  // Setup animation
-  var div = addDiv(t);
-  div.classList.add('target');
-  div.style.animation = 'animTransform 100s -50s forwards';
-  var animation = div.getAnimations()[0];
-
-  animation.ready.then(t.step_func(function() {
-    var transformStr =
-      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
-
-    var matrixComponents =
-      transformStr.startsWith('matrix(')
-      ? transformStr.substring('matrix('.length, transformStr.length-1)
-                    .split(',')
-                    .map(component => Number(component))
-      : [];
-    assert_equals(matrixComponents.length, 6,
-                  'Got a valid transform matrix on the compositor'
-                  + ' (got: "' + transformStr + '")');
-
-    // If the delay has been applied correctly we should be at least
-    // half-way through the animation
-    assert_true(matrixComponents[4] >= 50,
-                'Animation is at least half-way through on the compositor'
-                + ' (got translation of ' + matrixComponents[4] + ')');
-    t.done();
-  }));
-}, 'Starting an animation with a delay starts from the correct point');
-
 </script>
