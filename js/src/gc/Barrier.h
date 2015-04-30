@@ -334,13 +334,6 @@ struct InternalGCMethods<Value>
             preBarrierImpl(ZoneOfValueFromAnyThread(v), v);
     }
 
-    static void preBarrier(Zone* zone, Value v) {
-        MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-        if (v.isString() && StringIsPermanentAtom(v.toString()))
-            return;
-        preBarrierImpl(zone, v);
-    }
-
   private:
     static void preBarrierImpl(Zone* zone, Value v) {
         JS::shadow::Zone* shadowZone = JS::shadow::Zone::asShadowZone(zone);
@@ -459,7 +452,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
 
   protected:
     void pre() { InternalGCMethods<T>::preBarrier(value); }
-    void pre(Zone* zone) { InternalGCMethods<T>::preBarrier(zone, value); }
 };
 
 template <>
@@ -883,20 +875,12 @@ class HeapSlot : public BarrieredBase<Value>
 
 #ifdef DEBUG
     bool preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot);
-    bool preconditionForSet(Zone* zone, NativeObject* owner, Kind kind, uint32_t slot);
     bool preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot, Value target) const;
 #endif
 
     void set(NativeObject* owner, Kind kind, uint32_t slot, const Value& v) {
         MOZ_ASSERT(preconditionForSet(owner, kind, slot));
         pre();
-        value = v;
-        post(owner, kind, slot, v);
-    }
-
-    void set(Zone* zone, NativeObject* owner, Kind kind, uint32_t slot, const Value& v) {
-        MOZ_ASSERT(preconditionForSet(zone, owner, kind, slot));
-        pre(zone);
         value = v;
         post(owner, kind, slot, v);
     }
