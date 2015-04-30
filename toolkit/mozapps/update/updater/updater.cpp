@@ -802,7 +802,7 @@ static int ensure_copy_recursive(const NS_tchar *path, const NS_tchar *dest,
       }
     }
   }
-
+  NS_tclosedir(dir);
   return rv;
 }
 

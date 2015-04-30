@@ -74,8 +74,7 @@ int32_t nsTableRowGroupFrame::GetStartRowIndex()
   }
   // if the row group doesn't have any children, get it the hard way
   if (-1 == result) {
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
-    return tableFrame->GetStartRowIndex(this);
+    return GetTableFrame()->GetStartRowIndex(this);
   }
 
   return result;
@@ -157,16 +156,14 @@ void
 nsDisplayTableRowGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
                                         nsRenderingContext* aCtx)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
-  TableBackgroundPainter painter(tableFrame,
+  auto rgFrame = static_cast<nsTableRowGroupFrame*>(mFrame);
+  TableBackgroundPainter painter(rgFrame->GetTableFrame(),
                                  TableBackgroundPainter::eOrigin_TableRowGroup,
                                  mFrame->PresContext(), *aCtx,
                                  mVisibleRect, ToReferenceFrame(),
                                  aBuilder->GetBackgroundPaintFlags());
 
-  DrawResult result =
-    painter.PaintRowGroup(static_cast<nsTableRowGroupFrame*>(mFrame));
-
+  DrawResult result = painter.PaintRowGroup(rgFrame);
   nsDisplayTableItemGeometry::UpdateDrawResult(this, result);
 }
 
@@ -327,7 +324,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
   if (aPageBreakBeforeEnd)
     *aPageBreakBeforeEnd = false;
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   const bool borderCollapse = tableFrame->IsBorderCollapse();
 
   // XXXldb Should we really be checking this rather than available height?
@@ -525,7 +522,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*           aPresContext,
                                           nsHTMLReflowMetrics&     aDesiredSize,
                                           const nsHTMLReflowState& aReflowState)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   const bool isPaginated = aPresContext->IsPaginated();
 
   int32_t numEffCols = tableFrame->GetEffectiveColCount();
@@ -804,7 +801,7 @@ nscoord
 nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
                                                   nscoord aWidth)
 {
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
@@ -1294,7 +1291,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // see if a special height reflow needs to occur due to having a pct height
   nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   nsRowGroupReflowState state(aReflowState, tableFrame);
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
@@ -1375,7 +1372,7 @@ nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (!aOldStyleContext) //avoid this on init
     return;
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
       tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     nsIntRect damageArea(0, GetStartRowIndex(), tableFrame->GetColCount(),
@@ -1412,7 +1409,7 @@ nsTableRowGroupFrame::AppendFrames(ChildListID     aListID,
   mFrames.AppendFrames(nullptr, aFrameList);
 
   if (rows.Length() > 0) {
-    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    nsTableFrame* tableFrame = GetTableFrame();
     tableFrame->AppendRows(this, rowIndex, rows);
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1435,7 +1432,7 @@ nsTableRowGroupFrame::InsertFrames(ChildListID     aListID,
 
   // collect the new row frames in an array
   // XXXbz why are we doing the QI stuff?  There shouldn't be any non-rows here.
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   nsTArray<nsTableRowFrame*> rows;
   bool gotFirstRow = false;
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
@@ -1479,10 +1476,10 @@ nsTableRowGroupFrame::RemoveFrame(ChildListID     aListID,
 
   ClearRowCursor();
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   // XXX why are we doing the QI stuff?  There shouldn't be any non-rows here.
   nsTableRowFrame* rowFrame = do_QueryFrame(aOldFrame);
   if (rowFrame) {
+    nsTableFrame* tableFrame = GetTableFrame();
     // remove the rows from the table (and flag a rebalance)
     tableFrame->RemoveRows(*rowFrame, 1, true);
 
@@ -1516,7 +1513,7 @@ nscoord
 nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
 {
   nscoord result = 0;
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* tableFrame = GetTableFrame();
   int32_t startRowIndex = GetStartRowIndex();
   if ((aReflowState.ComputedHeight() > 0) && (aReflowState.ComputedHeight() < NS_UNCONSTRAINEDSIZE)) {
     nscoord cellSpacing = tableFrame->GetRowSpacing(startRowIndex,
@@ -1652,9 +1649,8 @@ nsTableRowGroupFrame::GetNumLines()
 bool
 nsTableRowGroupFrame::GetDirection()
 {
-  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
   return (NS_STYLE_DIRECTION_RTL ==
-          table->StyleVisibility()->mDirection);
+          GetTableFrame()->StyleVisibility()->mDirection);
 }
 
 NS_IMETHODIMP
@@ -1666,7 +1662,7 @@ nsTableRowGroupFrame::GetLine(int32_t    aLineNumber,
   NS_ENSURE_ARG_POINTER(aFirstFrameOnLine);
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
 
-  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* table = GetTableFrame();
   nsTableCellMap* cellMap = table->GetCellMap();
 
   *aFirstFrameOnLine = nullptr;
@@ -1728,7 +1724,7 @@ nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber,
                                   bool*    aPosIsBeforeFirstFrame,
                                   bool*    aPosIsAfterLastFrame)
 {
-  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
+  nsTableFrame* table = GetTableFrame();
   nsTableCellMap* cellMap = table->GetCellMap();
 
   WritingMode wm = table->GetWritingMode();

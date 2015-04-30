@@ -14,18 +14,18 @@
 namespace mozilla {
 namespace dom {
 
-class AnimationEffectReadonly
+class AnimationEffectReadOnly
   : public nsISupports
   , public nsWrapperCache
 {
 protected:
-  virtual ~AnimationEffectReadonly() { }
+  virtual ~AnimationEffectReadOnly() { }
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadonly)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadOnly)
 
-  explicit AnimationEffectReadonly(nsISupports* aParent)
+  explicit AnimationEffectReadOnly(nsISupports* aParent)
     : mParent(aParent)
   {
   }

@@ -1,0 +1,12 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+INSTALL_TARGETS += FAKE_GMP_OPENH264_PLUGIN
+FAKE_GMP_OPENH264_PLUGIN_DEST = $(DEPTH)/dist/bin/gmp-fakeopenh264/1.0
+FAKE_GMP_OPENH264_PLUGIN_FILES = \
+  $(srcdir)/fakeopenh264.info \
+  $(srcdir)/fakeopenh264.voucher \
+  $(NULL)
+

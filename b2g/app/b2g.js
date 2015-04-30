@@ -318,6 +318,11 @@ pref("media.cache_readahead_limit", 30);
 // Enable/Disable Gonk Decoder Module
 pref("media.fragmented-mp4.gonk.enabled", true);
 #endif
+
+//Encrypted media extensions.
+pref("media.eme.enabled", true);
+pref("media.eme.apiVisible", true);
+
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 3);

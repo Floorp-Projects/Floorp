@@ -15,8 +15,8 @@ namespace dom {
 
 class AudioParam;
 
-class AudioBufferSourceNode : public AudioNode,
-                              public MainThreadMediaStreamListener
+class AudioBufferSourceNode final : public AudioNode,
+                                    public MainThreadMediaStreamListener
 {
 public:
   explicit AudioBufferSourceNode(AudioContext* aContext);

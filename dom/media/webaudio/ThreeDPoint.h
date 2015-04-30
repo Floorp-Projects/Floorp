@@ -14,7 +14,8 @@ namespace mozilla {
 
 namespace dom {
 
-struct ThreeDPoint {
+struct ThreeDPoint final
+{
   ThreeDPoint()
     : x(0.)
     , y(0.)

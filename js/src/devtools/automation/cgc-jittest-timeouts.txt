@@ -7,6 +7,7 @@ basic/bug632964-regexp.js
 basic/bug677957-2.js
 basic/testBug614653.js
 basic/testBug686274.js
+basic/testManyVars.js
 basic/testTypedArrayInit.js
 gc/bug-1014972.js
 gc/bug-906236.js

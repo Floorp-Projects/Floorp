@@ -40,3 +40,8 @@ OS_COMPILE_CXXFLAGS :=
 
 # LNK1246: '/SAFESEH' not compatible with 'x64' target machine
 LDFLAGS := $(filter-out -SAFESEH,$(LDFLAGS))
+
+# When targetting x64, we need to specify a subsystem of at least 5.02, because
+# the 5.01 value we inherit from the x86 parts is silently ignored, making the
+# linker default to 6.00 (Vista) as of VS2013.
+WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,5.02
