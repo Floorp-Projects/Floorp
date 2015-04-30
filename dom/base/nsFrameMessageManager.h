@@ -34,6 +34,9 @@
 class nsIFrameLoader;
 
 namespace mozilla {
+
+struct OwningSerializedStructuredCloneBuffer;
+
 namespace dom {
 
 class nsIContentParent;
@@ -54,6 +57,9 @@ enum MessageManagerFlags {
 
 class MessageManagerCallback
 {
+protected:
+  typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
+
 public:
   virtual ~MessageManagerCallback() {}
 
@@ -67,7 +73,7 @@ public:
                                      const StructuredCloneData& aData,
                                      JS::Handle<JSObject*> aCpows,
                                      nsIPrincipal* aPrincipal,
-                                     InfallibleTArray<nsString>* aJSONRetVal,
+                                     nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal,
                                      bool aIsSync)
   {
     return true;
@@ -161,6 +167,7 @@ class nsFrameMessageManager final : public nsIContentFrameMessageManager,
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::StructuredCloneData StructuredCloneData;
+  typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
 public:
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         nsFrameMessageManager* aParentManager,
@@ -233,7 +240,7 @@ public:
                           const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          InfallibleTArray<nsString>* aJSONRetVal);
+                          nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal);
 
   void AddChildManager(nsFrameMessageManager* aManager);
   void RemoveChildManager(nsFrameMessageManager* aManager)
@@ -298,7 +305,7 @@ private:
                           bool aTargetClosed, const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,
                           mozilla::jsipc::CpowHolder* aCpows, nsIPrincipal* aPrincipal,
-                          InfallibleTArray<nsString>* aJSONRetVal);
+                          nsTArray<OwningSerializedStructuredCloneBuffer>* aRetVal);
 
   NS_IMETHOD LoadScript(const nsAString& aURL,
                         bool aAllowDelayedLoad,

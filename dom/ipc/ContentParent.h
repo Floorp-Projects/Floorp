@@ -77,6 +77,7 @@ class ContentParent final : public PContentParent
     typedef mozilla::ipc::TestShellParent TestShellParent;
     typedef mozilla::ipc::URIParams URIParams;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+    typedef mozilla::OwningSerializedStructuredCloneBuffer OwningSerializedStructuredCloneBuffer;
 
 public:
 #ifdef MOZ_NUWA_PROCESS
@@ -714,12 +715,12 @@ private:
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
                                  const IPC::Principal& aPrincipal,
-                                 InfallibleTArray<nsString>* aRetvals) override;
+                                 nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals) override;
     virtual bool RecvRpcMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 InfallibleTArray<CpowEntry>&& aCpows,
                                 const IPC::Principal& aPrincipal,
-                                InfallibleTArray<nsString>* aRetvals) override;
+                                nsTArray<OwningSerializedStructuredCloneBuffer>* aRetvals) override;
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   InfallibleTArray<CpowEntry>&& aCpows,
