@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ipc/ConnectionOrientedSocket.h"
-#include "mozilla/ipc/SocketBase.h"
+#include "mozilla/ipc/DataSocket.h"
 #include "nsError.h"
 #include "nsAutoPtr.h"
 
@@ -112,25 +112,29 @@ protected:
  * Bluetooth daemon. It offers connection establishment and sending
  * PDUs. PDU receiving is performed by |BluetoothDaemonPDUConsumer|.
  */
-class BluetoothDaemonConnection : public SocketBase
+class BluetoothDaemonConnection : public DataSocket
                                 , public ConnectionOrientedSocket
 {
 public:
   BluetoothDaemonConnection();
   virtual ~BluetoothDaemonConnection();
 
-  // SocketBase
-  //
-
   nsresult ConnectSocket(BluetoothDaemonPDUConsumer* aConsumer);
-  void     CloseSocket();
 
-  nsresult Send(BluetoothDaemonPDU* aPDU);
-
-  // ConnectionOrientedSocket
+  // Methods for |ConnectionOrientedSocket|
   //
 
   virtual ConnectionOrientedSocketIO* GetIO() override;
+
+  // Methods for |DataSocket|
+  //
+
+  void SendSocketData(UnixSocketIOBuffer* aBuffer) override;
+
+  // Methods for |SocketBase|
+  //
+
+  void CloseSocket() override;
 
 protected:
 
