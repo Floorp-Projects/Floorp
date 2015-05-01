@@ -3416,14 +3416,6 @@ void MediaDecoderStateMachine::PreservesPitchChanged()
   }
 }
 
-void
-MediaDecoderStateMachine::SetMinimizePrerollUntilPlaybackStarts()
-{
-  AssertCurrentThreadInMonitor();
-  DECODER_LOG("SetMinimizePrerollUntilPlaybackStarts()");
-  mMinimizePreroll = true;
-}
-
 bool MediaDecoderStateMachine::IsShutdown()
 {
   AssertCurrentThreadInMonitor();
