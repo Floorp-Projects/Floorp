@@ -45,6 +45,7 @@ public:
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_FORWARD_SAFE_NSISYNCMESSAGESENDER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
+  NS_FORWARD_SAFE_NSICONTENTPROCESSMESSAGEMANAGER(mMessageManager)
 
   virtual void LoadScript(const nsAString& aURL);
 
@@ -62,6 +63,8 @@ public:
   {
     MOZ_CRASH("ProcessGlobal doesn't use DOM bindings!");
   }
+
+  void SetInitialProcessData(JS::HandleValue aInitialData);
 
 protected:
   virtual ~ProcessGlobal();

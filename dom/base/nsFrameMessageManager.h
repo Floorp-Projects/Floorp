@@ -162,7 +162,7 @@ private:
 class nsFrameMessageManager final : public nsIContentFrameMessageManager,
                                     public nsIMessageBroadcaster,
                                     public nsIFrameScriptLoader,
-                                    public nsIProcessScriptLoader,
+                                    public nsIGlobalProcessScriptLoader,
                                     public nsIProcessChecker
 {
   friend class mozilla::dom::MessageManagerReporter;
@@ -171,58 +171,15 @@ class nsFrameMessageManager final : public nsIContentFrameMessageManager,
 public:
   nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                         nsFrameMessageManager* aParentManager,
-                        /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
-  : mChrome(!!(aFlags & mozilla::dom::ipc::MM_CHROME)),
-    mGlobal(!!(aFlags & mozilla::dom::ipc::MM_GLOBAL)),
-    mIsProcessManager(!!(aFlags & mozilla::dom::ipc::MM_PROCESSMANAGER)),
-    mIsBroadcaster(!!(aFlags & mozilla::dom::ipc::MM_BROADCASTER)),
-    mOwnsCallback(!!(aFlags & mozilla::dom::ipc::MM_OWNSCALLBACK)),
-    mHandlingMessage(false),
-    mClosed(false),
-    mDisconnected(false),
-    mCallback(aCallback),
-    mParentManager(aParentManager)
-  {
-    NS_ASSERTION(mChrome || !aParentManager, "Should not set parent manager!");
-    NS_ASSERTION(!mIsBroadcaster || !mCallback,
-                 "Broadcasters cannot have callbacks!");
-    // This is a bit hackish. When parent manager is global, we want
-    // to attach the message manager to it immediately.
-    // Is it just the frame message manager which waits until the
-    // content process is running.
-    if (mParentManager && (mCallback || IsBroadcaster())) {
-      mParentManager->AddChildManager(this);
-    }
-    if (mOwnsCallback) {
-      mOwnedCallback = aCallback;
-    }
-  }
+                        /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags);
 
 private:
-  ~nsFrameMessageManager()
-  {
-    for (int32_t i = mChildManagers.Count(); i > 0; --i) {
-      static_cast<nsFrameMessageManager*>(mChildManagers[i - 1])->
-        Disconnect(false);
-    }
-    if (mIsProcessManager) {
-      if (this == sParentProcessManager) {
-        sParentProcessManager = nullptr;
-      }
-      if (this == sChildProcessManager) {
-        sChildProcessManager = nullptr;
-        delete mozilla::dom::SameProcessMessageQueue::Get();
-      }
-      if (this == sSameProcessParentManager) {
-        sSameProcessParentManager = nullptr;
-      }
-    }
-  }
+  ~nsFrameMessageManager();
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFrameMessageManager,
-                                           nsIContentFrameMessageManager)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameMessageManager,
+                                                         nsIContentFrameMessageManager)
   NS_DECL_NSIMESSAGELISTENERMANAGER
   NS_DECL_NSIMESSAGESENDER
   NS_DECL_NSIMESSAGEBROADCASTER
@@ -231,6 +188,7 @@ public:
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
   NS_DECL_NSIFRAMESCRIPTLOADER
   NS_DECL_NSIPROCESSSCRIPTLOADER
+  NS_DECL_NSIGLOBALPROCESSSCRIPTLOADER
   NS_DECL_NSIPROCESSCHECKER
 
   static nsFrameMessageManager*
@@ -291,6 +249,9 @@ public:
   {
     sChildProcessManager = aManager;
   }
+
+  void SetInitialProcessData(JS::HandleValue aInitialData);
+
 private:
   nsresult SendMessage(const nsAString& aMessageName,
                        JS::Handle<JS::Value> aJSON,
@@ -333,6 +294,7 @@ protected:
   nsFrameMessageManager* mParentManager;
   nsTArray<nsString> mPendingScripts;
   nsTArray<bool> mPendingScriptsGlobalStates;
+  JS::Heap<JS::Value> mInitialProcessData;
 
   void LoadPendingScripts(nsFrameMessageManager* aManager,
                           nsFrameMessageManager* aChildMM);

@@ -812,10 +812,11 @@ ContentChild::InitXPCOM()
     bool isConnected;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
+    OwningSerializedStructuredCloneBuffer initialData;
 
     SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                   &isLangRTL, &mAvailableDictionaries,
-                                  &clipboardCaps, &domainPolicy);
+                                  &clipboardCaps, &domainPolicy, &initialData);
     RecvSetOffline(isOffline);
     RecvSetConnectivity(isConnected);
     RecvBidiKeyboardNotify(isLangRTL);
@@ -836,6 +837,20 @@ ContentChild::InitXPCOM()
     nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
     if (nsCOMPtr<nsIClipboardProxy> clipboardProxy = do_QueryInterface(clipboard)) {
         clipboardProxy->SetCapabilities(clipboardCaps);
+    }
+
+    {
+        AutoJSAPI jsapi;
+        if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
+            MOZ_CRASH();
+        }
+        JS::RootedValue data(jsapi.cx());
+        if (!JS_ReadStructuredClone(jsapi.cx(), initialData.data, initialData.dataLength,
+                                    JS_STRUCTURED_CLONE_VERSION, &data, nullptr, nullptr)) {
+            MOZ_CRASH();
+        }
+        ProcessGlobal* global = ProcessGlobal::Get();
+        global->SetInitialProcessData(data);
     }
 
     DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
