@@ -878,9 +878,12 @@
   background-color: rgba(170,170,170,.4);
 }
 
+.devtools-tab:not([selected])[highlighted] {
+  box-shadow: 0 2px 0 var(--theme-highlight-green) inset;
+}
+
 .theme-dark .devtools-tab:not([selected])[highlighted] {
   background-color: hsla(99,100%,14%,.2);
-  box-shadow: 0 2px 0 #7bc107 inset;
 }
 
 .theme-light .devtools-tab:not([selected])[highlighted] {

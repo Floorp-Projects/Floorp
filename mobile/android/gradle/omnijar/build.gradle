@@ -4,7 +4,7 @@ apply plugin: 'java'
  * This task runs when any input file is newer than the omnijar.
  */
 task buildOmnijar(type:Exec) {
-    dependsOn generateCodeAndResources
+    dependsOn rootProject.generateCodeAndResources
 
     // Depend on all the Gecko resources.
     inputs.sourceDir 'src/main/java/locales'
@@ -18,10 +18,9 @@ task buildOmnijar(type:Exec) {
 
     workingDir "${topobjdir}"
 
-    commandLine "${topsrcdir}/mach"
-    args 'build'
+    commandLine mozconfig.substs.GMAKE
     args '-C'
-    args 'mobile/android/base'
+    args "${topobjdir}/mobile/android/base"
     args 'gradle-omnijar'
 
     // Only show the output if something went wrong.

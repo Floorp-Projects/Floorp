@@ -1106,12 +1106,15 @@ HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
     return NS_OK;
   }
 
-  histogram.Add(value);
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
   if (Histogram* subsession = GetSubsessionHistogram(histogram)) {
     subsession->Add(value);
   }
 #endif
+
+  // It is safe to add to the histogram now: the subsession histogram was already
+  // cloned from this so we won't add the sample twice.
+  histogram.Add(value);
 
   return NS_OK;
 }
