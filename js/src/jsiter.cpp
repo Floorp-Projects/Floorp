@@ -543,11 +543,14 @@ NativeIterator::allocateIterator(JSContext* cx, uint32_t slength, const AutoIdVe
 }
 
 NativeIterator*
-NativeIterator::allocateSentinel(JSContext* cx)
+NativeIterator::allocateSentinel(JSContext* maybecx)
 {
     NativeIterator* ni = js_pod_malloc<NativeIterator>();
-    if (!ni)
+    if (!ni) {
+        if (maybecx)
+            ReportOutOfMemory(maybecx);
         return nullptr;
+    }
 
     PodZero(ni);
 

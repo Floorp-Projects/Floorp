@@ -900,6 +900,9 @@ RegExpCompartment::init(JSContext* cx)
 void
 RegExpCompartment::sweep(JSRuntime* rt)
 {
+    if (!set_.initialized())
+        return;
+
     for (Set::Enum e(set_); !e.empty(); e.popFront()) {
         RegExpShared* shared = e.front();
 

@@ -1247,8 +1247,10 @@ BaseShape::getUnowned(ExclusiveContext* cx, StackBaseShape& base)
 {
     BaseShapeSet& table = cx->compartment()->baseShapes;
 
-    if (!table.initialized() && !table.init())
+    if (!table.initialized() && !table.init()) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     DependentAddPtr<BaseShapeSet> p(cx, table, base);
     if (p)
@@ -1480,8 +1482,10 @@ EmptyShape::getInitialShape(ExclusiveContext* cx, const Class* clasp, TaggedProt
 
     InitialShapeSet& table = cx->compartment()->initialShapes;
 
-    if (!table.initialized() && !table.init())
+    if (!table.initialized() && !table.init()) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     typedef InitialShapeEntry::Lookup Lookup;
     DependentAddPtr<InitialShapeSet>
