@@ -7,8 +7,6 @@
 Cu.import("resource://services-common/utils.js");
 const { LOOP_ROOMS_CACHE_FILENAME } = Cu.import("resource:///modules/loop/LoopRoomsCache.jsm", {});
 
-const kContextEnabledPref = "loop.contextInConverations.enabled";
-
 const kFxAKey = "uGIs-kGbYt1hBBwjyW7MLQ";
 
 // Rooms details as responded by the server.
@@ -251,14 +249,12 @@ function run_test() {
   setupFakeLoopServer();
 
   Services.prefs.setCharPref("loop.key.fxa", kFxAKey);
-  Services.prefs.setBoolPref(kContextEnabledPref, true);
 
   // Pretend we're signed into FxA.
   MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
   MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
 
   do_register_cleanup(function () {
-    Services.prefs.clearUserPref(kContextEnabledPref);
     Services.prefs.clearUserPref("loop.key.fxa");
 
     MozLoopServiceInternal.fxAOAuthTokenData = null;
