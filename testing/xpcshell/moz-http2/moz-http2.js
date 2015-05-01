@@ -396,6 +396,12 @@ function handleRequest(req, res) {
    }
   }
 
+  // for use with test_altsvc.js
+  else if (u.pathname === "/altsvc-test") {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Alt-Svc', 'h2=' + req.headers['x-altsvc']);
+  }
+
   res.setHeader('Content-Type', 'text/html');
   if (req.httpVersionMajor != 2) {
     res.setHeader('Connection', 'close');
@@ -404,11 +410,11 @@ function handleRequest(req, res) {
   res.end(content);
 }
 
-// Set up the SSL certs for our server
+// Set up the SSL certs for our server - this server has a cert for foo.example.com
+// signed by netwerk/tests/unit/CA.cert.der
 var options = {
-  key: fs.readFileSync(__dirname + '/../moz-spdy/spdy-key.pem'),
-  cert: fs.readFileSync(__dirname + '/../moz-spdy/spdy-cert.pem'),
-  ca: fs.readFileSync(__dirname + '/../moz-spdy/spdy-ca.pem'),
+  key: fs.readFileSync(__dirname + '/http2-key.pem'),
+  cert: fs.readFileSync(__dirname + '/http2-cert.pem'),
   //, log: require('../node-http2/test/util').createLogger('server')
 };
 
