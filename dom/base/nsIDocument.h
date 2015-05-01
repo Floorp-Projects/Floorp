@@ -1938,6 +1938,12 @@ public:
   }
 
   /**
+   * If this document is a static clone, let the original document know that
+   * we're going away and then release our reference to it.
+   */
+  void UnlinkOriginalDocumentIfStatic();
+
+  /**
    * These are called by the parser as it encounters <picture> tags, the end of
    * said tags, and possible picture <source srcset> sources respectively. These
    * are used to inform ResolvePreLoadImage() calls.  Unset attributes are
@@ -2860,6 +2866,9 @@ protected:
    * The current frame request callback handle
    */
   int32_t mFrameRequestCallbackCounter;
+
+  // Count of live static clones of this document.
+  uint32_t mStaticCloneCount;
 
   // Array of nodes that have been blocked to prevent user tracking.
   // They most likely have had their nsIChannel canceled by the URL
