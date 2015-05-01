@@ -46,8 +46,11 @@ MOZ_APP_ID={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 
 MOZ_APP_STATIC_INI=1
 
-# Enable on-demand decompression
+# Enable on-demand decompression.  This requires a host compile toolchain to
+# build szip to use during packaging.
+if test "$COMPILE_ENVIRONMENT"; then
 MOZ_ENABLE_SZIP=1
+fi
 
 # Enable navigator.mozPay
 MOZ_PAY=1
