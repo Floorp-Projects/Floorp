@@ -413,9 +413,9 @@ CacheStorage::~CacheStorage()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
   if (mActor) {
-    mActor->StartDestroy();
-    // DestroyInternal() is called synchronously by StartDestroy().  So we
-    // should have already cleared the mActor.
+    mActor->StartDestroyFromListener();
+    // DestroyInternal() is called synchronously by StartDestroyFromListener().
+    // So we should have already cleared the mActor.
     MOZ_ASSERT(!mActor);
   }
 }
@@ -438,7 +438,7 @@ CacheStorage::MaybeRunPendingRequests()
       entry->mPromise->MaybeReject(rv);
       continue;
     }
-    mActor->ExecuteOp(mGlobal, entry->mPromise, args.SendAsOpArgs());
+    mActor->ExecuteOp(mGlobal, entry->mPromise, this, args.SendAsOpArgs());
   }
   mPendingRequests.Clear();
 }
