@@ -6,7 +6,7 @@ use hyper::method::Method::{Get, Post, Delete};
 use command::{WebDriverMessage};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
-static ROUTES: [(Method, &'static str, Route); 43] = [
+static ROUTES: [(Method, &'static str, Route); 46] = [
     (Post, "/session", Route::NewSession),
     (Delete, "/session/{sessionId}", Route::DeleteSession),
     (Post, "/session/{sessionId}/url", Route::Get),
@@ -38,8 +38,11 @@ static ROUTES: [(Method, &'static str, Route); 43] = [
     (Get, "/session/{sessionId}/element/{elementId}/enabled", Route::IsEnabled),
     (Post, "/session/{sessionId}/execute", Route::ExecuteScript),
     (Post, "/session/{sessionId}/execute_async", Route::ExecuteAsyncScript),
-    (Get, "/session/{sessionId}/cookie", Route::GetCookie),
+    (Get, "/session/{sessionId}/cookie", Route::GetCookies),
+    (Get, "/session/{sessionId}/cookie/{name}", Route::GetCookie),
     (Post, "/session/{sessionId}/cookie", Route::AddCookie),
+    (Delete, "/session/{sessionId}/cookie", Route::DeleteCookies),
+    (Delete, "/session/{sessionId}/cookie/{name}", Route::DeleteCookie),
     (Post, "/session/{sessionId}/timeouts", Route::SetTimeouts),
     //(Post, "/session/{sessionId}/actions", Route::Actions),
     (Post, "/session/{sessionId}/element/{elementId}/click", Route::ElementClick),
@@ -86,8 +89,11 @@ pub enum Route {
     IsEnabled,
     ExecuteScript,
     ExecuteAsyncScript,
+    GetCookies,
     GetCookie,
     AddCookie,
+    DeleteCookies,
+    DeleteCookie,
     SetTimeouts,
     //Actions XXX - once I understand the spec, perhaps
     ElementClick,
