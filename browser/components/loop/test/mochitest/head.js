@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const HAWK_TOKEN_LENGTH = 64;
 const {
   LOOP_SESSION_TYPE,
@@ -123,8 +125,8 @@ function loadLoopPanel(aOverrideOptions = {}) {
   let loopPanel = document.getElementById("loop-notification-panel");
   loopPanel.setAttribute("animate", "false");
 
-  // Now get the actual API.
-  yield promiseGetMozLoopAPI();
+  // Now get the actual API loaded into gMozLoopAPI.
+  return promiseGetMozLoopAPI();
 }
 
 function promiseOAuthParamsSetup(baseURL, params) {
@@ -319,7 +321,7 @@ const mockDb = {
     callback(null, details);
   },
   remove: function(guid, callback) {
-    if (!guid in this._store) {
+    if (!(guid in this._store)) {
       callback(new Error("Could not find _guid '" + guid + "' in database"));
       return;
     }

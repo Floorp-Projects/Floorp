@@ -140,7 +140,8 @@ static nsresult pref_DoCallback(const char* changed_pref);
 
 enum {
     kPrefSetDefault = 1,
-    kPrefForceSet = 2
+    kPrefForceSet = 2,
+    kPrefStickyDefault = 4,
 };
 static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t flags);
 
@@ -149,11 +150,8 @@ static nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, u
 nsresult PREF_Init()
 {
     if (!gHashTable.IsInitialized()) {
-        if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
-                               sizeof(PrefHashEntry), fallible,
-                               PREF_HASHTABLE_INITIAL_LENGTH)) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        PL_DHashTableInit(&gHashTable, &pref_HashTableOps,
+                          sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_LENGTH);
 
         PL_INIT_ARENA_POOL(&gPrefNameArena, "PrefNameArena",
                            PREFNAME_ARENA_SIZE);
@@ -340,7 +338,8 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg)
         (pref_ValueChanged(pref->defaultPref,
                            pref->userPref,
                            (PrefType) PREF_TYPE(pref)) ||
-         !(pref->flags & PREF_HAS_DEFAULT))) {
+         !(pref->flags & PREF_HAS_DEFAULT) ||
+         pref->flags & PREF_STICKY_DEFAULT)) {
         sourcePref = &pref->userPref;
     } else {
         if (argData->saveTypes == SAVE_ALL_AND_DEFAULTS) {
@@ -778,6 +777,8 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
             {
                 pref_SetValue(&pref->defaultPref, &pref->flags, value, type);
                 pref->flags |= PREF_HAS_DEFAULT;
+                if (flags & kPrefStickyDefault)
+                    pref->flags |= PREF_STICKY_DEFAULT;
                 if (!PREF_HAS_USER_VALUE(pref))
                     valueChanged = true;
             }
@@ -787,9 +788,11 @@ nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t
     }
     else
     {
-        /* If new value is same as the default value, then un-set the user value.
+        /* If new value is same as the default value and it's not a "sticky"
+           pref, then un-set the user value.
            Otherwise, set the user value only if it has changed */
         if ((pref->flags & PREF_HAS_DEFAULT) &&
+            !(pref->flags & PREF_STICKY_DEFAULT) &&
             !pref_ValueChanged(pref->defaultPref, value, type) &&
             !(flags & kPrefForceSet))
         {
@@ -1002,7 +1005,12 @@ void PREF_ReaderCallback(void       *closure,
                          const char *pref,
                          PrefValue   value,
                          PrefType    type,
-                         bool        isDefault)
+                         bool        isDefault,
+                         bool        isStickyDefault)
 {
-    pref_HashPref(pref, value, type, isDefault ? kPrefSetDefault : kPrefForceSet);
+    uint32_t flags = isDefault ? kPrefSetDefault : kPrefForceSet;
+    if (isDefault && isStickyDefault) {
+        flags |= kPrefStickyDefault;
+    }
+    pref_HashPref(pref, value, type, flags);
 }

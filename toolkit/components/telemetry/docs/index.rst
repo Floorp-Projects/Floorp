@@ -19,3 +19,4 @@ Client-side, this consists of:
    common-ping
    environment
    main-ping
+   preferences

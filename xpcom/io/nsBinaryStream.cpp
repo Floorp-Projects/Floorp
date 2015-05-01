@@ -315,7 +315,7 @@ nsBinaryOutputStream::WriteCompoundObject(nsISupports* aObject,
 
     rv = WriteID(*cidptr);
 
-    NS_Free(cidptr);
+    free(cidptr);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {

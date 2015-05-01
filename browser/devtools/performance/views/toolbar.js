@@ -21,6 +21,19 @@ let ToolbarView = {
       menupopup: $("#performance-options-menupopup")
     });
 
+    // TODO bug 1160313 get rid of retro mode checks
+    // hide option buttons here, and any other buttons in the toolbar
+    // (details.js takes care of view buttons)
+    if (PerformanceController.getOption("retro-mode")) {
+      let RETRO_ELEMENTS = [
+        "#option-flatten-tree-recursion", "#option-enable-memory", "#option-invert-flame-graph",
+        "#option-show-jit-optimizations", "#filter-button"
+      ];
+      for (let selector of RETRO_ELEMENTS) {
+        $(selector).hidden = true;
+      }
+    }
+
     yield this.optionsView.initialize();
     this.optionsView.on("pref-changed", this._onPrefChanged);
 

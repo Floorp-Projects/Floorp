@@ -344,7 +344,7 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create the buffer we need
-  char* destBuf = (char *) NS_Alloc(aDestLength);
+  char* destBuf = (char *) moz_xmalloc(aDestLength);
   if (!destBuf)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -352,7 +352,7 @@ nsJSONWriter::WriteToStream(nsIOutputStream *aStream,
   if (NS_SUCCEEDED(rv))
     rv = aStream->Write(destBuf, aDestLength, &bytesWritten);
 
-  NS_Free(destBuf);
+  free(destBuf);
   mDidWrite = true;
 
   return rv;

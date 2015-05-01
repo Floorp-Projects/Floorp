@@ -269,6 +269,9 @@ add_task(function test_updateSuggestedTile() {
   let testObserver = new TestFirstRun();
   DirectoryLinksProvider.addObserver(testObserver);
 
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
+
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   let links = yield fetchData();
 
@@ -383,6 +386,7 @@ add_task(function test_updateSuggestedTile() {
 
   // Cleanup
   yield promiseCleanDirectoryLinksProvider();
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   NewTabUtils.getProviderLinks = origGetProviderLinks;
   DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
@@ -421,6 +425,9 @@ add_task(function test_suggestedLinksMap() {
 });
 
 add_task(function test_topSitesWithSuggestedLinks() {
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
+
   let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = function(site) {
@@ -468,6 +475,7 @@ add_task(function test_topSitesWithSuggestedLinks() {
   isIdentical([...DirectoryLinksProvider._topSitesWithSuggestedLinks], expectedTopSitesWithSuggestedLinks);
 
   // Cleanup.
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   NewTabUtils.getProviderLinks = origGetProviderLinks;
 });
@@ -479,7 +487,7 @@ add_task(function test_suggestedAttributes() {
   let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
   DirectoryLinksProvider._getCurrentTopSiteCount = () => 8;
 
-  let frecent_sites = ["top.site.com"];
+  let frecent_sites = "addons.mozilla.org,air.mozilla.org,blog.mozilla.org,bugzilla.mozilla.org,developer.mozilla.org,etherpad.mozilla.org,forums.mozillazine.org,hacks.mozilla.org,hg.mozilla.org,mozilla.org,planet.mozilla.org,quality.mozilla.org,support.mozilla.org,treeherder.mozilla.org,wiki.mozilla.org".split(",");
   let imageURI = "https://image/";
   let title = "the title";
   let type = "affiliate";
@@ -514,6 +522,7 @@ add_task(function test_suggestedAttributes() {
   // Make sure we get the expected attributes on the suggested tile
   let link = gLinks.getLinks()[0];
   do_check_eq(link.imageURI, imageURI);
+  do_check_eq(link.targetedName, "Mozilla");
   do_check_eq(link.targetedSite, frecent_sites[0]);
   do_check_eq(link.title, title);
   do_check_eq(link.type, type);
@@ -528,6 +537,8 @@ add_task(function test_suggestedAttributes() {
 
 add_task(function test_frequencyCappedSites_views() {
   Services.prefs.setCharPref(kPingUrlPref, "");
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
 
@@ -594,6 +605,7 @@ add_task(function test_frequencyCappedSites_views() {
   checkFirstTypeAndLength("organic", 1);
 
   // Cleanup.
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);
@@ -603,6 +615,8 @@ add_task(function test_frequencyCappedSites_views() {
 
 add_task(function test_frequencyCappedSites_click() {
   Services.prefs.setCharPref(kPingUrlPref, "");
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
 
@@ -663,6 +677,7 @@ add_task(function test_frequencyCappedSites_click() {
   checkFirstTypeAndLength("organic", 1);
 
   // Cleanup.
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);
@@ -1139,6 +1154,8 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
 });
 
 add_task(function test_DirectoryLinksProvider_enhancedURIs() {
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
   let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
   NewTabUtils.isTopPlacesSite = () => true;
   let origCurrentTopSiteCount = DirectoryLinksProvider._getCurrentTopSiteCount;
@@ -1182,6 +1199,7 @@ add_task(function test_DirectoryLinksProvider_enhancedURIs() {
   do_check_eq(links[0].enhancedImageURI, "data:,net1");
 
   // Cleanup.
+  DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
   NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
   DirectoryLinksProvider._getCurrentTopSiteCount = origCurrentTopSiteCount;
   gLinks.removeProvider(DirectoryLinksProvider);

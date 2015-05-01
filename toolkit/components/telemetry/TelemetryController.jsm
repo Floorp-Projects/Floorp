@@ -21,6 +21,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryController::";
@@ -35,6 +36,11 @@ const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
 const PREF_FHR_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_SESSIONS_BRANCH = "datareporting.sessions.";
+const PREF_UNIFIED = PREF_BRANCH + "unified";
+
+// Whether the FHR/Telemetry unification features are enabled.
+// Changing this pref requires a restart.
+const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 const PING_FORMAT_VERSION = 4;
 
@@ -46,6 +52,12 @@ const TELEMETRY_TEST_DELAY = 100;
 const DEFAULT_RETENTION_DAYS = 14;
 // Timeout after which we consider a ping submission failed.
 const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
+
+// We treat pings before midnight as happening "at midnight" with this tolerance.
+const MIDNIGHT_TOLERANCE_MS = 15 * 60 * 1000;
+// We try to spread "midnight" pings out over this interval.
+const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
+const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
 
 XPCOMUtils.defineLazyModuleGetter(this, "ClientID",
                                   "resource://gre/modules/ClientID.jsm");
@@ -115,10 +127,29 @@ function isNewPingFormat(aPing) {
 }
 
 /**
+ * Takes a date and returns it trunctated to a date with daily precision.
+ */
+function truncateToDays(date) {
+  return new Date(date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate(),
+                  0, 0, 0, 0);
+}
+
+function tomorrow(date) {
+  let d = new Date(date);
+  d.setDate(d.getDate() + 1);
+  return d;
+}
+
+/**
  * This is a policy object used to override behavior for testing.
  */
 let Policy = {
   now: () => new Date(),
+  midnightPingFuzzingDelay: () => MIDNIGHT_FUZZING_DELAY_MS,
+  setPingSendTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+  clearPingSendTimeout: (id) => clearTimeout(id),
 }
 
 this.EXPORTED_SYMBOLS = ["TelemetryController"];
@@ -340,6 +371,9 @@ let Impl = {
   _delayedInitTask: null,
   // The deferred promise resolved when the initialization task completes.
   _delayedInitTaskDeferred: null,
+  // Timer for scheduled ping sends.
+  _pingSendTimer: null,
+
   // The session recorder, shared with FHR and the Data Reporting Service.
   _sessionRecorder: null,
   // This is a public barrier Telemetry clients can use to add blockers to the shutdown
@@ -484,6 +518,31 @@ let Impl = {
   },
 
   /**
+   * This helper calculates the next time that we can send pings at.
+   * Currently this mostly redistributes ping sends around midnight to avoid submission
+   * spikes around local midnight for daily pings.
+   *
+   * @param now Date The current time.
+   * @return Number The next time (ms from UNIX epoch) when we can send pings.
+   */
+  _getNextPingSendTime: function(now) {
+    const todayDate = truncateToDays(now);
+    const tomorrowDate = tomorrow(todayDate);
+    const nextMidnightRangeStart = tomorrowDate.getTime() - MIDNIGHT_TOLERANCE_MS;
+    const currentMidnightRangeEnd = todayDate.getTime() - MIDNIGHT_TOLERANCE_MS + Policy.midnightPingFuzzingDelay();
+
+    if (now.getTime() < currentMidnightRangeEnd) {
+      return currentMidnightRangeEnd;
+    }
+
+    if (now.getTime() >= nextMidnightRangeStart) {
+      return nextMidnightRangeStart + Policy.midnightPingFuzzingDelay();
+    }
+
+    return now.getTime();
+  },
+
+  /**
    * Submit ping payloads to Telemetry. This will assemble a complete ping, adding
    * environment data, client id and some general info.
    * Depending on configuration, the ping will be sent to the server (immediately or later)
@@ -509,12 +568,23 @@ let Impl = {
     // Always persist the pings if we are allowed to.
     let archivePromise = TelemetryArchive.promiseArchivePing(pingData)
       .catch(e => this._log.error("submitExternalPing - Failed to archive ping " + pingData.id, e));
-
     let p = [ archivePromise ];
 
-    if (!this._initialized) {
-      // We are still initializing and should not send yet, add this to the pending pings.
-      this._log.trace("submitExternalPing - still initializing, ping is pending");
+    // Check if we can send pings now.
+    const now = Policy.now();
+    const nextPingSendTime = this._getNextPingSendTime(now);
+    const throttled = (nextPingSendTime > now.getTime());
+
+    // We can't send pings now, schedule a later send.
+    if (throttled) {
+      this._log.trace("submitExternalPing - throttled, delaying ping send to " + new Date(nextPingSendTime));
+      this._reschedulePingSendTimer(nextPingSendTime);
+    }
+
+    if (!this._initialized || throttled) {
+      // We can't send because we are still initializing or throttled, add this to the pending pings.
+      this._log.trace("submitExternalPing - ping is pending, initialized: " + this._initialized +
+                      ", throttled: " + throttled);
       p.push(TelemetryStorage.addPendingPing(pingData));
     } else {
       // Try to send the ping, persist it if sending it fails.
@@ -541,6 +611,16 @@ let Impl = {
       return Promise.resolve();
     }
 
+    // Check if we can send pings now - otherwise schedule a later send.
+    const now = Policy.now();
+    const nextPingSendTime = this._getNextPingSendTime(now);
+    if (nextPingSendTime > now.getTime()) {
+      this._log.trace("sendPersistedPings - delaying ping send to " + new Date(nextPingSendTime));
+      this._reschedulePingSendTimer(nextPingSendTime);
+      return Promise.resolve();
+    }
+
+    // We can send now.
     let pingsIterator = Iterator(this.popPayloads());
     let p = [for (data of pingsIterator) this.doPing(data, true).catch((e) => {
       this._log.error("sendPersistedPings - doPing rejected", e);
@@ -816,13 +896,10 @@ let Impl = {
    *                   false otherwise.
    */
   enableTelemetryRecording: function enableTelemetryRecording() {
+    const enabled = Preferences.get(PREF_ENABLED, false);
+
     // Enable base Telemetry recording, if needed.
-#if !defined(MOZ_WIDGET_ANDROID)
-    Telemetry.canRecordBase = Preferences.get(PREF_FHR_ENABLED, false);
-#else
-    // FHR recording is always "enabled" on Android (data upload is not).
-    Telemetry.canRecordBase = true;
-#endif
+    Telemetry.canRecordBase = enabled || IS_UNIFIED_TELEMETRY;
 
 #ifdef MOZILLA_OFFICIAL
     if (!Telemetry.isOfficialTelemetry && !this._testMode) {
@@ -834,7 +911,6 @@ let Impl = {
     }
 #endif
 
-    let enabled = Preferences.get(PREF_ENABLED, false);
     this._server = Preferences.get(PREF_SERVER, undefined);
     if (!enabled || !Telemetry.canRecordBase) {
       // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
@@ -874,15 +950,12 @@ let Impl = {
 
     // Only initialize the session recorder if FHR is enabled.
     // TODO: move this after the |enableTelemetryRecording| block and drop the
-    // PREF_FHR_ENABLED check after bug 1137252 lands.
-    if (!this._sessionRecorder && Preferences.get(PREF_FHR_ENABLED, true)) {
+    // PREF_FHR_ENABLED check once we permanently switch over to unified Telemetry.
+    if (!this._sessionRecorder &&
+        (Preferences.get(PREF_FHR_ENABLED, true) || IS_UNIFIED_TELEMETRY)) {
       this._sessionRecorder = new SessionRecorder(PREF_SESSIONS_BRANCH);
       this._sessionRecorder.onStartup();
     }
-
-    // Initialize some probes that are kept in their own modules
-    this._thirdPartyCookies = new ThirdPartyCookieProbe();
-    this._thirdPartyCookies.init();
 
     if (!this.enableTelemetryRecording()) {
       this._log.config("setupChromeProcess - Telemetry recording is disabled, skipping Chrome process setup.");
@@ -961,7 +1034,11 @@ let Impl = {
     try {
       // First wait for clients processing shutdown.
       yield this._shutdownBarrier.wait();
-      // Then wait for any outstanding async ping activity.
+
+      // Then clear scheduled ping sends...
+      this._clearPingSendTimer();
+
+      // ... and wait for any outstanding async ping activity.
       yield this._connectionsBarrier.wait();
     } finally {
       // Reset state.
@@ -1031,11 +1108,13 @@ let Impl = {
   /**
    * Check if pings can be sent to the server. If FHR is not allowed to upload,
    * pings are not sent to the server (Telemetry is a sub-feature of FHR).
+   * If unified telemetry is off, don't send pings if Telemetry is disabled.
    * @return {Boolean} True if pings can be send to the servers, false otherwise.
    */
   _canSend: function() {
     return (Telemetry.isOfficialTelemetry || this._testMode) &&
-           Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
+           Preferences.get(PREF_FHR_UPLOAD_ENABLED, false) &&
+           (IS_UNIFIED_TELEMETRY || Preferences.get(PREF_ENABLED));
   },
 
   /**
@@ -1049,6 +1128,19 @@ let Impl = {
       shutdownBarrier: this._shutdownBarrier.state,
       connectionsBarrier: this._connectionsBarrier.state,
     };
+  },
+
+  _reschedulePingSendTimer: function(timestamp) {
+    this._clearPingSendTimer();
+    const interval = timestamp - Policy.now();
+    this._pingSendTimer = Policy.setPingSendTimeout(() => this.sendPersistedPings(), interval);
+  },
+
+  _clearPingSendTimer: function() {
+    if (this._pingSendTimer) {
+      Policy.clearPingSendTimeout(this._pingSendTimer);
+      this._pingSendTimer = null;
+    }
   },
 
   /**

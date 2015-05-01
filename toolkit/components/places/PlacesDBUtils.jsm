@@ -67,7 +67,6 @@ this.PlacesDBUtils = {
       }
 
       // Notify observers that maintenance finished.
-      Services.prefs.setIntPref("places.database.lastMaintenance", parseInt(Date.now() / 1000));
       Services.obs.notifyObservers(null, FINISHED_MAINTENANCE_TOPIC, null);
     }
   },
@@ -94,7 +93,12 @@ this.PlacesDBUtils = {
     , this._refreshUI
     ]);
     tasks._telemetryStart = Date.now();
-    tasks.callback = aCallback;
+    tasks.callback = function() {
+      Services.prefs.setIntPref("places.database.lastMaintenance",
+                                parseInt(Date.now() / 1000));
+      if (aCallback)
+        aCallback();
+    }
     tasks.scope = aScope;
     this._executeTasks(tasks);
   },

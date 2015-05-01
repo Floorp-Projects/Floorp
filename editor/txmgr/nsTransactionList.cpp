@@ -110,7 +110,7 @@ NS_IMETHODIMP nsTransactionList::GetData(int32_t aIndex,
 
   nsCOMArray<nsISupports>& data = item->GetData();
 
-  nsISupports** ret = static_cast<nsISupports**>(NS_Alloc(data.Count() *
+  nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(data.Count() *
     sizeof(nsISupports*)));
 
   for (int32_t i = 0; i < data.Count(); i++) {

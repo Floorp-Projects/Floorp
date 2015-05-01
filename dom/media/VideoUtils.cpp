@@ -280,7 +280,7 @@ GenerateRandomName(nsCString& aOutSalt, uint32_t aLength)
   nsDependentCSubstring randomData(reinterpret_cast<const char*>(buffer),
                                    requiredBytesLength);
   rv = Base64Encode(randomData, temp);
-  NS_Free(buffer);
+  free(buffer);
   buffer = nullptr;
   if (NS_FAILED (rv)) return rv;
 

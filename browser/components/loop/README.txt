@@ -54,7 +54,7 @@ If you install eslint and the react plugin globally:
 
 You can also run it by hand in the browser/components/loop directory:
 
-  eslint -ext .js -ext .jsx --ext .jsm .
+  eslint --ext .js --ext .jsx --ext .jsm .
 
 Front-End Unit Tests
 ====================

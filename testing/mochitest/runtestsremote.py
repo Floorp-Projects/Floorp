@@ -492,16 +492,14 @@ def main(args):
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
 
+    if options is None:
+        raise ValueError("Invalid options specified, use --help for a list of valid options")
+
     mochitest = MochiRemote(auto, dm, options)
 
     log = mochitest.log
     message_logger.logger = log
     mochitest.message_logger = message_logger
-
-    if (options is None):
-        log.error(
-            "Invalid options specified, use --help for a list of valid options")
-        return 1
 
     productPieces = options.remoteProductName.split('.')
     if (productPieces is not None):

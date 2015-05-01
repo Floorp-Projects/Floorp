@@ -4049,7 +4049,7 @@ ContentParent::RecvGetRandomValues(const uint32_t& length,
 
     memcpy(randomValues->Elements(), buf, length);
 
-    NS_Free(buf);
+    free(buf);
 
     return true;
 }

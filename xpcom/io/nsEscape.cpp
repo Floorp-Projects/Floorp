@@ -104,9 +104,6 @@ nsEscapeCount(const char* aStr, nsEscapeMask aFlags, size_t* aOutLen)
   }
 
   // fail if we need more than 4GB
-  // size_t is likely to be long unsigned int but moz_xmalloc(size_t)
-  // calls NS_Alloc_P(size_t) which calls PR_Malloc(uint32_t), so there is
-  // no chance to allocate more than 4GB using moz_xmalloc()
   if (dstSize > UINT32_MAX) {
     return 0;
   }
@@ -233,7 +230,7 @@ nsEscapeHTML(const char* aString)
     return nullptr;
   }
 
-  rv = (char*)NS_Alloc((6 * len) + 1);
+  rv = (char*)moz_xmalloc((6 * len) + 1);
   char* ptr = rv;
 
   if (rv) {

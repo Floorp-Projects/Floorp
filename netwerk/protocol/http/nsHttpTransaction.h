@@ -16,6 +16,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
+#include "mozilla/net/DNS.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -440,6 +441,13 @@ public:
 
 private:
     nsRefPtr<ASpdySession> mTunnelProvider;
+
+public:
+    void GetNetworkAddresses(NetAddr &self, NetAddr &peer);
+
+private:
+    NetAddr                         mSelfAddr;
+    NetAddr                         mPeerAddr;
 };
 
 }} // namespace mozilla::net

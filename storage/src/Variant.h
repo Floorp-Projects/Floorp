@@ -281,7 +281,7 @@ struct variant_storage_traits<uint8_t[], true>
   static inline void destroy(StorageType &aData)
   {
     if (aData.first) {
-      NS_Free(aData.first);
+      free(aData.first);
       aData.first = nullptr;
     }
   }

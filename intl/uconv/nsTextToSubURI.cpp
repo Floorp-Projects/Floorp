@@ -72,7 +72,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
     int32_t outlen = 0;
     if (NS_SUCCEEDED(rv = encoder->GetMaxLength(text, ulen, &outlen))) {
       if (outlen >= 256) {
-        pBuf = (char*)NS_Alloc(outlen+1);
+        pBuf = (char*)moz_xmalloc(outlen+1);
       }
       if (nullptr == pBuf) {
         outlen = 255;
@@ -95,7 +95,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
       }
     }
     if (pBuf != buf) {
-      NS_Free(pBuf);
+      free(pBuf);
     }
   }
   
@@ -138,7 +138,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
   int32_t len = strlen(unescaped);
   int32_t outlen = 0;
   if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
-    pBuf = (char16_t *) NS_Alloc((outlen+1)*sizeof(char16_t));
+    pBuf = (char16_t *) moz_xmalloc((outlen+1)*sizeof(char16_t));
     if (nullptr == pBuf) {
       rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
@@ -146,11 +146,11 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
         pBuf[outlen] = 0;
         *_retval = pBuf;
       } else {
-        NS_Free(pBuf);
+        free(pBuf);
       }
     }
   }
-  NS_Free(unescaped);
+  free(unescaped);
 
   return rv;
 }
@@ -203,7 +203,7 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   nsresult rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char16_t *ustr = (char16_t *) NS_Alloc(dstLen * sizeof(char16_t));
+  char16_t *ustr = (char16_t *) moz_xmalloc(dstLen * sizeof(char16_t));
   NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
 
   rv = unicodeDecoder->Convert(aURI.get(), &srcLen, ustr, &dstLen);
@@ -211,7 +211,7 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   if (NS_SUCCEEDED(rv))
     _retval.Assign(ustr, dstLen);
   
-  NS_Free(ustr);
+  free(ustr);
 
   return rv;
 }

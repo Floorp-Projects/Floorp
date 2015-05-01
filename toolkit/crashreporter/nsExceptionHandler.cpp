@@ -1645,22 +1645,22 @@ nsresult UnsetExceptionHandler()
   lastRunCrashID = nullptr;
 
   if (pendingDirectory) {
-    NS_Free(pendingDirectory);
+    free(pendingDirectory);
     pendingDirectory = nullptr;
   }
 
   if (crashReporterPath) {
-    NS_Free(crashReporterPath);
+    free(crashReporterPath);
     crashReporterPath = nullptr;
   }
 
   if (eventsDirectory) {
-    NS_Free(eventsDirectory);
+    free(eventsDirectory);
     eventsDirectory = nullptr;
   }
 
   if (memoryReportPath) {
-    NS_Free(memoryReportPath);
+    free(memoryReportPath);
     memoryReportPath = nullptr;
   }
 
@@ -2245,7 +2245,7 @@ SetCrashEventsDir(nsIFile* aDir)
   }
 
   if (eventsDirectory) {
-    NS_Free(eventsDirectory);
+    free(eventsDirectory);
   }
 
 #ifdef XP_WIN
@@ -2273,7 +2273,7 @@ SetCrashEventsDir(nsIFile* aDir)
   PR_SetEnv(eventsEnv);
 
   if (oldEventsEnv) {
-    NS_Free(oldEventsEnv);
+    free(oldEventsEnv);
   }
 #endif
 }

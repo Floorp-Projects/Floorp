@@ -35,7 +35,7 @@ class MP4Stream;
 
 class MP4Reader final : public MediaDecoderReader
 {
-  typedef mp4_demuxer::TrackType TrackType;
+  typedef TrackInfo::TrackType TrackType;
 
 public:
   explicit MP4Reader(AbstractMediaDecoder* aDecoder);
@@ -114,18 +114,18 @@ private:
 
   // Blocks until the demuxer produces an sample of specified type.
   // Returns nullptr on error on EOS. Caller must delete sample.
-  already_AddRefed<MediaRawData> PopSample(mp4_demuxer::TrackType aTrack);
-  already_AddRefed<MediaRawData> PopSampleLocked(mp4_demuxer::TrackType aTrack);
+  already_AddRefed<MediaRawData> PopSample(TrackType aTrack);
+  already_AddRefed<MediaRawData> PopSampleLocked(TrackType aTrack);
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
   // DecoderCallback proxies the MediaDataDecoderCallback calls to these
   // functions.
-  void Output(mp4_demuxer::TrackType aType, MediaData* aSample);
-  void InputExhausted(mp4_demuxer::TrackType aTrack);
-  void Error(mp4_demuxer::TrackType aTrack);
-  void Flush(mp4_demuxer::TrackType aTrack);
-  void DrainComplete(mp4_demuxer::TrackType aTrack);
+  void Output(TrackType aType, MediaData* aSample);
+  void InputExhausted(TrackType aTrack);
+  void Error(TrackType aTrack);
+  void Flush(TrackType aTrack);
+  void DrainComplete(TrackType aTrack);
   void UpdateIndex();
   bool IsSupportedAudioMimeType(const nsACString& aMimeType);
   bool IsSupportedVideoMimeType(const nsACString& aMimeType);
@@ -144,8 +144,7 @@ private:
 
   class DecoderCallback : public MediaDataDecoderCallback {
   public:
-    DecoderCallback(MP4Reader* aReader,
-                    mp4_demuxer::TrackType aType)
+    DecoderCallback(MP4Reader* aReader, TrackType aType)
       : mReader(aReader)
       , mType(aType)
     {
@@ -170,7 +169,7 @@ private:
     }
   private:
     MP4Reader* mReader;
-    mp4_demuxer::TrackType mType;
+    TrackType mType;
   };
 
   struct DecoderData {
@@ -264,7 +263,7 @@ private:
   // delta there.
   uint64_t mLastReportedNumDecodedFrames;
 
-  DecoderData& GetDecoderData(mp4_demuxer::TrackType aTrack);
+  DecoderData& GetDecoderData(TrackType aTrack);
 
   layers::LayersBackend mLayersBackendType;
 

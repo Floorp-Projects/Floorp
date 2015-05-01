@@ -6,6 +6,7 @@
 
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/IntegerRange.h"
 
 #include "nsCOMPtr.h"
 #include "nsTableFrame.h"
@@ -126,7 +127,7 @@ struct BCPropertyData
   BCPropertyData() : mTopBorderWidth(0), mRightBorderWidth(0),
                      mBottomBorderWidth(0), mLeftBorderWidth(0),
                      mLeftCellBorderWidth(0), mRightCellBorderWidth(0) {}
-  nsIntRect mDamageArea;
+  TableArea mDamageArea;
   BCPixelSize mTopBorderWidth;
   BCPixelSize mRightBorderWidth;
   BCPixelSize mBottomBorderWidth;
@@ -611,7 +612,7 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame,
   }
   // for now, just bail and recalc all of the collapsing borders
   if (IsBorderCollapse()) {
-    nsIntRect damageArea(aColIndex, 0, 1, GetRowCount());
+    TableArea damageArea(aColIndex, 0, 1, GetRowCount());
     AddBCDamageArea(damageArea);
   }
 }
@@ -632,7 +633,7 @@ void nsTableFrame::RemoveCol(nsTableColGroupFrame* aColGroupFrame,
   }
   // for now, just bail and recalc all of the collapsing borders
   if (IsBorderCollapse()) {
-    nsIntRect damageArea(0, 0, GetColCount(), GetRowCount());
+    TableArea damageArea(0, 0, GetColCount(), GetRowCount());
     AddBCDamageArea(damageArea);
   }
 }
@@ -800,7 +801,7 @@ nsTableFrame::AppendCell(nsTableCellFrame& aCellFrame,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    nsIntRect damageArea(0,0,0,0);
+    TableArea damageArea(0, 0, 0, 0);
     cellMap->AppendCell(aCellFrame, aRowIndex, true, damageArea);
     MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
@@ -815,7 +816,7 @@ void nsTableFrame::InsertCells(nsTArray<nsTableCellFrame*>& aCellFrames,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    nsIntRect damageArea(0,0,0,0);
+    TableArea damageArea(0, 0, 0, 0);
     cellMap->InsertCells(aCellFrames, aRowIndex, aColIndexBefore, damageArea);
     MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
@@ -855,7 +856,7 @@ void nsTableFrame::RemoveCell(nsTableCellFrame* aCellFrame,
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    nsIntRect damageArea(0,0,0,0);
+    TableArea damageArea(0, 0, 0, 0);
     cellMap->RemoveCell(aCellFrame, aRowIndex, damageArea);
     MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
@@ -909,7 +910,7 @@ nsTableFrame::InsertRows(nsTableRowGroupFrame*       aRowGroupFrame,
   int32_t numColsToAdd = 0;
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    nsIntRect damageArea(0,0,0,0);
+    TableArea damageArea(0, 0, 0, 0);
     int32_t origNumRows = cellMap->GetRowCount();
     int32_t numNewRows = aRowFrames.Length();
     cellMap->InsertRows(aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans, damageArea);
@@ -963,7 +964,7 @@ void nsTableFrame::RemoveRows(nsTableRowFrame& aFirstRowFrame,
 #endif
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    nsIntRect damageArea(0,0,0,0);
+    TableArea damageArea(0, 0, 0, 0);
     cellMap->RemoveRows(firstRowIndex, aNumRowsToRemove, aConsiderSpans, damageArea);
     MatchCellMapToColCache(cellMap);
     if (IsBorderCollapse()) {
@@ -2495,7 +2496,7 @@ nsTableFrame::DoRemoveFrame(ChildListID     aListID,
       cellMap->Synchronize(this);
       // Create an empty slice
       ResetRowIndices(nsFrameList::Slice(mFrames, nullptr, nullptr));
-      nsIntRect damageArea;
+      TableArea damageArea;
       cellMap->RebuildConsideringCells(nullptr, nullptr, 0, 0, false, damageArea);
 
       static_cast<nsTableFrame*>(FirstInFlow())->MatchCellMapToColCache(cellMap);
@@ -3988,20 +3989,20 @@ nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const
 
 #ifdef DEBUG
 #define VerifyNonNegativeDamageRect(r)                                  \
-  NS_ASSERTION((r).x >= 0, "negative col index");                       \
-  NS_ASSERTION((r).y >= 0, "negative row index");                       \
-  NS_ASSERTION((r).width >= 0, "negative horizontal damage");           \
-  NS_ASSERTION((r).height >= 0, "negative vertical damage");
+  NS_ASSERTION((r).StartCol() >= 0, "negative col index");              \
+  NS_ASSERTION((r).StartRow() >= 0, "negative row index");              \
+  NS_ASSERTION((r).ColCount() >= 0, "negative cols damage");            \
+  NS_ASSERTION((r).RowCount() >= 0, "negative rows damage");
 #define VerifyDamageRect(r)                                             \
   VerifyNonNegativeDamageRect(r);                                       \
-  NS_ASSERTION((r).XMost() <= GetColCount(),                            \
-               "horizontal damage extends outside table");              \
-  NS_ASSERTION((r).YMost() <= GetRowCount(),                            \
-               "vertical damage extends outside table");
+  NS_ASSERTION((r).EndCol() <= GetColCount(),                           \
+               "cols damage extends outside table");                    \
+  NS_ASSERTION((r).EndRow() <= GetRowCount(),                           \
+               "rows damage extends outside table");
 #endif
 
 void
-nsTableFrame::AddBCDamageArea(const nsIntRect& aValue)
+nsTableFrame::AddBCDamageArea(const TableArea& aValue)
 {
   NS_ASSERTION(IsBorderCollapse(), "invalid AddBCDamageArea call");
 #ifdef DEBUG
@@ -4017,28 +4018,28 @@ nsTableFrame::AddBCDamageArea(const nsIntRect& aValue)
 #endif
     // Clamp the old damage area to the current table area in case it shrunk.
     int32_t cols = GetColCount();
-    if (value->mDamageArea.XMost() > cols) {
-      if (value->mDamageArea.x > cols) {
-        value->mDamageArea.x = cols;
-        value->mDamageArea.width = 0;
+    if (value->mDamageArea.EndCol() > cols) {
+      if (value->mDamageArea.StartCol() > cols) {
+        value->mDamageArea.StartCol() = cols;
+        value->mDamageArea.ColCount() = 0;
       }
       else {
-        value->mDamageArea.width = cols - value->mDamageArea.x;
+        value->mDamageArea.ColCount() = cols - value->mDamageArea.StartCol();
       }
     }
     int32_t rows = GetRowCount();
-    if (value->mDamageArea.YMost() > rows) {
-      if (value->mDamageArea.y > rows) {
-        value->mDamageArea.y = rows;
-        value->mDamageArea.height = 0;
+    if (value->mDamageArea.EndRow() > rows) {
+      if (value->mDamageArea.StartRow() > rows) {
+        value->mDamageArea.StartRow() = rows;
+        value->mDamageArea.RowCount() = 0;
       }
       else {
-        value->mDamageArea.height = rows - value->mDamageArea.y;
+        value->mDamageArea.RowCount() = rows - value->mDamageArea.StartRow();
       }
     }
 
     // Construct a union of the new and old damage areas.
-    value->mDamageArea.UnionRect(value->mDamageArea, aValue);
+    value->mDamageArea.UnionArea(value->mDamageArea, aValue);
   }
 }
 
@@ -4052,7 +4053,7 @@ nsTableFrame::SetFullBCDamageArea()
 
   BCPropertyData* value = GetBCProperty(true);
   if (value) {
-    value->mDamageArea = nsIntRect(0, 0, GetColCount(), GetRowCount());
+    value->mDamageArea = TableArea(0, 0, GetColCount(), GetRowCount());
   }
 }
 
@@ -4268,7 +4269,7 @@ class BCMapCellIterator
 {
 public:
   BCMapCellIterator(nsTableFrame* aTableFrame,
-                    const nsIntRect& aDamageArea);
+                    const TableArea& aDamageArea);
 
   void First(BCMapCellInfo& aMapCellInfo);
 
@@ -4314,15 +4315,15 @@ private:
 };
 
 BCMapCellIterator::BCMapCellIterator(nsTableFrame* aTableFrame,
-                                     const nsIntRect& aDamageArea)
+                                     const TableArea& aDamageArea)
 :mTableFrame(aTableFrame)
 {
   mTableCellMap  = aTableFrame->GetCellMap();
 
-  mAreaStart.x   = aDamageArea.x;
-  mAreaStart.y   = aDamageArea.y;
-  mAreaEnd.y     = aDamageArea.y + aDamageArea.height - 1;
-  mAreaEnd.x     = aDamageArea.x + aDamageArea.width - 1;
+  mAreaStart.x   = aDamageArea.StartCol();
+  mAreaStart.y   = aDamageArea.StartRow();
+  mAreaEnd.x     = aDamageArea.EndCol() - 1;
+  mAreaEnd.y     = aDamageArea.EndRow() - 1;
 
   mNumTableRows  = mTableFrame->GetRowCount();
   mRow           = nullptr;
@@ -4451,7 +4452,7 @@ BCMapCellIterator::SetNewRow(nsTableRowFrame* aRow)
     for (mColIndex = mAreaStart.x; mColIndex <= mAreaEnd.x; mColIndex++) {
       CellData* cellData = row.SafeElementAt(mColIndex);
       if (!cellData) { // add a dead cell data
-        nsIntRect damageArea;
+        TableArea damageArea;
         cellData = mCellMap->AppendCell(*mTableCellMap, nullptr, rgRowIndex,
                                         false, 0, damageArea);
         if (!cellData) ABORT1(false);
@@ -4547,7 +4548,7 @@ BCMapCellIterator::Next(BCMapCellInfo& aMapInfo)
       BCCellData* cellData =
          static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, mColIndex));
       if (!cellData) { // add a dead cell data
-        nsIntRect damageArea;
+        TableArea damageArea;
         cellData =
           static_cast<BCCellData*>(mCellMap->AppendCell(*mTableCellMap, nullptr,
                                                          rgRowIndex, false, 0,
@@ -4582,7 +4583,7 @@ BCMapCellIterator::PeekRight(BCMapCellInfo&   aRefInfo,
     static_cast<BCCellData*>(mCellMap->GetDataAt(rgRowIndex, colIndex));
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(colIndex < mTableCellMap->GetColCount(), "program error");
-    nsIntRect damageArea;
+    TableArea damageArea;
     cellData =
       static_cast<BCCellData*>(mCellMap->AppendCell(*mTableCellMap, nullptr,
                                                      rgRowIndex, false, 0,
@@ -4640,7 +4641,7 @@ BCMapCellIterator::PeekBottom(BCMapCellInfo&   aRefInfo,
     static_cast<BCCellData*>(cellMap->GetDataAt(rgRowIndex, aColIndex));
   if (!cellData) { // add a dead cell data
     NS_ASSERTION(rgRowIndex < cellMap->GetRowCount(), "program error");
-    nsIntRect damageArea;
+    TableArea damageArea;
     cellData =
       static_cast<BCCellData*>(cellMap->AppendCell(*mTableCellMap, nullptr,
                                                     rgRowIndex, false, 0,
@@ -5175,15 +5176,15 @@ SetHorBorder(const BCCellBorder& aNewBorder,
 // The extra segments and borders outside the actual damage area will not be updated in the cell map,
 // because they in turn would need info from adjacent segments outside the damage area to be accurate.
 void
-nsTableFrame::ExpandBCDamageArea(nsIntRect& aRect) const
+nsTableFrame::ExpandBCDamageArea(TableArea& aArea) const
 {
   int32_t numRows = GetRowCount();
   int32_t numCols = GetColCount();
 
-  int32_t dStartX = aRect.x;
-  int32_t dEndX   = aRect.XMost() - 1;
-  int32_t dStartY = aRect.y;
-  int32_t dEndY   = aRect.YMost() - 1;
+  int32_t dStartX = aArea.StartCol();
+  int32_t dEndX   = aArea.EndCol() - 1;
+  int32_t dStartY = aArea.StartRow();
+  int32_t dEndY   = aArea.EndRow() - 1;
 
   // expand the damage area in each direction
   if (dStartX > 0) {
@@ -5289,16 +5290,16 @@ nsTableFrame::ExpandBCDamageArea(nsIntRect& aRect) const
   }
   if (haveSpanner) {
     // make the damage area the whole table
-    aRect.x      = 0;
-    aRect.y      = 0;
-    aRect.width  = numCols;
-    aRect.height = numRows;
+    aArea.StartCol() = 0;
+    aArea.StartRow() = 0;
+    aArea.ColCount() = numCols;
+    aArea.RowCount() = numRows;
   }
   else {
-    aRect.x      = dStartX;
-    aRect.y      = dStartY;
-    aRect.width  = 1 + dEndX - dStartX;
-    aRect.height = 1 + dEndY - dStartY;
+    aArea.StartCol() = dStartX;
+    aArea.StartRow() = dStartY;
+    aArea.ColCount() = 1 + dEndX - dStartX;
+    aArea.RowCount() = 1 + dEndY - dStartY;
   }
 }
 
@@ -5713,7 +5714,7 @@ nsTableFrame::CalcBCBorders()
 
 
   // calculate an expanded damage area
-  nsIntRect damageArea(propData->mDamageArea);
+  TableArea damageArea(propData->mDamageArea);
   ExpandBCDamageArea(damageArea);
 
   // segments that are on the table border edges need
@@ -5724,11 +5725,13 @@ nsTableFrame::CalcBCBorders()
   }
 
   // vertical borders indexed in x-direction (cols)
-  BCCellBorders lastVerBorders(damageArea.width + 1, damageArea.x);
+  BCCellBorders lastVerBorders(damageArea.ColCount() + 1,
+                               damageArea.StartCol());
   if (!lastVerBorders.borders) ABORT0();
   BCCellBorder  lastTopBorder, lastBottomBorder;
   // horizontal borders indexed in x-direction (cols)
-  BCCellBorders lastBottomBorders(damageArea.width + 1, damageArea.x);
+  BCCellBorders lastBottomBorders(damageArea.ColCount() + 1,
+                                  damageArea.StartCol());
   if (!lastBottomBorders.borders) ABORT0();
   bool startSeg;
   bool gotRowBorder = false;
@@ -5736,9 +5739,9 @@ nsTableFrame::CalcBCBorders()
   BCMapCellInfo  info(this), ajaInfo(this);
 
   BCCellBorder currentBorder, adjacentBorder;
-  BCCorners topCorners(damageArea.width + 1, damageArea.x);
+  BCCorners topCorners(damageArea.ColCount() + 1, damageArea.StartCol());
   if (!topCorners.corners) ABORT0();
-  BCCorners bottomCorners(damageArea.width + 1, damageArea.x);
+  BCCorners bottomCorners(damageArea.ColCount() + 1, damageArea.StartCol());
   if (!bottomCorners.corners) ABORT0();
 
   BCMapCellIterator iter(this, damageArea);
@@ -5749,7 +5752,7 @@ nsTableFrame::CalcBCBorders()
       lastTopBorder.Reset(info.mRowIndex, info.mRowSpan);
       lastBottomBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
     }
-    else if (info.mColIndex > damageArea.x) {
+    else if (info.mColIndex > damageArea.StartCol()) {
       lastBottomBorder = lastBottomBorders[info.mColIndex - 1];
       if (info.mRowIndex >
           (lastBottomBorder.rowIndex - lastBottomBorder.rowSpan)) {
@@ -5918,8 +5921,8 @@ nsTableFrame::CalcBCBorders()
         startSeg = SetBorder(currentBorder,
                              lastVerBorders[info.GetCellEndColIndex() + 1]);
         // store the border segment in the cell map and update cellBorders
-        if (info.GetCellEndColIndex() < damageArea.XMost() &&
-            rowY >= damageArea.y && rowY < damageArea.YMost()) {
+        if (info.GetCellEndColIndex() < damageArea.EndCol() &&
+            rowY >= damageArea.StartRow() && rowY < damageArea.EndRow()) {
           tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *iter.mCellMap,
                                         iter.mRowGroupStart, rowY,
                                         info.GetCellEndColIndex(), segLength,
@@ -5945,8 +5948,8 @@ nsTableFrame::CalcBCBorders()
           trCorner->Update(NS_SIDE_RIGHT, currentBorder);
         }
         // store the top right corner in the cell map
-        if (info.GetCellEndColIndex() < damageArea.XMost() &&
-            rowY >= damageArea.y) {
+        if (info.GetCellEndColIndex() < damageArea.EndCol() &&
+            rowY >= damageArea.StartRow()) {
           if (0 != rowY) {
             tableCellMap->SetBCBorderCorner(eTopRight, *iter.mCellMap,
                                             iter.mRowGroupStart, rowY,
@@ -6055,7 +6058,7 @@ nsTableFrame::CalcBCBorders()
         bool hitsSpanBelow = (colX > ajaInfo.mColIndex) &&
                                (colX < ajaInfo.mColIndex + ajaInfo.mColSpan);
         bool update = true;
-        if ((colX == info.mColIndex) && (colX > damageArea.x)) {
+        if (colX == info.mColIndex && colX > damageArea.StartCol()) {
           int32_t prevRowIndex = lastBottomBorders[colX - 1].rowIndex;
           if (prevRowIndex > info.GetCellEndRowIndex() + 1) {
             // hits a rowspan on the right
@@ -6072,8 +6075,8 @@ nsTableFrame::CalcBCBorders()
         if (update) {
           blCorner.Update(NS_SIDE_RIGHT, currentBorder);
         }
-        if (info.GetCellEndRowIndex() < damageArea.YMost() &&
-            (colX >= damageArea.x)) {
+        if (info.GetCellEndRowIndex() < damageArea.EndRow() &&
+            colX >= damageArea.StartCol()) {
           if (hitsSpanBelow) {
             tableCellMap->SetBCBorderCorner(eBottomLeft, *iter.mCellMap,
                                             iter.mRowGroupStart,
@@ -6110,9 +6113,8 @@ nsTableFrame::CalcBCBorders()
         }
 
         // store the border segment the cell map and update cellBorders
-        if (info.GetCellEndRowIndex() < damageArea.YMost() &&
-            (colX >= damageArea.x) &&
-            (colX < damageArea.XMost())) {
+        if (info.GetCellEndRowIndex() < damageArea.EndRow() &&
+            colX >= damageArea.StartCol() && colX < damageArea.EndCol()) {
           tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *iter.mCellMap,
                                         iter.mRowGroupStart,
                                         info.GetCellEndRowIndex(),
@@ -6165,7 +6167,7 @@ nsTableFrame::CalcBCBorders()
   } // for (iter.First(info); info.mCell; iter.Next(info)) {
   // reset the bc flag and damage area
   SetNeedToCalcBCBorders(false);
-  propData->mDamageArea = nsIntRect(0,0,0,0);
+  propData->mDamageArea = TableArea(0, 0, 0, 0);
 #ifdef DEBUG_TABLE_CELLMAP
   mCellMap->Dump();
 #endif
@@ -6343,15 +6345,25 @@ public:
   bool                  IsTableRightMost()  {return (mColIndex >= mNumTableCols);}
   bool                  IsTableBottomMost() {return (mRowIndex >= mNumTableRows) && !mTable->GetNextInFlow();}
   bool                  IsTableLeftMost()   {return (mColIndex == 0);}
-  bool                  IsDamageAreaTopMost()    {return (mRowIndex == mDamageArea.y);}
-  bool                  IsDamageAreaRightMost()  {return (mColIndex >= mDamageArea.XMost());}
-  bool                  IsDamageAreaBottomMost() {return (mRowIndex >= mDamageArea.YMost());}
-  bool                  IsDamageAreaLeftMost()   {return (mColIndex == mDamageArea.x);}
-  int32_t               GetRelativeColIndex() {return (mColIndex - mDamageArea.x);}
+  bool IsDamageAreaTopMost() const
+    { return mRowIndex == mDamageArea.StartRow(); }
+  bool IsDamageAreaRightMost() const
+    { return mColIndex >= mDamageArea.EndCol(); }
+  bool IsDamageAreaBottomMost() const
+    { return mRowIndex >= mDamageArea.EndRow(); }
+  bool IsDamageAreaLeftMost() const
+    { return mColIndex == mDamageArea.StartCol(); }
+  int32_t GetRelativeColIndex() const
+    { return mColIndex - mDamageArea.StartCol(); }
 
-  nsIntRect             mDamageArea;        // damageArea in cellmap coordinates
+  TableArea             mDamageArea;        // damageArea in cellmap coordinates
   bool                  IsAfterRepeatedHeader() { return !mIsRepeatedHeader && (mRowIndex == (mRepeatedHeaderRowIndex + 1));}
-  bool                  StartRepeatedFooter() {return mIsRepeatedFooter && (mRowIndex == mRgFirstRowIndex) && (mRowIndex != mDamageArea.y);}
+  bool StartRepeatedFooter() const
+  {
+    return mIsRepeatedFooter && mRowIndex == mRgFirstRowIndex &&
+      mRowIndex != mDamageArea.StartRow();
+  }
+
   nscoord               mInitialOffsetX;  // offsetX of the first border with
                                             // respect to the table
   nscoord               mInitialOffsetY;    // offsetY of the first border with
@@ -6524,12 +6536,12 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
   }
   if (!haveIntersect)
     return false;
-  mDamageArea = nsIntRect(startColIndex, startRowIndex,
+  mDamageArea = TableArea(startColIndex, startRowIndex,
                           1 + DeprecatedAbs<int32_t>(endColIndex - startColIndex),
                           1 + endRowIndex - startRowIndex);
 
   Reset();
-  mVerInfo = new BCVerticalSeg[mDamageArea.width + 1];
+  mVerInfo = new BCVerticalSeg[mDamageArea.ColCount() + 1];
   if (!mVerInfo)
     return false;
   return true;
@@ -6619,7 +6631,7 @@ BCPaintBorderIterator::SetNewRow(nsTableRowFrame* aRow)
   if (mRow) {
     mIsNewRow = true;
     mRowIndex = mRow->GetRowIndex();
-    mColIndex = mDamageArea.x;
+    mColIndex = mDamageArea.StartCol();
     mPrevHorSegHeight = 0;
     if (mIsRepeatedHeader) {
       mRepeatedHeaderRowIndex = mRowIndex;
@@ -6661,7 +6673,7 @@ BCPaintBorderIterator::SetNewRowGroup()
       // if mRowGroup doesn't have a prev in flow, then it may be a repeated
       // header or footer
       const nsStyleDisplay* display = mRg->StyleDisplay();
-      if (mRowIndex == mDamageArea.y) {
+      if (mRowIndex == mDamageArea.StartRow()) {
         mIsRepeatedHeader = (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay);
       }
       else {
@@ -6681,8 +6693,8 @@ BCPaintBorderIterator::SetNewRowGroup()
 void
 BCPaintBorderIterator::First()
 {
-  if (!mTable || (mDamageArea.x >= mNumTableCols) ||
-      (mDamageArea.y >= mNumTableRows)) ABORT0();
+  if (!mTable || mDamageArea.StartCol() >= mNumTableCols ||
+      mDamageArea.StartRow() >= mNumTableRows) ABORT0();
 
   mAtEnd = false;
 
@@ -6691,14 +6703,14 @@ BCPaintBorderIterator::First()
     nsTableRowGroupFrame* rowG = mRowGroups[rgY];
     int32_t start = rowG->GetStartRowIndex();
     int32_t end   = start + rowG->GetRowCount() - 1;
-    if ((mDamageArea.y >= start) && (mDamageArea.y <= end)) {
+    if (mDamageArea.StartRow() >= start && mDamageArea.StartRow() <= end) {
       mRgIndex = rgY - 1; // SetNewRowGroup increments rowGroupIndex
       if (SetNewRowGroup()) {
-        while ((mRowIndex < mDamageArea.y) && !mAtEnd) {
+        while (mRowIndex < mDamageArea.StartRow() && !mAtEnd) {
           SetNewRow();
         }
         if (!mAtEnd) {
-          SetNewData(mDamageArea.y, mDamageArea.x);
+          SetNewData(mDamageArea.StartRow(), mDamageArea.StartCol());
         }
       }
       return;
@@ -6717,12 +6729,12 @@ BCPaintBorderIterator::Next()
   mIsNewRow = false;
 
   mColIndex++;
-  if (mColIndex > mDamageArea.XMost()) {
+  if (mColIndex > mDamageArea.EndCol()) {
     mRowIndex++;
-    if (mRowIndex == mDamageArea.YMost()) {
-      mColIndex = mDamageArea.x;
+    if (mRowIndex == mDamageArea.EndRow()) {
+      mColIndex = mDamageArea.StartCol();
     }
-    else if (mRowIndex < mDamageArea.YMost()) {
+    else if (mRowIndex < mDamageArea.EndRow()) {
       if (mRowIndex <= mRgLastRowIndex) {
         SetNewRow();
       }
@@ -7370,9 +7382,9 @@ void
 BCPaintBorderIterator::ResetVerInfo()
 {
   if (mVerInfo) {
-    memset(mVerInfo, 0, mDamageArea.width * sizeof(BCVerticalSeg));
+    memset(mVerInfo, 0, mDamageArea.ColCount() * sizeof(BCVerticalSeg));
     // XXX reinitialize properly
-    for (int32_t xIndex = 0; xIndex < mDamageArea.width; xIndex++) {
+    for (auto xIndex : MakeRange(mDamageArea.ColCount())) {
       mVerInfo[xIndex].mColWidth = -1;
     }
   }

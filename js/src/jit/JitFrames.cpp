@@ -1094,7 +1094,7 @@ MarkIonJSFrame(JSTracer* trc, const JitFrameIterator& frame)
     for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
         if (gcRegs.has(*iter))
-            gc::TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(spill), "ion-gc-spill");
+            TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(spill), "ion-gc-spill");
         else if (valueRegs.has(*iter))
             TraceRoot(trc, reinterpret_cast<Value*>(spill), "ion-value-spill");
     }
@@ -1422,7 +1422,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             TraceRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootCell:
-            gc::TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(argBase), "ion-vm-args");
+            TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(argBase), "ion-vm-args");
             break;
         }
 
@@ -1456,7 +1456,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             TraceRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");
             break;
           case VMFunction::RootCell:
-            gc::TraceGenericPointerRoot(trc, footer->outParam<gc::Cell*>(), "ion-vm-out");
+            TraceGenericPointerRoot(trc, footer->outParam<gc::Cell*>(), "ion-vm-out");
             break;
         }
     }
