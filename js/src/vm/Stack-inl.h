@@ -263,8 +263,10 @@ InterpreterStack::allocateFrame(JSContext* cx, size_t size)
     }
 
     uint8_t* buffer = reinterpret_cast<uint8_t*>(allocator_.alloc(size));
-    if (!buffer)
+    if (!buffer) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     frameCount_++;
     return buffer;
