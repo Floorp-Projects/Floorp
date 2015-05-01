@@ -326,6 +326,9 @@ Other Measurements\n\
 0.00 MB (100.0%) -- p6\n\
 └──0.00 MB (100.0%) ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}/p6\n\
 \n\
+0.00 MB (100.0%) -- p7\n\
+└──0.00 MB (100.0%) ── js-main-runtime-compartments/system/jar:file:///.../omni.ja!/p7\n\
+\n\
 0.00 MB ── p1 (pid NNN)\n\
 0.00 MB ── p2 (blah, pid=NNN)\n\
 \n\
@@ -420,6 +423,9 @@ Other Measurements\n\
 \n\
 11 B (100.0%) -- p6\n\
 └──11 B (100.0%) ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}/p6\n\
+\n\
+11 B (100.0%) -- p7\n\
+└──11 B (100.0%) ── js-main-runtime-compartments/system/jar:file:///.../omni.ja!/p7\n\
 \n\
 11 B ── p1 (pid NNN)\n\
 11 B ── p2 (blah, pid=NNN)\n\
