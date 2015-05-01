@@ -152,7 +152,20 @@ public:
     return mState;
   }
 
-  void SetAudioCaptured();
+  void DispatchAudioCaptured()
+  {
+    nsRefPtr<MediaDecoderStateMachine> self = this;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
+    {
+      MOZ_ASSERT(self->OnTaskQueue());
+      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+      if (!self->mAudioCaptured) {
+        self->mAudioCaptured = true;
+        self->ScheduleStateMachine();
+      }
+    });
+    TaskQueue()->Dispatch(r.forget());
+  }
 
   // Check if the decoder needs to become dormant state.
   bool IsDormantNeeded();
