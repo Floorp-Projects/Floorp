@@ -26,8 +26,8 @@ function test()
     var [a, b, [c0, c1]] = [x, x, x];
   }
 
-  expect = `TypeError: (intermediate value)[Symbol.iterator](...).next(...).value is null`;
-  actual = 'No Error';
+  expect = "TypeError: can't convert null to object";
+  actual = "No Error";
   try
   {
     f(null);

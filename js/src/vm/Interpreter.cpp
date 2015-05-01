@@ -206,7 +206,6 @@ NoSuchMethod(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     MOZ_ASSERT(vp[0].isObject());
-    MOZ_ASSERT(vp[1].isObject());
     NativeObject* obj = &vp[0].toObject().as<NativeObject>();
     MOZ_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
