@@ -10,8 +10,12 @@
 //
 // [
 //   "AGlobalInterface",
-//   {name: "ExperimentalThing", release: false},
-//   {name: "OptionalThing", pref: "some.thing.enabled"},
+//   { name: "ExperimentalThing", release: false },
+//   { name: "ReallyExperimentalThing", nightly: true },
+//   { name: "DesktopOnlyThing", desktop: true },
+//   { name: "NonB2gOnlyThing", b2g: false },
+//   { name: "FancyControl", xbl: true },
+//   { name: "DisabledEverywhere", disabled: true },
 // ];
 //
 // See createInterfaceMap() below for a complete list of properties.
@@ -85,11 +89,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Blob",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "BroadcastChannel", pref: "dom.broadcastChannel.enabled" },
+    "BroadcastChannel",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "Cache", pref: "dom.caches.enabled" },
+    { name: "Cache", release: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "CacheStorage", pref: "dom.caches.enabled" },
+    { name: "CacheStorage", release: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Client",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -175,7 +179,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "URLSearchParams",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-   { name: "WebSocket", pref: "dom.workers.websocket.enabled" },
+    "WebSocket",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "WindowClient",
 // IMPORTANT: Do not change this list without review from a DOM peer!

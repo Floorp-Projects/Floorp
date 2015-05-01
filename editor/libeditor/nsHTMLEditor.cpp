@@ -728,7 +728,7 @@ AssertParserServiceIsCorrect(nsIAtom* aTag, bool aIsBlock)
       assertmsg.Append(tagName);
       char* assertstr = ToNewCString(assertmsg);
       NS_ASSERTION(aIsBlock, assertstr);
-      NS_Free(assertstr);
+      free(assertstr);
     }
   }
 #endif // DEBUG

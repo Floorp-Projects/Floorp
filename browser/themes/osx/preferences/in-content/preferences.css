@@ -9,29 +9,6 @@ prefpane .groupbox-title {
   margin-bottom: 0;
 }
 
-spinbuttons {
-  -moz-appearance: none;
-}
-
-.spinbuttons-up {
-  margin-top: 0 !important;
-  border-radius: 4px 4px 0 0;
-}
-
-.spinbuttons-down  {
-  margin-bottom: 0 !important;
-  border-radius: 0 0 4px 4px;
-}
-
-.spinbuttons-button > .button-box {
-  -moz-padding-start: 2px !important;
-  -moz-padding-end: 3px !important;
-}
-
-.spinbuttons-button > .button-box > .button-text {
-  display: none;
-}
-
 .actionsMenu > .menulist-label-box > .menulist-icon {
   margin-top: 2px;
   -moz-margin-start: 2px;

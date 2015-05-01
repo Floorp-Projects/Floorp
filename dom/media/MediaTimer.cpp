@@ -16,14 +16,6 @@
 
 namespace mozilla {
 
-PRLogModuleInfo* gMediaTimerLog;
-static void EnsureMediaTimerLog()
-{
-  if (!gMediaTimerLog) {
-    gMediaTimerLog = PR_NewLogModule("MediaTimer");
-  }
-}
-
 NS_IMPL_ADDREF(MediaTimer)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaTimer, DispatchDestroy())
 
@@ -33,7 +25,6 @@ MediaTimer::MediaTimer()
   , mCreationTimeStamp(TimeStamp::Now())
   , mUpdateScheduled(false)
 {
-  EnsureMediaTimerLog();
   TIMER_LOG("MediaTimer::MediaTimer");
 
   // Use the SharedThreadPool to create an nsIThreadPool with a maximum of one

@@ -53,6 +53,7 @@ class ThreadLocal
 
   LoggingInfo mLoggingInfo;
   IDBTransaction* mCurrentTransaction;
+  nsCString mLoggingIdString;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
@@ -81,6 +82,14 @@ public:
     AssertIsOnOwningThread();
 
     return mLoggingInfo.backgroundChildLoggingId();
+  }
+
+  const nsCString&
+  IdString() const
+  {
+    AssertIsOnOwningThread();
+
+    return mLoggingIdString;
   }
 
   int64_t

@@ -530,7 +530,7 @@ ClearByMask(WebGLContext* webgl, GLbitfield mask)
         colorAttachmentsMask[0] = true;
     }
 
-    webgl->ForceClearFramebufferWithDefaultValues(mask, colorAttachmentsMask);
+    webgl->ForceClearFramebufferWithDefaultValues(false, mask, colorAttachmentsMask);
     return true;
 }
 

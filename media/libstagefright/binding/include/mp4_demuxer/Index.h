@@ -5,16 +5,23 @@
 #ifndef INDEX_H_
 #define INDEX_H_
 
-#include "media/stagefright/MediaSource.h"
-#include "mp4_demuxer/mp4_demuxer.h"
+#include "MediaResource.h"
+#include "mozilla/Monitor.h"
+#include "mp4_demuxer/Interval.h"
+#include "mp4_demuxer/Stream.h"
+#include "nsISupportsImpl.h"
+
+template<class T> class nsRefPtr;
+template<class T> class nsAutoPtr;
 
 namespace mp4_demuxer
 {
 
-template <typename T> class Interval;
-class MoofParser;
-class Sample;
 class Index;
+class MoofParser;
+struct Sample;
+
+typedef int64_t Microseconds;
 
 class SampleIterator
 {
@@ -37,8 +44,20 @@ class Index
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Index)
 
-  Index(const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex,
-        Stream* aSource, uint32_t aTrackId, bool aIsAudio, Monitor* aMonitor);
+  struct Indice
+  {
+    uint64_t start_offset;
+    uint64_t end_offset;
+    uint64_t start_composition;
+    uint64_t end_composition;
+    bool sync;
+  };
+
+  Index(const nsTArray<Indice>& aIndex,
+        Stream* aSource,
+        uint32_t aTrackId,
+        bool aIsAudio,
+        mozilla::Monitor* aMonitor);
 
   void UpdateMoofIndex(const nsTArray<mozilla::MediaByteRange>& aByteRanges);
   Microseconds GetEndCompositionIfBuffered(
@@ -57,7 +76,7 @@ private:
   Stream* mSource;
   nsTArray<Sample> mIndex;
   nsAutoPtr<MoofParser> mMoofParser;
-  Monitor* mMonitor;
+  mozilla::Monitor* mMonitor;
 };
 }
 

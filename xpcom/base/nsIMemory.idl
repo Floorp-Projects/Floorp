@@ -10,7 +10,7 @@
  * nsIMemory: interface to allocate and deallocate memory. Also provides
  * for notifications in low-memory situations.
  *
- * The frozen exported symbols NS_Alloc, NS_Realloc, and NS_Free
+ * The frozen exported symbols moz_xmalloc, moz_xrealloc, and free
  * provide a more efficient way to access XPCOM memory allocation. Using
  * those symbols is preferred to using the methods on this interface.
  *

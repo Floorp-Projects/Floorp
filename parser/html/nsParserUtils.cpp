@@ -173,7 +173,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
       char* escapedSpec = nsEscapeHTML(spec.get());
       if (escapedSpec)
         base += escapedSpec;
-      NS_Free(escapedSpec);
+      free(escapedSpec);
       base.Append('"');
       tagStack.AppendElement(NS_ConvertUTF8toUTF16(base));
     }  else {

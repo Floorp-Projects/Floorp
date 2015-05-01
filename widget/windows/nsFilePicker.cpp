@@ -179,7 +179,7 @@ nsFilePicker::nsFilePicker() :
 nsFilePicker::~nsFilePicker()
 {
   if (mLastUsedUnicodeDirectory) {
-    NS_Free(mLastUsedUnicodeDirectory);
+    free(mLastUsedUnicodeDirectory);
     mLastUsedUnicodeDirectory = nullptr;
   }
   CoUninitialize();
@@ -1276,7 +1276,7 @@ nsFilePicker::RememberLastUsedDirectory()
   }
 
   if (mLastUsedUnicodeDirectory) {
-    NS_Free(mLastUsedUnicodeDirectory);
+    free(mLastUsedUnicodeDirectory);
     mLastUsedUnicodeDirectory = nullptr;
   }
   mLastUsedUnicodeDirectory = ToNewUnicode(newDir);

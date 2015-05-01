@@ -1921,6 +1921,17 @@ protected:
     SetScrollableFrameMetrics(layers[8], FrameMetrics::START_SCROLL_ID + 1);
     SetScrollableFrameMetrics(layers[9], FrameMetrics::START_SCROLL_ID + 3);
   }
+
+  void CreateBug1148350LayerTree() {
+    const char* layerTreeSyntax = "c(t)";
+    // LayerID                     0 1
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,200,200)),
+      nsIntRegion(nsIntRect(0,0,200,200)),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
+  }
 };
 
 // A simple hit testing test that doesn't involve any transforms on layers.
@@ -2305,6 +2316,41 @@ TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
   EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
 
   mcc->RunThroughDelayedTasks();
+}
+
+TEST_F(APZHitTestingTester, Bug1148350) {
+  CreateBug1148350LayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+
+  MockFunction<void(std::string checkPointName)> check;
+  {
+    InSequence s;
+    EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(100, 100), 0, ApzcOf(layers[1])->GetGuid())).Times(1);
+    EXPECT_CALL(check, Call("Tapped without transform"));
+    EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(100, 100), 0, ApzcOf(layers[1])->GetGuid())).Times(1);
+    EXPECT_CALL(check, Call("Tapped with interleaved transform"));
+  }
+
+  int time = 0;
+  Tap(manager, 100, 100, time, 100);
+  mcc->RunThroughDelayedTasks();
+  check.Call("Tapped without transform");
+
+  uint64_t blockId;
+  TouchDown(manager, 100, 100, time, &blockId);
+  if (gfxPrefs::TouchActionEnabled()) {
+    SetDefaultAllowedTouchBehavior(manager, blockId);
+  }
+  time += 100;
+
+  layers[0]->SetVisibleRegion(nsIntRegion(nsIntRect(0,50,200,150)));
+  layers[0]->SetBaseTransform(Matrix4x4::Translation(0, 50, 0));
+  manager->UpdateHitTestingTree(nullptr, root, false, 0, 0);
+
+  TouchUp(manager, 100, 100, time);
+  mcc->RunThroughDelayedTasks();
+  check.Call("Tapped with interleaved transform");
 }
 
 class APZOverscrollHandoffTester : public APZCTreeManagerTester {

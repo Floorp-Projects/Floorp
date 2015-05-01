@@ -9,6 +9,8 @@
  */
 let MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
 
+  shouldUpdateWhileMouseIsActive: true,
+
   rerenderPrefs: [
     "invert-flame-graph",
     "flatten-tree-recursion",
