@@ -12,6 +12,7 @@
 #endif
 #include <gtk/gtk.h>
 #include <dlfcn.h>
+#include "gfxPlatformGtk.h"
 
 static uint32_t sScreenId = 0;
 

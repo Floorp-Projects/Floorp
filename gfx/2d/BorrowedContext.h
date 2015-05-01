@@ -8,6 +8,11 @@
 
 #include "2D.h"
 
+#ifdef MOZ_X11
+#include <X11/extensions/Xrender.h>
+#include <X11/Xlib.h>
+#endif
+
 struct _cairo;
 typedef struct _cairo cairo_t;
 
@@ -68,6 +73,69 @@ private:
   static void ReturnCairoContextToDrawTarget(DrawTarget *aDT, cairo_t *aCairo);
   DrawTarget *mDT;
 };
+
+#ifdef MOZ_X11
+/* This is a helper class that let's you borrow an Xlib drawable from
+ * a DrawTarget. This is used for drawing themed widgets.
+ *
+ * Callers should check the Xlib drawable after constructing the object
+ * to see if it succeeded. The DrawTarget should not be used while
+ * the drawable is borrowed. */
+class BorrowedXlibDrawable
+{
+public:
+  BorrowedXlibDrawable()
+    : mDT(nullptr),
+      mDisplay(nullptr),
+      mDrawable(None),
+      mScreen(nullptr),
+      mVisual(nullptr),
+      mXRenderFormat(nullptr)
+  {}
+
+  explicit BorrowedXlibDrawable(DrawTarget *aDT)
+    : mDT(nullptr),
+      mDisplay(nullptr),
+      mDrawable(None),
+      mScreen(nullptr),
+      mVisual(nullptr),
+      mXRenderFormat(nullptr)
+  {
+    Init(aDT);
+  }
+
+  // We can optionally Init after construction in
+  // case we don't know what the DT will be at construction
+  // time.
+  bool Init(DrawTarget *aDT);
+
+  // The caller needs to call Finish if drawable is non-zero when
+  // they are done with the context. This is currently explicit
+  // instead of happening implicitly in the destructor to make
+  // what's happening in the caller more clear. It also
+  // let's you resume using the DrawTarget in the same scope.
+  void Finish();
+
+  ~BorrowedXlibDrawable() {
+    MOZ_ASSERT(!mDrawable);
+  }
+
+  Display *GetDisplay() const { return mDisplay; }
+  Drawable GetDrawable() const { return mDrawable; }
+  Screen *GetScreen() const { return mScreen; }
+  Visual *GetVisual() const { return mVisual; }
+
+  XRenderPictFormat* GetXRenderFormat() const { return mXRenderFormat; }
+
+private:
+  DrawTarget *mDT;
+  Display *mDisplay;
+  Drawable mDrawable;
+  Screen *mScreen;
+  Visual *mVisual;
+  XRenderPictFormat *mXRenderFormat;
+};
+#endif
 
 #ifdef XP_MACOSX
 /* This is a helper class that let's you borrow a CGContextRef from a
