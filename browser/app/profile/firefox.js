@@ -1327,8 +1327,8 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
-pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
-pref("browser.devedition.theme.enabled", true);
+sticky_pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
+sticky_pref("browser.devedition.theme.enabled", true);
 #endif
 
 // Developer edition promo preferences
@@ -1443,6 +1443,15 @@ pref("devtools.performance.ui.show-idle-blocks", true);
 pref("devtools.performance.ui.enable-memory", false);
 pref("devtools.performance.ui.enable-framerate", true);
 pref("devtools.performance.ui.show-jit-optimizations", false);
+// If in aurora (40.0, will revert for 40.1), set default
+// to retro mode.
+// TODO bug 1160313
+#if MOZ_UPDATE_CHANNEL == aurora
+  pref("devtools.performance.ui.retro-mode", true);
+#else
+  pref("devtools.performance.ui.retro-mode", false);
+#endif
+
 
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
@@ -1507,9 +1516,9 @@ pref("devtools.webaudioeditor.inspectorWidth", 300);
 
 // Default theme ("dark" or "light")
 #ifdef MOZ_DEV_EDITION
-pref("devtools.theme", "dark");
+sticky_pref("devtools.theme", "dark");
 #else
-pref("devtools.theme", "light");
+sticky_pref("devtools.theme", "light");
 #endif
 
 // Display the introductory text
@@ -1646,10 +1655,10 @@ pref("browser.newtabpage.rows", 3);
 pref("browser.newtabpage.columns", 5);
 
 // directory tiles download URL
-pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v2/links/fetch/%LOCALE%");
+pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%");
 
 // endpoint to send newtab click and view pings
-pref("browser.newtabpage.directory.ping", "https://tiles.services.mozilla.com/v2/links/");
+pref("browser.newtabpage.directory.ping", "https://tiles.services.mozilla.com/v3/links/");
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
@@ -1863,7 +1872,7 @@ pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 
-#ifdef NIGHTLY_BUILD
+#ifdef E10S_TESTING_ONLY
 // At the moment, autostart.2 is used, while autostart.1 is unused.
 // We leave it here set to false to reset users' defaults and allow
 // us to change everybody to true in the future, when desired.
@@ -1871,7 +1880,7 @@ pref("browser.tabs.remote.autostart.1", false);
 pref("browser.tabs.remote.autostart.2", true);
 #endif
 
-#ifdef NIGHTLY_BUILD
+#ifdef E10S_TESTING_ONLY
 // Enable e10s add-on interposition by default.
 pref("extensions.interposition.enabled", true);
 pref("extensions.interposition.prefetching", true);
@@ -1900,6 +1909,7 @@ pref("browser.readinglist.sidebarEverOpened", false);
 pref("readinglist.scheduler.enabled", false);
 pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");
 
+pref("browser.reader.detectedFirstArticle", false);
 // Don't limit how many nodes we care about on desktop:
 pref("reader.parse-node-limit", 0);
 

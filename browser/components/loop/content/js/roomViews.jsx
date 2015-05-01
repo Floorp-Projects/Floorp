@@ -11,10 +11,11 @@ var loop = loop || {};
 loop.roomViews = (function(mozL10n) {
   "use strict";
 
-  var sharedActions = loop.shared.actions;
-  var sharedMixins = loop.shared.mixins;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var sharedActions = loop.shared.actions;
+  var sharedMixins = loop.shared.mixins;
+  var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
 
   /**
@@ -312,13 +313,25 @@ loop.roomViews = (function(mozL10n) {
       var thumbnail = URL && URL.thumbnail || "";
       var URLDescription = URL && URL.description || "";
       var location = URL && URL.location || "";
+      var locationData = null;
+      if (location) {
+        locationData = sharedUtils.formatURL(location);
+      }
+
+      if (!locationData) {
+        return null;
+      }
+
       return (
         <div className="room-context">
           <img className="room-context-thumbnail" src={thumbnail}/>
           <div className="room-context-content">
             <div className="room-context-label">{mozL10n.get("context_inroom_label")}</div>
             <div className="room-context-description">{URLDescription}</div>
-            <a className="room-context-url" href={location} target="_blank">{location}</a>
+            <a className="room-context-url"
+               href={location}
+               target="_blank"
+               title={locationData.location}>{locationData.hostname}</a>
             {this.props.roomData.roomDescription ?
               <div className="room-context-comment">{this.props.roomData.roomDescription}</div> :
               null}

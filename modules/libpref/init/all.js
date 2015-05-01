@@ -179,7 +179,7 @@ pref("dom.url.encode_decode_hash", true);
 // Whether to run add-on code in different compartments from browser code. This
 // causes a separate compartment for each (addon, global) combination, which may
 // significantly increase the number of compartments in the system.
-#ifdef NIGHTLY_BUILD
+#ifdef E10S_TESTING_ONLY
 pref("dom.compartment_per_addon", true);
 #else
 pref("dom.compartment_per_addon", false);
@@ -771,6 +771,8 @@ pref("toolkit.scrollbox.verticalScrollDistance", 3);
 pref("toolkit.scrollbox.horizontalScrollDistance", 5);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
+// Telemetry settings.
+// Server to submit telemetry pings to.
 pref("toolkit.telemetry.server", "https://incoming.telemetry.mozilla.org");
 // Telemetry server owner. Please change if you set toolkit.telemetry.server to a different server
 pref("toolkit.telemetry.server_owner", "Mozilla");
@@ -779,6 +781,8 @@ pref("toolkit.telemetry.infoURL", "https://www.mozilla.org/legal/privacy/firefox
 // Determines whether full SQL strings are returned when they might contain sensitive info
 // i.e. dynamically constructed SQL strings or SQL executed by addons against addon DBs
 pref("toolkit.telemetry.debugSlowSql", false);
+// Whether to use the unified telemetry behavior, requires a restart.
+pref("toolkit.telemetry.unified", true);
 
 // Identity module
 pref("toolkit.identity.enabled", false);
@@ -792,9 +796,9 @@ pref("devtools.errorconsole.deprecation_warnings", true);
 
 // Disable debugging chrome
 #ifdef MOZ_DEV_EDITION
-pref("devtools.chrome.enabled", true);
+sticky_pref("devtools.chrome.enabled", true);
 #else
-pref("devtools.chrome.enabled", false);
+sticky_pref("devtools.chrome.enabled", false);
 #endif
 
 // Disable remote debugging protocol logging
@@ -802,9 +806,9 @@ pref("devtools.debugger.log", false);
 pref("devtools.debugger.log.verbose", false);
 // Disable remote debugging connections
 #ifdef MOZ_DEV_EDITION
-pref("devtools.debugger.remote-enabled", true);
+sticky_pref("devtools.debugger.remote-enabled", true);
 #else
-pref("devtools.debugger.remote-enabled", false);
+sticky_pref("devtools.debugger.remote-enabled", false);
 #endif
 pref("devtools.debugger.remote-port", 6000);
 // Force debugger server binding on the loopback interface
@@ -2434,7 +2438,7 @@ pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 
 // Asynchronous plugin initialization should only be enabled on non-e10s
 // channels until some remaining bugs are resolved.
-#ifdef NIGHTLY_BUILD
+#ifdef E10S_TESTING_ONLY
 pref("dom.ipc.plugins.asyncInit", false);
 #else
 pref("dom.ipc.plugins.asyncInit", true);
@@ -4114,6 +4118,7 @@ pref("browser.history.maxStateObjectSize", 655360);
 pref("xpinstall.whitelist.required", true);
 // Only Firefox requires add-on signatures
 pref("xpinstall.signatures.required", false);
+pref("xpinstall.signatures.infoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
 pref("extensions.alwaysUnpack", false);
 pref("extensions.minCompatiblePlatformVersion", "2.0");
 

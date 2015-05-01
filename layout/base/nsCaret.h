@@ -206,6 +206,12 @@ protected:
      */
     bool                  mIsBlinkOn;
     /**
+     * mBlinkCount is used to control the number of times to blink the caret
+     * before stopping the blink. This is reset each time we reset the
+     * blinking.
+     */
+    int32_t               mBlinkCount;
+    /**
      * mIsVisible is true when SetVisible was last called with 'true'.
      */
     bool                  mVisible;

@@ -32,7 +32,7 @@ toolkit.jar:
   skin/classic/mozapps/extensions/utilities.svg                   (../../shared/extensions/utilities.svg)
   skin/classic/mozapps/extensions/toolbarbutton-dropmarker.png    (extensions/toolbarbutton-dropmarker.png)
   skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
-  skin/classic/mozapps/extensions/navigation.png                  (extensions/navigation.png)
+  skin/classic/mozapps/extensions/navigation.png                  (../../shared/extensions/navigation.png)
   skin/classic/mozapps/extensions/stripes-warning.png             (extensions/stripes-warning.png)
   skin/classic/mozapps/extensions/stripes-error.png               (extensions/stripes-error.png)
   skin/classic/mozapps/extensions/stripes-info-positive.png       (extensions/stripes-info-positive.png)

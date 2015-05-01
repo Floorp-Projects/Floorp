@@ -1,0 +1,17 @@
+$inherits:
+  from: 'tasks/builds/b2g_aries_lightsaber_nightly_base.yml'
+  variables:
+    build_name: 'aries'
+    build_type: 'nightly-user'
+task:
+  metadata:
+    name: '[TC] B2G Aries Nightly (user)'
+  scopes:
+    - 'docker-worker:cache:build-aries-lightsaber-nightly-user'
+
+  payload:
+    cache:
+      build-aries-lightsaber-nightly-user: /home/worker/workspace
+    env:
+      VARIANT: user
+

@@ -123,6 +123,7 @@ browser.jar:
         skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
         skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
         skin/classic/browser/reader-tour.png                         (../shared/reader/reader-tour.png)
+        skin/classic/browser/reader-tour@2x.png                      (../shared/reader/reader-tour@2x.png)
         skin/classic/browser/readerMode.svg                          (../shared/reader/readerMode.svg)
         skin/classic/browser/readinglist/icons.svg                   (../shared/readinglist/icons.svg)
         skin/classic/browser/readinglist/readinglist-icon.svg        (../shared/readinglist/readinglist-icon.svg)

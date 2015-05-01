@@ -1,13 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 let startTimerCalled = false;
 
 /**
  * Tests that registration doesn't happen when the expiry time is
  * not set.
  */
-add_task(function test_initialize_no_expiry() {
+add_task(function* test_initialize_no_expiry() {
   startTimerCalled = false;
 
   let initializedPromise = yield MozLoopService.initialize();

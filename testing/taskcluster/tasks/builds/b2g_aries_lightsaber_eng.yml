@@ -1,35 +1,35 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
   variables:
-    build_name: 'aries'
-    build_type: 'nightly'
+    build_name: 'aries-eng'
+    build_type: 'opt'
 task:
   workerType: flame-kk
   scopes:
-    - 'docker-worker:cache:build-aries-lightsaber-nightly'
+    - 'docker-worker:cache:build-aries-eng'
   metadata:
-    name: '[TC] B2G Aries Nightly'
+    name: '[TC] B2G Aries Eng'
 
   payload:
     cache:
-      build-aries-lightsaber-nightly: /home/worker/workspace
+      build-aries-eng: /home/worker/workspace
     env:
       TARGET: 'aries'
       DEBUG: 0
+      VARIANT: eng
+      GAIA_OPTIMIZE: '1'
+      B2G_SYSTEM_APPS: '1'
     command:
       - >
         checkout-gecko workspace &&
         cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-lightsaber-nightly.sh $HOME/workspace
-
+        buildbot_step 'Build' ./build-lightsaber.sh $HOME/workspace
   extra:
     treeherder:
-      symbol: B
+      symbol: Be
       groupSymbol: Aries
       groupName: Aries Device Image
       machine:
         platform: b2g-device-image
     locations:
       img: 'private/build/aries.zip'
-      mar: 'public/build/b2g-aries-gecko-update.mar'
-
