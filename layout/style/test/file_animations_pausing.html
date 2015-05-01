@@ -19,7 +19,6 @@
   <script>
     var ok = opener.ok.bind(opener);
     var is = opener.is.bind(opener);
-    var okOrTodo = opener.okOrTodo.bind(opener);
     function finish() {
       var o = opener;
       self.close();
@@ -36,7 +35,7 @@ runOMTATest(function() {
   runAllAsyncAnimTests().then(function() {
     finish();
   });
-}, finish);
+}, finish, opener.SpecialPowers);
 
 addAsyncAnimTest(function *() {
   var [ div, cs ] = new_div("animation: anim 10s 2 linear alternate");
