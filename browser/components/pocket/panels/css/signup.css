@@ -1,0 +1,267 @@
+/*  signup.css
+ *
+ *  Description:
+ *  With base elements out of the way, this sets all custom styling for the extension.
+ *
+ *  Contents:
+ *  Global
+ *  Core detail
+ *  Buttons
+ *  Responsive
+ */
+
+/*=Global
+--------------------------------------------------------------------------------------- */
+.pkt_ext_containersignup {
+    background-color: #ebebeb;
+    color: #333;
+    display: block;
+    font-size: 16px;
+    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    text-align: center;
+}
+.pkt_ext_containersignup_inactive {
+    -moz-animation: pkt_ext_hide 0.3s ease-out;
+    -webkit-animation: pkt_ext_hide 0.3s ease-out;
+    animation: pkt_ext_hide 0.3s ease-out;
+    opacity: 0;
+    visibility: hidden;
+}
+.pkt_ext_cf:after {
+    content: " ";
+    display:table;
+    clear:both;
+}
+@-webkit-keyframes pkt_ext_hide {
+    0% {
+        opacity: 1;
+        visibility: visible;
+    }
+    99% {
+        opacity: 0;
+        visibility: visible;
+    }
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+@keyframes pkt_ext_hide {
+    0% {
+        opacity: 1;
+        visibility: visible;
+    }
+    99% {
+        opacity: 0;
+        visibility: visible;
+    }
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+/*=Core detail
+--------------------------------------------------------------------------------------- */
+.pkt_ext_containersignup p {
+    font-size: 14px;
+    color: #333;
+    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.3;
+    margin: 0 auto 1.5em;
+    max-width: 250px;
+}
+.pkt_ext_containersignup a { 
+    color: #4c8fd0;
+    text-decoration: none;
+}
+.pkt_ext_containersignup a:hover {
+    color: #3076b9;
+}
+.pkt_ext_containersignup .pkt_ext_introrecommend {
+    background-color: #f4f4f4;
+    color: #333;
+    font-size: 12px;
+    font-weight: normal;
+    margin: 0;
+    padding: 1em 0.5em;
+}
+.pkt_ext_containersignup .pkt_ext_introdetail {
+    background-color: #fbfbfb;
+    border: 1px solid #c1c1c1;
+    border-width: 1px 0;
+}
+.pkt_ext_containersignup .pkt_ext_logo {
+    background: url(../img/pocketlogo@1x.png) center bottom no-repeat;
+    display: block;
+    height: 38px;
+    margin: 0 auto 15px;
+    padding-top: 25px;
+    position: relative;
+    text-indent: -9999px;
+    width: 147px;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+    .pkt_ext_containersignup .pkt_ext_logo {
+        background-image: url(../img/pocketlogo@2x.png);
+        background-size: 147px 38px;
+    }
+}
+.pkt_ext_containersignup .pkt_ext_introimg {
+    background: url(../img/pocketmultidevices@1x.png) center center no-repeat;
+    display: block;
+    height: 122px;
+    margin: 10px auto 20px;
+    position: relative;
+    text-indent: -9999px;
+    width: 171px;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+    .pkt_ext_containersignup .pkt_ext_introimg {
+        background-image: url(../img/pocketmultidevices@2x.png);
+        background-size: 171px 122px;
+    }
+}
+.pkt_ext_containersignup .pkt_ext_tagline {
+    margin-bottom: 0.5em;
+}
+.pkt_ext_containersignup .pkt_ext_learnmore {
+    font-size: 12px;
+}
+.pkt_ext_signupdetail h4 {
+    font-size: 12px;
+    font-weight: normal;
+}
+.pkt_ext_signupdetail .btn-container {
+    position: relative;
+    margin-bottom: 0.8em;
+}
+.pkt_ext_containersignup .ff_signuphelp {
+    background: url(../img/signup_help@1x.png) center center no-repeat;
+    display: block;
+    height: 18px;
+    margin-top: -9px;
+    right: -15px;
+    position: absolute;
+    text-indent: -9999px;
+    width: 18px;
+    top: 50%;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 1.5dppx) {
+    .pkt_ext_containersignup .ff_signuphelp {
+        background-image: url(../img/signup_help@2x.png);
+        background-size: 18px 18px;
+    }
+}
+.pkt_ext_containersignup .alreadyhave {
+    font-size: 12px;
+    max-width: 320px;
+    margin-top: 15px;
+}
+
+/*=Buttons
+--------------------------------------------------------------------------------------- */
+.pkt_ext_containersignup .btn {
+    background-color: #0096dd;
+    border: 1px solid #0095dd;
+    border-radius: 2px;
+    color: #fff;
+    display: inline-block;
+    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 1;
+    margin: 0;
+    padding: 11px 45px;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 0 -1px 0 rgba(142,4,17,0.5);
+    transition: background-color 0.1s linear;
+    width: auto;
+}
+.pkt_ext_containersignup .btn-secondary {
+    background-color: #fbfbfb;
+    border-color: #c1c1c1;
+    color: #444;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+.pkt_ext_containersignup .btn-small {
+    padding: 6px 20px;
+}
+.pkt_ext_containersignup .btn-mini {
+    font-size: 14px;
+    padding: 5px 15px 4px;
+}
+.pkt_ext_containersignup .btn:hover {
+    background-color: #008acb;
+    color: #fff;
+    text-decoration: none;
+}
+.pkt_ext_containersignup .btn-secondary:hover,
+.pkt_ext_containersignup .btn-important:hover {
+    background-color: #f6f6f6;
+    color: #222;
+}
+.pkt_ext_containersignup .btn-disabled {
+    background-image: none;
+    color: #ccc;
+    color: rgba(255,255,255,0.6);
+    cursor: default;
+    opacity: 0.9;
+}
+.pkt_ext_containersignup .signup-btn-firefox,
+.pkt_ext_containersignup .signup-btn-email,
+.pkt_ext_containersignup .signupinterim-btn-login,
+.pkt_ext_containersignup .signupinterim-btn-signup,
+.pkt_ext_containersignup .forgot-btn-submit,
+.pkt_ext_containersignup .forgotreset-btn-change {
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    min-width: 12.125em;
+    padding: 0.8em 1.1875em;
+    box-sizing: content-box;
+}
+.pkt_ext_containersignup .signup-btn-email {
+    position: relative;
+    z-index: 10;
+}
+.pkt_ext_containersignup .signup-btn-firefox {
+    min-width: 14.5em;
+    position: relative;
+    padding: 0;
+}
+.pkt_ext_containersignup .signup-btn-firefox .logo {
+    background: url(../img/signup_firefoxlogo@1x.png) center center no-repeat;
+    height: 2.6em;
+    left: 10px;
+    margin: 0;
+    padding: 0;
+    width: 22px;
+    position: absolute;
+}
+@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (min-resolution: 144dpi) {
+    .pkt_ext_containersignup .signup-btn-firefox .logo {
+        background-image: url(../img/signup_firefoxlogo@2x.png);
+        background-size: 22px 22px;
+    }
+}
+.pkt_ext_containersignup .forgotreset-btn-change {
+    margin-bottom: 2em;
+}
+.pkt_ext_containersignup .signup-btn-firefox .text {
+    display: inline-block;
+    padding: 0.8em 1.625em;
+    position: relative;
+    text-shadow: none;
+    white-space: nowrap;
+}
+.pkt_ext_containersignup .signup-btn-firefox .text {
+    color: #fff;
+}
+.pkt_ext_containersignup .btn-disabled .text {
+    color: #ccc;
+    color: rgba(255,255,255,0.6);
+}
