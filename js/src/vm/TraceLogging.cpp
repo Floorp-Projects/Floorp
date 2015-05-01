@@ -185,10 +185,10 @@ TraceLoggerThread::~TraceLoggerThread()
         graph = nullptr;
     }
 
-    for (TextIdHashMap::Range r = extraTextId.all(); !r.empty(); r.popFront())
-        js_delete(r.front().value());
-    extraTextId.finish();
-    pointerMap.finish();
+    if (extraTextId.initialized()) {
+        for (TextIdHashMap::Range r = extraTextId.all(); !r.empty(); r.popFront())
+            js_delete(r.front().value());
+    }
 }
 
 bool
