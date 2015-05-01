@@ -1,0 +1,23 @@
+<html>
+<head>
+    <title>Slow Loading</title>
+    <meta name="viewport" content="initial-scale=1.0"/>
+    <meta charset="utf-8">
+    <script type="text/javascript">
+
+        // Busy wait (There's no sleep function in JavaScript)
+        var waitForMilliseconds = 10000;
+        var start = new Date();
+        var now = null;
+        do {
+            now = new Date();
+        } while (now - start < waitForMilliseconds);
+
+    </script>
+</head>
+<body style="margin: 0; padding: 0">
+<div style="text-align: center; margin: 0; padding: 0">
+    <h1>This page is loading very slow.</h1>
+</div>
+</body>
+</html>
