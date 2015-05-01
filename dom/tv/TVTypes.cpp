@@ -55,7 +55,7 @@ TVTunerData::GetSupportedSourceTypes(uint32_t* aCount,
   *aCount = mCount;
 
   char** sourceTypes = (mCount > 0) ?
-                       static_cast<char **>(NS_Alloc(mCount * sizeof(char*))) :
+                       static_cast<char **>(moz_xmalloc(mCount * sizeof(char*))) :
                        nullptr;
   for (uint32_t i = 0; i < mCount; i++) {
     sourceTypes[i] = NS_strdup(mSupportedSourceTypes[i]);
@@ -87,7 +87,7 @@ TVTunerData::SetSupportedSourceTypes(uint32_t aCount,
   mCount = aCount;
 
   mSupportedSourceTypes = (mCount > 0) ?
-                          static_cast<char **>(NS_Alloc(mCount * sizeof(char*))) :
+                          static_cast<char **>(moz_xmalloc(mCount * sizeof(char*))) :
                           nullptr;
   for (uint32_t i = 0; i < mCount; i++) {
     mSupportedSourceTypes[i] = NS_strdup(aSourceTypes[i]);
@@ -377,7 +377,7 @@ TVProgramData::GetAudioLanguages(uint32_t* aCount,
   *aCount = mAudioLanguageCount;
 
   char** languages = (mAudioLanguageCount > 0) ?
-                     static_cast<char **>(NS_Alloc(mAudioLanguageCount * sizeof(char*))) :
+                     static_cast<char **>(moz_xmalloc(mAudioLanguageCount * sizeof(char*))) :
                      nullptr;
   for (uint32_t i = 0; i < mAudioLanguageCount; i++) {
     languages[i] = NS_strdup(mAudioLanguages[i]);
@@ -402,7 +402,7 @@ TVProgramData::SetAudioLanguages(uint32_t aCount,
   mAudioLanguageCount = aCount;
 
   mAudioLanguages = (mAudioLanguageCount > 0) ?
-                    static_cast<char **>(NS_Alloc(mAudioLanguageCount * sizeof(char*))) :
+                    static_cast<char **>(moz_xmalloc(mAudioLanguageCount * sizeof(char*))) :
                     nullptr;
   for (uint32_t i = 0; i < mAudioLanguageCount; i++) {
     mAudioLanguages[i] = NS_strdup(aLanguages[i]);
@@ -418,7 +418,7 @@ TVProgramData::GetSubtitleLanguages(uint32_t* aCount,
   *aCount = mSubtitleLanguageCount;
 
   char** languages = (mSubtitleLanguageCount > 0) ?
-                     static_cast<char **>(NS_Alloc(mSubtitleLanguageCount * sizeof(char*))) :
+                     static_cast<char **>(moz_xmalloc(mSubtitleLanguageCount * sizeof(char*))) :
                      nullptr;
   for (uint32_t i = 0; i < mSubtitleLanguageCount; i++) {
     languages[i] = NS_strdup(mSubtitleLanguages[i]);
@@ -443,7 +443,7 @@ TVProgramData::SetSubtitleLanguages(uint32_t aCount,
   mSubtitleLanguageCount = aCount;
 
   mSubtitleLanguages = (mSubtitleLanguageCount > 0) ?
-                       static_cast<char **>(NS_Alloc(mSubtitleLanguageCount * sizeof(char*))) :
+                       static_cast<char **>(moz_xmalloc(mSubtitleLanguageCount * sizeof(char*))) :
                        nullptr;
   for (uint32_t i = 0; i < mSubtitleLanguageCount; i++) {
     mSubtitleLanguages[i] = NS_strdup(aLanguages[i]);

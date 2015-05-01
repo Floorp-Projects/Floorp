@@ -40,7 +40,7 @@ moz_qicon_to_channel(QImage* image, nsIURI* aURI,
 
   const int n_channels = 4;
   long int buf_size = 2 + n_channels * height * width;
-  uint8_t* const buf = (uint8_t*)NS_Alloc(buf_size);
+  uint8_t* const buf = (uint8_t*)moz_xmalloc(buf_size);
   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
   uint8_t* out = buf;
 

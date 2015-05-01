@@ -39,6 +39,26 @@ public:
    */
   static bool IsDolphin() { return !!(sConsumers & DOLPHIN); }
 
+  /**
+   * Return true if we should disable e10s due to a detected
+   * accessibility client.
+   */
+  static bool IsBlacklistedForE10S()
+  {
+    // We currently blacklist everything except UNKNOWN and UIAUTOMATION
+    return !!(sConsumers &
+              (NVDA     |
+               JAWS     |
+               OLDJAWS  |
+               WE       |
+               DOLPHIN  |
+               SEROTEK  |
+               COBRA    |
+               ZOOMTEXT |
+               KAZAGURU |
+               YOUDAO));
+  }
+
 private:
   Compatibility();
   Compatibility(const Compatibility&);

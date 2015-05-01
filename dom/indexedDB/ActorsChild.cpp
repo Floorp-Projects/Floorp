@@ -72,6 +72,12 @@ ThreadLocal::ThreadLocal(const nsID& aBackgroundChildLoggingId)
   MOZ_ASSERT(mOwningThread);
 
   MOZ_COUNT_CTOR(mozilla::dom::indexedDB::ThreadLocal);
+
+  // NSID_LENGTH counts the null terminator, SetLength() does not.
+  mLoggingIdString.SetLength(NSID_LENGTH - 1);
+
+  aBackgroundChildLoggingId.ToProvidedString(
+    *reinterpret_cast<char(*)[NSID_LENGTH]>(mLoggingIdString.BeginWriting()));
 }
 
 ThreadLocal::~ThreadLocal()

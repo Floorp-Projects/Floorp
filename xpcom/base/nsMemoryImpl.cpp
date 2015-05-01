@@ -185,24 +185,6 @@ nsMemoryImpl::sLastFlushTime = 0;
 nsMemoryImpl::FlushEvent
 nsMemoryImpl::sFlushEvent;
 
-XPCOM_API(void*)
-NS_Alloc(size_t aSize)
-{
-  return moz_xmalloc(aSize);
-}
-
-XPCOM_API(void*)
-NS_Realloc(void* aPtr, size_t aSize)
-{
-  return moz_xrealloc(aPtr, aSize);
-}
-
-XPCOM_API(void)
-NS_Free(void* aPtr)
-{
-  free(aPtr);
-}
-
 nsresult
 NS_GetMemoryManager(nsIMemory** aResult)
 {

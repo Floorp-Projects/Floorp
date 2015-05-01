@@ -96,7 +96,21 @@ public:
   {
   }
 
+  template <typename I>
+  nsAutoPtr(nsAutoPtr<I>& aSmartPtr)
+    : mRawPtr(aSmartPtr.forget())
+    // Construct by transferring ownership from another smart pointer.
+  {
+  }
+
   nsAutoPtr(nsAutoPtr<T>&& aSmartPtr)
+    : mRawPtr(aSmartPtr.forget())
+    // Construct by transferring ownership from another smart pointer.
+  {
+  }
+
+  template <typename I>
+  nsAutoPtr(nsAutoPtr<I>&& aSmartPtr)
     : mRawPtr(aSmartPtr.forget())
     // Construct by transferring ownership from another smart pointer.
   {
@@ -119,7 +133,22 @@ public:
     return *this;
   }
 
+  template <typename I>
+  nsAutoPtr<T>& operator=(nsAutoPtr<I>& aRhs)
+  // assign by transferring ownership from another smart pointer.
+  {
+    assign(aRhs.forget());
+    return *this;
+  }
+
   nsAutoPtr<T>& operator=(nsAutoPtr<T>&& aRhs)
+  {
+    assign(aRhs.forget());
+    return *this;
+  }
+
+  template <typename I>
+  nsAutoPtr<T>& operator=(nsAutoPtr<I>&& aRhs)
   {
     assign(aRhs.forget());
     return *this;

@@ -23,7 +23,15 @@ builds:
       - b2g
     types:
       opt:
-        task: tasks/builds/b2g_aries_lightsaber_nightly.yml
+        task: tasks/builds/b2g_aries_lightsaber_nightly_opt.yml
+      debug:
+        task: tasks/builds/b2g_aries_lightsaber_nightly_debug.yml
+  aries-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_lightsaber_eng.yml
 
 tests:
   gaia-build:

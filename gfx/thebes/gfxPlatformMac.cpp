@@ -166,7 +166,7 @@ gfxPlatformMac::MakePlatformFont(const nsAString& aFontName,
 {
     // Ownership of aFontData is received here, and passed on to
     // gfxPlatformFontList::MakePlatformFont(), which must ensure the data
-    // is released with NS_Free when no longer needed
+    // is released with free when no longer needed
     return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
                                                                      aWeight,
                                                                      aStretch,

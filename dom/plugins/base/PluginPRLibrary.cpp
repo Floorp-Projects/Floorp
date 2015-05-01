@@ -243,10 +243,10 @@ PluginPRLibrary::NPP_GetSitesWithData(InfallibleTArray<nsCString>& result)
   char** iterator = sites;
   while (*iterator) {
     result.AppendElement(*iterator);
-    NS_Free(*iterator);
+    free(*iterator);
     ++iterator;
   }
-  NS_Free(sites);
+  free(sites);
 
   return NS_OK;
 }

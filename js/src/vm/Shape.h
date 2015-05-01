@@ -933,7 +933,7 @@ class Shape : public gc::TenuredCell
 
     static inline ThingRootKind rootKind() { return THING_ROOT_SHAPE; }
 
-    inline void traceChildren(JSTracer* trc);
+    void traceChildren(JSTracer* trc);
 
     inline Shape* search(ExclusiveContext* cx, jsid id);
     inline Shape* searchLinear(jsid id);

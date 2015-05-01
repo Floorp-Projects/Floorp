@@ -241,7 +241,7 @@ nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     GetRowIndex(rowIndex);
     // row span needs to be clamped as we do not create rows in the cellmap
     // which do not have cells originating in them
-    nsIntRect damageArea(colIndex, rowIndex, GetColSpan(),
+    TableArea damageArea(colIndex, rowIndex, GetColSpan(),
       std::min(GetRowSpan(), tableFrame->GetRowCount() - rowIndex));
     tableFrame->AddBCDamageArea(damageArea);
   }

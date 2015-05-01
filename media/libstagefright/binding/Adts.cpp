@@ -4,7 +4,6 @@
 
 #include "mp4_demuxer/Adts.h"
 #include "MediaData.h"
-#include "media/stagefright/MediaBuffer.h"
 #include "mozilla/Array.h"
 #include "mozilla/ArrayUtils.h"
 

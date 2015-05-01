@@ -15,6 +15,15 @@ fi
 aws s3 cp s3://b2g-nightly-credentials/balrog_credentials .
 mar_file=b2g-${TARGET%%-*}-gecko-update.mar
 
+# We need different platform names for each variant (user, userdebug and
+# eng). We do not append variant suffix for "user" to keep compability with
+# verions already installed in the phones.
+if [ $VARIANT == "user" ]; then
+  PLATFORM=$TARGET
+else
+  PLATFORM=$TARGET-$VARIANT
+fi
+
 ./mozharness/scripts/b2g_lightsaber.py \
   --config b2g/taskcluster-lightsaber-nightly.py \
   --config balrog/staging.py \
@@ -29,7 +38,7 @@ mar_file=b2g-${TARGET%%-*}-gecko-update.mar
   --checkout-revision=$GECKO_HEAD_REV \
   --base-repo=$GECKO_BASE_REPOSITORY \
   --repo=$GECKO_HEAD_REPOSITORY \
-  --platform $TARGET \
+  --platform $PLATFORM \
   --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/$mar_file \
 
 # Don't cache backups

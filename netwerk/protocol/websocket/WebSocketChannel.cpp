@@ -2054,7 +2054,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
       return;
     }
     mask = * reinterpret_cast<uint32_t *>(buffer);
-    NS_Free(buffer);
+    free(buffer);
   } while (!mask);
   NetworkEndian::writeUint32(payload - sizeof(uint32_t), mask);
 
@@ -2492,7 +2492,7 @@ WebSocketChannel::SetupRequest()
   rv = mRandomGenerator->GenerateRandomBytes(16, &secKey);
   NS_ENSURE_SUCCESS(rv, rv);
   char* b64 = PL_Base64Encode((const char *)secKey, 16, nullptr);
-  NS_Free(secKey);
+  free(secKey);
   if (!b64)
     return NS_ERROR_OUT_OF_MEMORY;
   secKeyString.Assign(b64);

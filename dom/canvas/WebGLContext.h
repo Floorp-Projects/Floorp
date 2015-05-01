@@ -326,7 +326,7 @@ public:
     // amount of work it does.
     // It only clears the buffers we specify, and can reset its state without
     // first having to query anything, as WebGL knows its state at all times.
-    void ForceClearFramebufferWithDefaultValues(GLbitfield mask,
+    void ForceClearFramebufferWithDefaultValues(bool fakeNoAlpha, GLbitfield mask,
                                                 const bool colorAttachmentsMask[kMaxColorAttachments]);
 
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.

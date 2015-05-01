@@ -607,12 +607,12 @@ protected:
   void FireAsyncScrollOnTimeout();
 
   /**
-   * Convert ScreenPoint relative to this APZC to CSSPoint relative
+   * Convert ScreenPoint relative to the screen to CSSPoint relative
    * to the parent document. This excludes the transient compositor transform.
    * NOTE: This must be converted to CSSPoint relative to the child
-   * document before sending over IPC.
+   * document before sending over IPC to a child process.
    */
-  bool ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint* aOut);
+  bool ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* aOut);
 
   enum AxisLockMode {
     FREE,     /* No locking at all */
@@ -623,7 +623,7 @@ protected:
   static AxisLockMode GetAxisLockMode();
 
   // Helper function for OnSingleTapUp() and OnSingleTapConfirmed().
-  nsEventStatus GenerateSingleTap(const ParentLayerPoint& aPoint, mozilla::Modifiers aModifiers);
+  nsEventStatus GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers);
 
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();

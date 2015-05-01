@@ -96,7 +96,7 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
     sheets.AppendElement(document->GetStyleSheetAt(i));
   }
 
-  nsISupports** ret = static_cast<nsISupports**>(NS_Alloc(sheets.Count() *
+  nsISupports** ret = static_cast<nsISupports**>(moz_xmalloc(sheets.Count() *
                                                  sizeof(nsISupports*)));
 
   for (int32_t i = 0; i < sheets.Count(); i++) {
@@ -773,7 +773,7 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
 
   *aLength = array.Length();
   char16_t** ret =
-    static_cast<char16_t**>(NS_Alloc(*aLength * sizeof(char16_t*)));
+    static_cast<char16_t**>(moz_xmalloc(*aLength * sizeof(char16_t*)));
   for (uint32_t i = 0; i < *aLength; ++i) {
     ret[i] = ToNewUnicode(array[i]);
   }

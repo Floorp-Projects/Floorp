@@ -1028,7 +1028,12 @@ public:
     GetFrameStatistics().NotifyDecodedFrames(aParsed, aDecoded, aDropped);
   }
 
-  WatchTarget& ReadyStateWatchTarget() { return *mReadyStateWatchTarget; }
+  void UpdateReadyState()
+  {
+    if (mOwner) {
+      mOwner->UpdateReadyState();
+    }
+  }
 
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() { return mNextFrameStatus; }
 
@@ -1047,10 +1052,11 @@ protected:
   // Return true if the decoder has reached the end of playback
   bool IsEnded() const;
 
-  WatcherHolder mReadyStateWatchTarget;
+  // State-watching manager.
+  WatchManager<MediaDecoder> mWatchManager;
 
   // NextFrameStatus, mirrored from the state machine.
-  Mirror<MediaDecoderOwner::NextFrameStatus>::Holder mNextFrameStatus;
+  Mirror<MediaDecoderOwner::NextFrameStatus> mNextFrameStatus;
 
   /******
    * The following members should be accessed with the decoder lock held.
@@ -1136,14 +1142,14 @@ protected:
   // OR on the main thread.
   // Any change to the state on the main thread must call NotifyAll on the
   // monitor so the decode thread can wake up.
-  Canonical<PlayState>::Holder mPlayState;
+  Canonical<PlayState> mPlayState;
 
   // This can only be changed on the main thread while holding the decoder
   // monitor. Thus, it can be safely read while holding the decoder monitor
   // OR on the main thread.
   // Any change to the state must call NotifyAll on the monitor.
   // This can only be PLAY_STATE_PAUSED or PLAY_STATE_PLAYING.
-  Canonical<PlayState>::Holder mNextState;
+  Canonical<PlayState> mNextState;
 public:
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
   AbstractCanonical<PlayState>* CanonicalNextPlayState() { return &mNextState; }
