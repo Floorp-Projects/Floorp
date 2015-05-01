@@ -1325,8 +1325,11 @@ GlobalObject::initTypedObjectModule(JSContext* cx, Handle<GlobalObject*> global)
     // Everything is setup, install module on the global object:
     RootedValue moduleValue(cx, ObjectValue(*module));
     global->setConstructor(JSProto_TypedObject, moduleValue);
-    if (!DefineProperty(cx, global, cx->names().TypedObject, moduleValue, nullptr, nullptr, 0))
+    if (!DefineProperty(cx, global, cx->names().TypedObject, moduleValue, nullptr, nullptr,
+                        JSPROP_RESOLVING))
+    {
         return false;
+    }
 
     return module;
 }

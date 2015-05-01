@@ -1248,26 +1248,17 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             // distinguish the two cases, we note that when resolving, the
             // property won't already exist; whereas the first time it is
             // redefined, it will.
-            if (obj->containsPure(id))
+            if ((desc_.attributes() & JSPROP_RESOLVING) == 0)
                 obj->as<ArgumentsObject>().markLengthOverridden();
         }
     }
 
     // 9.1.6.1 OrdinaryDefineOwnProperty steps 1-2.
     RootedShape shape(cx);
-    if (desc_.hasValue()) {
-        // If we did a normal lookup here, it would cause resolve hook recursion in
-        // the following case. Suppose the first script we run in a lazy global is
-        // |parseInt()|.
-        //   - js::InitNumberClass is called to resolve parseInt.
-        //   - js::InitNumberClass tries to define the Number constructor on the
-        //     global.
-        //   - We end up here.
-        //   - This lookup for 'Number' triggers the global resolve hook.
-        //   - js::InitNumberClass is called again, this time to resolve Number.
-        //   - It creates a second Number constructor, which trips an assertion.
-        //
-        // Therefore we do a special lookup that does not call the resolve hook.
+    if (desc_.attributes() & JSPROP_RESOLVING) {
+        // We are being called from a resolve or enumerate hook to reify a
+        // lazily-resolved property. To avoid reentering the resolve hook and
+        // recursing forever, skip the resolve hook when doing this lookup.
         NativeLookupOwnPropertyNoResolve(cx, obj, id, &shape);
     } else {
         if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))

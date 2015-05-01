@@ -1231,9 +1231,8 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     JSAtom* undefinedAtom = cx->names().undefined;
     if (idAtom == undefinedAtom) {
         *resolved = true;
-        return DefineProperty(cx, obj, undefinedAtom->asPropertyName(),
-                              UndefinedHandleValue, nullptr, nullptr,
-                              JSPROP_PERMANENT | JSPROP_READONLY);
+        return DefineProperty(cx, global, id, UndefinedHandleValue, nullptr, nullptr,
+                              JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
