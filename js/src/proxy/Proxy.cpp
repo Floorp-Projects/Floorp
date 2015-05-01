@@ -774,10 +774,8 @@ js::InitProxyClass(JSContext* cx, HandleObject obj)
 
     if (!JS_DefineFunctions(cx, ctor, static_methods))
         return nullptr;
-    if (!JS_DefineProperty(cx, obj, "Proxy", ctor, 0,
-                           JS_STUBGETTER, JS_STUBSETTER)) {
+    if (!JS_DefineProperty(cx, obj, "Proxy", ctor, JSPROP_RESOLVING, JS_STUBGETTER, JS_STUBSETTER))
         return nullptr;
-    }
 
     global->setConstructor(JSProto_Proxy, ObjectValue(*ctor));
     return ctor;
