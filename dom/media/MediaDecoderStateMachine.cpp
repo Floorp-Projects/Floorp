@@ -229,7 +229,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVolume(mTaskQueue, 1.0, "MediaDecoderStateMachine::mVolume (Mirror)"),
   mPlaybackRate(1.0),
   mLogicalPlaybackRate(mTaskQueue, 1.0, "MediaDecoderStateMachine::mLogicalPlaybackRate (Mirror)"),
-  mPreservesPitch(true),
+  mPreservesPitch(mTaskQueue, true, "MediaDecoderStateMachine::mPreservesPitch (Mirror)"),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
   mQuickBufferingLowDataThresholdUsecs(detail::QUICK_BUFFERING_LOW_DATA_USECS),
@@ -310,12 +310,14 @@ MediaDecoderStateMachine::InitializationTask()
   mNextPlayState.Connect(mDecoder->CanonicalNextPlayState());
   mVolume.Connect(mDecoder->CanonicalVolume());
   mLogicalPlaybackRate.Connect(mDecoder->CanonicalPlaybackRate());
+  mPreservesPitch.Connect(mDecoder->CanonicalPreservesPitch());
 
   // Initialize watchers.
   mWatchManager.Watch(mState, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
   mWatchManager.Watch(mLogicalPlaybackRate, &MediaDecoderStateMachine::LogicalPlaybackRateChanged);
+  mWatchManager.Watch(mPreservesPitch, &MediaDecoderStateMachine::PreservesPitchChanged);
 
 }
 
@@ -2552,6 +2554,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mNextPlayState.DisconnectIfConnected();
   mVolume.DisconnectIfConnected();
   mLogicalPlaybackRate.DisconnectIfConnected();
+  mPreservesPitch.DisconnectIfConnected();
   mNextFrameStatus.DisconnectAll();
 
   // Shut down the watch manager before shutting down our task queue.
@@ -3414,12 +3417,11 @@ MediaDecoderStateMachine::LogicalPlaybackRateChanged()
   }
 }
 
-void MediaDecoderStateMachine::SetPreservesPitch(bool aPreservesPitch)
+void MediaDecoderStateMachine::PreservesPitchChanged()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  mPreservesPitch = aPreservesPitch;
   if (mAudioSink) {
     mAudioSink->SetPreservesPitch(mPreservesPitch);
   }
