@@ -89,18 +89,15 @@ function waitForProviderLoad(cb) {
     waitForCondition(function() {
       let sbrowser = document.getElementById("social-sidebar-browser");
       let provider = SocialSidebar.provider;
-      let postActivation = provider && gBrowser.contentDocument.location.href == provider.origin + "/browser/browser/base/content/test/social/social_postActivation.html";
+      let postActivation = provider && gBrowser.contentDocument &&
+                            gBrowser.contentDocument.location.href == provider.origin + "/browser/browser/base/content/test/social/social_postActivation.html";
 
-      return provider &&
-             provider.profile &&
-             provider.profile.displayName &&
-             postActivation &&
-             sbrowser.docShellIsActive;
+      return postActivation && sbrowser.docShellIsActive;
     }, function() {
       // executeSoon to let the browser UI observers run first
       executeSoon(cb);
     },
-    "waitForProviderLoad: provider profile was not set");
+    "waitForProviderLoad: provider was not loaded");
 }
 
 
@@ -178,22 +175,19 @@ let gProviders = [
   {
     name: "provider 1",
     origin: "https://example.com",
-    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html?provider1",
-    workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js#no-profile,no-recommend",
+    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar_empty.html?provider1",
     iconURL: "chrome://branding/content/icon48.png"
   },
   {
     name: "provider 2",
     origin: "https://test1.example.com",
-    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html?provider2",
-    workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js#no-profile,no-recommend",
+    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html?provider2",
     iconURL: "chrome://branding/content/icon64.png"
   },
   {
     name: "provider 3",
     origin: "https://test2.example.com",
-    sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html?provider2",
-    workerURL: "https://test2.example.com/browser/browser/base/content/test/social/social_worker.js#no-profile,no-recommend",
+    sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html?provider2",
     iconURL: "chrome://branding/content/about-logo.png"
   }
 ];
