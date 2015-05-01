@@ -89,11 +89,34 @@ xul|menulist:-moz-focusring,
 xul|checkbox:-moz-focusring > .checkbox-check,
 xul|radio[focused="true"] > .radio-check,
 xul|tab:-moz-focusring > .tab-middle > .tab-text {
-	outline: 2px solid rgba(0,149,221,0.5);
-	outline-offset: 1px;
-	-moz-outline-radius: 2px;
+  outline: 2px solid rgba(0,149,221,0.5);
+  outline-offset: 1px;
+  -moz-outline-radius: 2px;
 }
 
 xul|radio[focused="true"] > .radio-check {
-	-moz-outline-radius: 100%;
+  -moz-outline-radius: 100%;
+}
+
+xul|spinbuttons {
+  -moz-appearance: none;
+}
+
+xul|*.spinbuttons-up {
+  margin-top: 0 !important;
+  border-radius: 4px 4px 0 0;
+}
+
+xul|*.spinbuttons-down  {
+  margin-bottom: 0 !important;
+  border-radius: 0 0 4px 4px;
+}
+
+xul|*.spinbuttons-button > xul|*.button-box {
+  -moz-padding-start: 2px !important;
+  -moz-padding-end: 3px !important;
+}
+
+xul|*.spinbuttons-button > xul|*.button-box > xul|*.button-text {
+  display: none;
 }

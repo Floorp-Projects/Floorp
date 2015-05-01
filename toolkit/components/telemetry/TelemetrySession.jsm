@@ -60,6 +60,8 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_ASYNC_PLUGIN_INIT = "dom.ipc.plugins.asyncInit";
+const PREF_UNIFIED = PREF_BRANCH + "unified";
+
 
 const MESSAGE_TELEMETRY_PAYLOAD = "Telemetry:Payload";
 const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
@@ -68,6 +70,10 @@ const DATAREPORTING_DIRECTORY = "datareporting";
 const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
 
 const SESSION_STATE_FILE_NAME = "session-state.json";
+
+// Whether the FHR/Telemetry unification features are enabled.
+// Changing this pref requires a restart.
+const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
 
 // Maximum number of content payloads that we are willing to store.
 const MAX_NUM_CONTENT_PAYLOADS = 10;
@@ -1339,12 +1345,8 @@ let Impl = {
    * respectively.
    */
   assemblePayloadWithMeasurements: function(simpleMeasurements, info, reason, clearSubsession) {
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-    const isSubsession = !this._isClassicReason(reason);
-#else
-    const isSubsession = false;
-    clearSubsession = false;
-#endif
+    const isSubsession = IS_UNIFIED_TELEMETRY && !this._isClassicReason(reason);
+    clearSubsession = IS_UNIFIED_TELEMETRY && clearSubsession;
     this._log.trace("assemblePayloadWithMeasurements - reason: " + reason +
                     ", submitting subsession data: " + isSubsession);
 
@@ -1481,6 +1483,11 @@ let Impl = {
       return Promise.resolve();
     }
 
+    if (!Telemetry.canRecordBase && !testing) {
+      this._log.config("setupChromeProcess - Telemetry recording is disabled, skipping Chrome process setup.");
+      return Promise.resolve();
+    }
+
     // Generate a unique id once per session so the server can cope with duplicate
     // submissions, orphaning and other oddities. The id is shared across subsessions.
     this._sessionId = Policy.generateSessionUUID();
@@ -1501,11 +1508,6 @@ let Impl = {
     if (previousBuildId != thisBuildID) {
       this._previousBuildId = previousBuildId;
       Preferences.set(PREF_PREVIOUS_BUILDID, thisBuildID);
-    }
-
-    if (!Telemetry.canRecordBase && !testing) {
-      this._log.config("setupChromeProcess - Telemetry recording is disabled, skipping Chrome process setup.");
-      return Promise.resolve();
     }
 
     TelemetryController.shutdown.addBlocker("TelemetrySession: shutting down",
@@ -1541,22 +1543,25 @@ let Impl = {
 
         Telemetry.asyncFetchTelemetryData(function () {});
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-        // Check for a previously written aborted session ping.
-        yield this._checkAbortedSessionPing();
+        if (IS_UNIFIED_TELEMETRY) {
+          // Check for a previously written aborted session ping.
+          yield this._checkAbortedSessionPing();
 
-        TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
-                                                    (reason, data) => this._onEnvironmentChange(reason, data));
-        // Write the first aborted-session ping as early as possible. Just do that
-        // if we are not testing, since calling Telemetry.reset() will make a previous
-        // aborted ping a pending ping.
-        if (!testing) {
-          yield this._saveAbortedSessionPing();
+          // Write the first aborted-session ping as early as possible. Just do that
+          // if we are not testing, since calling Telemetry.reset() will make a previous
+          // aborted ping a pending ping.
+          if (!testing) {
+            yield this._saveAbortedSessionPing();
+          }
+
+          TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
+                                 (reason, data) => this._onEnvironmentChange(reason, data));
+
+          // Start the scheduler.
+          // We skip this if unified telemetry is off, so we don't
+          // trigger the new unified ping types.
+          TelemetryScheduler.init();
         }
-
-        // Start the scheduler.
-        TelemetryScheduler.init();
-#endif
 
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
@@ -1663,7 +1668,10 @@ let Impl = {
   savePendingPings: function savePendingPings() {
     this._log.trace("savePendingPings");
 
-#ifndef MOZ_WIDGET_ANDROID
+    if (!IS_UNIFIED_TELEMETRY) {
+      return this.savePendingPingsClassic();
+    }
+
     let options = {
       retentionDays: RETENTION_DAYS,
       addClientId: true,
@@ -1677,9 +1685,6 @@ let Impl = {
     return TelemetryController.addPendingPing(getPingType(shutdownPayload), shutdownPayload, options)
                         .then(() => this.savePendingPingsClassic(),
                               () => this.savePendingPingsClassic());
-#else
-    return this.savePendingPingsClassic();
-#endif
   },
 
   /**
@@ -1869,10 +1874,10 @@ let Impl = {
     this._log.trace("shutdownChromeProcess - testing: " + testing);
 
     let cleanup = () => {
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-      TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
-      TelemetryScheduler.shutdown();
-#endif
+      if (IS_UNIFIED_TELEMETRY) {
+        TelemetryEnvironment.unregisterChangeListener(ENVIRONMENT_CHANGE_LISTENER);
+        TelemetryScheduler.shutdown();
+      }
       this.uninstall();
 
       let reset = () => {
@@ -1881,13 +1886,17 @@ let Impl = {
       };
 
       if (Telemetry.isOfficialTelemetry || testing) {
-        return this.savePendingPings()
-                .then(() => this._stateSaveSerializer.flushTasks())
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-                .then(() => this._abortedSessionSerializer
-                                .enqueueTask(() => this._removeAbortedSessionPing()))
-#endif
-                .then(reset);
+        return Task.spawn(function*() {
+          yield this.savePendingPings();
+          yield this._stateSaveSerializer.flushTasks();
+
+          if (IS_UNIFIED_TELEMETRY) {
+            yield this._abortedSessionSerializer
+                      .enqueueTask(() => this._removeAbortedSessionPing());
+          }
+
+          reset();
+        }.bind(this));
       }
 
       reset();
@@ -1933,13 +1942,11 @@ let Impl = {
     };
 
     let promise = TelemetryController.submitExternalPing(getPingType(payload), payload, options);
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
     // If required, also save the payload as an aborted session.
-    if (saveAsAborted) {
+    if (saveAsAborted && IS_UNIFIED_TELEMETRY) {
       let abortedPromise = this._saveAbortedSessionPing(payload);
       promise = promise.then(() => abortedPromise);
     }
-#endif
     return promise;
   },
 

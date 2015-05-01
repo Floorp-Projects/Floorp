@@ -221,6 +221,14 @@ AbstractCanvasGraph.prototype = {
   },
 
   /**
+   * Return true if the mouse is actively messing with the selection, false
+   * otherwise.
+   */
+  get isMouseActive() {
+    return this._isMouseActive;
+  },
+
+  /**
    * Returns a promise resolved once this graph is ready to receive data.
    */
   ready: function() {
