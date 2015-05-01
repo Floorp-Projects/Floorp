@@ -1839,6 +1839,8 @@ MediaManager::GetUserMedia(
                                 false) ||
 #if defined(XP_MACOSX) || defined(XP_WIN)
           (
+            // Allow tab sharing for all platforms including XP and OSX 10.6
+            (src != dom::MediaSourceEnum::Browser) &&
             !Preferences::GetBool("media.getusermedia.screensharing.allow_on_old_platforms",
                                   false) &&
 #if defined(XP_MACOSX)
