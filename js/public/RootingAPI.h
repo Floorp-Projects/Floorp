@@ -214,9 +214,13 @@ JS_FRIEND_API(void) HeapCellRelocate(js::gc::Cell** cellp);
  */
 extern JS_FRIEND_API(void)
 AssertGCThingMustBeTenured(JSObject* obj);
+extern JS_FRIEND_API(void)
+AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell);
 #else
 inline void
 AssertGCThingMustBeTenured(JSObject* obj) {}
+inline void
+AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell) {}
 #endif
 
 /*
@@ -639,7 +643,10 @@ struct GCMethods<T*>
 {
     static T* initial() { return nullptr; }
     static bool needsPostBarrier(T* v) { return false; }
-    static void postBarrier(T** vp) {}
+    static void postBarrier(T** vp) {
+        if (vp)
+            JS::AssertGCThingIsNotAnObjectSubclass(reinterpret_cast<js::gc::Cell*>(vp));
+    }
     static void relocate(T** vp) {}
 };
 
