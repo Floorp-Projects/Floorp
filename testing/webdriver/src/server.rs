@@ -196,7 +196,7 @@ impl Handler for HttpHandler {
                                 Ok(response) => (StatusCode::Ok, response.to_json_string()),
                                 Err(err) => (err.http_status(), err.to_json_string()),
                             },
-                            Err(_) => panic!("Error reading response")
+                            Err(e) => panic!("Error reading response: {:?}", e)
                         }
                     },
                     Err(err) => {
@@ -226,9 +226,10 @@ pub fn start<T: 'static+WebDriverHandler>(address: SocketAddr, handler: T) {
     let http_handler = HttpHandler::new(api, msg_send);
     let server = Server::http(http_handler);
 
-    thread::spawn(move || {
+    let builder = thread::Builder::new().name("webdriver dispatcher".to_string());
+    builder.spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
-    });
+    }).unwrap();
     server.listen(&address).unwrap();
 }
