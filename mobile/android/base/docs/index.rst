@@ -7,4 +7,5 @@ Firefox for Android
 
    localeswitching
    uitelemetry
+   adjust
    gradle
