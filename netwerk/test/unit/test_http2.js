@@ -318,7 +318,7 @@ function checkXhr(xhr) {
   do_test_finished();
 }
 
-// Fires off an XHR request over SPDY
+// Fires off an XHR request over h2
 function test_http2_xhr() {
   var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
@@ -884,7 +884,7 @@ function run_test() {
   do_check_neq(serverPort, null);
   dump("using port " + serverPort + "\n");
 
-  // Set to allow the cert presented by our SPDY server
+  // Set to allow the cert presented by our H2 server
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
