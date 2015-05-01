@@ -21,18 +21,27 @@ def ancestors(path):
         if child == "":
             break
 
-def load_mach(topsrcdir):
-    sys.path[0:0] = [os.path.join(topsrcdir, "build")]
+def load_mach(dir_path, mach_path):
+    import imp
+    with open(mach_path, 'r') as fh:
+        imp.load_module('mach_bootstrap', fh, mach_path,
+                        ('.py', 'r', imp.PY_SOURCE))
     import mach_bootstrap
-    return mach_bootstrap.bootstrap(topsrcdir)
+    return mach_bootstrap.bootstrap(dir_path)
 
 
 def check_and_get_mach(dir_path):
-    # If we find the mach bootstrap module, we are in the srcdir.
-    mach_path = os.path.join(dir_path, 'build/mach_bootstrap.py')
-    if os.path.isfile(mach_path):
-        return load_mach(dir_path)
+    bootstrap_paths = (
+        'build/mach_bootstrap.py',
+        # test package bootstrap
+        'tools/mach_bootstrap.py',
+    )
+    for bootstrap_path in bootstrap_paths:
+        mach_path = os.path.join(dir_path, bootstrap_path)
+        if os.path.isfile(mach_path):
+            return load_mach(dir_path, mach_path)
     return None
+
 
 def get_mach():
     # Check whether the current directory is within a mach src or obj dir.
