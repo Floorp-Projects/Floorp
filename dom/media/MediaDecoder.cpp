@@ -601,7 +601,7 @@ MediaDecoder::MediaDecoder() :
   mCurrentTime(0.0),
   mVolume(AbstractThread::MainThread(), 0.0, "MediaDecoder::mVolume (Canonical)"),
   mPlaybackRate(AbstractThread::MainThread(), 1.0, "MediaDecoder::mPlaybackRate (Canonical)"),
-  mInitialPreservesPitch(true),
+  mPreservesPitch(AbstractThread::MainThread(), true, "MediaDecoder::mPreservesPitch (Canonical)"),
   mDuration(-1),
   mMediaSeekable(true),
   mSameOriginMedia(false),
@@ -750,7 +750,6 @@ void MediaDecoder::SetStateMachineParameters()
   if (GetDecodedStream()) {
     mDecoderStateMachine->SetAudioCaptured();
   }
-  mDecoderStateMachine->SetPreservesPitch(mInitialPreservesPitch);
   if (mMinimizePreroll) {
     mDecoderStateMachine->SetMinimizePrerollUntilPlaybackStarts();
   }
@@ -1562,11 +1561,7 @@ void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 
 void MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 {
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetPreservesPitch(aPreservesPitch);
-  } else {
-    mInitialPreservesPitch = aPreservesPitch;
-  }
+  mPreservesPitch = aPreservesPitch;
 }
 
 bool MediaDecoder::OnDecodeTaskQueue() const {
