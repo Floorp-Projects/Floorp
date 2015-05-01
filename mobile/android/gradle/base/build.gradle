@@ -68,7 +68,7 @@ dependencies {
 }
 
 android.libraryVariants.all { variant ->
-    variant.checkManifest.dependsOn generateCodeAndResources
+    variant.checkManifest.dependsOn rootProject.generateCodeAndResources
 }
 
 apply plugin: 'idea'

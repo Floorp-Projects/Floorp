@@ -206,9 +206,7 @@ class RefTest(object):
     # Ensure that telemetry is disabled, so we don't connect to the telemetry
     # server in the middle of the tests.
     prefs['toolkit.telemetry.enabled'] = False
-    # Don't send Telemetry reports to the production server. This is
-    # needed as Telemetry sends pings also if FHR upload is enabled.
-    prefs['toolkit.telemetry.server'] = 'http://%(server)s/telemetry-dummy/'
+    prefs['toolkit.telemetry.unified'] = False
     # Likewise for safebrowsing.
     prefs['browser.safebrowsing.enabled'] = False
     prefs['browser.safebrowsing.malware.enabled'] = False

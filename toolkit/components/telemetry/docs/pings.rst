@@ -45,13 +45,3 @@ To allow for cheaper lookup of archived pings, storage follows a specific naming
 * ``<timestamp>`` - Timestamp of the ping creation date.
 * ``<UUID>`` - The ping identifier.
 * ``<type>`` - The ping type.
-
-Preferences
-===========
-
-Telemetry behaviour is controlled through the following preferences:
-
-* ``datareporting.healthreport.service.enabled`` - If true, records base Telemetry data. Otherwise, completely disables telemetry recording.
-* ``toolkit.telemetry.enabled`` - If true, record the extended Telemetry data. Please note that base Telemetry data needs to be enabled as well and we need to be in an official build or in test mode. This preference is controlled through the `Preferences` dialog.
-* ``datareporting.healthreport.uploadEnabled`` - Send the data we record if user has consented to FHR. This preference is controlled through the `Preferences` dialog.
-* ``toolkit.telemetry.archive.enabled`` - Allow pings to be archived locally.

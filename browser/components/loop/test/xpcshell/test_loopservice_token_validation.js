@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // XXX should report error if Hawk-Session-Token is lexically invalid
 // (not a string of 64 hex digits) to help resist other possible injection
 // attacks.  For now, however, we're just checking if it's the right length.

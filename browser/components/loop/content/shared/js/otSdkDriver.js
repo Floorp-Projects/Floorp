@@ -789,7 +789,7 @@ loop.OTSdkDriver = (function() {
         bucket = buckets.MORE_THAN_5M;
       }
 
-      this.mozLoop.telemetryAddValue("LOOP_TWO_WAY_MEDIA_CONN_LENGTH", bucket);
+      this.mozLoop.telemetryAddValue("LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1", bucket);
       this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_ALREADY_NOTED);
 
       this._connectionLengthNotedCalls++;
@@ -857,7 +857,7 @@ loop.OTSdkDriver = (function() {
         return;
       }
 
-      this.mozLoop.telemetryAddValue("LOOP_SHARING_STATE_CHANGE", bucket);
+      this.mozLoop.telemetryAddValue("LOOP_SHARING_STATE_CHANGE_1", bucket);
     }
   };
 
