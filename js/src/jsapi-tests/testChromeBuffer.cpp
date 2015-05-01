@@ -63,8 +63,8 @@ BEGIN_TEST(testChromeBuffer)
      * buffer space.
      */
     {
-        JSRuntimeOptions oldOptions = JS::RuntimeOptionsRef(rt);
         // Disable the JIT because if we don't this test fails.  See bug 1160414.
+        JS::RuntimeOptions oldOptions = JS::RuntimeOptionsRef(rt);
         JS::RuntimeOptionsRef(rt).setIon(false).setBaseline(false);
         {
             JSAutoCompartment ac(cx, trusted_glob);
