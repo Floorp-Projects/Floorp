@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "prlink.h"
 #include "prclist.h"
-#include "npapi.h"
 #include "nsIPluginTag.h"
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"
@@ -30,6 +29,7 @@
 #include "nsCRT.h"
 
 #ifdef XP_WIN
+#include <minwindef.h>
 #include "nsIWindowsRegKey.h"
 #endif
 
@@ -52,6 +52,10 @@ class nsNPAPIPluginStreamListener;
 class nsIPluginInstanceOwner;
 class nsIInputStream;
 class nsIStreamListener;
+#ifndef npapi_h_
+struct _NPP;
+typedef _NPP* NPP;
+#endif
 
 class nsInvalidPluginTag : public nsISupports
 {
