@@ -125,10 +125,7 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
     return nullptr;
   }
 
-  RefPtr<CompositingRenderTargetD3D9> rt =
-    new CompositingRenderTargetD3D9(texture, aInit, aRect);
-
-  return rt;
+  return MakeAndAddRef<CompositingRenderTargetD3D9>(texture, aInit, aRect);
 }
 
 TemporaryRef<CompositingRenderTarget>
@@ -192,12 +189,9 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
     }
   }
 
-  RefPtr<CompositingRenderTargetD3D9> rt =
-    new CompositingRenderTargetD3D9(texture,
-                                    INIT_MODE_NONE,
-                                    aRect);
-
-  return rt;
+  return MakeAndAddRef<CompositingRenderTargetD3D9>(texture,
+                                                    INIT_MODE_NONE,
+                                                    aRect);
 }
 
 void

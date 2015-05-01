@@ -268,7 +268,7 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
     break;
   }
 
-  return result;
+  return result.forget();
 }
 
 /**

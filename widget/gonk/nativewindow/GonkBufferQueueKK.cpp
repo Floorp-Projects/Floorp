@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Copyright (C) 2012 The Android Open Source Project
  * Copyright (C) 2013 Mozilla Foundation
@@ -128,7 +129,8 @@ GonkBufferQueue::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
         if (mSlots[i].mGraphicBuffer != NULL && mSlots[i].mGraphicBuffer->handle == buffer->handle) {
-            return mSlots[i].mTextureClient;
+             RefPtr<TextureClient> client(mSlots[i].mTextureClient);
+             return client.forget();
         }
     }
     ALOGE("getSlotFromBufferLocked: unknown buffer: %p", buffer->handle);

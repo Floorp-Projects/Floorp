@@ -89,7 +89,8 @@ nsSVGPathGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
   // looking at the global variable that the pref's stored in.
   if (cacheable && mCachedPath) {
     if (aDrawTarget.GetBackendType() == mCachedPath->GetBackendType()) {
-      return mCachedPath;
+      RefPtr<Path> path(mCachedPath);
+      return path.forget();
     }
   }
   RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder(aFillRule);

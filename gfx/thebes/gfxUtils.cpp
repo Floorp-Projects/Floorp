@@ -341,7 +341,7 @@ gfxUtils::CreatePremultipliedDataSurface(DataSourceSurface* srcSurf)
                     srcSurf->GetSize().height);
 
     UnmapSrcDest(srcSurf, destSurf);
-    return destSurf;
+    return destSurf.forget();
 }
 
 TemporaryRef<DataSourceSurface>
@@ -362,7 +362,7 @@ gfxUtils::CreateUnpremultipliedDataSurface(DataSourceSurface* srcSurf)
                       srcSurf->GetSize().height);
 
     UnmapSrcDest(srcSurf, destSurf);
-    return destSurf;
+    return destSurf.forget();
 }
 
 void
@@ -719,8 +719,7 @@ PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
     pb->LineTo(Point(r->x, r->YMost()));
     pb->Close();
   }
-  RefPtr<Path> path = pb->Finish();
-  return path;
+  return pb->Finish();
 }
 
 static void

@@ -56,7 +56,7 @@ TemporaryRef<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronously
     loader = entry->mLoader;
     if (loader) { // existing entry
         MOZ_ASSERT(sampleRate == loader->databaseSampleRate());
-        return loader;
+        return loader.forget();
     }
 
     loader = new HRTFDatabaseLoader(sampleRate);
@@ -64,7 +64,7 @@ TemporaryRef<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronously
 
     loader->loadAsynchronously();
 
-    return loader;
+    return loader.forget();
 }
 
 HRTFDatabaseLoader::HRTFDatabaseLoader(float sampleRate)

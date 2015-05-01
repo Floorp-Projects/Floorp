@@ -1092,7 +1092,7 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
     aPoint2 = tmp;
     gs = gfxGradientCache::GetOrCreateGradientStops(aDT, rawStops, ExtendMode::CLAMP);
   }
-  return gs;
+  return gs.forget();
 }
 
 typedef struct { Float a, b; } twoFloats;

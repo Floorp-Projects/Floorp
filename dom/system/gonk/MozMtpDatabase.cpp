@@ -164,7 +164,7 @@ MozMtpDatabase::GetEntry(MtpObjectHandle aHandle)
   if (aHandle > 0 && aHandle < mDb.Length()) {
     entry = mDb[aHandle];
   }
-  return entry;
+  return entry.forget();
 }
 
 void

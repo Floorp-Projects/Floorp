@@ -197,7 +197,8 @@ DrawTargetCG::Snapshot()
     mSnapshot = new SourceSurfaceCGBitmapContext(this);
   }
 
-  return mSnapshot;
+  RefPtr<SourceSurface> snapshot(mSnapshot);
+  return snapshot.forget();
 }
 
 TemporaryRef<DrawTarget>

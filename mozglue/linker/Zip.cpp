@@ -54,7 +54,7 @@ Zip::Create(const char *filename, void *mapped, size_t size)
   }
 
   ZipCollection::Singleton.Register(zip);
-  return zip;
+  return zip.forget();
 }
 
 Zip::Zip(const char *filename, void *mapped, size_t size)
