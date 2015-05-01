@@ -25,10 +25,10 @@ for (var sym of symbols) {
     assertEq(obj.hasOwnProperty(sym), true);
     assertEq(obj[sym], "ok");
     assertDeepEq(Object.getOwnPropertyDescriptor(obj, sym), {
-        configurable: true,
-        enumerable: true,
         value: "ok",
-        writable: true
+        writable: true,
+        enumerable: true,
+        configurable: true
     });
 
     // assign again, observe value is overwritten
