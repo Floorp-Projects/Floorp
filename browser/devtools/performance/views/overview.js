@@ -97,9 +97,10 @@ let OverviewView = {
    * false otherwise.
    */
   get isMouseActive() {
-    return (this.markersOverview && this.markersOverview.isMouseActive) ||
-           (this.memoryOverview && this.memoryOverview.isMouseActive) ||
-           (this.framerateGraph && this.framerateGraph.isMouseActive);
+    // Fetch all graphs currently stored in the GraphsController.
+    // These graphs are not necessarily active, but will not have
+    // an active mouse, in that case.
+    return !!this.graphs.getWidgets().some(e => e.isMouseActive);
   },
 
   /**
