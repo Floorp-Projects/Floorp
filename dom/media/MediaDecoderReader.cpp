@@ -179,13 +179,13 @@ MediaDecoderReader::ComputeStartTime(const VideoData* aVideo, const AudioData* a
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>
-MediaDecoderReader::CallReadMetadata()
+MediaDecoderReader::AsyncReadMetadata()
 {
   typedef ReadMetadataFailureReason Reason;
 
   MOZ_ASSERT(OnTaskQueue());
   mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
-  DECODER_LOG("MediaDecoderReader::CallReadMetadata");
+  DECODER_LOG("MediaDecoderReader::AsyncReadMetadata");
 
   // PreReadMetadata causes us to try to allocate various hardware and OS
   // resources, which may not be available at the moment.
@@ -198,8 +198,8 @@ MediaDecoderReader::CallReadMetadata()
   nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
   nsresult rv = ReadMetadata(&metadata->mInfo, getter_Transfers(metadata->mTags));
 
-  // Reading metadata can cause us to discover that we need resources (like
-  // encryption keys).
+  // Reading metadata can cause us to discover that we need resources (a hardware
+  // resource initialized but not yet ready for use).
   if (IsWaitingMediaResources()) {
     return MetadataPromise::CreateAndReject(Reason::WAITING_FOR_RESOURCES, __func__);
   }
