@@ -42,6 +42,7 @@ public:
     , mMediaTime(0)
     , mType(aType)
   {
+    MOZ_COUNT_CTOR(TrackInfo);
   }
 
   // Only used for backward compatibility. Do not use in new code.
@@ -93,6 +94,11 @@ public:
     return mType;
   }
   bool virtual IsValid() const = 0;
+
+  virtual ~TrackInfo()
+  {
+    MOZ_COUNT_DTOR(TrackInfo);
+  }
 
 private:
   TrackType mType;
