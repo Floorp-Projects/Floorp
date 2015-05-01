@@ -21,17 +21,17 @@ var descs = new D;
 var s1 = Symbol("s1");
 var hits = 0;
 descs[s1] = {
-    configurable: true,
-    enumerable: true,
     get: () => hits++,
-    set: undefined
+    set: undefined,
+    enumerable: true,
+    configurable: true
 };
 var s2 = Symbol("s2");
 descs[s2] = {
-    configurable: true,
-    enumerable: false,
     value: {},
-    writable: true
+    writable: true,
+    enumerable: false,
+    configurable: true
 };
 var s3 = Symbol("s3");
 D.prototype[s3] = {value: "FAIL"};

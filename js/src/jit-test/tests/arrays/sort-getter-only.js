@@ -5,10 +5,10 @@ load(libdir + "asserts.js");
 var a = ["A", , "B", "C", "D"];
 var normalArrayElementDesc = Object.getOwnPropertyDescriptor(a, 0);
 var getterDesc = {
-    configurable: false,
-    enumerable: true,
     get: function () { return "F"; },
-    set: undefined
+    set: undefined,
+    enumerable: true,
+    configurable: false
 };
 Object.defineProperty(a, 1, getterDesc);
 

@@ -14,10 +14,10 @@ for (var constructor of constructors) {
     assertEq(constructor.of.length, 0);
 
     assertDeepEq(Object.getOwnPropertyDescriptor(constructor.__proto__, "of"), {
-        configurable: true,
-        enumerable: false,
         value: constructor.of,
-        writable: true
+        writable: true,
+        enumerable: false,
+        configurable: true
     });
 
     // Basic tests.
