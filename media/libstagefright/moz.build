@@ -63,6 +63,7 @@ EXPORTS.mp4_demuxer += [
     'binding/include/mp4_demuxer/mp4_demuxer.h',
     'binding/include/mp4_demuxer/MP4Metadata.h',
     'binding/include/mp4_demuxer/MP4TrackDemuxer.h',
+    'binding/include/mp4_demuxer/ResourceStream.h',
     'binding/include/mp4_demuxer/SinfParser.h',
     'binding/include/mp4_demuxer/Stream.h',
 ]
@@ -92,6 +93,7 @@ UNIFIED_SOURCES += [
     'binding/mp4_demuxer.cpp',
     'binding/MP4Metadata.cpp',
     'binding/MP4TrackDemuxer.cpp',
+    'binding/ResourceStream.cpp',
     'binding/SinfParser.cpp',
     'frameworks/av/media/libstagefright/DataSource.cpp',
     'frameworks/av/media/libstagefright/ESDS.cpp',
