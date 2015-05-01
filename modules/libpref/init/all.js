@@ -4713,3 +4713,10 @@ pref("gfx.vsync.refreshdriver", true);
 #ifdef MOZ_SECUREELEMENT
 pref("dom.secureelement.enabled", false);
 #endif
+
+// Allow control characters appear in composition string.
+// When this is false, control characters except
+// CHARACTER TABULATION (horizontal tab) are removed from
+// both composition string and data attribute of compositionupdate
+// and compositionend events.
+pref("dom.compositionevent.allow_control_characters", false);

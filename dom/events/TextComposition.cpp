@@ -14,6 +14,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 
@@ -43,6 +44,9 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mIsRequestingCancel(false)
   , mRequestedToCommitOrCancel(false)
   , mWasNativeCompositionEndEventDiscarded(false)
+  , mAllowControlCharacters(
+      Preferences::GetBool("dom.compositionevent.allow_control_characters",
+                           false))
 {
 }
 
@@ -133,6 +137,60 @@ TextComposition::OnCompositionEventDiscarded(
   mWasNativeCompositionEndEventDiscarded = true;
 }
 
+static inline bool
+IsControlChar(uint32_t aCharCode)
+{
+  return aCharCode < ' ' || aCharCode == 0x7F;
+}
+
+static size_t
+FindFirstControlCharacter(const nsAString& aStr)
+{
+  const char16_t* sourceBegin = aStr.BeginReading();
+  const char16_t* sourceEnd = aStr.EndReading();
+
+  for (const char16_t* source = sourceBegin; source < sourceEnd; ++source) {
+    if (*source != '\t' && IsControlChar(*source)) {
+      return source - sourceBegin;
+    }
+  }
+
+  return -1;
+}
+
+static void
+RemoveControlCharactersFrom(nsAString& aStr, TextRangeArray* aRanges)
+{
+  size_t firstControlCharOffset = FindFirstControlCharacter(aStr);
+  if (firstControlCharOffset == (size_t)-1) {
+    return;
+  }
+
+  nsAutoString copy(aStr);
+  const char16_t* sourceBegin = copy.BeginReading();
+  const char16_t* sourceEnd = copy.EndReading();
+
+  char16_t* dest = aStr.BeginWriting();
+  if (NS_WARN_IF(!dest)) {
+    return;
+  }
+
+  char16_t* curDest = dest + firstControlCharOffset;
+  size_t i = firstControlCharOffset;
+  for (const char16_t* source = sourceBegin + firstControlCharOffset;
+       source < sourceEnd; ++source) {
+    if (*source == '\t' || !IsControlChar(*source)) {
+      *curDest = *source;
+      ++curDest;
+      ++i;
+    } else if (aRanges) {
+      aRanges->RemoveCharacter(i);
+    }
+  }
+
+  aStr.SetLength(curDest - dest);
+}
+
 void
 TextComposition::DispatchCompositionEvent(
                    WidgetCompositionEvent* aCompositionEvent,
@@ -140,6 +198,10 @@ TextComposition::DispatchCompositionEvent(
                    EventDispatchingCallback* aCallBack,
                    bool aIsSynthesized)
 {
+  if (!mAllowControlCharacters) {
+    RemoveControlCharactersFrom(aCompositionEvent->mData,
+                                aCompositionEvent->mRanges);
+  }
   if (aCompositionEvent->message == NS_COMPOSITION_COMMIT_AS_IS) {
     NS_ASSERTION(!aCompositionEvent->mRanges,
                  "mRanges of NS_COMPOSITION_COMMIT_AS_IS should be null");
