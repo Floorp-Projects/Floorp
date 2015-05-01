@@ -40,6 +40,7 @@
 #include "jswrapper.h"
 
 #include "builtin/MapObject.h"
+#include "js/Date.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -53,6 +54,7 @@ using mozilla::BitwiseCast;
 using mozilla::IsNaN;
 using mozilla::LittleEndian;
 using mozilla::NativeEndian;
+using mozilla::NumbersAreIdentical;
 using JS::CanonicalizeNaN;
 
 // When you make updates here, make sure you consider whether you need to bump the
@@ -1591,12 +1593,13 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
         double d;
         if (!in.readDouble(&d) || !checkDouble(d))
             return false;
-        if (!IsNaN(d) && d != TimeClip(d)) {
+        JS::ClippedTime t = JS::TimeClip(d);
+        if (!NumbersAreIdentical(d, t.value())) {
             JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
                                  JSMSG_SC_BAD_SERIALIZED_DATA, "date");
             return false;
         }
-        JSObject* obj = NewDateObjectMsec(context(), d);
+        JSObject* obj = NewDateObjectMsec(context(), t);
         if (!obj)
             return false;
         vp.setObject(*obj);
