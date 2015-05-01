@@ -47,9 +47,9 @@ const prefs = new Preferences("dom.push.");
 // Set debug first so that all debugging actually works.
 gDebuggingEnabled = prefs.get("debug");
 
-const kPUSHDB_DB_NAME = "push";
+const kPUSHDB_DB_NAME = "pushapi";
 const kPUSHDB_DB_VERSION = 1; // Change this if the IndexedDB format changes
-const kPUSHDB_STORE_NAME = "push";
+const kPUSHDB_STORE_NAME = "pushapi";
 
 const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
                                           // by server to signal that it can
