@@ -4,6 +4,9 @@
 /*
  * This file contains tests for the mozLoop telemetry API.
  */
+
+"use strict";
+
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 add_task(loadLoopPanel);

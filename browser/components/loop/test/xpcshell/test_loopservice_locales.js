@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 function test_locale() {
   // Set the pref to something controlled.
   Services.prefs.setCharPref("general.useragent.locale", "ab-CD");

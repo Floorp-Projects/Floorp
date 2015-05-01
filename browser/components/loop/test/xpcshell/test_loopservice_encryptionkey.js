@@ -2,6 +2,8 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* global Services, Assert */
 
+"use strict";
+
 const kGuestKeyPref = "loop.key";
 const kFxAKeyPref = "loop.key.fxa";
 
