@@ -517,7 +517,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   RefPtr<CompositingRenderTarget> target = CreateRenderTarget(mInvalidRect, INIT_MODE_CLEAR);
   if (!target) {
     if (!mTarget) {
-      mWidget->EndRemoteDrawing();
+      mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
     }
     return;
   }
@@ -579,7 +579,7 @@ BasicCompositor::EndFrame()
                       IntPoint(r->x - offset.x, r->y - offset.y));
   }
   if (!mTarget) {
-    mWidget->EndRemoteDrawing();
+    mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
   }
 
   mDrawTarget = nullptr;

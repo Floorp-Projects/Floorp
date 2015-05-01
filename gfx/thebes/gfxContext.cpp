@@ -619,6 +619,23 @@ gfxContext::GetClipExtents()
 }
 
 bool
+gfxContext::HasComplexClip() const
+{
+  for (int i = mStateStack.Length() - 1; i >= 0; i--) {
+    for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
+      const AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+      if (clip.path || !clip.transform.IsRectilinear()) {
+        return true;
+      }
+    }
+    if (mStateStack[i].clipWasReset) {
+      break;
+    }
+  }
+  return false;
+}
+
+bool
 gfxContext::ClipContainsRect(const gfxRect& aRect)
 {
   unsigned int lastReset = 0;
