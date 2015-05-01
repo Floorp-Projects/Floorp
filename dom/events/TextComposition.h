@@ -221,6 +221,13 @@ private:
   // discarded by PresShell due to not safe to dispatch events.
   bool mWasNativeCompositionEndEventDiscarded;
 
+  // Allow control characters appear in composition string.
+  // When this is false, control characters except
+  // CHARACTER TABULATION (horizontal tab) are removed from
+  // both composition string and data attribute of compositionupdate
+  // and compositionend events.
+  bool mAllowControlCharacters;
+
   // Hide the default constructor and copy constructor.
   TextComposition() {}
   TextComposition(const TextComposition& aOther);
