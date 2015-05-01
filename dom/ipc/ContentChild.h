@@ -294,6 +294,7 @@ public:
     virtual bool DeallocPRemoteSpellcheckEngineChild(PRemoteSpellcheckEngineChild*) override;
 
     virtual bool RecvSetOffline(const bool& offline) override;
+    virtual bool RecvSetConnectivity(const bool& connectivity) override;
 
     virtual bool RecvSpeakerManagerNotify() override;
 
