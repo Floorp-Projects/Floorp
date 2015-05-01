@@ -571,18 +571,7 @@ IsInternalFunctionObject(JSObject* funobj)
     return fun->isLambda() && fun->isInterpreted() && !fun->environment();
 }
 
-class AutoPropertyDescriptorVector : public AutoVectorRooter<PropertyDescriptor>
-{
-  public:
-    explicit AutoPropertyDescriptorVector(JSContext* cx
-                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter(cx, DESCVECTOR)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
+typedef AutoVectorRooter<PropertyDescriptor> AutoPropertyDescriptorVector;
 
 /*
  * Make an object with the specified prototype. If parent is null, it will
