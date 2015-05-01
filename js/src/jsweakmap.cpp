@@ -646,7 +646,7 @@ InitWeakMapClass(JSContext* cx, HandleObject obj, bool defineMembers)
         return nullptr;
 
     RootedFunction ctor(cx, global->createConstructor(cx, WeakMap_construct,
-                                                      cx->names().WeakMap, 1));
+                                                      cx->names().WeakMap, 0));
     if (!ctor)
         return nullptr;
 
