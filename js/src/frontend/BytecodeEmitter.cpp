@@ -3726,10 +3726,7 @@ BytecodeEmitter::emitDestructuringOpsObjectHelper(ParseNode* pattern, VarEmitOpt
     MOZ_ASSERT(pattern->isKind(PNK_OBJECT));
     MOZ_ASSERT(pattern->isArity(PN_LIST));
 
-    MOZ_ASSERT(this->stackDepth != 0);                            // ... RHS
-
-    if (!emitToObject())                                          // ... OBJ
-        return false;
+    MOZ_ASSERT(this->stackDepth != 0);                            // ... OBJ
 
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
         // Duplicate the value being destructured to use as a reference base.
@@ -4956,39 +4953,16 @@ BytecodeEmitter::emitWith(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitToObject()
-{
-    if (!emitAtomOp(cx->names().ToObject, JSOP_GETINTRINSIC)) // VAL TOOBJECT
-        return false;
-    if (!emit1(JSOP_UNDEFINED))                               // VAL TOOBJECT UNDEFINED
-        return false;
-    if (!emit2(JSOP_PICK, (jsbytecode)2))                     // TOOBJECT UNDEFINED VAL
-        return false;
-    if (!emitCall(JSOP_CALL, 1))                              // OBJ
-        return false;
-    checkTypeSet(JSOP_CALL);
-    return true;
-}
-
-bool
 BytecodeEmitter::emitIterator()
 {
-    // Convert iterable to iterator, consistent with GetIterator.
-    //
-    // Note that what we call VAL, the spec calls |obj|.  The value isn't
-    // necessarily an object!  |GetMethod(obj, @@iterator)| implies a ToObject
-    // call during the effective |obj[@@iterator]()|, but that object-for-real
-    // is discarded after the method lookup.  So we call the iterator function
-    // with the originally-provided value.
-    if (!emit1(JSOP_DUP))                                 // VAL VAL
+    // Convert iterable to iterator.
+    if (!emit1(JSOP_DUP))                                 // OBJ OBJ
         return false;
-    if (!emitToObject())                                  // VAL OBJ
+    if (!emit2(JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator))) // OBJ OBJ @@ITERATOR
         return false;
-    if (!emit2(JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator))) // VAL OBJ @@ITERATOR
+    if (!emitElemOpBase(JSOP_CALLELEM))                   // OBJ ITERFN
         return false;
-    if (!emitElemOpBase(JSOP_CALLELEM))                   // VAL ITERFN
-        return false;
-    if (!emit1(JSOP_SWAP))                                // ITERFN VAL
+    if (!emit1(JSOP_SWAP))                                // ITERFN OBJ
         return false;
     if (!emitCall(JSOP_CALL, 0))                          // ITER
         return false;
