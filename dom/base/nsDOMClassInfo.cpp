@@ -684,6 +684,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageBroadcaster, nsISupports)
     DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIProcessScriptLoader)
+    DOM_CLASSINFO_MAP_ENTRY(nsIGlobalProcessScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageBroadcaster)
   DOM_CLASSINFO_MAP_END
