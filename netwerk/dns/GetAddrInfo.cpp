@@ -148,11 +148,66 @@ _GetAddrInfoShutdown_Windows()
   return NS_OK;
 }
 
+// If successful, returns in aResult a TTL value that is smaller or
+// equal with the one already there. Gets the TTL value by calling
+// to dnsapi->mDnsQueryFunc and iterating through the returned
+// records to find the one with the smallest TTL value.
 static MOZ_ALWAYS_INLINE nsresult
-_GetTTLData_Windows(const char* aHost, uint16_t* aResult)
+_GetMinTTLForRequestType_Windows(DnsapiInfo * dnsapi, const char* aHost,
+                                 uint16_t aRequestType, unsigned int* aResult)
+{
+  MOZ_ASSERT(dnsapi);
+  MOZ_ASSERT(aHost);
+  MOZ_ASSERT(aResult);
+
+  PDNS_RECORDA dnsData = nullptr;
+  DNS_STATUS status = dnsapi->mDnsQueryFunc(
+    aHost,
+    aRequestType,
+    (DNS_QUERY_STANDARD | DNS_QUERY_NO_NETBT | DNS_QUERY_NO_HOSTS_FILE
+      | DNS_QUERY_NO_MULTICAST | DNS_QUERY_ACCEPT_TRUNCATED_RESPONSE
+      | DNS_QUERY_DONT_RESET_TTL_VALUES),
+    nullptr,
+    &dnsData,
+    nullptr);
+  if (status == DNS_INFO_NO_RECORDS || status == DNS_ERROR_RCODE_NAME_ERROR
+      || !dnsData) {
+    LOG("No DNS records found for %s. status=%X. aRequestType = %X\n",
+        aHost, status, aRequestType);
+    return NS_ERROR_FAILURE;
+  } else if (status != NOERROR) {
+    LOG_WARNING("DnsQuery_A failed with status %X.\n", status);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  for (PDNS_RECORDA curRecord = dnsData; curRecord; curRecord = curRecord->pNext) {
+    // Only records in the answer section are important
+    if (curRecord->Flags.S.Section != DnsSectionAnswer) {
+      continue;
+    }
+
+    if (curRecord->wType == aRequestType) {
+      *aResult = std::min<unsigned int>(*aResult, curRecord->dwTtl);
+    } else {
+      LOG("Received unexpected record type %u in response for %s.\n",
+          curRecord->wType, aHost);
+    }
+  }
+
+  dnsapi->mDnsFreeFunc(dnsData, DNS_FREE_TYPE::DnsFreeRecordList);
+  return NS_OK;
+}
+
+static MOZ_ALWAYS_INLINE nsresult
+_GetTTLData_Windows(const char* aHost, uint16_t* aResult, uint16_t aAddressFamily)
 {
   MOZ_ASSERT(aHost);
   MOZ_ASSERT(aResult);
+  if (aAddressFamily != PR_AF_UNSPEC &&
+      aAddressFamily != PR_AF_INET &&
+      aAddressFamily != PR_AF_INET6) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsRefPtr<DnsapiInfo> dnsapi = nullptr;
   {
@@ -165,39 +220,16 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  PDNS_RECORDA dnsData = nullptr;
-  DNS_STATUS status = dnsapi->mDnsQueryFunc(
-      aHost,
-      DNS_TYPE_ANY,
-      (DNS_QUERY_STANDARD | DNS_QUERY_NO_NETBT | DNS_QUERY_NO_HOSTS_FILE
-        | DNS_QUERY_NO_MULTICAST | DNS_QUERY_ACCEPT_TRUNCATED_RESPONSE
-        | DNS_QUERY_DONT_RESET_TTL_VALUES),
-      nullptr,
-      &dnsData,
-      nullptr);
-  if (status == DNS_INFO_NO_RECORDS || status == DNS_ERROR_RCODE_NAME_ERROR
-      || !dnsData) {
-    LOG("No DNS records found for %s.\n", aHost);
-    return NS_ERROR_UNKNOWN_HOST;
-  } else if (status != NOERROR) {
-    LOG_WARNING("DnsQuery_A failed with status %X.\n", status);
-    return NS_ERROR_FAILURE;
-  }
-
+  // In order to avoid using ANY records which are not always implemented as a
+  // "Gimme what you have" request in hostname resolvers, we should send A
+  // and/or AAAA requests, based on the address family requested.
   unsigned int ttl = -1;
-  PDNS_RECORDA curRecord = dnsData;
-  for (; curRecord; curRecord = curRecord->pNext) {
-    // Only records in the answer section are important
-    if (curRecord->Flags.S.Section != DnsSectionAnswer) {
-      continue;
-    }
-
-    if (curRecord->wType == DNS_TYPE_A || curRecord->wType == DNS_TYPE_AAAA) {
-      ttl = std::min<unsigned int>(ttl, curRecord->dwTtl);
-    }
+  if (aAddressFamily == PR_AF_UNSPEC || aAddressFamily == PR_AF_INET) {
+    _GetMinTTLForRequestType_Windows(dnsapi, aHost, DNS_TYPE_A, &ttl);
   }
-
-  dnsapi->mDnsFreeFunc(dnsData, DNS_FREE_TYPE::DnsFreeRecordList);
+  if (aAddressFamily == PR_AF_UNSPEC || aAddressFamily == PR_AF_INET6) {
+    _GetMinTTLForRequestType_Windows(dnsapi, aHost, DNS_TYPE_AAAA, &ttl);
+  }
 
   {
     // dnsapi's destructor is not thread-safe, so we release explicitly here
@@ -398,7 +430,7 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
 
     LOG("Getting TTL for %s (cname = %s).", aHost, name);
     uint16_t ttl = 0;
-    nsresult ttlRv = _GetTTLData_Windows(name, &ttl);
+    nsresult ttlRv = _GetTTLData_Windows(name, &ttl, aAddressFamily);
     if (NS_SUCCEEDED(ttlRv)) {
       (*aAddrInfo)->ttl = ttl;
       LOG("Got TTL %u for %s (name = %s).", ttl, aHost, name);
