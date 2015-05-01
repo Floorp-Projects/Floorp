@@ -209,7 +209,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
         mDecoderStateMachine,
         &MediaDecoderStateMachine::SetDormant,
         true);
-    mDecoderStateMachine->TaskQueue()->Dispatch(event);
+    mDecoderStateMachine->TaskQueue()->Dispatch(event.forget());
 
     if (IsEnded()) {
       mWasEndedWhenEnteredDormant = true;
@@ -225,7 +225,7 @@ void MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
         mDecoderStateMachine,
         &MediaDecoderStateMachine::SetDormant,
         false);
-    mDecoderStateMachine->TaskQueue()->Dispatch(event);
+    mDecoderStateMachine->TaskQueue()->Dispatch(event.forget());
   }
 }
 

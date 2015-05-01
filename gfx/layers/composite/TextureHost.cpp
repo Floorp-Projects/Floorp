@@ -200,8 +200,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
 #ifdef MOZ_X11
     case SurfaceDescriptor::TSurfaceDescriptorX11: {
       const SurfaceDescriptorX11& desc = aDesc.get_SurfaceDescriptorX11();
-      RefPtr<TextureHost> result = new X11TextureHost(aFlags, desc);
-      return result;
+      return MakeAndAddRef<X11TextureHost>(aFlags, desc);
     }
 #endif
 
@@ -254,7 +253,7 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
       NS_WARNING("No backend independent TextureHost for this descriptor type");
     }
   }
-  return result;
+  return result.forget();
 }
 
 void

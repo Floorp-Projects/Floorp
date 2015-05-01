@@ -285,8 +285,6 @@ public:
   operator T*() const { return mPtr; }
   T* operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mPtr; }
   T& operator*() const { return *mPtr; }
-  template<typename U>
-  operator TemporaryRef<U>() { return TemporaryRef<U>(mPtr); }
 
 private:
   void assign(T* aVal)

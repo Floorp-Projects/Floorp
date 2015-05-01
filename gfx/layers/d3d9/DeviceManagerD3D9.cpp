@@ -844,7 +844,7 @@ DeviceManagerD3D9::CreateTexture(const IntSize &aSize,
     RegisterTextureHost(aTextureHost);
   }
 
-  return result;
+  return result.forget();
 }
 
 #ifdef DEBUG

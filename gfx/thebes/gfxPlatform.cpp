@@ -858,7 +858,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     SourceSurfaceUserData *surf = static_cast<SourceSurfaceUserData*>(userData);
 
     if (surf->mSrcSurface->IsValid() && surf->mBackendType == aTarget->GetBackendType()) {
-      return surf->mSrcSurface;
+      RefPtr<SourceSurface> srcSurface(surf->mSrcSurface);
+      return srcSurface.forget();
     }
     // We can just continue here as when setting new user data the destroy
     // function will be called for the old user data.
@@ -1025,10 +1026,8 @@ gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
   NativeFont nativeFont;
   nativeFont.mType = NativeFontType::CAIRO_FONT_FACE;
   nativeFont.mFont = aFont->GetCairoScaledFont();
-  RefPtr<ScaledFont> scaledFont =
-    Factory::CreateScaledFontForNativeFont(nativeFont,
-                                           aFont->GetAdjustedSize());
-  return scaledFont;
+  return Factory::CreateScaledFontForNativeFont(nativeFont,
+                                                aFont->GetAdjustedSize());
 }
 
 int

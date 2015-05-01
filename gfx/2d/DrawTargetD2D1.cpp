@@ -69,7 +69,8 @@ TemporaryRef<SourceSurface>
 DrawTargetD2D1::Snapshot()
 {
   if (mSnapshot) {
-    return mSnapshot;
+    RefPtr<SourceSurface> snapshot(mSnapshot);
+    return snapshot.forget();
   }
   PopAllClips();
 
@@ -77,7 +78,8 @@ DrawTargetD2D1::Snapshot()
 
   mSnapshot = new SourceSurfaceD2D1(mBitmap, mDC, mFormat, mSize, this);
 
-  return mSnapshot;
+  RefPtr<SourceSurface> snapshot(mSnapshot);
+  return snapshot.forget();
 }
 
 void
@@ -1134,7 +1136,8 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
 {
   if (mCurrentClippedGeometry) {
     *aClipBounds = mCurrentClipBounds;
-    return mCurrentClippedGeometry;
+    RefPtr<ID2D1Geometry> clippedGeometry(mCurrentClippedGeometry);
+    return clippedGeometry.forget();
   }
 
   MOZ_ASSERT(mPushedClips.size());
@@ -1215,7 +1218,8 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
   }
   mCurrentClippedGeometry = pathGeom.forget();
   *aClipBounds = mCurrentClipBounds;
-  return mCurrentClippedGeometry;
+  RefPtr<ID2D1Geometry> clippedGeometry(mCurrentClippedGeometry);
+  return clippedGeometry.forget();
 }
 
 TemporaryRef<ID2D1Geometry>
@@ -1233,7 +1237,7 @@ DrawTargetD2D1::GetInverseClippedGeometry()
   rectGeom->CombineWithGeometry(geom, D2D1_COMBINE_MODE_EXCLUDE, D2D1::IdentityMatrix(), sink);
   sink->Close();
 
-  return inverseGeom;
+  return inverseGeom.forget();
 }
 
 void
@@ -1295,7 +1299,7 @@ DrawTargetD2D1::GetSolidColorBrush(const D2D_COLOR_F& aColor)
 {
   RefPtr<ID2D1SolidColorBrush> brush = mSolidColorBrush;
   brush->SetColor(aColor);
-  return brush;
+  return brush.forget();
 }
 
 TemporaryRef<ID2D1Brush>

@@ -241,8 +241,7 @@ public:
   }
 
   TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
   }
 };
 
@@ -285,8 +284,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
   }
 };
 
@@ -328,8 +326,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
   }
 };
 
@@ -370,8 +367,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
-    return effect;
+    return CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
   }
 };
 #endif

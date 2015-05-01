@@ -170,7 +170,7 @@ LoadedElf::Create(const char *path, void *base_addr)
     static_cast<void *>(elf));
 
   ElfLoader::Singleton.Register(elf);
-  return elf;
+  return elf.forget();
 }
 
 bool
