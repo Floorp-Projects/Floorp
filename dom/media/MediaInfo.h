@@ -6,6 +6,7 @@
 #if !defined(MediaInfo_h)
 #define MediaInfo_h
 
+#include "mozilla/UniquePtr.h"
 #include "nsRect.h"
 #include "nsRefPtr.h"
 #include "nsSize.h"
@@ -122,11 +123,31 @@ public:
   {
     return mType;
   }
+
   bool virtual IsValid() const = 0;
+
+  virtual UniquePtr<TrackInfo> Clone() const = 0;
 
   virtual ~TrackInfo()
   {
     MOZ_COUNT_DTOR(TrackInfo);
+  }
+
+protected:
+  TrackInfo(const TrackInfo& aOther)
+  {
+    mId = aOther.mId;
+    mKind = aOther.mKind;
+    mLabel = aOther.mLabel;
+    mLanguage = aOther.mLanguage;
+    mEnabled = aOther.mEnabled;
+    mTrackId = aOther.mTrackId;
+    mMimeType = aOther.mMimeType;
+    mDuration = aOther.mDuration;
+    mMediaTime = aOther.mMediaTime;
+    mCrypto = aOther.mCrypto;
+    mType = aOther.mType;
+    MOZ_COUNT_CTOR(TrackInfo);
   }
 
 private:
@@ -152,6 +173,16 @@ public:
   {
   }
 
+  VideoInfo(const VideoInfo& aOther)
+    : TrackInfo(aOther)
+    , mDisplay(aOther.mDisplay)
+    , mStereoMode(aOther.mStereoMode)
+    , mImage(aOther.mImage)
+    , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
+    , mExtraData(aOther.mExtraData)
+  {
+  }
+
   virtual bool IsValid() const override
   {
     return mDisplay.width > 0 && mDisplay.height > 0;
@@ -165,6 +196,11 @@ public:
   virtual const VideoInfo* GetAsVideoInfo() const
   {
     return this;
+  }
+
+  virtual UniquePtr<TrackInfo> Clone() const
+  {
+    return MakeUnique<VideoInfo>(*this);
   }
 
   // Size in pixels at which the video is rendered. This is after it has
@@ -195,6 +231,18 @@ public:
   {
   }
 
+  AudioInfo(const AudioInfo& aOther)
+    : TrackInfo(aOther)
+    , mRate(aOther.mRate)
+    , mChannels(aOther.mChannels)
+    , mBitDepth(aOther.mBitDepth)
+    , mProfile(aOther.mProfile)
+    , mExtendedProfile(aOther.mExtendedProfile)
+    , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
+    , mExtraData(aOther.mExtraData)
+  {
+  }
+
   virtual bool IsValid() const override
   {
     return mChannels > 0 && mRate > 0;
@@ -208,6 +256,11 @@ public:
   virtual const AudioInfo* GetAsAudioInfo() const
   {
     return this;
+  }
+
+  virtual UniquePtr<TrackInfo> Clone() const
+  {
+    return MakeUnique<AudioInfo>(*this);
   }
 
   // Sample rate.
