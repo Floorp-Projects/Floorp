@@ -41,8 +41,11 @@ pub enum WebDriverCommand {
     IsEnabled(WebElement),
     ExecuteScript(JavascriptCommandParameters),
     ExecuteAsyncScript(JavascriptCommandParameters),
-    GetCookie,
+    GetCookies,
+    GetCookie(String),
     AddCookie(AddCookieParameters),
+    DeleteCookies,
+    DeleteCookie(String),
     SetTimeouts(TimeoutsParameters),
     //Actions(ActionsParameters),
     ElementClick(WebElement),
@@ -245,12 +248,27 @@ impl WebDriverMessage {
                 let parameters: JavascriptCommandParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ExecuteAsyncScript(parameters)
             },
+            Route::GetCookies => {
+                WebDriverCommand::GetCookies
+            },
             Route::GetCookie => {
-                WebDriverCommand::GetCookie
+                let name = try_opt!(params.name("name"),
+                                    ErrorStatus::InvalidArgument,
+                                    "Missing name parameter").to_string();
+                WebDriverCommand::GetCookie(name)
             },
             Route::AddCookie => {
                 let parameters: AddCookieParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::AddCookie(parameters)
+            },
+            Route::DeleteCookies => {
+                WebDriverCommand::DeleteCookies
+            },
+            Route::DeleteCookie => {
+                let name = try_opt!(params.name("name"),
+                                    ErrorStatus::InvalidArgument,
+                                    "Missing name parameter").to_string();
+                WebDriverCommand::DeleteCookie(name)
             },
             Route::DismissAlert => {
                 WebDriverCommand::DismissAlert
@@ -289,11 +307,12 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::IsSelected(_) | WebDriverCommand::GetElementAttribute(_, _) |
             WebDriverCommand::GetCSSValue(_, _) | WebDriverCommand::GetElementText(_) |
             WebDriverCommand::GetElementTagName(_) | WebDriverCommand::GetElementRect(_) |
-            WebDriverCommand::IsEnabled(_) | WebDriverCommand::GetCookie |
-            WebDriverCommand::DismissAlert | WebDriverCommand::AcceptAlert |
-            WebDriverCommand::GetAlertText | WebDriverCommand::ElementClick(_) |
-            WebDriverCommand::ElementTap(_) | WebDriverCommand::ElementClear(_) |
-            WebDriverCommand::TakeScreenshot => {
+            WebDriverCommand::IsEnabled(_) | WebDriverCommand::GetCookies |
+            WebDriverCommand::GetCookie(_) | WebDriverCommand::DeleteCookies |
+            WebDriverCommand::DeleteCookie(_) |WebDriverCommand::DismissAlert |
+            WebDriverCommand::AcceptAlert | WebDriverCommand::GetAlertText |
+            WebDriverCommand::ElementClick(_) | WebDriverCommand::ElementTap(_) |
+            WebDriverCommand::ElementClear(_) | WebDriverCommand::TakeScreenshot => {
                 None
             },
             WebDriverCommand::Get(ref x) => Some(x.to_json()),
