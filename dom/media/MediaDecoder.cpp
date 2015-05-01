@@ -600,7 +600,7 @@ MediaDecoder::MediaDecoder() :
   mPlaybackPosition(0),
   mCurrentTime(0.0),
   mVolume(AbstractThread::MainThread(), 0.0, "MediaDecoder::mVolume (Canonical)"),
-  mInitialPlaybackRate(1.0),
+  mPlaybackRate(AbstractThread::MainThread(), 1.0, "MediaDecoder::mPlaybackRate (Canonical)"),
   mInitialPreservesPitch(true),
   mDuration(-1),
   mMediaSeekable(true),
@@ -750,7 +750,6 @@ void MediaDecoder::SetStateMachineParameters()
   if (GetDecodedStream()) {
     mDecoderStateMachine->SetAudioCaptured();
   }
-  SetPlaybackRate(mInitialPlaybackRate);
   mDecoderStateMachine->SetPreservesPitch(mInitialPreservesPitch);
   if (mMinimizePreroll) {
     mDecoderStateMachine->SetMinimizePrerollUntilPlaybackStarts();
@@ -1546,11 +1545,10 @@ bool MediaDecoder::OnStateMachineTaskQueue() const
 
 void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 {
-  if (aPlaybackRate == 0.0) {
+  mPlaybackRate = aPlaybackRate;
+  if (mPlaybackRate == 0.0) {
     mPausedForPlaybackRateNull = true;
-    mInitialPlaybackRate = aPlaybackRate;
     Pause();
-    return;
   } else if (mPausedForPlaybackRateNull) {
     // Play() uses mPausedForPlaybackRateNull value, so must reset it first
     mPausedForPlaybackRateNull = false;
@@ -1559,12 +1557,6 @@ void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
     if (mOwner && !mOwner->GetPaused()) {
       Play();
     }
-  }
-
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetPlaybackRate(aPlaybackRate);
-  } else {
-    mInitialPlaybackRate = aPlaybackRate;
   }
 }
 

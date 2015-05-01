@@ -228,6 +228,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecodedVideoEndTime(-1),
   mVolume(mTaskQueue, 1.0, "MediaDecoderStateMachine::mVolume (Mirror)"),
   mPlaybackRate(1.0),
+  mLogicalPlaybackRate(mTaskQueue, 1.0, "MediaDecoderStateMachine::mLogicalPlaybackRate (Mirror)"),
   mPreservesPitch(true),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(detail::AMPLE_AUDIO_USECS),
@@ -308,11 +309,13 @@ MediaDecoderStateMachine::InitializationTask()
   mPlayState.Connect(mDecoder->CanonicalPlayState());
   mNextPlayState.Connect(mDecoder->CanonicalNextPlayState());
   mVolume.Connect(mDecoder->CanonicalVolume());
+  mLogicalPlaybackRate.Connect(mDecoder->CanonicalPlaybackRate());
 
   // Initialize watchers.
   mWatchManager.Watch(mState, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
+  mWatchManager.Watch(mLogicalPlaybackRate, &MediaDecoderStateMachine::LogicalPlaybackRateChanged);
 
 }
 
@@ -2548,6 +2551,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mPlayState.DisconnectIfConnected();
   mNextPlayState.DisconnectIfConnected();
   mVolume.DisconnectIfConnected();
+  mLogicalPlaybackRate.DisconnectIfConnected();
   mNextFrameStatus.DisconnectAll();
 
   // Shut down the watch manager before shutting down our task queue.
@@ -3383,14 +3387,14 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
   return mDispatchedStateMachine || mDelayedScheduler.IsScheduled();
 }
 
-void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
+void
+MediaDecoderStateMachine::LogicalPlaybackRateChanged()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  NS_ASSERTION(aPlaybackRate != 0,
-      "PlaybackRate == 0 should be handled before this function.");
+  MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  if (mPlaybackRate == aPlaybackRate) {
+  if (mLogicalPlaybackRate == 0) {
+    // This case is handled in MediaDecoder by pausing playback.
     return;
   }
 
@@ -3404,7 +3408,7 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
     SetPlayStartTime(TimeStamp::Now());
   }
 
-  mPlaybackRate = aPlaybackRate;
+  mPlaybackRate = mLogicalPlaybackRate;
   if (mAudioSink) {
     mAudioSink->SetPlaybackRate(mPlaybackRate);
   }
