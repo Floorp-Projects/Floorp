@@ -111,31 +111,12 @@ check("o[- (o)]");
 // A few one off tests
 check_one("6", (function () { 6() }), " is not a function");
 check_one("0", (function () { Array.prototype.reverse.call('123'); }), " is read-only");
+check_one(`(intermediate value)[Symbol.iterator](...).next(...).value`,
+          function () { var [{ x }] = [null, {}]; }, " is null");
+check_one(`(intermediate value)[Symbol.iterator](...).next(...).value`,
+          function () { ieval("let (x) { var [a, b, [c0, c1]] = [x, x, x]; }") }, " is undefined");
 check_one("void 1", function() { (void 1)(); }, " is not a function");
 check_one("void o[1]", function() { var o = []; (void o[1])() }, " is not a function");
-
-// Manual testing for a few isolated cases.  In these instances, the only way
-// to trigger an error is *not* on an attempted property access during
-// destructuring, but during a preceding ToObject() call on the value to be
-// iterated.  And the error message for failed ToObject(...) is different:
-// "can't convert {0} to object".
-function checkCantConvert(f, valstr)
-{
-    try
-    {
-        f();
-        throw new Error("didn't throw");
-    }
-    catch (e)
-    {
-        assertEq(e instanceof TypeError, true,
-                 "expected TypeError, got " + e + " for function " + f);
-        assertEq(e.message, "can't convert " + valstr + " to object");
-    }
-}
-
-checkCantConvert(function() { var [{x}] = [null, {}]; }, "null");
-checkCantConvert(function () { ieval("let (x) { var [a, b, [c0, c1]] = [x, x, x]; }") }, "undefined");
 
 // Check fallback behavior
 assertThrowsInstanceOf(function () { for (let x of undefined) {} }, TypeError);
