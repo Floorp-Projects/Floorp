@@ -1091,7 +1091,10 @@ public:
   AbstractCanonical<double>* CanonicalPlaybackRate() { return &mPlaybackRate; }
 protected:
 
-  bool mInitialPreservesPitch;
+  Canonical<bool> mPreservesPitch;
+public:
+  AbstractCanonical<bool>* CanonicalPreservesPitch() { return &mPreservesPitch; }
+protected:
 
   // Duration of the media resource. Set to -1 if unknown.
   // Set when the metadata is loaded. Accessed on the main thread
