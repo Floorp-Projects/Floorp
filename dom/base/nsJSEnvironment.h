@@ -22,7 +22,9 @@ class nsICycleCollectorListener;
 class nsScriptNameSpaceManager;
 
 namespace JS {
-class AutoValueVector;
+template <typename T>
+class AutoVectorRooter;
+typedef AutoVectorRooter<Value> AutoValueVector;
 }
 
 namespace mozilla {

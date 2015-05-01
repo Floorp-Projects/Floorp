@@ -659,44 +659,9 @@ CheckForInterrupt(JSContext* cx)
 
 /************************************************************************/
 
-class AutoStringVector : public AutoVectorRooter<JSString*>
-{
-  public:
-    explicit AutoStringVector(JSContext* cx
-                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<JSString*>(cx, STRINGVECTOR)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoPropertyNameVector : public AutoVectorRooter<PropertyName*>
-{
-  public:
-    explicit AutoPropertyNameVector(JSContext* cx
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<PropertyName*>(cx, STRINGVECTOR)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-class AutoShapeVector : public AutoVectorRooter<Shape*>
-{
-  public:
-    explicit AutoShapeVector(JSContext* cx
-                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<Shape*>(cx, SHAPEVECTOR)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
+typedef JS::AutoVectorRooter<JSString*> AutoStringVector;
+typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
+typedef JS::AutoVectorRooter<Shape*> AutoShapeVector;
 
 class AutoObjectObjectHashMap : public AutoHashMapRooter<JSObject*, JSObject*>
 {

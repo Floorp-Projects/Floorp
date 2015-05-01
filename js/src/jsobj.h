@@ -33,7 +33,7 @@ struct ClassInfo;
 
 namespace js {
 
-class AutoPropertyDescriptorVector;
+typedef AutoVectorRooter<PropertyDescriptor> AutoPropertyDescriptorVector;
 class GCMarker;
 class Nursery;
 
