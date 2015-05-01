@@ -391,12 +391,18 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] void cacheFrameLoader(in nsIFrameLoader aFrameLoader);
 };
 
-[scriptable, builtinclass, uuid(d0c799a2-d5ff-4a75-acbb-b8c8347944a6)]
+[scriptable, builtinclass, uuid(6d12e467-2446-46db-9965-e4e93cb87ca5)]
 interface nsIContentProcessMessageManager : nsIMessageManagerGlobal
 {
+  /**
+   * Read out a copy of the object that was initialized in the parent
+   * process via nsIProcessScriptLoader.initialProcessData.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval initialProcessData;
 };
 
-[scriptable, builtinclass, uuid(6fb78110-45ae-11e3-8f96-0800200c9a66)]
+[scriptable, builtinclass, uuid(bf61446b-ba24-4b1d-88c7-4f94724b9ce1)]
 interface nsIFrameScriptLoader : nsISupports
 {
   /**
@@ -446,6 +452,26 @@ interface nsIProcessScriptLoader : nsISupports
    */
   [implicit_jscontext]
   jsval getDelayedProcessScripts();
+};
+
+[scriptable, builtinclass, uuid(5b390753-abb3-49b0-ae3b-b803dab58144)]
+interface nsIGlobalProcessScriptLoader : nsIProcessScriptLoader
+{
+  /**
+   * Allows the parent process to set the initial process data for
+   * new, not-yet-created child processes. This attribute should only
+   * be used by the global parent process message manager. When a new
+   * process is created, it gets a copy of this data (via structured
+   * cloning). It can access the data via the initialProcessData
+   * attribute of its childprocessmessagemanager.
+   *
+   * This value will always be a JS object. Different users are
+   * expected to set properties on this object. The property name
+   * should be unique enough that other Gecko consumers won't
+   * accidentally choose it.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval initialProcessData;
 };
 
 [scriptable, builtinclass, uuid(637e8538-4f8f-4a3d-8510-e74386233e19)]

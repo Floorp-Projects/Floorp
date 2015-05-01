@@ -20,6 +20,17 @@ function processScript() {
 }
 let processScriptURL = "data:,(" + processScript.toString() + ")()";
 
+function initTestScript() {
+  let init = initialProcessData;
+  if (init.test123 != "hello") {
+    dump("Initial data incorrect\n");
+    return;
+  }
+
+  sendAsyncMessage("ProcessTest:InitGood", init.test456.get("hi"));
+}
+let initTestScriptURL = "data:,(" + initTestScript.toString() + ")()";
+
 let checkProcess = Task.async(function*(mm) {
   let { target } = yield promiseMessage(mm, "ProcessTest:Loaded");
   target.sendAsyncMessage("ProcessTest:Reply");
@@ -60,11 +71,18 @@ add_task(function*() {
   gBrowser.selectedBrowser.loadURI("about:robots");
   yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
+  let init = ppmm.initialProcessData;
+  init.test123 = "hello";
+  init.test456 = new Map();
+  init.test456.set("hi", "bye");
+
   // With no remote frames left we should be down to one process.
   // However, stuff like remote thumbnails can cause a content
   // process to exist nonetheless. This should be rare, though,
   // so the test is useful most of the time.
   if (ppmm.childCount == 1) {
+    let mainMM = ppmm.getChildAt(0);
+
     let check = checkProcess(ppmm);
     ppmm.loadProcessScript(processScriptURL, true);
 
@@ -83,6 +101,13 @@ add_task(function*() {
     yield check;
 
     ppmm.removeDelayedProcessScript(processScriptURL);
+
+    let childMM;
+    childMM = ppmm.getChildAt(0) == mainMM ? ppmm.getChildAt(1) : ppmm.getChildAt(0);
+
+    childMM.loadProcessScript(initTestScriptURL, false);
+    let msg = yield promiseMessage(childMM, "ProcessTest:InitGood");
+    is(msg.data, "bye", "initial process data was correct");
   } else {
     info("Unable to finish test entirely");
   }

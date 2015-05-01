@@ -2944,10 +2944,11 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     InfallibleTArray<nsString> unusedDictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
+    OwningSerializedStructuredCloneBuffer initialData;
 
     RecvGetXPCOMProcessAttributes(&isOffline, &isConnected,
                                   &isLangRTL, &unusedDictionaries,
-                                  &clipboardCaps, &domainPolicy);
+                                  &clipboardCaps, &domainPolicy, &initialData);
     mozilla::unused << content->SendSetOffline(isOffline);
     mozilla::unused << content->SendSetConnectivity(isConnected);
     MOZ_ASSERT(!clipboardCaps.supportsSelectionClipboard() &&
@@ -3274,7 +3275,8 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              bool* aIsLangRTL,
                                              InfallibleTArray<nsString>* dictionaries,
                                              ClipboardCapabilities* clipboardCaps,
-                                             DomainPolicyClone* domainPolicy)
+                                             DomainPolicyClone* domainPolicy,
+                                             OwningSerializedStructuredCloneBuffer* initialData)
 {
     nsCOMPtr<nsIIOService> io(do_GetIOService());
     MOZ_ASSERT(io, "No IO service?");
@@ -3309,6 +3311,25 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     NS_ENSURE_TRUE(ssm, false);
     ssm->CloneDomainPolicy(domainPolicy);
+
+    if (nsFrameMessageManager* mm = nsFrameMessageManager::sParentProcessManager) {
+        AutoJSAPI jsapi;
+        if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
+            return false;
+        }
+        JS::RootedValue init(jsapi.cx());
+        nsresult result = mm->GetInitialProcessData(jsapi.cx(), &init);
+        if (NS_FAILED(result)) {
+            return false;
+        }
+
+        JSAutoStructuredCloneBuffer buffer;
+        if (!buffer.write(jsapi.cx(), init)) {
+            return false;
+        }
+
+        buffer.steal(&initialData->data, &initialData->dataLength);
+    }
 
     return true;
 }
