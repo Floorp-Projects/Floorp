@@ -53,7 +53,7 @@ pub enum WebDriverCommand {
     AcceptAlert,
     GetAlertText,
     SendAlertText(SendAlertTextParameters),
-    TakeScreenshot(TakeScreenshotParameters)
+    TakeScreenshot
 }
 
 #[derive(PartialEq)]
@@ -264,11 +264,8 @@ impl WebDriverMessage {
             Route::SendAlertText => {
                 let parameters: SendAlertTextParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::SendAlertText(parameters)
-            }
-            Route::TakeScreenshot => {
-                let parameters: TakeScreenshotParameters = try!(Parameters::from_json(&body_data));
-                WebDriverCommand::TakeScreenshot(parameters)
-            }
+            },
+            Route::TakeScreenshot => WebDriverCommand::TakeScreenshot,
         };
         Ok(WebDriverMessage::new(session_id, command))
     }
@@ -295,7 +292,8 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::IsEnabled(_) | WebDriverCommand::GetCookie |
             WebDriverCommand::DismissAlert | WebDriverCommand::AcceptAlert |
             WebDriverCommand::GetAlertText | WebDriverCommand::ElementClick(_) |
-            WebDriverCommand::ElementTap(_) | WebDriverCommand::ElementClear(_) => {
+            WebDriverCommand::ElementTap(_) | WebDriverCommand::ElementClear(_) |
+            WebDriverCommand::TakeScreenshot => {
                 None
             },
             WebDriverCommand::Get(ref x) => Some(x.to_json()),
@@ -312,7 +310,6 @@ impl ToJson for WebDriverMessage {
             WebDriverCommand::ExecuteAsyncScript(ref x) => Some(x.to_json()),
             WebDriverCommand::AddCookie(ref x) => Some(x.to_json()),
             WebDriverCommand::SendAlertText(ref x) => Some(x.to_json()),
-            WebDriverCommand::TakeScreenshot(ref x) => Some(x.to_json())
         };
         if parameters.is_some() {
             data.insert("parameters".to_string(), parameters.unwrap());
