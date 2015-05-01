@@ -17,6 +17,10 @@
 
 namespace mozilla {
 
+class AudioInfo;
+class VideoInfo;
+class TextInfo;
+
 class TrackInfo {
 public:
   enum TrackType {
@@ -77,17 +81,42 @@ public:
   int64_t mMediaTime;
   CryptoTrack mCrypto;
 
+  virtual AudioInfo* GetAsAudioInfo()
+  {
+    return nullptr;
+  }
+  virtual VideoInfo* GetAsVideoInfo()
+  {
+    return nullptr;
+  }
+  virtual TextInfo* GetAsTextInfo()
+  {
+    return nullptr;
+  }
+  virtual const AudioInfo* GetAsAudioInfo() const
+  {
+    return nullptr;
+  }
+  virtual const VideoInfo* GetAsVideoInfo() const
+  {
+    return nullptr;
+  }
+  virtual const TextInfo* GetAsTextInfo() const
+  {
+    return nullptr;
+  }
+
   bool IsAudio() const
   {
-    return mType == kAudioTrack;
+    return !!GetAsAudioInfo();
   }
   bool IsVideo() const
   {
-    return mType == kVideoTrack;
+    return !!GetAsVideoInfo();
   }
   bool IsText() const
   {
-    return mType == kTextTrack;
+    return !!GetAsTextInfo();
   }
   TrackType GetType() const
   {
@@ -128,6 +157,16 @@ public:
     return mDisplay.width > 0 && mDisplay.height > 0;
   }
 
+  virtual VideoInfo* GetAsVideoInfo()
+  {
+    return this;
+  }
+
+  virtual const VideoInfo* GetAsVideoInfo() const
+  {
+    return this;
+  }
+
   // Size in pixels at which the video is rendered. This is after it has
   // been scaled by its aspect ratio.
   nsIntSize mDisplay;
@@ -156,6 +195,21 @@ public:
   {
   }
 
+  virtual bool IsValid() const override
+  {
+    return mChannels > 0 && mRate > 0;
+  }
+
+  virtual AudioInfo* GetAsAudioInfo()
+  {
+    return this;
+  }
+
+  virtual const AudioInfo* GetAsAudioInfo() const
+  {
+    return this;
+  }
+
   // Sample rate.
   uint32_t mRate;
 
@@ -174,10 +228,6 @@ public:
   nsRefPtr<MediaByteBuffer> mCodecSpecificConfig;
   nsRefPtr<MediaByteBuffer> mExtraData;
 
-  virtual bool IsValid() const override
-  {
-    return mChannels > 0 && mRate > 0;
-  }
 };
 
 class EncryptionInfo {
