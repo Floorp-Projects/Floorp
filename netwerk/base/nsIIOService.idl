@@ -22,7 +22,7 @@ interface nsILoadInfo;
  * as a convenience to the programmer and in some cases to improve performance
  * by eliminating intermediate data structures and interfaces.
  */
-[scriptable, uuid(b1c3c61d-2df9-4240-ae16-0355b51a2770)]
+[scriptable, uuid(4286de5a-b2ea-446f-8f70-e2a461f42694)]
 interface nsIIOService : nsISupports
 {
     /**
@@ -179,6 +179,11 @@ interface nsIIOService : nsISupports
     attribute boolean offline;
 
     /**
+     * Returns false if there are no interfaces for a network request
+     */
+    readonly attribute boolean connectivity;
+
+    /**
      * Set whether network appears to be offline for network connections from
      * a given appID.
      *
@@ -269,3 +274,14 @@ interface nsIAppOfflineInfo : nsISupports
  */
 #define NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC "network:app-offline-status-changed"
 %}
+
+[builtinclass, uuid(cd66ffef-3bc3-40de-841a-e2dcbea213a2)]
+interface nsIIOServiceInternal : nsISupports
+{
+    /**
+     * This is an internal method that should only be called from ContentChild
+     * in order to pass the connectivity state from the chrome process to the
+     * content process. It throws if called outside the content process.
+     */
+    void SetConnectivity(in boolean connectivity);
+};

@@ -806,12 +806,15 @@ ContentChild::InitXPCOM()
         NS_WARNING("Couldn't register console listener for child process");
 
     bool isOffline, isLangRTL;
+    bool isConnected;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
 
-    SendGetXPCOMProcessAttributes(&isOffline, &isLangRTL, &mAvailableDictionaries,
+    SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
+                                  &isLangRTL, &mAvailableDictionaries,
                                   &clipboardCaps, &domainPolicy);
     RecvSetOffline(isOffline);
+    RecvSetConnectivity(isConnected);
     RecvBidiKeyboardNotify(isLangRTL);
 
     // Create the CPOW manager as soon as possible.
@@ -1879,6 +1882,18 @@ ContentChild::RecvSetOffline(const bool& offline)
     NS_ASSERTION(io, "IO Service can not be null");
 
     io->SetOffline(offline);
+
+    return true;
+}
+
+bool
+ContentChild::RecvSetConnectivity(const bool& connectivity)
+{
+    nsCOMPtr<nsIIOService> io(do_GetIOService());
+    nsCOMPtr<nsIIOServiceInternal> ioInternal(do_QueryInterface(io));
+    NS_ASSERTION(ioInternal, "IO Service can not be null");
+
+    ioInternal->SetConnectivity(connectivity);
 
     return true;
 }
