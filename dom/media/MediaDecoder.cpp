@@ -751,14 +751,19 @@ void MediaDecoder::SetStateMachineParameters()
     mDecoderStateMachine->DispatchAudioCaptured();
   }
   if (mMinimizePreroll) {
-    mDecoderStateMachine->SetMinimizePrerollUntilPlaybackStarts();
+    mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
 }
 
 void MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
 {
+  DECODER_LOG("SetMinimizePrerollUntilPlaybackStarts()");
   MOZ_ASSERT(NS_IsMainThread());
   mMinimizePreroll = true;
+
+  // This needs to be called before we init the state machine, otherwise it will
+  // have no effect.
+  MOZ_DIAGNOSTIC_ASSERT(!mDecoderStateMachine);
 }
 
 nsresult MediaDecoder::ScheduleStateMachineThread()
