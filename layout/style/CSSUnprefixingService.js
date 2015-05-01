@@ -6,7 +6,6 @@
 
 /* Implementation of a service that converts certain vendor-prefixed CSS
    properties to their unprefixed equivalents, for sites on a whitelist. */
-// XXXdholbert whitelist is coming in bug 1132743
 
 "use strict";
 

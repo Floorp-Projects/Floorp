@@ -16,7 +16,7 @@ class nsIFile;
  * Application-specific data needed to start the apprunner.
  *
  * @note When this structure is allocated and manipulated by XRE_CreateAppData,
- *       string fields will be allocated with NS_Alloc, and interface pointers
+ *       string fields will be allocated with moz_xmalloc, and interface pointers
  *       are strong references.
  */
 struct nsXREAppData

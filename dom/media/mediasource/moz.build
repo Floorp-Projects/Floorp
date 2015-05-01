@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
     'MediaSourceDecoder.cpp',
     'MediaSourceReader.cpp',
     'MediaSourceUtils.cpp',
+    'ResourceQueue.cpp',
     'SourceBuffer.cpp',
     'SourceBufferDecoder.cpp',
     'SourceBufferList.cpp',

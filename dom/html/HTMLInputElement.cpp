@@ -2323,7 +2323,7 @@ HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, char16_t*** aFileNames)
 
   *aLength = array.Length();
   char16_t** ret =
-    static_cast<char16_t**>(NS_Alloc(*aLength * sizeof(char16_t*)));
+    static_cast<char16_t**>(moz_xmalloc(*aLength * sizeof(char16_t*)));
   if (!ret) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -5903,11 +5903,15 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
 
     if (status == NS_NET_STATUS_CONNECTED_TO ||
         status == NS_NET_STATUS_WAITING_FOR) {
-        nsCOMPtr<nsISocketTransport> socketTransport =
-            do_QueryInterface(trans);
-        if (socketTransport) {
-            socketTransport->GetSelfAddr(&mSelfAddr);
-            socketTransport->GetPeerAddr(&mPeerAddr);
+        if (mTransaction) {
+            mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr);
+        } else {
+            nsCOMPtr<nsISocketTransport> socketTransport =
+                do_QueryInterface(trans);
+            if (socketTransport) {
+                socketTransport->GetSelfAddr(&mSelfAddr);
+                socketTransport->GetPeerAddr(&mPeerAddr);
+            }
         }
     }
 

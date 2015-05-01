@@ -844,6 +844,10 @@ function makeDReportMap(aJSONReports)
       /moz-nullprincipal:{........-....-....-....-............}/g,
       "moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}");
 
+    // Normalize omni.ja! paths.
+    path = path.replace(/jar:file:\\\\\\(.+)\\omni.ja!/,
+                        "jar:file:\\\\\\...\\omni.ja!");
+
     let processPath = process + kProcessPathSep + path;
     let rOld = dreportMap[processPath];
     if (rOld === undefined) {

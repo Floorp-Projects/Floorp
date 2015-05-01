@@ -1131,3 +1131,7 @@ pref("dom.requestSync.enabled", true);
 
 // Resample touch events on b2g
 pref("gfx.touch.resample", true);
+
+// mulet apparently loads firefox.js as well as b2g.js, so we have to explicitly
+// disable serviceworkers here to get them disabled in mulet.
+pref("dom.serviceWorkers.enabled", false);

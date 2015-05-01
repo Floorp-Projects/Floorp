@@ -856,7 +856,7 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
   
   if (NS_SUCCEEDED(rv) && value) {
     mResult = ToNewUTF8String(nsDependentString(password));
-    NS_Free(password);
+    free(password);
   }
 }
 

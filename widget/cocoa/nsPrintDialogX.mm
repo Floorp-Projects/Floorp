@@ -61,9 +61,9 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
       CFRelease(cfTitleString);
     }
     for (int32_t i = titleCount - 1; i >= 0; i--) {
-      NS_Free(docTitles[i]);
+      free(docTitles[i]);
     }
-    NS_Free(docTitles);
+    free(docTitles);
     docTitles = NULL;
     titleCount = 0;
   }

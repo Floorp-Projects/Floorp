@@ -314,7 +314,12 @@ private:
 
 enum Interfaces
 {
-  HYPERTEXT = 1
+  HYPERTEXT = 1,
+  HYPERLINK = 2,
+  IMAGE = 4,
+  VALUE = 8,
+  TABLE = 16,
+  TABLECELL = 32,
 };
 
 }

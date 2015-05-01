@@ -130,7 +130,7 @@ sqlite3_T_blob(sqlite3_context *aCtx,
                const void *aData,
                int aSize)
 {
-  ::sqlite3_result_blob(aCtx, aData, aSize, NS_Free);
+  ::sqlite3_result_blob(aCtx, aData, aSize, free);
   return SQLITE_OK;
 }
 
