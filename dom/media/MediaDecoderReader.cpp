@@ -33,26 +33,6 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_WARN(x, ...) \
   DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoder, ##__VA_ARGS__).get()))
 
-
-PRLogModuleInfo* gMediaPromiseLog;
-PRLogModuleInfo* gStateWatchingLog;
-
-void
-EnsureMediaPromiseLog()
-{
-  if (!gMediaPromiseLog) {
-    gMediaPromiseLog = PR_NewLogModule("MediaPromise");
-  }
-}
-
-void
-EnsureStateWatchingLog()
-{
-  if (!gStateWatchingLog) {
-    gStateWatchingLog = PR_NewLogModule("StateWatching");
-  }
-}
-
 class VideoQueueMemoryFunctor : public nsDequeFunctor {
 public:
   VideoQueueMemoryFunctor() : mSize(0) {}
@@ -96,8 +76,6 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mVideoDiscontinuity(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
-  EnsureMediaPromiseLog();
-  EnsureStateWatchingLog();
 }
 
 MediaDecoderReader::~MediaDecoderReader()

@@ -58,8 +58,6 @@ namespace mozilla {
 
 extern PRLogModuleInfo* gStateWatchingLog;
 
-void EnsureStateWatchingLog();
-
 #define WATCH_LOG(x, ...) \
   MOZ_ASSERT(gStateWatchingLog); \
   PR_LOG(gStateWatchingLog, PR_LOG_DEBUG, (x, ##__VA_ARGS__))
