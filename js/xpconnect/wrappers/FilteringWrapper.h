@@ -15,7 +15,9 @@
 struct JSPropertyDescriptor;
 
 namespace JS {
-class AutoIdVector;
+template <typename T>
+class AutoVectorRooter;
+typedef AutoVectorRooter<jsid> AutoIdVector;
 }
 
 namespace xpc {
