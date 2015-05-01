@@ -16,6 +16,7 @@
 #include "VideoUtils.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TypeTraits.h"
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
@@ -108,6 +109,7 @@ TrackBuffer::Shutdown()
   mParentDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   mShutdown = true;
   mInitializationPromise.RejectIfExists(NS_ERROR_ABORT, __func__);
+  mMetadataRequest.DisconnectIfExists();
 
   MOZ_ASSERT(mShutdownPromise.IsEmpty());
   nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
@@ -548,25 +550,55 @@ TrackBuffer::NewDecoder(int64_t aTimestampOffset)
   mLastEndTimestamp.reset();
   mLastTimestampOffset = aTimestampOffset;
 
-  decoder->SetTaskQueue(mTaskQueue);
+  decoder->SetTaskQueue(decoder->GetReader()->GetTaskQueue());
   return decoder.forget();
 }
 
 bool
 TrackBuffer::QueueInitializeDecoder(SourceBufferDecoder* aDecoder)
 {
-  if (NS_WARN_IF(!mTaskQueue)) {
-    mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
-    return false;
-  }
-
+  // Bug 1153295: We must ensure that the nsIRunnable hold a strong reference
+  // to aDecoder.
+  static_assert(mozilla::IsBaseOf<nsISupports, SourceBufferDecoder>::value,
+                "SourceBufferDecoder must be inheriting from nsISupports");
   RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<SourceBufferDecoder*>(this,
                                                       &TrackBuffer::InitializeDecoder,
                                                       aDecoder);
-  mTaskQueue->Dispatch(task);
+  // We need to initialize the reader on its own task queue
+  aDecoder->GetReader()->GetTaskQueue()->Dispatch(task);
   return true;
 }
+
+// MetadataRecipient is a is used to pass extra values required by the
+// MetadataPromise's target methods
+class MetadataRecipient {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MetadataRecipient);
+
+  MetadataRecipient(TrackBuffer* aOwner,
+                    SourceBufferDecoder* aDecoder,
+                    bool aWasEnded)
+    : mOwner(aOwner)
+    , mDecoder(aDecoder)
+    , mWasEnded(aWasEnded) { }
+
+  void OnMetadataRead(MetadataHolder* aMetadata)
+  {
+    mOwner->OnMetadataRead(aMetadata, mDecoder, mWasEnded);
+  }
+
+  void OnMetadataNotRead(ReadMetadataFailureReason aReason)
+  {
+    mOwner->OnMetadataNotRead(aReason, mDecoder);
+  }
+
+private:
+  ~MetadataRecipient() {}
+  nsRefPtr<TrackBuffer> mOwner;
+  nsRefPtr<SourceBufferDecoder> mDecoder;
+  bool mWasEnded;
+};
 
 void
 TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
@@ -584,7 +616,6 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 
   if (mCurrentDecoder != aDecoder) {
     MSE_DEBUG("append was cancelled. Aborting initialization.");
-    RemoveDecoder(aDecoder);
     // If we reached this point, the SourceBuffer would have disconnected
     // the promise. So no need to reject it.
     return;
@@ -596,18 +627,15 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   // important pieces of our state (like mTaskQueue) have also been torn down.
   if (mShutdown) {
     MSE_DEBUG("was shut down. Aborting initialization.");
-    RemoveDecoder(aDecoder);
     return;
   }
 
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+  MOZ_ASSERT(aDecoder->GetReader()->GetTaskQueue()->IsCurrentThreadIn());
+
   MediaDecoderReader* reader = aDecoder->GetReader();
+
   MSE_DEBUG("Initializing subdecoder %p reader %p",
             aDecoder, reader);
-
-  MediaInfo mi;
-  nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
-  nsresult rv;
 
   // HACK WARNING:
   // We only reach this point once we know that we have a complete init segment.
@@ -620,42 +648,60 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
   if (!wasEnded) {
     aDecoder->GetResource()->Ended();
   }
+  nsRefPtr<MetadataRecipient> recipient =
+    new MetadataRecipient(this, aDecoder, wasEnded);
+  nsRefPtr<MediaDecoderReader::MetadataPromise> promise;
   {
     ReentrantMonitorAutoExit mon(mParentDecoder->GetReentrantMonitor());
-    rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
+    promise = reader->AsyncReadMetadata();
   }
-  if (!wasEnded) {
-    // Adding an empty buffer will reopen the SourceBufferResource
-    nsRefPtr<MediaLargeByteBuffer> emptyBuffer = new MediaLargeByteBuffer;
-    aDecoder->GetResource()->AppendData(emptyBuffer);
-  }
-  // HACK END.
 
-  reader->SetIdle();
   if (mShutdown) {
     MSE_DEBUG("was shut down while reading metadata. Aborting initialization.");
     return;
   }
   if (mCurrentDecoder != aDecoder) {
     MSE_DEBUG("append was cancelled. Aborting initialization.");
-    RemoveDecoder(aDecoder);
     return;
   }
 
-  if (NS_SUCCEEDED(rv) && reader->IsWaitingOnCDMResource()) {
+  mMetadataRequest.Begin(promise
+                           ->RefableThen(reader->GetTaskQueue(), __func__,
+                                         recipient.get(),
+                                         &MetadataRecipient::OnMetadataRead,
+                                         &MetadataRecipient::OnMetadataNotRead));
+}
+
+void
+TrackBuffer::OnMetadataRead(MetadataHolder* aMetadata,
+                            SourceBufferDecoder* aDecoder,
+                            bool aWasEnded)
+{
+  MOZ_ASSERT(aDecoder->GetReader()->GetTaskQueue()->IsCurrentThreadIn());
+
+  mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
+  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+
+  mMetadataRequest.Complete();
+
+  // Adding an empty buffer will reopen the SourceBufferResource
+  if (!aWasEnded) {
+    nsRefPtr<MediaLargeByteBuffer> emptyBuffer = new MediaLargeByteBuffer;
+    aDecoder->GetResource()->AppendData(emptyBuffer);
+  }
+  // HACK END.
+
+  MediaDecoderReader* reader = aDecoder->GetReader();
+  reader->SetIdle();
+
+  if (reader->IsWaitingOnCDMResource()) {
     mIsWaitingOnCDM = true;
   }
 
   aDecoder->SetTaskQueue(nullptr);
 
-  if (NS_FAILED(rv) || (!mi.HasVideo() && !mi.HasAudio())) {
-    // XXX: Need to signal error back to owning SourceBuffer.
-    MSE_DEBUG("Reader %p failed to initialize rv=%x audio=%d video=%d",
-              reader, rv, mi.HasAudio(), mi.HasVideo());
-    RemoveDecoder(aDecoder);
-    mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
-    return;
-  }
+  // A MediaDataPromise is only resolved if MediaInfo.HasValidMedia() is true.
+  MediaInfo mi = aMetadata->mInfo;
 
   if (mi.HasVideo()) {
     MSE_DEBUG("Reader %p video resolution=%dx%d",
@@ -679,8 +725,32 @@ TrackBuffer::InitializeDecoder(SourceBufferDecoder* aDecoder)
 }
 
 void
+TrackBuffer::OnMetadataNotRead(ReadMetadataFailureReason aReason,
+                               SourceBufferDecoder* aDecoder)
+{
+  MOZ_ASSERT(aDecoder->GetReader()->GetTaskQueue()->IsCurrentThreadIn());
+
+  mParentDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
+  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+
+  mMetadataRequest.Complete();
+
+  MediaDecoderReader* reader = aDecoder->GetReader();
+  reader->SetIdle();
+
+  aDecoder->SetTaskQueue(nullptr);
+
+  MSE_DEBUG("Reader %p failed to initialize", reader);
+
+  RemoveDecoder(aDecoder);
+  mInitializationPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
+}
+
+void
 TrackBuffer::CompleteInitializeDecoder(SourceBufferDecoder* aDecoder)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!mParentDecoder) {
     MSE_DEBUG("was shutdown. Aborting initialization.");
     return;
@@ -690,13 +760,11 @@ TrackBuffer::CompleteInitializeDecoder(SourceBufferDecoder* aDecoder)
     MSE_DEBUG("append was cancelled. Aborting initialization.");
     // If we reached this point, the SourceBuffer would have disconnected
     // the promise. So no need to reject it.
-    RemoveDecoder(aDecoder);
     return;
   }
 
   if (mShutdown) {
     MSE_DEBUG("was shut down. Aborting initialization.");
-    RemoveDecoder(aDecoder);
     return;
   }
 
@@ -859,7 +927,16 @@ TrackBuffer::ResetParserState()
 void
 TrackBuffer::AbortAppendData()
 {
+  ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+
+  nsRefPtr<SourceBufferDecoder> current = mCurrentDecoder;
   DiscardCurrentDecoder();
+
+  if (mMetadataRequest.Exists() || !mInitializationPromise.IsEmpty()) {
+    MOZ_ASSERT(current);
+    RemoveDecoder(current);
+  }
+  mMetadataRequest.DisconnectIfExists();
   // The SourceBuffer would have disconnected its promise.
   // However we must ensure that the MediaPromiseHolder handle all pending
   // promises.

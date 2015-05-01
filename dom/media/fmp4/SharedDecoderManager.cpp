@@ -242,10 +242,7 @@ SharedDecoderProxy::Shutdown()
 bool
 SharedDecoderProxy::IsWaitingMediaResources()
 {
-  if (mManager->mActiveProxy == this) {
-    return mManager->mDecoder->IsWaitingMediaResources();
-  }
-  return mManager->mActiveProxy != nullptr;
+  return mManager->mDecoder->IsWaitingMediaResources();
 }
 
 bool

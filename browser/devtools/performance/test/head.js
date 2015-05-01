@@ -56,6 +56,7 @@ let DEFAULT_PREFS = [
   "devtools.performance.memory.max-log-length",
   "devtools.performance.profiler.buffer-size",
   "devtools.performance.profiler.sample-frequency-khz",
+  "devtools.performance.ui.retro-mode",
 ].reduce((prefs, pref) => {
   prefs[pref] = Preferences.get(pref);
   return prefs;
@@ -66,6 +67,10 @@ Services.prefs.setBoolPref("devtools.performance.enabled", true);
 // Enable logging for all the tests. Both the debugger server and frontend will
 // be affected by this pref.
 Services.prefs.setBoolPref("devtools.debugger.log", false);
+
+// Disable retro mode.
+// TODO bug 1160313
+Services.prefs.setBoolPref("devtools.performance.ui.retro-mode", false);
 
 /**
  * Call manually in tests that use frame script utils after initializing

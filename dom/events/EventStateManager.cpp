@@ -3794,10 +3794,11 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
     // event to the remote frame.
     if (IsRemoteTarget(aTargetContent)) {
       if (aMessage == NS_MOUSE_EXIT_SYNTH) {
-        // For remote content, send a normal widget mouse exit event.
+        // For remote content, send a "top-level" widget mouse exit event.
         nsAutoPtr<WidgetMouseEvent> remoteEvent;
         CreateMouseOrPointerWidgetEvent(aMouseEvent, NS_MOUSE_EXIT,
                                         aRelatedContent, remoteEvent);
+        remoteEvent->exit = WidgetMouseEvent::eTopLevel;
 
         // mCurrentTarget is set to the new target, so we must reset it to the
         // old target and then dispatch a cross-process event. (mCurrentTarget

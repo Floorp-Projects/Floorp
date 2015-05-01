@@ -230,19 +230,19 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
 
   for (uint32_t i = 0; i < mCachedParamLength; i++) {
     if (mCachedParamNames[i]) {
-      NS_Free(mCachedParamNames[i]);
+      free(mCachedParamNames[i]);
       mCachedParamNames[i] = nullptr;
     }
     if (mCachedParamValues[i]) {
-      NS_Free(mCachedParamValues[i]);
+      free(mCachedParamValues[i]);
       mCachedParamValues[i] = nullptr;
     }
   }
 
-  NS_Free(mCachedParamNames);
+  free(mCachedParamNames);
   mCachedParamNames = nullptr;
 
-  NS_Free(mCachedParamValues);
+  free(mCachedParamValues);
   mCachedParamValues = nullptr;
 }
 
@@ -454,8 +454,8 @@ nsNPAPIPluginInstance::Start()
   uint32_t quirkParamLength = params.Length() ?
                                 mCachedParamLength : attributes.Length();
 
-  mCachedParamNames = (char**)NS_Alloc(sizeof(char*) * mCachedParamLength);
-  mCachedParamValues = (char**)NS_Alloc(sizeof(char*) * mCachedParamLength);
+  mCachedParamNames = (char**)moz_xmalloc(sizeof(char*) * mCachedParamLength);
+  mCachedParamValues = (char**)moz_xmalloc(sizeof(char*) * mCachedParamLength);
 
   for (uint32_t i = 0; i < attributes.Length(); i++) {
     mCachedParamNames[i] = ToNewUTF8String(attributes[i].mName);

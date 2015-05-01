@@ -1279,14 +1279,17 @@ add_task(function test_preventive_maintenance()
   stmt.finalize();
   do_check_true(defaultBookmarksMaxId > 0);
 
-  for ([, test] in Iterator(tests)) {
+  for (let [, test] in Iterator(tests)) {
     dump("\nExecuting test: " + test.name + "\n" + "*** " + test.desc + "\n");
     yield test.setup();
 
     let promiseMaintenanceFinished =
         promiseTopicObserved(FINISHED_MAINTENANCE_NOTIFICATION_TOPIC);
-    PlacesDBUtils.maintenanceOnIdle();
+    Services.prefs.clearUserPref("places.database.lastMaintenance");
+    let callbackInvoked = false;
+    PlacesDBUtils.maintenanceOnIdle(() => callbackInvoked = true);
     yield promiseMaintenanceFinished;
+    do_check_true(callbackInvoked);
 
     // Check the lastMaintenance time has been saved.
     do_check_neq(Services.prefs.getIntPref("places.database.lastMaintenance"), null);

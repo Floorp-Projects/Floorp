@@ -3186,6 +3186,99 @@ function runNotRedundantChangeTest()
   textarea.removeEventListener("text", handler, true);
 }
 
+function runControlCharTest()
+{
+  textarea.focus();
+
+  var result = {};
+  function clearResult()
+  {
+    result = { compositionupdate: null, compositionend: null };
+  }
+
+  function handler(aEvent)
+  {
+    result[aEvent.type] = aEvent.data;
+  }
+
+  textarea.addEventListener("compositionupdate", handler, true);
+  textarea.addEventListener("compositionend", handler, true);
+
+  textarea.value = "";
+
+  var controlChars = String.fromCharCode.apply(null, Object.keys(Array.from({length:0x20}))) + "\x7F";
+  var allowedChars = "\t";
+
+  var data = "AB" + controlChars + "CD" + controlChars + "EF";
+  var removedData = "AB" + allowedChars + "CD" + allowedChars + "EF";
+
+  var DIndex = data.indexOf("D");
+  var removedDIndex = removedData.indexOf("D");
+
+  // input string contains control characters
+  clearResult();
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": data,
+        "clauses":
+        [
+          { "length": DIndex,
+            "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          { "length": data.length - DIndex,
+            "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE }
+        ]
+      },
+      "caret": { "start": DIndex, "length": 0 }
+    });
+
+  checkSelection(removedDIndex, "", "runControlCharTest", "#1")
+
+  is(result.compositionupdate, removedData, "runControlCharTest: control characters in event.data should be removed in compositionupdate event #1");
+  is(textarea.value, removedData, "runControlCharTest: control characters should not appear in textarea #1");
+
+  synthesizeComposition({ type: "compositioncommit", data: data });
+
+  is(result.compositionend, removedData, "runControlCharTest: control characters in event.data should be removed in compositionend event #2");
+  is(textarea.value, removedData, "runControlCharTest: control characters should not appear in textarea #2");
+
+  textarea.value = "";
+
+  clearResult();
+
+  SpecialPowers.setBoolPref("dom.compositionevent.allow_control_characters", true);
+
+  // input string contains control characters, allowing control characters
+  clearResult();
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": data,
+        "clauses":
+        [
+          { "length": DIndex,
+            "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          { "length": data.length - DIndex,
+            "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE }
+        ]
+      },
+      "caret": { "start": DIndex, "length": 0 }
+    });
+
+  checkSelection(DIndex - 1 + kLFLen, "", "runControlCharTest", "#3")
+
+  is(result.compositionupdate, data, "runControlCharTest: control characters in event.data should not be removed in compositionupdate event #3");
+  is(textarea.value, data.replace(/\r/g, "\n"), "runControlCharTest: control characters should appear in textarea #3");
+
+  synthesizeComposition({ type: "compositioncommit", data: data });
+
+  is(result.compositionend, data, "runControlCharTest: control characters in event.data should not be removed in compositionend event #4");
+  is(textarea.value, data.replace(/\r/g, "\n"), "runControlCharTest: control characters should appear in textarea #4");
+
+  SpecialPowers.clearUserPref("dom.compositionevent.allow_control_characters");
+
+  textarea.removeEventListener("compositionupdate", handler, true);
+  textarea.removeEventListener("compositionend", handler, true);
+}
+
 function runRemoveContentTest(aCallback)
 {
   var events = [];
@@ -3760,6 +3853,7 @@ function runTest()
   runIsComposingTest();
   runRedundantChangeTest();
   runNotRedundantChangeTest();
+  runControlCharTest();
   runAsyncForceCommitTest(function () {
     runRemoveContentTest(function () {
       runFrameTest();

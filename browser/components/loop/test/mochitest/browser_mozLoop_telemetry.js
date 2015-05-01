@@ -4,6 +4,9 @@
 /*
  * This file contains tests for the mozLoop telemetry API.
  */
+
+"use strict";
+
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 add_task(loadLoopPanel);
@@ -23,7 +26,7 @@ add_task(function* test_initialize() {
  * Tests that enumerated bucket histograms exist and can be updated.
  */
 add_task(function* test_mozLoop_telemetryAdd_buckets() {
-  let histogramId = "LOOP_TWO_WAY_MEDIA_CONN_LENGTH";
+  let histogramId = "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1";
   let histogram = Services.telemetry.getHistogramById(histogramId);
   let CONN_LENGTH = gMozLoopAPI.TWO_WAY_MEDIA_CONN_LENGTH;
 
@@ -49,7 +52,7 @@ add_task(function* test_mozLoop_telemetryAdd_buckets() {
 });
 
 add_task(function* test_mozLoop_telemetryAdd_sharing_buckets() {
-  let histogramId = "LOOP_SHARING_STATE_CHANGE";
+  let histogramId = "LOOP_SHARING_STATE_CHANGE_1";
   let histogram = Services.telemetry.getHistogramById(histogramId);
   const SHARING_STATES = gMozLoopAPI.SHARING_STATE_CHANGE;
 

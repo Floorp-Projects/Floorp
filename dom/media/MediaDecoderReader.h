@@ -167,10 +167,10 @@ public:
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
 
-  // The ReadMetadata API is unfortunately synchronous. We should fix that at
-  // some point, but for now we can make things a bit better by using a
-  // promise-y API on top of a synchronous call.
-  nsRefPtr<MetadataPromise> CallReadMetadata();
+  // The default implementation of AsyncReadMetadata is implemented in terms of
+  // synchronous PreReadMetadata() / ReadMetadata() calls. Implementations may also
+  // override AsyncReadMetadata to create a more proper async implementation.
+  virtual nsRefPtr<MetadataPromise> AsyncReadMetadata();
 
   // A function that is called before ReadMetadata() call.
   virtual void PreReadMetadata() {};

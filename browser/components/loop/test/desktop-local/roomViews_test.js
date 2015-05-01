@@ -242,6 +242,23 @@ describe("loop.roomViews", function () {
 
         expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
       });
+
+      it("should format the context url for display", function() {
+        sandbox.stub(sharedUtils, "formatURL").returns({
+          location: "location",
+          hostname: "hostname"
+        });
+
+        view = mountTestComponent({
+          showContext: true,
+          roomData: {
+            roomContextUrls: [fakeContextURL]
+          }
+        });
+
+        expect(view.getDOMNode().querySelector(".room-context-url").textContent)
+          .eql("hostname");
+      });
     });
   });
 

@@ -700,7 +700,7 @@ public:
  *   (1) mData can be null
  *   (2) objects of this type can be automatically cast to |const CharT*|
  *   (3) getter_Copies method is supported to adopt data allocated with
- *       NS_Alloc, such as "out string" parameters in XPIDL.
+ *       moz_xmalloc, such as "out string" parameters in XPIDL.
  *
  * NAMES:
  *   nsXPIDLString for wide characters

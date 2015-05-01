@@ -255,7 +255,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
               aIdx->SetDescription(result);
             success = true;
           }
-          NS_Free(result);
+          free(result);
         } else {
           NS_WARNING("UnEscapeAndConvert error");
         }

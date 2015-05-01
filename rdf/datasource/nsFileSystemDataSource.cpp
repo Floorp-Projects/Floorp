@@ -1012,7 +1012,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
             continue;
   
         nsAutoCString           leaf(escLeafStr);
-        NS_Free(escLeafStr);
+        free(escLeafStr);
         escLeafStr = nullptr;
 
         // using nsEscape() [above] doesn't escape slashes, so do that by hand

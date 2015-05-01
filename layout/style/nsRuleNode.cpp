@@ -17,7 +17,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 
-#include "nsDeviceContext.h"
+#include "nsAlgorithm.h" // for clamped()
 #include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIWidget.h"
@@ -1617,8 +1617,6 @@ nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
   PLDHashTable *hash = PL_NewDHashTable(&ChildrenHashOps,
                                         sizeof(ChildrenHashEntry),
                                         aNumKids);
-  if (!hash)
-    return;
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
     // This will never fail because of the initial size we gave the table.
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(
@@ -7327,6 +7325,8 @@ SetGridTrackBreadth(const nsCSSValue& aValue,
   nsCSSUnit unit = aValue.GetUnit();
   if (unit == eCSSUnit_FlexFraction) {
     aResult.SetFlexFractionValue(aValue.GetFloatValue());
+  } else if (unit == eCSSUnit_Auto) {
+    aResult.SetAutoValue();
   } else {
     MOZ_ASSERT(unit != eCSSUnit_Inherit && unit != eCSSUnit_Unset,
                "Unexpected value that would use dummyParentCoord");
@@ -7354,12 +7354,6 @@ SetGridTrackSize(const nsCSSValue& aValue,
                         aStyleContext, aPresContext, aCanStoreInRuleTree);
     SetGridTrackBreadth(func->Item(2), aResultMax,
                         aStyleContext, aPresContext, aCanStoreInRuleTree);
-  } else if (aValue.GetUnit() == eCSSUnit_Auto) {
-    // 'auto' computes to 'minmax(min-content, max-content)'
-    aResultMin.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
-                           eStyleUnit_Enumerated);
-    aResultMax.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
-                           eStyleUnit_Enumerated);
   } else {
     // A single <track-breadth>,
     // specifies identical min and max sizing functions.
@@ -7393,12 +7387,10 @@ SetGridAutoColumnsRows(const nsCSSValue& aValue,
   case eCSSUnit_Initial:
   case eCSSUnit_Unset:
     // The initial value is 'auto',
-    // which computes to 'minmax(min-content, max-content)'.
+    // which computes to 'minmax(auto, auto)'.
     // (Explicitly-specified 'auto' values are handled in SetGridTrackSize.)
-    aResultMin.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
-                           eStyleUnit_Enumerated);
-    aResultMax.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
-                           eStyleUnit_Enumerated);
+    aResultMin.SetAutoValue();
+    aResultMax.SetAutoValue();
     break;
 
   default:
@@ -7555,7 +7547,9 @@ SetGridLine(const nsCSSValue& aValue,
       if (item->mValue.GetUnit() == eCSSUnit_Enumerated) {
         aResult.mHasSpan = true;
       } else if (item->mValue.GetUnit() == eCSSUnit_Integer) {
-        aResult.mInteger = item->mValue.GetIntValue();
+        aResult.mInteger = clamped(item->mValue.GetIntValue(),
+                                   nsStyleGridLine::kMinLine,
+                                   nsStyleGridLine::kMaxLine);
       } else if (item->mValue.GetUnit() == eCSSUnit_Ident) {
         item->mValue.GetStringValue(aResult.mLineName);
       } else {
@@ -9286,34 +9280,6 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   MOZ_ASSERT(data, "should have aborted on out-of-memory");
   return data;
 }
-
-// See comments above in GetStyleData for an explanation of what the
-// code below does.
-#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
-const nsStyle##name_*                                                         \
-nsRuleNode::GetStyle##name_(nsStyleContext* aContext, bool aComputeData)      \
-{                                                                             \
-  NS_ASSERTION(IsUsedDirectly(),                                              \
-               "if we ever call this on rule nodes that aren't used "         \
-               "directly, we should adjust handling of mDependentBits "       \
-               "in some way.");                                               \
-                                                                              \
-  const nsStyle##name_ *data;                                                 \
-  data = mStyleData.GetStyle##name_();                                        \
-  if (MOZ_LIKELY(data != nullptr))                                            \
-    return data;                                                              \
-                                                                              \
-  if (MOZ_UNLIKELY(!aComputeData))                                            \
-    return nullptr;                                                           \
-                                                                              \
-  data = static_cast<const nsStyle##name_ *>                                  \
-           (WalkRuleTree(eStyleStruct_##name_, aContext));                    \
-                                                                              \
-  MOZ_ASSERT(data, "should have aborted on out-of-memory");                   \
-  return data;                                                                \
-}
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
 
 void
 nsRuleNode::Mark()

@@ -1,0 +1,15 @@
+{
+  "ecmaFeatures": {
+   // These are on for this directory for .jsm and content/js files.
+    "blockBindings": true,
+    "arrowFunctions": true,
+    "destructuring": true,
+    "generators": true,
+    "spread": true,
+    "restParams": true,
+    "objectLiteralShorthandMethods": true
+  },
+  "rules": {
+    "generator-star-spacing": [2, "after"]
+  }
+}

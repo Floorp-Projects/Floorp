@@ -6,6 +6,7 @@
 #if !defined(MediaInfo_h)
 #define MediaInfo_h
 
+#include "mozilla/UniquePtr.h"
 #include "nsRect.h"
 #include "nsRefPtr.h"
 #include "nsSize.h"
@@ -16,6 +17,10 @@
 #include "StreamBuffer.h" // for TrackID
 
 namespace mozilla {
+
+class AudioInfo;
+class VideoInfo;
+class TextInfo;
 
 class TrackInfo {
 public:
@@ -42,6 +47,7 @@ public:
     , mMediaTime(0)
     , mType(aType)
   {
+    MOZ_COUNT_CTOR(TrackInfo);
   }
 
   // Only used for backward compatibility. Do not use in new code.
@@ -76,23 +82,73 @@ public:
   int64_t mMediaTime;
   CryptoTrack mCrypto;
 
+  virtual AudioInfo* GetAsAudioInfo()
+  {
+    return nullptr;
+  }
+  virtual VideoInfo* GetAsVideoInfo()
+  {
+    return nullptr;
+  }
+  virtual TextInfo* GetAsTextInfo()
+  {
+    return nullptr;
+  }
+  virtual const AudioInfo* GetAsAudioInfo() const
+  {
+    return nullptr;
+  }
+  virtual const VideoInfo* GetAsVideoInfo() const
+  {
+    return nullptr;
+  }
+  virtual const TextInfo* GetAsTextInfo() const
+  {
+    return nullptr;
+  }
+
   bool IsAudio() const
   {
-    return mType == kAudioTrack;
+    return !!GetAsAudioInfo();
   }
   bool IsVideo() const
   {
-    return mType == kVideoTrack;
+    return !!GetAsVideoInfo();
   }
   bool IsText() const
   {
-    return mType == kTextTrack;
+    return !!GetAsTextInfo();
   }
   TrackType GetType() const
   {
     return mType;
   }
+
   bool virtual IsValid() const = 0;
+
+  virtual UniquePtr<TrackInfo> Clone() const = 0;
+
+  virtual ~TrackInfo()
+  {
+    MOZ_COUNT_DTOR(TrackInfo);
+  }
+
+protected:
+  TrackInfo(const TrackInfo& aOther)
+  {
+    mId = aOther.mId;
+    mKind = aOther.mKind;
+    mLabel = aOther.mLabel;
+    mLanguage = aOther.mLanguage;
+    mEnabled = aOther.mEnabled;
+    mTrackId = aOther.mTrackId;
+    mMimeType = aOther.mMimeType;
+    mDuration = aOther.mDuration;
+    mMediaTime = aOther.mMediaTime;
+    mCrypto = aOther.mCrypto;
+    mType = aOther.mType;
+    MOZ_COUNT_CTOR(TrackInfo);
+  }
 
 private:
   TrackType mType;
@@ -117,9 +173,34 @@ public:
   {
   }
 
+  VideoInfo(const VideoInfo& aOther)
+    : TrackInfo(aOther)
+    , mDisplay(aOther.mDisplay)
+    , mStereoMode(aOther.mStereoMode)
+    , mImage(aOther.mImage)
+    , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
+    , mExtraData(aOther.mExtraData)
+  {
+  }
+
   virtual bool IsValid() const override
   {
     return mDisplay.width > 0 && mDisplay.height > 0;
+  }
+
+  virtual VideoInfo* GetAsVideoInfo()
+  {
+    return this;
+  }
+
+  virtual const VideoInfo* GetAsVideoInfo() const
+  {
+    return this;
+  }
+
+  virtual UniquePtr<TrackInfo> Clone() const
+  {
+    return MakeUnique<VideoInfo>(*this);
   }
 
   // Size in pixels at which the video is rendered. This is after it has
@@ -150,6 +231,38 @@ public:
   {
   }
 
+  AudioInfo(const AudioInfo& aOther)
+    : TrackInfo(aOther)
+    , mRate(aOther.mRate)
+    , mChannels(aOther.mChannels)
+    , mBitDepth(aOther.mBitDepth)
+    , mProfile(aOther.mProfile)
+    , mExtendedProfile(aOther.mExtendedProfile)
+    , mCodecSpecificConfig(aOther.mCodecSpecificConfig)
+    , mExtraData(aOther.mExtraData)
+  {
+  }
+
+  virtual bool IsValid() const override
+  {
+    return mChannels > 0 && mRate > 0;
+  }
+
+  virtual AudioInfo* GetAsAudioInfo()
+  {
+    return this;
+  }
+
+  virtual const AudioInfo* GetAsAudioInfo() const
+  {
+    return this;
+  }
+
+  virtual UniquePtr<TrackInfo> Clone() const
+  {
+    return MakeUnique<AudioInfo>(*this);
+  }
+
   // Sample rate.
   uint32_t mRate;
 
@@ -168,10 +281,6 @@ public:
   nsRefPtr<MediaByteBuffer> mCodecSpecificConfig;
   nsRefPtr<MediaByteBuffer> mExtraData;
 
-  virtual bool IsValid() const override
-  {
-    return mChannels > 0 && mRate > 0;
-  }
 };
 
 class EncryptionInfo {

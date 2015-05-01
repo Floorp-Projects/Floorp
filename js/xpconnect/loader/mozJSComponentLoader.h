@@ -118,7 +118,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             }
 
             if (location)
-                NS_Free(location);
+                free(location);
 
             obj = nullptr;
             thisObjectKey = nullptr;

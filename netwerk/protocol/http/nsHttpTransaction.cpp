@@ -142,6 +142,13 @@ nsHttpTransaction::nsHttpTransaction()
 {
     LOG(("Creating nsHttpTransaction @%p\n", this));
     gHttpHandler->GetMaxPipelineObjectSize(&mMaxPipelineObjectSize);
+
+#ifdef MOZ_VALGRIND
+    memset(&mSelfAddr, 0, sizeof(NetAddr));
+    memset(&mPeerAddr, 0, sizeof(NetAddr));
+#endif
+    mSelfAddr.raw.family = PR_AF_UNSPEC;
+    mPeerAddr.raw.family = PR_AF_UNSPEC;
 }
 
 nsHttpTransaction::~nsHttpTransaction()
@@ -510,6 +517,17 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
 {
     LOG(("nsHttpTransaction::OnSocketStatus [this=%p status=%x progress=%lld]\n",
         this, status, progress));
+
+    if (status == NS_NET_STATUS_CONNECTED_TO ||
+        status == NS_NET_STATUS_WAITING_FOR) {
+        nsISocketTransport *socketTransport =
+            mConnection ? mConnection->Transport() : nullptr;
+        if (socketTransport) {
+            MutexAutoLock lock(mLock);
+            socketTransport->GetSelfAddr(&mSelfAddr);
+            socketTransport->GetPeerAddr(&mPeerAddr);
+        }
+    }
 
     // If the timing is enabled, and we are not using a persistent connection
     // then the requestStart timestamp will be null, so we mark the timestamps
@@ -2199,6 +2217,14 @@ nsHttpTransaction::RestartVerifier::Set(int64_t contentLength,
     }
 
     mSetup = true;
+}
+
+void
+nsHttpTransaction::GetNetworkAddresses(NetAddr &self, NetAddr &peer)
+{
+    MutexAutoLock lock(mLock);
+    self = mSelfAddr;
+    peer = mPeerAddr;
 }
 
 } // namespace mozilla::net

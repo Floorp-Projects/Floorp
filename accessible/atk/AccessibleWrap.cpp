@@ -1041,6 +1041,18 @@ GetInterfacesForProxy(ProxyAccessible* aProxy, uint32_t aInterfaces)
     interfaces |= (1 << MAI_INTERFACE_HYPERTEXT) | (1 << MAI_INTERFACE_TEXT)
         | (1 << MAI_INTERFACE_EDITABLE_TEXT);
 
+  if (aInterfaces & Interfaces::HYPERLINK)
+    interfaces |= MAI_INTERFACE_HYPERLINK_IMPL;
+
+  if (aInterfaces & Interfaces::VALUE)
+    interfaces |= MAI_INTERFACE_VALUE;
+
+  if (aInterfaces & Interfaces::TABLE)
+    interfaces |= MAI_INTERFACE_TABLE;
+
+  if (aInterfaces & Interfaces::IMAGE)
+    interfaces |= MAI_INTERFACE_IMAGE;
+
   return interfaces;
 }
 

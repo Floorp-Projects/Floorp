@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.js
 const gStringBundle = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 let ReaderParent = {
+  _readerModeInfoPanelOpen: false,
 
   MESSAGES: [
     "Reader:AddToList",
@@ -187,6 +188,20 @@ let ReaderParent = {
       command.setAttribute("hidden", !browser.isArticle);
       command.setAttribute("accesskey", gStringBundle.GetStringFromName("readerView.enter.accesskey"));
     }
+
+    let currentUriHost = browser.currentURI && browser.currentURI.asciiHost;
+    if (browser.isArticle &&
+        !Services.prefs.getBoolPref("browser.reader.detectedFirstArticle") &&
+        currentUriHost && !currentUriHost.endsWith("mozilla.org")) {
+      this.showReaderModeInfoPanel(browser);
+      Services.prefs.setBoolPref("browser.reader.detectedFirstArticle", true);
+      this._readerModeInfoPanelOpen = true;
+    } else if (this._readerModeInfoPanelOpen) {
+      if (UITour.isInfoOnTarget(win, "readerMode-urlBar")) {
+        UITour.hideInfo(win);
+      }
+      this._readerModeInfoPanelOpen = false;
+    }
   },
 
   forceShowReaderIcon: function(browser) {
@@ -228,10 +243,16 @@ let ReaderParent = {
     let targetPromise = UITour.getTarget(win, "readerMode-urlBar");
     targetPromise.then(target => {
       let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+      let icon = "chrome://browser/skin/";
+      if (win.devicePixelRatio > 1) {
+        icon += "reader-tour@2x.png";
+      } else {
+        icon += "reader-tour.png";
+      }
       UITour.showInfo(win, browser.messageManager, target,
-                      browserBundle.GetStringFromName("readerView.promo.firstDetectedArticle.title"),
-                      browserBundle.GetStringFromName("readerView.promo.firstDetectedArticle.body"),
-                      "chrome://browser/skin/reader-tour.png");
+                      browserBundle.GetStringFromName("readingList.promo.firstUse.readerView.title"),
+                      browserBundle.GetStringFromName("readingList.promo.firstUse.readerView.body"),
+                      icon);
     });
   },
 

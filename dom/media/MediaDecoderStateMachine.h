@@ -163,6 +163,11 @@ public:
   void SetDormant(bool aDormant);
 
 private:
+  // Initialization that needs to happen on the task queue. This is the first
+  // task that gets run on the task queue, and is dispatched from the MDSM
+  // constructor immediately after the task queue is created.
+  void InitializationTask();
+
   void Shutdown();
 public:
 
@@ -775,6 +780,9 @@ public:
   // Task queue for running the state machine.
   nsRefPtr<MediaTaskQueue> mTaskQueue;
 
+  // State-watching manager.
+  WatchManager<MediaDecoderStateMachine> mWatchManager;
+
   // True is we are decoding a realtime stream, like a camera stream.
   bool mRealTime;
 
@@ -886,8 +894,8 @@ public:
   bool mDurationSet;
 
   // The current play state and next play state, mirrored from the main thread.
-  Mirror<MediaDecoder::PlayState>::Holder mPlayState;
-  Mirror<MediaDecoder::PlayState>::Holder mNextPlayState;
+  Mirror<MediaDecoder::PlayState> mPlayState;
+  Mirror<MediaDecoder::PlayState> mNextPlayState;
 
   // Returns true if we're logically playing, that is, if the Play() has
   // been called and Pause() has not or we have not yet reached the end
@@ -903,8 +911,7 @@ public:
 
   // The status of our next frame. Mirrored on the main thread and used to
   // compute ready state.
-  WatcherHolder mNextFrameStatusUpdater;
-  Canonical<NextFrameStatus>::Holder mNextFrameStatus;
+  Canonical<NextFrameStatus> mNextFrameStatus;
 public:
   AbstractCanonical<NextFrameStatus>* CanonicalNextFrameStatus() { return &mNextFrameStatus; }
 protected:

@@ -40,7 +40,7 @@ interface mozIStorageBindingParams : nsISupports {
    void bindUTF8StringAsBlobByName(in AUTF8String aName, in AUTF8String aValue);
 
    // The function adopts the storage for the provided blob.  After calling
-   // this function, mozStorage will ensure that NS_Free is called on the
+   // this function, mozStorage will ensure that free is called on the
    // underlying pointer.
    [noscript]
    void bindAdoptedBlobByName(in AUTF8String aName,
@@ -77,7 +77,7 @@ interface mozIStorageBindingParams : nsISupports {
    void bindUTF8StringAsBlobByIndex(in unsigned long aIndex, in AUTF8String aValue);
 
    // The function adopts the storage for the provided blob.  After calling
-   // this function, mozStorage will ensure that NS_Free is called on the
+   // this function, mozStorage will ensure that free is called on the
    // underlying pointer.
    [noscript]
    void bindAdoptedBlobByIndex(in unsigned long aIndex,

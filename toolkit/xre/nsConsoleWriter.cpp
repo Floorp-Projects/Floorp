@@ -91,5 +91,5 @@ WriteConsoleLog()
   }
 
   PR_Close(file);
-  NS_Free(messages);
+  free(messages);
 }

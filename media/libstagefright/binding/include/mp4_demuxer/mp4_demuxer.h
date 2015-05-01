@@ -5,40 +5,23 @@
 #ifndef MP4_DEMUXER_H_
 #define MP4_DEMUXER_H_
 
-#include "nsAutoPtr.h"
-#include "nsTArray.h"
+#include "MediaInfo.h"
+#include "MediaResource.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/UniquePtr.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mp4_demuxer/Interval.h"
+#include "mp4_demuxer/Stream.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/Monitor.h"
-
-namespace mozilla { class MediaByteRange; }
+#include "nsTArray.h"
 
 namespace mp4_demuxer
 {
-
+class Index;
+class MP4Metadata;
+class SampleIterator;
 using mozilla::Monitor;
-struct StageFrightPrivate;
 typedef int64_t Microseconds;
-
-class Stream
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Stream);
-
-  virtual bool ReadAt(int64_t offset, void* data, size_t size,
-                      size_t* bytes_read) = 0;
-  virtual bool CachedReadAt(int64_t offset, void* data, size_t size,
-                            size_t* bytes_read) = 0;
-  virtual bool Length(int64_t* size) = 0;
-
-  virtual void DiscardBefore(int64_t offset) {}
-
-protected:
-  virtual ~Stream() {}
-};
-
-enum TrackType { kVideo = 1, kAudio };
 
 class MP4Demuxer
 {
@@ -62,9 +45,9 @@ public:
   already_AddRefed<mozilla::MediaRawData> DemuxAudioSample();
   already_AddRefed<mozilla::MediaRawData> DemuxVideoSample();
 
-  const CryptoFile& Crypto() { return mCrypto; }
-  const mozilla::AudioInfo& AudioConfig() { return mAudioConfig; }
-  const mozilla::VideoInfo& VideoConfig() { return mVideoConfig; }
+  const CryptoFile& Crypto() const;
+  const mozilla::AudioInfo& AudioConfig() const { return *mAudioConfig->GetAsAudioInfo(); }
+  const mozilla::VideoInfo& VideoConfig() const { return *mVideoConfig->GetAsVideoInfo(); }
 
   void UpdateIndex(const nsTArray<mozilla::MediaByteRange>& aByteRanges);
 
@@ -82,19 +65,20 @@ protected:
   ~MP4Demuxer();
 
 private:
-  void UpdateCrypto(const stagefright::MetaData* aMetaData);
-  MP4AudioInfo mAudioConfig;
-  MP4VideoInfo mVideoConfig;
-  CryptoFile mCrypto;
+  mozilla::UniquePtr<mozilla::TrackInfo> mAudioConfig;
+  mozilla::UniquePtr<mozilla::TrackInfo> mVideoConfig;
 
-  nsAutoPtr<StageFrightPrivate> mPrivate;
   nsRefPtr<Stream> mSource;
   nsTArray<mozilla::MediaByteRange> mCachedByteRanges;
   nsTArray<Interval<Microseconds>> mCachedTimeRanges;
   Monitor* mMonitor;
   Microseconds mNextKeyframeTime;
+  mozilla::UniquePtr<MP4Metadata> mMetadata;
+  mozilla::UniquePtr<SampleIterator> mAudioIterator;
+  mozilla::UniquePtr<SampleIterator> mVideoIterator;
+  nsTArray<nsRefPtr<Index>> mIndexes;
 };
 
-} // namespace mozilla
+} // namespace mp4_demuxer
 
 #endif // MP4_DEMUXER_H_

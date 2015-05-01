@@ -1,0 +1,17 @@
+{
+  "ecmaFeatures": {
+    "arrowFunctions": true,
+    "blockBindings": true,
+    "destructuring": true,
+    "generators": true,
+    "restParams": true,
+    "spread": true,
+    "objectLiteralShorthandMethods": true,
+  },
+  "rules": {
+    "generator-star-spacing": [2, "after"],
+    // We should fix the errors and enable this (set to 2)
+    "no-var": 0,
+    "strict": [2, "global"]
+  }
+}

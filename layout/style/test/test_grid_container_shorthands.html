@@ -18,8 +18,8 @@ var initial_values = {
     gridTemplateRows: "none",
     gridAutoFlow: "row",
     // Computed value for 'auto'
-    gridAutoColumns: "minmax(min-content, max-content)",
-    gridAutoRows: "minmax(min-content, max-content)",
+    gridAutoColumns: "auto",
+    gridAutoRows: "auto",
 };
 
 // For various specified values of the grid-template shorthand,
@@ -106,24 +106,24 @@ var grid_template_test_cases = [
     {
         specified: "'fizz'",
         gridTemplateAreas: "\"fizz\"",
-        gridTemplateRows: "minmax(min-content, max-content)",
+        gridTemplateRows: "auto",
     },
     {
         specified: "(bar) 'fizz'",
         gridTemplateAreas: "\"fizz\"",
-        gridTemplateRows: "(bar) minmax(min-content, max-content)",
+        gridTemplateRows: "(bar) auto",
     },
     {
         specified: "(foo) 40px / 'fizz'",
         gridTemplateAreas: "\"fizz\"",
         gridTemplateColumns: "(foo) 40px",
-        gridTemplateRows: "minmax(min-content, max-content)",
+        gridTemplateRows: "auto",
     },
     {
         specified: "(foo) 40px / (bar) 'fizz'",
         gridTemplateAreas: "\"fizz\"",
         gridTemplateColumns: "(foo) 40px",
-        gridTemplateRows: "(bar) minmax(min-content, max-content)",
+        gridTemplateRows: "(bar) auto",
     },
     {
         specified: "(foo) 40px / 'fizz' 100px",
@@ -195,7 +195,7 @@ grid_test_cases = grid_template_test_cases.concat([
     {
         specified: "column dense auto",
         gridAutoFlow: "column dense",
-        gridAutoColumns: "minmax(min-content, max-content)",
+        gridAutoColumns: "auto",
     },
     {
         specified: "dense row minmax(min-content, 2fr)",

@@ -117,10 +117,20 @@ public:
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
+PRLogModuleInfo* gStateWatchingLog;
+PRLogModuleInfo* gMediaPromiseLog;
+PRLogModuleInfo* gMediaTimerLog;
+
 void
 MediaDecoder::InitStatics()
 {
   AbstractThread::InitStatics();
+
+  // Log modules.
+  gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
+  gMediaPromiseLog = PR_NewLogModule("MediaPromise");
+  gStateWatchingLog = PR_NewLogModule("StateWatching");
+  gMediaTimerLog = PR_NewLogModule("MediaTimer");
 }
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
@@ -585,7 +595,10 @@ bool MediaDecoder::IsInfinite()
 }
 
 MediaDecoder::MediaDecoder() :
-  mReadyStateWatchTarget("MediaDecoder::mReadyStateWatchTarget"),
+  mWatchManager(this, AbstractThread::MainThread()),
+  mNextFrameStatus(AbstractThread::MainThread(),
+                   MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
+                   "MediaDecoder::mNextFrameStatus (Mirror)"),
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
@@ -596,6 +609,10 @@ MediaDecoder::MediaDecoder() :
   mMediaSeekable(true),
   mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
+  mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
+             "MediaDecoder::mPlayState (Canonical)"),
+  mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
+             "MediaDecoder::mNextState (Canonical)"),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
   mOwner(nullptr),
@@ -617,27 +634,12 @@ MediaDecoder::MediaDecoder() :
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
   MediaMemoryTracker::AddMediaDecoder(this);
-#ifdef PR_LOGGING
-  if (!gMediaDecoderLog) {
-    gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
-  }
-  EnsureStateWatchingLog();
-#endif
-
-  // Initialize canonicals.
-  mPlayState.Init(AbstractThread::MainThread(), PLAY_STATE_LOADING, "MediaDecoder::mPlayState (Canonical)");
-  mNextState.Init(AbstractThread::MainThread(), PLAY_STATE_PAUSED, "MediaDecoder::mNextState (Canonical)");
-
-  // Initialize mirrors.
-  mNextFrameStatus.Init(AbstractThread::MainThread(), MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
-                        "MediaDecoder::mNextFrameStatus (Mirror)");
-
 
   mAudioChannel = AudioChannelService::GetDefaultAudioChannel();
 
   // Initialize watchers.
-  mReadyStateWatchTarget->Watch(mPlayState);
-  mReadyStateWatchTarget->Watch(mNextFrameStatus);
+  mWatchManager.Watch(mPlayState, &MediaDecoder::UpdateReadyState);
+  mWatchManager.Watch(mNextFrameStatus, &MediaDecoder::UpdateReadyState);
 }
 
 bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
@@ -1648,7 +1650,7 @@ void MediaDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int6
 
   // ReadyState computation depends on MediaDecoder::CanPlayThrough, which
   // depends on the download rate.
-  mReadyStateWatchTarget->Notify();
+  UpdateReadyState();
 }
 
 // Provide access to the state machine object

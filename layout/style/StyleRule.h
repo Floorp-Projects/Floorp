@@ -71,7 +71,7 @@ public:
     //      (if nsCSSPseudoClasses::HasNthPairArg(mType))
     //   d. a selector list, which means mSelectors is non-null
     //      (if nsCSSPseudoClasses::HasSelectorListArg(mType))
-    void*           mMemory; // mString and mNumbers use NS_Alloc/NS_Free
+    void*           mMemory; // mString and mNumbers use moz_xmalloc/free
     char16_t*      mString;
     int32_t*        mNumbers;
     nsCSSSelectorList* mSelectors;

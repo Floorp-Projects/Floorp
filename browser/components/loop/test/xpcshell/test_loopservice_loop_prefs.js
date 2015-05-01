@@ -2,6 +2,8 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /*global XPCOMUtils, Services, Assert */
 
+"use strict";
+
 var fakeCharPrefName = "color";
 var fakeBoolPrefName = "boolean";
 var fakePrefValue = "green";
