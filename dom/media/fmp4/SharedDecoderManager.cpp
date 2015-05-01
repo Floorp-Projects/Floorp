@@ -52,6 +52,11 @@ public:
       mManager->mActiveCallback->ReleaseMediaResources();
     }
   }
+  virtual bool OnReaderTaskQueue() override
+  {
+    MOZ_ASSERT(mManager->mActiveCallback);
+    return mManager->mActiveCallback->OnReaderTaskQueue();
+  }
 
   SharedDecoderManager* mManager;
 };
