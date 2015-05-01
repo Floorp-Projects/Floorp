@@ -222,7 +222,7 @@ loop.contacts = (function(_, mozL10n) {
                               "disabled": !this.props.canEdit })}
               onClick={this.onItemClick} data-action="remove">
             <i className="icon icon-remove" />
-            {mozL10n.get("remove_contact_menu_button")}
+            {mozL10n.get("remove_contact_menu_button2")}
           </li>
         </ul>
       );
@@ -587,7 +587,7 @@ loop.contacts = (function(_, mozL10n) {
             <ButtonGroup>
               <Button caption={this.state.importBusy
                                ? mozL10n.get("importing_contacts_progress_button")
-                               : mozL10n.get("import_contacts_button")}
+                               : mozL10n.get("import_contacts_button2")}
                       disabled={this.state.importBusy}
                       onClick={this.handleImportButtonClick}>
                 <div className={cx({"contact-import-spinner": true,

@@ -3045,6 +3045,7 @@
     "high": "150000",
     "n_buckets": 20,
     "extended_statistics_ok": true,
+    "releaseChannelCollection": "opt-out",
     "description": "PLACES: Number of unique pages"
   },
   "PLACES_BOOKMARKS_COUNT": {
@@ -3054,6 +3055,7 @@
     "high": "8000",
     "n_buckets": 15,
     "extended_statistics_ok": true,
+    "releaseChannelCollection": "opt-out",
     "description": "PLACES: Number of bookmarks"
   },
   "PLACES_TAGS_COUNT": {
@@ -4877,12 +4879,14 @@
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
+    "releaseChannelCollection": "opt-out",
     "description": "Record the search counts for search engines"
   },
   "SEARCH_DEFAULT_ENGINE": {
     "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
+    "releaseChannelCollection": "opt-out",
     "description": "Record the default search engine."
   },
   "SEARCH_SERVICE_INIT_MS": {
@@ -7510,7 +7514,7 @@
     "kind": "boolean",
     "description": "Stores 1 every time the URL is copied or shared."
   },
-  "LOOP_TWO_WAY_MEDIA_CONN_LENGTH": {
+  "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1": {
     "alert_emails": ["firefox-dev@mozilla.org", "dmose@mozilla.com"],
     "expires_in_version": "43",
     "kind": "enumerated",
@@ -7518,7 +7522,7 @@
     "releaseChannelCollection": "opt-out",
     "description": "Connection length for bi-directionally connected media (0=SHORTER_THAN_10S, 1=BETWEEN_10S_AND_30S, 2=BETWEEN_30S_AND_5M, 3=MORE_THAN_5M)"
   },
-  "LOOP_SHARING_STATE_CHANGE": {
+  "LOOP_SHARING_STATE_CHANGE_1": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
     "expires_in_version": "43",
     "kind": "enumerated",

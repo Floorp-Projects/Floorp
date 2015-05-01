@@ -49,45 +49,13 @@ manifest_FLAGS += \
 
 ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
-# Install robocop configs and helper
-INSTALL_TARGETS += robocop
-robocop_TARGET  := export
-robocop_DEST    := $(CURDIR)
-robocop_FILES   := \
-  $(TESTPATH)/robocop.ini \
-  $(TESTPATH)/robocop_autophone.ini \
-  $(NULL)
-robocop-deps := $(notdir $(robocop_FILES))
-
-ROBOCOP_FILES := \
-  $(wildcard $(TESTPATH)/*.html) \
-  $(wildcard $(TESTPATH)/*.jpg) \
-  $(wildcard $(TESTPATH)/*.sjs) \
-  $(wildcard $(TESTPATH)/test*.js) \
-  $(wildcard $(TESTPATH)/robocop*.js) \
-  $(wildcard $(TESTPATH)/*.xml) \
-  $(wildcard $(TESTPATH)/*.ogg) \
-  $(wildcard $(TESTPATH)/*.mp4) \
-  $(wildcard $(TESTPATH)/*.webm) \
-  $(wildcard $(TESTPATH)/*.swf) \
-  $(wildcard $(TESTPATH)/reader_mode_pages) \
-  $(NULL)
-
-ROBOCOP_DEST := $(DEPTH)/_tests/testing/mochitest/tests/robocop/
-ROBOCOP_TARGET := export
-INSTALL_TARGETS += ROBOCOP
-
 GARBAGE += \
   AndroidManifest.xml \
-  $(robocop-deps) \
-  $(testconstants-dep) \
   $(NULL)
 
 JAVAFILES += \
   $(java-harness) \
   $(java-tests) \
-  $(robocop-deps) \
-  $(testconstants-dep) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

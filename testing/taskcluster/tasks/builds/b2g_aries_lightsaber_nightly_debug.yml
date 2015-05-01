@@ -1,0 +1,18 @@
+$inherits:
+  from: 'tasks/builds/b2g_aries_lightsaber_nightly_base.yml'
+  variables:
+    build_name: 'aries'
+    build_type: 'nightly-debug'
+task:
+  metadata:
+    name: '[TC] B2G Aries Nightly (userdebug)'
+  scopes:
+    - 'docker-worker:cache:build-aries-lightsaber-nightly-debug'
+
+  payload:
+    cache:
+      build-aries-lightsaber-nightly-debug: /home/worker/workspace
+    env:
+      VARIANT: userdebug
+      B2G_DEBUG: 1
+

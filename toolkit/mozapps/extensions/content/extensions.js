@@ -2639,6 +2639,7 @@ var gListView = {
 
   showEmptyNotice: function gListView_showEmptyNotice(aShow) {
     this._emptyNotice.hidden = !aShow;
+    this._listBox.hidden = aShow;
   },
 
   onSortChanged: function gListView_onSortChanged(aSortBy, aAscending) {
@@ -2785,6 +2786,7 @@ var gDetailView = {
       version.hidden = true;
     }
 
+    var screenshotbox = document.getElementById("detail-screenshot-box");
     var screenshot = document.getElementById("detail-screenshot");
     if (aAddon.screenshots && aAddon.screenshots.length > 0) {
       if (aAddon.screenshots[0].thumbnailURL) {
@@ -2797,9 +2799,9 @@ var gDetailView = {
         screenshot.height = aAddon.screenshots[0].height;
       }
       screenshot.setAttribute("loading", "true");
-      screenshot.hidden = false;
+      screenshotbox.hidden = false;
     } else {
-      screenshot.hidden = true;
+      screenshotbox.hidden = true;
     }
 
     var desc = document.getElementById("detail-desc");
@@ -3073,6 +3075,17 @@ var gDetailView = {
         errorLink.value = gStrings.ext.GetStringFromName("details.notification.blocked.link");
         errorLink.href = this._addon.blocklistURL;
         errorLink.hidden = false;
+      } else if (this._addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
+        let msgType = this._addon.appDisabled ? "error" : "warning";
+        this.node.setAttribute("notification", msgType);
+        document.getElementById("detail-" + msgType).textContent = gStrings.ext.formatStringFromName(
+          "details.notification.unsigned" + (this._addon.appDisabled ? "AndDisabled" : ""),
+          [this._addon.name, gStrings.brandShortName], 2
+        );
+        var infoLink = document.getElementById("detail-" + msgType + "-link");
+        infoLink.value = gStrings.ext.GetStringFromName("details.notification.unsigned.link");
+        infoLink.href = Services.prefs.getCharPref("xpinstall.signatures.infoURL");
+        infoLink.hidden = false;
       } else if (!this._addon.isCompatible && (AddonManager.checkCompatibility ||
         (this._addon.blocklistState != Ci.nsIBlocklistService.STATE_SOFTBLOCKED))) {
         this.node.setAttribute("notification", "warning");
@@ -3337,6 +3350,7 @@ var gDetailView = {
     }
 
     if (aProperties.indexOf("appDisabled") != -1 ||
+        aProperties.indexOf("signedState") != -1 ||
         aProperties.indexOf("userDisabled") != -1)
       this.updateState();
   },
@@ -3455,8 +3469,8 @@ var gUpdatesView = {
         self.showEmptyNotice(false);
         self._updateSelected.hidden = true;
 
-        while (self._listBox.itemCount > 0)
-          self._listBox.removeItemAt(0);
+        while (self._listBox.childNodes.length > 0)
+          self._listBox.removeChild(self._listBox.firstChild);
       }
 
       var elements = [];
@@ -3490,6 +3504,7 @@ var gUpdatesView = {
 
   showEmptyNotice: function gUpdatesView_showEmptyNotice(aShow) {
     this._emptyNotice.hidden = !aShow;
+    this._listBox.hidden = aShow;
   },
 
   isManualUpdate: function gUpdatesView_isManualUpdate(aInstall, aOnlyAvailable) {

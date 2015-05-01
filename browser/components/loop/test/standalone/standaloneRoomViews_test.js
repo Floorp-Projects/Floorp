@@ -13,6 +13,7 @@ describe("loop.standaloneRoomViews", function() {
   var FEEDBACK_STATES = loop.store.FEEDBACK_STATES;
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var sharedActions = loop.shared.actions;
+  var sharedUtils = loop.shared.utils;
 
   var sandbox, dispatcher, activeRoomStore, feedbackStore, dispatch;
 
@@ -94,6 +95,26 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       expect(view.getDOMNode().querySelector(".standalone-context-url")).not.eql(null);
+    });
+
+    it("should format the url for display", function() {
+      sandbox.stub(sharedUtils, "formatURL").returns({
+          location: "location",
+          hostname: "hostname"
+        });
+
+      var view = mountTestComponent({
+        roomName: "Mike's room",
+        roomContextUrls: [{
+          description: "Mark's super page",
+          location: "http://invalid.com",
+          thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        }]
+      });
+
+      expect(view.getDOMNode()
+        .querySelector(".standalone-context-url-description-wrapper > a").textContent)
+        .eql("hostname");
     });
 
     it("should not display context information if no urls are supplied", function() {

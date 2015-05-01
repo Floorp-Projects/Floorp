@@ -2251,12 +2251,13 @@ function resolveURIToLocalPath(aURI) {
  *        Optional. The content type of this source, if immediately available.
  */
 function SourceActor({ source, thread, originalUrl, generatedSource,
-                       contentType }) {
+                       isInlineSource, contentType }) {
   this._threadActor = thread;
   this._originalUrl = originalUrl;
   this._source = source;
   this._generatedSource = generatedSource;
   this._contentType = contentType;
+  this._isInlineSource = isInlineSource;
 
   this.onSource = this.onSource.bind(this);
   this._invertSourceMap = this._invertSourceMap.bind(this);
@@ -2286,8 +2287,14 @@ SourceActor.prototype = {
   _addonPath: null,
 
   get isSourceMapped() {
-    return this._originalURL || this._generatedSource ||
-           this.threadActor.sources.isPrettyPrinted(this.url);
+    return !this.isInlineSource && (
+      this._originalURL || this._generatedSource ||
+        this.threadActor.sources.isPrettyPrinted(this.url)
+    );
+  },
+
+  get isInlineSource() {
+    return this._isInlineSource;
   },
 
   get threadActor() { return this._threadActor; },
@@ -2410,10 +2417,13 @@ SourceActor.prototype = {
         return toResolvedContent(this.source.text);
       }
       else {
-        // XXX bug 865252: Don't load from the cache if this is a source mapped
-        // source because we can't guarantee that the cache has the most up to date
-        // content for this source like we can if it isn't source mapped.
-        let sourceFetched = fetch(this.url, { loadFromCache: !this.source });
+        // Only load the HTML page source from cache (which exists when
+        // there are inline sources). Otherwise, we can't trust the
+        // cache because we are most likely here because we are
+        // fetching the original text for sourcemapped code, and the
+        // page hasn't requested it before (if it has, it was a
+        // previous debugging session).
+        let sourceFetched = fetch(this.url, { loadFromCache: this.isInlineSource });
 
         // Record the contentType we just learned during fetching
         return sourceFetched.then(result => {

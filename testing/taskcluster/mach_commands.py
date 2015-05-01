@@ -327,6 +327,8 @@ class Graph(object):
 
             graph['scopes'].append(define_task)
             graph['scopes'].extend(build_task['task'].get('scopes', []))
+            route_scopes = map(lambda route: 'queue:route:' + route, build_task['task'].get('routes', []))
+            graph['scopes'].extend(route_scopes)
 
             # Treeherder symbol configuration for the graph required for each
             # build so tests know which platform they belong to.
