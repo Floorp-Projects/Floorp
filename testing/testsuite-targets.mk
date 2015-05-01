@@ -395,6 +395,7 @@ ifndef UNIVERSAL_BINARY
 PKG_STAGE = $(DIST)/test-stage
 package-tests: \
   stage-config \
+  stage-mach \
   stage-mochitest \
   stage-reftest \
   stage-xpcshell \
@@ -446,6 +447,7 @@ make-stage-dir:
 	$(NSINSTALL) -D $(PKG_STAGE)/jetpack
 	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
+	$(NSINSTALL) -D $(PKG_STAGE)/tools/mach
 
 stage-b2g: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/b2g/test/b2g-unittest-requirements.txt $(PKG_STAGE)/b2g
@@ -453,6 +455,11 @@ stage-b2g: make-stage-dir
 stage-config: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/config
 	@(cd $(topsrcdir)/testing/config && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/config && tar -xf -)
+
+stage-mach: make-stage-dir
+	@(cd $(topsrcdir)/python/mach && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tools/mach && tar -xf -)
+	cp $(topsrcdir)/testing/tools/mach_test_package_bootstrap.py $(PKG_STAGE)/tools/mach_bootstrap.py
+	cp $(topsrcdir)/mach $(PKG_STAGE)
 
 stage-mochitest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mochitest stage-package
