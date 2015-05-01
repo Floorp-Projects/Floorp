@@ -2615,9 +2615,9 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
     case DECODER_STATE_DECODING_METADATA: {
       if (!mMetadataRequest.Exists()) {
-        DECODER_LOG("Dispatching CallReadMetadata");
+        DECODER_LOG("Dispatching AsyncReadMetadata");
         mMetadataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                                              &MediaDecoderReader::CallReadMetadata)
+                                              &MediaDecoderReader::AsyncReadMetadata)
           ->RefableThen(TaskQueue(), __func__, this,
                         &MediaDecoderStateMachine::OnMetadataRead,
                         &MediaDecoderStateMachine::OnMetadataNotRead));
