@@ -9,6 +9,16 @@ this.EXPORTED_SYMBOLS = ["Pocket"];
 
 Cu.import("resource://gre/modules/Http.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "PocketBundle", function() {
+  const kPocketBundle = "chrome://browser/content/browser-pocket.properties";
+  return Services.strings.createBundle(kPocketBundle);
+});
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
+  "resource://gre/modules/ReaderMode.jsm");
 
 let Pocket = {
   get isLoggedIn() {
@@ -105,5 +115,19 @@ let Pocket = {
         onError(new Error(error + " - " + errorMessage));
       }
     });
-  }
+  },
+
+  /**
+   * Functions related to the Pocket panel UI.
+   */
+  onPanelViewShowing(event) {
+    let window = event.target.ownerDocument.defaultView;
+    window.pktUI.pocketButtonOnCommand(event);
+    window.pktUI.pocketPanelDidShow(event)
+  },
+
+  onPanelViewHiding(event) {
+    let window = event.target.ownerDocument.defaultView;
+    window.pktUI.pocketPanelDidHide(event);
+  },
 };
