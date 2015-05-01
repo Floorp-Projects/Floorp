@@ -9,6 +9,7 @@
 #include "nsTArray.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mp4_demuxer/Interval.h"
+#include "mp4_demuxer/Stream.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/Monitor.h"
 
@@ -20,23 +21,6 @@ namespace mp4_demuxer
 using mozilla::Monitor;
 struct StageFrightPrivate;
 typedef int64_t Microseconds;
-
-class Stream
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Stream);
-
-  virtual bool ReadAt(int64_t offset, void* data, size_t size,
-                      size_t* bytes_read) = 0;
-  virtual bool CachedReadAt(int64_t offset, void* data, size_t size,
-                            size_t* bytes_read) = 0;
-  virtual bool Length(int64_t* size) = 0;
-
-  virtual void DiscardBefore(int64_t offset) {}
-
-protected:
-  virtual ~Stream() {}
-};
 
 class MP4Demuxer
 {

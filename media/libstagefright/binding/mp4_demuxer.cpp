@@ -90,6 +90,22 @@ MP4Demuxer::~MP4Demuxer()
   }
 }
 
+static void
+ConvertIndex(nsTArray<Index::Indice>& aDest,
+             const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex)
+{
+  for (size_t i = 0; i < aIndex.size(); i++) {
+    Index::Indice indice;
+    const stagefright::MediaSource::Indice& s_indice = aIndex[i];
+    indice.start_offset = s_indice.start_offset;
+    indice.end_offset = s_indice.end_offset;
+    indice.start_composition = s_indice.start_composition;
+    indice.end_composition = s_indice.end_composition;
+    indice.sync = s_indice.sync;
+    aDest.AppendElement(indice);
+  }
+}
+
 bool
 MP4Demuxer::Init()
 {
@@ -118,9 +134,15 @@ MP4Demuxer::Init()
       }
       mPrivate->mAudio = track;
       mAudioConfig.Update(metaData.get(), mimeType);
-      nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
-                                        mSource, mAudioConfig.mTrackId,
-                                        /* aIsAudio = */ true, mMonitor);
+
+      nsTArray<Index::Indice> indices;
+      ConvertIndex(indices, mPrivate->mAudio->exportIndex());
+      nsRefPtr<Index> index =
+        new Index(indices,
+                  mSource,
+                  mAudioConfig.mTrackId,
+                  /* aIsAudio = */ true,
+                  mMonitor);
       mPrivate->mIndexes.AppendElement(index);
       mPrivate->mAudioIterator = new SampleIterator(index);
     } else if (!mPrivate->mVideo.get() && !strncmp(mimeType, "video/", 6)) {
@@ -130,9 +152,16 @@ MP4Demuxer::Init()
       }
       mPrivate->mVideo = track;
       mVideoConfig.Update(metaData.get(), mimeType);
-      nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
-                                        mSource, mVideoConfig.mTrackId,
-                                        /* aIsAudio = */ false, mMonitor);
+
+      nsTArray<Index::Indice> indices;
+      ConvertIndex(indices, mPrivate->mVideo->exportIndex());
+
+      nsRefPtr<Index> index =
+        new Index(indices,
+                  mSource,
+                  mVideoConfig.mTrackId,
+                  /* aIsAudio = */ false,
+                  mMonitor);
       mPrivate->mIndexes.AppendElement(index);
       mPrivate->mVideoIterator = new SampleIterator(index);
     }
