@@ -8,6 +8,7 @@
 #include "media/stagefright/MediaSource.h"
 #include "media/stagefright/MetaData.h"
 #include "mozilla/Monitor.h"
+#include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
 
 #include <limits>
@@ -262,6 +263,16 @@ MP4Metadata::GetTrackNumber(mozilla::TrackID aTrackID)
     }
   }
   return -1;
+}
+
+/*static*/ bool
+MP4Metadata::HasCompleteMetadata(Stream* aSource)
+{
+  // The MoofParser requires a monitor, but we don't need one here.
+  mozilla::Monitor monitor("MP4Metadata::HasCompleteMetadata");
+  mozilla::MonitorAutoLock mon(monitor);
+  auto parser = mozilla::MakeUnique<MoofParser>(aSource, 0, false, &monitor);
+  return parser->HasMetadata();
 }
 
 } // namespace mp4_demuxer
