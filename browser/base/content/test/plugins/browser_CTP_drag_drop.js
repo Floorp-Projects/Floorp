@@ -1,102 +1,96 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-let gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-
-let gNextTest = null;
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 let gNewWindow = null;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
+add_task(function* () {
+  registerCleanupFunction(function () {
     clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
     Services.prefs.clearUserPref("plugins.click_to_play");
+    Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+    gNewWindow.close();
+    gNewWindow = null;
+    window.focus();
   });
+});
+
+add_task(function* () {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("PluginBindingAttached", handleEvent, true, true);
-  gNextTest = part1;
-  gBrowser.selectedBrowser.contentDocument.location = gHttpTestRoot + "plugin_test.html";
-}
 
-function handleEvent() {
-  gNextTest();
-}
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-function part1() {
-  gBrowser.selectedBrowser.removeEventListener("PluginBindingAttached", handleEvent);
-  waitForNotificationPopup("click-to-play-plugins", gBrowser.selectedBrowser, () => {
-    gNextTest = part2;
-    gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-    gNewWindow.addEventListener("load", handleEvent, true);
-  });
-}
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
 
-function part2() {
-  gNewWindow.removeEventListener("load", handleEvent);
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
-  waitForCondition(condition, part3, "Waited too long for click-to-play notification");
-}
+  // Work around for delayed PluginBindingAttached
+  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
 
-function part3() {
+  yield promisePopupNotification("click-to-play-plugins");
+});
+
+add_task(function* () {
+  gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+
+  // XXX technically can't load fire before we get this call???
+  yield waitForEvent(gNewWindow, "load", null, true);
+
+  yield promisePopupNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
+
   ok(PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser), "Should have a click-to-play notification in the tab in the new window");
   ok(!PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should not have a click-to-play notification in the old window now");
+});
 
+add_task(function* () {
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, gNewWindow.gBrowser.selectedTab);
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
-  waitForCondition(condition, part4, "Waited too long for click-to-play notification");
-}
 
-function part4() {
+  yield promisePopupNotification("click-to-play-plugins", gBrowser.selectedBrowser);
+
   ok(PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should have a click-to-play notification in the initial tab again");
 
-  gBrowser.selectedBrowser.addEventListener("PluginBindingAttached", handleEvent, true, true);
-  gNextTest = part5;
-  gBrowser.selectedBrowser.contentDocument.location = gHttpTestRoot + "plugin_test.html";
-}
+  // Work around for delayed PluginBindingAttached
+  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+});
 
-function part5() {
-  gBrowser.selectedBrowser.removeEventListener("PluginBindingAttached", handleEvent);
-  waitForNotificationPopup("click-to-play-plugins", gBrowser.selectedBrowser, () => {
-    gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-    waitForFocus(part6, gNewWindow);
-  });
-}
+add_task(function* () {
+  yield promisePopupNotification("click-to-play-plugins");
 
-function part6() {
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
-  waitForCondition(condition, part7, "Waited too long for click-to-play notification");
-}
+  gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
 
-function part7() {
+  yield promiseWaitForFocus(gNewWindow);
+
+  yield promisePopupNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
+});
+
+add_task(function* () {
   ok(PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser), "Should have a click-to-play notification in the tab in the new window");
   ok(!PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should not have a click-to-play notification in the old window now");
 
-  let plugin = gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "plugin should not be activated");
+  let pluginInfo = yield promiseForPluginInfo("test", gNewWindow.gBrowser.selectedBrowser);
+  ok(!pluginInfo.activated, "plugin should not be activated");
 
-  EventUtils.synthesizeMouseAtCenter(plugin, {}, gNewWindow.gBrowser.selectedBrowser.contentWindow);
+  yield ContentTask.spawn(gNewWindow.gBrowser.selectedBrowser, {}, function* () {
+    let doc = content.document;
+    let plugin = doc.getElementById("test");
+    let bounds = plugin.getBoundingClientRect();
+    let left = (bounds.left + bounds.right) / 2;
+    let top = (bounds.top + bounds.bottom) / 2;
+    let utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
+    utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
+  });
+
   let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser).dismissed && gNewWindow.PopupNotifications.panel.firstChild;
-  waitForCondition(condition, part8, "waited too long for plugin to activate");
-}
+  yield promiseForCondition(condition);
+});
 
-function part8() {
+add_task(function* () {
   // Click the activate button on doorhanger to make sure it works
   gNewWindow.PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let plugin = gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  waitForCondition(() => objLoadingContent.activated, shutdown, "plugin should be activated now");
-}
-
-function shutdown() {
-  gNewWindow.close();
-  gNewWindow = null;
-  finish();
-}
+  let pluginInfo = yield promiseForPluginInfo("test", gNewWindow.gBrowser.selectedBrowser);
+  ok(pluginInfo.activated, "plugin should be activated");
+});
