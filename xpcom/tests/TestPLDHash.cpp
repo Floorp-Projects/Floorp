@@ -22,12 +22,20 @@ static bool test_pldhash_Init_capacity_ok()
   }
 
   // Try the largest allowed capacity.  With PL_DHASH_MAX_CAPACITY==1<<26, this
-  // will allocate 0.5GB of entry store on 32-bit platforms and 1GB on 64-bit
-  // platforms.
-  if (!PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(PLDHashEntryStub),
-                         mozilla::fallible, PL_DHASH_MAX_INITIAL_LENGTH)) {
-    return false;
-  }
+  // would allocate (if we added an element) 0.5GB of entry store on 32-bit
+  // platforms and 1GB on 64-bit platforms.
+  //
+  // Ideally we'd also try (a) a too-large capacity, and (b) a large capacity
+  // combined with a large entry size that when multipled overflow. But those
+  // cases would cause the test to abort immediately.
+  //
+  // Furthermore, ideally we'd also try a large-but-ok capacity that almost but
+  // doesn't quite overflow, but that would result in allocating just under 4GB
+  // of entry storage.  That's very likely to fail on 32-bit platforms, so such
+  // a test wouldn't be reliable.
+  //
+  PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(PLDHashEntryStub),
+                    PL_DHASH_MAX_INITIAL_LENGTH);
 
   // Check that Init() sets |ops|.
   if (!t.IsInitialized()) {
@@ -36,67 +44,6 @@ static bool test_pldhash_Init_capacity_ok()
 
   // Check that Finish() nulls |ops|.
   PL_DHashTableFinish(&t);
-  if (t.IsInitialized()) {
-    return false;
-  }
-
-  return true;
-}
-
-static bool test_pldhash_Init_capacity_too_large()
-{
-  PLDHashTable t;
-
-  // Check that the constructor nulls |ops|.
-  if (t.IsInitialized()) {
-    return false;
-  }
-
-  // Try the smallest too-large capacity.
-  if (PL_DHashTableInit(&t, PL_DHashGetStubOps(),
-                        sizeof(PLDHashEntryStub),
-                        mozilla::fallible,
-                        PL_DHASH_MAX_INITIAL_LENGTH + 1)) {
-    return false;   // it succeeded!?
-  }
-  // Don't call PL_DHashTableFinish() here; it's not safe after Init() failure.
-
-  // Check that |ops| is still null.
-  if (t.IsInitialized()) {
-    return false;
-  }
-
-  return true;
-}
-
-static bool test_pldhash_Init_overflow()
-{
-  PLDHashTable t;
-
-  // Check that the constructor nulls |ops|.
-  if (t.IsInitialized()) {
-    return false;
-  }
-
-  // Try an acceptable capacity, but one whose byte size overflows uint32_t.
-  //
-  // Ideally we'd also try a large-but-ok capacity that almost but doesn't
-  // quite overflow, but that would result in allocating just under 4GB of
-  // entry storage.  That's very likely to fail on 32-bit platforms, so such a
-  // test wouldn't be reliable.
-
-  struct OneKBEntry {
-      PLDHashEntryHdr hdr;
-      char buf[1024 - sizeof(PLDHashEntryHdr)];
-  };
-
-  if (PL_DHashTableInit(&t, PL_DHashGetStubOps(), sizeof(OneKBEntry),
-                        mozilla::fallible, PL_DHASH_MAX_INITIAL_LENGTH)) {
-    return false;   // it succeeded!?
-  }
-  // Don't call PL_DHashTableFinish() here; it's not safe after Init() failure.
-
-  // Check that |ops| is still null.
   if (t.IsInitialized()) {
     return false;
   }
@@ -226,8 +173,6 @@ static const struct Test {
   TestFunc    func;
 } tests[] = {
   DECL_TEST(test_pldhash_Init_capacity_ok),
-  DECL_TEST(test_pldhash_Init_capacity_too_large),
-  DECL_TEST(test_pldhash_Init_overflow),
   DECL_TEST(test_pldhash_lazy_storage),
 // See bug 931062, we skip this test on Android due to OOM.
 #ifndef MOZ_WIDGET_ANDROID

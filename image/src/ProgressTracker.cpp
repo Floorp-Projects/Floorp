@@ -67,6 +67,7 @@ CheckProgressConsistency(Progress aProgress)
 void
 ProgressTracker::SetImage(Image* aImage)
 {
+  MutexAutoLock lock(mImageMutex);
   MOZ_ASSERT(aImage, "Setting null image");
   MOZ_ASSERT(!mImage, "Setting image when we already have one");
   mImage = aImage;
@@ -75,6 +76,7 @@ ProgressTracker::SetImage(Image* aImage)
 void
 ProgressTracker::ResetImage()
 {
+  MutexAutoLock lock(mImageMutex);
   MOZ_ASSERT(mImage, "Resetting image when it's already null!");
   mImage = nullptr;
 }
@@ -163,8 +165,9 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
   MOZ_ASSERT(NS_IsMainThread());
 
 #ifdef PR_LOGGING
-  if (mImage && mImage->GetURI()) {
-    nsRefPtr<ImageURL> uri(mImage->GetURI());
+  nsRefPtr<Image> image = GetImage();
+  if (image && image->GetURI()) {
+    nsRefPtr<ImageURL> uri(image->GetURI());
     nsAutoCString spec;
     uri->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(GetImgLog(),
@@ -231,9 +234,10 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
   MOZ_ASSERT(NS_IsMainThread());
 
 #ifdef PR_LOGGING
+  nsRefPtr<Image> image = GetImage();
   nsAutoCString spec;
-  if (mImage && mImage->GetURI()) {
-    mImage->GetURI()->GetSpec(spec);
+  if (image && image->GetURI()) {
+    image->GetURI()->GetSpec(spec);
   }
   LOG_FUNC_WITH_PARAM(GetImgLog(),
                       "ProgressTracker::NotifyCurrentState", "uri", spec.get());
@@ -347,7 +351,7 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
   CheckProgressConsistency(mProgress);
 
   // Send notifications.
-  SyncNotifyInternal(mObservers, !!mImage, progress, aInvalidRect);
+  SyncNotifyInternal(mObservers, HasImage(), progress, aInvalidRect);
 
   if (progress & FLAG_HAS_ERROR) {
     FireFailureNotification();
@@ -359,19 +363,21 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsRefPtr<Image> image = GetImage();
+
 #ifdef PR_LOGGING
   nsAutoCString spec;
-  if (mImage && mImage->GetURI()) {
-    mImage->GetURI()->GetSpec(spec);
+  if (image && image->GetURI()) {
+    image->GetURI()->GetSpec(spec);
   }
   LOG_SCOPE_WITH_PARAM(GetImgLog(),
                        "ProgressTracker::SyncNotify", "uri", spec.get());
 #endif
 
   nsIntRect rect;
-  if (mImage) {
-    if (NS_FAILED(mImage->GetWidth(&rect.width)) ||
-        NS_FAILED(mImage->GetHeight(&rect.height))) {
+  if (image) {
+    if (NS_FAILED(image->GetWidth(&rect.width)) ||
+        NS_FAILED(image->GetHeight(&rect.height))) {
       // Either the image has no intrinsic size, or it has an error.
       rect = GetMaxSizedIntRect();
     }
@@ -379,7 +385,7 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
 
   ObserverArray array;
   array.AppendElement(aObserver);
-  SyncNotifyInternal(array, !!mImage, mProgress, rect);
+  SyncNotifyInternal(array, !!image, mProgress, rect);
 }
 
 void
@@ -491,11 +497,12 @@ ProgressTracker::FireFailureNotification()
 
   // Some kind of problem has happened with image decoding.
   // Report the URI to net:failed-to-process-uri-conent observers.
-  if (mImage) {
+  nsRefPtr<Image> image = GetImage();
+  if (image) {
     // Should be on main thread, so ok to create a new nsIURI.
     nsCOMPtr<nsIURI> uri;
     {
-      nsRefPtr<ImageURL> threadsafeUriData = mImage->GetURI();
+      nsRefPtr<ImageURL> threadsafeUriData = image->GetURI();
       uri = threadsafeUriData ? threadsafeUriData->ToIURI() : nullptr;
     }
     if (uri) {

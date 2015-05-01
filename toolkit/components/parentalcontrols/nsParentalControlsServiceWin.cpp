@@ -283,7 +283,7 @@ nsParentalControlsService::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceR
 
   // Free up the allocated strings in our array
   for (idx = 0; idx < uriIdx; idx++)
-    NS_Free((void*)arrUrls[idx]);
+    free((void*)arrUrls[idx]);
 
   return NS_OK;
 }

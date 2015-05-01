@@ -394,7 +394,11 @@ mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath)
   if ((read(fd, elf.buf, bufsize) <= 0) ||
       (memcmp(elf.buf, ELFMAG, 4)) ||
       (elf.ehdr.e_ident[EI_CLASS] != ELFCLASS) ||
-      (elf.ehdr.e_phoff + elf.ehdr.e_phentsize * elf.ehdr.e_phnum >= bufsize)) {
+      // Upcast e_phentsize so the multiplication is done in the same precision
+      // as the subsequent addition, to satisfy static analyzers and avoid
+      // issues with abnormally large program header tables.
+      (elf.ehdr.e_phoff + (static_cast<Elf_Off>(elf.ehdr.e_phentsize) *
+                           elf.ehdr.e_phnum) >= bufsize)) {
     close(fd);
     return;
   }

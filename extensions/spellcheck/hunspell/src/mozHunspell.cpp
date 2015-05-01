@@ -322,7 +322,7 @@ NS_IMETHODIMP mozHunspell::GetDictionaryList(char16_t ***aDictionaries,
     return NS_ERROR_NULL_POINTER;
 
   AppendNewStruct ans = {
-    (char16_t**) NS_Alloc(sizeof(char16_t*) * mDictionaries.Count()),
+    (char16_t**) moz_xmalloc(sizeof(char16_t*) * mDictionaries.Count()),
     0,
     false
   };
@@ -333,9 +333,9 @@ NS_IMETHODIMP mozHunspell::GetDictionaryList(char16_t ***aDictionaries,
   if (ans.failed) {
     while (ans.count) {
       --ans.count;
-      NS_Free(ans.dics[ans.count]);
+      free(ans.dics[ans.count]);
     }
-    NS_Free(ans.dics);
+    free(ans.dics);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

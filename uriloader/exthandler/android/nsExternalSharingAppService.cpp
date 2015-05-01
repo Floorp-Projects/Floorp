@@ -50,8 +50,8 @@ nsExternalSharingAppService::GetSharingApps(const nsAString & aMIMEType,
                                                   nullptr, sendAction);
   array->GetLength(aLen);
   *aHandlers =
-    static_cast<nsISharingHandlerApp**>(NS_Alloc(sizeof(nsISharingHandlerApp*)
-                                                 * *aLen));
+    static_cast<nsISharingHandlerApp**>(moz_xmalloc(sizeof(nsISharingHandlerApp*)
+                                                    * *aLen));
   for (uint32_t i = 0; i < *aLen; i++) {
     rv = array->QueryElementAt(i, NS_GET_IID(nsISharingHandlerApp),
                                (void**)(*aHandlers + i));

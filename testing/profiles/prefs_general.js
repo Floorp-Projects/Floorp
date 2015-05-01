@@ -51,7 +51,6 @@ user_pref("dom.w3c_touch_events.enabled", 1);
 user_pref("dom.undo_manager.enabled", true);
 user_pref("dom.webcomponents.enabled", true);
 user_pref("dom.htmlimports.enabled", true);
-user_pref("dom.animations-api.core.enabled", true);
 // Set a future policy version to avoid the telemetry prompt.
 user_pref("toolkit.telemetry.prompted", 999);
 user_pref("toolkit.telemetry.notifiedOptOut", 999);
@@ -165,8 +164,6 @@ user_pref("layout.css.unicode-range.enabled", true);
 user_pref("layout.spammy_warnings.enabled", false);
 
 // Enable Media Source Extensions for testing
-user_pref("media.mediasource.enabled", true);
-user_pref("media.mediasource.whitelist", false);
 user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);
 
@@ -295,7 +292,6 @@ user_pref("browser.search.countryCode", "US");
 user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
 
 user_pref("media.eme.enabled", true);
-user_pref("media.eme.apiVisible", true);
 
 #if defined(XP_WIN)
 user_pref("media.decoder.heuristic.dormant.timeout", 0);

@@ -105,6 +105,9 @@
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
+#if defined(XP_WIN)
+#include "mozilla/a11y/Compatibility.h"
+#endif
 #endif
 
 #include "nsCRT.h"
@@ -859,17 +862,20 @@ nsXULAppInfo::GetAccessibilityEnabled(bool* aResult)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetAccessibilityIsUIA(bool* aResult)
+nsXULAppInfo::GetAccessibilityIsBlacklistedForE10S(bool* aResult)
 {
   *aResult = false;
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-  // This is the same check the a11y service does to identify uia clients.
-  if (GetAccService() != nullptr &&
-      (::GetModuleHandleW(L"uiautomation") ||
-       ::GetModuleHandleW(L"uiautomationcore"))) {
+#if defined(ACCESSIBILITY)
+#if defined(XP_WIN)
+  if (GetAccService() && mozilla::a11y::Compatibility::IsBlacklistedForE10S()) {
+    *aResult = true;
+  }
+#elif defined(XP_MACOSX)
+  if (GetAccService()) {
     *aResult = true;
   }
 #endif
+#endif // defined(ACCESSIBILITY)
   return NS_OK;
 }
 
@@ -2038,7 +2044,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
       NS_ENSURE_SUCCESS(rv, rv);
 
       CopyUTF16toUTF8(profileNamePtr, profileName);
-      NS_Free(profileNamePtr);
+      free(profileNamePtr);
 
       lock->Unlock();
     }

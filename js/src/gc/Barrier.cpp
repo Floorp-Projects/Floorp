@@ -36,15 +36,6 @@ HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
 }
 
 bool
-HeapSlot::preconditionForSet(Zone* zone, NativeObject* owner, Kind kind, uint32_t slot)
-{
-    bool ok = kind == Slot
-            ? &owner->getSlotRef(slot) == this
-            : &owner->getDenseElement(slot) == (const Value*)this;
-    return ok && owner->zone() == zone;
-}
-
-bool
 HeapSlot::preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot, Value target) const
 {
     return kind == Slot

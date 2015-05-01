@@ -74,8 +74,8 @@ TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader
         MOZ_ASSERT(!(*reinterpret_cast<uintptr_t*>(ptr) & 0x1));
 
         // No barrier needed since these are constants.
-        gc::TraceManuallyBarrieredGenericPointerEdge(trc, reinterpret_cast<gc::Cell**>(ptr),
-                                                     "ion-masm-ptr");
+        TraceManuallyBarrieredGenericPointerEdge(trc, reinterpret_cast<gc::Cell**>(ptr),
+                                                 "ion-masm-ptr");
     }
 }
 

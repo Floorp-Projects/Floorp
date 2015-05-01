@@ -2286,7 +2286,7 @@ nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
   }
 
   *count = valArray.Length();
-  char **ret = static_cast<char **>(NS_Alloc(*count * sizeof(char*)));
+  char **ret = static_cast<char **>(moz_xmalloc(*count * sizeof(char*)));
   if (!ret) return NS_ERROR_OUT_OF_MEMORY;
 
   for (uint32_t i = 0; i <  *count; i++) {

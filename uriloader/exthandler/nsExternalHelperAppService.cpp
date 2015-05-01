@@ -1405,7 +1405,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   nsAutoCString tempLeafName;
   nsDependentCSubstring randomData(reinterpret_cast<const char*>(buffer), requiredBytesLength);
   rv = Base64Encode(randomData, tempLeafName);
-  NS_Free(buffer);
+  free(buffer);
   buffer = nullptr;
   NS_ENSURE_SUCCESS(rv, rv);
 

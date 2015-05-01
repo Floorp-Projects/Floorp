@@ -16,7 +16,13 @@ function runWithMSE(testFunction) {
     testFunction(ms, el);
   }
 
-  addLoadEvent(bootstrapTest);
+  addLoadEvent(function () {
+    SpecialPowers.pushPrefEnv({"set": [
+      [ "media.mediasource.enabled", true ],
+      [ "media.mediasource.whitelist", false ],
+    ]},
+                              bootstrapTest);
+  });
 }
 
 function fetchWithXHR(uri, onLoadFunction) {

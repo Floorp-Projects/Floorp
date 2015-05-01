@@ -26,6 +26,9 @@
 
 using namespace mozilla;
 typedef nsGridContainerFrame::TrackSize TrackSize;
+const uint32_t nsGridContainerFrame::kAutoLine = 12345U;
+const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
+  uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine - 1);
 
 class nsGridContainerFrame::GridItemCSSOrderIterator
 {
@@ -132,77 +135,83 @@ private:
  * the zero-based aFromIndex, and return the 1-based index (line number).
  * Also take into account there is an unconditional match at aImplicitLine
  * unless it's zero.
- * Return the last match if aNth occurrences can't be found, or zero if no
- * occurrence can be found.
+ * Return zero if aNth occurrences can't be found.  In that case, aNth has
+ * been decremented with the number of occurrences that were found (if any).
  */
 static uint32_t
-FindLine(const nsString& aName, uint32_t aNth,
+FindLine(const nsString& aName, int32_t* aNth,
          uint32_t aFromIndex, uint32_t aImplicitLine,
          const nsTArray<nsTArray<nsString>>& aNameList)
 {
-  MOZ_ASSERT(aNth != 0);
+  MOZ_ASSERT(aNth && *aNth > 0);
+  int32_t nth = *aNth;
   const uint32_t len = aNameList.Length();
-  uint32_t lastFound = 0;
   uint32_t line;
   uint32_t i = aFromIndex;
   for (; i < len; i = line) {
     line = i + 1;
     if (line == aImplicitLine || aNameList[i].Contains(aName)) {
-      lastFound = line;
-      if (--aNth == 0) {
-        return lastFound;
+      if (--nth == 0) {
+        return line;
       }
     }
   }
   if (aImplicitLine > i) {
     // aImplicitLine is after the lines we searched above so it's last.
     // (grid-template-areas has more tracks than grid-template-[rows|columns])
-    lastFound = aImplicitLine;
+    if (--nth == 0) {
+      return aImplicitLine;
+    }
   }
-  return lastFound;
+  MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
+  *aNth = nth;
+  return 0;
 }
 
 /**
  * @see FindLine, this function does the same but searches in reverse.
  */
 static uint32_t
-RFindLine(const nsString& aName, uint32_t aNth,
+RFindLine(const nsString& aName, int32_t* aNth,
           uint32_t aFromIndex, uint32_t aImplicitLine,
           const nsTArray<nsTArray<nsString>>& aNameList)
 {
-  MOZ_ASSERT(aNth != 0);
+  MOZ_ASSERT(aNth && *aNth > 0);
+  int32_t nth = *aNth;
   const uint32_t len = aNameList.Length();
-  uint32_t lastFound = 0;
   // The implicit line may be beyond the length of aNameList so we match this
-  // line first if it's within the 0..aFromIndex range.
+  // line first if it's within the len..aFromIndex range.
   if (aImplicitLine > len && aImplicitLine < aFromIndex) {
-    lastFound = aImplicitLine;
-    if (--aNth == 0) {
-      return lastFound;
+    if (--nth == 0) {
+      return aImplicitLine;
     }
   }
   uint32_t i = aFromIndex == 0 ? len : std::min(aFromIndex, len);
   for (; i; --i) {
     if (i == aImplicitLine || aNameList[i - 1].Contains(aName)) {
-      lastFound = i;
-      if (--aNth == 0) {
-        break;
+      if (--nth == 0) {
+        return i;
       }
     }
   }
-  return lastFound;
+  MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
+  *aNth = nth;
+  return 0;
 }
 
 static uint32_t
-FindNamedLine(const nsString& aName, int32_t aNth,
+FindNamedLine(const nsString& aName, int32_t* aNth,
               uint32_t aFromIndex, uint32_t aImplicitLine,
               const nsTArray<nsTArray<nsString>>& aNameList)
 {
-  MOZ_ASSERT(aNth != 0);
-  if (aNth > 0) {
+  MOZ_ASSERT(aNth && *aNth != 0);
+  if (*aNth > 0) {
     return ::FindLine(aName, aNth, aFromIndex, aImplicitLine, aNameList);
   }
-  return ::RFindLine(aName, -aNth, aFromIndex, aImplicitLine, aNameList);
+  int32_t nth = -*aNth;
+  int32_t line = ::RFindLine(aName, &nth, aFromIndex, aImplicitLine, aNameList);
+  *aNth = -nth;
+  return line;
 }
 
 /**
@@ -256,8 +265,7 @@ IsNameWithStartSuffix(const nsString& aString, uint32_t* aIndex)
 static nscoord
 GridLinePosition(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes)
 {
-  MOZ_ASSERT(aLine != 0, "expected a 1-based line number");
-  const uint32_t endIndex = aLine - 1;
+  const uint32_t endIndex = aLine;
   MOZ_ASSERT(endIndex <= aTrackSizes.Length(), "aTrackSizes is too small");
   nscoord pos = 0;
   for (uint32_t i = 0; i < endIndex; ++i) {
@@ -333,7 +341,8 @@ nsGridContainerFrame::AddImplicitNamedAreas(
   // (x-start) 0 (x-start) 0 (x-end)
   // (x-end) 0 (x-start) 0 (x-end)
   // (x-start) 0 (x-end) 0 (x-start) 0 (x-end)
-  const uint32_t len = aLineNameLists.Length();
+  const uint32_t len =
+    std::min(aLineNameLists.Length(), size_t(nsStyleGridLine::kMaxLine));
   nsTHashtable<nsStringHashKey> currentStarts;
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
@@ -374,7 +383,7 @@ nsGridContainerFrame::InitImplicitNamedAreas(const nsStylePosition* aStyle)
   }
 }
 
-uint32_t
+int32_t
 nsGridContainerFrame::ResolveLine(
   const nsStyleGridLine& aLine,
   int32_t aNth,
@@ -387,10 +396,10 @@ nsGridContainerFrame::ResolveLine(
   const nsStylePosition* aStyle)
 {
   MOZ_ASSERT(!aLine.IsAuto());
-  uint32_t line = 0;
+  int32_t line = 0;
   if (aLine.mLineName.IsEmpty()) {
     MOZ_ASSERT(aNth != 0, "css-grid 9.2: <integer> must not be zero.");
-    line = std::max(int32_t(aFromIndex) + aNth, 1);
+    line = int32_t(aFromIndex) + aNth;
   } else {
     if (aNth == 0) {
       // <integer> was omitted; treat it as 1.
@@ -414,7 +423,7 @@ nsGridContainerFrame::ResolveLine(
         }
         // XXX must Implicit Named Areas have all four lines?
         // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
-        line = ::FindNamedLine(lineName, aNth, aFromIndex, implicitLine,
+        line = ::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
                                aLineNameList);
       }
     }
@@ -437,30 +446,28 @@ nsGridContainerFrame::ResolveLine(
           implicitLine = area->*areaEdge;
         }
       }
-      line = ::FindNamedLine(aLine.mLineName, aNth, aFromIndex, implicitLine,
+      line = ::FindNamedLine(aLine.mLineName, &aNth, aFromIndex, implicitLine,
                              aLineNameList);
     }
 
     if (line == 0) {
-      // No line matching <custom-ident> exists.
+      MOZ_ASSERT(aNth != 0, "we found all N named lines but 'line' is zero!");
+      int32_t edgeLine;
       if (aLine.mHasSpan) {
         // http://dev.w3.org/csswg/css-grid/#grid-placement-span-int
-        // Treat 'span <custom-ident> N' as 'span N'.
-        line = std::max(int32_t(aFromIndex) + aNth, 1);
+        // 'span <custom-ident> N'
+        edgeLine = aSide == eLineRangeSideStart ? 1 : aExplicitGridEnd;
       } else {
         // http://dev.w3.org/csswg/css-grid/#grid-placement-int
-        // Treat '<custom-ident> N' as first/last line depending on N's sign.
-        // XXX this is wrong due to a spec change, see bug 1009776 comment 17.
-        // XXX we want to possibly expand the implicit grid here.
-        line = aNth >= 0 ? 1 : aExplicitGridEnd;
+        // '<custom-ident> N'
+        edgeLine = aNth < 0 ? 1 : aExplicitGridEnd;
       }
+      // "If not enough lines with that name exist, all lines in the implicit
+      // grid are assumed to have that name..."
+      line = edgeLine + aNth;
     }
   }
-  // The only case which can result in "auto" (line == 0) is a plain
-  // <custom-ident> (without <integer> or 'span') which wasn't found.
-  MOZ_ASSERT(line != 0 || (!aLine.mHasSpan && aLine.mInteger == 0),
-             "Given a <integer> or 'span' the result should never be auto");
-  return line;
+  return clamped(line, nsStyleGridLine::kMinLine, nsStyleGridLine::kMaxLine);
 }
 
 nsGridContainerFrame::LinePair
@@ -473,64 +480,87 @@ nsGridContainerFrame::ResolveLineRangeHelper(
   uint32_t aExplicitGridEnd,
   const nsStylePosition* aStyle)
 {
+  MOZ_ASSERT(int32_t(nsGridContainerFrame::kAutoLine) > nsStyleGridLine::kMaxLine);
+
   if (aStart.mHasSpan) {
     if (aEnd.mHasSpan || aEnd.IsAuto()) {
       // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
       if (aStart.mLineName.IsEmpty()) {
         // span <integer> / span *
         // span <integer> / auto
-        return LinePair(0, aStart.mInteger);
+        return LinePair(kAutoLine, aStart.mInteger);
       }
       // span <custom-ident> / span *
       // span <custom-ident> / auto
-      return LinePair(0, 1); // XXX subgrid explicit size instead of 1?
+      return LinePair(kAutoLine, 1); // XXX subgrid explicit size instead of 1?
     }
 
     auto end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
                            aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                            aStyle);
-    if (end == 0) {
-      // span * / <custom-ident> that can't be found
-      return LinePair(0, aStart.mInteger);
-    }
     int32_t span = aStart.mInteger == 0 ? 1 : aStart.mInteger;
+    if (end <= 1) {
+      // The end is at or before the first explicit line, thus all lines before
+      // it match <custom-ident> since they're implicit.
+      int32_t start = std::max(end - span, nsStyleGridLine::kMinLine);
+      return LinePair(start, end);
+    }
     auto start = ResolveLine(aStart, -span, end, aLineNameList, aAreaStart,
                              aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
                              aStyle);
-    MOZ_ASSERT(start > 0, "A start span can never resolve to 'auto'");
     return LinePair(start, end);
   }
 
-  uint32_t start = 0;
-  if (!aStart.IsAuto()) {
+  int32_t start = kAutoLine;
+  if (aStart.IsAuto()) {
+    if (aEnd.IsAuto()) {
+      // auto / auto
+      return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
+    }
+    if (aEnd.mHasSpan) {
+      if (aEnd.mLineName.IsEmpty()) {
+        // auto / span <integer>
+        MOZ_ASSERT(aEnd.mInteger != 0);
+        return LinePair(start, aEnd.mInteger);
+      }
+      // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
+      // auto / span <custom-ident>
+      return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
+    }
+  } else {
     start = ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
                         aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
                         aStyle);
-  }
-  if (aEnd.IsAuto()) {
-    // * (except span) / auto
-    return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
-  }
-  if (start == 0 && aEnd.mHasSpan) {
-    if (aEnd.mLineName.IsEmpty()) {
-      // auto (or not found <custom-ident>) / span <integer>
-      MOZ_ASSERT(aEnd.mInteger != 0);
-      return LinePair(0, aEnd.mInteger);
+    if (aEnd.IsAuto()) {
+      // A "definite line / auto" should resolve the auto to 'span 1'.
+      // The error handling in ResolveLineRange will make that happen and also
+      // clamp the end line correctly if we return "start / start".
+      return LinePair(start, start);
     }
-    // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-    // auto (or not found <custom-ident>) / span <custom-ident>
-    return LinePair(0, 1); // XXX subgrid explicit size instead of 1?
   }
 
-  uint32_t from = aEnd.mHasSpan ? start : 0;
-  auto end = ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
+  uint32_t from = 0;
+  int32_t nth = aEnd.mInteger == 0 ? 1 : aEnd.mInteger;
+  if (aEnd.mHasSpan) {
+    if (MOZ_UNLIKELY(start < 0)) {
+      if (aEnd.mLineName.IsEmpty()) {
+        return LinePair(start, start + nth);
+      }
+      // Fall through and start searching from the start of the grid (from=0).
+    } else {
+      if (start >= int32_t(aExplicitGridEnd)) {
+        // The start is at or after the last explicit line, thus all lines
+        // after it match <custom-ident> since they're implicit.
+        return LinePair(start, std::min(start + nth, nsStyleGridLine::kMaxLine));
+      }
+      from = start;
+    }
+  }
+  auto end = ResolveLine(aEnd, nth, from, aLineNameList, aAreaStart,
                          aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
-  if (end == 0) {
-    // * (except span) / not found <custom-ident>
-    end = 1; // XXX subgrid explicit size instead of 1?
-  } else if (start == 0) {
-    // auto (or not found <custom-ident>) / definite line
-    start = std::max(1U, end - 1);
+  if (start == int32_t(kAutoLine)) {
+    // auto / definite line
+    start = std::max(nsStyleGridLine::kMinLine, end - 1);
   }
   return LinePair(start, end);
 }
@@ -547,11 +577,19 @@ nsGridContainerFrame::ResolveLineRange(
 {
   LinePair r = ResolveLineRangeHelper(aStart, aEnd, aLineNameList, aAreaStart,
                                       aAreaEnd, aExplicitGridEnd, aStyle);
-  MOZ_ASSERT(r.second != 0);
+  MOZ_ASSERT(r.second != int32_t(kAutoLine));
 
-  // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-  if (r.second <= r.first) {
-    r.second = r.first + 1;
+  if (r.first == int32_t(kAutoLine)) {
+    // r.second is a span, clamp it to kMaxLine - 1 so that the returned
+    // range has a HypotheticalEnd <= kMaxLine.
+    // http://dev.w3.org/csswg/css-grid/#overlarge-grids
+    r.second = std::min(r.second, nsStyleGridLine::kMaxLine - 1);
+  } else if (r.second <= r.first) {
+    // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
+    if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
+      r.first = nsStyleGridLine::kMaxLine - 1;
+    }
+    r.second = r.first + 1; // XXX subgrid explicit size instead of 1?
   }
   return LineRange(r.first, r.second);
 }
@@ -580,42 +618,41 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
   uint32_t GridNamedArea::* aAreaStart,
   uint32_t GridNamedArea::* aAreaEnd,
   uint32_t aExplicitGridEnd,
-  uint32_t aGridEnd,
+  int32_t aGridStart,
+  int32_t aGridEnd,
   const nsStylePosition* aStyle)
 {
   if (aStart.IsAuto()) {
     if (aEnd.IsAuto()) {
-      return LineRange(0, 0);
+      return LineRange(kAutoLine, kAutoLine);
     }
-    uint32_t end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
-                               aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
-                               aStyle);
-    MOZ_ASSERT(end != 0, "resolving non-auto line shouldn't result in auto");
+    int32_t end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
+                              aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
+                              aStyle);
     if (aEnd.mHasSpan) {
       ++end;
     }
-    return LineRange(0, clamped(end, 1U, aGridEnd));
+    return LineRange(kAutoLine, clamped(end, aGridStart, aGridEnd));
   }
 
   if (aEnd.IsAuto()) {
-    uint32_t start =
+    int32_t start =
       ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
                   aAreaEnd, aExplicitGridEnd, eLineRangeSideStart, aStyle);
-    MOZ_ASSERT(start != 0, "resolving non-auto line shouldn't result in auto");
     if (aStart.mHasSpan) {
-      start = std::max(int32_t(aGridEnd) - int32_t(start), 1);
+      start = std::max(aGridEnd - start, aGridStart);
     }
-    return LineRange(clamped(start, 1U, aGridEnd), 0);
+    return LineRange(clamped(start, aGridStart, aGridEnd), kAutoLine);
   }
 
   LineRange r = ResolveLineRange(aStart, aEnd, aLineNameList, aAreaStart,
                                  aAreaEnd, aExplicitGridEnd, aStyle);
   MOZ_ASSERT(!r.IsAuto(), "resolving definite lines shouldn't result in auto");
   // Clamp definite lines to be within the implicit grid.
-  // Note that this implies mStart may be equal to mEnd.
-  r.mStart = clamped(r.mStart, 1U, aGridEnd);
-  r.mEnd = clamped(r.mEnd, 1U, aGridEnd);
-  MOZ_ASSERT(r.mStart <= r.mEnd);
+  // Note that this implies mUntranslatedStart may be equal to mUntranslatedEnd.
+  r.mUntranslatedStart = clamped(r.mUntranslatedStart, aGridStart, aGridEnd);
+  r.mUntranslatedEnd = clamped(r.mUntranslatedEnd, aGridStart, aGridEnd);
+  MOZ_ASSERT(r.mUntranslatedStart <= r.mUntranslatedEnd);
   return r;
 }
 
@@ -623,12 +660,10 @@ uint32_t
 nsGridContainerFrame::FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
                                   const GridArea* aArea) const
 {
-  MOZ_ASSERT(aStartCol > 0, "expected a 1-based track number");
-  MOZ_ASSERT(aLockedRow > 0, "expected a 1-based track number");
   const uint32_t extent = aArea->mCols.Extent();
-  const uint32_t iStart = aLockedRow - 1;
+  const uint32_t iStart = aLockedRow;
   const uint32_t iEnd = iStart + aArea->mRows.Extent();
-  uint32_t candidate = aStartCol - 1;
+  uint32_t candidate = aStartCol;
   for (uint32_t i = iStart; i < iEnd; ) {
     if (i >= mCellMap.mCells.Length()) {
       break;
@@ -657,7 +692,7 @@ nsGridContainerFrame::FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
       ++i;
     }
   }
-  return candidate + 1; // return a 1-based column number
+  return candidate;
 }
 
 nsGridContainerFrame::GridArea
@@ -665,19 +700,23 @@ nsGridContainerFrame::PlaceAbsPos(nsIFrame* aChild,
                                   const nsStylePosition* aStyle)
 {
   const nsStylePosition* itemStyle = aChild->StylePosition();
+  int32_t gridColStart = 1 - mExplicitGridOffsetCol;
+  int32_t gridRowStart = 1 - mExplicitGridOffsetRow;
   return GridArea(
     ResolveAbsPosLineRange(itemStyle->mGridColumnStart,
                            itemStyle->mGridColumnEnd,
                            aStyle->mGridTemplateColumns.mLineNameLists,
                            &GridNamedArea::mColumnStart,
                            &GridNamedArea::mColumnEnd,
-                           mExplicitGridColEnd, mGridColEnd, aStyle),
+                           mExplicitGridColEnd, gridColStart, mGridColEnd,
+                           aStyle),
     ResolveAbsPosLineRange(itemStyle->mGridRowStart,
                            itemStyle->mGridRowEnd,
                            aStyle->mGridTemplateRows.mLineNameLists,
                            &GridNamedArea::mRowStart,
                            &GridNamedArea::mRowEnd,
-                           mExplicitGridRowEnd, mGridRowEnd, aStyle));
+                           mExplicitGridRowEnd, gridRowStart, mGridRowEnd,
+                           aStyle));
 }
 
 void
@@ -693,13 +732,11 @@ uint32_t
 nsGridContainerFrame::FindAutoRow(uint32_t aLockedCol, uint32_t aStartRow,
                                   const GridArea* aArea) const
 {
-  MOZ_ASSERT(aLockedCol > 0, "expected a 1-based track number");
-  MOZ_ASSERT(aStartRow > 0, "expected a 1-based track number");
   const uint32_t extent = aArea->mRows.Extent();
-  const uint32_t jStart = aLockedCol - 1;
+  const uint32_t jStart = aLockedCol;
   const uint32_t jEnd = jStart + aArea->mCols.Extent();
   const uint32_t iEnd = mCellMap.mCells.Length();
-  uint32_t candidate = aStartRow - 1;
+  uint32_t candidate = aStartRow;
   // Find the first gap in the rows that's at least 'extent' tall.
   // ('gap' tracks how tall the current row gap is.)
   for (uint32_t i = candidate, gap = 0; i < iEnd && gap < extent; ++i) {
@@ -717,7 +754,7 @@ nsGridContainerFrame::FindAutoRow(uint32_t aLockedCol, uint32_t aStartRow,
       }
     }
   }
-  return candidate + 1; // return a 1-based row number
+  return candidate;
 }
 
 void
@@ -745,10 +782,10 @@ nsGridContainerFrame::PlaceAutoAutoInRowOrder(uint32_t aStartCol,
     if (col + colExtent <= gridColEnd) {
       break;
     }
-    col = 1;
+    col = 0;
   }
-  MOZ_ASSERT(row < gridRowEnd || col == 1,
-             "expected column 1 for placing in a new row");
+  MOZ_ASSERT(row < gridRowEnd || col == 0,
+             "expected column 0 for placing in a new row");
   aArea->mCols.ResolveAutoPosition(col);
   aArea->mRows.ResolveAutoPosition(row);
   MOZ_ASSERT(aArea->IsDefinite());
@@ -770,10 +807,10 @@ nsGridContainerFrame::PlaceAutoAutoInColOrder(uint32_t aStartCol,
     if (row + rowExtent <= gridRowEnd) {
       break;
     }
-    row = 1;
+    row = 0;
   }
-  MOZ_ASSERT(col < gridColEnd || row == 1,
-             "expected row 1 for placing in a new column");
+  MOZ_ASSERT(col < gridColEnd || row == 0,
+             "expected row 0 for placing in a new column");
   aArea->mCols.ResolveAutoPosition(col);
   aArea->mRows.ResolveAutoPosition(row);
   MOZ_ASSERT(aArea->IsDefinite());
@@ -783,11 +820,17 @@ void
 nsGridContainerFrame::InitializeGridBounds(const nsStylePosition* aStyle)
 {
   // http://dev.w3.org/csswg/css-grid/#grid-definition
+  // Note that this is for a grid with a 1,1 origin.  We'll change that
+  // to a 0,0 based grid after placing definite lines.
   uint32_t colEnd = aStyle->mGridTemplateColumns.mLineNameLists.Length();
   uint32_t rowEnd = aStyle->mGridTemplateRows.mLineNameLists.Length();
   auto areas = aStyle->mGridTemplateAreas.get();
   mExplicitGridColEnd = std::max(colEnd, areas ? areas->mNColumns + 1 : 1);
   mExplicitGridRowEnd = std::max(rowEnd, areas ? areas->NRows() + 1 : 1);
+  mExplicitGridColEnd =
+    std::min(mExplicitGridColEnd, uint32_t(nsStyleGridLine::kMaxLine));
+  mExplicitGridRowEnd =
+    std::min(mExplicitGridRowEnd, uint32_t(nsStyleGridLine::kMaxLine));
   mGridColEnd = mExplicitGridColEnd;
   mGridRowEnd = mExplicitGridRowEnd;
 }
@@ -801,18 +844,48 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
+  int32_t minCol = 1;
+  int32_t minRow = 1;
   for (; !aIter.AtEnd(); aIter.Next()) {
     nsIFrame* child = *aIter;
     const GridArea& area = PlaceDefinite(child, aStyle);
+    if (area.mCols.IsDefinite()) {
+      minCol = std::min(minCol, area.mCols.mUntranslatedStart);
+    }
+    if (area.mRows.IsDefinite()) {
+      minRow = std::min(minRow, area.mRows.mUntranslatedStart);
+    }
     GridArea* prop = GetGridAreaForChild(child);
     if (prop) {
       *prop = area;
     } else {
-      child->Properties().Set(GridAreaProperty(), new GridArea(area));
+      prop = new GridArea(area);
+      child->Properties().Set(GridAreaProperty(), prop);
     }
-    if (area.IsDefinite()) {
-      mCellMap.Fill(area);
-      InflateGridFor(area);
+  }
+
+  // Translate the whole grid so that the top-/left-most area is at 0,0.
+  mExplicitGridOffsetCol = 1 - minCol; // minCol/Row is always <= 1, see above
+  mExplicitGridOffsetRow = 1 - minRow;
+  const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
+  const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
+  mGridColEnd += offsetToColZero;
+  mGridRowEnd += offsetToRowZero;
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
+    GridArea* area = GetGridAreaForChild(child);
+    if (area->mCols.IsDefinite()) {
+      area->mCols.mStart = area->mCols.mUntranslatedStart + offsetToColZero;
+      area->mCols.mEnd = area->mCols.mUntranslatedEnd + offsetToColZero;
+    }
+    if (area->mRows.IsDefinite()) {
+      area->mRows.mStart = area->mRows.mUntranslatedStart + offsetToRowZero;
+      area->mRows.mEnd = area->mRows.mUntranslatedEnd + offsetToRowZero;
+    }
+    if (area->IsDefinite()) {
+      mCellMap.Fill(*area);
+      InflateGridFor(*area);
     }
   }
 
@@ -838,7 +911,7 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
       LineRange& minor = isRowOrder ? area->mCols : area->mRows;
       if (major.IsDefinite() && minor.IsAuto()) {
         // Items with 'auto' in the minor dimension only.
-        uint32_t cursor = 1;
+        uint32_t cursor = 0;
         if (isSparse) {
           cursors->Get(major.mStart, &cursor);
         }
@@ -861,8 +934,8 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
   // XXX now says it should (but didn't in earlier versions)
 
   // Step 3, place the remaining grid items
-  uint32_t cursorMajor = 1; // for 'dense' these two cursors will stay at 1,1
-  uint32_t cursorMinor = 1;
+  uint32_t cursorMajor = 0; // for 'dense' these two cursors will stay at 0,0
+  uint32_t cursorMinor = 0;
   auto placeAutoMajorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoRow
                                        : &nsGridContainerFrame::PlaceAutoCol;
   aIter.Reset();
@@ -916,9 +989,28 @@ nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
     // We only resolve definite lines here; we'll align auto positions to the
     // grid container later during reflow.
     nsFrameList children(GetChildList(GetAbsoluteListID()));
+    const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
+    const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
+    // Untranslate the grid again temporarily while resolving abs.pos. lines.
+    AutoRestore<uint32_t> save1(mGridColEnd);
+    AutoRestore<uint32_t> save2(mGridRowEnd);
+    mGridColEnd -= offsetToColZero;
+    mGridRowEnd -= offsetToRowZero;
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
       nsIFrame* child = e.get();
       GridArea area(PlaceAbsPos(child, aStyle));
+      if (area.mCols.mUntranslatedStart != int32_t(kAutoLine)) {
+        area.mCols.mStart = area.mCols.mUntranslatedStart + offsetToColZero;
+      }
+      if (area.mCols.mUntranslatedEnd != int32_t(kAutoLine)) {
+        area.mCols.mEnd = area.mCols.mUntranslatedEnd + offsetToColZero;
+      }
+      if (area.mRows.mUntranslatedStart != int32_t(kAutoLine)) {
+        area.mRows.mStart = area.mRows.mUntranslatedStart + offsetToRowZero;
+      }
+      if (area.mRows.mUntranslatedEnd != int32_t(kAutoLine)) {
+        area.mRows.mEnd = area.mRows.mUntranslatedEnd + offsetToRowZero;
+      }
       GridArea* prop = GetGridAreaForChild(child);
       if (prop) {
         *prop = area;
@@ -938,6 +1030,7 @@ InitializeTrackSize(nscoord aPercentageBasis,
   // http://dev.w3.org/csswg/css-grid/#algo-init
   nscoord& base = aTrackSize->mBase;
   switch (aMinCoord.GetUnit()) {
+    case eStyleUnit_Auto:
     case eStyleUnit_Enumerated:
     case eStyleUnit_FlexFraction:
       base = 0;
@@ -947,6 +1040,7 @@ InitializeTrackSize(nscoord aPercentageBasis,
   }
   nscoord& limit = aTrackSize->mLimit;
   switch (aMaxCoord.GetUnit()) {
+    case eStyleUnit_Auto:
     case eStyleUnit_Enumerated:
       limit = NS_UNCONSTRAINEDSIZE;
       break;
@@ -967,17 +1061,24 @@ InitializeTrackSizes(nscoord aPercentageBasis,
                      const nsTArray<nsStyleCoord>& aMaxSizingFunctions,
                      const nsStyleCoord& aAutoMinFunction,
                      const nsStyleCoord& aAutoMaxFunction,
+                     uint32_t aExplicitGridOffset,
                      nsTArray<TrackSize>& aResults)
 {
-  MOZ_ASSERT(aResults.Length() >= aMinSizingFunctions.Length());
+  MOZ_ASSERT(aResults.Length() >= aExplicitGridOffset + aMinSizingFunctions.Length());
   MOZ_ASSERT(aMinSizingFunctions.Length() == aMaxSizingFunctions.Length());
-  const size_t len = aMinSizingFunctions.Length();
   size_t i = 0;
-  for (; i < len; ++i) {
+  for (; i < aExplicitGridOffset; ++i) {
     InitializeTrackSize(aPercentageBasis,
-                        aMinSizingFunctions[i], aMaxSizingFunctions[i],
+                        aAutoMinFunction, aAutoMaxFunction,
                         &aResults[i]);
   }
+  size_t j = 0;
+  for (const size_t len = aMinSizingFunctions.Length(); j < len; ++j) {
+    InitializeTrackSize(aPercentageBasis,
+                        aMinSizingFunctions[j], aMaxSizingFunctions[j],
+                        &aResults[i + j]);
+  }
+  i += j;
   for (; i < aResults.Length(); ++i) {
     InitializeTrackSize(aPercentageBasis,
                         aAutoMinFunction, aAutoMaxFunction,
@@ -991,20 +1092,22 @@ nsGridContainerFrame::CalculateTrackSizes(const LogicalSize& aPercentageBasis,
                                           nsTArray<TrackSize>& aColSizes,
                                           nsTArray<TrackSize>& aRowSizes)
 {
-  aColSizes.SetLength(mGridColEnd - 1);
-  aRowSizes.SetLength(mGridRowEnd - 1);
+  aColSizes.SetLength(mGridColEnd);
+  aRowSizes.SetLength(mGridRowEnd);
   WritingMode wm = GetWritingMode();
   InitializeTrackSizes(aPercentageBasis.ISize(wm),
                        aStyle->mGridTemplateColumns.mMinTrackSizingFunctions,
                        aStyle->mGridTemplateColumns.mMaxTrackSizingFunctions,
                        aStyle->mGridAutoColumnsMin,
                        aStyle->mGridAutoColumnsMax,
+                       mExplicitGridOffsetCol,
                        aColSizes);
   InitializeTrackSizes(aPercentageBasis.BSize(wm),
                        aStyle->mGridTemplateRows.mMinTrackSizingFunctions,
                        aStyle->mGridTemplateRows.mMaxTrackSizingFunctions,
                        aStyle->mGridAutoRowsMin,
                        aStyle->mGridAutoRowsMax,
+                       mExplicitGridOffsetRow,
                        aRowSizes);
 }
 
@@ -1012,11 +1115,10 @@ void
 nsGridContainerFrame::LineRange::ToPositionAndLength(
   const nsTArray<TrackSize>& aTrackSizes, nscoord* aPos, nscoord* aLength) const
 {
-  //MOZ_ASSERT(mStart != 0 && Extent() > 0, "expected a definite LineRange");
-  // XXX relaxed it a bit for abs.pos. items for now:
-  MOZ_ASSERT(mStart != 0 && mEnd != 0, "expected a definite LineRange");
+  MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
+             "expected a definite LineRange");
   nscoord pos = 0;
-  const uint32_t start = mStart - 1;
+  const uint32_t start = mStart;
   uint32_t i = 0;
   for (; i < start; ++i) {
     pos += aTrackSizes[i].mBase;
@@ -1024,7 +1126,7 @@ nsGridContainerFrame::LineRange::ToPositionAndLength(
   *aPos = pos;
 
   nscoord length = 0;
-  const uint32_t end = mEnd - 1;
+  const uint32_t end = mEnd;
   MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
   for (; i < end; ++i) {
     length += aTrackSizes[i].mBase;
@@ -1037,10 +1139,10 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
   const nsTArray<TrackSize>& aTrackSizes, nscoord aGridOrigin,
   nscoord* aPos, nscoord* aLength) const
 {
-  // A "0" line represents "auto", which for abspos children, contributes
-  // the corresponding edge of the grid's padding-box.
-  if (mEnd == 0) {
-    if (mStart == 0) {
+  // kAutoLine for abspos children contributes the corresponding edge
+  // of the grid container's padding-box.
+  if (mEnd == kAutoLine) {
+    if (mStart == kAutoLine) {
       // done
     } else {
       const nscoord endPos = *aPos + *aLength;
@@ -1049,7 +1151,7 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
       *aLength = std::max(endPos - *aPos, 0);
     }
   } else {
-    if (mStart == 0) {
+    if (mStart == kAutoLine) {
       nscoord endPos = ::GridLinePosition(mEnd, aTrackSizes);
       *aLength = std::max(aGridOrigin + endPos, 0);
     } else {
@@ -1068,6 +1170,8 @@ nsGridContainerFrame::ContainingBlockFor(
   const nsTArray<TrackSize>& aRowSizes) const
 {
   nscoord i, b, iSize, bSize;
+  MOZ_ASSERT(aArea.mCols.Extent() > 0, "grid items cover at least one track");
+  MOZ_ASSERT(aArea.mRows.Extent() > 0, "grid items cover at least one track");
   aArea.mCols.ToPositionAndLength(aColSizes, &i, &iSize);
   aArea.mRows.ToPositionAndLength(aRowSizes, &b, &bSize);
   return LogicalRect(aWM, i, b, iSize, bSize);
@@ -1212,7 +1316,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   nscoord bSize = 0;
   if (computedBSize == NS_AUTOHEIGHT) {
-    for (uint32_t i = 0; i < mGridRowEnd - 1; ++i) {
+    for (uint32_t i = 0; i < mGridRowEnd; ++i) {
       bSize += rowSizes[i].mBase;
     }
   } else {
@@ -1286,17 +1390,14 @@ nsGridContainerFrame::CellMap::Fill(const GridArea& aGridArea)
 {
   MOZ_ASSERT(aGridArea.IsDefinite());
   MOZ_ASSERT(aGridArea.mRows.mStart < aGridArea.mRows.mEnd);
-  MOZ_ASSERT(aGridArea.mRows.mStart > 0);
   MOZ_ASSERT(aGridArea.mCols.mStart < aGridArea.mCols.mEnd);
-  MOZ_ASSERT(aGridArea.mCols.mStart > 0);
-  // Line numbers are 1-based so convert them to a zero-based index.
-  const auto numRows = aGridArea.mRows.mEnd - 1;
-  const auto numCols = aGridArea.mCols.mEnd - 1;
+  const auto numRows = aGridArea.mRows.mEnd;
+  const auto numCols = aGridArea.mCols.mEnd;
   mCells.EnsureLengthAtLeast(numRows);
-  for (auto i = aGridArea.mRows.mStart - 1; i < numRows; ++i) {
+  for (auto i = aGridArea.mRows.mStart; i < numRows; ++i) {
     nsTArray<Cell>& cellsInRow = mCells[i];
     cellsInRow.EnsureLengthAtLeast(numCols);
-    for (auto j = aGridArea.mCols.mStart - 1; j < numCols; ++j) {
+    for (auto j = aGridArea.mCols.mStart; j < numCols; ++j) {
       cellsInRow[j].mIsOccupied = true;
     }
   }

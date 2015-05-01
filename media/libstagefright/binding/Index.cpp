@@ -7,8 +7,8 @@
 #include "mp4_demuxer/Interval.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/SinfParser.h"
-#include "media/stagefright/MediaSource.h"
-#include "MediaResource.h"
+#include "nsAutoPtr.h"
+#include "nsRefPtr.h"
 
 #include <algorithm>
 #include <limits>
@@ -226,16 +226,19 @@ SampleIterator::GetNextKeyframeTime()
   return -1;
 }
 
-Index::Index(const stagefright::Vector<MediaSource::Indice>& aIndex,
-             Stream* aSource, uint32_t aTrackId, bool aIsAudio, Monitor* aMonitor)
+Index::Index(const nsTArray<Indice>& aIndex,
+             Stream* aSource,
+             uint32_t aTrackId,
+             bool aIsAudio,
+             Monitor* aMonitor)
   : mSource(aSource)
   , mMonitor(aMonitor)
 {
-  if (aIndex.isEmpty()) {
+  if (aIndex.IsEmpty()) {
     mMoofParser = new MoofParser(aSource, aTrackId, aIsAudio, aMonitor);
   } else {
-    for (size_t i = 0; i < aIndex.size(); i++) {
-      const MediaSource::Indice& indice = aIndex[i];
+    for (size_t i = 0; i < aIndex.Length(); i++) {
+      const Indice& indice = aIndex[i];
       Sample sample;
       sample.mByteRange = MediaByteRange(indice.start_offset,
                                          indice.end_offset);

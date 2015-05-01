@@ -4087,7 +4087,7 @@ JSObject::traceChildren(JSTracer* trc)
         {
             GetObjectSlotNameFunctor func(nobj);
             JS::AutoTracingDetails ctx(trc, func);
-            MarkObjectSlots(trc, nobj, 0, nobj->slotSpan());
+            TraceObjectSlots(trc, nobj, 0, nobj->slotSpan());
         }
 
         do {

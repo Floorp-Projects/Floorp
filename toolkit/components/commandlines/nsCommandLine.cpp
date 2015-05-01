@@ -489,7 +489,7 @@ LogConsoleMessage(const char16_t* fmt, ...)
   if (cs)
     cs->LogStringMessage(msg);
 
-  NS_Free(msg);
+  free(msg);
 }
 
 nsresult

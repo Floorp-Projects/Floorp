@@ -889,7 +889,7 @@ nsStandardURL::AppendToSubstring(uint32_t pos,
     if (UINT32_MAX - ((uint32_t)len + 1) < tailLen)
         return nullptr;
 
-    char *result = (char *) NS_Alloc(len + tailLen + 1);
+    char *result = (char *) moz_xmalloc(len + tailLen + 1);
     if (result) {
         memcpy(result, mSpec.get() + pos, len);
         memcpy(result + len, tail, tailLen);
