@@ -93,6 +93,16 @@ let OverviewView = {
   }),
 
   /**
+   * Returns true if any of the overview graphs have mouse dragging active,
+   * false otherwise.
+   */
+  get isMouseActive() {
+    return (this.markersOverview && this.markersOverview.isMouseActive) ||
+           (this.memoryOverview && this.memoryOverview.isMouseActive) ||
+           (this.framerateGraph && this.framerateGraph.isMouseActive);
+  },
+
+  /**
    * Disabled in the event we're using a Timeline mock, so we'll have no
    * timeline, ticks or memory data to show, so just block rendering and hide
    * the panel.

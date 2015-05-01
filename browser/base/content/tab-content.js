@@ -555,7 +555,9 @@ addEventListener("unload", () => {
 }, false);
 
 addMessageListener("Browser:AppTab", function(message) {
-  docShell.isAppTab = message.data.isAppTab;
+  if (docShell) {
+    docShell.isAppTab = message.data.isAppTab;
+  }
 });
 
 let WebBrowserChrome = {

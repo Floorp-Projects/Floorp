@@ -16,6 +16,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
+  var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
 
   var StandaloneRoomInfoArea = React.createClass({
@@ -248,7 +249,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
         return null;
       }
 
-      var location = this.props.roomContextUrl.location;
+      var locationInfo = sharedUtils.formatURL(this.props.roomContextUrl.location);
+      if (!locationInfo) {
+        return null;
+      }
 
       var cx = React.addons.classSet;
 
@@ -262,9 +266,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
             <img src={this.props.roomContextUrl.thumbnail} />
           <div className="standalone-context-url-description-wrapper">
             {this.props.roomContextUrl.description}
-            <br /><a href={location}
+            <br /><a href={locationInfo.location}
                      onClick={this.recordClick}
-                     target="_blank">{location}</a>
+                     target="_blank"
+                     title={locationInfo.location}>{locationInfo.hostname}</a>
           </div>
         </div>
       );
