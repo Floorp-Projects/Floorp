@@ -632,18 +632,103 @@ BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(a
 exports.BrowserTabList = BrowserTabList;
 
 /**
- * Creates a tab actor for handling requests to a browser tab, like
- * attaching and detaching. TabActor respects the actor factories
- * registered with DebuggerServer.addTabActor.
+ * Creates a TabActor whose main goal is to manage lifetime and
+ * expose the tab actors being registered via DebuggerServer.registerModule.
+ * But also track the lifetime of the document being tracked.
+ *
+ * ### Main requests:
+ *
+ * `attach`/`detach` requests:
+ *  - start/stop document watching:
+ *    Starts watching for new documents and emits `tabNavigated` and
+ *    `frameUpdate` over RDP.
+ *  - retrieve the thread actor:
+ *    Instantiates a ThreadActor that can be later attached to in order to
+ *    debug JS sources in the document.
+ * `switchToFrame`:
+ *  Change the targeted document of the whole TabActor, and its child tab actors
+ *  to an iframe or back to its original document.
+ *
+ * Most of the TabActor properties (like `chromeEventHandler` or `docShells`)
+ * are meant to be used by the various child tab actors.
+ *
+ * ### RDP events:
+ *
+ *  - `tabNavigated`:
+ *    Sent when the tab is about to navigate or has just navigated to
+ *    a different document.
+ *    This event contains the following attributes:
+ *     * url (string) The new URI being loaded.
+ *     * nativeConsoleAPI (boolean) `false` if the console API of the page has been
+ *                                          overridden (e.g. by Firebug),
+ *                                  `true`  if the Gecko implementation is used.
+ *     * state (string) `start` if we just start requesting the new URL,
+ *                      `stop`  if the new URL is done loading.
+ *     * isFrameSwitching (boolean) Indicates the event is dispatched when
+ *                                  switching the TabActor context to
+ *                                  a different frame. When we switch to
+ *                                  an iframe, there is no document load.
+ *                                  The targeted document is most likely
+ *                                  going to be already done loading.
+ *     * title (string) The document title being loaded.
+ *                      (sent only on state=stop)
+ *
+ *  - `frameUpdate`:
+ *    Sent when there was a change in the child frames contained in the document
+ *    or when the tab's context was switched to another frame.
+ *    This event can have four different forms depending on the type of incident:
+ *    * One or many frames are updated:
+ *      { frames: [{ id, url, title, parentID }, ...] }
+ *    * One frame got destroyed:
+ *      { frames: [{ id, destroy: true }]}
+ *    * All frames got destroyed:
+ *      { destroyAll: true }
+ *    * We switched the context of the TabActor to a specific frame:
+ *      { selected: #id }
+ *
+ * ### Internal, non-rdp events:
+ * Various events are also dispatched on the TabActor itself that are not
+ * related to RDP, so, not sent to the client. They all relate to the documents
+ * tracked by the TabActor (its main targeted document, but also any of its iframes).
+ *  - will-navigate
+ *    This event fires once navigation starts.
+ *    All pending user prompts are dealt with,
+ *    but it is fired before the first request starts.
+ *  - navigate
+ *    This event is fired once the document's readyState is "complete".
+ *  - window-ready
+ *    This event is fired on three distinct scenarios:
+ *     * When a new Window object is crafted, equivalent of `DOMWindowCreated`.
+ *       It is dispatched before any page script is executed.
+ *     * We will have already received a window-ready event for this window
+ *       when it was created, but we received a window-destroyed event when
+ *       it was frozen into the bfcache, and now the user navigated back to
+ *       this page, so it's now live again and we should resume handling it.
+ *     * For each existing document, when an `attach` request is received.
+ *       At this point scripts in the page will be already loaded.
+ *  - window-destroyed
+ *    This event is fired in two cases:
+ *     * When the window object is destroyed, i.e. when the related document
+ *       is garbage collected. This can happen when the tab is closed or the
+ *       iframe is removed from the DOM.
+ *       It is equivalent of `inner-window-destroyed` event.
+ *     * When the page goes into the bfcache and gets frozen.
+ *       The equivalent of `pagehide`.
+ *  - changed-toplevel-document
+ *    This event fires when we switch the TabActor targeted document
+ *    to one of its iframes, or back to its original top document.
+ *    It is dispatched between window-destroyed and window-ready.
+ *
+ * Note that *all* these events are dispatched in the following order
+ * when we switch the context of the TabActor to a given iframe:
+ *   will-navigate, window-destroyed, changed-toplevel-document, window-ready, navigate
  *
  * This class is subclassed by BrowserTabActor and
  * ContentActor. Subclasses are expected to implement a getter
- * the docShell properties.
+ * for the docShell property.
  *
  * @param aConnection DebuggerServerConnection
  *        The conection to the client.
- * @param aChromeEventHandler
- *        An object on which listen for DOMWindowCreated and pageshow events.
  */
 function TabActor(aConnection)
 {
