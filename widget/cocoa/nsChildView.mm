@@ -2601,7 +2601,7 @@ nsChildView::StartRemoteDrawing()
     return nullptr;
   }
 
-  return drawTarget;
+  return drawTarget.forget();
 }
 
 void
@@ -2718,7 +2718,7 @@ RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
   mInUpdate = true;
 
   RefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
-  return drawTarget;
+  return drawTarget.forget();
 }
 
 #define NSFoundationVersionWithProperStrideSupportForSubtextureUpload NSFoundationVersionNumber10_6_3

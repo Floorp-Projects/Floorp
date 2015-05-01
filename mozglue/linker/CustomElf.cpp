@@ -263,7 +263,7 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
   }
   DEBUG_LOG("CustomElf::Load(\"%s\", 0x%x) = %p", path, flags,
             static_cast<void *>(elf));
-  return elf;
+  return elf.forget();
 }
 
 CustomElf::~CustomElf()

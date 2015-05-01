@@ -652,7 +652,7 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
       retVal = new DrawTargetRecording(mRecorder, retVal, true);
     }
 
-    return retVal;
+    return retVal.forget();
   }
 
   gfxWarning() << "Failed to create draw target for D3D11 texture.";

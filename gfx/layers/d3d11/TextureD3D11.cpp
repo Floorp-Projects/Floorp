@@ -167,7 +167,7 @@ CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
       NS_WARNING("Unsupported SurfaceDescriptor type");
     }
   }
-  return result;
+  return result.forget();
 }
 
 TextureClientD3D11::TextureClientD3D11(ISurfaceAllocator* aAllocator,
@@ -225,7 +225,7 @@ TextureClientD3D11::Create(ISurfaceAllocator* aAllocator,
                                                              aFlags);
   texture->mTexture = aTexture;
   texture->mSize = aSize;
-  return texture;
+  return texture.forget();
 }
 
 TemporaryRef<TextureClient>
@@ -239,7 +239,7 @@ TextureClientD3D11::CreateSimilar(TextureFlags aFlags,
     return nullptr;
   }
 
-  return tex;
+  return tex.forget();
 }
 
 void
@@ -575,7 +575,7 @@ DXGIYCbCrTextureClient::Create(ISurfaceAllocator* aAllocator,
   texture->mSize = aSize;
   texture->mSizeY = aSizeY;
   texture->mSizeCbCr = aSizeCbCr;
-  return texture;
+  return texture.forget();
 }
 
 bool

@@ -346,7 +346,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   /* Handle dlopen(nullptr) directly. */
   if (!path) {
     handle = SystemElf::Load(nullptr, flags);
-    return handle;
+    return handle.forget();
   }
 
   /* TODO: Handle relative paths correctly */

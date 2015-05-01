@@ -51,5 +51,5 @@ MacIOSurfaceImage::GetAsSourceSurface()
   dataSurface->Unmap();
   mSurface->Unlock();
 
-  return dataSurface;
+  return dataSurface.forget();
 }
