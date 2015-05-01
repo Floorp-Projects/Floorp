@@ -9,9 +9,6 @@ content/libs
 content/shared/libs
 standalone/content/libs
 standalone/node_modules
-# We should look at turning these on when we fix the warnings
-test/xpcshell
-test/mochitest
 # Libs we don't need to check
 test/shared/vendor
 
