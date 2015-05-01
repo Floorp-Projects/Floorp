@@ -6,7 +6,7 @@
 <resources>
 
     <dimen name="arrow_popup_container_width">400dp</dimen>
-    <dimen name="doorhanger_offsetY">124dp</dimen>
+    <dimen name="doorhanger_offsetY">100dp</dimen>
 
     <dimen name="browser_toolbar_height">56dp</dimen>
     <dimen name="browser_toolbar_height_flipper">60dp</dimen>
