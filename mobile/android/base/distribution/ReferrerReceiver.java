@@ -30,7 +30,13 @@ public class ReferrerReceiver extends BroadcastReceiver {
     public static final String ACTION_REFERRER_RECEIVED = "org.mozilla.fennec.REFERRER_RECEIVED";
 
     /**
-     * If the install intent has this source, we'll track the campaign ID.
+     * If the install intent has this source, it is a Mozilla specific or over
+     * the air distribution referral.  We'll track the campaign ID using
+     * Mozilla's metrics systems.
+     *
+     * If the install intent has a source different than this one, it is a
+     * referral from an advertising network.  We may track these campaigns using
+     * third-party tracking and metrics systems.
      */
     private static final String MOZILLA_UTM_SOURCE = "mozilla";
 
