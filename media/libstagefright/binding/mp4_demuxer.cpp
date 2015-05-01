@@ -29,10 +29,14 @@ MP4Demuxer::Init()
 {
   mMonitor->AssertCurrentThreadOwns();
 
+  // Check that we have an entire moov before attempting any new reads to make
+  // the retry system work.
+  if (!MP4Metadata::HasCompleteMetadata(mSource)) {
+    return false;
+  }
+
   mMetadata = mozilla::MakeUnique<MP4Metadata>(mSource);
 
-  // Read the number of tracks. If we can't find any, make sure to bail now before
-  // attempting any new reads to make the retry system work.
   if (!mMetadata->GetNumberTracks(mozilla::TrackInfo::kAudioTrack) &&
       !mMetadata->GetNumberTracks(mozilla::TrackInfo::kVideoTrack)) {
     return false;
