@@ -7,11 +7,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+
 const {MozLoopService, LOOP_SESSION_TYPE} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
+                                  "resource://services-common/utils.js");
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
   const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
   return new EventEmitter();
@@ -19,6 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
 XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/loop/loop.properties');
 });
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoopRoomsCache",
+  "resource:///modules/loop/LoopRoomsCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "loopUtils",
   "resource:///modules/loop/utils.js", "utils");
 XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
@@ -41,6 +46,8 @@ const roomsPushNotification = function(version, channelID) {
 let gDirty = true;
 // Global variable that keeps track of the currently used account.
 let gCurrentUser = null;
+// Global variable that keeps track of the room cache.
+let gRoomsCache = null;
 
 /**
  * Extend a `target` object with the properties defined in `source`.
@@ -122,6 +129,13 @@ let LoopRoomsInternal = {
    * @var {Map} rooms Collection of rooms currently in cache.
    */
   rooms: new Map(),
+
+  get roomsCache() {
+    if (!gRoomsCache) {
+      gRoomsCache = new LoopRoomsCache();
+    }
+    return gRoomsCache;
+  },
 
   /**
    * @var {String} sessionType The type of user session. May be 'FXA' or 'GUEST'.
@@ -275,11 +289,39 @@ let LoopRoomsInternal = {
       throw new Error("Missing wrappedKey");
     }
 
-    // Bug 1152761 will cause us to additionally store keys locally. We'll
-    // need to add some code for recovery in case decryption fails.
-    let key = yield this.promiseDecryptRoomKey(roomData.context.wrappedKey);
+    let savedRoomKey = yield this.roomsCache.getKey(this.sessionType, roomData.roomToken);
+    let fallback = false;
+    let key;
+
+    try {
+      key = yield this.promiseDecryptRoomKey(roomData.context.wrappedKey);
+    } catch (error) {
+      // If we don't have a key saved, then we can't do anything.
+      if (!savedRoomKey) {
+        throw error;
+      }
+
+      // We failed to decrypt the room key, so has our FxA key changed?
+      // If so, we fall-back to the saved room key.
+      key = savedRoomKey;
+      fallback = true;
+    }
 
     let decryptedData = yield loopCrypto.decryptBytes(key, roomData.context.value);
+
+    if (fallback) {
+      // Fallback decryption succeeded, so we need to re-encrypt the room key and
+      // save the data back again.
+      // XXX Bug 1152764 will implement this or make it a separate bug.
+    } else if (!savedRoomKey || key != savedRoomKey) {
+      // Decryption succeeded, but we don't have the right key saved.
+      try {
+        yield this.roomsCache.setKey(this.sessionType, roomData.roomToken, key);
+      }
+      catch (error) {
+        MozLoopService.log.error("Failed to save room key:", error);
+      }
+    }
 
     roomData.roomKey = key;
     roomData.decryptedContext = JSON.parse(decryptedData);
@@ -337,7 +379,7 @@ let LoopRoomsInternal = {
 
         this.saveAndNotifyUpdate(roomData, isUpdate);
       } catch (error) {
-        MozLoopService.log.error("Failed to decrypt room data: " + error);
+        MozLoopService.log.error("Failed to decrypt room data: ", error);
         // Do what we can to save the room data.
         room.decryptedContext = {};
         this.saveAndNotifyUpdate(room, isUpdate);
@@ -489,6 +531,9 @@ let LoopRoomsInternal = {
       if (this.sessionType == LOOP_SESSION_TYPE.GUEST) {
         this.setGuestCreatedRoom(true);
       }
+
+      // Now we've got the room token, we can save the key to disk.
+      yield this.roomsCache.setKey(this.sessionType, room.roomToken, room.roomKey);
 
       eventEmitter.emit("add", room);
       callback(null, room);
@@ -700,6 +745,10 @@ let LoopRoomsInternal = {
         sendData = {
           roomName: newRoomName
         };
+      } else {
+        // This might be an upgrade to encrypted rename, so store the key
+        // just in case.
+        yield this.roomsCache.setKey(this.sessionType, all.roomToken, all.roomKey);
       }
 
       let response = yield MozLoopService.hawkRequest(this.sessionType,
