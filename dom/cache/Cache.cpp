@@ -229,7 +229,7 @@ already_AddRefed<Promise>
 Cache::Match(const RequestOrUSVString& aRequest,
              const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -256,7 +256,7 @@ already_AddRefed<Promise>
 Cache::MatchAll(const Optional<RequestOrUSVString>& aRequest,
                 const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -286,7 +286,7 @@ already_AddRefed<Promise>
 Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
            ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -301,13 +301,13 @@ Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
   nsTArray<nsRefPtr<Request>> requestList(1);
   nsRefPtr<Request> request = Request::Constructor(global, aRequest,
                                                    RequestInit(), aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   nsAutoString url;
   request->GetUrl(url);
-  if (!IsValidPutRequestURL(url, aRv)) {
+  if (NS_WARN_IF(!IsValidPutRequestURL(url, aRv))) {
     return nullptr;
   }
 
@@ -320,7 +320,7 @@ Cache::AddAll(JSContext* aContext,
               const Sequence<OwningRequestOrUSVString>& aRequestList,
               ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -334,7 +334,8 @@ Cache::AddAll(JSContext* aContext,
 
     if (aRequestList[i].IsRequest()) {
       requestOrString.SetAsRequest() = aRequestList[i].GetAsRequest();
-      if (!IsValidPutRequestMethod(requestOrString.GetAsRequest(), aRv)) {
+      if (NS_WARN_IF(!IsValidPutRequestMethod(requestOrString.GetAsRequest(),
+                     aRv))) {
         return nullptr;
       }
     } else {
@@ -345,13 +346,13 @@ Cache::AddAll(JSContext* aContext,
 
     nsRefPtr<Request> request = Request::Constructor(global, requestOrString,
                                                      RequestInit(), aRv);
-    if (aRv.Failed()) {
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
     nsAutoString url;
     request->GetUrl(url);
-    if (!IsValidPutRequestURL(url, aRv)) {
+    if (NS_WARN_IF(!IsValidPutRequestURL(url, aRv))) {
       return nullptr;
     }
 
@@ -365,17 +366,17 @@ already_AddRefed<Promise>
 Cache::Put(const RequestOrUSVString& aRequest, Response& aResponse,
            ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  if (!IsValidPutRequestMethod(aRequest, aRv)) {
+  if (NS_WARN_IF(!IsValidPutRequestMethod(aRequest, aRv))) {
     return nullptr;
   }
 
   nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, ReadBody, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -383,7 +384,7 @@ Cache::Put(const RequestOrUSVString& aRequest, Response& aResponse,
 
   args.Add(ir, ReadBody, TypeErrorOnInvalidScheme,
            aResponse, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -394,13 +395,13 @@ already_AddRefed<Promise>
 Cache::Delete(const RequestOrUSVString& aRequest,
               const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
   nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -410,7 +411,7 @@ Cache::Delete(const RequestOrUSVString& aRequest,
   AutoChildOpArgs args(this, CacheDeleteArgs(CacheRequest(), params));
 
   args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -421,7 +422,7 @@ already_AddRefed<Promise>
 Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
             const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -434,12 +435,12 @@ Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
   if (aRequest.WasPassed()) {
     nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
                                                      IgnoreBody, aRv);
-    if (aRv.Failed()) {
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
     args.Add(ir, IgnoreBody, IgnoreInvalidScheme, aRv);
-    if (aRv.Failed()) {
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
   }
@@ -529,7 +530,7 @@ already_AddRefed<Promise>
 Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
 {
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (!promise) {
+  if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
 
@@ -546,7 +547,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
   // If there is no work to do, then resolve immediately
   if (aRequestList.IsEmpty()) {
     nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-    if (!promise) {
+    if (NS_WARN_IF(!promise)) {
       return nullptr;
     }
 
@@ -566,7 +567,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
     requestOrString.SetAsRequest() = aRequestList[i];
     nsRefPtr<Promise> fetch = FetchRequest(mGlobal, requestOrString,
                                            RequestInit(), aRv);
-    if (aRv.Failed()) {
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
@@ -574,7 +575,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
@@ -582,7 +583,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
                                                     Move(aRequestList), promise);
 
   nsRefPtr<Promise> fetchPromise = Promise::All(aGlobal, fetchList, aRv);
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
   fetchPromise->AppendNativeHandler(handler);
@@ -597,7 +598,7 @@ Cache::PutAll(const nsTArray<nsRefPtr<Request>>& aRequestList,
 {
   MOZ_ASSERT(aRequestList.Length() == aResponseList.Length());
 
-  if (!mActor) {
+  if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -607,7 +608,7 @@ Cache::PutAll(const nsTArray<nsRefPtr<Request>>& aRequestList,
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
     nsRefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
     args.Add(ir, ReadBody, TypeErrorOnInvalidScheme, *aResponseList[i], aRv);
-    if (aRv.Failed()) {
+    if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
   }
