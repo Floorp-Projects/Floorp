@@ -229,7 +229,10 @@ already_AddRefed<Promise>
 Cache::Match(const RequestOrUSVString& aRequest,
              const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -253,7 +256,10 @@ already_AddRefed<Promise>
 Cache::MatchAll(const Optional<RequestOrUSVString>& aRequest,
                 const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
@@ -280,6 +286,11 @@ already_AddRefed<Promise>
 Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
            ErrorResult& aRv)
 {
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   if (!IsValidPutRequestMethod(aRequest, aRv)) {
     return nullptr;
   }
@@ -309,6 +320,11 @@ Cache::AddAll(JSContext* aContext,
               const Sequence<OwningRequestOrUSVString>& aRequestList,
               ErrorResult& aRv)
 {
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_ASSERT(!global.Failed());
 
@@ -349,7 +365,10 @@ already_AddRefed<Promise>
 Cache::Put(const RequestOrUSVString& aRequest, Response& aResponse,
            ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   if (!IsValidPutRequestMethod(aRequest, aRv)) {
     return nullptr;
@@ -375,7 +394,10 @@ already_AddRefed<Promise>
 Cache::Delete(const RequestOrUSVString& aRequest,
               const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
   if (aRv.Failed()) {
@@ -399,7 +421,10 @@ already_AddRefed<Promise>
 Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
             const CacheQueryOptions& aOptions, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
@@ -493,9 +518,9 @@ Cache::~Cache()
 {
   NS_ASSERT_OWNINGTHREAD(Cache);
   if (mActor) {
-    mActor->StartDestroy();
-    // DestroyInternal() is called synchronously by StartDestroy().  So we
-    // should have already cleared the mActor.
+    mActor->StartDestroyFromListener();
+    // DestroyInternal() is called synchronously by StartDestroyFromListener().
+    // So we should have already cleared the mActor.
     MOZ_ASSERT(!mActor);
   }
 }
@@ -508,7 +533,7 @@ Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
     return nullptr;
   }
 
-  mActor->ExecuteOp(mGlobal, promise, aOpArgs.SendAsOpArgs());
+  mActor->ExecuteOp(mGlobal, promise, this, aOpArgs.SendAsOpArgs());
   return promise.forget();
 }
 
@@ -570,8 +595,12 @@ Cache::PutAll(const nsTArray<nsRefPtr<Request>>& aRequestList,
               const nsTArray<nsRefPtr<Response>>& aResponseList,
               ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
   MOZ_ASSERT(aRequestList.Length() == aResponseList.Length());
+
+  if (!mActor) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   AutoChildOpArgs args(this, CachePutAllArgs());
 
