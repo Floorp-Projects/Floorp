@@ -199,6 +199,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     bool found;
     const char* name;
 
+    propFlags |= JSPROP_RESOLVING;
+
     if (set) {
         if (iface)
             found = true;
@@ -364,6 +366,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             AutoResolveName arn(ccx, id);
             if (resolved)
                 *resolved = true;
+            desc.attributesRef() |= JSPROP_RESOLVING;
             return JS_DefinePropertyById(ccx, obj, id, desc);
         }
     }
