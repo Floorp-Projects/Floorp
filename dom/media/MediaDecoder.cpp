@@ -535,7 +535,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     if (mDecoderStateMachine) {
-      mDecoderStateMachine->SetAudioCaptured();
+      mDecoderStateMachine->DispatchAudioCaptured();
     }
     if (!GetDecodedStream()) {
       int64_t t = mDecoderStateMachine ?
@@ -748,7 +748,7 @@ void MediaDecoder::SetStateMachineParameters()
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mDecoderStateMachine->SetDuration(mDuration);
   if (GetDecodedStream()) {
-    mDecoderStateMachine->SetAudioCaptured();
+    mDecoderStateMachine->DispatchAudioCaptured();
   }
   if (mMinimizePreroll) {
     mDecoderStateMachine->SetMinimizePrerollUntilPlaybackStarts();

@@ -1372,17 +1372,6 @@ void MediaDecoderStateMachine::VolumeChanged()
   }
 }
 
-void MediaDecoderStateMachine::SetAudioCaptured()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  AssertCurrentThreadInMonitor();
-  if (!mAudioCaptured) {
-    mAudioCaptured = true;
-    // Schedule the state machine to send stream data as soon as possible.
-    ScheduleStateMachine();
-  }
-}
-
 double MediaDecoderStateMachine::GetCurrentTime() const
 {
   return static_cast<double>(mCurrentFrameTime) / static_cast<double>(USECS_PER_S);
