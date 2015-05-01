@@ -10,8 +10,12 @@
 //
 // [
 //   "AGlobalInterface",
-//   {name: "ExperimentalThing", release: false},
-//   {name: "OptionalThing", pref: "some.thing.enabled"},
+//   { name: "ExperimentalThing", release: false },
+//   { name: "ReallyExperimentalThing", nightly: true },
+//   { name: "DesktopOnlyThing", desktop: true },
+//   { name: "NonB2gOnlyThing", b2g: false },
+//   { name: "FancyControl", xbl: true },
+//   { name: "DisabledEverywhere", disabled: true },
 // ];
 //
 // See createInterfaceMap() below for a complete list of properties.
@@ -83,11 +87,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Blob",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "BroadcastChannel", pref: "dom.broadcastChannel.enabled" },
+    "BroadcastChannel",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "Cache", pref: "dom.caches.enabled" },
+    { name: "Cache", release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "CacheStorage", pref: "dom.caches.enabled" },
+    { name: "CacheStorage", release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DedicatedWorkerGlobalScope",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -147,7 +151,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Response",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "ServiceWorkerRegistration", pref: "dom.serviceWorkers.enabled" },
+    { name: "ServiceWorkerRegistration", nightly: true, b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -163,7 +167,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "URLSearchParams",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-   { name: "WebSocket", pref: "dom.workers.websocket.enabled" },
+    "WebSocket",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Worker",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -195,7 +199,8 @@ function createInterfaceMap(prefMap, permissionMap, version, userAgent, isB2G) {
                  (entry.b2g === !isB2G) ||
                  (entry.release === !isRelease) ||
                  (entry.pref && !prefMap[entry.pref])  ||
-                 (entry.permission && !permissionMap[entry.permission])) {
+                 (entry.permission && !permissionMap[entry.permission]) ||
+                 entry.disabled) {
         interfaceMap[entry.name] = false;
       } else {
         interfaceMap[entry.name] = true;
