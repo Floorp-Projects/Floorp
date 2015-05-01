@@ -231,40 +231,9 @@
 
     <panelview id="PanelUI-pocketView" flex="1">
       <vbox class="panel-subview-body">
-        <label id="pocket-header"/>
-        <vbox id="pocket-login-required" hidden="true">
-          <label id="pocket-login-required-tagline" class="pocket-subheader"/>
-          <description id="pocket-fxa-options">
-            <button id="pocket-signup-with-fxa" class="pocket-button"/>
-            <label id="pocket-signup-or"/>
-            <button id="pocket-signup-with-email" class="pocket-button"/>
-          </description>
-          <label id="pocket-account-question"/>
-          <label id="pocket-login-now" class="text-link"/>
-        </vbox>
-        <vbox id="pocket-page-saved" hidden="true">
-          <label id="pocket-page-saved-header" class="pocket-header"/>
-          <hbox id="pocket-page-saved-next-steps" pack="center">
-            <label id="pocket-open-pocket" class="text-link"/>
-            <label id="pocket-remove-page" class="text-link"
-                   onclick="Pocket.remove(this.itemId);"/>
-          </hbox>
-          <hbox id="pocket-separator">
-            <box class="pocket-separator-colorstop"/>
-            <box class="pocket-separator-colorstop"/>
-            <box class="pocket-separator-colorstop"/>
-            <box class="pocket-separator-colorstop"/>
-          </hbox>
-          <vbox id="pocket-page-tags">
-            <hbox id="pocket-page-tags-form">
-              <textbox id="pocket-page-tags-field"
-                       flex="1"/>
-              <button id="pocket-page-tags-add" disabled="true"/>
-            </hbox>
-            <label id="pocket-page-suggested-tags-header"/>
-            <description id="pocket-page-suggested-tags"/>
-          </vbox>
-        </vbox>
+        <hbox id="pocket-panel-container" align="top" flex="1">
+          <iframe id="pocket-panel-iframe" type="content"/>
+        </hbox>
       </vbox>
     </panelview>
 
