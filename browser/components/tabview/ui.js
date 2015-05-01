@@ -465,10 +465,6 @@ let UI = {
     });
     this._reorderTabItemsOnShow = [];
 
-#ifdef XP_WIN
-    // Restore the full height when showing TabView
-    gTabViewFrame.style.marginTop = "";
-#endif
     gTabViewDeck.selectedPanel = gTabViewFrame;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", false);
     gTabViewFrame.contentWindow.focus();
@@ -543,12 +539,6 @@ let UI = {
     });
     this._reorderTabsOnHide = [];
 
-#ifdef XP_WIN
-    // Push the top of TabView frame to behind the tabbrowser, so glass can show
-    // XXX bug 586679: avoid shrinking the iframe and squishing iframe contents
-    // as well as avoiding the flash of black as we animate out
-    gTabViewFrame.style.marginTop = gBrowser.boxObject.y + "px";
-#endif
     gTabViewDeck.selectedPanel = gBrowserPanel;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", true);
     gBrowser.selectedBrowser.focus();
