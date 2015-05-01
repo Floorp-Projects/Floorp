@@ -418,14 +418,14 @@ nsComponentManagerImpl::Init()
   ComponentLocation* cl = sModuleLocations->AppendElement();
   nsCOMPtr<nsIFile> lf = CloneAndAppend(greDir,
                                         NS_LITERAL_CSTRING("chrome.manifest"));
-  cl->type = NS_COMPONENT_LOCATION;
+  cl->type = NS_APP_LOCATION;
   cl->location.Init(lf);
 
   nsRefPtr<nsZipArchive> greOmnijar =
     mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
   if (greOmnijar) {
     cl = sModuleLocations->AppendElement();
-    cl->type = NS_COMPONENT_LOCATION;
+    cl->type = NS_APP_LOCATION;
     cl->location.Init(greOmnijar, "chrome.manifest");
   }
 
@@ -433,7 +433,7 @@ nsComponentManagerImpl::Init()
   appDir->Equals(greDir, &equals);
   if (!equals) {
     cl = sModuleLocations->AppendElement();
-    cl->type = NS_COMPONENT_LOCATION;
+    cl->type = NS_APP_LOCATION;
     lf = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
     cl->location.Init(lf);
   }
@@ -442,7 +442,7 @@ nsComponentManagerImpl::Init()
     mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
   if (appOmnijar) {
     cl = sModuleLocations->AppendElement();
-    cl->type = NS_COMPONENT_LOCATION;
+    cl->type = NS_APP_LOCATION;
     cl->location.Init(appOmnijar, "chrome.manifest");
   }
 
@@ -1712,7 +1712,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::AutoRegister(nsIFile* aLocation)
 {
 #if !defined(MOZILLA_XPCOMRT_API)
-  XRE_AddManifestLocation(NS_COMPONENT_LOCATION, aLocation);
+  XRE_AddManifestLocation(NS_EXTENSION_LOCATION, aLocation);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -2151,7 +2151,7 @@ nsComponentManagerImpl::XPTOnlyManifestManifest(
   char* file = aArgv[0];
   FileLocation f(aCx.mFile, file);
 
-  DoRegisterManifest(NS_COMPONENT_LOCATION, f, false, true);
+  DoRegisterManifest(NS_APP_LOCATION, f, false, true);
 }
 
 /* static */
@@ -2175,7 +2175,7 @@ nsComponentManagerImpl::PreloadXPT(nsIFile* aFile)
   MOZ_ASSERT(!nsComponentManagerImpl::gComponentManager);
   FileLocation location(aFile, "chrome.manifest");
 
-  DoRegisterManifest(NS_COMPONENT_LOCATION, location,
+  DoRegisterManifest(NS_APP_LOCATION, location,
                      false, true /* aXPTOnly */);
 }
 
