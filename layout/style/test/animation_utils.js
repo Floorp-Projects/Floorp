@@ -190,13 +190,21 @@ function findKeyframesRule(name) {
 // Since this function relies on various asynchronous operations, the caller is
 // responsible for calling SimpleTest.waitForExplicitFinish() before calling
 // this and SimpleTest.finish() within aTestFunction and aOnSkip.
-function runOMTATest(aTestFunction, aOnSkip) {
+//
+// specialPowersForPrefs exists because some SpecialPowers objects apparently
+// can get prefs and some can't; callers that would normally have one of the
+// latter but can get their hands on one of the former can pass it in
+// explicitly.
+function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
   const OMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
   var utils      = SpecialPowers.DOMWindowUtils;
+  if (!specialPowersForPrefs) {
+      specialPowersForPrefs = SpecialPowers;
+  }
   var expectOMTA = utils.layerManagerRemote &&
                    // ^ Off-main thread animation cannot be used if off-main
                    // thread composition (OMTC) is not available
-                   SpecialPowers.getBoolPref(OMTAPrefKey);
+                   specialPowersForPrefs.getBoolPref(OMTAPrefKey);
 
   isOMTAWorking().then(function(isWorking) {
     if (expectOMTA) {
