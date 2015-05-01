@@ -1086,8 +1086,11 @@ public:
 protected:
 
   // PlaybackRate and pitch preservation status we should start at.
-  // Readable/Writeable from the main thread.
-  double mInitialPlaybackRate;
+  Canonical<double> mPlaybackRate;
+public:
+  AbstractCanonical<double>* CanonicalPlaybackRate() { return &mPlaybackRate; }
+protected:
+
   bool mInitialPreservesPitch;
 
   // Duration of the media resource. Set to -1 if unknown.
