@@ -843,7 +843,8 @@ ObjectGroup::setGroupToHomogenousArray(ExclusiveContext* cx, JSObject* obj,
         AddTypePropertyId(cx, group, nullptr, JSID_VOID, elementType);
 
         key.proto = objProto;
-        (void) p.add(cx, *table, key, group);
+        if (!p.add(cx, *table, key, group))
+            cx->recoverFromOutOfMemory();
     }
 }
 
