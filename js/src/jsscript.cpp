@@ -1592,8 +1592,10 @@ ScriptSource::chars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holde
 
         const size_t nbytes = sizeof(char16_t) * (length_ + 1);
         char16_t* decompressed = static_cast<char16_t*>(js_malloc(nbytes));
-        if (!decompressed)
+        if (!decompressed) {
+            JS_ReportOutOfMemory(cx);
             return nullptr;
+        }
 
         if (!DecompressString((const unsigned char*) compressedData(), compressedBytes(),
                               reinterpret_cast<unsigned char*>(decompressed), nbytes)) {

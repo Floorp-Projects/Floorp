@@ -473,6 +473,7 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
         if (!table || !table->init()) {
             js_delete(table);
             table = nullptr;
+            ReportOutOfMemory(cx);
             return nullptr;
         }
     }
@@ -524,8 +525,10 @@ ObjectGroup::defaultNewGroup(ExclusiveContext* cx, const Class* clasp,
     if (!group)
         return nullptr;
 
-    if (!table->add(p, ObjectGroupCompartment::NewEntry(group, associated)))
+    if (!table->add(p, ObjectGroupCompartment::NewEntry(group, associated))) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     ObjectGroupCompartment::newTablePostBarrier(cx, table, clasp, proto, associated);
 
@@ -581,6 +584,7 @@ ObjectGroup::lazySingletonGroup(ExclusiveContext* cx, const Class* clasp, Tagged
     if (!table) {
         table = cx->new_<ObjectGroupCompartment::NewTable>();
         if (!table || !table->init()) {
+            ReportOutOfMemory(cx);
             js_delete(table);
             table = nullptr;
             return nullptr;
@@ -605,8 +609,10 @@ ObjectGroup::lazySingletonGroup(ExclusiveContext* cx, const Class* clasp, Tagged
     if (!group)
         return nullptr;
 
-    if (!table->add(p, ObjectGroupCompartment::NewEntry(group, nullptr)))
+    if (!table->add(p, ObjectGroupCompartment::NewEntry(group, nullptr))) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     ObjectGroupCompartment::newTablePostBarrier(cx, table, clasp, proto, nullptr);
 

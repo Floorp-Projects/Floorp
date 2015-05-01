@@ -377,7 +377,7 @@ struct JSCompartment
     JSCompartment(JS::Zone* zone, const JS::CompartmentOptions& options);
     ~JSCompartment();
 
-    bool init(JSContext* cx);
+    bool init(JSContext* maybecx);
 
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer* trc);
