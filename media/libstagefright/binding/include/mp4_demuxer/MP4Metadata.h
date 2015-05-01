@@ -28,6 +28,7 @@ public:
   explicit MP4Metadata(Stream* aSource);
   ~MP4Metadata();
 
+  static bool HasCompleteMetadata(Stream* aSource);
   uint32_t GetNumberTracks(mozilla::TrackInfo::TrackType aType) const;
   mozilla::UniquePtr<mozilla::TrackInfo> GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                                                       size_t aTrackNumber) const;
