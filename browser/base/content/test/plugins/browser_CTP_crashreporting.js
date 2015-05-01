@@ -1,10 +1,8 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
+let rootDir = getRootDirectory(gTestPath);
+const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
-const PLUGIN_PAGE = getRootDirectory(gTestPath) + "plugin_big.html";
-const PLUGIN_SMALL_PAGE = getRootDirectory(gTestPath) + "plugin_small.html";
+const PLUGIN_PAGE = gTestRoot + "plugin_big.html";
+const PLUGIN_SMALL_PAGE = gTestRoot + "plugin_small.html";
 
 /**
  * Takes an nsIPropertyBag and converts it into a JavaScript Object. It
@@ -30,14 +28,8 @@ function convertPropertyBag(aBag) {
   return result;
 }
 
-function promisePopupNotificationShown(notificationID) {
-  return new Promise((resolve) => {
-    waitForNotificationShown(notificationID, resolve);
-  });
-}
-
 add_task(function* setup() {
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables plugin
   // crash reports.  This test needs them enabled.  The test also needs a mock
@@ -51,9 +43,17 @@ add_task(function* setup() {
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
+
   registerCleanupFunction(function cleanUp() {
+    clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverURL);
+    Services.prefs.clearUserPref("plugins.click_to_play");
+    Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+    window.focus();
   });
 });
 
@@ -66,20 +66,15 @@ add_task(function*() {
     gBrowser,
     url: PLUGIN_PAGE,
   }, function* (browser) {
-    let activated = yield ContentTask.spawn(browser, null, function*() {
-      let plugin = content.document.getElementById("test");
-      return plugin.QueryInterface(Ci.nsIObjectLoadingContent).activated;
-    });
-    ok(!activated, "Plugin should not be activated");
+    // Work around for delayed PluginBindingAttached
+    yield promiseUpdatePluginBindings(browser);
 
-    // Open up the click-to-play notification popup...
-    let popupNotification = PopupNotifications.getNotification("click-to-play-plugins",
-                                                               browser);
-    ok(popupNotification, "Should have a click-to-play notification");
+    let pluginInfo = yield promiseForPluginInfo("test", browser);
+    ok(!pluginInfo.activated, "Plugin should not be activated");
 
-    yield promisePopupNotificationShown(popupNotification);
-
-    // The primary button in the popup should activate the plugin.
+    // Simulate clicking the "Allow Always" button.
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", browser);
+    yield promiseForNotificationShown(notification, browser);
     PopupNotifications.panel.firstChild._primaryButton.click();
 
     // Prepare a crash report topic observer that only returns when
@@ -99,8 +94,9 @@ add_task(function*() {
       }, "Waited too long for plugin to activate.");
 
       try {
-        plugin.crash();
-      } catch(e) {}
+        Components.utils.waiveXrays(plugin).crash();
+      } catch(e) {
+      }
 
       let doc = plugin.ownerDocument;
 
@@ -177,21 +173,11 @@ add_task(function*() {
     gBrowser,
     url: PLUGIN_SMALL_PAGE,
   }, function* (browser) {
-    let activated = yield ContentTask.spawn(browser, null, function*() {
-      let plugin = content.document.getElementById("test");
-      return plugin.QueryInterface(Ci.nsIObjectLoadingContent).activated;
-    });
-    ok(!activated, "Plugin should not be activated");
+    // Work around for delayed PluginBindingAttached
+    yield promiseUpdatePluginBindings(browser);
 
-    // Open up the click-to-play notification popup...
-    let popupNotification = PopupNotifications.getNotification("click-to-play-plugins",
-                                                               browser);
-    ok(popupNotification, "Should have a click-to-play notification");
-
-    yield promisePopupNotificationShown(popupNotification);
-
-    // The primary button in the popup should activate the plugin.
-    PopupNotifications.panel.firstChild._primaryButton.click();
+    let pluginInfo = yield promiseForPluginInfo("test", browser);
+    ok(pluginInfo.activated, "Plugin should be activated from previous test");
 
     // Prepare a crash report topic observer that only returns when
     // the crash report has been successfully sent.
@@ -210,7 +196,7 @@ add_task(function*() {
       }, "Waited too long for plugin to activate.");
 
       try {
-        plugin.crash();
+        Components.utils.waiveXrays(plugin).crash();
       } catch(e) {}
     });
 
