@@ -21,6 +21,7 @@ const kMissingAPIMessage = "Unsupported blocklist call in the child process."
  */
 
 function Blocklist() {
+  this.init();
 }
 
 Blocklist.prototype = {
@@ -28,12 +29,41 @@ Blocklist.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistService]),
 
+  init: function () {
+    Services.cpmm.addMessageListener("Blocklist:blocklistInvalidated", this);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+  },
+
+  uninit: function () {
+    Services.cpmm.removeMessageListener("Blocklist:blocklistInvalidated", this);
+    Services.obs.removeObserver(this, "xpcom-shutdown", false);
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+    case "xpcom-shutdown":
+      this.uninit();
+      break;
+    }
+  },
+
+  // Message manager message handlers
+  receiveMessage: function (aMsg) {
+    switch (aMsg.name) {
+      case "Blocklist:blocklistInvalidated":
+        Services.obs.notifyObservers(null, "blocklist-updated", null);
+        break;
+      default:
+        throw new Error("Unknown blocklist message received from content: " + aMsg.name);
+    }
+  },
+
   /*
-    * A helper that queries key data from a plugin or addon object
-    * and generates a simple data wrapper suitable for ipc. We hand
-    * these directly to the nsBlockListService in the parent which
-    * doesn't query for much.. allowing us to get away with this.
-    */
+   * A helper that queries key data from a plugin or addon object
+   * and generates a simple data wrapper suitable for ipc. We hand
+   * these directly to the nsBlockListService in the parent which
+   * doesn't query for much.. allowing us to get away with this.
+   */
   flattenObject: function (aTag) {
     // Based on debugging the nsBlocklistService, these are the props the
     // parent side will check on our objects.
@@ -57,7 +87,7 @@ Blocklist.prototype = {
   },
 
   getPluginBlocklistState: function (aPluginTag, aAppVersion, aToolkitVersion) {
-    return Services.cpmm.sendSyncMessage("Blocklist::getPluginBlocklistState", {
+    return Services.cpmm.sendSyncMessage("Blocklist:getPluginBlocklistState", {
       addonData: this.flattenObject(aPluginTag),
       appVersion: aAppVersion,
       toolkitVersion: aToolkitVersion
