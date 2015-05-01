@@ -20,7 +20,6 @@ EXTRA_JS_MODULES.loop += [
     'modules/LoopCalls.jsm',
     'modules/LoopContacts.jsm',
     'modules/LoopRooms.jsm',
-    'modules/LoopRoomsCache.jsm',
     'modules/LoopStorage.jsm',
     'modules/MozLoopAPI.jsm',
     'modules/MozLoopPushHandler.jsm',
