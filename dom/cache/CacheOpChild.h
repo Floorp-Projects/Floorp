@@ -31,7 +31,8 @@ class CacheOpChild final : public PCacheOpChild
 private:
   // This class must be constructed by CacheChild or CacheStorageChild using
   // their ExecuteOp() factory method.
-  CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal, Promise* aPromise);
+  CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
+               nsISupports* aParent, Promise* aPromise);
   ~CacheOpChild();
 
   // PCacheOpChild methods
@@ -68,6 +69,9 @@ private:
   HandleRequestList(const nsTArray<CacheRequest>& aRequestList);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  // Hold the parent Cache or CacheStorage object alive until this async
+  // operation completes.
+  nsCOMPtr<nsISupports> mParent;
   nsRefPtr<Promise> mPromise;
 
   NS_DECL_OWNINGTHREAD

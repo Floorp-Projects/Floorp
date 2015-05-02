@@ -1,49 +1,65 @@
-const gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 let gTestBrowser = null;
 let gWrapperClickCount = 0;
 
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
+add_task(function* () {
+  registerCleanupFunction(function () {
+    clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    gBrowser.removeCurrentTab();
+    window.focus();
+    gTestBrowser = null;
   });
+});
+
+add_task(function* () {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("load", pageLoad, true);
-  gTestBrowser.contentWindow.location = gHttpTestRoot + "plugin_bug787619.html";
-}
 
-function pageLoad() {
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+
+  let testRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+  yield promiseTabLoadEvent(gBrowser.selectedTab, testRoot + "plugin_bug787619.html");
+
   // Due to layout being async, "PluginBindAttached" may trigger later.
   // This forces a layout flush, thus triggering it, and schedules the
   // test so it is definitely executed afterwards.
-  gTestBrowser.contentDocument.getElementById('plugin').clientTop;
-  executeSoon(part1);
-}
+  yield promiseUpdatePluginBindings(gTestBrowser);
 
-function part1() {
-  let wrapper = gTestBrowser.contentDocument.getElementById('wrapper');
-  wrapper.addEventListener('click', function() ++gWrapperClickCount, false);
+  // check plugin state
+  let pluginInfo = yield promiseForPluginInfo("plugin");
+  ok(!pluginInfo.activated, "1a plugin should not be activated");
 
-  let plugin = gTestBrowser.contentDocument.getElementById('plugin');
-  ok(plugin, 'got plugin element');
-  ok(!plugin.activated, 'plugin should not be activated');
-  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed, "Doorhanger should not be open");
+  // click the overlay to prompt
+  let promise = promisePopupNotification("click-to-play-plugins");
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    let plugin = content.document.getElementById("plugin");
+    let bounds = plugin.getBoundingClientRect();
+    let left = (bounds.left + bounds.right) / 2;
+    let top = (bounds.top + bounds.bottom) / 2;
+    let utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.sendMouseEvent("mousedown", left, top, 0, 1, 0, false, 0, 0);
+    utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
+  });
+  yield promise;
 
-  EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
-  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed;
-  waitForCondition(condition, part2,
-                   'waited too long for plugin to activate');
-}
+  // check plugin state
+  pluginInfo = yield promiseForPluginInfo("plugin");
+  ok(!pluginInfo.activated, "1b plugin should not be activated");
 
-function part2() {
+  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
+    PopupNotifications.panel.firstChild;
+  yield promiseForCondition(condition);
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
+  // check plugin state
+  pluginInfo = yield promiseForPluginInfo("plugin");
+  ok(pluginInfo.activated, "plugin should be activated");
+
   is(gWrapperClickCount, 0, 'wrapper should not have received any clicks');
-  gTestBrowser.removeEventListener("load", pageLoad, true);
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
+});
