@@ -3953,14 +3953,6 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to collect all window data (ms)"
   },
-  "FX_SESSION_RESTORE_COLLECT_SINGLE_WINDOW_DATA_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "30000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Time to collect the data of a single window (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "FX_SESSION_RESTORE_COLLECT_COOKIES_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
@@ -4015,14 +4007,6 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to read the session data from the file on disk (ms)"
   },
-  "FX_SESSION_RESTORE_WRITE_STATE_LONGEST_OP_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Time spent on the main thread serializing, broadcasting and sending the session data for writing (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "FX_SESSION_RESTORE_WRITE_FILE_MS": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "default",
@@ -4031,14 +4015,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Session restore: Time to write the session data to the file on disk (ms)"
-  },
-  "FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Duration of the longest uninterruptible operation while writing session data (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FX_SESSION_RESTORE_FILE_SIZE_BYTES": {
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
@@ -4069,122 +4045,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
-  },
-  "FX_SESSION_RESTORE_SESSION_LENGTH": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "365",
-    "n_buckets": 15,
-    "description": "Session restore: Days elapsed since the session was first started *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_EXTRACTING_STATISTICS_DURATION_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Duration of the off main thread statistics extraction mechanism (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_TOTAL_OPEN_WINDOWS_SIZE_BYTES": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "Session restore: The subset of sessionrestore.js representing open windows (total size, in bytes)"
-  },
-  "FX_SESSION_RESTORE_TOTAL_CLOSED_WINDOWS_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "Session restore: The subset of sessionrestore.js representing closed windows (total size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_TOTAL_CLOSED_TABS_IN_OPEN_WINDOWS_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "Sessionrestore: The subset of sesionstore.js representing closed tabs in open windows (total size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_TOTAL_COOKIES_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with cookies (total size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_TOTAL_DOM_STORAGE_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with DOM storage (total size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_TOTAL_FORMDATA_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing form data (total size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_TOTAL_HISTORY_SIZE_BYTES": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing history (total size, in bytes)"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_OPEN_WINDOWS_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "Session restore: The subset of sessionrestore.js representing open windows (item size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_CLOSED_WINDOWS_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "Session restore: The subset of sessionrestore.js representing closed windows (item size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_CLOSED_TABS_IN_OPEN_WINDOWS_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "Sessionrestore: The subset of sesionstore.js representing closed tabs in open windows (item size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_COOKIES_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with cookies (item size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_DOM_STORAGE_SIZE_BYTES": {
-    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with DOM storage (item size, in bytes)"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_FORMDATA_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing form data (item size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "FX_SESSION_RESTORE_INDIVIDUAL_HISTORY_SIZE_BYTES": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "5000000",
-    "n_buckets": 30,
-    "description": "The subset of sessionstore.js dealing with storing history (item size, in bytes) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
