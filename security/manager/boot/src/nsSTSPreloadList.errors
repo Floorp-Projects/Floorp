@@ -13,7 +13,7 @@ api.recurly.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header (error ignored - included regardless)
 app.manilla.com: could not connect to host
 appengine.google.com: did not receive HSTS header (error ignored - included regardless)
-appseccalifornia.org: did not receive HSTS header
+appseccalifornia.org: could not connect to host
 astaxi.net: did not receive HSTS header
 at.search.yahoo.com: did not receive HSTS header
 atavio.at: could not connect to host
@@ -29,7 +29,6 @@ barcodeberlin.com: did not receive HSTS header
 bassh.net: could not connect to host
 bccx.com: could not connect to host
 bcm.com.au: max-age too low: 0
-bcrook.com: could not connect to host
 be.search.yahoo.com: did not receive HSTS header
 betnet.fr: could not connect to host
 bi.search.yahoo.com: did not receive HSTS header
@@ -37,13 +36,16 @@ bidon.ca: did not receive HSTS header
 bigshinylock.minazo.net: could not connect to host
 bitfarm-archiv.com: did not receive HSTS header
 bitfarm-archiv.de: did not receive HSTS header
+bitgo.com: max-age too low: 0
 bizon.sk: did not receive HSTS header
 blacklane.com: did not receive HSTS header
 blog.lookout.com: did not receive HSTS header
 br.search.yahoo.com: did not receive HSTS header
+brage.info: could not connect to host
 brainfork.ml: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 brainvation.de: did not receive HSTS header
+bran.cc: could not connect to host
 browserid.org: did not receive HSTS header
 business.medbank.com.mt: could not connect to host
 buttercoin.com: did not receive HSTS header
@@ -71,12 +73,13 @@ chrome.google.com: did not receive HSTS header (error ignored - included regardl
 cimballa.com: did not receive HSTS header
 cl.search.yahoo.com: did not receive HSTS header
 climaprecio.es: did not receive HSTS header
-clintwilson.technology: could not connect to host
 cn.search.yahoo.com: did not receive HSTS header
 co.search.yahoo.com: did not receive HSTS header
 code.google.com: did not receive HSTS header (error ignored - included regardless)
 codereview.chromium.org: did not receive HSTS header (error ignored - included regardless)
+coding.net: did not receive HSTS header
 coffeeetc.co.uk: did not receive HSTS header
+comdurav.com: could not connect to host
 conformal.com: could not connect to host
 console.python.org: did not receive HSTS header
 coursella.com: did not receive HSTS header
@@ -86,14 +89,11 @@ crbug.com: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crowdjuris.com: could not connect to host
 crypto.is: max-age too low: 7776000
-cs50.harvard.edu: max-age too low: 1
-cs50.net: max-age too low: 1
 csawctf.poly.edu: could not connect to host
 ct.search.yahoo.com: did not receive HSTS header
 cujanovic.com: did not receive HSTS header
 cyanogenmod.xxx: could not connect to host
 cybershambles.com: could not connect to host
-darkserver.fedoraproject.org: could not connect to host
 datasnitch.co.uk: could not connect to host
 daylightcompany.com: did not receive HSTS header
 de.search.yahoo.com: did not receive HSTS header
@@ -128,12 +128,11 @@ etsysecure.com: could not connect to host
 fabianfischer.de: did not receive HSTS header
 fatzebra.com.au: did not receive HSTS header
 fi.search.yahoo.com: did not receive HSTS header
-fixingdns.com: could not connect to host
+fixingdns.com: did not receive HSTS header
 fj.search.yahoo.com: did not receive HSTS header
 fm83.nl: did not receive HSTS header
 fonetiq.io: could not connect to host
 fr.search.yahoo.com: did not receive HSTS header
-friendlink.jp: did not receive HSTS header
 gamesdepartment.co.uk: did not receive HSTS header
 geekandi.com: max-age too low: 7776000
 getlantern.org: did not receive HSTS header
@@ -155,14 +154,14 @@ guidetoiceland.is: did not receive HSTS header
 gwijaya.com: did not receive HSTS header
 hackerone-user-content.com: could not connect to host
 hatoko.net: could not connect to host
-helpadmin.net: did not receive HSTS header
+hexony.com: did not receive HSTS header
 history.google.com: did not receive HSTS header (error ignored - included regardless)
 hk.search.yahoo.com: did not receive HSTS header
 hn.search.yahoo.com: did not receive HSTS header
 hoerbuecher-und-hoerspiele.de: did not receive HSTS header
 honeytracks.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 horosho.in: could not connect to host
-horseboners.xxx: could not connect to host
+horseboners.xxx: did not receive HSTS header
 hostedtalkgadget.google.com: did not receive HSTS header (error ignored - included regardless)
 howrandom.org: could not connect to host
 hstspreload.appspot.com: did not receive HSTS header
@@ -186,11 +185,12 @@ it.search.yahoo.com: did not receive HSTS header
 itshost.ru: could not connect to host
 j0s.at: did not receive HSTS header
 jamesdoylephoto.com: did not receive HSTS header
-janoberst.com: did not receive HSTS header
 jelmer.co.uk: could not connect to host
 johners.me: could not connect to host
 jottit.com: could not connect to host
+julian-kipka.de: did not receive HSTS header
 k-dev.de: could not connect to host
+kamikano.com: did not receive HSTS header
 keeley.gq: could not connect to host
 keeley.ml: could not connect to host
 keepclean.me: could not connect to host
@@ -222,6 +222,7 @@ lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FA
 luxus-russen.de: could not connect to host
 lv.search.yahoo.com: did not receive HSTS header
 m.gparent.org: could not connect to host
+m0wef.uk: could not connect to host
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
 maktoob.search.yahoo.com: did not receive HSTS header
 malaysia.search.yahoo.com: did not receive HSTS header
@@ -231,11 +232,12 @@ marshut.net: could not connect to host
 matatall.com: could not connect to host
 mattmccutchen.net: could not connect to host
 mccrypto.de: could not connect to host
+medallia.io: could not connect to host
 mediacru.sh: could not connect to host
 megashur.se: did not receive HSTS header
 megaxchange.com: did not receive HSTS header
 meinebo.it: could not connect to host
-micropple.net: did not receive HSTS header
+micropple.net: could not connect to host
 minikneet.nl: could not connect to host
 mirindadomo.ru: did not receive HSTS header
 mnemotiv.com: could not connect to host
@@ -245,6 +247,7 @@ mocloud.eu: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR
 mqas.net: could not connect to host
 mt.search.yahoo.com: did not receive HSTS header
 mu.search.yahoo.com: did not receive HSTS header
+mutamatic.com: could not connect to host
 mw.search.yahoo.com: did not receive HSTS header
 mx.search.yahoo.com: did not receive HSTS header
 my.alfresco.com: did not receive HSTS header
@@ -255,6 +258,7 @@ mykreuzfahrt.de: did not receive HSTS header
 myni.io: could not connect to host
 neftaly.com: did not receive HSTS header
 neonisi.com: could not connect to host
+netbox.cc: did not receive HSTS header
 netzpolitik.org: did not receive HSTS header
 netztest.at: did not receive HSTS header
 newkaliningrad.ru: did not receive HSTS header
@@ -275,10 +279,12 @@ openshift.redhat.com: did not receive HSTS header
 otakurepublic.com: did not receive HSTS header
 ottospora.nl: could not connect to host
 pa.search.yahoo.com: did not receive HSTS header
+partyvan.se: could not connect to host
 passwordbox.com: did not receive HSTS header
 passwords.google.com: did not receive HSTS header (error ignored - included regardless)
 pe.search.yahoo.com: did not receive HSTS header
 ph.search.yahoo.com: did not receive HSTS header
+pierre-schmitz.com: did not receive HSTS header
 piratenlogin.de: could not connect to host
 pisidia.de: did not receive HSTS header
 pk.search.yahoo.com: did not receive HSTS header
@@ -296,6 +302,8 @@ pult.co: could not connect to host
 py.search.yahoo.com: did not receive HSTS header
 qc.search.yahoo.com: did not receive HSTS header
 rapidresearch.me: could not connect to host
+rasing.me: could not connect to host
+ravchat.com: did not receive HSTS header
 redlatam.org: did not receive HSTS header
 redports.org: did not receive HSTS header
 regar42.fr: could not connect to host
@@ -305,10 +313,10 @@ rme.li: did not receive HSTS header
 ro.search.yahoo.com: did not receive HSTS header
 roddis.net: did not receive HSTS header
 ru.search.yahoo.com: did not receive HSTS header
-rubyshop.nl: did not receive HSTS header
 rw.search.yahoo.com: did not receive HSTS header
 sah3.net: could not connect to host
 saturngames.co.uk: could not connect to host
+savetheinternet.eu: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
 sdsl-speedtest.de: could not connect to host
 se.search.yahoo.com: did not receive HSTS header
@@ -324,7 +332,6 @@ siammedia.co: did not receive HSTS header
 silentcircle.org: could not connect to host
 simon.butcher.name: max-age too low: 2629743
 simplyfixit.co.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
-simplystudio.com: could not connect to host
 sistemy48.ru: did not receive HSTS header
 sites.google.com: did not receive HSTS header (error ignored - included regardless)
 smartlend.se: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
@@ -340,6 +347,7 @@ ssl.google-analytics.com: did not receive HSTS header (error ignored - included 
 ssl.panoramio.com: did not receive HSTS header
 stocktrade.de: could not connect to host
 suite73.org: could not connect to host
+sunjaydhama.com: did not receive HSTS header
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 suzukikenichi.com: did not receive HSTS header
@@ -372,13 +380,14 @@ tv.search.yahoo.com: could not connect to host
 tw.search.yahoo.com: did not receive HSTS header
 ua.search.yahoo.com: did not receive HSTS header
 uk.search.yahoo.com: did not receive HSTS header
+unterfrankenclan.de: could not connect to host
 uprotect.it: could not connect to host
 ustr.gov: max-age too low: 86400
 uy.search.yahoo.com: did not receive HSTS header
 uz.search.yahoo.com: did not receive HSTS header
 ve.search.yahoo.com: did not receive HSTS header
 vhost.co.id: could not connect to host
-viennan.net: could not connect to host
+viennan.net: did not receive HSTS header
 vn.search.yahoo.com: did not receive HSTS header
 vyncke.org: did not receive HSTS header
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -396,7 +405,6 @@ www.elanex.biz: did not receive HSTS header
 www.gmail.com: did not receive HSTS header (error ignored - included regardless)
 www.googlemail.com: did not receive HSTS header (error ignored - included regardless)
 www.greplin.com: could not connect to host
-www.heliosnet.com: could not connect to host
 www.jitsi.org: did not receive HSTS header
 www.logentries.com: did not receive HSTS header
 www.moneybookers.com: did not receive HSTS header
@@ -412,5 +420,6 @@ xtream-hosting.de: could not connect to host
 xtream-hosting.eu: could not connect to host
 xtreamhosting.eu: could not connect to host
 za.search.yahoo.com: did not receive HSTS header
+zarooba.com: did not receive HSTS header
 zh.search.yahoo.com: did not receive HSTS header
 zoo24.de: could not connect to host
