@@ -3514,15 +3514,24 @@ public:
       : mFrame(nullptr)
       , mTransformList(aTransformList)
       , mToTransformOrigin(aToTransformOrigin)
-      , mToPerspectiveOrigin(aToPerspectiveOrigin)
       , mChildPerspective(aChildPerspective)
+      , mToPerspectiveOrigin(aToPerspectiveOrigin)
     {}
+
+    const Point3D& GetToPerspectiveOrigin() const
+    {
+      MOZ_ASSERT(mChildPerspective > 0, "Only valid with mChildPerspective > 0");
+      return mToPerspectiveOrigin;
+    }
 
     const nsIFrame* mFrame;
     nsRefPtr<nsCSSValueSharedList> mTransformList;
     const Point3D mToTransformOrigin;
-    const Point3D mToPerspectiveOrigin;
     nscoord mChildPerspective;
+
+  private:
+    // mToPerspectiveOrigin is only valid if mChildPerspective > 0.
+    Point3D mToPerspectiveOrigin;
   };
 
   /**
