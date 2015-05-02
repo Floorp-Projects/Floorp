@@ -11,8 +11,6 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 let openChatOrig = Chat.open;
 
-const kContextEnabledPref = "loop.contextInConverations.enabled";
-
 const kGuestKey = "uGIs-kGbYt1hBBwjyW7MLQ";
 
 // Rooms details as responded by the server.
@@ -299,14 +297,10 @@ add_task(function* setup_server() {
       let body = CommonUtils.readBytesFromInputStream(req.bodyInputStream);
       let data = JSON.parse(body);
 
-      if (Services.prefs.getBoolPref(kContextEnabledPref)) {
-        Assert.equal(data.roomOwner, kCreateRoomProps.roomOwner);
-        Assert.equal(data.maxSize, kCreateRoomProps.maxSize);
-        Assert.ok(!("decryptedContext" in data), "should not have any decrypted data");
-        Assert.ok("context" in data, "should have context");
-      } else {
-        Assert.deepEqual(data, kCreateRoomUnencryptedProps);
-      }
+      Assert.equal(data.roomOwner, kCreateRoomProps.roomOwner);
+      Assert.equal(data.maxSize, kCreateRoomProps.maxSize);
+      Assert.ok(!("decryptedContext" in data), "should not have any decrypted data");
+      Assert.ok("context" in data, "should have context");
 
       res.write(JSON.stringify(kCreateRoomData));
     } else {
@@ -353,15 +347,11 @@ add_task(function* setup_server() {
         res.finish();
       } else if (req.method == "PATCH") {
         let data = getJSONData(req.bodyInputStream);
-        if (Services.prefs.getBoolPref(kContextEnabledPref)) {
-          Assert.ok("context" in data, "should have encrypted context");
-          // We return a fake encrypted name here as the context is
-          // encrypted.
-          returnRoomDetails(res, "fakeEncrypted");
-        } else {
-          Assert.ok(!("context" in data), "should not have encrypted context");
-          returnRoomDetails(res, data.roomName);
-        }
+
+        Assert.ok("context" in data, "should have encrypted context");
+        // We return a fake encrypted name here as the context is
+        // encrypted.
+        returnRoomDetails(res, "fakeEncrypted");
       } else {
         roomDetail.context = room.context;
         res.setStatusLine(null, 200, "OK");
@@ -415,20 +405,6 @@ add_task(function* test_errorStates() {
 
 // Test if creating a new room works as expected.
 add_task(function* test_createRoom() {
-  Services.prefs.setBoolPref(kContextEnabledPref, true);
-
-  var expectedRoom = extend({}, kCreateRoomProps);
-  expectedRoom.roomToken = kCreateRoomData.roomToken;
-
-  gExpectedAdds.push(expectedRoom);
-  let room = yield LoopRooms.promise("create", kCreateRoomProps);
-  compareRooms(room, expectedRoom);
-});
-
-// XXX Test unencrypted rooms. This will go away once we switch encryption on.
-add_task(function* test_createRoom_unencrypted() {
-  Services.prefs.setBoolPref(kContextEnabledPref, false);
-
   var expectedRoom = extend({}, kCreateRoomProps);
   expectedRoom.roomToken = kCreateRoomData.roomToken;
 
@@ -601,17 +577,9 @@ add_task(function* test_sendConnectionStatus() {
 
 // Test if renaming a room works as expected.
 add_task(function* test_renameRoom() {
-  Services.prefs.setBoolPref(kContextEnabledPref, true);
   let roomToken = "_nxD4V4FflQ";
   let renameData = yield LoopRooms.promise("rename", roomToken, "fakeName");
   Assert.equal(renameData.roomName, "fakeEncrypted", "should have set the new name");
-});
-
-add_task(function* test_renameRoom_unencrpyted() {
-  Services.prefs.setBoolPref(kContextEnabledPref, false);
-  let roomToken = "_nxD4V4FflQ";
-  let renameData = yield LoopRooms.promise("rename", roomToken, "fakeName");
-  Assert.equal(renameData.roomName, "fakeName", "should have set the new name");
 });
 
 add_task(function* test_roomDeleteNotifications() {
@@ -657,7 +625,6 @@ function run_test() {
   do_register_cleanup(function () {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
-    Services.prefs.clearUserPref(kContextEnabledPref);
     Services.prefs.clearUserPref("loop.key");
 
     MozLoopServiceInternal.fxAOAuthTokenData = null;

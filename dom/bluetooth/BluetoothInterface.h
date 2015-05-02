@@ -888,6 +888,9 @@ public:
   virtual void EnergyInfoNotification(const BluetoothActivityEnergyInfo& aInfo)
   { }
 
+  virtual void BackendErrorNotification(bool aCrashed)
+  { }
+
 protected:
   BluetoothNotificationHandler()
   { }

@@ -181,6 +181,21 @@ SmsIPCService::GetSmscAddress(uint32_t aServiceId,
   return SendRequest(GetSmscAddressRequest(aServiceId), aRequest);
 }
 
+
+NS_IMETHODIMP
+SmsIPCService::SetSmscAddress(uint32_t aServiceId,
+                              const nsAString& aNumber,
+                              uint32_t aTypeOfNumber,
+                              uint32_t aNumberPlanIdentification,
+                              nsIMobileMessageCallback* aRequest)
+{
+  return SendRequest(SetSmscAddressRequest(aServiceId,
+                                           nsString(aNumber),
+                                           aTypeOfNumber,
+                                           aNumberPlanIdentification),
+                     aRequest);
+}
+
 NS_IMETHODIMP
 SmsIPCService::Send(uint32_t aServiceId,
                     const nsAString& aNumber,

@@ -3115,6 +3115,17 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
         }
       }
     }
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+    else if (presShell->GetDocument() && presShell->GetDocument()->IsRootDisplayDocument()) {
+      // In cases where the root document is a XUL document, we want to take
+      // the ViewID from the root element, as that will be the ViewID of the
+      // root APZC in the tree.
+      if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
+        id = nsLayoutUtils::FindOrCreateIDFor(element);
+      }
+    }
+#endif
+
     nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);
 
     PROFILER_LABEL("nsLayoutUtils", "PaintFrame::BuildDisplayList",
