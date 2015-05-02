@@ -9,7 +9,4 @@ DIRS += ['content', 'locales']
 DIST_SUBDIR = 'browser'
 export('DIST_SUBDIR')
 
-JS_PREFERENCE_FILES += [
-    'pref/firefox-branding.js',
-]
-
+include('../branding-common.mozbuild')

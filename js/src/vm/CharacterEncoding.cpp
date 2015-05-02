@@ -340,8 +340,10 @@ InflateUTF8StringHelper(JSContext* cx, const UTF8Chars src, CountAction countAct
         return TwoByteCharsZ();
 
     char16_t* dst = cx->pod_malloc<char16_t>(*outlen + 1);  // +1 for NUL
-    if (!dst)
+    if (!dst) {
+        ReportOutOfMemory(cx);
         return TwoByteCharsZ();
+    }
 
     if (isAscii) {
         size_t srclen = src.length();

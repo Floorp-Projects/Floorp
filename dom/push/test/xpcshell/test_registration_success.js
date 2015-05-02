@@ -60,8 +60,10 @@ add_task(function* test_registration_success() {
 
   let registration = yield PushNotificationService.registration(
     'https://example.net/a');
-  deepEqual(registration, {
-    pushEndpoint: 'https://example.com/update/same-manifest/1',
-    version: 5
-  }, 'Should include registrations for all pages with this manifest');
+  equal(
+    registration.pushEndpoint,
+    'https://example.com/update/same-manifest/1',
+    'Wrong push endpoint for scope'
+  );
+  equal(registration.version, 5, 'Wrong version for scope');
 });

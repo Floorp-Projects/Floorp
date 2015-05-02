@@ -7,7 +7,7 @@ assertEq(desc.writable, true);
 
 assertEq(typeof WeakMap, 'function');
 assertEq(Object.keys(WeakMap).length, 0);
-assertEq(WeakMap.length, 1);
+assertEq(WeakMap.length, 0);
 assertEq(WeakMap.name, "WeakMap");
 
 assertEq(Object.getPrototypeOf(WeakMap.prototype), Object.prototype);

@@ -11,6 +11,7 @@
 
 #include "gc/Heap.h"
 #include "gc/StoreBuffer.h"
+#include "js/HeapAPI.h"
 #include "js/Id.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -196,9 +197,6 @@ bool
 CurrentThreadIsGCSweeping();
 #endif
 
-bool
-StringIsPermanentAtom(JSString* str);
-
 namespace gc {
 
 template <typename T> struct MapTypeToTraceKind {};
@@ -240,55 +238,6 @@ void MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name);
 
 } // namespace gc
 
-// This context is more basal than the GC things being implemented, so C++ does
-// not know about the inheritance hierarchy yet.
-static inline const gc::TenuredCell* AsTenuredCell(const JSString* str) {
-    return reinterpret_cast<const gc::TenuredCell*>(str);
-}
-static inline const gc::TenuredCell* AsTenuredCell(const JS::Symbol* sym) {
-    return reinterpret_cast<const gc::TenuredCell*>(sym);
-}
-
-JS::Zone*
-ZoneOfObjectFromAnyThread(const JSObject& obj);
-
-static inline JS::shadow::Zone*
-ShadowZoneOfObjectFromAnyThread(JSObject* obj)
-{
-    return JS::shadow::Zone::asShadowZone(ZoneOfObjectFromAnyThread(*obj));
-}
-
-static inline JS::shadow::Zone*
-ShadowZoneOfStringFromAnyThread(JSString* str)
-{
-    return JS::shadow::Zone::asShadowZone(AsTenuredCell(str)->zoneFromAnyThread());
-}
-
-static inline JS::shadow::Zone*
-ShadowZoneOfSymbolFromAnyThread(JS::Symbol* sym)
-{
-    return JS::shadow::Zone::asShadowZone(AsTenuredCell(sym)->zoneFromAnyThread());
-}
-
-MOZ_ALWAYS_INLINE JS::Zone*
-ZoneOfValueFromAnyThread(const JS::Value& value)
-{
-    MOZ_ASSERT(value.isMarkable());
-    if (value.isObject())
-        return ZoneOfObjectFromAnyThread(value.toObject());
-    return js::gc::TenuredCell::fromPointer(value.toGCThing())->zoneFromAnyThread();
-}
-
-MOZ_ALWAYS_INLINE JS::Zone*
-ZoneOfIdFromAnyThread(const jsid& id)
-{
-    MOZ_ASSERT(JSID_IS_GCTHING(id));
-    return js::gc::TenuredCell::fromPointer(JSID_TO_GCTHING(id).asCell())->zoneFromAnyThread();
-}
-
-void
-ValueReadBarrier(const Value& value);
-
 template <typename T>
 struct InternalGCMethods {};
 
@@ -306,46 +255,23 @@ struct InternalGCMethods<T*>
     static void readBarrier(T* v) { T::readBarrier(v); }
 };
 
+template <typename S> struct PreBarrierFunctor : VoidDefaultAdaptor<S> {
+    template <typename T> void operator()(T* t);
+};
+
+template <typename S> struct ReadBarrierFunctor : public VoidDefaultAdaptor<S> {
+    template <typename T> void operator()(T* t);
+};
+
 template <>
 struct InternalGCMethods<Value>
 {
-    static JSRuntime* runtimeFromAnyThread(const Value& v) {
-        MOZ_ASSERT(v.isMarkable());
-        return static_cast<js::gc::Cell*>(v.toGCThing())->runtimeFromAnyThread();
-    }
-    static JS::shadow::Runtime* shadowRuntimeFromAnyThread(const Value& v) {
-        return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromAnyThread(v));
-    }
-    static JSRuntime* runtimeFromMainThread(const Value& v) {
-        MOZ_ASSERT(v.isMarkable());
-        return static_cast<js::gc::Cell*>(v.toGCThing())->runtimeFromMainThread();
-    }
-    static JS::shadow::Runtime* shadowRuntimeFromMainThread(const Value& v) {
-        return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromMainThread(v));
-    }
-
     static bool isMarkable(Value v) { return v.isMarkable(); }
 
     static void preBarrier(Value v) {
-        MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-        if (v.isString() && StringIsPermanentAtom(v.toString()))
-            return;
-        if (v.isMarkable() && shadowRuntimeFromAnyThread(v)->needsIncrementalBarrier())
-            preBarrierImpl(ZoneOfValueFromAnyThread(v), v);
+        DispatchValueTyped(PreBarrierFunctor<Value>(), v);
     }
 
-  private:
-    static void preBarrierImpl(Zone* zone, Value v) {
-        JS::shadow::Zone* shadowZone = JS::shadow::Zone::asShadowZone(zone);
-        if (shadowZone->needsIncrementalBarrier()) {
-            MOZ_ASSERT_IF(v.isMarkable(), shadowRuntimeFromMainThread(v)->needsIncrementalBarrier());
-            Value tmp(v);
-            js::gc::MarkValueForBarrier(shadowZone->barrierTracer(), &tmp, "write barrier");
-            MOZ_ASSERT(tmp == v);
-        }
-    }
-
-  public:
     static void postBarrier(Value* vp) {
         MOZ_ASSERT(!CurrentThreadIsIonCompiling());
         if (vp->isObject()) {
@@ -373,7 +299,9 @@ struct InternalGCMethods<Value>
         shadowRuntime->gcStoreBufferPtr()->removeRelocatableValueFromAnyThread(vp);
     }
 
-    static void readBarrier(const Value& v) { ValueReadBarrier(v); }
+    static void readBarrier(const Value& v) {
+        DispatchValueTyped(ReadBarrierFunctor<Value>(), v);
+    }
 };
 
 template <>
@@ -381,32 +309,7 @@ struct InternalGCMethods<jsid>
 {
     static bool isMarkable(jsid id) { return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id); }
 
-    static void preBarrier(jsid id) {
-        MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-        if (JSID_IS_STRING(id) && StringIsPermanentAtom(JSID_TO_STRING(id)))
-            return;
-        if (JSID_IS_GCTHING(id) && shadowRuntimeFromAnyThread(id)->needsIncrementalBarrier())
-            preBarrierImpl(ZoneOfIdFromAnyThread(id), id);
-    }
-
-  private:
-    static JSRuntime* runtimeFromAnyThread(jsid id) {
-        MOZ_ASSERT(JSID_IS_GCTHING(id));
-        return JSID_TO_GCTHING(id).asCell()->runtimeFromAnyThread();
-    }
-    static JS::shadow::Runtime* shadowRuntimeFromAnyThread(jsid id) {
-        return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromAnyThread(id));
-    }
-    static void preBarrierImpl(Zone* zone, jsid id) {
-        JS::shadow::Zone* shadowZone = JS::shadow::Zone::asShadowZone(zone);
-        if (shadowZone->needsIncrementalBarrier()) {
-            jsid tmp(id);
-            js::gc::MarkIdForBarrier(shadowZone->barrierTracer(), &tmp, "id write barrier");
-            MOZ_ASSERT(tmp == id);
-        }
-    }
-
-  public:
+    static void preBarrier(jsid id) { DispatchIdTyped(PreBarrierFunctor<jsid>(), id); }
     static void postBarrier(jsid* idp) {}
     static void postBarrierRelocate(jsid* idp) {}
     static void postBarrierRemove(jsid* idp) {}

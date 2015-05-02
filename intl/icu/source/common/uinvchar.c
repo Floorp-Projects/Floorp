@@ -429,7 +429,7 @@ uprv_copyEbcdic(const UDataSwapper *ds,
     while(count>0) {
         c=*s++;
         if(c!=0 && ((c=asciiFromEbcdic[c])==0 || !UCHAR_IS_INVARIANT(c))) {
-            udata_printError(ds, "uprv_copyEbcdic() string[%] contains a variant character in position %d\n",
+            udata_printError(ds, "uprv_copyEbcdic() string[%d] contains a variant character in position %d\n",
                              length, length-count);
             *pErrorCode=U_INVALID_CHAR_FOUND;
             return 0;

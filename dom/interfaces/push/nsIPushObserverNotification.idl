@@ -9,7 +9,7 @@
  * A push message received by an `nsIPushNotificationService`, used as the
  * subject of a `push-notification` observer notification.
  */
-[scriptable, uuid(66a87970-6dc9-46e0-ac61-adb4a13791de)]
+[scriptable, uuid(56f57607-28b6-44b0-aa56-3d4d3c88be15)]
 interface nsIPushObserverNotification : nsISupports
 {
   /* The URL that receives push messages from an application server. */
@@ -27,4 +27,14 @@ interface nsIPushObserverNotification : nsISupports
    * may be discarded.
    */
   attribute string data;
+
+  /**
+   * How many times has a push event occured against this pushEndpoint
+   */
+  attribute long long pushCount;
+
+  /**
+   * The last time a push occured against this this pushEndpoint
+   */
+   attribute long long lastPush;
 };

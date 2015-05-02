@@ -40,6 +40,7 @@ class nsRenderingContext;
 class nsDisplayTableItem;
 class nsISelection;
 class nsDisplayLayerEventRegions;
+class nsDisplayScrollInfoLayer;
 class nsCaret;
 
 namespace mozilla {
@@ -347,7 +348,9 @@ public:
   bool IsBuildingLayerEventRegions()
   {
     if (mMode == PAINTING) {
-      return (gfxPrefs::LayoutEventRegionsEnabled() ||
+      // Note: this is the only place that gets to query LayoutEventRegionsEnabled
+      // 'directly' - other code should call this function.
+      return (gfxPrefs::LayoutEventRegionsEnabledDoNotUseDirectly() ||
               gfxPrefs::AsyncPanZoomEnabled());
     }
     return false;
@@ -843,6 +846,14 @@ public:
                                      const nsIFrame* aStopAtAncestor,
                                      nsIFrame** aOutResult);
 
+  void EnterSVGEffectsContents(nsDisplayList* aHoistedItemsStorage);
+  void ExitSVGEffectsContents();
+
+  bool ShouldBuildScrollInfoItemsForHoisting() const
+  { return mSVGEffectsBuildingDepth > 0; }
+
+  void AppendNewScrollInfoItemForHoisting(nsDisplayScrollInfoLayer* aScrollInfoItem);
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -926,12 +937,19 @@ private:
   nsIntRegion                    mWindowDraggingRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
+  // A temporary list that we append scroll info items to while building
+  // display items for the contents of frames with SVG effects.
+  // Only non-null when ShouldBuildScrollInfoItemsForHoisting() is true.
+  // This is a pointer and not a real nsDisplayList value because the
+  // nsDisplayList class is defined below this class, so we can't use it here.
+  nsDisplayList*                 mScrollInfoItemsForHoisting;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   Mode                           mMode;
   ViewID                         mCurrentScrollParentId;
   ViewID                         mCurrentScrollbarTarget;
   uint32_t                       mCurrentScrollbarFlags;
   BlendModeSet                   mContainedBlendModes;
+  int32_t                        mSVGEffectsBuildingDepth;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;
   bool                           mHadToIgnoreSuppression;
@@ -3206,20 +3224,18 @@ public:
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
 
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
+  { return false; }
 
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
   mozilla::UniquePtr<FrameMetrics> ComputeFrameMetrics(Layer* aLayer,
                                                        const ContainerLayerParameters& aContainerParameters);
 
-  void MarkHoisted() { mHoisted = true; }
-
 protected:
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
   ViewID mScrollParentId;
-  bool mHoisted;
 };
 
 /**
@@ -3498,15 +3514,24 @@ public:
       : mFrame(nullptr)
       , mTransformList(aTransformList)
       , mToTransformOrigin(aToTransformOrigin)
-      , mToPerspectiveOrigin(aToPerspectiveOrigin)
       , mChildPerspective(aChildPerspective)
+      , mToPerspectiveOrigin(aToPerspectiveOrigin)
     {}
+
+    const Point3D& GetToPerspectiveOrigin() const
+    {
+      MOZ_ASSERT(mChildPerspective > 0, "Only valid with mChildPerspective > 0");
+      return mToPerspectiveOrigin;
+    }
 
     const nsIFrame* mFrame;
     nsRefPtr<nsCSSValueSharedList> mTransformList;
     const Point3D mToTransformOrigin;
-    const Point3D mToPerspectiveOrigin;
     nscoord mChildPerspective;
+
+  private:
+    // mToPerspectiveOrigin is only valid if mChildPerspective > 0.
+    Point3D mToPerspectiveOrigin;
   };
 
   /**
