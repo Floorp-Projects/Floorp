@@ -50,8 +50,9 @@ GonkAudioDecoderManager::GonkAudioDecoderManager(
 {
   MOZ_COUNT_CTOR(GonkAudioDecoderManager);
   MOZ_ASSERT(mAudioChannels);
-  mUserData.AppendElements(aConfig.mCodecSpecificConfig->Elements(),
-                           aConfig.mCodecSpecificConfig->Length());
+  mCodecSpecificData = aConfig.mCodecSpecificConfig;
+  mMimeType = aConfig.mMimeType;
+
   // Pass through mp3 without applying an ADTS header.
   if (!aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
       mUseAdts = false;
@@ -66,6 +67,7 @@ GonkAudioDecoderManager::~GonkAudioDecoderManager()
 android::sp<MediaCodecProxy>
 GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
 {
+  status_t rv = OK;
   if (mLooper != nullptr) {
     return nullptr;
   }
@@ -74,7 +76,7 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   mLooper->setName("GonkAudioDecoderManager");
   mLooper->start();
 
-  mDecoder = MediaCodecProxy::CreateByType(mLooper, "audio/mp4a-latm", false, nullptr);
+  mDecoder = MediaCodecProxy::CreateByType(mLooper, mMimeType.get(), false, nullptr);
   if (!mDecoder.get()) {
     return nullptr;
   }
@@ -85,8 +87,8 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   }
   sp<AMessage> format = new AMessage;
   // Fixed values
-  GADM_LOG("Init Audio channel no:%d, sample-rate:%d", mAudioChannels, mAudioRate);
-  format->setString("mime", "audio/mp4a-latm");
+  GADM_LOG("Configure audio mime type:%s, chan no:%d, sample-rate:%d", mMimeType.get(), mAudioChannels, mAudioRate);
+  format->setString("mime", mMimeType.get());
   format->setInt32("channel-count", mAudioChannels);
   format->setInt32("sample-rate", mAudioRate);
   format->setInt32("aac-profile", mAudioProfile);
@@ -95,8 +97,11 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   if (err != OK || !mDecoder->Prepare()) {
     return nullptr;
   }
-  status_t rv = mDecoder->Input(mUserData.Elements(), mUserData.Length(), 0,
-                                android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
+
+  if (mMimeType.EqualsLiteral("audio/mp4a-latm")) {
+    rv = mDecoder->Input(mCodecSpecificData->Elements(), mCodecSpecificData->Length(), 0,
+                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
+  }
 
   if (rv == OK) {
     return mDecoder;
