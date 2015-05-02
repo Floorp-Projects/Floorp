@@ -9,4 +9,4 @@ from the original download found at:
 http://code.google.com/p/robotium/
 
 Firefox for Android developers should read the documentation in
-mobile/android/base/tests/README.rst.
+mobile/android/tests/browser/robocop/README.rst.
