@@ -128,16 +128,15 @@ GonkDisplayJB::GonkDisplayJB()
 #else
     sp<Surface> stc = new Surface(producer);
 #endif
-
     mSTClient = stc;
-    mSTClient->perform(mSTClient.get(), NATIVE_WINDOW_SET_BUFFER_COUNT, 2);
-    mSTClient->perform(mSTClient.get(), NATIVE_WINDOW_SET_USAGE,
-                                        GRALLOC_USAGE_HW_FB |
-                                        GRALLOC_USAGE_HW_RENDER |
-                                        GRALLOC_USAGE_HW_COMPOSER);
-
     mList = (hwc_display_contents_1_t *)malloc(sizeof(*mList) + (sizeof(hwc_layer_1_t)*2));
-    if (mHwc) {
+
+    uint32_t usage = GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER;
+    if (mFBDevice) {
+        // If device uses fb, they can not use single buffer for boot animation
+        mSTClient->perform(mSTClient.get(), NATIVE_WINDOW_SET_BUFFER_COUNT, 2);
+        mSTClient->perform(mSTClient.get(), NATIVE_WINDOW_SET_USAGE, usage);
+    } else if (mHwc) {
 #if ANDROID_VERSION >= 21
         if (mHwc->common.version >= HWC_DEVICE_API_VERSION_1_4) {
             mHwc->setPowerMode(mHwc, HWC_DISPLAY_PRIMARY, HWC_POWER_MODE_NORMAL);
@@ -147,8 +146,10 @@ GonkDisplayJB::GonkDisplayJB()
 #else
         mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, 0);
 #endif
+        // For devices w/ hwc v1.0 or no hwc, this buffer can not be created,
+        // only create this buffer for devices w/ hwc version > 1.0.
+        mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, usage, &err);
     }
-
 
     ALOGI("Starting bootanimation with (%d) format framebuffer", surfaceformat);
     StartBootAnimation();
@@ -166,7 +167,9 @@ GonkDisplayJB::~GonkDisplayJB()
 ANativeWindow*
 GonkDisplayJB::GetNativeWindow()
 {
-    StopBootAnimation();
+    if (!mBootAnimBuffer.get()) {
+        StopBootAnimation();
+    }
     return mSTClient.get();
 }
 
@@ -232,6 +235,11 @@ GonkDisplayJB::GetDispSurface()
 bool
 GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 {
+    if (mBootAnimBuffer.get()) {
+        StopBootAnimation();
+        mBootAnimBuffer = nullptr;
+    }
+
     // Should be called when composition rendering is complete for a frame.
     // Only HWC v1.0 needs this call.
     // HWC > v1.0 case, do not call compositionComplete().
@@ -307,6 +315,9 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
 ANativeWindowBuffer*
 GonkDisplayJB::DequeueBuffer()
 {
+    if (mBootAnimBuffer.get()) {
+        return static_cast<ANativeWindowBuffer*>(mBootAnimBuffer.get());
+    }
     ANativeWindowBuffer *buf;
     mSTClient->dequeueBuffer(mSTClient.get(), &buf, &mFence);
     return buf;
@@ -316,14 +327,20 @@ bool
 GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
 {
     bool success = Post(buf->handle, -1);
-    int error = mSTClient->queueBuffer(mSTClient.get(), buf, mFence);
-
+    int error = 0;
+    if (!mBootAnimBuffer.get()) {
+        error = mSTClient->queueBuffer(mSTClient.get(), buf, mFence);
+    }
     return error == 0 && success;
 }
 
 void
 GonkDisplayJB::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
+    if (mBootAnimBuffer.get()) {
+        StopBootAnimation();
+        mBootAnimBuffer = nullptr;
+    }
     eglSwapBuffers(dpy, sur);
 }
 

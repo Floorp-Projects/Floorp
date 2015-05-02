@@ -8,7 +8,7 @@
 // the first focusable element in the corresponding MarkupContainer so that the
 // keyboard can be used immediately.
 
-const TEST_URL = "data:text/html;charset=utf8,<div></div>Text node";
+const TEST_URL = "data:text/html;charset=utf8,<div class='test-class'></div>Text node";
 
 add_task(function*() {
   let {inspector, toolbox} = yield addTab(TEST_URL).then(openInspector);
@@ -31,4 +31,18 @@ add_task(function*() {
   is(inspector.markup.doc.activeElement,
      getContainerForNodeFront(divFront, inspector).editor.tag,
      "The currently focused element is the div's tagname");
+
+  info("Click on the test-class attribute, to make sure it gets focused");
+  let editor = getContainerForNodeFront(divFront, inspector).editor;
+  let attributeEditor = editor.attrElements.get("class").querySelector(".editable");
+
+  let onFocus = once(attributeEditor, "focus");
+  EventUtils.synthesizeMouseAtCenter(attributeEditor, {type: "mousedown"},
+    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(attributeEditor, {type: "mouseup"},
+    inspector.markup.doc.defaultView);
+  yield onFocus;
+
+  is(inspector.markup.doc.activeElement, attributeEditor,
+     "The currently focused element is the div's class attribute");
 });

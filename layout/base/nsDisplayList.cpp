@@ -1521,12 +1521,12 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     nsIContent* content = nullptr;
     if (scrollFrame) {
       content = scrollFrame->GetContent();
-    } else if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
-      // If there is no root scroll frame, and we're using containerless
-      // scrolling, pick the document element instead.
-      // On Android we want the root xul document to get a null scroll id
-      // so that the root content document gets the first non-null scroll id.
-#ifndef MOZ_WIDGET_ANDROID
+    } else {
+      // If there is no root scroll frame, pick the document element instead.
+      // The only case we don't want to do this is in non-APZ fennec, where
+      // we want the root xul document to get a null scroll id so that the root
+      // content document gets the first non-null scroll id.
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
       content = document->GetDocumentElement();
 #endif
     }

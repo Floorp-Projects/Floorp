@@ -316,7 +316,7 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
     event.modifiers = getDOMModifiers(mData.metaState);
     event.location = mDOMKeyLocation;
     event.time = mData.timeMs;
-    return nsWindow::DispatchInputEvent(event);
+    return nsWindow::DispatchKeyInput(event);
 }
 
 void

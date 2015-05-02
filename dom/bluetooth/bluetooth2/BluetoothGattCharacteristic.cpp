@@ -149,6 +149,7 @@ BluetoothGattCharacteristic::HandleDescriptorsDiscovered(
   const InfallibleTArray<BluetoothGattId>& descriptorIds =
     aValue.get_ArrayOfBluetoothGattId();
 
+  mDescriptors.Clear();
   for (uint32_t i = 0; i < descriptorIds.Length(); i++) {
     mDescriptors.AppendElement(new BluetoothGattDescriptor(
       GetParentObject(), this, descriptorIds[i]));
@@ -194,8 +195,6 @@ void
 BluetoothGattCharacteristic::GetValue(JSContext* cx,
                                       JS::MutableHandle<JSObject*> aValue) const
 {
-  MOZ_ASSERT(aValue);
-
   aValue.set(mValue.IsEmpty()
              ? nullptr
              : ArrayBuffer::Create(cx, mValue.Length(), mValue.Elements()));

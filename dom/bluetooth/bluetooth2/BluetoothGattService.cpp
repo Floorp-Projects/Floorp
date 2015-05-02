@@ -85,6 +85,7 @@ BluetoothGattService::HandleIncludedServicesDiscovered(
   const InfallibleTArray<BluetoothGattServiceId>& includedServIds =
     aValue.get_ArrayOfBluetoothGattServiceId();
 
+  mIncludedServices.Clear();
   for (uint32_t i = 0; i < includedServIds.Length(); i++) {
     mIncludedServices.AppendElement(new BluetoothGattService(
       GetParentObject(), mAppUuid, includedServIds[i]));
@@ -103,6 +104,7 @@ BluetoothGattService::HandleCharacteristicsDiscovered(
   const InfallibleTArray<BluetoothGattCharAttribute>& characteristics =
     aValue.get_ArrayOfBluetoothGattCharAttribute();
 
+  mCharacteristics.Clear();
   for (uint32_t i = 0; i < characteristics.Length(); i++) {
     mCharacteristics.AppendElement(new BluetoothGattCharacteristic(
       GetParentObject(), this, characteristics[i]));

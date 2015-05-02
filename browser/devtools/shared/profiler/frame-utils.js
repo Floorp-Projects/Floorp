@@ -54,6 +54,16 @@ exports.parseLocation = function parseLocation (frame) {
 },
 
 /**
+ * Determines if the given frame is the (root) frame.
+ *
+ * @param object frame
+ * @return boolean
+ */
+exports.isRoot = function isRoot({ location }) {
+  return location === "(root)";
+};
+
+/**
 * Checks if the specified function represents a chrome or content frame.
 *
 * @param object frame
@@ -61,8 +71,13 @@ exports.parseLocation = function parseLocation (frame) {
 * @return boolean
 *         True if a content frame, false if a chrome frame.
 */
-exports.isContent = function isContent ({ category, location }) {
+exports.isContent = function isContent (frame) {
+  if (exports.isRoot(frame)) {
+    return true;
+  }
+
   // Only C++ stack frames have associated category information.
+  const { category, location } = frame;
   return !!(!category &&
     !CHROME_SCHEMES.find(e => location.includes(e)) &&
     CONTENT_SCHEMES.find(e => location.includes(e)));

@@ -38,7 +38,7 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
 
         // For the moment lets exit early and start fennec as normal if we're not in nightly with
         // the tab queue build flag.
-        if (!AppConstants.MOZ_ANDROID_TAB_QUEUE) {
+        if (!AppConstants.MOZ_ANDROID_TAB_QUEUE || !AppConstants.NIGHTLY_BUILD) {
             loadNormally(intent.getUnsafe());
             return;
         }

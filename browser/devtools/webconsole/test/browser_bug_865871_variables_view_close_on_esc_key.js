@@ -20,79 +20,56 @@ function test()
     let {tab} = yield loadTab(TEST_URI);
     hud = yield openConsole(tab);
     let jsterm = hud.jsterm;
+    let result;
+    let vview;
+    let msg;
 
-    let msg = yield execute("fooObj");
-    ok(msg, "output message found");
-
-    let anchor = msg.querySelector("a");
-    let body = msg.querySelector(".message-body");
-    ok(anchor, "object anchor");
-    ok(body, "message body");
-    ok(body.textContent.includes('testProp: "testValue"'), "message text check");
-
-    msg.scrollIntoView();
-    executeSoon(() => {
-      EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
-    });
-
-    let vviewVar = yield jsterm.once("variablesview-fetched");
-    let vview = vviewVar._variablesView;
-    ok(vview, "variables view object");
-
-    let [result] = yield findVariableViewProperties(vviewVar, [
-      { name: "testProp", value: "testValue" },
-    ], { webconsole: hud });
+    yield openSidebar("fooObj",
+                      'testProp: "testValue"',
+                      { name: "testProp", value: "testValue" });
 
     let prop = result.matchedProp;
     ok(prop, "matched the |testProp| property in the variables view");
 
     vview.window.focus();
 
-    executeSoon(() => {
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
-    });
-    yield jsterm.once("sidebar-closed");
+    let sidebarClosed = jsterm.once("sidebar-closed");
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    yield sidebarClosed;
 
     jsterm.clearOutput();
 
-    msg = yield execute("window.location");
-    ok(msg, "output message found");
-
-    body = msg.querySelector(".message-body");
-    ok(body, "message body");
-    anchor = msg.querySelector("a");
-    ok(anchor, "object anchor");
-    ok(body.textContent.includes("Location \u2192 http://example.com/browser/"),
-       "message text check");
-
-    msg.scrollIntoView();
-    executeSoon(() => {
-      EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow)
-    });
-    vviewVar = yield jsterm.once("variablesview-fetched");
-
-    vview = vviewVar._variablesView;
-    ok(vview, "variables view object");
-
-    yield findVariableViewProperties(vviewVar, [
-      { name: "host", value: "example.com" },
-    ], { webconsole: hud });
+    yield openSidebar("window.location",
+                      "Location \u2192 http://example.com/browser/",
+                      { name: "host", value: "example.com" });
 
     vview.window.focus();
 
     msg.scrollIntoView();
-    executeSoon(() => {
-      EventUtils.synthesizeKey("VK_ESCAPE", {});
-    });
+    sidebarClosed = jsterm.once("sidebar-closed");
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    yield sidebarClosed;
 
-    yield jsterm.once("sidebar-closed");
-  }
+    function* openSidebar(objName, expectedText, expectedObj) {
+      msg = yield jsterm.execute(objName);
+      ok(msg, "output message found");
 
-  function execute(str) {
-    let deferred = promise.defer();
-    hud.jsterm.execute(str, (msg) => {
-      deferred.resolve(msg);
-    });
-    return deferred.promise;
+      let anchor = msg.querySelector("a");
+      let body = msg.querySelector(".message-body");
+      ok(anchor, "object anchor");
+      ok(body, "message body");
+      ok(body.textContent.includes(expectedText), "message text check");
+
+      msg.scrollIntoView();
+      yield EventUtils.synthesizeMouse(anchor, 2, 2, {}, hud.iframeWindow);
+
+      let vviewVar = yield jsterm.once("variablesview-fetched");
+      vview = vviewVar._variablesView;
+      ok(vview, "variables view object exists");
+
+      [result] = yield findVariableViewProperties(vviewVar, [
+        expectedObj,
+      ], { webconsole: hud });
+    }
   }
 }
