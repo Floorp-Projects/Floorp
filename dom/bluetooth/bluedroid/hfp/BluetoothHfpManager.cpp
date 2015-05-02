@@ -1283,6 +1283,7 @@ void
 BluetoothHfpManager::OnDisconnectError()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE_VOID(mController);
 
   mController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
 }

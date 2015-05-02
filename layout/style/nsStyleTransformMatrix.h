@@ -13,6 +13,7 @@
 #include "nsCSSValue.h"
 #include "gfx3DMatrix.h"
 
+class nsIFrame;
 class nsStyleContext;
 class nsPresContext;
 struct nsRect;
@@ -21,7 +22,86 @@ struct nsRect;
  * A helper to generate gfxMatrixes from css transform functions.
  */
 namespace nsStyleTransformMatrix {
-  
+
+  /**
+   * This class provides on-demand access to the 'reference box' for CSS
+   * transforms (needed to resolve percentage values in 'transform',
+   * 'transform-origin', etc.):
+   *
+   *    http://dev.w3.org/csswg/css-transforms/#reference-box
+   *
+   * This class helps us to avoid calculating the reference box unless and
+   * until it is actually needed. This is important for performance when
+   * transforms are applied to SVG elements since the reference box for SVG is
+   * much more expensive to calculate (than for elements with a CSS layout box
+   * where we can use the nsIFrame's cached mRect), much more common (than on
+   * HTML), and yet very rarely have percentage values that require the
+   * reference box to be resolved. We also don't want to cause SVG frames to
+   * cache lots of ObjectBoundingBoxProperty objects that aren't needed.
+   *
+   * If UNIFIED_CONTINUATIONS (experimental, and currently broke) is defined,
+   * we consider the reference box for non-SVG frames to be the smallest
+   * rectangle containing a frame and all of its continuations.  For example,
+   * if there is a <span> element with several continuations split over
+   * several lines, this function will return the rectangle containing all of
+   * those continuations. (This behavior is not currently in a spec.)
+   */
+  class MOZ_STACK_CLASS TransformReferenceBox final {
+  public:
+    typedef nscoord (TransformReferenceBox::*DimensionGetter)();
+
+    explicit TransformReferenceBox()
+      : mFrame(nullptr)
+      , mIsCached(false)
+    {}
+
+    explicit TransformReferenceBox(const nsIFrame* aFrame)
+      : mFrame(aFrame)
+      , mIsCached(false)
+    {
+      MOZ_ASSERT(mFrame);
+    }
+
+    explicit TransformReferenceBox(const nsIFrame* aFrame,
+                                   const nsSize& aFallbackDimensions)
+    {
+      mFrame = aFrame;
+      mIsCached = false;
+      if (!mFrame) {
+        Init(aFallbackDimensions);
+      }
+    }
+
+    void Init(const nsIFrame* aFrame) {
+      MOZ_ASSERT(!mFrame && !mIsCached);
+      mFrame = aFrame;
+    }
+
+    void Init(const nsSize& aDimensions);
+
+    nscoord Width() {
+      EnsureDimensionsAreCached();
+      return mWidth;
+    }
+
+    nscoord Height() {
+      EnsureDimensionsAreCached();
+      return mHeight;
+    }
+
+  private:
+    // We don't really need to prevent copying, but since none of our consumers
+    // currently need to copy, preventing copying may allow us to catch some
+    // cases where we use pass-by-value instead of pass-by-reference.
+    TransformReferenceBox(const TransformReferenceBox&) = delete;
+
+    void EnsureDimensionsAreCached();
+
+    const nsIFrame* mFrame;
+    nscoord mWidth, mHeight;
+    bool mIsCached;
+  };
+
   /**
    * Return the transform function, as an nsCSSKeyword, for the given
    * nsCSSValue::Array from a transform list.
@@ -32,7 +112,8 @@ namespace nsStyleTransformMatrix {
                              nsStyleContext* aContext,
                              nsPresContext* aPresContext,
                              bool& aCanStoreInRuleTree,
-                             nscoord aSize);
+                             TransformReferenceBox* aRefBox,
+                             TransformReferenceBox::DimensionGetter aDimensionGetter = nullptr);
 
   void
   ProcessInterpolateMatrix(gfx3DMatrix& aMatrix,
@@ -40,7 +121,7 @@ namespace nsStyleTransformMatrix {
                             nsStyleContext* aContext,
                             nsPresContext* aPresContext,
                             bool& aCanStoreInRuleTree,
-                            nsRect& aBounds);
+                            TransformReferenceBox& aBounds);
 
   /**
    * Given an nsCSSValueList containing -moz-transform functions,
@@ -62,7 +143,7 @@ namespace nsStyleTransformMatrix {
                              nsStyleContext* aContext,
                              nsPresContext* aPresContext,
                              bool &aCanStoreInRuleTree,
-                             nsRect& aBounds,
+                             TransformReferenceBox& aBounds,
                              float aAppUnitsPerMatrixUnit);
 
 } // namespace nsStyleTransformMatrix

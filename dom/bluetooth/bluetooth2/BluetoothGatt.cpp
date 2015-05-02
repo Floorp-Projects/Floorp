@@ -256,6 +256,8 @@ BluetoothGatt::DiscoverServices(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   mDiscoveringServices = true;
+  mServices.Clear();
+  BluetoothGattBinding::ClearCachedServicesValue(this);
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
                                    promise,
@@ -292,6 +294,7 @@ BluetoothGatt::HandleServicesDiscovered(const BluetoothValue& aValue)
   const InfallibleTArray<BluetoothGattServiceId>& serviceIds =
     aValue.get_ArrayOfBluetoothGattServiceId();
 
+  mServices.Clear();
   for (uint32_t i = 0; i < serviceIds.Length(); i++) {
     mServices.AppendElement(new BluetoothGattService(
       GetParentObject(), mAppUuid, serviceIds[i]));
