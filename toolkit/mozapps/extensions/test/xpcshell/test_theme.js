@@ -95,10 +95,12 @@ function run_test() {
     do_check_neq(d, null);
     do_check_false(d.skinnable);
     do_check_false(d.foreignInstall);
+    do_check_eq(d.signedState, undefined);
 
     do_check_neq(t1, null);
     do_check_false(t1.userDisabled);
     do_check_false(t1.appDisabled);
+    do_check_eq(t1.signedState, undefined);
     do_check_true(t1.isActive);
     do_check_true(t1.skinnable);
     do_check_true(t1.foreignInstall);
@@ -112,6 +114,7 @@ function run_test() {
     do_check_neq(t2, null);
     do_check_true(t2.userDisabled);
     do_check_false(t2.appDisabled);
+    do_check_eq(t2.signedState, undefined);
     do_check_false(t2.isActive);
     do_check_false(t2.skinnable);
     do_check_true(t2.foreignInstall);
