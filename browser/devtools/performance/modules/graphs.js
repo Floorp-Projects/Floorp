@@ -266,8 +266,8 @@ GraphsController.prototype = {
       yield this._rendering.promise;
     }
 
-    for (let graphName in this._graphs) {
-      yield this._graphs[graphName].destroy();
+    for (let graph of this.getWidgets()) {
+      yield graph.destroy();
     }
   }),
 
@@ -277,9 +277,9 @@ GraphsController.prototype = {
    */
   setTheme: function (options={}) {
     let theme = options.theme || this._getTheme();
-    for (let graph in this._graphs) {
-      this._graphs[graph].setTheme(theme);
-      this._graphs[graph].refresh({ force: options.redraw });
+    for (let graph of this.getWidgets()) {
+      graph.setTheme(theme);
+      graph.refresh({ force: options.redraw });
     }
   },
 
@@ -346,6 +346,14 @@ GraphsController.prototype = {
 
   getMappedSelection: function ({ mapStart, mapEnd }) {
     return this._getPrimaryLink().getMappedSelection({ mapStart, mapEnd });
+  },
+
+  /**
+   * Returns an array of graphs that have been created, not necessarily
+   * enabled currently.
+   */
+  getWidgets: function () {
+    return Object.keys(this._graphs).map(name => this._graphs[name]);
   },
 
   /**

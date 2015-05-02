@@ -57,11 +57,13 @@ AddFeatureToStreamChild(const CacheRequest& aRequest, Feature* aFeature)
 } // anonymous namespace
 
 CacheOpChild::CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
-                           Promise* aPromise)
+                           nsISupports* aParent, Promise* aPromise)
   : mGlobal(aGlobal)
+  , mParent(aParent)
   , mPromise(aPromise)
 {
   MOZ_ASSERT(mGlobal);
+  MOZ_ASSERT(mParent);
   MOZ_ASSERT(mPromise);
 
   MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
@@ -95,7 +97,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
 
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     MOZ_ASSERT(aResult.type() == CacheOpResult::Tvoid_t);
     // TODO: Remove this const_cast (bug 1152078).
     // It is safe for now since this ErrorResult is handed off to us by IPDL

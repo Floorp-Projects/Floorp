@@ -1,47 +1,45 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+let gTestBrowser = null;
+let gConsoleErrors = 0;
 
-var rootDir = getRootDirectory(gTestPath);
-const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-var gTestBrowser = null;
-var gConsoleErrors = 0;
 
-function test() {
-  waitForExplicitFinish();
-  var newTab = gBrowser.addTab();
-  gBrowser.selectedTab = newTab;
+add_task(function* () {
+  registerCleanupFunction(function () {
+    clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    consoleService.unregisterListener(errorListener);
+    gBrowser.removeCurrentTab();
+    window.focus();
+    gTestBrowser = null;
+  });
+
+  gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("PluginBindingAttached", pluginBindingAttached, true, true);
-  var consoleService = Cc["@mozilla.org/consoleservice;1"]
+
+  let bindingPromise = waitForEvent(gTestBrowser, "PluginBindingAttached", null, true, true);
+
+  let consoleService = Cc["@mozilla.org/consoleservice;1"]
                          .getService(Ci.nsIConsoleService);
-  var errorListener = {
+  let errorListener = {
     observe: function(aMessage) {
-      if (aMessage.message.includes("NS_ERROR"))
+      if (aMessage.message.includes("NS_ERROR_FAILURE"))
         gConsoleErrors++;
     }
   };
   consoleService.registerListener(errorListener);
-  registerCleanupFunction(function() {
-    gTestBrowser.removeEventListener("PluginBindingAttached", pluginBindingAttached, true);
-    consoleService.unregisterListener(errorListener);
-    gBrowser.removeCurrentTab();
-    window.focus();
-  });
-  gTestBrowser.contentWindow.location = gHttpTestRoot + "plugin_bug797677.html";
-}
 
-function pluginBindingAttached() {
-  // Let browser-plugins.js handle the PluginNotFound event, then run the test
-  executeSoon(runTest);
-}
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_bug797677.html");
 
-function runTest() {
-  var doc = gTestBrowser.contentDocument;
-  var plugin = doc.getElementById("plugin");
+  yield bindingPromise;
+
+  let pluginInfo = yield promiseForPluginInfo("plugin");
+  is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "plugin should not have been found.");
+
+  // simple cpows
+  let plugin = gTestBrowser.contentDocument.getElementById("plugin");
   ok(plugin, "plugin should be in the page");
   is(gConsoleErrors, 0, "should have no console errors");
-  finish();
-}
+});

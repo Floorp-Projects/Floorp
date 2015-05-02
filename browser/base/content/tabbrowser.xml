@@ -3347,11 +3347,13 @@
             },
 
             /*
-             * Telemetry related helpers for recording tab switch timing.
+             * Telemetry and Profiler related helpers for recording tab switch
+             * timing.
              */
 
             startTabSwitch: function () {
               TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
+              this.addMarker("AsyncTabSwitch:Start");
             },
 
             finishTabSwitch: function () {
@@ -3360,6 +3362,7 @@
                 if (time != -1) {
                   TelemetryStopwatch.finish("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
                   this.log("DEBUG: tab switch time = " + time);
+                  this.addMarker("AsyncTabSwitch:Finish");
                 }
               }
             },
@@ -3367,6 +3370,7 @@
             spinnerDisplayed: function () {
               if (this.spinnerTab) {
                 TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
+                this.addMarker("AsyncTabSwitch:SpinnerShown");
               }
             },
 
@@ -3375,8 +3379,15 @@
                 this.log("DEBUG: spinner time = " +
                          TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window));
                 TelemetryStopwatch.finish("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
+                this.addMarker("AsyncTabSwitch:SpinnerHidden");
                 // we do not get a onPaint after displaying the spinner
                 this.finishTabSwitch();
+              }
+            },
+
+            addMarker: function(marker) {
+              if (Services.profiler) {
+                Services.profiler.AddMarker(marker);
               }
             },
 
