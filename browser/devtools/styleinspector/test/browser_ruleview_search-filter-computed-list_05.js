@@ -52,8 +52,7 @@ function* testAddTextInFilter(inspector, ruleView) {
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
   ok(!ruleEditor.container.classList.contains("ruleview-highlight"),
     "margin text property is not highlighted.");
-  ok(computed.classList.contains("filter-open"),
-    "margin computed list is open.");
+  ok(computed.hasAttribute("filter-open"), "margin computed list is open.");
 
   ok(computed.children[0].classList.contains("ruleview-highlight"),
     "margin-top computed property is correctly highlighted.");
