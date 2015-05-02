@@ -24,8 +24,6 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STARTED, this._onRecordingStarted);
-    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
     PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.addEventListener("select", this._onSelect, false);
@@ -37,8 +35,6 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
   destroy: function() {
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
-    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STARTED, this._onRecordingStarted);
-    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
     PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.removeEventListener("select", this._onSelect, false);
