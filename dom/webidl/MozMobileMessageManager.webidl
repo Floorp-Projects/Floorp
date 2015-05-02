@@ -75,6 +75,45 @@ dictionary MobileMessageFilter
   [EnforceRange] unsigned long long? threadId = 0;
 };
 
+/**
+ * TON defined in |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008.
+ * It's used in SM-RL originator / destination address element as defined in
+ * |8.2.5.2 Destination address element| of 3GPP TS 24.011.
+ */
+enum TypeOfNumber { "unknown", "international", "national", "network-specific",
+  "dedicated-access-short-code" };
+
+/**
+ * NPI defined in |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008.
+ * It's used in SM-RL originator / destination address element as defined in
+ * |8.2.5.2 Destination address element| of 3GPP TS 24.011.
+ */
+enum NumberPlanIdentification { "unknown", "isdn", "data", "telex", "national",
+  "private" };
+
+/**
+ * Type of address used in SmscAddress.
+ *
+ * As described in |3.1 Parameters Definitions| of 3GPP TS 27.005, the default
+ * value of <tosca> should be 129 (typeOfNumber=unknown,
+ * numberPlanIdentification=isdn) if the number does not begin with '+'.
+ *
+ * |setSmscAddress| updates typeOfNumber to international automatically if the
+ * given number begins with '+'.
+ */
+dictionary TypeOfAddress {
+  TypeOfNumber typeOfNumber = "unknown";
+  NumberPlanIdentification numberPlanIdentification = "isdn";
+};
+
+/**
+ * SMSC address.
+ */
+dictionary SmscAddress {
+  DOMString address;
+  TypeOfAddress typeOfAddress;
+};
+
 [Pref="dom.sms.enabled",
  CheckPermissions="sms",
  AvailableIn="CertifiedApps"]
@@ -156,6 +195,22 @@ interface MozMobileMessageManager : EventTarget
 
   [Throws]
   DOMRequest getSmscAddress(optional unsigned long serviceId);
+
+  /**
+   * Set the SMSC address.
+   *
+   * @param smscAddress
+   *        SMSC address to use.
+   *        Reject if smscAddress.address does not present.
+   * @param serviceId (optional)
+   *        The ID of the RIL service which needs to be specified under
+   *        the multi-sim scenario.
+   * @return a Promise
+   *         Resolve if success. Otherwise, reject with error cause.
+   */
+  [NewObject]
+  Promise<void> setSmscAddress(optional SmscAddress smscAddress,
+                               optional unsigned long serviceId);
 
   attribute EventHandler onreceived;
   attribute EventHandler onretrieving;

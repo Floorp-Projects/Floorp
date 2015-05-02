@@ -14,6 +14,7 @@ import org.mozilla.gecko.tests.components.AboutHomeComponent;
 import org.mozilla.gecko.tests.components.AppMenuComponent;
 import org.mozilla.gecko.tests.components.BaseComponent;
 import org.mozilla.gecko.tests.components.GeckoViewComponent;
+import org.mozilla.gecko.tests.components.TabStripComponent;
 import org.mozilla.gecko.tests.components.ToolbarComponent;
 import org.mozilla.gecko.tests.helpers.HelperInitializer;
 
@@ -41,6 +42,7 @@ abstract class UITest extends BaseRobocopTest
     protected AboutHomeComponent mAboutHome;
     protected AppMenuComponent mAppMenu;
     protected GeckoViewComponent mGeckoView;
+    protected TabStripComponent mTabStrip;
     protected ToolbarComponent mToolbar;
 
     @Override
@@ -93,6 +95,7 @@ abstract class UITest extends BaseRobocopTest
         mAboutHome = new AboutHomeComponent(this);
         mAppMenu = new AppMenuComponent(this);
         mGeckoView = new GeckoViewComponent(this);
+        mTabStrip = new TabStripComponent(this);
         mToolbar = new ToolbarComponent(this);
     }
 

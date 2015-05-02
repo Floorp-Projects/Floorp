@@ -45,7 +45,7 @@
 #include "BasicLayers.h"
 #include "libdisplay/GonkDisplay.h"
 #include "pixelflinger/format.h"
-#include "mozilla/BasicEvents.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/APZCTreeManager.h"
@@ -198,7 +198,7 @@ nsWindow::ConfigureAPZControllerThread()
 }
 
 /*static*/ nsEventStatus
-nsWindow::DispatchInputEvent(WidgetGUIEvent& aEvent)
+nsWindow::DispatchKeyInput(WidgetKeyboardEvent& aEvent)
 {
     if (!gFocusedWindow) {
         return nsEventStatus_eIgnore;
