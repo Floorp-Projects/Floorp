@@ -18,7 +18,7 @@ interface nsITabParent;
 #include "js/TypeDecls.h"
 %}
 
-[scriptable, uuid(41a2f0c6-3ca1-44f9-8efa-744a43aa399d)]
+[scriptable, uuid(83f23c7e-6ce0-433f-9fe2-f287ae8c6e0c)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -59,6 +59,16 @@ interface nsIAppShellService : nsISupports
   void createHiddenWindow();
 
   void destroyHiddenWindow();
+
+  /**
+   * B2G multi-screen support. When open another top-level window on b2g,
+   * a screen ID is needed for identifying which screen this window is
+   * opened to.
+   * @param aScreenId Differentiate screens of windows. It is platform-
+   *                  specific due to the hardware limitation for now.
+   */
+  [noscript]
+  void setScreenId(in uint32_t aScreenId);
 
   /**
    * Return the (singleton) application hidden window, automatically created

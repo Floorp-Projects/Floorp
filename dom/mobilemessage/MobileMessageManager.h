@@ -13,6 +13,7 @@
 class nsISmsService;
 class nsIDOMMozSmsMessage;
 class nsIDOMMozMmsMessage;
+class Promise;
 
 namespace mozilla {
 namespace dom {
@@ -24,6 +25,7 @@ struct MmsSendParameters;
 struct MobileMessageFilter;
 class OwningLongOrMozSmsMessageOrMozMmsMessage;
 struct SmsSendParameters;
+struct SmscAddress;
 
 class MobileMessageManager final : public DOMEventTargetHelper
                                  , public nsIObserver
@@ -113,6 +115,11 @@ public:
 
   already_AddRefed<DOMRequest>
   GetSmscAddress(const Optional<uint32_t>& aServiceId,
+                 ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  SetSmscAddress(const SmscAddress& aSmscAddress,
+                 const Optional<uint32_t>& aServiceId,
                  ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(received)

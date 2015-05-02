@@ -12,7 +12,7 @@ interface nsIMobileMessageCallback;
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, uuid(ae688bca-00c9-4d08-945d-e8a5272ad5b1)]
+[scriptable, uuid(c8ca5f06-ad76-44b0-a324-9e2910fd37da)]
 interface nsISmsService : nsISupports
 {
   /**
@@ -41,21 +41,130 @@ interface nsISmsService : nsISupports
   const unsigned short DELIVERY_STATUS_TYPE_PENDING        = 2;
   const unsigned short DELIVERY_STATUS_TYPE_ERROR          = 3;
 
+  /**
+   * Constant definitions of SM-RP type of number as defined in
+   * |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008.
+   */
+  const unsigned short TYPE_OF_NUMBER_UNKNOWN                     = 0;
+  const unsigned short TYPE_OF_NUMBER_INTERNATIONAL               = 1;
+  const unsigned short TYPE_OF_NUMBER_NATIONAL                    = 2;
+  const unsigned short TYPE_OF_NUMBER_NETWORK_SPECIFIC            = 3;
+  const unsigned short TYPE_OF_NUMBER_DEDICATED_ACCESS_SHORT_CODE = 4;
+
+  /**
+   * Constant definitions of SM-RP number plan identification as defined in
+   * |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008.
+   */
+  const unsigned short NUMBER_PLAN_IDENTIFICATION_UNKNOWN  = 0;
+  const unsigned short NUMBER_PLAN_IDENTIFICATION_ISDN     = 1;
+  const unsigned short NUMBER_PLAN_IDENTIFICATION_DATA     = 2;
+  const unsigned short NUMBER_PLAN_IDENTIFICATION_TELEX    = 3;
+  const unsigned short NUMBER_PLAN_IDENTIFICATION_NATIONAL = 4;
+  const unsigned short NUMBER_PLAN_IDENTIFICATION_PRIVATE  = 5;
+
+  /**
+   * The default RIL service ID used for SMS.
+   */
   readonly attribute unsigned long smsDefaultServiceId;
 
+  /**
+   * Get the information necessary to create a multi-part SMS for a given text.
+   *
+   * @param text
+   *        The text message content.
+   * @param request
+   *        The callback object to use. It invokes
+   *        |notifySegmentInfoForTextGot| on success, or
+   *        |notifyGetSegmentInfoForTextFailed| on failure.
+   */
   void getSegmentInfoForText(in DOMString text,
                              in nsIMobileMessageCallback request);
 
+  /**
+   * Send a SMS.
+   *
+   * @param serviceId
+   *        The ID of RIL service to use.
+   * @param number
+   *        Destination number in string.
+   * @param message
+   *        The text message content.
+   * @param silent
+   *        |true| to send a silent message. It's used to make a SMS based
+   *        authentication for some services such as mobile billing.
+   * @param request
+   *        The callback object to use. It invokes |notifyMessageSent| on
+   *        success, or |notifySendMessageFailed| on failure.
+   * @throws NS_ERROR_INVALID_ARG
+   *         If |serviceId| exceeds the max value of available IDs.
+   */
   void send(in unsigned long serviceId,
             in DOMString number,
             in DOMString message,
             in boolean silent,
             in nsIMobileMessageCallback request);
 
+  /**
+   * Add a number to the list of silent message originators. When receiving a
+   * SMS sent from one of the numbers in the list, |SmsService| will notify
+   * observers through the topic "silent-sms-received".
+   *
+   * It's used when a SMS based authentication has been initiated and the client
+   * is waiting for an incoming silent message containing the authentication
+   * result.
+   *
+   * @param number
+   *        Originator number in string.
+   * @throw NS_ERROR_UNEXPECTED
+   *        If the given number has already been added before.
+   */
   void addSilentNumber(in DOMString number);
+
+  /**
+   * Remove a number from the silent message originator list.
+   *
+   * @param number
+   *        Originator number in string.
+   * @throws NS_ERROR_INVALID_ARG
+   *         If the number doesn't exist in the list.
+   */
   void removeSilentNumber(in DOMString number);
 
+  /**
+   * Get the short message service center address of given |serviceId|.
+   *
+   * @param serviceId
+   *        The ID of RIL service to use.
+   * @param request
+   *        The callback object to use. It invokes |notifyGetSmscAddress| on
+   *        success, or |notifyGetSmscAddressFailed| on failure.
+   * @throws NS_ERROR_INVALID_ARG
+   *         If |serviceId| exceeds the max value of available IDs.
+   */
   void getSmscAddress(in unsigned long serviceId,
+                      in nsIMobileMessageCallback request);
+
+  /**
+   * Set the short message service center address of given |serviceId|.
+   *
+   * @param serviceId
+   *        The ID of RIL service to use.
+   * @param number
+   *        Number part of the SMSC address.
+   * @param typeOfNumber
+   *        Type of number of the SMSC address.
+   * @param numberPlanIdentification
+   *        Number plan identification of the SMSC address.
+   * @param request
+   *        The callback object to use. It invokes |notifySetSmscAddress| on
+   *        success, or |notifySetSmscAddressFailed| on failure.
+   * @throws NS_ERROR_INVALID_ARG
+   *         If |serviceId| exceeds the max value of available IDs.
+   */
+  void setSmscAddress(in unsigned long serviceId,
+                      in DOMString number,
+                      in unsigned long typeOfNumber,
+                      in unsigned long numberPlanIdentification,
                       in nsIMobileMessageCallback request);
 };
 

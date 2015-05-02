@@ -1407,6 +1407,30 @@ this.CB_UMTS_MESSAGE_TYPE_SCHEDULE = 2;
 this.CB_UMTS_MESSAGE_TYPE_CBS41    = 3;
 
 /**
+ * Number plan identification defined in
+ * |Table 10.5.118: Called party BCD number| of 3GPP TS 24.008.
+ */
+this.CALLED_PARTY_BCD_NPI_UNKNOWN  = 0;
+this.CALLED_PARTY_BCD_NPI_ISDN     = 1;
+this.CALLED_PARTY_BCD_NPI_DATA     = 3;
+this.CALLED_PARTY_BCD_NPI_TELEX    = 4;
+this.CALLED_PARTY_BCD_NPI_NATIONAL = 8;
+this.CALLED_PARTY_BCD_NPI_PRIVATE  = 9;
+
+/**
+ * Array of number plan identification values which can be used to map an
+ * enumeration to the corresponding value.
+ */
+this.CALLED_PARTY_BCD_NPI = [
+  CALLED_PARTY_BCD_NPI_UNKNOWN,
+  CALLED_PARTY_BCD_NPI_ISDN,
+  CALLED_PARTY_BCD_NPI_DATA,
+  CALLED_PARTY_BCD_NPI_TELEX,
+  CALLED_PARTY_BCD_NPI_NATIONAL,
+  CALLED_PARTY_BCD_NPI_PRIVATE
+];
+
+/**
  * GSM PDU constants
  */
 
