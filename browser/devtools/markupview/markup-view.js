@@ -1815,16 +1815,6 @@ MarkupContainer.prototype = {
       return;
     }
 
-    // output-parser generated links handling.
-    if (target.nodeName === "a") {
-      event.stopPropagation();
-      event.preventDefault();
-      let browserWin = this.markup._inspector.target
-                           .tab.ownerDocument.defaultView;
-      browserWin.openUILinkIn(target.href, "tab");
-      return;
-    }
-
     // target is the MarkupContainer itself.
     this._isMouseDown = true;
     this.hovered = false;
