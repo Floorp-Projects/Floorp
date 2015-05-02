@@ -94,7 +94,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, uint32_t aEventType,
   } else if (mIsExternal) {
     if (aEventType == NS_PASTE) {
       CacheExternalClipboardFormats();
-    } else if (aEventType >= NS_DRAGDROP_EVENT_START && aEventType <= NS_DRAGDROP_LEAVE_SYNTH) {
+    } else if (aEventType >= NS_DRAGDROP_EVENT_START && aEventType <= NS_DRAGDROP_LEAVE) {
       CacheExternalDragFormats();
     }
   }

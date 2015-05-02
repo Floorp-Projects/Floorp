@@ -71,13 +71,13 @@
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
 #define NS_MOUSE_BUTTON_UP              (NS_MOUSE_MESSAGE_START + 1)
 #define NS_MOUSE_BUTTON_DOWN            (NS_MOUSE_MESSAGE_START + 2)
-#define NS_MOUSE_ENTER                  (NS_MOUSE_MESSAGE_START + 22)
-#define NS_MOUSE_EXIT                   (NS_MOUSE_MESSAGE_START + 23)
+#define NS_MOUSE_ENTER_WIDGET           (NS_MOUSE_MESSAGE_START + 22)
+#define NS_MOUSE_EXIT_WIDGET            (NS_MOUSE_MESSAGE_START + 23)
 #define NS_MOUSE_DOUBLECLICK            (NS_MOUSE_MESSAGE_START + 24)
 #define NS_MOUSE_CLICK                  (NS_MOUSE_MESSAGE_START + 27)
 #define NS_MOUSE_ACTIVATE               (NS_MOUSE_MESSAGE_START + 30)
-#define NS_MOUSE_ENTER_SYNTH            (NS_MOUSE_MESSAGE_START + 31)
-#define NS_MOUSE_EXIT_SYNTH             (NS_MOUSE_MESSAGE_START + 32)
+#define NS_MOUSE_OVER                   (NS_MOUSE_MESSAGE_START + 31)
+#define NS_MOUSE_OUT                    (NS_MOUSE_MESSAGE_START + 32)
 #define NS_MOUSE_MOZHITTEST             (NS_MOUSE_MESSAGE_START + 33)
 #define NS_MOUSEENTER                   (NS_MOUSE_MESSAGE_START + 34)
 #define NS_MOUSELEAVE                   (NS_MOUSE_MESSAGE_START + 35)
@@ -132,9 +132,7 @@
 #define NS_DRAGDROP_END                 (NS_DRAGDROP_EVENT_START + 6)
 #define NS_DRAGDROP_START               (NS_DRAGDROP_EVENT_START + 7)
 #define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 8)
-#define NS_DRAGDROP_OVER_SYNTH          (NS_DRAGDROP_EVENT_START + 1)
-#define NS_DRAGDROP_EXIT_SYNTH          (NS_DRAGDROP_EVENT_START + 2)
-#define NS_DRAGDROP_LEAVE_SYNTH         (NS_DRAGDROP_EVENT_START + 9)
+#define NS_DRAGDROP_LEAVE               (NS_DRAGDROP_EVENT_START + 9)
 
 // Events for popups
 #define NS_XUL_EVENT_START            1500

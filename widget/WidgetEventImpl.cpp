@@ -82,11 +82,11 @@ WidgetEvent::HasMouseEventMessage() const
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_CLICK:
     case NS_MOUSE_DOUBLECLICK:
-    case NS_MOUSE_ENTER:
-    case NS_MOUSE_EXIT:
+    case NS_MOUSE_ENTER_WIDGET:
+    case NS_MOUSE_EXIT_WIDGET:
     case NS_MOUSE_ACTIVATE:
-    case NS_MOUSE_ENTER_SYNTH:
-    case NS_MOUSE_EXIT_SYNTH:
+    case NS_MOUSE_OVER:
+    case NS_MOUSE_OUT:
     case NS_MOUSE_MOZHITTEST:
     case NS_MOUSE_MOVE:
       return true;
@@ -108,7 +108,7 @@ WidgetEvent::HasDragEventMessage() const
     case NS_DRAGDROP_END:
     case NS_DRAGDROP_START:
     case NS_DRAGDROP_DROP:
-    case NS_DRAGDROP_LEAVE_SYNTH:
+    case NS_DRAGDROP_LEAVE:
       return true;
     default:
       return false;
