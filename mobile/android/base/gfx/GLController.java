@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
@@ -112,8 +113,12 @@ public class GLController {
     };
 
     private GLController() {
-        mEGLPreloadingThread = new EGLPreloadingThread();
-        mEGLPreloadingThread.start();
+        if (AppConstants.Versions.preICS) {
+            mEGLPreloadingThread = new EGLPreloadingThread();
+            mEGLPreloadingThread.start();
+        } else {
+            mEGLPreloadingThread = null;
+        }
     }
 
     static GLController getInstance(LayerView view) {
@@ -211,10 +216,12 @@ public class GLController {
         // it shouldn't be a problem to be initializing EGL from two different threads.
         // Still, having this join() here means that we don't have to wonder about what
         // kind of caveats might exist with EGL initialization reentrancy on various drivers.
-        try {
-            mEGLPreloadingThread.join();
-        } catch (InterruptedException e) {
-            Log.w(LOGTAG, "EGLPreloadingThread interrupted", e);
+        if (mEGLPreloadingThread != null) {
+            try {
+                mEGLPreloadingThread.join();
+            } catch (InterruptedException e) {
+                Log.w(LOGTAG, "EGLPreloadingThread interrupted", e);
+            }
         }
 
         mEGL = (EGL10)EGLContext.getEGL();
@@ -225,18 +232,20 @@ public class GLController {
             return;
         }
 
-        // while calling eglInitialize here should not be necessary as it was already called
-        // by the EGLPreloadingThread, it really doesn't cost much to call it again here,
-        // and makes this code easier to think about: EGLPreloadingThread is only a
-        // preloading optimization, not something we rely on for anything else.
-        //
-        // Also note that while calling eglInitialize isn't necessary on Android 4.x
-        // (at least Android's HardwareRenderer does it for us already), it is necessary
-        // on Android 2.x.
-        int[] returnedVersion = new int[2];
-        if (!mEGL.eglInitialize(mEGLDisplay, returnedVersion)) {
-            Log.w(LOGTAG, "eglInitialize failed");
-            return;
+        if (AppConstants.Versions.preICS) {
+            // while calling eglInitialize here should not be necessary as it was already called
+            // by the EGLPreloadingThread, it really doesn't cost much to call it again here,
+            // and makes this code easier to think about: EGLPreloadingThread is only a
+            // preloading optimization, not something we rely on for anything else.
+            //
+            // Also note that while calling eglInitialize isn't necessary on Android 4.x
+            // (at least Android's HardwareRenderer does it for us already), it is necessary
+            // on Android 2.x.
+            int[] returnedVersion = new int[2];
+            if (!mEGL.eglInitialize(mEGLDisplay, returnedVersion)) {
+                Log.w(LOGTAG, "eglInitialize failed");
+                return;
+            }
         }
 
         mEGLConfig = chooseConfig();
