@@ -30,12 +30,12 @@ struct IdValuePair
     {}
 };
 
-class MOZ_STACK_CLASS AutoIdValueVector : public AutoVectorRooter<IdValuePair>
+class MOZ_STACK_CLASS AutoIdValueVector : public JS::AutoVectorRooterBase<IdValuePair>
 {
   public:
     explicit AutoIdValueVector(ContextFriendFields* cx
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<IdValuePair>(cx, IDVALVECTOR)
+        : AutoVectorRooterBase<IdValuePair>(cx, IDVALVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

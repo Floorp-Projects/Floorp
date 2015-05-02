@@ -482,10 +482,10 @@ bool
 Promise::PerformMicroTaskCheckpoint()
 {
   CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
-  nsTArray<nsCOMPtr<nsIRunnable>>& microtaskQueue =
+  std::queue<nsCOMPtr<nsIRunnable>>& microtaskQueue =
     runtime->GetPromiseMicroTaskQueue();
 
-  if (microtaskQueue.IsEmpty()) {
+  if (microtaskQueue.empty()) {
     return false;
   }
 
@@ -495,11 +495,11 @@ Promise::PerformMicroTaskCheckpoint()
   }
 
   do {
-    nsCOMPtr<nsIRunnable> runnable = microtaskQueue.ElementAt(0);
+    nsCOMPtr<nsIRunnable> runnable = microtaskQueue.front();
     MOZ_ASSERT(runnable);
 
     // This function can re-enter, so we remove the element before calling.
-    microtaskQueue.RemoveElementAt(0);
+    microtaskQueue.pop();
     nsresult rv = runnable->Run();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
@@ -507,7 +507,7 @@ Promise::PerformMicroTaskCheckpoint()
     if (cx.isSome()) {
       JS_CheckForInterrupt(cx.ref());
     }
-  } while (!microtaskQueue.IsEmpty());
+  } while (!microtaskQueue.empty());
 
   return true;
 }
@@ -1168,10 +1168,10 @@ Promise::DispatchToMicroTask(nsIRunnable* aRunnable)
   MOZ_ASSERT(aRunnable);
 
   CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
-  nsTArray<nsCOMPtr<nsIRunnable>>& microtaskQueue =
+  std::queue<nsCOMPtr<nsIRunnable>>& microtaskQueue =
     runtime->GetPromiseMicroTaskQueue();
 
-  microtaskQueue.AppendElement(aRunnable);
+  microtaskQueue.push(aRunnable);
 }
 
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)

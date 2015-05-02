@@ -19,18 +19,22 @@
       return;
     }
 
+    // Add a little bottom padding to the window so that we don't capture the
+    // rounded corners at the bottom, which our GL drawing code on OS X draws
+    // for regular windows.
+    // (The reftest framework doesn't have this problem because it doesn't use
+    // a regular window with a titlebar, so there are no rounded corners.)
+    const WINDOW_INNER_WIDTH = CANVAS_WIDTH;
+    const WINDOW_INNER_HEIGHT = CANVAS_HEIGHT + 10;
+
     // Need to open as a toplevel chrome window so that
     // DRAWWINDOW_USE_WIDGET_LAYERS is honored.
     sourceWindow = window.open("file_drawWindow_source.html", "",
-                               "chrome,width=200,height=100");
-    sourceWindow.addEventListener("load", runTests, false);
+                               `chrome,width=${WINDOW_INNER_WIDTH},height=${WINDOW_INNER_HEIGHT}`);
+    SimpleTest.waitForFocus(runTests, sourceWindow);
   }
 
-  function runTests(event) {
-    if (event.target != sourceWindow.document) {
-      return;
-    }
-
+  function runTests() {
     var cxInterfaceWrap = SpecialPowers.wrap(CanvasRenderingContext2D);
     var flags = cxInterfaceWrap.DRAWWINDOW_USE_WIDGET_LAYERS |
                 cxInterfaceWrap.DRAWWINDOW_DRAW_CARET |

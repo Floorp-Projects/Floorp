@@ -1132,13 +1132,13 @@ NameToId(PropertyName* name)
     return NON_INTEGER_ATOM_TO_JSID(name);
 }
 
-class AutoNameVector : public AutoVectorRooter<PropertyName*>
+class AutoNameVector : public JS::AutoVectorRooterBase<PropertyName*>
 {
-    typedef AutoVectorRooter<PropertyName*> BaseType;
+    typedef AutoVectorRooterBase<PropertyName*> BaseType;
   public:
     explicit AutoNameVector(JSContext* cx
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<PropertyName*>(cx, NAMEVECTOR)
+        : AutoVectorRooterBase<PropertyName*>(cx, NAMEVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

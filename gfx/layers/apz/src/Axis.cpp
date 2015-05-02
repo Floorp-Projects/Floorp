@@ -140,7 +140,7 @@ bool Axis::AdjustDisplacement(ParentLayerCoord aDisplacement,
     return false;
   }
 
-  StopSamplingOverscrollAnimation();
+  ClearOverscrollAnimationState();
 
   ParentLayerCoord displacement = aDisplacement;
 
@@ -182,7 +182,7 @@ ParentLayerCoord Axis::ApplyResistance(ParentLayerCoord aRequestedOverscroll) co
 
 void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   MOZ_ASSERT(CanScroll());
-  StopSamplingOverscrollAnimation();
+  ClearOverscrollAnimationState();
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
 #ifdef DEBUG
@@ -224,10 +224,23 @@ ParentLayerCoord Axis::GetOverscroll() const {
   return result;
 }
 
-void Axis::StopSamplingOverscrollAnimation() {
-  ParentLayerCoord overscroll = GetOverscroll();
-  ClearOverscroll();
-  mOverscroll = overscroll;
+void Axis::StartOverscrollAnimation(float aVelocity) {
+  // Make sure any state from a previous animation has been cleared.
+  MOZ_ASSERT(mFirstOverscrollAnimationSample == 0 &&
+             mLastOverscrollPeak == 0 &&
+             mOverscrollScale == 1);
+
+  SetVelocity(aVelocity);
+}
+
+void Axis::EndOverscrollAnimation() {
+  ClearOverscrollAnimationState();
+}
+
+void Axis::ClearOverscrollAnimationState() {
+  mFirstOverscrollAnimationSample = 0;
+  mLastOverscrollPeak = 0;
+  mOverscrollScale = 1.0f;
 }
 
 void Axis::StepOverscrollAnimation(double aStepDurationMilliseconds) {
@@ -347,10 +360,8 @@ bool Axis::IsOverscrolled() const {
 }
 
 void Axis::ClearOverscroll() {
+  ClearOverscrollAnimationState();
   mOverscroll = 0;
-  mFirstOverscrollAnimationSample = 0;
-  mLastOverscrollPeak = 0;
-  mOverscrollScale = 1.0f;
 }
 
 ParentLayerCoord Axis::PanStart() const {

@@ -257,6 +257,17 @@ protected:
     apzc->SetFrameMetrics(TestFrameMetrics());
   }
 
+  /**
+   * Get the APZC's scroll range in CSS pixels.
+   */
+  CSSRect GetScrollRange() const
+  {
+    const FrameMetrics& metrics = apzc->GetFrameMetrics();
+    return CSSRect(
+        metrics.GetScrollableRect().TopLeft(),
+        metrics.GetScrollableRect().Size() - metrics.CalculateCompositedSizeInCssPixels());
+  }
+
   virtual void TearDown()
   {
     apzc->Destroy();
@@ -275,6 +286,49 @@ protected:
   void MakeApzcUnzoomable()
   {
     apzc->UpdateZoomConstraints(ZoomConstraints(false, false, CSSToParentLayerScale(1.0f), CSSToParentLayerScale(1.0f)));
+  }
+
+  void PanIntoOverscroll(int& aTime);
+
+  /**
+   * Sample animations once, 1 ms later than the last sample.
+   */
+  void SampleAnimationOnce()
+  {
+    const TimeDuration increment = TimeDuration::FromMilliseconds(1);
+    ParentLayerPoint pointOut;
+    ViewTransform viewTransformOut;
+    testStartTime += increment;
+    apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
+  }
+
+  /**
+   * Sample animations until we recover from overscroll.
+   * @param aExpectedScrollOffset the expected reported scroll offset
+   *                              throughout the animation
+   */
+  void SampleAnimationUntilRecoveredFromOverscroll(const ParentLayerPoint& aExpectedScrollOffset)
+  {
+    const TimeDuration increment = TimeDuration::FromMilliseconds(1);
+    bool recoveredFromOverscroll = false;
+    ParentLayerPoint pointOut;
+    ViewTransform viewTransformOut;
+    while (apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut)) {
+      // The reported scroll offset should be the same throughout.
+      EXPECT_EQ(aExpectedScrollOffset, pointOut);
+
+      // Trigger computation of the overscroll tranform, to make sure
+      // no assetions fire during the calculation.
+      apzc->GetOverscrollTransform();
+
+      if (!apzc->IsOverscrolled()) {
+        recoveredFromOverscroll = true;
+      }
+
+      testStartTime += increment;
+    }
+    EXPECT_TRUE(recoveredFromOverscroll);
+    apzc->AssertStateIsReset();
   }
 
   void TestOverscroll();
@@ -1137,36 +1191,23 @@ TEST_F(APZCBasicTester, PanningTransformNotifications) {
   check.Call("Done");
 }
 
+void APZCBasicTester::PanIntoOverscroll(int& aTime)
+{
+  int touchStart = 500;
+  int touchEnd = 10;
+  Pan(apzc, aTime, touchStart, touchEnd);
+  EXPECT_TRUE(apzc->IsOverscrolled());
+}
+
 void APZCBasicTester::TestOverscroll()
 {
   // Pan sufficiently to hit overscroll behavior
   int time = 0;
-  int touchStart = 500;
-  int touchEnd = 10;
-  Pan(apzc, time, touchStart, touchEnd);
-  EXPECT_TRUE(apzc->IsOverscrolled());
+  PanIntoOverscroll(time);
 
   // Check that we recover from overscroll via an animation.
-  const TimeDuration increment = TimeDuration::FromMilliseconds(1);
-  bool recoveredFromOverscroll = false;
-  ParentLayerPoint pointOut;
-  ViewTransform viewTransformOut;
-  while (apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut)) {
-    // The reported scroll offset should be the same throughout.
-    EXPECT_EQ(ParentLayerPoint(0, 90), pointOut);
-
-    // Trigger computation of the overscroll tranform, to make sure
-    // no assetions fire during the calculation.
-    apzc->GetOverscrollTransform();
-
-    if (!apzc->IsOverscrolled()) {
-      recoveredFromOverscroll = true;
-    }
-
-    testStartTime += increment;
-  }
-  EXPECT_TRUE(recoveredFromOverscroll);
-  apzc->AssertStateIsReset();
+  ParentLayerPoint expectedScrollOffset(0, GetScrollRange().YMost());
+  SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
 }
 
 
@@ -1178,7 +1219,7 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
 
 // Tests that an overscroll animation doesn't trigger an assertion failure
 // in the case where a sample has a velocity of zero.
-TEST_F(APZCBasicTester, OverScroll_Bug1152051) {
+TEST_F(APZCBasicTester, OverScroll_Bug1152051a) {
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
 
   // Doctor the prefs to make the velocity zero at the end of the first sample.
@@ -1195,6 +1236,44 @@ TEST_F(APZCBasicTester, OverScroll_Bug1152051) {
   SCOPED_GFX_PREF(APZOverscrollSpringStiffness, float, 0.01225f);
 
   TestOverscroll();
+}
+
+// Tests that ending an overscroll animation doesn't leave around state that
+// confuses the next overscroll animation.
+TEST_F(APZCBasicTester, OverScroll_Bug1152051b) {
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  SCOPED_GFX_PREF(APZOverscrollStopDistanceThreshold, float, 0.1f);
+
+  // Pan sufficiently to hit overscroll behavior
+  int time = 0;
+  PanIntoOverscroll(time);
+
+  // Sample animations once, to give the fling animation started on touch-up
+  // a chance to realize it's overscrolled, and schedule a call to
+  // HandleFlingOverscroll().
+  SampleAnimationOnce();
+
+  // Give the call to HandleFlingOverscroll() a chance to occur, creating
+  // an overscroll animation.
+  mcc->RunThroughDelayedTasks();
+
+  // Sample the overscroll animation once, to get it to initialize
+  // the first overscroll sample.
+  SampleAnimationOnce();
+
+  // Do a touch-down to cancel the overscroll animation, and then a touch-up
+  // to schedule a new one since we're still overscrolled. We don't pan because
+  // panning can trigger functions that clear the overscroll animation state
+  // in other ways.
+  TouchDown(apzc, 10, 10, time, nullptr);
+  TouchUp(apzc, 10, 10, time);
+
+  // Sample the second overscroll animation to its end.
+  // If the ending of the first overscroll animation fails to clear state
+  // properly, this will assert.
+  ParentLayerPoint expectedScrollOffset(0, GetScrollRange().YMost());
+  SampleAnimationUntilRecoveredFromOverscroll(expectedScrollOffset);
 }
 
 TEST_F(APZCBasicTester, OverScrollAbort) {

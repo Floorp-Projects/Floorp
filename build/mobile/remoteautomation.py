@@ -80,6 +80,14 @@ class RemoteAutomation(Automation):
         # Don't override the user's choice here.  See bug 1049688.
         env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
 
+        # Set WebRTC logging in case it is not set yet.
+        # On Android, environment variables cannot contain ',' so the
+        # standard WebRTC setting for NSPR_LOG_MODULES is not available.
+        # env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')
+        env.setdefault('R_LOG_LEVEL', '6')
+        env.setdefault('R_LOG_DESTINATION', 'stderr')
+        env.setdefault('R_LOG_VERBOSE', '1')
+
         return env
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):

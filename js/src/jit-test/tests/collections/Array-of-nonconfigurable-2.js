@@ -9,8 +9,8 @@ function C() {
 }
 try { Array.of.call(C, 1); } catch (e) {}
 assertDeepEq(Object.getOwnPropertyDescriptor(obj, 0), {
-    configurable: false,
-    enumerable: false,
     value: "v",
-    writable: false
+    writable: false,
+    enumerable: false,
+    configurable: false
 });

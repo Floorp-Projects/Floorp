@@ -574,61 +574,77 @@ date_msecFromDate(double year, double mon, double mday, double hour,
     return MakeDate(MakeDay(year, mon, mday), MakeTime(hour, min, sec, msec));
 }
 
-/* compute the time in msec (unclipped) from the given args */
-#define MAXARGS        7
-
-static bool
-date_msecFromArgs(JSContext* cx, CallArgs args, double* rval)
-{
-    unsigned loop;
-    double array[MAXARGS];
-    double msec_time;
-
-    for (loop = 0; loop < MAXARGS; loop++) {
-        if (loop < args.length()) {
-            double d;
-            if (!ToNumber(cx, args[loop], &d))
-                return false;
-            /* return NaN if any arg is not finite */
-            if (!IsFinite(d)) {
-                *rval = GenericNaN();
-                return true;
-            }
-            array[loop] = ToInteger(d);
-        } else {
-            if (loop == 2) {
-                array[loop] = 1; /* Default the date argument to 1. */
-            } else {
-                array[loop] = 0;
-            }
-        }
-    }
-
-    /* adjust 2-digit years into the 20th century */
-    if (array[0] >= 0 && array[0] <= 99)
-        array[0] += 1900;
-
-    msec_time = date_msecFromDate(array[0], array[1], array[2],
-                                  array[3], array[4], array[5], array[6]);
-    *rval = msec_time;
-    return true;
-}
-
-/*
- * See ECMA 15.9.4.[3-10];
- */
+/* ES6 20.3.3.4. */
 static bool
 date_UTC(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    double msec_time;
-    if (!date_msecFromArgs(cx, args, &msec_time))
+    // Steps 1-2.
+    double y;
+    if (!ToNumber(cx, args.get(0), &y))
         return false;
 
-    msec_time = TimeClip(msec_time);
+    // Steps 3-4.
+    double m;
+    if (!ToNumber(cx, args.get(1), &m))
+        return false;
 
-    args.rval().setNumber(msec_time);
+    // Steps 5-6.
+    double dt;
+    if (args.length() >= 3) {
+        if (!ToNumber(cx, args[2], &dt))
+            return false;
+    } else {
+        dt = 1;
+    }
+
+    // Steps 7-8.
+    double h;
+    if (args.length() >= 4) {
+        if (!ToNumber(cx, args[3], &h))
+            return false;
+    } else {
+        h = 0;
+    }
+
+    // Steps 9-10.
+    double min;
+    if (args.length() >= 5) {
+        if (!ToNumber(cx, args[4], &min))
+            return false;
+    } else {
+        min = 0;
+    }
+
+    // Steps 11-12.
+    double s;
+    if (args.length() >= 6) {
+        if (!ToNumber(cx, args[5], &s))
+            return false;
+    } else {
+        s = 0;
+    }
+
+    // Steps 13-14.
+    double milli;
+    if (args.length() >= 7) {
+        if (!ToNumber(cx, args[6], &milli))
+            return false;
+    } else {
+        milli = 0;
+    }
+
+    // Step 15.
+    double yr = y;
+    if (!IsNaN(y)) {
+        double yint = ToInteger(y);
+        if (0 <= yint && yint <= 99)
+            yr = 1900 + yint;
+    }
+
+    // Step 16.
+    args.rval().setDouble(TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli))));
     return true;
 }
 
@@ -2891,7 +2907,7 @@ js::date_valueOf(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec date_static_methods[] = {
-    JS_FN("UTC",                 date_UTC,                MAXARGS,0),
+    JS_FN("UTC",                 date_UTC,                7,0),
     JS_FN("parse",               date_parse,              1,0),
     JS_FN("now",                 date_now,                0,0),
     JS_FS_END
@@ -2956,34 +2972,49 @@ static const JSFunctionSpec date_methods[] = {
     JS_FS_END
 };
 
-bool
-js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
+static bool
+NewDateObject(JSContext* cx, const CallArgs& args, double d)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject* obj = NewDateObjectMsec(cx, d);
+    if (!obj)
+        return false;
 
-    /* Date called as function. */
-    if (!args.isConstructing())
-        return date_format(cx, NowAsMillis(), FORMATSPEC_FULL, args.rval());
+    args.rval().setObject(*obj);
+    return true;
+}
 
-    /* Date called as constructor. */
-    double d;
-    if (args.length() == 0) {
-        /* ES5 15.9.3.3. */
-        d = NowAsMillis();
-    } else if (args.length() == 1) {
-        /* ES5 15.9.3.2. */
+static bool
+ToDateString(JSContext* cx, const CallArgs& args, double d)
+{
+    return date_format(cx, d, FORMATSPEC_FULL, args.rval());
+}
 
-        /* Step 1. */
+static bool
+DateNoArguments(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() == 0);
+
+    double now = NowAsMillis();
+
+    if (args.isConstructing())
+        return NewDateObject(cx, args, now);
+
+    return ToDateString(cx, args, now);
+}
+
+static bool
+DateOneArgument(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() == 1);
+
+    if (args.isConstructing()) {
+        double d;
+
         if (!ToPrimitive(cx, args[0]))
             return false;
 
         if (args[0].isString()) {
-            /* Step 2. */
-            JSString* str = args[0].toString();
-            if (!str)
-                return false;
-
-            JSLinearString* linearStr = str->ensureLinear(cx);
+            JSLinearString* linearStr = args[0].toString()->ensureLinear(cx);
             if (!linearStr)
                 return false;
 
@@ -2992,29 +3023,109 @@ js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
             else
                 d = TimeClip(d);
         } else {
-            /* Step 3. */
             if (!ToNumber(cx, args[0], &d))
                 return false;
             d = TimeClip(d);
         }
-    } else {
-        double msec_time;
-        if (!date_msecFromArgs(cx, args, &msec_time))
-            return false;
 
-        if (IsFinite(msec_time)) {
-            msec_time = UTC(msec_time, &cx->runtime()->dateTimeInfo);
-            msec_time = TimeClip(msec_time);
-        }
-        d = msec_time;
+        return NewDateObject(cx, args, d);
     }
 
-    JSObject* obj = NewDateObjectMsec(cx, d);
-    if (!obj)
-        return false;
+    return ToDateString(cx, args, NowAsMillis());
+}
 
-    args.rval().setObject(*obj);
-    return true;
+static bool
+DateMultipleArguments(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(args.length() >= 2);
+
+    // Step 3.
+    if (args.isConstructing()) {
+        // Steps 3a-b.
+        double y;
+        if (!ToNumber(cx, args[0], &y))
+            return false;
+
+        // Steps 3c-d.
+        double m;
+        if (!ToNumber(cx, args[1], &m))
+            return false;
+
+        // Steps 3e-f.
+        double dt;
+        if (args.length() >= 3) {
+            if (!ToNumber(cx, args[2], &dt))
+                return false;
+        } else {
+            dt = 1;
+        }
+
+        // Steps 3g-h.
+        double h;
+        if (args.length() >= 4) {
+            if (!ToNumber(cx, args[3], &h))
+                return false;
+        } else {
+            h = 0;
+        }
+
+        // Steps 3i-j.
+        double min;
+        if (args.length() >= 5) {
+            if (!ToNumber(cx, args[4], &min))
+                return false;
+        } else {
+            min = 0;
+        }
+
+        // Steps 3k-l.
+        double s;
+        if (args.length() >= 6) {
+            if (!ToNumber(cx, args[5], &s))
+                return false;
+        } else {
+            s = 0;
+        }
+
+        // Steps 3m-n.
+        double milli;
+        if (args.length() >= 7) {
+            if (!ToNumber(cx, args[6], &milli))
+                return false;
+        } else {
+            milli = 0;
+        }
+
+        // Step 3o.
+        double yr = y;
+        if (!IsNaN(y)) {
+            double yint = ToInteger(y);
+            if (0 <= yint && yint <= 99)
+                yr = 1900 + yint;
+        }
+
+        // Step 3p.
+        double finalDate = MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli));
+
+        // Steps 3q-t.
+        return NewDateObject(cx, args, TimeClip(UTC(finalDate, &cx->runtime()->dateTimeInfo)));
+    }
+
+    return ToDateString(cx, args, NowAsMillis());
+}
+
+bool
+js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() == 0)
+        return DateNoArguments(cx, args);
+
+    if (args.length() == 1)
+        return DateOneArgument(cx, args);
+
+    return DateMultipleArguments(cx, args);
 }
 
 static bool
@@ -3052,7 +3163,7 @@ const Class DateObject::class_ = {
     nullptr, /* construct */
     nullptr, /* trace */
     {
-        GenericCreateConstructor<DateConstructor, MAXARGS, JSFunction::FinalizeKind>,
+        GenericCreateConstructor<DateConstructor, 7, JSFunction::FinalizeKind>,
         GenericCreatePrototype,
         date_static_methods,
         nullptr,

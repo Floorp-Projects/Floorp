@@ -923,7 +923,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SettingsManager",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "ShadowRoot", pref: "dom.webcomponents.enabled"},
+    "ShadowRoot", // Bogus, but the test harness forces it on.  See bug 1159768.
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SharedWorker",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1381,7 +1381,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change the list above without review from a DOM peer!
 
 function createInterfaceMap(isXBLScope) {
-  var prefs = SpecialPowers.Services.prefs;
   var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
   var isNightly = version.endsWith("a1");
   var isRelease = !version.includes("a");
@@ -1406,21 +1405,23 @@ function createInterfaceMap(isXBLScope) {
     for (var entry of interfaces) {
       if (typeof(entry) === "string") {
         interfaceMap[entry] = true;
-      } else if ((entry.nightly === !isNightly) ||
-                 (entry.xbl === !isXBLScope) ||
-                 (entry.desktop === !isDesktop) ||
-                 (entry.b2g === !isB2G) ||
-                 (entry.windows === !isWindows) ||
-                 (entry.mac === !isMac) ||
-                 (entry.linux === !isLinux) ||
-                 (entry.android === !isAndroid) ||
-                 (entry.release === !isRelease) ||
-                 (entry.pref && !prefs.getBoolPref(entry.pref))  ||
-                 (entry.permission && !hasPermission(entry.permission)) ||
-                 entry.disabled) {
-        interfaceMap[entry.name] = false;
       } else {
-        interfaceMap[entry.name] = true;
+	ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
+	if ((entry.nightly === !isNightly) ||
+            (entry.xbl === !isXBLScope) ||
+            (entry.desktop === !isDesktop) ||
+            (entry.b2g === !isB2G) ||
+            (entry.windows === !isWindows) ||
+            (entry.mac === !isMac) ||
+            (entry.linux === !isLinux) ||
+            (entry.android === !isAndroid) ||
+            (entry.release === !isRelease) ||
+            (entry.permission && !hasPermission(entry.permission)) ||
+            entry.disabled) {
+          interfaceMap[entry.name] = false;
+	} else {
+          interfaceMap[entry.name] = true;
+	}
       }
     }
   }
