@@ -43,7 +43,14 @@ class DateObject : public NativeObject
     static const Class class_;
     static const Class protoClass_;
 
-    inline const js::Value& UTCTime() const {
+    JS::ClippedTime clippedTime() const {
+        double t = getFixedSlot(UTC_TIME_SLOT).toDouble();
+        JS::ClippedTime clipped = JS::TimeClip(t);
+        MOZ_ASSERT(mozilla::NumbersAreIdentical(clipped.toDouble(), t));
+        return clipped;
+    }
+
+    const js::Value& UTCTime() const {
         return getFixedSlot(UTC_TIME_SLOT);
     }
 
