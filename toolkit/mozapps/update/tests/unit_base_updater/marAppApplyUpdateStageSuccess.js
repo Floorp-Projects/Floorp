@@ -231,7 +231,7 @@ function finishCheckUpdateApplied() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   gSwitchApp = true;
   checkUpdateLogContents();
   gSwitchApp = false;
