@@ -102,7 +102,7 @@ struct NativeIterator
         prev_ = nullptr;
     }
 
-    static NativeIterator* allocateSentinel(JSContext* cx);
+    static NativeIterator* allocateSentinel(JSContext* maybecx);
     static NativeIterator* allocateIterator(JSContext* cx, uint32_t slength,
                                             const js::AutoIdVector& props);
     void init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t slength, uint32_t key);

@@ -377,7 +377,7 @@ struct JSCompartment
     JSCompartment(JS::Zone* zone, const JS::CompartmentOptions& options);
     ~JSCompartment();
 
-    bool init(JSContext* cx);
+    bool init(JSContext* maybecx);
 
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer* trc);
@@ -731,12 +731,12 @@ struct WrapperValue
     Value value;
 };
 
-class AutoWrapperVector : public AutoVectorRooter<WrapperValue>
+class AutoWrapperVector : public JS::AutoVectorRooterBase<WrapperValue>
 {
   public:
     explicit AutoWrapperVector(JSContext* cx
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoVectorRooter<WrapperValue>(cx, WRAPVECTOR)
+        : AutoVectorRooterBase<WrapperValue>(cx, WRAPVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

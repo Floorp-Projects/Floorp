@@ -19,7 +19,6 @@
 // There are also some functions for requesting information that requires
 // SpecialPowers or other main-thread-only resources:
 //
-//  workerTestGetPrefs() - request an array of prefs value from the main thread
 //  workerTestGetPermissions() - request an array permissions from the MT
 //  workerTestGetVersion() - request the current version string from the MT
 //  workerTestGetUserAgent() - request the user agent string from the MT
@@ -36,17 +35,6 @@ function workerTestExec(script) {
 
     } else if (event.data.type == 'status') {
       ok(event.data.status, event.data.msg);
-
-    } else if (event.data.type == 'getPrefs') {
-      var result = {};
-      event.data.prefs.forEach(function(pref) {
-        result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
-      });
-      worker.postMessage({
-        type: 'returnPrefs',
-        prefs: event.data.prefs,
-        result: result
-      });
 
     } else if (event.data.type == 'getPermissions') {
       var result = {};

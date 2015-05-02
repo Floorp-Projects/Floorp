@@ -21,5 +21,7 @@ setup(name='moznetwork',
       packages=['moznetwork'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=deps
+      install_requires=deps,
+      entry_points={'console_scripts': [
+          'moznetwork = moznetwork:cli']},
       )

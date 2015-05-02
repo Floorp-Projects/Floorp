@@ -28,6 +28,7 @@ import mozpack.path as mozpath
 from .common import CommonBackend
 from ..frontend.data import (
     AndroidEclipseProjectData,
+    BrandingFiles,
     ConfigFileSubstitution,
     ContextDerived,
     ContextWrapped,
@@ -134,6 +135,7 @@ DEPRECATED_VARIABLES = [
     'MOCHITEST_FILES_PARTS',
     'MOCHITEST_METRO_FILES',
     'MOCHITEST_ROBOCOP_FILES',
+    'MOZ_CHROME_FILE_FORMAT',
     'SHORT_LIBNAME',
     'TESTING_JS_MODULES',
     'TESTING_JS_MODULE_DIR',
@@ -377,6 +379,7 @@ class RecursiveMakeBackend(CommonBackend):
         self._install_manifests = {
             k: InstallManifest() for k in [
                 'dist_bin',
+                'dist_branding',
                 'dist_idl',
                 'dist_include',
                 'dist_public',
@@ -492,6 +495,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Resources):
             self._process_resources(obj, obj.resources, backend_file)
+
+        elif isinstance(obj, BrandingFiles):
+            self._process_branding_files(obj, obj.files, backend_file)
 
         elif isinstance(obj, JsPreferenceFile):
             if obj.path.startswith('/'):
@@ -939,6 +945,22 @@ INSTALL_TARGETS += %(prefix)s
 
             if not os.path.exists(source):
                 raise Exception('File listed in RESOURCE_FILES does not exist: %s' % source)
+
+    def _process_branding_files(self, obj, files, backend_file):
+        for source, dest, flags in self._walk_hierarchy(obj, files):
+            if flags and flags.source:
+                source = mozpath.normpath(mozpath.join(obj.srcdir, flags.source))
+            if not os.path.exists(source):
+                raise Exception('File listed in BRANDING_FILES does not exist: %s' % source)
+
+            self._install_manifests['dist_branding'].add_symlink(source, dest)
+
+        # Also emit the necessary rules to create $(DIST)/branding during partial
+        # tree builds. The locale makefiles rely on this working.
+        backend_file.write('NONRECURSIVE_TARGETS += export\n')
+        backend_file.write('NONRECURSIVE_TARGETS_export += branding\n')
+        backend_file.write('NONRECURSIVE_TARGETS_export_branding_DIRECTORY = $(DEPTH)\n')
+        backend_file.write('NONRECURSIVE_TARGETS_export_branding_TARGETS += install-dist/branding\n')
 
     def _process_installation_target(self, obj, backend_file):
         # A few makefiles need to be able to override the following rules via

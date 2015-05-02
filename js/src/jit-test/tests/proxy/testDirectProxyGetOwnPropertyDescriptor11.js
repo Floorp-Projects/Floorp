@@ -7,8 +7,8 @@ var p = new Proxy({}, {
 });
 var desc = Object.getOwnPropertyDescriptor(p, "x");
 assertDeepEq(desc, {
-    configurable: true,
-    enumerable: false,
     value: undefined,
-    writable: false
+    writable: false,
+    enumerable: false,
+    configurable: true
 });

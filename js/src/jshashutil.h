@@ -31,11 +31,15 @@ struct DependentAddPtr
     {}
 
     template <class KeyInput, class ValueInput>
-    bool add(const ExclusiveContext* cx, T& table, const KeyInput& key, const ValueInput& value) {
+    bool add(ExclusiveContext* cx, T& table, const KeyInput& key, const ValueInput& value) {
         bool gcHappened = originalGcNumber != cx->zone()->gcNumber();
         if (gcHappened)
             addPtr = table.lookupForAdd(key);
-        return table.relookupOrAdd(addPtr, key, value);
+        if (!table.relookupOrAdd(addPtr, key, value)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
     }
 
 

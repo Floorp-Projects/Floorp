@@ -2,15 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import socket
+import argparse
 import array
 import re
+import socket
 import struct
 import subprocess
+import sys
+
 import mozinfo
 
 if mozinfo.isLinux:
     import fcntl
+
 
 class NetworkError(Exception):
     """Exception thrown when unable to obtain interface or IP."""
@@ -34,11 +38,12 @@ def _get_interface_list():
         ))[0]
         namestr = names.tostring()
         return [(namestr[i:i + 32].split('\0', 1)[0],
-                socket.inet_ntoa(namestr[i + 20:i + 24]))\
+                socket.inet_ntoa(namestr[i + 20:i + 24]))
                 for i in range(0, outbytes, struct_size)]
 
     except IOError:
         raise NetworkError('Unable to call ioctl with SIOCGIFCONF')
+
 
 def _proc_matches(args, regex):
     """Helper returns the matches of regex in the output of a process created with
@@ -47,6 +52,7 @@ def _proc_matches(args, regex):
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT).stdout.read()
     return re.findall(regex, output)
+
 
 def _parse_ifconfig():
     """Parse the output of running ifconfig on mac in cases other methods
@@ -76,6 +82,7 @@ def _parse_ifconfig():
         return [addr for addr in addrs if not addr.startswith('127.')][0]
     except IndexError:
         return None
+
 
 def get_ip():
     """Provides an available network interface address, for example
@@ -112,3 +119,14 @@ def get_ip():
 def get_lan_ip():
     """Deprecated. Please use get_ip() instead."""
     return get_ip()
+
+
+def cli(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description='Retrieve IP address')
+    parser.parse_args()
+    print 'IP address: %s' % get_ip()
+
+
+if __name__ == '__main__':
+    cli()

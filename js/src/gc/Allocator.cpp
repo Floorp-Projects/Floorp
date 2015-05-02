@@ -72,7 +72,10 @@ GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
 
     // For testing out of memory conditions
     if (js::oom::ShouldFailWithOOM()) {
-        ReportOutOfMemory(cx);
+        // If we are doing a fallible allocation, percolate up the OOM
+        // instead of reporting it.
+        if (allowGC)
+            ReportOutOfMemory(cx);
         return false;
     }
 
