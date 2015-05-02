@@ -4,20 +4,21 @@
 
 "use strict";
 
-// Tests that the rule view search filter works properly for parsed property value.
+// Tests that the rule view search filter works properly in the computed list
+// for property line input.
 
-const SEARCH = ":00F";
+const SEARCH = "margin-top:4px"
 
 let TEST_URI = [
   '<style type="text/css">',
   '  #testid {',
-  '    background-color: #00F;',
+  '    margin: 4px 0px;',
   '  }',
   '  .testclass {',
-  '    width: 100%;',
+  '    background-color: red;',
   '  }',
   '</style>',
-  '<div id="testid" class="testclass">Styled Node</div>'
+  '<h1 id="testid" class="testclass">Styled Node</h1>'
 ].join("\n");
 
 add_task(function*() {
@@ -44,8 +45,22 @@ function* testAddTextInFilter(inspector, ruleView) {
     "First rule is inline element.");
 
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
+  let ruleEditor = rule.textProps[0].editor;
+  let computed = ruleEditor.computed;
 
   is(rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(rule.textProps[0].editor.container.classList.contains("ruleview-highlight"),
-    "background-color text property is correctly highlighted.");
+  ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
+  ok(!ruleEditor.container.classList.contains("ruleview-highlight"),
+    "margin text property is not highlighted.");
+  ok(computed.classList.contains("filter-open"),
+    "margin computed list is open.");
+
+  ok(computed.children[0].classList.contains("ruleview-highlight"),
+    "margin-top computed property is not highlighted.");
+  ok(!computed.children[1].classList.contains("ruleview-highlight"),
+    "margin-right computed property is not highlighted.");
+  ok(!computed.children[2].classList.contains("ruleview-highlight"),
+    "margin-bottom computed property is not highlighted.");
+  ok(!computed.children[3].classList.contains("ruleview-highlight"),
+    "margin-left computed property is not highlighted.");
 }
