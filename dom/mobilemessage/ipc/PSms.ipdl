@@ -79,6 +79,14 @@ struct GetSmscAddressRequest
   uint32_t serviceId;
 };
 
+struct SetSmscAddressRequest
+{
+  uint32_t serviceId;
+  nsString number;
+  uint32_t typeOfNumber;
+  uint32_t numberPlanIdentification;
+};
+
 union IPCSmsRequest
 {
   SendMessageRequest;
@@ -88,6 +96,7 @@ union IPCSmsRequest
   MarkMessageReadRequest;
   GetSegmentInfoForTextRequest;
   GetSmscAddressRequest;
+  SetSmscAddressRequest;
 };
 
 union IPCMobileMessageCursor

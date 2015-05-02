@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-using mozilla::dom::workers::Running;
+using mozilla::dom::workers::Canceling;
 using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerPrivate;
 
@@ -73,7 +73,7 @@ Feature::Notify(JSContext* aCx, Status aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(Feature);
 
-  if (aStatus <= Running || mNotified) {
+  if (aStatus < Canceling || mNotified) {
     return true;
   }
 

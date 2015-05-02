@@ -39,7 +39,7 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     static void DoDraw(void);
-    static nsEventStatus DispatchInputEvent(mozilla::WidgetGUIEvent& aEvent);
+    static nsEventStatus DispatchKeyInput(mozilla::WidgetKeyboardEvent& aEvent);
     static void DispatchTouchInput(mozilla::MultiTouchInput& aInput);
 
     NS_IMETHOD Create(nsIWidget *aParent,

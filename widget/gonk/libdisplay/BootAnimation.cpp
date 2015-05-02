@@ -639,7 +639,6 @@ StartBootAnimation()
     pthread_create(&sAnimationThread, nullptr, AnimationThread, nullptr);
 }
 
-
 void
 StopBootAnimation()
 {

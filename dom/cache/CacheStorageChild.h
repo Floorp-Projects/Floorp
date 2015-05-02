@@ -33,22 +33,24 @@ public:
   ~CacheStorageChild();
 
   // Must be called by the associated CacheStorage listener in its
-  // ActorDestroy() method.  Also, CacheStorage must call SendDestroy() on the
-  // actor in its destructor to trigger ActorDestroy() if it has not been
-  // called yet.
+  // DestroyInternal() method.  Also, CacheStorage must call
+  // SendDestroyFromListener() on the actor in its destructor to trigger
+  // ActorDestroy() if it has not been called yet.
   void ClearListener();
 
   void
   ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-            const CacheOpArgs& aArgs);
+            nsISupports* aParent, const CacheOpArgs& aArgs);
 
-  // ActorChild methods
-
-  // Synchronously call ActorDestroy on our CacheStorage listener and then start
-  // the actor destruction asynchronously from the parent-side.
-  virtual void StartDestroy() override;
+  // Our parent Listener object has gone out of scope and is being destroyed.
+  void StartDestroyFromListener();
 
 private:
+  // ActorChild methods
+
+  // Feature is trying to destroy due to worker shutdown.
+  virtual void StartDestroy() override;
+
   // PCacheStorageChild methods
   virtual void ActorDestroy(ActorDestroyReason aReason) override;
 
@@ -67,6 +69,7 @@ private:
   // destroyed.
   CacheStorage* MOZ_NON_OWNING_REF mListener;
   uint32_t mNumChildActors;
+  bool mDelayedDestroy;
 
   NS_DECL_OWNINGTHREAD
 };
