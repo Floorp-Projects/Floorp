@@ -717,6 +717,10 @@ Toolbox.prototype = {
       this._buildPickerButton();
     }
 
+    // Set the visibility of the built in buttons before adding more buttons
+    // so they are shown before calling into the GCLI actor.
+    this.setToolboxButtonsVisibility();
+
     const options = {
       environment: CommandUtils.createEnvironment(this, '_target')
     };

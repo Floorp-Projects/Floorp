@@ -1122,9 +1122,9 @@ class AndroidCommands(MachCommandBase):
             '--robocop-ini=' +
             os.path.join(
                 self.topobjdir,
-                'build',
-                'mobile',
-                'robocop',
+                '_tests',
+                'testing',
+                'mochitest',
                 'robocop.ini'),
             '--log-mach=-',
         ]
