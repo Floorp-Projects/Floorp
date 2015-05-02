@@ -54,10 +54,10 @@ function* testOpenExpanderAndAddTextInFilter(inspector, ruleView) {
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
   ok(ruleEditor.container.classList.contains("ruleview-highlight"),
     "margin text property is correctly highlighted.");
-  ok(!computed.classList.contains("filter-open"),
+  ok(!computed.hasAttribute("filter-open"),
     "margin computed list does not contain filter-open class.");
-  ok(computed.classList.contains("user-open"),
-    "margin computed list contains user-open class.");
+  ok(computed.hasAttribute("user-open"),
+    "margin computed list contains user-open attribute.");
 
   ok(!computed.children[0].classList.contains("ruleview-highlight"),
     "margin-top computed property is not highlighted.");
@@ -92,8 +92,8 @@ function* testClearSearchFilter(inspector, ruleView) {
   let computed = ruleEditor.computed;
 
   ok(ruleEditor.expander.getAttribute("open"), "Expander is open.");
-  ok(!computed.classList.contains("filter-open"),
+  ok(!computed.hasAttribute("filter-open"),
     "margin computed list does not contain filter-open class.");
-  ok(computed.classList.contains("user-open"),
-    "margin computed list contains user-open class.");
+  ok(computed.hasAttribute("user-open"),
+    "margin computed list contains user-open attribute.");
 }
