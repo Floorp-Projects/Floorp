@@ -72,22 +72,6 @@ this.SessionFile = {
     return SessionFileInternal.write(aData);
   },
   /**
-   * Gather telemetry statistics.
-   *
-   *
-   * Most of the work is done off the main thread but there is a main
-   * thread cost involved to send data to the worker thread. This method
-   * should therefore be called only when we know that it will not disrupt
-   * the user's experience, e.g. on idle-daily.
-   *
-   * @return {Promise}
-   * @promise {object} An object holding all the information to be submitted
-   * to Telemetry.
-   */
-  gatherTelemetry: function(aData) {
-    return SessionFileInternal.gatherTelemetry(aData);
-  },
-  /**
    * Wipe the contents of the session file, asynchronously.
    */
   wipe: function () {
@@ -268,14 +252,6 @@ let SessionFileInternal = {
     return result;
   }),
 
-  gatherTelemetry: function(aStateString) {
-    return Task.spawn(function() {
-      let msg = yield SessionWorker.post("gatherTelemetry", [aStateString]);
-      this._recordTelemetry(msg.telemetry);
-      throw new Task.Result(msg.telemetry);
-    }.bind(this));
-  },
-
   write: function (aData) {
     if (RunState.isClosed) {
       return Promise.reject(new Error("SessionFile is closed"));
@@ -289,25 +265,11 @@ let SessionFileInternal = {
       RunState.setClosed();
     }
 
-    let refObj = {};
-    let name = "FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS";
+    let performShutdownCleanup = isFinalWrite &&
+      !sessionStartup.isAutomaticRestoreEnabled();
 
-    let promise = new Promise(resolve => {
-      // Start measuring main thread impact.
-      TelemetryStopwatch.start(name, refObj);
-
-      let performShutdownCleanup = isFinalWrite &&
-        !sessionStartup.isAutomaticRestoreEnabled();
-
-      let options = {isFinalWrite, performShutdownCleanup};
-
-      try {
-        resolve(SessionWorker.post("write", [aData, options]));
-      } finally {
-        // Record how long we stopped the main thread.
-        TelemetryStopwatch.finish(name, refObj);
-      }
-    });
+    let options = {isFinalWrite, performShutdownCleanup};
+    let promise = SessionWorker.post("write", [aData, options]);
 
     // Wait until the write is done.
     promise = promise.then(msg => {
@@ -322,7 +284,6 @@ let SessionFileInternal = {
       }
     }, err => {
       // Catch and report any errors.
-      TelemetryStopwatch.cancel(name, refObj);
       console.error("Could not write session state file ", err, err.stack);
       // By not doing anything special here we ensure that |promise| cannot
       // be rejected anymore. The shutdown/cleanup code at the end of the
