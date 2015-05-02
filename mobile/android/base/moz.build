@@ -817,7 +817,6 @@ main.package_name = 'org.mozilla.gecko'
 # .project file to modify this list.
 main.filtered_resources += [
     '1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/resources/**',
-    '1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/tests/**',
 ]
 
 main.recursive_make_targets += generated_recursive_make_targets
@@ -837,7 +836,6 @@ main.res = None
 cpe = main.add_classpathentry('src', SRCDIR,
     dstdir='src/org/mozilla/gecko',
     exclude_patterns=[
-        'org/mozilla/gecko/tests/**',
         'org/mozilla/gecko/resources/**'])
 
 if not CONFIG['MOZ_CRASHREPORTER']:
