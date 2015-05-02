@@ -26,8 +26,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
@@ -1087,128 +1085,8 @@ if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
       viewId: "PanelUI-pocketView",
       label: PocketBundle.GetStringFromName("pocket-button.label"),
       tooltiptext: PocketBundle.GetStringFromName("pocket-button.tooltiptext"),
-      onCreated(node) {
-        let doc = node.ownerDocument;
-        let elementsNeedingStrings = [
-          "pocket-header",
-          "pocket-login-required-tagline",
-          "pocket-signup-with-fxa",
-          "pocket-signup-with-email",
-          "pocket-account-question",
-          "pocket-login-now",
-          "pocket-page-saved-header",
-          "pocket-open-pocket",
-          "pocket-remove-page",
-          "pocket-page-tags-field",
-          "pocket-page-tags-add",
-          "pocket-page-suggested-tags-header",
-          "pocket-signup-or",
-        ];
-
-        for (let elementId of elementsNeedingStrings) {
-          let el = doc.getElementById(elementId);
-          let string = PocketBundle.GetStringFromName(elementId);
-
-          switch (el.localName) {
-            case "button":
-              el.label = string;
-              break;
-            case "textbox":
-              el.setAttribute("placeholder", string);
-              break;
-            default:
-              el.textContent = string;
-              break;
-          }
-        }
-
-        let addTagsField = doc.getElementById("pocket-page-tags-field");
-        let addTagsButton = doc.getElementById("pocket-page-tags-add");
-        addTagsField.addEventListener("input", this);
-        addTagsButton.addEventListener("command", this);
-      },
-      onViewShowing(event) {
-        let doc = event.target.ownerDocument;
-
-        let loginView = doc.getElementById("pocket-login-required");
-        let pageSavedView = doc.getElementById("pocket-page-saved");
-        let showPageSaved = Pocket.isLoggedIn;
-        loginView.hidden = showPageSaved;
-        pageSavedView.hidden = !showPageSaved;
-
-        if (!showPageSaved)
-          return;
-
-        let gBrowser = doc.defaultView.gBrowser;
-        let uri = gBrowser.currentURI;
-        if (uri.schemeIs("about"))
-          uri = ReaderMode.getOriginalUrl(uri.spec);
-        else
-          uri = uri.spec;
-        if (!uri)
-          return; //TODO should prevent the panel from showing
-
-        Pocket.save(uri, gBrowser.contentTitle).then(
-          item => {
-            doc.getElementById("pocket-remove-page").itemId = item.item_id;
-          },
-          error => {dump(error + "\n");}
-        );
-      },
-      onViewHiding(event) {
-        let doc = event.target.ownerDocument;
-        doc.getElementById("pocket-remove-page").itemId = null;
-      },
-
-      handleEvent: function(event) {
-        let doc = event.target.ownerDocument;
-        let field = doc.getElementById("pocket-page-tags-field");
-        let button = doc.getElementById("pocket-page-tags-add");
-        switch (event.type) {
-          case "input":
-            button.disabled = !field.value.trim();
-            break;
-          case "command":
-            Pocket.tag(doc.getElementById("pocket-remove-page").itemId,
-                       field.value);
-            field.value = "";
-            break;
-        }
-      },
-
-      USER_REMOVED_PREF: "browser.pocket.removedByUser",
-      onWidgetAdded(aWidgetId, aArea, aPosition) {
-        if (aWidgetId != this.id) {
-          return;
-        }
-
-        let placement = CustomizableUI.getPlacementOfWidget(this.id);
-        let widgetInUI = placement && placement.area;
-        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !widgetInUI);
-      },
-      onWidgetRemoved(aWidgetId, aArea) {
-        if (aWidgetId != this.id) {
-          return;
-        }
-
-        let placement = CustomizableUI.getPlacementOfWidget(this.id);
-        let widgetInUI = placement && placement.area;
-        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !widgetInUI);
-      },
-      onWidgetReset(aNode, aContainer) {
-        if (aNode.id != this.id) {
-          return;
-        }
-
-        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !aContainer);
-      },
-      onWidgetUndoMove(aNode, aContainer) {
-        if (aNode.id != this.id) {
-          return;
-        }
-
-        Services.prefs.setBoolPref(this.USER_REMOVED_PREF, !aContainer);
-      }
+      onViewShowing: Pocket.onPanelViewShowing,
+      onViewHiding: Pocket.onPanelViewHiding,
     };
 
     CustomizableWidgets.push(pocketButton);
