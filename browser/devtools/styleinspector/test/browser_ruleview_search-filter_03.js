@@ -6,6 +6,8 @@
 
 // Tests that the rule view search filter works properly for rule selectors.
 
+const SEARCH = "#test";
+
 let TEST_URI = [
   '<style type="text/css">',
   '  #testid {',
@@ -26,20 +28,24 @@ add_task(function*() {
 });
 
 function* testAddTextInFilter(inspector, ruleView) {
-  info("Setting filter text to \"#test\"");
+  info("Setting filter text to \"" + SEARCH + "\"");
 
   let win = ruleView.doc.defaultView;
   let searchField = ruleView.searchField;
   let onRuleViewFilter = inspector.once("ruleview-filtered");
 
   searchField.focus();
-  synthesizeKeys("#test", win);
+  synthesizeKeys(SEARCH, win);
   yield onRuleViewFilter;
 
   info("Check that the correct rules are visible");
   is(ruleView.element.children.length, 2, "Should have 2 rules.");
-  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element", "First rule is inline element.");
-  is(getRuleViewRuleEditor(ruleView, 1).rule.selectorText, "#testid", "Second rule is #testid.");
-  ok(getRuleViewRuleEditor(ruleView, 1).selectorText.children[0].classList.contains("ruleview-highlight"),
+  is(getRuleViewRuleEditor(ruleView, 0).rule.selectorText, "element",
+    "First rule is inline element.");
+
+  let ruleEditor = getRuleViewRuleEditor(ruleView, 1);
+
+  is(ruleEditor.rule.selectorText, "#testid", "Second rule is #testid.");
+  ok(ruleEditor.selectorText.children[0].classList.contains("ruleview-highlight"),
     "#testid selector is highlighted.")
 }
