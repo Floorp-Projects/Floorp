@@ -48,7 +48,8 @@ const TEST_DATA = [{
     attributeName: "for",
     links: [
       {type: "idref", value: "name"},
-      {type: "idref", value: "message"}
+      {type: "idref", value: "message"},
+      {type: "idref", value: "invalid"}
     ]
   }]
 }, {

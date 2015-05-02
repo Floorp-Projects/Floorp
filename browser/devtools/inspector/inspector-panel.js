@@ -1113,6 +1113,7 @@ InspectorPanel.prototype = {
       this.walker.document(this.selection.nodeFront).then(doc => {
         this.walker.querySelector(doc, "#" + CSS.escape(link)).then(node => {
           if (!node) {
+            this.emit("idref-attribute-link-failed");
             return;
           }
           this.selection.setNodeFront(node);

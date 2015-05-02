@@ -8,7 +8,7 @@
   </head>
   <body>
     <form id="message-form" method="post" action="/post_message">
-      <p>
+      <p for="invalid-idref">
         <label for="name">Name</label>
         <input id="name" type="text" />
       </p>
@@ -19,7 +19,7 @@
       <p>
         <button>Send message</button>
       </p>
-      <output form="message-form" for="name message">Thank you for your message!</output>
+      <output form="message-form" for="name message invalid">Thank you for your message!</output>
     </form>
     <a href="/go/somewhere/else" ping="/analytics?page=pageA /analytics?user=test">Click me, I'm a link</a>
     <ul>
