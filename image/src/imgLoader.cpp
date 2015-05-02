@@ -1439,9 +1439,8 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
   LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
                              "imgLoader::PutIntoCache", "uri", aKey.Spec());
 
-  // Check to see if this request already exists in the cache and is being
-  // loaded on a different thread. If so, don't allow this entry to be added to
-  // the cache.
+  // Check to see if this request already exists in the cache. If so, we'll
+  // replace the old version.
   nsRefPtr<imgCacheEntry> tmpCacheEntry;
   if (cache.Get(aKey, getter_AddRefs(tmpCacheEntry)) && tmpCacheEntry) {
     PR_LOG(GetImgLog(), PR_LOG_DEBUG,

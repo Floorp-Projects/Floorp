@@ -546,7 +546,6 @@ struct NewLayerEntry {
   // This rect is in the layer's own coordinate space. The computed visible
   // region for the layer cannot extend beyond this rect.
   nsIntRect mLayerContentsVisibleRect;
-  nsTArray<nsDisplayScrollInfoLayer*> mScrollInfoItems;
   bool mHideAllLayersBelow;
   // When mOpaqueForAnimatedGeometryRootParent is true, the opaque region of
   // this layer is opaque in the same position even subject to the animation of
@@ -919,11 +918,6 @@ public:
     CollectOldLayers();
   }
 
-  ~ContainerState()
-  {
-    MOZ_ASSERT(mHoistedItems.IsEmpty());
-  }
-
   /**
    * This is the method that actually walks a display list and builds
    * the child layers.
@@ -1000,16 +994,6 @@ public:
   void SetOuterVisibleRegionForLayer(Layer* aLayer,
                                      const nsIntRegion& aOuterVisibleRegion,
                                      const nsIntRect* aLayerContentsVisibleRect = nullptr) const;
-
-  void AddHoistedItem(nsDisplayScrollInfoLayer* aItem)
-  {
-    mHoistedItems.AppendElement(aItem);
-  }
-
-  void AddHoistedItems(const nsTArray<nsDisplayScrollInfoLayer*>& aItems)
-  {
-    mHoistedItems.AppendElements(aItems);
-  }
 
   /**
    * Try to determine whether the PaintedLayer aData has a single opaque color
@@ -1221,11 +1205,6 @@ protected:
   nscoord                          mAppUnitsPerDevPixel;
   bool                             mSnappingEnabled;
   bool                             mFlattenToSingleLayer;
-  /**
-   * In some cases we need to hoist nsDisplayScrollInfoLayer items out from a
-   * nested inactive container. This holds the items hoisted up from children.
-   */
-  nsTArray<nsDisplayScrollInfoLayer*> mHoistedItems;
 };
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
@@ -1394,7 +1373,7 @@ FrameLayerBuilder::Shutdown()
 
 void
 FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-                        PaintedLayerData* aLayerData, ContainerState* aContainingContainerState)
+                        PaintedLayerData* aLayerData)
 {
   mDisplayListBuilder = aBuilder;
   mRootPresContext = aBuilder->RootReferenceFrame()->PresContext()->GetRootPresContext();
@@ -1402,7 +1381,6 @@ FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
   }
   mContainingPaintedLayer = aLayerData;
-  mContainingContainerState = aContainingContainerState;
   aManager->SetUserData(&gLayerManagerLayerBuilder, this);
 }
 
@@ -2824,8 +2802,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     mNewChildLayers[data->mNewChildLayersIndex].mLayer = paintedLayer.forget();
   }
 
-  MOZ_ASSERT(mHoistedItems.IsEmpty());
-
   for (auto& item : data->mAssignedDisplayItems) {
     MOZ_ASSERT(item.mItem->GetType() != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS);
 
@@ -2836,8 +2812,6 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   }
 
   NewLayerEntry* newLayerEntry = &mNewChildLayers[data->mNewChildLayersIndex];
-  newLayerEntry->mScrollInfoItems.SwapElements(mHoistedItems);
-
 
   nsRefPtr<Layer> layer;
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
@@ -3460,21 +3434,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
     }
 
-    nsDisplayItem::Type itemType = item->GetType();
-    if (itemType == nsDisplayItem::TYPE_SCROLL_INFO_LAYER &&
-        mLayerBuilder->GetContainingContainerState()) {
-      // We have encountered a scrollable area inside a nested (inactive)
-      // layer manager, so we need to hoist the item out into the parent; that
-      // way we will still generate a scrollinfo layer for it and the APZ can
-      // drive main-thread sync scrolling.
-      // Note: |item| is removed from aList and will be attached into the parent
-      // list, so we don't delete it here.
-      nsDisplayScrollInfoLayer* scrollInfoItem = static_cast<nsDisplayScrollInfoLayer*>(item);
-      scrollInfoItem->MarkHoisted();
-      mLayerBuilder->GetContainingContainerState()->AddHoistedItem(scrollInfoItem);
-      continue;
-    }
-
     nsDisplayList* itemSameCoordinateSystemChildren
       = item->GetSameCoordinateSystemChildren();
     if (item->ShouldFlattenAway(mBuilder)) {
@@ -3494,6 +3453,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
+    nsDisplayItem::Type itemType = item->GetType();
     if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
@@ -3986,7 +3946,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
     if (tempManager) {
       FLB_LOG_PAINTED_LAYER_DECISION(aLayerData, "Creating nested FLB for item %p\n", aItem);
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData, &aContainerState);
+      layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData);
 
       tempManager->BeginTransaction();
       if (mRetainingManager) {
@@ -4411,58 +4371,6 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData,
       if (layer->GetPrevSibling() != prevChild) {
         mContainerLayer->RepositionChild(layer, prevChild);
       }
-    }
-
-    ContainerState* containingContainerState = mLayerBuilder->GetContainingContainerState();
-    if (containingContainerState) {
-      containingContainerState->AddHoistedItems(mNewChildLayers[i].mScrollInfoItems);
-    } else {
-      // Build layers for all mNewChildLayers[i].mScrollInfoItems and insert
-      // them after layer.
-      for (nsDisplayScrollInfoLayer* item : mNewChildLayers[i].mScrollInfoItems) {
-        LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
-        MOZ_ASSERT(layerState == LAYER_ACTIVE_EMPTY);
-        nsRefPtr<Layer> scrollInfoLayer = item->BuildLayer(mBuilder, mManager, mParameters);
-        if (!scrollInfoLayer) {
-          item->~nsDisplayScrollInfoLayer();
-          continue;
-        }
-
-        mLayerBuilder->AddLayerDisplayItem(scrollInfoLayer, item, layerState,
-                                           nsPoint(), nullptr);
-
-        const nsIFrame* animatedGeometryRoot =
-          nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
-        bool shouldFixToViewport = !animatedGeometryRoot->GetParent() &&
-          item->ShouldFixToViewport(mManager);
-        const nsIFrame* fixedPosFrame =
-          FindFixedPosFrameForLayerData(animatedGeometryRoot, shouldFixToViewport);
-
-        NewLayerEntry scrollInfoLayerEntry;
-        scrollInfoLayerEntry.mLayer = scrollInfoLayer;
-        scrollInfoLayerEntry.mAnimatedGeometryRoot = animatedGeometryRoot;
-        scrollInfoLayerEntry.mFixedPosFrameForLayerData = fixedPosFrame;
-        scrollInfoLayerEntry.mOpaqueForAnimatedGeometryRootParent = false;
-        scrollInfoLayerEntry.mBaseFrameMetrics =
-            item->ComputeFrameMetrics(scrollInfoLayer, mParameters);
-        SetupScrollingMetadata(&scrollInfoLayerEntry);
-
-        if (!scrollInfoLayer->GetParent()) {
-          // This is not currently a child of the container, so just add it
-          // now.
-          mContainerLayer->InsertAfter(scrollInfoLayer, layer);
-        } else {
-          NS_ASSERTION(scrollInfoLayer->GetParent() == mContainerLayer,
-                       "scrollInfoLayer shouldn't be the child of some other container");
-          if (scrollInfoLayer->GetPrevSibling() != layer) {
-            mContainerLayer->RepositionChild(scrollInfoLayer, layer);
-          }
-        }
-
-        layer = scrollInfoLayer;
-        item->~nsDisplayScrollInfoLayer();
-      }
-      mNewChildLayers[i].mScrollInfoItems.Clear();
     }
   }
 

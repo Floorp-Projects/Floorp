@@ -42,7 +42,9 @@ extern JS_FRIEND_DATA(const js::Class* const) FunctionClassPtr;
 
 namespace JS {
 
-class AutoIdVector;
+template <typename T>
+class AutoVectorRooter;
+typedef AutoVectorRooter<jsid> AutoIdVector;
 
 /*
  * Per ES6, the [[DefineOwnProperty]] internal method has three different
