@@ -56,7 +56,7 @@ body {
   cursor: pointer;
 }
 
-.ruleview-computedlist:not(.styleinspector-open),
+.ruleview-computedlist:not(.user-open),
 .ruleview-warning[hidden] {
   display: none;
 }
