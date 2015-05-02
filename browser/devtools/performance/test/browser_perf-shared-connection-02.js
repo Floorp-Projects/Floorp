@@ -18,7 +18,7 @@ function spawnTest () {
 
   ok(sharedConnection,
     "A shared profiler connection for the current toolbox was retrieved.");
-  is(sharedConnection._request, panel.panelWin.gFront._request,
+  is(panel.panelWin.gFront._connection, sharedConnection,
     "The same shared profiler connection is used by the panel's front.");
 
   yield sharedConnection.open();
