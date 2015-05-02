@@ -6,30 +6,6 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 let chatbar = document.getElementById("pinnedchats");
 
-function waitForCondition(condition, errorMsg) {
-  let deferred = Promise.defer();
-  var tries = 0;
-  var interval = setInterval(function() {
-    if (tries >= 30) {
-      ok(false, errorMsg);
-      moveOn();
-    }
-    var conditionPassed;
-    try {
-      conditionPassed = condition();
-    } catch (e) {
-      ok(false, e + "\n" + e.stack);
-      conditionPassed = false;
-    }
-    if (conditionPassed) {
-      moveOn();
-    }
-    tries++;
-  }, 100);
-  var moveOn = function() { clearInterval(interval); deferred.resolve(); };
-  return deferred.promise;
-}
-
 add_chat_task(function* testOpenCloseChat() {
   let chatbox = yield promiseOpenChat("http://example.com");
   Assert.strictEqual(chatbox, chatbar.selectedChat);
@@ -115,7 +91,7 @@ add_chat_task(function* testSecondTopLevelWindow() {
   secondWindow.close();
 });
 
-// Test that chats are created in the correct window.
+// Test that findChromeWindowForChats() returns the expected window.
 add_chat_task(function* testChatWindowChooser() {
   let chat = yield promiseOpenChat("http://example.com");
   Assert.equal(numChatsInWindow(window), 1, "first window has the chat");
@@ -124,42 +100,34 @@ add_chat_task(function* testChatWindowChooser() {
   let secondWindow = OpenBrowserWindow();
   yield promiseOneEvent(secondWindow, "load");
   Assert.equal(secondWindow, Chat.findChromeWindowForChats(null), "Second window is the preferred chat window");
-  Assert.equal(numChatsInWindow(secondWindow), 0, "second window starts with no chats");
-  yield promiseOpenChat("http://example.com#2");
-  Assert.equal(numChatsInWindow(secondWindow), 1, "second window now has chats");
-  Assert.equal(numChatsInWindow(window), 1, "first window still has 1 chat");
-  chat.close();
 
-  // a bit heavy handed, but handy fixing bug 1090633
-  yield waitForCondition(function () !chat.parentNode, "chat has been detached");
-  Assert.equal(numChatsInWindow(window), 0, "first window now has no chats");
-  // now open another chat - it should still open in the second.
-  yield promiseOpenChat("http://example.com#3");
-  Assert.equal(numChatsInWindow(window), 0, "first window still has no chats");
-  Assert.equal(numChatsInWindow(secondWindow), 2, "second window has both chats");
+  // focus the first window, and check it will be selected for future chats.
+  // Bug 1090633 - there are lots of issues around focus, especially when the
+  // browser itself doesn't have focus. We can end up with
+  // Services.wm.getMostRecentWindow("navigator:browser") returning a different
+  // window than, say, Services.focus.activeWindow. But the focus manager isn't
+  // the point of this test.
+  // So we simply keep focusing the first window until it is reported as the
+  // most recent.
+  do {
+    dump("trying to force window to become the most recent.\n");
+    secondWindow.focus();
+    window.focus();
+    yield promiseWaitForFocus();
+  } while (Services.wm.getMostRecentWindow("navigator:browser") != window)
 
-  // focus the first window, and open yet another chat - it
-  // should open in the first window.
-  window.focus();
-  yield promiseWaitForFocus();
-  chat = yield promiseOpenChat("http://example.com#4");
-  Assert.equal(numChatsInWindow(window), 1, "first window got new chat");
-  chat.close();
-  Assert.equal(numChatsInWindow(window), 0, "first window has no chats");
+  Assert.equal(window, Chat.findChromeWindowForChats(null), "First window now the preferred chat window");
 
   let privateWindow = OpenBrowserWindow({private: true});
   yield promiseOneEvent(privateWindow, "load")
 
-  // open a last chat - the focused window can't accept
-  // chats (it's a private window), so the chat should open
-  // in the window that was selected before. This is known
-  // to be broken on Linux.
-  chat = yield promiseOpenChat("http://example.com#5");
-  let os = Services.appinfo.OS;
-  const BROKEN_WM_Z_ORDER = os != "WINNT" && os != "Darwin";
-  let fn = BROKEN_WM_Z_ORDER ? todo : ok;
-  fn(numChatsInWindow(window) == 1, "first window got the chat");
-  chat.close();
+  // The focused window can't accept chats (it's a private window), so the
+  // chat should open in the window that was selected before. This will be
+  // either window or secondWindow (linux may choose a different one) but the
+  // point is that the window is *not* the private one.
+  Assert.ok(Chat.findChromeWindowForChats(null) == window ||
+            Chat.findChromeWindowForChats(null) == secondWindow,
+            "Private window isn't selected for new chats.");
   privateWindow.close();
   secondWindow.close();
 });
