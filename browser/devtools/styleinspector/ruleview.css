@@ -56,12 +56,13 @@ body {
   cursor: pointer;
 }
 
-.ruleview-computedlist:not(.user-open),
+.ruleview-computedlist,
 .ruleview-warning[hidden] {
   display: none;
 }
 
-.ruleview-computedlist.filter-open {
+.ruleview-computedlist[user-open],
+.ruleview-computedlist[filter-open] {
   display: block;
 }
 
