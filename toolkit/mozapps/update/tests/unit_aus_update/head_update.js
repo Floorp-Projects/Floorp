@@ -1481,17 +1481,22 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
     }
   }
 
-  let updatesDir = getUpdatesPatchDir();
-  updater.copyToFollowingLinks(updatesDir, updater.leafName);
-  let updateBin = updatesDir.clone();
-  updateBin.append(updater.leafName);
-  if (updateBin.leafName == "updater.app") {
-    updateBin.append("Contents");
-    updateBin.append("MacOS");
-    updateBin.append("updater");
-    if (!updateBin.exists()) {
-      do_throw("Unable to find the updater executable!");
+   let updatesDir = getUpdatesPatchDir();
+  let updateBin;
+  if (IS_WIN) {
+    updateBin = updater.clone();
+  } else {
+    updater.copyToFollowingLinks(updatesDir, updater.leafName);
+    updateBin = updatesDir.clone();
+    updateBin.append(updater.leafName);
+    if (updateBin.leafName == "updater.app") {
+      updateBin.append("Contents");
+      updateBin.append("MacOS");
+      updateBin.append("updater");
     }
+  }
+  if (!updateBin.exists()) {
+    do_throw("Unable to find the updater executable!");
   }
 
   let applyToDir = getApplyDirFile(null, true);
@@ -2471,6 +2476,10 @@ function checkUpdateLogContents(aCompareLogFile, aExcludeDistributionDir) {
   if (gSwitchApp) {
     // Remove the lines which contain absolute paths
     updateLogContents = updateLogContents.replace(/^Begin moving.*$/mg, "");
+    updateLogContents = updateLogContents.replace(/^ensure_remove: failed to remove file: .*$/mg, "");
+    updateLogContents = updateLogContents.replace(/^ensure_remove_recursive: unable to remove directory: .*$/mg, "");
+    updateLogContents = updateLogContents.replace(/^Removing tmpDir failed, err: -1$/mg, "");
+    updateLogContents = updateLogContents.replace(/^remove_recursive_on_reboot: .*$/mg, "");
   }
   updateLogContents = updateLogContents.replace(/\r/g, "");
   // Replace error codes since they are different on each platform.
