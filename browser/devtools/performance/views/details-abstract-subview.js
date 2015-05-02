@@ -17,7 +17,6 @@ let DetailsSubview = {
     this._onPrefChanged = this._onPrefChanged.bind(this);
 
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
-    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.on(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.on(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
@@ -32,7 +31,6 @@ let DetailsSubview = {
     clearNamedTimeout("range-change-debounce");
 
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
-    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this._onRecordingStoppedOrSelected);
     PerformanceController.off(EVENTS.PREF_CHANGED, this._onPrefChanged);
     OverviewView.off(EVENTS.OVERVIEW_RANGE_SELECTED, this._onOverviewRangeChange);
@@ -81,7 +79,7 @@ let DetailsSubview = {
    * Called when recording stops or is selected.
    */
   _onRecordingStoppedOrSelected: function(_, recording) {
-    if (!recording || recording.isRecording()) {
+    if (!recording || !recording.isCompleted()) {
       return;
     }
     if (DetailsView.isViewSelected(this) || this.canUpdateWhileHidden) {
@@ -131,7 +129,7 @@ let DetailsSubview = {
     // All detail views require a recording to be complete, so do not
     // attempt to render if recording is in progress or does not exist.
     let recording = PerformanceController.getCurrentRecording();
-    if (!recording || recording.isRecording()) {
+    if (!recording || !recording.isCompleted()) {
       return;
     }
 
