@@ -1,116 +1,69 @@
-var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir;
-const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+let rootDir = getRootDirectory(gTestPath);
+const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
-var gTestBrowser = null;
-var gNextTest = null;
-var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
-
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
+add_task(function* () {
+  registerCleanupFunction(function () {
     clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    Services.prefs.clearUserPref("plugins.click_to_play");
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+    gBrowser.removeCurrentTab();
+    window.focus();
   });
-  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
-
-  let newTab = gBrowser.addTab();
-  gBrowser.selectedTab = newTab;
-  gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("load", pageLoad, true);
-
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
-
-  prepareTest(runAfterPluginBindingAttached(test1), gHttpTestRoot + "plugin_test.html");
-}
-
-function finishTest() {
-  clearAllPluginPermissions();
-  gTestBrowser.removeEventListener("load", pageLoad, true);
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
-
-function pageLoad() {
-  // The plugin events are async dispatched and can come after the load event
-  // This just allows the events to fire before we then go on to test the states
-  executeSoon(gNextTest);
-}
-
-function prepareTest(nextTest, url) {
-  gNextTest = nextTest;
-  gTestBrowser.contentWindow.location = url;
-}
-
-// Due to layout being async, "PluginBindAttached" may trigger later.
-// This wraps a function to force a layout flush, thus triggering it,
-// and schedules the function execution so they're definitely executed
-// afterwards.
-function runAfterPluginBindingAttached(func) {
-  return function() {
-    let doc = gTestBrowser.contentDocument;
-    let elems = doc.getElementsByTagName('embed');
-    if (elems.length < 1) {
-      elems = doc.getElementsByTagName('object');
-    }
-    elems[0].clientTop;
-    executeSoon(func);
-  };
-}
+});
 
 // Test that the activate action in content menus for CTP plugins works
-function test1() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+add_task(function* () {
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
+
+  gBrowser.selectedTab = gBrowser.addTab();
+
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+  let bindingPromise = waitForEvent(gBrowser.selectedBrowser, "PluginBindingAttached", null, true, true);
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+  yield promiseUpdatePluginBindings(gBrowser.selectedBrowser);
+  yield bindingPromise;
+
+  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
   ok(popupNotification, "Test 1, Should have a click-to-play notification");
 
-  let plugin = gTestBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 1, Plugin should not be activated");
+  // check plugin state
+  let pluginInfo = yield promiseForPluginInfo("test", gBrowser.selectedBrowser);
+  ok(!pluginInfo.activated, "plugin should not be activated");
+   
+  // Display a context menu on the test plugin so we can test
+  // activation menu options.
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    let plugin = content.document.getElementById("test");
+    let bounds = plugin.getBoundingClientRect();
+    let left = (bounds.left + bounds.right) / 2;
+    let top = (bounds.top + bounds.bottom) / 2;
+    let utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    utils.sendMouseEvent("contextmenu", left, top, 2, 1, 0);
+  });
 
-  // When the popupshown DOM event is fired, the actual showing of the popup
-  // may still be pending. Clear the event loop before continuing so that
-  // subsequently-opened popups aren't cancelled by accident.
-  let goToNext = function(aEvent) {
-    window.document.removeEventListener("popupshown", goToNext, false);
-    executeSoon(function() {
-      test2();
-      aEvent.target.hidePopup();
-    });
-  };
-  window.document.addEventListener("popupshown", goToNext, false);
-  EventUtils.synthesizeMouseAtCenter(plugin,
-                                     { type: "contextmenu", button: 2 },
-                                     gTestBrowser.contentWindow);
-}
+  popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);
+  ok(popupNotification, "Should have a click-to-play notification");
+  ok(popupNotification.dismissed, "notification should be dismissed");
 
-function test2() {
-  let activate = window.document.getElementById("context-ctp-play");
-  ok(activate, "Test 2, Should have a context menu entry for activating the plugin");
+  // fixes a occasional test timeout on win7 opt
+  yield promiseForCondition(() => document.getElementById("context-ctp-play"));
 
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 2, Should have a click-to-play notification");
-  ok(notification.dismissed, "Test 2, notification should be dismissed");
+  let actMenuItem = document.getElementById("context-ctp-play");
+  ok(actMenuItem, "Should have a context menu entry for activating the plugin");
 
-  // Trigger the click-to-play popup
-  activate.doCommand();
+  // Activate the plugin via the context menu
+  EventUtils.synthesizeMouseAtCenter(actMenuItem, {});
 
-  waitForCondition(() => !notification.dismissed,
-		   test3, "Test 2, waited too long for context activation");
-}
+  yield promiseForCondition(() => !PopupNotifications.panel.dismissed && PopupNotifications.panel.firstChild);
 
-function test3() {
   // Activate the plugin
   PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let plugin = gTestBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  waitForCondition(() => objLoadingContent.activated, test4, "Waited too long for plugin to activate");
-}
-
-function test4() {
-  finishTest();
-}
+  // check plugin state
+  pluginInfo = yield promiseForPluginInfo("test", gBrowser.selectedBrowser);
+  ok(pluginInfo.activated, "plugin should not be activated");
+});

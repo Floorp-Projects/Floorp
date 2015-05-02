@@ -164,7 +164,7 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
 
   // Never send an op-specific result if we have an error.  Instead, send
   // void_t() to ensure that we don't leak actors on the child side.
-  if (aRv.Failed()) {
+  if (NS_WARN_IF(aRv.Failed())) {
     unused << Send__delete__(this, aRv, void_t());
     aRv.SuppressException(); // We serialiazed it, as best we could.
     return;

@@ -1,114 +1,127 @@
-var rootDir = getRootDirectory(gTestPath);
-const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://mochi.test:8888/");
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+let gTestBrowser = null;
 
-var gTestBrowser = null;
-var gNextTest = null;
-
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
+add_task(function* () {
+  registerCleanupFunction(Task.async(function*() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
-  });
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+    resetBlocklist();
+    gBrowser.removeCurrentTab();
+    window.focus();
+    gTestBrowser = null;
+  }));
+});
 
-  var newTab = gBrowser.addTab();
+add_task(function* () {
+  let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("load", pageLoad, true);
-  prepareTest(test1a, gTestRoot + "plugin_add_dynamically.html");
-}
 
-function finishTest() {
-  gTestBrowser.removeEventListener("load", pageLoad, true);
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
 
-function pageLoad() {
-  // The plugin events are async dispatched and can come after the load event
-  // This just allows the events to fire before we then go on to test the states
-  executeSoon(gNextTest);
-}
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
 
-function prepareTest(nextTest, url) {
-  gNextTest = nextTest;
-  gTestBrowser.contentWindow.location = url;
-}
+  // Prime the blocklist service, the remote service doesn't launch on startup.
+  yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
+
+  let exmsg = yield promiseInitContentBlocklistSvc(gBrowser.selectedBrowser);
+  ok(!exmsg, "exception: " + exmsg);
+
+  yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+});
 
 // Tests that navigation within the page and the window.history API doesn't break click-to-play state.
-function test1a() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 1a, Should not have a click-to-play notification");
-  var plugin = new XPCNativeWrapper(XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addPlugin());
+add_task(function* () {
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_add_dynamically.html");
 
-  var condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, test1b, "Test 1a, Waited too long for plugin notification");
-}
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "Test 1a, Should not have a click-to-play notification");
 
-function test1b() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 1b, Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Test 1b, Plugin should not be activated");
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
+  });
+
+  yield promisePopupNotification("click-to-play-plugins");
+});
+
+add_task(function* () {
+  let isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    let plugin = content.document.getElementsByTagName("embed")[0];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(!isActivated, "Test 1b, Plugin should not be activated");
 
   // Click the activate button on doorhanger to make sure it works
-  popupNotification.reshow();
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+
+  yield promiseForNotificationShown(notification);
+
   PopupNotifications.panel.firstChild._primaryButton.click();
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test1c, "Test 1b, Waited too long for plugin activation");
-}
 
-function test1c() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Test 1c, Should still have a click-to-play notification");
-  var plugin = new XPCNativeWrapper(XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addPlugin());
+  isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    let plugin = content.document.getElementsByTagName("embed")[0];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(isActivated, "Test 1b, Plugin should be activated");
+});
 
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test1d, "Test 1c, Waited too long for plugin activation");
-}
+add_task(function* () {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 1c, Should still have a click-to-play notification");
 
-function test1d() {
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[1];
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 1d, Plugin should be activated");
+  let isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
+    let plugin = content.document.getElementsByTagName("embed")[1];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(isActivated, "Test 1c, Newly inserted plugin in activated page should be activated");
+});
 
-  gNextTest = test1e;
-  gTestBrowser.contentWindow.addEventListener("hashchange", test1e, false);
+add_task(function* () {
+  let isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    let plugin = content.document.getElementsByTagName("embed")[1];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(isActivated, "Test 1d, Plugin should be activated");
+
+  let promise = waitForEvent(gTestBrowser.contentWindow, "hashchange", null);
   gTestBrowser.contentWindow.location += "#anchorNavigation";
-}
+  yield promise;
+});
 
-function test1e() {
-  gTestBrowser.contentWindow.removeEventListener("hashchange", test1e, false);
+add_task(function* () {
+  let isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
+    let plugin = content.document.getElementsByTagName("embed")[2];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(isActivated, "Test 1e, Plugin should be activated");
+});
 
-  var plugin = new XPCNativeWrapper(XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addPlugin());
+add_task(function* () {
+  let isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    let plugin = content.document.getElementsByTagName("embed")[2];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(isActivated, "Test 1f, Plugin should be activated");
 
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test1f, "Test 1e, Waited too long for plugin activation");
-}
-
-function test1f() {
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[2];
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "Test 1f, Plugin should be activated");
-
-  gTestBrowser.contentWindow.history.replaceState({}, "", "replacedState");
-  var plugin = new XPCNativeWrapper(XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addPlugin());
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test1g, "Test 1f, Waited too long for plugin activation");
-}
-
-function test1g() {
-  var plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[3];
-  var objLoadingContent2 = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent2.activated, "Test 1g, Plugin should be activated");
-  finishTest();
-}
+  isActivated = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    content.history.replaceState({}, "", "replacedState");
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
+    let plugin = content.document.getElementsByTagName("embed")[3];
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    return objLoadingContent.activated;
+  });
+  ok(isActivated, "Test 1f, Plugin should not be activated");
+});

@@ -33,25 +33,27 @@ public:
 
   void SetListener(Cache* aListener);
 
-  // Must be called by the associated Cache listener in its ActorDestroy()
-  // method.  Also, Cache must Send__delete__() the actor in its destructor to
-  // trigger ActorDestroy() if it has not been called yet.
+  // Must be called by the associated Cache listener in its DestroyInternal()
+  // method.  Also, Cache must call StartDestroyFromListener() on the actor in
+  // its destructor to trigger ActorDestroy() if it has not been called yet.
   void ClearListener();
 
   void
   ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-            const CacheOpArgs& aArgs);
+            nsISupports* aParent, const CacheOpArgs& aArgs);
 
   CachePushStreamChild*
   CreatePushStream(nsIAsyncInputStream* aStream);
 
-  // ActorChild methods
-
-  // Synchronously call ActorDestroy on our Cache listener and then start the
-  // actor destruction asynchronously from the parent-side.
-  virtual void StartDestroy() override;
+  // Our parent Listener object has gone out of scope and is being destroyed.
+  void StartDestroyFromListener();
 
 private:
+  // ActorChild methods
+
+  // Feature is trying to destroy due to worker shutdown.
+  virtual void StartDestroy() override;
+
   // PCacheChild methods
   virtual void
   ActorDestroy(ActorDestroyReason aReason) override;
@@ -77,6 +79,7 @@ private:
   // destroyed.
   Cache* MOZ_NON_OWNING_REF mListener;
   uint32_t mNumChildActors;
+  bool mDelayedDestroy;
 
   NS_DECL_OWNINGTHREAD
 };

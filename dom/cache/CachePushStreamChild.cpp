@@ -118,8 +118,9 @@ CachePushStreamChild::Start()
 void
 CachePushStreamChild::StartDestroy()
 {
-  // called if we are running on a Worker and the thread gets shutdown
-  OnEnd(NS_ERROR_ABORT);
+  // The worker has signaled its shutting down, but continue streaming.  The
+  // Cache is now designed to hold the worker open until all async operations
+  // complete.
 }
 
 void

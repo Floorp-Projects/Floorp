@@ -1,50 +1,63 @@
-/**
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
-
-var rootDir = getRootDirectory(gTestPath);
-const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://mochi.test:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
+var gTestBrowser = null;
 
 // Test clearing plugin data using sanitize.js.
-const testURL1 = gHttpTestRoot + "browser_clearplugindata.html";
-const testURL2 = gHttpTestRoot + "browser_clearplugindata_noage.html";
+const testURL1 = gTestRoot + "browser_clearplugindata.html";
+const testURL2 = gTestRoot + "browser_clearplugindata_noage.html";
 
-let tempScope = {};
+var tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
-let Sanitizer = tempScope.Sanitizer;
+var Sanitizer = tempScope.Sanitizer;
 
 const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 pluginHost.QueryInterface(pluginHostIface);
 
 var pluginTag = getTestPlugin();
-var s;
+var sanitizer = null;
 
 function stored(needles) {
-  var something = pluginHost.siteHasData(this.pluginTag, null);
+  let something = pluginHost.siteHasData(this.pluginTag, null);
   if (!needles)
     return something;
 
   if (!something)
     return false;
 
-  for (var i = 0; i < needles.length; ++i) {
+  for (let i = 0; i < needles.length; ++i) {
     if (!pluginHost.siteHasData(this.pluginTag, needles[i]))
       return false;
   }
   return true;
 }
 
-function test() {
-  waitForExplicitFinish();
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
+add_task(function* () {
+  registerCleanupFunction(function () {
+    clearAllPluginPermissions();
+    Services.prefs.clearUserPref("plugins.click_to_play");
+    Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    if (gTestBrowser) {
+      gBrowser.removeCurrentTab();
+    }
+    window.focus();
+    gTestBrowser = null;
+  });
+});
 
-  s = new Sanitizer();
-  s.ignoreTimespan = false;
-  s.prefDomain = "privacy.cpd.";
-  var itemPrefs = gPrefService.getBranch(s.prefDomain);
+add_task(function* () {
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+
+  sanitizer = new Sanitizer();
+  sanitizer.ignoreTimespan = false;
+  sanitizer.prefDomain = "privacy.cpd.";
+  let itemPrefs = gPrefService.getBranch(sanitizer.prefDomain);
   itemPrefs.setBoolPref("history", false);
   itemPrefs.setBoolPref("downloads", false);
   itemPrefs.setBoolPref("cache", false);
@@ -54,80 +67,61 @@ function test() {
   itemPrefs.setBoolPref("passwords", false);
   itemPrefs.setBoolPref("sessions", false);
   itemPrefs.setBoolPref("siteSettings", false);
+});
 
-  executeSoon(test_with_age);
-}
-
-function setFinishedCallback(callback)
-{
-  let testPage = gBrowser.selectedBrowser.contentWindow.wrappedJSObject;
-  testPage.testFinishedCallback = function() {
-    setTimeout(function() {
-      info("got finished callback");
-      callback();
-    }, 0);
-  }
-}
-
-function test_with_age()
-{
+add_task(function* () {
   // Load page to set data for the plugin.
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  gTestBrowser = gBrowser.selectedBrowser;
 
-    setFinishedCallback(function() {
-      ok(stored(["foo.com","bar.com","baz.com","qux.com"]),
-        "Data stored for sites");
+  yield promiseTabLoadEvent(gBrowser.selectedTab, testURL1);
 
-      // Clear 20 seconds ago
-      var now_uSec = Date.now() * 1000;
-      s.range = [now_uSec - 20*1000000, now_uSec];
-      s.sanitize();
+  yield promiseUpdatePluginBindings(gTestBrowser);
 
-      ok(stored(["bar.com","qux.com"]), "Data stored for sites");
-      ok(!stored(["foo.com"]), "Data cleared for foo.com");
-      ok(!stored(["baz.com"]), "Data cleared for baz.com");
+  ok(stored(["foo.com","bar.com","baz.com","qux.com"]),
+    "Data stored for sites");
 
-      // Clear everything
-      s.range = null;
-      s.sanitize();
+  // Clear 20 seconds ago
+  let now_uSec = Date.now() * 1000;
+  sanitizer.range = [now_uSec - 20*1000000, now_uSec];
+  sanitizer.sanitize();
 
-      ok(!stored(null), "All data cleared");
+  ok(stored(["bar.com","qux.com"]), "Data stored for sites");
+  ok(!stored(["foo.com"]), "Data cleared for foo.com");
+  ok(!stored(["baz.com"]), "Data cleared for baz.com");
 
-      gBrowser.removeCurrentTab();
+  // Clear everything
+  sanitizer.range = null;
+  sanitizer.sanitize();
 
-      executeSoon(test_without_age);
-    });
-  }, true);
-  content.location = testURL1;
-}
+  ok(!stored(null), "All data cleared");
 
-function test_without_age()
-{
+  gBrowser.removeCurrentTab();
+  gTestBrowser = null;
+});
+
+add_task(function* () {
   // Load page to set data for the plugin.
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  gTestBrowser = gBrowser.selectedBrowser;
 
-    setFinishedCallback(function() {
-      ok(stored(["foo.com","bar.com","baz.com","qux.com"]),
-        "Data stored for sites");
+  yield promiseTabLoadEvent(gBrowser.selectedTab, testURL2);
 
-      // Attempt to clear 20 seconds ago. The plugin will throw
-      // NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED, which should result in us
-      // clearing all data regardless of age.
-      var now_uSec = Date.now() * 1000;
-      s.range = [now_uSec - 20*1000000, now_uSec];
-      s.sanitize();
+  yield promiseUpdatePluginBindings(gTestBrowser);
 
-      ok(!stored(null), "All data cleared");
+  ok(stored(["foo.com","bar.com","baz.com","qux.com"]),
+    "Data stored for sites");
 
-      gBrowser.removeCurrentTab();
+  // Attempt to clear 20 seconds ago. The plugin will throw
+  // NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED, which should result in us
+  // clearing all data regardless of age.
+  let now_uSec = Date.now() * 1000;
+  sanitizer.range = [now_uSec - 20*1000000, now_uSec];
+  sanitizer.sanitize();
 
-      executeSoon(finish);
-    });
-  }, true);
-  content.location = testURL2;
-}
+  ok(!stored(null), "All data cleared");
+
+  gBrowser.removeCurrentTab();
+  gTestBrowser = null;
+});
 
