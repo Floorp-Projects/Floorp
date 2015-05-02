@@ -1,0 +1,43 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+JS_PREFERENCE_FILES += [
+    'pref/firefox-branding.js',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    BRANDING_FILES += [
+        'appname.bmp',
+        'bgintro.bmp',
+        'branding.nsi',
+        'clock.bmp',
+        'document.ico',
+        'firefox.ico',
+        'newtab.ico',
+        'newwindow.ico',
+        'particles.bmp',
+        'pbmode.ico',
+        'pencil-rtl.bmp',
+        'pencil.bmp',
+        'wizHeader.bmp',
+        'wizHeaderRTL.bmp',
+        'wizWatermark.bmp',
+     ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    BRANDING_FILES += [
+        'background.png',
+        'disk.icns',
+        'document.icns',
+        'dsstore',
+        'firefox.icns',
+    ]
+elif CONFIG['MOZ_WIDGET_GTK']:
+    BRANDING_FILES += [
+        'default16.png',
+        'default32.png',
+        'default48.png',
+        'mozicon128.png',
+    ]

@@ -1037,10 +1037,8 @@ SavedStacks::getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup looku
     if (!frame)
         return nullptr;
 
-    if (!p.add(cx, frames, lookupInstance, frame)) {
-        ReportOutOfMemory(cx);
+    if (!p.add(cx, frames, lookupInstance, frame))
         return nullptr;
-    }
 
     return frame;
 }

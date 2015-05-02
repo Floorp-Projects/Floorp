@@ -1,6 +1,7 @@
+const CANVAS_WIDTH = 200;
+const CANVAS_HEIGHT = 100;
+
 function runDrawWindowTests(win, drawWindowFlags, transparentBackground) {
-  const CANVAS_WIDTH = 200;
-  const CANVAS_HEIGHT = 100;
 
   function make_canvas() {
     var canvas = document.createElement("canvas");

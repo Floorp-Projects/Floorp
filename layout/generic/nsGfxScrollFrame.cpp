@@ -3007,26 +3007,24 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       inactiveRegionItem->AddInactiveScrollPort(mScrollPort + aBuilder->ToReferenceFrame(mOuter));
     }
 
-    // In case we are not using displayport or the nsDisplayScrollLayers are
-    // flattened during visibility computation, we still need to export the
-    // metadata about this scroll box to the compositor process.
-    nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
-      aBuilder, mScrolledFrame, mOuter);
-
-    nsDisplayList* positionedDescendants = scrolledContent.PositionedDescendants();
-    nsDisplayList* destinationList = nullptr;
-    int32_t zindex =
-      MaxZIndexInListOfItemsContainedInFrame(positionedDescendants, mOuter);
-    if (zindex >= 0) {
-      layerItem->SetOverrideZIndex(zindex);
-      destinationList = positionedDescendants;
-    } else {
-      destinationList = scrolledContent.Outlines();
-    }
     if (inactiveRegionItem) {
+      nsDisplayList* positionedDescendants = scrolledContent.PositionedDescendants();
+      nsDisplayList* destinationList = nullptr;
+      int32_t zindex =
+        MaxZIndexInListOfItemsContainedInFrame(positionedDescendants, mOuter);
+      if (zindex >= 0) {
+        destinationList = positionedDescendants;
+      } else {
+        destinationList = scrolledContent.Outlines();
+      }
       destinationList->AppendNewToTop(inactiveRegionItem);
     }
-    destinationList->AppendNewToTop(layerItem);
+
+    if (aBuilder->ShouldBuildScrollInfoItemsForHoisting()) {
+      aBuilder->AppendNewScrollInfoItemForHoisting(
+        new (aBuilder) nsDisplayScrollInfoLayer(aBuilder, mScrolledFrame,
+                                                mOuter));
+    }
   }
   // Now display overlay scrollbars and the resizer, if we have one.
   AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent, usingDisplayport,
