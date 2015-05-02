@@ -300,7 +300,9 @@ public:
                                        uint8_t aLen) override;
   virtual void LeTestModeNotification(BluetoothStatus aStatus,
                                       uint16_t aNumPackets) override;
+  virtual void BackendErrorNotification(bool aCrashed) override;
 
+  virtual void CompleteToggleBt(bool aEnabled) override;
 protected:
   static nsresult StartGonkBluetooth();
   static nsresult StopGonkBluetooth();
@@ -526,6 +528,9 @@ public:
 
   virtual void EnergyInfoNotification(
     const BluetoothActivityEnergyInfo& aInfo) override;
+
+  virtual void BackendErrorNotification(bool aCrashed) override;
+  virtual void CompleteToggleBt(bool aEnabled) override;
 
 protected:
   static nsresult StartGonkBluetooth();

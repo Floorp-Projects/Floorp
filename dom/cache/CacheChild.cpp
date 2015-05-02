@@ -33,6 +33,7 @@ DeallocPCacheChild(PCacheChild* aActor)
 CacheChild::CacheChild()
   : mListener(nullptr)
   , mNumChildActors(0)
+  , mDelayedDestroy(false)
 {
   MOZ_COUNT_CTOR(cache::CacheChild);
 }
@@ -64,11 +65,11 @@ CacheChild::ClearListener()
 
 void
 CacheChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-                      const CacheOpArgs& aArgs)
+                      nsISupports* aParent, const CacheOpArgs& aArgs)
 {
   mNumChildActors += 1;
   MOZ_ALWAYS_TRUE(SendPCacheOpConstructor(
-    new CacheOpChild(GetFeature(), aGlobal, aPromise), aArgs));
+    new CacheOpChild(GetFeature(), aGlobal, aParent, aPromise), aArgs));
 }
 
 CachePushStreamChild*
@@ -82,8 +83,32 @@ CacheChild::CreatePushStream(nsIAsyncInputStream* aStream)
 }
 
 void
+CacheChild::StartDestroyFromListener()
+{
+  NS_ASSERT_OWNINGTHREAD(CacheChild);
+
+  // The listener should be held alive by any async operations, so if it
+  // is going away then there must not be any child actors.  This in turn
+  // ensures that StartDestroy() will not trigger the delayed path.
+  MOZ_ASSERT(!mNumChildActors);
+
+  StartDestroy();
+}
+
+void
 CacheChild::StartDestroy()
 {
+  NS_ASSERT_OWNINGTHREAD(CacheChild);
+
+  // If we have outstanding child actors, then don't destroy ourself yet.
+  // The child actors should be short lived and we should allow them to complete
+  // if possible.  NoteDeletedActor() will call back into this Shutdown()
+  // method when the last child actor is gone.
+  if (mNumChildActors) {
+    mDelayedDestroy = true;
+    return;
+  }
+
   nsRefPtr<Cache> listener = mListener;
 
   // StartDestroy() can get called from either Cache or the Feature.
@@ -97,14 +122,6 @@ CacheChild::StartDestroy()
 
   // Cache listener should call ClearListener() in DestroyInternal()
   MOZ_ASSERT(!mListener);
-
-  // If we have outstanding child actors, then don't destroy ourself yet.
-  // The child actors should be short lived and we should allow them to complete
-  // if possible.  SendTeardown() will be called when the count drops to zero
-  // in NoteDeletedActor().
-  if (mNumChildActors) {
-    return;
-  }
 
   // Start actor destruction from parent process
   unused << SendTeardown();
@@ -158,8 +175,8 @@ void
 CacheChild::NoteDeletedActor()
 {
   mNumChildActors -= 1;
-  if (!mNumChildActors && !mListener) {
-    unused << SendTeardown();
+  if (!mNumChildActors && mDelayedDestroy) {
+    StartDestroy();
   }
 }
 

@@ -25,6 +25,7 @@ DeallocPCacheStorageChild(PCacheStorageChild* aActor)
 CacheStorageChild::CacheStorageChild(CacheStorage* aListener, Feature* aFeature)
   : mListener(aListener)
   , mNumChildActors(0)
+  , mDelayedDestroy(false)
 {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_ASSERT(mListener);
@@ -49,17 +50,39 @@ CacheStorageChild::ClearListener()
 
 void
 CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
-                             const CacheOpArgs& aArgs)
+                             nsISupports* aParent, const CacheOpArgs& aArgs)
 {
   mNumChildActors += 1;
   unused << SendPCacheOpConstructor(
-    new CacheOpChild(GetFeature(), aGlobal, aPromise), aArgs);
+    new CacheOpChild(GetFeature(), aGlobal, aParent, aPromise), aArgs);
+}
+
+void
+CacheStorageChild::StartDestroyFromListener()
+{
+  NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
+
+  // The listener should be held alive by any async operations, so if it
+  // is going away then there must not be any child actors.  This in turn
+  // ensures that StartDestroy() will not trigger the delayed path.
+  MOZ_ASSERT(!mNumChildActors);
+
+  StartDestroy();
 }
 
 void
 CacheStorageChild::StartDestroy()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
+
+  // If we have outstanding child actors, then don't destroy ourself yet.
+  // The child actors should be short lived and we should allow them to complete
+  // if possible.  NoteDeletedActor() will call back into this Shutdown()
+  // method when the last child actor is gone.
+  if (mNumChildActors) {
+    mDelayedDestroy = true;
+    return;
+  }
 
   nsRefPtr<CacheStorage> listener = mListener;
 
@@ -74,14 +97,6 @@ CacheStorageChild::StartDestroy()
 
   // CacheStorage listener should call ClearListener() in DestroyInternal()
   MOZ_ASSERT(!mListener);
-
-  // If we have outstanding child actors, then don't destroy ourself yet.
-  // The child actors should be short lived and we should allow them to complete
-  // if possible.  SendTeardown() will be called when the count drops to zero
-  // in NoteDeletedActor().
-  if (mNumChildActors) {
-    return;
-  }
 
   // Start actor destruction from parent process
   unused << SendTeardown();
@@ -121,8 +136,8 @@ CacheStorageChild::NoteDeletedActor()
 {
   MOZ_ASSERT(mNumChildActors);
   mNumChildActors -= 1;
-  if (!mNumChildActors && !mListener) {
-    unused << SendTeardown();
+  if (!mNumChildActors && mDelayedDestroy) {
+    StartDestroy();
   }
 }
 

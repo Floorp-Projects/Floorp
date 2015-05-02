@@ -166,7 +166,7 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   // wait for the async ActorCreated() callback.
   MOZ_ASSERT(NS_IsMainThread());
   bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-  if (!ok) {
+  if (NS_WARN_IF(!ok)) {
     ActorFailed();
   }
 }
@@ -177,7 +177,7 @@ CacheStorage::Match(const RequestOrUSVString& aRequest,
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (mFailedActor) {
+  if (NS_WARN_IF(mFailedActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -189,7 +189,7 @@ CacheStorage::Match(const RequestOrUSVString& aRequest,
   }
 
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (!promise) {
+  if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
 
@@ -212,13 +212,13 @@ CacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (mFailedActor) {
+  if (NS_WARN_IF(mFailedActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (!promise) {
+  if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
 
@@ -237,13 +237,13 @@ CacheStorage::Open(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (mFailedActor) {
+  if (NS_WARN_IF(mFailedActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (!promise) {
+  if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
 
@@ -262,13 +262,13 @@ CacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (mFailedActor) {
+  if (NS_WARN_IF(mFailedActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (!promise) {
+  if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
 
@@ -287,13 +287,13 @@ CacheStorage::Keys(ErrorResult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (mFailedActor) {
+  if (NS_WARN_IF(mFailedActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
   nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
-  if (!promise) {
+  if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
 
@@ -413,9 +413,9 @@ CacheStorage::~CacheStorage()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
   if (mActor) {
-    mActor->StartDestroy();
-    // DestroyInternal() is called synchronously by StartDestroy().  So we
-    // should have already cleared the mActor.
+    mActor->StartDestroyFromListener();
+    // DestroyInternal() is called synchronously by StartDestroyFromListener().
+    // So we should have already cleared the mActor.
     MOZ_ASSERT(!mActor);
   }
 }
@@ -434,11 +434,11 @@ CacheStorage::MaybeRunPendingRequests()
     if (entry->mRequest) {
       args.Add(entry->mRequest, IgnoreBody, IgnoreInvalidScheme, rv);
     }
-    if (rv.Failed()) {
+    if (NS_WARN_IF(rv.Failed())) {
       entry->mPromise->MaybeReject(rv);
       continue;
     }
-    mActor->ExecuteOp(mGlobal, entry->mPromise, args.SendAsOpArgs());
+    mActor->ExecuteOp(mGlobal, entry->mPromise, this, args.SendAsOpArgs());
   }
   mPendingRequests.Clear();
 }
