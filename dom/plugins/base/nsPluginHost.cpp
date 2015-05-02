@@ -110,6 +110,8 @@
 #include "nsExceptionHandler.h"
 #endif
 
+#include "npapi.h"
+
 using namespace mozilla;
 using mozilla::TimeStamp;
 using mozilla::plugins::PluginTag;
@@ -1054,7 +1056,6 @@ nsPluginHost::GetBlocklistStateForType(const nsACString &aMimeType,
                                     aExcludeFlags,
                                     getter_AddRefs(tag));
   NS_ENSURE_SUCCESS(rv, rv);
-
   return tag->GetBlocklistState(aState);
 }
 
@@ -1275,6 +1276,13 @@ nsPluginHost::GetPluginForContentProcess(uint32_t aPluginId, nsNPAPIPlugin** aPl
 
   nsPluginTag* pluginTag = PluginWithId(aPluginId);
   if (pluginTag) {
+    // When setting up a bridge, double check with chrome to see if this plugin
+    // is blocked hard. Note this does not protect against vulnerable plugins
+    // that the user has explicitly allowed. :(
+    if (pluginTag->IsBlocklisted()) {
+      return NS_ERROR_PLUGIN_BLOCKLISTED;
+    }
+
     nsresult rv = EnsurePluginLoaded(pluginTag);
     if (NS_FAILED(rv)) {
       return rv;

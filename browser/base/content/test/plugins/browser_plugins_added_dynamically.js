@@ -1,178 +1,137 @@
 var rootDir = getRootDirectory(gTestPath);
 const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://mochi.test:8888/");
-
-let gTestBrowser = null;
-let gNextTest = null;
 let gPluginHost = Components.classes["@mozilla.org/plugin/host;1"].getService(Components.interfaces.nsIPluginHost);
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+let gTestBrowser = null;
 
-// Let's do the XPCNativeWrapper dance!
-function addPlugin(browser, type) {
-  let contentWindow = XPCNativeWrapper.unwrap(browser.contentWindow);
-  contentWindow.addPlugin(type);
-}
-
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
+add_task(function* () {
+  registerCleanupFunction(Task.async(function*() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
-  });
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
-
-  let newTab = gBrowser.addTab();
-  gBrowser.selectedTab = newTab;
-  gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("load", pageLoad, true);
-  prepareTest(testActivateAddSameTypePart1, gTestRoot + "plugin_add_dynamically.html");
-}
-
-function finishTest() {
-  gTestBrowser.removeEventListener("load", pageLoad, true);
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
-
-function pageLoad() {
-  // The plugin events are async dispatched and can come after the load event
-  // This just allows the events to fire before we then go on to test the states
-  executeSoon(gNextTest);
-}
-
-function prepareTest(nextTest, url) {
-  gNextTest = nextTest;
-  gTestBrowser.contentWindow.location = url;
-}
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+    resetBlocklist();
+    gBrowser.removeCurrentTab();
+    window.focus();
+    gTestBrowser = null;
+  }));
+});
 
 // "Activate" of a given type -> plugins of that type dynamically added should
 // automatically play.
-function testActivateAddSameTypePart1() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "testActivateAddSameTypePart1: should not have a click-to-play notification");
-  addPlugin(gTestBrowser);
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, testActivateAddSameTypePart2, "testActivateAddSameTypePart1: waited too long for click-to-play-plugin notification");
-}
+add_task(function* () {
+  let newTab = gBrowser.addTab();
+  gBrowser.selectedTab = newTab;
+  gTestBrowser = gBrowser.selectedBrowser;
 
-function testActivateAddSameTypePart2() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "testActivateAddSameTypePart2: should have a click-to-play notification");
+  Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
 
-  popupNotification.reshow();
-  testActivateAddSameTypePart3();
-}
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Second Test Plug-in");
+});
 
-function testActivateAddSameTypePart3() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+add_task(function* () {
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_add_dynamically.html");
+
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "Test 1a, Should not have a click-to-play notification");
+
+  // Add a plugin of type test
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin("pluginone", "application/x-test"));
+  });
+
+  yield promisePopupNotification("click-to-play-plugins");
+
+  notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 1a, Should not have a click-to-play notification");
+
+  yield promiseForNotificationShown(notification);
+
   let centerAction = null;
-  for (let action of popupNotification.options.pluginData.values()) {
+  for (let action of notification.options.pluginData.values()) {
     if (action.pluginName == "Test") {
       centerAction = action;
       break;
     }
   }
-  ok(centerAction, "testActivateAddSameTypePart3: found center action for the Test plugin");
+  ok(centerAction, "Test 2, found center action for the Test plugin");
 
   let centerItem = null;
   for (let item of PopupNotifications.panel.firstChild.childNodes) {
-    if (item.action && item.action == centerAction) {
+    is(item.value, "block", "Test 3, all plugins should start out blocked");
+    if (item.action == centerAction) {
       centerItem = item;
       break;
     }
   }
-  ok(centerItem, "testActivateAddSameTypePart3: found center item for the Test plugin");
+  ok(centerItem, "Test 4, found center item for the Test plugin");
 
-  let plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  ok(!plugin.activated, "testActivateAddSameTypePart3: plugin should not be activated");
-
-  // Change the state and click the ok button to activate the Test plugin
+  // Select the allow now option in the select drop down for Test Plugin
   centerItem.value = "allownow";
-  PopupNotifications.panel.firstChild._primaryButton.click();
-
-  let condition = function() plugin.activated;
-  waitForCondition(condition, testActivateAddSameTypePart4, "testActivateAddSameTypePart3: waited too long for plugin to activate");
-}
-
-function testActivateAddSameTypePart4() {
-  let plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  ok(plugin.activated, "testActivateAddSameTypePart4: plugin should be activated");
-
-  addPlugin(gTestBrowser);
-  let condition = function() {
-    let embeds = gTestBrowser.contentDocument.getElementsByTagName("embed");
-    let allActivated = true;
-    for (let embed of embeds) {
-      if (!embed.activated)
-        allActivated = false;
-    }
-    return allActivated && embeds.length == 2;
-  };
-  waitForCondition(condition, testActivateAddSameTypePart5, "testActivateAddSameTypePart4: waited too long for second plugin to activate"); }
-
-function testActivateAddSameTypePart5() {
-  let embeds = gTestBrowser.contentDocument.getElementsByTagName("embed");
-  for (let embed of embeds) {
-    ok(embed.activated, "testActivateAddSameTypePart5: all plugins should be activated");
-  }
-  clearAllPluginPermissions();
-  prepareTest(testActivateAddDifferentTypePart1, gTestRoot + "plugin_add_dynamically.html");
-}
-
-// "Activate" of a given type -> plugins of other types dynamically added
-// should not automatically play.
-function testActivateAddDifferentTypePart1() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "testActivateAddDifferentTypePart1: should not have a click-to-play notification");
-  addPlugin(gTestBrowser);
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, testActivateAddDifferentTypePart2, "testActivateAddDifferentTypePart1: waited too long for click-to-play-plugin notification");
-}
-
-function testActivateAddDifferentTypePart2() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "testActivateAddDifferentTypePart2: should have a click-to-play notification");
-
-  // we have to actually show the panel to get the bindings to instantiate
-  popupNotification.reshow();
-  testActivateAddDifferentTypePart3();
-}
-
-function testActivateAddDifferentTypePart3() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  is(popupNotification.options.pluginData.size, 1, "Should be one plugin action");
-
-  let plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  ok(!plugin.activated, "testActivateAddDifferentTypePart3: plugin should not be activated");
 
   // "click" the button to activate the Test plugin
   PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let condition = function() plugin.activated;
-  waitForCondition(condition, testActivateAddDifferentTypePart4, "testActivateAddDifferentTypePart3: waited too long for plugin to activate");
-}
+  let pluginInfo = yield promiseForPluginInfo("pluginone");
+  ok(pluginInfo.activated, "Test 5, plugin should be activated");
 
-function testActivateAddDifferentTypePart4() {
-  let plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
-  ok(plugin.activated, "testActivateAddDifferentTypePart4: plugin should be activated");
+  // Add another plugin of type test
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin("plugintwo", "application/x-test"));
+  });
 
-  addPlugin(gTestBrowser);
-  let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, testActivateAddDifferentTypePart5, "testActivateAddDifferentTypePart5: waited too long for popup notification");
-}
+  pluginInfo = yield promiseForPluginInfo("plugintwo");
+  ok(pluginInfo.activated, "Test 6, plugins should be activated");
+});
 
-function testActivateAddDifferentTypePart5() {
-  ok(PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser), "testActivateAddDifferentTypePart5: should have popup notification");
-  let embeds = gTestBrowser.contentDocument.getElementsByTagName("embed");
-  for (let embed of embeds) {
-    if (embed.type == "application/x-test")
-      ok(embed.activated, "testActivateAddDifferentTypePart5: Test plugin should be activated");
-    else if (embed.type == "application/x-second-test")
-      ok(!embed.activated, "testActivateAddDifferentTypePart5: Second Test plugin should not be activated");
-  }
+// "Activate" of a given type -> plugins of other types dynamically added
+// should not automatically play.
+add_task(function* () {
+  clearAllPluginPermissions();
 
-  finishTest();
-}
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_add_dynamically.html");
+
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(!notification, "Test 7, Should not have a click-to-play notification");
+
+  // Add a plugin of type test
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin("pluginone", "application/x-test"));
+  });
+
+  yield promisePopupNotification("click-to-play-plugins");
+
+  notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 8, Should not have a click-to-play notification");
+
+  yield promiseForNotificationShown(notification);
+
+  is(notification.options.pluginData.size, 1, "Should be one plugin action");
+
+  let pluginInfo = yield promiseForPluginInfo("pluginone");
+  ok(!pluginInfo.activated, "Test 8, test plugin should be activated");
+
+  let condition = function() !notification.dismissed &&
+    PopupNotifications.panel.firstChild;
+  yield promiseForCondition(condition);
+
+  // "click" the button to activate the Test plugin
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
+  pluginInfo = yield promiseForPluginInfo("pluginone");
+  ok(pluginInfo.activated, "Test 9, test plugin should be activated");
+
+  yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin("plugintwo", "application/x-second-test"));
+  });
+
+  yield promisePopupNotification("click-to-play-plugins");
+
+  pluginInfo = yield promiseForPluginInfo("pluginone");
+  ok(pluginInfo.activated, "Test 10, plugins should be activated");
+  pluginInfo = yield promiseForPluginInfo("plugintwo");
+  ok(!pluginInfo.activated, "Test 11, plugins should be activated");
+});

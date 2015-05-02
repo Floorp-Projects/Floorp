@@ -21,19 +21,51 @@ const kMissingAPIMessage = "Unsupported blocklist call in the child process."
  */
 
 function Blocklist() {
+  this.init();
 }
 
 Blocklist.prototype = {
   classID: Components.ID("{e0a106ed-6ad4-47a4-b6af-2f1c8aa4712d}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistService]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsIBlocklistService]),
+
+  init: function () {
+    Services.cpmm.addMessageListener("Blocklist:blocklistInvalidated", this);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+  },
+
+  uninit: function () {
+    Services.cpmm.removeMessageListener("Blocklist:blocklistInvalidated", this);
+    Services.obs.removeObserver(this, "xpcom-shutdown", false);
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+    case "xpcom-shutdown":
+      this.uninit();
+      break;
+    }
+  },
+
+  // Message manager message handlers
+  receiveMessage: function (aMsg) {
+    switch (aMsg.name) {
+      case "Blocklist:blocklistInvalidated":
+        Services.obs.notifyObservers(null, "blocklist-updated", null);
+        Services.cpmm.sendAsyncMessage("Blocklist:content-blocklist-updated");
+        break;
+      default:
+        throw new Error("Unknown blocklist message received from content: " + aMsg.name);
+    }
+  },
 
   /*
-    * A helper that queries key data from a plugin or addon object
-    * and generates a simple data wrapper suitable for ipc. We hand
-    * these directly to the nsBlockListService in the parent which
-    * doesn't query for much.. allowing us to get away with this.
-    */
+   * A helper that queries key data from a plugin or addon object
+   * and generates a simple data wrapper suitable for ipc. We hand
+   * these directly to the nsBlockListService in the parent which
+   * doesn't query for much.. allowing us to get away with this.
+   */
   flattenObject: function (aTag) {
     // Based on debugging the nsBlocklistService, these are the props the
     // parent side will check on our objects.
@@ -49,15 +81,16 @@ Blocklist.prototype = {
   // only calls getPluginBlocklistState.
 
   isAddonBlocklisted: function (aAddon, aAppVersion, aToolkitVersion) {
-    throw new Error(kMissingAPIMessage);
+    return true;
   },
 
   getAddonBlocklistState: function (aAddon, aAppVersion, aToolkitVersion) {
-    throw new Error(kMissingAPIMessage);
+    return Components.interfaces.nsIBlocklistService.STATE_BLOCKED;
   },
 
+  // There are a few callers in layout that rely on this.
   getPluginBlocklistState: function (aPluginTag, aAppVersion, aToolkitVersion) {
-    return Services.cpmm.sendSyncMessage("Blocklist::getPluginBlocklistState", {
+    return Services.cpmm.sendSyncMessage("Blocklist:getPluginBlocklistState", {
       addonData: this.flattenObject(aPluginTag),
       appVersion: aAppVersion,
       toolkitVersion: aToolkitVersion
