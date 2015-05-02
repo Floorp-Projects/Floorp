@@ -1592,7 +1592,7 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
         if (!in.readDouble(&d) || !checkDouble(d))
             return false;
         JS::ClippedTime t = JS::TimeClip(d);
-        if (!NumbersAreIdentical(d, t.value())) {
+        if (!NumbersAreIdentical(d, t.toDouble())) {
             JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
                                  JSMSG_SC_BAD_SERIALIZED_DATA, "date");
             return false;
