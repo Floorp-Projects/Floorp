@@ -128,6 +128,7 @@ bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 #endif // DEBUG
 
 typedef FrameMetrics::ViewID ViewID;
+typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationEmPerLine;
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationMinTwips;
@@ -462,12 +463,12 @@ GetScaleForValue(const StyleAnimationValue& aValue, nsIFrame* aFrame)
     return gfxSize();
   }
 
-  nsRect frameBounds = aFrame->GetRect();
   bool dontCare;
+  TransformReferenceBox refBox(aFrame);
   gfx3DMatrix transform = nsStyleTransformMatrix::ReadTransforms(
                             list->mHead,
                             aFrame->StyleContext(),
-                            aFrame->PresContext(), dontCare, frameBounds,
+                            aFrame->PresContext(), dontCare, refBox,
                             aFrame->PresContext()->AppUnitsPerDevPixel());
 
   gfxMatrix transform2d;
@@ -3114,6 +3115,17 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
         }
       }
     }
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+    else if (presShell->GetDocument() && presShell->GetDocument()->IsRootDisplayDocument()) {
+      // In cases where the root document is a XUL document, we want to take
+      // the ViewID from the root element, as that will be the ViewID of the
+      // root APZC in the tree.
+      if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
+        id = nsLayoutUtils::FindOrCreateIDFor(element);
+      }
+    }
+#endif
+
     nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(&builder, id);
 
     PROFILER_LABEL("nsLayoutUtils", "PaintFrame::BuildDisplayList",

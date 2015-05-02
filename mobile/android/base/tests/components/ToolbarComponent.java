@@ -84,6 +84,11 @@ public class ToolbarComponent extends BaseComponent {
         return this;
     }
 
+    public ToolbarComponent assertBackButtonIsNotEnabled() {
+        fAssertFalse("The back button is not enabled", isBackButtonEnabled());
+        return this;
+    }
+
     /**
      * Returns the root View for the browser toolbar.
      */
@@ -305,5 +310,9 @@ public class ToolbarComponent extends BaseComponent {
 
     private boolean isUrlEditTextSelected() {
         return getUrlEditText().isSelected();
+    }
+
+    private boolean isBackButtonEnabled() {
+        return getBackButton().isEnabled();
     }
 }

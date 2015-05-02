@@ -218,11 +218,6 @@ let LoopRoomsInternal = {
       };
     }
 
-    // For now, disable encryption/context if context is disabled
-    if (!MozLoopService.getLoopPref("contextInConverations.enabled")) {
-      return getUnencryptedData();
-    }
-
     var newRoomData = extend({}, roomData);
 
     if (!newRoomData.context) {
@@ -700,7 +695,8 @@ let LoopRoomsInternal = {
       };
 
       // If we're not encrypting currently, then only send the roomName.
-      if (!Services.prefs.getBoolPref("loop.contextInConverations.enabled")) {
+      // XXX This should go away once bug 1153788 is fixed.
+      if (!sendData.context) {
         sendData = {
           roomName: newRoomName
         };

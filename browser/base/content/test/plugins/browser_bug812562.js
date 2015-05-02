@@ -1,93 +1,80 @@
-var gHttpTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-var gTestBrowser = null;
-var gNextTest = null;
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+let gTestBrowser = null;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-
-function test() {
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("plugins.click_to_play");
-  });
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
-
-  var newTab = gBrowser.addTab();
-  gBrowser.selectedTab = newTab;
-  gTestBrowser = gBrowser.selectedBrowser;
-  gTestBrowser.addEventListener("load", pageLoad, true);
-  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
-  function() {
-    prepareTest(function() {
-        // Due to layout being async, "PluginBindAttached" may trigger later.
-        // This forces a layout flush, thus triggering it, and schedules the
-        // test so it is definitely executed afterwards.
-        gTestBrowser.contentDocument.getElementById('test').clientTop;
-        testPart1();
-      },
-      gHttpTestRoot + "plugin_test.html");
-  });
-}
-
-function finishTest() {
-  gTestBrowser.removeEventListener("load", pageLoad, true);
-  gBrowser.removeCurrentTab();
-  window.focus();
-  setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
-  function() {
+add_task(function* () {
+  registerCleanupFunction(Task.async(function*() {
+    clearAllPluginPermissions();
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+    setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+    yield asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
     resetBlocklist();
-    finish();
-  });
-}
+    Services.prefs.clearUserPref("plugins.click_to_play");
+    gBrowser.removeCurrentTab();
+    window.focus();
+    gTestBrowser = null;
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gTestBrowser = gBrowser.selectedBrowser;
 
-function pageLoad(aEvent) {
-  // The plugin events are async dispatched and can come after the load event
-  // This just allows the events to fire before we then go on to test the states
-  if (gNextTest != null)
-    executeSoon(gNextTest);
-}
+  Services.prefs.setBoolPref("plugins.click_to_play", true);
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-function prepareTest(nextTest, url) {
-  gNextTest = nextTest;
-  gTestBrowser.contentWindow.location = url;
-}
+  // Prime the blocklist service, the remote service doesn't launch on startup.
+  yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
+  let exmsg = yield promiseInitContentBlocklistSvc(gBrowser.selectedBrowser);
+  ok(!exmsg, "exception: " + exmsg);
+});
 
 // Tests that the going back will reshow the notification for click-to-play
-// blocklisted plugins (part 1/4)
-function testPart1() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+// blocklisted plugins
+add_task(function* () {
+  yield asyncSetAndUpdateBlocklist(gTestRoot + "blockPluginVulnerableUpdatable.xml", gTestBrowser);
+
+  yield promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
+
+  // Work around for delayed PluginBindingAttached
+  yield promiseUpdatePluginBindings(gTestBrowser);
+
+  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "test part 1: Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "test part 1: plugin fallback type should be PLUGIN_VULNERABLE_UPDATABLE");
-  ok(!objLoadingContent.activated, "test part 1: plugin should not be activated");
 
-  prepareTest(testPart2, "about:blank");
-}
+  let pluginInfo = yield promiseForPluginInfo("test");
+  is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "plugin should be marked as VULNERABLE");
 
-function testPart2() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  let found = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    return !!content.document.getElementById("test");
+  });
+  ok(found, "test part 1: plugin should not be activated");
+
+  yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
+});
+
+add_task(function* () {
+  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(!popupNotification, "test part 2: Should not have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  ok(!plugin, "test part 2: Should not have a plugin in this page");
+  let found = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    return !!content.document.getElementById("test");
+  });
+  ok(!found, "test part 2: plugin should not be activated");
 
-  Services.obs.addObserver(testPart3, "PopupNotifications-updateNotShowing", false);
+  let obsPromise = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
+  let overlayPromise = promisePopupNotification("click-to-play-plugins");
   gTestBrowser.contentWindow.history.back();
-}
+  yield obsPromise;
+  yield overlayPromise;
+});
 
-function testPart3() {
-  Services.obs.removeObserver(testPart3, "PopupNotifications-updateNotShowing");
-  var condition = function() PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  waitForCondition(condition, testPart4, "test part 3: waited too long for click-to-play-plugin notification");
-}
+add_task(function* () {
+  yield promiseUpdatePluginBindings(gTestBrowser);
 
-function testPart4() {
-  var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "test part 4: Should have a click-to-play notification");
-  var plugin = gTestBrowser.contentDocument.getElementById("test");
-  var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "test part 4: plugin fallback type should be PLUGIN_VULNERABLE_UPDATABLE");
-  ok(!objLoadingContent.activated, "test part 4: plugin should not be activated");
+  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(popupNotification, "test part 3: Should have a click-to-play notification");
 
-  finishTest();
-}
+  let pluginInfo = yield promiseForPluginInfo("test");
+  is(pluginInfo.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "plugin should be marked as VULNERABLE");
+
+  let found = yield ContentTask.spawn(gTestBrowser, {}, function* () {
+    return !!content.document.getElementById("test");
+  });
+  ok(found, "test part 3: plugin should not be activated");
+});
