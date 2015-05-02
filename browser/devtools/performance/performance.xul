@@ -77,7 +77,7 @@
         <hbox id="recordings-controls"
               class="devtools-toolbarbutton-group">
           <toolbarbutton id="main-record-button"
-                         class="devtools-toolbarbutton record-button"
+                         class="devtools-toolbarbutton record-button devtools-thobber"
                          tooltiptext="&profilerUI.recordButton.tooltip;"/>
           <toolbarbutton id="import-button"
                          class="devtools-toolbarbutton"
@@ -159,8 +159,7 @@
                   flex="1">
               <label value="&profilerUI.stopNotice1;"/>
               <button class="devtools-toolbarbutton record-button"
-                      standalone="true"
-                      checked="true" />
+                      standalone="true" />
               <label value="&profilerUI.stopNotice2;"/>
             </hbox>
             <hbox id="console-recording-notice"

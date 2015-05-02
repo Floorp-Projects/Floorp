@@ -15,12 +15,12 @@ function spawnTest () {
   yield profilerConnected;
   let connection = getPerformanceActorsConnection(target);
 
-  let profileStart = once(connection, "console-profile-start");
+  let profileStart = once(connection, "recording-started");
   console.profile("rust");
   yield profileStart;
 
   busyWait(WAIT_TIME);
-  let profileEnd = once(connection, "console-profile-end");
+  let profileEnd = once(connection, "recording-stopped");
   console.profileEnd("rust");
   yield profileEnd;
 
