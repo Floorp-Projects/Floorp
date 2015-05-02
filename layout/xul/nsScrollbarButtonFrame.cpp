@@ -63,7 +63,7 @@ nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
     case NS_MOUSE_BUTTON_UP:
       HandleRelease(aPresContext, aEvent, aEventStatus);
       break;
-    case NS_MOUSE_EXIT_SYNTH:
+    case NS_MOUSE_OUT:
       mCursorOnThis = false;
       break;
     case NS_MOUSE_MOVE: {
