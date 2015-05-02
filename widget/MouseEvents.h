@@ -322,8 +322,8 @@ public:
     , mDefaultPreventedOnContent(false)
   {
     mFlags.mCancelable =
-      (aMessage != NS_DRAGDROP_EXIT_SYNTH &&
-       aMessage != NS_DRAGDROP_LEAVE_SYNTH &&
+      (aMessage != NS_DRAGDROP_EXIT &&
+       aMessage != NS_DRAGDROP_LEAVE &&
        aMessage != NS_DRAGDROP_END);
   }
 

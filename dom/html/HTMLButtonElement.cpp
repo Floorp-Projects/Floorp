@@ -347,7 +347,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         }
         break;
 
-      case NS_MOUSE_ENTER_SYNTH:
+      case NS_MOUSE_OVER:
         {
           aVisitor.mPresContext->EventStateManager()->
             SetContentState(this, NS_EVENT_STATE_HOVER);
@@ -356,7 +356,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         break;
 
         // XXX this doesn't seem to do anything yet
-      case NS_MOUSE_EXIT_SYNTH:
+      case NS_MOUSE_OUT:
         {
           aVisitor.mPresContext->EventStateManager()->
             SetContentState(nullptr, NS_EVENT_STATE_HOVER);
