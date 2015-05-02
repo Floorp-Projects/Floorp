@@ -30,21 +30,6 @@ function workerTestDone() {
   postMessage({ type: 'finish' });
 }
 
-function workerTestGetPrefs(prefs, cb) {
-  addEventListener('message', function workerTestGetPrefsCB(e) {
-    if (e.data.type != 'returnPrefs' ||
-        !workerTestArrayEquals(prefs, e.data.prefs)) {
-      return;
-    }
-    removeEventListener('message', workerTestGetPrefsCB);
-    cb(e.data.result);
-  });
-  postMessage({
-    type: 'getPrefs',
-    prefs: prefs
-  });
-}
-
 function workerTestGetPermissions(permissions, cb) {
   addEventListener('message', function workerTestGetPermissionsCB(e) {
     if (e.data.type != 'returnPermissions' ||

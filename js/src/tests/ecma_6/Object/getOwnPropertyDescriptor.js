@@ -18,17 +18,17 @@ if (typeof Symbol === "function") {
 }
 
 assertDeepEq(Object.getOwnPropertyDescriptor("foo", "length"), {
-    configurable: false,
-    enumerable: false,
     value: 3,
-    writable: false
+    writable: false,
+    enumerable: false,
+    configurable: false
 });
 
 assertDeepEq(Object.getOwnPropertyDescriptor("foo", 0), {
-    configurable: false,
-    enumerable: true,
     value: "f",
-    writable: false
+    writable: false,
+    enumerable: true,
+    configurable: false
 });
 
 if (typeof reportCompare === "function")

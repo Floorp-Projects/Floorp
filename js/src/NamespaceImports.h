@@ -28,11 +28,13 @@ class TwoByteCharsZ;
 class UTF8Chars;
 class UTF8CharsZ;
 
-class AutoFunctionVector;
-class AutoIdVector;
-class AutoObjectVector;
-class AutoScriptVector;
-class AutoValueVector;
+template <typename T>
+class AutoVectorRooter;
+typedef AutoVectorRooter<Value> AutoValueVector;
+typedef AutoVectorRooter<jsid> AutoIdVector;
+typedef AutoVectorRooter<JSObject*> AutoObjectVector;
+typedef AutoVectorRooter<JSFunction*> AutoFunctionVector;
+typedef AutoVectorRooter<JSScript*> AutoVector;
 
 class AutoIdArray;
 
@@ -75,17 +77,17 @@ using JS::TwoByteCharsZ;
 using JS::UTF8Chars;
 using JS::UTF8CharsZ;
 
-using JS::AutoFunctionVector;
-using JS::AutoIdVector;
-using JS::AutoObjectVector;
-using JS::AutoScriptVector;
-using JS::AutoValueVector;
+using JS::AutoVectorRooter;
+typedef AutoVectorRooter<Value> AutoValueVector;
+typedef AutoVectorRooter<jsid> AutoIdVector;
+typedef AutoVectorRooter<JSObject*> AutoObjectVector;
+typedef AutoVectorRooter<JSFunction*> AutoFunctionVector;
+typedef AutoVectorRooter<JSScript*> AutoScriptVector;
 
 using JS::AutoIdArray;
 
 using JS::AutoHashMapRooter;
 using JS::AutoHashSetRooter;
-using JS::AutoVectorRooter;
 using JS::RootedGeneric;
 
 using JS::CallArgs;
