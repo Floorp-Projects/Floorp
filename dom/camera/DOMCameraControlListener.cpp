@@ -365,9 +365,16 @@ DOMCameraControlListener::OnTakePictureComplete(const uint8_t* aData, uint32_t a
                                static_cast<uint64_t>(mLength),
                                mMimeType);
       aDOMCameraControl->OnTakePictureComplete(picture);
+      mData = NULL;
     }
 
   protected:
+    virtual
+    ~Callback()
+    {
+        free(mData);
+    }
+
     uint8_t* mData;
     uint32_t mLength;
     nsString mMimeType;
