@@ -53,7 +53,8 @@
                 label="&cmd.uninstallAddon.label;"
                 accesskey="&cmd.uninstallAddon.accesskey;"/>
       <menuitem id="menuitem_debugItem" command="cmd_debugItem"
-                label="&cmd.debugAddon.label;"/>
+                label="&cmd.debugAddon.label;"
+                accesskey="&cmd.debugAddon.accesskey;"/>
       <menuseparator id="addonitem-menuseparator" />
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
 #ifdef XP_WIN
