@@ -117,6 +117,10 @@ class BaselineInspector
     JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
     JSObject* getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp);
 
+    // Sometimes the group a template object will have is known, even if the
+    // object itself isn't.
+    ObjectGroup* getTemplateObjectGroup(jsbytecode* pc);
+
     JSFunction* getSingleCallee(jsbytecode* pc);
 
     DeclEnvObject* templateDeclEnvObject();
