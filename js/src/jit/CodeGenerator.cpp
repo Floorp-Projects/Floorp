@@ -2252,7 +2252,7 @@ CodeGenerator::visitStoreSlotV(LStoreSlotV* lir)
 }
 
 static void
-GuardReceiver(MacroAssembler& masm, const ReceiverGuard::StackGuard& guard,
+GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
               Register obj, Register scratch, Label* miss, bool checkNullExpando)
 {
     if (guard.group) {
@@ -2280,7 +2280,7 @@ CodeGenerator::emitGetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
     Label done;
 
     for (size_t i = 0; i < mir->numReceivers(); i++) {
-        ReceiverGuard::StackGuard receiver = mir->receiver(i);
+        ReceiverGuard receiver = mir->receiver(i);
 
         Label next;
         GuardReceiver(masm, receiver, obj, scratch, &next, /* checkNullExpando = */ false);
@@ -2359,7 +2359,7 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
 
     Label done;
     for (size_t i = 0; i < mir->numReceivers(); i++) {
-        ReceiverGuard::StackGuard receiver = mir->receiver(i);
+        ReceiverGuard receiver = mir->receiver(i);
 
         Label next;
         GuardReceiver(masm, receiver, obj, scratch, &next, /* checkNullExpando = */ false);
@@ -2531,7 +2531,7 @@ CodeGenerator::visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic* lir)
     Label done;
 
     for (size_t i = 0; i < mir->numReceivers(); i++) {
-        const ReceiverGuard::StackGuard& receiver = mir->receiver(i);
+        const ReceiverGuard& receiver = mir->receiver(i);
 
         Label next;
         GuardReceiver(masm, receiver, obj, temp, &next, /* checkNullExpando = */ true);
@@ -7122,31 +7122,59 @@ CodeGenerator::visitIteratorStart(LIteratorStart* lir)
     masm.branchTest32(Assembler::NonZero, Address(niTemp, offsetof(NativeIterator, flags)),
                       Imm32(JSITER_ACTIVE|JSITER_UNREUSABLE), ool->entry());
 
-    // Load the iterator's shape array.
-    masm.loadPtr(Address(niTemp, offsetof(NativeIterator, shapes_array)), temp2);
+    // Load the iterator's receiver guard array.
+    masm.loadPtr(Address(niTemp, offsetof(NativeIterator, guard_array)), temp2);
 
-    // Compare shape of object with the first shape.
-    masm.loadObjShape(obj, temp1);
-    masm.branchPtr(Assembler::NotEqual, Address(temp2, 0), temp1, ool->entry());
+    // Compare object with the first receiver guard. The last iterator can only
+    // match for native objects and unboxed objects.
+    {
+        Address groupAddr(temp2, offsetof(ReceiverGuard, group));
+        Address shapeAddr(temp2, offsetof(ReceiverGuard, shape));
+        Label guardDone, shapeMismatch, noExpando;
+        masm.loadObjShape(obj, temp1);
+        masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, &shapeMismatch);
 
-    // Compare shape of object's prototype with the second shape.
+        // Ensure the object does not have any elements. The presence of dense
+        // elements is not captured by the shape tests above.
+        masm.branchPtr(Assembler::NotEqual,
+                       Address(obj, NativeObject::offsetOfElements()),
+                       ImmPtr(js::emptyObjectElements),
+                       ool->entry());
+        masm.jump(&guardDone);
+
+        masm.bind(&shapeMismatch);
+        masm.loadObjGroup(obj, temp1);
+        masm.branchPtr(Assembler::NotEqual, groupAddr, temp1, ool->entry());
+        masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), temp1);
+        masm.branchTestPtr(Assembler::Zero, temp1, temp1, &noExpando);
+        masm.branchPtr(Assembler::NotEqual,
+                       Address(temp1, NativeObject::offsetOfElements()),
+                       ImmPtr(js::emptyObjectElements),
+                       ool->entry());
+        masm.loadObjShape(temp1, temp1);
+        masm.bind(&noExpando);
+        masm.branchPtr(Assembler::NotEqual, shapeAddr, temp1, ool->entry());
+        masm.bind(&guardDone);
+    }
+
+    // Compare shape of object's prototype with the second shape. The prototype
+    // must be native, as unboxed objects cannot be prototypes (they cannot
+    // have the delegate flag set). Also check for the absence of dense elements.
+    Address prototypeShapeAddr(temp2, sizeof(ReceiverGuard) + offsetof(ReceiverGuard, shape));
     masm.loadObjProto(obj, temp1);
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(temp1, NativeObject::offsetOfElements()),
+                   ImmPtr(js::emptyObjectElements),
+                   ool->entry());
     masm.loadObjShape(temp1, temp1);
-    masm.branchPtr(Assembler::NotEqual, Address(temp2, sizeof(Shape*)), temp1, ool->entry());
+    masm.branchPtr(Assembler::NotEqual, prototypeShapeAddr, temp1, ool->entry());
 
     // Ensure the object's prototype's prototype is nullptr. The last native
     // iterator will always have a prototype chain length of one (i.e. it must
-    // be a plain ), so we do not need to generate a loop here.
+    // be a plain object), so we do not need to generate a loop here.
     masm.loadObjProto(obj, temp1);
     masm.loadObjProto(temp1, temp1);
     masm.branchTestPtr(Assembler::NonZero, temp1, temp1, ool->entry());
-
-    // Ensure the object does not have any elements. The presence of dense
-    // elements is not captured by the shape tests above.
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(obj, NativeObject::offsetOfElements()),
-                   ImmPtr(js::emptyObjectElements),
-                   ool->entry());
 
     // Write barrier for stores to the iterator. We only need to take a write
     // barrier if NativeIterator::obj is actually going to change.
