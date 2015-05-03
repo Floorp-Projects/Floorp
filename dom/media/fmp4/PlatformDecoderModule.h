@@ -189,9 +189,9 @@ public:
 // media data that the decoder accepts as valid input and produces as
 // output is determined when the MediaDataDecoder is created.
 //
-// All functions are only called on the decode task queue. Don't block
-// inside these functions, unless it's explicitly noted that you should
-// (like in Flush() and Drain()).
+// Unless otherwise noted, all functions are only called on the decode task
+// queue. Don't block inside these functions, unless it's explicitly noted
+// that you should (like in Flush() and Drain()).
 //
 // Decoding is done asynchronously. Any async work can be done on the
 // MediaTaskQueue passed into the PlatformDecoderModules's Create*Decoder()
@@ -245,6 +245,7 @@ public:
   // returned.
   virtual nsresult Shutdown() = 0;
 
+  // Called from the state machine task queue.
   virtual bool IsHardwareAccelerated() const { return false; }
 
   // ConfigurationChanged will be called to inform the video or audio decoder
