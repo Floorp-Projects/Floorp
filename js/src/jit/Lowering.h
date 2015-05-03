@@ -187,6 +187,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitTypedObjectDescr(MTypedObjectDescr* ins);
     void visitInitializedLength(MInitializedLength* ins);
     void visitSetInitializedLength(MSetInitializedLength* ins);
+    void visitUnboxedArrayLength(MUnboxedArrayLength* ins);
+    void visitUnboxedArrayInitializedLength(MUnboxedArrayInitializedLength* ins);
+    void visitIncrementUnboxedArrayInitializedLength(MIncrementUnboxedArrayInitializedLength* ins);
     void visitNot(MNot* ins);
     void visitBoundsCheck(MBoundsCheck* ins);
     void visitBoundsCheckLower(MBoundsCheckLower* ins);
