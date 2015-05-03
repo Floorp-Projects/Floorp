@@ -13,11 +13,11 @@ using namespace mozilla::dom;
 
 /* static */ bool
 InterAppComm::EnabledForScope(JSContext* /* unused */,
-			      JS::Handle<JSObject*> /* unused */)
+                              JS::Handle<JSObject*> /* unused */)
 {
   // Disable the constructors if they're disabled by the preference for sure.
   if (!Preferences::GetBool("dom.inter-app-communication-api.enabled", false)) {
-  	return false;
+    return false;
   }
 
   // Only expose the constructors to the chrome codes for Gecko internal uses.

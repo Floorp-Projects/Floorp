@@ -108,12 +108,12 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
 
 NS_IMETHODIMP
 nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
-					       nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
-					       const nsIID *aProtoChainInterface,
-					       const nsIID **aInterfaces,
-					       uint32_t aScriptableFlags,
-					       bool aHasClassInterface,
-					       const nsCID *aConstructorCID)
+                                               nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
+                                               const nsIID *aProtoChainInterface,
+                                               const nsIID **aInterfaces,
+                                               uint32_t aScriptableFlags,
+                                               bool aHasClassInterface,
+                                               const nsCID *aConstructorCID)
 {
   nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);

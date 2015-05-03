@@ -88,7 +88,7 @@ public:
   void GetSupportedNames(unsigned, nsTArray<nsString>& aKeys);
 
   void NamedGetter(const nsAString& aKey, bool& aFound, nsAString& aResult,
-	           ErrorResult& aRv)
+                   ErrorResult& aRv)
   {
     GetItem(aKey, aResult, aRv);
     aFound = !aResult.IsVoid();
