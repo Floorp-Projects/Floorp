@@ -9967,7 +9967,7 @@ class MGetPropertyPolymorphic
 {
     struct Entry {
         // The group and/or shape to guard against.
-        ReceiverGuard::StackGuard receiver;
+        ReceiverGuard receiver;
 
         // The property to load, null for loads from unboxed properties.
         Shape* shape;
@@ -10001,7 +10001,7 @@ class MGetPropertyPolymorphic
         return congruentIfOperandsEqual(ins);
     }
 
-    bool addReceiver(const ReceiverGuard::StackGuard receiver, Shape* shape) {
+    bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
         Entry entry;
         entry.receiver = receiver;
         entry.shape = shape;
@@ -10010,7 +10010,7 @@ class MGetPropertyPolymorphic
     size_t numReceivers() const {
         return receivers_.length();
     }
-    const ReceiverGuard::StackGuard receiver(size_t i) const {
+    const ReceiverGuard receiver(size_t i) const {
         return receivers_[i].receiver;
     }
     Shape* shape(size_t i) const {
@@ -10047,7 +10047,7 @@ class MSetPropertyPolymorphic
 {
     struct Entry {
         // The group and/or shape to guard against.
-        ReceiverGuard::StackGuard receiver;
+        ReceiverGuard receiver;
 
         // The property to store, null for stores to unboxed properties.
         Shape* shape;
@@ -10074,7 +10074,7 @@ class MSetPropertyPolymorphic
         return new(alloc) MSetPropertyPolymorphic(alloc, obj, value, name);
     }
 
-    bool addReceiver(const ReceiverGuard::StackGuard& receiver, Shape* shape) {
+    bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
         Entry entry;
         entry.receiver = receiver;
         entry.shape = shape;
@@ -10083,7 +10083,7 @@ class MSetPropertyPolymorphic
     size_t numReceivers() const {
         return receivers_.length();
     }
-    const ReceiverGuard::StackGuard& receiver(size_t i) const {
+    const ReceiverGuard& receiver(size_t i) const {
         return receivers_[i].receiver;
     }
     Shape* shape(size_t i) const {
@@ -10410,7 +10410,7 @@ class MGuardReceiverPolymorphic
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    Vector<ReceiverGuard::StackGuard, 4, JitAllocPolicy> receivers_;
+    Vector<ReceiverGuard, 4, JitAllocPolicy> receivers_;
 
     MGuardReceiverPolymorphic(TempAllocator& alloc, MDefinition* obj)
       : MUnaryInstruction(obj),
@@ -10432,13 +10432,13 @@ class MGuardReceiverPolymorphic
         return getOperand(0);
     }
 
-    bool addReceiver(const ReceiverGuard::StackGuard& receiver) {
+    bool addReceiver(const ReceiverGuard& receiver) {
         return receivers_.append(receiver);
     }
     size_t numReceivers() const {
         return receivers_.length();
     }
-    const ReceiverGuard::StackGuard& receiver(size_t i) const {
+    const ReceiverGuard& receiver(size_t i) const {
         return receivers_[i];
     }
 

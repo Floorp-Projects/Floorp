@@ -92,7 +92,7 @@ class BaselineInspector
     bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
 
   public:
-    typedef Vector<ReceiverGuard::StackGuard, 4, JitAllocPolicy> ReceiverVector;
+    typedef Vector<ReceiverGuard, 4, JitAllocPolicy> ReceiverVector;
     typedef Vector<ObjectGroup*, 4, JitAllocPolicy> ObjectGroupVector;
     bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                 ObjectGroupVector& convertUnboxedGroups);

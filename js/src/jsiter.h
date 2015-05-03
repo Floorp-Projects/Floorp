@@ -16,6 +16,7 @@
 #include "jscntxt.h"
 
 #include "gc/Barrier.h"
+#include "vm/ReceiverGuard.h"
 #include "vm/Stack.h"
 
 /*
@@ -34,9 +35,9 @@ struct NativeIterator
     HeapPtrFlatString* props_array;
     HeapPtrFlatString* props_cursor;
     HeapPtrFlatString* props_end;
-    Shape** shapes_array;
-    uint32_t shapes_length;
-    uint32_t shapes_key;
+    HeapReceiverGuard* guard_array;
+    uint32_t guard_length;
+    uint32_t guard_key;
     uint32_t flags;
 
   private:
