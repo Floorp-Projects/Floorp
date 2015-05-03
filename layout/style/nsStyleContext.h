@@ -157,6 +157,8 @@ public:
   // as if nowrap is set, <br> is suppressed, and blocks are inlinized.
   // This bit is propogated to all children of line partitipants. It is
   // currently used by ruby to make its content frames unbreakable.
+  // NOTE: for nsTextFrame, use nsTextFrame::ShouldSuppressLineBreak()
+  // instead of this method.
   bool ShouldSuppressLineBreak() const
     { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
 
