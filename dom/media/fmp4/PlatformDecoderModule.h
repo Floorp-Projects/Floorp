@@ -191,7 +191,7 @@ public:
 //
 // Unless otherwise noted, all functions are only called on the decode task
 // queue. Don't block inside these functions, unless it's explicitly noted
-// that you should (like in Flush() and Drain()).
+// that you should (like in Flush()).
 //
 // Decoding is done asynchronously. Any async work can be done on the
 // MediaTaskQueue passed into the PlatformDecoderModules's Create*Decoder()
