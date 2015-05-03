@@ -1740,28 +1740,26 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     frame.syncStack(0);
 
     uint32_t length = GET_UINT24(pc);
-    RootedObjectGroup group(cx);
-    if (!ObjectGroup::useSingletonForAllocationSite(script, pc, JSProto_Array)) {
-        group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
-        if (!group)
-            return false;
-    }
 
-    // Pass length in R0, group in R1.
+    // Pass length in R0.
     masm.move32(Imm32(length), R0.scratchReg());
-    masm.movePtr(ImmGCPtr(group), R1.scratchReg());
 
-    ArrayObject* templateObject = NewDenseUnallocatedArray(cx, length, NullPtr(), TenuredObject);
-    if (!templateObject)
+    ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
+    if (!group)
         return false;
-    templateObject->setGroup(group);
 
-    ICNewArray_Fallback::Compiler stubCompiler(cx, templateObject);
+    ICNewArray_Fallback::Compiler stubCompiler(cx, group);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     frame.push(R0);
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_SPREADCALLARRAY()
+{
+    return emit_JSOP_NEWARRAY();
 }
 
 typedef JSObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject, gc::InitialHeap);
@@ -1829,24 +1827,15 @@ BaselineCompiler::emit_JSOP_NEWINIT()
     frame.syncStack(0);
     JSProtoKey key = JSProtoKey(GET_UINT8(pc));
 
-    RootedObjectGroup group(cx);
-    if (!ObjectGroup::useSingletonForAllocationSite(script, pc, key)) {
-        group = ObjectGroup::allocationSiteGroup(cx, script, pc, key);
+    if (key == JSProto_Array) {
+        // Pass length in R0.
+        masm.move32(Imm32(0), R0.scratchReg());
+
+        ObjectGroup* group = ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
         if (!group)
             return false;
-    }
 
-    if (key == JSProto_Array) {
-        // Pass length in R0, group in R1.
-        masm.move32(Imm32(0), R0.scratchReg());
-        masm.movePtr(ImmGCPtr(group), R1.scratchReg());
-
-        ArrayObject* templateObject = NewDenseUnallocatedArray(cx, 0, NullPtr(), TenuredObject);
-        if (!templateObject)
-            return false;
-        templateObject->setGroup(group);
-
-        ICNewArray_Fallback::Compiler stubCompiler(cx, templateObject);
+        ICNewArray_Fallback::Compiler stubCompiler(cx, group);
         if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     } else {
