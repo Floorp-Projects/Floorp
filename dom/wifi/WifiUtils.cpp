@@ -143,7 +143,7 @@ convertToBytes(char* buf, uint32_t maxlen, const char* str)
       break;
     default:
       buf[len++] = *pos++;
-	  break;
+      break;
     }
   }
   return len;

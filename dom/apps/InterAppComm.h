@@ -18,7 +18,7 @@ class InterAppComm
 {
 public:
   static bool EnabledForScope(JSContext* /* unused */,
-			      JS::Handle<JSObject*> /* unused */);
+                              JS::Handle<JSObject*> /* unused */);
 };
 
 } // namespace dom
