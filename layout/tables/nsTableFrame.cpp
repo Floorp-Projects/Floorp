@@ -6407,15 +6407,13 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
     nsTableRowGroupFrame* rgFrame = mRowGroups[rgX];
     for (nsTableRowFrame* rowFrame = rgFrame->GetFirstRow(); rowFrame;
          rowFrame = rowFrame->GetNextRow()) {
-      // conservatively estimate the half border widths outside the row
-      nscoord topBorderHalf    = (mTable->GetPrevInFlow()) ? 0 :
-       nsPresContext::CSSPixelsToAppUnits(rowFrame->GetTopBCBorderWidth() + 1);
-      nscoord bottomBorderHalf = (mTable->GetNextInFlow()) ? 0 :
-        nsPresContext::CSSPixelsToAppUnits(rowFrame->GetBottomBCBorderWidth() + 1);
       // get the row rect relative to the table rather than the row group
       nsSize rowSize = rowFrame->GetSize();
       if (haveIntersect) {
-        if (aDirtyRect.YMost() >= (rowY - topBorderHalf)) {
+        // conservatively estimate the half border widths outside the row
+        nscoord borderHalf = mTable->GetPrevInFlow() ? 0 : nsPresContext::
+          CSSPixelsToAppUnits(rowFrame->GetTopBCBorderWidth() + 1);
+        if (aDirtyRect.YMost() >= rowY - borderHalf) {
           nsTableRowFrame* fifRow =
             static_cast<nsTableRowFrame*>(rowFrame->FirstInFlow());
           endRowIndex = fifRow->GetRowIndex();
@@ -6423,7 +6421,10 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
         else done = true;
       }
       else {
-        if ((rowY + rowSize.height + bottomBorderHalf) >= aDirtyRect.y) {
+        // conservatively estimate the half border widths outside the row
+        nscoord borderHalf = mTable->GetNextInFlow() ? 0 : nsPresContext::
+          CSSPixelsToAppUnits(rowFrame->GetBottomBCBorderWidth() + 1);
+        if (rowY + rowSize.height + borderHalf >= aDirtyRect.y) {
           mStartRg  = rgFrame;
           mStartRow = rowFrame;
           nsTableRowFrame* fifRow =
