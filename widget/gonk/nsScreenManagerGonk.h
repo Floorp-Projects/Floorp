@@ -79,6 +79,7 @@ public:
 
 protected:
     ~nsScreenManagerGonk();
+    void VsyncControl(bool aEnabled);
 
     bool mInitialized;
     nsCOMPtr<nsIScreen> mOneScreen;
