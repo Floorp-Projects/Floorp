@@ -298,6 +298,7 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
   uint32_t format = aBuffer->getPixelFormat();
   uint32_t width = aSurface->GetSize().width;
   uint32_t height = aSurface->GetSize().height;
+  uint32_t stride = aBuffer->getStride();
 
   if (format == GrallocImage::HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO) {
     // The Adreno hardware decoder aligns image dimensions to a multiple of 32,
@@ -316,11 +317,11 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
   }
 
   if (format == HAL_PIXEL_FORMAT_YCrCb_420_SP) {
-    uint32_t uvOffset = height * width;
-    ConvertYVU420SPToRGB565(buffer, width,
+    uint32_t uvOffset = height * stride;
+    ConvertYVU420SPToRGB565(buffer, stride,
                             buffer + uvOffset + 1,
                             buffer + uvOffset,
-                            width,
+                            stride,
                             aMappedSurface->mData,
                             width, height);
     return OK;
