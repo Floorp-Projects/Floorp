@@ -157,7 +157,7 @@ public:
    *
    * @return NS_OK if discovery stopped correctly, false otherwise
    */
-  virtual nsresult
+  virtual void
   StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
@@ -165,7 +165,7 @@ public:
    *
    * @return NS_OK if discovery stopped correctly, false otherwise
    */
-  virtual nsresult
+  virtual void
   StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
