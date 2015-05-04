@@ -509,7 +509,7 @@ let gEditItemOverlay = {
     // Here we update either the item title or its cached static title
     let newTitle = this._namePicker.value;
     if (!newTitle &&
-        PlacesUtils.bookmarks.getFolderIdForItem(itemId) == PlacesUtils.tagsFolderId) {
+        PlacesUtils.bookmarks.getFolderIdForItem(this._paneInfo.itemId) == PlacesUtils.tagsFolderId) {
       // We don't allow setting an empty title for a tag, restore the old one.
       this._initNamePicker();
     }
