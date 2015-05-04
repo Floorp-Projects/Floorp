@@ -313,7 +313,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
         if (binding) {
           // XXX sXBL/XBL2 issue
           // If this is an anonymous XBL element use the binding
-          // document for the base URI. 
+          // document for the base URI.
           // XXX Will fail with xml:base
           base = binding->PrototypeBinding()->DocURI();
           break;
@@ -326,7 +326,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
       base = explicitBaseURI;
       break;
     }
-    
+
     // Otherwise check for xml:base attribute
     elem->GetAttr(kNameSpaceID_XML, nsGkAtoms::base, attr);
     if (!attr.IsEmpty()) {
@@ -334,7 +334,7 @@ nsIContent::GetBaseURI(bool aTryUseXHRDocBaseURI) const
     }
     elem = elem->GetParent();
   } while(elem);
-  
+
   // Now resolve against all xml:base attrs
   for (uint32_t i = baseAttrs.Length() - 1; i != uint32_t(-1); --i) {
     nsCOMPtr<nsIURI> newBase;
@@ -455,7 +455,7 @@ FragmentOrElement::Children()
   FragmentOrElement::nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mChildrenList) {
-    slots->mChildrenList = new nsContentList(this, kNameSpaceID_Wildcard, 
+    slots->mChildrenList = new nsContentList(this, kNameSpaceID_Wildcard,
                                              nsGkAtoms::_asterisk, nsGkAtoms::_asterisk,
                                              false);
   }
@@ -1686,7 +1686,7 @@ FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
   if (!root) {
     return false;
   }
- 
+
   // Subtree has been traversed already, and aNode has
   // been handled in a way that doesn't require revisiting it.
   if (root->IsPurpleRoot()) {
@@ -1740,7 +1740,7 @@ FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
     }
   }
 
-  if (!currentDoc || !foundBlack) { 
+  if (!currentDoc || !foundBlack) {
     root->SetIsPurpleRoot(true);
     if (domOnlyCycle) {
       if (!gNodesToUnbind) {
@@ -1780,7 +1780,7 @@ FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
     nsIContent* n = nodesToClear[i];
     MarkNodeChildren(n);
     // Can't remove currently handled purple node,
-    // unless aRemovingAllowed is true. 
+    // unless aRemovingAllowed is true.
     if ((n != aNode || aRemovingAllowed) && n->IsPurple()) {
       n->RemovePurple();
     }
@@ -1798,7 +1798,7 @@ FragmentOrElement::CanSkipThis(nsINode* aNode)
     return true;
   }
   nsIDocument* c = aNode->GetUncomposedDoc();
-  return 
+  return
     ((c && nsCCUncollectableMarker::InGeneration(c->GetMarkedCCGeneration())) ||
      aNode->InCCBlackTree()) && !NeedsScriptTraverse(aNode);
 }
@@ -2465,7 +2465,7 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
       delete attValue;
       continue;
     }
-    
+
     aBuilder.Append(" ");
 
     if (MOZ_LIKELY(attNs == kNameSpaceID_None) ||
@@ -2525,12 +2525,12 @@ ShouldEscape(nsIContent* aParent)
   static const nsIAtom* nonEscapingElements[] = {
     nsGkAtoms::style, nsGkAtoms::script, nsGkAtoms::xmp,
     nsGkAtoms::iframe, nsGkAtoms::noembed, nsGkAtoms::noframes,
-    nsGkAtoms::plaintext, 
+    nsGkAtoms::plaintext,
     // Per the current spec noscript should be escaped in case
     // scripts are disabled or if document doesn't have
     // browsing context. However the latter seems to be a spec bug
     // and Gecko hasn't traditionally done the former.
-    nsGkAtoms::noscript    
+    nsGkAtoms::noscript
   };
   static mozilla::BloomFilter<12, nsIAtom> sFilter;
   static bool sInitialized = false;
