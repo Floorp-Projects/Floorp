@@ -13,7 +13,7 @@ import xpidl
 class TestParser(unittest.TestCase):
     def setUp(self):
         self.p = xpidl.IDLParser()
-    
+
     def testEmpty(self):
         i = self.p.parse("", filename='f')
         self.assertTrue(isinstance(i, xpidl.IDL))
