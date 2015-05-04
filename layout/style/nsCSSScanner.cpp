@@ -552,7 +552,8 @@ nsCSSScanner::SkipComment()
   for (;;) {
     int32_t ch = Peek();
     if (ch < 0) {
-      mReporter->ReportUnexpectedEOF("PECommentEOF");
+      if (mReporter)
+        mReporter->ReportUnexpectedEOF("PECommentEOF");
       SetEOFCharacters(eEOFCharacters_Asterisk | eEOFCharacters_Slash);
       return;
     }
@@ -560,7 +561,8 @@ nsCSSScanner::SkipComment()
       Advance();
       ch = Peek();
       if (ch < 0) {
-        mReporter->ReportUnexpectedEOF("PECommentEOF");
+        if (mReporter)
+          mReporter->ReportUnexpectedEOF("PECommentEOF");
         SetEOFCharacters(eEOFCharacters_Slash);
         return;
       }
@@ -985,7 +987,8 @@ nsCSSScanner::ScanString(nsCSSToken& aToken)
 
     mSeenBadToken = true;
     aToken.mType = eCSSToken_Bad_String;
-    mReporter->ReportUnexpected("SEUnterminatedString", aToken);
+    if (mReporter)
+      mReporter->ReportUnexpected("SEUnterminatedString", aToken);
     break;
   }
   return true;
@@ -1192,15 +1195,15 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
 /**
  * Primary scanner entry point.  Consume one token and fill in
  * |aToken| accordingly.  Will skip over any number of comments first,
- * and will also skip over rather than return whitespace tokens if
- * |aSkipWS| is true.
+ * and will also skip over rather than return whitespace and comment
+ * tokens, depending on the value of |aSkip|.
  *
  * Returns true if it successfully consumed a token, false if EOF has
  * been reached.  Will always advance the current read position by at
  * least one character unless called when already at EOF.
  */
 bool
-nsCSSScanner::Next(nsCSSToken& aToken, bool aSkipWS)
+nsCSSScanner::Next(nsCSSToken& aToken, nsCSSScannerExclude aSkip)
 {
   int32_t ch;
 
@@ -1218,15 +1221,18 @@ nsCSSScanner::Next(nsCSSToken& aToken, bool aSkipWS)
     ch = Peek();
     if (IsWhitespace(ch)) {
       SkipWhitespace();
-      if (!aSkipWS) {
+      if (aSkip != eCSSScannerExclude_WhitespaceAndComments) {
         aToken.mType = eCSSToken_Whitespace;
         return true;
       }
       continue; // start again at the beginning
     }
     if (ch == '/' && !IsSVGMode() && Peek(1) == '*') {
-      // FIXME: Editor wants comments to be preserved (bug 60290).
       SkipComment();
+      if (aSkip == eCSSScannerExclude_None) {
+        aToken.mType = eCSSToken_Comment;
+        return true;
+      }
       continue; // start again at the beginning
     }
     break;
