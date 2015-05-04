@@ -63,7 +63,7 @@ interface PeerConnectionImpl  {
   void close();
 
   /* Notify DOM window if this plugin crash is ours. */
-  boolean pluginCrash(unsigned long long pluginId, DOMString name, DOMString pluginDumpID);
+  boolean pluginCrash(unsigned long long pluginId, DOMString name);
 
   /* Attributes */
   [Constant]
