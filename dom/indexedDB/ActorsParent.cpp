@@ -4132,9 +4132,6 @@ private:
   EnsureDatabaseActorIsAlive();
 
   void
-  CleanupBackgroundThreadObjects(bool aInvalidate);
-
-  void
   MetadataToSpec(DatabaseSpec& aSpec);
 
   void
@@ -4144,9 +4141,6 @@ private:
 #else
   { }
 #endif
-
-  virtual void
-  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual nsresult
   QuotaManagerOpen() override;
@@ -11212,18 +11206,6 @@ OpenDatabaseOp::OpenDatabaseOp(Factory* aFactory,
   }
 }
 
-void
-OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy)
-{
-  AssertIsOnOwningThread();
-
-  FactoryOp::ActorDestroy(aWhy);
-
-  if (aWhy != Deletion) {
-    CleanupBackgroundThreadObjects(/* aInvalidate */ true);
-  }
-}
-
 nsresult
 OpenDatabaseOp::QuotaManagerOpen()
 {
@@ -11998,7 +11980,19 @@ OpenDatabaseOp::SendResults()
       PBackgroundIDBFactoryRequestParent::Send__delete__(this, response);
   }
 
-  CleanupBackgroundThreadObjects(NS_FAILED(mResultCode));
+  if (mDatabase) {
+    MOZ_ASSERT(!mOfflineStorage);
+
+    if (NS_FAILED(mResultCode)) {
+      mDatabase->Invalidate();
+    }
+
+    // Make sure to release the database on this thread.
+    mDatabase = nullptr;
+  } else if (mOfflineStorage) {
+    mOfflineStorage->CloseOnOwningThread();
+    DatabaseOfflineStorage::UnregisterOnOwningThread(mOfflineStorage.forget());
+  }
 
   FinishSendResults();
 }
@@ -12078,27 +12072,6 @@ OpenDatabaseOp::EnsureDatabaseActorIsAlive()
   }
 
   return NS_OK;
-}
-
-void
-OpenDatabaseOp::CleanupBackgroundThreadObjects(bool aInvalidate)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(IsActorDestroyed());
-
-  if (mDatabase) {
-    MOZ_ASSERT(!mOfflineStorage);
-
-    if (aInvalidate) {
-      mDatabase->Invalidate();
-    }
-
-    // Make sure to release the database on this thread.
-    mDatabase = nullptr;
-  } else if (mOfflineStorage) {
-    mOfflineStorage->CloseOnOwningThread();
-    DatabaseOfflineStorage::UnregisterOnOwningThread(mOfflineStorage.forget());
-  }
 }
 
 void
