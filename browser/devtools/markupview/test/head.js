@@ -685,3 +685,17 @@ function createTestHTTPServer() {
   server.start(-1);
   return server;
 }
+
+/**
+ * A helper that simulates a contextmenu event on the given chrome DOM element.
+ */
+function contextMenuClick(element) {
+  let evt = element.ownerDocument.createEvent('MouseEvents');
+  let button = 2;  // right click
+
+  evt.initMouseEvent('contextmenu', true, true,
+       element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
+       false, false, false, button, null);
+
+  element.dispatchEvent(evt);
+}

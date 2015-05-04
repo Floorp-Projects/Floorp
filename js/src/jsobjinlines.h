@@ -29,7 +29,7 @@
 inline js::Shape*
 JSObject::maybeShape() const
 {
-    if (is<js::UnboxedPlainObject>())
+    if (is<js::UnboxedPlainObject>() || is<js::UnboxedArrayObject>())
         return nullptr;
     return *reinterpret_cast<js::Shape**>(uintptr_t(this) + offsetOfShape());
 }
@@ -268,6 +268,8 @@ JSObject::create(js::ExclusiveContext* cx, js::gc::AllocKind kind, js::gc::Initi
     MOZ_ASSERT_IF(group->clasp()->finalize,
                   heap == js::gc::TenuredHeap ||
                   (group->clasp()->flags & JSCLASS_FINALIZE_FROM_NURSERY));
+    MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
+                  heap == js::gc::TenuredHeap);
 
     // Non-native classes cannot have reserved slots or private data, and the
     // objects can't have any fixed slots, for compatibility with
@@ -758,11 +760,11 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx)
         return Proxy::objectClassIs(obj, classValue, cx);
 
     switch (classValue) {
-      case ESClass_Object: return obj->is<PlainObject>();
+      case ESClass_Object: return obj->is<PlainObject>() || obj->is<UnboxedPlainObject>();
       case ESClass_Array:
       case ESClass_IsArray:
         // There difference between those is only relevant for proxies.
-        return obj->is<ArrayObject>();
+        return obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>();
       case ESClass_Number: return obj->is<NumberObject>();
       case ESClass_String: return obj->is<StringObject>();
       case ESClass_Boolean: return obj->is<BooleanObject>();
@@ -789,7 +791,7 @@ IsObjectWithClass(const Value& v, ESClassValue classValue, JSContext* cx)
 inline bool
 IsArray(HandleObject obj, JSContext* cx)
 {
-    if (obj->is<ArrayObject>())
+    if (obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>())
         return true;
 
     return ObjectClassIs(obj, ESClass_IsArray, cx);
