@@ -13,6 +13,8 @@
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
 
+using namespace mozilla;
+
 #define COL_TYPE_BITS                 (NS_FRAME_STATE_BIT(28) | \
                                        NS_FRAME_STATE_BIT(29) | \
                                        NS_FRAME_STATE_BIT(30) | \
@@ -69,18 +71,18 @@ nsTableColFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   }
 }
 
-void nsTableColFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
+void nsTableColFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
                                                  BCPixelSize aPixelValue)
 {
   switch (aForSide) {
-    case NS_SIDE_TOP:
-      mTopContBorderWidth = aPixelValue;
+    case eLogicalSideBStart:
+      mBStartContBorderWidth = aPixelValue;
       return;
-    case NS_SIDE_RIGHT:
-      mRightContBorderWidth = aPixelValue;
+    case eLogicalSideIEnd:
+      mIEndContBorderWidth = aPixelValue;
       return;
-    case NS_SIDE_BOTTOM:
-      mBottomContBorderWidth = aPixelValue;
+    case eLogicalSideBEnd:
+      mBEndContBorderWidth = aPixelValue;
       return;
     default:
       NS_ERROR("invalid side arg");
