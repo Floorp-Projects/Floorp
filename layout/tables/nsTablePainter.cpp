@@ -12,6 +12,7 @@
 #include "nsTablePainter.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
+#include "mozilla/WritingModes.h"
 
 /* ~*~ Table Background Painting ~*~
 
@@ -95,6 +96,7 @@
    XXX views are going
  */
 
+using namespace mozilla;
 using namespace mozilla::image;
 
 TableBackgroundPainter::TableBackgroundData::TableBackgroundData()
@@ -489,7 +491,9 @@ TableBackgroundPainter::PaintRow(nsTableRowFrame* aFrame,
       nsMargin border;
       nsTableRowFrame* nextRow = aFrame->GetNextRow();
       if (nextRow) { //outer top below us is inner bottom for us
-        border.bottom = nextRow->GetOuterTopContBCBorderWidth();
+        WritingMode wm = nextRow->GetWritingMode();
+        border.Side(wm.PhysicalSide(eLogicalSideBEnd)) =
+          nextRow->GetOuterBStartContBCBorderWidth();
       }
       else { //acquire rg's bottom border
         nsTableRowGroupFrame* rowGroup = static_cast<nsTableRowGroupFrame*>(aFrame->GetParent());

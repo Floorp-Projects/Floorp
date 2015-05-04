@@ -195,7 +195,7 @@ MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   // manner, such as a synchronous event or action cancelling the touch, or a
   // touch point leaving the document window and going into a non-document
   // area capable of handling user interactions.
-  case NS_MOUSE_EXIT:
+  case NS_MOUSE_EXIT_WIDGET:
     mType = MULTITOUCH_CANCEL;
     break;
   default:

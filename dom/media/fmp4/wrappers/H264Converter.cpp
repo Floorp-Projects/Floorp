@@ -109,15 +109,6 @@ H264Converter::Shutdown()
 }
 
 bool
-H264Converter::IsWaitingMediaResources()
-{
-  if (mDecoder) {
-    return mDecoder->IsWaitingMediaResources();
-  }
-  return MediaDataDecoder::IsWaitingMediaResources();
-}
-
-bool
 H264Converter::IsHardwareAccelerated() const
 {
   if (mDecoder) {

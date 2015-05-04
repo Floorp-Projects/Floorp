@@ -1209,9 +1209,9 @@ function pollForReadyState(msg, start, callback) {
 
 /**
  * Navigate to the given URL.  The operation will be performed on the
- * current browser context, and handles the case where we navigate
- * within an iframe.  All other navigation is handled by the server
- * (in chrome space).
+ * current browsing context, which means it handles the case where we
+ * navigate within an iframe.  All other navigation is handled by the
+ * driver (in chrome space).
  */
 function get(msg) {
   let start = new Date().getTime();

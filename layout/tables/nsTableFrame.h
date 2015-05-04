@@ -986,7 +986,7 @@ inline nscoord
 nsTableFrame::GetContinuousLeftBCBorderWidth() const
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  return BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mBits.mLeftContBCBorder);
+  return BC_BORDER_END_HALF_COORD(aPixelsToTwips, mBits.mLeftContBCBorder);
 }
 
 inline void nsTableFrame::SetContinuousLeftBCBorderWidth(nscoord aValue)

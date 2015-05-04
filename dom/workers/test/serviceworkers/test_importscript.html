@@ -19,7 +19,9 @@
   }
 
   function unregister() {
-    return registration.unregister().then(function(result) {
+    return fetch("importscript.sjs?clearcounter").then(function() {
+      return registration.unregister();
+    }).then(function(result) {
       ok(result, "Unregister should return true.");
     }, function(e) {
       dump("Unregistering the SW failed with " + e + "\n");

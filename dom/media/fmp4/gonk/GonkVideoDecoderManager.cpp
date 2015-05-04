@@ -50,6 +50,7 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   : GonkDecoderManager(aTaskQueue)
   , mImageContainer(aImageContainer)
   , mReaderCallback(nullptr)
+  , mLastDecodedTime(0)
   , mColorConverterBufferSize(0)
   , mNativeWindow(nullptr)
   , mPendingVideoBuffersLock("GonkVideoDecoderManager::mPendingVideoBuffersLock")
@@ -113,54 +114,7 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
     mNativeWindow = new GonkNativeWindow();
   }
 
-  mReaderCallback->NotifyResourcesStatusChanged();
-
   return mDecoder;
-}
-
-void
-GonkVideoDecoderManager::QueueFrameTimeIn(int64_t aPTS, int64_t aDuration)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
-  FrameTimeInfo timeInfo = {aPTS, aDuration};
-  mFrameTimeInfo.AppendElement(timeInfo);
-}
-
-nsresult
-GonkVideoDecoderManager::QueueFrameTimeOut(int64_t aPTS, int64_t& aDuration)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-
-  // Set default to 1 here.
-  // During seeking, frames could still in MediaCodec and the mFrameTimeInfo could
-  // be cleared before these frames are out from MediaCodec. This is ok because
-  // these frames are old frame before seeking.
-  aDuration = 1;
-  for (uint32_t i = 0; i < mFrameTimeInfo.Length(); i++) {
-    const FrameTimeInfo& entry = mFrameTimeInfo.ElementAt(i);
-    if (i == 0) {
-      if (entry.pts > aPTS) {
-        // Codec sent a frame with rollbacked PTS time. It could
-        // be codec's problem.
-        ReleaseVideoBuffer();
-        return NS_ERROR_NOT_AVAILABLE;
-      }
-    }
-
-    // Ideally, the first entry in mFrameTimeInfo should be the one we are looking
-    // for. However, MediaCodec could dropped frame and the first entry doesn't
-    // match current decoded frame's PTS.
-    if (entry.pts == aPTS) {
-      aDuration = entry.duration;
-      if (i > 0) {
-        LOG("Frame could be dropped by MediaCodec, %d dropped frames.", i);
-      }
-      mFrameTimeInfo.RemoveElementsAt(0, i+1);
-      break;
-    }
-  }
-  return NS_OK;
 }
 
 nsresult
@@ -181,9 +135,12 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
     return NS_ERROR_UNEXPECTED;
   }
 
-  int64_t duration;
-  nsresult rv = QueueFrameTimeOut(timeUs, duration);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mLastDecodedTime > timeUs) {
+    ReleaseVideoBuffer();
+    GVDM_LOG("Output decoded sample time is revert. time=%lld", timeUs);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  mLastDecodedTime = timeUs;
 
   if (mVideoBuffer->range_length() == 0) {
     // Some decoders may return spurious empty buffers that we just want to ignore
@@ -224,7 +181,8 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
                              mImageContainer,
                              aStreamOffset,
                              timeUs,
-                             duration,
+                             1, // No way to pass sample duration from muxer to
+                                // OMX codec, so we hardcode the duration here.
                              textureClient,
                              keyFrame,
                              -1,
@@ -438,47 +396,17 @@ void GonkVideoDecoderManager::ReleaseVideoBuffer() {
 status_t
 GonkVideoDecoderManager::SendSampleToOMX(MediaRawData* aSample)
 {
-  // An empty MediaRawData is going to notify EOS to decoder. It doesn't need
-  // to keep PTS and duration.
-  if (aSample->mData && aSample->mDuration && aSample->mTime) {
-    QueueFrameTimeIn(aSample->mTime, aSample->mDuration);
-  }
-
   return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->mData),
                          aSample->mSize,
                          aSample->mTime,
                          0);
 }
 
-void
-GonkVideoDecoderManager::ClearQueueFrameTime()
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  mFrameTimeInfo.Clear();
-}
-
 nsresult
 GonkVideoDecoderManager::Flush()
 {
   GonkDecoderManager::Flush();
-
-  class ClearFrameTimeRunnable : public nsRunnable
-  {
-  public:
-    explicit ClearFrameTimeRunnable(GonkVideoDecoderManager* aManager)
-      : mManager(aManager) {}
-
-    NS_IMETHOD Run()
-    {
-      mManager->ClearQueueFrameTime();
-      return NS_OK;
-    }
-
-    GonkVideoDecoderManager* mManager;
-  };
-
-  mTaskQueue->SyncDispatch(new ClearFrameTimeRunnable(this));
-
+  mLastDecodedTime = 0;
   status_t err = mDecoder->flush();
   if (err != OK) {
     return NS_ERROR_FAILURE;

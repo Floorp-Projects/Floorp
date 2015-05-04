@@ -333,10 +333,6 @@ private:
 };
 #endif // MOZ_EME
 
-bool MP4Reader::IsWaitingMediaResources() {
-  return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
-}
-
 bool MP4Reader::IsWaitingOnCDMResource() {
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> proxy;
@@ -378,6 +374,7 @@ MP4Reader::IsSupportedAudioMimeType(const nsACString& aMimeType)
 {
   return (aMimeType.EqualsLiteral("audio/mpeg") ||
           aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+          aMimeType.EqualsLiteral("audio/amr-wb") ||
           aMimeType.EqualsLiteral("audio/3gpp")) &&
          mPlatform->SupportsMimeType(aMimeType);
 }
@@ -434,6 +431,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   } else if (mPlatform && !IsWaitingMediaResources()) {
     *aInfo = mInfo;
     *aTags = nullptr;
+    NS_ENSURE_TRUE(EnsureDecodersSetup(), NS_ERROR_FAILURE);
+    return NS_OK;
   }
 
   if (HasAudio()) {
@@ -492,67 +491,49 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   return NS_OK;
 }
 
-bool MP4Reader::CheckIfDecoderSetup()
-{
-  if (!mDemuxerInitialized) {
-    return false;
-  }
-
-  if (HasAudio() && !mAudio.mDecoder) {
-    return false;
-  }
-
-  if (HasVideo() && !mVideo.mDecoder) {
-    return false;
-  }
-
-  return true;
-}
-
 bool
 MP4Reader::EnsureDecodersSetup()
 {
-  if (CheckIfDecoderSetup()) {
-    return true;
-  }
+  MOZ_ASSERT(mDemuxerInitialized);
 
-  if (mIsEncrypted) {
+  if (!mPlatform) {
+    if (mIsEncrypted) {
 #ifdef MOZ_EME
-    // We have encrypted audio or video. We'll need a CDM to decrypt and
-    // possibly decode this. Wait until we've received a CDM from the
-    // JavaScript player app. Note: we still go through the motions here
-    // even if EME is disabled, so that if script tries and fails to create
-    // a CDM, we can detect that and notify chrome and show some UI explaining
-    // that we failed due to EME being disabled.
-    nsRefPtr<CDMProxy> proxy;
-    if (IsWaitingMediaResources()) {
-      return true;
-    }
-    MOZ_ASSERT(!IsWaitingMediaResources());
+      // We have encrypted audio or video. We'll need a CDM to decrypt and
+      // possibly decode this. Wait until we've received a CDM from the
+      // JavaScript player app. Note: we still go through the motions here
+      // even if EME is disabled, so that if script tries and fails to create
+      // a CDM, we can detect that and notify chrome and show some UI
+      // explaining that we failed due to EME being disabled.
+      nsRefPtr<CDMProxy> proxy;
+      if (IsWaitingMediaResources()) {
+        return true;
+      }
+      MOZ_ASSERT(!IsWaitingMediaResources());
 
-    {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      proxy = mDecoder->GetCDMProxy();
-    }
-    MOZ_ASSERT(proxy);
+      {
+        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+        proxy = mDecoder->GetCDMProxy();
+      }
+      MOZ_ASSERT(proxy);
 
-    mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy,
-                                                        HasAudio(),
-                                                        HasVideo());
-    NS_ENSURE_TRUE(mPlatform, false);
+      mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy,
+                                                          HasAudio(),
+                                                          HasVideo());
+      NS_ENSURE_TRUE(mPlatform, false);
 #else
-    // EME not supported.
-    return false;
+      // EME not supported.
+      return false;
 #endif
-  } else {
-    // mPlatform doesn't need to be recreated when resuming from dormant.
-    if (!mPlatform) {
+    } else {
       mPlatform = PlatformDecoderModule::Create();
       NS_ENSURE_TRUE(mPlatform, false);
     }
   }
 
-  if (HasAudio()) {
+  MOZ_ASSERT(mPlatform);
+
+  if (HasAudio() && !mAudio.mDecoder) {
     NS_ENSURE_TRUE(IsSupportedAudioMimeType(mDemuxer->AudioConfig().mMimeType),
                    false);
 
@@ -565,7 +546,7 @@ MP4Reader::EnsureDecodersSetup()
     NS_ENSURE_SUCCESS(rv, false);
   }
 
-  if (HasVideo()) {
+  if (HasVideo() && !mVideo.mDecoder) {
     NS_ENSURE_TRUE(IsSupportedVideoMimeType(mDemuxer->VideoConfig().mMimeType),
                    false);
 
@@ -590,6 +571,8 @@ MP4Reader::EnsureDecodersSetup()
     nsresult rv = mVideo.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, false);
   }
+
+  NotifyResourcesStatusChanged();
 
   return true;
 }
