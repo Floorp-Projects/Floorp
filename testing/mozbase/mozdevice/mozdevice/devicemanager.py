@@ -158,7 +158,7 @@ class DeviceManager(object):
         cmdline = ["/system/bin/logcat", "-v", format, "-d"] + filterSpecs
         output = self.shellCheckOutput(cmdline,
                                       root=self._logcatNeedsRoot)
-        lines = output.replace('\r\n', '\n').splitlines(keepends=True)
+        lines = output.replace('\r\n', '\n').splitlines(True)
 
         for regex in filterOutRegexps:
             lines = [line for line in lines if not re.search(regex, line)]
