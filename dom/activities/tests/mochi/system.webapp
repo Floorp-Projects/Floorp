@@ -1,0 +1,6 @@
+{
+  "name": "System app",
+  "activities": {
+    "import-app": { "blob": { "required": true } }
+  }
+}
