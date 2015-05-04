@@ -63,8 +63,10 @@ function run_test()
 {
   Cu.setAddonInterposition(ADDONID, TestInterposition);
 
+  Cu.importGlobalProperties(["XMLHttpRequest"]);
+
   let sandbox = Cu.Sandbox(this, {addonId: ADDONID});
-  sandbox.outerObj = {};
+  sandbox.outerObj = new XMLHttpRequest();
 
   expectAccess("abcxyz", () => {
     Cu.evalInSandbox("outerObj.abcxyz = 12;", sandbox);
