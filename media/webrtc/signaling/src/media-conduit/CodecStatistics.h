@@ -21,8 +21,9 @@ class VideoCodecStatistics : public webrtc::ViEEncoderObserver
                            , public webrtc::ViEDecoderObserver
 {
 public:
-  VideoCodecStatistics(int channel, webrtc::ViECodec* vieCodec, bool encoder);
+  VideoCodecStatistics(int channel, webrtc::ViECodec* vieCodec);
   ~VideoCodecStatistics();
+  void Register(bool encoder);
 
   void SentFrame();
   virtual void OutgoingRate(const int video_channel,
@@ -92,7 +93,8 @@ private:
   RunningStat mDecoderBitRate;
   RunningStat mDecoderFps;
   uint32_t mDecoderDiscardedPackets;
-  const bool mEncoderMode;
+  bool mRegisteredEncode;
+  bool mRegisteredDecode;
 
   webrtc::VideoReceiveState mReceiveState;
 #ifdef MOZILLA_INTERNAL_API
