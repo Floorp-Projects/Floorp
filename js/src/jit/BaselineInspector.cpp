@@ -21,9 +21,9 @@ SetElemICInspector::sawOOBDenseWrite() const
     if (!icEntry_)
         return false;
 
-    // Check for a SetElem_DenseAdd stub.
+    // Check for an element adding stub.
     for (ICStub* stub = icEntry_->firstStub(); stub; stub = stub->next()) {
-        if (stub->isSetElem_DenseAdd())
+        if (stub->isSetElem_DenseOrUnboxedArrayAdd())
             return true;
     }
 
@@ -59,7 +59,7 @@ SetElemICInspector::sawDenseWrite() const
 
     // Check for a SetElem_DenseAdd or SetElem_Dense stub.
     for (ICStub* stub = icEntry_->firstStub(); stub; stub = stub->next()) {
-        if (stub->isSetElem_DenseAdd() || stub->isSetElem_Dense())
+        if (stub->isSetElem_DenseOrUnboxedArrayAdd() || stub->isSetElem_DenseOrUnboxedArray())
             return true;
     }
     return false;
@@ -91,7 +91,7 @@ VectorAppendNoDuplicate(S& list, T value)
 }
 
 static bool
-AddReceiver(const ReceiverGuard::StackGuard& receiver,
+AddReceiver(const ReceiverGuard& receiver,
             BaselineInspector::ReceiverVector& receivers,
             BaselineInspector::ObjectGroupVector& convertUnboxedGroups)
 {
@@ -122,16 +122,16 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
 
     ICStub* stub = entry.firstStub();
     while (stub->next()) {
-        ReceiverGuard::StackGuard receiver;
+        ReceiverGuard receiver;
         if (stub->isGetProp_Native()) {
             receiver = stub->toGetProp_Native()->receiverGuard();
         } else if (stub->isSetProp_Native()) {
-            receiver = ReceiverGuard::StackGuard(stub->toSetProp_Native()->group(),
-                                                 stub->toSetProp_Native()->shape());
+            receiver = ReceiverGuard(stub->toSetProp_Native()->group(),
+                                     stub->toSetProp_Native()->shape());
         } else if (stub->isGetProp_Unboxed()) {
-            receiver = ReceiverGuard::StackGuard(stub->toGetProp_Unboxed()->group(), nullptr);
+            receiver = ReceiverGuard(stub->toGetProp_Unboxed()->group(), nullptr);
         } else if (stub->isSetProp_Unboxed()) {
-            receiver = ReceiverGuard::StackGuard(stub->toSetProp_Unboxed()->group(), nullptr);
+            receiver = ReceiverGuard(stub->toSetProp_Unboxed()->group(), nullptr);
         } else {
             receivers.clear();
             return true;
@@ -463,6 +463,25 @@ BaselineInspector::getTemplateObject(jsbytecode* pc)
     return nullptr;
 }
 
+ObjectGroup*
+BaselineInspector::getTemplateObjectGroup(jsbytecode* pc)
+{
+    if (!hasBaselineScript())
+        return nullptr;
+
+    const ICEntry& entry = icEntryFromPC(pc);
+    for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
+        switch (stub->kind()) {
+          case ICStub::NewArray_Fallback:
+            return stub->toNewArray_Fallback()->templateGroup();
+          default:
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
 JSFunction*
 BaselineInspector::getSingleCallee(jsbytecode* pc)
 {
@@ -568,7 +587,7 @@ GlobalShapeForGetPropFunction(ICStub* stub)
         if (nstub->isOwnGetter())
             return nullptr;
 
-        const ReceiverGuard& guard = nstub->receiverGuard();
+        const HeapReceiverGuard& guard = nstub->receiverGuard();
         if (Shape* shape = guard.shape()) {
             if (shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL)
                 return shape;

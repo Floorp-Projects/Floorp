@@ -746,8 +746,8 @@ JSString* RegExpReplace(JSContext* cx, HandleString string, HandleObject regexp,
 JSString* StringReplace(JSContext* cx, HandleString string, HandleString pattern,
                         HandleString repl);
 
-bool SetDenseElement(JSContext* cx, HandleNativeObject obj, int32_t index, HandleValue value,
-                     bool strict);
+bool SetDenseOrUnboxedArrayElement(JSContext* cx, HandleObject obj, int32_t index,
+                                   HandleValue value, bool strict);
 
 void AssertValidObjectPtr(JSContext* cx, JSObject* obj);
 void AssertValidObjectOrNullPtr(JSContext* cx, JSObject* obj);

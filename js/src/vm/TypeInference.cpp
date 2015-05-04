@@ -643,6 +643,9 @@ ConstraintTypeSet::addType(ExclusiveContext* cxArg, Type type)
 void
 TypeSet::print(FILE* fp)
 {
+    if (!fp)
+        fp = stderr;
+
     if (flags & TYPE_FLAG_NON_DATA_PROPERTY)
         fprintf(fp, " [non-data]");
 
@@ -2381,6 +2384,8 @@ TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList* constraints, jsid
 bool
 js::ClassCanHaveExtraProperties(const Class* clasp)
 {
+    if (clasp == &UnboxedPlainObject::class_ || clasp == &UnboxedArrayObject::class_)
+        return false;
     return clasp->resolve
         || clasp->ops.lookupProperty
         || clasp->ops.getProperty
@@ -3337,16 +3342,19 @@ PreliminaryObjectArray::sweep()
 void
 PreliminaryObjectArrayWithTemplate::trace(JSTracer* trc)
 {
-    TraceEdge(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
+    if (shape_)
+        TraceEdge(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
 }
 
 /* static */ void
 PreliminaryObjectArrayWithTemplate::writeBarrierPre(PreliminaryObjectArrayWithTemplate* objects)
 {
-    if (!objects->shape()->runtimeFromAnyThread()->needsIncrementalBarrier())
+    Shape* shape = objects->shape();
+
+    if (!shape || !shape->runtimeFromAnyThread()->needsIncrementalBarrier())
         return;
 
-    JS::Zone* zone = objects->shape()->zoneFromAnyThread();
+    JS::Zone* zone = shape->zoneFromAnyThread();
     if (zone->needsIncrementalBarrier())
         objects->trace(zone->barrierTracer());
 }
@@ -3406,33 +3414,37 @@ PreliminaryObjectArrayWithTemplate::maybeAnalyze(ExclusiveContext* cx, ObjectGro
     ScopedJSDeletePtr<PreliminaryObjectArrayWithTemplate> preliminaryObjects(this);
     group->detachPreliminaryObjects();
 
-    MOZ_ASSERT(shape()->slotSpan() != 0);
-    MOZ_ASSERT(OnlyHasDataProperties(shape()));
+    if (shape()) {
+        MOZ_ASSERT(shape()->slotSpan() != 0);
+        MOZ_ASSERT(OnlyHasDataProperties(shape()));
 
-    // Make sure all the preliminary objects reflect the properties originally
-    // in the template object.
-    for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
-        JSObject* objBase = preliminaryObjects->get(i);
-        if (!objBase)
-            continue;
-        PlainObject* obj = &objBase->as<PlainObject>();
+        // Make sure all the preliminary objects reflect the properties originally
+        // in the template object.
+        for (size_t i = 0; i < PreliminaryObjectArray::COUNT; i++) {
+            JSObject* objBase = preliminaryObjects->get(i);
+            if (!objBase)
+                continue;
+            PlainObject* obj = &objBase->as<PlainObject>();
 
-        if (obj->inDictionaryMode() || !OnlyHasDataProperties(obj->lastProperty()))
-            return;
+            if (obj->inDictionaryMode() || !OnlyHasDataProperties(obj->lastProperty()))
+                return;
 
-        if (CommonPrefix(obj->lastProperty(), shape()) != shape())
-            return;
+            if (CommonPrefix(obj->lastProperty(), shape()) != shape())
+                return;
+        }
     }
 
     TryConvertToUnboxedLayout(cx, shape(), group, preliminaryObjects);
     if (group->maybeUnboxedLayout())
         return;
 
-    // We weren't able to use an unboxed layout, but since the preliminary
-    // still reflect the template object's properties, and all objects in the
-    // future will be created with those properties, the properties can be
-    // marked as definite for objects in the group.
-    group->addDefiniteProperties(cx, shape());
+    if (shape()) {
+        // We weren't able to use an unboxed layout, but since the preliminary
+        // still reflect the template object's properties, and all objects in the
+        // future will be created with those properties, the properties can be
+        // marked as definite for objects in the group.
+        group->addDefiniteProperties(cx, shape());
+    }
 }
 
 /////////////////////////////////////////////////////////////////////

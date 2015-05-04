@@ -30,6 +30,7 @@
 #include "CounterStyleManager.h"
 
 class nsIFrame;
+class nsTextFrame;
 class nsIURI;
 class imgIContainer;
 
@@ -1666,7 +1667,7 @@ struct nsStyleText {
   // style struct is for.  If the frame is for SVG text or inside ruby,
   // the return value will be massaged to be something that makes sense
   // for those cases.
-  inline bool NewlineIsSignificant(const nsIFrame* aContextFrame) const;
+  inline bool NewlineIsSignificant(const nsTextFrame* aContextFrame) const;
   inline bool WhiteSpaceCanWrap(const nsIFrame* aContextFrame) const;
   inline bool WordCanWrap(const nsIFrame* aContextFrame) const;
 };
