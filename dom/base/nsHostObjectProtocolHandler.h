@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -137,11 +139,11 @@ NS_GetSourceForMediaSourceURI(nsIURI* aURI, mozilla::dom::MediaSource** aSource)
 
 #define NS_MEDIASTREAMPROTOCOLHANDLER_CID \
 { 0x27d1fa24, 0x2b73, 0x4db3, \
-	{ 0xab, 0x48, 0xb9, 0x83, 0x83, 0x40, 0xe0, 0x81 } }
+  { 0xab, 0x48, 0xb9, 0x83, 0x83, 0x40, 0xe0, 0x81 } }
 
 #define NS_MEDIASOURCEPROTOCOLHANDLER_CID \
 { 0x12ef31fc, 0xa8fb, 0x4661, \
-	{ 0x9a, 0x63, 0xfb, 0x61, 0x04,0x5d, 0xb8, 0x61 } }
+  { 0x9a, 0x63, 0xfb, 0x61, 0x04,0x5d, 0xb8, 0x61 } }
 
 #define NS_FONTTABLEPROTOCOLHANDLER_CID \
 { 0x3fc8f04e, 0xd719, 0x43ca, \

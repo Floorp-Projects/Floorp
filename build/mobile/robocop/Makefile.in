@@ -2,9 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-mobile-tests := mobile/android/base/tests
+mobile-tests := mobile/android/tests/browser/robocop
 TESTPATH     := $(topsrcdir)/$(mobile-tests)
-dir-tests    := $(DEPTH)/$(mobile-tests)
 
 ANDROID_APK_NAME := robocop-debug
 
@@ -61,8 +60,6 @@ JAVAFILES += \
 include $(topsrcdir)/config/rules.mk
 
 tools:: $(ANDROID_APK_NAME).apk
-
-GENERATED_DIRS += $(dir-tests)
 
 # The test APK needs to know the contents of the target APK while not
 # being linked against them.  This is a best effort to avoid getting

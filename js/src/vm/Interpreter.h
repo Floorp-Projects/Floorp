@@ -445,6 +445,13 @@ NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 JSObject*
 NewObjectOperationWithTemplate(JSContext* cx, HandleObject templateObject);
 
+JSObject*
+NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc, uint32_t length,
+                  NewObjectKind newKind = GenericObject);
+
+JSObject*
+NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject);
+
 inline bool
 SetConstOperation(JSContext* cx, HandleObject varobj, HandlePropertyName name, HandleValue rval)
 {

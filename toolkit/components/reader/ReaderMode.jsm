@@ -121,7 +121,8 @@ this.ReaderMode = {
     // We pass in a helper function to determine if a node is visible, because
     // it uses gecko APIs that the engine-agnostic readability code can't rely
     // upon.
-    return new Readability(uri, doc).isProbablyReaderable(this.isNodeVisible.bind(this, utils));
+    // NOTE: This is currently disabled, see bug 1158228.
+    return new Readability(uri, doc).isProbablyReaderable(/*this.isNodeVisible.bind(this, utils)*/);
   },
 
   isNodeVisible: function(utils, node) {
