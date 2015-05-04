@@ -538,6 +538,13 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     return true;
   }
 
+  if (!mTxn->mPaints.empty()) {
+    // With some platforms, telling the drawing backend that there will be no more
+    // drawing for this frame helps with preventing command queues from spanning
+    // across multiple frames.
+    gfxPlatform::GetPlatform()->FlushContentDrawing();
+  }
+
   MOZ_LAYERS_LOG(("[LayersForwarder] destroying buffers..."));
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
