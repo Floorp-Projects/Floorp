@@ -7,6 +7,7 @@
 this.EXPORTED_SYMBOLS = [ "Feeds" ];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
@@ -37,8 +38,11 @@ this.Feeds = {
     }
 
     if (aIsFeed) {
+      // re-create the principal as it may be a CPOW.
+      let principalURI = BrowserUtils.makeURIFromCPOW(aPrincipal.URI);
+      let principalToCheck = Services.scriptSecurityManager.getNoAppCodebasePrincipal(principalURI);
       try {
-        BrowserUtils.urlSecurityCheck(aLink.href, aPrincipal,
+        BrowserUtils.urlSecurityCheck(aLink.href, principalToCheck,
                                       Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         return type || "application/rss+xml";
       }
