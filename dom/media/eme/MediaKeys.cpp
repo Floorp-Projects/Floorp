@@ -377,22 +377,23 @@ MediaKeys::Init(ErrorResult& aRv)
 class CrashHandler : public gmp::GeckoMediaPluginService::PluginCrashCallback
 {
 public:
-  CrashHandler(const nsACString& aPluginId,
+  CrashHandler(const uint32_t aPluginId,
                nsPIDOMWindow* aParentWindow,
                nsIDocument* aDocument)
     : gmp::GeckoMediaPluginService::PluginCrashCallback(aPluginId)
+    , mPluginId(aPluginId)
     , mParentWindowWeakPtr(do_GetWeakReference(aParentWindow))
     , mDocumentWeakPtr(do_GetWeakReference(aDocument))
   {
   }
 
-  virtual void Run(const nsACString& aPluginName, const nsAString& aPluginDumpId) override
+  virtual void Run(const nsACString& aPluginName) override
   {
     PluginCrashedEventInit init;
+    init.mPluginID = mPluginId;
     init.mBubbles = true;
     init.mCancelable = true;
     init.mGmpPlugin = true;
-    init.mPluginDumpID = aPluginDumpId;
     CopyUTF8toUTF16(aPluginName, init.mPluginName);
     init.mSubmittedCrashReport = false;
 
@@ -445,12 +446,13 @@ private:
     return true;
   }
 
+  uint32_t mPluginId;
   nsWeakPtr mParentWindowWeakPtr;
   nsWeakPtr mDocumentWeakPtr;
 };
 
 void
-MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const nsACString& aPluginId)
+MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t aPluginId)
 {
   nsRefPtr<Promise> promise(RetrievePromise(aId));
   if (!promise) {
@@ -468,7 +470,7 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const nsACStri
                                         mKeySystem,
                                         MediaKeySystemStatus::Cdm_created);
 
-  if (!aPluginId.IsEmpty()) {
+  if (aPluginId) {
     // Prepare plugin crash reporter.
     nsRefPtr<gmp::GeckoMediaPluginService> service =
       gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
@@ -483,8 +485,8 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const nsACStri
       return;
     }
     service->AddPluginCrashCallback(new CrashHandler(aPluginId, mParent, doc));
-    EME_LOG("MediaKeys[%p]::OnCDMCreated() registered crash handler for pluginId '%s'",
-            this, aPluginId.Data());
+    EME_LOG("MediaKeys[%p]::OnCDMCreated() registered crash handler for pluginId '%i'",
+            this, aPluginId);
   }
 }
 

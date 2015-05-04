@@ -165,9 +165,8 @@ GeckoMediaPluginService::RemoveObsoletePluginCrashCallbacks()
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
     nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
     if (!callback->IsStillValid()) {
-      LOGD(("%s::%s - Removing obsolete callback for pluginId %s",
-            __CLASS__, __FUNCTION__,
-            PromiseFlatCString(callback->PluginId()).get()));
+      LOGD(("%s::%s - Removing obsolete callback for pluginId %i",
+            __CLASS__, __FUNCTION__, callback->PluginId()));
       mPluginCrashCallbacks.RemoveElementAt(i - 1);
     }
   }
@@ -182,7 +181,7 @@ GeckoMediaPluginService::AddPluginCrashCallback(
 }
 
 void
-GeckoMediaPluginService::RemovePluginCrashCallbacks(const nsACString& aPluginId)
+GeckoMediaPluginService::RemovePluginCrashCallbacks(const uint32_t aPluginId)
 {
   RemoveObsoletePluginCrashCallbacks();
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
@@ -194,24 +193,22 @@ GeckoMediaPluginService::RemovePluginCrashCallbacks(const nsACString& aPluginId)
 }
 
 void
-GeckoMediaPluginService::RunPluginCrashCallbacks(const nsACString& aPluginId,
-                                                 const nsACString& aPluginName,
-                                                 const nsAString& aPluginDumpId)
+GeckoMediaPluginService::RunPluginCrashCallbacks(const uint32_t aPluginId,
+                                                 const nsACString& aPluginName)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  LOGD(("%s::%s(%s)", __CLASS__, __FUNCTION__, aPluginId.Data()));
+  LOGD(("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId));
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
     nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
-    const nsACString& callbackPluginId = callback->PluginId();
+    const uint32_t callbackPluginId = callback->PluginId();
     if (!callback->IsStillValid()) {
-      LOGD(("%s::%s(%s) - Removing obsolete callback for pluginId %s",
-            __CLASS__, __FUNCTION__, aPluginId.Data(),
-            PromiseFlatCString(callback->PluginId()).get()));
+      LOGD(("%s::%s(%i) - Removing obsolete callback for pluginId %i",
+            __CLASS__, __FUNCTION__, aPluginId, callback->PluginId()));
       mPluginCrashCallbacks.RemoveElementAt(i - 1);
     } else if (callbackPluginId == aPluginId) {
-      LOGD(("%s::%s(%s) - Running #%u",
-          __CLASS__, __FUNCTION__, aPluginId.Data(), i - 1));
-      callback->Run(aPluginName, aPluginDumpId);
+      LOGD(("%s::%s(%i) - Running #%u",
+          __CLASS__, __FUNCTION__, aPluginId, i - 1));
+      callback->Run(aPluginName);
       mPluginCrashCallbacks.RemoveElementAt(i - 1);
     }
   }
