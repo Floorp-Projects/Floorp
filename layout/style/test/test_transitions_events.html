@@ -126,6 +126,7 @@ document.documentElement.addEventListener("transitionend",
       }
       is(event.propertyName, "color");
       is(event.isTrusted, true);
+      finished_test();
     } else {
       if (!did_stops &&
           (event.target == $("five") || event.target == $("six"))) {
@@ -206,9 +207,12 @@ $("one").addEventListener("transitionend",
 started_test(); // color on #one
 started_test(); // border-top-color on #one
 started_test(); // border-right-color on #one
+started_test(); // border-right-color on #one (listener on root)
 started_test(); // border-bottom-color on #one
 started_test(); // border-left-color on #one
 started_test(); // -moz-column-rule-color on #one
+started_test(); // text-decoration-color on #one
+started_test(); // outline-color on #one
 $("one").style.color = "lime";
 
 
