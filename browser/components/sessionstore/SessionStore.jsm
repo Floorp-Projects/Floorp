@@ -2754,7 +2754,8 @@ let SessionStoreInternal = {
     // fill the array with at least empty tabData objects until |_tPos| or
     // we'll end up with |null| entries.
     for (let tab of Array.slice(tabbrowser.tabs, 0, tab._tPos)) {
-      this._windows[window.__SSi].tabs.push(TabState.collect(tab));
+      let emptyState = {entries: [], lastAccessed: tab.lastAccessed};
+      this._windows[window.__SSi].tabs.push(emptyState);
     }
 
     // Update the tab state in case we shut down without being notified.
