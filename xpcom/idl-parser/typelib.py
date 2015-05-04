@@ -48,9 +48,11 @@ TypeMap = {
     'jsval':              xpt.Type.Tags.jsval
 }
 
+
 # XXXkhuey dipper types should go away (bug 677784)
 def isDipperType(type):
     return type == xpt.Type.Tags.DOMString or type == xpt.Type.Tags.AString or type == xpt.Type.Tags.CString or type == xpt.Type.Tags.UTF8String
+
 
 def build_interface(iface, ifaces):
     def get_type(type, calltype, iid_is=None, size_is=None):
@@ -235,6 +237,7 @@ def build_interface(iface, ifaces):
                          function=iface.attributes.function,
                          builtinclass=iface.attributes.builtinclass,
                          main_process_scriptable_only=iface.attributes.main_process_scriptable_only)
+
 
 def write_typelib(idl, fd, filename):
     """ Generate the typelib. """
