@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<script>
+  navigator.serviceWorker.getRegistration(".").then(function(reg) {
+    reg.onupdatefound = function() {
+      reg.onupdatefound = null;
+      var sw = reg.installing;
+      sw.onstatechange = function() {
+        sw.onstatechange = null;
+        var success = !reg.waiting && reg.active;
+        parent.postMessage({status: "callback", data: "done"}, "*");
+      };
+    };
+    SpecialPowers.startPeriodicServiceWorkerUpdates();
+  });
+</script>
