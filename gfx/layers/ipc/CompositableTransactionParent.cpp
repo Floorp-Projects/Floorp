@@ -171,21 +171,26 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpUseTexture: {
       const OpUseTexture& op = aEdit.get_OpUseTexture();
       CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
-      MOZ_ASSERT(tex.get());
-      if (!ValidatePictureRect(tex->GetSize(), op.picture())) {
-        return false;
-      }
-      compositable->UseTextureHost(tex, op.picture());
+      nsAutoTArray<CompositableHost::TimedTexture,4> textures;
+      for (auto& timedTexture : op.textures()) {
+        CompositableHost::TimedTexture* t = textures.AppendElement();
+        t->mTexture =
+            TextureHost::AsTextureHost(timedTexture.textureParent());
+        MOZ_ASSERT(t->mTexture);
+        t->mTimeStamp = timedTexture.timeStamp();
+        t->mPictureRect = timedTexture.picture();
+        MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
 
-      MaybeFence maybeFence = op.fence();
-      if (maybeFence.type() == MaybeFence::TFenceHandle) {
-        FenceHandle fence = maybeFence.get_FenceHandle();
-        if (fence.IsValid() && tex) {
-          tex->SetAcquireFenceHandle(fence);
+        MaybeFence maybeFence = timedTexture.fence();
+        if (maybeFence.type() == MaybeFence::TFenceHandle) {
+          FenceHandle fence = maybeFence.get_FenceHandle();
+          if (fence.IsValid()) {
+            t->mTexture->SetAcquireFenceHandle(fence);
+          }
         }
       }
+      compositable->UseTextureHost(textures);
 
       if (IsAsync() && compositable->GetLayer()) {
         ScheduleComposition(op);
