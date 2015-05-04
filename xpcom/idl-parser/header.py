@@ -7,7 +7,12 @@
 
 """Print a C++ header file for the IDL files specified on the command line"""
 
-import sys, os.path, re, xpidl, itertools, glob
+import sys
+import os.path
+import re
+import xpidl
+import itertools
+import glob
 
 printdoccomments = False
 
