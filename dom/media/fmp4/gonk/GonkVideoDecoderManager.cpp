@@ -114,8 +114,6 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
     mNativeWindow = new GonkNativeWindow();
   }
 
-  mReaderCallback->NotifyResourcesStatusChanged();
-
   return mDecoder;
 }
 

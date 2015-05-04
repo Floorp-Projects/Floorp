@@ -69,7 +69,6 @@ public:
 
   virtual nsresult Shutdown() override;
 
-  virtual bool IsWaitingMediaResources() { return false; };
   virtual bool IsHardwareAccelerated() const override;
 
 private:
