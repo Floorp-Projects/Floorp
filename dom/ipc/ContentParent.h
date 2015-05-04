@@ -787,6 +787,8 @@ private:
 
     virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) override;
 
+    virtual bool RecvRemoveFakeVolume(const nsString& fsName) override;
+
     virtual bool RecvKeywordToURI(const nsCString& aKeyword,
                                   nsString* aProviderName,
                                   OptionalInputStreamParams* aPostData,
