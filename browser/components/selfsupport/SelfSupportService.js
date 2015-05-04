@@ -68,11 +68,6 @@ MozSelfSupportInterface.prototype = {
   resetPref: function(name) {
     Services.prefs.clearUserPref(name);
   },
-
-  resetSearchEngines: function() {
-    Services.search.restoreDefaultEngines();
-    Services.search.resetToOriginalDefaultEngine();
-  },
 }
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozSelfSupportInterface]);

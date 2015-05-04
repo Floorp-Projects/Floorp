@@ -50,9 +50,4 @@ interface MozSelfSupport
    *        The name of the pref to reset.
    */
   void resetPref(DOMString name);
-
-  /**
-   * Resets original search engines, and resets the default one.
-   */
-  void resetSearchEngines();
 };
