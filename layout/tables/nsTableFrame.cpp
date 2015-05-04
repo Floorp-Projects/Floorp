@@ -5494,8 +5494,8 @@ BCMapCellInfo::SetIEndBorderWidths(BCPixelSize aWidth)
 {
    // update the borders of the cells and cols affected
   if (mCell) {
-    mCell->SetBorderWidth(mEndSide, std::max(aWidth,
-                          mCell->GetBorderWidth(mEndSide)));
+    mCell->SetBorderWidth(eLogicalSideIEnd, std::max(aWidth,
+                          mCell->GetBorderWidth(eLogicalSideIEnd)));
   }
   if (mEndCol) {
     BCPixelSize half = BC_BORDER_START_HALF(aWidth);
@@ -5509,8 +5509,8 @@ BCMapCellInfo::SetBEndBorderWidths(BCPixelSize aWidth)
 {
   // update the borders of the affected cells and rows
   if (mCell) {
-    mCell->SetBorderWidth(NS_SIDE_BOTTOM, std::max(aWidth,
-                          mCell->GetBorderWidth(NS_SIDE_BOTTOM)));
+    mCell->SetBorderWidth(eLogicalSideBEnd, std::max(aWidth,
+                          mCell->GetBorderWidth(eLogicalSideBEnd)));
   }
   if (mEndRow) {
     BCPixelSize half = BC_BORDER_START_HALF(aWidth);
@@ -5522,8 +5522,8 @@ void
 BCMapCellInfo::SetBStartBorderWidths(BCPixelSize aWidth)
 {
  if (mCell) {
-     mCell->SetBorderWidth(NS_SIDE_TOP, std::max(aWidth,
-                           mCell->GetBorderWidth(NS_SIDE_TOP)));
+     mCell->SetBorderWidth(eLogicalSideBStart, std::max(aWidth,
+                           mCell->GetBorderWidth(eLogicalSideBStart)));
   }
   if (mStartRow) {
     BCPixelSize half = BC_BORDER_END_HALF(aWidth);
@@ -5535,8 +5535,8 @@ void
 BCMapCellInfo::SetIStartBorderWidths(BCPixelSize aWidth)
 {
   if (mCell) {
-    mCell->SetBorderWidth(mStartSide, std::max(aWidth,
-                          mCell->GetBorderWidth(mStartSide)));
+    mCell->SetBorderWidth(eLogicalSideIStart, std::max(aWidth,
+                          mCell->GetBorderWidth(eLogicalSideIStart)));
   }
   if (mStartCol) {
     BCPixelSize half = BC_BORDER_END_HALF(aWidth);
