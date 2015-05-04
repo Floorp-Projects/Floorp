@@ -2672,7 +2672,10 @@ nsTableFrame::InitChildReflowState(nsHTMLReflowState& aReflowState)
   if (IsBorderCollapse()) {
     nsTableRowGroupFrame* rgFrame =
        static_cast<nsTableRowGroupFrame*>(aReflowState.frame);
-    pCollapseBorder = rgFrame->GetBCBorderWidth(collapseBorder);
+    WritingMode wm = GetWritingMode();
+    LogicalMargin border = rgFrame->GetBCBorderWidth(wm);
+    collapseBorder = border.GetPhysicalMargin(wm);
+    pCollapseBorder = &collapseBorder;
   }
   aReflowState.Init(presContext, -1, -1, pCollapseBorder, &padding);
 
@@ -5289,14 +5292,16 @@ BCMapCellInfo::SetTableBStartIStartContBCBorder()
     currentBorder = CompareBorders(mTableFrame, nullptr, nullptr, mRowGroup,
                                    mStartRow, nullptr, mTableWM,
                                    eLogicalSideBStart, !ADJACENT);
-    mStartRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
+    mStartRow->SetContinuousBCBorderWidth(eLogicalSideBStart,
+                                          currentBorder.width);
   }
   if (mCgAtEnd && mColGroup) {
     //calculate continuous top colgroup border once per colgroup
     currentBorder = CompareBorders(mTableFrame, mColGroup, nullptr, mRowGroup,
                                    mStartRow, nullptr, mTableWM,
                                    eLogicalSideBStart, !ADJACENT);
-    mColGroup->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
+    mColGroup->SetContinuousBCBorderWidth(eLogicalSideBStart,
+                                          currentBorder.width);
   }
   if (0 == mColIndex) {
     currentBorder = CompareBorders(mTableFrame, mColGroup, mStartCol, nullptr,
@@ -5315,7 +5320,8 @@ BCMapCellInfo::SetRowGroupIStartContBCBorder()
      currentBorder = CompareBorders(mTableFrame, mColGroup, mStartCol,
                                     mRowGroup, nullptr, nullptr, mTableWM,
                                     eLogicalSideIStart, !ADJACENT);
-     mRowGroup->SetContinuousBCBorderWidth(mStartSide, currentBorder.width);
+     mRowGroup->SetContinuousBCBorderWidth(eLogicalSideIStart,
+                                           currentBorder.width);
   }
 }
 
@@ -5328,7 +5334,8 @@ BCMapCellInfo::SetRowGroupIEndContBCBorder()
     currentBorder = CompareBorders(mTableFrame, mColGroup, mEndCol, mRowGroup,
                                    nullptr, nullptr, mTableWM, eLogicalSideIEnd,
                                    ADJACENT);
-    mRowGroup->SetContinuousBCBorderWidth(mEndSide, currentBorder.width);
+    mRowGroup->SetContinuousBCBorderWidth(eLogicalSideIEnd,
+                                          currentBorder.width);
   }
 }
 
@@ -5410,7 +5417,8 @@ BCMapCellInfo::SetInnerRowGroupBEndContBCBorder(const nsIFrame* aNextRowGroup,
   currentBorder = CompareBorders(false, currentBorder, adjacentBorder,
                                  HORIZONTAL);
   if (aNextRow) {
-    aNextRow->SetContinuousBCBorderWidth(NS_SIDE_TOP, currentBorder.width);
+    aNextRow->SetContinuousBCBorderWidth(eLogicalSideBStart,
+                                         currentBorder.width);
   }
   if (mRgAtEnd && mRowGroup) {
     mRowGroup->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM, currentBorder.width);
@@ -5426,7 +5434,7 @@ BCMapCellInfo::SetRowIStartContBCBorder()
     currentBorder = CompareBorders(mTableFrame, mColGroup, mStartCol,
                                    mRowGroup, mCurrentRowFrame, nullptr,
                                    mTableWM, eLogicalSideIStart, !ADJACENT);
-    mCurrentRowFrame->SetContinuousBCBorderWidth(mStartSide,
+    mCurrentRowFrame->SetContinuousBCBorderWidth(eLogicalSideIStart,
                                                  currentBorder.width);
   }
 }
@@ -5439,7 +5447,7 @@ BCMapCellInfo::SetRowIEndContBCBorder()
     currentBorder = CompareBorders(mTableFrame, mColGroup, mEndCol, mRowGroup,
                                    mCurrentRowFrame, nullptr, mTableWM,
                                    eLogicalSideIEnd, ADJACENT);
-    mCurrentRowFrame->SetContinuousBCBorderWidth(mEndSide,
+    mCurrentRowFrame->SetContinuousBCBorderWidth(eLogicalSideIEnd,
                                                  currentBorder.width);
   }
 }
@@ -5506,8 +5514,8 @@ BCMapCellInfo::SetBEndBorderWidths(BCPixelSize aWidth)
   }
   if (mEndRow) {
     BCPixelSize half = BC_BORDER_START_HALF(aWidth);
-    mEndRow->SetBottomBCBorderWidth(
-      std::max(nscoord(half), mEndRow->GetBottomBCBorderWidth()));
+    mEndRow->SetBEndBCBorderWidth(
+      std::max(nscoord(half), mEndRow->GetBEndBCBorderWidth()));
   }
 }
 void
@@ -5519,8 +5527,8 @@ BCMapCellInfo::SetBStartBorderWidths(BCPixelSize aWidth)
   }
   if (mStartRow) {
     BCPixelSize half = BC_BORDER_END_HALF(aWidth);
-    mStartRow->SetTopBCBorderWidth(
-      std::max(nscoord(half), mStartRow->GetTopBCBorderWidth()));
+    mStartRow->SetBStartBCBorderWidth(
+      std::max(nscoord(half), mStartRow->GetBStartBCBorderWidth()));
   }
 }
 void
@@ -6412,7 +6420,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
       if (haveIntersect) {
         // conservatively estimate the half border widths outside the row
         nscoord borderHalf = mTable->GetPrevInFlow() ? 0 : nsPresContext::
-          CSSPixelsToAppUnits(rowFrame->GetTopBCBorderWidth() + 1);
+          CSSPixelsToAppUnits(rowFrame->GetBStartBCBorderWidth() + 1);
         if (aDirtyRect.YMost() >= rowY - borderHalf) {
           nsTableRowFrame* fifRow =
             static_cast<nsTableRowFrame*>(rowFrame->FirstInFlow());
@@ -6423,7 +6431,7 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
       else {
         // conservatively estimate the half border widths outside the row
         nscoord borderHalf = mTable->GetNextInFlow() ? 0 : nsPresContext::
-          CSSPixelsToAppUnits(rowFrame->GetBottomBCBorderWidth() + 1);
+          CSSPixelsToAppUnits(rowFrame->GetBEndBCBorderWidth() + 1);
         if (rowY + rowSize.height + borderHalf >= aDirtyRect.y) {
           mStartRg  = rgFrame;
           mStartRow = rowFrame;
