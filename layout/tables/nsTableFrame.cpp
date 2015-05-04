@@ -4179,12 +4179,7 @@ struct BCMapCellInfo
   int32_t               mNumTableRows;
   int32_t               mNumTableCols;
   BCPropertyData*       mTableBCData;
-
-  // storage of table ltr information, the border collapse code swaps the sides
-  // to account for rtl tables, this is done through mStartSide and mEndSide
   WritingMode           mTableWM;
-  mozilla::css::Side    mStartSide;
-  mozilla::css::Side    mEndSide;
 
   // a cell can only belong to one rowgroup
   nsTableRowGroupFrame* mRowGroup;
@@ -4231,14 +4226,6 @@ BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
       mTableFrame->Properties().Get(TableBCProperty())))
   , mTableWM(aTableFrame->StyleContext())
 {
-  if (mTableWM.IsBidiLTR()) {
-    mStartSide = NS_SIDE_LEFT;
-    mEndSide = NS_SIDE_RIGHT;
-  }
-  else {
-    mStartSide = NS_SIDE_RIGHT;
-    mEndSide = NS_SIDE_LEFT;
-  }
   ResetCellInfo();
 }
 
