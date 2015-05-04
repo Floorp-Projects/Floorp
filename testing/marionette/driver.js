@@ -1141,27 +1141,24 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
 };
 
 /**
- * Navigate to to given URL.
+ * Navigate to given URL.
  *
- * This will follow redirects issued by the server.  When the method
- * returns is based on the page load strategy that the user has
- * selected.
+ * Navigates the current browsing context to the given URL and waits for
+ * the document to load or the session's page timeout duration to elapse
+ * before returning.
  *
- * Documents that contain a META tag with the "http-equiv" attribute
- * set to "refresh" will return if the timeout is greater than 1
- * second and the other criteria for determining whether a page is
- * loaded are met.  When the refresh period is 1 second or less and
- * the page load strategy is "normal" or "conservative", it will
- * wait for the page to complete loading before returning.
+ * The command will return with a failure if there is an error loading
+ * the document or the URL is blocked.  This can occur if it fails to
+ * reach host, the URL is malformed, or if there is a certificate issue
+ * to name some examples.
  *
- * If any modal dialog box, such as those opened on
- * window.onbeforeunload or window.alert, is opened at any point in
- * the page load, it will return immediately.
+ * The document is considered successfully loaded when the
+ * DOMContentLoaded event on the frame element associated with the
+ * current window triggers and document.readyState is "complete".
  *
- * If a 401 response is seen by the browser, it will return
- * immediately.  That is, if BASIC, DIGEST, NTLM or similar
- * authentication is required, the page load is assumed to be
- * complete.  This does not include FORM-based authentication.
+ * In chrome context it will change the current window's location to
+ * the supplied URL and wait until document.readyState equals "complete"
+ * or the page timeout duration has elapsed.
  *
  * @param {string} url
  *     URL to navigate to.
