@@ -4673,24 +4673,31 @@ static uint8_t styleToPriority[13] = { 0,  // NS_STYLE_BORDER_STYLE_NONE
 // and the lowest: 'inset'. none is even weaker
 #define CELL_CORNER true
 
-/** return the border style, border color for a given frame and side
+/** return the border style, border color and optional the width in
+  * pixel for a given frame and side
   * @param aFrame           - query the info for this frame
   * @param aSide            - the side of the frame
   * @param aStyle           - the border style
   * @param aColor           - the border color
   * @param aTableIsLTR      - table direction is LTR
+  * @param aWidth           - the border width in px
   */
 static void
 GetColorAndStyle(const nsIFrame*  aFrame,
                  mozilla::css::Side aSide,
                  uint8_t* aStyle,
                  nscolor* aColor,
-                 bool             aTableIsLTR)
+                 bool aTableIsLTR,
+                 BCPixelSize* aWidth = nullptr)
 {
   NS_PRECONDITION(aFrame, "null frame");
   NS_PRECONDITION(aStyle && aColor, "null argument");
   // initialize out arg
   *aColor = 0;
+  if (aWidth) {
+    *aWidth = 0;
+  }
+
   const nsStyleBorder* styleData = aFrame->StyleBorder();
   if(!aTableIsLTR) { // revert the directions
     if (NS_SIDE_RIGHT == aSide) {
@@ -4708,6 +4715,11 @@ GetColorAndStyle(const nsIFrame*  aFrame,
   }
   *aColor = aFrame->StyleContext()->GetVisitedDependentColor(
              nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[aSide]);
+
+  if (aWidth) {
+    nscoord width = styleData->GetComputedBorderWidth(aSide);
+    *aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
+  }
 }
 
 /** coerce the paint style as required by CSS2.1
@@ -4730,44 +4742,6 @@ GetPaintStyleInfo(const nsIFrame*  aFrame,
   } else if (NS_STYLE_BORDER_STYLE_OUTSET == *aStyle) {
     *aStyle = NS_STYLE_BORDER_STYLE_GROOVE;
   }
-}
-
-/** return the border style, border color and the width in pixel for a given
-  * frame and side
-  * @param aFrame           - query the info for this frame
-  * @param aSide            - the side of the frame
-  * @param aStyle           - the border style
-  * @param aColor           - the border color
-  * @param aTableIsLTR      - table direction is LTR
-  * @param aWidth           - the border width in px.
-  * @param aTwipsToPixels   - conversion factor from twips to pixel
-  */
-static void
-GetColorAndStyle(const nsIFrame*  aFrame,
-                 mozilla::css::Side aSide,
-                 uint8_t* aStyle,
-                 nscolor* aColor,
-                 bool             aTableIsLTR,
-                 BCPixelSize* aWidth)
-{
-  GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR);
-  if ((NS_STYLE_BORDER_STYLE_NONE == *aStyle) ||
-      (NS_STYLE_BORDER_STYLE_HIDDEN == *aStyle)) {
-    aWidth = 0;
-    return;
-  }
-  const nsStyleBorder* styleData = aFrame->StyleBorder();
-  nscoord width;
-  if(!aTableIsLTR) { // revert the directions
-    if (NS_SIDE_RIGHT == aSide) {
-      aSide = NS_SIDE_LEFT;
-    }
-    else if (NS_SIDE_LEFT == aSide) {
-      aSide = NS_SIDE_RIGHT;
-    }
-  }
-  width = styleData->GetComputedBorderWidth(aSide);
-  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
 }
 
 class nsDelayedCalcBCBorders : public nsRunnable {
