@@ -7,8 +7,11 @@
 
 """A parser for cross-platform IDL (XPIDL) files."""
 
-import sys, os.path, re
-from ply import lex, yacc
+import sys
+import os.path
+import re
+from ply import lex
+from ply import yacc
 
 """A type conforms to the following pattern:
 
