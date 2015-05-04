@@ -468,10 +468,14 @@ let gEditItemOverlay = {
     if (!anyChanges)
       return false;
 
+    // The panel could have been closed in the meanwhile.
+    if (!this._paneInfo)
+      return false;
+
     // Ensure the tagsField is in sync, clean it up from empty tags
     currentTags = this._paneInfo.bulkTagging ?
                     this._getCommonTags() :
-                    PlacesUtils.tagging.getTagsForURI(this._uri);
+                    PlacesUtils.tagging.getTagsForURI(this._paneInfo.uri);
     this._initTextField(this._tagsField, currentTags.join(", "), false);
     return true;
   }),
