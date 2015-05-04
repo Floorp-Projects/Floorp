@@ -55,6 +55,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'node-attribute-parser.js',
     'observable-object.js',
     'options-view.js',
+    'poller.js',
     'source-utils.js',
     'telemetry.js',
     'theme-switching.js',
