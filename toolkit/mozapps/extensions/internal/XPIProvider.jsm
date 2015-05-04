@@ -1357,8 +1357,18 @@ function verifyDirSignedState(aDir, aAddon) {
   if (!SIGNED_TYPES.has(aAddon.type))
     return Promise.resolve(undefined);
 
-  // TODO: Get the certificate for an unpacked add-on (bug 1038072)
-  return Promise.resolve(AddonManager.SIGNEDSTATE_MISSING);
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"]
+               .getService(Ci.nsIX509CertDB);
+
+  let root = Ci.nsIX509CertDB.AddonsPublicRoot;
+  if (!REQUIRE_SIGNING && Preferences.get(PREF_XPI_SIGNATURES_DEV_ROOT, false))
+    root = Ci.nsIX509CertDB.AddonsStageRoot;
+
+  return new Promise(resolve => {
+    certDB.verifySignedDirectoryAsync(root, aFile, (aRv, aCert) => {
+      resolve(getSignedStatus(aRv, aCert, aAddon.id));
+    });
+  });
 }
 
 /**
