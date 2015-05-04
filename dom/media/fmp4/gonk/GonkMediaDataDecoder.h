@@ -19,8 +19,6 @@ class MediaRawData;
 // Manage the data flow from inputting encoded data and outputting decode data.
 class GonkDecoderManager {
 public:
-  GonkDecoderManager(MediaTaskQueue* aTaskQueue);
-
   virtual ~GonkDecoderManager() {}
 
   // Creates and initializs the GonkDecoder.
@@ -28,7 +26,7 @@ public:
   virtual android::sp<android::MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) = 0;
 
   // Add samples into OMX decoder or queue them if decoder is out of input buffer.
-  virtual nsresult Input(MediaRawData* aSample);
+  virtual nsresult Input(MediaRawData* aSample) = 0;
 
   // Produces decoded output, it blocks until output can be produced or a timeout
   // is expired or until EOS. Returns NS_OK on success, or NS_ERROR_NOT_AVAILABLE
@@ -40,32 +38,12 @@ public:
                           nsRefPtr<MediaData>& aOutput) = 0;
 
   // Flush the queued sample.
-  // It this function is overrided by subclass, this functino should be called
-  // in the overrided function.
-  virtual nsresult Flush();
+  virtual nsresult Flush() = 0;
 
-  // It should be called in MediaTask thread.
-  bool HasQueuedSample() {
-    ReentrantMonitorAutoEnter mon(mMonitor);
-    return mQueueSample.Length();
-  }
+  // True if sample is queued.
+  virtual bool HasQueuedSample() = 0;
 
 protected:
-  // It performs special operation to MP4 sample, the real action is depended on
-  // the codec type.
-  virtual bool PerformFormatSpecificProcess(MediaRawData* aSample) { return true; }
-
-  // It sends MP4Sample to OMX layer. It must be overrided by subclass.
-  virtual android::status_t SendSampleToOMX(MediaRawData* aSample) = 0;
-
-  // This monitor protects mQueueSample.
-  ReentrantMonitor mMonitor;
-
-  // An queue with the MP4 samples which are waiting to be sent into OMX.
-  // If an element is an empty MP4Sample, that menas EOS. There should not
-  // any sample be queued after EOS.
-  nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
-
   nsRefPtr<MediaByteBuffer> mCodecSpecificData;
 
   nsAutoCString mMimeType;
