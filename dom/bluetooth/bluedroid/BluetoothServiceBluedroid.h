@@ -56,8 +56,8 @@ public:
   FetchUuidsInternal(const nsAString& aDeviceAddress,
                      BluetoothReplyRunnable* aRunnable) override;
 
-  virtual nsresult StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
-  virtual nsresult StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
+  virtual void StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
+  virtual void StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
   SetProperty(BluetoothObjectType aType,
@@ -190,6 +190,12 @@ public:
   //
   // GATT Client
   //
+
+  virtual void StartLeScanInternal(const nsTArray<nsString>& aServiceUuids,
+                                   BluetoothReplyRunnable* aRunnable);
+
+  virtual void StopLeScanInternal(const nsAString& aScanUuid,
+                                  BluetoothReplyRunnable* aRunnable);
 
   virtual void
   ConnectGattClientInternal(const nsAString& aAppUuid,
@@ -362,8 +368,8 @@ public:
                                      const nsTArray<nsString>& aDeviceAddress,
                                      BluetoothReplyRunnable* aRunnable);
 
-  virtual nsresult StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
-  virtual nsresult StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
+  virtual void StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
+  virtual void StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
   SetProperty(BluetoothObjectType aType,

@@ -16,6 +16,7 @@ interface Console {
   void table(any... data);
   void trace();
   void dir(any... data);
+  void dirxml(any... data);
   void group(any... data);
   void groupCollapsed(any... data);
   void groupEnd(any... data);
@@ -31,8 +32,6 @@ interface Console {
   // No-op methods for compatibility with other browsers.
   [BinaryName="noopMethod"]
   void clear();
-  [BinaryName="noopMethod"]
-  void dirxml();
   [BinaryName="noopMethod"]
   void markTimeline();
   [BinaryName="noopMethod"]

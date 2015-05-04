@@ -100,6 +100,12 @@ public:
                                             ErrorResult& aRv);
   already_AddRefed<Promise> StartDiscovery(ErrorResult& aRv);
   already_AddRefed<Promise> StopDiscovery(ErrorResult& aRv);
+
+  already_AddRefed<Promise> StartLeScan(
+    const nsTArray<nsString>& aServiceUuids, ErrorResult& aRv);
+  already_AddRefed<Promise> StopLeScan(
+    BluetoothDiscoveryHandle& aDiscoveryHandle, ErrorResult& aRv);
+
   already_AddRefed<Promise> Pair(const nsAString& aDeviceAddress,
                                  ErrorResult& aRv);
   already_AddRefed<Promise> Unpair(const nsAString& aDeviceAddress,
@@ -179,6 +185,21 @@ public:
    */
   void SetDiscoveryHandleInUse(BluetoothDiscoveryHandle* aDiscoveryHandle);
 
+  /**
+   * Append a BluetoothDiscoveryHandle to LeScan handle array.
+   *
+   * @param aDiscoveryHandle [in] Discovery handle to be appended.
+   */
+  void AppendLeScanHandle(BluetoothDiscoveryHandle* aDiscoveryHandle);
+
+  /**
+   * Remove the BluetoothDiscoverHandle with the given UUID from LeScan handle
+   * array.
+   *
+   * @param aScanUuid [in] The UUID of the LE scan task.
+   */
+  void RemoveLeScanHandle(const nsAString& aScanUuid);
+
 private:
   BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
   ~BluetoothAdapter();
@@ -249,6 +270,13 @@ private:
    *                    - bool      'Paired'
    */
   void HandleDeviceUnpaired(const BluetoothValue& aValue);
+
+  /**
+   * Handle "LeDeviceFound" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the scanned device.
+   */
+  void HandleLeDeviceFound(const BluetoothValue& aValue);
 
   /**
    * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.
@@ -337,6 +365,14 @@ private:
    * some adapter.
    */
   nsRefPtr<BluetoothDiscoveryHandle> mDiscoveryHandleInUse;
+
+  /**
+   * Handles to fire 'ondevicefound' event handler for scanned device
+   *
+   * Each non-stopped LeScan process has a LeScan handle which is
+   * responsible to dispatch LeDeviceEvent.
+   */
+  nsTArray<nsRefPtr<BluetoothDiscoveryHandle> > mLeScanHandleArray;
 
   /**
    * nsRefPtr array of BluetoothDevices created by this adapter. The array is

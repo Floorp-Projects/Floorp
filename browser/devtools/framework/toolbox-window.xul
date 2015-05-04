@@ -26,6 +26,19 @@
          key="&closeCmd.key;"
          command="toolbox-cmd-close"
          modifiers="accel"/>
+    <key id="toolbox-key-toggle"
+         key="&toggleToolbox.key;"
+         command="toolbox-cmd-close"
+#ifdef XP_MACOSX
+         modifiers="accel,alt"
+#else
+         modifiers="accel,shift"
+#endif
+        />
+    <key id="toolbox-key-toggle-F12"
+         keycode="&toggleToolboxF12.keycode;"
+         keytext="&toggleToolboxF12.keytext;"
+         command="toolbox-cmd-close"/>
   </keyset>
 
   <iframe id="toolbox-iframe" flex="1" forceOwnRefreshDriver=""></iframe>

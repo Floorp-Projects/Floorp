@@ -397,16 +397,11 @@ BluetoothAdapter::StartStopDiscovery(bool aStart, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsresult rv;
+
   if (aStart) {
-    rv = bs->StartDiscoveryInternal(results);
+    bs->StartDiscoveryInternal(results);
   } else {
-    rv = bs->StopDiscoveryInternal(results);
-  }
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Start/Stop Discovery failed!");
-    aRv.Throw(rv);
-    return nullptr;
+    bs->StopDiscoveryInternal(results);
   }
 
   // mDiscovering is not set here, we'll get a Property update from our external

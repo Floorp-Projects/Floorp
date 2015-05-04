@@ -93,6 +93,7 @@ const CONSOLE_API_LEVELS_TO_SEVERITIES = {
   table: "log",
   debug: "log",
   dir: "log",
+  dirxml: "log",
   group: "log",
   groupCollapsed: "log",
   groupEnd: "log",
@@ -2982,7 +2983,8 @@ Widgets.ObjectRenderers.add({
 
   _renderDocumentNode: function()
   {
-    let fn = Widgets.ObjectRenderers.byKind.ObjectWithURL.prototype._renderElement;
+    let fn =
+      Widgets.ObjectRenderers.byKind.ObjectWithURL.prototype._renderElement;
     this.element = fn.call(this, this.objectActor,
                            this.objectActor.preview.location);
     this.element.classList.add("documentNode");
