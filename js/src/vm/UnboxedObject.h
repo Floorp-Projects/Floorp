@@ -399,6 +399,9 @@ class UnboxedArrayObject : public JSObject
     static void objectMoved(JSObject* obj, const JSObject* old);
     static void finalize(FreeOp* fop, JSObject* obj);
 
+    static size_t objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject* src,
+                                           gc::AllocKind allocKind);
+
     uint8_t* elements() {
         return elements_;
     }
