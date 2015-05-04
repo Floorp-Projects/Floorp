@@ -83,6 +83,7 @@ var got_four_root = false;
 var got_body = false;
 var did_stops = false;
 var got_before = false;
+var got_after = false;
 
 document.documentElement.addEventListener("transitionend",
   function(event) {
@@ -122,6 +123,8 @@ document.documentElement.addEventListener("transitionend",
         got_before = true;
         is(event.pseudoElement, "::before");
       } else {
+        ok(!got_after, "transitionend on #seven::after");
+        got_after = true;
         is(event.pseudoElement, "::after");
       }
       is(event.propertyName, "color");
