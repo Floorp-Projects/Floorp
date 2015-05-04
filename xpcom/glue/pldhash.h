@@ -223,31 +223,17 @@ public:
 #endif
   {}
 
-  PLDHashTable(PLDHashTable&& aOther) { *this = mozilla::Move(aOther); }
-
-  PLDHashTable& operator=(PLDHashTable&& aOther)
-  {
-    using mozilla::Move;
-
-    mOps = Move(aOther.mOps);
-    mHashShift = Move(aOther.mHashShift);
-    mEntrySize = Move(aOther.mEntrySize);
-    mEntryCount = Move(aOther.mEntryCount);
-    mRemovedCount = Move(aOther.mRemovedCount);
-    mGeneration = Move(aOther.mGeneration);
-    mEntryStore = Move(aOther.mEntryStore);
-
-#ifdef PL_DHASHMETER
-    mStats = Move(aOther.mStats);
-#endif
-
+  PLDHashTable(PLDHashTable&& aOther)
+    : mOps(nullptr)
+    , mEntryStore(nullptr)
 #ifdef DEBUG
-    // Atomic<> doesn't have an |operator=(Atomic<>&&)|.
-    mRecursionLevel = uint32_t(aOther.mRecursionLevel);
+    , mRecursionLevel(0)
 #endif
-
-    return *this;
+  {
+    *this = mozilla::Move(aOther);
   }
+
+  PLDHashTable& operator=(PLDHashTable&& aOther);
 
   bool IsInitialized() const { return !!mOps; }
 
