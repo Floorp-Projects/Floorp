@@ -11,6 +11,8 @@
 #include "jsfriendapi.h"
 #include "nsIAddonInterposition.h"
 #include "xpcprivate.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "nsGlobalWindow.h"
 
 #include "nsID.h"
 
@@ -23,6 +25,17 @@ bool
 Interpose(JSContext* cx, HandleObject target, const nsIID* iid, HandleId id,
           MutableHandle<JSPropertyDescriptor> descriptor)
 {
+    // We only want to do interpostion on DOM instances and
+    // wrapped natives.
+    RootedObject unwrapped(cx, UncheckedUnwrap(target));
+    const js::Class* clasp = js::GetObjectClass(unwrapped);
+    if (!mozilla::dom::IsDOMClass(clasp) &&
+        !IS_WN_CLASS(clasp) &&
+        !IS_PROTO_CLASS(clasp) &&
+        clasp != &OuterWindowProxyClass) {
+        return true;
+    }
+
     XPCWrappedNativeScope* scope = ObjectScope(CurrentGlobalOrNull(cx));
     MOZ_ASSERT(scope->HasInterposition());
 
