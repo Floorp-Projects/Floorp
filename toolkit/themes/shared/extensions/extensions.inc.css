@@ -965,7 +965,6 @@ button.button-link {
   background: transparent;
   border: none;
   box-shadow: none;
-  text-decoration: underline;
   color: #0095dd;
   cursor: pointer;
   min-width: 0;
@@ -978,20 +977,17 @@ button.button-link:not(:-moz-focusring) > .button-box {
   margin: 1px;
 }
 
-.text-link {
-  color: #0095dd;
-  font-size: inherit;
-}
-
-button.button-link:hover,
-.text-link:hover {
-  color: #4cb1ff;
+button.button-link:hover {
   background-color: transparent;
+  color: #178ce5;
+  text-decoration: underline;
 }
 
 /* Needed to override normal button style from inContent.css */
 button.button-link:not([disabled="true"]):active:hover {
   background-color: transparent;
+  color: #ff9500;
+  text-decoration: none;
 }
 
 
