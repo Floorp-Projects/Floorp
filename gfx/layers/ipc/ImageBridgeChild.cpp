@@ -119,10 +119,12 @@ ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
   FenceHandle fence = aTexture->GetAcquireFenceHandle();
   IntRect pictureRect = aPictureRect ? *aPictureRect :
       IntRect(IntPoint(0, 0), IntSize(aTexture->GetSize()));
+  nsAutoTArray<TimedTexture,1> textures;
+  textures.AppendElement(TimedTexture(nullptr, aTexture->GetIPDLActor(),
+                                      fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                                      TimeStamp(), pictureRect));
   mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                                   nullptr, aTexture->GetIPDLActor(),
-                                   fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
-                                   pictureRect));
+                                   textures));
 }
 
 void

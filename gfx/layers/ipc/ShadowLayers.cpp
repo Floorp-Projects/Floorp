@@ -362,10 +362,12 @@ ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
   FenceHandle fence = aTexture->GetAcquireFenceHandle();
   IntRect pictureRect = aPictureRect ? *aPictureRect :
       IntRect(nsIntPoint(0, 0), IntSize(aTexture->GetSize()));
+  nsAutoTArray<TimedTexture,1> textures;
+  textures.AppendElement(TimedTexture(nullptr, aTexture->GetIPDLActor(),
+                                      fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
+                                      TimeStamp(), pictureRect));
   mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                             nullptr, aTexture->GetIPDLActor(),
-                             fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
-                             pictureRect));
+                             textures));
   if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD
       && aTexture->HasInternalBuffer()) {
     // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot

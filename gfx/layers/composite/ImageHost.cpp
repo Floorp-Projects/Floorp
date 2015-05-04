@@ -36,16 +36,17 @@ ImageHost::~ImageHost()
 {}
 
 void
-ImageHost::UseTextureHost(TextureHost* aTexture,
-                          const nsIntRect& aPictureRect)
+ImageHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 {
-  CompositableHost::UseTextureHost(aTexture, aPictureRect);
-  mFrontBuffer = aTexture;
+  CompositableHost::UseTextureHost(aTextures);
+  MOZ_ASSERT(aTextures.Length() >= 1);
+  const TimedTexture& t = aTextures[0];
+  mFrontBuffer = t.mTexture;
   if (mFrontBuffer) {
     mFrontBuffer->Updated();
     mFrontBuffer->PrepareTextureSource(mTextureSource);
   }
-  mPictureRect = aPictureRect;
+  mPictureRect = t.mPictureRect;
 }
 
 void
@@ -66,6 +67,20 @@ ImageHost::GetAsTextureHost(IntRect* aPictureRect)
     *aPictureRect = mPictureRect;
   }
   return mFrontBuffer;
+}
+
+void ImageHost::Attach(Layer* aLayer,
+                       Compositor* aCompositor,
+                       AttachFlags aFlags)
+{
+  CompositableHost::Attach(aLayer, aCompositor, aFlags);
+  if (mFrontBuffer) {
+    if (GetCompositor()) {
+      mFrontBuffer->SetCompositor(GetCompositor());
+    }
+    mFrontBuffer->Updated();
+    mFrontBuffer->PrepareTextureSource(mTextureSource);
+  }
 }
 
 void
