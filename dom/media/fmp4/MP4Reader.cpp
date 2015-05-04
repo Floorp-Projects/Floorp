@@ -333,10 +333,6 @@ private:
 };
 #endif // MOZ_EME
 
-bool MP4Reader::IsWaitingMediaResources() {
-  return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
-}
-
 bool MP4Reader::IsWaitingOnCDMResource() {
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> proxy;
@@ -574,6 +570,8 @@ MP4Reader::EnsureDecodersSetup()
     nsresult rv = mVideo.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, false);
   }
+
+  NotifyResourcesStatusChanged();
 
   return true;
 }
