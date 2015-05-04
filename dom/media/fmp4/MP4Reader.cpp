@@ -374,6 +374,7 @@ MP4Reader::IsSupportedAudioMimeType(const nsACString& aMimeType)
 {
   return (aMimeType.EqualsLiteral("audio/mpeg") ||
           aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+          aMimeType.EqualsLiteral("audio/amr-wb") ||
           aMimeType.EqualsLiteral("audio/3gpp")) &&
          mPlatform->SupportsMimeType(aMimeType);
 }
