@@ -48,6 +48,7 @@ ClearKeySessionManager::ClearKeySessionManager()
 ClearKeySessionManager::~ClearKeySessionManager()
 {
   CK_LOGD("ClearKeySessionManager dtor %p", this);
+   assert(!mRefCount);
 }
 
 static bool
@@ -386,9 +387,9 @@ ClearKeySessionManager::Decrypt(GMPBuffer* aBuffer,
     return;
   }
 
-  mThread->Post(WrapTaskRefCounted(this,
-                                   &ClearKeySessionManager::DoDecrypt,
-                                   aBuffer, aMetadata));
+  mThread->Post(WrapTask(this,
+                         &ClearKeySessionManager::DoDecrypt,
+                         aBuffer, aMetadata));
 }
 
 void
