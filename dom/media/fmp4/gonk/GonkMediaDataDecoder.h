@@ -66,8 +66,6 @@ protected:
   // any sample be queued after EOS.
   nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
 
-  RefPtr<MediaTaskQueue> mTaskQueue;
-
   nsRefPtr<MediaByteBuffer> mCodecSpecificData;
 
   nsAutoCString mMimeType;
@@ -95,8 +93,6 @@ public:
   virtual nsresult Drain() override;
 
   virtual nsresult Shutdown() override;
-
-  virtual bool IsWaitingMediaResources() override;
 
 private:
 

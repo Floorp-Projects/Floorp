@@ -27,7 +27,6 @@ namespace mozilla {
 
 GonkDecoderManager::GonkDecoderManager(MediaTaskQueue* aTaskQueue)
   : mMonitor("GonkDecoderManager")
-  , mTaskQueue(aTaskQueue)
 {
 }
 
@@ -221,14 +220,6 @@ GonkMediaDataDecoder::Drain()
 {
   mTaskQueue->Dispatch(NS_NewRunnableMethod(this, &GonkMediaDataDecoder::ProcessDrain));
   return NS_OK;
-}
-
-bool
-GonkMediaDataDecoder::IsWaitingMediaResources() {
-  if (!mDecoder.get()) {
-    return true;
-  }
-  return false;
 }
 
 } // namespace mozilla
