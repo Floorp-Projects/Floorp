@@ -7,7 +7,7 @@
 
 interface nsIInputStream;
 
-[scriptable, uuid(AD9D3F1C-A8DE-4d0b-9714-1B922297AD65)]
+[scriptable, uuid(62e6529a-5cf6-491a-82ef-b3a8273cdd19)]
 interface nsIUploadChannel2 : nsISupports
 {
     /**
@@ -45,4 +45,10 @@ interface nsIUploadChannel2 : nsISupports
      * contians request headers.
      */
     readonly attribute boolean uploadStreamHasHeaders;
+
+    /**
+     * Clones the upload stream and returns an equivalent stream.
+     */
+    [noscript]
+    nsIInputStream cloneUploadStream();
 };
