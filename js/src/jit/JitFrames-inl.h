@@ -51,6 +51,8 @@ JitFrameIterator::prevType() const
 inline bool
 JitFrameIterator::isFakeExitFrame() const
 {
+    if (type() == JitFrame_LazyLink)
+        return false;
     bool res = (prevType() == JitFrame_Unwound_Rectifier ||
                 prevType() == JitFrame_Unwound_IonJS ||
                 prevType() == JitFrame_Unwound_BaselineJS ||
@@ -64,7 +66,7 @@ JitFrameIterator::isFakeExitFrame() const
 inline ExitFrameLayout*
 JitFrameIterator::exitFrame() const
 {
-    MOZ_ASSERT(type() == JitFrame_Exit);
+    MOZ_ASSERT(isExitFrame());
     MOZ_ASSERT(!isFakeExitFrame());
     return (ExitFrameLayout*) fp();
 }
