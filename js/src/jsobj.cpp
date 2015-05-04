@@ -3965,6 +3965,16 @@ JSObject::allocKindForTenure(const js::Nursery& nursery) const
         return GetGCObjectKindForBytes(UnboxedPlainObject::offsetOfData() + nbytes);
     }
 
+    // Unboxed arrays use inline data if their size is small enough.
+    if (is<UnboxedArrayObject>()) {
+        const UnboxedArrayObject* nobj = &as<UnboxedArrayObject>();
+        size_t nbytes = UnboxedArrayObject::offsetOfInlineElements() +
+                        nobj->capacity() * nobj->elementSize();
+        if (nbytes <= JSObject::MAX_BYTE_SIZE)
+            return GetGCObjectKindForBytes(nbytes);
+        return AllocKind::OBJECT0;
+    }
+
     // Inlined typed objects are followed by their data, so make sure we copy
     // it all over to the new object.
     if (is<InlineTypedObject>()) {
