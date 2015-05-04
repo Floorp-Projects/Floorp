@@ -1829,10 +1829,6 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
 
     bool isArray = !templateShape;
 
-    const JS::RuntimeOptions& options = group->runtimeFromAnyThread()->options();
-    if (isArray ? !options.unboxedArrays() : !options.unboxedObjects())
-        return true;
-
     if (group->runtimeFromAnyThread()->isSelfHostingGlobal(cx->global()))
         return true;
 
