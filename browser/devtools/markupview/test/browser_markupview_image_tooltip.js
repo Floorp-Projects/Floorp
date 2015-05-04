@@ -61,10 +61,10 @@ function* getImageTooltipTarget({selector}, inspector) {
 
   let container = getContainerForNodeFront(nodeFront, inspector);
 
-   let target = container.editor.tag;
-   if (isImg) {
-     target = container.editor.getAttributeElement("src");
-   }
+  let target = container.editor.tag;
+  if (isImg) {
+    target = container.editor.getAttributeElement("src").querySelector(".link");
+  }
   return target;
 }
 
