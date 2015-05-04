@@ -35,6 +35,21 @@
 
 #include <limits.h> 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+ * Maximum FFT order supported by the twiddle table.  Only used by the
+ * float FFT routines. Must be consistent with the table in
+ * armSP_FFT_F32TwiddleTable.c.
+ */
+#ifdef BIG_FFT_TABLE
+#define TWIDDLE_TABLE_ORDER 15
+#else
+#define TWIDDLE_TABLE_ORDER 12
+#endif
+
 #define OMX_IN
 #define OMX_OUT
 #define OMX_INOUT
@@ -193,10 +208,24 @@ typedef struct
 /* OMX_F32 */
 typedef float OMX_F32; /** Single precision floating point,IEEE 754 */
 
-
 /* OMX_F64 */
 typedef double OMX_F64; /** Double precision floating point,IEEE 754 */
 
+/* OMX_FC32 */
+typedef struct
+{
+  OMX_F32 Re; /** Real part */
+  OMX_F32 Im; /** Imaginary part */	
+
+} OMX_FC32; /** single precision floating point complex number */
+
+/* OMX_FC64 */
+typedef struct
+{
+  OMX_F64 Re; /** Real part */
+  OMX_F64 Im; /** Imaginary part */	
+
+} OMX_FC64; /** double precision floating point complex number */
 
 /* OMX_INT */
 typedef int OMX_INT; /** signed integer corresponding to machine word length, has maximum signed value INT_MAX*/
@@ -251,4 +280,7 @@ typedef struct
 	
 } OMXSize;
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _OMXTYPES_H_ */
