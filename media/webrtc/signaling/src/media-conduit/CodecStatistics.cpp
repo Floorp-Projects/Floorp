@@ -16,14 +16,14 @@ using namespace webrtc;
 static const char* logTag ="WebrtcVideoSessionConduit";
 
 VideoCodecStatistics::VideoCodecStatistics(int channel,
-                                           ViECodec* codec,
-                                           bool encoder) :
+                                           ViECodec* codec) :
   mChannel(channel),
   mSentRawFrames(0),
   mPtrViECodec(codec),
   mEncoderDroppedFrames(0),
   mDecoderDiscardedPackets(0),
-  mEncoderMode(encoder),
+  mRegisteredEncode(false),
+  mRegisteredDecode(false),
   mReceiveState(kReceiveStateInitial)
 #ifdef MOZILLA_INTERNAL_API
   , mRecoveredBeforeLoss(0)
@@ -31,19 +31,26 @@ VideoCodecStatistics::VideoCodecStatistics(int channel,
 #endif
 {
   MOZ_ASSERT(mPtrViECodec);
-  if (mEncoderMode) {
-    mPtrViECodec->RegisterEncoderObserver(mChannel, *this);
-  } else {
-    mPtrViECodec->RegisterDecoderObserver(mChannel, *this);
-  }
 }
 
 VideoCodecStatistics::~VideoCodecStatistics()
 {
-  if (mEncoderMode) {
+  if (mRegisteredEncode) {
     mPtrViECodec->DeregisterEncoderObserver(mChannel);
-  } else {
+  }
+  if (mRegisteredDecode) {
     mPtrViECodec->DeregisterDecoderObserver(mChannel);
+  }
+}
+
+void VideoCodecStatistics::Register(bool encoder)
+{
+  if (encoder && !mRegisteredEncode) {
+    mPtrViECodec->RegisterEncoderObserver(mChannel, *this);
+    mRegisteredEncode = true;
+  } else if (!encoder && !mRegisteredDecode) {
+    mPtrViECodec->RegisterDecoderObserver(mChannel, *this);
+    mRegisteredDecode = true;
   }
 }
 
