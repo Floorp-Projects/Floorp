@@ -2076,7 +2076,7 @@ let Impl = {
     if (abortedExists) {
       this._log.trace("_checkAbortedSessionPing - aborted session found: " + FILE_PATH);
       yield this._abortedSessionSerializer.enqueueTask(
-        () => TelemetryController.addPendingPingFromFile(FILE_PATH, true));
+        () => TelemetryController.addAbortedSessionPing(FILE_PATH));
     }
   }),
 
