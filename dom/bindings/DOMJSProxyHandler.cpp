@@ -210,25 +210,12 @@ DOMProxyHandler::set(JSContext *cx, Handle<JSObject*> proxy, Handle<jsid> id,
 
   // Make sure to ignore our named properties when checking for own
   // property descriptors for a set.
-  JS::Rooted<JSPropertyDescriptor> desc(cx);
+  JS::Rooted<JSPropertyDescriptor> ownDesc(cx);
   if (!getOwnPropDescriptor(cx, proxy, id, /* ignoreNamedProps = */ true,
-                            &desc)) {
+                            &ownDesc)) {
     return false;
   }
-  if (!desc.object()) {
-    // Don't just use getPropertyDescriptor, unlike BaseProxyHandler::set,
-    // because that would call getOwnPropertyDescriptor on ourselves.  Instead,
-    // directly delegate to the proto, if any.
-    JS::Rooted<JSObject*> proto(cx);
-    if (!js::GetObjectProto(cx, proxy, &proto)) {
-      return false;
-    }
-    if (proto && !JS_GetPropertyDescriptorById(cx, proto, id, &desc)) {
-      return false;
-    }
-  }
-
-  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, desc, result);
+  return js::SetPropertyIgnoringNamedGetter(cx, proxy, id, v, receiver, ownDesc, result);
 }
 
 bool
