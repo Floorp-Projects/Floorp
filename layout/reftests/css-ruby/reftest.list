@@ -31,7 +31,7 @@ fuzzy-if(winWidget,255,792) == lang-specific-style-1.html lang-specific-style-1-
 == line-break-suppression-1.html line-break-suppression-1-ref.html
 == line-break-suppression-2.html line-break-suppression-2-ref.html
 == line-break-suppression-3.html line-break-suppression-3-ref.html
-fails-if(B2G) == line-break-suppression-4.html line-break-suppression-4-ref.html # bug 1156169
+== line-break-suppression-4.html line-break-suppression-4-ref.html
 == line-height-1.html line-height-1-ref.html
 == line-height-2.html line-height-2-ref.html
 == line-height-3.html line-height-3-ref.html

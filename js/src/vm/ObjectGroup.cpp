@@ -1168,6 +1168,15 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* script, jsbytecode* pc
         }
     }
 
+    if (JSOp(*pc) == JSOP_NEWARRAY && cx->runtime()->options().unboxedArrays()) {
+        PreliminaryObjectArrayWithTemplate* preliminaryObjects =
+            cx->new_<PreliminaryObjectArrayWithTemplate>(nullptr);
+        if (preliminaryObjects)
+            res->setPreliminaryObjects(preliminaryObjects);
+        else
+            cx->recoverFromOutOfMemory();
+    }
+
     if (!table->add(p, key, res))
         return nullptr;
 
