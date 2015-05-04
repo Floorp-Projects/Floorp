@@ -38,7 +38,6 @@ class MediaOmxReader : public MediaOmxCommonReader
   int64_t mAudioSeekTimeUs;
   int64_t mLastParserDuration;
   int32_t mSkipCount;
-  bool mUseParserDuration;
   // If mIsShutdown is false, and mShutdownMutex is held, then
   // AbstractMediaDecoder::mDecoder will be non-null.
   bool mIsShutdown;

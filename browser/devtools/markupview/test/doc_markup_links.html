@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Markup-view links</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" type="image/png" sizes="196x196" href="/media/img/firefox/favicon-196.223e1bcaf067.png">
+  </head>
+  <body>
+    <form id="message-form" method="post" action="/post_message">
+      <p for="invalid-idref">
+        <label for="name">Name</label>
+        <input id="name" type="text" />
+      </p>
+      <p>
+        <label for="message">Message</label>
+        <input id="message" type="text" />
+      </p>
+      <p>
+        <button>Send message</button>
+      </p>
+      <output form="message-form" for="name message invalid">Thank you for your message!</output>
+    </form>
+    <a href="/go/somewhere/else" ping="/analytics?page=pageA /analytics?user=test">Click me, I'm a link</a>
+    <ul>
+      <li contextmenu="menu1">Item 1</li>
+      <li contextmenu="menu2">Item 2</li>
+      <li contextmenu="menu3">Item 3</li>
+    </ul>
+    <menu type="context" id="menu1">
+      <menuitem label="custom menu 1"></menuitem>
+    </menu>
+    <menu type="context" id="menu2">
+      <menuitem label="custom menu 2"></menuitem>
+    </menu>
+    <menu type="context" id="menu3">
+      <menuitem label="custom menu 3"></menuitem>
+    </menu>
+    <video controls poster="doc_markup_tooltip.png" src="code-rush.mp4"></video>
+    <script type="text/javascript" src="lib_jquery_1.0.js"></script>
+  </body>
+</html>

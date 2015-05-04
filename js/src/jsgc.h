@@ -331,6 +331,12 @@ GetGCKindSlots(AllocKind thingKind, const Class* clasp)
     return nslots;
 }
 
+static inline size_t
+GetGCKindBytes(AllocKind thingKind)
+{
+    return sizeof(JSObject_Slots0) + GetGCKindSlots(thingKind) * sizeof(Value);
+}
+
 // Class to assist in triggering background chunk allocation. This cannot be done
 // while holding the GC or worker thread state lock due to lock ordering issues.
 // As a result, the triggering is delayed using this class until neither of the

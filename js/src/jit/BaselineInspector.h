@@ -92,7 +92,7 @@ class BaselineInspector
     bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
 
   public:
-    typedef Vector<ReceiverGuard::StackGuard, 4, JitAllocPolicy> ReceiverVector;
+    typedef Vector<ReceiverGuard, 4, JitAllocPolicy> ReceiverVector;
     typedef Vector<ObjectGroup*, 4, JitAllocPolicy> ObjectGroupVector;
     bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                 ObjectGroupVector& convertUnboxedGroups);
@@ -116,6 +116,10 @@ class BaselineInspector
     JSObject* getTemplateObject(jsbytecode* pc);
     JSObject* getTemplateObjectForNative(jsbytecode* pc, Native native);
     JSObject* getTemplateObjectForClassHook(jsbytecode* pc, const Class* clasp);
+
+    // Sometimes the group a template object will have is known, even if the
+    // object itself isn't.
+    ObjectGroup* getTemplateObjectGroup(jsbytecode* pc);
 
     JSFunction* getSingleCallee(jsbytecode* pc);
 

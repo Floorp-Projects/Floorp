@@ -7,6 +7,8 @@ const NON_REMOTE_PAGE = "about:welcomeback";
 
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+requestLongerTimeout(2);
+
 function frame_script() {
   content.document.body.innerHTML = `
     <a href="about:home" target="_blank" id="testAnchor">Open a window</a>
