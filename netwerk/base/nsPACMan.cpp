@@ -439,7 +439,7 @@ nsPACMan::StartLoading()
     return;
   }
 
-  if (NS_SUCCEEDED(mLoader->Init(this))) {
+  if (NS_SUCCEEDED(mLoader->Init(this, nullptr))) {
     // Always hit the origin server when loading PAC.
     nsCOMPtr<nsIIOService> ios = do_GetIOService();
     if (ios) {
