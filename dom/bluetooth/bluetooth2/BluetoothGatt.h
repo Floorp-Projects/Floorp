@@ -88,13 +88,6 @@ private:
   void UpdateConnectionState(BluetoothConnectionState aState);
 
   /**
-   * Generate a random uuid.
-   *
-   * @param aUuidString [out] String to store the generated uuid.
-   */
-  void GenerateUuid(nsAString &aUuidString);
-
-  /**
    * Add newly discovered GATT services into mServices and update the cache
    * value of mServices.
    *

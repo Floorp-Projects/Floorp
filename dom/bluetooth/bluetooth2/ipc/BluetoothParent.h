@@ -147,6 +147,12 @@ protected:
   DoRequest(const StopDiscoveryRequest& aRequest);
 
   bool
+  DoRequest(const StartLeScanRequest& aRequest);
+
+  bool
+  DoRequest(const StopLeScanRequest& aRequest);
+
+  bool
   DoRequest(const PairRequest& aRequest);
 
   bool

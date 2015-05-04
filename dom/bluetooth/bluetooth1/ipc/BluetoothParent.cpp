@@ -343,9 +343,7 @@ BluetoothRequestParent::DoRequest(const StartDiscoveryRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TStartDiscoveryRequest);
 
-  nsresult rv =
-    mService->StartDiscoveryInternal(mReplyRunnable.get());
-  NS_ENSURE_SUCCESS(rv, false);
+  mService->StartDiscoveryInternal(mReplyRunnable.get());
 
   return true;
 }
@@ -356,9 +354,7 @@ BluetoothRequestParent::DoRequest(const StopDiscoveryRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TStopDiscoveryRequest);
 
-  nsresult rv =
-    mService->StopDiscoveryInternal(mReplyRunnable.get());
-  NS_ENSURE_SUCCESS(rv, false);
+  mService->StopDiscoveryInternal(mReplyRunnable.get());
 
   return true;
 }
