@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.tabqueue;
 
-import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
@@ -154,7 +154,8 @@ public class TabQueueHelper {
     public static void showNotification(final Context context, final int tabsQueued) {
         ThreadUtils.assertNotOnUiThread();
 
-        Intent resultIntent = new Intent(context, BrowserApp.class);
+        Intent resultIntent = new Intent();
+        resultIntent.setClassName(context, AppConstants.BROWSER_INTENT_CLASS_NAME);
         resultIntent.setAction(TabQueueHelper.LOAD_URLS_ACTION);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_CANCEL_CURRENT);
