@@ -15,9 +15,6 @@ function test() {
     let { RequestsMenu } = NetMonitorView;
     reqMenu = RequestsMenu;
 
-    is(reqMenu.itemCount, 0,
-      "The request menu should empty before reloading");
-
     let button = document.querySelector("#requests-menu-reload-notice-button");
     button.click();
   })
