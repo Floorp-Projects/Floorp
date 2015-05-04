@@ -1146,13 +1146,16 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
                                       SdpMediaSection* msection,
                                       Sdp* sdp)
 {
+  nsresult rv = CopyStickyParams(remoteMsection, msection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (MsectionIsDisabled(remoteMsection)) {
     DisableMsection(sdp, msection);
     return NS_OK;
   }
 
   SdpSetupAttribute::Role role;
-  nsresult rv = DetermineAnswererSetupRole(remoteMsection, &role);
+  rv = DetermineAnswererSetupRole(remoteMsection, &role);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AddTransportAttributes(msection, role);
@@ -1168,9 +1171,6 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   if (remoteMsection.IsSending()) {
     msection->SetReceiving(true);
   }
-
-  rv = CopyStickyParams(remoteMsection, msection);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now add the codecs.
   PtrVector<JsepCodecDescription> matchingCodecs(
