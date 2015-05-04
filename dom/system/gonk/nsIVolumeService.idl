@@ -8,7 +8,7 @@
 
 interface nsIArray;
 
-[scriptable, uuid(879874c6-5532-437a-bf76-703d0c2e7e77)]
+[scriptable, uuid(cfbf9880-cba5-11e4-8830-0800200c9a66)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
@@ -24,6 +24,9 @@ interface nsIVolumeService : nsISupports
     /* for test case only to simulate sdcard insertion/removal */
     void createFakeVolume(in DOMString name, in DOMString path);
     void SetFakeVolumeState(in DOMString name, in long state);
+
+    /* for test case only to test removal of storage area */
+    void removeFakeVolume(in DOMString name);
 };
 
 %{C++
