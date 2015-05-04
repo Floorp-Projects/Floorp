@@ -5,7 +5,7 @@
   }).then(function(registration) {
     registration.unregister().then(function(success) {
       if (success) {
-        parent.callback();
+        parent.postMessage({status: "callback", data: "done"}, "*");
       } else {
         dump("Unregister failed\n");
       }

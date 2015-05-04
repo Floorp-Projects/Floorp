@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <script>
   function done() {
-    parent.callback();
+    parent.postMessage({status: "callback", data: "done"}, "*");
   }
 
   navigator.serviceWorker.ready.then(done);
