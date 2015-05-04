@@ -24,19 +24,20 @@ function onTabViewWindowLoaded() {
   is(groupItems.length, 1, "There is only one group");
   is(groupItems[0].getChildren().length, 3, "The group has three tab items");
 
-  gBrowser.removeTab(tabTwo);
-  ok(TabView.isVisible(), "Tab View is still visible after removing a tab");
-  is(groupItems[0].getChildren().length, 2, "The group has two tab items");
+  BrowserTestUtils.removeTab(tabTwo).then(() => {
+    ok(TabView.isVisible(), "Tab View is still visible after removing a tab");
+    is(groupItems[0].getChildren().length, 2, "The group has two tab items");
 
-  restoreTab(function (tabTwo) {
-    ok(TabView.isVisible(), "Tab View is still visible after restoring a tab");
-    is(groupItems[0].getChildren().length, 3, "The group still has three tab items");
+    restoreTab(function (tabTwo) {
+      ok(TabView.isVisible(), "Tab View is still visible after restoring a tab");
+      is(groupItems[0].getChildren().length, 3, "The group still has three tab items");
 
-    // clean up and finish
-    hideTabView(function () {
-      gBrowser.removeTab(tabOne);
-      gBrowser.removeTab(tabTwo);
-      finish();
+      // clean up and finish
+      hideTabView(function () {
+        gBrowser.removeTab(tabOne);
+        gBrowser.removeTab(tabTwo);
+        finish();
+      });
     });
   });
 }

@@ -529,15 +529,5 @@ for (let name of FORM_HELPERS) {
 }
 
 function promiseRemoveTab(tab) {
-  return new Promise(resolve => {
-    let {messageManager: mm, frameLoader} = tab.linkedBrowser;
-    mm.addMessageListener("SessionStore:update", function onMessage(msg) {
-      if (msg.targetFrameLoader == frameLoader && msg.data.isFinal) {
-        mm.removeMessageListener("SessionStore:update", onMessage);
-        resolve();
-      }
-    }, true);
-
-    tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
-  });
+  return BrowserTestUtils.removeTab(tab);
 }
