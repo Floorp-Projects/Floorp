@@ -667,7 +667,11 @@ nsXREDirProvider::LoadAppBundleDirs()
 
     nsCOMPtr<nsIFile> manifest =
       CloneAndAppend(subdir, "chrome.manifest");
+#ifdef MOZ_B2G
+    XRE_AddManifestLocation(NS_APP_LOCATION, manifest);
+#else
     XRE_AddManifestLocation(NS_EXTENSION_LOCATION, manifest);
+#endif
   }
 }
 
