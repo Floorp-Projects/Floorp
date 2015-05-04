@@ -2601,10 +2601,10 @@ nsTableFrame::GetOuterBCBorder() const
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
   BCPropertyData* propData = GetBCProperty();
   if (propData) {
-    border.top    = BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
-    border.right  = BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightBorderWidth);
-    border.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
-    border.left   = BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftBorderWidth);
+    border.top = BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth);
+    border.right = BC_BORDER_END_HALF_COORD(p2t, propData->mRightBorderWidth);
+    border.bottom = BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth);
+    border.left = BC_BORDER_START_HALF_COORD(p2t, propData->mLeftBorderWidth);
   }
   return border;
 }
@@ -2619,10 +2619,10 @@ nsTableFrame::GetIncludedOuterBCBorder() const
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
   BCPropertyData* propData = GetBCProperty();
   if (propData) {
-    border.top += BC_BORDER_TOP_HALF_COORD(p2t, propData->mTopBorderWidth);
-    border.right += BC_BORDER_RIGHT_HALF_COORD(p2t, propData->mRightCellBorderWidth);
-    border.bottom += BC_BORDER_BOTTOM_HALF_COORD(p2t, propData->mBottomBorderWidth);
-    border.left += BC_BORDER_LEFT_HALF_COORD(p2t, propData->mLeftCellBorderWidth);
+    border.top += BC_BORDER_START_HALF_COORD(p2t, propData->mTopBorderWidth);
+    border.right += BC_BORDER_END_HALF_COORD(p2t, propData->mRightCellBorderWidth);
+    border.bottom += BC_BORDER_END_HALF_COORD(p2t, propData->mBottomBorderWidth);
+    border.left += BC_BORDER_START_HALF_COORD(p2t, propData->mLeftCellBorderWidth);
   }
   return border;
 }
@@ -5517,7 +5517,7 @@ BCMapCellInfo::SetRightBorderWidths(BCPixelSize aWidth)
                           mCell->GetBorderWidth(mEndSide)));
   }
   if (mRightCol) {
-    BCPixelSize half = BC_BORDER_LEFT_HALF(aWidth);
+    BCPixelSize half = BC_BORDER_START_HALF(aWidth);
     mRightCol->SetRightBorderWidth(std::max(nscoord(half),
                                    mRightCol->GetRightBorderWidth()));
   }
@@ -5532,7 +5532,7 @@ BCMapCellInfo::SetBottomBorderWidths(BCPixelSize aWidth)
                           mCell->GetBorderWidth(NS_SIDE_BOTTOM)));
   }
   if (mBottomRow) {
-    BCPixelSize half = BC_BORDER_TOP_HALF(aWidth);
+    BCPixelSize half = BC_BORDER_START_HALF(aWidth);
     mBottomRow->SetBottomBCBorderWidth(std::max(nscoord(half),
                                        mBottomRow->GetBottomBCBorderWidth()));
   }
@@ -5545,7 +5545,7 @@ BCMapCellInfo::SetTopBorderWidths(BCPixelSize aWidth)
                            mCell->GetBorderWidth(NS_SIDE_TOP)));
   }
   if (mTopRow) {
-    BCPixelSize half = BC_BORDER_BOTTOM_HALF(aWidth);
+    BCPixelSize half = BC_BORDER_END_HALF(aWidth);
     mTopRow->SetTopBCBorderWidth(std::max(nscoord(half),
                                         mTopRow->GetTopBCBorderWidth()));
   }
@@ -5558,7 +5558,7 @@ BCMapCellInfo::SetLeftBorderWidths(BCPixelSize aWidth)
                           mCell->GetBorderWidth(mStartSide)));
   }
   if (mLeftCol) {
-    BCPixelSize half = BC_BORDER_RIGHT_HALF(aWidth);
+    BCPixelSize half = BC_BORDER_END_HALF(aWidth);
     mLeftCol->SetLeftBorderWidth(std::max(nscoord(half),
                                         mLeftCol->GetLeftBorderWidth()));
   }
