@@ -38,15 +38,13 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 
 namespace mozilla {
 
-GonkAudioDecoderManager::GonkAudioDecoderManager(
-  MediaTaskQueue* aTaskQueue,
-  const AudioInfo& aConfig)
-  : GonkDecoderManager(aTaskQueue)
-  , mAudioChannels(aConfig.mChannels)
+GonkAudioDecoderManager::GonkAudioDecoderManager(const AudioInfo& aConfig)
+  : mAudioChannels(aConfig.mChannels)
   , mAudioRate(aConfig.mRate)
   , mAudioProfile(aConfig.mProfile)
   , mUseAdts(true)
   , mAudioBuffer(nullptr)
+  , mMonitor("GonkAudioDecoderManager")
 {
   MOZ_COUNT_CTOR(GonkAudioDecoderManager);
   MOZ_ASSERT(mAudioChannels);
@@ -111,13 +109,53 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   }
 }
 
-status_t
-GonkAudioDecoderManager::SendSampleToOMX(MediaRawData* aSample)
+bool
+GonkAudioDecoderManager::HasQueuedSample()
 {
-  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->mData),
-                         aSample->mSize,
-                         aSample->mTime,
-                         0);
+    MonitorAutoLock mon(mMonitor);
+    return mQueueSample.Length();
+}
+
+nsresult
+GonkAudioDecoderManager::Input(MediaRawData* aSample)
+{
+  MonitorAutoLock mon(mMonitor);
+  nsRefPtr<MediaRawData> sample;
+
+  if (aSample) {
+    sample = aSample;
+    if (!PerformFormatSpecificProcess(sample)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    // It means EOS with empty sample.
+    sample = new MediaRawData();
+  }
+
+  mQueueSample.AppendElement(sample);
+
+  status_t rv;
+  while (mQueueSample.Length()) {
+    nsRefPtr<MediaRawData> data = mQueueSample.ElementAt(0);
+    {
+      MonitorAutoUnlock mon_exit(mMonitor);
+      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->mData),
+                           data->mSize,
+                           data->mTime,
+                           0);
+    }
+    if (rv == OK) {
+      mQueueSample.RemoveElementAt(0);
+    } else if (rv == -EAGAIN || rv == -ETIMEDOUT) {
+      // In most cases, EAGAIN or ETIMEOUT are safe because OMX can't fill
+      // buffer on time.
+      return NS_OK;
+    } else {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  return NS_OK;
 }
 
 bool
@@ -179,6 +217,21 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
                                                 mAudioRate);
   ReleaseAudioBuffer();
   audioData.forget(v);
+  return NS_OK;
+}
+
+nsresult
+GonkAudioDecoderManager::Flush()
+{
+  {
+    MonitorAutoLock mon(mMonitor);
+    mQueueSample.Clear();
+  }
+
+  if (mDecoder->flush() != OK) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -257,16 +310,5 @@ void GonkAudioDecoderManager::ReleaseAudioBuffer() {
     mDecoder->ReleaseMediaBuffer(mAudioBuffer);
     mAudioBuffer = nullptr;
   }
-}
-
-nsresult
-GonkAudioDecoderManager::Flush()
-{
-  GonkDecoderManager::Flush();
-  status_t err = mDecoder->flush();
-  if (err != OK) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
 }
 } // namespace mozilla
