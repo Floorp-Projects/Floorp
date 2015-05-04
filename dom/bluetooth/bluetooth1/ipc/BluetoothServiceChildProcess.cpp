@@ -124,20 +124,18 @@ BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
   return NS_OK;
 }
 
-nsresult
+void
 BluetoothServiceChildProcess::StopDiscoveryInternal(
                                               BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, StopDiscoveryRequest());
-  return NS_OK;
 }
 
-nsresult
+void
 BluetoothServiceChildProcess::StartDiscoveryInternal(
                                               BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, StartDiscoveryRequest());
-  return NS_OK;
 }
 
 nsresult
@@ -295,7 +293,7 @@ BluetoothServiceChildProcess::ConfirmReceivingFile(
                 ConfirmReceivingFileRequest(nsString(aDeviceAddress)));
     return;
   }
-  
+
   SendRequest(aRunnable,
               DenyReceivingFileRequest(nsString(aDeviceAddress)));
 }

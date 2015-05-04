@@ -162,6 +162,11 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     BluetoothDeviceBinding::ClearCachedUuidsValue(this);
   } else if (name.EqualsLiteral("Type")) {
     mType = ConvertUint32ToDeviceType(value.get_uint32_t());
+  } else if (name.EqualsLiteral("GattAdv")) {
+    MOZ_ASSERT(value.type() == BluetoothValue::TArrayOfuint8_t);
+    nsTArray<uint8_t> advData;
+    advData = value.get_ArrayOfuint8_t();
+    UpdatePropertiesFromAdvData(advData);
   } else {
     BT_WARNING("Not handling device property: %s",
                NS_ConvertUTF16toUTF8(name).get());
@@ -319,6 +324,104 @@ BluetoothDevice::GetGatt()
   }
 
   return mGatt;
+}
+
+void
+BluetoothDevice::UpdatePropertiesFromAdvData(const nsTArray<uint8_t>& aAdvData)
+{
+  // According to BT Core Spec. Vol 3 - Ch 11, advertisement data consists of a
+  // significant part and a non-significant part.
+  // The significant part contains a sequence of AD structures. Each AD
+  // structure shall have a Length field of one octet, which contains the
+  // Length value, and a Data field of Length octets.
+  unsigned int offset = 0;
+  while (offset < aAdvData.Length()) {
+    int dataFieldLength = aAdvData[offset++];
+
+    // According to BT Core Spec, it only occurs to allow an early termination
+    // of the Advertising data.
+    if (dataFieldLength <= 0) {
+      break;
+    }
+
+    // Length of the data field which is composed by AD type (1 byte) and
+    // AD data (dataFieldLength -1 bytes)
+    int dataLength = dataFieldLength - 1;
+    if (offset + dataLength >= aAdvData.Length()) {
+      break;
+    }
+
+    // Update UUIDs and name of BluetoothDevice.
+    int type = aAdvData[offset++];
+    switch (type) {
+      case GAP_INCOMPLETE_UUID16:
+      case GAP_COMPLETE_UUID16:
+      case GAP_INCOMPLETE_UUID32:
+      case GAP_COMPLETE_UUID32:
+      case GAP_INCOMPLETE_UUID128:
+      case GAP_COMPLETE_UUID128: {
+        mUuids.Clear();
+
+        // The length of uint16_t UUID array
+        uint8_t len = 0;
+        if (GAP_INCOMPLETE_UUID16 && GAP_COMPLETE_UUID16) {
+          len = 1;
+        } else if (GAP_INCOMPLETE_UUID32 && GAP_COMPLETE_UUID32) {
+          len = 2;
+        } else {
+          len = 8;
+        }
+        uint16_t uuid[len];
+
+        while (dataLength > 0) {
+          // Read (len * 2) bytes from the data buffer and compose a 16-bits
+          // UUID array.
+          for (uint8_t i = 0; i < len; ++i) {
+            uuid[i] = aAdvData[offset++];
+            uuid[i] += (aAdvData[offset++] << 8);
+            dataLength -= 2;
+          }
+
+          char uuidStr[36];
+          if (type == GAP_INCOMPLETE_UUID16 || type == GAP_COMPLETE_UUID16) {
+            // Convert 16-bits UUID into string.
+            sprintf(uuidStr, "0000%04x-0000-1000-8000-00805f9b34fb", uuid[0]);
+          } else if (type == GAP_INCOMPLETE_UUID32 || type == GAP_COMPLETE_UUID32) {
+            // Convert 32-bits UUID into string.
+            sprintf(uuidStr, "%04x%04x-0000-1000-8000-00805f9b34fb",
+              uuid[1], uuid[0]);
+          } else if (type == GAP_INCOMPLETE_UUID128 || type == GAP_COMPLETE_UUID128) {
+            // Convert 128-bits UUID into string.
+            sprintf(uuidStr, "%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
+              uuid[7], uuid[6], uuid[5], uuid[4],
+              uuid[3], uuid[2], uuid[1], uuid[0]);
+          }
+          nsString uuidNsString;
+          uuidNsString.AssignLiteral(uuidStr);
+
+          mUuids.AppendElement(uuidNsString);
+        }
+
+        BluetoothDeviceBinding::ClearCachedUuidsValue(this);
+        break;
+      }
+      case GAP_SHORTENED_NAME:
+        if (!mName.IsEmpty()) break;
+      case GAP_COMPLETE_NAME: {
+        // Read device name from data buffer.
+        char deviceName[dataLength];
+        for (int i = 0; i < dataLength; ++i) {
+          deviceName[i] = aAdvData[offset++];
+        }
+
+        mName.AssignASCII(deviceName, dataLength);
+        break;
+      }
+      default:
+        offset += dataLength;
+        break;
+    }
+  }
 }
 
 JSObject*

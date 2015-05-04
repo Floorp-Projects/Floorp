@@ -202,6 +202,10 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_StartDiscoveryRequest());
     case Request::TStopDiscoveryRequest:
       return actor->DoRequest(aRequest.get_StopDiscoveryRequest());
+    case Request::TStartLeScanRequest:
+      return actor->DoRequest(aRequest.get_StartLeScanRequest());
+    case Request::TStopLeScanRequest:
+      return actor->DoRequest(aRequest.get_StopLeScanRequest());
     case Request::TPairRequest:
       return actor->DoRequest(aRequest.get_PairRequest());
     case Request::TUnpairRequest:
@@ -403,9 +407,7 @@ BluetoothRequestParent::DoRequest(const StartDiscoveryRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TStartDiscoveryRequest);
 
-  nsresult rv =
-    mService->StartDiscoveryInternal(mReplyRunnable.get());
-  NS_ENSURE_SUCCESS(rv, false);
+  mService->StartDiscoveryInternal(mReplyRunnable.get());
 
   return true;
 }
@@ -416,9 +418,29 @@ BluetoothRequestParent::DoRequest(const StopDiscoveryRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TStopDiscoveryRequest);
 
-  nsresult rv =
-    mService->StopDiscoveryInternal(mReplyRunnable.get());
-  NS_ENSURE_SUCCESS(rv, false);
+  mService->StopDiscoveryInternal(mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const StartLeScanRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TStartLeScanRequest);
+
+  mService->StartLeScanInternal(aRequest.serviceUuids(), mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const StopLeScanRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TStopLeScanRequest);
+
+  mService->StopLeScanInternal(aRequest.scanUuid(), mReplyRunnable.get());
 
   return true;
 }
