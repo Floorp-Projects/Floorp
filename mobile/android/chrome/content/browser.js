@@ -7094,42 +7094,6 @@ var SearchEngines = {
     Services.obs.addObserver(this, "SearchEngines:RestoreDefaults", false);
     Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
-
-    let filter = {
-      matches: function (aElement) {
-        // Copied from body of isTargetAKeywordField function in nsContextMenu.js
-        if(!(aElement instanceof HTMLInputElement))
-          return false;
-        let form = aElement.form;
-        if (!form || aElement.type == "password")
-          return false;
-
-        let method = form.method.toUpperCase();
-
-        // These are the following types of forms we can create keywords for:
-        //
-        // method    encoding type        can create keyword
-        // GET       *                                   YES
-        //           *                                   YES
-        // POST      *                                   YES
-        // POST      application/x-www-form-urlencoded   YES
-        // POST      text/plain                          NO ( a little tricky to do)
-        // POST      multipart/form-data                 NO
-        // POST      everything else                     YES
-        return (method == "GET" || method == "") ||
-               (form.enctype != "text/plain") && (form.enctype != "multipart/form-data");
-      }
-    };
-    SelectionHandler.addAction({
-      id: "search_add_action",
-      label: Strings.browser.GetStringFromName("contextmenu.addSearchEngine2"),
-      icon: "drawable://ab_add_search_engine",
-      selector: filter,
-      action: function(aElement) {
-        UITelemetry.addEvent("action.1", "actionbar", null, "add_search_engine");
-        SearchEngines.addEngine(aElement);
-      }
-    });
   },
 
   // Fetch list of search engines. all ? All engines : Visible engines only.

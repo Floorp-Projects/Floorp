@@ -162,6 +162,10 @@ ul.children + .tag-line::before {
   padding: 1px 0;
 }
 
+.attr-value .link {
+  text-decoration: underline;
+}
+
 .newattr:focus {
   margin-right: 0;
 }
