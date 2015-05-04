@@ -346,7 +346,7 @@ def write_interface(iface, fd):
 
         fd.write("  /* %s */\n" % m.toIDL())
         fd.write("  %s = 0;\n\n" % methodAsNative(m))
-                                                                           
+
     def write_attr_decl(a):
         printComments(fd, a.doccomments, '  ')
 
