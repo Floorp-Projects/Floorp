@@ -13,6 +13,7 @@
 #include "nsTablePainter.h"
 #include "nsTArray.h"
 #include "nsTableFrame.h"
+#include "mozilla/WritingModes.h"
 
 class nsTableRowFrame;
 
@@ -161,7 +162,7 @@ public:
    */
   nscoord GetHeightBasis(const nsHTMLReflowState& aReflowState);
 
-  nsMargin* GetBCBorderWidth(nsMargin& aBorder);
+  mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
 
   /**
    * Gets inner border widths before collapsing with cell borders
