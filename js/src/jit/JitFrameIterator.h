@@ -65,7 +65,14 @@ enum FrameType
     // the reconstruction of the BaselineJS frame. From within C++, a bailout
     // frame is always the last frame in a JitActivation iff the bailout frame
     // information is recorded on the JitActivation.
-    JitFrame_Bailout
+    JitFrame_Bailout,
+
+    // A lazy link frame is a special exit frame where a IonJS frame is reused
+    // for linking the newly compiled code.  A special frame is needed to
+    // work-around the fact that we can make stack patterns which are similar to
+    // unwound frames. As opposed to unwound frames, we still have to mark all
+    // the arguments of the original IonJS frame.
+    JitFrame_LazyLink
 };
 
 enum ReadFrameArgsBehavior {
@@ -142,6 +149,9 @@ class JitFrameIterator
     bool checkInvalidation(IonScript** ionScript) const;
     bool checkInvalidation() const;
 
+    bool isExitFrame() const {
+        return type_ == JitFrame_Exit || type_ == JitFrame_LazyLink;
+    }
     bool isScripted() const {
         return type_ == JitFrame_BaselineJS || type_ == JitFrame_IonJS || type_ == JitFrame_Bailout;
     }
@@ -198,7 +208,7 @@ class JitFrameIterator
     // Returns the stack space used by the current frame, in bytes. This does
     // not include the size of its fixed header.
     size_t frameSize() const {
-        MOZ_ASSERT(type_ != JitFrame_Exit);
+        MOZ_ASSERT(!isExitFrame());
         return frameSize_;
     }
 

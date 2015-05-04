@@ -44,15 +44,10 @@ public:
   // in the overrided function.
   virtual nsresult Flush();
 
-  // It should be called in MediaTash thread.
+  // It should be called in MediaTask thread.
   bool HasQueuedSample() {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    ReentrantMonitorAutoEnter mon(mMonitor);
     return mQueueSample.Length();
-  }
-
-  void ClearQueuedSample() {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-    mQueueSample.Clear();
   }
 
 protected:
@@ -63,12 +58,13 @@ protected:
   // It sends MP4Sample to OMX layer. It must be overrided by subclass.
   virtual android::status_t SendSampleToOMX(MediaRawData* aSample) = 0;
 
+  // This monitor protects mQueueSample.
+  ReentrantMonitor mMonitor;
+
   // An queue with the MP4 samples which are waiting to be sent into OMX.
   // If an element is an empty MP4Sample, that menas EOS. There should not
   // any sample be queued after EOS.
   nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
-
-  RefPtr<MediaTaskQueue> mTaskQueue;
 
   nsRefPtr<MediaByteBuffer> mCodecSpecificData;
 
@@ -97,8 +93,6 @@ public:
   virtual nsresult Drain() override;
 
   virtual nsresult Shutdown() override;
-
-  virtual bool IsWaitingMediaResources() override;
 
 private:
 

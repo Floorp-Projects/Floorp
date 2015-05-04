@@ -2465,7 +2465,7 @@ public:
   * are likely to need special-case handling of the RCD-RSF.
   */
   static nsSize
-  CalculateCompositionSizeForFrame(nsIFrame* aFrame);
+  CalculateCompositionSizeForFrame(nsIFrame* aFrame, bool aSubtractScrollbars = true);
 
  /**
   * Calculate the composition size for the root scroll frame of the root

@@ -72,7 +72,6 @@ public:
 
   // For Media Resource Management
   virtual void SetIdle() override;
-  virtual bool IsWaitingMediaResources() override;
   virtual bool IsDormantNeeded() override;
   virtual void ReleaseMediaResources() override;
   virtual void SetSharedDecoderManager(SharedDecoderManager* aManager)
@@ -96,8 +95,6 @@ private:
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
   bool EnsureDecodersSetup();
-
-  bool CheckIfDecoderSetup();
 
   // Sends input to decoder for aTrack, and output to the state machine,
   // if necessary.

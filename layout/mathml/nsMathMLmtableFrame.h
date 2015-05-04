@@ -264,7 +264,7 @@ public:
     return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
-  virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const override;
+  virtual LogicalMargin GetBorderWidth(WritingMode aWM) const override;
 
   virtual nsMargin GetBorderOverflow() override;
 

@@ -374,12 +374,12 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return DragEnter(dragEvent);
     }
     // dragover
-    case NS_DRAGDROP_OVER_SYNTH: {
+    case NS_DRAGDROP_OVER: {
       nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
       return DragOver(dragEvent);
     }
     // dragexit
-    case NS_DRAGDROP_EXIT_SYNTH: {
+    case NS_DRAGDROP_EXIT: {
       nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
       return DragExit(dragEvent);
     }

@@ -796,9 +796,8 @@ nsTableCellFrame::IntrinsicISizeOffsets(nsRenderingContext* aRenderingContext)
   result.hMargin = 0;
   result.hPctMargin = 0;
 
-  nsMargin border;
-  GetBorderWidth(border);
-  result.hBorder = border.LeftRight();
+  WritingMode wm = GetWritingMode();
+  result.hBorder = GetBorderWidth(wm).IStartEnd(wm);
 
   return result;
 }
@@ -875,15 +874,15 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   nsSize availSize(aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
 
-  nsMargin borderPadding = aReflowState.ComputedPhysicalPadding();
-  nsMargin border;
-  GetBorderWidth(border);
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalMargin borderPadding = aReflowState.ComputedLogicalPadding();
+  LogicalMargin border = GetBorderWidth(wm);
   borderPadding += border;
 
-  nscoord topInset    = borderPadding.top;
-  nscoord rightInset  = borderPadding.right;
-  nscoord bottomInset = borderPadding.bottom;
-  nscoord leftInset   = borderPadding.left;
+  nscoord topInset = borderPadding.Top(wm);
+  nscoord rightInset = borderPadding.Right(wm);
+  nscoord bottomInset = borderPadding.Bottom(wm);
+  nscoord leftInset = borderPadding.Left(wm);
 
   // reduce available space by insets, if we're in a constrained situation
   availSize.width -= leftInset + rightInset;
@@ -895,7 +894,6 @@ nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   if (availSize.height < 0)
     availSize.height = 1;
 
-  WritingMode wm = aReflowState.GetWritingMode();
   nsHTMLReflowMetrics kidSize(wm, aDesiredSize.mFlags);
   kidSize.ClearSize();
   SetPriorAvailWidth(aReflowState.AvailableWidth());
@@ -1080,11 +1078,10 @@ NS_NewTableCellFrame(nsIPresShell*   aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
-nsMargin*
-nsTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
+LogicalMargin
+nsTableCellFrame::GetBorderWidth(WritingMode aWM) const
 {
-  aBorder = StyleBorder()->GetComputedBorder();
-  return &aBorder;
+  return LogicalMargin(aWM, StyleBorder()->GetComputedBorder());
 }
 
 nsIAtom*
@@ -1107,7 +1104,7 @@ nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext,
                                        nsTableFrame* aTableFrame)
   : nsTableCellFrame(aContext, aTableFrame)
 {
-  mTopBorder = mRightBorder = mBottomBorder = mLeftBorder = 0;
+  mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
 }
 
 nsBCTableCellFrame::~nsBCTableCellFrame()
@@ -1123,9 +1120,8 @@ nsBCTableCellFrame::GetType() const
 /* virtual */ nsMargin
 nsBCTableCellFrame::GetUsedBorder() const
 {
-  nsMargin result;
-  GetBorderWidth(result);
-  return result;
+  WritingMode wm = GetWritingMode();
+  return GetBorderWidth(wm).GetPhysicalMargin(wm);
 }
 
 /* virtual */ bool
@@ -1148,61 +1144,61 @@ nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsMargin*
-nsBCTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
+LogicalMargin
+nsBCTableCellFrame::GetBorderWidth(WritingMode aWM) const
 {
-  int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  aBorder.top    = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips, mTopBorder);
-  aBorder.right  = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips, mRightBorder);
-  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips, mBottomBorder);
-  aBorder.left   = BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mLeftBorder);
-  return &aBorder;
+  int32_t pixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
+  return LogicalMargin(aWM,
+                       BC_BORDER_END_HALF_COORD(pixelsToTwips, mBStartBorder),
+                       BC_BORDER_START_HALF_COORD(pixelsToTwips, mIEndBorder),
+                       BC_BORDER_START_HALF_COORD(pixelsToTwips, mBEndBorder),
+                       BC_BORDER_END_HALF_COORD(pixelsToTwips, mIStartBorder));
 }
 
 BCPixelSize
-nsBCTableCellFrame::GetBorderWidth(mozilla::css::Side aSide) const
+nsBCTableCellFrame::GetBorderWidth(LogicalSide aSide) const
 {
   switch(aSide) {
-  case NS_SIDE_TOP:
-    return BC_BORDER_BOTTOM_HALF(mTopBorder);
-  case NS_SIDE_RIGHT:
-    return BC_BORDER_LEFT_HALF(mRightBorder);
-  case NS_SIDE_BOTTOM:
-    return BC_BORDER_TOP_HALF(mBottomBorder);
+  case eLogicalSideBStart:
+    return BC_BORDER_END_HALF(mBStartBorder);
+  case eLogicalSideIEnd:
+    return BC_BORDER_START_HALF(mIEndBorder);
+  case eLogicalSideBEnd:
+    return BC_BORDER_START_HALF(mBEndBorder);
   default:
-    return BC_BORDER_RIGHT_HALF(mLeftBorder);
+    return BC_BORDER_END_HALF(mIStartBorder);
   }
 }
 
 void
-nsBCTableCellFrame::SetBorderWidth(mozilla::css::Side aSide,
-                                   BCPixelSize aValue)
+nsBCTableCellFrame::SetBorderWidth(LogicalSide aSide, BCPixelSize aValue)
 {
   switch(aSide) {
-  case NS_SIDE_TOP:
-    mTopBorder = aValue;
+  case eLogicalSideBStart:
+    mBStartBorder = aValue;
     break;
-  case NS_SIDE_RIGHT:
-    mRightBorder = aValue;
+  case eLogicalSideIEnd:
+    mIEndBorder = aValue;
     break;
-  case NS_SIDE_BOTTOM:
-    mBottomBorder = aValue;
+  case eLogicalSideBEnd:
+    mBEndBorder = aValue;
     break;
   default:
-    mLeftBorder = aValue;
+    mIStartBorder = aValue;
   }
 }
 
 /* virtual */ nsMargin
 nsBCTableCellFrame::GetBorderOverflow()
 {
-  nsMargin halfBorder;
+  WritingMode wm = GetWritingMode();
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
-  halfBorder.top = BC_BORDER_TOP_HALF_COORD(p2t, mTopBorder);
-  halfBorder.right = BC_BORDER_RIGHT_HALF_COORD(p2t, mRightBorder);
-  halfBorder.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, mBottomBorder);
-  halfBorder.left = BC_BORDER_LEFT_HALF_COORD(p2t, mLeftBorder);
-  return halfBorder;
+  LogicalMargin halfBorder(wm,
+                           BC_BORDER_START_HALF_COORD(p2t, mBStartBorder),
+                           BC_BORDER_END_HALF_COORD(p2t, mIEndBorder),
+                           BC_BORDER_END_HALF_COORD(p2t, mBEndBorder),
+                           BC_BORDER_START_HALF_COORD(p2t, mIStartBorder));
+  return halfBorder.GetPhysicalMargin(wm);
 }
 
 
@@ -1214,8 +1210,8 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
 {
   // make border-width reflect the half of the border-collapse
   // assigned border that's inside the cell
-  nsMargin borderWidth;
-  GetBorderWidth(borderWidth);
+  WritingMode wm = GetWritingMode();
+  nsMargin borderWidth = GetBorderWidth(wm).GetPhysicalMargin(wm);
 
   nsStyleBorder myBorder(*StyleBorder());
 

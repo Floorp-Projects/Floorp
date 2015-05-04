@@ -75,7 +75,9 @@ nsTableRowFrame::InitChildReflowState(nsPresContext&         aPresContext,
     // we only reflow cells, so don't need to check frame type
     nsBCTableCellFrame* bcCellFrame = (nsBCTableCellFrame*)aReflowState.frame;
     if (bcCellFrame) {
-      pCollapseBorder = bcCellFrame->GetBorderWidth(collapseBorder);
+      WritingMode wm = GetWritingMode();
+      collapseBorder = bcCellFrame->GetBorderWidth(wm).GetPhysicalMargin(wm);
+      pCollapseBorder = &collapseBorder;
     }
   }
   aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder);
@@ -1373,18 +1375,18 @@ nsTableRowFrame::GetUnpaginatedHeight(nsPresContext* aPresContext)
   return NS_PTR_TO_INT32(props.Get(RowUnpaginatedHeightProperty()));
 }
 
-void nsTableRowFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
+void nsTableRowFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
                                                  BCPixelSize aPixelValue)
 {
   switch (aForSide) {
-    case NS_SIDE_RIGHT:
-      mRightContBorderWidth = aPixelValue;
+    case eLogicalSideIEnd:
+      mIEndContBorderWidth = aPixelValue;
       return;
-    case NS_SIDE_TOP:
-      mTopContBorderWidth = aPixelValue;
+    case eLogicalSideBStart:
+      mBStartContBorderWidth = aPixelValue;
       return;
-    case NS_SIDE_LEFT:
-      mLeftContBorderWidth = aPixelValue;
+    case eLogicalSideIStart:
+      mIStartContBorderWidth = aPixelValue;
       return;
     default:
       NS_ERROR("invalid NS_SIDE arg");
