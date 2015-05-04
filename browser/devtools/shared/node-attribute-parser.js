@@ -18,8 +18,10 @@
  *   (e.g. <label for="input-id"> or <key command="command-id">).
  * - TYPE_IDREF_LIST: a space separated list of IDREFs (e.g.
  *   <output for="id1 id2">).
- * - TYPE_RESOURCE_URI: a URI to a javascript or css resource that can be opened
- *   in the devtools (e.g. <script src="uri">).
+ * - TYPE_JS_RESOURCE_URI: a URI to a javascript resource that can be opened in
+ *   the devtools (e.g. <script src="uri">).
+ * - TYPE_CSS_RESOURCE_URI: a URI to a css resource that can be opened in the
+ *   devtools (e.g. <link href="uri">).
  *
  * parseAttribute is the parser entry function, exported on this module.
  */
@@ -29,7 +31,8 @@ const TYPE_URI = "uri";
 const TYPE_URI_LIST = "uriList";
 const TYPE_IDREF = "idref";
 const TYPE_IDREF_LIST = "idrefList";
-const TYPE_RESOURCE_URI = "resource";
+const TYPE_JS_RESOURCE_URI = "jsresource";
+const TYPE_CSS_RESOURCE_URI = "cssresource";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -65,7 +68,7 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: HTML_NS, attributeName: "headers", tagName: "th", type: TYPE_IDREF_LIST},
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "a", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "area", type: TYPE_URI},
-  {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_RESOURCE_URI,
+  {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
    isValid: (namespaceURI, tagName, attributes) => {
     return getAttribute(attributes, "rel") === "stylesheet";
    }},
@@ -82,7 +85,7 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: HTML_NS, attributeName: "ping", tagName: "area", type: TYPE_URI_LIST},
   {namespaceURI: HTML_NS, attributeName: "poster", tagName: "video", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "profile", tagName: "head", type: TYPE_URI},
-  {namespaceURI: "*", attributeName: "src", tagName: "script", type: TYPE_RESOURCE_URI},
+  {namespaceURI: "*", attributeName: "src", tagName: "script", type: TYPE_JS_RESOURCE_URI},
   {namespaceURI: HTML_NS, attributeName: "src", tagName: "input", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "src", tagName: "frame", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "src", tagName: "iframe", type: TYPE_URI},
@@ -137,9 +140,15 @@ let parsers = {
     }
     return data;
   },
-  [TYPE_RESOURCE_URI]: function(attributeValue) {
+  [TYPE_JS_RESOURCE_URI]: function(attributeValue) {
     return [{
-      type: TYPE_RESOURCE_URI,
+      type: TYPE_JS_RESOURCE_URI,
+      value: attributeValue
+    }];
+  },
+  [TYPE_CSS_RESOURCE_URI]: function(attributeValue) {
+    return [{
+      type: TYPE_CSS_RESOURCE_URI,
       value: attributeValue
     }];
   },
@@ -169,7 +178,7 @@ let parsers = {
  * be an array of {name, value} objects.
  * @param {String} attributeName The name of the attribute to parse.
  * @return {Array} An array of tokens that represents the value. Each token is
- * an object {type: [string|uri|resource|idref], value}.
+ * an object {type: [string|uri|jsresource|cssresource|idref], value}.
  * For instance parsing the ping attribute in <a ping="uri1 uri2"> returns:
  * [
  *   {type: "uri", value: "uri2"},
