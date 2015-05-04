@@ -39,8 +39,6 @@ XPCOMUtils.defineLazyGetter(this, "gRil", function() {
   return null;
 });
 
-const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
-const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const TOPIC_PREF_CHANGED             = "nsPref:changed";
@@ -126,8 +124,6 @@ function TetheringService() {
   Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
   Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED, false);
   Services.obs.addObserver(this, TOPIC_CONNECTION_STATE_CHANGED, false);
-  Services.obs.addObserver(this, TOPIC_INTERFACE_REGISTERED, false);
-  Services.obs.addObserver(this, TOPIC_INTERFACE_UNREGISTERED, false);
   Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
 
   this._dataDefaultServiceId = 0;
@@ -257,28 +253,10 @@ TetheringService.prototype = {
               " changed state to " + network.state);
         this.onConnectionChanged(network);
         break;
-      case TOPIC_INTERFACE_REGISTERED:
-        network = aSubject.QueryInterface(Ci.nsINetworkInterface);
-        if (network &&
-            network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-          debug("Force setting " + SETTINGS_DUN_REQUIRED + " to true.");
-          this.tetheringSettings[SETTINGS_DUN_REQUIRED] = true;
-        }
-        break;
-      case TOPIC_INTERFACE_UNREGISTERED:
-        network = aSubject.QueryInterface(Ci.nsINetworkInterface);
-        if (network &&
-            network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-          this.tetheringSettings[SETTINGS_DUN_REQUIRED] =
-          libcutils.property_get("ro.tethering.dun_required") === "1";
-        }
-        break;
       case TOPIC_XPCOM_SHUTDOWN:
         Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_MOZSETTINGS_CHANGED);
         Services.obs.removeObserver(this, TOPIC_CONNECTION_STATE_CHANGED);
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_REGISTERED);
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
         Services.prefs.removeObserver(PREF_NETWORK_DEBUG_ENABLED, this);
 
         this.dunConnectTimer.cancel();
@@ -642,6 +620,10 @@ TetheringService.prototype = {
       debug('Pending args: ' + JSON.stringify(this._pendingWifiTetheringRequestArgs));
       return;
     }
+
+    // Re-check again, test cases set this property later.
+    this.tetheringSettings[SETTINGS_DUN_REQUIRED] =
+      libcutils.property_get("ro.tethering.dun_required") === "1";
 
     if (!aEnable) {
       this.enableWifiTethering(false, aConfig, aCallback);
