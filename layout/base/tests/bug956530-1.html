@@ -18,15 +18,17 @@
         synthesizeMouseAtCenter(document.body, {});
         setTimeout(function() {
           synthesizeMouseAtCenter(i, {});
-          setTimeout(function() {
-            document.documentElement.removeAttribute("class");
-          }, 0);
         }, 0);
+      }, 0);
+    }
+    function finish() {
+      setTimeout(function() {
+        document.documentElement.removeAttribute("class");
       }, 0);
     }
   </script>
   <body onload="setTimeout(test, 0)">
     <input value="text text text text text"
-           onfocus="this.select()">
+           onfocus="this.select(); finish();">
   </body>
 </html>
