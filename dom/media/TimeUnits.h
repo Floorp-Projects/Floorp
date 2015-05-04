@@ -8,6 +8,7 @@
 #define TIME_UNITS_H
 
 #include "VideoUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 
 namespace mozilla {
@@ -55,8 +56,81 @@ struct Microseconds {
   int64_t mValue;
 };
 
+class TimeUnit final {
+public:
+  static TimeUnit FromSeconds(double aValue) {
+    MOZ_ASSERT(!IsNaN(aValue));
 
-}
-}
+    double val = aValue * USECS_PER_S;
+    if (val >= double(INT64_MAX)) {
+      return FromMicroseconds(INT64_MAX);
+    } else if (val <= double(INT64_MIN)) {
+      return FromMicroseconds(INT64_MIN);
+    } else {
+      return FromMicroseconds(int64_t(val));
+    }
+  }
+
+  static TimeUnit FromMicroseconds(int64_t aValue) {
+    return TimeUnit(aValue);
+  }
+
+  static TimeUnit FromMicroseconds(Microseconds aValue) {
+    return TimeUnit(aValue.mValue);
+  }
+
+  int64_t ToMicroseconds() const {
+    return mValue.value();
+  }
+
+  double ToSeconds() const {
+    return double(mValue.value()) / USECS_PER_S;
+  }
+
+  bool operator >= (const TimeUnit& aOther) const {
+    MOZ_ASSERT(IsValid() && aOther.IsValid());
+    return mValue.value() >= aOther.mValue.value();
+  }
+  bool operator > (const TimeUnit& aOther) const {
+    return !(*this <= aOther);
+  }
+  bool operator <= (const TimeUnit& aOther) const {
+    MOZ_ASSERT(IsValid() && aOther.IsValid());
+    return mValue.value() <= aOther.mValue.value();
+  }
+  bool operator < (const TimeUnit& aOther) const {
+    return !(*this >= aOther);
+  }
+  TimeUnit operator + (const TimeUnit& aOther) const {
+    return TimeUnit(mValue + aOther.mValue);
+  }
+  TimeUnit operator - (const TimeUnit& aOther) const {
+    return TimeUnit(mValue - aOther.mValue);
+  }
+
+  bool IsValid() const
+  {
+    return mValue.isValid();
+  }
+
+  explicit TimeUnit(const Microseconds& aMicroseconds)
+    : mValue(aMicroseconds.mValue)
+  {}
+
+  TimeUnit(const TimeUnit&) = default;
+
+  TimeUnit& operator = (const TimeUnit&) = default;
+
+private:
+  explicit TimeUnit(CheckedInt64 aMicroseconds)
+    : mValue(aMicroseconds)
+  {}
+
+  // Our internal representation is in microseconds.
+  CheckedInt64 mValue;
+};
+
+} // namespace media
+} // namespace mozilla
 
 #endif // TIME_UNITS_H
