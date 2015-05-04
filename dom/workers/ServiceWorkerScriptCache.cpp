@@ -9,6 +9,7 @@
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Cache.h"
 #include "nsIThreadRetargetableRequest.h"
+#include "nsSerializationHelper.h"
 
 #include "nsIPrincipal.h"
 #include "Workers.h"
@@ -60,11 +61,13 @@ class CompareManager;
 
 // This class downloads a URL from the network and then it calls
 // NetworkFinished() in the CompareManager.
-class CompareNetwork final : public nsIStreamLoaderObserver
+class CompareNetwork final : public nsIStreamLoaderObserver,
+                             public nsIRequestObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
 
   explicit CompareNetwork(CompareManager* aManager)
     : mManager(aManager)
@@ -118,7 +121,7 @@ public:
     }
 
     nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
+    rv = NS_NewStreamLoader(getter_AddRefs(loader), this, this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -158,7 +161,8 @@ private:
   nsString mBuffer;
 };
 
-NS_IMPL_ISUPPORTS(CompareNetwork, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(CompareNetwork, nsIStreamLoaderObserver,
+                  nsIRequestObserver)
 
 // This class gets a cached Response from the CacheStorage and then it calls
 // CacheFinished() in the CompareManager.
@@ -432,6 +436,12 @@ public:
     return mCacheStorage;
   }
 
+  void
+  SetSecurityInfo(nsISerializable* aSecurityInfo)
+  {
+    NS_SerializeToString(aSecurityInfo, mSecurityInfo);
+  }
+
 private:
   ~CompareManager()
   {
@@ -525,6 +535,8 @@ private:
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(body);
 
+    ir->SetSecurityInfo(mSecurityInfo);
+
     nsRefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
 
     RequestOrUSVString request;
@@ -555,6 +567,8 @@ private:
   // Only used if the network script has changed and needs to be cached.
   nsString mNewCacheName;
 
+  nsCString mSecurityInfo;
+
   enum {
     WaitingForOpen,
     WaitingForPut
@@ -564,6 +578,38 @@ private:
   bool mCacheFinished;
   bool mInCache;
 };
+
+NS_IMETHODIMP
+CompareNetwork::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+{
+  AssertIsOnMainThread();
+
+#ifdef DEBUG
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  MOZ_ASSERT(channel == mChannel);
+#endif
+
+  nsCOMPtr<nsISupports> infoObj;
+  mChannel->GetSecurityInfo(getter_AddRefs(infoObj));
+  if (infoObj) {
+    nsCOMPtr<nsISerializable> serializable = do_QueryInterface(infoObj);
+    if (serializable) {
+      mManager->SetSecurityInfo(serializable);
+    } else {
+      NS_WARNING("A non-serializable object was obtained from nsIChannel::GetSecurityInfo()!");
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CompareNetwork::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                              nsresult aStatusCode)
+{
+  // Nothing to do here!
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
