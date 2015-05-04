@@ -1225,7 +1225,6 @@ var ViewMenu = {
       url:          { key: "URI",          dir: "ascending"  },
       date:         { key: "DATE",         dir: "descending" },
       visitCount:   { key: "VISITCOUNT",   dir: "descending" },
-      keyword:      { key: "KEYWORD",      dir: "ascending"  },
       dateAdded:    { key: "DATEADDED",    dir: "descending" },
       lastModified: { key: "LASTMODIFIED", dir: "descending" },
       description:  { key: "ANNOTATION",
