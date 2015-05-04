@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
-    MODULE = 'openmax_dl'
+    Library('openmax_dl')
 
     EXPORTS.dl.api += [
         'api/armCOMM_s.h',
@@ -75,10 +75,11 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
         'sp/src/omxSP_FFTInv_CToC_SC32_Sfs_s.S',
     ]
 
-    LIBRARY_NAME = 'openmax_dl'
-
     LOCAL_INCLUDES += [
-        '..'
+        '..',
+        'api'
     ]
 
     DEFINES['BIG_FFT_TABLE'] = True
+
+    FINAL_LIBRARY = 'xul'
