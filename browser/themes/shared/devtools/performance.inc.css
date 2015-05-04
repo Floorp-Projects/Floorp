@@ -415,6 +415,7 @@
   -moz-padding-end: 8px;
   padding-top: 2vh;
   overflow: auto;
+  min-width: 50px;
 }
 
 .marker-details-bullet {
