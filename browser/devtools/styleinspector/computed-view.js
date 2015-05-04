@@ -152,6 +152,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this._onCopy = this._onCopy.bind(this);
   this._onCopyColor = this._onCopyColor.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
+  this._onFilterKeyPress = this._onFilterKeyPress.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
   this._onIncludeBrowserStyles = this._onIncludeBrowserStyles.bind(this);
   this._onFilterTextboxContextMenu = this._onFilterTextboxContextMenu.bind(this);
@@ -168,6 +169,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
+  this.searchField.addEventListener("keypress", this._onFilterKeyPress);
   this.searchField.addEventListener("contextmenu", this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
   this.includeBrowserStylesCheckbox.addEventListener("command",
@@ -545,6 +547,46 @@ CssHtmlTree.prototype = {
   },
 
   /**
+   * Handle the search box's keypress event. If the escape key is pressed,
+   * clear the search box field.
+   */
+  _onFilterKeyPress: function(aEvent) {
+    if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE &&
+        this._onClearSearch()) {
+      aEvent.preventDefault();
+      aEvent.stopPropagation();
+    }
+  },
+
+  /**
+   * Context menu handler for filter style search box.
+   */
+  _onFilterTextboxContextMenu: function(event) {
+    try {
+      this.styleDocument.defaultView.focus();
+      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
+      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
+    } catch(e) {
+      console.error(e);
+    }
+  },
+
+  /**
+   * Called when the user clicks on the clear button in the filter style search
+   * box. Returns true if the search box is cleared and false otherwise.
+   */
+  _onClearSearch: function() {
+    if (this.searchField.value) {
+      this.searchField.value = "";
+      this.searchField.focus();
+      this._onFilterStyles();
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
    * The change event handler for the includeBrowserStyles checkbox.
    *
    * @param {Event} aEvent the DOM Event object.
@@ -831,29 +873,6 @@ CssHtmlTree.prototype = {
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   },
 
-   /**
-   * Context menu handler for filter style search box.
-   */
-  _onFilterTextboxContextMenu: function(event) {
-    try {
-      this.styleDocument.defaultView.focus();
-      let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
-      contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
-    } catch(e) {
-      console.error(e);
-    }
-  },
-
-  /**
-   * Called when the user clicks on the clear button in the filter style search
-   * box.
-   */
-  _onClearSearch: function() {
-    this.searchField.value = "";
-    this.searchField.focus();
-    this._onFilterStyles();
-  },
-
   /**
    * Destructor for CssHtmlTree.
    */
@@ -906,6 +925,7 @@ CssHtmlTree.prototype = {
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.searchField.removeEventListener("input", this._onFilterStyles);
+    this.searchField.removeEventListener("keypress", this._onFilterKeyPress);
     this.searchField.removeEventListener("contextmenu", this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
     this.includeBrowserStylesCheckbox.removeEventListener("command",
