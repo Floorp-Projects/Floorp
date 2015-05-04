@@ -4683,13 +4683,14 @@ static uint8_t styleToPriority[13] = { 0,  // NS_STYLE_BORDER_STYLE_NONE
 static void
 GetColorAndStyle(const nsIFrame*  aFrame,
                  mozilla::css::Side aSide,
-                 uint8_t&         aStyle,
-                 nscolor&         aColor,
+                 uint8_t* aStyle,
+                 nscolor* aColor,
                  bool             aTableIsLTR)
 {
   NS_PRECONDITION(aFrame, "null frame");
+  NS_PRECONDITION(aStyle && aColor, "null argument");
   // initialize out arg
-  aColor = 0;
+  *aColor = 0;
   const nsStyleBorder* styleData = aFrame->StyleBorder();
   if(!aTableIsLTR) { // revert the directions
     if (NS_SIDE_RIGHT == aSide) {
@@ -4699,13 +4700,13 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       aSide = NS_SIDE_RIGHT;
     }
   }
-  aStyle = styleData->GetBorderStyle(aSide);
+  *aStyle = styleData->GetBorderStyle(aSide);
 
-  if ((NS_STYLE_BORDER_STYLE_NONE == aStyle) ||
-      (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
+  if ((NS_STYLE_BORDER_STYLE_NONE == *aStyle) ||
+      (NS_STYLE_BORDER_STYLE_HIDDEN == *aStyle)) {
     return;
   }
-  aColor = aFrame->StyleContext()->GetVisitedDependentColor(
+  *aColor = aFrame->StyleContext()->GetVisitedDependentColor(
              nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[aSide]);
 }
 
@@ -4719,16 +4720,15 @@ GetColorAndStyle(const nsIFrame*  aFrame,
 static void
 GetPaintStyleInfo(const nsIFrame*  aFrame,
                   mozilla::css::Side aSide,
-                  uint8_t&         aStyle,
-                  nscolor&         aColor,
+                  uint8_t* aStyle,
+                  nscolor* aColor,
                   bool             aTableIsLTR)
 {
   GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR);
-  if (NS_STYLE_BORDER_STYLE_INSET    == aStyle) {
-    aStyle = NS_STYLE_BORDER_STYLE_RIDGE;
-  }
-  else if (NS_STYLE_BORDER_STYLE_OUTSET    == aStyle) {
-    aStyle = NS_STYLE_BORDER_STYLE_GROOVE;
+  if (NS_STYLE_BORDER_STYLE_INSET == *aStyle) {
+    *aStyle = NS_STYLE_BORDER_STYLE_RIDGE;
+  } else if (NS_STYLE_BORDER_STYLE_OUTSET == *aStyle) {
+    *aStyle = NS_STYLE_BORDER_STYLE_GROOVE;
   }
 }
 
@@ -4745,14 +4745,14 @@ GetPaintStyleInfo(const nsIFrame*  aFrame,
 static void
 GetColorAndStyle(const nsIFrame*  aFrame,
                  mozilla::css::Side aSide,
-                 uint8_t&         aStyle,
-                 nscolor&         aColor,
+                 uint8_t* aStyle,
+                 nscolor* aColor,
                  bool             aTableIsLTR,
-                 BCPixelSize&     aWidth)
+                 BCPixelSize* aWidth)
 {
   GetColorAndStyle(aFrame, aSide, aStyle, aColor, aTableIsLTR);
-  if ((NS_STYLE_BORDER_STYLE_NONE == aStyle) ||
-      (NS_STYLE_BORDER_STYLE_HIDDEN == aStyle)) {
+  if ((NS_STYLE_BORDER_STYLE_NONE == *aStyle) ||
+      (NS_STYLE_BORDER_STYLE_HIDDEN == *aStyle)) {
     aWidth = 0;
     return;
   }
@@ -4767,7 +4767,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
     }
   }
   width = styleData->GetComputedBorderWidth(aSide);
-  aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
+  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
 }
 
 class nsDelayedCalcBCBorders : public nsRunnable {
@@ -4900,7 +4900,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
 
   // start with the table as dominant if present
   if (aTableFrame) {
-    GetColorAndStyle(aTableFrame, aSide, border.style, border.color, aTableIsLTR, border.width);
+    GetColorAndStyle(aTableFrame, aSide, &border.style, &border.color, aTableIsLTR, &border.width);
     border.owner = eTableOwner;
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
       return border;
@@ -4908,7 +4908,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the colgroup is dominant
   if (aColGroupFrame) {
-    GetColorAndStyle(aColGroupFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, tempBorder.width);
+    GetColorAndStyle(aColGroupFrame, aSide, &tempBorder.style, &tempBorder.color, aTableIsLTR, &tempBorder.width);
     tempBorder.owner = (aAja && !horizontal) ? eAjaColGroupOwner : eColGroupOwner;
     // pass here and below false for aSecondIsHorizontal as it is only used for corner calculations.
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
@@ -4918,7 +4918,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the col is dominant
   if (aColFrame) {
-    GetColorAndStyle(aColFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, tempBorder.width);
+    GetColorAndStyle(aColFrame, aSide, &tempBorder.style, &tempBorder.color, aTableIsLTR, &tempBorder.width);
     tempBorder.owner = (aAja && !horizontal) ? eAjaColOwner : eColOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
@@ -4927,7 +4927,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the rowgroup is dominant
   if (aRowGroupFrame) {
-    GetColorAndStyle(aRowGroupFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, tempBorder.width);
+    GetColorAndStyle(aRowGroupFrame, aSide, &tempBorder.style, &tempBorder.color, aTableIsLTR, &tempBorder.width);
     tempBorder.owner = (aAja && horizontal) ? eAjaRowGroupOwner : eRowGroupOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
@@ -4936,7 +4936,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the row is dominant
   if (aRowFrame) {
-    GetColorAndStyle(aRowFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, tempBorder.width);
+    GetColorAndStyle(aRowFrame, aSide, &tempBorder.style, &tempBorder.color, aTableIsLTR, &tempBorder.width);
     tempBorder.owner = (aAja && horizontal) ? eAjaRowOwner : eRowOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
     if (NS_STYLE_BORDER_STYLE_HIDDEN == border.style) {
@@ -4945,7 +4945,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
   }
   // see if the cell is dominant
   if (aCellFrame) {
-    GetColorAndStyle(aCellFrame, aSide, tempBorder.style, tempBorder.color, aTableIsLTR, tempBorder.width);
+    GetColorAndStyle(aCellFrame, aSide, &tempBorder.style, &tempBorder.color, aTableIsLTR, &tempBorder.width);
     tempBorder.owner = (aAja) ? eAjaCellOwner : eCellOwner;
     border = CompareBorders(!CELL_CORNER, border, tempBorder, false);
   }
@@ -7016,7 +7016,7 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
       break;
   }
   if (owner) {
-    ::GetPaintStyleInfo(owner, side, style, color, aIter.mTableIsLTR);
+    ::GetPaintStyleInfo(owner, side, &style, &color, aIter.mTableIsLTR);
   }
   BCPixelSize smallHalf, largeHalf;
   DivideBCBorderSize(mWidth, smallHalf, largeHalf);
@@ -7207,7 +7207,7 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
       break;
   }
   if (owner) {
-    ::GetPaintStyleInfo(owner, side, style, color, aIter.mTableIsLTR);
+    ::GetPaintStyleInfo(owner, side, &style, &color, aIter.mTableIsLTR);
   }
   BCPixelSize smallHalf, largeHalf;
   DivideBCBorderSize(mWidth, smallHalf, largeHalf);
