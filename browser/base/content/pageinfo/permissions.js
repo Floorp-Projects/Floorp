@@ -30,7 +30,7 @@ var permissionObserver = {
 
 function onLoadPermission()
 {
-  var uri = gDocument.documentURIObject;
+  var uri = BrowserUtils.makeURIFromCPOW(gDocument.documentURIObject);
   var permTab = document.getElementById("permTab");
   if (SitePermissions.isSupportedURI(uri)) {
     gPermURI = uri;
