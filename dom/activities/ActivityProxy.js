@@ -69,6 +69,22 @@ ActivityProxy.prototype = {
       return;
     }
 
+    // Check the activities that are restricted to be used in dev mode.
+    let devMode = false;
+    let isDevModeActivity = false;
+    try {
+      devMode = Services.prefs.getBoolPref("dom.apps.developer_mode");
+      isDevModeActivity =
+        Services.prefs.getCharPref("dom.activities.developer_mode_only")
+                      .split(",").indexOf(aOptions.name) !== -1;
+
+    } catch(e) {}
+    if (isDevModeActivity && !devMode) {
+      Services.DOMRequest.fireErrorAsync(this.activity, "SecurityError");
+      Services.obs.notifyObservers(null, "Activity:Error", null);
+      return;
+    }
+
     cpmm.addMessageListener("Activity:FireSuccess", this);
     cpmm.addMessageListener("Activity:FireError", this);
 
