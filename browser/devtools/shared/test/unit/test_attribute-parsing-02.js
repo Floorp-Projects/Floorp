@@ -51,7 +51,7 @@ const TEST_DATA = [{
   attributeValue: "styles.css",
   otherAttributes: [{name: "rel", value: "stylesheet"}],
   expected: [
-    {value: "styles.css", type: "resource"}
+    {value: "styles.css", type: "cssresource"}
   ]
 }, {
   tagName: "link",
@@ -103,7 +103,7 @@ const TEST_DATA = [{
   attributeName: "src",
   attributeValue: "script.js",
   expected: [
-    {value: "script.js", type: "resource"}
+    {value: "script.js", type: "jsresource"}
   ]
 }];
 

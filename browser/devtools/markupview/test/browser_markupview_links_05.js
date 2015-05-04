@@ -12,9 +12,6 @@ const TEST_URL = TEST_URL_ROOT + "doc_markup_links.html";
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-  let linkFollow = inspector.panelDoc.getElementById("node-menu-link-follow");
-  let linkCopy = inspector.panelDoc.getElementById("node-menu-link-copy");
-
   info("Select a node with a URI attribute");
   yield selectNode("video", inspector);
 
