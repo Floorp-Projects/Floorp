@@ -476,7 +476,8 @@ static void*
 GetReturnAddressToIonCode(JSContext* cx)
 {
     JitFrameIterator iter(cx);
-    MOZ_ASSERT(iter.type() == JitFrame_Exit);
+    MOZ_ASSERT(iter.type() == JitFrame_Exit,
+               "An exit frame is expected as update functions are called with a VMFunction.");
 
     void* returnAddr = iter.returnAddress();
 #ifdef DEBUG
