@@ -243,7 +243,7 @@ function finishCheckUpdateApplied() {
     do_check_true(running.exists());
   }
 
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   gSwitchApp = true;
   checkUpdateLogContents();
   gSwitchApp = false;
