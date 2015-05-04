@@ -47,7 +47,7 @@ EXPORTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
-	    'D3D11ShareHandleImage.cpp',
+        'D3D11ShareHandleImage.cpp',
     ]
     UNIFIED_SOURCES += [
         'D3D9SurfaceImage.cpp',
