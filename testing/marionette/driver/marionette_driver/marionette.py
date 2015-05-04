@@ -787,6 +787,68 @@ class Marionette(object):
                     typing.append(val[i])
         return typing
 
+    def push_permission(self, perm_type, allow):
+        with self.using_context('content'):
+            perm = self.execute_script("""
+                let allow = arguments[0];
+                if (allow)
+                  allow = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
+                else
+                  allow = Components.interfaces.nsIPermissionManager.DENY_ACTION;
+                let perm_type = arguments[1];
+
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                window.wrappedJSObject.permChanged = false;
+                window.wrappedJSObject.permObserver = function(subject, topic, data) {
+                  if (topic == "perm-changed") {
+                    let permission = subject.QueryInterface(Components.interfaces.nsIPermission);
+                    if (perm_type == permission.type) {
+                      Services.obs.removeObserver(window.wrappedJSObject.permObserver, "perm-changed");
+                      window.wrappedJSObject.permChanged = true;
+                    }
+                  }
+                };
+                Services.obs.addObserver(window.wrappedJSObject.permObserver,
+                                         "perm-changed", false);
+
+                let value = {
+                              'url': document.nodePrincipal.URI.spec,
+                              'appId': document.nodePrincipal.appId,
+                              'isInBrowserElement': document.nodePrincipal.isInBrowserElement,
+                              'type': perm_type,
+                              'action': allow
+                            };
+                return value;
+                """, script_args=[allow, perm_type], sandbox='system')
+
+        with self.using_context('chrome'):
+            waiting = self.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                let perm = arguments[0];
+                let secMan = Services.scriptSecurityManager;
+                let principal = secMan.getAppCodebasePrincipal(Services.io.newURI(perm.url, null, null), 
+                                perm.appId, perm.isInBrowserElement);
+                let testPerm = Services.perms.testPermissionFromPrincipal(principal, perm.type, perm.action);
+                if (testPerm == perm.action) {
+                  return false;
+                }
+                Services.perms.addFromPrincipal(principal, perm.type, perm.action);
+                return true;
+                """, script_args=[perm])
+
+        with self.using_context('content'):
+            if waiting:
+                self.execute_async_script("""
+                    waitFor(marionetteScriptFinished, function() {
+                      return window.wrappedJSObject.permChanged;
+                    });
+                    """, sandbox='system')
+            else:
+                self.execute_script("""
+                    Components.utils.import("resource://gre/modules/Services.jsm");
+                    Services.obs.removeObserver(window.wrappedJSObject.permObserver, "perm-changed");
+                    """, sandbox='system')
+
     def enforce_gecko_prefs(self, prefs):
         """
         Checks if the running instance has the given prefs. If not, it will kill the
