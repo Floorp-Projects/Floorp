@@ -196,7 +196,9 @@ let NetMonitorController = {
 
   /**
    * Initiates remote or chrome network monitoring based on the current target,
-   * wiring event handlers as necessary.
+   * wiring event handlers as necessary. Since the TabTarget will have already
+   * started listening to network requests by now, this is largely
+   * netmonitor-specific initialization.
    *
    * @return object
    *         A promise that is resolved when the monitor finishes connecting.
@@ -209,15 +211,18 @@ let NetMonitorController = {
     let deferred = promise.defer();
     this._connection = deferred.promise;
 
-    let target = this._target;
-    let { client, form } = target;
+    this.client = this._target.client;
     // Some actors like AddonActor or RootActor for chrome debugging
-    // do not support attach/detach and can be used directly
-    if (!target.isTabActor) {
-      this._startChromeMonitoring(client, form.consoleActor, deferred.resolve);
-    } else {
-      this._startMonitoringTab(client, form, deferred.resolve);
+    // aren't actual tabs.
+    if (this._target.isTabActor) {
+      this.tabClient = this._target.activeTab;
     }
+    this.webConsoleClient = this._target.activeConsole;
+    this.webConsoleClient.setPreferences(NET_PREFS, () => {
+      this.TargetEventsHandler.connect();
+      this.NetworkEventsHandler.connect();
+      deferred.resolve();
+    });
 
     yield deferred.promise;
     window.emit(EVENTS.CONNECTED);
@@ -241,82 +246,6 @@ let NetMonitorController = {
    */
   isConnected: function() {
     return !!this.client;
-  },
-
-  /**
-   * Sets up a monitoring session.
-   *
-   * @param DebuggerClient aClient
-   *        The debugger client.
-   * @param object aTabGrip
-   *        The remote protocol grip of the tab.
-   * @param function aCallback
-   *        A function to invoke once the client attached to the console client.
-   */
-  _startMonitoringTab: function(aClient, aTabGrip, aCallback) {
-    if (!aClient) {
-      Cu.reportError("No client found!");
-      return;
-    }
-    this.client = aClient;
-
-    aClient.attachTab(aTabGrip.actor, (aResponse, aTabClient) => {
-      if (!aTabClient) {
-        Cu.reportError("No tab client found!");
-        return;
-      }
-      this.tabClient = aTabClient;
-
-      aClient.attachConsole(aTabGrip.consoleActor, LISTENERS, (aResponse, aWebConsoleClient) => {
-        if (!aWebConsoleClient) {
-          Cu.reportError("Couldn't attach to console: " + aResponse.error);
-          return;
-        }
-        this.webConsoleClient = aWebConsoleClient;
-        this.webConsoleClient.setPreferences(NET_PREFS, () => {
-          this.TargetEventsHandler.connect();
-          this.NetworkEventsHandler.connect();
-
-          if (aCallback) {
-            aCallback();
-          }
-        });
-      });
-    });
-  },
-
-  /**
-   * Sets up a chrome monitoring session.
-   *
-   * @param DebuggerClient aClient
-   *        The debugger client.
-   * @param object aConsoleActor
-   *        The remote protocol grip of the chrome debugger.
-   * @param function aCallback
-   *        A function to invoke once the client attached to the console client.
-   */
-  _startChromeMonitoring: function(aClient, aConsoleActor, aCallback) {
-    if (!aClient) {
-      Cu.reportError("No client found!");
-      return;
-    }
-    this.client = aClient;
-
-    aClient.attachConsole(aConsoleActor, LISTENERS, (aResponse, aWebConsoleClient) => {
-      if (!aWebConsoleClient) {
-        Cu.reportError("Couldn't attach to console: " + aResponse.error);
-        return;
-      }
-      this.webConsoleClient = aWebConsoleClient;
-      this.webConsoleClient.setPreferences(NET_PREFS, () => {
-        this.TargetEventsHandler.connect();
-        this.NetworkEventsHandler.connect();
-
-        if (aCallback) {
-          aCallback();
-        }
-      });
-    });
   },
 
   /**

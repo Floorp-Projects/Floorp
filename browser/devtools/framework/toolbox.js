@@ -110,6 +110,9 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._toolPanels = new Map();
   this._telemetry = new Telemetry();
 
+  this._initInspector = null;
+  this._inspector = null;
+
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
@@ -367,7 +370,7 @@ Toolbox.prototype = {
 
       this._pingTelemetry();
 
-      let panel = yield this.selectTool(this._defaultToolId);
+      yield this.selectTool(this._defaultToolId);
 
       // Wait until the original tool is selected so that the split
       // console input will receive focus.
