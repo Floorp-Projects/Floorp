@@ -5342,8 +5342,8 @@ BCMapCellInfo::SetColumnBStartIEndContBCBorder()
                                  mCurrentColFrame, mRowGroup, mStartRow,
                                  nullptr, mTableWM, eLogicalSideBStart,
                                  !ADJACENT);
-  ((nsTableColFrame*) mCurrentColFrame)->SetContinuousBCBorderWidth(NS_SIDE_TOP,
-                                                           currentBorder.width);
+  ((nsTableColFrame*) mCurrentColFrame)->
+    SetContinuousBCBorderWidth(eLogicalSideBStart, currentBorder.width);
   if (mNumTableCols == GetCellEndColIndex() + 1) {
     currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
                                    mCurrentColFrame, nullptr, nullptr, nullptr,
@@ -5354,7 +5354,7 @@ BCMapCellInfo::SetColumnBStartIEndContBCBorder()
                                    mCurrentColFrame, nullptr,nullptr, nullptr,
                                    mTableWM, eLogicalSideIEnd, !ADJACENT);
   }
-  mCurrentColFrame->SetContinuousBCBorderWidth(NS_SIDE_RIGHT,
+  mCurrentColFrame->SetContinuousBCBorderWidth(eLogicalSideIEnd,
                                                currentBorder.width);
 }
 
@@ -5366,7 +5366,7 @@ BCMapCellInfo::SetColumnBEndContBCBorder()
   currentBorder = CompareBorders(mTableFrame, mCurrentColGroupFrame,
                                  mCurrentColFrame, mRowGroup, mEndRow,
                                  nullptr, mTableWM, eLogicalSideBEnd, ADJACENT);
-  mCurrentColFrame->SetContinuousBCBorderWidth(NS_SIDE_BOTTOM,
+  mCurrentColFrame->SetContinuousBCBorderWidth(eLogicalSideBEnd,
                                                currentBorder.width);
 }
 
@@ -5491,8 +5491,8 @@ BCMapCellInfo::SetIEndBorderWidths(BCPixelSize aWidth)
   }
   if (mEndCol) {
     BCPixelSize half = BC_BORDER_START_HALF(aWidth);
-    mEndCol->SetRightBorderWidth(std::max(nscoord(half),
-                                           mEndCol->GetRightBorderWidth()));
+    mEndCol->SetIEndBorderWidth(
+      std::max(nscoord(half), mEndCol->GetIEndBorderWidth()));
   }
 }
 
@@ -5532,8 +5532,8 @@ BCMapCellInfo::SetIStartBorderWidths(BCPixelSize aWidth)
   }
   if (mStartCol) {
     BCPixelSize half = BC_BORDER_END_HALF(aWidth);
-    mStartCol->SetLeftBorderWidth(std::max(nscoord(half),
-                                           mStartCol->GetLeftBorderWidth()));
+    mStartCol->SetIStartBorderWidth(
+      std::max(nscoord(half), mStartCol->GetIStartBorderWidth()));
   }
 }
 
@@ -6474,18 +6474,18 @@ BCPaintBorderIterator::SetDamageArea(const nsRect& aDirtyRect)
     nsSize size = colFrame->GetSize();
     if (haveIntersect) {
       // conservatively estimate the left half border width outside the col
-      nscoord leftBorderHalf =
-        nsPresContext::CSSPixelsToAppUnits(colFrame->GetLeftBorderWidth() + 1);
-      if (aDirtyRect.XMost() >= (x - leftBorderHalf)) {
+      nscoord istartBorderHalf = nsPresContext::
+        CSSPixelsToAppUnits(colFrame->GetIStartBorderWidth() + 1);
+      if (aDirtyRect.XMost() >= x - istartBorderHalf) {
         endColIndex = colX;
       }
       else break;
     }
     else {
       // conservatively estimate the right half border width outside the col
-      nscoord rightBorderHalf =
-        nsPresContext::CSSPixelsToAppUnits(colFrame->GetRightBorderWidth() + 1);
-      if ((x + size.width + rightBorderHalf) >= aDirtyRect.x) {
+      nscoord iendBorderHalf = nsPresContext::
+        CSSPixelsToAppUnits(colFrame->GetIEndBorderWidth() + 1);
+      if (x + size.width + iendBorderHalf >= aDirtyRect.x) {
         startColIndex = endColIndex = colX;
         haveIntersect = true;
       }
