@@ -176,19 +176,29 @@ public:
 
   /**
    * Stop device discovery (platform specific implementation)
-   *
-   * @return NS_OK if discovery stopped correctly, false otherwise
    */
-  virtual nsresult
+  virtual void
   StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
    * Start device discovery (platform specific implementation)
-   *
-   * @return NS_OK if discovery stopped correctly, false otherwise
    */
-  virtual nsresult
+  virtual void
   StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Stops an ongoing Bluetooth LE device scan.
+   */
+  virtual void
+  StopLeScanInternal(const nsAString& aScanUuid,
+                     BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Starts a Bluetooth LE device scan.
+   */
+  virtual void
+  StartLeScanInternal(const nsTArray<nsString>& aServiceUuids,
+                      BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
    * Set a property for the specified object

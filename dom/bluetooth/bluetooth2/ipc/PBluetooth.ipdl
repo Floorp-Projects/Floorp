@@ -53,6 +53,16 @@ struct StopDiscoveryRequest
 {
 };
 
+struct StartLeScanRequest
+{
+  nsString[] serviceUuids;
+};
+
+struct StopLeScanRequest
+{
+  nsString scanUuid;
+};
+
 struct PairRequest
 {
   nsString address;
@@ -274,6 +284,8 @@ union Request
   GetPropertyRequest;
   StartDiscoveryRequest;
   StopDiscoveryRequest;
+  StartLeScanRequest;
+  StopLeScanRequest;
   PairRequest;
   UnpairRequest;
   PinReplyRequest;

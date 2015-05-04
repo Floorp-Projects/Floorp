@@ -9,7 +9,7 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 659907: " +
-  "Expand console object with a dir method"
+  "Expand console object with a dir method";
 
 let test = asyncTest(function*() {
   yield loadTab(TEST_URI);

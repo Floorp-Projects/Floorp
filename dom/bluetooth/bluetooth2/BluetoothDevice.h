@@ -144,6 +144,16 @@ private:
   bool IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
                                 const BluetoothValue& aValue);
 
+  /**
+   * Parse advertising data to update device properties.
+   *
+   * Parse 'Advertising Data Type' from an inquiry response and set name, UUIDs
+   * and COD if they exist in ADV data.
+   *
+   * @param aAdvData [in] advertising data which provided by the LeScan result.
+   */
+   void UpdatePropertiesFromAdvData(const nsTArray<uint8_t>& aAdvData);
+
   /****************************************************************************
    * Variables
    ***************************************************************************/

@@ -51,6 +51,14 @@ ReversedUuidToString(const BluetoothUuid& aUuid, nsAString& aString);
 void
 StringToUuid(const char* aString, BluetoothUuid& aUuid);
 
+/**
+ * Generate a random uuid.
+ *
+ * @param aUuidString [out] String to store the generated uuid.
+ */
+void
+GenerateUuid(nsAString &aUuidString);
+
 //
 // Generate bluetooth signal path from GattId
 //

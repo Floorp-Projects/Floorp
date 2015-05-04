@@ -13,7 +13,7 @@ const TEST_DATA = [{
   selector: "link",
   attributes: [{
     attributeName: "href",
-    links: [{type: "resource", value: "style.css"}]
+    links: [{type: "cssresource", value: "style.css"}]
   }]
 }, {
   selector: "link[rel=icon]",
@@ -95,7 +95,7 @@ const TEST_DATA = [{
   selector: "script",
   attributes: [{
     attributeName: "src",
-    links: [{type: "resource", value: "lib_jquery_1.0.js"}]
+    links: [{type: "jsresource", value: "lib_jquery_1.0.js"}]
   }]
 }];
 

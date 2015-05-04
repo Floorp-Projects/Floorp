@@ -27,6 +27,12 @@ public:
   static void InitGattInterface(BluetoothProfileResultHandler* aRes);
   static void DeinitGattInterface(BluetoothProfileResultHandler* aRes);
 
+  void StartLeScan(const nsTArray<nsString>& aServiceUuids,
+                   BluetoothReplyRunnable* aRunnable);
+
+  void StopLeScan(const nsAString& aScanUuid,
+                  BluetoothReplyRunnable* aRunnable);
+
   void Connect(const nsAString& aAppUuid,
                const nsAString& aDeviceAddr,
                BluetoothReplyRunnable* aRunnable);
@@ -92,6 +98,8 @@ private:
   class InitGattResultHandler;
   class RegisterClientResultHandler;
   class UnregisterClientResultHandler;
+  class StartLeScanResultHandler;
+  class StopLeScanResultHandler;
   class ConnectResultHandler;
   class DisconnectResultHandler;
   class DiscoverResultHandler;
