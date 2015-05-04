@@ -32,8 +32,6 @@ AudioDecoder::AudioDecoder(GMPAudioHost *aHostAPI)
   , mNumInputTasks(0)
   , mHasShutdown(false)
 {
-  // We drop the ref in DecodingComplete().
-  AddRef();
 }
 
 AudioDecoder::~AudioDecoder()
@@ -86,9 +84,9 @@ AudioDecoder::Decode(GMPAudioSamples* aInput)
     AutoLock lock(mMutex);
     mNumInputTasks++;
   }
-  mWorkerThread->Post(WrapTaskRefCounted(this,
-                                         &AudioDecoder::DecodeTask,
-                                         aInput));
+  mWorkerThread->Post(WrapTask(this,
+                               &AudioDecoder::DecodeTask,
+                               aInput));
 }
 
 void
@@ -260,8 +258,8 @@ AudioDecoder::Drain()
     return;
   }
   EnsureWorker();
-  mWorkerThread->Post(WrapTaskRefCounted(this,
-                                         &AudioDecoder::DrainTask));
+  mWorkerThread->Post(WrapTask(this,
+                               &AudioDecoder::DrainTask));
 }
 
 void
@@ -272,19 +270,24 @@ AudioDecoder::DecodingComplete()
   }
   mHasShutdown = true;
 
-  // Release the reference we added in the constructor. There may be
-  // WrapRefCounted tasks that also hold references to us, and keep
-  // us alive a little longer.
-  Release();
+  // Worker thread might have dispatched more tasks to the main thread that need this object.
+  // Append another task to delete |this|.
+  GetPlatform()->runonmainthread(WrapTask(this, &AudioDecoder::Destroy));
 }
 
 void
-AudioDecoder::MaybeRunOnMainThread(GMPTask* aTask)
+AudioDecoder::Destroy()
+{
+  delete this;
+}
+
+void
+AudioDecoder::MaybeRunOnMainThread(gmp_task_args_base* aTask)
 {
   class MaybeRunTask : public GMPTask
   {
   public:
-    MaybeRunTask(AudioDecoder* aDecoder, GMPTask* aTask)
+    MaybeRunTask(AudioDecoder* aDecoder, gmp_task_args_base* aTask)
       : mDecoder(aDecoder), mTask(aTask)
     { }
 
@@ -304,8 +307,8 @@ AudioDecoder::MaybeRunOnMainThread(GMPTask* aTask)
     }
 
   private:
-    RefPtr<AudioDecoder> mDecoder;
-    GMPTask* mTask;
+    AudioDecoder* mDecoder;
+    gmp_task_args_base* mTask;
   };
 
   GetPlatform()->runonmainthread(new MaybeRunTask(this, aTask));
