@@ -221,7 +221,7 @@ toolkit.jar:
         skin/classic/aero/global/aboutMemory.css                      (../../shared/aboutMemory.css)
         skin/classic/aero/global/aboutReader.css                      (../../shared/aboutReader.css)
         skin/classic/aero/global/aboutReaderContent.css               (../../shared/aboutReaderContent.css)
- *      skin/classic/aero/global/aboutReaderControls.css              (../../shared/aboutReaderControls.css)
+*       skin/classic/aero/global/aboutReaderControls.css              (../../shared/aboutReaderControls.css)
         skin/classic/aero/global/aboutSupport.css                     (../../shared/aboutSupport.css)
         skin/classic/aero/global/appPicker.css                        (../../shared/appPicker.css)
         skin/classic/aero/global/arrow.css
