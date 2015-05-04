@@ -22,6 +22,7 @@ gTestSuite.startTest(function() {
                              "types": ["dun"] } ]];
       return gTestSuite.setDataApnSettings(apnSettings);
     })
+    .then(() => gTestSuite.setTetheringDunRequired())
     .then(() => gTestSuite.startTetheringTest(function() {
       return gTestSuite.ensureWifiEnabled(false)
         .then(() => gTestSuite.setWifiTetheringEnabled(true, true))
