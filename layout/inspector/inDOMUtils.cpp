@@ -37,6 +37,7 @@
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
+#include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsCSSParser.h"
@@ -286,6 +287,19 @@ inDOMUtils::GetRuleColumn(nsIDOMCSSRule* aRule, uint32_t* _retval)
   }
 
   *_retval = rule->GetColumnNumber();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::GetCSSLexer(const nsAString& aText, JSContext* aCx,
+                        JS::MutableHandleValue aResult)
+{
+  MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
+  JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
+  nsAutoPtr<CSSLexer> lexer(new CSSLexer(aText));
+  if (!WrapNewBindingNonWrapperCachedObject(aCx, scope, lexer, aResult)) {
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 

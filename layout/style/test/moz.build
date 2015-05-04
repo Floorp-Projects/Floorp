@@ -15,6 +15,7 @@ MOCHITEST_MANIFESTS += [
     'css-visited/mochitest.ini',
     'mochitest.ini',
 ]
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
