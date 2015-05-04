@@ -297,6 +297,7 @@ UNIFIED_SOURCES += [
     'vm/PIC.cpp',
     'vm/Probes.cpp',
     'vm/ProxyObject.cpp',
+    'vm/ReceiverGuard.cpp',
     'vm/RegExpObject.cpp',
     'vm/RegExpStatics.cpp',
     'vm/Runtime.cpp',

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="vrl">
+<head>
+<title>Bug 1114329 testcase</title>
+<style>
+ .vrl {
+   writing-mode: vertical-rl;
+   -webkit-writing-mode: vertical-rl;
+   writing-mode: tb-rl;
+   direction: rtl;
+}
+</style>
+</head>
+<body>
+  <div style="height:0px;width:0px;overflow:visible">
+    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;position:relative;bottom:0px;"></div>
+  </div>
+  <div style="height:0px;width:0px;overflow:visible">
+    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;position:relative;bottom:100px;"></div>
+  </div>
+  <div style="background:silver;padding-bottom:200px;">
+This text should appear ABOVE the red and green blocks.
+  </div>
+</body>
+</html>

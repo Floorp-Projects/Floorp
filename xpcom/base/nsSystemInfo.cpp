@@ -14,6 +14,7 @@
 #include "mozilla/arm.h"
 
 #ifdef XP_WIN
+#include <time.h>
 #include <windows.h>
 #include <winioctl.h>
 #include "base/scoped_handle_win.h"
@@ -21,6 +22,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIObserverService.h"
+#include "nsWindowsHelpers.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -130,6 +132,46 @@ GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
   free(deviceOutput);
   return NS_OK;
 }
+
+nsresult GetInstallYear(uint32_t& aYear)
+{
+  HKEY hKey;
+  LONG status = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                              NS_LITERAL_STRING(
+                              "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"
+                              ).get(),
+                              0, KEY_READ | KEY_WOW64_64KEY, &hKey);
+
+  if (status != ERROR_SUCCESS) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsAutoRegKey key(hKey);
+
+  DWORD type = 0;
+  time_t raw_time = 0;
+  DWORD time_size = sizeof(time_t);
+
+  status = RegQueryValueExW(hKey, NS_LITERAL_STRING("InstallDate").get(),
+                            nullptr, &type, (LPBYTE)&raw_time, &time_size);
+
+  if (status != ERROR_SUCCESS) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (type != REG_DWORD) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  tm time;
+  if (localtime_s(&time, &raw_time) != 0) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  aYear = 1900UL + time.tm_year;
+  return NS_OK;
+}
+
 } // anonymous namespace
 #endif // defined(XP_WIN)
 
@@ -251,6 +293,14 @@ nsSystemInfo::Init()
     rv = SetPropertyAsACString(NS_LITERAL_STRING("winHDDRevision"),
                                hddRevision);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  uint32_t installYear = 0;
+  if (NS_SUCCEEDED(GetInstallYear(installYear))) {
+    rv = SetPropertyAsUint32(NS_LITERAL_STRING("installYear"), installYear);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 #endif
 
