@@ -51,12 +51,15 @@ public:
                          const gfx::Rect& aClipRect,
                          const nsIntRegion* aVisibleRegion = nullptr) override;
 
-  virtual void UseTextureHost(TextureHost* aTexture,
-                              const nsIntRect& aPictureRect) override;
+  virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
 
   virtual void RemoveTextureHost(TextureHost* aTexture) override;
 
   virtual TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
+
+  virtual void Attach(Layer* aLayer,
+                      Compositor* aCompositor,
+                      AttachFlags aFlags = NO_FLAGS) override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 

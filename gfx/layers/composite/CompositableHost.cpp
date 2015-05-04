@@ -107,14 +107,12 @@ CompositableHost::FromIPDLActor(PCompositableParent* aActor)
 }
 
 void
-CompositableHost::UseTextureHost(TextureHost* aTexture,
-                                 const IntRect& aPictureRect)
+CompositableHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
 {
-  if (!aTexture) {
-    return;
-  }
   if (GetCompositor()) {
-    aTexture->SetCompositor(GetCompositor());
+    for (auto& texture : aTextures) {
+      texture.mTexture->SetCompositor(GetCompositor());
+    }
   }
 }
 

@@ -383,15 +383,26 @@ union MaybeFence {
   null_t;
 };
 
+struct TimedTexture {
+  PTexture texture;
+  MaybeFence fence;
+  TimeStamp timeStamp;
+  IntRect picture;
+};
+
 /**
- * Tells the compositor-side which texture to use (for example, as front buffer
- * if there is several textures for double buffering)
+ * Tells the compositor-side which textures to use (for example, as front buffer
+ * if there are several textures for double buffering).
+ * This provides a list of textures with timestamps, ordered by timestamp.
+ * The newest texture whose timestamp is <= the current time is rendered
+ * (where null is considered less than every other timestamp). If there is no
+ * such texture, the first texture is rendered.
+ * The first timestamp value can be null, but the others must not be.
+ * The list must not be empty.
  */
 struct OpUseTexture {
   PCompositable compositable;
-  PTexture texture;
-  MaybeFence fence;
-  IntRect picture;
+  TimedTexture[] textures;
 };
 
 struct OpUseComponentAlphaTextures {
