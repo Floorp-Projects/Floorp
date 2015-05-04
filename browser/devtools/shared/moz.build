@@ -52,6 +52,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'frame-script-utils.js',
     'getjson.js',
     'inplace-editor.js',
+    'node-attribute-parser.js',
     'observable-object.js',
     'options-view.js',
     'source-utils.js',
