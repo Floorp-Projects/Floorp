@@ -2217,6 +2217,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       // Prevent cycle collections and shrinking during incremental GC.
       sCCLockedOut = true;
 
+      nsJSContext::KillGCTimer();
       nsJSContext::KillShrinkGCBuffersTimer();
 
       break;
