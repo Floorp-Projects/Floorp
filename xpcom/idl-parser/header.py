@@ -241,7 +241,7 @@ uuid_decoder = re.compile(r"""(?P<m0>[a-f0-9]{8})-
                               (?P<m4>[a-f0-9]{12})$""", re.X)
 
 iface_prolog = """ {
- public: 
+ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(%(defname)s_IID)
 
