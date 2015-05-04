@@ -1239,13 +1239,12 @@ nsMathMLmtdFrame::ProcessBorders(nsTableFrame* aFrame,
   return NS_OK;
 }
 
-nsMargin*
-nsMathMLmtdFrame::GetBorderWidth(nsMargin& aBorder) const
+LogicalMargin
+nsMathMLmtdFrame::GetBorderWidth(WritingMode aWM) const
 {
   nsStyleBorder styleBorder = *StyleBorder();
   ApplyBorderToStyle(this, styleBorder);
-  aBorder = styleBorder.GetComputedBorder();
-  return &aBorder;
+  return LogicalMargin(aWM, styleBorder.GetComputedBorder());
 }
 
 nsMargin
