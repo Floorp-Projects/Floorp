@@ -25,10 +25,11 @@
 #include "mfobjects.h"
 
 class VideoDecoder : public GMPVideoDecoder
-                   , public RefCounted
 {
 public:
   VideoDecoder(GMPVideoHost *aHostAPI);
+
+  virtual ~VideoDecoder();
 
   virtual void InitDecode(const GMPVideoCodec& aCodecSettings,
                           const uint8_t* aCodecSpecific,
@@ -52,8 +53,6 @@ public:
 
 private:
 
-  virtual ~VideoDecoder();
-
   void EnsureWorker();
 
   void DrainTask();
@@ -71,7 +70,8 @@ private:
                              int32_t aStride,
                              GMPVideoi420Frame* aVideoFrame);
 
-  void MaybeRunOnMainThread(GMPTask* aTask);
+  void MaybeRunOnMainThread(gmp_task_args_base* aTask);
+  void Destroy();
 
   GMPVideoHost *mHostAPI; // host-owned, invalid at DecodingComplete
   GMPVideoDecoderCallback* mCallback; // host-owned, invalid at DecodingComplete
