@@ -352,10 +352,16 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
     ComputeInsideBorderSize(aState, desiredInsideBorderSize);
   nsSize scrollPortSize = nsSize(std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
                                  std::max(0, aState->mInsideBorderSize.height - hScrollbarDesiredHeight));
+
   nsSize visualScrollPortSize = scrollPortSize;
   nsIPresShell* presShell = PresContext()->PresShell();
   if (mHelper.mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
-    visualScrollPortSize = presShell->GetScrollPositionClampingScrollPortSize();
+    nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(this, false);
+    float resolution = presShell->GetResolution();
+    compositionSize.width /= resolution;
+    compositionSize.height /= resolution;
+    visualScrollPortSize = nsSize(std::max(0, compositionSize.width - vScrollbarDesiredWidth),
+                                  std::max(0, compositionSize.height - hScrollbarDesiredHeight));
   }
 
   if (!aForce) {
