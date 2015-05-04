@@ -49,16 +49,20 @@ interface nsIStreamLoaderObserver : nsISupports
  *
  * XXX define behaviour for sizes >4 GB
  */
-[scriptable, uuid(8ea7e890-8211-11d9-8bde-f66bad1e3f3a)]
+[scriptable, uuid(323bcff1-7513-4e1f-a541-1c9213c2ed1b)]
 interface nsIStreamLoader : nsIStreamListener
 {
     /**
      * Initialize this stream loader, and start loading the data.
      *
-     * @param aObserver
+     * @param aStreamObserver
      *        An observer that will be notified when the data is complete.
+     * @param aRequestObserver
+     *        An optional observer that will be notified when the request
+     *        has started or stopped.
      */
-    void init(in nsIStreamLoaderObserver aObserver);
+    void init(in nsIStreamLoaderObserver aStreamObserver,
+              [optional] in nsIRequestObserver aRequestObserver);
 
     /**
      * Gets the number of bytes read so far.
