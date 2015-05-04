@@ -62,6 +62,9 @@ NativeIterator::mark(JSTracer* trc)
     if (obj)
         TraceEdge(trc, &obj, "obj");
 
+    for (size_t i = 0; i < guard_length; i++)
+        guard_array[i].trace(trc);
+
     // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
     // GC removes any elements from the list, it won't remove this one.
     if (iterObj_)
@@ -283,8 +286,20 @@ Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags, AutoIdVector* props)
             if (!enumerate(cx, pobj, properties))
                  return false;
 
+            RootedId id(cx);
             for (size_t n = 0; n < properties.length(); n++) {
-                if (!Enumerate(cx, pobj, properties[n], true, flags, ht, props))
+                id = properties[n];
+                bool enumerable = true;
+
+                // The enumerate hook does not indicate whether the properties
+                // it returns are enumerable or not. There is no non-effectful
+                // way to determine this from the object, so carve out
+                // exceptions here for places where the property is not
+                // enumerable.
+                if (pobj->is<UnboxedArrayObject>() && id == NameToId(cx->names().length))
+                    enumerable = false;
+
+                if (!Enumerate(cx, pobj, id, enumerable, flags, ht, props))
                     return false;
             }
 
@@ -519,10 +534,12 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
 }
 
 NativeIterator*
-NativeIterator::allocateIterator(JSContext* cx, uint32_t slength, const AutoIdVector& props)
+NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, const AutoIdVector& props)
 {
+    JS_STATIC_ASSERT(sizeof(ReceiverGuard) == 2 * sizeof(void*));
+
     size_t plength = props.length();
-    NativeIterator* ni = cx->zone()->pod_malloc_with_extra<NativeIterator, void*>(plength + slength);
+    NativeIterator* ni = cx->zone()->pod_malloc_with_extra<NativeIterator, void*>(plength + numGuards * 2);
     if (!ni)
         return nullptr;
 
@@ -560,14 +577,14 @@ NativeIterator::allocateSentinel(JSContext* maybecx)
 }
 
 inline void
-NativeIterator::init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t slength, uint32_t key)
+NativeIterator::init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t numGuards, uint32_t key)
 {
     this->obj.init(obj);
     this->iterObj_ = iterObj;
     this->flags = flags;
-    this->shapes_array = (Shape**) this->props_end;
-    this->shapes_length = slength;
-    this->shapes_key = key;
+    this->guard_array = (HeapReceiverGuard*) this->props_end;
+    this->guard_length = numGuards;
+    this->guard_key = key;
 }
 
 static inline void
@@ -584,7 +601,7 @@ RegisterEnumerator(JSContext* cx, PropertyIteratorObject* iterobj, NativeIterato
 
 static inline bool
 VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& keys,
-                    uint32_t slength, uint32_t key, MutableHandleObject objp)
+                    uint32_t numGuards, uint32_t key, MutableHandleObject objp)
 {
     MOZ_ASSERT(!(flags & JSITER_FOREACH));
 
@@ -596,26 +613,20 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
     if (!iterobj)
         return false;
 
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, slength, keys);
+    NativeIterator* ni = NativeIterator::allocateIterator(cx, numGuards, keys);
     if (!ni)
         return false;
-    ni->init(obj, iterobj, flags, slength, key);
+    ni->init(obj, iterobj, flags, numGuards, key);
 
-    if (slength) {
-        /*
-         * Fill in the shape array from scratch.  We can't use the array that was
-         * computed for the cache lookup earlier, as constructing iterobj could
-         * have triggered a shape-regenerating GC.  Don't bother with regenerating
-         * the shape key; if such a GC *does* occur, we can only get hits through
-         * the one-slot lastNativeIterator cache.
-         */
+    if (numGuards) {
+        // Fill in the guard array from scratch.
         JSObject* pobj = obj;
         size_t ind = 0;
         do {
-            ni->shapes_array[ind++] = pobj->as<NativeObject>().lastProperty();
+            ni->guard_array[ind++].init(ReceiverGuard(pobj));
             pobj = pobj->getProto();
         } while (pobj);
-        MOZ_ASSERT(ind == slength);
+        MOZ_ASSERT(ind == numGuards);
     }
 
     iterobj->setNativeIterator(ni);
@@ -690,6 +701,37 @@ UpdateNativeIterator(NativeIterator* ni, JSObject* obj)
     ni->obj = obj;
 }
 
+static inline bool
+CanCompareIterableObjectToCache(JSObject* obj)
+{
+    if (obj->isNative())
+        return obj->as<NativeObject>().hasEmptyElements();
+    if (obj->is<UnboxedPlainObject>()) {
+        if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
+            return expando->hasEmptyElements();
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+CanCacheIterableObject(JSContext* cx, JSObject* obj)
+{
+    if (!CanCompareIterableObjectToCache(obj))
+        return false;
+    if (obj->isNative()) {
+        if (IsAnyTypedArray(obj) ||
+            obj->hasUncacheableProto() ||
+            obj->getOps()->enumerate ||
+            obj->getClass()->enumerate ||
+            obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool
 js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp)
 {
@@ -708,27 +750,21 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
             return Proxy::enumerate(cx, obj, objp);
     }
 
-    Vector<Shape*, 8> shapes(cx);
+    Vector<ReceiverGuard, 8> guards(cx);
     uint32_t key = 0;
     if (flags == JSITER_ENUMERATE) {
-        /*
-         * Check to see if this is the same as the most recent object which
-         * was iterated over.  We don't explicitly check for shapeless
-         * objects here, as they are not inserted into the cache and
-         * will result in a miss.
-         */
+        // Check to see if this is the same as the most recent object which was
+        // iterated over.
         PropertyIteratorObject* last = cx->runtime()->nativeIterCache.last;
         if (last) {
             NativeIterator* lastni = last->getNativeIterator();
             if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                obj->isNative() &&
-                obj->as<NativeObject>().hasEmptyElements() &&
-                obj->as<NativeObject>().lastProperty() == lastni->shapes_array[0])
+                CanCompareIterableObjectToCache(obj) &&
+                ReceiverGuard(obj) == lastni->guard_array[0])
             {
                 JSObject* proto = obj->getProto();
-                if (proto->isNative() &&
-                    proto->as<NativeObject>().hasEmptyElements() &&
-                    proto->as<NativeObject>().lastProperty() == lastni->shapes_array[1] &&
+                if (CanCompareIterableObjectToCache(proto) &&
+                    ReceiverGuard(proto) == lastni->guard_array[1] &&
                     !proto->getProto())
                 {
                     objp.set(last);
@@ -748,20 +784,13 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
         {
             JSObject* pobj = obj;
             do {
-                if (!pobj->isNative() ||
-                    !pobj->as<NativeObject>().hasEmptyElements() ||
-                    IsAnyTypedArray(pobj) ||
-                    pobj->hasUncacheableProto() ||
-                    pobj->getOps()->enumerate ||
-                    pobj->getClass()->enumerate ||
-                    pobj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
-                {
-                    shapes.clear();
+                if (!CanCacheIterableObject(cx, pobj)) {
+                    guards.clear();
                     goto miss;
                 }
-                Shape* shape = pobj->as<NativeObject>().lastProperty();
-                key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
-                if (!shapes.append(shape))
+                ReceiverGuard guard(pobj);
+                key = (key + (key << 16)) ^ guard.hash();
+                if (!guards.append(guard))
                     return false;
                 pobj = pobj->getProto();
             } while (pobj);
@@ -771,14 +800,16 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
         if (iterobj) {
             NativeIterator* ni = iterobj->getNativeIterator();
             if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                ni->shapes_key == key &&
-                ni->shapes_length == shapes.length() &&
-                Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
+                ni->guard_key == key &&
+                ni->guard_length == guards.length() &&
+                Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
+                        guards.begin(), ni->guard_length))
+            {
                 objp.set(iterobj);
 
                 UpdateNativeIterator(ni, obj);
                 RegisterEnumerator(cx, iterobj, ni);
-                if (shapes.length() == 2)
+                if (guards.length() == 2)
                     cx->runtime()->nativeIterCache.last = iterobj;
                 return true;
             }
@@ -793,7 +824,7 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
 
     AutoIdVector keys(cx);
     if (flags & JSITER_FOREACH) {
-        MOZ_ASSERT(shapes.empty());
+        MOZ_ASSERT(guards.empty());
 
         if (!Snapshot(cx, obj, flags, &keys))
             return false;
@@ -802,17 +833,17 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleOb
     } else {
         if (!Snapshot(cx, obj, flags, &keys))
             return false;
-        if (!VectorToKeyIterator(cx, obj, flags, keys, shapes.length(), key, objp))
+        if (!VectorToKeyIterator(cx, obj, flags, keys, guards.length(), key, objp))
             return false;
     }
 
     PropertyIteratorObject* iterobj = &objp->as<PropertyIteratorObject>();
 
     /* Cache the iterator object if possible. */
-    if (shapes.length())
+    if (guards.length())
         cx->runtime()->nativeIterCache.set(key, iterobj);
 
-    if (shapes.length() == 2)
+    if (guards.length() == 2)
         cx->runtime()->nativeIterCache.last = iterobj;
     return true;
 }

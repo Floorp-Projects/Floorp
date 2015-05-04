@@ -597,7 +597,7 @@ IonBuilder::inlineArray(CallInfo& callInfo)
 
     MNewArray* ins = MNewArray::New(alloc(), constraints(), initLength, templateConst,
                                     templateArray->group()->initialHeap(constraints()),
-                                    allocating);
+                                    allocating, pc);
     current->add(ins);
     current->push(ins);
 
@@ -1590,7 +1590,7 @@ IonBuilder::inlineConstantStringSplit(CallInfo& callInfo)
 
     MNewArray* ins = MNewArray::New(alloc(), constraints(), initLength, templateConst,
                                     templateObject->group()->initialHeap(constraints()),
-                                    NewArray_FullyAllocating);
+                                    NewArray_FullyAllocating, pc);
 
     current->add(ins);
     current->push(ins);
@@ -2135,7 +2135,7 @@ IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo& callInfo, uint32_t base)
 
     TemporaryTypeSet::DoubleConversion conversion =
         obj->resultTypeSet()->convertDoubleElements(constraints());
-    if (!jsop_setelem_dense(conversion, SetElem_Unsafe, obj, id, elem))
+    if (!jsop_setelem_dense(conversion, SetElem_Unsafe, obj, id, elem, JSVAL_TYPE_MAGIC))
         return false;
     return true;
 }

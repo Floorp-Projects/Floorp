@@ -1138,6 +1138,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
         asmJS_(true),
         nativeRegExp_(true),
         unboxedObjects_(false), // Not enabled by default yet
+        unboxedArrays_(false), // Ditto
         werror_(false),
         strictMode_(false),
         extraWarnings_(false),
@@ -1187,6 +1188,12 @@ class JS_PUBLIC_API(RuntimeOptions) {
         return *this;
     }
 
+    bool unboxedArrays() const { return unboxedArrays_; }
+    RuntimeOptions& setUnboxedArrays(bool flag) {
+        unboxedArrays_ = flag;
+        return *this;
+    }
+
     bool werror() const { return werror_; }
     RuntimeOptions& setWerror(bool flag) {
         werror_ = flag;
@@ -1233,6 +1240,7 @@ class JS_PUBLIC_API(RuntimeOptions) {
     bool asmJS_ : 1;
     bool nativeRegExp_ : 1;
     bool unboxedObjects_ : 1;
+    bool unboxedArrays_ : 1;
     bool werror_ : 1;
     bool strictMode_ : 1;
     bool extraWarnings_ : 1;

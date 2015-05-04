@@ -678,7 +678,7 @@ static bool IsSpaceCombiningSequenceTail(const nsTextFragment* aFrag, uint32_t a
 // Check whether aPos is a space for CSS 'word-spacing' purposes
 static bool
 IsCSSWordSpacingSpace(const nsTextFragment* aFrag, uint32_t aPos,
-                      nsIFrame* aFrame, const nsStyleText* aStyleText)
+                      nsTextFrame* aFrame, const nsStyleText* aStyleText)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
 
@@ -1942,7 +1942,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= GetSpacingFlags(WordSpacing(f));
     nsTextFrameUtils::CompressionMode compression =
       GetCSSWhitespaceToCompressionMode(f, textStyle);
-    if ((enabledJustification || f->StyleContext()->ShouldSuppressLineBreak()) &&
+    if ((enabledJustification || f->ShouldSuppressLineBreak()) &&
         !textStyle->WhiteSpaceIsSignificant() && !isSVG) {
       textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
     }
@@ -2816,9 +2816,9 @@ static int32_t FindChar(const nsTextFragment* frag,
   return -1;
 }
 
-static bool IsChineseOrJapanese(nsIFrame* aFrame)
+static bool IsChineseOrJapanese(nsTextFrame* aFrame)
 {
-  if (aFrame->StyleContext()->ShouldSuppressLineBreak()) {
+  if (aFrame->ShouldSuppressLineBreak()) {
     // Always treat ruby as CJ language so that those characters can
     // be expanded properly even when surrounded by other language.
     return true;
@@ -8343,7 +8343,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                                    (GetStateBits() & TEXT_IS_IN_TOKEN_MATHML);
   gfxBreakPriority breakPriority = aLineLayout.LastOptionalBreakPriority();
   gfxTextRun::SuppressBreak suppressBreak = gfxTextRun::eNoSuppressBreak;
-  if (StyleContext()->ShouldSuppressLineBreak()) {
+  if (ShouldSuppressLineBreak()) {
     suppressBreak = gfxTextRun::eSuppressAllBreaks;
   } else if (!aLineLayout.LineIsBreakable()) {
     suppressBreak = gfxTextRun::eSuppressInitialBreak;
@@ -8552,7 +8552,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   bool emptyTextAtStartOfLine = atStartOfLine && length == 0;
   if (!breakAfter && charsFit == length && !emptyTextAtStartOfLine &&
       transformedOffset + transformedLength == mTextRun->GetLength() &&
-      !StyleContext()->ShouldSuppressLineBreak() &&
+      !ShouldSuppressLineBreak() &&
       (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK)) {
     // We placed all the text in the textrun and we have a break opportunity at
     // the end of the textrun. We need to record it because the following
@@ -8614,7 +8614,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   if (!textStyle->WhiteSpaceIsSignificant() &&
       (lineContainer->StyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
        lineContainer->StyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
-       StyleContext()->ShouldSuppressLineBreak()) &&
+       ShouldSuppressLineBreak()) &&
       !lineContainer->IsSVGText()) {
     AddStateBits(TEXT_JUSTIFICATION_ENABLED);
     provider.ComputeJustification(offset, charsFit);

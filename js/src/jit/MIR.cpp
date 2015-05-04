@@ -667,19 +667,30 @@ MConstant::NewConstraintlessObject(TempAllocator& alloc, JSObject* v)
     return new(alloc) MConstant(v);
 }
 
-TemporaryTypeSet*
-jit::MakeSingletonTypeSet(CompilerConstraintList* constraints, JSObject* obj)
+static TemporaryTypeSet*
+MakeSingletonTypeSetFromKey(CompilerConstraintList* constraints, TypeSet::ObjectKey* key)
 {
     // Invalidate when this object's ObjectGroup gets unknown properties. This
     // happens for instance when we mutate an object's __proto__, in this case
     // we want to invalidate and mark this TypeSet as containing AnyObject
     // (because mutating __proto__ will change an object's ObjectGroup).
     MOZ_ASSERT(constraints);
-    TypeSet::ObjectKey* key = TypeSet::ObjectKey::get(obj);
     key->hasStableClassAndProto(constraints);
 
     LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
-    return alloc->new_<TemporaryTypeSet>(alloc, TypeSet::ObjectType(obj));
+    return alloc->new_<TemporaryTypeSet>(alloc, TypeSet::ObjectType(key));
+}
+
+TemporaryTypeSet*
+jit::MakeSingletonTypeSet(CompilerConstraintList* constraints, JSObject* obj)
+{
+    return MakeSingletonTypeSetFromKey(constraints, TypeSet::ObjectKey::get(obj));
+}
+
+TemporaryTypeSet*
+jit::MakeSingletonTypeSet(CompilerConstraintList* constraints, ObjectGroup* obj)
+{
+    return MakeSingletonTypeSetFromKey(constraints, TypeSet::ObjectKey::get(obj));
 }
 
 static TemporaryTypeSet*
@@ -4018,17 +4029,17 @@ MArrayState::Copy(TempAllocator& alloc, MArrayState* state)
 }
 
 MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConstant* templateConst,
-                     gc::InitialHeap initialHeap, AllocatingBehaviour allocating)
+                     gc::InitialHeap initialHeap, AllocatingBehaviour allocating, jsbytecode* pc)
   : MUnaryInstruction(templateConst),
     count_(count),
     initialHeap_(initialHeap),
     allocating_(allocating),
-    convertDoubleElements_(false)
+    convertDoubleElements_(false),
+    pc_(pc)
 {
-    ArrayObject* obj = templateObject();
     setResultType(MIRType_Object);
-    if (!obj->isSingleton()) {
-        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, obj);
+    if (templateObject()) {
+        TemporaryTypeSet* types = MakeSingletonTypeSet(constraints, templateObject());
         setResultTypeSet(types);
         if (types->convertDoubleElements(constraints) == TemporaryTypeSet::AlwaysConvertToDoubles)
             convertDoubleElements_ = true;
@@ -4038,16 +4049,25 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConst
 bool
 MNewArray::shouldUseVM() const
 {
+    if (!templateObject())
+        return true;
+
+    // Allocate space using the VMCall when mir hints it needs to get allocated
+    // immediately, but only when data doesn't fit the available array slots.
+    if (allocatingBehaviour() == NewArray_Unallocating)
+        return false;
+
+    if (templateObject()->is<UnboxedArrayObject>()) {
+        MOZ_ASSERT(templateObject()->as<UnboxedArrayObject>().capacity() >= count());
+        return !templateObject()->as<UnboxedArrayObject>().hasInlineElements();
+    }
+
     MOZ_ASSERT(count() < NativeObject::NELEMENTS_LIMIT);
 
     size_t arraySlots =
         gc::GetGCKindSlots(templateObject()->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
-    // Allocate space using the VMCall when mir hints it needs to get allocated
-    // immediately, but only when data doesn't fit the available array slots.
-    bool allocating = allocatingBehaviour() != NewArray_Unallocating && count() > arraySlots;
-
-    return templateObject()->isSingleton() || allocating;
+    return count() > arraySlots;
 }
 
 bool
@@ -4694,6 +4714,48 @@ jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
     // Typed arrays are native classes but do not have dense elements.
     const Class* clasp = types->getKnownClass(constraints);
     return clasp && clasp->isNative() && !IsAnyTypedArrayClass(clasp);
+}
+
+JSValueType
+jit::UnboxedArrayElementType(CompilerConstraintList* constraints, MDefinition* obj,
+                             MDefinition* id)
+{
+    if (obj->mightBeType(MIRType_String))
+        return JSVAL_TYPE_MAGIC;
+
+    if (id && id->type() != MIRType_Int32 && id->type() != MIRType_Double)
+        return JSVAL_TYPE_MAGIC;
+
+    TemporaryTypeSet* types = obj->resultTypeSet();
+    if (!types || types->unknownObject())
+        return JSVAL_TYPE_MAGIC;
+
+    JSValueType elementType = JSVAL_TYPE_MAGIC;
+    for (unsigned i = 0; i < types->getObjectCount(); i++) {
+        TypeSet::ObjectKey* key = types->getObject(i);
+        if (!key)
+            continue;
+
+        if (key->unknownProperties() || !key->isGroup())
+            return JSVAL_TYPE_MAGIC;
+
+        if (key->clasp() != &UnboxedArrayObject::class_)
+            return JSVAL_TYPE_MAGIC;
+
+        const UnboxedLayout &layout = key->group()->unboxedLayout();
+
+        if (layout.nativeGroup())
+            return JSVAL_TYPE_MAGIC;
+
+        if (elementType == layout.elementType() || elementType == JSVAL_TYPE_MAGIC)
+            elementType = layout.elementType();
+        else
+            return JSVAL_TYPE_MAGIC;
+
+        key->watchStateChangeForUnboxedConvertedToNative(constraints);
+    }
+
+    return elementType;
 }
 
 bool

@@ -717,10 +717,10 @@ skip-if(B2G||Mulet) fails-if(Android) != 379461-3-container-xhtml.html 379461-3-
 == 383035-2.html about:blank
 == 383488-1.html 383488-1-ref.html
 == 383551-1.html 383551-1-ref.html
-== 383883-1.html 383883-1-ref.html
-== 383883-2.html 383883-2-ref.html
-== 383883-3.html 383883-3-ref.html
-== 383883-4.html 383883-4-ref.html
+fuzzy-if(B2G,68,26) == 383883-1.html 383883-1-ref.html
+fuzzy-if(B2G,68,26) == 383883-2.html 383883-2-ref.html
+fuzzy-if(B2G,68,26) == 383883-3.html 383883-3-ref.html
+fuzzy-if(B2G,68,26) == 383883-4.html 383883-4-ref.html
 == 383884-1.html 383884-1-ref.html
 == 383885-1.html 383885-1-ref.html
 == 384322-1.html 384322-1-ref.html
