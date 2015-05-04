@@ -9,6 +9,7 @@ import mozunit
 import unittest
 import xpidl
 
+
 class TestParser(unittest.TestCase):
     def setUp(self):
         self.p = xpidl.IDLParser()
