@@ -296,7 +296,10 @@ nsTableRowGroupFrame::InitChildReflowState(nsPresContext&     aPresContext,
   if (aBorderCollapse) {
     nsTableRowFrame *rowFrame = do_QueryFrame(aReflowState.frame);
     if (rowFrame) {
-      pCollapseBorder = rowFrame->GetBCBorderWidth(collapseBorder);
+      WritingMode wm = GetWritingMode();
+      LogicalMargin border = rowFrame->GetBCBorderWidth(wm);
+      collapseBorder = border.GetPhysicalMargin(wm);
+      pCollapseBorder = &collapseBorder;
     }
   }
   aReflowState.Init(&aPresContext, -1, -1, pCollapseBorder, &padding);
@@ -1600,11 +1603,10 @@ nsTableRowGroupFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsMargin*
-nsTableRowGroupFrame::GetBCBorderWidth(nsMargin& aBorder)
+LogicalMargin
+nsTableRowGroupFrame::GetBCBorderWidth(WritingMode aWM)
 {
-  aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
-
+  LogicalMargin border(aWM);
   nsTableRowFrame* firstRowFrame = nullptr;
   nsTableRowFrame* lastRowFrame = nullptr;
   for (nsTableRowFrame* rowFrame = GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
@@ -1614,11 +1616,12 @@ nsTableRowGroupFrame::GetBCBorderWidth(nsMargin& aBorder)
     lastRowFrame = rowFrame;
   }
   if (firstRowFrame) {
-    aBorder.top    = nsPresContext::CSSPixelsToAppUnits(firstRowFrame->GetTopBCBorderWidth());
-    aBorder.bottom = nsPresContext::CSSPixelsToAppUnits(lastRowFrame->GetBottomBCBorderWidth());
+    border.BStart(aWM) = nsPresContext::
+      CSSPixelsToAppUnits(firstRowFrame->GetBStartBCBorderWidth());
+    border.BEnd(aWM) = nsPresContext::
+      CSSPixelsToAppUnits(lastRowFrame->GetBEndBCBorderWidth());
   }
-
-  return &aBorder;
+  return border;
 }
 
 void nsTableRowGroupFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
