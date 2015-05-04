@@ -2734,7 +2734,9 @@ CSSParserImpl::GetToken(bool aSkipWS)
       return true;
     }
   }
-  return mScanner->Next(mToken, aSkipWS);
+  return mScanner->Next(mToken, aSkipWS ?
+                        eCSSScannerExclude_WhitespaceAndComments :
+                        eCSSScannerExclude_Comments);
 }
 
 void
