@@ -1152,10 +1152,10 @@ nsMargin*
 nsBCTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  aBorder.top    = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips, mTopBorder);
-  aBorder.right  = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips, mRightBorder);
-  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips, mBottomBorder);
-  aBorder.left   = BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mLeftBorder);
+  aBorder.top = BC_BORDER_END_HALF_COORD(aPixelsToTwips, mTopBorder);
+  aBorder.right = BC_BORDER_START_HALF_COORD(aPixelsToTwips, mRightBorder);
+  aBorder.bottom = BC_BORDER_START_HALF_COORD(aPixelsToTwips, mBottomBorder);
+  aBorder.left = BC_BORDER_END_HALF_COORD(aPixelsToTwips, mLeftBorder);
   return &aBorder;
 }
 
@@ -1164,13 +1164,13 @@ nsBCTableCellFrame::GetBorderWidth(mozilla::css::Side aSide) const
 {
   switch(aSide) {
   case NS_SIDE_TOP:
-    return BC_BORDER_BOTTOM_HALF(mTopBorder);
+    return BC_BORDER_END_HALF(mTopBorder);
   case NS_SIDE_RIGHT:
-    return BC_BORDER_LEFT_HALF(mRightBorder);
+    return BC_BORDER_START_HALF(mRightBorder);
   case NS_SIDE_BOTTOM:
-    return BC_BORDER_TOP_HALF(mBottomBorder);
+    return BC_BORDER_START_HALF(mBottomBorder);
   default:
-    return BC_BORDER_RIGHT_HALF(mLeftBorder);
+    return BC_BORDER_END_HALF(mLeftBorder);
   }
 }
 
@@ -1198,10 +1198,10 @@ nsBCTableCellFrame::GetBorderOverflow()
 {
   nsMargin halfBorder;
   int32_t p2t = nsPresContext::AppUnitsPerCSSPixel();
-  halfBorder.top = BC_BORDER_TOP_HALF_COORD(p2t, mTopBorder);
-  halfBorder.right = BC_BORDER_RIGHT_HALF_COORD(p2t, mRightBorder);
-  halfBorder.bottom = BC_BORDER_BOTTOM_HALF_COORD(p2t, mBottomBorder);
-  halfBorder.left = BC_BORDER_LEFT_HALF_COORD(p2t, mLeftBorder);
+  halfBorder.top = BC_BORDER_START_HALF_COORD(p2t, mTopBorder);
+  halfBorder.right = BC_BORDER_END_HALF_COORD(p2t, mRightBorder);
+  halfBorder.bottom = BC_BORDER_END_HALF_COORD(p2t, mBottomBorder);
+  halfBorder.left = BC_BORDER_START_HALF_COORD(p2t, mLeftBorder);
   return halfBorder;
 }
 

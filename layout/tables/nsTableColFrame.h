@@ -348,13 +348,12 @@ inline nscoord
 nsTableColFrame::GetContinuousBCBorderWidth(nsMargin& aBorder)
 {
   int32_t aPixelsToTwips = nsPresContext::AppUnitsPerCSSPixel();
-  aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,
-                                            mTopContBorderWidth);
-  aBorder.right = BC_BORDER_LEFT_HALF_COORD(aPixelsToTwips,
-                                            mRightContBorderWidth);
-  aBorder.bottom = BC_BORDER_TOP_HALF_COORD(aPixelsToTwips,
-                                            mBottomContBorderWidth);
-  return BC_BORDER_RIGHT_HALF_COORD(aPixelsToTwips, mRightContBorderWidth);
+  aBorder.top = BC_BORDER_END_HALF_COORD(aPixelsToTwips, mTopContBorderWidth);
+  aBorder.right = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+                                             mRightContBorderWidth);
+  aBorder.bottom = BC_BORDER_START_HALF_COORD(aPixelsToTwips,
+                                              mBottomContBorderWidth);
+  return BC_BORDER_END_HALF_COORD(aPixelsToTwips, mRightContBorderWidth);
 }
 
 #endif
