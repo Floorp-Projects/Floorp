@@ -5875,16 +5875,6 @@ Factory::Create(const LoggingInfo& aLoggingInfo)
 
   // If this is the first instance then we need to do some initialization.
   if (!sFactoryInstanceCount) {
-    if (!gTransactionThreadPool) {
-      nsRefPtr<TransactionThreadPool> threadPool =
-        TransactionThreadPool::Create();
-      if (NS_WARN_IF(!threadPool)) {
-        return nullptr;
-      }
-
-      gTransactionThreadPool = threadPool;
-    }
-
     MOZ_ASSERT(!gLiveDatabaseHashtable);
     gLiveDatabaseHashtable = new DatabaseActorHashtable();
 
@@ -6535,6 +6525,16 @@ Database::RecvPBackgroundIDBTransactionConstructor(
     // This is an expected race. We don't want the child to die here, just don't
     // actually do any work.
     return true;
+  }
+
+  if (!gTransactionThreadPool) {
+    nsRefPtr<TransactionThreadPool> threadPool =
+      TransactionThreadPool::Create();
+    if (NS_WARN_IF(!threadPool)) {
+      return nullptr;
+    }
+
+    gTransactionThreadPool = threadPool;
   }
 
   auto* transaction = static_cast<NormalTransaction*>(aActor);
@@ -11837,6 +11837,17 @@ OpenDatabaseOp::DispatchToWorkThread()
       IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (!gTransactionThreadPool) {
+    nsRefPtr<TransactionThreadPool> threadPool =
+      TransactionThreadPool::Create();
+    if (!threadPool) {
+      IDB_REPORT_INTERNAL_ERR();
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    gTransactionThreadPool = threadPool;
   }
 
   mState = State_DatabaseWorkVersionChange;
