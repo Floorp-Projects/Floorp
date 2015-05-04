@@ -97,8 +97,6 @@ private:
 
   bool EnsureDecodersSetup();
 
-  bool CheckIfDecoderSetup();
-
   // Sends input to decoder for aTrack, and output to the state machine,
   // if necessary.
   void Update(TrackType aTrack);
