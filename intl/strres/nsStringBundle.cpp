@@ -69,6 +69,15 @@ nsStringBundle::LoadProperties()
   rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
   if (NS_FAILED(rv)) return rv;
 
+  // whitelist check for local schemes
+  nsCString scheme;
+  uri->GetScheme(scheme);
+  if (!scheme.EqualsLiteral("chrome") && !scheme.EqualsLiteral("jar") &&
+      !scheme.EqualsLiteral("resource") && !scheme.EqualsLiteral("file") &&
+      !scheme.EqualsLiteral("data")) {
+    return NS_ERROR_ABORT;
+  }
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      uri,

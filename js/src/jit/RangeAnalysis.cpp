@@ -1895,6 +1895,16 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
     return true;
 }
 
+// Unbox beta nodes in order to hoist instruction properly, and not be limited
+// by the beta nodes which are added after each branch.
+static inline MDefinition*
+DefinitionOrBetaInputDefinition(MDefinition* ins)
+{
+    while (ins->isBeta())
+        ins = ins->toBeta()->input();
+    return ins;
+}
+
 LoopIterationBound*
 RangeAnalysis::analyzeLoopIterationCount(MBasicBlock* header,
                                          MTest* test, BranchDirection direction)
@@ -1940,9 +1950,8 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock* header,
 
     // The second operand of the phi should be a value written by an add/sub
     // in every loop iteration, i.e. in a block which dominates the backedge.
-    MDefinition* lhsWrite = lhs.term->toPhi()->getLoopBackedgeOperand();
-    if (lhsWrite->isBeta())
-        lhsWrite = lhsWrite->getOperand(0);
+    MDefinition* lhsWrite =
+        DefinitionOrBetaInputDefinition(lhs.term->toPhi()->getLoopBackedgeOperand());
     if (!lhsWrite->isAdd() && !lhsWrite->isSub())
         return nullptr;
     if (!lhsWrite->block()->isMarked())
@@ -2107,7 +2116,8 @@ bool
 RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header, MBoundsCheck* ins)
 {
     // The bounds check's length must be loop invariant.
-    if (ins->length()->block()->isMarked())
+    MDefinition *length = DefinitionOrBetaInputDefinition(ins->length());
+    if (length->block()->isMarked())
         return false;
 
     // The bounds check's index should not be loop invariant (else we would
@@ -2165,7 +2175,7 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock* header, MBoundsCheck* ins)
     lowerCheck->computeRange(alloc());
     lowerCheck->collectRangeInfoPreTrunc();
 
-    MBoundsCheck* upperCheck = MBoundsCheck::New(alloc(), upperTerm, ins->length());
+    MBoundsCheck* upperCheck = MBoundsCheck::New(alloc(), upperTerm, length);
     upperCheck->setMinimum(upperConstant);
     upperCheck->setMaximum(upperConstant);
     upperCheck->computeRange(alloc());
