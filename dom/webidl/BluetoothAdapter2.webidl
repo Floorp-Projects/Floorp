@@ -97,6 +97,12 @@ interface BluetoothAdapter : EventTarget {
 
   sequence<BluetoothDevice> getPairedDevices();
 
+  [NewObject]
+  Promise<BluetoothDiscoveryHandle> startLeScan(sequence<DOMString> serviceUuids);
+
+  [NewObject]
+  Promise<void> stopLeScan(BluetoothDiscoveryHandle discoveryHandle);
+
   [NewObject, Throws, AvailableIn=CertifiedApps]
   DOMRequest getConnectedDevices(unsigned short serviceUuid);
 

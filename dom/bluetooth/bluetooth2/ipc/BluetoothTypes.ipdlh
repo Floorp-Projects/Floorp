@@ -28,6 +28,7 @@ namespace bluetooth {
  */
 union BluetoothValue
 {
+  int32_t;
   uint32_t;
   nsString;
   bool;

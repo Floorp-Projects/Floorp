@@ -247,6 +247,8 @@ function InplaceEditor(aOptions, aEvent)
     this.input.addEventListener("keyup", this._onKeyup, false);
   }
 
+  this._updateSize();
+
   if (aOptions.start) {
     aOptions.start(this, aEvent);
   }
@@ -364,7 +366,6 @@ InplaceEditor.prototype = {
       // account for the fact that after adding a newline the <pre> doesn't grow
       // unless there's text content on the line.
       width += 15;
-      this._measurement.textContent += "M";
       this.input.style.height = this._measurement.offsetHeight + "px";
     }
 
