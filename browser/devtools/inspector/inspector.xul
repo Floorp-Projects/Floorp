@@ -91,11 +91,15 @@
         label="&inspectorScrollNodeIntoView.label;"
         accesskey="&inspectorScrollNodeIntoView.accesskey;"
         oncommand="inspector.scrollNodeIntoView()"/>
-      <menuseparator/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
         accesskey="&inspectorHTMLDelete.accesskey;"
         oncommand="inspector.deleteNode()"/>
+      <menuseparator id="node-menu-link-separator"/>
+      <menuitem id="node-menu-link-follow"
+        oncommand="inspector.followAttributeLink()"/>
+      <menuitem id="node-menu-link-copy"
+        oncommand="inspector.copyAttributeLink()"/>
       <menuseparator/>
       <menuitem id="node-menu-pseudo-hover"
         label=":hover" type="checkbox"

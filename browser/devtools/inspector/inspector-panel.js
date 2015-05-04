@@ -692,6 +692,9 @@ InspectorPanel.prototype = {
       unique.hidden = true;
     }
 
+    // Enable/Disable the link open/copy items.
+    this._setupNodeLinkMenu();
+
     // Enable the "edit HTML" item if the selection is an element and the root
     // actor has the appropriate trait (isOuterHTMLEditable)
     let editHTML = this.panelDoc.getElementById("node-menu-edithtml");
@@ -747,6 +750,56 @@ InspectorPanel.prototype = {
     while (this.lastNodemenuItem.nextSibling) {
       let toDelete = this.lastNodemenuItem.nextSibling;
       toDelete.parentNode.removeChild(toDelete);
+    }
+  },
+
+  /**
+   * Link menu items can be shown or hidden depending on the context and
+   * selected node, and their labels can vary.
+   */
+  _setupNodeLinkMenu: function InspectorPanel_setupNodeLinkMenu() {
+    let linkSeparator = this.panelDoc.getElementById("node-menu-link-separator");
+    let linkFollow = this.panelDoc.getElementById("node-menu-link-follow");
+    let linkCopy = this.panelDoc.getElementById("node-menu-link-copy");
+
+    // Hide all by default.
+    linkSeparator.setAttribute("hidden", "true");
+    linkFollow.setAttribute("hidden", "true");
+    linkCopy.setAttribute("hidden", "true");
+
+    // Get information about the right-clicked node.
+    let popupNode = this.panelDoc.popupNode;
+    if (!popupNode || !popupNode.classList.contains("link")) {
+      return;
+    }
+
+    let type = popupNode.dataset.type;
+    // Bug 1158822 will make "resource" type URLs open in devtools, but for now
+    // they're considered like "uri".
+    if (type === "uri" || type === "resource") {
+      // First make sure the target can resolve relative URLs.
+      this.target.actorHasMethod("inspector", "resolveRelativeURL").then(canResolve => {
+        if (!canResolve) {
+          return;
+        }
+
+        linkSeparator.removeAttribute("hidden");
+
+        // Links can't be opened in new tabs in the browser toolbox.
+        if (!this.target.chrome) {
+          linkFollow.removeAttribute("hidden");
+          linkFollow.setAttribute("label", this.strings.GetStringFromName(
+            "inspector.menu.openUrlInNewTab.label"));
+        }
+        linkCopy.removeAttribute("hidden");
+        linkCopy.setAttribute("label", this.strings.GetStringFromName(
+          "inspector.menu.copyUrlToClipboard.label"));
+      }, console.error);
+    } else if (type === "idref") {
+      linkSeparator.removeAttribute("hidden");
+      linkFollow.removeAttribute("hidden");
+      linkFollow.setAttribute("label", this.strings.formatStringFromName(
+        "inspector.menu.selectElement.label", [popupNode.dataset.link], 1));
     }
   },
 
@@ -1035,6 +1088,52 @@ InspectorPanel.prototype = {
       // remove the node from content
       this.walker.removeNode(this.selection.nodeFront);
     }
+  },
+
+  /**
+   * This method is here for the benefit of the node-menu-link-follow menu item
+   * in the inspector contextual-menu. It's behavior depends on which node was
+   * right-clicked when the menu was opened.
+   */
+  followAttributeLink: function InspectorPanel_followLink(e) {
+    let type = this.panelDoc.popupNode.dataset.type;
+    let link = this.panelDoc.popupNode.dataset.link;
+
+    // "resource" type links should open appropriate tool instead (bug 1158822).
+    if (type === "uri" || type === "resource") {
+      // Open link in a new tab.
+      // When the inspector menu was setup on click (see _setupNodeLinkMenu), we
+      // already checked that resolveRelativeURL existed.
+      this.inspector.resolveRelativeURL(link, this.selection.nodeFront).then(url => {
+        let browserWin = this.target.tab.ownerDocument.defaultView;
+        browserWin.openUILinkIn(url, "tab");
+      }, console.error);
+    } else if (type == "idref") {
+      // Select the node in the same document.
+      this.walker.document(this.selection.nodeFront).then(doc => {
+        this.walker.querySelector(doc, "#" + CSS.escape(link)).then(node => {
+          if (!node) {
+            this.emit("idref-attribute-link-failed");
+            return;
+          }
+          this.selection.setNodeFront(node);
+        }, console.error);
+      }, console.error);
+    }
+  },
+
+  /**
+   * This method is here for the benefit of the node-menu-link-copy menu item
+   * in the inspector contextual-menu. It's behavior depends on which node was
+   * right-clicked when the menu was opened.
+   */
+  copyAttributeLink: function InspectorPanel_copyLink(e) {
+    let link = this.panelDoc.popupNode.dataset.link;
+    // When the inspector menu was setup on click (see _setupNodeLinkMenu), we
+    // already checked that resolveRelativeURL existed.
+    this.inspector.resolveRelativeURL(link, this.selection.nodeFront).then(url => {
+      clipboardHelper.copyString(url);
+    }, console.error);
   },
 
   /**
