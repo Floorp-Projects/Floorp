@@ -853,6 +853,10 @@ nsresult
 NS_CloneInputStream(nsIInputStream* aSource, nsIInputStream** aCloneOut,
                     nsIInputStream** aReplacementOut)
 {
+  if (NS_WARN_IF(!aSource)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Attempt to perform the clone directly on the source stream
   nsCOMPtr<nsICloneableInputStream> cloneable = do_QueryInterface(aSource);
   if (cloneable && cloneable->GetCloneable()) {
