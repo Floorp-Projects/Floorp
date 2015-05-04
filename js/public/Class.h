@@ -591,7 +591,7 @@ struct JSClass {
 
 #define JSCLASS_IS_PROXY                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+4))
 
-#define JSCLASS_FINALIZE_FROM_NURSERY   (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
+#define JSCLASS_SKIP_NURSERY_FINALIZE   (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
 
 // Reserved for embeddings.
 #define JSCLASS_USERBIT2                (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))

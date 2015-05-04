@@ -17,6 +17,7 @@
 
 #include "jsobjinlines.h"
 
+#include "gc/Nursery-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -24,6 +25,7 @@ using namespace js;
 
 using JS::GenericNaN;
 using mozilla::DebugOnly;
+using mozilla::PodCopy;
 using mozilla::RoundUpPow2;
 
 static const ObjectElements emptyElementsHeader(0, 0);
@@ -377,31 +379,6 @@ NativeObject::setSlotSpan(ExclusiveContext* cx, uint32_t span)
     return true;
 }
 
-// This will not run the garbage collector.  If a nursery cannot accomodate the slot array
-// an attempt will be made to place the array in the tenured area.
-static HeapSlot*
-AllocateSlots(ExclusiveContext* cx, JSObject* obj, uint32_t nslots)
-{
-    if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(obj, nslots);
-    return obj->zone()->pod_malloc<HeapSlot>(nslots);
-}
-
-// This will not run the garbage collector.  If a nursery cannot accomodate the slot array
-// an attempt will be made to place the array in the tenured area.
-//
-// If this returns null then the old slots will be left alone.
-static HeapSlot*
-ReallocateSlots(ExclusiveContext* cx, JSObject* obj, HeapSlot* oldSlots,
-                uint32_t oldCount, uint32_t newCount)
-{
-    if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(obj, oldSlots,
-                                                                        oldCount, newCount);
-    }
-    return obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
-}
-
 bool
 NativeObject::growSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCount)
 {
@@ -417,14 +394,14 @@ NativeObject::growSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCou
     MOZ_ASSERT(newCount < NELEMENTS_LIMIT);
 
     if (!oldCount) {
-        slots_ = AllocateSlots(cx, this, newCount);
+        slots_ = AllocateObjectBuffer<HeapSlot>(cx, this, newCount);
         if (!slots_)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(slots_, newCount);
         return true;
     }
 
-    HeapSlot* newslots = ReallocateSlots(cx, this, slots_, oldCount, newCount);
+    HeapSlot* newslots = ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
     if (!newslots)
         return false;  /* Leave slots at its old size. */
 
@@ -440,7 +417,7 @@ FreeSlots(ExclusiveContext* cx, HeapSlot* slots)
 {
     // Note: threads without a JSContext do not have access to GGC nursery allocated things.
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gc.nursery.freeSlots(slots);
+        return cx->asJSContext()->runtime()->gc.nursery.freeBuffer(slots);
     js_free(slots);
 }
 
@@ -457,7 +434,7 @@ NativeObject::shrinkSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newC
 
     MOZ_ASSERT_IF(!is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
-    HeapSlot* newslots = ReallocateSlots(cx, this, slots_, oldCount, newCount);
+    HeapSlot* newslots = ReallocateObjectBuffer<HeapSlot>(cx, this, slots_, oldCount, newCount);
     if (!newslots)
         return;  /* Leave slots at its old size. */
 
@@ -664,31 +641,6 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
     return ED_OK;
 }
 
-// This will not run the garbage collector.  If a nursery cannot accomodate the element array
-// an attempt will be made to place the array in the tenured area.
-static ObjectElements*
-AllocateElements(ExclusiveContext* cx, JSObject* obj, uint32_t nelems)
-{
-    if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gc.nursery.allocateElements(obj, nelems);
-    return reinterpret_cast<js::ObjectElements*>(obj->zone()->pod_malloc<HeapSlot>(nelems));
-}
-
-// This will not run the garbage collector.  If a nursery cannot accomodate the element array
-// an attempt will be made to place the array in the tenured area.
-static ObjectElements*
-ReallocateElements(ExclusiveContext* cx, JSObject* obj, ObjectElements* oldHeader,
-                   uint32_t oldCount, uint32_t newCount)
-{
-    if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(obj, oldHeader,
-                                                                           oldCount, newCount);
-    }
-    return reinterpret_cast<js::ObjectElements*>(
-            obj->zone()->pod_realloc<HeapSlot>(reinterpret_cast<HeapSlot*>(oldHeader),
-                                               oldCount, newCount));
-}
-
 // Round up |reqAllocated| to a good size. Up to 1 Mebi (i.e. 1,048,576) the
 // slot count is usually a power-of-two:
 //
@@ -820,19 +772,20 @@ NativeObject::growElements(ExclusiveContext* cx, uint32_t reqCapacity)
 
     uint32_t initlen = getDenseInitializedLength();
 
-    ObjectElements* newheader;
+    HeapSlot* oldHeaderSlots = reinterpret_cast<HeapSlot*>(getElementsHeader());
+    HeapSlot* newHeaderSlots;
     if (hasDynamicElements()) {
-        newheader = ReallocateElements(cx, this, getElementsHeader(), oldAllocated, newAllocated);
-        if (!newheader)
+        newHeaderSlots = ReallocateObjectBuffer<HeapSlot>(cx, this, oldHeaderSlots, oldAllocated, newAllocated);
+        if (!newHeaderSlots)
             return false;   // Leave elements at its old size.
     } else {
-        newheader = AllocateElements(cx, this, newAllocated);
-        if (!newheader)
+        newHeaderSlots = AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
+        if (!newHeaderSlots)
             return false;   // Leave elements at its old size.
-        js_memcpy(newheader, getElementsHeader(),
-                  (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
+        PodCopy(newHeaderSlots, oldHeaderSlots, ObjectElements::VALUES_PER_HEADER + initlen);
     }
 
+    ObjectElements* newheader = reinterpret_cast<ObjectElements*>(newHeaderSlots);
     newheader->capacity = newCapacity;
     elements_ = newheader->elements();
 
@@ -863,13 +816,15 @@ NativeObject::shrinkElements(ExclusiveContext* cx, uint32_t reqCapacity)
     MOZ_ASSERT(newAllocated > ObjectElements::VALUES_PER_HEADER);
     uint32_t newCapacity = newAllocated - ObjectElements::VALUES_PER_HEADER;
 
-    ObjectElements* newheader = ReallocateElements(cx, this, getElementsHeader(),
-                                                   oldAllocated, newAllocated);
-    if (!newheader) {
+    HeapSlot* oldHeaderSlots = reinterpret_cast<HeapSlot*>(getElementsHeader());
+    HeapSlot* newHeaderSlots = ReallocateObjectBuffer<HeapSlot>(cx, this, oldHeaderSlots,
+                                                                oldAllocated, newAllocated);
+    if (!newHeaderSlots) {
         cx->recoverFromOutOfMemory();
         return;  // Leave elements at its old size.
     }
 
+    ObjectElements* newheader = reinterpret_cast<ObjectElements*>(newHeaderSlots);
     newheader->capacity = newCapacity;
     elements_ = newheader->elements();
 }
@@ -893,9 +848,10 @@ NativeObject::CopyElementsForWrite(ExclusiveContext* cx, NativeObject* obj)
 
     JSObject::writeBarrierPre(obj->getElementsHeader()->ownerObject());
 
-    ObjectElements* newheader = AllocateElements(cx, obj, newAllocated);
-    if (!newheader)
+    HeapSlot* newHeaderSlots = AllocateObjectBuffer<HeapSlot>(cx, obj, newAllocated);
+    if (!newHeaderSlots)
         return false;
+    ObjectElements* newheader = reinterpret_cast<ObjectElements*>(newHeaderSlots);
     js_memcpy(newheader, obj->getElementsHeader(),
               (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
 
