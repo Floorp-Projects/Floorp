@@ -9805,23 +9805,6 @@ nsCSSFrameConstructor::WrapItemsInPseudoRubyLevelContainer(
     // whether contentEndIter has been done.
     RubyWhitespaceType whitespaceType =
       InterpretRubyWhitespace(aState, endIter, contentEndIter);
-    if ((whitespaceType == eRubyInterLeafWhitespace ||
-         whitespaceType == eRubyInterSegmentWhitespace) &&
-        !endIter.item().mStyleContext->ShouldSuppressLineBreak()) {
-      // It is possible that a whitespace is not contained by any ruby
-      // box before we wrap it, which makes the ShouldSuppressLineBreak
-      // bit not be set properly before.  Hence we have to get a new
-      // context which suppress line break here.
-      nsStyleContext* oldContext = endIter.item().mStyleContext;
-      nsRefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
-        ResolveStyleForNonElement(oldContext->GetParent(), true);
-      MOZ_ASSERT(newContext->ShouldSuppressLineBreak());
-      for (FCItemIterator iter(endIter); iter != contentEndIter; iter.Next()) {
-        MOZ_ASSERT(iter.item().mStyleContext == oldContext,
-                   "all whitespaces should share the same style context");
-        iter.item().mStyleContext = newContext;
-      }
-    }
     if (whitespaceType == eRubyInterLevelWhitespace) {
       // Remove inter-level whitespace.
       bool atStart = (aIter == endIter);

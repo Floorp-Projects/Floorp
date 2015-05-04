@@ -135,22 +135,17 @@ public:
                                                   NS_STYLE_CONTEXT_TYPE_SHIFT);
   }
 
-  enum {
-    eRelevantLinkVisited = 1 << 0,
-    eSuppressLineBreak = 1 << 1
-  };
-
   // Find, if it already exists *and is easily findable* (i.e., near the
   // start of the child list), a style context whose:
   //  * GetPseudo() matches aPseudoTag
   //  * RuleNode() matches aRules
   //  * !GetStyleIfVisited() == !aRulesIfVisited, and, if they're
   //    non-null, GetStyleIfVisited()->RuleNode() == aRulesIfVisited
-  //  * RelevantLinkVisited() == (aFlags & eRelevantLinkVisited)
-  //  * ShouldSuppressLineBreak() == (aFlags & eSuppressLineBreak)
+  //  * RelevantLinkVisited() == aRelevantLinkVisited
   already_AddRefed<nsStyleContext>
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
-                     nsRuleNode* aRulesIfVisited, uint32_t aFlags);
+                     nsRuleNode* aRulesIfVisited,
+                     bool aRelevantLinkVisited);
 
   // Does this style context or any of its ancestors have text
   // decoration lines?
@@ -162,6 +157,8 @@ public:
   // as if nowrap is set, <br> is suppressed, and blocks are inlinized.
   // This bit is propogated to all children of line partitipants. It is
   // currently used by ruby to make its content frames unbreakable.
+  // NOTE: for nsTextFrame, use nsTextFrame::ShouldSuppressLineBreak()
+  // instead of this method.
   bool ShouldSuppressLineBreak() const
     { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
 

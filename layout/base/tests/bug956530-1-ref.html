@@ -13,11 +13,15 @@
       focus();
       var i = document.querySelector("input");
       i.focus();
-      document.documentElement.removeAttribute("class");
+    }
+    function finish() {
+      setTimeout(function() {
+        document.documentElement.removeAttribute("class");
+      }, 0);
     }
   </script>
   <body onload="setTimeout(test, 0)">
     <input value="text text text text text"
-           onfocus="this.select()">
+           onfocus="this.select(); finish();">
   </body>
 </html>

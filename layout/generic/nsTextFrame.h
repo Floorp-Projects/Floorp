@@ -15,6 +15,7 @@
 #include "gfxTextRun.h"
 #include "nsDisplayList.h"
 #include "JustificationUtils.h"
+#include "RubyUtils.h"
 
 // Undo the windows.h damage
 #if defined(XP_WIN) && defined(DrawText)
@@ -120,6 +121,18 @@ public:
     // XXX kipp: temporary
     return nsFrame::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced |
                                              nsIFrame::eLineParticipant));
+  }
+
+  bool ShouldSuppressLineBreak() const
+  {
+    // If the parent frame of the text frame is ruby content box, it must
+    // suppress line break inside. This check is necessary, because when
+    // a whitespace is only contained by pseudo ruby frames, its style
+    // context won't have SuppressLineBreak bit set.
+    if (mozilla::RubyUtils::IsRubyContentBox(GetParent()->GetType())) {
+      return true;
+    }
+    return StyleContext()->ShouldSuppressLineBreak();
   }
 
   virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;
