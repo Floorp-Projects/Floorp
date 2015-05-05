@@ -71,8 +71,8 @@ add_task(function* test_open_and_close() {
 
   // Now close stuff, this should add closeAt
   yield promiseWindowClosed(newWin);
-  gBrowser.removeTab(newTab1);
-  gBrowser.removeTab(newTab2);
+  yield promiseRemoveTab(newTab1);
+  yield promiseRemoveTab(newTab2);
 
   state = CLOSED_STATE = JSON.parse(ss.getBrowserState());
 

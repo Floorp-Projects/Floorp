@@ -103,6 +103,7 @@ WEBIDL_FILES = [
     'DesktopNotification.webidl',
     'DeviceMotionEvent.webidl',
     'DeviceStorage.webidl',
+    'DeviceStorageAreaListener.webidl',
     'Directory.webidl',
     'DisplayPortInputPort.webidl',
     'Document.webidl',

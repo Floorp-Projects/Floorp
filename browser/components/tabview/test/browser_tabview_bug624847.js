@@ -56,18 +56,19 @@ function test() {
     assertNumberOfTabs(2);
 
     afterAllTabsLoaded(function () {
-      win.gBrowser.removeTab(tab);
-      assertNumberOfTabs(1);
-      assertNumberOfPinnedTabs(0);
+      BrowserTestUtils.removeTab(tab).then(() => {
+        assertNumberOfTabs(1);
+        assertNumberOfPinnedTabs(0);
 
-      restoreTab(function () {
-        prefix = 'unpinned-restored';
-        assertValidPrerequisites();
-        assertGroupItemPreserved();
+        restoreTab(function () {
+          prefix = 'unpinned-restored';
+          assertValidPrerequisites();
+          assertGroupItemPreserved();
 
-        createBlankTab();
-        afterAllTabsLoaded(testUndoCloseWithSelectedBlankPinnedTab, win);
-      }, 0, win);
+          createBlankTab();
+          afterAllTabsLoaded(testUndoCloseWithSelectedBlankPinnedTab, win);
+        }, 0, win);
+      });
     }, win);
   }
 

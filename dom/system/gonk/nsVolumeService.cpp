@@ -439,7 +439,7 @@ NS_IMETHODIMP
 nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_INIT,
+    nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_MOUNTED,
                                           -1    /* mountGeneration */,
                                           true  /* isMediaPresent */,
                                           false /* isSharing */,
@@ -469,14 +469,55 @@ nsVolumeService::SetFakeVolumeState(const nsAString& name, int32_t state)
     if (!vol || !vol->IsFake()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-    vol->SetState(state);
-    vol->LogState();
-    UpdateVolume(vol.get());
+
+    // UpdateVolume expects the volume passed in to NOT be the
+    // same pointer as what CreateOrFindVolumeByName would return,
+    // which is why we allocate a temporary volume here.
+    nsRefPtr<nsVolume> volume = new nsVolume(name);
+    volume->Set(vol);
+    volume->SetState(state);
+    volume->LogState();
+    UpdateVolume(volume.get());
     return NS_OK;
   }
 
   ContentChild::GetSingleton()->SendSetFakeVolumeState(nsString(name), state);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsVolumeService::RemoveFakeVolume(const nsAString& name)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    SetFakeVolumeState(name, nsIVolume::STATE_NOMEDIA);
+    RemoveVolumeByName(name);
+    return NS_OK;
+  }
+
+  ContentChild::GetSingleton()->SendRemoveFakeVolume(nsString(name));
+  return NS_OK;
+}
+
+void
+nsVolumeService::RemoveVolumeByName(const nsAString& aName)
+{
+  nsRefPtr<nsVolume> vol;
+  {
+    MonitorAutoLock autoLock(mArrayMonitor);
+    vol = FindVolumeByName(aName);
+  }
+  if (!vol) {
+    return;
+  }
+  mVolumeArray.RemoveElement(vol);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    nsCOMPtr<nsIObserverService> obs = GetObserverService();
+    if (!obs) {
+      return;
+    }
+    obs->NotifyObservers(nullptr, NS_VOLUME_REMOVED, nsString(aName).get());
+  }
 }
 
 /***************************************************************************

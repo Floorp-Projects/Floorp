@@ -25,58 +25,6 @@ using namespace android;
 
 namespace mozilla {
 
-GonkDecoderManager::GonkDecoderManager(MediaTaskQueue* aTaskQueue)
-  : mMonitor("GonkDecoderManager")
-{
-}
-
-nsresult
-GonkDecoderManager::Input(MediaRawData* aSample)
-{
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  nsRefPtr<MediaRawData> sample;
-
-  if (!aSample) {
-    // It means EOS with empty sample.
-    sample = new MediaRawData();
-  } else {
-    sample = aSample;
-    if (!PerformFormatSpecificProcess(sample)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  mQueueSample.AppendElement(sample);
-
-  status_t rv;
-  while (mQueueSample.Length()) {
-    nsRefPtr<MediaRawData> data = mQueueSample.ElementAt(0);
-    {
-      ReentrantMonitorAutoExit mon_exit(mMonitor);
-      rv = SendSampleToOMX(data);
-    }
-    if (rv == OK) {
-      mQueueSample.RemoveElementAt(0);
-    } else if (rv == -EAGAIN || rv == -ETIMEDOUT) {
-      // In most cases, EAGAIN or ETIMEOUT are safe because OMX can't fill
-      // buffer on time.
-      return NS_OK;
-    } else {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-GonkDecoderManager::Flush()
-{
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  mQueueSample.Clear();
-  return NS_OK;
-}
-
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
                                            FlushableMediaTaskQueue* aTaskQueue,
                                            MediaDataDecoderCallback* aCallback)

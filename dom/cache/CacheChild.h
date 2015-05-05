@@ -43,7 +43,7 @@ public:
             nsISupports* aParent, const CacheOpArgs& aArgs);
 
   CachePushStreamChild*
-  CreatePushStream(nsIAsyncInputStream* aStream);
+  CreatePushStream(nsISupports* aParent, nsIAsyncInputStream* aStream);
 
   // Our parent Listener object has gone out of scope and is being destroyed.
   void StartDestroyFromListener();
