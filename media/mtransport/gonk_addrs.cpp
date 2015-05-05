@@ -129,7 +129,7 @@ nr_stun_get_addrs(nr_local_addr aAddrs[], int aMaxAddrs,
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   mozilla::SyncRunnable::DispatchToThread(
     mainThread.get(),
-    mozilla::WrapRunnableNMRet(&GetInterfaces, &interfaces, &rv),
+    mozilla::WrapRunnableNMRet(&rv, &GetInterfaces, &interfaces),
     false);
   if (NS_FAILED(rv)) {
     return R_FAILED;

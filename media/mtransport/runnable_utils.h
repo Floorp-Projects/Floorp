@@ -10,7 +10,9 @@
 #define runnable_utils_h__
 
 #include "nsThreadUtils.h"
+#include "mozilla/IndexSequence.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Tuple.h"
 
 // Abstract base class for all of our templates
 namespace mozilla {
@@ -53,24 +55,159 @@ class runnable_args_base : public nsRunnable {
   NS_IMETHOD Run() = 0;
 };
 
+
+template<typename R>
+struct RunnableFunctionCallHelper
+{
+  template<typename FunType, typename... Args, size_t... Indices>
+  static R apply(FunType func, Tuple<Args...>& args, IndexSequence<Indices...>)
+  {
+    return func(Get<Indices>(args)...);
+  }
+};
+
+// A void specialization is needed in the case where the template instantiator
+// knows we don't want to return a value, but we don't know whether the called
+// function returns void or something else.
+template<>
+struct RunnableFunctionCallHelper<void>
+{
+  template<typename FunType, typename... Args, size_t... Indices>
+  static void apply(FunType func, Tuple<Args...>& args, IndexSequence<Indices...>)
+  {
+    func(Get<Indices>(args)...);
+  }
+};
+
+template<typename R>
+struct RunnableMethodCallHelper
+{
+  template<typename Class, typename M, typename... Args, size_t... Indices>
+  static R apply(Class obj, M method, Tuple<Args...>& args, IndexSequence<Indices...>)
+  {
+    return ((*obj).*method)(Get<Indices>(args)...);
+  }
+};
+
+// A void specialization is needed in the case where the template instantiator
+// knows we don't want to return a value, but we don't know whether the called
+// method returns void or something else.
+template<>
+struct RunnableMethodCallHelper<void>
+{
+  template<typename Class, typename M, typename... Args, size_t... Indices>
+  static void apply(Class obj, M method, Tuple<Args...>& args, IndexSequence<Indices...>)
+  {
+    ((*obj).*method)(Get<Indices>(args)...);
+  }
+};
+
 }
 
-// The generated file contains four major function templates
-// (in variants for arbitrary numbers of arguments up to 10,
-// which is why it is machine generated). The four templates
-// are:
-//
-// WrapRunnable(o, m, ...) -- wraps a member function m of an object ptr o
-// WrapRunnableRet(o, m, ..., r) -- wraps a member function m of an object ptr o
-//                                  the function returns something that can
-//                                  be assigned to *r
-// WrapRunnableNM(f, ...) -- wraps a function f
-// WrapRunnableNMRet(f, ..., r) -- wraps a function f that returns something
-//                                 that can be assigned to *r
-//
-// All of these template functions return a Runnable* which can be passed
-// to Dispatch().
-#include "runnable_utils_generated.h"
+template<typename FunType, typename... Args>
+class runnable_args_func : public detail::runnable_args_base<detail::NoResult>
+{
+public:
+  // |explicit| to pacify static analysis when there are no |args|.
+  explicit runnable_args_func(FunType f, Args... args)
+    : mFunc(f), mArgs(args...)
+  {}
+
+  NS_IMETHOD Run() {
+    detail::RunnableFunctionCallHelper<void>::apply(mFunc, mArgs, typename IndexSequenceFor<Args...>::Type());
+    return NS_OK;
+  }
+
+private:
+  FunType mFunc;
+  Tuple<Args...> mArgs;
+};
+
+template<typename FunType, typename... Args>
+runnable_args_func<FunType, Args...>*
+WrapRunnableNM(FunType f, Args... args)
+{
+  return new runnable_args_func<FunType, Args...>(f, args...);
+}
+
+template<typename Ret, typename FunType, typename... Args>
+class runnable_args_func_ret : public detail::runnable_args_base<detail::ReturnsResult>
+{
+public:
+  runnable_args_func_ret(Ret* ret, FunType f, Args... args)
+    : mReturn(ret), mFunc(f), mArgs(args...)
+  {}
+
+  NS_IMETHOD Run() {
+    *mReturn = detail::RunnableFunctionCallHelper<Ret>::apply(mFunc, mArgs, typename IndexSequenceFor<Args...>::Type());
+    return NS_OK;
+  }
+
+private:
+  Ret* mReturn;
+  FunType mFunc;
+  Tuple<Args...> mArgs;
+};
+
+template<typename R, typename FunType, typename... Args>
+runnable_args_func_ret<R, FunType, Args...>*
+WrapRunnableNMRet(R* ret, FunType f, Args... args)
+{
+  return new runnable_args_func_ret<R, FunType, Args...>(ret, f, args...);
+}
+
+template<typename Class, typename M, typename... Args>
+class runnable_args_memfn : public detail::runnable_args_base<detail::NoResult>
+{
+public:
+  runnable_args_memfn(Class obj, M method, Args... args)
+    : mObj(obj), mMethod(method), mArgs(args...)
+  {}
+
+  NS_IMETHOD Run() {
+    detail::RunnableMethodCallHelper<void>::apply(mObj, mMethod, mArgs, typename IndexSequenceFor<Args...>::Type());
+    return NS_OK;
+  }
+
+private:
+  Class mObj;
+  M mMethod;
+  Tuple<Args...> mArgs;
+};
+
+template<typename Class, typename M, typename... Args>
+runnable_args_memfn<Class, M, Args...>*
+WrapRunnable(Class obj, M method, Args... args)
+{
+  return new runnable_args_memfn<Class, M, Args...>(obj, method, args...);
+}
+
+template<typename Ret, typename Class, typename M, typename... Args>
+class runnable_args_memfn_ret : public detail::runnable_args_base<detail::ReturnsResult>
+{
+public:
+  runnable_args_memfn_ret(Ret* ret, Class obj, M method, Args... args)
+    : mReturn(ret), mObj(obj), mMethod(method), mArgs(args...)
+  {}
+
+  NS_IMETHOD Run() {
+    *mReturn = detail::RunnableMethodCallHelper<Ret>::apply(mObj, mMethod, mArgs, typename IndexSequenceFor<Args...>::Type());
+    return NS_OK;
+  }
+
+private:
+  Ret* mReturn;
+  Class mObj;
+  M mMethod;
+  Tuple<Args...> mArgs;
+};
+
+template<typename R, typename Class, typename M, typename... Args>
+runnable_args_memfn_ret<R, Class, M, Args...>*
+WrapRunnableRet(R* ret, Class obj, M method, Args... args)
+{
+  return new runnable_args_memfn_ret<R, Class, M, Args...>(ret, obj, method, args...);
+}
 
 static inline nsresult RUN_ON_THREAD(nsIEventTarget *thread, detail::runnable_args_base<detail::NoResult> *runnable, uint32_t flags) {
   return detail::RunOnThreadInternal(thread, static_cast<nsIRunnable *>(runnable), flags);
