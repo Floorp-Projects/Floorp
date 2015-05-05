@@ -8,6 +8,8 @@ DIRS += ['interfaces']
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochi/mochitest.ini']
+
 EXPORTS.mozilla.dom += [
     'Activity.h',
 ]

@@ -6,7 +6,6 @@
 package org.mozilla.gecko.tabqueue;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
@@ -69,7 +68,7 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
      * Start fennec with the supplied intent.
      */
     private void loadNormally(Intent intent) {
-        intent.setClass(getApplicationContext(), BrowserApp.class);
+        intent.setClassName(getApplicationContext(), AppConstants.BROWSER_INTENT_CLASS_NAME);
         startActivity(intent);
         finish();
     }

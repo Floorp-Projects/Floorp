@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}
+-->
+<head>
+  <title>Test for Bug {1123846}</title>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1123846}">Mozilla Bug {1123846}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+
+/**
+  * Tests the developer mode activities that can only be provided by the
+  * system app.
+  *
+  * We test the following:
+  * 1) No dev mode, no system app installed (failure).
+  * 2) No dev mode, system app installed (failure).
+  * 3) No dev mode, system app and other app installed (failure).
+  * 4) Dev mode, system app and other app installed (success, only system app returned).
+  */
+
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+var gRootUrl = "http://test/chrome/dom/activities/tests/mochi/";
+var gGenerator = runTest();
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document },
+     { "type": "browser", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document }],
+    function() {
+      SpecialPowers.pushPrefEnv(
+        {'set': [["dom.mozBrowserFramesEnabled", true],
+                 ["dom.sysmsg.enabled", true],
+                 ["dom.apps.developer_mode", false],
+                 ["dom.activities.developer_mode_only", "import-app"]]},
+        continueTest) });
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+function unexpectedSuccess(aMsg) {
+  return function() {
+    ok(false, "Should not have succeeded: " + aMsg);
+    finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var systemAppUrl = gRootUrl + "system.webapp";
+var otherAppUrl = gRootUrl + "manifest.webapp";
+
+function installApp(aUrl) {
+  var request = navigator.mozApps.install(aUrl, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  return request;
+}
+
+function installSystemApp() {
+  return installApp(systemAppUrl);
+}
+
+function installOtherApp() {
+  return installApp(otherAppUrl);
+}
+
+function uninstall(aApp) {
+  info("Uninstalling " + (aApp ? aApp.manifestURL : "NO APP!!"));
+  var request = navigator.mozApps.mgmt.uninstall(aApp);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+}
+
+function registerComponent(aObject, aDescription, aContract) {
+  var uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
+                        .getService(Ci.nsIUUIDGenerator);
+  var cid = uuidGenerator.generateUUID();
+
+  info("Registering " + cid);
+
+  var componentManager =
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.registerFactory(cid, aDescription, aContract, aObject);
+
+  // Keep the id on the object so we can unregister later.
+  aObject.cid = cid;
+}
+
+function unregisterComponent(aObject) {
+  info("Unregistering " + aObject.cid);
+  var componentManager =
+    Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.unregisterFactory(aObject.cid, aObject);
+}
+
+var ActivityGlue = {
+  // nsISupports implementation.
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIActivityUIGlue)) {
+      return this;
+    }
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation.
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIActivityUIGlue implementation.
+  chooseActivity: function(aOptions, aActivities, aCallback) {
+    aCallback.handleEvent(Ci.nsIActivityUIGlueCallback.WEBAPPS_ACTIVITY,
+                          aActivities.length == 1 ? 0 : -1);
+  }
+};
+
+var SystemMessageGlue = {
+  // nsISupports implementation.
+  QueryInterface: function(iid) {
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsISystemMessageGlue)) {
+      return this;
+    }
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation.
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsISystemMessageGlue implementation.
+  openApp(pageURL, manifestURL, type, target, showApp, onlyShowApp, extra) {
+    // We should only try to open a page in the sytem app.
+    is(manifestURL, systemAppUrl, "Opening a page in the system app.");
+  }
+};
+
+registerComponent(ActivityGlue,
+                  "Activity Glue",
+                  "@mozilla.org/dom/activities/ui-glue;1");
+
+registerComponent(SystemMessageGlue,
+                  "System Message Glue",
+                  "@mozilla.org/dom/messages/system-message-glue;1");
+
+function finish() {
+  unregisterComponent(ActivityGlue);
+  unregisterComponent(SystemMessageGlue);
+  SimpleTest.finish();
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+/**
+  * Test exporting and importing hosted and packaged apps.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  // Check how many apps we are starting with.
+  var request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  // 1) No dev mode, no system app installed (failure).
+  var activity = new MozActivity({ name: "import-app" });
+  activity.onerror = function() {
+    ok(true, "1) No dev mode, no system app installed");
+    continueTest();
+  }
+  activity.onsuccess = unexpectedSuccess("1) No dev mode, no system app installed");
+  yield undefined;
+
+
+  // 2) No dev mode, system app installed (failure).
+  // Configure the system app manifest url.
+  SpecialPowers.pushPrefEnv(
+        {'set': [["b2g.system_manifest_url", systemAppUrl]]},
+        continueTest);
+  yield undefined;
+
+  // Install the system app.
+  request = installSystemApp();
+  yield undefined;
+  var systemApp = request.result;
+  ok(systemApp, "systemApp is non-null");
+
+  activity = new MozActivity({ name: "import-app" });
+  activity.onerror = function() {
+    ok(true, "2) No dev mode, system app installed");
+    continueTest();
+  }
+  activity.onsuccess = unexpectedSuccess("2) No dev mode, system app installed");
+  yield undefined;
+
+  // 3) No dev mode, system app and other app installed (failure).
+  request = installOtherApp();
+  yield undefined;
+  var otherApp = request.result;
+  ok(otherApp, "otherApp is non-null");
+
+  activity = new MozActivity({ name: "import-app" });
+  activity.onerror = function() {
+    ok(true, "3) No dev mode, system app and other app installed");
+    continueTest();
+  }
+  activity.onsuccess = unexpectedSuccess("3) No dev mode, system app and other app installed");
+  yield undefined;
+
+  // 4) Dev mode, no system app installed.
+  SpecialPowers.pushPrefEnv(
+        {'set': [["dom.apps.developer_mode", true]]},
+        continueTest);
+  yield undefined;
+
+  activity = new MozActivity({ name: "import-app" });
+  activity.onsuccess = function() {
+    ok(true, "4) Dev mode, system app and other app installed");
+    continueTest();
+  }
+  activity.onerror = function(aError) {
+    ok(false, "Got error: " + aError.name);
+    finish();
+  }
+  yield undefined;
+
+  // Cleanup
+  uninstall(systemApp);
+  yield undefined;
+
+  uninstall(otherApp);
+  yield undefined;
+
+  // Check that we restored the app registry.
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  is(request.result.length, initialAppsCount, "All apps are uninstalled.");
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>
