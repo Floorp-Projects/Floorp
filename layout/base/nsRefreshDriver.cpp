@@ -1330,6 +1330,7 @@ nsRefreshDriver::ObserverCount() const
   // changes can trigger transitions which fire events when they complete, and
   // layout changes can affect media queries on child documents, triggering
   // style changes, etc.
+  sum += mResizeEventFlushObservers.Length();
   sum += mStyleFlushObservers.Length();
   sum += mLayoutFlushObservers.Length();
   sum += mFrameRequestCallbackDocs.Length();
@@ -1626,6 +1627,24 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
   AutoRestore<TimeStamp> restoreTickStart(mTickStart);
   mTickStart = TimeStamp::Now();
+
+  // Resize events should be fired before layout flushes or
+  // calling animation frame callbacks.
+  nsAutoTArray<nsIPresShell*, 16> observers;
+  observers.AppendElements(mResizeEventFlushObservers);
+  for (uint32_t i = observers.Length(); i; --i) {
+    if (!mPresContext || !mPresContext->GetPresShell()) {
+      break;
+    }
+    // Make sure to not process observers which might have been removed
+    // during previous iterations.
+    nsIPresShell* shell = observers[i - 1];
+    if (!mResizeEventFlushObservers.Contains(shell)) {
+      continue;
+    }
+    mResizeEventFlushObservers.RemoveElement(shell);
+    shell->FireResizeEvent();
+  }
 
   /*
    * The timer holds a reference to |this| while calling |Notify|.
