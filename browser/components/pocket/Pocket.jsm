@@ -132,4 +132,28 @@ let Pocket = {
     let window = event.target.ownerDocument.defaultView;
     window.pktUI.pocketPanelDidHide(event);
   },
+
+  // Called on tab/urlbar/location changes and after customization. Update
+  // anything that is tab specific.
+  onLocationChange(browser, locationURI) {
+    if (!locationURI) {
+      return;
+    }
+    let widget = CustomizableUI.getWidget("pocket-button");
+    for (let instance of widget.instances) {
+      let node = instance.node;
+      if (!node ||
+          node.ownerDocument != browser.ownerDocument) {
+        continue;
+      }
+      if (node) {
+        let win = browser.ownerDocument.defaultView;
+        node.disabled = win.pktApi.isUserLoggedIn() &&
+                        !locationURI.schemeIs("http") &&
+                        !locationURI.schemeIs("https") &&
+                        !(locationURI.schemeIs("about") &&
+                          locationURI.spec.toLowerCase().startsWith("about:reader?url="));
+      }
+    }
+  },
 };
