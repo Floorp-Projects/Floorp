@@ -240,15 +240,19 @@ XRE_API(nsresult,
  * @param aFileCount the number of items in the aFiles array.
  * @note appdir/components is registered automatically.
  *
- * NS_COMPONENT_LOCATION specifies a location to search for binary XPCOM
+ * NS_APP_LOCATION specifies a location to search for binary XPCOM
  * components as well as component/chrome manifest files.
+ *
+ * NS_EXTENSION_LOCATION excludes binary XPCOM components but allows other
+ * manifest instructions.
  *
  * NS_SKIN_LOCATION specifies a location to search for chrome manifest files
  * which are only allowed to register only skin packages and style overlays.
  */
 enum NSLocationType
 {
-  NS_COMPONENT_LOCATION,
+  NS_APP_LOCATION,
+  NS_EXTENSION_LOCATION,
   NS_SKIN_LOCATION,
   NS_BOOTSTRAPPED_LOCATION
 };

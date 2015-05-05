@@ -66,13 +66,13 @@ public:
   public:
     NS_INLINE_DECL_REFCOUNTING(PluginCrashCallback)
 
-    PluginCrashCallback(const nsACString& aPluginId)
+    PluginCrashCallback(const uint32_t aPluginId)
       : mPluginId(aPluginId)
     {
       MOZ_ASSERT(NS_IsMainThread());
     }
-    const nsACString& PluginId() const { return mPluginId; }
-    virtual void Run(const nsACString& aPluginName, const nsAString& aPluginDumpId) = 0;
+    const uint32_t PluginId() const { return mPluginId; }
+    virtual void Run(const nsACString& aPluginName) = 0;
     virtual bool IsStillValid() = 0; // False if callback has become useless.
   protected:
     virtual ~PluginCrashCallback()
@@ -80,14 +80,13 @@ public:
       MOZ_ASSERT(NS_IsMainThread());
     }
   private:
-    const nsCString mPluginId;
+    const uint32_t mPluginId;
   };
   void RemoveObsoletePluginCrashCallbacks(); // Called from add/remove/run.
   void AddPluginCrashCallback(nsRefPtr<PluginCrashCallback> aPluginCrashCallback);
-  void RemovePluginCrashCallbacks(const nsACString& aPluginId);
-  void RunPluginCrashCallbacks(const nsACString& aPluginId,
-                               const nsACString& aPluginName,
-                               const nsAString& aPluginDumpId);
+  void RemovePluginCrashCallbacks(const uint32_t aPluginId);
+  void RunPluginCrashCallbacks(const uint32_t aPluginId,
+                               const nsACString& aPluginName);
 
 protected:
   GeckoMediaPluginService();

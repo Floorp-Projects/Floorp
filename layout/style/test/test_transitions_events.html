@@ -83,6 +83,7 @@ var got_four_root = false;
 var got_body = false;
 var did_stops = false;
 var got_before = false;
+var got_after = false;
 
 document.documentElement.addEventListener("transitionend",
   function(event) {
@@ -122,10 +123,13 @@ document.documentElement.addEventListener("transitionend",
         got_before = true;
         is(event.pseudoElement, "::before");
       } else {
+        ok(!got_after, "transitionend on #seven::after");
+        got_after = true;
         is(event.pseudoElement, "::after");
       }
       is(event.propertyName, "color");
       is(event.isTrusted, true);
+      finished_test();
     } else {
       if (!did_stops &&
           (event.target == $("five") || event.target == $("six"))) {
@@ -203,12 +207,15 @@ $("one").addEventListener("transitionend",
     finished_test();
   }, false);
 
-started_test();
-started_test();
-started_test();
-started_test();
-started_test();
-started_test();
+started_test(); // color on #one
+started_test(); // border-top-color on #one
+started_test(); // border-right-color on #one
+started_test(); // border-right-color on #one (listener on root)
+started_test(); // border-bottom-color on #one
+started_test(); // border-left-color on #one
+started_test(); // -moz-column-rule-color on #one
+started_test(); // text-decoration-color on #one
+started_test(); // outline-color on #one
 $("one").style.color = "lime";
 
 
@@ -231,7 +238,7 @@ $("two").addEventListener("transitionend",
     finished_test();
   }, false);
 
-started_test();
+started_test(); // #two
 $("two").className = "bar";
 
 $("three").addEventListener("transitionend",
@@ -266,15 +273,15 @@ $("three").addEventListener("transitionend",
     finished_test();
   }, true);
 
-started_test();
-started_test();
-started_test();
-started_test();
+started_test(); // margin-top on #three
+started_test(); // margin-right on #three
+started_test(); // margin-bottom on #three
+started_test(); // margin-left on #three
 $("three").className = "bar";
 
 // We reverse the transition on four, and we should only get an event
 // at the end of the second transition.
-started_test();
+started_test(); // #four (listener on root)
 $("four").style.color = "lime";
 
 // We cancel the transition on five by changing 'transition-property',
@@ -285,8 +292,8 @@ $("five").style.color = "lime";
 // then changing the value, so we should get no event.
 $("six").style.color = "lime";
 
-started_test();
-started_test();
+started_test(); // #seven::before (listener on root)
+started_test(); // #seven::after (listener on root)
 $("seven").setAttribute("foo", "bar");
 
 setTimeout(function() {
@@ -312,7 +319,7 @@ function poll_start_reversal() {
 setTimeout(poll_start_reversal, 200);
 
 // And make our own event to dispatch to the body.
-started_test();
+started_test(); // synthesized event to body (listener on root)
 
 var e = new TransitionEvent("transitionend",
                             {
