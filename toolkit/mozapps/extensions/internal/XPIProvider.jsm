@@ -53,6 +53,12 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsIResProtocolHandler");
 
+XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
+  let certUtils = {};
+  Components.utils.import("resource://gre/modules/CertUtils.jsm", certUtils);
+  return certUtils;
+});
+
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
 
@@ -94,6 +100,10 @@ const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion"
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
 
 const PREF_CHECKCOMAT_THEMEOVERRIDE   = "extensions.checkCompatibility.temporaryThemeOverride_minAppVersion";
+
+const PREF_EM_HOTFIX_ID               = "extensions.hotfix.id";
+const PREF_EM_CERT_CHECKATTRIBUTES    = "extensions.hotfix.cert.checkAttributes";
+const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
 
 const URI_EXTENSION_SELECT_DIALOG     = "chrome://mozapps/content/extensions/selectAddons.xul";
 const URI_EXTENSION_UPDATE_DIALOG     = "chrome://mozapps/content/extensions/update.xul";
@@ -1289,6 +1299,20 @@ function getSignedStatus(aRv, aCert, aExpectedID) {
     case Cr.NS_OK:
       if (aExpectedID != aCert.commonName)
         return AddonManager.SIGNEDSTATE_BROKEN;
+
+      let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
+      if (hotfixID && hotfixID == aExpectedID && Preferences.get(PREF_EM_CERT_CHECKATTRIBUTES, false)) {
+        // The hotfix add-on has some more rigorous certificate checks
+        try {
+          CertUtils.validateCert(aCert,
+                                 CertUtils.readCertPrefs(PREF_EM_HOTFIX_CERTS));
+        }
+        catch (e) {
+          logger.warn("The hotfix add-on was not signed by the expected " +
+                      "certificate and so will not be installed.", e);
+          return AddonManager.SIGNEDSTATE_BROKEN;
+        }
+      }
 
       return /preliminary/i.test(aCert.organizationalUnit)
                ? AddonManager.SIGNEDSTATE_PRELIMINARY
@@ -5544,9 +5568,8 @@ AddonInstall.prototype = {
                    createInstance(Ci.nsIStreamListenerTee);
     listener.init(this, this.stream);
     try {
-      Components.utils.import("resource://gre/modules/CertUtils.jsm");
       let requireBuiltIn = Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true);
-      this.badCertHandler = new BadCertHandler(!requireBuiltIn);
+      this.badCertHandler = new CertUtils.BadCertHandler(!requireBuiltIn);
 
       this.channel = NetUtil.newChannel2(this.sourceURI,
                                          null,
@@ -5700,8 +5723,8 @@ AddonInstall.prototype = {
       if (!(aRequest instanceof Ci.nsIHttpChannel) || aRequest.requestSucceeded) {
         if (!this.hash && (aRequest instanceof Ci.nsIChannel)) {
           try {
-            checkCert(aRequest,
-                      !Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true));
+            CertUtils.checkCert(aRequest,
+                                !Preferences.get(PREF_INSTALL_REQUIREBUILTINCERTS, true));
           }
           catch (e) {
             this.downloadFailed(AddonManager.ERROR_NETWORK_FAILURE, e);
