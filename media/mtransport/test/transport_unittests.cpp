@@ -633,7 +633,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     layers->push(dtls_);
 
     test_utils->sts_target()->Dispatch(
-      WrapRunnableRet(flow_, &TransportFlow::PushLayers, layers, &res),
+      WrapRunnableRet(&res, flow_, &TransportFlow::PushLayers, layers),
       NS_DISPATCH_SYNC);
 
     ASSERT_EQ((nsresult)NS_OK, res);
@@ -644,7 +644,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // Start gathering
     test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(ice_ctx_, &NrIceCtx::StartGathering, &res),
+        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartGathering),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -684,23 +684,23 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
     // First send attributes
     test_utils->sts_target()->Dispatch(
-      WrapRunnableRet(peer_->ice_ctx_,
+      WrapRunnableRet(&res, peer_->ice_ctx_,
                       &NrIceCtx::ParseGlobalAttributes,
-                      ice_ctx_->GetGlobalAttributes(), &res),
+                      ice_ctx_->GetGlobalAttributes()),
       NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
     for (size_t i=0; i<streams_.size(); ++i) {
       test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(peer_->streams_[i], &NrIceMediaStream::ParseAttributes,
-                        candidates_[streams_[i]->name()], &res), NS_DISPATCH_SYNC);
+        WrapRunnableRet(&res, peer_->streams_[i], &NrIceMediaStream::ParseAttributes,
+                        candidates_[streams_[i]->name()]), NS_DISPATCH_SYNC);
 
       ASSERT_TRUE(NS_SUCCEEDED(res));
     }
 
     // Start checks on the other peer.
     test_utils->sts_target()->Dispatch(
-      WrapRunnableRet(peer_->ice_ctx_, &NrIceCtx::StartChecks, &res),
+      WrapRunnableRet(&res, peer_->ice_ctx_, &NrIceCtx::StartChecks),
       NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -708,7 +708,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   TransportResult SendPacket(const unsigned char* data, size_t len) {
     TransportResult ret;
     test_utils->sts_target()->Dispatch(
-      WrapRunnableRet(flow_, &TransportFlow::SendPacket, data, len, &ret),
+      WrapRunnableRet(&ret, flow_, &TransportFlow::SendPacket, data, len),
       NS_DISPATCH_SYNC);
 
     return ret;
@@ -755,7 +755,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
     TransportLayer::State tstate;
 
     RUN_ON_THREAD(test_utils->sts_target(),
-                  WrapRunnableRet(flow_, &TransportFlow::state, &tstate));
+                  WrapRunnableRet(&tstate, flow_, &TransportFlow::state));
 
     return tstate;
   }
@@ -774,8 +774,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     nsresult rv;
     uint16_t cipher;
     RUN_ON_THREAD(test_utils->sts_target(),
-                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetCipherSuite,
-                                  &cipher, &rv));
+                  WrapRunnableRet(&rv, dtls_, &TransportLayerDtls::GetCipherSuite,
+                                  &cipher));
 
     if (NS_FAILED(rv)) {
       return TLS_NULL_WITH_NULL_NULL; // i.e., not good
@@ -787,8 +787,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     nsresult rv;
     uint16_t cipher;
     RUN_ON_THREAD(test_utils->sts_target(),
-                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetSrtpCipher,
-                                  &cipher, &rv));
+                  WrapRunnableRet(&rv, dtls_, &TransportLayerDtls::GetSrtpCipher,
+                                  &cipher));
     if (NS_FAILED(rv)) {
       return 0; // the SRTP equivalent of TLS_NULL_WITH_NULL_NULL
     }

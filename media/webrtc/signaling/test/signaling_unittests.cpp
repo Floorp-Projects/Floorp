@@ -662,8 +662,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       // Instead we are dispatching back to the same method for
       // all of these.
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::Initialize,
-          aObserver, aWindow, aConfiguration, aThread, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::Initialize,
+          aObserver, aWindow, aConfiguration, aThread),
         NS_DISPATCH_SYNC);
       rv = NS_OK;
     }
@@ -685,8 +685,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       }
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::CreateOffer,
-          aOptions, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::CreateOffer, aOptions),
         NS_DISPATCH_SYNC);
     }
 
@@ -700,7 +699,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->CreateAnswer();
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::CreateAnswer, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::CreateAnswer),
         NS_DISPATCH_SYNC);
     }
 
@@ -714,8 +713,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->SetLocalDescription(aAction, aSDP);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::SetLocalDescription,
-          aAction, aSDP, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::SetLocalDescription,
+          aAction, aSDP),
         NS_DISPATCH_SYNC);
     }
 
@@ -729,8 +728,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->SetRemoteDescription(aAction, aSDP);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::SetRemoteDescription,
-          aAction, aSDP, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::SetRemoteDescription,
+          aAction, aSDP),
         NS_DISPATCH_SYNC);
     }
 
@@ -745,8 +744,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->AddIceCandidate(aCandidate, aMid, aLevel);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::AddIceCandidate,
-          aCandidate, aMid, aLevel, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::AddIceCandidate,
+          aCandidate, aMid, aLevel),
         NS_DISPATCH_SYNC);
     }
     return rv;
@@ -761,8 +760,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->AddTrack(*aTrack, *aMediaStream);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::AddTrack, aTrack,
-                        aMediaStream, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::AddTrack, aTrack,
+                        aMediaStream),
         NS_DISPATCH_SYNC);
     }
 
@@ -776,7 +775,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->RemoveTrack(*aTrack);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::RemoveTrack, aTrack, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::RemoveTrack, aTrack),
         NS_DISPATCH_SYNC);
     }
 
@@ -790,8 +789,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->GetLocalDescription(aSDP);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::GetLocalDescription,
-          aSDP, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::GetLocalDescription,
+          aSDP),
         NS_DISPATCH_SYNC);
     }
 
@@ -805,8 +804,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->GetRemoteDescription(aSDP);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::GetRemoteDescription,
-          aSDP, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::GetRemoteDescription,
+          aSDP),
         NS_DISPATCH_SYNC);
     }
 
@@ -820,8 +819,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       result = pc_->SignalingState();
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::SignalingState,
-          &result),
+        WrapRunnableRet(&result, this, &PCDispatchWrapper::SignalingState),
         NS_DISPATCH_SYNC);
     }
 
@@ -835,8 +833,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       result = pc_->IceConnectionState();
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::IceConnectionState,
-          &result),
+        WrapRunnableRet(&result, this, &PCDispatchWrapper::IceConnectionState),
         NS_DISPATCH_SYNC);
     }
 
@@ -850,8 +847,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       result = pc_->IceGatheringState();
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::IceGatheringState,
-          &result),
+        WrapRunnableRet(&result, this, &PCDispatchWrapper::IceGatheringState),
         NS_DISPATCH_SYNC);
     }
 
@@ -865,7 +861,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
       rv = pc_->Close();
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::Close, &rv),
+        WrapRunnableRet(&rv, this, &PCDispatchWrapper::Close),
         NS_DISPATCH_SYNC);
     }
 
@@ -1067,7 +1063,7 @@ class SignalingAgent {
       nsresult ret;
       mozilla::SyncRunnable::DispatchToThread(
         test_utils->sts_target(),
-        WrapRunnableRet(audio_stream, &Fake_MediaStream::Start, &ret));
+        WrapRunnableRet(&ret, audio_stream, &Fake_MediaStream::Start));
 
       ASSERT_TRUE(NS_SUCCEEDED(ret));
       stream = audio_stream;
@@ -1127,9 +1123,9 @@ class SignalingAgent {
   {
     LocalSourceStreamInfo* info;
     mozilla::SyncRunnable::DispatchToThread(
-      gMainThread, WrapRunnableRet(
+      gMainThread, WrapRunnableRet(&info,
         pc->media(), &PeerConnectionMedia::GetLocalStreamById,
-        streamId, &info));
+        streamId));
 
     ASSERT_TRUE(info) << "No such local stream id: " << streamId;
 
@@ -1137,10 +1133,9 @@ class SignalingAgent {
 
     mozilla::SyncRunnable::DispatchToThread(
         gMainThread,
-        WrapRunnableRet(info,
+        WrapRunnableRet(&pipeline, info,
                         &SourceStreamInfo::GetPipelineByTrackId_m,
-                        trackId,
-                        &pipeline));
+                        trackId));
 
     ASSERT_TRUE(pipeline) << "No such local track id: " << trackId;
 
@@ -1175,9 +1170,9 @@ class SignalingAgent {
   {
     RemoteSourceStreamInfo* info;
     mozilla::SyncRunnable::DispatchToThread(
-      gMainThread, WrapRunnableRet(
+      gMainThread, WrapRunnableRet(&info,
         pc->media(), &PeerConnectionMedia::GetRemoteStreamById,
-        streamId, &info));
+        streamId));
 
     ASSERT_TRUE(info) << "No such remote stream id: " << streamId;
 
@@ -1185,10 +1180,9 @@ class SignalingAgent {
 
     mozilla::SyncRunnable::DispatchToThread(
         gMainThread,
-        WrapRunnableRet(info,
+        WrapRunnableRet(&pipeline, info,
                         &SourceStreamInfo::GetPipelineByTrackId_m,
-                        trackId,
-                        &pipeline));
+                        trackId));
 
     ASSERT_TRUE(pipeline) << "No such remote track id: " << trackId;
 
@@ -1300,7 +1294,7 @@ class SignalingAgent {
     nsresult ret;
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnableRet(audio_stream, &Fake_MediaStream::Start, &ret));
+      WrapRunnableRet(&ret, audio_stream, &Fake_MediaStream::Start));
 
     ASSERT_TRUE(NS_SUCCEEDED(ret));
 
@@ -1509,14 +1503,14 @@ class SignalingAgent {
     SourceStreamInfo* streamInfo;
     if (local) {
       mozilla::SyncRunnable::DispatchToThread(
-        gMainThread, WrapRunnableRet(
+        gMainThread, WrapRunnableRet(&streamInfo,
           pc->media(), &PeerConnectionMedia::GetLocalStreamByIndex,
-          stream, &streamInfo));
+          stream));
     } else {
       mozilla::SyncRunnable::DispatchToThread(
-        gMainThread, WrapRunnableRet(
+        gMainThread, WrapRunnableRet(&streamInfo,
           pc->media(), &PeerConnectionMedia::GetRemoteStreamByIndex,
-          stream, &streamInfo));
+          stream));
     }
 
     if (!streamInfo) {
@@ -4729,7 +4723,7 @@ int main(int argc, char **argv) {
 
   int result;
   gGtestThread->Dispatch(
-    WrapRunnableNMRet(gtest_main, argc, argv, &result), NS_DISPATCH_NORMAL);
+    WrapRunnableNMRet(&result, gtest_main, argc, argv), NS_DISPATCH_NORMAL);
 
   // Here we handle the event queue for dispatches to the main thread
   // When the GTest thread is complete it will send one more dispatch
