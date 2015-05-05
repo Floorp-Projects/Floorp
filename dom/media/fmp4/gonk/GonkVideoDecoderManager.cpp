@@ -44,16 +44,15 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 namespace mozilla {
 
 GonkVideoDecoderManager::GonkVideoDecoderManager(
-  MediaTaskQueue* aTaskQueue,
   mozilla::layers::ImageContainer* aImageContainer,
   const VideoInfo& aConfig)
-  : GonkDecoderManager(aTaskQueue)
-  , mImageContainer(aImageContainer)
+  : mImageContainer(aImageContainer)
   , mReaderCallback(nullptr)
   , mLastDecodedTime(0)
   , mColorConverterBufferSize(0)
   , mNativeWindow(nullptr)
   , mPendingVideoBuffersLock("GonkVideoDecoderManager::mPendingVideoBuffersLock")
+  , mMonitor("GonkVideoDecoderManager")
 {
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
   mMimeType = aConfig.mMimeType;
@@ -115,6 +114,52 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   }
 
   return mDecoder;
+}
+
+nsresult
+GonkVideoDecoderManager::Input(MediaRawData* aSample)
+{
+  MonitorAutoLock mon(mMonitor);
+  nsRefPtr<MediaRawData> sample;
+
+  if (!aSample) {
+    // It means EOS with empty sample.
+    sample = new MediaRawData();
+  } else {
+    sample = aSample;
+  }
+
+  mQueueSample.AppendElement(sample);
+
+  status_t rv;
+  while (mQueueSample.Length()) {
+    nsRefPtr<MediaRawData> data = mQueueSample.ElementAt(0);
+    {
+      MonitorAutoUnlock mon_unlock(mMonitor);
+      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->mData),
+                           data->mSize,
+                           data->mTime,
+                           0);
+    }
+    if (rv == OK) {
+      mQueueSample.RemoveElementAt(0);
+    } else if (rv == -EAGAIN || rv == -ETIMEDOUT) {
+      // In most cases, EAGAIN or ETIMEOUT are safe because OMX can't fill
+      // buffer on time.
+      return NS_OK;
+    } else {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  return NS_OK;
+}
+
+bool
+GonkVideoDecoderManager::HasQueuedSample()
+{
+    MonitorAutoLock mon(mMonitor);
+    return mQueueSample.Length();
 }
 
 nsresult
@@ -305,6 +350,23 @@ GonkVideoDecoderManager::SetVideoFormat()
   return false;
 }
 
+nsresult
+GonkVideoDecoderManager::Flush()
+{
+  {
+    MonitorAutoLock mon(mMonitor);
+    mQueueSample.Clear();
+  }
+
+ mLastDecodedTime = 0;
+
+  if (mDecoder->flush() != OK) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 // Blocks until decoded sample is produced by the deoder.
 nsresult
 GonkVideoDecoderManager::Output(int64_t aStreamOffset,
@@ -391,27 +453,6 @@ void GonkVideoDecoderManager::ReleaseVideoBuffer() {
     mDecoder->ReleaseMediaBuffer(mVideoBuffer);
     mVideoBuffer = nullptr;
   }
-}
-
-status_t
-GonkVideoDecoderManager::SendSampleToOMX(MediaRawData* aSample)
-{
-  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->mData),
-                         aSample->mSize,
-                         aSample->mTime,
-                         0);
-}
-
-nsresult
-GonkVideoDecoderManager::Flush()
-{
-  GonkDecoderManager::Flush();
-  mLastDecodedTime = 0;
-  status_t err = mDecoder->flush();
-  if (err != OK) {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
 }
 
 void
@@ -574,12 +615,4 @@ void GonkVideoDecoderManager::ReleaseAllPendingVideoBuffers()
   releasingVideoBuffers.clear();
 }
 
-void GonkVideoDecoderManager::ReleaseMediaResources() {
-  GVDM_LOG("ReleseMediaResources");
-  if (mDecoder == nullptr) {
-    return;
-  }
-  ReleaseAllPendingVideoBuffers();
-  mDecoder->ReleaseMediaResources();
-}
 } // namespace mozilla

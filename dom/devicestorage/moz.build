@@ -10,12 +10,17 @@ EXPORTS += [
     'nsDeviceStorage.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'DeviceStorageAreaListener.h',
+]
+
 EXPORTS.mozilla.dom.devicestorage += [
     'DeviceStorageRequestChild.h',
     'DeviceStorageRequestParent.h',
 ]
 
 UNIFIED_SOURCES += [
+    'DeviceStorageAreaListener.cpp',
     'DeviceStorageRequestChild.cpp',
     'DeviceStorageRequestParent.cpp',
     'nsDeviceStorage.cpp',

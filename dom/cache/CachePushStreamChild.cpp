@@ -93,10 +93,13 @@ NS_IMPL_ISUPPORTS(CachePushStreamChild::Callback, nsIInputStreamCallback,
                                                   nsICancelableRunnable);
 
 CachePushStreamChild::CachePushStreamChild(Feature* aFeature,
+                                           nsISupports* aParent,
                                            nsIAsyncInputStream* aStream)
-  : mStream(aStream)
+  : mParent(aParent)
+  , mStream(aStream)
   , mClosed(false)
 {
+  MOZ_ASSERT(mParent);
   MOZ_ASSERT(mStream);
   MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
   SetFeature(aFeature);

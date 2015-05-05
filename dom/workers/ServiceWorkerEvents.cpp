@@ -224,6 +224,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   AutoCancel autoCancel(this);
 
   if (!aValue.isObject()) {
+    NS_WARNING("FetchEvent::RespondWith was passed a promise resolved to a non-Object value");
     return;
   }
 

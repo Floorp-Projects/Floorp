@@ -94,6 +94,7 @@ class Telephony;
 class Voicemail;
 class TVManager;
 class InputPortManager;
+class DeviceStorageAreaListener;
 
 namespace time {
 class TimeManager;
@@ -214,11 +215,15 @@ public:
   void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
   already_AddRefed<WakeLock> RequestWakeLock(const nsAString &aTopic,
                                              ErrorResult& aRv);
+  DeviceStorageAreaListener* GetDeviceStorageAreaListener(ErrorResult& aRv);
   nsDOMDeviceStorage* GetDeviceStorage(const nsAString& aType,
                                        ErrorResult& aRv);
   void GetDeviceStorages(const nsAString& aType,
                          nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores,
                          ErrorResult& aRv);
+  nsDOMDeviceStorage* GetDeviceStorageByNameAndType(const nsAString& aName,
+                                                    const nsAString& aType,
+                                                    ErrorResult& aRv);
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
   CellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
   IccManager* GetMozIccManager(ErrorResult& aRv);
@@ -379,6 +384,7 @@ private:
   nsRefPtr<time::TimeManager> mTimeManager;
   nsRefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<DeviceStorageAreaListener> mDeviceStorageAreaListener;
 
   // Hashtable for saving cached objects DoResolve created, so we don't create
   // the object twice if asked for it twice, whether due to use of "delete" or

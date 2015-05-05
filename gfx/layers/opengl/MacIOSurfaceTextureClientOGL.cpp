@@ -22,12 +22,18 @@ MacIOSurfaceTextureClientOGL::~MacIOSurfaceTextureClientOGL()
   }
 }
 
-void
-MacIOSurfaceTextureClientOGL::InitWith(MacIOSurface* aSurface)
+// static
+TemporaryRef<MacIOSurfaceTextureClientOGL>
+MacIOSurfaceTextureClientOGL::Create(ISurfaceAllocator* aAllocator,
+                                     TextureFlags aFlags,
+                                     MacIOSurface* aSurface)
 {
-  MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(!IsAllocated());
-  mSurface = aSurface;
+  RefPtr<MacIOSurfaceTextureClientOGL> texture =
+      new MacIOSurfaceTextureClientOGL(aAllocator, aFlags);
+  MOZ_ASSERT(texture->IsValid());
+  MOZ_ASSERT(!texture->IsAllocated());
+  texture->mSurface = aSurface;
+  return texture;
 }
 
 bool
