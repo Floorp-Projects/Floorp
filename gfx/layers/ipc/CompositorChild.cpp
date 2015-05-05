@@ -372,6 +372,16 @@ CompositorChild::AddOverfillObserver(ClientLayerManager* aLayerManager)
   mOverfillObservers.AppendElement(aLayerManager);
 }
 
+bool
+CompositorChild::RecvClearCachedResources(const uint64_t& aId)
+{
+  dom::TabChild* child = dom::TabChild::GetFrom(aId);
+  if (child) {
+    child->ClearCachedResources();
+  }
+  return true;
+}
+
 void
 CompositorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -547,6 +557,26 @@ CompositorChild::SendResume()
     return true;
   }
   return PCompositorChild::SendResume();
+}
+
+bool
+CompositorChild::SendNotifyHidden(const uint64_t& id)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendNotifyHidden(id);
+}
+
+bool
+CompositorChild::SendNotifyVisible(const uint64_t& id)
+{
+  MOZ_ASSERT(mCanSend);
+  if (!mCanSend) {
+    return true;
+  }
+  return PCompositorChild::SendNotifyVisible(id);
 }
 
 bool
