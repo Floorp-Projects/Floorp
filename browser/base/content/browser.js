@@ -45,6 +45,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
+XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
+                                  "resource:///modules/Pocket.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
@@ -4191,6 +4193,7 @@ var XULBrowserWindow = {
         BookmarkingUI.onLocationChange();
         SocialUI.updateState(location);
         UITour.onLocationChange(location);
+        Pocket.onLocationChange(browser, aLocationURI);
       }
 
       // Utility functions for disabling find
