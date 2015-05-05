@@ -18,8 +18,10 @@
 #define __RefCount_h__
 
 #include <stdint.h>
+#include <atomic>
+#include <assert.h>
 
-// Note: Not thread safe!
+// Note: Thread safe.
 class RefCounted {
 public:
   void AddRef() {
@@ -41,8 +43,9 @@ protected:
   }
   virtual ~RefCounted()
   {
+    assert(!mRefCount);
   }
-  uint32_t mRefCount;
+  std::atomic<uint32_t> mRefCount;
 };
 
 template<class T>
