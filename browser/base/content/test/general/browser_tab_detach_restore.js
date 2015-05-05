@@ -10,6 +10,7 @@ add_task(function*() {
   let tab = gBrowser.addTab();
   tab.linkedBrowser.loadURI(uri);
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  TabState.flush(tab.linkedBrowser);
 
   let key = tab.linkedBrowser.permanentKey;
   let win = gBrowser.replaceTabWithWindow(tab);

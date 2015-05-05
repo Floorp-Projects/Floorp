@@ -65,8 +65,10 @@ let historyListener = {
   ])
 };
 
-docShell.QueryInterface(Ci.nsIWebNavigation).
+let {sessionHistory} = docShell.QueryInterface(Ci.nsIWebNavigation);
+if (sessionHistory) {
   sessionHistory.addSHistoryListener(historyListener);
+}
 
 /**
  * This frame script is only loaded for sessionstore mochitests. It enables us

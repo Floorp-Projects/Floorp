@@ -14,7 +14,7 @@
   "devDependencies": {
     "eslint": "0.20.x",
     "eslint-plugin-react": "2.2.x",
-    "express": "3.x"
+    "express": "4.x"
   },
   "scripts": {
     "test": "make test",
