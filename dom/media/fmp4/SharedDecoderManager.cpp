@@ -98,9 +98,12 @@ SharedDecoderManager::CreateVideoDecoder(
       mPDM = nullptr;
       return nullptr;
     }
-    mPDM = aPDM;
     nsresult rv = mDecoder->Init();
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    if (NS_FAILED(rv)) {
+      mDecoder = nullptr;
+      return nullptr;
+    }
+    mPDM = aPDM;
   }
 
   nsRefPtr<SharedDecoderProxy> proxy(new SharedDecoderProxy(this, aCallback));
@@ -148,10 +151,11 @@ SharedDecoderManager::SetIdle(MediaDataDecoder* aProxy)
 {
   if (aProxy && mActiveProxy == aProxy) {
     mWaitForInternalDrain = true;
-    mActiveProxy->Drain();
-    MonitorAutoLock mon(mMonitor);
-    while (mWaitForInternalDrain) {
-      mon.Wait();
+    if (NS_SUCCEEDED(mActiveProxy->Drain())) {
+      MonitorAutoLock mon(mMonitor);
+      while (mWaitForInternalDrain) {
+        mon.Wait();
+      }
     }
     mActiveProxy->Flush();
     mActiveProxy = nullptr;
