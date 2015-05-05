@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
+-->
+<head>
+  <title>Test for Bug 1013412</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #content {
+    height: 800px;
+    overflow: scroll;
+  }
+
+  #scroller {
+    height: 2000px;
+    background: repeating-linear-gradient(#EEE, #EEE 100px, #DDD 100px, #DDD 200px);
+  }
+
+  #scrollbox {
+    margin-top: 200px;
+    width: 500px;
+    height: 500px;
+    border-radius: 250px;
+    box-shadow: inset 0 0 0 60px #555;
+    background: #777;
+  }
+
+  #circle {
+    position: relative;
+    left: 240px;
+    top: 20px;
+    border: 10px solid white;
+    border-radius: 10px;
+    width: 0px;
+    height: 0px;
+    transform-origin: 10px 230px;
+    will-change: transform;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1161206">Mozilla Bug 1161206</a>
+<p id="display"></p>
+<div id="content">
+  <p>Scrolling the page should be async, but scrolling over the dark circle should not scroll the page and instead rotate the white ball.</p>
+  <div id="scroller">
+   <div id="scrollbox">
+    <div id="circle"></div>
+   </div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+var rotation = 0;
+var rotationAdjusted = false;
+
+var incrementForMode = function (mode) {
+  switch (mode) {
+    case WheelEvent.DOM_DELTA_PIXEL: return 1;
+    case WheelEvent.DOM_DELTA_LINE: return 15;
+    case WheelEvent.DOM_DELTA_PAGE: return 400;
+  }
+  return 0;
+};
+
+document.getElementById("scrollbox").addEventListener("wheel", function (e) {
+  rotation += e.deltaY * incrementForMode(e.deltaMode) * 0.2;
+  document.getElementById("circle").style.transform = "rotate(" + rotation + "deg)";
+  rotationAdjusted = true;
+  e.preventDefault();
+});
+
+function* runTest() {
+  var content = document.getElementById('content');
+  for (i = 0; i < 300; i++) { // enough iterations that we would scroll to the bottom of 'content'
+    yield synthesizeNativeWheelAndWaitForEvent(content, 100, 150, 0, -5, continueTest);
+  }
+  var scrollbox = document.getElementById('scrollbox');
+  is(content.scrollTop > 0, true, "We should have scrolled down somewhat");
+  is(content.scrollTop < content.scrollTopMax, true, "We should not have scrolled to the bottom of the scrollframe");
+  is(rotationAdjusted, true, "The rotation should have been adjusted");
+}
+
+var gTestContinuation = null;
+function continueTest() {
+  if (!gTestContinuation) {
+    gTestContinuation = runTest();
+  }
+  var ret = gTestContinuation.next();
+  if (ret.done) {
+    SimpleTest.finish();
+  } else {
+    is(ret.value, true, "Wheel event successfully synthesized");
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(continueTest, window);
+
+</script>
+</pre>
+
+</body>
+</html>
