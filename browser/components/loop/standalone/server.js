@@ -13,10 +13,16 @@ var express = require('express');
 var app = express();
 
 var port = process.env.PORT || 3000;
-var loopServerPort = process.env.LOOP_SERVER_PORT || 5000;
 var feedbackApiUrl = process.env.LOOP_FEEDBACK_API_URL ||
                      "https://input.allizom.org/api/v1/feedback";
 var feedbackProductName = process.env.LOOP_FEEDBACK_PRODUCT_NAME || "Loop";
+var loopServerUrl = process.env.LOOP_SERVER_URL || "http://localhost:5000";
+
+// Remove trailing slashes as double slashes in the url can confuse the server
+// responses.
+if (loopServerUrl[loopServerUrl.length - 1] === "/") {
+  loopServerUrl = loopServerUrl.slice(0, -1);
+}
 
 function getConfigFile(req, res) {
   "use strict";
@@ -25,7 +31,7 @@ function getConfigFile(req, res) {
   res.send([
     "var loop = loop || {};",
     "loop.config = loop.config || {};",
-    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "/v0';",
+    "loop.config.serverUrl = '" + loopServerUrl + "/v0';",
     "loop.config.feedbackApiUrl = '" + feedbackApiUrl + "';",
     "loop.config.feedbackProductName = '" + feedbackProductName + "';",
     // XXX Update with the real marketplace url once the FxOS Loop app is
@@ -54,7 +60,6 @@ app.get('/content/c/config.js', getConfigFile);
 // /ui - for the ui showcase
 // /content - for the standalone files.
 
-app.use('/test', express.static(__dirname + '/../test'));
 app.use('/ui', express.static(__dirname + '/../ui'));
 
 // This exists exclusively for the unit tests. They are served the
@@ -70,6 +75,10 @@ app.use('/content', express.static(__dirname + '/../content'));
 // These two are based on the above, but handle call urls, that have a /c/ in them.
 app.use('/content/c', express.static(__dirname + '/content'));
 app.use('/content/c', express.static(__dirname + '/../content'));
+
+// Two lines for the same reason as /content above.
+app.use('/test', express.static(__dirname + '/test'));
+app.use('/test', express.static(__dirname + '/../test'));
 
 // As we don't have hashes on the urls, the best way to serve the index files
 // appears to be to be to closely filter the url and match appropriately.

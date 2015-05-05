@@ -30,15 +30,16 @@ function test() {
     ok(tab.hidden, "newly created tab is now hidden");
 
     // close and restore hidden tab
-    gBrowser.removeTab(tab);
-    tab = ss.undoCloseTab(window, 0);
+    promiseRemoveTab(tab).then(() => {
+      tab = ss.undoCloseTab(window, 0);
 
-    // check that everything was restored correctly, clean up and finish
-    whenTabIsLoaded(tab, function () {
-      is(tab.linkedBrowser.currentURI.spec, "about:mozilla", "restored tab has correct url");
+      // check that everything was restored correctly, clean up and finish
+      whenTabIsLoaded(tab, function () {
+        is(tab.linkedBrowser.currentURI.spec, "about:mozilla", "restored tab has correct url");
 
-      gBrowser.removeTab(tab);
-      finish();
+        gBrowser.removeTab(tab);
+        finish();
+      });
     });
   });
 }

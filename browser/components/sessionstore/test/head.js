@@ -527,3 +527,7 @@ for (let name of FORM_HELPERS) {
   let msg = "ss-test:" + name;
   this[name] = (browser, data) => sendMessage(browser, msg, data);
 }
+
+function promiseRemoveTab(tab) {
+  return BrowserTestUtils.removeTab(tab);
+}

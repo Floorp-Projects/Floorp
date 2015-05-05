@@ -92,6 +92,9 @@ const NOTAB_MESSAGES = new Set([
 const CLOSED_MESSAGES = new Set([
   // For a description see above.
   "SessionStore:crashedTabRevived",
+
+  // For a description see above.
+  "SessionStore:update",
 ]);
 
 // These are tab events that we listen to.
@@ -337,6 +340,15 @@ let SessionStoreInternal = {
   // here - that way we know which browsers to ignore messages from (until
   // they get restored).
   _crashedBrowsers: new WeakSet(),
+
+  // A map (xul:browser -> nsIFrameLoader) that maps a browser to the last
+  // associated frameLoader we heard about.
+  _lastKnownFrameLoader: new WeakMap(),
+
+  // A map (xul:browser -> object) that maps a browser associated with a
+  // recently closed tab to all its necessary state information we need to
+  // properly handle final update message.
+  _closedTabs: new WeakMap(),
 
   // whether a setBrowserState call is in progress
   _browserSetState: false,
@@ -612,14 +624,64 @@ let SessionStoreInternal = {
         TabState.setSyncHandler(browser, aMessage.objects.handler);
         break;
       case "SessionStore:update":
+        // Ignore messages from <browser> elements that have crashed
+        // and not yet been revived.
         if (this._crashedBrowsers.has(browser.permanentKey)) {
-          // Ignore messages from <browser> elements that have crashed
-          // and not yet been revived.
           return;
         }
+
+        // |browser.frameLoader| might be empty if the browser was already
+        // destroyed and its tab removed. In that case we still have the last
+        // frameLoader we know about to compare.
+        let frameLoader = browser.frameLoader ||
+                          this._lastKnownFrameLoader.get(browser.permanentKey);
+
+        // If the message isn't targeting the latest frameLoader discard it.
+        if (frameLoader != aMessage.targetFrameLoader) {
+          return;
+        }
+
+        // Record telemetry measurements done in the child and update the tab's
+        // cached state. Mark the window as dirty and trigger a delayed write.
         this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
+
+        // Handle any updates sent by the child after the tab was closed. This
+        // might be the final update as sent by the "unload" handler but also
+        // any async update message that was sent before the child unloaded.
+        if (this._closedTabs.has(browser.permanentKey)) {
+          let {closedTabs, tabData} = this._closedTabs.get(browser.permanentKey);
+
+          // Update the closed tab's state. This will be reflected in its
+          // window's list of closed tabs as that refers to the same object.
+          TabState.copyFromCache({linkedBrowser: browser}, tabData.state);
+
+          // Is this the tab's final message?
+          if (aMessage.data.isFinal) {
+            // We expect no further updates.
+            this._closedTabs.delete(browser.permanentKey);
+            // The tab state no longer needs this reference.
+            delete tabData.permanentKey;
+
+            // Determine whether the tab state is worth saving.
+            let shouldSave = this._shouldSaveTabState(tabData.state);
+            let index = closedTabs.indexOf(tabData);
+
+            if (shouldSave && index == -1) {
+              // If the tab state is worth saving and we didn't push it onto
+              // the list of closed tabs when it was closed (because we deemed
+              // the state not worth saving) then add it to the window's list
+              // of closed tabs now.
+              this.saveClosedTabData(closedTabs, tabData);
+            } else if (!shouldSave && index > -1) {
+              // Remove from the list of closed tabs. The update messages sent
+              // after the tab was closed changed enough state so that we no
+              // longer consider its data interesting enough to keep around.
+              this.removeClosedTabData(closedTabs, index);
+            }
+          }
+        }
         break;
       case "SessionStore:restoreHistoryComplete":
         if (this.isCurrentEpoch(browser, aMessage.data.epoch)) {
@@ -722,25 +784,26 @@ let SessionStoreInternal = {
    * Implement nsIDOMEventListener for handling various window and tab events
    */
   handleEvent: function ssi_handleEvent(aEvent) {
-    var win = aEvent.currentTarget.ownerDocument.defaultView;
+    let win = aEvent.currentTarget.ownerDocument.defaultView;
+    let target = aEvent.originalTarget;
     switch (aEvent.type) {
       case "TabOpen":
-        this.onTabAdd(win, aEvent.originalTarget);
+        this.onTabAdd(win, target);
         break;
       case "TabClose":
         // aEvent.detail determines if the tab was closed by moving to a different window
         if (!aEvent.detail)
-          this.onTabClose(win, aEvent.originalTarget);
-        this.onTabRemove(win, aEvent.originalTarget);
+          this.onTabClose(win, target);
+        this.onTabRemove(win, target);
         break;
       case "TabSelect":
         this.onTabSelect(win);
         break;
       case "TabShow":
-        this.onTabShow(win, aEvent.originalTarget);
+        this.onTabShow(win, target);
         break;
       case "TabHide":
-        this.onTabHide(win, aEvent.originalTarget);
+        this.onTabHide(win, target);
         break;
       case "TabPinned":
       case "TabUnpinned":
@@ -748,8 +811,15 @@ let SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
       case "oop-browser-crashed":
-        this.onBrowserCrashed(win, aEvent.originalTarget);
+        this.onBrowserCrashed(win, target);
         break;
+      case "XULFrameLoaderCreated":
+        if (target.tagName == "browser" && target.frameLoader) {
+          this._lastKnownFrameLoader.set(target.permanentKey, target.frameLoader);
+        }
+        break;
+      default:
+        throw new Error(`unhandled event ${aEvent.type}?`);
     }
     this._clearRestoringWindows();
   },
@@ -943,6 +1013,9 @@ let SessionStoreInternal = {
     TAB_EVENTS.forEach(function(aEvent) {
       tabbrowser.tabContainer.addEventListener(aEvent, this, true);
     }, this);
+
+    // Keep track of a browser's latest frameLoader.
+    aWindow.gBrowser.addEventListener("XULFrameLoaderCreated", this);
   },
 
   /**
@@ -1045,6 +1118,8 @@ let SessionStoreInternal = {
     TAB_EVENTS.forEach(function(aEvent) {
       tabbrowser.tabContainer.removeEventListener(aEvent, this, true);
     }, this);
+
+    aWindow.gBrowser.removeEventListener("XULFrameLoaderCreated", this);
 
     let winData = this._windows[aWindow.__SSi];
 
@@ -1311,6 +1386,11 @@ let SessionStoreInternal = {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("SwapDocShells", this);
     browser.addEventListener("oop-browser-crashed", this);
+
+    if (browser.frameLoader) {
+      this._lastKnownFrameLoader.set(browser.permanentKey, browser.frameLoader);
+    }
+
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
     }
@@ -1365,9 +1445,6 @@ let SessionStoreInternal = {
       return;
     }
 
-    // Flush all data queued in the content script before the tab is gone.
-    TabState.flush(aTab.linkedBrowser);
-
     // Get the latest data for this tab (generally, from the cache)
     let tabState = TabState.collect(aTab);
 
@@ -1377,23 +1454,96 @@ let SessionStoreInternal = {
       return;
     }
 
-    // store closed-tab data for undo
-    if (this._shouldSaveTabState(tabState)) {
-      let tabTitle = aTab.label;
-      let tabbrowser = aWindow.gBrowser;
-      tabTitle = this._replaceLoadingTitle(tabTitle, tabbrowser, aTab);
+    // Store closed-tab data for undo.
+    let tabbrowser = aWindow.gBrowser;
+    let tabTitle = this._replaceLoadingTitle(aTab.label, tabbrowser, aTab);
+    let {permanentKey} = aTab.linkedBrowser;
 
-      this._windows[aWindow.__SSi]._closedTabs.unshift({
-        state: tabState,
-        title: tabTitle,
-        image: tabbrowser.getIcon(aTab),
-        pos: aTab._tPos,
-        closedAt: Date.now()
-      });
-      var length = this._windows[aWindow.__SSi]._closedTabs.length;
-      if (length > this._max_tabs_undo)
-        this._windows[aWindow.__SSi]._closedTabs.splice(this._max_tabs_undo, length - this._max_tabs_undo);
+    let tabData = {
+      permanentKey,
+      state: tabState,
+      title: tabTitle,
+      image: tabbrowser.getIcon(aTab),
+      pos: aTab._tPos,
+      closedAt: Date.now()
+    };
+
+    let closedTabs = this._windows[aWindow.__SSi]._closedTabs;
+
+    // Determine whether the tab contains any information worth saving. Note
+    // that there might be pending state changes queued in the child that
+    // didn't reach the parent yet. If a tab is emptied before closing then we
+    // might still remove it from the list of closed tabs later.
+    if (this._shouldSaveTabState(tabState)) {
+      // Save the tab state, for now. We might push a valid tab out
+      // of the list but those cases should be extremely rare and
+      // do probably never occur when using the browser normally.
+      // (Tests or add-ons might do weird things though.)
+      this.saveClosedTabData(closedTabs, tabData);
     }
+
+    // Remember the closed tab to properly handle any last updates included in
+    // the final "update" message sent by the frame script's unload handler.
+    this._closedTabs.set(permanentKey, {closedTabs, tabData});
+  },
+
+  /**
+   * Insert a given |tabData| object into the list of |closedTabs|. We will
+   * determine the right insertion point based on the .closedAt properties of
+   * all tabs already in the list. The list will be truncated to contain a
+   * maximum of |this._max_tabs_undo| entries.
+   *
+   * @param closedTabs (array)
+   *        The list of closed tabs for a window.
+   * @param tabData (object)
+   *        The tabData to be inserted.
+   */
+  saveClosedTabData(closedTabs, tabData) {
+    // Find the index of the first tab in the list
+    // of closed tabs that was closed before our tab.
+    let index = closedTabs.findIndex(tab => {
+      return tab.closedAt < tabData.closedAt;
+    });
+
+    // If we found no tab closed before our
+    // tab then just append it to the list.
+    if (index == -1) {
+      index = closedTabs.length;
+    }
+
+    // Insert tabData at the right position.
+    closedTabs.splice(index, 0, tabData);
+
+    // Truncate the list of closed tabs, if needed.
+    if (closedTabs.length > this._max_tabs_undo) {
+      closedTabs.splice(this._max_tabs_undo, closedTabs.length);
+    }
+  },
+
+  /**
+   * Remove the closed tab data at |index| from the list of |closedTabs|. If
+   * the tab's final message is still pending we will simply discard it when
+   * it arrives so that the tab doesn't reappear in the list.
+   *
+   * @param closedTabs (array)
+   *        The list of closed tabs for a window.
+   * @param index (uint)
+   *        The index of the tab to remove.
+   */
+  removeClosedTabData(closedTabs, index) {
+    // Remove the given index from the list.
+    let [closedTab] = closedTabs.splice(index, 1);
+
+    // If the closed tab's state still has a .permanentKey property then we
+    // haven't seen its final update message yet. Remove it from the map of
+    // closed tabs so that we will simply discard its last messages and will
+    // not add it back to the list of closed tabs again.
+    if (closedTab.permanentKey) {
+      this._closedTabs.delete(closedTab.permanentKey);
+      delete closedTab.permanentKey;
+    }
+
+    return closedTab;
   },
 
   /**
@@ -1696,18 +1846,17 @@ let SessionStoreInternal = {
     }
 
     // fetch the data of closed tab, while removing it from the array
-    let [closedTab] = closedTabs.splice(aIndex, 1);
-    let closedTabState = closedTab.state;
+    let {state, pos} = this.removeClosedTabData(closedTabs, aIndex);
 
     // create a new tab
     let tabbrowser = aWindow.gBrowser;
     let tab = tabbrowser.selectedTab = tabbrowser.addTab();
 
     // restore tab content
-    this.restoreTab(tab, closedTabState);
+    this.restoreTab(tab, state);
 
     // restore the tab's position
-    tabbrowser.moveTabTo(tab, closedTab.pos);
+    tabbrowser.moveTabTo(tab, pos);
 
     // focus the tab's content area (bug 342432)
     tab.linkedBrowser.focus();
@@ -1729,7 +1878,7 @@ let SessionStoreInternal = {
     }
 
     // remove closed tab from the array
-    closedTabs.splice(aIndex, 1);
+    this.removeClosedTabData(closedTabs, aIndex);
   },
 
   getClosedWindowCount: function ssi_getClosedWindowCount() {

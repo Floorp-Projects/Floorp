@@ -76,7 +76,7 @@ add_task(function history() {
     }
   } finally {
     if (tab) {
-      gBrowser.removeTab(tab);
+      yield promiseRemoveTab(tab);
     }
   }
 });
@@ -93,7 +93,7 @@ add_task(function close_tab() {
     let statistics = yield promiseStats();
 
     info("Now closing a tab");
-    gBrowser.removeTab(tab);
+    yield promiseRemoveTab(tab);
     tab = null;
     let statistics2 = yield promiseStats();
 
@@ -108,7 +108,7 @@ add_task(function close_tab() {
 
   } finally {
     if (tab) {
-      gBrowser.removeTab(tab);
+      yield promiseRemoveTab(tab);
     }
   }
 });
@@ -202,7 +202,7 @@ add_task(function dom_storage() {
 
   } finally {
     if (tab) {
-      gBrowser.removeTab(tab);
+      yield promiseRemoveTab(tab);
     }
   }
 });
@@ -235,7 +235,7 @@ add_task(function formdata() {
     }
   } finally {
     if (tab) {
-      gBrowser.removeTab(tab);
+      yield promiseRemoveTab(tab);
     }
   }
 });
