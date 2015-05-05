@@ -13,14 +13,14 @@
 [Exposed=(Window,Worker),
  Func="mozilla::dom::cache::CacheStorage::PrefEnabled"]
 interface CacheStorage {
-[Throws]
-Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
-[Throws]
-Promise<boolean> has(DOMString cacheName);
-[Throws]
-Promise<Cache> open(DOMString cacheName);
-[Throws]
-Promise<boolean> delete(DOMString cacheName);
-[Throws]
-Promise<sequence<DOMString>> keys();
+  [NewObject]
+  Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);
+  [NewObject]
+  Promise<boolean> has(DOMString cacheName);
+  [NewObject]
+  Promise<Cache> open(DOMString cacheName);
+  [NewObject]
+  Promise<boolean> delete(DOMString cacheName);
+  [NewObject]
+  Promise<sequence<DOMString>> keys();
 };
