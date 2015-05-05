@@ -497,7 +497,7 @@ gfxAndroidPlatform::CreateHardwareVsyncSource()
     VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
     display.EnableVsync();
     if (!display.IsVsyncEnabled()) {
-        NS_WARNING("Error enabling gonk vsync. Falling back to software vsync\n");
+        NS_WARNING("Error enabling gonk vsync. Falling back to software vsync");
         return gfxPlatform::CreateHardwareVsyncSource();
     }
     display.DisableVsync();
