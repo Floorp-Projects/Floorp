@@ -10,19 +10,21 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 
+document.addEventListener("Initialized", () => {
+  if (Services.prefs.getBoolPref("browser.search.showOneOffButtons"))
+    return;
+
+  document.getElementById("category-search").hidden = true;
+  if (document.location.hash == "#search")
+    document.location.hash = "";
+});
+
 var gEngineView = null;
 
 var gSearchPane = {
 
   init: function ()
   {
-    if (!Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
-      document.getElementById("category-search").hidden = true;
-      if (document.location.hash == "#search")
-        document.location.hash = "";
-      return;
-    }
-
     gEngineView = new EngineView(new EngineStore());
     document.getElementById("engineList").view = gEngineView;
     this.buildDefaultEngineDropDown();
