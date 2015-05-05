@@ -287,20 +287,17 @@ nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
                                             void               *aDtorData,
                                             bool                aTransfer)
   : mName(aName),
+    mObjectValueMap(PL_DHashGetStubOps(), sizeof(PropertyListMapEntry)),
     mDtorFunc(aDtorFunc),
     mDtorData(aDtorData),
     mTransfer(aTransfer),
     mNext(nullptr)
 {
-  PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(),
-                    sizeof(PropertyListMapEntry));
 }
 
 nsPropertyTable::PropertyList::~PropertyList()
 {
-  PL_DHashTableFinish(&mObjectValueMap);
 }
-
 
 static PLDHashOperator
 DestroyPropertyEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
