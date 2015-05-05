@@ -128,6 +128,8 @@
 
 #define half      d0.f32
 
+HALF:   .float  0.5
+
     @// Allocate stack memory required by the function
 
     @// Write function header
@@ -298,7 +300,7 @@ finalComplexToRealFixup:
         @// since both of them require Z(1),Z(2) and Z(N/2-2),Z(N/2-1)
 
 
-        ADR     t0, HALF
+        LDR     t0, =HALF
         VLD1    half[0], [t0]
 
 evenOddButterflyLoop:
@@ -400,5 +402,5 @@ End:
 
         @// Write function tail
         M_END
-HALF:   .float  0.5
+
         .end
