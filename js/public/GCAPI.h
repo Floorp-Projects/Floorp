@@ -422,9 +422,6 @@ WasIncrementalGC(JSRuntime* rt);
 class JS_PUBLIC_API(AutoDisableGenerationalGC)
 {
     js::gc::GCRuntime* gc;
-#ifdef JS_GC_ZEAL
-    bool restartVerifier;
-#endif
 
   public:
     explicit AutoDisableGenerationalGC(JSRuntime* rt);

@@ -416,7 +416,6 @@ class ObjectGroupCompartment::NewTableRef : public gc::BufferableRef
 
     void mark(JSTracer* trc) {
         JSObject* prior = proto;
-        JS::AutoOriginalTraceLocation reloc(trc, &proto);
         TraceManuallyBarrieredEdge(trc, &proto, "newObjectGroups set prototype");
         if (prior == proto)
             return;
