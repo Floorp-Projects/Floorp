@@ -60,7 +60,18 @@ function thirdEntry(event) {
   is(event.target, gOuterDoc, "Third MozEnteredDomFullscreen should be targeted at outer doc");
   ok(gOuterDoc.mozFullScreenElement != null, "Outer doc return to fullscreen after cancel fullscreen in inner doc");
   window.removeEventListener("MozEnteredDomFullscreen", thirdEntry, false);
+  window.removeEventListener("MozExitedDomFullscreen", earlyExit, false);
+  window.addEventListener("MozExitedDomFullscreen", lastExit, false);
   gOuterDoc.mozCancelFullScreen();
+}
+
+function earlyExit(event) {
+  ok(false, "MozExitedDomFullscreen should only be triggered after cancel all fullscreen");
+}
+
+function lastExit(event) {
+  is(event.target, gOuterDoc, "MozExitedDomFullscreen should be targeted at the last exited doc");
+  ok(gOuterDoc.mozFullScreenElement == null, "Fullscreen should have been fully exited");
   window.opener.wrappedJSObject.done();
 }
 
@@ -71,6 +82,7 @@ function start() {
       gOuterDoc = gBrowser.contentDocument;
       gBrowser.contentWindow.focus();
       window.addEventListener("MozEnteredDomFullscreen", firstEntry, false);
+      window.addEventListener("MozExitedDomFullscreen", earlyExit, false);
       gOuterDoc.body.mozRequestFullScreen();
     });
 }
@@ -78,6 +90,6 @@ function start() {
 ]]>
 </script>
 <!-- chrome://mochitests/content/chrome/dom/tests/mochitest/chrome/test_MozEnteredDomFullscreen_event.xul -->
-<browser type="content" id="browser" width="400" height="400" src="http://mochi.test:8888/tests/dom/tests/mochitest/general/file_MozEnteredDomFullscreen.html"/>
+<browser type="content" id="browser" width="400" height="400" src="http://mochi.test:8888/tests/dom/tests/mochitest/general/file_MozDomFullscreen.html"/>
 
 </window>
