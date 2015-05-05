@@ -28,7 +28,7 @@ add_task(function* test_dont_save_passwords() {
   yield setInputValue(browser, {id: "passwd", value: PASS});
 
   // Close and restore the tab.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
   yield promiseTabRestored(tab);
@@ -45,7 +45,6 @@ add_task(function* test_dont_save_passwords() {
     // Ensure that we have not saved our password.
     ok(!state.includes(PASS), "password has not been written to file " + key)
   );
-
 
   // Cleanup.
   gBrowser.removeTab(tab);

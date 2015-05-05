@@ -89,7 +89,9 @@ let FavIcons = {
       tabImage = this._favIconService.getFaviconLinkForIcon(tabImageURI).spec;
     }
 
-    tabImage = PlacesUtils.getImageURLForResolution(window, tabImage);
+    if (tabImage) {
+      tabImage = PlacesUtils.getImageURLForResolution(window, tabImage);
+    }
 
     callback(tabImage);
   },

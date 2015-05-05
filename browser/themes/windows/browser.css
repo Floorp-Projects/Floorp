@@ -2297,6 +2297,12 @@ notification[value="loop-sharing-notification"] .messageImage {
   -moz-image-region: auto;
 }
 
+#panelMenu_pocket,
+#menu_pocket,
+#BMB_pocket {
+  list-style-image: url("chrome://browser/content/pocket/panels/img/pocketmenuitem16.png");
+}
+
 /* ::::: Keyboard UI Panel ::::: */
 
 .KUI-panel {

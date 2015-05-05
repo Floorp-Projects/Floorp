@@ -85,9 +85,12 @@
 
   <binding id="iframe" role="outerdoc">
     <implementation>
-      <property name="docShell"
-                readonly="true"
-                onget="return this.boxObject.docShell"/>
+      <property name="docShell" readonly="true">
+        <getter><![CDATA[
+          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          return frameLoader ? frameLoader.docShell : null;
+        ]]></getter>
+      </property>
       <property name="contentWindow"
                 readonly="true"
                 onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);"/>

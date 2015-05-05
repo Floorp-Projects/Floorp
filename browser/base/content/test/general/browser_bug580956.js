@@ -19,9 +19,9 @@ function test() {
   browser.addEventListener("load", function() {
     browser.removeEventListener("load", arguments.callee, true);
 
-    gBrowser.removeTab(tab);
-    ok(isUndoCloseEnabled(), "Undo Close Tab should be enabled.");
-
-    finish();
+    BrowserTestUtils.removeTab(tab).then(() => {
+      ok(isUndoCloseEnabled(), "Undo Close Tab should be enabled.");
+      finish();
+    });
   }, true);
 }
