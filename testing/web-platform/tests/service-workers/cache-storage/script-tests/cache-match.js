@@ -103,14 +103,6 @@ var vary_entries = [
     request: new Request('http://example.com/c'),
     response: new Response('',
                            {headers: {'Vary': 'Cookies'}})
-  },
-
-  {
-    name: 'vary_wildcard',
-    request: new Request('http://example.com/c',
-                         {headers: {'Cookies': 'x', 'X-Key': '1'}}),
-    response: new Response('',
-                           {headers: {'Vary': '*'}})
   }
 ];
 
@@ -180,32 +172,6 @@ prepopulated_cache_test(simple_entries, function(cache, entries) {
                                'Cache.match should match by Request.');
         });
   }, 'Cache.match with new Request');
-
-cache_test(function(cache) {
-    var request = new Request('https://example.com/foo', {
-        method: 'POST',
-        body: 'Hello world!'
-      });
-    var response = new Response('Booyah!', {
-        status: 200,
-        headers: {'Content-Type': 'text/plain'}
-      });
-
-    return cache.put(request.clone(), response.clone())
-      .then(function() {
-          assert_false(
-            request.bodyUsed,
-            '[https://fetch.spec.whatwg.org/#concept-body-used-flag] ' +
-            'Request.bodyUsed flag should be initially false.');
-        })
-      .then(function() {
-          return cache.match(request);
-        })
-      .then(function(result) {
-          assert_false(request.bodyUsed,
-                       'Cache.match should not consume Request body.');
-        });
-  }, 'Cache.match with Request containing non-empty body');
 
 prepopulated_cache_test(simple_entries, function(cache, entries) {
     return cache.matchAll(entries.a.request,
@@ -337,7 +303,6 @@ prepopulated_cache_test(vary_entries, function(cache, entries) {
           assert_array_equivalent(
             result,
             [
-              entries.vary_wildcard.response,
               entries.vary_cookie_absent.response
             ],
             'Cache.matchAll should exclude matches if a vary header is ' +
@@ -354,7 +319,6 @@ prepopulated_cache_test(vary_entries, function(cache, entries) {
           assert_array_equivalent(
             result,
             [
-              entries.vary_wildcard.response
             ],
             'Cache.matchAll should exclude matches if a vary header is ' +
             'missing in the cached request, but is present in the query ' +
@@ -381,7 +345,6 @@ prepopulated_cache_test(vary_entries, function(cache, entries) {
           assert_object_in_array(
             result,
             [
-              entries.vary_wildcard.response,
               entries.vary_cookie_absent.response
             ],
             'Cache.match should honor "Vary" header.');
@@ -398,7 +361,6 @@ prepopulated_cache_test(vary_entries, function(cache, entries) {
               entries.vary_cookie_is_cookie.response,
               entries.vary_cookie_is_good.response,
               entries.vary_cookie_absent.response,
-              entries.vary_wildcard.response
             ],
             'Cache.matchAll should honor "ignoreVary" parameter.');
         });
@@ -463,6 +425,15 @@ cache_test(function(cache) {
                         'valid body each time it is called.');
         });
   }, 'Cache.match invoked multiple times for the same Request/Response');
+
+prepopulated_cache_test(simple_entries, function(cache, entries) {
+    var request = new Request(entries.a.request, { method: 'POST' });
+    return cache.match(request)
+      .then(function(result) {
+          assert_equals(result, undefined,
+                        'Cache.match should not find a match');
+        });
+  }, 'Cache.match with POST Request');
 
 // Helpers ---
 

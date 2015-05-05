@@ -68,29 +68,6 @@ cache_test(function(cache) {
   }, 'Cache.put with Response without a body');
 
 cache_test(function(cache) {
-    var request = new Request(test_url, {
-        method: 'POST',
-        body: 'Hello'
-      });
-    var response = new Response(test_body);
-    assert_false(request.bodyUsed,
-                 '[https://fetch.spec.whatwg.org/#dom-body-bodyused] ' +
-                 'Request.bodyUsed should be initially false.');
-    return cache.put(request, response.clone())
-      .then(function() {
-          assert_true(request.bodyUsed,
-                       'Cache.put should consume Request body.');
-        })
-      .then(function() {
-          return cache.match(request);
-        })
-      .then(function(result) {
-          assert_object_equals(result, response,
-                               'Cache.put should store response body.');
-        });
-  }, 'Cache.put with Request containing a body');
-
-cache_test(function(cache) {
     var request = new Request(test_url);
     var response = new Response(test_body);
     return cache.put(request, response.clone())
@@ -294,18 +271,11 @@ cache_test(function(cache) {
 
 cache_test(function(cache) {
     var request = new Request(test_url, {method: 'POST', body: test_body});
-    assert_false(request.bodyUsed,
-                 '[https://fetch.spec.whatwg.org/#dom-body-bodyused] ' +
-                 'Request.bodyUsed should be initially false.');
-    var copy = new Request(request);
-    assert_true(request.bodyUsed,
-                '[https://fetch.spec.whatwg.org/#dom-request] ' +
-                'Request constructor should set input\'s used flag.');
     return assert_promise_rejects(
       cache.put(request, new Response(test_body)),
       new TypeError(),
-      'Cache.put should throw a TypeError for a request with used body.');
-  }, 'Cache.put with a used request body');
+      'Cache.put should throw a TypeError for a POST request.');
+  }, 'Cache.put with a POST request');
 
 cache_test(function(cache) {
     var response = new Response(test_body);
@@ -313,12 +283,35 @@ cache_test(function(cache) {
                  '[https://fetch.spec.whatwg.org/#dom-body-bodyused] ' +
                  'Response.bodyUsed should be initially false.');
     return response.text().then(function() {
-      assert_false(
+      assert_true(
         response.bodyUsed,
         '[https://fetch.spec.whatwg.org/#concept-body-consume-body] ' +
-          'The text() method should not set "body passed" flag.');
-      return cache.put(new Request(test_url), response);
-    });
+          'The text() method should set "body used" flag.');
+      return assert_promise_rejects(
+        cache.put(new Request(test_url), response),
+        new TypeError,
+        '[https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-put] ' +
+        'Cache put should reject with TypeError when Response ' +
+        'body is already used.');
+      });
   }, 'Cache.put with a used response body');
+
+cache_test(function(cache) {
+    return assert_promise_rejects(
+      cache.put(new Request(test_url),
+                new Response(test_body, { headers: { VARY: '*' }})),
+      new TypeError(),
+      'Cache.put should reject VARY:* Responses with a TypeError.');
+  }, 'Cache.put with a VARY:* Response');
+
+cache_test(function(cache) {
+    return assert_promise_rejects(
+      cache.put(new Request(test_url),
+                new Response(test_body,
+                             { headers: { VARY: 'Accept-Language,*' }})),
+      new TypeError(),
+      'Cache.put should reject Responses with an embedded VARY:* with a ' +
+      'TypeError.');
+  }, 'Cache.put with an embedded VARY:* Response');
 
 done();
