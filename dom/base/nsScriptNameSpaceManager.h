@@ -234,10 +234,8 @@ private:
   nsGlobalNameStruct* LookupNameInternal(const nsAString& aName,
                                          const char16_t **aClassName = nullptr);
 
-  PLDHashTable mGlobalNames;
-  PLDHashTable mNavigatorNames;
-
-  bool mIsInitialized;
+  PLDHashTable2 mGlobalNames;
+  PLDHashTable2 mNavigatorNames;
 };
 
 #endif /* nsScriptNameSpaceManager_h__ */
