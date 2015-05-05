@@ -13,7 +13,7 @@ from copy import copy
 from subprocess import list2cmdline, call
 
 from lib.results import NullTestOutput
-from lib.tests import TestCase, TBPL_FLAGS
+from lib.tests import TestCase, TBPL_FLAGS, TBPL_DEBUG_FLAGS
 from lib.results import ResultsSink
 from lib.progressbar import ProgressBar
 
@@ -97,6 +97,9 @@ def parse_args():
     harness_og.add_option('--tbpl', action='store_true',
                           help='Runs each test in all configurations tbpl'
                           ' tests.')
+    harness_og.add_option('--tbpl-debug', action='store_true',
+                          help='Runs each test in some faster configurations'
+                          ' tbpl tests.')
     harness_og.add_option('-g', '--debug', action='store_true',
                           help='Run a test in debugger.')
     harness_og.add_option('--debugger', default='gdb -q --args',
@@ -269,9 +272,9 @@ def load_tests(options, requested_paths, excluded_paths):
         sys.exit()
 
     # Create a new test list. Apply each TBPL configuration to every test.
-    if options.tbpl:
+    if options.tbpl or options.tbpl_debug:
         new_test_list = []
-        flags_list = TBPL_FLAGS
+        flags_list = TBPL_FLAGS if options.tbpl else TBPL_DEBUG_FLAGS
         for test in test_list:
             for jitflags in flags_list:
                 tmp_test = copy(test)
