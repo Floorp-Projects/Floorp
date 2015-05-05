@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "RefCounted.h"
 
 // 0 arguments --
 template<typename M> class gmp_task_args_nm_0 : public gmp_task_args_base {
@@ -1908,3 +1909,30 @@ gmp_task_args_m_14_ret<C, M, A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A
     (o, m, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, r);
 }
 
+class RefCountTaskWrapper : public gmp_task_args_base {
+public:
+  RefCountTaskWrapper(GMPTask* aTask, RefCounted* aRefCounted)
+    : mTask(aTask)
+    , mRefCounted(aRefCounted)
+  {}
+  virtual void Run() override {
+    mTask->Run();
+  }
+  virtual void Destroy() override {
+    mTask->Destroy();
+    gmp_task_args_base::Destroy();
+  }
+private:
+  ~RefCountTaskWrapper() {}
+
+  GMPTask* mTask;
+  RefPtr<RefCounted> mRefCounted;
+};
+
+template<typename Type, typename Method, typename... Args>
+GMPTask*
+WrapTaskRefCounted(Type* aType, Method aMethod, Args... args)
+{
+  GMPTask* t = WrapTask(aType, aMethod, args...);
+  return new RefCountTaskWrapper(t, aType);
+}
