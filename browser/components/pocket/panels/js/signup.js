@@ -19,12 +19,14 @@ var PKT_SIGNUP_OVERLAY = function (options)
     this.closeValid = true;
     this.mouseInside = false;
     this.autocloseTimer = null;
+    this.variant = "";
+    this.pockethost = "getpocket.com";
+    this.fxasignedin = false;
     this.dictJSON = {};
     this.initCloseTabEvents = function() {
-        $('.btn,.alreadyhave > a').click(function(e)
+        $('.btn,.pkt_ext_learnmore,.alreadyhave > a').click(function(e)
         {
             e.preventDefault();
-            console.log('sending new tab messsage',$(this).attr('href'));
             thePKT_SIGNUP.sendMessage("openTabWithUrl",
             {
                 url: $(this).attr('href'),
@@ -144,6 +146,22 @@ PKT_SIGNUP_OVERLAY.prototype = {
     {
         var myself = this;
 
+        var variant = window.location.href.match(/variant=([\w|\.]*)&?/);
+        if (variant && variant.length > 1)
+        {
+            this.variant = variant[1];
+        }
+        var fxasignedin = window.location.href.match(/fxasignedin=([\w|\d|\.]*)&?/);
+        if (fxasignedin && fxasignedin.length > 1)
+        {
+            this.fxasignedin = (fxasignedin[1] == '1');
+        }
+        var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
+        if (host && host.length > 1)
+        {
+            this.pockethost = host[1];
+        }
+
         if (this.active)
         {
             return;
@@ -151,10 +169,20 @@ PKT_SIGNUP_OVERLAY.prototype = {
         this.active = true;
 
         // set translations
-        myself.getTranslations();
+        this.getTranslations();
+        this.dictJSON.fxasignedin = this.fxasignedin ? 1 : 0;
+        this.dictJSON.variant = (this.variant ? this.variant : 'undefined');
+        this.dictJSON.pockethost = this.pockethost;
 
         // Create actual content
-        $('body').append(Handlebars.templates.signup_shell(this.dictJSON));
+        if (this.variant == 'storyboard')
+        {
+            $('body').append(Handlebars.templates.signupstoryboard_shell(this.dictJSON));
+        }
+        else
+        {
+            $('body').append(Handlebars.templates.signup_shell(this.dictJSON));
+        }
 
         // tell background we're ready
         thePKT_SIGNUP.sendMessage("show");
