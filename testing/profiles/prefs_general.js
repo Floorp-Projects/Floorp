@@ -154,9 +154,6 @@ user_pref("layout.css.object-fit-and-position.enabled", true);
 // Enable CSS Ruby for testing
 user_pref("layout.css.ruby.enabled", true);
 
-// Enable CSS Font Loading API for testing
-user_pref("layout.css.font-loading-api.enabled", true);
-
 // Enable unicode-range for testing
 user_pref("layout.css.unicode-range.enabled", true);
 
