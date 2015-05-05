@@ -18,8 +18,44 @@
 #define __RefCount_h__
 
 #include <stdint.h>
-#include <atomic>
 #include <assert.h>
+#include "ClearKeyUtils.h"
+
+#if defined(_MSC_VER)
+#include <atomic>
+typedef std::atomic<uint32_t> AtomicRefCount;
+#else
+class AtomicRefCount {
+public:
+  explicit AtomicRefCount(uint32_t aValue)
+    : mCount(aValue)
+    , mMutex(GMPCreateMutex())
+  {
+    assert(mMutex);
+  }
+  ~AtomicRefCount()
+  {
+    if (mMutex) {
+      mMutex->Destroy();
+    }
+  }
+  uint32_t operator--() {
+    AutoLock lock(mMutex);
+    return --mCount;
+  }
+  uint32_t operator++() {
+    AutoLock lock(mMutex);
+    return ++mCount;
+  }
+  operator uint32_t() {
+    AutoLock lock(mMutex);
+    return mCount;
+  }
+private:
+  uint32_t mCount;
+  GMPMutex* mMutex;
+};
+#endif
 
 // Note: Thread safe.
 class RefCounted {
@@ -45,7 +81,7 @@ protected:
   {
     assert(!mRefCount);
   }
-  std::atomic<uint32_t> mRefCount;
+  AtomicRefCount mRefCount;
 };
 
 template<class T>
