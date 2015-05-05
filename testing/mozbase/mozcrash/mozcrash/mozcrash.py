@@ -335,7 +335,7 @@ def check_for_java_exception(logcat, quiet=False):
                 if not quiet:
                     print "PROCESS-CRASH | java-exception | %s %s" % (exception_type, exception_location)
             else:
-                print "Automation Error: Logcat is truncated!"
+                print "Automation Error: java exception in logcat at line %d of %d: %s" % (i, len(logcat), line)
             break
 
     return found_exception

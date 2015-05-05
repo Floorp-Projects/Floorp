@@ -37,16 +37,16 @@ using mozilla::ArrayLength;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
-struct js::Nursery::FreeHugeSlotsTask : public GCParallelTask
+struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
 {
-    explicit FreeHugeSlotsTask(FreeOp* fop) : fop_(fop) {}
-    bool init() { return slots_.init(); }
-    void transferSlotsToFree(HugeSlotsSet& slotsToFree);
-    ~FreeHugeSlotsTask() override { join(); }
+    explicit FreeMallocedBuffersTask(FreeOp* fop) : fop_(fop) {}
+    bool init() { return buffers_.init(); }
+    void transferBuffersToFree(MallocedBuffersSet& buffersToFree);
+    ~FreeMallocedBuffersTask() override { join(); }
 
   private:
     FreeOp* fop_;
-    HugeSlotsSet slots_;
+    MallocedBuffersSet buffers_;
 
     virtual void run() override;
 };
@@ -61,15 +61,15 @@ js::Nursery::init(uint32_t maxNurseryBytes)
     if (numNurseryChunks_ == 0)
         return true;
 
-    if (!hugeSlots.init())
+    if (!mallocedBuffers.init())
         return false;
 
     void* heap = MapAlignedPages(nurserySize(), Alignment);
     if (!heap)
         return false;
 
-    freeHugeSlotsTask = js_new<FreeHugeSlotsTask>(runtime()->defaultFreeOp());
-    if (!freeHugeSlotsTask || !freeHugeSlotsTask->init())
+    freeMallocedBuffersTask = js_new<FreeMallocedBuffersTask>(runtime()->defaultFreeOp());
+    if (!freeMallocedBuffersTask || !freeMallocedBuffersTask->init())
         return false;
 
     heapStart_ = uintptr_t(heap);
@@ -100,7 +100,7 @@ js::Nursery::~Nursery()
     if (start())
         UnmapPages((void*)start(), nurserySize());
 
-    js_delete(freeHugeSlotsTask);
+    js_delete(freeMallocedBuffersTask);
 }
 
 void
@@ -175,38 +175,19 @@ js::Nursery::leaveZealMode() {
 }
 #endif // JS_GC_ZEAL
 
-void
-js::Nursery::verifyFinalizerList()
-{
-#ifdef DEBUG
-    for (ListItem* current = finalizers_; current; current = current->next()) {
-        JSObject* obj = current->get();
-        RelocationOverlay* overlay = RelocationOverlay::fromCell(obj);
-        if (overlay->isForwarded())
-            obj = static_cast<JSObject*>(overlay->forwardingAddress());
-        MOZ_ASSERT(obj);
-        MOZ_ASSERT(obj->group());
-        MOZ_ASSERT(obj->group()->clasp());
-        MOZ_ASSERT(obj->group()->clasp()->finalize);
-        MOZ_ASSERT(obj->group()->clasp()->flags & JSCLASS_FINALIZE_FROM_NURSERY);
-    }
-#endif // DEBUG
-}
-
 JSObject*
 js::Nursery::allocateObject(JSContext* cx, size_t size, size_t numDynamic, const js::Class* clasp)
 {
     /* Ensure there's enough space to replace the contents with a RelocationOverlay. */
     MOZ_ASSERT(size >= sizeof(RelocationOverlay));
-    verifyFinalizerList();
 
-    /* If we have a finalizer, get space for the list entry. */
-    ListItem* listEntry = nullptr;
-    if (clasp->finalize) {
-        listEntry = static_cast<ListItem*>(allocate(sizeof(ListItem)));
-        if (!listEntry)
-            return nullptr;
-    }
+    /*
+     * Classes with JSCLASS_SKIP_NURSERY_FINALIZE will not have their finalizer
+     * called if they are nursery allocated and not promoted to the tenured
+     * heap. The finalizers for these classes must do nothing except free data
+     * which was allocated via Nursery::allocateBuffer.
+     */
+    MOZ_ASSERT_IF(clasp->finalize, clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE);
 
     /* Make the object allocation. */
     JSObject* obj = static_cast<JSObject*>(allocate(size));
@@ -216,29 +197,18 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t numDynamic, const
     /* If we want external slots, add them. */
     HeapSlot* slots = nullptr;
     if (numDynamic) {
-        /* Try to allocate in the nursery first. */
-        if (numDynamic <= MaxNurserySlots)
-            slots = static_cast<HeapSlot*>(allocate(numDynamic * sizeof(HeapSlot)));
-
-        /* If we are out of space or too large, use the malloc heap. */
-        if (!slots)
-            slots = allocateHugeSlots(cx->zone(), numDynamic);
-
-        /* It is safe to leave the allocated object uninitialized, since we do
-         * not visit unallocated things. */
-        if (!slots)
+        slots = static_cast<HeapSlot*>(allocateBuffer(cx->zone(), numDynamic * sizeof(HeapSlot)));
+        if (!slots) {
+            /*
+             * It is safe to leave the allocated object uninitialized, since we
+             * do not visit unallocated things in the nursery.
+             */
             return nullptr;
+        }
     }
 
     /* Always initialize the slots field to match the JIT behavior. */
     obj->setInitialSlotsMaybeNonNative(slots);
-
-    /* If we have a finalizer, link it into the finalizer list. */
-    if (clasp->finalize) {
-        MOZ_ASSERT(listEntry);
-        new (listEntry) ListItem(finalizers_, obj);
-        finalizers_ = listEntry;
-    }
 
     TraceNurseryAlloc(obj, size);
     return obj;
@@ -264,87 +234,70 @@ js::Nursery::allocate(size_t size)
     return thing;
 }
 
-/* Internally, this function is used to allocate elements as well as slots. */
-HeapSlot*
-js::Nursery::allocateSlots(JSObject* obj, uint32_t nslots)
+void*
+js::Nursery::allocateBuffer(Zone* zone, uint32_t nbytes)
+{
+    MOZ_ASSERT(nbytes > 0);
+
+    if (nbytes <= MaxNurseryBufferSize) {
+        void* buffer = allocate(nbytes);
+        if (buffer)
+            return buffer;
+    }
+
+    void* buffer = zone->pod_malloc<uint8_t>(nbytes);
+    if (buffer) {
+        /* If this put fails, we will only leak the slots. */
+        (void)mallocedBuffers.put(buffer);
+    }
+    return buffer;
+}
+
+void*
+js::Nursery::allocateBuffer(JSObject* obj, uint32_t nbytes)
 {
     MOZ_ASSERT(obj);
-    MOZ_ASSERT(nslots > 0);
+    MOZ_ASSERT(nbytes > 0);
 
     if (!IsInsideNursery(obj))
-        return obj->zone()->pod_malloc<HeapSlot>(nslots);
-
-    if (nslots > MaxNurserySlots)
-        return allocateHugeSlots(obj->zone(), nslots);
-
-    size_t size = sizeof(HeapSlot) * nslots;
-    HeapSlot* slots = static_cast<HeapSlot*>(allocate(size));
-    if (slots)
-        return slots;
-
-    return allocateHugeSlots(obj->zone(), nslots);
+        return obj->zone()->pod_malloc<uint8_t>(nbytes);
+    return allocateBuffer(obj->zone(), nbytes);
 }
 
-ObjectElements*
-js::Nursery::allocateElements(JSObject* obj, uint32_t nelems)
-{
-    MOZ_ASSERT(nelems >= ObjectElements::VALUES_PER_HEADER);
-    return reinterpret_cast<ObjectElements*>(allocateSlots(obj, nelems));
-}
-
-HeapSlot*
-js::Nursery::reallocateSlots(JSObject* obj, HeapSlot* oldSlots,
-                             uint32_t oldCount, uint32_t newCount)
+void*
+js::Nursery::reallocateBuffer(JSObject* obj, void* oldBuffer,
+                              uint32_t oldBytes, uint32_t newBytes)
 {
     if (!IsInsideNursery(obj))
-        return obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
+        return obj->zone()->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);
 
-    if (!isInside(oldSlots)) {
-        HeapSlot* newSlots = obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
-        if (newSlots && oldSlots != newSlots) {
-            hugeSlots.remove(oldSlots);
+    if (!isInside(oldBuffer)) {
+        void* newBuffer = obj->zone()->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);
+        if (newBuffer && oldBytes != newBytes) {
+            removeMallocedBuffer(oldBuffer);
             /* If this put fails, we will only leak the slots. */
-            (void)hugeSlots.put(newSlots);
+            (void)mallocedBuffers.put(newBuffer);
         }
-        return newSlots;
+        return newBuffer;
     }
 
     /* The nursery cannot make use of the returned slots data. */
-    if (newCount < oldCount)
-        return oldSlots;
+    if (newBytes < oldBytes)
+        return oldBuffer;
 
-    HeapSlot* newSlots = allocateSlots(obj, newCount);
-    if (newSlots)
-        PodCopy(newSlots, oldSlots, oldCount);
-    return newSlots;
-}
-
-ObjectElements*
-js::Nursery::reallocateElements(JSObject* obj, ObjectElements* oldHeader,
-                                uint32_t oldCount, uint32_t newCount)
-{
-    HeapSlot* slots = reallocateSlots(obj, reinterpret_cast<HeapSlot*>(oldHeader),
-                                      oldCount, newCount);
-    return reinterpret_cast<ObjectElements*>(slots);
+    void* newBuffer = allocateBuffer(obj->zone(), newBytes);
+    if (newBuffer)
+        PodCopy((uint8_t*)newBuffer, (uint8_t*)oldBuffer, oldBytes);
+    return newBuffer;
 }
 
 void
-js::Nursery::freeSlots(HeapSlot* slots)
+js::Nursery::freeBuffer(void* buffer)
 {
-    if (!isInside(slots)) {
-        hugeSlots.remove(slots);
-        js_free(slots);
+    if (!isInside(buffer)) {
+        removeMallocedBuffer(buffer);
+        js_free(buffer);
     }
-}
-
-HeapSlot*
-js::Nursery::allocateHugeSlots(JS::Zone* zone, size_t nslots)
-{
-    HeapSlot* slots = zone->pod_malloc<HeapSlot>(nslots);
-    /* If this put fails, we will only leak the slots. */
-    if (slots)
-        (void)hugeSlots.put(slots);
-    return slots;
 }
 
 namespace js {
@@ -691,8 +644,15 @@ js::Nursery::moveObjectToTenured(MinorCollectionTracer* trc,
         }
     }
 
-    if (src->is<InlineTypedObject>())
+    if (src->is<InlineTypedObject>()) {
         InlineTypedObject::objectMovedDuringMinorGC(trc, dst, src);
+    } else if (src->is<UnboxedArrayObject>()) {
+        tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(trc, dst, src, dstKind);
+    } else {
+        // Objects with JSCLASS_SKIP_NURSERY_FINALIZE need to be handled above
+        // to ensure any additional nursery buffers they hold are moved.
+        MOZ_ASSERT(!(src->getClass()->flags & JSCLASS_SKIP_NURSERY_FINALIZE));
+    }
 
     return tenuredSize;
 }
@@ -705,7 +665,7 @@ js::Nursery::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind 
         return 0;
 
     if (!isInside(src->slots_)) {
-        hugeSlots.remove(src->slots_);
+        removeMallocedBuffer(src->slots_);
         return 0;
     }
 
@@ -732,7 +692,7 @@ js::Nursery::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKi
     /* TODO Bug 874151: Prefer to put element data inline if we have space. */
     if (!isInside(srcHeader)) {
         MOZ_ASSERT(src->elements_ == dst->elements_);
-        hugeSlots.remove(reinterpret_cast<HeapSlot*>(srcHeader));
+        removeMallocedBuffer(srcHeader);
         return 0;
     }
 
@@ -879,13 +839,9 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     TIME_END(updateJitActivations);
 
     // Sweep.
-    TIME_START(runFinalizers);
-    runFinalizers();
-    TIME_END(runFinalizers);
-
-    TIME_START(freeHugeSlots);
-    freeHugeSlots();
-    TIME_END(freeHugeSlots);
+    TIME_START(freeMallocedBuffers);
+    freeMallocedBuffers();
+    TIME_END(freeMallocedBuffers);
 
     TIME_START(sweep);
     sweep();
@@ -947,7 +903,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
 
 #define FMT " %6" PRIu64
         fprintf(stderr,
-                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
                 js::gcstats::ExplainReason(reason),
                 promotionRate * 100,
                 numActiveChunks_,
@@ -966,8 +922,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
                 TIME_TOTAL(collectToFP),
                 TIME_TOTAL(sweepArrayBufferViewList),
                 TIME_TOTAL(updateJitActivations),
-                TIME_TOTAL(runFinalizers),
-                TIME_TOTAL(freeHugeSlots),
+                TIME_TOTAL(freeMallocedBuffers),
                 TIME_TOTAL(clearStoreBuffer),
                 TIME_TOTAL(sweep),
                 TIME_TOTAL(resize),
@@ -981,62 +936,47 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
 #undef TIME_TOTAL
 
 void
-js::Nursery::FreeHugeSlotsTask::transferSlotsToFree(HugeSlotsSet& slotsToFree)
+js::Nursery::FreeMallocedBuffersTask::transferBuffersToFree(MallocedBuffersSet& buffersToFree)
 {
-    // Transfer the contents of the source set to the task's slots_ member by
+    // Transfer the contents of the source set to the task's buffers_ member by
     // swapping the sets, which also clears the source.
     MOZ_ASSERT(!isRunning());
-    MOZ_ASSERT(slots_.empty());
-    mozilla::Swap(slots_, slotsToFree);
+    MOZ_ASSERT(buffers_.empty());
+    mozilla::Swap(buffers_, buffersToFree);
 }
 
 void
-js::Nursery::FreeHugeSlotsTask::run()
+js::Nursery::FreeMallocedBuffersTask::run()
 {
-    for (HugeSlotsSet::Range r = slots_.all(); !r.empty(); r.popFront())
+    for (MallocedBuffersSet::Range r = buffers_.all(); !r.empty(); r.popFront())
         fop_->free_(r.front());
-    slots_.clear();
+    buffers_.clear();
 }
 
 void
-js::Nursery::freeHugeSlots()
+js::Nursery::freeMallocedBuffers()
 {
-    if (hugeSlots.empty())
+    if (mallocedBuffers.empty())
         return;
 
     bool started;
     {
         AutoLockHelperThreadState lock;
-        freeHugeSlotsTask->joinWithLockHeld();
-        freeHugeSlotsTask->transferSlotsToFree(hugeSlots);
-        started = freeHugeSlotsTask->startWithLockHeld();
+        freeMallocedBuffersTask->joinWithLockHeld();
+        freeMallocedBuffersTask->transferBuffersToFree(mallocedBuffers);
+        started = freeMallocedBuffersTask->startWithLockHeld();
     }
 
     if (!started)
-        freeHugeSlotsTask->runFromMainThread(runtime());
+        freeMallocedBuffersTask->runFromMainThread(runtime());
 
-    MOZ_ASSERT(hugeSlots.empty());
+    MOZ_ASSERT(mallocedBuffers.empty());
 }
 
 void
 js::Nursery::waitBackgroundFreeEnd()
 {
-    freeHugeSlotsTask->join();
-}
-
-void
-js::Nursery::runFinalizers()
-{
-    verifyFinalizerList();
-
-    FreeOp* fop = runtime()->defaultFreeOp();
-    for (ListItem* current = finalizers_; current; current = current->next()) {
-        JSObject* obj = current->get();
-        RelocationOverlay* overlay = RelocationOverlay::fromCell(obj);
-        if (!overlay->isForwarded())
-            obj->getClass()->finalize(fop, obj);
-    }
-    finalizers_ = nullptr;
+    freeMallocedBuffersTask->join();
 }
 
 void

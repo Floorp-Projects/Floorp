@@ -82,7 +82,7 @@ public:
 
     base::ProcessId otherProcess;
     nsCString displayName;
-    nsCString pluginId;
+    uint32_t pluginId;
     bool ok = aGMPServiceChild->SendLoadGMP(mNodeId, mAPI, mTags,
                                             alreadyBridgedTo, &otherProcess,
                                             &displayName, &pluginId);

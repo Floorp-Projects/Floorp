@@ -526,9 +526,8 @@ public:
     rv = Close();
   }
 
-  bool PluginCrash(uint64_t aPluginID,
-                   const nsAString& aPluginName,
-                   const nsAString& aPluginDumpID);
+  bool PluginCrash(uint32_t aPluginID,
+                   const nsAString& aPluginName);
 
   nsresult InitializeDataChannel();
 

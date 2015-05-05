@@ -1085,9 +1085,10 @@ MacroAssembler::nurseryAllocate(Register result, Register temp, gc::AllocKind al
     MOZ_ASSERT(initialHeap != gc::TenuredHeap);
 
     // We still need to allocate in the nursery, per the comment in
-    // shouldNurseryAllocate; however, we need to insert into hugeSlots, so
-    // bail to do the nursery allocation in the interpreter.
-    if (nDynamicSlots >= Nursery::MaxNurserySlots) {
+    // shouldNurseryAllocate; however, we need to insert into the
+    // mallocedBuffers set, so bail to do the nursery allocation in the
+    // interpreter.
+    if (nDynamicSlots >= Nursery::MaxNurseryBufferSize / sizeof(Value)) {
         jump(fail);
         return;
     }

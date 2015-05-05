@@ -13,8 +13,7 @@ var gPluginHandler = {
     "PluginContent:HideNotificationBar",
     "PluginContent:ShowInstallNotification",
     "PluginContent:InstallSinglePlugin",
-    "PluginContent:ShowNPAPIPluginCrashedNotification",
-    "PluginContent:ShowGMPCrashedNotification",
+    "PluginContent:ShowPluginCrashedNotification",
     "PluginContent:SubmitReport",
     "PluginContent:LinkClickCallback",
   ],
@@ -62,15 +61,9 @@ var gPluginHandler = {
       case "PluginContent:InstallSinglePlugin":
         this.installSinglePlugin(msg.data.pluginInfo);
         break;
-      case "PluginContent:ShowNPAPIPluginCrashedNotification":
-        this.showNPAPIPluginCrashedNotification(msg.target, msg.data.message,
-                                                msg.data.runID);
-        break;
-      case "PluginContent:ShowGMPCrashedNotification":
-        this.showGMPCrashedNotification(msg.target,
-                                        msg.data.messageString,
-                                        msg.data.pluginDumpID,
-                                        msg.data.browserDumpID);
+      case "PluginContent:ShowPluginCrashedNotification":
+        this.showPluginCrashedNotification(msg.target, msg.data.messageString,
+                                           msg.data.pluginID);
         break;
       case "PluginContent:SubmitReport":
         if (AppConstants.MOZ_CRASHREPORTER) {
@@ -498,63 +491,32 @@ var gPluginHandler = {
                              { pluginName, runID, state });
   },
 
-  showNPAPIPluginCrashedNotification: function (browser, messageString, runID) {
-    let crashReportCallback;
-
-    if (AppConstants.MOZ_CRASHREPORTER &&
-        PluginCrashReporter.hasCrashReport(runID)) {
-      crashReportCallback = () => {
-        PluginCrashReporter.submitCrashReport(runID);
-      };
-    }
-
-    this._showPluginCrashedNotification(browser, messageString, crashReportCallback);
-  },
-
   /**
-   * For now, GMP crashes are handled separately from NPAPI plugin crashes,
-   * since the latter are not yet working for e10s. These will be unified
-   * once e10s support is added for GMP crash reporting in bug 1146955.
-   */
-  showGMPCrashedNotification: function (browser, messageString,
-                                        pluginDumpID, browserDumpID) {
-    let crashReportCallback;
-
-    if (AppConstants.MOZ_CRASHREPORTER && pluginDumpID) {
-      crashReportCallback = () => {
-        PluginCrashReporter.submitGMPCrashReport(pluginDumpID, browserDumpID);
-      };
-    }
-
-    this._showPluginCrashedNotification(browser, messageString, crashReportCallback);
-  },
-
-  /**
-   * A helper function for showing the plugin crashed notification bar.
+   * Shows a plugin-crashed notification bar for a browser that has had an
+   * invisiable NPAPI plugin crash, or a GMP plugin crash.
    *
    * @param browser
-   *        The browser that contains the crashing plugin.
+   *        The browser to show the notification for.
    * @param messageString
-   *        The message to display in the notification.
-   * @param crashReportCallback
-   *        Optional. Pass a function to submit a crash report for this plugin
-   *        crash if a report exists. If no function is passed, the Submit Report
-   *        button will not be added.
+   *        The string to put in the notification bar
+   * @param pluginID
+   *        The unique-per-process identifier for the NPAPI plugin or GMP.
+   *        For a GMP, this is the pluginID. For NPAPI plugins (where "pluginID"
+   *        means something different), this is the runID.
    */
-  _showPluginCrashedNotification: function (browser, messageString, crashReportCallback) {
+  showPluginCrashedNotification: function (browser, messageString, pluginID) {
     // If there's already an existing notification bar, don't do anything.
     let notificationBox = gBrowser.getNotificationBox(browser);
     let notification = notificationBox.getNotificationWithValue("plugin-crashed");
-    if (notification)
+    if (notification) {
       return;
+    }
 
     // Configure the notification bar
     let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
     let iconURL = "chrome://mozapps/skin/plugins/notifyPluginCrashed.png";
     let reloadLabel = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.label");
     let reloadKey   = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.accesskey");
-    let submitLabel = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.label");
-    let submitKey   = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.accesskey");
 
     let buttons = [{
       label: reloadLabel,
@@ -563,12 +525,17 @@ var gPluginHandler = {
       callback: function() { browser.reload(); },
     }];
 
-    if (AppConstants.MOZ_CRASHREPORTER && crashReportCallback) {
+    if (AppConstants.MOZ_CRASHREPORTER &&
+        PluginCrashReporter.hasCrashReport(pluginID)) {
+      let submitLabel = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.label");
+      let submitKey   = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.accesskey");
       let submitButton = {
         label: submitLabel,
         accessKey: submitKey,
         popup: null,
-        callback: crashReportCallback,
+        callback: () => {
+          PluginCrashReporter.submitCrashReport(pluginID);
+        },
       };
 
       buttons.push(submitButton);
@@ -585,11 +552,9 @@ var gPluginHandler = {
     let crashurl = formatURL("app.support.baseURL", true);
     crashurl += "plugin-crashed-notificationbar";
     link.href = crashurl;
-
     let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
     description.appendChild(link);
   },
 };
 
 gPluginHandler.init();
-

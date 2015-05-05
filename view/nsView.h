@@ -290,6 +290,8 @@ public:
     mForcedRepaint = aForceRepaint; 
   }
 
+  void SetNeedsWindowPropertiesSync();
+
   /**
    * Make aWidget direct its events to this view.
    * The caller must call DetachWidgetEventHandler before this view
@@ -463,6 +465,7 @@ private:
   uint32_t          mVFlags;
   bool              mWidgetIsTopLevel;
   bool              mForcedRepaint;
+  bool              mNeedsWindowPropertiesSync;
 };
 
 #endif
