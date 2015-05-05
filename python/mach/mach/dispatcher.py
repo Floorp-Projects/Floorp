@@ -109,14 +109,17 @@ class CommandAction(argparse.Action):
 
         # Command suggestion
         if command not in self._mach_registrar.command_handlers:
+            # Make sure we don't suggest any deprecated commands.
+            names = [h.name for h in self._mach_registrar.command_handlers.values()
+                        if h.cls.__name__ == 'DeprecatedCommands']
             # We first try to look for a valid command that is very similar to the given command.
-            suggested_commands = difflib.get_close_matches(command, self._mach_registrar.command_handlers.keys(), cutoff=0.8)
+            suggested_commands = difflib.get_close_matches(command, names, cutoff=0.8)
             # If we find more than one matching command, or no command at all, we give command suggestions instead
             # (with a lower matching threshold). All commands that start with the given command (for instance: 'mochitest-plain',
             # 'mochitest-chrome', etc. for 'mochitest-') are also included.
             if len(suggested_commands) != 1:
-                suggested_commands = set(difflib.get_close_matches(command, self._mach_registrar.command_handlers.keys(), cutoff=0.5))
-                suggested_commands |= {cmd for cmd in self._mach_registrar.command_handlers if cmd.startswith(command)}
+                suggested_commands = set(difflib.get_close_matches(command, names, cutoff=0.5))
+                suggested_commands |= {cmd for cmd in names if cmd.startswith(command)}
                 raise UnknownCommandError(command, 'run', suggested_commands)
             sys.stderr.write("We're assuming the '%s' command is '%s' and we're executing it for you.\n\n" % (command, suggested_commands[0]))
             command = suggested_commands[0]
