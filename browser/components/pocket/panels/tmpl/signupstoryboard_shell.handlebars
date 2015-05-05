@@ -1,0 +1,26 @@
+<div class="pkt_ext_introdetail pkt_ext_introdetailstoryboard">
+	<div class="pkt_ext_introstory pkt_ext_introstoryone">
+		<div class="pkt_ext_introstory_text">
+			<p class="pkt_ext_tagline">{{taglinestory_one}}</p>
+		</div>
+		<div class="pkt_ext_introstoryone_img"></div>
+	</div>
+	<div class="pkt_ext_introstorydivider"></div>
+	<div class="pkt_ext_introstory pkt_ext_introstorytwo">
+		<div class="pkt_ext_introstory_text">
+			<p class="pkt_ext_tagline">{{taglinestory_two}}</p>
+			<p><a class="pkt_ext_learnmore" href="http://{{pockethost}}?s={{variant}}&t=wlm&src=ff_learn_more" target="_blank">{{learnmore}}</a></p>
+		</div>
+		<div class="pkt_ext_introstorytwo_img"></div>
+	</div>
+</div>
+<div class="pkt_ext_signupdetail">
+	<h4>{{signuptosave}}</h4>
+	{{#if fxasignedin}}
+	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s={{variant}}&t=wlm" target=_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signinfirefox}}</span></a></p>
+	{{else}}
+	<p class="btn-container"><a href="https://{{pockethost}}/ff_signup?s={{variant}}&t=wlm" target=_blank" class="btn signup-btn-firefox"><span class="logo"></span><span class="text">{{signupfirefox}}</span></a></p>
+	<p class="btn-container"><a href="http://{{pockethost}}/signup?force=email&src=extension&s={{variant}}&t=wlm" target="_blank" class="btn btn-secondary signup-btn-email signup-btn-initstate">{{signupemail}}</a></p>
+	{{/if}}
+	<p class="alreadyhave">{{alreadyhaveacct}} <a href="http://{{pockethost}}/login?ep=3&src=extension&s={{variant}}&t=wlm" target="_blank">{{loginnow}}</a>.</p>
+</div>
