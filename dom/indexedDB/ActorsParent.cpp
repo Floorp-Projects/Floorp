@@ -22,6 +22,7 @@
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Endian.h"
+#include "mozilla/Hal.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
@@ -66,6 +67,7 @@
 #include "nsIEventTarget.h"
 #include "nsIFile.h"
 #include "nsIFileURL.h"
+#include "nsIIdleService.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsInterfaceHashtable.h"
@@ -85,10 +87,13 @@
 #include "nsPrintfCString.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
+#include "nsThreadPool.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCID.h"
 #include "PermissionRequestBase.h"
 #include "ProfilerHelpers.h"
+#include "prsystem.h"
+#include "prtime.h"
 #include "ReportInternalError.h"
 #include "snappy/snappy.h"
 
@@ -236,6 +241,8 @@ enum AppId {
   kUnknownAppId = nsIScriptSecurityManager::UNKNOWN_APP_ID
 };
 
+const char kIdleServiceContractId[] = "@mozilla.org/widget/idleservice;1";
+
 #ifdef DEBUG
 
 const int32_t kDEBUGThreadPriority = nsISupportsPriority::PRIORITY_NORMAL;
@@ -246,6 +253,14 @@ const int32_t kDEBUGTransactionThreadPriority =
 const uint32_t kDEBUGTransactionThreadSleepMS = 0;
 
 #endif
+
+const bool kRunningXPCShellTests =
+#ifdef ENABLE_TESTS
+  !!PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")
+#else
+  false
+#endif
+  ;
 
 struct FreeDeleter
 {
@@ -4260,7 +4275,7 @@ GetFileForPath(const nsAString& aPath)
 }
 
 nsresult
-GetStorageConnection(const nsAString& aDatabaseFilePath,
+GetStorageConnection(nsIFile* aDatabaseFile,
                      PersistenceType aPersistenceType,
                      const nsACString& aGroup,
                      const nsACString& aOrigin,
@@ -4269,22 +4284,15 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
-  MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
-  MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
+  MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(aConnection);
 
   PROFILER_LABEL("IndexedDB",
                  "GetStorageConnection",
                  js::ProfileEntry::Category::STORAGE);
 
-  nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
-  if (NS_WARN_IF(!dbFile)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
   bool exists;
-  nsresult rv = dbFile->Exists(&exists);
+  nsresult rv = aDatabaseFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4295,7 +4303,7 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
   }
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(dbFile,
+  rv = GetDatabaseFileURL(aDatabaseFile,
                           aPersistenceType,
                           aGroup,
                           aOrigin,
@@ -4329,6 +4337,34 @@ GetStorageConnection(const nsAString& aDatabaseFilePath,
 
   connection.forget(aConnection);
   return NS_OK;
+}
+
+nsresult
+GetStorageConnection(const nsAString& aDatabaseFilePath,
+                     PersistenceType aPersistenceType,
+                     const nsACString& aGroup,
+                     const nsACString& aOrigin,
+                     uint32_t aTelemetryId,
+                     mozIStorageConnection** aConnection)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
+  MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")));
+  MOZ_ASSERT(aConnection);
+
+  nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
+  if (NS_WARN_IF(!dbFile)) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  return GetStorageConnection(dbFile,
+                              aPersistenceType,
+                              aGroup,
+                              aOrigin,
+                              aTelemetryId,
+                              aConnection);
 }
 
 /*******************************************************************************
@@ -7759,19 +7795,59 @@ private:
 
 class QuotaClient final
   : public mozilla::dom::quota::Client
+  , public nsIObserver
 {
-  class ShutdownWorkThreadsRunnable;
-  friend class ShutdownWorkThreadsRunnable;
+  // The number of seconds we will wait after receiving the idle-daily
+  // notification before beginning maintenance.
+  static const uint32_t kIdleObserverTimeSec = 1;
 
+  // The minimum amount of time that has passed since the last vacuum before we
+  // will attempt to analyze the database for fragmentation.
+  static const PRTime kMinVacuumAge =
+    PRTime(PR_USEC_PER_SEC) * 60 * 60 * 24 * 7;
+
+  // If the percent of database pages that are not in contiguous order is higher
+  // than this percentage we will attempt a vacuum.
+  static const int32_t kPercentUnorderedThreshold = 30;
+
+  // If the percent of file size growth since the last vacuum is higher than
+  // this percentage we will attempt a vacuum.
+  static const int32_t kPercentFileSizeGrowthThreshold = 10;
+
+  // The number of freelist pages beyond which we will favor an incremental
+  // vacuum over a full vacuum.
+  static const int32_t kMaxFreelistThreshold = 5;
+
+  // If the percent of unused file bytes in the database exceeds this percentage
+  // then we will attempt a full vacuum.
+  static const int32_t kPercentUnusedThreshold = 20;
+
+  class AutoProgressHandler;
+  struct MaintenanceInfoBase;
+  struct MultipleMaintenanceInfo;
+  class ShutdownWorkThreadsRunnable;
+  struct SingleMaintenanceInfo;
   class WaitForTransactionsRunnable;
-  friend class WaitForTransactionsRunnable;
+
+  typedef nsClassHashtable<nsCStringHashKey, MultipleMaintenanceInfo>
+          MaintenanceInfoHashtable;
+
+  enum MaintenanceAction {
+    MaintenanceAction_Nothing = 0,
+    MaintenanceAction_IncrementalVacuum,
+    MaintenanceAction_FullVacuum
+  };
 
   static QuotaClient* sInstance;
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
   nsRefPtr<ShutdownWorkThreadsRunnable> mShutdownRunnable;
-
+  nsRefPtr<nsThreadPool> mMaintenanceThreadPool;
+  PRTime mMaintenanceStartTime;
+  Atomic<uint32_t> mMaintenanceRunId;
+  UniquePtr<MaintenanceInfoHashtable> mMaintenanceInfoHashtable;
   bool mShutdownRequested;
+  bool mIdleObserverRegistered;
 
 public:
   QuotaClient();
@@ -7812,10 +7888,21 @@ public:
     return mShutdownRequested;
   }
 
+  bool
+  IdleMaintenanceMustEnd(uint32_t aRunId) const
+  {
+    if (mMaintenanceRunId != aRunId) {
+      MOZ_ASSERT(mMaintenanceRunId > aRunId);
+      return true;
+    }
+
+    return false;
+  }
+
   void
   NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
 
-  NS_INLINE_DECL_REFCOUNTING(QuotaClient, override)
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   virtual mozilla::dom::quota::Client::Type
   GetType() override;
@@ -7845,8 +7932,7 @@ public:
                             nsIRunnable* aCallback) override;
 
   virtual void
-  PerformIdleMaintenance() override
-  { }
+  PerformIdleMaintenance() override;
 
   virtual void
   ShutdownWorkThreads() override;
@@ -7863,6 +7949,238 @@ private:
   GetUsageForDirectoryInternal(nsIFile* aDirectory,
                                UsageInfo* aUsageInfo,
                                bool aDatabaseFiles);
+
+  void
+  RemoveIdleObserver();
+
+  void
+  StartIdleMaintenance();
+
+  void
+  StopIdleMaintenance();
+
+  // Runs on mMaintenanceThreadPool. Once it finds databases it will queue a
+  // runnable that calls BlockQuotaManagerForIdleMaintenance.
+  void
+  FindDatabasesForIdleMaintenance(uint32_t aRunId);
+
+  // Runs on the main thread. Once QuotaManager has blocked it will call
+  // ScheduleIdleMaintenance.
+  void
+  BlockQuotaManagerForIdleMaintenance(
+                                    uint32_t aRunId,
+                                    MultipleMaintenanceInfo&& aMaintenanceInfo);
+
+  // Runs on the main thread. It dispatches a runnable for each database that
+  // will call PerformIdleMaintenanceOnDatabase.
+  void
+  ScheduleIdleMaintenance(uint32_t aRunId, const nsACString& aKey);
+
+  // Runs on mMaintenanceThreadPool. Does maintenance on one database and then
+  // dispatches a runnable back to the main thread to call
+  // MaybeUnblockQuotaManagerForIdleMaintenance.
+  void
+  PerformIdleMaintenanceOnDatabase(uint32_t aRunId,
+                                   const nsACString& aKey,
+                                   SingleMaintenanceInfo&& aMaintenanceInfo);
+
+  // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
+  void
+  PerformIdleMaintenanceOnDatabaseInternal(
+                                 uint32_t aRunId,
+                                 const SingleMaintenanceInfo& aMaintenanceInfo);
+
+  // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
+  nsresult
+  CheckIntegrity(mozIStorageConnection* aConnection, bool* aOk);
+
+  // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
+  nsresult
+  DetermineMaintenanceAction(mozIStorageConnection* aConnection,
+                             nsIFile* aDatabaseFile,
+                             MaintenanceAction* aMaintenanceAction);
+
+  // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
+  void
+  IncrementalVacuum(mozIStorageConnection* aConnection);
+
+  // Runs on mMaintenanceThreadPool as part of PerformIdleMaintenanceOnDatabase.
+  void
+  FullVacuum(mozIStorageConnection* aConnection,
+             nsIFile* aDatabaseFile);
+
+  // Runs on the main thread. Checks to see if all database maintenance has
+  // finished and then calls UnblockQuotaManagerForIdleMaintenance.
+  void
+  MaybeUnblockQuotaManagerForIdleMaintenance(
+                                     const nsACString& aKey,
+                                     const nsAString& aDatabasePath);
+
+  // Runs on the main thread.
+  void
+  UnblockQuotaManagerForIdleMaintenance(
+                               const MultipleMaintenanceInfo& aMaintenanceInfo);
+
+  NS_DECL_NSIOBSERVER
+};
+
+class MOZ_STACK_CLASS QuotaClient::AutoProgressHandler final
+  : public mozIStorageProgressHandler
+{
+  QuotaClient* mQuotaClient;
+  mozIStorageConnection* mConnection;
+  uint32_t mRunId;
+
+  NS_DECL_OWNINGTHREAD
+
+  // This class is stack-based so we never actually allow AddRef/Release to do
+  // anything. But we need to know if any consumer *thinks* that they have a
+  // reference to this object so we track the reference countin DEBUG builds.
+  DebugOnly<nsrefcnt> mDEBUGRefCnt;
+
+public:
+  AutoProgressHandler(QuotaClient* aQuotaClient, uint32_t aRunId)
+    : mQuotaClient(aQuotaClient)
+    , mConnection(nullptr)
+    , mRunId(aRunId)
+    , mDEBUGRefCnt(0)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!IsOnBackgroundThread());
+    NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
+    MOZ_ASSERT(aQuotaClient);
+  }
+
+  ~AutoProgressHandler()
+  {
+    NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
+
+    if (mConnection) {
+      Unregister();
+    }
+
+    MOZ_ASSERT(!mDEBUGRefCnt);
+  }
+
+  nsresult
+  Register(mozIStorageConnection* aConnection);
+
+  // We don't want the mRefCnt member but this class does not "inherit"
+  // nsISupports.
+  NS_DECL_ISUPPORTS_INHERITED
+
+private:
+  void
+  Unregister();
+
+  NS_DECL_MOZISTORAGEPROGRESSHANDLER
+
+  // Not available for the heap!
+  void*
+  operator new(size_t) = delete;
+  void*
+  operator new[](size_t) = delete;
+  void
+  operator delete(void*) = delete;
+  void
+  operator delete[](void*) = delete;
+};
+
+struct QuotaClient::MaintenanceInfoBase
+{
+  const nsCString mGroup;
+  const nsCString mOrigin;
+  const PersistenceType mPersistenceType;
+
+protected:
+  MaintenanceInfoBase(const nsACString& aGroup,
+                      const nsACString& aOrigin,
+                      PersistenceType aPersistenceType)
+    : mGroup(aGroup)
+    , mOrigin(aOrigin)
+    , mPersistenceType(aPersistenceType)
+  {
+    MOZ_ASSERT(!aGroup.IsEmpty());
+    MOZ_ASSERT(!aOrigin.IsEmpty());
+    MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
+
+    MOZ_COUNT_CTOR(QuotaClient::MaintenanceInfoBase);
+  }
+
+  MaintenanceInfoBase(MaintenanceInfoBase&& aOther)
+    : mGroup(Move(aOther.mGroup))
+    , mOrigin(Move(aOther.mOrigin))
+    , mPersistenceType(Move(aOther.mPersistenceType))
+  {
+    MOZ_COUNT_CTOR(QuotaClient::MaintenanceInfoBase);
+  }
+
+  ~MaintenanceInfoBase()
+  {
+    MOZ_COUNT_DTOR(QuotaClient::MaintenanceInfoBase);
+  }
+
+  MaintenanceInfoBase(const MaintenanceInfoBase& aOther) = delete;
+};
+
+struct QuotaClient::SingleMaintenanceInfo final
+  : public MaintenanceInfoBase
+{
+  const nsString mDatabasePath;
+
+  SingleMaintenanceInfo(const nsACString& aGroup,
+                        const nsACString& aOrigin,
+                        PersistenceType aPersistenceType,
+                        const nsAString& aDatabasePath)
+   : MaintenanceInfoBase(aGroup, aOrigin, aPersistenceType)
+   , mDatabasePath(aDatabasePath)
+  {
+    MOZ_ASSERT(!aDatabasePath.IsEmpty());
+  }
+
+  SingleMaintenanceInfo(SingleMaintenanceInfo&& aOther)
+    : MaintenanceInfoBase(Move(aOther))
+    , mDatabasePath(Move(aOther.mDatabasePath))
+  {
+    MOZ_ASSERT(!mDatabasePath.IsEmpty());
+  }
+
+  SingleMaintenanceInfo(const SingleMaintenanceInfo& aOther) = delete;
+};
+
+struct QuotaClient::MultipleMaintenanceInfo final
+  : public MaintenanceInfoBase
+{
+  nsTArray<nsString> mDatabasePaths;
+
+  MultipleMaintenanceInfo(const nsACString& aGroup,
+                          const nsACString& aOrigin,
+                          PersistenceType aPersistenceType,
+                          nsTArray<nsString>&& aDatabasePaths)
+   : MaintenanceInfoBase(aGroup, aOrigin, aPersistenceType)
+   , mDatabasePaths(Move(aDatabasePaths))
+  {
+#ifdef DEBUG
+    MOZ_ASSERT(!mDatabasePaths.IsEmpty());
+    for (const nsString& databasePath : mDatabasePaths) {
+      MOZ_ASSERT(!databasePath.IsEmpty());
+    }
+#endif
+  }
+
+  MultipleMaintenanceInfo(MultipleMaintenanceInfo&& aOther)
+    : MaintenanceInfoBase(Move(aOther))
+    , mDatabasePaths(Move(aOther.mDatabasePaths))
+  {
+#ifdef DEBUG
+    MOZ_ASSERT(!mDatabasePaths.IsEmpty());
+    for (const nsString& databasePath : mDatabasePaths) {
+      MOZ_ASSERT(!databasePath.IsEmpty());
+    }
+#endif
+  }
+
+  MultipleMaintenanceInfo(const MultipleMaintenanceInfo& aOther) = delete;
 };
 
 class QuotaClient::ShutdownWorkThreadsRunnable final
@@ -7871,7 +8189,6 @@ class QuotaClient::ShutdownWorkThreadsRunnable final
   nsRefPtr<QuotaClient> mQuotaClient;
 
 public:
-
   explicit ShutdownWorkThreadsRunnable(QuotaClient* aQuotaClient)
     : mQuotaClient(aQuotaClient)
   {
@@ -15137,7 +15454,10 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
 QuotaClient* QuotaClient::sInstance = nullptr;
 
 QuotaClient::QuotaClient()
-  : mShutdownRequested(false)
+  : mMaintenanceStartTime(0)
+  , mMaintenanceRunId(0)
+  , mShutdownRequested(false)
+  , mIdleObserverRegistered(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
@@ -15155,6 +15475,9 @@ QuotaClient::~QuotaClient()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance == this, "We expect this to be a singleton!");
   MOZ_ASSERT(gTelemetryIdMutex);
+  MOZ_ASSERT(!mMaintenanceThreadPool);
+  MOZ_ASSERT_IF(mMaintenanceInfoHashtable, !mMaintenanceInfoHashtable->Count());
+  MOZ_ASSERT(!mIdleObserverRegistered);
 
   // No one else should be able to touch gTelemetryIdHashtable now that the
   // QuotaClient has gone away.
@@ -15173,6 +15496,8 @@ QuotaClient::NoteBackgroundThread(nsIEventTarget* aBackgroundThread)
 
   mBackgroundThread = aBackgroundThread;
 }
+
+NS_IMPL_ISUPPORTS(QuotaClient, nsIObserver)
 
 mozilla::dom::quota::Client::Type
 QuotaClient::GetType()
@@ -15571,11 +15896,67 @@ QuotaClient::WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
 }
 
 void
+QuotaClient::PerformIdleMaintenance()
+{
+  using namespace mozilla::hal;
+
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mShutdownRequested);
+
+  // If we're running on battery power then skip all idle maintenance since we
+  // would otherwise be doing lots of disk I/O.
+  BatteryInformation batteryInfo;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // Android XPCShell doesn't load the AndroidBridge that is needed to make
+  // GetCurrentBatteryInformation work...
+  if (!kRunningXPCShellTests)
+#endif
+  {
+    GetCurrentBatteryInformation(&batteryInfo);
+  }
+
+  // If we're running XPCShell because we always want to be able to test this
+  // code so pretend that we're always charging.
+  if (kRunningXPCShellTests) {
+    batteryInfo.level() = 100;
+    batteryInfo.charging() = true;
+  }
+
+  if (NS_WARN_IF(!batteryInfo.charging())) {
+    return;
+  }
+
+  // Make sure that the IndexedDatabaseManager is running so that we can check
+  // for low disk space mode.
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
+  if (NS_WARN_IF(!mgr)) {
+    return;
+  }
+
+  if (kRunningXPCShellTests) {
+    // We don't want user activity to impact this code if we're running tests.
+    unused << Observe(nullptr, OBSERVER_TOPIC_IDLE, nullptr);
+  } else if (!mIdleObserverRegistered) {
+    nsCOMPtr<nsIIdleService> idleService =
+      do_GetService(kIdleServiceContractId);
+    MOZ_ASSERT(idleService);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      idleService->AddIdleObserver(this, kIdleObserverTimeSec)));
+
+    mIdleObserverRegistered = true;
+  }
+}
+
+void
 QuotaClient::ShutdownWorkThreads()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mShutdownRunnable);
   MOZ_ASSERT(!mShutdownRequested);
+
+  StopIdleMaintenance();
 
   mShutdownRequested = true;
 
@@ -15583,22 +15964,27 @@ QuotaClient::ShutdownWorkThreads()
     nsRefPtr<ShutdownWorkThreadsRunnable> runnable =
       new ShutdownWorkThreadsRunnable(this);
 
-    if (NS_FAILED(mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
-      // This can happen if the thread has shut down already.
-      return;
+    if (NS_SUCCEEDED(mBackgroundThread->Dispatch(runnable,
+                                                 NS_DISPATCH_NORMAL))) {
+      mShutdownRunnable = Move(runnable);
     }
+  }
 
+  FileService::Shutdown();
+
+  if (mMaintenanceThreadPool) {
+    mMaintenanceThreadPool->Shutdown();
+    mMaintenanceThreadPool = nullptr;
+  }
+
+  if (mShutdownRunnable) {
     nsIThread* currentThread = NS_GetCurrentThread();
     MOZ_ASSERT(currentThread);
-
-    mShutdownRunnable.swap(runnable);
 
     while (mShutdownRunnable) {
       MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
     }
   }
-
-  FileService::Shutdown();
 }
 
 nsresult
@@ -15645,6 +16031,9 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
     return NS_OK;
   }
 
+  const NS_ConvertASCIItoUTF16 journalSuffix(
+    kSQLiteJournalSuffix,
+    LiteralStringLength(kSQLiteJournalSuffix));
   const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
                                          LiteralStringLength(kSQLiteSHMSuffix));
 
@@ -15667,12 +16056,19 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
       return rv;
     }
 
-    if (StringEndsWith(leafName, shmSuffix)) {
+    // Journal files and sqlite-shm files don't count towards usage.
+    if (StringEndsWith(leafName, journalSuffix) ||
+        StringEndsWith(leafName, shmSuffix)) {
       continue;
     }
 
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
+    if (rv == NS_ERROR_FILE_NOT_FOUND ||
+        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+      continue;
+    }
+
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -15720,6 +16116,974 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
   return NS_OK;
 }
 
+void
+QuotaClient::RemoveIdleObserver()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mIdleObserverRegistered) {
+    nsCOMPtr<nsIIdleService> idleService =
+      do_GetService(kIdleServiceContractId);
+    MOZ_ASSERT(idleService);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      idleService->RemoveIdleObserver(this, kIdleObserverTimeSec)));
+
+    mIdleObserverRegistered = false;
+  }
+}
+
+void
+QuotaClient::StartIdleMaintenance()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mShutdownRequested);
+
+  if (!mMaintenanceThreadPool) {
+    nsRefPtr<nsThreadPool> threadPool = new nsThreadPool();
+
+    // PR_GetNumberOfProcessors() can return -1 on error, so make sure we
+    // don't set some huge number here. We add 2 in case some threads block on
+    // the disk I/O.
+    const uint32_t threadCount =
+      std::max(int32_t(PR_GetNumberOfProcessors()), int32_t(1)) +
+      2;
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetThreadLimit(threadCount)));
+
+    // Don't keep more than one idle thread.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetIdleThreadLimit(1)));
+
+    // Don't keep idle threads alive very long.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetIdleThreadTimeout(5 * PR_MSEC_PER_SEC)));
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      threadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Mnt"))));
+
+    mMaintenanceThreadPool = Move(threadPool);
+  }
+
+  mMaintenanceStartTime = PR_Now();
+  MOZ_ASSERT(mMaintenanceStartTime);
+
+  if (!mMaintenanceInfoHashtable) {
+    mMaintenanceInfoHashtable = MakeUnique<MaintenanceInfoHashtable>();
+  }
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArg<uint32_t>(
+      this,
+      &QuotaClient::FindDatabasesForIdleMaintenance,
+      mMaintenanceRunId);
+  MOZ_ASSERT(runnable);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    mMaintenanceThreadPool->Dispatch(runnable, NS_DISPATCH_NORMAL)));
+}
+
+void
+QuotaClient::StopIdleMaintenance()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mShutdownRequested);
+
+  RemoveIdleObserver();
+
+  mMaintenanceRunId++;
+}
+
+void
+QuotaClient::FindDatabasesForIdleMaintenance(uint32_t aRunId)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(mMaintenanceThreadPool);
+
+  // The storage directory is structured like this:
+  //
+  //   <profile>/storage/<persistence>/<origin>/idb/*.sqlite
+  //
+  // We have to find all database files that match any persistence type and any
+  // origin. We ignore anything out of the ordinary for now.
+
+  if (IdleMaintenanceMustEnd(aRunId)) {
+    return;
+  }
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsCOMPtr<nsIFile> storageDir = GetFileForPath(quotaManager->GetStoragePath());
+  MOZ_ASSERT(storageDir);
+
+  bool exists;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(storageDir->Exists(&exists)));
+  if (!exists) {
+    return;
+  }
+
+  bool isDirectory;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(storageDir->IsDirectory(&isDirectory)));
+  if (NS_WARN_IF(!isDirectory)) {
+    return;
+  }
+
+  // There are currently only 3 persistence types, and we want to iterate them
+  // in this order:
+  static const PersistenceType kPersistenceTypes[] = {
+    PERSISTENCE_TYPE_PERSISTENT,
+    PERSISTENCE_TYPE_DEFAULT,
+    PERSISTENCE_TYPE_TEMPORARY
+  };
+
+  static_assert((sizeof(kPersistenceTypes) / sizeof(kPersistenceTypes[0])) ==
+                  size_t(PERSISTENCE_TYPE_INVALID),
+                "Something changed with available persistence types!");
+
+  NS_NAMED_LITERAL_STRING(idbDirName, IDB_DIRECTORY_NAME);
+  NS_NAMED_LITERAL_STRING(sqliteExtension, ".sqlite");
+
+  for (const PersistenceType persistenceType : kPersistenceTypes) {
+    // Loop over "<persistence>" directories.
+    if (IdleMaintenanceMustEnd(aRunId)) {
+      return;
+    }
+
+    nsAutoCString persistenceTypeString;
+    if (persistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      // XXX This shouldn't be a special case...
+      persistenceTypeString.AssignLiteral("permanent");
+    } else {
+      PersistenceTypeToText(persistenceType, persistenceTypeString);
+    }
+
+    nsCOMPtr<nsIFile> persistenceDir;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      storageDir->Clone(getter_AddRefs(persistenceDir))));
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      persistenceDir->Append(NS_ConvertASCIItoUTF16(persistenceTypeString))));
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(persistenceDir->Exists(&exists)));
+    if (!exists) {
+      continue;
+    }
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(persistenceDir->IsDirectory(&isDirectory)));
+    if (NS_WARN_IF(!isDirectory)) {
+      continue;
+    }
+
+    nsCOMPtr<nsISimpleEnumerator> persistenceDirEntries;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      persistenceDir->GetDirectoryEntries(
+        getter_AddRefs(persistenceDirEntries))));
+    if (!persistenceDirEntries) {
+      continue;
+    }
+
+    while (true) {
+      // Loop over "<origin>/idb" directories.
+      if (IdleMaintenanceMustEnd(aRunId)) {
+        return;
+      }
+
+      bool persistenceDirHasMoreEntries;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        persistenceDirEntries->HasMoreElements(&persistenceDirHasMoreEntries)));
+
+      if (!persistenceDirHasMoreEntries) {
+        break;
+      }
+
+      nsCOMPtr<nsISupports> persistenceDirEntry;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        persistenceDirEntries->GetNext(getter_AddRefs(persistenceDirEntry))));
+
+      nsCOMPtr<nsIFile> originDir = do_QueryInterface(persistenceDirEntry);
+      MOZ_ASSERT(originDir);
+
+      MOZ_ASSERT(NS_SUCCEEDED(originDir->Exists(&exists)));
+      MOZ_ASSERT(exists);
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(originDir->IsDirectory(&isDirectory)));
+      if (!isDirectory) {
+        continue;
+      }
+
+      nsCOMPtr<nsIFile> idbDir;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(originDir->Clone(getter_AddRefs(idbDir))));
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDir->Append(idbDirName)));
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDir->Exists(&exists)));
+      if (!exists) {
+        continue;
+      }
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDir->IsDirectory(&isDirectory)));
+      if (NS_WARN_IF(!isDirectory)) {
+        continue;
+      }
+
+      nsCOMPtr<nsISimpleEnumerator> idbDirEntries;
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries))));
+      if (!idbDirEntries) {
+        continue;
+      }
+
+      nsCString group;
+      nsCString origin;
+      nsTArray<nsString> databasePaths;
+
+      while (true) {
+        // Loop over files in the "idb" directory.
+        if (IdleMaintenanceMustEnd(aRunId)) {
+          return;
+        }
+
+        bool idbDirHasMoreEntries;
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+          idbDirEntries->HasMoreElements(&idbDirHasMoreEntries)));
+
+        if (!idbDirHasMoreEntries) {
+          break;
+        }
+
+        nsCOMPtr<nsISupports> idbDirEntry;
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+          idbDirEntries->GetNext(getter_AddRefs(idbDirEntry))));
+
+        nsCOMPtr<nsIFile> idbDirFile = do_QueryInterface(idbDirEntry);
+        MOZ_ASSERT(idbDirFile);
+
+        nsString idbFilePath;
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDirFile->GetPath(idbFilePath)));
+
+        if (!StringEndsWith(idbFilePath, sqliteExtension)) {
+          continue;
+        }
+
+        MOZ_ASSERT(NS_SUCCEEDED(idbDirFile->Exists(&exists)));
+        MOZ_ASSERT(exists);
+
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(idbDirFile->IsDirectory(&isDirectory)));
+        if (isDirectory) {
+          continue;
+        }
+
+        // Found a database.
+        if (databasePaths.IsEmpty()) {
+          MOZ_ASSERT(group.IsEmpty());
+          MOZ_ASSERT(origin.IsEmpty());
+
+          int64_t dummyTimeStamp;
+          bool dummyIsApp;
+          if (NS_WARN_IF(NS_FAILED(
+                QuotaManager::GetDirectoryMetadata(originDir,
+                                                   &dummyTimeStamp,
+                                                   group,
+                                                   origin,
+                                                   &dummyIsApp)))) {
+            // Not much we can do here...
+            continue;
+          }
+        }
+
+        MOZ_ASSERT(!databasePaths.Contains(idbFilePath));
+
+        databasePaths.AppendElement(idbFilePath);
+      }
+
+      if (!databasePaths.IsEmpty()) {
+        nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableMethodWithArgs<uint32_t, MultipleMaintenanceInfo&&>(
+            this,
+            &QuotaClient::BlockQuotaManagerForIdleMaintenance,
+            aRunId,
+            MultipleMaintenanceInfo(group,
+                                    origin,
+                                    persistenceType,
+                                    Move(databasePaths)));
+        MOZ_ASSERT(runnable);
+
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+      }
+    }
+  }
+}
+
+void
+QuotaClient::BlockQuotaManagerForIdleMaintenance(
+                                     uint32_t aRunId,
+                                     MultipleMaintenanceInfo&& aMaintenanceInfo)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (IdleMaintenanceMustEnd(aRunId)) {
+    return;
+  }
+
+  MOZ_ASSERT(mMaintenanceInfoHashtable);
+
+  nsAutoCString key;
+  key.AppendInt(aMaintenanceInfo.mPersistenceType);
+  key.Append('*');
+  key.Append(aMaintenanceInfo.mOrigin);
+
+  MOZ_ASSERT(!mMaintenanceInfoHashtable->Get(key));
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArgs<uint32_t, const nsCString>(
+      this,
+      &QuotaClient::ScheduleIdleMaintenance,
+      aRunId,
+      key);
+  MOZ_ASSERT(runnable);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  OriginOrPatternString oops =
+    OriginOrPatternString::FromOrigin(aMaintenanceInfo.mOrigin);
+
+  Nullable<PersistenceType> npt(aMaintenanceInfo.mPersistenceType);
+
+  nsresult rv =
+    quotaManager->WaitForOpenAllowed(oops, npt, EmptyCString(), runnable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  mMaintenanceInfoHashtable->Put(
+    key,
+    new MultipleMaintenanceInfo(Move(aMaintenanceInfo)));
+}
+
+void
+QuotaClient::ScheduleIdleMaintenance(uint32_t aRunId, const nsACString& aKey)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aKey.IsEmpty());
+
+  MultipleMaintenanceInfo* maintenanceInfo;
+  MOZ_ALWAYS_TRUE(mMaintenanceInfoHashtable->Get(aKey, &maintenanceInfo));
+  MOZ_ASSERT(maintenanceInfo);
+
+  if (IdleMaintenanceMustEnd(aRunId)) {
+    // We got canceled, unblock the QuotaManager.
+#ifdef DEBUG
+    maintenanceInfo->mDatabasePaths.Clear();
+#endif
+
+    UnblockQuotaManagerForIdleMaintenance(*maintenanceInfo);
+
+    mMaintenanceInfoHashtable->Remove(aKey);
+    return;
+  }
+
+  MOZ_ASSERT(mMaintenanceThreadPool);
+
+  for (const nsString& databasePath : maintenanceInfo->mDatabasePaths) {
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethodWithArgs<uint32_t,
+                                   nsCString,
+                                   SingleMaintenanceInfo&&>(
+        this,
+        &QuotaClient::PerformIdleMaintenanceOnDatabase,
+        aRunId,
+        aKey,
+        SingleMaintenanceInfo(maintenanceInfo->mGroup,
+                              maintenanceInfo->mOrigin,
+                              maintenanceInfo->mPersistenceType,
+                              databasePath));
+    MOZ_ASSERT(runnable);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      mMaintenanceThreadPool->Dispatch(runnable, NS_DISPATCH_NORMAL)));
+  }
+}
+
+void
+QuotaClient::PerformIdleMaintenanceOnDatabase(
+                                       uint32_t aRunId,
+                                       const nsACString& aKey,
+                                       SingleMaintenanceInfo&& aMaintenanceInfo)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(mMaintenanceThreadPool);
+  MOZ_ASSERT(mMaintenanceStartTime);
+  MOZ_ASSERT(!aMaintenanceInfo.mDatabasePath.IsEmpty());
+  MOZ_ASSERT(!aMaintenanceInfo.mGroup.IsEmpty());
+  MOZ_ASSERT(!aMaintenanceInfo.mOrigin.IsEmpty());
+
+  PerformIdleMaintenanceOnDatabaseInternal(aRunId, aMaintenanceInfo);
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArgs<nsCString, nsString>(
+      this,
+      &QuotaClient::MaybeUnblockQuotaManagerForIdleMaintenance,
+      aKey,
+      aMaintenanceInfo.mDatabasePath);
+  MOZ_ASSERT(runnable);
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+}
+
+void
+QuotaClient::PerformIdleMaintenanceOnDatabaseInternal(
+                                  uint32_t aRunId,
+                                  const SingleMaintenanceInfo& aMaintenanceInfo)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(mMaintenanceThreadPool);
+  MOZ_ASSERT(mMaintenanceStartTime);
+  MOZ_ASSERT(!aMaintenanceInfo.mDatabasePath.IsEmpty());
+  MOZ_ASSERT(!aMaintenanceInfo.mGroup.IsEmpty());
+  MOZ_ASSERT(!aMaintenanceInfo.mOrigin.IsEmpty());
+
+  nsCOMPtr<nsIFile> databaseFile =
+    GetFileForPath(aMaintenanceInfo.mDatabasePath);
+  MOZ_ASSERT(databaseFile);
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  nsresult rv = GetStorageConnection(databaseFile,
+                                     aMaintenanceInfo.mPersistenceType,
+                                     aMaintenanceInfo.mGroup,
+                                     aMaintenanceInfo.mOrigin,
+                                     TelemetryIdForFile(databaseFile),
+                                     getter_AddRefs(connection));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (IdleMaintenanceMustEnd(aRunId)) {
+    return;
+  }
+
+  AutoProgressHandler progressHandler(this, aRunId);
+  if (NS_WARN_IF(NS_FAILED(progressHandler.Register(connection)))) {
+    return;
+  }
+
+  bool databaseIsOk;
+  rv = CheckIntegrity(connection, &databaseIsOk);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (NS_WARN_IF(!databaseIsOk)) {
+    // XXX Handle this somehow! Probably need to clear all storage for the
+    //     origin. Needs followup.
+    MOZ_ASSERT(false, "Database corruption detected!");
+    return;
+  }
+
+  if (IdleMaintenanceMustEnd(aRunId)) {
+    return;
+  }
+
+  MaintenanceAction maintenanceAction;
+  rv = DetermineMaintenanceAction(connection, databaseFile, &maintenanceAction);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (IdleMaintenanceMustEnd(aRunId)) {
+    return;
+  }
+
+  switch (maintenanceAction) {
+    case MaintenanceAction_Nothing:
+      break;
+
+    case MaintenanceAction_IncrementalVacuum:
+      IncrementalVacuum(connection);
+      break;
+
+    case MaintenanceAction_FullVacuum:
+      FullVacuum(connection, databaseFile);
+      break;
+
+    default:
+      MOZ_CRASH("Unknown MaintenanceAction!");
+  }
+}
+
+nsresult
+QuotaClient::CheckIntegrity(mozIStorageConnection* aConnection, bool* aOk)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(aOk);
+
+  nsresult rv;
+
+  // First do a full integrity_check. Scope statements tightly here because
+  // later operations require zero live statements.
+  {
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "PRAGMA integrity_check(1);"
+    ), getter_AddRefs(stmt));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(hasResult);
+
+    nsString result;
+    rv = stmt->GetString(0, result);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (NS_WARN_IF(!result.EqualsLiteral("ok"))) {
+      *aOk = false;
+      return NS_OK;
+    }
+  }
+
+  // Now enable and check for foreign key constraints.
+  {
+    int32_t foreignKeysWereEnabled;
+    {
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "PRAGMA foreign_keys;"
+      ), getter_AddRefs(stmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      bool hasResult;
+      rv = stmt->ExecuteStep(&hasResult);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      MOZ_ASSERT(hasResult);
+
+      rv = stmt->GetInt32(0, &foreignKeysWereEnabled);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    bool changedForeignKeys;
+    if (foreignKeysWereEnabled) {
+      changedForeignKeys = false;
+    } else {
+      rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "PRAGMA foreign_keys = ON;"
+      ));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      changedForeignKeys = true;
+    }
+
+    bool foreignKeyError;
+    {
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "PRAGMA foreign_key_check;"
+      ), getter_AddRefs(stmt));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = stmt->ExecuteStep(&foreignKeyError);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (changedForeignKeys) {
+      nsAutoCString stmtSQL;
+      stmtSQL.AssignLiteral("PRAGMA foreign_keys = ");
+      if (foreignKeysWereEnabled) {
+        stmtSQL.AppendLiteral("ON");
+      } else {
+        stmtSQL.AppendLiteral("OFF");
+      }
+      stmtSQL.Append(';');
+
+      rv = aConnection->ExecuteSimpleSQL(stmtSQL);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    if (foreignKeyError) {
+      *aOk = false;
+      return NS_OK;
+    }
+  }
+
+  *aOk = true;
+  return NS_OK;
+}
+
+nsresult
+QuotaClient::DetermineMaintenanceAction(mozIStorageConnection* aConnection,
+                                        nsIFile* aDatabaseFile,
+                                        MaintenanceAction* aMaintenanceAction)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(aDatabaseFile);
+  MOZ_ASSERT(aMaintenanceAction);
+
+  int32_t schemaVersion;
+  nsresult rv = aConnection->GetSchemaVersion(&schemaVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Don't do anything if the schema version is less than 18; before that
+  // version no databases had |auto_vacuum == INCREMENTAL| set and we didn't
+  // track the values needed for the heuristics below.
+  if (schemaVersion < MakeSchemaVersion(18, 0)) {
+    *aMaintenanceAction = MaintenanceAction_Nothing;
+    return NS_OK;
+  }
+
+  bool lowDiskSpace = IndexedDatabaseManager::InLowDiskSpaceMode();
+
+  if (kRunningXPCShellTests) {
+    // If we're running XPCShell then we want to test both the low disk space
+    // and normal disk space code paths so pick semi-randomly based on the
+    // current time.
+    lowDiskSpace = ((PR_Now() / PR_USEC_PER_MSEC) % 2) == 0;
+  }
+
+  // If we're low on disk space then the best we can hope for is that an
+  // incremental vacuum might free some space. That is a journaled operation so
+  // it may not be possible even then.
+  if (lowDiskSpace) {
+    *aMaintenanceAction = MaintenanceAction_IncrementalVacuum;
+    return NS_OK;
+  }
+
+  // This method shouldn't make any permanent changes to the database, so make
+  // sure everything gets rolled back when we leave.
+  mozStorageTransaction transaction(aConnection,
+                                    /* aCommitOnComplete */ false);
+
+  // Check to see when we last vacuumed this database.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT last_vacuum_time, last_vacuum_size "
+      "FROM database;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  PRTime lastVacuumTime;
+  rv = stmt->GetInt64(0, &lastVacuumTime);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  int64_t lastVacuumSize;
+  rv = stmt->GetInt64(1, &lastVacuumSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(lastVacuumSize > 0);
+
+  // This shouldn't really be possible...
+  if (NS_WARN_IF(mMaintenanceStartTime <= lastVacuumTime)) {
+    *aMaintenanceAction = MaintenanceAction_Nothing;
+    return NS_OK;
+  }
+
+  if (mMaintenanceStartTime - lastVacuumTime < kMinVacuumAge) {
+    *aMaintenanceAction = MaintenanceAction_IncrementalVacuum;
+    return NS_OK;
+  }
+
+  // It has been more than a week since the database was vacuumed, so gather
+  // statistics on its usage to see if vacuuming is worthwhile.
+  rv = aConnection->EnableModule(NS_LITERAL_CSTRING("dbstat"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Create a temporary copy of the dbstat table to speed up the queries that
+  // come later.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE VIRTUAL TABLE __stats__ USING dbstat;"
+    "CREATE TEMP TABLE __temp_stats__ AS SELECT * FROM __stats__;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Calculate the percentage of the database pages that are not in contiguous
+  // order.
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT SUM(__ts1__.pageno != __ts2__.pageno + 1) * 100.0 / COUNT(*) "
+      "FROM __temp_stats__ AS __ts1__, __temp_stats__ AS __ts2__ "
+      "WHERE __ts1__.name = __ts2__.name "
+      "AND __ts1__.rowid = __ts2__.rowid + 1;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  int32_t percentUnordered;
+  rv = stmt->GetInt32(0, &percentUnordered);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(percentUnordered >= 0);
+  MOZ_ASSERT(percentUnordered <= 100);
+
+  if (percentUnordered >= kPercentUnorderedThreshold) {
+    *aMaintenanceAction = MaintenanceAction_FullVacuum;
+    return NS_OK;
+  }
+
+  // Don't try a full vacuum if the file hasn't grown by 10%.
+  int64_t currentFileSize;
+  rv = aDatabaseFile->GetFileSize(&currentFileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (currentFileSize <= lastVacuumSize ||
+      (((currentFileSize - lastVacuumSize) * 100 / currentFileSize) <
+         kPercentFileSizeGrowthThreshold)) {
+    *aMaintenanceAction = MaintenanceAction_IncrementalVacuum;
+    return NS_OK;
+  }
+
+  // See if there are any free pages that we can reclaim.
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "PRAGMA freelist_count;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  int32_t freelistCount;
+  rv = stmt->GetInt32(0, &freelistCount);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(freelistCount >= 0);
+
+  // If we have too many free pages then we should try an incremental vacuum. If
+  // that causes too much fragmentation then we'll try a full vacuum later.
+  if (freelistCount > kMaxFreelistThreshold) {
+    *aMaintenanceAction = MaintenanceAction_IncrementalVacuum;
+    return NS_OK;
+  }
+
+  // Calculate the percentage of unused bytes on pages in the database.
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT SUM(unused) * 100.0 / SUM(pgsize) "
+      "FROM __temp_stats__;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(hasResult);
+
+  int32_t percentUnused;
+  rv = stmt->GetInt32(0, &percentUnused);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(percentUnused >= 0);
+  MOZ_ASSERT(percentUnused <= 100);
+
+  *aMaintenanceAction = percentUnused >= kPercentUnusedThreshold ?
+                        MaintenanceAction_FullVacuum :
+                        MaintenanceAction_IncrementalVacuum;
+  return NS_OK;
+}
+
+void
+QuotaClient::IncrementalVacuum(mozIStorageConnection* aConnection)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA incremental_vacuum;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+}
+
+void
+QuotaClient::FullVacuum(mozIStorageConnection* aConnection,
+                        nsIFile* aDatabaseFile)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(aDatabaseFile);
+
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "VACUUM;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  PRTime vacuumTime = PR_Now();
+  MOZ_ASSERT(vacuumTime > 0);
+
+  int64_t fileSize;
+  rv = aDatabaseFile->GetFileSize(&fileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  MOZ_ASSERT(fileSize > 0);
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE database "
+      "SET last_vacuum_time = :time"
+        ", last_vacuum_size = :size;"
+  ), getter_AddRefs(stmt));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("time"), vacuumTime);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("size"), fileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = stmt->Execute();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+}
+
+void
+QuotaClient::MaybeUnblockQuotaManagerForIdleMaintenance(
+                                                 const nsACString& aKey,
+                                                 const nsAString& aDatabasePath)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aKey.IsEmpty());
+  MOZ_ASSERT(!aDatabasePath.IsEmpty());
+  MOZ_ASSERT(mMaintenanceInfoHashtable);
+
+  MultipleMaintenanceInfo* maintenanceInfo;
+  MOZ_ALWAYS_TRUE(mMaintenanceInfoHashtable->Get(aKey, &maintenanceInfo));
+  MOZ_ASSERT(maintenanceInfo);
+
+  MOZ_ALWAYS_TRUE(maintenanceInfo->mDatabasePaths.RemoveElement(aDatabasePath));
+
+  if (maintenanceInfo->mDatabasePaths.IsEmpty()) {
+    UnblockQuotaManagerForIdleMaintenance(*maintenanceInfo);
+
+    // This will delete |maintenanceInfo|.
+    mMaintenanceInfoHashtable->Remove(aKey);
+  }
+}
+
+void
+QuotaClient::UnblockQuotaManagerForIdleMaintenance(
+                                const MultipleMaintenanceInfo& aMaintenanceInfo)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aMaintenanceInfo.mOrigin.IsEmpty());
+  MOZ_ASSERT(aMaintenanceInfo.mDatabasePaths.IsEmpty());
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  OriginOrPatternString oops =
+    OriginOrPatternString::FromOrigin(aMaintenanceInfo.mOrigin);
+
+  Nullable<PersistenceType> npt(aMaintenanceInfo.mPersistenceType);
+
+  quotaManager->AllowNextSynchronizedOp(oops, npt, EmptyCString());
+}
+
+NS_IMETHODIMP
+QuotaClient::Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE)) {
+    StartIdleMaintenance();
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, OBSERVER_TOPIC_ACTIVE)) {
+    StopIdleMaintenance();
+    return NS_OK;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Should never get here!");
+  return NS_OK;
+}
 
 void
 QuotaClient::
@@ -15828,6 +17192,84 @@ WaitForTransactionsRunnable::Run()
       MOZ_CRASH("Should never get here!");
   }
 
+  return NS_OK;
+}
+
+nsresult
+QuotaClient::
+AutoProgressHandler::Register(mozIStorageConnection* aConnection)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(aConnection);
+
+  // We want to quickly bail out of any operation if the user becomes active, so
+  // use a small granularity here since database performance isn't critical.
+  static const int32_t kProgressGranularity = 50;
+
+  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
+  nsresult rv = aConnection->SetProgressHandler(kProgressGranularity,
+                                                this,
+                                                getter_AddRefs(oldHandler));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(!oldHandler);
+  mConnection = aConnection;
+
+  return NS_OK;
+}
+
+void
+QuotaClient::
+AutoProgressHandler::Unregister()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  MOZ_ASSERT(mConnection);
+
+  nsCOMPtr<mozIStorageProgressHandler> oldHandler;
+  nsresult rv = mConnection->RemoveProgressHandler(getter_AddRefs(oldHandler));
+  unused << NS_WARN_IF(NS_FAILED(rv));
+
+  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), oldHandler == this);
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+QuotaClient::
+AutoProgressHandler::AddRef()
+{
+  NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
+
+  mDEBUGRefCnt++;
+  return 2;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+QuotaClient::
+AutoProgressHandler::Release()
+{
+  NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
+
+  mDEBUGRefCnt--;
+  return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE(QuotaClient::AutoProgressHandler,
+                        mozIStorageProgressHandler)
+
+NS_IMETHODIMP
+QuotaClient::
+AutoProgressHandler::OnProgress(mozIStorageConnection* aConnection,
+                                bool* _retval)
+{
+  NS_ASSERT_OWNINGTHREAD(QuotaClient::AutoProgressHandler);
+  MOZ_ASSERT(aConnection);
+  MOZ_ASSERT(mConnection == aConnection);
+  MOZ_ASSERT(_retval);
+
+  *_retval = mQuotaClient->IdleMaintenanceMustEnd(mRunId);
   return NS_OK;
 }
 
