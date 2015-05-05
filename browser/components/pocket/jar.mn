@@ -16,6 +16,8 @@ browser.jar:
   content/browser/pocket/panels/img/pocketlogo@2x.png              (panels/img/pocketlogo@2x.png)
   content/browser/pocket/panels/img/pocketlogosolo@1x.png          (panels/img/pocketlogosolo@1x.png)
   content/browser/pocket/panels/img/pocketlogosolo@2x.png          (panels/img/pocketlogosolo@2x.png)
+  content/browser/pocket/panels/img/pocketmenuitem16.png           (panels/img/pocketmenuitem16.png)
+  content/browser/pocket/panels/img/pocketmenuitem16@2x.png        (panels/img/pocketmenuitem16@2x.png)
   content/browser/pocket/panels/img/pocketmultidevices@1x.png      (panels/img/pocketmultidevices@1x.png)
   content/browser/pocket/panels/img/pocketmultidevices@2x.png      (panels/img/pocketmultidevices@2x.png)
   content/browser/pocket/panels/img/signup_firefoxlogo@1x.png      (panels/img/signup_firefoxlogo@1x.png)

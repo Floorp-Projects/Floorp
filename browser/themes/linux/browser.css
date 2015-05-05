@@ -523,6 +523,12 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   list-style-image: url("chrome://browser/skin/readinglist/readinglist-icon.svg");
 }
 
+#panelMenu_pocket,
+#menu_pocket,
+#BMB_pocket {
+  list-style-image: url("chrome://browser/content/pocket/panels/img/pocketmenuitem16.png");
+}
+
 #menu_openDownloads {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 16px 16px 0px);
