@@ -1234,6 +1234,7 @@ nsGridContainerFrame::ReflowChildren(GridItemCSSOrderIterator&  aIter,
     nsReflowStatus childStatus;
     ReflowChild(child, pc, childSize, childRS, wm, childPos,
                 containerWidth, 0, childStatus);
+    childRS.ApplyRelativePositioning(&childPos, containerWidth);
     FinishReflowChild(child, pc, childSize, &childRS, wm, childPos,
                       containerWidth, 0);
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
