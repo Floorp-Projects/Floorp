@@ -102,10 +102,14 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
     fi
   fi
 elif [ "$OSTYPE" = "msys" ]; then
-  USE_64BIT=false
-  if [ "$platform" = "win64" ]; then
-      USE_64BIT=true
-  fi
+  case "$platform" in
+  win64*)
+    USE_64BIT=true
+    ;;
+  *)
+    USE_64BIT=false
+    ;;
+  esac
   MAKE=${MAKE:-mozmake}
   source "$ABSDIR/winbuildenv.sh"
 fi
