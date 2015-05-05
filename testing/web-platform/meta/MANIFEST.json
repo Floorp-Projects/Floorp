@@ -8984,10 +8984,6 @@
         "url": "/IndexedDB/index_sort_order.htm"
       },
       {
-        "path": "IndexedDB/interfaces.htm",
-        "url": "/IndexedDB/interfaces.htm"
-      },
-      {
         "path": "IndexedDB/interfaces.html",
         "url": "/IndexedDB/interfaces.html"
       },
@@ -10760,6 +10756,10 @@
         "url": "/dom/nodes/Text-constructor.html"
       },
       {
+        "path": "dom/nodes/Text-splitText.html",
+        "url": "/dom/nodes/Text-splitText.html"
+      },
+      {
         "path": "dom/nodes/attributes.html",
         "url": "/dom/nodes/attributes.html"
       },
@@ -11802,6 +11802,10 @@
       {
         "path": "html/dom/documents/dom-tree-accessors/document.title-08.html",
         "url": "/html/dom/documents/dom-tree-accessors/document.title-08.html"
+      },
+      {
+        "path": "html/dom/documents/dom-tree-accessors/document.title-09.html",
+        "url": "/html/dom/documents/dom-tree-accessors/document.title-09.html"
       },
       {
         "path": "html/dom/documents/dom-tree-accessors/nameditem-01.html",
@@ -16896,8 +16900,8 @@
         "url": "/web-animations/animation-node/idlharness.html"
       },
       {
-        "path": "web-animations/animation-timeline/animation-timeline.html",
-        "url": "/web-animations/animation-timeline/animation-timeline.html"
+        "path": "web-animations/animation-timeline/document-timeline.html",
+        "url": "/web-animations/animation-timeline/document-timeline.html"
       },
       {
         "path": "web-animations/animation-timeline/idlharness.html",
@@ -24821,7 +24825,7 @@
       }
     ]
   },
-  "rev": "20aef05e164be1ccbbd8f66192f01e778b5e5c18",
+  "rev": "40a9c4e9e4f99a738cd1a7602066c5e84d1b90b5",
   "url_base": "/",
   "version": 2
 }
