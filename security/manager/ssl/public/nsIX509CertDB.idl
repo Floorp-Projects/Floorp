@@ -28,6 +28,13 @@ interface nsIOpenSignedAppFileCallback : nsISupports
                                  in nsIX509Cert aSignerCert);
 };
 
+[scriptable, function, uuid(d5f97827-622a-488f-be08-d850432ac8ec)]
+interface nsIVerifySignedDirectoryCallback : nsISupports
+{
+  void verifySignedDirectoryFinished(in nsresult rv,
+                                     in nsIX509Cert aSignerCert);
+};
+
 [scriptable, function, uuid(3d6a9c87-5c5f-46fc-9410-96da6092f0f2)]
 interface nsIVerifySignedManifestCallback : nsISupports
 {
@@ -39,7 +46,7 @@ interface nsIVerifySignedManifestCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(560bc9ac-3e71-472e-9b08-2270d0c71878)]
+[scriptable, uuid(6d27211b-7119-4777-9c62-f29310eeb262)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -316,6 +323,22 @@ interface nsIX509CertDB : nsISupports {
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
+
+  /**
+   *  Verifies the signature on a directory representing an unpacked signed
+   *  JAR file. To be considered valid, there must be exactly one signature
+   *  on the directory structure and that signature must have signed every
+   *  entry. Further, the signature must come from a certificate that
+   *  is trusted for code signing.
+   *
+   *  On success NS_OK and the trusted certificate that signed the
+   *  unpacked JAR are returned.
+   *
+   *  On failure, an error code is returned.
+   */
+  void verifySignedDirectoryAsync(in AppTrustedRoot trustedRoot,
+                                  in nsIFile aUnpackedDir,
+                                  in nsIVerifySignedDirectoryCallback callback);
 
   /**
    * Given streams containing a signature and a manifest file, verifies
