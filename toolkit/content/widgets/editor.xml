@@ -134,9 +134,12 @@
                 readonly="true"/>
       <property name="contentDocument" readonly="true"
                 onget="return this.webNavigation.document;"/>
-      <property name="docShell"
-                onget="return this.boxObject.docShell;"
-                readonly="true"/>
+      <property name="docShell" readonly="true">
+        <getter><![CDATA[
+          let frameLoader = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+          return frameLoader ? frameLoader.docShell : null;
+        ]]></getter>
+      </property>
       <property name="currentURI"
                 readonly="true"
                 onget="return this.webNavigation.currentURI;"/>
