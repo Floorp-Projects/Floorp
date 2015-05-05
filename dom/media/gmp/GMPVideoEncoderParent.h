@@ -45,7 +45,7 @@ public:
   virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) override;
   virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override;
   virtual GMPErr SetPeriodicKeyFrames(bool aEnable) override;
-  virtual const uint64_t ParentID() override { return reinterpret_cast<uint64_t>(mPlugin.get()); }
+  virtual const uint32_t ParentID() override;
 
   // GMPSharedMemManager
   virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override

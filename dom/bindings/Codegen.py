@@ -10398,7 +10398,7 @@ class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
             $*{getIndexed}
             JS::Rooted<JSObject*> expando(cx);
             if (!isXray && (expando = GetExpandoObject(proxy))) {
-              if (!JS_GetPropertyDescriptorById(cx, expando, id, desc)) {
+              if (!JS_GetOwnPropertyDescriptorById(cx, expando, id, desc)) {
                 return false;
               }
               if (desc.object()) {

@@ -5,7 +5,7 @@ const Ci = Components.interfaces;
 
 function run_test() {
   let manifest = do_get_file('testcompnoaslr.manifest');
-  Components.manager.autoRegister(manifest);
+  registerAppManifest(manifest);
   var sysInfo = Cc["@mozilla.org/system-info;1"].
                 getService(Ci.nsIPropertyBag2);
   var ver = parseFloat(sysInfo.getProperty("version"));

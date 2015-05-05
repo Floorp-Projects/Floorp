@@ -29,7 +29,7 @@ class TestGetActiveFrameOOP(MarionetteTestCase):
 
     def test_active_frame_oop(self):
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
+        self.marionette.push_permission('browser', True)
 
         # Create first OOP frame
         self.marionette.execute_script("""

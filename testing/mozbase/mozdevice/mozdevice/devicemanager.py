@@ -152,11 +152,13 @@ class DeviceManager(object):
                   format="time",
                   filterOutRegexps=[]):
         """
-        Returns the contents of the logcat file as a list of strings
+        Returns the contents of the logcat file as a list of
+        '\n' terminated strings
         """
         cmdline = ["/system/bin/logcat", "-v", format, "-d"] + filterSpecs
-        lines = self.shellCheckOutput(cmdline,
-                                      root=self._logcatNeedsRoot).split('\r')
+        output = self.shellCheckOutput(cmdline,
+                                      root=self._logcatNeedsRoot)
+        lines = output.replace('\r\n', '\n').splitlines(True)
 
         for regex in filterOutRegexps:
             lines = [line for line in lines if not re.search(regex, line)]

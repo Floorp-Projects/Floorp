@@ -59,6 +59,15 @@ file from the alternate localization source tree
 
    locale/path/localized.dtd     (%localized/path/localized.dtd)
 
+The source tree location can also use wildcards, in which case the path in
+jar is expected to be a base directory. Paths before the wildcard are not
+made part of the destination path::
+
+     path/in/jar/                (source/tree/location/*.xul)
+
+The above will install all xul files under ``source/tree/location`` as
+``path/in/jar/*.xul``.
+
 Register Chrome
 ===============
 
