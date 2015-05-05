@@ -1532,12 +1532,11 @@ let Impl = {
       try {
         this._initialized = true;
 
-        let hasLoaded = yield this._loadSessionData();
-        if (!hasLoaded) {
-          // We could not load a valid session data file. Create one.
-          yield this._saveSessionData(this._getSessionDataObject()).catch(() =>
-            this._log.error("setupChromeProcess - Could not write session data to disk."));
-        }
+        yield this._loadSessionData();
+        // Update the session data to keep track of new subsessions created before
+        // the initialization.
+        yield this._saveSessionData(this._getSessionDataObject());
+
         this.attachObservers();
         this.gatherMemory();
 
@@ -1965,8 +1964,8 @@ let Impl = {
       if (data &&
           "profileSubsessionCounter" in data &&
           typeof(data.profileSubsessionCounter) == "number" &&
-          "previousSubsessionId" in data) {
-        this._previousSubsessionId = data.previousSubsessionId;
+          "subsessionId" in data) {
+        this._previousSubsessionId = data.subsessionId;
         // Add |_subsessionCounter| to the |_profileSubsessionCounter| to account for
         // new subsession while loading still takes place. This will always be exactly
         // 1 - the current subsessions.
@@ -1985,7 +1984,7 @@ let Impl = {
    */
   _getSessionDataObject: function() {
     return {
-      previousSubsessionId: this._previousSubsessionId,
+      subsessionId: this._subsessionId,
       profileSubsessionCounter: this._profileSubsessionCounter,
     };
   },
@@ -2009,8 +2008,7 @@ let Impl = {
     this._log.trace("_onEnvironmentChange", reason);
     let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
 
-    let clonedPayload = Cu.cloneInto(payload, myScope);
-    TelemetryScheduler.reschedulePings(REASON_ENVIRONMENT_CHANGE, clonedPayload);
+    TelemetryScheduler.reschedulePings(REASON_ENVIRONMENT_CHANGE, payload);
 
     let options = {
       retentionDays: RETENTION_DAYS,
@@ -2078,7 +2076,7 @@ let Impl = {
     if (abortedExists) {
       this._log.trace("_checkAbortedSessionPing - aborted session found: " + FILE_PATH);
       yield this._abortedSessionSerializer.enqueueTask(
-        () => TelemetryController.addPendingPingFromFile(FILE_PATH, true));
+        () => TelemetryController.addAbortedSessionPing(FILE_PATH));
     }
   }),
 
@@ -2095,7 +2093,7 @@ let Impl = {
 
     let payload = null;
     if (aProvidedPayload) {
-      payload = aProvidedPayload;
+      payload = Cu.cloneInto(aProvidedPayload, myScope);
       // Overwrite the original reason.
       payload.info.reason = REASON_ABORTED_SESSION;
     } else {

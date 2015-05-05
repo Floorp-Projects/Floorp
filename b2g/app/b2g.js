@@ -1132,6 +1132,10 @@ pref("dom.requestSync.enabled", true);
 // Resample touch events on b2g
 pref("gfx.touch.resample", true);
 
+// Comma separated list of activity names that can only be provided by
+// the system app in dev mode.
+pref("dom.activities.developer_mode_only", "import-app");
+
 // mulet apparently loads firefox.js as well as b2g.js, so we have to explicitly
 // disable serviceworkers here to get them disabled in mulet.
 pref("dom.serviceWorkers.enabled", false);

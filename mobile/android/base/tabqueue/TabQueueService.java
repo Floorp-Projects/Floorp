@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko.tabqueue;
 
-import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
@@ -190,7 +190,7 @@ public class TabQueueService extends Service {
 
     private void openNow(Intent intent) {
         Intent forwardIntent = new Intent(intent);
-        forwardIntent.setClass(getApplicationContext(), BrowserApp.class);
+        forwardIntent.setClassName(getApplicationContext(), AppConstants.BROWSER_INTENT_CLASS_NAME);
         forwardIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(forwardIntent);
 

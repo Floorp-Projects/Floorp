@@ -196,19 +196,6 @@ this.TelemetryController = Object.freeze({
   },
 
   /**
-   * Adds a ping to the pending ping list by moving it to the saved pings directory
-   * and adding it to the pending ping list.
-   *
-   * @param {String} aPingPath The path of the ping to add to the pending ping list.
-   * @param {Boolean} [aRemoveOriginal] If true, deletes the ping at aPingPath after adding
-   *                  it to the saved pings directory.
-   * @return {Promise} Resolved when the ping is correctly moved to the saved pings directory.
-   */
-  addPendingPingFromFile: function(aPingPath, aRemoveOriginal) {
-    return Impl.addPendingPingFromFile(aPingPath, aRemoveOriginal);
-  },
-
-  /**
    * Submit ping payloads to Telemetry. This will assemble a complete ping, adding
    * environment data, client id and some general info.
    * Depending on configuration, the ping will be sent to the server (immediately or later)
@@ -282,6 +269,16 @@ this.TelemetryController = Object.freeze({
     options.overwrite = aOptions.overwrite || false;
 
     return Impl.addPendingPing(aType, aPayload, options);
+  },
+
+  /**
+   * Save an aborted-session ping to the pending pings and archive it.
+   *
+   * @param {String} aFilePath The path to the aborted-session checkpoint ping.
+   * @return {Promise} Promise that is resolved when the ping is saved.
+   */
+  addAbortedSessionPing: function addAbortedSessionPing(aFilePath) {
+    return Impl.addAbortedSessionPing(aFilePath);
   },
 
   /**
@@ -501,23 +498,6 @@ let Impl = {
   },
 
   /**
-   * Adds a ping to the pending ping list by moving it to the saved pings directory
-   * and adding it to the pending ping list.
-   *
-   * @param {String} aPingPath The path of the ping to add to the pending ping list.
-   * @param {Boolean} [aRemoveOriginal] If true, deletes the ping at aPingPath after adding
-   *                  it to the saved pings directory.
-   * @return {Promise} Resolved when the ping is correctly moved to the saved pings directory.
-   */
-  addPendingPingFromFile: function(aPingPath, aRemoveOriginal) {
-    return TelemetryStorage.addPendingPingFromFile(aPingPath).then(() => {
-        if (aRemoveOriginal) {
-          return OS.File.remove(aPingPath);
-        }
-      }, error => this._log.error("addPendingPingFromFile - Unable to add the pending ping", error));
-  },
-
-  /**
    * This helper calculates the next time that we can send pings at.
    * Currently this mostly redistributes ping sends around midnight to avoid submission
    * spikes around local midnight for daily pings.
@@ -719,6 +699,26 @@ let Impl = {
     return TelemetryStorage.savePingToFile(pingData, aFilePath, aOptions.overwrite)
                         .then(() => pingData.id);
   },
+
+  /**
+   * Save an aborted-session ping to the pending pings and archive it.
+   *
+   * @param {String} aFilePath The path to the aborted-session checkpoint ping.
+   * @return {Promise} Promise that is resolved when the ping is saved.
+   */
+  addAbortedSessionPing: Task.async(function* addAbortedSessionPing(aFilePath) {
+    this._log.trace("addAbortedSessionPing");
+
+    let ping = yield TelemetryStorage.loadPingFile(aFilePath);
+    try {
+      yield TelemetryStorage.addPendingPing(ping);
+      yield TelemetryArchive.promiseArchivePing(ping);
+    } catch (e) {
+      this._log.error("addAbortedSessionPing - Unable to add the pending ping", e);
+    } finally {
+      yield OS.File.remove(aFilePath);
+    }
+  }),
 
   onPingRequestFinished: function(success, startTime, ping, isPersisted) {
     this._log.trace("onPingRequestFinished - success: " + success + ", persisted: " + isPersisted);
