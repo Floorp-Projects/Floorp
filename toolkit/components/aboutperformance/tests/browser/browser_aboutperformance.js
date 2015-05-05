@@ -5,15 +5,16 @@
 
 Cu.import("resource://testing-common/ContentTask.jsm", this);
 
-const URL = "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" + Math.random();
+const SALT = Math.random();
+const URL = "http://example.com/browser/toolkit/components/aboutperformance/tests/browser/browser_compartments.html?test=" + SALT;
 
 // This function is injected as source as a frameScript
 function frameScript() {
   "use strict";
 
-  addMessageListener("aboutperformance-test:hasItems", ({data: url}) => {
+  addMessageListener("aboutperformance-test:hasItems", ({data: salt}) => {
     let hasPlatform = false;
-    let hasURL = false;
+    let hasSalt = false;
 
     try {
       let eltData = content.document.getElementById("liveData");
@@ -25,10 +26,11 @@ function frameScript() {
       hasPlatform = eltData.querySelector("tr.platform") != null;
 
       // Find if we have a row for our URL
-      hasURL = false;
+      hasSalt = false;
       for (let eltContent of eltData.querySelectorAll("tr.content td.name")) {
-        if (eltContent.textContent == url) {
-          hasURL = true;
+        let name = eltContent.textContent;
+        if (name.contains(salt) && !name.contains("http")) {
+          hasSalt = true;
           break;
         }
       }
@@ -37,7 +39,7 @@ function frameScript() {
       Cu.reportError("Error in content: " + ex);
       Cu.reportError(ex.stack);
     } finally {
-      sendAsyncMessage("aboutperformance-test:hasItems", {hasPlatform, hasURL});
+      sendAsyncMessage("aboutperformance-test:hasItems", {hasPlatform, hasSalt});
     }
   });
 }
@@ -51,10 +53,10 @@ add_task(function* test() {
 
   while (true) {
     yield new Promise(resolve => setTimeout(resolve, 100));
-    let {hasPlatform, hasURL} = (yield promiseContentResponse(tabAboutPerformance.linkedBrowser, "aboutperformance-test:hasItems", URL));
-    info(`Platform: ${hasPlatform}, url: ${hasURL}`);
-    if (hasPlatform && hasURL) {
-      Assert.ok(true, "Found a row for <platform> and a row for our URL");
+    let {hasPlatform, hasSalt} = (yield promiseContentResponse(tabAboutPerformance.linkedBrowser, "aboutperformance-test:hasItems", SALT));
+    info(`Platform: ${hasPlatform}, salt: ${hasSalt}`);
+    if (hasPlatform && hasSalt) {
+      Assert.ok(true, "Found a row for <platform> and a row for our page");
       break;
     }
   }
