@@ -25,6 +25,16 @@ namespace mozilla {
 namespace image {
 
 /**
+ * DownscalerInvalidRect wraps two invalidation rects: one in terms of the
+ * original image size, and one in terms of the target size.
+ */
+struct DownscalerInvalidRect
+{
+  nsIntRect mOriginalSizeRect;
+  nsIntRect mTargetSizeRect;
+};
+
+/**
  * Downscaler is a high-quality, streaming image downscaler based upon Skia's
  * scaling implementation.
  *
@@ -47,6 +57,7 @@ public:
 
   const nsIntSize& OriginalSize() const { return mOriginalSize; }
   const nsIntSize& TargetSize() const { return mTargetSize; }
+  const gfxSize& Scale() const { return mScale; }
 
   /**
    * Begins a new frame and reinitializes the Downscaler.
@@ -73,7 +84,7 @@ public:
   bool HasInvalidation() const;
 
   /// Takes the Downscaler's current invalid rect and resets it.
-  nsIntRect TakeInvalidRect();
+  DownscalerInvalidRect TakeInvalidRect();
 
   /**
    * Resets the Downscaler's position in the image, for a new progressive pass
@@ -88,6 +99,7 @@ private:
 
   nsIntSize mOriginalSize;
   nsIntSize mTargetSize;
+  gfxSize mScale;
 
   uint8_t* mOutputBuffer;
 
