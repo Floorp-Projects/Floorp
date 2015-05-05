@@ -429,6 +429,18 @@ MOZ_TOOL_VARIABLES
 
 MOZ_CHECK_COMPILER_WRAPPER
 
+MOZ_PATH_PROG(RUSTC, rustc)
+MOZ_ARG_ENABLE_BOOL([rust],
+                    [  --enable-rust  Include rust language sources],
+                    [MOZ_RUST=1],
+                    [MOZ_RUST= ])
+if test -z "$RUSTC" -a -n "$MOZ_RUST"; then
+  AC_MSG_ERROR([Rust compiler not found.
+    To compile rust language sources, you must have 'rustc' in your path.
+    See http://www.rust-lang.org/ for more information.])
+fi
+AC_SUBST(MOZ_RUST)
+
 dnl ========================================================
 dnl Check for MacOS deployment target version
 dnl ========================================================
