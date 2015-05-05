@@ -145,18 +145,24 @@ function saveDocument(aDocument, aSkipPrompt)
     // Failure to get a content-disposition is ok
   }
 
-  var cacheKey = null;
+  let cacheKey = null;
   try {
-    cacheKey =
+    let shEntry =
       ifreq.getInterface(Components.interfaces.nsIWebNavigation)
-           .QueryInterface(Components.interfaces.nsIWebPageDescriptor);
+           .QueryInterface(Components.interfaces.nsIWebPageDescriptor)
+           .currentDescriptor
+           .QueryInterface(Components.interfaces.nsISHEntry);
+
+    shEntry.cacheKey.QueryInterface(Components.interfaces.nsISupportsPRUint32);
+
+    // In the event that the cacheKey is a CPOW, we cannot pass it to
+    // nsIWebBrowserPersist, so we create a new one and copy the value
+    // over. This is a workaround until bug 1101100 is fixed.
+    cacheKey = Cc["@mozilla.org/supports-PRUint32;1"]
+                 .createInstance(Ci.nsISupportsPRUint32);
+    cacheKey.data = shEntry.cacheKey.data;
   } catch (ex) {
     // We might not find it in the cache.  Oh, well.
-  }
-
-  if (cacheKey && Components.utils.isCrossProcessWrapper(cacheKey)) {
-    // Don't use a cache key from another process. See bug 1128050.
-    cacheKey = null;
   }
 
   internalSave(aDocument.location.href, aDocument, null, contentDisposition,
@@ -339,6 +345,9 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     // If we're saving a document, and are saving either in complete mode or
     // as converted text, pass the document to the web browser persist component.
     // If we're just saving the HTML (second option in the list), send only the URI.
+    let nonCPOWDocument =
+      aDocument && !Components.utils.isCrossProcessWrapper(aDocument);
+
     var persistArgs = {
       sourceURI         : sourceURI,
       sourceReferrer    : aReferrer,
@@ -346,7 +355,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
       targetContentType : (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
       targetFile        : file,
       sourceCacheKey    : aCacheKey,
-      sourcePostData    : aDocument ? getPostData(aDocument) : null,
+      sourcePostData    : nonCPOWDocument ? getPostData(aDocument) : null,
       bypassCache       : aShouldBypassCache,
       initiatingWindow  : aInitiatingDocument.defaultView
     };
