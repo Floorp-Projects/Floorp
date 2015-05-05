@@ -61,6 +61,8 @@ EXTRA_JS_MODULES.devtools.shared += [
     'theme-switching.js',
     'theme.js',
     'undo.js',
+    'worker-helper.js',
+    'worker.js',
 ]
 
 EXTRA_JS_MODULES.devtools.shared.widgets += [

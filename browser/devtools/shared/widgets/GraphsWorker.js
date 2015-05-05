@@ -3,18 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-self.onmessage = e => {
-  const { id, task, args } = e.data;
-
-  switch (task) {
-    case "plotTimestampsGraph":
-      plotTimestampsGraph(id, args);
-      break;
-    default:
-      self.postMessage({ id, error: e.message + "\n" + e.stack });
-      break;
-  }
-};
+/**
+ * Import `createTask` to communicate with `devtools/shared/worker`.
+ */
+importScripts("resource://gre/modules/workers/require.js");
+const { createTask } = require("resource:///modules/devtools/shared/worker-helper");
 
 /**
  * @see LineGraphWidget.prototype.setDataFromTimestamps in Graphs.jsm
@@ -23,13 +16,13 @@ self.onmessage = e => {
  * @param number interval
  * @param number duration
  */
-function plotTimestampsGraph(id, args) {
-  let plottedData = plotTimestamps(args.timestamps, args.interval);
-  let plottedMinMaxSum = getMinMaxAvg(plottedData, args.timestamps, args.duration);
+createTask(self, "plotTimestampsGraph", function ({ timestamps, interval, duration }) {
+  let plottedData = plotTimestamps(timestamps, interval);
+  let plottedMinMaxSum = getMinMaxAvg(plottedData, timestamps, duration);
 
-  let response = { id, plottedData, plottedMinMaxSum };
-  self.postMessage(response);
-}
+  return { plottedData, plottedMinMaxSum };
+});
+
 
 /**
  * Gets the min, max and average of the values in an array.
