@@ -2445,6 +2445,8 @@ nsNavBookmarks::GetURIForKeyword(const nsAString& aUserCasedKeyword,
   NS_ENSURE_TRUE(!aUserCasedKeyword.IsEmpty(), NS_ERROR_INVALID_ARG);
   *aURI = nullptr;
 
+  PLACES_WARN_DEPRECATED();
+
   // Shortcuts are always lowercased internally.
   nsAutoString keyword(aUserCasedKeyword);
   ToLowerCase(keyword);

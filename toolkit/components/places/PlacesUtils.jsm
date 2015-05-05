@@ -880,6 +880,8 @@ this.PlacesUtils = {
    * Set the POST data associated with a bookmark, if any.
    * Used by POST keywords.
    *   @param aBookmarkId
+   *
+   * @deprecated Use PlacesUtils.keywords.insert() API instead.
    */
   setPostDataForBookmark(aBookmarkId, aPostData) {
     if (!aPostData)
@@ -923,6 +925,8 @@ this.PlacesUtils = {
    * Get the POST data associated with a bookmark, if any.
    * @param aBookmarkId
    * @returns string of POST data if set for aBookmarkId. null otherwise.
+   *
+   * @deprecated Use PlacesUtils.keywords.fetch() API instead.
    */
   getPostDataForBookmark(aBookmarkId) {
     let stmt = PlacesUtils.history.DBConnection.createStatement(
