@@ -177,10 +177,6 @@ PuppetWidget::Show(bool aState)
     mChild->mVisible = aState;
   }
 
-  if (!mVisible && mLayerManager) {
-    mLayerManager->ClearCachedResources();
-  }
-
   if (!wasVisible && mVisible) {
     Resize(mBounds.width, mBounds.height, false);
     Invalidate(mBounds);
