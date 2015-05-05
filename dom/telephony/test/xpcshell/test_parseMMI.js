@@ -1,7 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-subscriptLoader.loadSubScript("resource://gre/modules/ril_consts.js", this);
+let TS = {};
+subscriptLoader.loadSubScript("resource://gre/components/TelephonyService.js", TS);
 
 let NS = {};
 subscriptLoader.loadSubScript("resource://gre/modules/DialNumberUtils.jsm", NS);
@@ -50,7 +51,7 @@ add_test(function test_parseMMI_USSD() {
   let mmi = parseMMI("*123#");
 
   equal(mmi.fullMMI, "*123#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, undefined);
   equal(mmi.sib, undefined);
@@ -73,7 +74,7 @@ add_test(function test_parseMMI_sia() {
   let mmi = parseMMI("*123*1#");
 
   equal(mmi.fullMMI, "*123*1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "1");
   equal(mmi.sib, undefined);
@@ -88,7 +89,7 @@ add_test(function test_parseMMI_sib() {
   let mmi = parseMMI("*123**1#");
 
   equal(mmi.fullMMI, "*123**1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "");
   equal(mmi.sib, "1");
@@ -103,7 +104,7 @@ add_test(function test_parseMMI_sic() {
   let mmi = parseMMI("*123***1#");
 
   equal(mmi.fullMMI, "*123***1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "");
   equal(mmi.sib, "");
@@ -118,7 +119,7 @@ add_test(function test_parseMMI_sia_sib() {
   let mmi = parseMMI("*123*1*1#");
 
   equal(mmi.fullMMI, "*123*1*1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "1");
   equal(mmi.sib, "1");
@@ -133,7 +134,7 @@ add_test(function test_parseMMI_sia_sic() {
   let mmi = parseMMI("*123*1**1#");
 
   equal(mmi.fullMMI, "*123*1**1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "1");
   equal(mmi.sib, "");
@@ -148,7 +149,7 @@ add_test(function test_parseMMI_sib_sic() {
   let mmi = parseMMI("*123**1*1#");
 
   equal(mmi.fullMMI, "*123**1*1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "");
   equal(mmi.sib, "1");
@@ -163,7 +164,7 @@ add_test(function test_parseMMI_pwd() {
   let mmi = parseMMI("*123****1#");
 
   equal(mmi.fullMMI, "*123****1#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, "");
   equal(mmi.sib, "");
@@ -178,7 +179,7 @@ add_test(function test_parseMMI_dial_number() {
   let mmi = parseMMI("*123#345");
 
   equal(mmi.fullMMI, "*123#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "123");
   equal(mmi.sia, undefined);
   equal(mmi.sib, undefined);
@@ -198,7 +199,7 @@ add_test(function test_parseMMI_activation() {
   let mmi = parseMMI("*00*12*34*56#");
 
   equal(mmi.fullMMI, "*00*12*34*56#");
-  equal(mmi.procedure, MMI_PROCEDURE_ACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ACTIVATION);
   equal(mmi.serviceCode, "00");
   equal(mmi.sia, "12");
   equal(mmi.sib, "34");
@@ -213,7 +214,7 @@ add_test(function test_parseMMI_deactivation() {
   let mmi = parseMMI("#00*12*34*56#");
 
   equal(mmi.fullMMI, "#00*12*34*56#");
-  equal(mmi.procedure, MMI_PROCEDURE_DEACTIVATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_DEACTIVATION);
   equal(mmi.serviceCode, "00");
   equal(mmi.sia, "12");
   equal(mmi.sib, "34");
@@ -228,7 +229,7 @@ add_test(function test_parseMMI_interrogation() {
   let mmi = parseMMI("*#00*12*34*56#");
 
   equal(mmi.fullMMI, "*#00*12*34*56#");
-  equal(mmi.procedure, MMI_PROCEDURE_INTERROGATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_INTERROGATION);
   equal(mmi.serviceCode, "00");
   equal(mmi.sia, "12");
   equal(mmi.sib, "34");
@@ -243,7 +244,7 @@ add_test(function test_parseMMI_registration() {
   let mmi = parseMMI("**00*12*34*56#");
 
   equal(mmi.fullMMI, "**00*12*34*56#");
-  equal(mmi.procedure, MMI_PROCEDURE_REGISTRATION);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_REGISTRATION);
   equal(mmi.serviceCode, "00");
   equal(mmi.sia, "12");
   equal(mmi.sib, "34");
@@ -258,7 +259,7 @@ add_test(function test_parseMMI_erasure() {
   let mmi = parseMMI("##00*12*34*56#");
 
   equal(mmi.fullMMI, "##00*12*34*56#");
-  equal(mmi.procedure, MMI_PROCEDURE_ERASURE);
+  equal(mmi.procedure, TS.MMI_PROCEDURE_ERASURE);
   equal(mmi.serviceCode, "00");
   equal(mmi.sia, "12");
   equal(mmi.sib, "34");
