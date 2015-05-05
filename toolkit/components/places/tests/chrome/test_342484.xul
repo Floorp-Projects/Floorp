@@ -32,8 +32,7 @@ function runTest() {
 
   PlacesUtils.livemarks.addLivemark(
     { title: "foo"
-    , parentId: PlacesUtils.toolbarFolderId
-    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    , parentGuid: PlacesUtils.bookmarks.toolbarGuid
     , feedURI: NetUtil.newURI(FEEDSPEC)
     , siteURI: NetUtil.newURI("http:/mochi.test/")
     })
@@ -47,8 +46,9 @@ function runTest() {
           ok(GOOD_URLS.indexOf(node.uri) != -1, "livemark item created with bad uri " + node.uri);
         }
 
-        PlacesUtils.bookmarks.removeItem(aLivemark.id);
-        SimpleTest.finish();
+        PlacesUtils.livemarks.removeLivemark(aLivemark).then(() => {
+          SimpleTest.finish();
+        });
       });
     }, function () {
       is(true, false, "Should not fail adding a livemark");

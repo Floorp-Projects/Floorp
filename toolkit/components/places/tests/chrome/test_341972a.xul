@@ -33,8 +33,7 @@ function runTest() {
 
   PlacesUtils.livemarks.addLivemark(
     { title: "foo"
-    , parentId: PlacesUtils.toolbarFolderId
-    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    , parentGuid: PlacesUtils.bookmarks.toolbarGuid
     , feedURI: NetUtil.newURI(FEEDSPEC)
     , siteURI: NetUtil.newURI(INITIALSITESPEC)
     })
@@ -46,8 +45,9 @@ function runTest() {
         is(aLivemark.siteURI.spec, FEEDSITESPEC,
            "livemark site URI set to value in feed");
 
-        PlacesUtils.bookmarks.removeItem(aLivemark.id);
-        SimpleTest.finish();
+        PlacesUtils.livemarks.removeLivemark(aLivemark).then(() => {
+          SimpleTest.finish();
+        });
       });
     }, function () {
       is(true, false, "Should not fail adding a livemark");

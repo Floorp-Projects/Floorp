@@ -28,14 +28,12 @@ Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 let gLivemarks = [
   { id: -1,
     title: "foo",
-    parentId: PlacesUtils.toolbarFolderId,
-    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     feedURI: NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/link-less-items.rss")
   },
   { id: -1,
     title: "bar",
-    parentId: PlacesUtils.toolbarFolderId,
-    index: PlacesUtils.bookmarks.DEFAULT_INDEX,
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     feedURI: NetUtil.newURI("http://mochi.test:8888/tests/toolkit/components/places/tests/chrome/link-less-items-no-site-uri.rss")
   },
 ];
