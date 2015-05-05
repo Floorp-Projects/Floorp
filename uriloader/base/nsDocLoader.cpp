@@ -91,12 +91,22 @@ class nsDefaultComparator <nsDocLoader::nsListenerInfo, nsIWebProgressListener*>
     }
 };
 
+/* static */ const PLDHashTableOps nsDocLoader::sRequestInfoHashOps =
+{
+  PL_DHashVoidPtrKeyStub,
+  PL_DHashMatchEntryStub,
+  PL_DHashMoveEntryStub,
+  nsDocLoader::RequestInfoHashClearEntry,
+  nsDocLoader::RequestInfoHashInitEntry
+};
+
 nsDocLoader::nsDocLoader()
   : mParent(nullptr),
     mCurrentSelfProgress(0),
     mMaxSelfProgress(0),
     mCurrentTotalProgress(0),
     mMaxTotalProgress(0),
+    mRequestInfoHash(&sRequestInfoHashOps, sizeof(nsRequestInfo)),
     mCompletedTotalProgress(0),
     mIsLoadingDocument(false),
     mIsRestoringDocument(false),
@@ -106,17 +116,6 @@ nsDocLoader::nsDocLoader()
   if (nullptr == gDocLoaderLog) {
       gDocLoaderLog = PR_NewLogModule("DocLoader");
   }
-
-  static const PLDHashTableOps hash_table_ops =
-  {
-    PL_DHashVoidPtrKeyStub,
-    PL_DHashMatchEntryStub,
-    PL_DHashMoveEntryStub,
-    RequestInfoHashClearEntry,
-    RequestInfoHashInitEntry
-  };
-
-  PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, sizeof(nsRequestInfo));
 
   ClearInternalProgress();
 
@@ -134,10 +133,6 @@ nsDocLoader::SetDocLoaderParent(nsDocLoader *aParent)
 nsresult
 nsDocLoader::Init()
 {
-  if (!mRequestInfoHash.IsInitialized()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsresult rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), this);
   if (NS_FAILED(rv)) return rv;
 
@@ -166,10 +161,6 @@ nsDocLoader::~nsDocLoader()
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
          ("DocLoader:%p: deleted.\n", this));
-
-  if (mRequestInfoHash.IsInitialized()) {
-    PL_DHashTableFinish(&mRequestInfoHash);
-  }
 }
 
 
@@ -1361,12 +1352,6 @@ RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, uint32_t number,
 
 void nsDocLoader::ClearRequestInfoHash(void)
 {
-  if (!mRequestInfoHash.IsInitialized() || !mRequestInfoHash.EntryCount()) {
-    // No hash, or the hash is empty, nothing to do here then...
-
-    return;
-  }
-
   PL_DHashTableEnumerate(&mRequestInfoHash, RemoveInfoCallback, nullptr);
 }
 
