@@ -32,12 +32,10 @@
 #include "mozilla/dom/OscillatorNodeBinding.h"
 #include <nsAutoPtr.h>
 #include <nsTArray.h>
-#include "AlignedTArray.h"
 #include "mozilla/MemoryReporting.h"
 
 namespace WebCore {
 
-typedef AlignedTArray<float> AlignedAudioFloatArray;
 typedef nsTArray<float> AudioFloatArray;
 
 class PeriodicWave {
@@ -100,7 +98,7 @@ private:
 
     // Creates tables based on numberOfComponents Fourier coefficients.
     void createBandLimitedTables(const float* real, const float* imag, unsigned numberOfComponents);
-    nsTArray<nsAutoPtr<AlignedAudioFloatArray> > m_bandLimitedTables;
+    nsTArray<nsAutoPtr<AudioFloatArray> > m_bandLimitedTables;
 };
 
 } // namespace WebCore
