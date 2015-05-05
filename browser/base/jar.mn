@@ -76,6 +76,7 @@ browser.jar:
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
         content/browser/browser-pocket.properties     (content/browser-pocket.properties)
+        content/browser/browser-pocket.dtd            (content/browser-pocket.dtd)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
 *       content/browser/chatWindow.xul                (content/chatWindow.xul)
         content/browser/tab-content.js                (content/tab-content.js)
