@@ -1,4 +1,6 @@
-function test() {
+"use strict";
+
+add_task(function* () {
   /** Test for Bug 350525 **/
 
   function test(aLambda) {
@@ -8,8 +10,6 @@ function test() {
     catch (ex) { }
     return false;
   }
-
-  waitForExplicitFinish();
 
   ////////////////////////////
   // setWindowValue, et al. //
@@ -56,7 +56,7 @@ function test() {
   ok(test(function() ss.deleteTabValue(tab, key)), "delete non-existent tab value");
 
   // clean up
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 
   /////////////////////////////////////
   // getClosedTabCount, undoCloseTab //
@@ -71,29 +71,26 @@ function test() {
   // create a new tab
   let testURL = "about:";
   tab = gBrowser.addTab(testURL);
-  promiseBrowserLoaded(tab.linkedBrowser).then(() => {
-    // make sure that the next closed tab will increase getClosedTabCount
-    gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", max_tabs_undo + 1);
+  yield promiseBrowserLoaded(tab.linkedBrowser);
 
-    // remove tab
-    gBrowser.removeTab(tab);
+  // make sure that the next closed tab will increase getClosedTabCount
+  gPrefService.setIntPref("browser.sessionstore.max_tabs_undo", max_tabs_undo + 1);
+  registerCleanupFunction(() => gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo"));
 
-    // getClosedTabCount
-    var newcount = ss.getClosedTabCount(window);
-    ok(newcount > count, "after closing a tab, getClosedTabCount has been incremented");
+  // remove tab
+  yield promiseRemoveTab(tab);
 
-    // undoCloseTab
-    tab = test(function() ss.undoCloseTab(window, 0));
-    ok(tab, "undoCloseTab doesn't throw")
+  // getClosedTabCount
+  let newcount = ss.getClosedTabCount(window);
+  ok(newcount > count, "after closing a tab, getClosedTabCount has been incremented");
 
-    promiseTabRestored(tab).then(() => {
-      is(tab.linkedBrowser.currentURI.spec, testURL, "correct tab was reopened");
+  // undoCloseTab
+  tab = test(function() ss.undoCloseTab(window, 0));
+  ok(tab, "undoCloseTab doesn't throw")
 
-      // clean up
-      if (gPrefService.prefHasUserValue("browser.sessionstore.max_tabs_undo"))
-        gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
-      gBrowser.removeTab(tab);
-      finish();
-    });
-  });
-}
+  yield promiseTabRestored(tab);
+  is(tab.linkedBrowser.currentURI.spec, testURL, "correct tab was reopened");
+
+  // clean up
+  gBrowser.removeTab(tab);
+});

@@ -59,7 +59,7 @@ add_task(function nested_page_style() {
   yield promiseBrowserLoaded(browser);
 
   yield enableSubDocumentStyleSheetsForSet(browser, "alternate");
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 
   let [{state: {pageStyle}}] = JSON.parse(ss.getClosedTabData(window));
   let expected = JSON.stringify({children: [{pageStyle: "alternate"}]});

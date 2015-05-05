@@ -533,18 +533,24 @@ interface nsINavBookmarksService : nsISupports
    *
    * Use an empty keyword to clear the keyword associated with the URI.
    * In both of these cases, succeeds but does nothing if the URL/keyword is not found.
+   *
+   * @deprecated Use PlacesUtils.keywords.insert() API instead.
    */
   void setKeywordForBookmark(in long long aItemId, in AString aKeyword);
 
   /**
    * Retrieves the keyword for the given bookmark. Will be void string
    * (null in JS) if no such keyword is found.
+   *
+   * @deprecated Use PlacesUtils.keywords.fetch() API instead.
    */
   AString getKeywordForBookmark(in long long aItemId);
 
   /**
    * Returns the URI associated with the given keyword. Empty if no such
    * keyword is found.
+   *
+   * @deprecated Use PlacesUtils.keywords.fetch() API instead.
    */
   nsIURI getURIForKeyword(in AString keyword);
 
