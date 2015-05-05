@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.64f3fd204a9a.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.3dc0c42bd761.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "68c0de542782"
+        "talos_revision": "c1da803b295e"
     },
     "extra_options": {
         "android": [ "--apkPath=%(apk_path)s" ]
@@ -83,6 +83,12 @@
         "g1-snow-e10s": {
             "tests": ["glterrain"],
             "talos_options": ["--e10s"]
+        },
+        "g2": {
+            "tests": ["damp"],
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_parent_dir_path": "talos/page_load_test/",
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
