@@ -638,7 +638,6 @@ IsOnFullDomainWhitelist(nsIURI* aURI)
     // 0th entry only active when testing:
     NS_LITERAL_CSTRING("test1.example.org"),
     NS_LITERAL_CSTRING("map.baidu.com"),
-    NS_LITERAL_CSTRING("music.baidu.com"),
     NS_LITERAL_CSTRING("3g.163.com"),
     NS_LITERAL_CSTRING("3glogo.gtimg.com"), // for 3g.163.com
     NS_LITERAL_CSTRING("info.3g.qq.com"), // for 3g.qq.com
