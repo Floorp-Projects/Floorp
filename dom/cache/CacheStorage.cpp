@@ -314,6 +314,30 @@ CacheStorage::PrefEnabled(JSContext* aCx, JSObject* aObj)
   return Cache::PrefEnabled(aCx, aObj);
 }
 
+// static
+already_AddRefed<CacheStorage>
+CacheStorage::Constructor(const GlobalObject& aGlobal,
+                          CacheStorageNamespace aNamespace,
+                          nsIPrincipal* aPrincipal, ErrorResult& aRv)
+{
+  if (NS_WARN_IF(!NS_IsMainThread())) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  // TODO: remove Namespace in favor of CacheStorageNamespace
+  static_assert(DEFAULT_NAMESPACE == (uint32_t)CacheStorageNamespace::Content,
+                "Default namespace should match webidl Content enum");
+  static_assert(CHROME_ONLY_NAMESPACE == (uint32_t)CacheStorageNamespace::Chrome,
+                "Chrome namespace should match webidl Chrome enum");
+  static_assert(NUMBER_OF_NAMESPACES == (uint32_t)CacheStorageNamespace::EndGuard_,
+                "Number of namespace should match webidl endguard enum");
+
+  Namespace ns = static_cast<Namespace>(aNamespace);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  return CreateOnMainThread(ns, global, aPrincipal, aRv);
+}
+
 nsISupports*
 CacheStorage::GetParentObject() const
 {
