@@ -493,6 +493,7 @@ class BaseMarionetteOptions(OptionParser):
 class BaseMarionetteTestRunner(object):
 
     textrunnerclass = MarionetteTextTestRunner
+    driverclass = Marionette
 
     def __init__(self, address=None, emulator=None, emulator_binary=None,
                  emulator_img=None, emulator_res='480x800', homedir=None,
@@ -696,7 +697,7 @@ class BaseMarionetteTestRunner(object):
         return kwargs
 
     def start_marionette(self):
-        self.marionette = Marionette(**self._build_kwargs())
+        self.marionette = self.driverclass(**self._build_kwargs())
 
     def launch_test_container(self):
         if self.marionette.session is None:

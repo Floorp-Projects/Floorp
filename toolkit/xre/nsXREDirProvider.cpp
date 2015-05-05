@@ -635,7 +635,7 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
 
     RegisterExtensionInterpositions(parser);
     LoadExtensionDirectories(parser, "ExtensionDirs", mExtensionDirectories,
-                             NS_COMPONENT_LOCATION);
+                             NS_EXTENSION_LOCATION);
     LoadExtensionDirectories(parser, "ThemeDirs", mThemeDirectories,
                              NS_SKIN_LOCATION);
   }
@@ -667,7 +667,7 @@ nsXREDirProvider::LoadAppBundleDirs()
 
     nsCOMPtr<nsIFile> manifest =
       CloneAndAppend(subdir, "chrome.manifest");
-    XRE_AddManifestLocation(NS_COMPONENT_LOCATION, manifest);
+    XRE_AddManifestLocation(NS_EXTENSION_LOCATION, manifest);
   }
 }
 

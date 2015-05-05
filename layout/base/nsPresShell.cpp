@@ -9245,7 +9245,8 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
                                              target->GetView(),
                                              boundsRelativeToTarget);
   nsContainerFrame::SyncWindowProperties(mPresContext, target,
-                                         target->GetView(), &rcx);
+                                         target->GetView(), &rcx,
+                                         nsContainerFrame::SET_ASYNC);
 
   target->DidReflow(mPresContext, nullptr, nsDidReflowStatus::FINISHED);
   if (target == rootFrame && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
@@ -11080,4 +11081,14 @@ PresShell::ResumePainting()
 
   mPaintingIsFrozen = false;
   GetPresContext()->RefreshDriver()->Thaw();
+}
+
+void
+nsIPresShell::SyncWindowProperties(nsView* aView)
+{
+  nsIFrame* frame = aView->GetFrame();
+  if (frame && mPresContext) {
+    nsRenderingContext rcx(CreateReferenceRenderingContext());
+    nsContainerFrame::SyncWindowProperties(mPresContext, frame, aView, &rcx, 0);
+  }
 }

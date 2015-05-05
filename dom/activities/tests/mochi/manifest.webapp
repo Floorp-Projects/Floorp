@@ -1,0 +1,6 @@
+{
+  "name": "Random app",
+  "activities": {
+    "import-app": { "blob": { "required": true } }
+  }
+}

@@ -27,6 +27,7 @@
 #include "nsAutoPtr.h"
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
+#include "xpcprivate.h"
 #include "BackstagePass.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -632,6 +633,35 @@ SimulateActivityCallback(JSContext* cx, unsigned argc, jsval* vp)
     return true;
 }
 
+static bool
+RegisterAppManifest(JSContext* cx, unsigned argc, jsval* vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return false;
+    }
+    if (!args[0].isObject()) {
+        JS_ReportError(cx, "Expected object as argument 1 to registerAppManifest");
+        return false;
+    }
+
+    Rooted<JSObject*> arg1(cx, &args[0].toObject());
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = nsXPConnect::XPConnect()->
+        WrapJS(cx, arg1, NS_GET_IID(nsIFile), getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+    rv = XRE_AddManifestLocation(NS_APP_LOCATION, file);
+    if (NS_FAILED(rv)) {
+        XPCThrower::Throw(rv, cx);
+        return false;
+    }
+    return true;
+}
+
 static const JSFunctionSpec glob_functions[] = {
     JS_FS("print",           Print,          0,0),
     JS_FS("readline",        ReadLine,       1,0),
@@ -652,6 +682,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("btoa",            Btoa,           1,0),
     JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
+    JS_FS("registerAppManifest", RegisterAppManifest, 1, 0),
     JS_FS_END
 };
 
@@ -1341,7 +1372,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
             printf("Couldn't get manifest file.\n");
             return 1;
         }
-        XRE_AddManifestLocation(NS_COMPONENT_LOCATION, lf);
+        XRE_AddManifestLocation(NS_APP_LOCATION, lf);
 
         argc -= 2;
         argv += 2;

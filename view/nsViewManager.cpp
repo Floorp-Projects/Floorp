@@ -368,6 +368,17 @@ nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   for (uint32_t i = 0; i < widgets.Length(); ++i) {
     nsView* view = nsView::GetViewFor(widgets[i]);
     if (view) {
+      if (view->mNeedsWindowPropertiesSync) {
+        view->mNeedsWindowPropertiesSync = false;
+        if (nsViewManager* vm = view->GetViewManager()) {
+          if (nsIPresShell* ps = vm->GetPresShell()) {
+            ps->SyncWindowProperties(view);
+          }
+        }
+      }
+    }
+    view = nsView::GetViewFor(widgets[i]);
+    if (view) {
       view->ResetWidgetBounds(false, true);
     }
   }
