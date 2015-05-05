@@ -8,6 +8,7 @@ let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/framework/toolbox-hosts");
+const {defer} = require("sdk/core/promise");
 
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
@@ -261,5 +262,3 @@ function waitUntil(predicate, interval = 10) {
     }, interval);
   });
 }
-
-// EventUtils just doesn't work!
