@@ -673,6 +673,16 @@ nsView::InitializeWindow(bool aEnableDragDrop, bool aResetVisibility)
   }
 }
 
+void
+nsView::SetNeedsWindowPropertiesSync()
+{
+  mNeedsWindowPropertiesSync = true;
+  if (mViewManager) {
+    mViewManager->PostPendingUpdate();
+  }
+}
+
+
 // Attach to a top level widget and start receiving mirrored events.
 nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
 {

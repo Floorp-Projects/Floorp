@@ -140,8 +140,8 @@ typedef struct CapturingContentInfo {
 
 // d910f009-d209-74c1-6b04-30c83c051c78
 #define NS_IPRESSHELL_IID \
-  { 0xd910f009, 0xd209, 0x74c1, \
-    { 0x6b, 0x04, 0x30, 0xc8, 0x3c, 0x05, 0x1c, 0x78 } }
+  { 0x025264c6, 0x0b12, 0x4804, \
+    { 0xa3, 0x3e, 0xb7, 0x73, 0xf2, 0x19, 0x48, 0x90 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1660,6 +1660,8 @@ public:
 
   bool HasPendingReflow() const
     { return mReflowScheduled || mReflowContinueTimer; }
+
+  void SyncWindowProperties(nsView* aView);
 
 protected:
   friend class nsRefreshDriver;

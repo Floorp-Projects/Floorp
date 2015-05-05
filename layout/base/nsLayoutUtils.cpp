@@ -3116,10 +3116,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       }
     }
 #if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
-    else if (presShell->GetDocument() && presShell->GetDocument()->IsRootDisplayDocument()) {
+    else if (presShell->GetDocument() && presShell->GetDocument()->IsRootDisplayDocument()
+        && !presShell->GetRootScrollFrame()) {
       // In cases where the root document is a XUL document, we want to take
       // the ViewID from the root element, as that will be the ViewID of the
-      // root APZC in the tree.
+      // root APZC in the tree. Skip doing this in cases where we know
+      // nsGfxScrollFrame::BuilDisplayList will do it instead.
       if (dom::Element* element = presShell->GetDocument()->GetDocumentElement()) {
         id = nsLayoutUtils::FindOrCreateIDFor(element);
       }

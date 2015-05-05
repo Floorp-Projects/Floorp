@@ -7,6 +7,7 @@
 [Constructor(DOMString type, optional PluginCrashedEventInit eventInitDict), ChromeOnly]
 interface PluginCrashedEvent : Event
 {
+  readonly attribute unsigned long pluginID;
   readonly attribute DOMString pluginDumpID;
   readonly attribute DOMString pluginName;
   readonly attribute DOMString? browserDumpID;
@@ -17,6 +18,7 @@ interface PluginCrashedEvent : Event
 
 dictionary PluginCrashedEventInit : EventInit
 {
+  unsigned long pluginID = 0;
   DOMString pluginDumpID = "";
   DOMString pluginName = "";
   DOMString? browserDumpID = null;

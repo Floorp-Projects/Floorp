@@ -24,6 +24,7 @@ from mozbuild.util import (
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
+from mozpack.files import FileFinder
 if sys.platform == 'win32':
     from ctypes import windll, WinError
     CreateHardLink = windll.kernel32.CreateHardLinkA
@@ -74,7 +75,7 @@ class JarMaker(object):
     regline = re.compile('\%\s+(.*)$')
     entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
     entryline = re.compile(entryre
-                           + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@]+)\))?\s*$'
+                           + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@\*]+)\))?\s*$'
                            )
 
     def __init__(self, outputFormat='flat', useJarfileManifest=True,
@@ -372,6 +373,29 @@ class JarMaker(object):
         else:
             # use srcdirs and the objdir (current working dir) for relative paths
             src_base = self.sourcedirs + [os.getcwd()]
+
+        if '*' in src:
+            if not out.endswith('/'):
+                out += '/'
+            def _prefix(s):
+                for p in s.split('/'):
+                    if '*' not in p:
+                        yield p + '/'
+            prefix = ''.join(_prefix(src))
+            fmt = '%s%s %s%%s (%s%%s)' % (
+                m.group('optPreprocess') or '',
+                m.group('optOverwrite') or '',
+                out,
+                m.group('locale') or '',
+            )
+            for _srcdir in src_base:
+                finder = FileFinder(_srcdir, find_executables=False)
+                for path, _ in finder.find(src):
+                    line = fmt % (path[len(prefix):], path)
+                    m = self.entryline.match(line)
+                    if m:
+                        self._processEntryLine(m, outHelper, jf)
+            return
 
         # check if the source file exists
         realsrc = None

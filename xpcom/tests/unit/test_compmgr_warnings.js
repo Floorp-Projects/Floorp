@@ -56,10 +56,9 @@ function run_test()
   cs.registerListener(kConsoleListener);
 
   var manifest = do_get_file('compmgr_warnings.manifest');
-  Components.manager.QueryInterface(Ci.nsIComponentRegistrar).
-    autoRegister(manifest);
+  registerAppManifest(manifest);
   manifest = do_get_file('testcomponent.manifest');
-  Components.manager.autoRegister(manifest);
+  registerAppManifest(manifest);
 
   run_deferred_event(function() {
     cs.unregisterListener(kConsoleListener);
