@@ -1512,6 +1512,12 @@ BluetoothDaemonProtocol::Send(BluetoothDaemonPDU* aPDU, void* aUserData)
   aPDU->SetConsumer(this);
   aPDU->SetUserData(aUserData);
   aPDU->UpdateHeader();
+
+  if (mConnection->GetConnectionStatus() == SOCKET_DISCONNECTED) {
+    BT_LOGR("Connection to Bluetooth daemon is closed.");
+    return NS_ERROR_FAILURE;
+  }
+
   mConnection->SendSocketData(aPDU); // Forward PDU to command channel
 
   return NS_OK;
