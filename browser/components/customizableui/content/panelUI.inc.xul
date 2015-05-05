@@ -137,6 +137,10 @@
           <observes element="readingListSidebar" attribute="checked"/>
           <observes element="readingListSidebar" attribute="hidden"/>
         </toolbarbutton>
+        <toolbarseparator id="panelMenu_pocketSeparator"/>
+        <toolbarbutton id="panelMenu_pocket" label="&pocketMenuitem.label;"
+                       class="subviewbutton cui-withicon"
+                       oncommand="openUILink(Pocket.listURL, event);"/>
         <toolbarseparator class="small-separator"/>
         <toolbaritem id="panelMenu_bookmarksMenu"
                      orient="vertical"
