@@ -20,6 +20,12 @@ TBPL_FLAGS = [
     ['--baseline-eager', '--no-fpu'],
     ['--no-baseline', '--no-ion'],
 ]
+# Run reduced variants on debug builds, since they take longer time.
+TBPL_DEBUG_FLAGS = [
+    [], # no flags, normal baseline and ion
+    ['--ion-eager', '--ion-offthread-compile=off'], # implies --baseline-eager
+    ['--baseline-eager'],
+]
 
 def do_run_cmd(cmd):
     l = [None, None]
