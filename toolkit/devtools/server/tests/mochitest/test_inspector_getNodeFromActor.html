@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1155653
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1155653</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker;
+
+addTest(function() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+
+    promiseDone(inspector.getWalker().then(walker => {
+      gWalker = walker;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function() {
+  info("Try to get a NodeFront from an invalid actorID");
+  gWalker.getNodeFromActor("invalid", ["node"]).then(node => {
+    ok(!node, "The node returned is null");
+    runNextTest();
+  });
+});
+
+addTest(function() {
+  info("Try to get a NodeFront from a valid actorID but invalid path");
+  gWalker.getNodeFromActor(gWalker.actorID, ["invalid", "path"]).then(node => {
+    ok(!node, "The node returned is null");
+    runNextTest();
+  });
+});
+
+addTest(function() {
+  info("Try to get a NodeFront from a valid actorID and valid path");
+  gWalker.getNodeFromActor(gWalker.actorID, ["rootDoc"]).then(rootDocNode => {
+    ok(rootDocNode, "A node was returned");
+    is(rootDocNode, gWalker.rootNode, "The right node was returned");
+    runNextTest();
+  });
+});
+
+addTest(function() {
+  info("Try to get a NodeFront from a valid actorID and valid complex path");
+  gWalker.getNodeFromActor(gWalker.actorID,
+    ["tabActor", "window", "document", "body"]).then(bodyNode => {
+    ok(bodyNode, "A node was returned");
+    gWalker.querySelector(gWalker.rootNode, "body").then(node => {
+      is(bodyNode, node, "The body node was returned");
+      runNextTest();
+    });
+  });
+});
+
+addTest(function() {
+  gWalker = null;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1155653">Mozilla Bug 1155653</a>
+<a id="inspectorContent" target="_blank" href="inspector_getImageData.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -99,6 +99,36 @@ body {
   }
 }
 
+/* Animation target node gutter, contains a preview of the dom node */
+
+.animation-target {
+  background-color: var(--theme-toolbar-background);
+  padding: 1px 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.animation-target .attribute-name {
+  padding-left: 4px;
+}
+
+.animation-target .node-selector {
+  background: url("chrome://browser/skin/devtools/vview-open-inspector.png") no-repeat 0 0;
+  padding-left: 16px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.animation-target .node-selector:hover {
+  background-position: -32px 0;
+}
+
+.animation-target .node-selector:active {
+  background-position: -16px 0;
+}
+
 /* Animation title gutter, contains the name, duration, iteration */
 
 .animation-title {
