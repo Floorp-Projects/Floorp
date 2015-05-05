@@ -191,6 +191,9 @@ SharedDecoderManager::DrainComplete()
 void
 SharedDecoderManager::Shutdown()
 {
+  // Shutdown() should have been called on any proxies.
+  MOZ_ASSERT(!mActiveProxy);
+
   if (mDecoder) {
     mDecoder->Shutdown();
     mDecoder = nullptr;
