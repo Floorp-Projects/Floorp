@@ -29,6 +29,8 @@ let Pocket = {
 
   get hostname() Services.prefs.getCharPref("browser.pocket.hostname"),
 
+  get listURL() { return "https://" + Pocket.hostname; },
+
   get _accessToken() {
     let sessionId, accessToken;
     let cookies = Services.cookies.getCookiesFromHost(this.hostname);
