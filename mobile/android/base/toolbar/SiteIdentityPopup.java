@@ -4,7 +4,10 @@
 
 package org.mozilla.gecko.toolbar;
 
+import org.json.JSONException;
+import org.json.JSONArray;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -14,6 +17,7 @@ import org.mozilla.gecko.SiteIdentity.MixedMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
@@ -32,7 +36,8 @@ import org.mozilla.gecko.widget.DoorhangerConfig;
  * SiteIdentityPopup is a singleton class that displays site identity data in
  * an arrow panel popup hanging from the lock icon in the browser toolbar.
  */
-public class SiteIdentityPopup extends AnchoredPopup {
+public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListener {
+
     public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING };
 
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
@@ -66,6 +71,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         super(context);
 
         mButtonClickListener = new PopupButtonListener();
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Doorhanger:Logins");
     }
 
     @Override
@@ -112,6 +118,22 @@ public class SiteIdentityPopup extends AnchoredPopup {
         if (isIdentityKnown) {
             updateIdentityInformation(siteIdentity);
         }
+    }
+
+    @Override
+    public void handleMessage(String event, JSONObject geckoObject) {
+        if ("Doorhanger:Logins".equals(event)) {
+            try {
+                final JSONArray logins = geckoObject.getJSONArray("logins");
+                addSelectLoginDoorhanger(logins);
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error accessing logins in Doorhanger:Logins message", e);
+            }
+        }
+    }
+
+    private void addSelectLoginDoorhanger(JSONArray logins) {
+        // TODO: add doorhanger + link (if there is more than one login).
     }
 
     private void toggleIdentityKnownContainerVisibility(final boolean isIdentityKnown) {
@@ -286,6 +308,10 @@ public class SiteIdentityPopup extends AnchoredPopup {
         if (lastVisibleDoorHanger != null) {
             lastVisibleDoorHanger.hideDivider();
         }
+    }
+
+    void destroy() {
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Doorhanger:Logins");
     }
 
     @Override
