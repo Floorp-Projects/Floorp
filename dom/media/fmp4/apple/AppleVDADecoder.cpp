@@ -364,6 +364,7 @@ AppleVDADecoder::SubmitFrame(MediaRawData* aSample)
 
   if (rv != noErr) {
     NS_WARNING("AppleVDADecoder: Couldn't pass frame to decoder");
+    mCallback->Error();
     return NS_ERROR_FAILURE;
   }
 
