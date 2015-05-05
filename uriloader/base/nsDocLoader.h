@@ -302,6 +302,8 @@ protected:
     bool mIsFlushingLayout;
 
 private:
+    static const PLDHashTableOps sRequestInfoHashOps;
+
     // A list of kids that are in the middle of their onload calls and will let
     // us know once they're done.  We don't want to fire onload for "normal"
     // DocLoaderIsEmpty calls (those coming from requests finishing in our
