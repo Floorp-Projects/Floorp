@@ -1941,6 +1941,9 @@ public class BrowserApp extends GeckoApp
                 });
             }
         } else {
+            if (mDoorHangerPopup != null) {
+                mDoorHangerPopup.disable();
+            }
             mTabsPanel.show(panel);
         }
     }
@@ -1948,6 +1951,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void hideTabs() {
         mTabsPanel.hide();
+        if (mDoorHangerPopup != null) {
+            mDoorHangerPopup.enable();
+        }
     }
 
     @Override
