@@ -100,7 +100,7 @@ ConvertBreaks(const T* aInSrc, int32_t& aIoLen, const char* aSrcBreak,
 
   // handle the no conversion case
   if (nsCRT::strcmp(aSrcBreak, aDestBreak) == 0) {
-    resultString = (T*)moz_xmalloc(sizeof(T) * aIoLen);
+    resultString = (T*)malloc(sizeof(T) * aIoLen);
     if (!resultString) {
       return nullptr;
     }
@@ -114,7 +114,7 @@ ConvertBreaks(const T* aInSrc, int32_t& aIoLen, const char* aSrcBreak,
   // handle the easy case, where the string length does not change, and the
   // breaks are only 1 char long, i.e. CR <-> LF
   if (srcBreakLen == destBreakLen && srcBreakLen == 1) {
-    resultString = (T*)moz_xmalloc(sizeof(T) * aIoLen);
+    resultString = (T*)malloc(sizeof(T) * aIoLen);
     if (!resultString) {
       return nullptr;
     }
@@ -144,7 +144,7 @@ ConvertBreaks(const T* aInSrc, int32_t& aIoLen, const char* aSrcBreak,
 
     int32_t newBufLen =
       aIoLen - (numLinebreaks * srcBreakLen) + (numLinebreaks * destBreakLen);
-    resultString = (T*)moz_xmalloc(sizeof(T) * newBufLen);
+    resultString = (T*)malloc(sizeof(T) * newBufLen);
     if (!resultString) {
       return nullptr;
     }
@@ -235,7 +235,7 @@ ConvertUnknownBreaks(const T* aInSrc, int32_t& aIoLen, const char* aDestBreak)
     src++;
   }
 
-  T* resultString = (T*)moz_xmalloc(sizeof(T) * finalLen);
+  T* resultString = (T*)malloc(sizeof(T) * finalLen);
   if (!resultString) {
     return nullptr;
   }

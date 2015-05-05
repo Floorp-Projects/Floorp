@@ -29,7 +29,7 @@ add_task(function* test() {
      "CSP should block the script loaded by the clicked data URI");
 
   // close the tab
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 
   // open new tab and recover the state
   tab = ss.undoCloseTab(window, 0);

@@ -136,13 +136,3 @@ span#hostname {
 #automaticallyReportInFuture {
   cursor: pointer;
 }
-
-#reportSendingMessage {
-  /* adjust the line-height to match the link */
-  line-height: 22px;
-}
-
-#reportSentMessage {
-  /* adjust the line-height to match the link */
-  line-height: 22px;
-}

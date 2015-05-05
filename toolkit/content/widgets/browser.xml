@@ -402,11 +402,6 @@
         ]]></getter>
       </property>
 
-      <field name="_permanentKey">({})</field>
-
-      <property name="permanentKey" readonly="true"
-                onget="return this._permanentKey;"/>
-
       <property name="outerWindowID" readonly="true">
         <getter><![CDATA[
           return this.contentWindow
@@ -1096,8 +1091,7 @@
             "_docShell",
             "_webBrowserFind",
             "_contentWindow",
-            "_webNavigation",
-            "_permanentKey"
+            "_webNavigation"
           ];
 
           if (this.isRemoteBrowser) {

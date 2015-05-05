@@ -53,6 +53,10 @@ this.TabState = Object.freeze({
 
   clone: function (tab) {
     return TabStateInternal.clone(tab);
+  },
+
+  copyFromCache: function (tab, tabData, options) {
+    TabStateInternal.copyFromCache(tab, tabData, options);
   }
 });
 
@@ -218,7 +222,7 @@ let TabStateInternal = {
 
     // Copy data from the tab state cache only if the tab has fully finished
     // restoring. We don't want to overwrite data contained in __SS_data.
-    this._copyFromCache(tab, tabData, options);
+    this.copyFromCache(tab, tabData, options);
 
     return tabData;
   },
@@ -233,7 +237,7 @@ let TabStateInternal = {
    * @param options (object)
    *        {includePrivateData: true} to always include private data
    */
-  _copyFromCache: function (tab, tabData, options = {}) {
+  copyFromCache: function (tab, tabData, options = {}) {
     let data = TabStateCache.get(tab.linkedBrowser);
     if (!data) {
       return;

@@ -360,6 +360,7 @@ public:
                                       const bool& aIsUnmounting,
                                       const bool& aIsRemovable,
                                       const bool& aIsHotSwappable) override;
+    virtual bool RecvVolumeRemoved(const nsString& aFsName) override;
 
     virtual bool RecvNuwaFork() override;
 
