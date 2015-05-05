@@ -1404,6 +1404,18 @@ var AddonManagerInternal = {
 
             aInstall.addListener({
               onDownloadEnded: function BUC_onDownloadEnded(aInstall) {
+                if (aInstall.addon.id != hotfixID) {
+                  logger.warn("The downloaded hotfix add-on did not have the " +
+                              "expected ID and so will not be installed.");
+                  aInstall.cancel();
+                  return;
+                }
+
+                // If XPIProvider has reported the hotfix as properly signed then
+                // there is nothing more to do here
+                if (aInstall.addon.signedState == AddonManager.SIGNEDSTATE_SIGNED)
+                  return;
+
                 try {
                   if (!Services.prefs.getBoolPref(PREF_EM_CERT_CHECKATTRIBUTES))
                     return;
