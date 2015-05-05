@@ -42,6 +42,9 @@
 // TODO : [nice to have] - Immediately save, buffer the actions in a local queue and send (so it works offline, works like our native extensions)
 // TODO : Remove console.log entries
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
+
 var pktUI = (function() {
 
 	// -- Initialization (on startup and new windows) -- //
@@ -277,16 +280,35 @@ var pktUI = (function() {
      * Show the sign-up panel
      */
     function showSignUp() {
-    	showPanel("chrome://browser/content/pocket/panels/signup.html", {
-    		onShow: function() {
-                // Open and resize the panel
-                resizePanel({
+        getFirefoxAccountSignedInUser(function(userdata)
+        {
+            var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
+            var startheight = 490;
+            if (pktApi.getSignupAB() == 'storyboard')
+            {
+                startheight = 460;
+                if (fxasignedin == '1')
+                {
+                    startheight = 406;
+                }
+            }
+            else
+            {
+                if (fxasignedin == '1')
+                {
+                    startheight = 436;
+                }
+            }
+           showPanel("chrome://browser/content/pocket/panels/signup.html?pockethost=" + Services.prefs.getCharPref("browser.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + pktApi.getSignupAB(), {
+               onShow: function() {
+                    resizePanel({
                         width: 300,
-                        height: 550
-                });
-            },
-			onHide: panelDidHide,
-    	});
+                        height: startheight
+                    });
+                },
+               onHide: panelDidHide,
+           });
+        });
     }
 
     /**
@@ -294,22 +316,31 @@ var pktUI = (function() {
      */
     function saveAndShowConfirmation(url, title) {
 
-        // Validate parameter
-        // TODO: Show some kind of error
-        if (typeof url === 'undefined') { return; }
-        if (!url.startsWith("http") && !url.startsWith('https')) { return; };
+        // Validate input parameter
+        if (typeof url !== 'undefined' && url.startsWith("about:reader?url=")) {
+            url = ReaderMode.getOriginalUrl(url);
+        }
 
-    	showPanel("chrome://browser/content/pocket/panels/saved.html?premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0'), {
+        var isValidURL = (typeof url !== 'undefined' && (url.startsWith("http") || url.startsWith('https')));
+
+        showPanel("chrome://browser/content/pocket/panels/saved.html?pockethost=" + Services.prefs.getCharPref("browser.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0'), {
     		onShow: function() {
                 // Open and resize the panel
                 resizePanel({
                         width: 350,
-                        height: 266
+                        height: 263
                 });
 
-                var options = {
-                    success: function(data, response) {
+                // Send error message for invalid url
+                if (!isValidURL) {
+                    var error = new Error('Only links can be saved');
+                    sendErrorMessage('saveLink', error);
+                    return;
+                }
 
+                // Add url
+                var options = {
+                    success: function(data, request) {
                         var item = data.item;
                         var successResponse = {
                             status: "success",
@@ -317,7 +348,14 @@ var pktUI = (function() {
                         };
                         sendMessage('saveLink', successResponse);
                     },
-                    error: function(error, response) {
+                    error: function(error, request) {
+                        // If user is not authorized show singup page
+                        if (request.status === 401) {
+                            showSignUp();
+                            return;
+                        }
+
+                        // Send error message to panel
                         sendErrorMessage('saveLink', error);
                     }
                 }
@@ -388,7 +426,6 @@ var pktUI = (function() {
      * Called when the signup and saved panel was hidden
      */
     function panelDidHide() {
-    	console.log("Panel did hide");
     }
 
     // -- Communication to Panels -- //
@@ -478,7 +515,7 @@ var pktUI = (function() {
                 activate = payload.activate;
             }
             openTabWithUrl(payload.url, activate);
-            sendMessage("openTabWithUrlResponse", url);
+            sendMessage("openTabWithUrlResponse", payload.url);
         });
 
 		// Close the panel
@@ -493,7 +530,6 @@ var pktUI = (function() {
 
 		// Callback post initialization to tell background script that panel is "ready" for communication.
 		addMessageListener("listenerReady", function(payload) {
-			console.log('got a listener init');
 		});
 
 		addMessageListener("resizePanel", function(payload) {
@@ -604,13 +640,12 @@ var pktUI = (function() {
     	return _isHidden;
     }
     
-    function isUserLoggedIntoFxA() {
-    	// TODO : verify with Firefox this is the right way to do this
-    	var user = fxAccounts.getSignedInUser();
-    	if (user && user.email)
-    		return true;
-    	
-    	return false;
+    function getFirefoxAccountSignedInUser(callback) {
+       fxAccounts.getSignedInUser().then(userData => {
+           callback(userData);
+       }).then(null, error => {
+           callback();
+       });
     }
     
     /**
@@ -705,7 +740,6 @@ var pktUI = (function() {
      */
     return {
     	onLoad: onLoad,
-    	onUnload: onUnload,
 
     	pocketButtonOnCommand: pocketButtonOnCommand,
     	pocketPanelDidShow: pocketPanelDidShow,
