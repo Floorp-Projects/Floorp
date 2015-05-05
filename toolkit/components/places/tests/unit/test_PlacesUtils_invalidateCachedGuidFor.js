@@ -10,9 +10,10 @@ add_task(function* () {
   PlacesUtils.invalidateCachedGuidFor(9999);
 
   do_print("Change the GUID.");
-  let db = yield PlacesUtils.promiseWrappedConnection();
-  yield db.execute("UPDATE moz_bookmarks SET guid = :guid WHERE id = :id",
-                   { guid: "123456789012", id});
+  yield PlacesUtils.withConnectionWrapper("test", Task.async(function*(db) {
+    yield db.execute("UPDATE moz_bookmarks SET guid = :guid WHERE id = :id",
+                     { guid: "123456789012", id});
+  }));
   // The cache should still point to the wrong id.
   Assert.equal((yield PlacesUtils.promiseItemGuid(id)), bm.guid);
 
