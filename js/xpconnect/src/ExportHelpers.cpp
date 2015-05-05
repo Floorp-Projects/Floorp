@@ -324,18 +324,14 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
     RootedObject unwrappedFun(cx, js::UncheckedUnwrap(&v.toObject()));
 
-    RootedObject thisObj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!thisObj) {
-        return false;
-    }
-
+    RootedObject thisObj(cx, args.isConstructing() ? nullptr : JS_THIS_OBJECT(cx, vp));
     {
         // We manually implement the contents of CrossCompartmentWrapper::call
         // here, because certain function wrappers (notably content->nsEP) are
         // not callable.
         JSAutoCompartment ac(cx, unwrappedFun);
 
-        RootedValue thisVal(cx, ObjectValue(*thisObj));
+        RootedValue thisVal(cx, ObjectOrNullValue(thisObj));
         if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapObject(cx, &thisObj))
             return false;
 
@@ -345,8 +341,13 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
         }
 
         RootedValue fval(cx, ObjectValue(*unwrappedFun));
-        if (!JS_CallFunctionValue(cx, thisObj, fval, args, args.rval()))
-            return false;
+        if (args.isConstructing()) {
+            if (!JS::Construct(cx, fval, args, args.rval()))
+                return false;
+        } else {
+            if (!JS_CallFunctionValue(cx, thisObj, fval, args, args.rval()))
+                return false;
+        }
     }
 
     // Rewrap the return value into our compartment.
@@ -361,8 +362,11 @@ NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
     if (id == JSID_VOIDHANDLE)
         id = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EMPTYSTRING);
 
+    // We have no way of knowing whether the underlying function wants to be a
+    // constructor or not, so we just mark all forwarders as constructors, and
+    // let the underlying function throw for construct calls if it wants.
     JSFunction* fun = js::NewFunctionByIdWithReserved(cx, FunctionForwarder,
-                                                      0, 0, id);
+                                                      0, JSFUN_CONSTRUCTOR, id);
     if (!fun)
         return false;
 
