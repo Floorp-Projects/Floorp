@@ -9,7 +9,7 @@ to the license set forth below, "Pocket," "Read It Later" and the Pocket icon
 and logos (collectively, the “Pocket Marks”) are registered and common law
 trademarks of Read It Later, Inc. This means that, while you have considerable
 freedom to redistribute and modify the Software, there are tight restrictions
-on your ability to use the Pocket Marks. This license does not grant you any
+on your ability to use the Pocket Marks. This  license does not grant you any
 rights to use the Pocket Marks except as they are embodied in the Software.
 
 ---
