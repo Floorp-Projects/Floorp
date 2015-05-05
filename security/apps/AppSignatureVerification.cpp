@@ -20,6 +20,7 @@
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIStringEnumerator.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsIZipReader.h"
 #include "nsNetUtil.h"
 #include "nsNSSCertificate.h"
@@ -98,7 +99,7 @@ ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
   return NS_OK;
 }
 
-// Finds exactly one (signature metadata) entry that matches the given
+// Finds exactly one (signature metadata) JAR entry that matches the given
 // search pattern, and then load it. Fails if there are no matches or if
 // there is more than one match. If bugDigest is not null then on success
 // bufDigest will contain the SHA-1 digeset of the entry.
@@ -153,27 +154,22 @@ FindAndLoadOneEntry(nsIZipReader * zip,
 // at once, which would require memory in proportion to the size of the largest
 // entry. Instead, we require only a small, fixed amount of memory.
 //
+// @param stream  an input stream from a JAR entry or file depending on whether
+//                it is from a signed archive or unpacked into a directory
 // @param digestFromManifest The digest that we're supposed to check the file's
 //                           contents against, from the manifest
 // @param buf A scratch buffer that we use for doing the I/O, which must have
 //            already been allocated. The size of this buffer is the unit
 //            size of our I/O.
 nsresult
-VerifyEntryContentDigest(nsIZipReader * zip, const nsACString & aFilename,
-                         const SECItem & digestFromManifest, SECItem & buf)
+VerifyStreamContentDigest(nsIInputStream* stream,
+                          const SECItem& digestFromManifest, SECItem& buf)
 {
   MOZ_ASSERT(buf.len > 0);
   if (digestFromManifest.len != SHA1_LENGTH)
     return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
 
   nsresult rv;
-
-  nsCOMPtr<nsIInputStream> stream;
-  rv = zip->GetInputStream(aFilename, getter_AddRefs(stream));
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_SIGNED_JAR_ENTRY_MISSING;
-  }
-
   uint64_t len64;
   rv = stream->Available(&len64);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -224,6 +220,81 @@ VerifyEntryContentDigest(nsIZipReader * zip, const nsACString & aFilename,
   }
 
   return NS_OK;
+}
+
+nsresult
+VerifyEntryContentDigest(nsIZipReader* zip, const nsACString& aFilename,
+                         const SECItem& digestFromManifest, SECItem& buf)
+{
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = zip->GetInputStream(aFilename, getter_AddRefs(stream));
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_SIGNED_JAR_ENTRY_MISSING;
+  }
+
+  return VerifyStreamContentDigest(stream, digestFromManifest, buf);
+}
+
+// @oaram aDir       directory containing the unpacked signed archive
+// @param aFilename  path of the target file relative to aDir
+// @param digestFromManifest The digest that we're supposed to check the file's
+//                           contents against, from the manifest
+// @param buf A scratch buffer that we use for doing the I/O
+nsresult
+VerifyFileContentDigest(nsIFile* aDir, const nsAString& aFilename,
+                        const SECItem& digestFromManifest, SECItem& buf)
+{
+  // Find the file corresponding to the manifest path
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aDir->Clone(getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // We don't know how to handle JARs with signed directory entries.
+  // It's technically possible in the manifest but makes no sense on disk.
+  // Inside an archive we just ignore them, but here we have to treat it
+  // as an error because the signed bytes never got unpacked.
+  int32_t pos = 0;
+  int32_t slash;
+  int32_t namelen = aFilename.Length();
+  if (namelen == 0 || aFilename[namelen - 1] == '/') {
+    return NS_ERROR_SIGNED_JAR_ENTRY_INVALID;
+  }
+
+  // Append path segments one by one
+  do {
+    slash = aFilename.FindChar('/', pos);
+    int32_t segend = (slash == kNotFound) ? namelen : slash;
+    rv = file->Append(Substring(aFilename, pos, (segend - pos)));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_SIGNED_JAR_ENTRY_INVALID;
+    }
+    pos = slash + 1;
+  }  while (pos < namelen && slash != kNotFound);
+
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) {
+    return NS_ERROR_SIGNED_JAR_ENTRY_MISSING;
+  }
+
+  bool isDir;
+  rv = file->IsDirectory(&isDir);
+  if (NS_FAILED(rv) || isDir) {
+    // We only support signed files, not directory entries
+    return NS_ERROR_SIGNED_JAR_ENTRY_INVALID;
+  }
+
+  // Open an input stream for that file and verify it.
+  nsCOMPtr<nsIInputStream> stream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file, -1, -1,
+                                  nsIFileInputStream::CLOSE_ON_EOF);
+  if (NS_FAILED(rv) || !stream) {
+    return NS_ERROR_SIGNED_JAR_ENTRY_MISSING;
+  }
+
+  return VerifyStreamContentDigest(stream, digestFromManifest, buf);
 }
 
 // On input, nextLineStart is the start of the current line. On output,
@@ -286,6 +357,7 @@ ReadLine(/*in/out*/ const char* & nextLineStart, /*out*/ nsCString & line,
 #define JAR_MF_SEARCH_STRING "(M|/M)ETA-INF/(M|m)(ANIFEST|anifest).(MF|mf)$"
 #define JAR_SF_SEARCH_STRING "(M|/M)ETA-INF/*.(SF|sf)$"
 #define JAR_RSA_SEARCH_STRING "(M|/M)ETA-INF/*.(RSA|rsa)$"
+#define JAR_META_DIR "META-INF"
 #define JAR_MF_HEADER "Manifest-Version: 1.0"
 #define JAR_SF_HEADER "Signature-Version: 1.0"
 
@@ -948,4 +1020,498 @@ nsNSSCertificateDB::VerifySignedManifestAsync(
     new VerifySignedmanifestTask(aTrustedRoot, aManifestStream,
                                  aSignatureStream, aCallback));
   return task->Dispatch("SignedManifest");
+}
+
+
+//
+// Signature verification for archives unpacked into a file structure
+//
+
+// Finds the "*.rsa" signature file in the META-INF directory and returns
+// the name. It is an error if there are none or more than one .rsa file
+nsresult
+FindSignatureFilename(nsIFile* aMetaDir,
+                      /*out*/ nsAString& aFilename)
+{
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = aMetaDir->GetDirectoryEntries(getter_AddRefs(entries));
+  nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(entries);
+  if (NS_FAILED(rv) || !files) {
+    return NS_ERROR_SIGNED_JAR_NOT_SIGNED;
+  }
+
+  bool found = false;
+  nsCOMPtr<nsIFile> file;
+  rv = files->GetNextFile(getter_AddRefs(file));
+
+  while (NS_SUCCEEDED(rv) && file) {
+    nsAutoString leafname;
+    rv = file->GetLeafName(leafname);
+    if (NS_SUCCEEDED(rv)) {
+      if (StringEndsWith(leafname, NS_LITERAL_STRING(".rsa"))) {
+        if (!found) {
+          found = true;
+          aFilename = leafname;
+        } else {
+          // second signature file is an error
+          rv = NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+          break;
+        }
+      }
+      rv = files->GetNextFile(getter_AddRefs(file));
+    }
+  }
+
+  if (!found) {
+    rv = NS_ERROR_SIGNED_JAR_NOT_SIGNED;
+  }
+
+  files->Close();
+  return rv;
+}
+
+// Loads the signature metadata file that matches the given filename in
+// the passed-in Meta-inf directory. If bufDigest is not null then on
+// success bufDigest will contain the SHA-1 digest of the entry.
+nsresult
+LoadOneMetafile(nsIFile* aMetaDir,
+                const nsAString& aFilename,
+                /*out*/ SECItem& aBuf,
+                /*optional, out*/ Digest* aBufDigest)
+{
+  nsCOMPtr<nsIFile> metafile;
+  nsresult rv = aMetaDir->Clone(getter_AddRefs(metafile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = metafile->Append(aFilename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool exists;
+  rv = metafile->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) {
+    // we can call a missing .rsa file "unsigned" but FindSignatureFilename()
+    // already found one: missing other metadata files means a broken signature.
+    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), metafile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = ReadStream(stream, aBuf);
+  stream->Close();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aBufDigest) {
+    rv = aBufDigest->DigestBuf(SEC_OID_SHA1, aBuf.data, aBuf.len - 1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+// Parses MANIFEST.MF and verifies the contents of the unpacked files
+// listed in the manifest.
+// The filenames of all entries will be returned in aMfItems. aBuf must
+// be a pre-allocated scratch buffer that is used for doing I/O.
+nsresult
+ParseMFUnpacked(const char* aFilebuf, nsIFile* aDir,
+                /*out*/ nsTHashtable<nsStringHashKey>& aMfItems,
+                ScopedAutoSECItem& aBuf)
+{
+  nsresult rv;
+
+  const char* nextLineStart = aFilebuf;
+
+  rv = CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_MF_HEADER));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Skip the rest of the header section, which ends with a blank line.
+  {
+    nsAutoCString line;
+    do {
+      rv = ReadLine(nextLineStart, line);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } while (line.Length() > 0);
+
+    // Manifest containing no file entries is OK, though useless.
+    if (*nextLineStart == '\0') {
+      return NS_OK;
+    }
+  }
+
+  nsAutoString curItemName;
+  ScopedAutoSECItem digest;
+
+  for (;;) {
+    nsAutoCString curLine;
+    rv = ReadLine(nextLineStart, curLine);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (curLine.Length() == 0) {
+      // end of section (blank line or end-of-file)
+
+      if (curItemName.Length() == 0) {
+        // '...Each section must start with an attribute with the name as
+        // "Name",...', so every section must have a Name attribute.
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      if (digest.len == 0) {
+        // We require every entry to have a digest, since we require every
+        // entry to be signed and we don't allow duplicate entries.
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      if (aMfItems.Contains(curItemName)) {
+        // Duplicate entry
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      // Verify that the file's content digest matches the digest from this
+      // MF section.
+      rv = VerifyFileContentDigest(aDir, curItemName, digest, aBuf);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aMfItems.PutEntry(curItemName);
+
+      if (*nextLineStart == '\0') {
+        // end-of-file
+        break;
+      }
+
+      // reset so we know we haven't encountered either of these for the next
+      // item yet.
+      curItemName.Truncate();
+      digest.reset();
+
+      continue; // skip the rest of the loop below
+    }
+
+    nsAutoCString attrName;
+    nsAutoCString attrValue;
+    rv = ParseAttribute(curLine, attrName, attrValue);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Lines to look for:
+
+    // (1) Digest:
+    if (attrName.LowerCaseEqualsLiteral("sha1-digest")) {
+      if (digest.len > 0) {
+        // multiple SHA1 digests in section
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      rv = MapSECStatus(ATOB_ConvertAsciiToItem(&digest, attrValue.get()));
+      if (NS_FAILED(rv)) {
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      continue;
+    }
+
+    // (2) Name: associates this manifest section with a file in the jar.
+    if (attrName.LowerCaseEqualsLiteral("name")) {
+      if (MOZ_UNLIKELY(curItemName.Length() > 0)) {
+        // multiple names in section
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      if (MOZ_UNLIKELY(attrValue.Length() == 0)) {
+        return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+      }
+
+      curItemName = NS_ConvertUTF8toUTF16(attrValue);
+
+      continue;
+    }
+
+    // (3) Magic: the only other must-understand attribute
+    if (attrName.LowerCaseEqualsLiteral("magic")) {
+      // We don't understand any magic, so we can't verify an entry that
+      // requires magic. Since we require every entry to have a valid
+      // signature, we have no choice but to reject the entry.
+      return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+    }
+
+    // unrecognized attributes must be ignored
+  }
+
+  return NS_OK;
+}
+
+// recursively check a directory tree for files not in the list of
+// verified files we found in the manifest. For each file we find
+// Check it against the files found in the manifest. If the file wasn't
+// in the manifest then it's unsigned and we can stop looking. Otherwise
+// remove it from the collection so we can check leftovers later.
+//
+// @param aDir   Directory to check
+// @param aPath  Relative path to that directory (to check against aItems)
+// @param aItems All the files found
+// @param *Filename  signature files that won't be in the manifest
+nsresult
+CheckDirForUnsignedFiles(nsIFile* aDir,
+                         const nsString& aPath,
+                         /* in/out */ nsTHashtable<nsStringHashKey>& aItems,
+                         const nsAString& sigFilename,
+                         const nsAString& sfFilename,
+                         const nsAString& mfFilename)
+{
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = aDir->GetDirectoryEntries(getter_AddRefs(entries));
+  nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(entries);
+  if (NS_FAILED(rv) || !files) {
+    return NS_ERROR_SIGNED_JAR_ENTRY_MISSING;
+  }
+
+  bool inMeta = StringBeginsWith(aPath, NS_LITERAL_STRING(JAR_META_DIR));
+
+  while (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIFile> file;
+    rv = files->GetNextFile(getter_AddRefs(file));
+    if (NS_FAILED(rv) || !file) {
+      break;
+    }
+
+    nsAutoString leafname;
+    rv = file->GetLeafName(leafname);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsAutoString curName(aPath + leafname);
+
+    bool isDir;
+    rv = file->IsDirectory(&isDir);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // if it's a directory we need to recurse
+    if (isDir) {
+      curName.Append(NS_LITERAL_STRING("/"));
+      rv = CheckDirForUnsignedFiles(file, curName, aItems,
+                                    sigFilename, sfFilename, mfFilename);
+    } else {
+      // The files that comprise the signature mechanism are not covered by the
+      // signature.
+      //
+      // XXX: This is OK for a single signature, but doesn't work for
+      // multiple signatures because the metadata for the other signatures
+      // is not signed either.
+      if (inMeta && ( leafname == sigFilename ||
+                      leafname == sfFilename ||
+                      leafname == mfFilename )) {
+        continue;
+      }
+
+      // make sure the current file was found in the manifest
+      nsStringHashKey* item = aItems.GetEntry(curName);
+      if (!item) {
+        return NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY;
+      }
+
+      // Remove the item so we can check for leftover items later
+      aItems.RemoveEntry(curName);
+    }
+  }
+  files->Close();
+  return rv;
+}
+
+/*
+ * Verify the signature of a directory structure as if it were a
+ * signed JAR file (used for unpacked JARs)
+ */
+nsresult
+VerifySignedDirectory(AppTrustedRoot aTrustedRoot,
+                      nsIFile* aDirectory,
+                      /*out, optional */ nsIX509Cert** aSignerCert)
+{
+  NS_ENSURE_ARG_POINTER(aDirectory);
+
+  if (aSignerCert) {
+    *aSignerCert = nullptr;
+  }
+
+  // Make sure there's a META-INF directory
+
+  nsCOMPtr<nsIFile> metaDir;
+  nsresult rv = aDirectory->Clone(getter_AddRefs(metaDir));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = metaDir->Append(NS_LITERAL_STRING(JAR_META_DIR));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  bool exists;
+  rv = metaDir->Exists(&exists);
+  if (NS_FAILED(rv) || !exists) {
+    return NS_ERROR_SIGNED_JAR_NOT_SIGNED;
+  }
+  bool isDirectory;
+  rv = metaDir->IsDirectory(&isDirectory);
+  if (NS_FAILED(rv) || !isDirectory) {
+    return NS_ERROR_SIGNED_JAR_NOT_SIGNED;
+  }
+
+  // Find and load the Signature (RSA) file
+
+  nsAutoString sigFilename;
+  rv = FindSignatureFilename(metaDir, sigFilename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  ScopedAutoSECItem sigBuffer;
+  rv = LoadOneMetafile(metaDir, sigFilename, sigBuffer, nullptr);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_SIGNED_JAR_NOT_SIGNED;
+  }
+
+  // Load the signature (SF) file and verify the signature.
+  // The .sf and .rsa files must have the same name apart from the extension.
+
+  nsAutoString sfFilename(Substring(sigFilename, 0, sigFilename.Length() - 3)
+                          + NS_LITERAL_STRING("sf"));
+
+  ScopedAutoSECItem sfBuffer;
+  Digest sfCalculatedDigest;
+  rv = LoadOneMetafile(metaDir, sfFilename, sfBuffer, &sfCalculatedDigest);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
+
+  sigBuffer.type = siBuffer;
+  ScopedCERTCertList builtChain;
+  rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedDigest.get(),
+                       builtChain);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
+
+  // Get the expected manifest hash from the signed .sf file
+
+  ScopedAutoSECItem mfDigest;
+  rv = ParseSF(char_ptr_cast(sfBuffer.data), mfDigest);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
+
+  // Load manifest (MF) file and verify signature
+
+  nsAutoString mfFilename(NS_LITERAL_STRING("manifest.mf"));
+  ScopedAutoSECItem manifestBuffer;
+  Digest mfCalculatedDigest;
+  rv = LoadOneMetafile(metaDir, mfFilename, manifestBuffer, &mfCalculatedDigest);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
+
+  if (SECITEM_CompareItem(&mfDigest, &mfCalculatedDigest.get()) != SECEqual) {
+    return NS_ERROR_SIGNED_JAR_MANIFEST_INVALID;
+  }
+
+  // Parse manifest and verify signed hash of all listed files
+
+  // Allocate the I/O buffer only once per JAR, instead of once per entry, in
+  // order to minimize malloc/free calls and in order to avoid fragmenting
+  // memory.
+  ScopedAutoSECItem buf(128 * 1024);
+
+  nsTHashtable<nsStringHashKey> items;
+  rv = ParseMFUnpacked(char_ptr_cast(manifestBuffer.data),
+                       aDirectory, items, buf);
+  if (NS_FAILED(rv)){
+    return rv;
+  }
+
+  // We've checked that everything listed in the manifest exists and is signed
+  // correctly. Now check on disk for extra (unsigned) files.
+  // Deletes found entries from items as it goes.
+  rv = CheckDirForUnsignedFiles(aDirectory, EmptyString(), items,
+                                sigFilename, sfFilename, mfFilename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // We verified that every entry that we require to be signed is signed. But,
+  // were there any missing entries--that is, entries that are mentioned in the
+  // manifest but missing from the directory tree? (There shouldn't be given
+  // ParseMFUnpacked() checking them all, but it's a cheap sanity check.)
+  if (items.Count() != 0) {
+    return NS_ERROR_SIGNED_JAR_ENTRY_MISSING;
+  }
+
+  // Return the signer's certificate to the reader if they want it.
+  // XXX: We should return an nsIX509CertList with the whole validated chain.
+  if (aSignerCert) {
+    MOZ_ASSERT(CERT_LIST_HEAD(builtChain));
+    nsCOMPtr<nsIX509Cert> signerCert =
+      nsNSSCertificate::Create(CERT_LIST_HEAD(builtChain)->cert);
+    NS_ENSURE_TRUE(signerCert, NS_ERROR_OUT_OF_MEMORY);
+    signerCert.forget(aSignerCert);
+  }
+
+  return NS_OK;
+}
+
+class VerifySignedDirectoryTask final : public CryptoTask
+{
+public:
+  VerifySignedDirectoryTask(AppTrustedRoot aTrustedRoot, nsIFile* aUnpackedJar,
+                            nsIVerifySignedDirectoryCallback* aCallback)
+    : mTrustedRoot(aTrustedRoot)
+    , mDirectory(aUnpackedJar)
+    , mCallback(new nsMainThreadPtrHolder<nsIVerifySignedDirectoryCallback>(aCallback))
+  {
+  }
+
+private:
+  virtual nsresult CalculateResult() override
+  {
+    return VerifySignedDirectory(mTrustedRoot,
+                                 mDirectory,
+                                 getter_AddRefs(mSignerCert));
+  }
+
+  // This class doesn't directly hold NSS resources so there's nothing that
+  // needs to be released
+  virtual void ReleaseNSSResources() override { }
+
+  virtual void CallCallback(nsresult rv) override
+  {
+    (void) mCallback->VerifySignedDirectoryFinished(rv, mSignerCert);
+  }
+
+  const AppTrustedRoot mTrustedRoot;
+  const nsCOMPtr<nsIFile> mDirectory;
+  nsMainThreadPtrHandle<nsIVerifySignedDirectoryCallback> mCallback;
+  nsCOMPtr<nsIX509Cert> mSignerCert; // out
+};
+
+NS_IMETHODIMP
+nsNSSCertificateDB::VerifySignedDirectoryAsync(
+  AppTrustedRoot aTrustedRoot, nsIFile* aUnpackedJar,
+  nsIVerifySignedDirectoryCallback* aCallback)
+{
+  NS_ENSURE_ARG_POINTER(aUnpackedJar);
+  NS_ENSURE_ARG_POINTER(aCallback);
+  RefPtr<VerifySignedDirectoryTask> task(new VerifySignedDirectoryTask(aTrustedRoot,
+                                                                       aUnpackedJar,
+                                                                       aCallback));
+  return task->Dispatch("UnpackedJar");
 }
