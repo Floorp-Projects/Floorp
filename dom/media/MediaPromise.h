@@ -198,7 +198,18 @@ protected:
     }
 
   protected:
-    virtual void DoResolveOrReject(ResolveOrRejectValue& aValue) = 0;
+    virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) = 0;
+
+    void DoResolveOrReject(ResolveOrRejectValue& aValue)
+    {
+      Consumer::mComplete = true;
+      if (Consumer::mDisconnected) {
+        PROMISE_LOG("ThenValue::DoResolveOrReject disconnected - bailing out [this=%p]", this);
+        return;
+      }
+
+      DoResolveOrRejectInternal(aValue);
+    }
 
     nsRefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
     const char* mCallSite;
@@ -253,15 +264,8 @@ protected:
   }
 
   protected:
-    virtual void DoResolveOrReject(ResolveOrRejectValue& aValue) override
+    virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
     {
-      Consumer::mComplete = true;
-      if (Consumer::mDisconnected) {
-        MOZ_ASSERT(!mThisVal);
-        PROMISE_LOG("ThenValue::DoResolveOrReject disconnected - bailing out [this=%p]", this);
-        return;
-      }
-
       if (aValue.IsResolve()) {
         InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aValue.ResolveValue());
       } else {
