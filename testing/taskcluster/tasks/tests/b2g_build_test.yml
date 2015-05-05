@@ -9,8 +9,20 @@ task:
   payload:
     command:
       - entrypoint # entrypoint ensures we are running in xvfb
+      - ./bin/pull_gaia.sh &&
       - >
-        curl https://queue.taskcluster.net/v1/task/wXAHAaxDQpqxoWF1iljJjg/runs/0/artifacts/public/cache/xulrunner-sdk-40.zip > /home/worker/artifacts/xulrunner-sdk-40.zi &&
+        python ./mozharness/scripts/gaia_build_integration.py
+        --no-read-buildbot-config
+        --config-file ./mozharness/configs/b2g/gaia_integration_config.py
+        --config-file ./mozharness_configs/gaia_integration_override.py
+        --config-file ./mozharness_configs/remove_executables.py
+        --installer-url {{build_url}}
+        --no-pull
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --gaia-repo https://hg.mozilla.org/integration/gaia-central
+        --gaia-dir /home/worker
+        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/xulrunner-sdk-40.zip
     artifacts:
       'public/build':
         type: directory
