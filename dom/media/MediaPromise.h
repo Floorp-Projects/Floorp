@@ -169,14 +169,40 @@ protected:
       RejectValueType mRejectValue;
     };
 
-    explicit ThenValueBase(const char* aCallSite) : mCallSite(aCallSite) {}
+    explicit ThenValueBase(AbstractThread* aResponseTarget, const char* aCallSite)
+      : mResponseTarget(aResponseTarget), mCallSite(aCallSite) {}
 
-    virtual void Dispatch(MediaPromise *aPromise) = 0;
+    void Dispatch(MediaPromise *aPromise)
+    {
+      aPromise->mMutex.AssertCurrentThreadOwns();
+      MOZ_ASSERT(!aPromise->IsPending());
+      bool resolved = aPromise->mResolveValue.isSome();
+      nsRefPtr<nsRunnable> runnable =
+        resolved ? static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveRunnable)(this, aPromise->mResolveValue.ref()))
+                 : static_cast<nsRunnable*>(new (typename ThenValueBase::RejectRunnable)(this, aPromise->mRejectValue.ref()));
+      PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
+                  resolved ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
+                  runnable.get(), aPromise, this);
+
+      // Promise consumers are allowed to disconnect the Consumer object and
+      // then shut down the thread or task queue that the promise result would
+      // be dispatched on. So we unfortunately can't assert that promise
+      // dispatch succeeds. :-(
+      mResponseTarget->Dispatch(runnable.forget(), AbstractThread::DontAssertDispatchSuccess);
+    }
+
+    virtual void Disconnect() override
+    {
+      MOZ_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
+      MOZ_DIAGNOSTIC_ASSERT(!Consumer::mComplete);
+      Consumer::mDisconnected = true;
+    }
 
   protected:
     virtual void DoResolve(ResolveValueType aResolveValue) = 0;
     virtual void DoReject(RejectValueType aRejectValue) = 0;
 
+    nsRefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
     const char* mCallSite;
   };
 
@@ -213,45 +239,14 @@ protected:
     ThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
               ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
               const char* aCallSite)
-      : ThenValueBase(aCallSite)
-      , mResponseTarget(aResponseTarget)
+      : ThenValueBase(aResponseTarget, aCallSite)
       , mThisVal(aThisVal)
       , mResolveMethod(aResolveMethod)
       , mRejectMethod(aRejectMethod) {}
 
-    void Dispatch(MediaPromise *aPromise) override
-    {
-      aPromise->mMutex.AssertCurrentThreadOwns();
-      MOZ_ASSERT(!aPromise->IsPending());
-      bool resolved = aPromise->mResolveValue.isSome();
-      nsRefPtr<nsRunnable> runnable =
-        resolved ? static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveRunnable)(this, aPromise->mResolveValue.ref()))
-                 : static_cast<nsRunnable*>(new (typename ThenValueBase::RejectRunnable)(this, aPromise->mRejectValue.ref()));
-      PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
-                  resolved ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
-                  runnable.get(), aPromise, this);
-
-      // Promise consumers are allowed to disconnect the Consumer object and
-      // then shut down the thread or task queue that the promise result would
-      // be dispatched on. So we unfortunately can't assert that promise
-      // dispatch succeeds. :-(
-      mResponseTarget->Dispatch(runnable.forget(), AbstractThread::DontAssertDispatchSuccess);
-    }
-
-#ifdef DEBUG
-  void AssertOnDispatchThread()
-  {
-    MOZ_ASSERT(mResponseTarget->IsCurrentThreadIn());
-  }
-#else
-  void AssertOnDispatchThread() {}
-#endif
-
   virtual void Disconnect() override
   {
-    AssertOnDispatchThread();
-    MOZ_DIAGNOSTIC_ASSERT(!Consumer::mComplete);
-    Consumer::mDisconnected = true;
+    ThenValueBase::Disconnect();
 
     // If a Consumer has been disconnected, we don't guarantee that the
     // resolve/reject runnable will be dispatched. Null out our refcounted
@@ -295,7 +290,6 @@ protected:
     }
 
   private:
-    nsRefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
     nsRefPtr<ThisType> mThisVal; // Only accessed and refcounted on dispatch thread.
     ResolveMethodType mResolveMethod;
     RejectMethodType mRejectMethod;
