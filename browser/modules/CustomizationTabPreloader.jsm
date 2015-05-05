@@ -155,6 +155,7 @@ HiddenBrowser.prototype = {
     this._hiddenFrame.get().then(aFrame => {
       let doc = aFrame.document;
       this._browser = doc.createElementNS(XUL_NS, "browser");
+      this._browser.permanentKey = {};
       this._browser.setAttribute("type", "content");
       this._browser.setAttribute("src", CUSTOMIZATION_URL);
       this._browser.style.width = "400px";

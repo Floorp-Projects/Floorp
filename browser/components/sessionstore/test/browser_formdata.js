@@ -30,7 +30,7 @@ add_task(function test_formdata() {
       yield setInputValue(browser, {id: "txt", value: INNER_VALUE, frame: 0});
 
       // Remove the tab.
-      gBrowser.removeTab(tab);
+      yield promiseRemoveTab(tab);
     });
   }
 
@@ -119,7 +119,7 @@ add_task(function test_nested() {
   yield sendMessage(browser, "ss-test:sendKeyEvent", {key: "m", frame: 0});
 
   // Remove the tab and check that we stored form data correctly.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   let [{state: {formdata}}] = JSON.parse(ss.getClosedTabData(window));
   is(JSON.stringify(formdata), JSON.stringify(FORM_DATA),
     "formdata for iframe stored correctly");
@@ -156,7 +156,7 @@ add_task(function test_design_mode() {
   yield sendMessage(browser, "ss-test:sendKeyEvent", {key: "m"});
 
   // Close and restore the tab.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
   yield promiseTabRestored(tab);
@@ -167,7 +167,7 @@ add_task(function test_design_mode() {
   is(html, expected, "editable document has been restored correctly");
 
   // Close and restore the tab.
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
   tab = ss.undoCloseTab(window, 0);
   browser = tab.linkedBrowser;
   yield promiseTabRestored(tab);
@@ -232,7 +232,7 @@ add_task(function test_ccNumbers() {
     yield setInputValue(browser, {id: "txt", value: formValue});
 
     // Remove the tab.
-    gBrowser.removeTab(tab);
+    yield promiseRemoveTab(tab);
   }
 
   // Test that valid CC numbers are not collected.

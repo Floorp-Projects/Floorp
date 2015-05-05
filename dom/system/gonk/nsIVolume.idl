@@ -101,6 +101,7 @@ interface nsIVolume : nsISupports
 %{C++
 // For use with the ObserverService
 #define NS_VOLUME_STATE_CHANGED  "volume-state-changed"
+#define NS_VOLUME_REMOVED        "volume-removed"
 
 namespace mozilla {
 namespace system {

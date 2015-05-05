@@ -73,11 +73,11 @@ CacheChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
 }
 
 CachePushStreamChild*
-CacheChild::CreatePushStream(nsIAsyncInputStream* aStream)
+CacheChild::CreatePushStream(nsISupports* aParent, nsIAsyncInputStream* aStream)
 {
   mNumChildActors += 1;
   auto actor = SendPCachePushStreamConstructor(
-    new CachePushStreamChild(GetFeature(), aStream));
+    new CachePushStreamChild(GetFeature(), aParent, aStream));
   MOZ_ASSERT(actor);
   return static_cast<CachePushStreamChild*>(actor);
 }
