@@ -512,7 +512,7 @@ Cache::CreatePushStream(nsIAsyncInputStream* aStream)
   NS_ASSERT_OWNINGTHREAD(Cache);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(aStream);
-  return mActor->CreatePushStream(aStream);
+  return mActor->CreatePushStream(this, aStream);
 }
 
 Cache::~Cache()

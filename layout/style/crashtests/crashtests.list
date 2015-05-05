@@ -113,5 +113,6 @@ load 1074651-1.html
 pref(dom.webcomponents.enabled,true) load 1089463-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1136010-1.html
 load 1153693-1.html
+load 1161366-1.html
 load large_border_image_width.html
 load border-image-visited-link.html

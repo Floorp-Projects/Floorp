@@ -2,6 +2,7 @@
 "runtests":{
 },
 "excludetests":{
-    "dom/devicestorage/test/test_dirs.html":"excluded"
+    "dom/devicestorage/test/test_dirs.html":"excluded",
+    "dom/devicestorage/test/test_storageAreaListener.html":"excluded"
    }
 }

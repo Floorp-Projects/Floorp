@@ -190,12 +190,17 @@ IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
     return nullptr;
   }
 
-  RefPtr<DXGIYCbCrTextureClient> texClient =
-    new DXGIYCbCrTextureClient(aClient->GetForwarder(), TextureFlags::DEFAULT);
-  texClient->InitWith(textureY, textureCb, textureCr,
-                      shareHandleY, shareHandleCb, shareHandleCr,
-                      GetSize(), mData.mYSize, mData.mCbCrSize);
-  mTextureClient = texClient;
+  mTextureClient = DXGIYCbCrTextureClient::Create(aClient->GetForwarder(),
+                                                  TextureFlags::DEFAULT,
+                                                  textureY,
+                                                  textureCb,
+                                                  textureCr,
+                                                  shareHandleY,
+                                                  shareHandleCb,
+                                                  shareHandleCr,
+                                                  GetSize(),
+                                                  mData.mYSize,
+                                                  mData.mCbCrSize);
 
   return mTextureClient;
 }
@@ -268,12 +273,17 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
   textureCr->QueryInterface((IDXGIResource**)byRef(resource));
   hr = resource->GetSharedHandle(&shareHandleCr);
 
-  RefPtr<DXGIYCbCrTextureClient> texClient =
-    new DXGIYCbCrTextureClient(aClient->GetForwarder(), TextureFlags::DEFAULT);
-  texClient->InitWith(textureY, textureCb, textureCr,
-                      shareHandleY, shareHandleCb, shareHandleCr,
-                      GetSize(), mData.mYSize, mData.mCbCrSize);
-  mTextureClient = texClient;
+  mTextureClient = DXGIYCbCrTextureClient::Create(aClient->GetForwarder(),
+                                                  TextureFlags::DEFAULT,
+                                                  textureY,
+                                                  textureCb,
+                                                  textureCr,
+                                                  shareHandleY,
+                                                  shareHandleCb,
+                                                  shareHandleCr,
+                                                  GetSize(),
+                                                  mData.mYSize,
+                                                  mData.mCbCrSize);
 
   return mTextureClient;
 }
