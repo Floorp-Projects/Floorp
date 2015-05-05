@@ -226,7 +226,7 @@ function updateLiveData() {
           _el.textContent = a ? a.name : _item.name
         });
       } else {
-        el.textContent = item.name;
+        el.textContent = item.title || item.name;
       }
     }
   } catch (ex) {

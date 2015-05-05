@@ -28,4 +28,9 @@ EXPORTS += [
     'nsPerformanceStats.h'
 ]
 
+# We need nsGlobalWindow
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
 FINAL_LIBRARY = 'xul'
