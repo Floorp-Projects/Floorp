@@ -12,6 +12,8 @@
 <!DOCTYPE page [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
+<!ENTITY % browserPocketDTD SYSTEM "chrome://browser/content/browser-pocket.dtd">
+%browserPocketDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd">
 %textcontextDTD;
 ]>
