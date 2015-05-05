@@ -233,7 +233,7 @@ class TestJarMaker(unittest.TestCase):
     def test_a_simple_symlink(self):
         '''Test a simple jar.mn with a symlink'''
         if not symlinks_supported(self.srcdir):
-            return
+            raise unittest.SkipTest('symlinks not supported')
 
         self._create_simple_setup()
         jm = JarMaker(outputFormat='symlink')
@@ -246,6 +246,65 @@ class TestJarMaker(unittest.TestCase):
         destfoo = os.path.join(self.builddir, 'chrome', 'test', 'dir', 'foo')
         self.assertTrue(is_symlink_to(destfoo, srcbar),
                         "{0} is not a symlink to {1}".format(destfoo, srcbar))
+
+    def _create_wildcard_setup(self):
+        # create src content
+        jarf = open(os.path.join(self.srcdir, 'jar.mn'), 'w')
+        jarf.write('''test.jar:
+ dir/bar (*.js)
+ dir/hoge (qux/*)
+''')
+        jarf.close()
+        open(os.path.join(self.srcdir,'foo.js'),'w').write('foo.js\n')
+        open(os.path.join(self.srcdir,'bar.js'),'w').write('bar.js\n')
+        os.makedirs(os.path.join(self.srcdir, 'qux', 'foo'))
+        open(os.path.join(self.srcdir,'qux', 'foo', '1'),'w').write('1\n')
+        open(os.path.join(self.srcdir,'qux', 'foo', '2'),'w').write('2\n')
+        open(os.path.join(self.srcdir,'qux', 'baz'),'w').write('baz\n')
+        # create reference
+        refpath = os.path.join(self.refdir, 'chrome', 'test.jar', 'dir')
+        os.makedirs(os.path.join(refpath, 'bar'))
+        os.makedirs(os.path.join(refpath, 'hoge', 'foo'))
+        open(os.path.join(refpath, 'bar', 'foo.js'), 'w').write('foo.js\n')
+        open(os.path.join(refpath, 'bar', 'bar.js'), 'w').write('bar.js\n')
+        open(os.path.join(refpath, 'hoge', 'foo', '1'), 'w').write('1\n')
+        open(os.path.join(refpath, 'hoge', 'foo', '2'), 'w').write('2\n')
+        open(os.path.join(refpath, 'hoge', 'baz'), 'w').write('baz\n')
+
+    def test_a_wildcard_jar(self):
+        '''Test a wildcard in jar.mn'''
+        self._create_wildcard_setup()
+        # call JarMaker
+        rv = self._jar_and_compare(os.path.join(self.srcdir,'jar.mn'),
+                                   sourcedirs = [self.srcdir])
+        self.assertTrue(not rv, rv)
+
+    def test_a_wildcard_symlink(self):
+        '''Test a wildcard in jar.mn with symlinks'''
+        if not symlinks_supported(self.srcdir):
+            raise unittest.SkipTest('symlinks not supported')
+
+        self._create_wildcard_setup()
+        jm = JarMaker(outputFormat='symlink')
+        jm.sourcedirs = [self.srcdir]
+        jm.topsourcedir = self.srcdir
+        jardir = os.path.join(self.builddir, 'chrome')
+        jm.makeJar(os.path.join(self.srcdir,'jar.mn'), jardir)
+
+        expected_symlinks = {
+            ('bar', 'foo.js'): ('foo.js',),
+            ('bar', 'bar.js'): ('bar.js',),
+            ('hoge', 'foo', '1'): ('qux', 'foo', '1'),
+            ('hoge', 'foo', '2'): ('qux', 'foo', '2'),
+            ('hoge', 'baz'): ('qux', 'baz'),
+        }
+        for dest, src in expected_symlinks.iteritems():
+            srcpath = os.path.join(self.srcdir, *src)
+            destpath = os.path.join(self.builddir, 'chrome', 'test', 'dir',
+                                    *dest)
+            self.assertTrue(is_symlink_to(destpath, srcpath),
+                            "{0} is not a symlink to {1}".format(destpath,
+                                                                 srcpath))
 
 
 class Test_relativesrcdir(unittest.TestCase):

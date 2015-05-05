@@ -139,6 +139,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/VRDevice.h"
+#include "nsComputedDOMStyle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -385,7 +386,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
                                IsHTMLElement(nsGkAtoms::object) ||
                                IsHTMLElement(nsGkAtoms::embed) ||
                                IsHTMLElement(nsGkAtoms::applet));
-  nsIPresShell *shell = aDocument->GetShell();
+  nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
   if (!shell || GetPrimaryFrame() || !isXULorPluginElement) {
     *aResult = nullptr;
 
@@ -393,11 +394,8 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
   }
 
   // Get the computed -moz-binding directly from the style context
-  nsPresContext *pctx = shell->GetPresContext();
-  NS_ENSURE_TRUE(pctx, false);
-
-  nsRefPtr<nsStyleContext> sc = pctx->StyleSet()->ResolveStyleFor(this,
-                                                                  nullptr);
+  nsRefPtr<nsStyleContext> sc =
+    nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr, shell);
   NS_ENSURE_TRUE(sc, false);
 
   *aResult = sc->StyleDisplay()->mBinding;

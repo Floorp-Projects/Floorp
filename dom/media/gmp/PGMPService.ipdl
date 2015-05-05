@@ -17,7 +17,7 @@ sync protocol PGMPService
 parent:
   sync LoadGMP(nsCString nodeId, nsCString api, nsCString[] tags,
                ProcessId[] alreadyBridgedTo)
-    returns (ProcessId id, nsCString displayName, nsCString pluginId);
+    returns (ProcessId id, nsCString displayName, uint32_t pluginId);
   sync GetGMPNodeId(nsString origin, nsString topLevelOrigin,
                     bool inPrivateBrowsing)
     returns (nsCString id);

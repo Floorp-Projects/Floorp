@@ -51,11 +51,11 @@ public:
   {
     return mDisplayName;
   }
-  void SetPluginId(const nsCString& aPluginId)
+  void SetPluginId(const uint32_t aPluginId)
   {
     mPluginId = aPluginId;
   }
-  const nsCString& GetPluginId()
+  const uint32_t GetPluginId()
   {
     return mPluginId;
   }
@@ -92,7 +92,7 @@ private:
   nsCOMPtr<nsIThread> mGMPThread;
   nsRefPtr<GMPParent> mParent;
   nsCString mDisplayName;
-  nsCString mPluginId;
+  uint32_t mPluginId;
 };
 
 } // namespace gmp
