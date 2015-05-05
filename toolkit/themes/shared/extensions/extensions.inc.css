@@ -353,8 +353,16 @@
 .list {
   -moz-appearance: none;
   margin: 0;
-  border-color: transparent;
+  border-width: 0 !important;
   background-color: transparent;
+}
+
+.list > scrollbox > .scrollbox-innerbox {
+  border: 1px dotted transparent;
+}
+
+.list:-moz-focusring > scrollbox > .scrollbox-innerbox {
+  border-color: #0095dd;
 }
 
 .addon {
