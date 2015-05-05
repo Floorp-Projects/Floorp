@@ -23,7 +23,7 @@ task:
         --test-url {{tests_url}}
         --gaia-repo https://hg.mozilla.org/integration/gaia-central
         --gaia-dir /home/worker
-        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/xulrunner-sdk-40.zip
+        --xre-url https://queue.taskcluster.net/v1/task/wXAHAaxDQpqxoWF1iljJjg/runs/0/artifacts/public/cache/xulrunner-sdk-40.zip
     artifacts:
       'public/build':
         type: directory
