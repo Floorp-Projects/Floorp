@@ -12,6 +12,14 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 
+TEST(CloneInputStream, InvalidInput)
+{
+  nsCOMPtr<nsIInputStream> clone;
+  nsresult rv = NS_CloneInputStream(nullptr, getter_AddRefs(clone));
+  ASSERT_TRUE(NS_FAILED(rv));
+  ASSERT_FALSE(clone);
+}
+
 TEST(CloneInputStream, CloneableInput)
 {
   nsTArray<char> inputData;

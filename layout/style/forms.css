@@ -827,8 +827,8 @@ input[type=range] {
   display: inline-block;
   inline-size: 12em;
   block-size: 1.3em;
-  margin-inline-start: 0.7em;
-  margin-inline-end: 0.7em;
+  -moz-margin-start: 0.7em;
+  -moz-margin-end: 0.7em;
   margin-block-start: 0;
   margin-block-end: 0;
   /* Override some rules that apply on all input types: */
@@ -843,8 +843,8 @@ input[type=range] {
 input[type=range][orient=block] {
   inline-size: 1.3em;
   block-size: 12em;
-  margin-inline-start: 0;
-  margin-inline-end: 0;
+  -moz-margin-start: 0;
+  -moz-margin-end: 0;
   margin-block-start: 0.7em;
   margin-block-end: 0.7em;
 }

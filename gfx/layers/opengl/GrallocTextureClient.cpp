@@ -59,16 +59,6 @@ GrallocTextureClientOGL::CreateSimilar(TextureFlags aFlags,
   return tex;
 }
 
-void
-GrallocTextureClientOGL::InitWith(MaybeMagicGrallocBufferHandle aHandle, gfx::IntSize aSize)
-{
-  MOZ_ASSERT(!IsAllocated());
-  MOZ_ASSERT(IsValid());
-  mGrallocHandle = aHandle;
-  mGraphicBuffer = GetGraphicBufferFrom(aHandle);
-  mSize = aSize;
-}
-
 bool
 GrallocTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {

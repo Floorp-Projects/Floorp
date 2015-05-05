@@ -485,10 +485,11 @@ FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
   nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mParent);
+  nsCOMPtr<nsIURI> docURI = window->GetDocumentURI();
   nsCOMPtr<nsIURI> base = window->GetDocBaseURI();
 
   if (!parser.ParseFontFaceDescriptor(aDescID, aString,
-                                      nullptr, // aSheetURL
+                                      docURI, // aSheetURL
                                       base,
                                       principal,
                                       aResult)) {

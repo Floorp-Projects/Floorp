@@ -8186,6 +8186,10 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
     }
   }
 
+  // If we have the scrollparent being the same as the scroll id, the
+  // compositor-side code could get into an infinite loop while building the
+  // overscroll handoff chain.
+  MOZ_ASSERT(aScrollParentId == FrameMetrics::NULL_SCROLL_ID || scrollId != aScrollParentId);
   metrics.SetScrollId(scrollId);
   metrics.SetIsRoot(aIsRoot);
   metrics.SetScrollParentId(aScrollParentId);
