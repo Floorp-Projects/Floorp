@@ -169,22 +169,6 @@ SizeOfEntryStore(uint32_t aCapacity, uint32_t aEntrySize, uint32_t* aNbytes)
   return uint64_t(*aNbytes) == nbytes64;   // returns false on overflow
 }
 
-PLDHashTable*
-PL_NewDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
-                 uint32_t aLength)
-{
-  PLDHashTable* table = new PLDHashTable();
-  PL_DHashTableInit(table, aOps, aEntrySize, aLength);
-  return table;
-}
-
-void
-PL_DHashTableDestroy(PLDHashTable* aTable)
-{
-  PL_DHashTableFinish(aTable);
-  delete aTable;
-}
-
 /*
  * Compute max and min load numbers (entry counts).  We have a secondary max
  * that allows us to overload a table reasonably if it cannot be grown further

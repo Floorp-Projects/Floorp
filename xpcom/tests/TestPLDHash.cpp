@@ -186,11 +186,11 @@ static bool test_pldhash_grow_to_max_capacity()
   };
 
   // This is infallible.
-  PLDHashTable* t = PL_NewDHashTable(&ops, sizeof(PLDHashEntryStub), 128);
+  PLDHashTable* t = new PLDHashTable(&ops, sizeof(PLDHashEntryStub), 128);
 
   // Check that New() sets |t->ops|.
   if (!t->IsInitialized()) {
-    PL_DHashTableDestroy(t);
+    delete t;
     return false;
   }
 
@@ -209,7 +209,7 @@ static bool test_pldhash_grow_to_max_capacity()
     return false;
   }
 
-  PL_DHashTableDestroy(t);
+  delete t;
 
   return true;
 }
