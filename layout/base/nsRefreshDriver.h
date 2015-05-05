@@ -149,6 +149,22 @@ public:
   void RemoveImageRequest(imgIRequest* aRequest);
 
   /**
+   * Add / remove presshells which have pending resize event.
+   */
+  void AddResizeEventFlushObserver(nsIPresShell* aShell)
+  {
+    NS_ASSERTION(!mResizeEventFlushObservers.Contains(aShell),
+      "Double-adding resize event flush observer");
+    mResizeEventFlushObservers.AppendElement(aShell);
+    EnsureTimerStarted();
+  }
+
+  void RemoveResizeEventFlushObserver(nsIPresShell* aShell)
+  {
+    mResizeEventFlushObservers.RemoveElement(aShell);
+  }
+
+  /**
    * Add / remove presshells that we should flush style and layout on
    */
   bool AddStyleFlushObserver(nsIPresShell* aShell) {
@@ -392,6 +408,7 @@ private:
   RequestTable mRequests;
   ImageStartTable mStartTable;
 
+  nsAutoTArray<nsIPresShell*, 16> mResizeEventFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;

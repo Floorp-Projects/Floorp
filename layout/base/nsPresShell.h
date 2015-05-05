@@ -390,6 +390,8 @@ public:
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
+  virtual void FireResizeEvent() override;
+
 protected:
   virtual ~PresShell();
 
@@ -700,9 +702,6 @@ protected:
                                            mozilla::LayoutDeviceIntPoint& aTargetPt,
                                            nsIWidget *aRootWidget);
 
-  void FireResizeEvent();
-  static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
-
   virtual void SynthesizeMouseMove(bool aFromScroll) override;
 
   PresShell* GetRootPresShell();
@@ -792,8 +791,6 @@ protected:
   nsTArray<nsIFrame*>       mDirtyRoots;
 
   nsTArray<nsAutoPtr<DelayedEvent> > mDelayedEvents;
-  nsRevocableEventPtr<nsRunnableMethod<PresShell> > mResizeEvent;
-  nsCOMPtr<nsITimer>        mAsyncResizeEventTimer;
 private:
   nsIFrame*                 mCurrentEventFrame;
   nsCOMPtr<nsIContent>      mCurrentEventContent;
@@ -861,8 +858,7 @@ protected:
   // have been processed.
   bool                      mShouldUnsuppressPainting : 1;
 
-  bool                      mAsyncResizeTimerIsActive : 1;
-  bool                      mInResize : 1;
+  bool                      mResizeEventPending : 1;
 
   bool                      mImageVisibilityVisited : 1;
 
