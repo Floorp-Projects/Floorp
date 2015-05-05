@@ -619,18 +619,9 @@ FT2FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList,
 class FontNameCache {
 public:
     FontNameCache()
-        : mWriteNeeded(false)
+        : mMap(&sMapOps, sizeof(FNCMapEntry), 0)
+        , mWriteNeeded(false)
     {
-        mOps = (PLDHashTableOps) {
-            StringHash,
-            HashMatchEntry,
-            MoveEntry,
-            PL_DHashClearEntryStub,
-            nullptr
-        };
-
-        PL_DHashTableInit(&mMap, &mOps, sizeof(FNCMapEntry), 0);
-
         MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
                    "StartupCacheFontNameCache should only be used in chrome "
                    "process");
@@ -641,17 +632,12 @@ public:
 
     ~FontNameCache()
     {
-        if (!mMap.IsInitialized()) {
-            return;
-        }
         if (!mWriteNeeded || !mCache) {
-            PL_DHashTableFinish(&mMap);
             return;
         }
 
         nsAutoCString buf;
         PL_DHashTableEnumerate(&mMap, WriteOutMap, &buf);
-        PL_DHashTableFinish(&mMap);
         mCache->PutBuffer(CACHE_KEY, buf.get(), buf.Length() + 1);
     }
 
@@ -753,7 +739,7 @@ private:
     PLDHashTable mMap;
     bool mWriteNeeded;
 
-    PLDHashTableOps mOps;
+    static const PLDHashTableOps sMapOps;
 
     static PLDHashOperator WriteOutMap(PLDHashTable *aTable,
                                        PLDHashEntryHdr *aHdr,
@@ -810,6 +796,15 @@ private:
         to->mFaces.Assign(from->mFaces);
         to->mFileExists = from->mFileExists;
     }
+};
+
+/* static */ const PLDHashTableOps FontNameCache::sMapOps =
+{
+    FontNameCache::StringHash,
+    FontNameCache::HashMatchEntry,
+    FontNameCache::MoveEntry,
+    PL_DHashClearEntryStub,
+    nullptr
 };
 
 /***************************************************************
