@@ -590,6 +590,7 @@ let DOMFullscreenHandler = {
     addMessageListener("DOMFullscreen:Approved", this);
     addMessageListener("DOMFullscreen:CleanUp", this);
     addEventListener("MozEnteredDomFullscreen", this);
+    addEventListener("MozExitedDomFullscreen", this);
   },
 
   receiveMessage: function(aMessage) {
@@ -615,6 +616,8 @@ let DOMFullscreenHandler = {
       sendAsyncMessage("MozEnteredDomFullscreen", {
         origin: this._fullscreenDoc.nodePrincipal.origin,
       });
+    } else if (aEvent.type == "MozExitedDomFullscreen") {
+      sendAsyncMessage("MozExitedDomFullscreen");
     }
   }
 };
