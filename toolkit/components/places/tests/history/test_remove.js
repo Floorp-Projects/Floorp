@@ -221,7 +221,7 @@ add_task(function* test_remove_many() {
       Assert.ok(origin);
       Assert.ok(origin.hasBookmark, "Observing onFrecencyChanged on a page with a bookmark");
       origin.onFrecencyChangedCalled = true;
-      // We do not make sure that `origin.onFrecencyChangedCalled` is `false`, as 
+      // We do not make sure that `origin.onFrecencyChangedCalled` is `false`, as
     },
     onManyFrecenciesChanged: function() {
       Assert.ok(false, "Observing onManyFrecenciesChanges, this is most likely correct but not covered by this test");

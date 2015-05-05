@@ -442,7 +442,7 @@ add_task(function* test_getLivemark_removeItem_contention() {
   PlacesUtils.livemarks.addLivemark({ title: "test"
                                     , parentGuid: PlacesUtils.bookmarks.unfiledGuid
                                     , feedURI: FEED_URI
-                                    });
+                                  }).catch(() => {/* swallow errors*/});
   yield PlacesUtils.bookmarks.eraseEverything();
   let livemark = yield PlacesUtils.livemarks.addLivemark(
     { title: "test"
