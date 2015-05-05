@@ -2611,7 +2611,12 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       parentdata_ = maybeFakeParentData.ptr();                                \
     }                                                                         \
   }                                                                           \
-  if (aStartStruct)                                                           \
+  if (eStyleStruct_##type_ == eStyleStruct_Variables)                         \
+    /* no need to copy construct an nsStyleVariables, as we will copy */      \
+    /* inherited variables (and set canStoreInRuleTree to false) in */        \
+    /* ComputeVariablesData */                                                \
+    data_ = new (mPresContext) nsStyle##type_ ctorargs_;                      \
+  else if (aStartStruct)                                                      \
     /* We only need to compute the delta between this computed data and */    \
     /* our computed data. */                                                  \
     data_ = new (mPresContext)                                                \
