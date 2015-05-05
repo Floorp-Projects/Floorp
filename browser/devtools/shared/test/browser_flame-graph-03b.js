@@ -68,8 +68,8 @@ let VERTICAL_AXIS = 2;
 function scroll(graph, wheel, axis, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  graph._onMouseMove({ clientX: x, clientY: y });
-  graph._onMouseWheel({ clientX: x, clientY: y, axis, detail: wheel, axis,
+  graph._onMouseMove({ testX: x, testY: y });
+  graph._onMouseWheel({ testX: x, testY: y, axis, detail: wheel, axis,
     HORIZONTAL_AXIS,
     VERTICAL_AXIS
   });

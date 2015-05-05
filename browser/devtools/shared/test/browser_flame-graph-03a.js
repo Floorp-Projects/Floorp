@@ -91,21 +91,21 @@ function testGraph(graph) {
 function hover(graph, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  graph._onMouseMove({ clientX: x, clientY: y });
+  graph._onMouseMove({ testX: x, testY: y });
 }
 
 function dragStart(graph, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  graph._onMouseMove({ clientX: x, clientY: y });
-  graph._onMouseDown({ clientX: x, clientY: y });
+  graph._onMouseMove({ testX: x, testY: y });
+  graph._onMouseDown({ testX: x, testY: y });
 }
 
 function dragStop(graph, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  graph._onMouseMove({ clientX: x, clientY: y });
-  graph._onMouseUp({ clientX: x, clientY: y });
+  graph._onMouseMove({ testX: x, testY: y });
+  graph._onMouseUp({ testX: x, testY: y });
 }
 
 let HORIZONTAL_AXIS = 1;
@@ -114,8 +114,8 @@ let VERTICAL_AXIS = 2;
 function scroll(graph, wheel, axis, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  graph._onMouseMove({ clientX: x, clientY: y });
-  graph._onMouseWheel({ clientX: x, clientY: y, axis, detail: wheel, axis,
+  graph._onMouseMove({ testX: x, testY: y });
+  graph._onMouseWheel({ testX: x, testY: y, axis, detail: wheel, axis,
     HORIZONTAL_AXIS,
     VERTICAL_AXIS
   });

@@ -84,7 +84,7 @@ function map(value, istart, istop, ostart, ostop) {
 function click(graph, x, y = 1) {
   x /= window.devicePixelRatio;
   y /= window.devicePixelRatio;
-  graph._onMouseMove({ clientX: x, clientY: y });
-  graph._onMouseDown({ clientX: x, clientY: y });
-  graph._onMouseUp({ clientX: x, clientY: y });
+  graph._onMouseMove({ testX: x, testY: y });
+  graph._onMouseDown({ testX: x, testY: y });
+  graph._onMouseUp({ testX: x, testY: y });
 }
