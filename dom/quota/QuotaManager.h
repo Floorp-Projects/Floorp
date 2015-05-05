@@ -313,6 +313,13 @@ public:
                                   EmptyCString(), _retval);
   }
 
+  static nsresult
+  GetDirectoryMetadata(nsIFile* aDirectory,
+                       int64_t* aTimestamp,
+                       nsACString& aGroup,
+                       nsACString& aOrigin,
+                       bool* aIsApp);
+
 private:
   QuotaManager();
 
