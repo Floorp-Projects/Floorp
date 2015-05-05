@@ -98,12 +98,14 @@ class JS_PUBLIC_API(JSTracer)
     WeakMapTraceKind eagerlyTraceWeakMaps() const { return eagerlyTraceWeakMaps_; }
 
     // An intermediate state on the road from C to C++ style dispatch.
-    enum TracerKindTag {
-        MarkingTracer,
-        CallbackTracer
+    enum class TracerKindTag {
+        Marking,
+        Tenuring,
+        Callback
     };
-    bool isMarkingTracer() const { return tag_ == MarkingTracer; }
-    bool isCallbackTracer() const { return tag_ == CallbackTracer; }
+    bool isMarkingTracer() const { return tag_ == TracerKindTag::Marking; }
+    bool isTenuringTracer() const { return tag_ == TracerKindTag::Tenuring; }
+    bool isCallbackTracer() const { return tag_ == TracerKindTag::Callback; }
     inline JS::CallbackTracer* asCallbackTracer();
 
   protected:
@@ -129,7 +131,7 @@ class JS_PUBLIC_API(CallbackTracer) : public JSTracer
   public:
     CallbackTracer(JSRuntime* rt, JSTraceCallback traceCallback,
                    WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
-      : JSTracer(rt, JSTracer::CallbackTracer, weakTraceKind), callback(traceCallback),
+      : JSTracer(rt, JSTracer::TracerKindTag::Callback, weakTraceKind), callback(traceCallback),
         contextName_(nullptr), contextIndex_(InvalidIndex), contextFunctor_(nullptr)
     {}
 
