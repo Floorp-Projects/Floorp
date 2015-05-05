@@ -4746,6 +4746,10 @@ BreakpointActor.prototype = {
   actorPrefix: "breakpoint",
   condition: null,
 
+  disconnect: function () {
+    this.removeScripts();
+  },
+
   hasScript: function (aScript) {
     return this.scripts.has(aScript);
   },
