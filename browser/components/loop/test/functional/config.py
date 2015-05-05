@@ -1,8 +1,9 @@
 # Loop server configuration
 CONTENT_SERVER_PORT = 3001
 LOOP_SERVER_PORT = 5001
+LOOP_SERVER_URL = "http://localhost:" + str(LOOP_SERVER_PORT)
 FIREFOX_PREFERENCES = {
-    "loop.server": "http://localhost:" + str(LOOP_SERVER_PORT),
+    "loop.server": LOOP_SERVER_URL + "/v0",
     "browser.dom.window.dump.enabled": True,
     # Some more changes might be necesarry to have this working in offline mode
     "media.peerconnection.default_iceservers": "[]",
