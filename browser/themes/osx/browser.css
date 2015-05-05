@@ -568,6 +568,24 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   list-style-image: url("chrome://browser/skin/readinglist/readinglist-icon.svg");
 }
 
+#panelMenu_pocket,
+#menu_pocket,
+#BMB_pocket {
+  list-style-image: url("chrome://browser/content/pocket/panels/img/pocketmenuitem16.png");
+}
+
+@media (min-resolution: 2dppx) {
+  #panelMenu_pocket,
+  #menu_pocket,
+  #BMB_pocket {
+    list-style-image: url("chrome://browser/content/pocket/panels/img/pocketmenuitem16@2x.png");
+  }
+
+  #panelMenu_pocket > .toolbarbutton-icon {
+    width: 16px;
+  }
+}
+
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
 toolbar .toolbarbutton-1:not([type="menu-button"]),
