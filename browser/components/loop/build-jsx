@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 
 import os
+import sys
 import re
 from distutils import spawn
 import subprocess
 from threading import Thread
 import argparse
+
 
 def find_react_version(lib_dir):
     "Finds the React library version number currently used."
@@ -17,28 +19,82 @@ def find_react_version(lib_dir):
     print 'Please checked the %s directory.' % lib_dir
     exit(1)
 
+
+def append_arguments(array1, array2):
+    "Appends array2 onto the end of array1"
+    result = array1[:]
+    result.extend(array2)
+    return result
+
+
+def check_jsx(jsx_path):
+    "Checks to see if jsx is installed or not"
+    if jsx_path is None:
+        print 'You do not have the react-tools installed'
+        print 'Please do $ npm install -g react-tools and make sure it is available in PATH'
+        exit(1)
+
+
+def find_react_command():
+    "Searches for a jsx location and forms a runnable command"
+    if sys.platform != 'win32':
+        jsx_path = spawn.find_executable('jsx')
+        check_jsx(jsx_path)
+        return [jsx_path]
+
+    # Else windows.
+    def find_excutable_no_extension(fileName):
+        """
+            spawn.find_executable assumes a '.exe' extension on windows
+            something which jsx doesn't have...
+        """
+        paths = os.environ['PATH'].split(os.pathsep)
+        for path in paths:
+            file = os.path.join(path, fileName)
+            if os.path.isfile(file):
+                return path
+        return None
+
+    # jsx isn't a true windows executable, so the standard spawn
+    # processes get upset. Hence, we have to use node to run the
+    # jsx file direct.
+    node = spawn.find_executable('node')
+    if node is None:
+        print 'You do not have node installed, or it is not in your PATH'
+        exit(1)
+
+    # We need the jsx path to make node happy
+    jsx_path = find_excutable_no_extension('jsx')
+    check_jsx(jsx_path)
+
+    # This is what node really wants to run.
+    jsx_path = os.path.join(jsx_path,
+                            "node_modules", "react-tools", "bin", "jsx")
+
+    return [node, jsx_path]
+
+
 SHARED_LIBS_DIR=os.path.join(os.path.dirname(__file__), "content", "shared", "libs")
 REACT_VERSION=find_react_version(SHARED_LIBS_DIR)
 
 src_files = []  # files to be compiled
 
-# search for react-tools install
-jsx_path = spawn.find_executable('jsx')
-if jsx_path is None:
-    print 'You do not have the react-tools installed'
-    print 'Please do $ npm install -g react-tools'
-    exit(1)
+run_command = find_react_command()
 
-p = subprocess.Popen([jsx_path, '-V'],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.STDOUT)
-for line in iter(p.stdout.readline, b''):
-    info = line.rstrip()
+if sys.platform == 'win32':
+    print 'Please ensure you are running react-tools version %s' % REACT_VERSION
+    print 'You may be already, but we are not currently able to detect it'
+else:
+    p = subprocess.Popen(append_arguments(run_command, ['-V']),
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+    for line in iter(p.stdout.readline, b''):
+        info = line.rstrip()
 
-if not info == REACT_VERSION:
-    print 'You have the wrong version of react-tools installed'
-    print 'Please use version %s' % REACT_VERSION
-    exit(1)
+    if not info == REACT_VERSION:
+        print 'You have the wrong version of react-tools installed'
+        print 'Please use version %s' % REACT_VERSION
+        exit(1)
 
 # parse the CLI arguments
 description = 'Loop build tool for JSX files. ' + \
@@ -63,7 +119,7 @@ for dirname, dirnames, filenames in os.walk('.'):
 
 
 def jsx_run_watcher(path):
-    subprocess.call(['jsx', '-w', '-x', 'jsx', path, path])
+    subprocess.call(append_arguments(run_command, ['-w', '-x', 'jsx', path, path]))
 
 
 def start_jsx_watcher_threads(dirs):
@@ -111,4 +167,4 @@ if args.watch:
     start_jsx_watcher_threads(unique_jsx_dirs)
 else:
     for d in unique_jsx_dirs:
-        out = subprocess.call(['jsx', '-x', 'jsx', d, d])
+        out = subprocess.call(append_arguments(run_command, ['-x', 'jsx', d, d]))
