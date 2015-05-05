@@ -25,10 +25,15 @@ add_task(function* () {
 add_task(function* () {
   info("Alt+Return keypress");
   let tab = gBrowser.selectedTab = gBrowser.addTab(START_VALUE);
+  // due to bug 691608, we must wait for the load event, else isTabEmpty() will
+  // return true on e10s for this tab, so it will be reused even with altKey.
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   gURLBar.focus();
   EventUtils.synthesizeKey("VK_RETURN", {altKey: true});
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  // wait for the new tab to appear.
+  yield BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
 
   // Check url bar and selected tab.
   is(gURLBar.textValue, TEST_VALUE, "Urlbar should preserve the value on return keypress");

@@ -355,6 +355,23 @@ let Activities = {
           calleeApp.appStatus !== Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
         return false;
       }
+
+      // If the activity is in the developer mode activity list, only let the
+      // system app be a provider.
+      let isSystemApp = false;
+      let isDevModeActivity = false;
+      try {
+        isSystemApp =
+          aResult.manifest == Services.prefs.getCharPref("b2g.system_manifest_url");
+        isDevModeActivity =
+          Services.prefs.getCharPref("dom.activities.developer_mode_only")
+                        .split(",").indexOf(aMsg.options.name) !== -1;
+      } catch(e)  {}
+
+      if (isDevModeActivity && !isSystemApp) {
+        return false;
+      }
+
       return ActivitiesServiceFilter.match(aMsg.options.data,
                                            aResult.description.filters);
     };
