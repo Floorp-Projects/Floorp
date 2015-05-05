@@ -165,8 +165,14 @@ elif [[ "$VARIANT" = "compacting" ]]; then
     esac
 fi
 
-if [[ "$VARIANT" = "warnaserr" ]]; then
+if [[ "$VARIANT" = "warnaserr" ||
+      "$VARIANT" = "warnaserrdebug" ||
+      "$VARIANT" = "plain" ]]; then
     export JSTESTS_EXTRA_ARGS=--tbpl
+elif [[ "$VARIANT" = "arm-sim" ||
+        "$VARIANT" = "rootanalysis" ||
+        "$VARIANT" = "plaindebug" ]]; then
+    export JSTESTS_EXTRA_ARGS=--tbpl-debug
 fi
 
 $COMMAND_PREFIX $MAKE check || exit 1
