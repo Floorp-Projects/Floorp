@@ -108,9 +108,6 @@ UNIFIED_SOURCES += [
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += ['AudioNodeEngineNEON.cpp']
     SOURCES['AudioNodeEngineNEON.cpp'].flags += ['-mfpu=neon']
-    LOCAL_INCLUDES += [
-        '/media/openmax_dl/dl/api/'
-    ]
 
 FAIL_ON_WARNINGS = True
 
@@ -120,4 +117,3 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '..'
 ]
-
