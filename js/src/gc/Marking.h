@@ -300,14 +300,9 @@ class GCMarker : public JSTracer
     mozilla::DebugOnly<bool> strictCompartmentChecking;
 };
 
-void
-SetMarkStackLimit(JSRuntime* rt, size_t limit);
-
 bool
 IsBufferingGrayRoots(JSTracer* trc);
 
-} /* namespace js */
-namespace js {
 namespace gc {
 
 /*** Special Cases ***/
