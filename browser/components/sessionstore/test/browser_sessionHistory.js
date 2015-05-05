@@ -15,7 +15,7 @@ add_task(function test_load_start() {
   // Load a new URI but remove the tab before it has finished loading.
   browser.loadURI("about:mozilla");
   yield promiseContentMessage(browser, "ss-test:OnHistoryReplaceEntry");
-  gBrowser.removeTab(tab);
+  yield promiseRemoveTab(tab);
 
   // Undo close the tab.
   tab = ss.undoCloseTab(window, 0);
