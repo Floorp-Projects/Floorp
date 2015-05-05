@@ -946,10 +946,10 @@ AbstractCanvasGraph.prototype = {
   _getRelativeEventCoordinates: function(e) {
     // For ease of testing, testX and testY can be passed in as the event
     // object.  If so, just return this.
-    if (e.screenX === undefined) {
+    if ("testX" in e && "testY" in e) {
       return {
-        mouseX: e.clientX * this._pixelRatio,
-        mouseY: e.clientY * this._pixelRatio
+        mouseX: e.testX * this._pixelRatio,
+        mouseY: e.testY * this._pixelRatio
       };
     }
 
