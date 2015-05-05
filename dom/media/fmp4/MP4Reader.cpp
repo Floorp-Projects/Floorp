@@ -1020,12 +1020,12 @@ MP4Reader::Flush(TrackType aTrack)
     MonitorAutoLock mon(data.mMonitor);
     data.mIsFlushing = true;
     data.mDemuxEOS = false;
-    data.mDrainComplete = false;
   }
   data.mDecoder->Flush();
   {
     MonitorAutoLock mon(data.mMonitor);
     data.mIsFlushing = false;
+    data.mDrainComplete = false;
     data.mOutput.Clear();
     data.mNumSamplesInput = 0;
     data.mNumSamplesOutput = 0;
