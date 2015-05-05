@@ -19,7 +19,6 @@ iframe1.height = '300px';
 var iframe2 = document.createElement('iframe');
 iframe2.height = '300px';
 document.body.appendChild(iframe1);
-document.body.appendChild(iframe2);
 
 iframe1.addEventListener('load', function iframe1Load() {
   iframe1.removeEventListener('load', iframe1Load);
@@ -32,7 +31,8 @@ iframe1.addEventListener('load', function iframe1Load() {
     alert('finish');
   });
 
-  setTimeout(function() { iframe2.src = frame_src; }, 1000);
+  document.body.appendChild(iframe2);
+  iframe2.src = frame_src;
 });
 
 
