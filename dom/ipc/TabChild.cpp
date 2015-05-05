@@ -2985,17 +2985,23 @@ TabChild::NotifyPainted()
 void
 TabChild::MakeVisible()
 {
-    if (mWidget) {
-        mWidget->Show(true);
-    }
+  CompositorChild* compositor = CompositorChild::Get();
+  compositor->SendNotifyVisible(mLayersId);
+
+  if (mWidget) {
+    mWidget->Show(true);
+  }
 }
 
 void
 TabChild::MakeHidden()
 {
-    if (mWidget) {
-        mWidget->Show(false);
-    }
+  CompositorChild* compositor = CompositorChild::Get();
+  compositor->SendNotifyHidden(mLayersId);
+
+  if (mWidget) {
+    mWidget->Show(false);
+  }
 }
 
 void
@@ -3135,6 +3141,17 @@ TabChild::DidComposite(uint64_t aTransactionId)
 
   ClientLayerManager *manager = static_cast<ClientLayerManager*>(mWidget->GetLayerManager());
   manager->DidComposite(aTransactionId);
+}
+
+void
+TabChild::ClearCachedResources()
+{
+  MOZ_ASSERT(mWidget);
+  MOZ_ASSERT(mWidget->GetLayerManager());
+  MOZ_ASSERT(mWidget->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT);
+
+  ClientLayerManager *manager = static_cast<ClientLayerManager*>(mWidget->GetLayerManager());
+  manager->ClearCachedResources();
 }
 
 NS_IMETHODIMP
