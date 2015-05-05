@@ -229,6 +229,17 @@ nsContextMenu.prototype = {
                      SimpleServiceDiscovery.services.length > 0 &&
                      CastingApps.getServicesForVideo(this.target).length > 0;
     this.setItemAttr("context-castvideo", "disabled", !shouldShowCast);
+
+    let canPocket = false;
+    if (shouldShow && window.gBrowser &&
+        this.browser.getTabBrowser() == window.gBrowser) {
+      let uri = this.browser.currentURI;
+      canPocket =
+        CustomizableUI.getPlacementOfWidget("pocket-button") &&
+        (uri.schemeIs("http") || uri.schemeIs("https") ||
+         (uri.schemeIs("about") && ReaderMode.getOriginalUrl(uri.spec)));
+    }
+    this.showItem("context-pocket", canPocket && window.Pocket && Pocket.isLoggedIn);
   },
 
   initViewItems: function CM_initViewItems() {
@@ -1651,6 +1662,22 @@ nsContextMenu.prototype = {
 
   savePageAs: function CM_savePageAs() {
     saveDocument(this.browser.contentDocumentAsCPOW);
+  },
+
+  saveToPocket: function CM_saveToPocket() {
+    let pocketWidget = document.getElementById("pocket-button");
+    let placement = CustomizableUI.getPlacementOfWidget("pocket-button");
+    if (!placement)
+      return;
+
+    if (placement.area == CustomizableUI.AREA_PANEL) {
+      PanelUI.show().then(function() {
+        pocketWidget = document.getElementById("pocket-button");
+        pocketWidget.doCommand();
+      });
+    } else {
+      pocketWidget.doCommand();
+    }
   },
 
   printFrame: function CM_printFrame() {
