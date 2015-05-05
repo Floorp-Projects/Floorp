@@ -438,7 +438,7 @@ int main(int argc, char** argv)
     NS_LITERAL_CSTRING("TestStartupCacheTelemetry.manifest"));
 #endif
 
-  XRE_AddManifestLocation(NS_COMPONENT_LOCATION, manifest);
+  XRE_AddManifestLocation(NS_APP_LOCATION, manifest);
 
   nsCOMPtr<nsIObserver> telemetryThing =
     do_GetService("@mozilla.org/testing/startup-cache-telemetry.js");

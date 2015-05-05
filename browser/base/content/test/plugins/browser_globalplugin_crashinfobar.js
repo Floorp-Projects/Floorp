@@ -1,6 +1,5 @@
 /**
- * Test that plugin crash submissions still work properly after
- * click-to-play activation.
+ * Test that the notification bar for crashed GMPs works.
  */
 add_task(function*() {
   yield BrowserTestUtils.withNewTab({
@@ -9,9 +8,8 @@ add_task(function*() {
   }, function* (browser) {
     yield ContentTask.spawn(browser, null, function* () {
       const GMP_CRASH_EVENT = {
+        pluginID: 1,
         pluginName: "GlobalTestPlugin",
-        pluginDumpID: "1234",
-        browserDumpID: "5678",
         submittedCrashReport: false,
         bubbles: true,
         cancelable: true,

@@ -1,0 +1,5 @@
+shumway.jar:
+% content shumway %chrome/
+% resource shumway %content/
+ chrome/	(chrome/*)
+ content/	(content/*)

@@ -52,8 +52,8 @@ MediaOmxCommonDecoder::SetPlatformCanOffloadAudio(bool aCanOffloadAudio)
 bool
 MediaOmxCommonDecoder::CheckDecoderCanOffloadAudio()
 {
-  return (mCanOffloadAudio && !mFallbackToStateMachine && !mOutputStreams.Length() &&
-      mInitialPlaybackRate == 1.0);
+  return (mCanOffloadAudio && !mFallbackToStateMachine &&
+          !mOutputStreams.Length() && mPlaybackRate == 1.0);
 }
 
 void
