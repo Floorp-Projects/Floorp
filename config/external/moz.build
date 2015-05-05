@@ -37,7 +37,7 @@ if CONFIG['MOZ_VPX'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
 if not CONFIG['MOZ_NATIVE_PNG']:
     external_dirs += ['media/libpng']
 
-if CONFIG['CPU_ARCH'] == 'arm':
+if CONFIG['ARM_ARCHITECTURE']:
     external_dirs += ['media/openmax_dl']
 
 external_dirs += [
