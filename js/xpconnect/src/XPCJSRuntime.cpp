@@ -2553,8 +2553,8 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
         KIND_NONHEAP, rtStats.runtime.gc.nurseryCommitted,
         "Memory being used by the GC's nursery.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery-huge-slots"),
-        KIND_NONHEAP, rtStats.runtime.gc.nurseryHugeSlots,
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery-malloced-buffers"),
+        KIND_NONHEAP, rtStats.runtime.gc.nurseryMallocedBuffers,
         "Out-of-line slots and elements belonging to objects in the "
         "nursery.");
 

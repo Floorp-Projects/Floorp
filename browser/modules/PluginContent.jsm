@@ -1031,8 +1031,8 @@ PluginContent.prototype = {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.
       if (!doc.mozNoPluginCrashedNotification) {
-        this.global.sendAsyncMessage("PluginContent:ShowNPAPIPluginCrashedNotification",
-                                     { message, runID });
+        this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
+                                     { messageString: message, pluginID: runID });
         // Remove the notification when the page is reloaded.
         doc.defaultView.top.addEventListener("unload", event => {
           this.hideNotificationBar("plugin-crashed");
@@ -1057,17 +1057,11 @@ PluginContent.prototype = {
     }
   },
 
-  /**
-   * Currently, GMP crash events are only handled in the non-e10s case.
-   * e10s support for GMP crash events is being tracked in bug 1146955.
-   */
   GMPCrashed: function(aEvent) {
     let target          = aEvent.target;
-    let submittedReport = aEvent.submittedCrashReport;
     let pluginName      = aEvent.pluginName;
-    let pluginDumpID    = aEvent.pluginDumpID;
-    let browserDumpID   = aEvent.browserDumpID;
     let gmpPlugin       = aEvent.gmpPlugin;
+    let pluginID        = aEvent.pluginID;
     let doc             = target.document;
 
     if (!gmpPlugin || !doc) {
@@ -1079,11 +1073,8 @@ PluginContent.prototype = {
       gNavigatorBundle.formatStringFromName("crashedpluginsMessage.title",
                                             [pluginName], 1);
 
-    this.global.sendAsyncMessage("PluginContent:ShowGMPCrashedNotification", {
-      messageString: messageString,
-      pluginDumpID: pluginDumpID,
-      browserDumpID: browserDumpID,
-    });
+    this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification",
+                                 { messageString, pluginID });
 
     // Remove the notification when the page is reloaded.
     doc.defaultView.top.addEventListener("unload", event => {

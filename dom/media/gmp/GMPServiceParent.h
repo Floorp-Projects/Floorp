@@ -193,7 +193,7 @@ public:
                            nsTArray<ProcessId>&& aAlreadyBridgedTo,
                            base::ProcessId* aID,
                            nsCString* aDisplayName,
-                           nsCString* aPluginId) override;
+                           uint32_t* aPluginId) override;
   virtual bool RecvGetGMPNodeId(const nsString& aOrigin,
                                 const nsString& aTopLevelOrigin,
                                 const bool& aInPrivateBrowsing,

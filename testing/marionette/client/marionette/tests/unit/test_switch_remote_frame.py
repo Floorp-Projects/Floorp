@@ -33,8 +33,7 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
 
     def test_remote_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_async_script(
-            "SpecialPowers.pushPermissions([{'type': 'browser', 'allow': true, 'context': document}], marionetteScriptFinished);")
+        self.marionette.push_permission('browser', True)
         self.marionette.execute_script("""
             let iframe = document.createElement("iframe");
             SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -55,8 +54,7 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
     def test_remote_frame_revisit(self):
         # test if we can revisit a remote frame (this takes a different codepath)
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_async_script(
-            "SpecialPowers.pushPermissions([{'type': 'browser', 'allow': true, 'context': document}], marionetteScriptFinished);")
+        self.marionette.push_permission('browser', True)
         self.marionette.execute_script("""
             let iframe = document.createElement("iframe");
             SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -89,8 +87,7 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
     def test_we_can_switch_to_a_remote_frame_by_index(self):
         # test if we can revisit a remote frame (this takes a different codepath)
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
-        self.marionette.execute_async_script(
-            "SpecialPowers.pushPermissions([{'type': 'browser', 'allow': true, 'context': document}], marionetteScriptFinished);")
+        self.marionette.push_permission('browser', True)
         self.marionette.execute_script("""
             let iframe = document.createElement("iframe");
             SpecialPowers.wrap(iframe).mozbrowser = true;

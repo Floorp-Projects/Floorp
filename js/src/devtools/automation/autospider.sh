@@ -105,10 +105,14 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
     fi
   fi
 elif [ "$OSTYPE" = "msys" ]; then
-  USE_64BIT=false
-  if [ "$platform" = "win64" ]; then
-      USE_64BIT=true
-  fi
+  case "$platform" in
+  win64*)
+    USE_64BIT=true
+    ;;
+  *)
+    USE_64BIT=false
+    ;;
+  esac
   MAKE=${MAKE:-mozmake}
   source "$ABSDIR/winbuildenv.sh"
 fi
@@ -117,6 +121,9 @@ MAKE=${MAKE:-make}
 
 if $USE_64BIT; then
   NSPR64="--enable-64bit"
+  if [ "$OSTYPE" = "msys" ]; then
+    CONFIGURE_ARGS="$CONFIGURE_ARGS --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32"
+  fi
 else
   NSPR64=""
   if [ "$OSTYPE" != "msys" ]; then
@@ -169,8 +176,14 @@ elif [[ "$VARIANT" = "compacting" ]]; then
     esac
 fi
 
-if [[ "$VARIANT" = "warnaserr" ]]; then
+if [[ "$VARIANT" = "warnaserr" ||
+      "$VARIANT" = "warnaserrdebug" ||
+      "$VARIANT" = "plain" ]]; then
     export JSTESTS_EXTRA_ARGS=--tbpl
+elif [[ "$VARIANT" = "arm-sim" ||
+        "$VARIANT" = "rootanalysis" ||
+        "$VARIANT" = "plaindebug" ]]; then
+    export JSTESTS_EXTRA_ARGS=--tbpl-debug
 fi
 
 $COMMAND_PREFIX $MAKE check || exit 1

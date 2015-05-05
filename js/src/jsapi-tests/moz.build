@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'testGCFinalizeCallback.cpp',
     'testGCHeapPostBarriers.cpp',
     'testGCMarking.cpp',
-    'testGCNursery.cpp',
     'testGCOutOfMemory.cpp',
     'testGCStoreBufferRemoval.cpp',
     'testGetPropertyDescriptor.cpp',

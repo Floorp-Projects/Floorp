@@ -279,8 +279,9 @@ class RemoteAutomation(Automation):
                 self.procName = app
                 print "Robocop process name: "+self.procName
 
-            # Setting timeout at 1 hour since on a remote device this takes much longer
-            self.timeout = 3600
+            # Setting timeout at 1 hour since on a remote device this takes much longer.
+            # Temporarily increased to 75 minutes because no more chunks can be created.
+            self.timeout = 4500
             # The benefit of the following sleep is unclear; it was formerly 15 seconds
             time.sleep(1)
 

@@ -14,9 +14,11 @@
 #include "js/TracingAPI.h"
 #include "vm/Runtime.h"
 
+namespace js {
+
 template <typename T>
 MOZ_ALWAYS_INLINE bool
-js::Nursery::getForwardedPointer(T** ref)
+Nursery::getForwardedPointer(T** ref)
 {
     MOZ_ASSERT(ref);
     MOZ_ASSERT(isInside((void*)*ref));
@@ -27,5 +29,48 @@ js::Nursery::getForwardedPointer(T** ref)
     *ref = static_cast<T*>(overlay->forwardingAddress());
     return true;
 }
+
+// The allocation methods below will not run the garbage collector. If the
+// nursery cannot accomodate the allocation, the malloc heap will be used
+// instead.
+
+template <typename T>
+static inline T*
+AllocateObjectBuffer(ExclusiveContext* cx, uint32_t count)
+{
+    if (cx->isJSContext()) {
+        Nursery& nursery = cx->asJSContext()->runtime()->gc.nursery;
+        return static_cast<T*>(nursery.allocateBuffer(cx->zone(), count * sizeof(T)));
+    }
+    return cx->zone()->pod_malloc<T>(count);
+}
+
+template <typename T>
+static inline T*
+AllocateObjectBuffer(ExclusiveContext* cx, JSObject* obj, uint32_t count)
+{
+    if (cx->isJSContext()) {
+        Nursery& nursery = cx->asJSContext()->runtime()->gc.nursery;
+        return static_cast<T*>(nursery.allocateBuffer(obj, count * sizeof(T)));
+    }
+    return obj->zone()->pod_malloc<T>(count);
+}
+
+// If this returns null then the old buffer will be left alone.
+template <typename T>
+static inline T*
+ReallocateObjectBuffer(ExclusiveContext* cx, JSObject* obj, T* oldBuffer,
+                       uint32_t oldCount, uint32_t newCount)
+{
+    if (cx->isJSContext()) {
+        Nursery& nursery = cx->asJSContext()->runtime()->gc.nursery;
+        return static_cast<T*>(nursery.reallocateBuffer(obj, oldBuffer,
+                                                        oldCount * sizeof(T),
+                                                        newCount * sizeof(T)));
+    }
+    return obj->zone()->pod_realloc<T>(oldBuffer, oldCount, newCount);
+}
+
+} // namespace js
 
 #endif /* gc_Nursery_inl_h */
