@@ -4218,13 +4218,22 @@ Tab.prototype = {
           // Update the page action to show the "reader active" icon.
           Reader.updatePageAction(this);
         }
-
         break;
       }
 
       case "DOMFormHasPassword": {
         LoginManagerContent.onDOMFormHasPassword(aEvent,
                                                  this.browser.contentWindow);
+
+        // Send logins for this hostname to Java.
+        let hostname = aEvent.target.baseURIObject.prePath;
+        let foundLogins = Services.logins.findLogins({}, hostname, "", "");
+        if (foundLogins.length > 0) {
+          let displayHost = IdentityHandler.getEffectiveHost();
+          let title = { text: displayHost, resource: hostname };
+          let selectObj = { title: title, logins: foundLogins };
+          Messaging.sendRequest({ type: "Doorhanger:Logins", data: selectObj });
+        }
         break;
       }
 
