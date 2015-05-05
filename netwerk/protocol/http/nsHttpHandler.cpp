@@ -363,6 +363,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "webapps-clear-data", true);
         mObserverService->AddObserver(this, "browser:purge-session-history", true);
         mObserverService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
+        mObserverService->AddObserver(this, "application-background", true);
     }
 
     MakeNewRequestTokenBucket();
@@ -2009,6 +2010,12 @@ nsHttpHandler::Observe(nsISupports *subject,
                 mConnMgr->PruneDeadConnections();
                 mConnMgr->VerifyTraffic();
             }
+        }
+    } else if (!strcmp(topic, "application-background")) {
+        // going to the background on android means we should close
+        // down idle connections for power conservation
+        if (mConnMgr) {
+            mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
         }
     }
 
