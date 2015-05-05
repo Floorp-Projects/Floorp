@@ -114,6 +114,9 @@ MAKE=${MAKE:-make}
 
 if $USE_64BIT; then
   NSPR64="--enable-64bit"
+  if [ "$OSTYPE" = "msys" ]; then
+    CONFIGURE_ARGS="$CONFIGURE_ARGS --target=x86_64-pc-mingw32 --host=x86_64-pc-mingw32"
+  fi
 else
   NSPR64=""
   if [ "$OSTYPE" != "msys" ]; then
