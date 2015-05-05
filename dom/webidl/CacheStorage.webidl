@@ -10,7 +10,10 @@
 
 // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache-storage
 
+interface Principal;
+
 [Exposed=(Window,Worker),
+ ChromeConstructor(CacheStorageNamespace namespace, Principal principal),
  Func="mozilla::dom::cache::CacheStorage::PrefEnabled"]
 interface CacheStorage {
   [NewObject]
@@ -23,4 +26,9 @@ interface CacheStorage {
   Promise<boolean> delete(DOMString cacheName);
   [NewObject]
   Promise<sequence<DOMString>> keys();
+};
+
+// chrome-only, gecko specific extension
+enum CacheStorageNamespace {
+  "content", "chrome"
 };
