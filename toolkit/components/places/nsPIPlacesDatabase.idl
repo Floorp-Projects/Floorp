@@ -11,13 +11,14 @@ interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface mozIStorageStatementCallback;
 interface mozIStoragePendingStatement;
+interface nsIAsyncShutdownClient;
 
 /**
  * This is a private interface used by Places components to get access to the
  * database.  If outside consumers wish to use this, they should only read from
  * the database so they do not break any internal invariants.
  */
-[scriptable, uuid(6eb7ed3d-13ca-450b-b370-15c75e2f3dab)]
+[scriptable, uuid(366ee63e-a413-477d-9ad6-8d6863e89401)]
 interface nsPIPlacesDatabase : nsISupports
 {
   /**
@@ -42,4 +43,10 @@ interface nsPIPlacesDatabase : nsISupports
     in unsigned long aQueryCount,
     in nsINavHistoryQueryOptions aOptions,
     in mozIStorageStatementCallback aCallback);
+
+  /**
+   * Hook for clients who need to perform actions during/by the end of
+   * the shutdown of the database.
+   */
+  readonly attribute nsIAsyncShutdownClient shutdownClient;
 };
