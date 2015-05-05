@@ -93,7 +93,6 @@ class AutoStopVerifyingBarriers
 {
     GCRuntime* gc;
     bool restartPreVerifier;
-    bool restartPostVerifier;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
@@ -102,8 +101,6 @@ class AutoStopVerifyingBarriers
       : gc(&rt->gc)
     {
         restartPreVerifier = gc->endVerifyPreBarriers() && !isShutdown;
-        restartPostVerifier = gc->endVerifyPostBarriers() && !isShutdown &&
-            JS::IsGenerationalGCEnabled(rt);
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -121,8 +118,6 @@ class AutoStopVerifyingBarriers
 
         if (restartPreVerifier)
             gc->startVerifyPreBarriers();
-        if (restartPostVerifier)
-            gc->startVerifyPostBarriers();
 
         if (outer != gcstats::PHASE_NONE)
             gc->stats.beginPhase(outer);

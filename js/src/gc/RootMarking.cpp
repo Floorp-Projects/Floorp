@@ -216,7 +216,6 @@ AutoGCRooter::trace(JSTracer* trc)
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
             TraceRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
             JSObject* key = e.front().key();
-            JS::AutoOriginalTraceLocation reloc(trc, &e.front().key());
             TraceRoot(trc, &key, "AutoObjectObjectHashMap key");
             if (key != e.front().key())
                 e.rekeyFront(key);
