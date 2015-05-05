@@ -167,9 +167,8 @@ GonkDisplayJB::~GonkDisplayJB()
 ANativeWindow*
 GonkDisplayJB::GetNativeWindow()
 {
-    if (!mBootAnimBuffer.get()) {
-        StopBootAnimation();
-    }
+    StopBootAnim();
+
     return mSTClient.get();
 }
 
@@ -235,10 +234,7 @@ GonkDisplayJB::GetDispSurface()
 bool
 GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 {
-    if (mBootAnimBuffer.get()) {
-        StopBootAnimation();
-        mBootAnimBuffer = nullptr;
-    }
+    StopBootAnim();
 
     // Should be called when composition rendering is complete for a frame.
     // Only HWC v1.0 needs this call.
@@ -337,10 +333,8 @@ GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
 void
 GonkDisplayJB::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
-    if (mBootAnimBuffer.get()) {
-        StopBootAnimation();
-        mBootAnimBuffer = nullptr;
-    }
+    StopBootAnim();
+
     eglSwapBuffers(dpy, sur);
 }
 
@@ -354,6 +348,15 @@ int
 GonkDisplayJB::GetPrevDispAcquireFd()
 {
     return mDispSurface->GetPrevDispAcquireFd();
+}
+
+void
+GonkDisplayJB::StopBootAnim()
+{
+    if (mBootAnimBuffer.get()) {
+        mBootAnimBuffer = nullptr;
+    }
+    StopBootAnimation();
 }
 
 __attribute__ ((visibility ("default")))
