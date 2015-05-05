@@ -2290,9 +2290,8 @@ PeerConnectionImpl::Close()
 }
 
 bool
-PeerConnectionImpl::PluginCrash(uint64_t aPluginID,
-                                const nsAString& aPluginName,
-                                const nsAString& aPluginDumpID)
+PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
+                                const nsAString& aPluginName)
 {
   // fire an event to the DOM window if this is "ours"
   bool result = mMedia ? mMedia->AnyCodecHasPluginID(aPluginID) : false;
@@ -2310,7 +2309,7 @@ PeerConnectionImpl::PluginCrash(uint64_t aPluginID,
   }
 
   PluginCrashedEventInit init;
-  init.mPluginDumpID = aPluginDumpID;
+  init.mPluginID = aPluginID;
   init.mPluginName = aPluginName;
   init.mSubmittedCrashReport = false;
   init.mGmpPlugin = true;

@@ -46,9 +46,10 @@ let accessibility = new Accessibility();
 let actions = new ActionChain(utils, checkForInterrupted);
 let importedScripts = null;
 
-// The sandbox we execute test scripts in. Gets lazily created in
-// createExecuteContentSandbox().
-let sandbox;
+// A dict of sandboxes used this session
+let sandboxes = {};
+// The name of the current sandbox
+let sandboxName = 'default';
 
 // the unload handler
 let onunload;
@@ -85,7 +86,6 @@ let modalHandler = function() {
     previousFrame = curFrame;
   }
   curFrame = content;
-  sandbox = null;
 };
 
 /**
@@ -403,7 +403,7 @@ function sendError(err, cmdId) {
  * Clear test values after completion of test
  */
 function resetValues() {
-  sandbox = null;
+  sandboxes = {};
   curFrame = content;
   actions.mouseEventsOnly = false;
 }
@@ -437,7 +437,6 @@ function checkForInterrupted() {
         //if previousFrame is set, then we're in a single process environment
         curFrame = actions.frame = previousFrame;
         previousFrame = null;
-        sandbox = null;
       }
       else {
         //else we're in OOP environment, so we'll switch to the original OOP frame
@@ -466,7 +465,12 @@ function createExecuteContentSandbox(win, timeout) {
   mn.runEmulatorCmd = (cmd, cb) => this.runEmulatorCmd(cmd, cb);
   mn.runEmulatorShell = (args, cb) => this.runEmulatorShell(args, cb);
 
-  let sandbox = new Cu.Sandbox(win, {sandboxPrototype: win});
+  let principal = win;
+  if (sandboxName == 'system') {
+    principal = Cc["@mozilla.org/systemprincipal;1"].
+                createInstance(Ci.nsIPrincipal);
+  }
+  let sandbox = new Cu.Sandbox(principal, {sandboxPrototype: win});
   sandbox.global = sandbox;
   sandbox.window = win;
   sandbox.document = sandbox.window.document;
@@ -532,7 +536,7 @@ function createExecuteContentSandbox(win, timeout) {
   sandbox.marionetteScriptFinished = val =>
       sandbox.asyncComplete(val, sandbox.asyncTestCommandId);
 
-  return sandbox;
+  sandboxes[sandboxName] = sandbox;
 }
 
 /**
@@ -557,17 +561,21 @@ function executeScript(msg, directInject) {
 
   asyncTestCommandId = msg.json.command_id;
   let script = msg.json.script;
+  sandboxName = msg.json.sandboxName;
 
-  if (msg.json.newSandbox || !sandbox) {
-    sandbox = createExecuteContentSandbox(curFrame,
-                                          msg.json.timeout);
-    if (!sandbox) {
+  if (msg.json.newSandbox ||
+      !(sandboxName in sandboxes) ||
+      (sandboxes[sandboxName].window != curFrame)) {
+    createExecuteContentSandbox(curFrame, msg.json.timeout);
+    if (!sandboxes[sandboxName]) {
       sendError(new WebDriverError("Could not create sandbox!"), asyncTestCommandId);
       return;
     }
   } else {
-    sandbox.asyncTestCommandId = asyncTestCommandId;
+    sandboxes[sandboxName].asyncTestCommandId = asyncTestCommandId;
   }
+
+  let sandbox = sandboxes[sandboxName];
 
   try {
     if (directInject) {
@@ -680,23 +688,26 @@ function executeWithCallback(msg, useFinish) {
 
   let script = msg.json.script;
   asyncTestCommandId = msg.json.command_id;
+  sandboxName = msg.json.sandboxName;
 
   onunload = function() {
     sendError(new JavaScriptError("unload was called"), asyncTestCommandId);
   };
   curFrame.addEventListener("unload", onunload, false);
 
-  if (msg.json.newSandbox || !sandbox) {
-    sandbox = createExecuteContentSandbox(curFrame,
-                                          msg.json.timeout);
-    if (!sandbox) {
+  if (msg.json.newSandbox ||
+      !(sandboxName in sandboxes) ||
+      (sandboxes[sandboxName].window != curFrame)) {
+    createExecuteContentSandbox(curFrame, msg.json.timeout);
+    if (!sandboxes[sandboxName]) {
       sendError(new JavaScriptError("Could not create sandbox!"), asyncTestCommandId);
       return;
     }
   }
   else {
-    sandbox.asyncTestCommandId = asyncTestCommandId;
+    sandboxes[sandboxName].asyncTestCommandId = asyncTestCommandId;
   }
+  let sandbox = sandboxes[sandboxName];
   sandbox.tag = script;
 
   asyncTestTimeoutId = curFrame.setTimeout(function() {
@@ -1642,7 +1653,7 @@ function switchToFrame(msg) {
     if(msg.json.focus == true) {
       curFrame.focus();
     }
-    sandbox = null;
+
     checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
     return;
   }
@@ -1694,7 +1705,7 @@ function switchToFrame(msg) {
           if(msg.json.focus == true) {
             curFrame.focus();
           }
-          sandbox = null;
+
           checkTimer.initWithCallback(checkLoad, 100, Ci.nsITimer.TYPE_ONE_SHOT);
           return;
         }
@@ -1715,8 +1726,6 @@ function switchToFrame(msg) {
     sendError(new NoSuchFrameError("Unable to locate frame: " + (msg.json.id || msg.json.element)), command_id);
     return true;
   }
-
-  sandbox = null;
 
   // send a synchronous message to let the server update the currently active
   // frame element (for getActiveFrame)
@@ -1877,7 +1886,7 @@ function runEmulatorShell(args, callback) {
 
 function emulatorCmdResult(msg) {
   let message = msg.json;
-  if (!sandbox) {
+  if (!sandboxes[sandboxName]) {
     return;
   }
   let cb = _emu_cbs[message.id];

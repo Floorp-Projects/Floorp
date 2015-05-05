@@ -290,10 +290,7 @@ void MediaDecoder::Pause()
 void MediaDecoder::SetVolume(double aVolume)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mInitialVolume = aVolume;
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetVolume(aVolume);
-  }
+  mVolume = aVolume;
 }
 
 void MediaDecoder::ConnectDecodedStreamToOutputStream(OutputStreamData* aStream)
@@ -538,7 +535,7 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     if (mDecoderStateMachine) {
-      mDecoderStateMachine->SetAudioCaptured();
+      mDecoderStateMachine->DispatchAudioCaptured();
     }
     if (!GetDecodedStream()) {
       int64_t t = mDecoderStateMachine ?
@@ -602,9 +599,9 @@ MediaDecoder::MediaDecoder() :
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
-  mInitialVolume(0.0),
-  mInitialPlaybackRate(1.0),
-  mInitialPreservesPitch(true),
+  mVolume(AbstractThread::MainThread(), 0.0, "MediaDecoder::mVolume (Canonical)"),
+  mPlaybackRate(AbstractThread::MainThread(), 1.0, "MediaDecoder::mPlaybackRate (Canonical)"),
+  mPreservesPitch(AbstractThread::MainThread(), true, "MediaDecoder::mPreservesPitch (Canonical)"),
   mDuration(-1),
   mMediaSeekable(true),
   mSameOriginMedia(false),
@@ -750,21 +747,23 @@ void MediaDecoder::SetStateMachineParameters()
 {
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mDecoderStateMachine->SetDuration(mDuration);
-  mDecoderStateMachine->SetVolume(mInitialVolume);
   if (GetDecodedStream()) {
-    mDecoderStateMachine->SetAudioCaptured();
+    mDecoderStateMachine->DispatchAudioCaptured();
   }
-  SetPlaybackRate(mInitialPlaybackRate);
-  mDecoderStateMachine->SetPreservesPitch(mInitialPreservesPitch);
   if (mMinimizePreroll) {
-    mDecoderStateMachine->SetMinimizePrerollUntilPlaybackStarts();
+    mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
   }
 }
 
 void MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
 {
+  DECODER_LOG("SetMinimizePrerollUntilPlaybackStarts()");
   MOZ_ASSERT(NS_IsMainThread());
   mMinimizePreroll = true;
+
+  // This needs to be called before we init the state machine, otherwise it will
+  // have no effect.
+  MOZ_DIAGNOSTIC_ASSERT(!mDecoderStateMachine);
 }
 
 nsresult MediaDecoder::ScheduleStateMachineThread()
@@ -1550,11 +1549,10 @@ bool MediaDecoder::OnStateMachineTaskQueue() const
 
 void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 {
-  if (aPlaybackRate == 0.0) {
+  mPlaybackRate = aPlaybackRate;
+  if (mPlaybackRate == 0.0) {
     mPausedForPlaybackRateNull = true;
-    mInitialPlaybackRate = aPlaybackRate;
     Pause();
-    return;
   } else if (mPausedForPlaybackRateNull) {
     // Play() uses mPausedForPlaybackRateNull value, so must reset it first
     mPausedForPlaybackRateNull = false;
@@ -1564,21 +1562,11 @@ void MediaDecoder::SetPlaybackRate(double aPlaybackRate)
       Play();
     }
   }
-
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetPlaybackRate(aPlaybackRate);
-  } else {
-    mInitialPlaybackRate = aPlaybackRate;
-  }
 }
 
 void MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
 {
-  if (mDecoderStateMachine) {
-    mDecoderStateMachine->SetPreservesPitch(aPreservesPitch);
-  } else {
-    mInitialPreservesPitch = aPreservesPitch;
-  }
+  mPreservesPitch = aPreservesPitch;
 }
 
 bool MediaDecoder::OnDecodeTaskQueue() const {

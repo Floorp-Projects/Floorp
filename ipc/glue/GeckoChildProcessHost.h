@@ -47,6 +47,8 @@ public:
 
   static uint32_t GetSupportedArchitecturesForProcessType(GeckoProcessType type);
 
+  static uint32_t GetUniqueID();
+
   // Block until the IPC channel for our subprocess is initialized,
   // but no longer.  The child process may or may not have been
   // created when this method returns.
@@ -196,6 +198,8 @@ private:
   //
   // FIXME/cjones: this strongly indicates bad design.  Shame on us.
   std::queue<IPC::Message> mQueue;
+
+  static uint32_t sNextUniqueID;
 };
 
 #ifdef MOZ_NUWA_PROCESS
