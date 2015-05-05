@@ -206,7 +206,8 @@ def print_header(idl, fd, filename):
     fd.write(header_end)
 
     for p in idl.productions:
-        if p.kind == 'include': continue
+        if p.kind == 'include':
+            continue
         if p.kind == 'cdata':
             fd.write(p.data)
             continue
@@ -478,7 +479,8 @@ def write_interface(iface, fd):
     fd.write(iface_template_prolog % names)
 
     for member in iface.members:
-        if isinstance(member, xpidl.ConstMember) or isinstance(member, xpidl.CDATA): continue
+        if isinstance(member, xpidl.ConstMember) or isinstance(member, xpidl.CDATA):
+            continue
         fd.write("/* %s */\n" % member.toIDL())
         if isinstance(member, xpidl.Attribute):
             fd.write(example_tmpl % {'implclass': implclass,

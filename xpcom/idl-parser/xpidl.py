@@ -213,7 +213,8 @@ class NameMap(object):
             object.name = object.name[1:]
         if object.name in self._d:
             old = self._d[object.name]
-            if old == object: return
+            if old == object:
+                return
             if isinstance(old, Forward) and isinstance(object, Interface):
                 self._d[object.name] = object
             elif isinstance(old, Interface) and isinstance(object, Forward):
@@ -258,7 +259,8 @@ class Include(object):
                 yield os.path.join(dir, self.filename)
 
         for file in incfiles():
-            if not os.path.exists(file): continue
+            if not os.path.exists(file):
+                continue
 
             self.IDL = parent.parser.parse(open(file).read(), filename=file)
             self.IDL.resolve(parent.incdirs, parent.parser)
@@ -373,7 +375,8 @@ class Forward(object):
         # forward.
         if parent.hasName(self.name):
             for i in xrange(0, len(parent.productions)):
-                if parent.productions[i] is self: break
+                if parent.productions[i] is self:
+                    break
             for i in xrange(i + 1, len(parent.productions)):
                 if hasattr(parent.productions[i], 'doccomments'):
                     parent.productions[i].doccomments[0:0] = self.doccomments
@@ -796,7 +799,8 @@ class Attribute(object):
         return "%s%sattribute %s %s;" % (attribs, readonly, self.type, self.name)
 
     def isScriptable(self):
-        if not self.iface.attributes.scriptable: return False
+        if not self.iface.attributes.scriptable:
+            return False
         return not self.noscript
 
     def __str__(self):
@@ -876,7 +880,8 @@ class Method(object):
                     raise IDLError("could not find is_size parameter '%s'" % p.size_is, self.location)
 
     def isScriptable(self):
-        if not self.iface.attributes.scriptable: return False
+        if not self.iface.attributes.scriptable:
+            return False
         return not (self.noscript or self.notxpcom)
 
     def __str__(self):
@@ -986,8 +991,10 @@ class Param(object):
 
     def nativeType(self):
         kwargs = {}
-        if self.shared: kwargs['shared'] = True
-        if self.const: kwargs['const'] = True
+        if self.shared:
+            kwargs['shared'] = True
+        if self.const:
+            kwargs['const'] = True
 
         try:
             return self.realtype.nativeType(self.paramtype, **kwargs)
