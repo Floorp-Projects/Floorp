@@ -35,7 +35,7 @@
 
 namespace WebCore {
 
-typedef AlignedTArray<float> AlignedAudioFloatArray;
+typedef nsTArray<float> AudioFloatArray;
 using mozilla::FFTBlock;
 
 class FFTConvolver {
@@ -66,13 +66,13 @@ private:
 
     // Buffer input until we get fftSize / 2 samples then do an FFT
     size_t m_readWriteIndex;
-    AlignedAudioFloatArray m_inputBuffer;
+    AudioFloatArray m_inputBuffer;
 
     // Stores output which we read a little at a time
-    AlignedAudioFloatArray m_outputBuffer;
+    AudioFloatArray m_outputBuffer;
 
     // Saves the 2nd half of the FFT buffer, so we can do an overlap-add with the 1st half of the next one
-    AlignedAudioFloatArray m_lastOverlapBuffer;
+    AudioFloatArray m_lastOverlapBuffer;
 };
 
 } // namespace WebCore

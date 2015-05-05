@@ -251,16 +251,17 @@ bool
 AnalyserNode::FFTAnalysis()
 {
   float* inputBuffer;
-  AlignedFallibleTArray<float> tmpBuffer;
+  bool allocated = false;
   if (mWriteIndex == 0) {
     inputBuffer = mBuffer.Elements();
   } else {
-    if (tmpBuffer.SetLength(FftSize())) {
+    inputBuffer = static_cast<float*>(malloc(FftSize() * sizeof(float)));
+    if (!inputBuffer) {
       return false;
     }
-    inputBuffer = tmpBuffer.Elements();
     memcpy(inputBuffer, mBuffer.Elements() + mWriteIndex, sizeof(float) * (FftSize() - mWriteIndex));
     memcpy(inputBuffer + FftSize() - mWriteIndex, mBuffer.Elements(), sizeof(float) * mWriteIndex);
+    allocated = true;
   }
 
   ApplyBlackmanWindow(inputBuffer, FftSize());
@@ -278,6 +279,9 @@ AnalyserNode::FFTAnalysis()
                        (1.0 - mSmoothingTimeConstant) * scalarMagnitude;
   }
 
+  if (allocated) {
+    free(inputBuffer);
+  }
   return true;
 }
 
@@ -301,16 +305,16 @@ AnalyserNode::AllocateBuffer()
 {
   bool result = true;
   if (mBuffer.Length() != FftSize()) {
-    if (mBuffer.SetLength(FftSize())) {
-      return false;
-    }
-    memset(mBuffer.Elements(), 0, sizeof(float) * FftSize());
-    mWriteIndex = 0;
+    result = mBuffer.SetLength(FftSize());
+    if (result) {
+      memset(mBuffer.Elements(), 0, sizeof(float) * FftSize());
+      mWriteIndex = 0;
 
-    if (mOutputBuffer.SetLength(FrequencyBinCount())) {
-      return false;
+      result = mOutputBuffer.SetLength(FrequencyBinCount());
+      if (result) {
+        memset(mOutputBuffer.Elements(), 0, sizeof(float) * FrequencyBinCount());
+      }
     }
-    memset(mOutputBuffer.Elements(), 0, sizeof(float) * FrequencyBinCount());
   }
   return result;
 }
