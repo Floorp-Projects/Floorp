@@ -477,21 +477,6 @@ void PL_DHashFreeStringKey(PLDHashTable* aTable, PLDHashEntryHdr* aEntry);
 const PLDHashTableOps* PL_DHashGetStubOps(void);
 
 /*
- * Dynamically allocate a new PLDHashTable, initialize it using
- * PL_DHashTableInit, and return its address. Never returns null.
- */
-PLDHashTable* PL_NewDHashTable(
-  const PLDHashTableOps* aOps, uint32_t aEntrySize,
-  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
-
-/*
- * Free |aTable|'s entry storage and |aTable| itself (both via
- * aTable->mOps->freeTable). Use this function to destroy a PLDHashTable that
- * was allocated on the heap via PL_NewDHashTable().
- */
-void PL_DHashTableDestroy(PLDHashTable* aTable);
-
-/*
  * This function works similarly to the multi-arg constructor.
  *
  * Any table initialized with this function must be finalized via
