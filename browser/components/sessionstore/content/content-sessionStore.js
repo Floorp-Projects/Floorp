@@ -265,6 +265,9 @@ let SessionHistoryListener = {
     if (!SessionHistory.isEmpty(docShell)) {
       this.collect();
     }
+
+    // Listen for page title changes.
+    addEventListener("DOMTitleChanged", this);
   },
 
   uninit: function () {
@@ -278,6 +281,10 @@ let SessionHistoryListener = {
     if (docShell) {
       MessageQueue.push("history", () => SessionHistory.collect(docShell));
     }
+  },
+
+  handleEvent(event) {
+    this.collect();
   },
 
   onFrameTreeCollected: function () {
