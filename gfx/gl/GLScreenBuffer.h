@@ -24,10 +24,6 @@
 #include "SurfaceTypes.h"
 
 namespace mozilla {
-namespace layers {
-class SharedSurfaceTextureClient;
-}
-
 namespace gl {
 
 class GLContext;
@@ -140,8 +136,8 @@ public:
 protected:
     UniquePtr<SurfaceFactory> mFactory;
 
-    RefPtr<layers::SharedSurfaceTextureClient> mBack;
-    RefPtr<layers::SharedSurfaceTextureClient> mFront;
+    RefPtr<ShSurfHandle> mBack;
+    RefPtr<ShSurfHandle> mFront;
 
     UniquePtr<DrawBuffer> mDraw;
     UniquePtr<ReadBuffer> mRead;
@@ -163,7 +159,21 @@ protected:
 
     GLScreenBuffer(GLContext* gl,
                    const SurfaceCaps& caps,
-                   UniquePtr<SurfaceFactory> factory);
+                   UniquePtr<SurfaceFactory> factory)
+        : mGL(gl)
+        , mCaps(caps)
+        , mFactory(Move(factory))
+        , mNeedsBlit(true)
+        , mUserReadBufferMode(LOCAL_GL_BACK)
+        , mUserDrawFB(0)
+        , mUserReadFB(0)
+        , mInternalDrawFB(0)
+        , mInternalReadFB(0)
+#ifdef DEBUG
+        , mInInternalMode_DrawFB(true)
+        , mInInternalMode_ReadFB(true)
+#endif
+    {}
 
 public:
     virtual ~GLScreenBuffer();
@@ -172,7 +182,7 @@ public:
         return mFactory.get();
     }
 
-    const RefPtr<layers::SharedSurfaceTextureClient>& Front() const {
+    ShSurfHandle* Front() const {
         return mFront;
     }
 

@@ -34,15 +34,6 @@ namespace mozilla {
 namespace gfx {
 class DrawTarget;
 }
-
-namespace layers {
-class ISurfaceAllocator;
-class SharedSurfaceTextureClient;
-enum class TextureFlags : uint32_t;
-class SurfaceDescriptor;
-class TextureClient;
-}
-
 namespace gl {
 
 class GLContext;
@@ -60,7 +51,6 @@ public:
     GLContext* const mGL;
     const gfx::IntSize mSize;
     const bool mHasAlpha;
-    const bool mCanRecycle;
 protected:
     bool mIsLocked;
     bool mIsProducerAcquired;
@@ -71,8 +61,7 @@ protected:
                   AttachmentType attachType,
                   GLContext* gl,
                   const gfx::IntSize& size,
-                  bool hasAlpha,
-                  bool canRecycle);
+                  bool hasAlpha);
 
 public:
     virtual ~SharedSurface() {
@@ -184,8 +173,37 @@ public:
     virtual bool NeedsIndirectReads() const {
         return false;
     }
+};
 
-    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) = 0;
+template<typename T>
+class UniquePtrQueue
+{
+    std::queue<T*> mQueue;
+
+public:
+    ~UniquePtrQueue() {
+        MOZ_ASSERT(Empty());
+    }
+
+    bool Empty() const {
+        return mQueue.empty();
+    }
+
+    void Push(UniquePtr<T> up) {
+        T* p = up.release();
+        mQueue.push(p);
+    }
+
+    UniquePtr<T> Pop() {
+        UniquePtr<T> ret;
+
+        if (!mQueue.empty()) {
+            ret.reset(mQueue.front());
+            mQueue.pop();
+        }
+
+        return Move(ret);
+    }
 };
 
 class SurfaceFactory : public SupportsWeakPtr<SurfaceFactory>
@@ -195,20 +213,18 @@ public:
     // with SupportsWeakPtr. (bug 1049278)
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(SurfaceFactory)
 
-    const SharedSurfaceType mType;
     GLContext* const mGL;
     const SurfaceCaps mCaps;
-    const RefPtr<layers::ISurfaceAllocator> mAllocator;
-    const layers::TextureFlags mFlags;
+    const SharedSurfaceType mType;
     const GLFormats mFormats;
+
 protected:
     SurfaceCaps mDrawCaps;
     SurfaceCaps mReadCaps;
-    std::queue<RefPtr<layers::SharedSurfaceTextureClient>> mRecyclePool;
 
-    SurfaceFactory(SharedSurfaceType type, GLContext* gl, const SurfaceCaps& caps,
-                   const RefPtr<layers::ISurfaceAllocator>& allocator,
-                   const layers::TextureFlags& flags);
+    SurfaceFactory(GLContext* gl,
+                   SharedSurfaceType type,
+                   const SurfaceCaps& caps);
 
 public:
     virtual ~SurfaceFactory();
@@ -224,15 +240,44 @@ public:
 protected:
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) = 0;
 
+    UniquePtrQueue<SharedSurface> mScraps;
+
 public:
     UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
-    //TemporaryRef<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
-    TemporaryRef<layers::SharedSurfaceTextureClient> NewTexClient(const gfx::IntSize& size);
-
-    static void RecycleCallback(layers::TextureClient* tc, void* /*closure*/);
+    TemporaryRef<ShSurfHandle> NewShSurfHandle(const gfx::IntSize& size);
 
     // Auto-deletes surfs of the wrong type.
-    bool Recycle(layers::SharedSurfaceTextureClient* texClient);
+    void Recycle(UniquePtr<SharedSurface> surf);
+};
+
+class ShSurfHandle : public RefCounted<ShSurfHandle>
+{
+public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(ShSurfHandle)
+
+private:
+    const WeakPtr<SurfaceFactory> mFactory;
+    UniquePtr<SharedSurface> mSurf;
+
+public:
+    ShSurfHandle(SurfaceFactory* factory, UniquePtr<SharedSurface> surf)
+        : mFactory(factory)
+        , mSurf(Move(surf))
+    {
+        MOZ_ASSERT(mFactory);
+        MOZ_ASSERT(mSurf);
+    }
+
+    ~ShSurfHandle() {
+        if (mFactory) {
+            mFactory->Recycle(Move(mSurf));
+        }
+    }
+
+    SharedSurface* Surf() const {
+        MOZ_ASSERT(mSurf.get());
+        return mSurf.get();
+    }
 };
 
 class ScopedReadbackFB
