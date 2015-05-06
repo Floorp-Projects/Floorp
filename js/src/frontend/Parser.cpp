@@ -1228,10 +1228,10 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
         flags = JSFunction::INTERPRETED;
         break;
     }
-    
-    gc::AllocKind allocKind = JSFunction::FinalizeKind;
+
+    gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
     if (kind == Arrow || kind == Method)
-        allocKind = JSFunction::ExtendedFinalizeKind;
+        allocKind = gc::AllocKind::FUNCTION_EXTENDED;
     fun = NewFunctionWithProto(context, nullptr, 0, flags, NullPtr(), atom, proto,
                                allocKind, TenuredObject);
     if (!fun)

@@ -12,6 +12,7 @@ EXPORTS.mozilla.a11y += [
     'AccessibleWrap.h',
     'Compatibility.h',
     'HyperTextAccessibleWrap.h',
+    'IDSet.h',
 ]
 
 UNIFIED_SOURCES += [

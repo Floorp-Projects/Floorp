@@ -98,9 +98,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
   } else {
     jobLevel = sandbox::JOB_NONE;
     accessTokenLevel = sandbox::USER_NON_ADMIN;
-    // INTEGRITY_LEVEL_LAST effectively means don't change from the integrity
-    // level of the broker process.
-    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
   }
 
