@@ -236,6 +236,17 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   data->isIFrameSelected() = false;
   data->isRangeSelection() = false;
   // data->GTKPrintSettings() default-initializes
+  // data->printJobName() default-initializes
+  data->printAllPages() = true;
+  data->mustCollate() = false;
+  // data->disposition() default-initializes
+  data->pagesAcross() = 1;
+  data->pagesDown() = 1;
+  // data->printTime() default-initializes
+  data->detailedErrorReporting() = true;
+  // data->faxNumber() default-initializes
+  data->addHeaderAndFooter() = false;
+  data->fileNameExtensionHidden() = false;
 
   return NS_OK;
 }
