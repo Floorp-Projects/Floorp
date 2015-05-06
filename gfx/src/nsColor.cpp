@@ -39,21 +39,8 @@ void nsColorNames::AddRefTable(void)
 {
   NS_ASSERTION(!gColorTable, "pre existing array!");
   if (!gColorTable) {
-    gColorTable = new nsStaticCaseInsensitiveNameTable();
-    if (gColorTable) {
-#ifdef DEBUG
-    {
-      // let's verify the table...
-      for (uint32_t index = 0; index < eColorName_COUNT; ++index) {
-        nsAutoCString temp1(kColorNames[index]);
-        nsAutoCString temp2(kColorNames[index]);
-        ToLowerCase(temp1);
-        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
-      }
-    }
-#endif      
-      gColorTable->Init(kColorNames, eColorName_COUNT); 
-    }
+    gColorTable =
+      new nsStaticCaseInsensitiveNameTable(kColorNames, eColorName_COUNT);
   }
 }
 
