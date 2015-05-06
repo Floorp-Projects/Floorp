@@ -59,7 +59,7 @@ struct SurfaceDescriptorDXGIYCbCr {
 };
 
 struct SurfaceDescriptorMacIOSurface {
-  uint32_t surface;
+  uint32_t surfaceId;
   double scaleFactor;
   bool isOpaque;
 };
@@ -86,10 +86,6 @@ struct NewSurfaceDescriptorGralloc {
   bool isOpaque;
 };
 
-struct SharedSurfaceDescriptor {
-  uintptr_t surf;
-};
-
 /**
  * Used for shmem-backed YCbCr and (flavors of) RGBA textures
  */
@@ -101,7 +97,7 @@ struct SurfaceDescriptorShmem {
 /**
  * Used for "raw memory"-backed YCbCr and (flavors of) RGBA textures
  */
- struct SurfaceDescriptorMemory {
+struct SurfaceDescriptorMemory {
   uintptr_t data;
   SurfaceFormat format;
 };
@@ -118,7 +114,6 @@ union SurfaceDescriptor {
   EGLImageDescriptor;
   SurfaceDescriptorMacIOSurface;
   NewSurfaceDescriptorGralloc;
-  SharedSurfaceDescriptor;
   null_t;
 };
 
