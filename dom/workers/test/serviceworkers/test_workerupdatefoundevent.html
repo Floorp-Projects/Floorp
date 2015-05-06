@@ -55,6 +55,7 @@
   }
 
   function unregister() {
+    window.onmessage = null;
     return registration.unregister().then(function(result) {
       ok(result, "Unregister should return true.");
     });
