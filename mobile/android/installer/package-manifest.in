@@ -449,6 +449,7 @@
 #ifdef MOZ_DEBUG
 @BINPATH@/components/TestInterfaceJS.js
 @BINPATH@/components/TestInterfaceJS.manifest
+@BINPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
 @BINPATH@/components/nsAsyncShutdown.manifest

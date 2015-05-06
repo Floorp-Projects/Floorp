@@ -3399,6 +3399,7 @@ class IDLInterfaceMember(IDLObjectWithIdentifier, IDLExposureMixins):
                               [self.location])
         self.aliases.append(alias)
 
+
 # MaplikeOrSetlike adds a trait to an interface, like map or iteration
 # functions. To handle them while still getting all of the generated binding
 # code taken care of, we treat them as macros that are expanded into members
@@ -3425,6 +3426,12 @@ class IDLMaplikeOrSetlike(IDLInterfaceMember):
         self.disallowedMemberNames = []
         self.disallowedNonMethodNames = []
 
+        # When generating JSAPI access code, we need to know the backing object
+        # type prefix to create the correct function. Generate here for reuse.
+        if self.isMaplike():
+            self.prefix = 'Map'
+        elif self.isSetlike():
+            self.prefix = 'Set'
 
     def __str__(self):
         return "declared '%s' with key '%s'" % (self.maplikeOrSetlikeType, self.keyType)
@@ -4349,7 +4356,15 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return self._hasOverloads
 
     def isIdentifierLess(self):
-        return self.identifier.name[:2] == "__"
+        """
+        True if the method name started with __, and if the method is not a
+        maplike/setlike method. Interfaces with maplike/setlike will generate
+        methods starting with __ for chrome only backing object access in JS
+        implemented interfaces, so while these functions use what is considered
+        an non-identifier name, they actually DO have an identifier.
+        """
+        return (self.identifier.name[:2] == "__" and
+                not self.isMaplikeOrSetlikeMethod())
 
     def resolve(self, parentScope):
         assert isinstance(parentScope, IDLScope)
