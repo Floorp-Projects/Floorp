@@ -596,9 +596,9 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
                 return false;
         }
 
-        gc::AllocKind allocKind = JSFunction::FinalizeKind;
+        gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
         if (uint16_t(flagsword) & JSFunction::EXTENDED)
-            allocKind = JSFunction::ExtendedFinalizeKind;
+            allocKind = gc::AllocKind::FUNCTION_EXTENDED;
         fun = NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
                                    /* enclosingDynamicScope = */ NullPtr(), NullPtr(), proto,
                                    allocKind, TenuredObject);
@@ -654,9 +654,7 @@ js::CloneFunctionAndScript(JSContext* cx, HandleObject enclosingScope, HandleFun
             return nullptr;
     }
 
-    gc::AllocKind allocKind = JSFunction::FinalizeKind;
-    if (srcFun->isExtended())
-        allocKind = JSFunction::ExtendedFinalizeKind;
+    gc::AllocKind allocKind = srcFun->getAllocKind();
     RootedFunction clone(cx, NewFunctionWithProto(cx, nullptr, 0,
                                                   JSFunction::INTERPRETED, NullPtr(), NullPtr(),
                                                   cloneProto, allocKind, TenuredObject));
@@ -784,7 +782,7 @@ CreateFunctionConstructor(JSContext* cx, JSProtoKey key)
     RootedObject functionCtor(cx,
       NewFunctionWithProto(cx, Function, 1, JSFunction::NATIVE_CTOR,
                            NullPtr(), HandlePropertyName(cx->names().Function),
-                           functionProto, JSFunction::FinalizeKind, SingletonObject));
+                           functionProto, AllocKind::FUNCTION, SingletonObject));
     if (!functionCtor)
         return nullptr;
 
@@ -804,7 +802,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
      */
     JSObject* functionProto_ =
         NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
-                             self, NullPtr(), objectProto, JSFunction::FinalizeKind,
+                             self, NullPtr(), objectProto, AllocKind::FUNCTION,
                              SingletonObject);
     if (!functionProto_)
         return nullptr;
@@ -872,7 +870,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     // confused.
     RootedFunction throwTypeError(cx,
       NewFunctionWithProto(cx, ThrowTypeError, 0, JSFunction::NATIVE_FUN,
-                           NullPtr(), NullPtr(), functionProto, JSFunction::FinalizeKind,
+                           NullPtr(), NullPtr(), functionProto, AllocKind::FUNCTION,
                            SingletonObject));
     if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
         return nullptr;
@@ -1954,7 +1952,7 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
     RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0,
                                                 JSFunction::INTERPRETED_LAMBDA, global,
                                                 anonymousAtom, proto,
-                                                JSFunction::FinalizeKind, TenuredObject));
+                                                AllocKind::FUNCTION, TenuredObject));
     if (!fun)
         return false;
 
@@ -2003,7 +2001,7 @@ JSFunction::isBuiltinFunctionConstructor()
 
 JSFunction*
 js::NewNativeFunction(ExclusiveContext* cx, Native native, unsigned nargs, HandleAtom atom,
-                      gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                      gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
                       NewObjectKind newKind /* = GenericObject */)
 {
     return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN,
@@ -2012,7 +2010,7 @@ js::NewNativeFunction(ExclusiveContext* cx, Native native, unsigned nargs, Handl
 
 JSFunction*
 js::NewNativeConstructor(ExclusiveContext* cx, Native native, unsigned nargs, HandleAtom atom,
-                         gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                         gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
                          NewObjectKind newKind /* = GenericObject */,
                          JSFunction::Flags flags /* = JSFunction::NATIVE_CTOR */)
 {
@@ -2024,7 +2022,7 @@ js::NewNativeConstructor(ExclusiveContext* cx, Native native, unsigned nargs, Ha
 JSFunction*
 js::NewScriptedFunction(ExclusiveContext* cx, unsigned nargs,
                         JSFunction::Flags flags, HandleAtom atom,
-                        gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                        gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
                         NewObjectKind newKind /* = GenericObject */,
                         HandleObject enclosingDynamicScope /* = NullPtr() */)
 {
@@ -2037,12 +2035,10 @@ JSFunction*
 js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
                          unsigned nargs, JSFunction::Flags flags, HandleObject enclosingDynamicScope,
                          HandleAtom atom, HandleObject proto,
-                         gc::AllocKind allocKind /* = JSFunction::FinalizeKind */,
+                         gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
                          NewObjectKind newKind /* = GenericObject */)
 {
-    MOZ_ASSERT(allocKind == JSFunction::FinalizeKind || allocKind == JSFunction::ExtendedFinalizeKind);
-    MOZ_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
-    MOZ_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
+    MOZ_ASSERT(allocKind == AllocKind::FUNCTION || allocKind == AllocKind::FUNCTION_EXTENDED);
     MOZ_ASSERT_IF(native, !enclosingDynamicScope);
 
     RootedObject funobj(cx);
@@ -2069,7 +2065,7 @@ js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
 
     RootedFunction fun(cx, &funobj->as<JSFunction>());
 
-    if (allocKind == JSFunction::ExtendedFinalizeKind)
+    if (allocKind == AllocKind::FUNCTION_EXTENDED)
         flags = JSFunction::Flags(flags | JSFunction::EXTENDED);
 
     /* Initialize all function members. */
@@ -2087,7 +2083,7 @@ js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
         MOZ_ASSERT(native);
         fun->initNative(native, nullptr);
     }
-    if (allocKind == JSFunction::ExtendedFinalizeKind)
+    if (allocKind == AllocKind::FUNCTION_EXTENDED)
         fun->initializeExtended();
     fun->initAtom(atom);
 
@@ -2169,7 +2165,7 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
     MOZ_ASSERT(useSameScript || !fun->isInterpretedLazy());
 
     uint16_t flags = fun->flags() & ~JSFunction::EXTENDED;
-    if (allocKind == JSFunction::ExtendedFinalizeKind)
+    if (allocKind == AllocKind::FUNCTION_EXTENDED)
         flags |= JSFunction::EXTENDED;
 
     clone->setArgCount(fun->nargs());
@@ -2188,7 +2184,7 @@ js::CloneFunctionObject(JSContext* cx, HandleFunction fun, HandleObject parent,
     }
     clone->initAtom(fun->displayAtom());
 
-    if (allocKind == JSFunction::ExtendedFinalizeKind) {
+    if (allocKind == AllocKind::FUNCTION_EXTENDED) {
         if (fun->isExtended() && fun->compartment() == cx->compartment()) {
             for (unsigned i = 0; i < FunctionExtended::NUM_EXTENDED_SLOTS; i++)
                 clone->initExtendedSlot(i, fun->getExtendedSlot(i));
@@ -2256,7 +2252,7 @@ js::IdToFunctionName(JSContext* cx, HandleId id)
 
 JSFunction*
 js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
-                   unsigned nargs, unsigned flags, AllocKind allocKind /* = FinalizeKind */,
+                   unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */,
                    NewObjectKind newKind /* = GenericObject */)
 {
     GetterOp gop;

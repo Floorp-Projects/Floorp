@@ -799,7 +799,7 @@ NewExportedFunction(JSContext* cx, const AsmJSModule::ExportedFunction& func,
     unsigned numArgs = func.isChangeHeap() ? 1 : func.numArgs();
     JSFunction* fun =
         NewNativeConstructor(cx, CallAsmJS, numArgs, name,
-                             JSFunction::ExtendedFinalizeKind, GenericObject,
+                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject,
                              JSFunction::ASMJS_CTOR);
     if (!fun)
         return nullptr;
@@ -832,7 +832,7 @@ HandleDynamicLinkFailure(JSContext* cx, CallArgs args, AsmJSModule& module, Hand
         return false;
 
     RootedFunction fun(cx, NewScriptedFunction(cx, 0, JSFunction::INTERPRETED,
-                                               name, JSFunction::FinalizeKind,
+                                               name, gc::AllocKind::FUNCTION,
                                                TenuredObject));
     if (!fun)
         return false;
@@ -1095,7 +1095,7 @@ js::NewAsmJSModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObje
                                                   : JSFunction::ASMJS_CTOR;
     JSFunction* moduleFun =
         NewNativeConstructor(cx, LinkAsmJS, origFun->nargs(), name,
-                             JSFunction::ExtendedFinalizeKind, TenuredObject,
+                             gc::AllocKind::FUNCTION_EXTENDED, TenuredObject,
                              flags);
     if (!moduleFun)
         return nullptr;

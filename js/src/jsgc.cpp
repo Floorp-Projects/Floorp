@@ -270,6 +270,8 @@ static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
     MOZ_FOR_EACH(CHECK_MIN_THING_SIZE_INNER, (), (__VA_ARGS__ UINT32_MAX))
 
 const uint32_t Arena::ThingSizes[] = CHECK_MIN_THING_SIZE(
+    sizeof(JSFunction),         /* AllocKind::FUNCTION            */
+    sizeof(FunctionExtended),   /* AllocKind::FUNCTION_EXTENDED   */
     sizeof(JSObject_Slots0),    /* AllocKind::OBJECT0             */
     sizeof(JSObject_Slots0),    /* AllocKind::OBJECT0_BACKGROUND  */
     sizeof(JSObject_Slots2),    /* AllocKind::OBJECT2             */
@@ -301,6 +303,8 @@ const uint32_t Arena::ThingSizes[] = CHECK_MIN_THING_SIZE(
 #define OFFSET(type) uint32_t(sizeof(ArenaHeader) + (ArenaSize - sizeof(ArenaHeader)) % sizeof(type))
 
 const uint32_t Arena::FirstThingOffsets[] = {
+    OFFSET(JSFunction),         /* AllocKind::FUNCTION            */
+    OFFSET(FunctionExtended),   /* AllocKind::FUNCTION_EXTENDED   */
     OFFSET(JSObject_Slots0),    /* AllocKind::OBJECT0             */
     OFFSET(JSObject_Slots0),    /* AllocKind::OBJECT0_BACKGROUND  */
     OFFSET(JSObject_Slots2),    /* AllocKind::OBJECT2             */
@@ -365,6 +369,8 @@ static const FinalizePhase IncrementalFinalizePhases[] = {
  */
 
 static const AllocKind BackgroundPhaseObjects[] = {
+    AllocKind::FUNCTION,
+    AllocKind::FUNCTION_EXTENDED,
     AllocKind::OBJECT0_BACKGROUND,
     AllocKind::OBJECT2_BACKGROUND,
     AllocKind::OBJECT4_BACKGROUND,
@@ -588,6 +594,8 @@ FinalizeArenas(FreeOp* fop,
                ArenaLists::KeepArenasEnum keepArenas)
 {
     switch (thingKind) {
+      case AllocKind::FUNCTION:
+      case AllocKind::FUNCTION_EXTENDED:
       case AllocKind::OBJECT0:
       case AllocKind::OBJECT0_BACKGROUND:
       case AllocKind::OBJECT2:
@@ -2286,6 +2294,8 @@ UpdateCellPointers(MovingTracer* trc, ArenaHeader* arena)
     JSGCTraceKind traceKind = MapAllocToTraceKind(kind);
 
     switch (kind) {
+      case AllocKind::FUNCTION:
+      case AllocKind::FUNCTION_EXTENDED:
       case AllocKind::OBJECT0:
       case AllocKind::OBJECT0_BACKGROUND:
       case AllocKind::OBJECT2:
