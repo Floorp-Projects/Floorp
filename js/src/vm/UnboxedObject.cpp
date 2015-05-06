@@ -71,6 +71,8 @@ static const uintptr_t CLEAR_CONSTRUCTOR_CODE_TOKEN = 0x1;
 /* static */ bool
 UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 {
+    gc::AutoSuppressGC suppress(cx);
+
     using namespace jit;
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
@@ -107,8 +109,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     Register object = regs.takeAny(), scratch1 = regs.takeAny(), scratch2 = regs.takeAny();
 
     LiveGeneralRegisterSet savedNonVolatileRegisters = SavedNonVolatileRegisters(regs);
-    for (GeneralRegisterForwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter)
-        masm.Push(*iter);
+    masm.PushRegsInMask(savedNonVolatileRegisters);
 
     // The scratch double register might be used by MacroAssembler methods.
     if (ScratchDoubleReg.volatile_())
@@ -148,11 +149,19 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     masm.jump(&allocated);
     masm.bind(&postBarrier);
 
+    LiveGeneralRegisterSet liveVolatileRegisters;
+    liveVolatileRegisters.add(propertiesReg);
+    if (object.volatile_())
+        liveVolatileRegisters.add(object);
+    masm.PushRegsInMask(liveVolatileRegisters);
+
     masm.mov(ImmPtr(cx->runtime()), scratch1);
     masm.setupUnalignedABICall(2, scratch2);
     masm.passABIArg(scratch1);
     masm.passABIArg(object);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
+
+    masm.PopRegsInMask(liveVolatileRegisters);
 
     masm.bind(&allocated);
 
@@ -213,8 +222,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     // Restore non-volatile registers which were saved on entry.
     if (ScratchDoubleReg.volatile_())
         masm.pop(ScratchDoubleReg);
-    for (GeneralRegisterBackwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter)
-        masm.Pop(*iter);
+    masm.PopRegsInMask(savedNonVolatileRegisters);
 
     masm.abiret();
 
@@ -327,7 +335,7 @@ SetUnboxedValue(ExclusiveContext* cx, JSObject* unboxedObject, jsid id,
 }
 
 static inline Value
-GetUnboxedValue(uint8_t* p, JSValueType type)
+GetUnboxedValue(uint8_t* p, JSValueType type, bool maybeUninitialized)
 {
     switch (type) {
       case JSVAL_TYPE_BOOLEAN:
@@ -336,8 +344,16 @@ GetUnboxedValue(uint8_t* p, JSValueType type)
       case JSVAL_TYPE_INT32:
         return Int32Value(*reinterpret_cast<int32_t*>(p));
 
-      case JSVAL_TYPE_DOUBLE:
-        return DoubleValue(*reinterpret_cast<double*>(p));
+      case JSVAL_TYPE_DOUBLE: {
+        // During unboxed plain object creation, non-GC thing properties are
+        // left uninitialized. This is normally fine, since the properties will
+        // be filled in shortly, but if they are read before that happens we
+        // need to make sure that doubles are canonical.
+        double d = *reinterpret_cast<double*>(p);
+        if (maybeUninitialized)
+            return DoubleValue(JS::CanonicalizeNaN(d));
+        return DoubleValue(d);
+      }
 
       case JSVAL_TYPE_STRING:
         return StringValue(*reinterpret_cast<JSString**>(p));
@@ -363,10 +379,11 @@ UnboxedPlainObject::setValue(ExclusiveContext* cx, const UnboxedLayout::Property
 }
 
 Value
-UnboxedPlainObject::getValue(const UnboxedLayout::Property& property)
+UnboxedPlainObject::getValue(const UnboxedLayout::Property& property,
+                             bool maybeUninitialized /* = false */)
 {
     uint8_t* p = &data_[property.offset];
-    return GetUnboxedValue(p, property.type);
+    return GetUnboxedValue(p, property.type, maybeUninitialized);
 }
 
 void
@@ -410,6 +427,12 @@ UnboxedPlainObject::ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj
     UnboxedExpandoObject* expando = NewObjectWithGivenProto<UnboxedExpandoObject>(cx, NullPtr());
     if (!expando)
         return nullptr;
+
+    // If the expando is tenured then the original object must also be tenured.
+    // Otherwise barriers triggered on the original object for writes to the
+    // expando (as can happen in the JIT) won't see the tenured->nursery edge.
+    // See WholeCellEdges::mark.
+    MOZ_ASSERT_IF(!IsInsideNursery(expando), !IsInsideNursery(obj));
 
     // As with setValue(), we need to manually trigger post barriers on the
     // whole object. If we treat the field as a HeapPtrObject and later convert
@@ -578,9 +601,14 @@ UnboxedPlainObject::convertToNative(JSContext* cx, JSObject* obj)
 
     AutoValueVector values(cx);
     for (size_t i = 0; i < layout.properties().length(); i++) {
-        if (!values.append(obj->as<UnboxedPlainObject>().getValue(layout.properties()[i])))
+        // We might be reading properties off the object which have not been
+        // initialized yet. Make sure any double values we read here are
+        // canonicalized.
+        if (!values.append(obj->as<UnboxedPlainObject>().getValue(layout.properties()[i], true)))
             return false;
     }
+
+    JSObject::writeBarrierPre(expando);
 
     obj->setGroup(layout.nativeGroup());
     obj->as<PlainObject>().setLastPropertyMakeNative(cx, layout.nativeShape());
@@ -935,7 +963,9 @@ const Class UnboxedExpandoObject::class_ = {
 
 const Class UnboxedPlainObject::class_ = {
     js_Object_str,
-    Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS,
+    Class::NON_NATIVE |
+    JSCLASS_IMPLEMENTS_BARRIERS |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
     nullptr,        /* getProperty */
@@ -1099,7 +1129,7 @@ UnboxedArrayObject::getElement(size_t index)
 {
     MOZ_ASSERT(index < initializedLength());
     uint8_t* p = elements() + index * elementSize();
-    return GetUnboxedValue(p, elementType());
+    return GetUnboxedValue(p, elementType(), /* maybeUninitialized = */ false);
 }
 
 /* static */ void
