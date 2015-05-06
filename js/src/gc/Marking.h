@@ -153,6 +153,7 @@ class GCMarker : public JSTracer
 
     // C++ requires explicit declarations of partial template instantiations.
     template <typename S> void traverse(S source, jsid target);
+    template <typename S> void traverse(S source, Value target);
 
     /*
      * Care must be taken changing the mark color from gray to black. The cycle
