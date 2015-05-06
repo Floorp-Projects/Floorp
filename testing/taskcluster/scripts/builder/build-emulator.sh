@@ -23,9 +23,7 @@ test $TARGET
 #
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
-if [ ! -d mozharness ]; then
-  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
-fi
+tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
 
 # Figure out where the remote manifest is so we can use caches for it.
 
