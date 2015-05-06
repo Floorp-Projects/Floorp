@@ -56,7 +56,8 @@ class Message : public Pickle {
 
   enum MessageCompression {
     COMPRESSION_NONE,
-    COMPRESSION_ENABLED
+    COMPRESSION_ENABLED,
+    COMPRESSION_ALL
   };
 
   virtual ~Message();
@@ -99,8 +100,12 @@ class Message : public Pickle {
   }
 
   // True if compression is enabled for this message.
-  bool compress() const {
-    return (header()->flags & COMPRESS_BIT) != 0;
+  MessageCompression compress_type() const {
+    return (header()->flags & COMPRESS_BIT) ?
+               COMPRESSION_ENABLED :
+               (header()->flags & COMPRESSALL_BIT) ?
+                   COMPRESSION_ALL :
+                   COMPRESSION_NONE;
   }
 
   // Set this on a reply to a synchronous message.
@@ -285,6 +290,7 @@ class Message : public Pickle {
     HAS_SENT_TIME_BIT = 0x0080,
     INTERRUPT_BIT   = 0x0100,
     COMPRESS_BIT    = 0x0200,
+    COMPRESSALL_BIT = 0x0400,
   };
 
   struct Header : Pickle::Header {

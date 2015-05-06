@@ -638,7 +638,6 @@ IsOnFullDomainWhitelist(nsIURI* aURI)
     // 0th entry only active when testing:
     NS_LITERAL_CSTRING("test1.example.org"),
     NS_LITERAL_CSTRING("map.baidu.com"),
-    NS_LITERAL_CSTRING("music.baidu.com"),
     NS_LITERAL_CSTRING("3g.163.com"),
     NS_LITERAL_CSTRING("3glogo.gtimg.com"), // for 3g.163.com
     NS_LITERAL_CSTRING("info.3g.qq.com"), // for 3g.qq.com
@@ -646,6 +645,16 @@ IsOnFullDomainWhitelist(nsIURI* aURI)
     NS_LITERAL_CSTRING("img.m.baidu.com"), // for [shucheng|ks].baidu.com
     NS_LITERAL_CSTRING("m.mogujie.com"),
     NS_LITERAL_CSTRING("touch.qunar.com"),
+    NS_LITERAL_CSTRING("mjs.sinaimg.cn"), // for sina.cn
+    NS_LITERAL_CSTRING("static.qiyi.com"), // for m.iqiyi.com
+    NS_LITERAL_CSTRING("www.kuaidi100.com"), // for m.kuaidi100.com
+    NS_LITERAL_CSTRING("m.pc6.com"),
+    NS_LITERAL_CSTRING("m.haosou.com"),
+    NS_LITERAL_CSTRING("m.mi.com"),
+    NS_LITERAL_CSTRING("wappass.baidu.com"),
+    NS_LITERAL_CSTRING("m.video.baidu.com"),
+    NS_LITERAL_CSTRING("m.video.baidu.com"),
+    NS_LITERAL_CSTRING("imgcache.gtimg.cn"), // for m.v.qq.com
   };
   static const size_t sNumFullDomainsOnWhitelist =
     MOZ_ARRAY_LENGTH(sFullDomainsOnWhitelist);

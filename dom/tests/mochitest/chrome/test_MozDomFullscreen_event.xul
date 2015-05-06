@@ -36,7 +36,7 @@ SpecialPowers.pushPrefEnv({"set": [['full-screen-api.enabled', true],
                                    ['full-screen-api.allow-trusted-requests-only', false]]}, setup);
 
 function setup() {
-   newwindow = window.open("MozEnteredDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
+   newwindow = window.open("MozDomFullscreen_chrome.xul", "_blank","chrome,resizable=yes,width=400,height=400");
 }
 
 function done()
