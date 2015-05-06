@@ -847,7 +847,7 @@ public class GeckoAppShell
         shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
         shortcutIntent.setData(Uri.parse(aURI));
         shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                    AppConstants.BROWSER_INTENT_CLASS_NAME);
+                                    AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
 
         Intent intent = new Intent();
         intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
@@ -1205,7 +1205,7 @@ public class GeckoAppShell
             // Return an intent with a URI that will open the YouTube page in the
             // current Fennec instance.
             final Class<?> c;
-            final String browserClassName = AppConstants.BROWSER_INTENT_CLASS_NAME;
+            final String browserClassName = AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
             try {
                 c = Class.forName(browserClassName);
             } catch (ClassNotFoundException e) {
