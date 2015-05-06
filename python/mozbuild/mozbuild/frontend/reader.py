@@ -198,7 +198,7 @@ class MozbuildSandbox(Sandbox):
         if key in self.subcontext_types:
             return self._create_subcontext(self.subcontext_types[key])
         if key in self.templates:
-            return self._create_template_function(self.templates[key])
+            return self._create_template_wrapper(self.templates[key])
         return Sandbox.__getitem__(self, key)
 
     def __setitem__(self, key, value):
@@ -308,14 +308,7 @@ class MozbuildSandbox(Sandbox):
         raise SandboxCalledError(self._context.source_stack, message)
 
     def _template_decorator(self, func):
-        """Registers template as expected by _create_template_function.
-
-        The template data consists of:
-        - the function object as it comes from the sandbox evaluation of the
-          template declaration.
-        - its code, modified as described in the comments of this method.
-        - the path of the file containing the template definition.
-        """
+        """Registers a template function."""
 
         if not inspect.isfunction(func):
             raise Exception('`template` is a function decorator. You must '
@@ -326,10 +319,98 @@ class MozbuildSandbox(Sandbox):
         if name in self.templates:
             raise KeyError(
                 'A template named "%s" was already declared in %s.' % (name,
-                self.templates[name][2]))
+                self.templates[name].path))
 
         if name.islower() or name.isupper() or name[0].islower():
             raise NameError('Template function names must be CamelCase.')
+
+        self.templates[name] = TemplateFunction(func)
+
+    @memoize
+    def _create_subcontext(self, cls):
+        """Return a function object that creates SubContext instances."""
+        def fn(*args, **kwargs):
+            return cls(self._context, *args, **kwargs)
+
+        return fn
+
+    @memoize
+    def _create_function(self, function_def):
+        """Returns a function object for use within the sandbox for the given
+        function definition.
+
+        The wrapper function does type coercion on the function arguments
+        """
+        func, args_def, doc = function_def
+        def function(*args):
+            def coerce(arg, type):
+                if not isinstance(arg, type):
+                    if issubclass(type, ContextDerivedValue):
+                        arg = type(self._context, arg)
+                    else:
+                        arg = type(arg)
+                return arg
+            args = [coerce(arg, type) for arg, type in zip(args, args_def)]
+            return func(self)(*args)
+
+        return function
+
+    @memoize
+    def _create_template_wrapper(self, template):
+        """Returns a function object for use within the sandbox for the given
+        TemplateFunction instance..
+
+        When a moz.build file contains a reference to a template call, the
+        sandbox needs a function to execute. This is what this method returns.
+        That function creates a new sandbox for execution of the template.
+        After the template is executed, the data from its execution is merged
+        with the context of the calling sandbox.
+        """
+        def template_wrapper(*args, **kwargs):
+            context = TemplateContext(
+                template=template.name,
+                allowed_variables=self._context._allowed_variables,
+                config=self._context.config)
+            context.add_source(self._context.current_path)
+            for p in self._context.all_paths:
+                context.add_source(p)
+
+            sandbox = MozbuildSandbox(context, metadata={
+                # We should arguably set these defaults to something else.
+                # Templates, for example, should arguably come from the state
+                # of the sandbox from when the template was declared, not when
+                # it was instantiated. Bug 1137319.
+                'functions': self.metadata.get('functions', {}),
+                'special_variables': self.metadata.get('special_variables', {}),
+                'subcontexts': self.metadata.get('subcontexts', {}),
+                'templates': self.metadata.get('templates', {})
+            })
+            template.exec_in_sandbox(sandbox, *args, **kwargs)
+
+            # This is gross, but allows the merge to happen. Eventually, the
+            # merging will go away and template contexts emitted independently.
+            klass = self._context.__class__
+            self._context.__class__ = TemplateContext
+            # The sandbox will do all the necessary checks for these merges.
+            for key, value in context.items():
+                if isinstance(value, dict):
+                    self[key].update(value)
+                elif isinstance(value, list):
+                    self[key] += value
+                else:
+                    self[key] = value
+            self._context.__class__ = klass
+
+            for p in context.all_paths:
+                self._context.add_source(p)
+
+        return template_wrapper
+
+
+class TemplateFunction(object):
+    def __init__(self, func):
+        self.path = inspect.getfile(func)
+        self.name = func.func_name
 
         lines, firstlineno = inspect.getsourcelines(func)
         first_op = None
@@ -363,95 +444,17 @@ class MozbuildSandbox(Sandbox):
         # (this is simpler than trying to deindent the function body)
         # So we need to prepend with n - 1 newlines so that line numbers
         # are unchanged.
-        code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
-        code += ''.join(lines[begin[0] - 1:])
+        self._code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
+        self._code += ''.join(lines[begin[0] - 1:])
+        self._func = func
 
-        self.templates[name] = func, code, self._context.current_path
+    def exec_in_sandbox(self, sandbox, *args, **kwargs):
+        """Executes the template function in the given sandbox."""
 
-    @memoize
-    def _create_subcontext(self, cls):
-        """Return a function object that creates SubContext instances."""
-        def fn(*args, **kwargs):
-            return cls(self._context, *args, **kwargs)
+        for k, v in inspect.getcallargs(self._func, *args, **kwargs).items():
+            sandbox[k] = v
 
-        return fn
-
-    @memoize
-    def _create_function(self, function_def):
-        """Returns a function object for use within the sandbox for the given
-        function definition.
-
-        The wrapper function does type coercion on the function arguments
-        """
-        func, args_def, doc = function_def
-        def function(*args):
-            def coerce(arg, type):
-                if not isinstance(arg, type):
-                    if issubclass(type, ContextDerivedValue):
-                        arg = type(self._context, arg)
-                    else:
-                        arg = type(arg)
-                return arg
-            args = [coerce(arg, type) for arg, type in zip(args, args_def)]
-            return func(self)(*args)
-
-        return function
-
-    @memoize
-    def _create_template_function(self, template):
-        """Returns a function object for use within the sandbox for the given
-        template.
-
-        When a moz.build file contains a reference to a template call, the
-        sandbox needs a function to execute. This is what this method returns.
-        That function creates a new sandbox for execution of the template.
-        After the template is executed, the data from its execution is merged
-        with the context of the calling sandbox.
-        """
-        func, code, path = template
-
-        def template_function(*args, **kwargs):
-            context = TemplateContext(
-                template=func.func_name,
-                allowed_variables=self._context._allowed_variables,
-                config=self._context.config)
-            context.add_source(self._context.current_path)
-            for p in self._context.all_paths:
-                context.add_source(p)
-
-            sandbox = MozbuildSandbox(context, metadata={
-                # We should arguably set these defaults to something else.
-                # Templates, for example, should arguably come from the state
-                # of the sandbox from when the template was declared, not when
-                # it was instantiated. Bug 1137319.
-                'functions': self.metadata.get('functions', {}),
-                'special_variables': self.metadata.get('special_variables', {}),
-                'subcontexts': self.metadata.get('subcontexts', {}),
-                'templates': self.metadata.get('templates', {})
-            })
-            for k, v in inspect.getcallargs(func, *args, **kwargs).items():
-                sandbox[k] = v
-
-            sandbox.exec_source(code, path, becomes_current_path=False)
-
-            # This is gross, but allows the merge to happen. Eventually, the
-            # merging will go away and template contexts emitted independently.
-            klass = self._context.__class__
-            self._context.__class__ = TemplateContext
-            # The sandbox will do all the necessary checks for these merges.
-            for key, value in context.items():
-                if isinstance(value, dict):
-                    self[key].update(value)
-                elif isinstance(value, list):
-                    self[key] += value
-                else:
-                    self[key] = value
-            self._context.__class__ = klass
-
-            for p in context.all_paths:
-                self._context.add_source(p)
-
-        return template_function
+        sandbox.exec_source(self._code, self.path, becomes_current_path=False)
 
 
 class SandboxValidationError(Exception):
