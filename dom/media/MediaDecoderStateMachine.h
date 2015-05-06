@@ -640,10 +640,6 @@ protected:
   // The decoder monitor must be held.
   nsresult EnsureVideoDecodeTaskQueued();
 
-  // Calls the reader's SetIdle(). This is only called in a task dispatched to
-  // the decode task queue, don't call it directly.
-  void SetReaderIdle();
-
   // Re-evaluates the state and determines whether we need to dispatch
   // events to run the decode, or if not whether we should set the reader
   // to idle mode. This is threadsafe, and can be called from any thread.
