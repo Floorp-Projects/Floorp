@@ -2520,15 +2520,6 @@ private:
 };
 
 void
-MediaDecoderStateMachine::ShutdownReader()
-{
-  MOZ_ASSERT(OnDecodeTaskQueue());
-  mReader->Shutdown()->Then(TaskQueue(), __func__, this,
-                            &MediaDecoderStateMachine::FinishShutdown,
-                            &MediaDecoderStateMachine::FinishShutdown);
-}
-
-void
 MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2614,10 +2605,10 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
       // Put a task in the decode queue to shutdown the reader.
       // the queue to spin down.
-      nsCOMPtr<nsIRunnable> task
-        = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::ShutdownReader);
-      DecodeTaskQueue()->Dispatch(task.forget());
-
+      ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__, &MediaDecoderReader::Shutdown)
+        ->Then(TaskQueue(), __func__, this,
+               &MediaDecoderStateMachine::FinishShutdown,
+               &MediaDecoderStateMachine::FinishShutdown);
       DECODER_LOG("Shutdown started");
       return NS_OK;
     }
