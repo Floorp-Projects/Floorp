@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerScriptCache.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/CacheBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Cache.h"
@@ -322,6 +323,13 @@ public:
   }
 
   void
+  SetMaxScope(const nsACString& aMaxScope)
+  {
+    MOZ_ASSERT(!mNetworkFinished);
+    mMaxScope = aMaxScope;
+  }
+
+  void
   NetworkFinished(nsresult aStatus)
   {
     AssertIsOnMainThread();
@@ -569,6 +577,8 @@ private:
 
   nsCString mSecurityInfo;
 
+  nsCString mMaxScope;
+
   enum {
     WaitingForOpen,
     WaitingForPut
@@ -648,6 +658,14 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
       mManager->NetworkFinished(NS_ERROR_FAILURE);
       return NS_OK;
     }
+
+    nsAutoCString maxScope;
+    // Note: we explicitly don't check for the return value here, because the
+    // absense of the header is not an error condition.
+    unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
+                                             maxScope);
+
+    mManager->SetMaxScope(maxScope);
   }
   else {
     // The only supported request schemes are http, https, and app.
