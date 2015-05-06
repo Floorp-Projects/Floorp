@@ -48,11 +48,12 @@ const LIVEMARKS = [
 
 function runTest()
 {
+  let loadCount = 0;
+
   function testLivemark(aLivemarkData) {
     PlacesUtils.livemarks.addLivemark(
       { title: "foo"
-      , parentId: PlacesUtils.toolbarFolderId
-      , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+      , parentGuid: PlacesUtils.bookmarks.toolbarGuid
       , feedURI: aLivemarkData.feedURI
       , siteURI: aLivemarkData.siteURI
       })
@@ -68,7 +69,6 @@ function runTest()
         }
 
         waitForLivemarkLoad(aLivemark, function (aLivemark) {
-          aLivemarkData.loaded = true;
           let nodes = aLivemark.getNodesForContainer({});
           is(nodes.length, aLivemarkData.urls.length,
              "Ensure all the livemark items were created.");
@@ -77,10 +77,10 @@ function runTest()
             is(node.uri, aUrl, aLivemarkData.message);
           });
 
-          PlacesUtils.bookmarks.removeItem(aLivemark.id);
-
-          if (LIVEMARKS.every(lm => lm.loaded))
-            SimpleTest.finish();
+          PlacesUtils.livemarks.removeLivemark(aLivemark).then(() => {
+            if (++loadCount == LIVEMARKS.length)
+              SimpleTest.finish();
+          });
         });
       }, function () {
         is(true, false, "Should not fail adding a livemark");
