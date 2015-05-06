@@ -118,10 +118,11 @@ public:
   already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,
                    const nsAString& aTitle,
-                   const NotificationOptions& aOptions);
+                   const NotificationOptions& aOptions,
+                   ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions);
+  GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<workers::ServiceWorker>
   GetInstalling() override;
@@ -206,10 +207,11 @@ public:
   already_AddRefed<Promise>
   ShowNotification(JSContext* aCx,
                    const nsAString& aTitle,
-                   const NotificationOptions& aOptions);
+                   const NotificationOptions& aOptions,
+                   ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions);
+  GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv);
 
   already_AddRefed<workers::ServiceWorker>
   GetInstalling() override;
