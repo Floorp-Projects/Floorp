@@ -53,7 +53,8 @@ function* testAddTextInFilter(inspector, ruleView) {
   ok(!ruleEditor.expander.getAttribute("open"), "Expander is closed.");
   ok(ruleEditor.container.classList.contains("ruleview-highlight"),
     "margin text property is correctly highlighted.");
-  ok(!computed.hasAttribute("filter-open"), "margin computed list is closed.");
+  ok(!computed.classList.contains("filter-open"),
+    "margin computed list is closed.");
 
   ok(!computed.children[0].classList.contains("ruleview-highlight"),
     "margin-top computed property is not highlighted.");
@@ -88,5 +89,6 @@ function* testClearSearchFilter(inspector, ruleView) {
   let computed = ruleEditor.computed;
 
   ok(!ruleEditor.expander.getAttribute("open"), "Expander is closed.");
-  ok(!computed.hasAttribute("filter-open"), "margin computed list is closed.");
+  ok(!computed.classList.contains("filter-open"),
+    "margin computed list is closed.");
 }
