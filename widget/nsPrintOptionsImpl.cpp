@@ -242,7 +242,7 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   // data->disposition() default-initializes
   data->pagesAcross() = 1;
   data->pagesDown() = 1;
-  // data->printTime() default-initializes
+  data->printTime() = 0;
   data->detailedErrorReporting() = true;
   // data->faxNumber() default-initializes
   data->addHeaderAndFooter() = false;
