@@ -44,7 +44,6 @@
     locale/browser/devtools/canvasdebugger.properties (%chrome/browser/devtools/canvasdebugger.properties)
     locale/browser/devtools/webaudioeditor.dtd          (%chrome/browser/devtools/webaudioeditor.dtd)
     locale/browser/devtools/webaudioeditor.properties   (%chrome/browser/devtools/webaudioeditor.properties)
-    locale/browser/devtools/gcli.properties           (%chrome/browser/devtools/gcli.properties)
     locale/browser/devtools/webconsole.properties     (%chrome/browser/devtools/webconsole.properties)
     locale/browser/devtools/inspector.properties      (%chrome/browser/devtools/inspector.properties)
     locale/browser/devtools/tilt.properties           (%chrome/browser/devtools/tilt.properties)
