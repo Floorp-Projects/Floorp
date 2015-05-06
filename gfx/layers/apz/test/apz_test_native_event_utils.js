@@ -17,6 +17,7 @@ function nativeVerticalWheelEventMsg() {
   switch (getPlatform()) {
     case "windows": return 0x020A; // WM_MOUSEWHEEL
     case "mac": return 0; // value is unused, can be anything
+    case "linux": return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
   throw "Native wheel events not supported on platform " + getPlatform();
 }
@@ -25,6 +26,7 @@ function nativeHorizontalWheelEventMsg() {
   switch (getPlatform()) {
     case "windows": return 0x020E; // WM_MOUSEHWHEEL
     case "mac": return 0; // value is unused, can be anything
+    case "linux": return 4; // value is unused, pass GDK_SCROLL_SMOOTH anyway
   }
   throw "Native wheel events not supported on platform " + getPlatform();
 }
