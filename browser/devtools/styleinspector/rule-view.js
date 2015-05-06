@@ -25,6 +25,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
+const PREF_ENABLE_MDN_DOCS_TOOLTIP = "devtools.inspector.mdnDocsTooltip.enabled";
 const PROPERTY_NAME_CLASS = "ruleview-propertyname";
 const FILTER_CHANGED_TIMEOUT = 150;
 
@@ -1153,8 +1154,10 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this._prefObserver.on(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
   this._prefObserver.on(PREF_UA_STYLES, this._handlePrefChange);
   this._prefObserver.on(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
+  this._prefObserver.on(PREF_ENABLE_MDN_DOCS_TOOLTIP, this._handlePrefChange);
 
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
+  this.enableMdnDocsTooltip = Services.prefs.getBoolPref(PREF_ENABLE_MDN_DOCS_TOOLTIP);
 
   let options = {
     autoSelect: true,
@@ -1352,7 +1355,8 @@ CssRuleView.prototype = {
     var showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     this.menuitemSources.setAttribute("checked", showOrig);
 
-    this.menuitemShowMdnDocs.hidden = !this.doc.popupNode.parentNode
+    this.menuitemShowMdnDocs.hidden = !this.enableMdnDocsTooltip ||
+                                      !this.doc.popupNode.parentNode
                                       .classList.contains(PROPERTY_NAME_CLASS);
 
     this.menuitemAddRule.disabled = this.inspector.selection.isAnonymousNode();
@@ -1595,6 +1599,10 @@ CssRuleView.prototype = {
       this.showUserAgentStyles = Services.prefs.getBoolPref(pref);
     }
 
+    if (pref === PREF_ENABLE_MDN_DOCS_TOOLTIP) {
+      this.enableMdnDocsTooltip = Services.prefs.getBoolPref(pref);
+    }
+
     // Reselect the currently selected element
     let refreshOnPrefs = [PREF_UA_STYLES, PREF_DEFAULT_COLOR_UNIT];
     if (refreshOnPrefs.indexOf(pref) > -1) {
@@ -1699,6 +1707,7 @@ CssRuleView.prototype = {
     this._prefObserver.off(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
     this._prefObserver.off(PREF_UA_STYLES, this._handlePrefChange);
     this._prefObserver.off(PREF_DEFAULT_COLOR_UNIT, this._handlePrefChange);
+    this._prefObserver.off(PREF_ENABLE_MDN_DOCS_TOOLTIP, this._handlePrefChange);
     this._prefObserver.destroy();
 
     this._outputParser = null;
