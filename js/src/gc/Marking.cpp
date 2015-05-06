@@ -1157,11 +1157,11 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
 
       case SavedValueArrayTag: {
         MOZ_ASSERT(!(addr & CellMask));
-        NativeObject* obj = reinterpret_cast<NativeObject*>(addr);
+        JSObject* obj = reinterpret_cast<JSObject*>(addr);
         HeapValue* vp;
         HeapValue* end;
         if (restoreValueArray(obj, (void**)&vp, (void**)&end))
-            pushValueArray(obj, vp, end);
+            pushValueArray(&obj->as<NativeObject>(), vp, end);
         else
             repush(obj);
         return;
@@ -1385,10 +1385,14 @@ GCMarker::saveValueRanges()
 }
 
 bool
-GCMarker::restoreValueArray(NativeObject* obj, void** vpp, void** endp)
+GCMarker::restoreValueArray(JSObject* objArg, void** vpp, void** endp)
 {
     uintptr_t start = stack.pop();
     HeapSlot::Kind kind = (HeapSlot::Kind) stack.pop();
+
+    if (!objArg->isNative())
+        return false;
+    NativeObject* obj = &objArg->as<NativeObject>();
 
     if (kind == HeapSlot::Element) {
         if (!obj->is<ArrayObject>())
@@ -1812,10 +1816,21 @@ StoreBuffer::WholeCellEdges::mark(TenuringTracer& mover) const
     JSGCTraceKind kind = GetGCThingTraceKind(edge);
     if (kind <= JSTRACE_OBJECT) {
         JSObject* object = static_cast<JSObject*>(edge);
-        if (object->is<ArgumentsObject>())
-            ArgumentsObject::trace(&mover, object);
+
         // FIXME: bug 1161664 -- call the inline path below, now that it is accessable.
         object->traceChildren(&mover);
+
+        // Additionally trace the expando object attached to any unboxed plain
+        // objects. Baseline and Ion can write properties to the expando while
+        // only adding a post barrier to the owning unboxed object. Note that
+        // it isn't possible for a nursery unboxed object to have a tenured
+        // expando, so that adding a post barrier on the original object will
+        // capture any tenured->nursery edges in the expando as well.
+        if (object->is<UnboxedPlainObject>()) {
+            if (UnboxedExpandoObject* expando = object->as<UnboxedPlainObject>().maybeExpando())
+                expando->traceChildren(&mover);
+        }
+
         return;
     }
     MOZ_ASSERT(kind == JSTRACE_JITCODE);
