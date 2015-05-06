@@ -79,5 +79,5 @@ assertEq(tByteSize([1, 2, 3, 4, 5, 6, 7, 8]),           s(112, 128));
 // Various forms of functions.
 assertEq(tByteSize(function () {}),                     s(32,  64));
 assertEq(tByteSize(function () {}.bind()),              s(96,  128));
-assertEq(tByteSize(() => 1),                            s(48,  96));
+assertEq(tByteSize(() => 1),                            s(48,  80));
 assertEq(tByteSize(Math.sin),                           s(32,  64));

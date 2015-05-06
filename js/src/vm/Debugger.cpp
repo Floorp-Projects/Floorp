@@ -6001,7 +6001,7 @@ DebuggerFrame_getArguments(JSContext* cx, unsigned argc, Value* vp)
         for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
             getobj = NewNativeFunction(cx, DebuggerArguments_getArg, 0, js::NullPtr(),
-                                       JSFunction::ExtendedFinalizeKind);
+                                       gc::AllocKind::FUNCTION_EXTENDED);
             if (!getobj)
                 return false;
             id = INT_TO_JSID(i);
