@@ -632,7 +632,6 @@ BrowserGlue.prototype = {
         let buttons = [
           {
             label: win.gNavigatorBundle.getFormattedString("addonwatch.disable.label", [addon.name]),
-            accessKey: win.gNavigatorBundle.getString("addonwatch.disable.accesskey"),
             callback: function() {
               addon.userDisabled = true;
               if (addon.pendingOperations != addon.PENDING_NONE) {

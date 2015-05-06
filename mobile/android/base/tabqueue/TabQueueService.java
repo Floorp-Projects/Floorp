@@ -190,7 +190,7 @@ public class TabQueueService extends Service {
 
     private void openNow(Intent intent) {
         Intent forwardIntent = new Intent(intent);
-        forwardIntent.setClassName(getApplicationContext(), AppConstants.BROWSER_INTENT_CLASS_NAME);
+        forwardIntent.setClassName(getApplicationContext(), AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         forwardIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(forwardIntent);
 

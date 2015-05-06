@@ -325,7 +325,7 @@ this.GoogleImporter.prototype = {
 
       request.onerror = function(error) {
         reject(error);
-      }
+      };
 
       request.send();
     });
@@ -514,7 +514,7 @@ this.GoogleImporter.prototype = {
       for (let [,orgNode] of Iterator(orgNodes)) {
         let orgElement = orgNode.getElementsByTagNameNS(kNS_GD, "orgName")[0];
         let titleElement = orgNode.getElementsByTagNameNS(kNS_GD, "orgTitle")[0];
-        contact.org.push(orgElement ? orgElement.textContent : "")
+        contact.org.push(orgElement ? orgElement.textContent : "");
         contact.jobTitle.push(titleElement ? titleElement.textContent : "");
       }
     }
