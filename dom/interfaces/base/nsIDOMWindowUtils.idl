@@ -51,7 +51,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(9bb4a34f-de8f-43d3-a58c-10757cac95a0)]
+[scriptable, uuid(1a75c351-d115-4d51-94df-731dd1723a1f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -612,6 +612,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * a default target on the platform.  E.g., on Windows, it's focused window.
    */
   const unsigned long MOUSESCROLL_PREFER_WIDGET_AT_POINT = 0x00000001;
+
+  /**
+   * Interpret the scroll delta values as lines rather than pixels.
+   */
+  const unsigned long MOUSESCROLL_SCROLL_LINES = 0x00000002;
 
   /**
    * The platform specific values of aAdditionalFlags.  Must be over 0x00010000.

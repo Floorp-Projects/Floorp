@@ -1087,7 +1087,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       TextureSourceOGL* sourceCb = sourceYCbCr->GetSubSource(Cb)->AsSourceOGL();
       TextureSourceOGL* sourceCr = sourceYCbCr->GetSubSource(Cr)->AsSourceOGL();
 
-      if (!sourceY && !sourceCb && !sourceCr) {
+      if (!sourceY || !sourceCb || !sourceCr) {
         NS_WARNING("Invalid layer texture.");
         return;
       }

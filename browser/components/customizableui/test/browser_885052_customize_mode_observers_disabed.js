@@ -4,6 +4,11 @@
 
 "use strict";
 
+function isFullscreenSizeMode() {
+  let sizemode = document.documentElement.getAttribute("sizemode");
+  return sizemode == "fullscreen";
+}
+
 // Observers should be disabled when in customization mode.
 add_task(function() {
   // Open and close the panel to make sure that the
@@ -17,9 +22,10 @@ add_task(function() {
 
   let fullscreenButton = document.getElementById("fullscreen-button");
   ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.")
+  ok(!isFullscreenSizeMode(), "Should not be in fullscreen sizemode before we enter fullscreen.");
 
   BrowserFullScreen();
-  yield waitForCondition(function() fullscreenButton.checked);
+  yield waitForCondition(() => isFullscreenSizeMode());
   ok(fullscreenButton.checked, "Fullscreen button should be checked when in fullscreen.")
 
   yield startCustomizing();
@@ -34,6 +40,6 @@ add_task(function() {
 
   BrowserFullScreen();
   fullscreenButton = document.getElementById("fullscreen-button");
-  yield waitForCondition(function() !fullscreenButton.checked);
+  yield waitForCondition(() => !isFullscreenSizeMode());
   ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.")
 });
