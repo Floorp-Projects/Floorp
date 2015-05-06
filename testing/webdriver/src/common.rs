@@ -7,7 +7,7 @@ use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
 pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 
-#[derive(RustcEncodable, PartialEq, Debug)]
+#[derive(RustcEncodable, PartialEq, Clone, Debug)]
 pub struct Date(u64);
 
 impl Date {

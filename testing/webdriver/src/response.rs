@@ -44,7 +44,7 @@ impl NewSessionResponse {
 
 #[derive(RustcEncodable, Debug)]
 pub struct ValueResponse {
-    value: json::Json
+    pub value: json::Json
 }
 
 impl ValueResponse {
@@ -57,8 +57,8 @@ impl ValueResponse {
 
 #[derive(RustcEncodable, Debug)]
 pub struct WindowSizeResponse {
-    width: u64,
-    height: u64
+    pub width: u64,
+    pub height: u64
 }
 
 impl WindowSizeResponse {
@@ -72,10 +72,10 @@ impl WindowSizeResponse {
 
 #[derive(RustcEncodable, Debug)]
 pub struct ElementRectResponse {
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64
 }
 
 impl ElementRectResponse {
@@ -90,21 +90,21 @@ impl ElementRectResponse {
 }
 
 //TODO: some of these fields are probably supposed to be optional
-#[derive(RustcEncodable, PartialEq, Debug)]
+#[derive(RustcEncodable, PartialEq, Debug, Clone)]
 pub struct Cookie {
-    name: String,
-    value: String,
-    path: Nullable<String>,
-    domain: Nullable<String>,
-    expiry: Nullable<Date>,
-    maxAge: Date,
-    secure: bool,
-    httpOnly: bool
+    pub name: String,
+    pub value: String,
+    pub path: Nullable<String>,
+    pub domain: Nullable<String>,
+    pub expiry: Nullable<Date>,
+    pub maxAge: Nullable<Date>,
+    pub secure: bool,
+    pub httpOnly: bool
 }
 
 impl Cookie {
     pub fn new(name: String, value: String, path: Nullable<String>, domain: Nullable<String>,
-               expiry: Nullable<Date>, max_age: Date, secure: bool, http_only: bool) -> Cookie {
+               expiry: Nullable<Date>, max_age: Nullable<Date>, secure: bool, http_only: bool) -> Cookie {
         Cookie {
             name: name,
             value: value,
@@ -120,7 +120,7 @@ impl Cookie {
 
 #[derive(RustcEncodable, Debug)]
 pub struct CookieResponse {
-    value: Vec<Cookie>
+    pub value: Vec<Cookie>
 }
 
 impl CookieResponse {
