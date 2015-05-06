@@ -117,7 +117,7 @@ loop.store = loop.store || {};
         error: null,
         pendingCreation: false,
         pendingInitialRetrieval: false,
-        rooms: [],
+        rooms: []
       };
     },
 
@@ -258,7 +258,7 @@ loop.store = loop.store || {};
     createRoom: function(actionData) {
       this.setStoreState({
         pendingCreation: true,
-        error: null,
+        error: null
       });
 
       var roomCreationData = {

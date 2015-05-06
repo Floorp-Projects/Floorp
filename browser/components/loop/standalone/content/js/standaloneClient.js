@@ -128,7 +128,7 @@ loop.StandaloneClient = (function($) {
       }.bind(this));
 
       req.fail(this._failureHandler.bind(this, cb));
-    },
+    }
   };
 
   return StandaloneClient;

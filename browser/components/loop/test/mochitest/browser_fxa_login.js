@@ -60,7 +60,7 @@ add_task(function* checkOAuthParams() {
     content_uri: BASE_URL + "/content",
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
-    state: "state",
+    state: "state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
   let client = yield MozLoopServiceInternal.promiseFxAOAuthClient();
@@ -108,7 +108,7 @@ add_task(function* params_no_hawk_session() {
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
     state: "state",
-    test_error: "params_no_hawk",
+    test_error: "params_no_hawk"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -153,7 +153,7 @@ add_task(function* invalidState() {
     content_uri: BASE_URL + "/content",
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
-    state: "invalid_state",
+    state: "invalid_state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
   let loginPromise = MozLoopService.logInToFxA();
@@ -180,7 +180,7 @@ add_task(function* basicRegistration() {
     content_uri: BASE_URL + "/content",
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
-    state: "state",
+    state: "state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
   yield resetFxA();
@@ -201,7 +201,7 @@ add_task(function* registrationWithInvalidState() {
     content_uri: BASE_URL + "/content",
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
-    state: "invalid_state",
+    state: "invalid_state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -228,7 +228,7 @@ add_task(function* registrationWith401() {
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
     state: "state",
-    test_error: "token_401",
+    test_error: "token_401"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -277,7 +277,7 @@ add_task(function* basicAuthorizationAndRegistration() {
     content_uri: BASE_URL + "/content",
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
-    state: "state",
+    state: "state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -340,7 +340,7 @@ add_task(function* loginWithParams401() {
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
     state: "state",
-    test_error: "params_401",
+    test_error: "params_401"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
   yield MozLoopService.promiseRegisteredWithServers();
@@ -402,7 +402,7 @@ add_task(function* loginWithRegistration401() {
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
     state: "state",
-    test_error: "token_401",
+    test_error: "token_401"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -432,7 +432,7 @@ add_task(function* openFxASettings() {
     oauth_uri: BASE_URL + "/oauth",
     profile_uri: BASE_URL + "/profile",
     state: "state",
-    test_error: "token_401",
+    test_error: "token_401"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -448,7 +448,7 @@ add_task(function* openFxASettings() {
         is(aBrowser.currentURI.spec, Services.io.newURI("/settings", null, contentURI).spec,
            "Check settings tab URL");
         resolve();
-      },
+      }
     };
     gBrowser.addTabsProgressListener(progressListener);
 

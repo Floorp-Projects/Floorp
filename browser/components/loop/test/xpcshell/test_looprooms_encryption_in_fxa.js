@@ -56,7 +56,7 @@ const kExpectedRooms = new Map([
       alg: "AES-GCM"
     },
     decryptedContext: {
-      roomName: "Loopy Discussion",
+      roomName: "Loopy Discussion"
     },
     roomKey: "h2H8Sa9QxLCTTiXNmJVtRA",
     roomToken: "QzBbvGmIZWU",
@@ -66,7 +66,7 @@ const kExpectedRooms = new Map([
 
 const kCreateRoomProps = {
   decryptedContext: {
-    roomName: "Say Hello",
+    roomName: "Say Hello"
   },
   roomOwner: "Gavin",
   maxSize: 2

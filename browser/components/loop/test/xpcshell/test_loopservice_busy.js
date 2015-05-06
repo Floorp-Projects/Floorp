@@ -54,7 +54,11 @@ function run_test() {
 
   // Setup fake login state so we get FxA requests.
   const MozLoopServiceInternal = Cu.import("resource:///modules/loop/MozLoopService.jsm", {}).MozLoopServiceInternal;
-  MozLoopServiceInternal.fxAOAuthTokenData = {token_type:"bearer",access_token:"1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",scope:"profile"};
+  MozLoopServiceInternal.fxAOAuthTokenData = {
+    token_type:"bearer",
+    access_token:"1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",
+    scope:"profile"
+  };
   MozLoopServiceInternal.fxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
 
   let mockWebSocket = new MockWebSocketChannel();
@@ -83,7 +87,7 @@ function run_test() {
               progressURL: "wss://localhost:5000/websocket"}]},
     {calls: [{callId: secondCallId,
               websocketToken: "1deadbeef1",
-              progressURL: "wss://localhost:5000/websocket"}]},
+              progressURL: "wss://localhost:5000/websocket"}]}
   ];
 
   loopServer.registerPathHandler("/registration", (request, response) => {
