@@ -694,6 +694,26 @@ Telephony::SupplementaryServiceNotification(uint32_t aServiceId,
 }
 
 NS_IMETHODIMP
+Telephony::NotifyError(uint32_t aServiceId,
+                       int32_t aCallIndex,
+                       const nsAString& aError)
+{
+  nsRefPtr<TelephonyCall> callToNotify =
+    GetCallFromEverywhere(aServiceId, aCallIndex);
+  if (!callToNotify) {
+    NS_ERROR("Don't call me with a bad call index!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Set the call state to 'disconnected' and remove it from the calls list.
+  callToNotify->UpdateDisconnectedReason(aError);
+  callToNotify->NotifyError(aError);
+  callToNotify->ChangeState(nsITelephonyService::CALL_STATE_DISCONNECTED);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Telephony::NotifyCdmaCallWaiting(uint32_t aServiceId, const nsAString& aNumber,
                                  uint16_t aNumberPresentation,
                                  const nsAString& aName,
