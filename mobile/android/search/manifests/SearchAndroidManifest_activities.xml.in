@@ -1,6 +1,7 @@
         <activity
             android:name="@MOZ_ANDROID_SEARCH_INTENT_CLASS@"
             android:launchMode="singleTop"
+            android:taskAffinity="@ANDROID_PACKAGE_NAME@.SEARCH"
             android:icon="@drawable/search_launcher"
             android:label="@string/search_app_name"
             android:configChanges="orientation|screenSize"
