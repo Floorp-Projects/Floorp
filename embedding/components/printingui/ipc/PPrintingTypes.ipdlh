@@ -72,6 +72,7 @@ struct PrintData {
   bool isInitializedFromPrinter;
   bool isInitializedFromPrefs;
   bool persistMarginBoxSettings;
+  int32_t optionFlags;
 
   /* Windows-specific things */
   nsString driverName;

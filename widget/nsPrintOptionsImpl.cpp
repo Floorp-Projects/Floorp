@@ -223,6 +223,8 @@ nsPrintOptions::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetIsInitializedFromPrefs(&data->isInitializedFromPrefs());
   aSettings->GetPersistMarginBoxSettings(&data->persistMarginBoxSettings());
 
+  aSettings->GetPrintOptionsBits(&data->optionFlags());
+
   // Initialize the platform-specific values that don't
   // default-initialize, so that we don't send uninitialized data over
   // IPC (which leads to valgrind warnings, and, for bools, fatal
@@ -323,6 +325,8 @@ nsPrintOptions::DeserializeToPrintSettings(const PrintData& data,
   settings->SetIsInitializedFromPrinter(data.isInitializedFromPrinter());
   settings->SetIsInitializedFromPrefs(data.isInitializedFromPrefs());
   settings->SetPersistMarginBoxSettings(data.persistMarginBoxSettings());
+
+  settings->SetPrintOptionsBits(data.optionFlags());
 
   return NS_OK;
 }
