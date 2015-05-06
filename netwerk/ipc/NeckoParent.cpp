@@ -696,12 +696,17 @@ NeckoParent::DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* actor)
 }
 
 bool
-NeckoParent::RecvSpeculativeConnect(const URIParams &aURI)
+NeckoParent::RecvSpeculativeConnect(const URIParams& aURI, const bool& aAnonymous)
 {
   nsCOMPtr<nsISpeculativeConnect> speculator(gIOService);
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (uri && speculator) {
-    speculator->SpeculativeConnect(uri, nullptr);
+    if (aAnonymous) {
+      speculator->SpeculativeAnonymousConnect(uri, nullptr);
+    } else {
+      speculator->SpeculativeConnect(uri, nullptr);
+    }
+
   }
   return true;
 }
