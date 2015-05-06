@@ -22,6 +22,8 @@ function TestServer1(nextTest) {
 }
 
 TestServer1.prototype = {
+    remainder : 2,
+
     QueryInterface: function(iid) {
       iid = SpecialPowers.wrap(iid);
         if (iid.equals(Ci.nsIServerSocketListener) ||
@@ -32,12 +34,12 @@ TestServer1.prototype = {
     onSocketAccepted: function(socket, trans) {
         try { socket.close(); } catch(e) {}
         try { trans.close(); } catch(e) {}
-        ok(true, "received connect");
-        srv1.listener.close();
-        if(srv1.nextTest != null) {
-         setTimeout(srv1.nextTest, 0);
+        this.remainder--;
+        ok(true, "received connect remainder = " + this.remainder);
+        if (!this.remainder) {
+          srv1.listener.close();
+          setTimeout(srv1.nextTest, 0);
         }
-        srv1.nextTest = null;
     },
     onStopListening: function(socket) {}
 };
@@ -51,6 +53,8 @@ function TestServer2(nextTest) {
 }
 
 TestServer2.prototype = {
+    remainder : 2,
+
     QueryInterface: function(iid) {
       iid = SpecialPowers.wrap(iid);
         if (iid.equals(Ci.nsIServerSocketListener) ||
@@ -61,12 +65,12 @@ TestServer2.prototype = {
     onSocketAccepted: function(socket, trans) {
         try { socket.close(); } catch(e) {}
         try { trans.close(); } catch(e) {}
-        ok(true, "received connect");
-        srv2.listener.close();
-        if(srv2.nextTest != null) {
-         setTimeout(srv2.nextTest, 0);
+        this.remainder--;
+        ok(true, "received connect srv2 remainder = " + this.remainder);
+        if (!this.remainder) {
+          srv2.listener.close();
+          setTimeout(srv2.nextTest, 0);
         }
-        srv2.nextTest = null;
     },
     onStopListening: function(socket) {}
 };
@@ -75,18 +79,25 @@ var originalLimit = SpecialPowers.getIntPref("network.http.speculative-parallel-
 
 function testElement()
 {
-  // test the link rel=preconnect element in the head
+  // test the link rel=preconnect element in the head for both normal
+  // and crossOrigin=anonymous
   srv1 = new TestServer1(testHeader);
-  SpecialPowers.setIntPref("network.http.speculative-parallel-limit", 1);
+  SpecialPowers.setIntPref("network.http.speculative-parallel-limit", 2);
   var link = document.createElement("link");
   link.rel = "preconnect";
   link.href = "//localhost:" +  srv1.listener.port;
+  document.head.appendChild(link);
+  link = document.createElement("link");
+  link.rel = "preconnect";
+  link.href = "//localhost:" +  srv1.listener.port;
+  link.crossOrigin = "anonymous";
   document.head.appendChild(link);
 }
 
 function testHeader()
 {
-  // test the http link response header
+  // test the http link response header - the test contains both a
+  // normal and anonymous preconnect link header
   srv2 = new TestServer2(testDone);
   var xhr = new XMLHttpRequest();
   xhr.open("GET", 'rel_preconnect.sjs', false);
