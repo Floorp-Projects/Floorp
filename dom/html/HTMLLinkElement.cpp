@@ -316,7 +316,7 @@ HTMLLinkElement::UpdatePreconnect()
   if (owner) {
     nsCOMPtr<nsIURI> uri = GetHrefURI();
     if (uri) {
-      owner->MaybePreconnect(uri);
+        owner->MaybePreconnect(uri, GetCORSMode());
     }
   }
 }
