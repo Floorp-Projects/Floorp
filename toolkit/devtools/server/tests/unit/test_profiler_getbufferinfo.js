@@ -14,13 +14,19 @@ const MAX_PROFILER_ENTRIES = 10000000;
 
 function run_test()
 {
+  // Ensure the profiler is not running when the test starts (it could
+  // happen if the MOZ_PROFILER_STARTUP environment variable is set).
+  Profiler.StopProfiler();
+
   get_chrome_actors((client, form) => {
     let actor = form.profilerActor;
-    activate_profiler(client, actor, startTime => {
-      wait_for_samples(client, actor, () => {
-        check_buffer(client, actor, () => {
-          deactivate_profiler(client, actor, () => {
-            client.close(do_test_finished);
+    check_empty_buffer(client, actor, () => {
+      activate_profiler(client, actor, startTime => {
+        wait_for_samples(client, actor, () => {
+          check_buffer(client, actor, () => {
+            deactivate_profiler(client, actor, () => {
+              client.close(do_test_finished);
+            });
           });
         });
       });
@@ -28,6 +34,16 @@ function run_test()
   })
 
   do_test_pending();
+}
+
+function check_empty_buffer(client, actor, callback)
+{
+  client.request({ to: actor, type: "getBufferInfo" }, response => {
+    do_check_true(response.position === 0);
+    do_check_true(response.totalSize === 0);
+    do_check_true(response.generation === 0);
+    callback();
+  });
 }
 
 function check_buffer(client, actor, callback)

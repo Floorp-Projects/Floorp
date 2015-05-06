@@ -53,8 +53,9 @@ CallProgressSocket.prototype = {
    */
   connect: function(onSuccess, onError) {
     this._onSuccess = onSuccess;
-    this._onError = onError ||
-      (reason => {MozLoopService.log.warn("LoopCalls::callProgessSocket - ", reason);});
+    this._onError = onError || (reason => {
+      MozLoopService.log.warn("LoopCalls::callProgessSocket - ", reason);
+    });
 
     if (!onSuccess) {
       this._onError("missing onSuccess argument");
@@ -237,7 +238,7 @@ let LoopCallsInternal = {
 
   _getCalls: function(sessionType, version) {
     return MozLoopService.hawkRequest(sessionType, "/calls?version=" + version, "GET").then(
-      response => {this._processCalls(response, sessionType);}
+      response => { this._processCalls(response, sessionType); }
     );
   },
 
@@ -309,7 +310,7 @@ let LoopCallsInternal = {
         }
 
         openChat();
-      })
+      });
     } else {
       openChat();
     }
@@ -397,7 +398,7 @@ let LoopCallsInternal = {
     }
     // This instance of CallProgressSocket should stay alive until the underlying
     // websocket is closed since it is passed to the websocket as the nsIWebSocketListener.
-    callProgress.connect(() => {callProgress.sendBusy();});
+    callProgress.connect(() => { callProgress.sendBusy(); });
   }
 };
 Object.freeze(LoopCallsInternal);

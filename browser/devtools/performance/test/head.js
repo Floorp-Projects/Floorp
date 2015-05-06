@@ -195,6 +195,7 @@ function initBackend(aUrl, targetOps={}) {
     // may not exist. Possible options that will actually work:
     // TEST_MOCK_MEMORY_ACTOR = true
     // TEST_MOCK_TIMELINE_ACTOR = true
+    // TEST_MOCK_BUFFER_CHECK_TIMER = number
     merge(target, targetOps);
 
     let connection = getPerformanceActorsConnection(target);

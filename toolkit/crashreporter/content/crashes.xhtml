@@ -17,11 +17,18 @@
 <style type="text/css">
 :root {
   font-family: sans-serif;
+  margin: 40px auto;
+  min-width: 30em;
+  max-width: 60em;
 }
 table {
+  clear: both;
+  width: 90%;
+  margin: 0 auto;
   padding-bottom: 2em;
 }
 th {
+  font-size: 130%;
   text-align: left;
   white-space: nowrap;
 }
@@ -32,18 +39,24 @@ th[chromedir="rtl"] {
 th:first-child {
   -moz-padding-end: 2em;
 }
+/* submitted */
+th:last-child {
+  text-align: center;
+}
 :link, :visited {
   display: block;
   min-height: 17px;
 }
 /* date */
 td:first-child + td {
+  width: 0;
   -moz-padding-start: 1em;
   -moz-padding-end: .5em;
   white-space: nowrap;
 }
 /* time */
 td:last-child {
+  width: 0;
   -moz-padding-start: .5em;
   white-space: nowrap;
 }
@@ -62,7 +75,7 @@ td:last-child {
 }
 </style>
 <link rel="stylesheet" media="screen, projection" type="text/css"
-      href="chrome://global/skin/dirListing/dirListing.css"/>
+      href="chrome://global/skin/in-content/common.css"/>
 <script type="application/javascript;version=1.8" src="chrome://global/content/crashes.js"/>
 
 <title>&crashes.title;</title>

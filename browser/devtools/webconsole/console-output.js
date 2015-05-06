@@ -1062,7 +1062,7 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
    *        DOM node or a function to invoke.
    * @return Element
    */
-  _renderBodyPiece: function(piece)
+  _renderBodyPiece: function(piece, options = {})
   {
     if (piece instanceof Ci.nsIDOMNode) {
       return piece;
@@ -1071,7 +1071,7 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
       return piece(this);
     }
 
-    return this._renderValueGrip(piece);
+    return this._renderValueGrip(piece, options);
   },
 
   /**
@@ -1410,20 +1410,21 @@ Messages.ConsoleGeneric.prototype = Heritage.extend(Messages.Extended.prototype,
   _renderBodyPieces: function(container)
   {
     let lastStyle = null;
+    let stylePieces = this._styles.length > 0 ? this._styles.length : 1;
 
     for (let i = 0; i < this._messagePieces.length; i++) {
-      let separator = i > 0 ? this._renderBodyPieceSeparator() : null;
-      if (separator) {
-        container.appendChild(separator);
+      // Pieces with an associated style definition come from "%c" formatting.
+      // For body pieces beyond that, add a separator before each one.
+      if (i >= stylePieces) {
+        container.appendChild(this._renderBodyPieceSeparator());
       }
 
       let piece = this._messagePieces[i];
       let style = this._styles[i];
 
       // No long string support.
-      if (style && typeof style == "string" ) {
-        lastStyle = this.cleanupStyle(style);
-      }
+      lastStyle = (style && typeof style == "string") ?
+                  this.cleanupStyle(style) : null;
 
       container.appendChild(this._renderBodyPiece(piece, lastStyle));
     }
@@ -1434,7 +1435,9 @@ Messages.ConsoleGeneric.prototype = Heritage.extend(Messages.Extended.prototype,
 
   _renderBodyPiece: function(piece, style)
   {
-    let elem = Messages.Extended.prototype._renderBodyPiece.call(this, piece);
+    // Skip quotes for top-level strings.
+    let options = { noStringQuotes: true };
+    let elem = Messages.Extended.prototype._renderBodyPiece.call(this, piece, options);
     let result = elem;
 
     if (style) {
@@ -3298,11 +3301,16 @@ Widgets.ObjectRenderers.add({
  *        The owning message.
  * @param object longStringActor
  *        The LongStringActor to display.
+ * @param object options
+ *        Options, such as noStringQuotes
  */
-Widgets.LongString = function(message, longStringActor)
+Widgets.LongString = function(message, longStringActor, options)
 {
   Widgets.BaseWidget.call(this, message);
   this.longStringActor = longStringActor;
+  this.noStringQuotes = (options && "noStringQuotes" in options) ?
+    options.noStringQuotes : !this.message._quoteStrings;
+
   this._onClick = this._onClick.bind(this);
   this._onSubstring = this._onSubstring.bind(this);
 };
@@ -3338,7 +3346,7 @@ Widgets.LongString.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
   _renderString: function(str)
   {
     this.element.textContent = VariablesView.getString(str, {
-      noStringQuotes: !this.message._quoteStrings,
+      noStringQuotes: this.noStringQuotes,
       noEllipsis: true,
     });
   },

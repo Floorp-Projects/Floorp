@@ -1361,6 +1361,27 @@ Console::ProcessCallData(ConsoleCallData* aData)
   }
 }
 
+namespace {
+
+// Helper method for ProcessArguments. Flushes output, if non-empty, to aSequence.
+void
+FlushOutput(JSContext* aCx, Sequence<JS::Value>& aSequence, nsString &output)
+{
+  if (!output.IsEmpty()) {
+    JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
+                                                       output.get(),
+                                                       output.Length()));
+    if (!str) {
+      return;
+    }
+
+    aSequence.AppendElement(JS::StringValue(str));
+    output.Truncate();
+  }
+}
+
+} // anonymous namespace
+
 void
 Console::ProcessArguments(JSContext* aCx,
                           const nsTArray<JS::Heap<JS::Value>>& aData,
@@ -1472,17 +1493,7 @@ Console::ProcessArguments(JSContext* aCx,
       case 'o':
       case 'O':
       {
-        if (!output.IsEmpty()) {
-          JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
-                                                             output.get(),
-                                                             output.Length()));
-          if (!str) {
-            return;
-          }
-
-          aSequence.AppendElement(JS::StringValue(str));
-          output.Truncate();
-        }
+        FlushOutput(aCx, aSequence, output);
 
         JS::Rooted<JS::Value> v(aCx);
         if (index < aData.Length()) {
@@ -1495,17 +1506,7 @@ Console::ProcessArguments(JSContext* aCx,
 
       case 'c':
       {
-        if (!output.IsEmpty()) {
-          JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx,
-                                                             output.get(),
-                                                             output.Length()));
-          if (!str) {
-            return;
-          }
-
-          aSequence.AppendElement(JS::StringValue(str));
-          output.Truncate();
-        }
+        FlushOutput(aCx, aSequence, output);
 
         if (index < aData.Length()) {
           JS::Rooted<JS::Value> v(aCx, aData[index++]);
@@ -1579,14 +1580,11 @@ Console::ProcessArguments(JSContext* aCx,
     }
   }
 
-  if (!output.IsEmpty()) {
-    JS::Rooted<JSString*> str(aCx, JS_NewUCStringCopyN(aCx, output.get(),
-                                                       output.Length()));
-    if (!str) {
-      return;
-    }
+  FlushOutput(aCx, aSequence, output);
 
-    aSequence.AppendElement(JS::StringValue(str));
+  // Discard trailing style element if there is no output to apply it to.
+  if (aStyles.Length() > aSequence.Length()) {
+    aStyles.TruncateLength(aSequence.Length());
   }
 
   // The rest of the array, if unused by the format string.

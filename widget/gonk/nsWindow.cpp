@@ -56,6 +56,7 @@
 #include "mozilla/TouchEvents.h"
 #include "nsThreadUtils.h"
 #include "HwcComposer2D.h"
+#include "VsyncSource.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 #define LOGW(args...) __android_log_print(ANDROID_LOG_WARN, "Gonk", ## args)
@@ -1116,7 +1117,10 @@ nsScreenManagerGonk::Initialize()
 void
 nsScreenManagerGonk::DisplayEnabled(bool aEnabled)
 {
-    HwcComposer2D::GetInstance()->EnableVsync(aEnabled);
+    if (gfxPrefs::HardwareVsyncEnabled()) {
+        VsyncControl(aEnabled);
+    }
+
     NS_DispatchToMainThread(aEnabled ? mScreenOnEvent : mScreenOffEvent);
 }
 
@@ -1162,4 +1166,26 @@ nsScreenManagerGonk::GetSystemDefaultScale(float *aDefaultScale)
 {
     *aDefaultScale = 1.0f;
     return NS_OK;
+}
+
+void
+nsScreenManagerGonk::VsyncControl(bool aEnabled)
+{
+    MOZ_ASSERT(gfxPrefs::HardwareVsyncEnabled());
+
+    if (!NS_IsMainThread()) {
+        NS_DispatchToMainThread(
+            NS_NewRunnableMethodWithArgs<bool>(this,
+                                               &nsScreenManagerGonk::VsyncControl,
+                                               aEnabled));
+        return;
+    }
+
+    MOZ_ASSERT(NS_IsMainThread());
+    VsyncSource::Display &display = gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay();
+    if (aEnabled) {
+        display.EnableVsync();
+    } else {
+        display.DisableVsync();
+    }
 }
