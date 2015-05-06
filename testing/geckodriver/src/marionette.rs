@@ -307,13 +307,13 @@ impl MarionetteSession {
             let error = try_opt!(error.as_object(),
                                  ErrorStatus::UnknownError,
                                  "Marionette error field was not an object");
-            let status_code = try_opt!(
+            let status_name = try_opt!(
                 try_opt!(error.get("status"),
                          ErrorStatus::UnknownError,
-                         "Error dict doesn't have a status field").as_u64(),
+                         "Error dict doesn't have a status field").as_string(),
                 ErrorStatus::UnknownError,
-                "Error status isn't an integer");
-            let status = self.error_from_code(status_code);
+                "Error status isn't an string");
+            let status = self.error_from_string(status_name);
             let default_msg = Json::String("Unknown error".to_string());
             let err_msg = try_opt!(
                 error.get("message").unwrap_or(&default_msg).as_string(),
@@ -524,30 +524,32 @@ impl MarionetteSession {
         }).collect::<Result<Vec<_>, _>>()
     }
 
-    pub fn error_from_code(&self, error_code: u64) -> ErrorStatus {
+    pub fn error_from_string(&self, error_code: &str) -> ErrorStatus {
         match error_code {
-            7 => ErrorStatus::NoSuchElement,
-            8 => ErrorStatus::NoSuchFrame,
-            9 => ErrorStatus::UnsupportedOperation,
-            10 => ErrorStatus::StaleElementReference,
-            11 => ErrorStatus::ElementNotVisible,
-            12 => ErrorStatus::InvalidElementState,
-            15 => ErrorStatus::ElementNotSelectable,
-            17 => ErrorStatus::JavascriptError,
-            21 => ErrorStatus::Timeout,
-            23 => ErrorStatus::NoSuchWindow,
-            24 => ErrorStatus::InvalidCookieDomain,
-            25 => ErrorStatus::UnableToSetCookie,
-            26 => ErrorStatus::UnexpectedAlertOpen,
-            27 => ErrorStatus::NoSuchAlert,
-            28 => ErrorStatus::ScriptTimeout,
-            29 => ErrorStatus::InvalidElementCoordinates,
-            32 => ErrorStatus::InvalidSelector,
-            34 => ErrorStatus::MoveTargetOutOfBounds,
-            405 => ErrorStatus::UnsupportedOperation,
-            // Explicitly list all known marionette error codes
-            13 | 19 | 51 | 52 | 53 | 54 | 55 | 56 | 500 | _ => ErrorStatus::UnknownError
-
+            "element not selectable" => ErrorStatus::ElementNotSelectable,
+            "element not visible" => ErrorStatus::ElementNotVisible,
+            "invalid argument" => ErrorStatus::InvalidArgument,
+            "invalid cookie domain" => ErrorStatus::InvalidCookieDomain,
+            "invalid element coordinates" => ErrorStatus::InvalidElementCoordinates,
+            "invalid element state" => ErrorStatus::InvalidElementState,
+            "invalid selector" => ErrorStatus::InvalidSelector,
+            "invalid session id" => ErrorStatus::InvalidSessionId,
+            "javascript error" => ErrorStatus::JavascriptError,
+            "move target out of bounds" => ErrorStatus::MoveTargetOutOfBounds,
+            "no such alert" => ErrorStatus::NoSuchAlert,
+            "no such element" => ErrorStatus::NoSuchElement,
+            "no such frame" => ErrorStatus::NoSuchFrame,
+            "no such window" => ErrorStatus::NoSuchWindow,
+            "script timeout" => ErrorStatus::ScriptTimeout,
+            "session not created" => ErrorStatus::SessionNotCreated,
+            "stale element reference" => ErrorStatus::StaleElementReference,
+            "timeout" => ErrorStatus::Timeout,
+            "unable to set cookie" => ErrorStatus::UnableToSetCookie,
+            "unexpected alert open" => ErrorStatus::UnexpectedAlertOpen,
+            "unknown error" => ErrorStatus::UnknownError,
+            "unknown command" => ErrorStatus::UnknownPath,
+            "unsupported operation" => ErrorStatus::UnsupportedOperation,
+            _ => ErrorStatus::UnknownError
         }
     }
 }
