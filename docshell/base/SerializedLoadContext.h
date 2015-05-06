@@ -72,11 +72,11 @@ struct ParamTraits<SerializedLoadContext>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->mIsNotNull) ||
-        !ReadParam(aMsg, aIter, &aResult->mIsContent)  ||
-        !ReadParam(aMsg, aIter, &aResult->mIsPrivateBitValid)  ||
-        !ReadParam(aMsg, aIter, &aResult->mUsePrivateBrowsing)  ||
-        !ReadParam(aMsg, aIter, &aResult->mUseRemoteTabs)  ||
-        !ReadParam(aMsg, aIter, &aResult->mAppId)  ||
+        !ReadParam(aMsg, aIter, &aResult->mIsContent) ||
+        !ReadParam(aMsg, aIter, &aResult->mIsPrivateBitValid) ||
+        !ReadParam(aMsg, aIter, &aResult->mUsePrivateBrowsing) ||
+        !ReadParam(aMsg, aIter, &aResult->mUseRemoteTabs) ||
+        !ReadParam(aMsg, aIter, &aResult->mAppId) ||
         !ReadParam(aMsg, aIter, &aResult->mIsInBrowserElement)) {
       return false;
     }
@@ -88,4 +88,3 @@ struct ParamTraits<SerializedLoadContext>
 } // namespace IPC
 
 #endif // SerializedLoadContext_h
-

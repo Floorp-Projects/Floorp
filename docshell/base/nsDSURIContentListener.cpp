@@ -26,10 +26,6 @@
 
 using namespace mozilla;
 
-//*****************************************************************************
-//***    nsDSURIContentListener: Object Management
-//*****************************************************************************
-
 nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
   : mDocShell(aDocShell)
   , mExistingJPEGRequest(nullptr)
@@ -50,10 +46,6 @@ nsDSURIContentListener::Init()
   return rv;
 }
 
-//*****************************************************************************
-// nsDSURIContentListener::nsISupports
-//*****************************************************************************
-
 NS_IMPL_ADDREF(nsDSURIContentListener)
 NS_IMPL_RELEASE(nsDSURIContentListener)
 
@@ -63,16 +55,11 @@ NS_INTERFACE_MAP_BEGIN(nsDSURIContentListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-//*****************************************************************************
-// nsDSURIContentListener::nsIURIContentListener
-//*****************************************************************************
-
 NS_IMETHODIMP
 nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, bool* aAbortOpen)
 {
-  // If mDocShell is null here, that means someone's starting a load
-  // in our docshell after it's already been destroyed.  Don't let
-  // that happen.
+  // If mDocShell is null here, that means someone's starting a load in our
+  // docshell after it's already been destroyed.  Don't let that happen.
   if (!mDocShell) {
     *aAbortOpen = true;
     return NS_OK;
@@ -188,17 +175,16 @@ nsDSURIContentListener::IsPreferred(const char* aContentType,
                                        aDesiredContentType,
                                        aCanHandle);
   }
-  // we used to return false here if we didn't have a parent properly
-  // registered at the top of the docshell hierarchy to dictate what
-  // content types this docshell should be a preferred handler for.  But
-  // this really makes it hard for developers using iframe or browser tags
-  // because then they need to make sure they implement
-  // nsIURIContentListener otherwise all link clicks would get sent to
-  // another window because we said we weren't the preferred handler type.
-  // I'm going to change the default now...if we can handle the content,
-  // and someone didn't EXPLICITLY set a nsIURIContentListener at the top
-  // of our docshell chain, then we'll now always attempt to process the
-  // content ourselves...
+  // we used to return false here if we didn't have a parent properly registered
+  // at the top of the docshell hierarchy to dictate what content types this
+  // docshell should be a preferred handler for. But this really makes it hard
+  // for developers using iframe or browser tags because then they need to make
+  // sure they implement nsIURIContentListener otherwise all link clicks would
+  // get sent to another window because we said we weren't the preferred handler
+  // type. I'm going to change the default now... if we can handle the content,
+  // and someone didn't EXPLICITLY set a nsIURIContentListener at the top of our
+  // docshell chain, then we'll now always attempt to process the content
+  // ourselves...
   return CanHandleContent(aContentType, true, aDesiredContentType, aCanHandle);
 }
 

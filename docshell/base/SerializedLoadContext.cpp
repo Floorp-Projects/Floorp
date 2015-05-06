@@ -77,4 +77,3 @@ SerializedLoadContext::Init(nsILoadContext* aLoadContext)
 }
 
 } // namespace IPC
-

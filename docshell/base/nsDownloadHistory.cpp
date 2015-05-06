@@ -12,13 +12,7 @@
 #include "nsIURI.h"
 #include "mozilla/Services.h"
 
-////////////////////////////////////////////////////////////////////////////////
-//// nsDownloadHistory
-
 NS_IMPL_ISUPPORTS(nsDownloadHistory, nsIDownloadHistory)
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsIDownloadHistory
 
 NS_IMETHODIMP
 nsDownloadHistory::AddDownload(nsIURI* aSource,
@@ -42,8 +36,7 @@ nsDownloadHistory::AddDownload(nsIURI* aSource,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!visited) {
-    nsCOMPtr<nsIObserverService> os =
-      mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->NotifyObservers(aSource, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
     }
