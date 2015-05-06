@@ -1406,9 +1406,9 @@ FxAccountsInternal.prototype = {
    *
    * @param options
    *        {
-   *          contentUrl: (string) Used by the FxAccountsWebChannel.
+   *          contentUrl: (string) Used by the FxAccountsProfileChannel.
    *            Defaults to pref identity.fxaccounts.settings.uri
-   *          profileServerUrl: (string) Used by the FxAccountsWebChannel.
+   *          profileServerUrl: (string) Used by the FxAccountsProfileChannel.
    *            Defaults to pref identity.fxaccounts.remote.profile.uri
    *        }
    *
