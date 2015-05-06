@@ -132,12 +132,20 @@ this.ReaderMode = {
     // We pass in a helper function to determine if a node is visible, because
     // it uses gecko APIs that the engine-agnostic readability code can't rely
     // upon.
-    // NOTE: This is currently disabled, see bug 1158228.
-    return new Readability(uri, doc).isProbablyReaderable(/*this.isNodeVisible.bind(this, utils)*/);
+    // NB: we need to do a flush the first time we call this, so we keep track of
+    // this using a property:
+    this._needFlushForVisibilityCheck = true;
+    return new Readability(uri, doc).isProbablyReaderable(this.isNodeVisible.bind(this, utils));
   },
 
   isNodeVisible: function(utils, node) {
-    let bounds = utils.getBoundsWithoutFlushing(node);
+    let bounds;
+    if (this._needFlushForVisibilityCheck) {
+      bounds = node.getBoundingClientRect();
+      this._needFlushForVisibilityCheck = false;
+    } else {
+      bounds = utils.getBoundsWithoutFlushing(node);
+    }
     return bounds.height > 0 && bounds.width > 0;
   },
 
