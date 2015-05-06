@@ -31,7 +31,7 @@ public class Restarter extends Service {
         restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                      .putExtra("didRestart", true)
                      .setClassName(getApplicationContext(),
-                                   AppConstants.BROWSER_INTENT_CLASS_NAME);
+                                   AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         startActivity(restartIntent);
         Log.d(LOGTAG, "Launched " + restartIntent);
     }

@@ -36,7 +36,7 @@ loop.store.StandaloneMetricsStore = (function() {
     pageLoad: "page load messages",
     success: "success",
     support: "support link click"
-  }
+  };
 
   var StandaloneMetricsStore = loop.store.createStore({
     actions: [
@@ -132,7 +132,7 @@ loop.store.StandaloneMetricsStore = (function() {
      */
     mediaConnected: function() {
       this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.success,
-        "Media connected")
+        "Media connected");
     },
 
     /**

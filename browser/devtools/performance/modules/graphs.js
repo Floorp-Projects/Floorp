@@ -345,7 +345,11 @@ GraphsController.prototype = {
   },
 
   getMappedSelection: function ({ mapStart, mapEnd }) {
-    return this._getPrimaryLink().getMappedSelection({ mapStart, mapEnd });
+    if (this._getPrimaryLink()) {
+      return this._getPrimaryLink().getMappedSelection({ mapStart, mapEnd });
+    } else {
+      return null;
+    }
   },
 
   /**

@@ -219,6 +219,14 @@ let gTestSuite = (function() {
   }
 
   /**
+   * Set 'ro.tethering.dun_required' system property to 1. Note that this is a
+   * 'ro' property, it can only be set once.
+   */
+  function setTetheringDunRequired() {
+    return runEmulatorShellSafe(['setprop', 'ro.tethering.dun_required', '1']);
+  }
+
+  /**
    * Wrap DOMRequest onsuccess/onerror events to Promise resolve/reject.
    *
    * Fulfill params: A DOMEvent.
@@ -704,6 +712,7 @@ let gTestSuite = (function() {
   suite.setWifiTetheringEnabled = setWifiTetheringEnabled;
   suite.getDataApnSettings = getDataApnSettings;
   suite.setDataApnSettings = setDataApnSettings;
+  suite.setTetheringDunRequired = setTetheringDunRequired;
 
 
   /**

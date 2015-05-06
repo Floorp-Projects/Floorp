@@ -300,8 +300,8 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mProperties &
-                          (GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE ||
-                           GATT_CHAR_PROP_BIT_WRITE ||
+                          (GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE |
+                           GATT_CHAR_PROP_BIT_WRITE |
                            GATT_CHAR_PROP_BIT_SIGNED_WRITE),
                         promise,
                         NS_ERROR_NOT_AVAILABLE);

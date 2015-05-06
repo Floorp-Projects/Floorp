@@ -568,12 +568,12 @@
   -moz-border-start: solid 4px #ff9500;
 }
 
-.addon[active="false"] {
-  opacity: 0.5;
+.addon[active="false"] > .content-container > .content-inner-container {
+  color: #999;
 }
 
-.addon[active="false"][selected] {
-  opacity: 0.7;
+.addon[active="false"][selected] > .content-container > .content-inner-container {
+  color: #777;
 }
 
 

@@ -31,7 +31,7 @@ let test = asyncTest(function*() {
       category: CATEGORY_OUTPUT,
     },
     {
-      text: '"foo" "bar"',
+      text: 'foo bar',
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],

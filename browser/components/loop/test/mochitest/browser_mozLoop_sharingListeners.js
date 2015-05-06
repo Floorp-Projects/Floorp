@@ -33,7 +33,7 @@ function promiseWindowIdReceivedOnAdd(handler) {
     handler.resolve = resolve;
     gMozLoopAPI.addBrowserSharingListener(handler.listener);
   });
-};
+}
 
 let createdTabs = [];
 
@@ -52,7 +52,7 @@ function promiseWindowIdReceivedNewTab(handlers = []) {
   promiseHandlers.push(promiseTabLoadEvent(createdTab, "about:mozilla"));
 
   return Promise.all(promiseHandlers);
-};
+}
 
 function promiseRemoveTab(tab) {
   return new Promise(resolve => {
@@ -170,7 +170,7 @@ add_task(function* test_infoBar() {
       "The popup should be opening anchored to the dropmarker");
     Assert.strictEqual(button.getElementsByTagNameNS(kNSXUL, "menupopup").length, 1,
       "There should be a popup attached to the button");
-  }
+  };
 
   testBarProps();
 

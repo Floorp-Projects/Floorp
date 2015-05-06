@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryController::";
@@ -55,6 +56,8 @@ const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
 
 // We treat pings before midnight as happening "at midnight" with this tolerance.
 const MIDNIGHT_TOLERANCE_MS = 15 * 60 * 1000;
+// For midnight fuzzing we want to affect pings around midnight with this tolerance.
+const MIDNIGHT_TOLERANCE_FUZZ_MS = 5 * 60 * 1000;
 // We try to spread "midnight" pings out over this interval.
 const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
 const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
@@ -124,16 +127,6 @@ function generateUUID() {
 function isNewPingFormat(aPing) {
   return ("id" in aPing) && ("application" in aPing) &&
          ("version" in aPing) && (aPing.version >= 2);
-}
-
-/**
- * Takes a date and returns it trunctated to a date with daily precision.
- */
-function truncateToDays(date) {
-  return new Date(date.getFullYear(),
-                  date.getMonth(),
-                  date.getDate(),
-                  0, 0, 0, 0);
 }
 
 function tomorrow(date) {
@@ -506,17 +499,20 @@ let Impl = {
    * @return Number The next time (ms from UNIX epoch) when we can send pings.
    */
   _getNextPingSendTime: function(now) {
-    const todayDate = truncateToDays(now);
-    const tomorrowDate = tomorrow(todayDate);
-    const nextMidnightRangeStart = tomorrowDate.getTime() - MIDNIGHT_TOLERANCE_MS;
-    const currentMidnightRangeEnd = todayDate.getTime() - MIDNIGHT_TOLERANCE_MS + Policy.midnightPingFuzzingDelay();
+    const midnight = TelemetryUtils.getNearestMidnight(now, MIDNIGHT_FUZZING_INTERVAL_MS);
 
-    if (now.getTime() < currentMidnightRangeEnd) {
-      return currentMidnightRangeEnd;
+    // Don't delay ping if we are not close to midnight.
+    if (!midnight) {
+      return now.getTime();
     }
 
-    if (now.getTime() >= nextMidnightRangeStart) {
-      return nextMidnightRangeStart + Policy.midnightPingFuzzingDelay();
+    // Delay ping send if we are within the midnight fuzzing range.
+    // This is from: |midnight - MIDNIGHT_TOLERANCE_FUZZ_MS|
+    // to: |midnight + MIDNIGHT_FUZZING_INTERVAL_MS|
+    const midnightRangeStart = midnight.getTime() - MIDNIGHT_TOLERANCE_FUZZ_MS;
+    if (now.getTime() >= midnightRangeStart) {
+      // We spread those ping sends out between |midnight| and |midnight + midnightPingFuzzingDelay|.
+      return midnight.getTime() + Policy.midnightPingFuzzingDelay();
     }
 
     return now.getTime();

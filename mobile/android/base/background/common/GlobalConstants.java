@@ -12,7 +12,7 @@ import org.mozilla.gecko.AppConstants;
  */
 public class GlobalConstants {
   public static final String BROWSER_INTENT_PACKAGE = AppConstants.ANDROID_PACKAGE_NAME;
-  public static final String BROWSER_INTENT_CLASS = AppConstants.BROWSER_INTENT_CLASS_NAME;
+  public static final String BROWSER_INTENT_CLASS = AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
 
   /**
    * Bug 800244: this signing-level permission protects broadcast intents that
