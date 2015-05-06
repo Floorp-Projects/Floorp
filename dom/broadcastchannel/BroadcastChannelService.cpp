@@ -84,12 +84,16 @@ struct MOZ_STACK_CLASS PostMessageData final
   PostMessageData(BroadcastChannelParent* aParent,
                   const ClonedMessageData& aData,
                   const nsAString& aOrigin,
+                  uint64_t aAppId,
+                  bool aIsInBrowserElement,
                   const nsAString& aChannel,
                   bool aPrivateBrowsing)
     : mParent(aParent)
     , mData(aData)
     , mOrigin(aOrigin)
     , mChannel(aChannel)
+    , mAppId(aAppId)
+    , mIsInBrowserElement(aIsInBrowserElement)
     , mPrivateBrowsing(aPrivateBrowsing)
   {
     MOZ_ASSERT(aParent);
@@ -119,6 +123,8 @@ struct MOZ_STACK_CLASS PostMessageData final
   nsTArray<nsRefPtr<FileImpl>> mFiles;
   const nsString mOrigin;
   const nsString mChannel;
+  uint64_t mAppId;
+  bool mIsInBrowserElement;
   bool mPrivateBrowsing;
 };
 
@@ -132,7 +138,8 @@ PostMessageEnumerator(nsPtrHashKey<BroadcastChannelParent>* aKey, void* aPtr)
   MOZ_ASSERT(parent);
 
   if (parent != data->mParent) {
-    parent->CheckAndDeliver(data->mData, data->mOrigin, data->mChannel,
+    parent->CheckAndDeliver(data->mData, data->mOrigin, data->mAppId,
+                            data->mIsInBrowserElement, data->mChannel,
                             data->mPrivateBrowsing);
   }
 
@@ -145,6 +152,8 @@ void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
                                      const ClonedMessageData& aData,
                                      const nsAString& aOrigin,
+                                     uint64_t aAppId,
+                                     bool aIsInBrowserElement,
                                      const nsAString& aChannel,
                                      bool aPrivateBrowsing)
 {
@@ -152,7 +161,8 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mAgents.Contains(aParent));
 
-  PostMessageData data(aParent, aData, aOrigin, aChannel, aPrivateBrowsing);
+  PostMessageData data(aParent, aData, aOrigin, aAppId, aIsInBrowserElement,
+                       aChannel, aPrivateBrowsing);
   mAgents.EnumerateEntries(PostMessageEnumerator, &data);
 }
 

@@ -13,6 +13,7 @@ namespace mozilla {
 
 namespace ipc {
 class BackgroundParentImpl;
+class PrincipalInfo;
 }
 
 namespace dom {
@@ -23,14 +24,19 @@ class BroadcastChannelParent final : public PBroadcastChannelParent
 {
   friend class mozilla::ipc::BackgroundParentImpl;
 
+  typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
+
 public:
   void CheckAndDeliver(const ClonedMessageData& aData,
                        const nsString& aOrigin,
+                       const uint64_t aAppId,
+                       const bool aIsInBrowserElement,
                        const nsString& aChannel,
                        bool aPrivateBrowsing);
 
 private:
-  BroadcastChannelParent(const nsAString& aOrigin,
+  BroadcastChannelParent(const PrincipalInfo& aPrincipalInfo,
+                         const nsAString& aOrigin,
                          const nsAString& aChannel,
                          bool aPrivateBrowsing);
   ~BroadcastChannelParent();
@@ -45,6 +51,8 @@ private:
   nsRefPtr<BroadcastChannelService> mService;
   nsString mOrigin;
   nsString mChannel;
+  uint64_t mAppId;
+  bool mIsInBrowserElement;
   bool mPrivateBrowsing;
 };
 
