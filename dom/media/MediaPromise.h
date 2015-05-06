@@ -242,12 +242,12 @@ protected:
   }
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  class ThenValue : public ThenValueBase
+  class MethodThenValue : public ThenValueBase
   {
   public:
-    ThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
-              ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
-              const char* aCallSite)
+    MethodThenValue(AbstractThread* aResponseTarget, ThisType* aThisVal,
+                    ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
+                    const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
       , mThisVal(aThisVal)
       , mResolveMethod(aResolveMethod)
@@ -285,6 +285,56 @@ protected:
     RejectMethodType mRejectMethod;
   };
 
+  // NB: We could use std::function here instead of a template if it were supported. :-(
+  template<typename ResolveFunction, typename RejectFunction>
+  class FunctionThenValue : public ThenValueBase
+  {
+  public:
+    FunctionThenValue(AbstractThread* aResponseTarget,
+                      ResolveFunction&& aResolveFunction,
+                      RejectFunction&& aRejectFunction,
+                      const char* aCallSite)
+      : ThenValueBase(aResponseTarget, aCallSite)
+    {
+      mResolveFunction.emplace(Move(aResolveFunction));
+      mRejectFunction.emplace(Move(aRejectFunction));
+    }
+
+  virtual void Disconnect() override
+  {
+    ThenValueBase::Disconnect();
+
+    // If a Consumer has been disconnected, we don't guarantee that the
+    // resolve/reject runnable will be dispatched. Destroy our callbacks
+    // now so that any references in closures are released predictable on
+    // the dispatch thread.
+    mResolveFunction.reset();
+    mRejectFunction.reset();
+  }
+
+  protected:
+    virtual void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override
+    {
+      if (aValue.IsResolve()) {
+        mResolveFunction.ref()(aValue.ResolveValue());
+      } else {
+        mRejectFunction.ref()(aValue.RejectValue());
+      }
+
+      // Destroy callbacks after invocation so that any references in closures are
+      // released predictably on the dispatch thread. Otherwise, they would be
+      // released on whatever thread last drops its reference to the ThenValue,
+      // which may or may not be ok.
+      mResolveFunction.reset();
+      mRejectFunction.reset();
+    }
+
+  private:
+    Maybe<ResolveFunction> mResolveFunction; // Only accessed and deleted on dispatch thread.
+    Maybe<RejectFunction> mRejectFunction; // Only accessed and deleted on dispatch thread.
+  };
+
+public:
   void ThenInternal(AbstractThread* aResponseThread, ThenValueBase* aThenValue,
                     const char* aCallSite)
   {
@@ -307,8 +357,18 @@ public:
   already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
                                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
-    nsRefPtr<ThenValueBase> thenValue = new ThenValue<ThisType, ResolveMethodType, RejectMethodType>(
+    nsRefPtr<ThenValueBase> thenValue = new MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>(
                                               aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
+    ThenInternal(aResponseThread, thenValue, aCallSite);
+    return thenValue.forget();
+  }
+
+  template<typename ResolveFunction, typename RejectFunction>
+  already_AddRefed<Consumer> RefableThen(AbstractThread* aResponseThread, const char* aCallSite,
+                                         ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
+  {
+    nsRefPtr<ThenValueBase> thenValue = new FunctionThenValue<ResolveFunction, RejectFunction>(aResponseThread,
+                                              Move(aResolveFunction), Move(aRejectFunction), aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
     return thenValue.forget();
   }
@@ -319,6 +379,15 @@ public:
   {
     nsRefPtr<Consumer> c =
       RefableThen(aResponseThread, aCallSite, aThisVal, aResolveMethod, aRejectMethod);
+    return;
+  }
+
+  template<typename ThisType, typename ResolveFunction, typename RejectFunction>
+  void Then(AbstractThread* aResponseThread, const char* aCallSite,
+            ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
+  {
+    nsRefPtr<Consumer> c =
+      RefableThen(aResponseThread, aCallSite, Move(aResolveFunction), Move(aRejectFunction));
     return;
   }
 
