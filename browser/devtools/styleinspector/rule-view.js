@@ -2136,7 +2136,7 @@ CssRuleView.prototype = {
       // Expand the computed list if a computed rule is highlighted and the
       // property rule is not highlighted
       if (!isPropertyHighlighted && isComputedHighlighted &&
-          !editor.computed.classList.contains("user-open")) {
+          !editor.computed.classList.contains("styleinspector-open")) {
         editor.expandForFilter();
         this._editorsExpandedForFilter.push(editor);
       }
@@ -3048,19 +3048,19 @@ TextPropertyEditor.prototype = {
   /**
    * Handles clicks on the computed property expander. If the computed list is
    * open due to user expanding or style filtering, collapse the computed list
-   * and close the expander. Otherwise, add .user-open class which is used to
-   * expand the computed list and tracks whether or not the computed list is
-   * expanded by manually by the user.
+   * and close the expander. Otherwise, add .styleinspector-open class which
+   * is used to expand the computed list and tracks whether or not the computed
+   * list is expanded by manually by the user.
    */
   _onExpandClicked: function(aEvent) {
     if (this.computed.classList.contains("filter-open") ||
-        this.computed.classList.contains("user-open")) {
+        this.computed.classList.contains("styleinspector-open")) {
       this.expander.removeAttribute("open");
       this.computed.classList.remove("filter-open");
-      this.computed.classList.remove("user-open");
+      this.computed.classList.remove("styleinspector-open");
     } else {
       this.expander.setAttribute("open", "true");
-      this.computed.classList.add("user-open");
+      this.computed.classList.add("styleinspector-open");
     }
 
     aEvent.stopPropagation();
@@ -3072,7 +3072,7 @@ TextPropertyEditor.prototype = {
    * computed list was toggled opened by the filter.
    */
   expandForFilter: function() {
-    if (!this.computed.classList.contains("user-open")) {
+    if (!this.computed.classList.contains("styleinspector-open")) {
       this.computed.classList.add("filter-open");
       this.expander.setAttribute("open", "true");
     }
@@ -3083,7 +3083,7 @@ TextPropertyEditor.prototype = {
    */
   collapseForFilter: function() {
     this.computed.classList.remove("filter-open");
-    if (!this.computed.classList.contains("user-open")) {
+    if (!this.computed.classList.contains("styleinspector-open")) {
       this.expander.removeAttribute("open");
     }
   },
