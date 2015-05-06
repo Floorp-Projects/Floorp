@@ -214,7 +214,7 @@ MockWebSocketChannel.prototype = {
 
   serverClose: function (err) {
     this.listener.onServerClose(this.context, err || -1);
-  },
+  }
 };
 
 const extend = function(target, source) {

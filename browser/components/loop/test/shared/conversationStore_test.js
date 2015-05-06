@@ -1056,7 +1056,7 @@ describe("loop.store.ConversationStore", function () {
 
         store._websocket.trigger("progress", {
           state: WS_STATES.TERMINATED,
-          reason: WEBSOCKET_REASONS.REJECT,
+          reason: WEBSOCKET_REASONS.REJECT
         });
 
         sinon.assert.calledOnce(dispatcher.dispatch);

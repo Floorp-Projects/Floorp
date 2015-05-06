@@ -139,7 +139,7 @@ loop.conversation = (function(mozL10n) {
     loop.store.StoreMixin.register({
       conversationAppStore: conversationAppStore,
       conversationStore: conversationStore,
-      feedbackStore: feedbackStore,
+      feedbackStore: feedbackStore
     });
 
     // Obtain the windowId and pass it through

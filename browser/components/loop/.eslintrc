@@ -34,8 +34,6 @@
 
     // Eslint built-in rules are documented at <http://eslint.org/docs/rules/>
     "camelcase": 0,               // TODO: Remove (use default)
-    "comma-dangle": 0,            // TODO: Remove (use default)
-    "comma-spacing": 0,           // TODO: Remove (use default)
     "consistent-return": 0,       // TODO: Remove (use default)
     "curly": 0,                   // TODO: Remove (use default)
     "dot-notation": 0,            // TODO: Remove (use default)

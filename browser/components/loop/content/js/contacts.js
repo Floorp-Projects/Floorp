@@ -157,7 +157,7 @@ loop.contacts = (function(_, mozL10n) {
 
     getInitialState: function () {
       return {
-        openDirUp: false,
+        openDirUp: false
       };
     },
 
@@ -175,7 +175,7 @@ loop.contacts = (function(_, mozL10n) {
       if (menuNodeRect.top + menuNodeRect.height >=
           listNodeRect.top + listNodeRect.height) {
         this.setState({
-          openDirUp: true,
+          openDirUp: true
         });
       }
     },
@@ -232,7 +232,7 @@ loop.contacts = (function(_, mozL10n) {
   const ContactDetail = React.createClass({displayName: "ContactDetail",
     getInitialState: function() {
       return {
-        showMenu: false,
+        showMenu: false
       };
     },
 
@@ -351,7 +351,7 @@ loop.contacts = (function(_, mozL10n) {
     getInitialState: function() {
       return {
         importBusy: false,
-        filter: "",
+        filter: ""
       };
     },
 
@@ -633,7 +633,7 @@ loop.contacts = (function(_, mozL10n) {
         pristine: true,
         name: "",
         email: "",
-        tel: "",
+        tel: ""
       };
     },
 
@@ -651,7 +651,7 @@ loop.contacts = (function(_, mozL10n) {
     handleAcceptButtonClick: function() {
       // Allow validity error indicators to be displayed.
       this.setState({
-        pristine: false,
+        pristine: false
       });
 
       let emailInput = this.refs.email.getDOMNode();
@@ -677,7 +677,7 @@ loop.contacts = (function(_, mozL10n) {
             }
           });
           this.setState({
-            contact: null,
+            contact: null
           });
           break;
         case "add":
@@ -752,6 +752,6 @@ loop.contacts = (function(_, mozL10n) {
     ContactsList: ContactsList,
     ContactDetailsForm: ContactDetailsForm,
     _getPreferred: getPreferred,
-    _setPreferred: setPreferred,
+    _setPreferred: setPreferred
   };
 })(_, document.mozL10n);

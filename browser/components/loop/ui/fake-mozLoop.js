@@ -38,7 +38,7 @@ var fakeRooms = [
   {
     "roomToken": "3jKS_Els9IU",
     "decryptedContext": {
-      "roomName": "UX Discussion",
+      "roomName": "UX Discussion"
     },
     "roomUrl": "http://localhost:3000/rooms/3jKS_Els9IU",
     "roomOwner": "Alexis",
@@ -71,7 +71,7 @@ var fakeContacts = [{
   category: ["google"],
   published: 1406798311748,
   updated: 1406798311748
-},{
+}, {
   id: 2,
   _guid: 2,
   name: ["Bob Banana"],

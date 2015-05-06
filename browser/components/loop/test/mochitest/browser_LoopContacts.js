@@ -26,7 +26,7 @@ const kContacts = [{
   category: ["google"],
   published: 1406798311748,
   updated: 1406798311748
-},{
+}, {
   id: 2,
   name: ["Bob Banana"],
   email: [{

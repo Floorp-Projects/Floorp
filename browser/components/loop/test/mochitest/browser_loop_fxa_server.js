@@ -19,7 +19,7 @@ add_task(function* required_setup_params() {
     content_uri: "https://example.com/content/",
     oauth_uri: "https://example.com/oauth/",
     profile_uri: "https://example.com/profile/",
-    state: "my_state",
+    state: "my_state"
   };
   let request = yield promiseOAuthParamsSetup(BASE_URL, params);
   is(request.status, 200, "Check /setup_params status");
@@ -38,7 +38,7 @@ add_task(function* optional_setup_params() {
     oauth_uri: "https://example.com/oauth/",
     profile_uri: "https://example.com/profile/",
     scope: "profile",
-    state: "my_state",
+    state: "my_state"
   };
   let request = yield promiseOAuthParamsSetup(BASE_URL, params);
   is(request.status, 200, "Check /setup_params status");
@@ -63,7 +63,7 @@ add_task(function* token_request() {
     content_uri: "https://example.com/content/",
     oauth_uri: "https://example.com/oauth/",
     profile_uri: "https://example.com/profile/",
-    state: "my_state",
+    state: "my_state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
@@ -80,7 +80,7 @@ add_task(function* token_request_invalid_state() {
     content_uri: "https://example.com/content/",
     oauth_uri: "https://example.com/oauth/",
     profile_uri: "https://example.com/profile/",
-    state: "my_invalid_state",
+    state: "my_invalid_state"
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
   let request = yield promiseToken("my_code", "my_state");
@@ -120,7 +120,7 @@ function promiseToken(code, state) {
     xhr.addEventListener("error", reject);
     let payload = {
       code: code,
-      state: state,
+      state: state
     };
     xhr.send(JSON.stringify(payload, null, 4));
   });

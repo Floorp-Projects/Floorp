@@ -207,7 +207,7 @@ PushSocket.prototype = {
       this._websocket.close(this._websocket.CLOSE_NORMAL);
     }
     catch (e) {}
-  },
+  }
 };
 
 
@@ -260,7 +260,7 @@ RetryManager.prototype = {
       clearTimeout(this._timeoutID);
       this._timeoutID = null;
     }
-  },
+  }
 };
 
 /**
@@ -313,7 +313,7 @@ PingMonitor.prototype = {
     consoleLog.info("PushHandler: ping sent");
     this._pingTimerID = setTimeout(this._onTimeout, this._pingTimeout);
     this._pingFunc();
-  },
+  }
 };
 
 
@@ -870,5 +870,5 @@ let MozLoopPushHandler = {
       this._pushSocket.send({messageType: "register",
                              channelID: channelID});
     }
-  },
+  }
 };

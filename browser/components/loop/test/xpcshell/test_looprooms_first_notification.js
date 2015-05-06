@@ -39,7 +39,7 @@ const kRoomsResponses = new Map([
     roomUrl: "http://localhost:3000/rooms/QzBbvGmIZWU",
     maxSize: 2,
     ctime: 140551741
-  }],
+  }]
 ]);
 
 let gRoomsAdded = [];

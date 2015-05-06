@@ -268,7 +268,7 @@ loop.panel = (function(_, mozL10n) {
             <a href={privacy_notice_url} target="_blank">
               {mozL10n.get("legal_text_privacy")}
             </a>
-          ),
+          )
         });
         return (
           <div id="powered-by-wrapper">
@@ -759,7 +759,7 @@ loop.panel = (function(_, mozL10n) {
     getInitialState: function() {
       return {
         userProfile: this.props.userProfile || this.props.mozLoop.userProfile,
-        gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen"),
+        gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
       };
     },
 
@@ -772,7 +772,7 @@ loop.panel = (function(_, mozL10n) {
       var firstErrorKey = Object.keys(this.props.mozLoop.errors)[0];
       return {
         type: firstErrorKey,
-        error: this.props.mozLoop.errors[firstErrorKey],
+        error: this.props.mozLoop.errors[firstErrorKey]
       };
     },
 
@@ -785,7 +785,7 @@ loop.panel = (function(_, mozL10n) {
           message: serviceError.error.friendlyMessage,
           details: serviceError.error.friendlyDetails,
           detailsButtonLabel: serviceError.error.friendlyDetailsButtonLabel,
-          detailsButtonCallback: serviceError.error.friendlyDetailsButtonCallback,
+          detailsButtonCallback: serviceError.error.friendlyDetailsButtonCallback
         });
       } else {
         this.props.notifications.remove(this.props.notifications.get("service-error"));
@@ -806,7 +806,7 @@ loop.panel = (function(_, mozL10n) {
 
     _gettingStartedSeen: function() {
       this.setState({
-        gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen"),
+        gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
       });
     },
 
@@ -959,7 +959,7 @@ loop.panel = (function(_, mozL10n) {
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
     ToSView: ToSView,
-    UserIdentity: UserIdentity,
+    UserIdentity: UserIdentity
   };
 })(_, document.mozL10n);
 

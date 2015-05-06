@@ -129,7 +129,7 @@ loop.roomViews = (function(mozL10n) {
               
                 mozL10n.get("share_panel_body", {
                   brandShortname: mozL10n.get("brandShortname"),
-                  clientSuperShortname: mozL10n.get("clientSuperShortname"),
+                  clientSuperShortname: mozL10n.get("clientSuperShortname")
                 })
               
             ), 

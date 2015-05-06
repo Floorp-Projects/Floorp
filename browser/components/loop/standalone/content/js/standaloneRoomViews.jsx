@@ -205,7 +205,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           <a href={loop.config.privacyWebsiteUrl} target="_blank">
             {mozL10n.get("privacy_notice_link_text")}
           </a>
-        ),
+        )
       });
     },
 
@@ -576,7 +576,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       var screenShareStreamClasses = React.addons.classSet({
         "screen": true,
         "focus-stream": this.state.receivingScreenShare,
-        hide: !this.state.receivingScreenShare,
+        hide: !this.state.receivingScreenShare
       });
 
       return (
