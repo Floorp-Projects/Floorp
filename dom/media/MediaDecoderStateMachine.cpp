@@ -934,11 +934,20 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
     MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
+    nsRefPtr<MediaDecoderStateMachine> self = this;
     WaitRequestRef(aType).Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                                &MediaDecoderReader::WaitForData, aType)
-      ->RefableThen(TaskQueue(), __func__, this,
-                    &MediaDecoderStateMachine::OnWaitForDataResolved,
-                    &MediaDecoderStateMachine::OnWaitForDataRejected));
+      ->RefableThen(TaskQueue(), __func__,
+                    [self] (MediaData::Type aType) -> void {
+                      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+                      self->WaitRequestRef(aType).Complete();
+                      self->DispatchDecodeTasksIfNeeded();
+                    },
+                    [self] (WaitForDataRejectValue aRejection) -> void {
+                      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
+                      self->WaitRequestRef(aRejection.mType).Complete();
+                    }));
+
     return;
   }
 
