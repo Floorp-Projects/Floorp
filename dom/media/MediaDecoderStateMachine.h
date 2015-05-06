@@ -186,7 +186,6 @@ public:
     TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown));
   }
 
-  void ShutdownReader();
   void FinishShutdown();
 
   bool IsRealTime() const;
