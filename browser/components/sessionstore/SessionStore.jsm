@@ -113,6 +113,7 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
+Cu.import("resource://gre/modules/debug.js", this);
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
@@ -1613,8 +1614,10 @@ let SessionStoreInternal = {
     // restore the selected tab and lazily restore the rest. We'll make no
     // efforts at this time to be smart and restore all of the tabs that had
     // been in a restored state at the time of the crash.
-    let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
-    this._resetLocalTabRestoringState(tab);
+    if (aBrowser.__SS_restoreState) {
+      let tab = aWindow.gBrowser.getTabForBrowser(aBrowser);
+      this._resetLocalTabRestoringState(tab);
+    }
   },
 
   // Clean up data that has been closed a long time ago.
@@ -2728,6 +2731,9 @@ let SessionStoreInternal = {
 
   // Restores the given tab state for a given tab.
   restoreTab(tab, tabData, options = {}) {
+    NS_ASSERT(!tab.linkedBrowser.__SS_restoreState,
+              "must reset tab before calling restoreTab()");
+
     let restoreImmediately = options.restoreImmediately;
     let loadArguments = options.loadArguments;
     let browser = tab.linkedBrowser;
@@ -3590,6 +3596,9 @@ let SessionStoreInternal = {
    *        The tab that will be "reset"
    */
   _resetLocalTabRestoringState: function (aTab) {
+    NS_ASSERT(aTab.linkedBrowser.__SS_restoreState,
+              "given tab is not restoring");
+
     let window = aTab.ownerDocument.defaultView;
     let browser = aTab.linkedBrowser;
 
@@ -3615,10 +3624,11 @@ let SessionStoreInternal = {
   },
 
   _resetTabRestoringState: function (tab) {
+    NS_ASSERT(tab.linkedBrowser.__SS_restoreState,
+              "given tab is not restoring");
+
     let browser = tab.linkedBrowser;
-    if (browser.__SS_restoreState) {
-      browser.messageManager.sendAsyncMessage("SessionStore:resetRestore", {});
-    }
+    browser.messageManager.sendAsyncMessage("SessionStore:resetRestore", {});
     this._resetLocalTabRestoringState(tab);
   },
 
