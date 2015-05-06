@@ -288,10 +288,13 @@ struct SurfaceCache
    * for sure the cache can't hold it.
    *
    * @param aSize  The dimensions of a surface in pixels.
+   * @param aBytesPerPixel  How many bytes each pixel of the surface requires.
+   *                        Defaults to 4, which is appropriate for RGBA or RGBX
+   *                        images.
    *
    * @return false if the surface cache can't hold a surface of that size.
    */
-  static bool CanHold(const IntSize& aSize);
+  static bool CanHold(const IntSize& aSize, uint32_t aBytesPerPixel = 4);
   static bool CanHold(size_t aSize);
 
   /**

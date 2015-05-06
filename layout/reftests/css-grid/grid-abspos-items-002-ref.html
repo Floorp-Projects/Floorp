@@ -26,7 +26,7 @@ body,html { color:black; background:white; font-size:16px; padding:0; margin:0; 
  height: 100px;
 }
 .zero-size { width:0; height:0; }
-.auto-size { width:auto; height:17px; }
+.auto-size { width:auto; height:0px; }
 
 .a {
   position: absolute;
@@ -89,7 +89,7 @@ span {
 <div class="grid">
 <span class="a">a</span>
 <span class="b abs">b</span>
-<span class="c abs" style="height:20px">c</span>
+<span class="c abs">c</span>
 <span class="d abs">d</span>
 <span class="e abs">e</span>
 <span class="f abs">f</span>
@@ -97,7 +97,7 @@ span {
 </div>
 
 <div class="grid zero-size">
-<span class="b abs">b</span>
+<span class="b abs" style="width:5px">b</span>
 </div>
 
 <div class="grid auto-size">

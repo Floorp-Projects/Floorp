@@ -931,13 +931,13 @@ private:
       // Return whether the iterator is done after doing that.
       // The iterator must not be done when this is called.
       inline bool SkipItemsThatNeedAnonFlexOrGridItem(
-        const nsFrameConstructorState& aState);
+        const nsFrameConstructorState& aState, nsIAtom* aContainerType);
 
       // Skip to the first frame that is a non-replaced inline or is
       // positioned.  Return whether the iterator is done after doing that.
       // The iterator must not be done when this is called.
       inline bool SkipItemsThatDontNeedAnonFlexOrGridItem(
-        const nsFrameConstructorState& aState);
+        const nsFrameConstructorState& aState, nsIAtom* aContainerType);
 
       // Skip over all items that do not want a ruby parent.  Return whether
       // the iterator is done after doing that.  The iterator must not be done
@@ -1074,7 +1074,8 @@ private:
 
     // Indicates whether (when in a flex or grid container) this item needs
     // to be wrapped in an anonymous block.
-    bool NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState);
+    bool NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState,
+                                 nsIAtom* aContainerType);
 
     // Don't call this unless the frametree really depends on the answer!
     // Especially so for generated content, where we don't want to reframe

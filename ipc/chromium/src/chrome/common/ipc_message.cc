@@ -49,6 +49,8 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
   header()->flags = priority;
   if (compression == COMPRESSION_ENABLED)
     header()->flags |= COMPRESS_BIT;
+  else if (compression == COMPRESSION_ALL)
+    header()->flags |= COMPRESSALL_BIT;
 #if defined(OS_POSIX)
   header()->num_fds = 0;
 #endif

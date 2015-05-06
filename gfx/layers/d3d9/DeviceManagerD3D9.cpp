@@ -206,7 +206,7 @@ DeviceManagerD3D9::Init()
     if (!mNv3DVUtils) {
       mNv3DVUtils = new Nv3DVUtils();
       if (!mNv3DVUtils) {
-        NS_WARNING("Could not create a new instance of Nv3DVUtils.\n");
+        NS_WARNING("Could not create a new instance of Nv3DVUtils.");
       }
     }
 

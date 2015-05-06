@@ -236,6 +236,14 @@ public:
    */
   void WaitUntilComplete() const;
 
+  /**
+   * Returns the number of bytes per pixel this imgFrame requires.  This is a
+   * worst-case value that does not take into account the effects of format
+   * changes caused by Optimize(), since an imgFrame is not optimized throughout
+   * its lifetime.
+   */
+  uint32_t GetBytesPerPixel() const { return GetIsPaletted() ? 1 : 4; }
+
   IntSize GetImageSize() const { return mImageSize; }
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
