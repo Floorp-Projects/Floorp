@@ -16,7 +16,7 @@ static_assert((int(NS_SIDE_TOP) == 0) &&
               "The mozilla::css::Side sequence must match the nsMargin nscoord sequence");
 
 nsRect
-ToAppUnits(const nsIntRect& aRect, nscoord aAppUnitsPerPixel)
+ToAppUnits(const mozilla::gfx::IntRect& aRect, nscoord aAppUnitsPerPixel)
 {
   return nsRect(NSIntPixelsToAppUnits(aRect.x, aAppUnitsPerPixel),
                 NSIntPixelsToAppUnits(aRect.y, aAppUnitsPerPixel),
@@ -24,8 +24,8 @@ ToAppUnits(const nsIntRect& aRect, nscoord aAppUnitsPerPixel)
                 NSIntPixelsToAppUnits(aRect.height, aAppUnitsPerPixel));
 }
 
-const nsIntRect& GetMaxSizedIntRect() {
-  static const nsIntRect r(0, 0, INT32_MAX, INT32_MAX);
+const mozilla::gfx::IntRect& GetMaxSizedIntRect() {
+  static const mozilla::gfx::IntRect r(0, 0, INT32_MAX, INT32_MAX);
   return r;
 }
 

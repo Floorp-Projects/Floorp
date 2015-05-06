@@ -606,20 +606,20 @@ nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
   return *this;
 }
 
-static nsIntRect
-TransformRect(const nsIntRect& aRect, const gfx3DMatrix& aTransform)
+static mozilla::gfx::IntRect
+TransformRect(const mozilla::gfx::IntRect& aRect, const gfx3DMatrix& aTransform)
 {
     if (aRect.IsEmpty()) {
-        return nsIntRect();
+        return mozilla::gfx::IntRect();
     }
 
     gfxRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
     rect = aTransform.TransformBounds(rect);
     rect.RoundOut();
 
-    nsIntRect intRect;
+    mozilla::gfx::IntRect intRect;
     if (!gfxUtils::GfxRectToIntRect(rect, &intRect)) {
-        return nsIntRect();
+        return mozilla::gfx::IntRect();
     }
 
     return intRect;
@@ -699,7 +699,7 @@ nsIntRegion nsRegion::ToPixels (nscoord aAppUnitsPerPixel, bool aOutsidePixels) 
   pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
   for (int i=0; i<n; i++) {
     nsRect rect = BoxToRect(boxes[i]);
-    nsIntRect deviceRect;
+    mozilla::gfx::IntRect deviceRect;
     if (aOutsidePixels)
       deviceRect = rect.ToOutsidePixels(aAppUnitsPerPixel);
     else
@@ -733,7 +733,7 @@ nsIntRegion nsRegion::ScaleToNearestPixels (float aScaleX, float aScaleY,
   nsRegionRectIterator rgnIter(*this);
   const nsRect* currentRect;
   while ((currentRect = rgnIter.Next())) {
-    nsIntRect deviceRect =
+    mozilla::gfx::IntRect deviceRect =
       currentRect->ScaleToNearestPixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
@@ -747,7 +747,7 @@ nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
   nsRegionRectIterator rgnIter(*this);
   const nsRect* currentRect;
   while ((currentRect = rgnIter.Next())) {
-    nsIntRect deviceRect =
+    mozilla::gfx::IntRect deviceRect =
       currentRect->ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
@@ -778,14 +778,14 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
   nsIntRegion intRegion;
   if (n) {
     nsRect first = BoxToRect(boxes[0]);
-    nsIntRect firstDeviceRect =
+    mozilla::gfx::IntRect firstDeviceRect =
       first.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
     for (int i=1; i<n; i++) {
       nsRect rect = nsRect(boxes[i].x1, boxes[i].y1,
 	  boxes[i].x2 - boxes[i].x1,
 	  boxes[i].y2 - boxes[i].y1);
-      nsIntRect deviceRect =
+      mozilla::gfx::IntRect deviceRect =
 	rect.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
       if (rect.y <= first.YMost()) {
