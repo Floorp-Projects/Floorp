@@ -719,7 +719,12 @@ RDFServiceImpl*
 RDFServiceImpl::gRDFService;
 
 RDFServiceImpl::RDFServiceImpl()
-    :  mNamedDataSources(nullptr)
+    : mNamedDataSources(nullptr)
+    , mResources(&gResourceTableOps, sizeof(ResourceHashEntry))
+    , mLiterals(&gLiteralTableOps, sizeof(LiteralHashEntry))
+    , mInts(&gIntTableOps, sizeof(IntHashEntry))
+    , mDates(&gDateTableOps, sizeof(DateHashEntry))
+    , mBlobs(&gBlobTableOps, sizeof(BlobHashEntry))
 {
     gRDFService = this;
 }
@@ -738,17 +743,6 @@ RDFServiceImpl::Init()
     if (! mNamedDataSources)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PL_DHashTableInit(&mResources, &gResourceTableOps,
-                      sizeof(ResourceHashEntry));
-
-    PL_DHashTableInit(&mLiterals, &gLiteralTableOps, sizeof(LiteralHashEntry));
-
-    PL_DHashTableInit(&mInts, &gIntTableOps, sizeof(IntHashEntry));
-
-    PL_DHashTableInit(&mDates, &gDateTableOps, sizeof(DateHashEntry));
-
-    PL_DHashTableInit(&mBlobs, &gBlobTableOps, sizeof(BlobHashEntry));
-
     mDefaultResourceFactory = do_GetClassObject(kRDFDefaultResourceCID, &rv);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get default resource factory");
     if (NS_FAILED(rv)) return rv;
@@ -766,16 +760,6 @@ RDFServiceImpl::~RDFServiceImpl()
         PL_HashTableDestroy(mNamedDataSources);
         mNamedDataSources = nullptr;
     }
-    if (mResources.IsInitialized())
-        PL_DHashTableFinish(&mResources);
-    if (mLiterals.IsInitialized())
-        PL_DHashTableFinish(&mLiterals);
-    if (mInts.IsInitialized())
-        PL_DHashTableFinish(&mInts);
-    if (mDates.IsInitialized())
-        PL_DHashTableFinish(&mDates);
-    if (mBlobs.IsInitialized())
-        PL_DHashTableFinish(&mBlobs);
     gRDFService = nullptr;
 }
 
@@ -793,9 +777,6 @@ RDFServiceImpl::CreateSingleton(nsISupports* aOuter,
     }
 
     nsRefPtr<RDFServiceImpl> serv = new RDFServiceImpl();
-    if (!serv)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     nsresult rv = serv->Init();
     if (NS_FAILED(rv))
         return rv;
