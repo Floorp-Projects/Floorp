@@ -13,6 +13,7 @@ EXTRA_JS_MODULES.devtools.gcli.commands += [
     'commands/csscoverage.js',
     'commands/folder.js',
     'commands/highlight.js',
+    'commands/index.js',
     'commands/inject.js',
     'commands/jsb.js',
     'commands/listen.js',
