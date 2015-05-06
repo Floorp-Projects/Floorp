@@ -78,8 +78,13 @@ ErrorWrongTypeArg(JSContext* cx, size_t argIndex, Handle<TypeDescr*> typeDescr)
     JS_snprintf(charArgIndex, sizeof charArgIndex, "%d", argIndex);
 
     HeapSlot& typeNameSlot = typeDescr->getReservedSlotRef(JS_DESCR_SLOT_STRING_REPR);
+    char* typeNameStr = JS_EncodeString(cx, typeNameSlot.toString());
+    if (!typeNameStr)
+        return false;
+
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_NOT_A_VECTOR,
-                         JS_EncodeString(cx, typeNameSlot.toString()), charArgIndex);
+                         typeNameStr, charArgIndex);
+    JS_free(cx, typeNameStr);
     return false;
 }
 
