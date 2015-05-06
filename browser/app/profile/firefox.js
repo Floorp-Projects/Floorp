@@ -1396,6 +1396,8 @@ pref("devtools.inspector.imagePreviewTooltipSize", 300);
 pref("devtools.inspector.showUserAgentStyles", false);
 // Show all native anonymous content (like controls in <video> tags)
 pref("devtools.inspector.showAllAnonymousContent", false);
+// Enable the MDN docs tooltip
+pref("devtools.inspector.mdnDocsTooltip.enabled", true);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");
