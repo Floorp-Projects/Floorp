@@ -134,22 +134,15 @@ static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 nsStaticCaseInsensitiveNameTable*
 CreateStaticTable(const char* const aRawTable[], int32_t aLength)
 {
-  auto table = new nsStaticCaseInsensitiveNameTable();
-  if (table) {
+  auto table = new nsStaticCaseInsensitiveNameTable(aRawTable, aLength);
 #ifdef DEBUG
-    // let's verify the table...
-    for (int32_t index = 0; index < aLength; ++index) {
-      nsAutoCString temp1(aRawTable[index]);
-      nsAutoCString temp2(aRawTable[index]);
-      ToLowerCase(temp1);
-      MOZ_ASSERT(temp1.Equals(temp2),
-                 "upper case char in case insensitive name table");
-      MOZ_ASSERT(-1 == temp1.FindChar('_'),
-                 "underscore char in case insensitive name table");
-    }
-#endif
-    table->Init(aRawTable, aLength);
+  // Partially verify the entries.
+  for (int32_t index = 0; index < aLength; ++index) {
+    nsAutoCString temp(aRawTable[index]);
+    MOZ_ASSERT(-1 == temp.FindChar('_'),
+               "underscore char in case insensitive name table");
   }
+#endif
   return table;
 }
 
