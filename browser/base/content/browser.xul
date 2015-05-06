@@ -730,9 +730,9 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
 #ifdef MOZ_DEV_EDITION
-             defaultset="urlbar-container,search-container,developer-button,bookmarks-menu-button,downloads-button,home-button,loop-button"
+             defaultset="urlbar-container,search-container,developer-button,bookmarks-menu-button,pocket-button,downloads-button,home-button,loop-button"
 #else
-             defaultset="urlbar-container,search-container,bookmarks-menu-button,downloads-button,home-button,loop-button"
+             defaultset="urlbar-container,search-container,bookmarks-menu-button,pocket-button,downloads-button,home-button,loop-button"
 #endif
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
