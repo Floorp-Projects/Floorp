@@ -361,7 +361,7 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
  * This function has the same behavior as UserToDevicePixelSnapped except that
  * aRect is not transformed to device space.
  */
-inline void MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
+inline bool MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
                                     bool aAllowScaleOr90DegreeRotate = false)
 {
   if (UserToDevicePixelSnapped(aRect, aDrawTarget,
@@ -371,7 +371,9 @@ inline void MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
     Matrix mat = aDrawTarget.GetTransform();
     mat.Invert();
     aRect = mat.TransformBounds(aRect);
+    return true;
   }
+  return false;
 }
 
 } // namespace gfx
