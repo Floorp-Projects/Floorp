@@ -50,7 +50,8 @@ var pktApi = (function() {
 
     // Base url for all api calls
     // TODO: This is a dev server and will be changed before launch
-    var pocketAPIhost = Services.prefs.getCharPref("browser.pocket.hostname");
+    var pocketAPIhost = Services.prefs.getCharPref("browser.pocket.api");
+    var pocketSiteHost = Services.prefs.getCharPref("browser.pocket.site");
 
     // Base url for all api calls
     var baseAPIUrl = "https://" + pocketAPIhost + "/v3";
@@ -139,7 +140,7 @@ var pktApi = (function() {
     function getCookiesFromPocket() {
     
         var cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-        var pocketCookies = cookieManager.getCookiesFromHost(pocketAPIhost);
+        var pocketCookies = cookieManager.getCookiesFromHost(pocketSiteHost);
         var cookies = {};
         while (pocketCookies.hasMoreElements()) {
             var cookie = pocketCookies.getNext().QueryInterface(Ci.nsICookie2);
@@ -225,6 +226,12 @@ var pktApi = (function() {
 
                 // TODO: Better error handling
                 if (options.error) {
+                    // In case the user did revoke the access token or it's not
+                    // valid anymore clear the user data
+                    if (request.status === 401) {
+                        clearUserData();
+                    }
+
                     // Check to handle Pocket error
                     var errorMessage = request.getResponseHeader("X-Error");
                     if (typeof errorMessage !== "undefined") {
@@ -237,9 +244,6 @@ var pktApi = (function() {
                 }
 			}
 		};
-
-		// TODO - do we want to pass a special user agent?
-		//request.setRequestHeader("User-Agent" , 'Pocket Firefox ' + this.APP.v);
 
 		// Set headers
 		request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
@@ -268,6 +272,7 @@ var pktApi = (function() {
         setSetting("tags", undefined);
         setSetting("usedTags", undefined);
 
+        setSetting("fsv1", undefined);
     }
 
     /**
@@ -321,8 +326,6 @@ var pktApi = (function() {
             },
             error: options.error
         });
-
-        return sendAction(action, options);
     }
 
     /**
@@ -444,7 +447,7 @@ var pktApi = (function() {
                 var tagToSave = tags[i].trim();
                 var newUsedTagObject = {
                     "tag": tagToSave,
-                    "timestamp": new Date()
+                    "timestamp": new Date().getTime()
                 };
                 usedTags[tagToSave] = newUsedTagObject;
             }
@@ -488,9 +491,9 @@ var pktApi = (function() {
                 }
 
                 // Sort usedTagsObjectArray based on timestamp
-                usedTagsObjectArray.sort(function(a, b) {
-                    a = new Date(a.timestamp);
-                    b = new Date(b.timestamp);
+                usedTagsObjectArray.sort(function(usedTagA, usedTagB) {
+                    var a = usedTagA.timestamp;
+                    var b = usedTagB.timestamp;
                     return a < b ? -1 : a > b ? 1 : 0;
                 });
 
@@ -564,6 +567,26 @@ var pktApi = (function() {
     }
 
     /**
+     * Helper function to get current signup AB group the user is in
+     */
+    function getSignupAB() {
+        if (!getSetting('signupAB'))
+        {
+            var rand = (Math.floor(Math.random()*2+1));
+            if (rand == 2)
+            {
+                setSetting('signupAB','storyboard');
+            }
+            else
+            {
+                setSetting('signupAB','hero');
+            }
+
+        }
+        return getSetting('signupAB');
+    }
+
+    /**
      * Public functions
      */
     return {
@@ -576,6 +599,7 @@ var pktApi = (function() {
         getTags: getTags,
         isPremiumUser: isPremiumUser,
         getSuggestedTagsForItem: getSuggestedTagsForItem,
-        getSuggestedTagsForURL: getSuggestedTagsForURL
+        getSuggestedTagsForURL: getSuggestedTagsForURL,
+        getSignupAB: getSignupAB
     };
 }());

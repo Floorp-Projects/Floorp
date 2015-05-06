@@ -1953,6 +1953,9 @@ public class BrowserApp extends GeckoApp
                 });
             }
         } else {
+            if (mDoorHangerPopup != null) {
+                mDoorHangerPopup.disable();
+            }
             mTabsPanel.show(panel);
         }
     }
@@ -1960,6 +1963,9 @@ public class BrowserApp extends GeckoApp
     @Override
     public void hideTabs() {
         mTabsPanel.hide();
+        if (mDoorHangerPopup != null) {
+            mDoorHangerPopup.enable();
+        }
     }
 
     @Override
@@ -2234,6 +2240,14 @@ public class BrowserApp extends GeckoApp
         // Expected to be fixed by bug 915825.
         hideHomePager(url);
         loadUrlOrKeywordSearch(url);
+        clearSelectedTabApplicationId();
+    }
+
+    private void clearSelectedTabApplicationId() {
+        final Tab selected = Tabs.getInstance().getSelectedTab();
+        if (selected != null) {
+            selected.setApplicationId(null);
+        }
     }
 
     private void loadUrlOrKeywordSearch(final String url) {
@@ -3572,6 +3586,7 @@ public class BrowserApp extends GeckoApp
             startActivity(intent);
         } else if (!maybeSwitchToTab(url, flags)) {
             openUrlAndStopEditing(url);
+            clearSelectedTabApplicationId();
         }
     }
 
