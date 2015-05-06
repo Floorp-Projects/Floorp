@@ -298,13 +298,32 @@ let CustomizableUIInternal = {
 
     let currentVersion = gSavedState.currentVersion;
     for (let [id, widget] of gPalette) {
-      if (widget._introducedInVersion > currentVersion &&
-          widget.defaultArea) {
-        let futurePlacements = gFuturePlacements.get(widget.defaultArea);
-        if (futurePlacements) {
-          futurePlacements.add(id);
-        } else {
-          gFuturePlacements.set(widget.defaultArea, new Set([id]));
+      if (widget.defaultArea) {
+        let shouldAdd = false;
+        let shouldSetPref = false;
+        let prefId = "browser.toolbarbuttons.introduced." + widget.id;
+        if (widget._introducedInVersion === "pref") {
+          try {
+            shouldAdd = !Services.prefs.getBoolPref(prefId);
+          } catch (ex) {
+            // Pref doesn't exist:
+            shouldAdd = true;
+          }
+          shouldSetPref = shouldAdd;
+        } else if (widget._introducedInVersion > currentVersion) {
+          shouldAdd = true;
+        }
+
+        if (shouldAdd) {
+          let futurePlacements = gFuturePlacements.get(widget.defaultArea);
+          if (futurePlacements) {
+            futurePlacements.add(id);
+          } else {
+            gFuturePlacements.set(widget.defaultArea, new Set([id]));
+          }
+          if (shouldSetPref) {
+            Services.prefs.setBoolPref(prefId, true);
+          }
         }
       }
     }
