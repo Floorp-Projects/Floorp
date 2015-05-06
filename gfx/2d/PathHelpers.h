@@ -362,9 +362,10 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
  * aRect is not transformed to device space.
  */
 inline void MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
-                                    bool aIgnoreScale = false)
+                                    bool aAllowScaleOr90DegreeRotate = false)
 {
-  if (UserToDevicePixelSnapped(aRect, aDrawTarget, aIgnoreScale)) {
+  if (UserToDevicePixelSnapped(aRect, aDrawTarget,
+                               aAllowScaleOr90DegreeRotate)) {
     // Since UserToDevicePixelSnapped returned true we know there is no
     // rotation/skew in 'mat', so we can just use TransformBounds() here.
     Matrix mat = aDrawTarget.GetTransform();
