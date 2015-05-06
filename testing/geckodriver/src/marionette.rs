@@ -25,9 +25,9 @@ use webdriver::command::WebDriverCommand::{
     IsSelected, GetElementAttribute, GetCSSValue, GetElementText,
     GetElementTagName, GetElementRect, IsEnabled, ElementClick,
     ElementTap, ElementClear, ElementSendKeys, ExecuteScript,
-    ExecuteAsyncScript, GetCookie, AddCookie, SetTimeouts,
-    DismissAlert, AcceptAlert, GetAlertText, SendAlertText,
-    TakeScreenshot};
+    ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
+    DeleteCookies, DeleteCookie, SetTimeouts, DismissAlert,
+    AcceptAlert, GetAlertText, SendAlertText, TakeScreenshot};
 use webdriver::command::{
     GetParameters, WindowSizeParameters, SwitchToWindowParameters,
     SwitchToFrameParameters, LocatorParameters, JavascriptCommandParameters,
@@ -329,9 +329,9 @@ impl MarionetteSession {
             //Everything that doesn't have a response value
             Get(_) | GoBack | GoForward | Refresh | Close | SetTimeouts(_) |
             SetWindowSize(_) | MaximizeWindow | SwitchToWindow(_) | SwitchToFrame(_) |
-            SwitchToParentFrame | AddCookie(_) | DismissAlert | AcceptAlert |
-            SendAlertText(_) | ElementClick(_) | ElementTap(_) | ElementClear(_) |
-            ElementSendKeys(_, _) => {
+            SwitchToParentFrame | AddCookie(_) | DeleteCookies | DeleteCookie(_) |
+            DismissAlert | AcceptAlert | SendAlertText(_) | ElementClick(_) |
+            ElementTap(_) | ElementClear(_) | ElementSendKeys(_, _) => {
                 WebDriverResponse::Void
             },
             //Things that simply return the contents of the marionette "value" property
@@ -339,7 +339,7 @@ impl MarionetteSession {
             IsDisplayed(_) | IsSelected(_) |
             GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
-            GetAlertText | TakeScreenshot(_) => {
+            GetAlertText | TakeScreenshot => {
                 let value = try_opt!(json_data.get("value"),
                                      ErrorStatus::UnknownError,
                                      "Failed to find value field");
@@ -408,76 +408,15 @@ impl MarionetteSession {
 
                 WebDriverResponse::ElementRect(ElementRectResponse::new(x, y, width, height))
             },
-            GetCookie => {
-                let value = try_opt!(
-                    try_opt!(json_data.get("value"),
-                             ErrorStatus::UnknownError,
-                             "Failed to find value field").as_array(),
-                    ErrorStatus::UnknownError,
-                    "Failed to interpret value as array");
-                let cookies = try!(value.iter().map(|x| {
-                    let name = try_opt!(
-                        try_opt!(x.find("name"),
-                                 ErrorStatus::UnknownError,
-                                 "Failed to find name field").as_string(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret name as string").to_string();
-                    let value = try_opt!(
-                        try_opt!(x.find("value"),
-                                 ErrorStatus::UnknownError,
-                                 "Failed to find value field").as_string(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret value as string").to_string();
-                    let path = try!(
-                        Nullable::from_json(try_opt!(x.find("path"),
-                                                     ErrorStatus::UnknownError,
-                                                     "Failed to find path field"),
-                                            |x| {
-                                                Ok((try_opt!(x.as_string(),
-                                                             ErrorStatus::UnknownError,
-                                                             "Failed to interpret path as String")).to_string())
-                                            }));
-                    let domain = try!(
-                        Nullable::from_json(try_opt!(x.find("domain"),
-                                                     ErrorStatus::UnknownError,
-                                                     "Failed to find domain field"),
-                                            |x| {
-                                                Ok((try_opt!(x.as_string(),
-                                                             ErrorStatus::UnknownError,
-                                                             "Failed to interpret domain as String")).to_string())
-                                            }));
-                    let expiry = try!(
-                        Nullable::from_json(try_opt!(x.find("expiry"),
-                                                     ErrorStatus::UnknownError,
-                                                     "Failed to find expiry field"),
-                                            |x| {
-                                                Ok(Date::new((try_opt!(
-                                                    x.as_u64(),
-                                                    ErrorStatus::UnknownError,
-                                                    "Failed to interpret domain as String"))))
-                                            }));
-                    let max_age = Date::new(try_opt!(
-                        try_opt!(x.find("maxAge"),
-                                 ErrorStatus::UnknownError,
-                                 "Failed to find maxAge field").as_u64(),
-                        ErrorStatus::UnknownError,
-                        "Failed to interpret maxAge as u64"));
-                    let secure = match x.find("secure") {
-                        Some(x) => try_opt!(x.as_boolean(),
-                                            ErrorStatus::UnknownError,
-                                            "Failed to interpret secure as boolean"),
-                        None => false
-                    };
-                    let http_only = match x.find("httpOnly") {
-                        Some(x) => try_opt!(x.as_boolean(),
-                                            ErrorStatus::UnknownError,
-                                            "Failed to interpret http_only as boolean"),
-                        None => false
-                    };
-                    Ok(Cookie::new(name, value, path, domain, expiry, max_age, secure, http_only))
-                }).collect::<Result<Vec<_>, _>>());
+            GetCookies => {
+                let cookies = try!(self.process_cookies(json_data));
                 WebDriverResponse::Cookie(CookieResponse::new(cookies))
             },
+            GetCookie(ref name) => {
+                let mut cookies = try!(self.process_cookies(json_data));
+                cookies.retain(|x| x.name == *name);
+                WebDriverResponse::Cookie(CookieResponse::new(cookies))
+            }
             FindElement(_) | FindElementElement(_, _) => {
                 let element = try!(self.to_web_element(
                     try_opt!(json_data.get("value"),
@@ -521,6 +460,76 @@ impl MarionetteSession {
                 WebDriverResponse::DeleteSession
             }
         })
+    }
+
+    fn process_cookies(&self, json_data: BTreeMap<String, Json>) -> WebDriverResult<Vec<Cookie>> {
+        let value = try_opt!(
+            try_opt!(json_data.get("value"),
+                     ErrorStatus::UnknownError,
+                     "Failed to find value field").as_array(),
+            ErrorStatus::UnknownError,
+            "Failed to interpret value as array");
+        value.iter().map(|x| {
+            let name = try_opt!(
+                try_opt!(x.find("name"),
+                         ErrorStatus::UnknownError,
+                         "Failed to find name field").as_string(),
+                ErrorStatus::UnknownError,
+                "Failed to interpret name as string").to_string();
+            let value = try_opt!(
+                try_opt!(x.find("value"),
+                         ErrorStatus::UnknownError,
+                         "Failed to find value field").as_string(),
+                ErrorStatus::UnknownError,
+                "Failed to interpret value as string").to_string();
+            let path = try!(
+                Nullable::from_json(try_opt!(x.find("path"),
+                                             ErrorStatus::UnknownError,
+                                             "Failed to find path field"),
+                                    |x| {
+                                        Ok((try_opt!(x.as_string(),
+                                                     ErrorStatus::UnknownError,
+                                                     "Failed to interpret path as String")).to_string())
+                                    }));
+            let domain = try!(
+                Nullable::from_json(try_opt!(x.find("domain"),
+                                             ErrorStatus::UnknownError,
+                                             "Failed to find domain field"),
+                                    |x| {
+                                        Ok((try_opt!(x.as_string(),
+                                                     ErrorStatus::UnknownError,
+                                                     "Failed to interpret domain as String")).to_string())
+                                    }));
+            let expiry = try!(
+                Nullable::from_json(try_opt!(x.find("expiry"),
+                                             ErrorStatus::UnknownError,
+                                             "Failed to find expiry field"),
+                                    |x| {
+                                        Ok(Date::new((try_opt!(
+                                            x.as_u64(),
+                                            ErrorStatus::UnknownError,
+                                            "Failed to interpret domain as String"))))
+                                    }));
+            let max_age = Date::new(try_opt!(
+                try_opt!(x.find("maxAge"),
+                         ErrorStatus::UnknownError,
+                         "Failed to find maxAge field").as_u64(),
+                ErrorStatus::UnknownError,
+                "Failed to interpret maxAge as u64"));
+            let secure = match x.find("secure") {
+                Some(x) => try_opt!(x.as_boolean(),
+                                    ErrorStatus::UnknownError,
+                                    "Failed to interpret secure as boolean"),
+                None => false
+            };
+            let http_only = match x.find("httpOnly") {
+                Some(x) => try_opt!(x.as_boolean(),
+                                    ErrorStatus::UnknownError,
+                                    "Failed to interpret http_only as boolean"),
+                None => false
+            };
+            Ok(Cookie::new(name, value, path, domain, expiry, max_age, secure, http_only))
+        }).collect::<Result<Vec<_>, _>>()
     }
 
     pub fn error_from_code(&self, error_code: u64) -> ErrorStatus {
@@ -792,7 +801,13 @@ impl ToMarionette for WebDriverMessage {
             },
             ExecuteScript(ref x) => (Some("executeScript"), Some(x.to_marionette())),
             ExecuteAsyncScript(ref x) => (Some("executeAsyncScript"), Some(x.to_marionette())),
-            GetCookie => (Some("getCookies"), None),
+            GetCookies | GetCookie(_) => (Some("getCookies"), None),
+            DeleteCookies => (Some("deleteAllCookies"), None),
+            DeleteCookie(ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("name".to_string(), x.to_json());
+                (Some("deleteCookie"), Some(Ok(Json::Object(data))))
+            },
             AddCookie(ref x) => (Some("addCookie"), Some(x.to_marionette())),
             DismissAlert => (Some("dismissDialog"), None),
             AcceptAlert => (Some("acceptDialog"), None),
@@ -802,7 +817,13 @@ impl ToMarionette for WebDriverMessage {
                 data.insert("value".to_string(), x.to_json());
                 (Some("sendKeysToDialog"), Some(Ok(Json::Object(data))))
             },
-            TakeScreenshot(ref x) => (Some("takeScreenshot"), Some(x.to_marionette())),
+            TakeScreenshot => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), Json::Null);
+                data.insert("highlights".to_string(), Json::Array(vec![]));
+                data.insert("full".to_string(), Json::Boolean(false));
+                (Some("takeScreenshot"), Some(Ok(Json::Object(data))))
+            },
         };
 
         let name = try_opt!(opt_name,
