@@ -1,0 +1,34 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Test</title>
+
+    <script type="text/javascript;version=1.7">
+    let testIsIDBDatabase;
+    let testException;
+
+    function runTest() {
+      let w = new SharedWorker('browser_permissionsSharedWorker.js');
+      w.port.onmessage = function(e) {
+        if (e.data.status == 'success') {
+          testIsIDBDatabase = e.data.isIDBDatabase;
+        } else {
+          testException = e.data.error;
+        }
+
+        setTimeout(testFinishedCallback, 0, testIsIDBDatabase, testException);
+      }
+
+      const name = window.location.pathname + "_sharedWorker";
+      w.port.postMessage(name);
+    }
+    </script>
+
+  </head>
+
+  <body onload="runTest();"></body>
+
+</html>
