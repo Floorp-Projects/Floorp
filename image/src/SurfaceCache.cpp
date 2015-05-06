@@ -65,9 +65,10 @@ static StaticRefPtr<SurfaceCacheImpl> sInstance;
  */
 typedef size_t Cost;
 
-static Cost ComputeCost(const IntSize& aSize)
+static Cost ComputeCost(const IntSize& aSize, uint32_t aBytesPerPixel)
 {
-  return aSize.width * aSize.height * 4;  // width * height * 4 bytes (32bpp)
+  MOZ_ASSERT(aBytesPerPixel == 1 || aBytesPerPixel == 4);
+  return aSize.width * aSize.height * aBytesPerPixel;
 }
 
 /**
@@ -982,18 +983,18 @@ SurfaceCache::Insert(imgFrame*         aSurface,
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
-  Cost cost = ComputeCost(aSurfaceKey.Size());
+  Cost cost = ComputeCost(aSurface->GetSize(), aSurface->GetBytesPerPixel());
   return sInstance->Insert(aSurface, cost, aImageKey, aSurfaceKey, aLifetime);
 }
 
 /* static */ bool
-SurfaceCache::CanHold(const IntSize& aSize)
+SurfaceCache::CanHold(const IntSize& aSize, uint32_t aBytesPerPixel /* = 4 */)
 {
   if (!sInstance) {
     return false;
   }
 
-  Cost cost = ComputeCost(aSize);
+  Cost cost = ComputeCost(aSize, aBytesPerPixel);
   return sInstance->CanHold(cost);
 }
 
