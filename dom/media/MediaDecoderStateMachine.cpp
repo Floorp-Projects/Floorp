@@ -1799,14 +1799,6 @@ MediaDecoderStateMachine::EnqueueDecodeFirstFrameTask()
 }
 
 void
-MediaDecoderStateMachine::SetReaderIdle()
-{
-  MOZ_ASSERT(OnDecodeTaskQueue());
-  DECODER_LOG("Invoking SetReaderIdle()");
-  mReader->SetIdle();
-}
-
-void
 MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -1863,11 +1855,10 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
   }
 
   if (needIdle) {
-    DECODER_LOG("Dispatching SetReaderIdle() audioQueue=%lld videoQueue=%lld",
+    DECODER_LOG("Dispatching SetIdle() audioQueue=%lld videoQueue=%lld",
                 GetDecodedAudioDuration(),
                 VideoQueue().Duration());
-    nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(
-        this, &MediaDecoderStateMachine::SetReaderIdle);
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::SetIdle);
     DecodeTaskQueue()->Dispatch(task.forget());
   }
 }
