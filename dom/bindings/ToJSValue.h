@@ -209,6 +209,15 @@ ToJSValue(JSContext* aCx,
   return ToJSValue(aCx, *aArgument.get(), aValue);
 }
 
+template <typename T>
+MOZ_WARN_UNUSED_RESULT bool
+ToJSValue(JSContext* aCx,
+          const NonNull<T>& aArgument,
+          JS::MutableHandle<JS::Value> aValue)
+{
+  return ToJSValue(aCx, *aArgument.get(), aValue);
+}
+
 // Accept WebIDL dictionaries
 template <class T>
 MOZ_WARN_UNUSED_RESULT
