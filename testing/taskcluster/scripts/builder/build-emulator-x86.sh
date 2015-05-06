@@ -17,14 +17,7 @@ test $TARGET
 
 . setup-ccache.sh
 
-# First check if the mozharness directory is available. This is intended to be
-# used locally in development to test mozharness changes:
-#
-#   $ docker -v your_mozharness:/home/worker/mozharness ...
-#
-if [ ! -d mozharness ]; then
-  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
-fi
+tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
 
 # Figure out where the remote manifest is so we can use caches for it.
 
@@ -68,4 +61,3 @@ mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
 mv $WORKSPACE/B2G/objdir-gecko/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 
 ccache -s
-

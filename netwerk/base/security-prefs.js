@@ -8,10 +8,10 @@ pref("security.tls.version.fallback-limit", 3);
 pref("security.tls.insecure_fallback_hosts", "");
 pref("security.tls.insecure_fallback_hosts.use_static_list", true);
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-pref("security.tls.unrestricted_rc4_fallback", false);
-#else
+#ifdef RELEASE_BUILD
 pref("security.tls.unrestricted_rc4_fallback", true);
+#else
+pref("security.tls.unrestricted_rc4_fallback", false);
 #endif
 
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
