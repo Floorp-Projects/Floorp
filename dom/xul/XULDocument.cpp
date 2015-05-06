@@ -148,22 +148,23 @@ struct BroadcastListener {
 Element*
 nsRefMapEntry::GetFirstElement()
 {
-    return static_cast<Element*>(mRefContentList.SafeElementAt(0));
+    return mRefContentList.SafeElementAt(0);
 }
 
 void
 nsRefMapEntry::AppendAll(nsCOMArray<nsIContent>* aElements)
 {
-    for (int32_t i = 0; i < mRefContentList.Count(); ++i) {
-        aElements->AppendObject(static_cast<nsIContent*>(mRefContentList[i]));
+    for (size_t i = 0; i < mRefContentList.Length(); ++i) {
+        aElements->AppendObject(mRefContentList[i]);
     }
 }
 
 bool
 nsRefMapEntry::AddElement(Element* aElement)
 {
-    if (mRefContentList.IndexOf(aElement) >= 0)
+    if (mRefContentList.Contains(aElement)) {
         return true;
+    }
     return mRefContentList.AppendElement(aElement);
 }
 
@@ -171,7 +172,7 @@ bool
 nsRefMapEntry::RemoveElement(Element* aElement)
 {
     mRefContentList.RemoveElement(aElement);
-    return mRefContentList.Count() == 0;
+    return mRefContentList.IsEmpty();
 }
 
 //----------------------------------------------------------------------
