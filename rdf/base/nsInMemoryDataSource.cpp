@@ -250,8 +250,8 @@ protected:
     // nsIRDFResource object per unique URI). The value of an entry is
     // an Assertion struct, which is a linked list of (subject
     // predicate object) triples.
-    PLDHashTable mForwardArcs; 
-    PLDHashTable mReverseArcs; 
+    PLDHashTable2 mForwardArcs;
+    PLDHashTable2 mReverseArcs;
 
     nsCOMArray<nsIRDFObserver> mObservers;  
     uint32_t                   mNumObservers;
@@ -286,7 +286,6 @@ protected:
 
     explicit InMemoryDataSource(nsISupports* aOuter);
     virtual ~InMemoryDataSource();
-    nsresult Init();
 
     friend nsresult
     NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResult);
@@ -752,16 +751,11 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
     }
 
     InMemoryDataSource* datasource = new InMemoryDataSource(aOuter);
-    if (! datasource)
-        return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(datasource);
 
-    nsresult rv = datasource->Init();
-    if (NS_SUCCEEDED(rv)) {
-        datasource->fAggregated.AddRef();
-        rv = datasource->AggregatedQueryInterface(aIID, aResult); // This'll AddRef()
-        datasource->fAggregated.Release();
-    }
+    datasource->fAggregated.AddRef();
+    nsresult rv = datasource->AggregatedQueryInterface(aIID, aResult); // This'll AddRef()
+    datasource->fAggregated.Release();
 
     NS_RELEASE(datasource);
     return rv;
@@ -769,25 +763,18 @@ NS_NewRDFInMemoryDataSource(nsISupports* aOuter, const nsIID& aIID, void** aResu
 
 
 InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
-    : mNumObservers(0), mReadCount(0)
+    : mForwardArcs(PL_DHashGetStubOps(), sizeof(Entry))
+    , mReverseArcs(PL_DHashGetStubOps(), sizeof(Entry))
+    , mNumObservers(0)
+    , mReadCount(0)
 {
     NS_INIT_AGGREGATED(aOuter);
 
     mPropagateChanges = true;
     MOZ_COUNT_CTOR(InMemoryDataSource);
-}
-
-
-nsresult
-InMemoryDataSource::Init()
-{
-    PL_DHashTableInit(&mForwardArcs, PL_DHashGetStubOps(), sizeof(Entry));
-    PL_DHashTableInit(&mReverseArcs, PL_DHashGetStubOps(), sizeof(Entry));
 
     if (! gLog)
         gLog = PR_NewLogModule("InMemoryDataSource");
-
-    return NS_OK;
 }
 
 
@@ -798,16 +785,13 @@ InMemoryDataSource::~InMemoryDataSource()
     fprintf(stdout, "%d - RDF: InMemoryDataSource\n", gInstanceCount);
 #endif
 
-    if (mForwardArcs.IsInitialized()) {
+    if (mForwardArcs.EntryCount() > 0) {
         // This'll release all of the Assertion objects that are
         // associated with this data source. We only need to do this
         // for the forward arcs, because the reverse arcs table
         // indexes the exact same set of resources.
         PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, nullptr);
-        PL_DHashTableFinish(&mForwardArcs);
     }
-    if (mReverseArcs.IsInitialized())
-        PL_DHashTableFinish(&mReverseArcs);
 
     MOZ_LOG(gLog, PR_LOG_NOTICE,
            ("InMemoryDataSource(%p): destroyed.", this));
