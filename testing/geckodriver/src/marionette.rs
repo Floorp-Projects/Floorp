@@ -483,51 +483,43 @@ impl MarionetteSession {
                 ErrorStatus::UnknownError,
                 "Failed to interpret value as string").to_string();
             let path = try!(
-                Nullable::from_json(try_opt!(x.find("path"),
-                                             ErrorStatus::UnknownError,
-                                             "Failed to find path field"),
+                Nullable::from_json(x.find("path").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok((try_opt!(x.as_string(),
                                                      ErrorStatus::UnknownError,
                                                      "Failed to interpret path as String")).to_string())
                                     }));
             let domain = try!(
-                Nullable::from_json(try_opt!(x.find("domain"),
-                                             ErrorStatus::UnknownError,
-                                             "Failed to find domain field"),
+                Nullable::from_json(x.find("domain").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok((try_opt!(x.as_string(),
                                                      ErrorStatus::UnknownError,
                                                      "Failed to interpret domain as String")).to_string())
                                     }));
             let expiry = try!(
-                Nullable::from_json(try_opt!(x.find("expiry"),
-                                             ErrorStatus::UnknownError,
-                                             "Failed to find expiry field"),
+                Nullable::from_json(x.find("expiry").unwrap_or(&Json::Null),
                                     |x| {
                                         Ok(Date::new((try_opt!(
                                             x.as_u64(),
                                             ErrorStatus::UnknownError,
                                             "Failed to interpret domain as String"))))
                                     }));
-            let max_age = Date::new(try_opt!(
-                try_opt!(x.find("maxAge"),
-                         ErrorStatus::UnknownError,
-                         "Failed to find maxAge field").as_u64(),
+            let max_age = try!(
+                Nullable::from_json(x.find("maxAge").unwrap_or(&Json::Null),
+                                    |x| {
+                                        Ok(Date::new((try_opt!(
+                                            x.as_u64(),
+                                            ErrorStatus::UnknownError,
+                                            "Failed to interpret domain as String"))))
+                                    }));
+            let secure = try_opt!(
+                x.find("secure").map_or(Some(false), |x| x.as_boolean()),
                 ErrorStatus::UnknownError,
-                "Failed to interpret maxAge as u64"));
-            let secure = match x.find("secure") {
-                Some(x) => try_opt!(x.as_boolean(),
-                                    ErrorStatus::UnknownError,
-                                    "Failed to interpret secure as boolean"),
-                None => false
-            };
-            let http_only = match x.find("httpOnly") {
-                Some(x) => try_opt!(x.as_boolean(),
-                                    ErrorStatus::UnknownError,
-                                    "Failed to interpret http_only as boolean"),
-                None => false
-            };
+                "Failed to interpret secure as boolean");
+            let http_only = try_opt!(
+                x.find("httpOnly").map_or(Some(false), |x| x.as_boolean()),
+                ErrorStatus::UnknownError,
+                "Failed to interpret httpOnly as boolean");
             Ok(Cookie::new(name, value, path, domain, expiry, max_age, secure, http_only))
         }).collect::<Result<Vec<_>, _>>()
     }
