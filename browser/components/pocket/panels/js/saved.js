@@ -105,7 +105,7 @@ var PKT_SAVED_OVERLAY = function (options)
     };
     this.startCloseTimer = function(manualtime) 
     {
-        /*var settime = manualtime ? manualtime : myself.autocloseTiming;
+        var settime = manualtime ? manualtime : myself.autocloseTiming;
         if (typeof myself.autocloseTimer == 'number') 
         {
             clearTimeout(myself.autocloseTimer);
@@ -117,7 +117,7 @@ var PKT_SAVED_OVERLAY = function (options)
                 myself.preventCloseTimerCancel = false;
                 myself.closePopup();
             }
-        }, settime);*/
+        }, settime);
     };
     this.stopCloseTimer = function() 
     {
