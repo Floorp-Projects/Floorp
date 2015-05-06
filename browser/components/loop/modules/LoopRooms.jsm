@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/loop/loop.properties');
 });
 XPCOMUtils.defineLazyModuleGetter(this, "loopUtils",
-  "resource:///modules/loop/utils.js", "utils")
+  "resource:///modules/loop/utils.js", "utils");
 XPCOMUtils.defineLazyModuleGetter(this, "loopCrypto",
   "resource:///modules/loop/crypto.js", "LoopCrypto");
 
@@ -341,7 +341,7 @@ let LoopRoomsInternal = {
         // Do what we can to save the room data.
         room.decryptedContext = {};
         this.saveAndNotifyUpdate(room, isUpdate);
-      };
+      }
     }
   }),
 
