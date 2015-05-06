@@ -11,6 +11,26 @@ Components.utils.import("resource:///modules/UITour.jsm");
 
 let hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
 
+let hasPocket = false;
+if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
+  let isEnabledForLocale = true;
+  if (Services.prefs.getBoolPref("browser.pocket.useLocaleList")) {
+    let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                           .getService(Ci.nsIXULChromeRegistry);
+    let browserLocale = chromeRegistry.getSelectedLocale("browser");
+    let enabledLocales = [];
+    try {
+      enabledLocales = Services.prefs.getCharPref("browser.pocket.enabledLocales").split(' ');
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    isEnabledForLocale = enabledLocales.indexOf(browserLocale) != -1;
+  }
+  if (isEnabledForLocale) {
+    hasPocket = true;
+  }
+}
+
 function test() {
   requestLongerTimeout(2);
   UITourTest();
@@ -37,6 +57,7 @@ let tests = [
         "home",
         "loop",
         "devtools",
+        ...(hasPocket ? ["pocket"] : []),
         "privateWindow",
         "quit",
         "readerMode-urlBar",
@@ -68,6 +89,7 @@ let tests = [
         "loop",
         "devtools",
         "home",
+        ...(hasPocket ? ["pocket"] : []),
         "privateWindow",
         "quit",
         "readerMode-urlBar",
@@ -104,6 +126,7 @@ let tests = [
         "home",
         "loop",
         "devtools",
+        ...(hasPocket ? ["pocket"] : []),
         "privateWindow",
         "quit",
         "readerMode-urlBar",
