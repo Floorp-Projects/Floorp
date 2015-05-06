@@ -54,7 +54,6 @@ exports.baseModules = [
  * modules that are *not* owned by a tool.
  */
 exports.devtoolsModules = [
-  "devtools/tilt/tilt-commands",
   "gcli/commands/addon",
   "gcli/commands/appcache",
   "gcli/commands/calllog",
@@ -89,12 +88,27 @@ try {
 }
 
 /**
+ * Register commands from toolbox buttons with 'command: [ "some/module" ]'
+ * definitions.  The map/reduce incantation squashes the array of arrays to a
+ * single array.
+ */
+try {
+  const { ToolboxButtons } = require("devtools/framework/toolbox");
+  exports.devtoolsButtonModules = ToolboxButtons.map(def => def.commands || [])
+                                     .reduce((prev, curr) => prev.concat(curr), []);
+} catch(e) {
+  // "devtools/framework/toolbox" is only accessible from Firefox
+  exports.devtoolsButtonModules = [];
+}
+
+/**
  * Add modules to a system for use in a content process (but don't call load)
  */
 exports.addAllItemsByModule = function(system) {
   system.addItemsByModule(exports.baseModules, { delayedLoad: true });
   system.addItemsByModule(exports.devtoolsModules, { delayedLoad: true });
   system.addItemsByModule(exports.devtoolsToolModules, { delayedLoad: true });
+  system.addItemsByModule(exports.devtoolsButtonModules, { delayedLoad: true });
 
   const { mozDirLoader } = require("gcli/commands/cmd");
   system.addItemsByModule("mozcmd", { delayedLoad: true, loader: mozDirLoader });
