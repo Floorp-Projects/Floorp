@@ -9,6 +9,7 @@
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
 #include "GLReadTexImageHelper.h"
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "ScopedGLHelpers.h"
 #include "SharedSurface.h"
 #include "TextureGarbageBin.h"
@@ -72,7 +73,8 @@ SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
                     AttachmentType::GLTexture,
                     gl,
                     size,
-                    hasAlpha)
+                    hasAlpha,
+                    false) // Can't recycle, as mSync changes never update TextureHost.
     , mMutex("SharedSurface_EGLImage mutex")
     , mEGL(egl)
     , mFormats(formats)
@@ -215,10 +217,20 @@ SharedSurface_EGLImage::AcquireConsumerTexture(GLContext* consGL, GLuint* out_te
     *out_target = LOCAL_GL_TEXTURE_EXTERNAL;
 }
 
+bool
+SharedSurface_EGLImage::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
+{
+    *out_descriptor = layers::EGLImageDescriptor((uintptr_t)mImage, (uintptr_t)mSync,
+                                                 mSize);
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////
 
 /*static*/ UniquePtr<SurfaceFactory_EGLImage>
-SurfaceFactory_EGLImage::Create(GLContext* prodGL,
-                                const SurfaceCaps& caps)
+SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
+                                const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                const layers::TextureFlags& flags)
 {
     EGLContext context = GLContextEGL::Cast(prodGL)->GetEGLContext();
 
@@ -227,7 +239,7 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL,
 
     GLLibraryEGL* egl = &sEGLLibrary;
     if (SharedSurface_EGLImage::HasExtensions(egl, prodGL)) {
-        ret.reset( new ptrT(prodGL, context, caps) );
+        ret.reset( new ptrT(prodGL, caps, allocator, flags, context) );
     }
 
     return Move(ret);
