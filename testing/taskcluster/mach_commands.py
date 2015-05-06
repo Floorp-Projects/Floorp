@@ -9,7 +9,6 @@ import os.path
 import json
 import copy
 import datetime
-import subprocess
 import sys
 import urllib2
 
@@ -30,6 +29,7 @@ import taskcluster_graph.build_task
 ROOT = os.path.dirname(os.path.realpath(__file__))
 GECKO = os.path.realpath(os.path.join(ROOT, '..', '..'))
 DOCKER_ROOT = os.path.join(ROOT, '..', 'docker')
+MOZHARNESS_CONFIG = os.path.join(GECKO, 'testing', 'mozharness', 'mozharness.json')
 
 # XXX: If/when we have the taskcluster queue use construct url instead
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
@@ -48,38 +48,9 @@ DEFAULT_JOB_PATH = os.path.join(
     ROOT, 'tasks', 'branches', 'mozilla-central', 'job_flags.yml'
 )
 
-def get_hg_url():
-    ''' Determine the url for the mercurial repository'''
-    try:
-        url = subprocess.check_output(
-            ['hg', 'path', 'default'],
-            stderr=subprocess.PIPE
-        )
-    except subprocess.CalledProcessError:
-        sys.stderr.write(
-            "Error: Could not determine the current hg repository url. " \
-            "Ensure command is executed within a hg respository"
-        )
-        sys.exit(1)
-
-    return url
-
-def get_latest_hg_revision(repository):
-    ''' Retrieves the revision number of the latest changed head'''
-    try:
-        revision = subprocess.check_output(
-            ['hg', 'id', '-r', 'tip', repository, '-i'],
-            stderr=subprocess.PIPE
-        ).strip('\n')
-    except subprocess.CalledProcessError:
-        sys.stderr.write(
-            "Error: Could not determine the latest hg revision at {} " \
-            "Ensure command is executed within a cloned hg respository and " \
-            "remote default remote repository is accessible".format(repository)
-        )
-        sys.exit(1)
-
-    return revision
+def load_mozharness_info():
+    with open(MOZHARNESS_CONFIG) as content:
+        return json.load(content)
 
 def docker_image(name):
     ''' Determine the docker tag/revision from an in tree docker file '''
@@ -195,9 +166,6 @@ class Graph(object):
     @CommandArgument('--base-repository',
         default=os.environ.get('GECKO_BASE_REPOSITORY'),
         help='URL for "base" repository to clone')
-    @CommandArgument('--mozharness-repository',
-        default='https://hg.mozilla.org/build/mozharness',
-        help='URL for custom mozharness repo')
     @CommandArgument('--head-repository',
         default=os.environ.get('GECKO_HEAD_REPOSITORY'),
         help='URL for "head" repository to fetch revision from')
@@ -207,12 +175,6 @@ class Graph(object):
     @CommandArgument('--head-rev',
         default=os.environ.get('GECKO_HEAD_REV'),
         help='Commit revision to use from head repository')
-    @CommandArgument('--mozharness-rev',
-        default='default',
-        help='Commit revision to use from mozharness repository')
-    @CommandArgument('--mozharness-ref',
-        default='master',
-        help='Commit ref to use from mozharness repository')
     @CommandArgument('--message',
         help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
     @CommandArgument('--revision-hash',
@@ -249,6 +211,8 @@ class Graph(object):
         jobs = templates.load(job_path, {})
 
         job_graph = parse_commit(message, jobs)
+        mozharness = load_mozharness_info()
+
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
             'project': project,
@@ -262,9 +226,9 @@ class Graph(object):
             'owner': params['owner'],
             'from_now': json_time_from_now,
             'now': datetime.datetime.now().isoformat(),
-            'mozharness_repository': params['mozharness_repository'],
-            'mozharness_rev': params['mozharness_rev'],
-            'mozharness_ref': params['mozharness_ref'],
+            'mozharness_repository': mozharness['repo'],
+            'mozharness_rev': mozharness['revision'],
+            'mozharness_ref':mozharness.get('reference', mozharness['revision']),
             'revision_hash': params['revision_hash']
         }.items())
 
@@ -422,193 +386,3 @@ class Graph(object):
             graph.pop('metadata', None)
 
         print(json.dumps(graph, indent=4))
-
-@CommandProvider
-class CIBuild(object):
-    @Command('taskcluster-build', category='ci',
-        description="Create taskcluster try server build task")
-    @CommandArgument('--base-repository',
-        help='URL for "base" repository to clone')
-    @CommandArgument('--mozharness-repository',
-        default='http://hg.mozilla.org/build/mozharness',
-        help='URL for custom mozharness repo')
-    @CommandArgument('--head-repository',
-        required=True,
-        help='URL for "head" repository to fetch revision from')
-    @CommandArgument('--head-ref',
-        help='Reference (this is same as rev usually for hg)')
-    @CommandArgument('--head-rev',
-        required=True,
-        help='Commit revision to use')
-    @CommandArgument('--mozharness-rev',
-        default='tip',
-        help='Commit revision to use from mozharness repository')
-    @CommandArgument('--mozharness-ref',
-        default='master',
-        help='Commit ref to use from mozharness repository')
-    @CommandArgument('--owner',
-        required=True,
-        help='email address of who owns this graph')
-    @CommandArgument('build_task',
-        help='path to build task definition')
-    def create_ci_build(self, **params):
-        templates = Templates(ROOT)
-        # TODO handle git repos
-        head_repository = params['head_repository']
-        if not head_repository:
-            head_repository = get_hg_url()
-
-        head_rev = params['head_rev']
-        if not head_rev:
-            head_rev = get_latest_hg_revision(head_repository)
-
-        head_ref = params['head_ref'] or head_rev
-
-        build_parameters = dict(gaia_info().items() + {
-            'docker_image': docker_image,
-            'owner': params['owner'],
-            'from_now': json_time_from_now,
-            'now': current_json_time(),
-            'base_repository': params['base_repository'] or head_repository,
-            'head_repository': head_repository,
-            'head_rev': head_rev,
-            'head_ref': head_ref,
-            'mozharness_repository': params['mozharness_repository'],
-            'mozharness_ref': params['mozharness_ref'],
-            'mozharness_rev': params['mozharness_rev']
-        }.items())
-
-        try:
-            build_task = templates.load(params['build_task'], build_parameters)
-        except IOError:
-            sys.stderr.write(
-                "Could not load build task file.  Ensure path is a relative " \
-                "path from testing/taskcluster"
-            )
-            sys.exit(1)
-
-        taskcluster_graph.build_task.validate(build_task)
-
-        print(json.dumps(build_task['task'], indent=4))
-
-@CommandProvider
-class CITest(object):
-    @Command('taskcluster-test', category='ci',
-        description='Create taskcluster try server test task')
-    @CommandArgument('--task-id',
-        help='the task id to pick the correct build and tests')
-    @CommandArgument('--total-chunks', type=int,
-        help='total number of chunks')
-    @CommandArgument('--chunk', type=int,
-        help='current chunk')
-    @CommandArgument('--owner',
-        help='email address of who owns this graph')
-    @CommandArgument('test_task',
-        help='path to the test task definition')
-    def create_ci_test(self, test_task, task_id='', total_chunks=1, chunk=1, owner=''):
-        if total_chunks is None:
-            total_chunks = 1
-
-        if chunk is None:
-            chunk = 1
-
-        if chunk < 1 or chunk > total_chunks:
-            raise ValueError(
-                '"chunk" must be a value between 1 and "total_chunks (default 1)"')
-
-        build_url, img_url, tests_url = self._get_build_and_tests_url(task_id)
-
-        test_parameters = dict(gaia_info().items() + {
-            'docker_image': docker_image,
-            'build_url': ARTIFACT_URL.format(task_id, build_url),
-            'img_url': ARTIFACT_URL.format(task_id, img_url),
-            'tests_url': ARTIFACT_URL.format(task_id, tests_url),
-            'total_chunks': total_chunks,
-            'chunk': chunk,
-            'owner': owner,
-            'from_now': json_time_from_now,
-            'now': current_json_time()
-        }.items())
-
-        try:
-            templates = Templates(ROOT)
-            test_task = templates.load(test_task, test_parameters)
-        except IOError:
-            sys.stderr.write(
-                "Could not load test task file.  Ensure path is a relative " \
-                "path from testing/taskcluster"
-            )
-            sys.exit(1)
-
-        print(json.dumps(test_task['task'], indent=4))
-
-    def _get_build_and_tests_url(self, task_id):
-        task = get_task(task_id)
-        locations = task['extra']['locations']
-        return locations['build'], locations.get('img', ''), locations['tests']
-
-@CommandProvider
-class CIDockerRun(object):
-    @Command('taskcluster-docker-run', category='ci',
-        description='Run a docker image and optionally mount local hg repos. ' \
-                    'Repos will be mounted to /home/worker/x/source accordingly. ' \
-                    'For example, to run a centos image and mount local gecko ' \
-                    'and gaia repos: mach ci-docker-run --local-gecko-repo ' \
-                    '/home/user/mozilla-central/ --local-gaia-repo /home/user/gaia/ '\
-                    '--docker-flags="-t -i" centos:centos7 /bin/bash')
-    @CommandArgument('--local-gecko-repo',
-        action='store', dest='local_gecko_repo',
-        help='local gecko hg repository for volume mount')
-    @CommandArgument('--gecko-revision',
-        action='store', dest='gecko_revision',
-        help='local gecko repo revision (defaults to latest)')
-    @CommandArgument('--local-gaia-repo',
-        action='store', dest='local_gaia_repo',
-        help='local gaia hg repository for volume mount')
-    @CommandArgument('--mozconfig',
-        help='The mozconfig file for building gecko')
-    @CommandArgument('--docker-flags',
-        action='store', dest='flags',
-        help='string of run flags (i.e. --docker-flags="-i -t")')
-    @CommandArgument('image',
-        help='name of docker image to run')
-    @CommandArgument('command',
-        nargs='*',
-        help='command to run inside the docker image')
-    def ci_docker_run(self, local_gecko_repo='', gecko_revision='',
-                      local_gaia_repo='', mozconfig="", flags="", **kwargs):
-        ''' Run docker image and optionally volume mount specified local repos '''
-        gecko_mount_point='/home/worker/mozilla-central/source/'
-        gaia_mount_point='/home/worker/gaia/source/'
-        cmd_out = ['docker', 'run']
-        if flags:
-            cmd_out.extend(flags.split())
-        if local_gecko_repo:
-            if not os.path.exists(local_gecko_repo):
-                print("Gecko repository path doesn't exist: %s" % local_gecko_repo)
-                sys.exit(1)
-            if not gecko_revision:
-                gecko_revision = get_latest_hg_revision(local_gecko_repo)
-            cmd_out.extend(['-v', '%s:%s' % (local_gecko_repo, gecko_mount_point)])
-            cmd_out.extend(['-e', 'REPOSITORY=%s' % gecko_mount_point])
-            cmd_out.extend(['-e', 'REVISION=%s' % gecko_revision])
-        if local_gaia_repo:
-            if not os.path.exists(local_gaia_repo):
-                print("Gaia repository path doesn't exist: %s" % local_gaia_repo)
-                sys.exit(1)
-            cmd_out.extend(['-v', '%s:%s' % (local_gaia_repo, gaia_mount_point)])
-            cmd_out.extend(['-e', 'GAIA_REPOSITORY=%s' % gaia_mount_point])
-        if mozconfig:
-            cmd_out.extend(['-e', 'MOZCONFIG=%s' % mozconfig])
-        cmd_out.append(kwargs['image'])
-        for cmd_x in kwargs['command']:
-            cmd_out.append(cmd_x)
-        try:
-            subprocess.check_call(cmd_out)
-        except subprocess.CalledProcessError:
-            sys.stderr.write("Docker run command returned non-zero status. Attempted:\n")
-            cmd_line = ''
-            for x in cmd_out:
-                cmd_line = cmd_line + x + ' '
-            sys.stderr.write(cmd_line + '\n')
-            sys.exit(1)

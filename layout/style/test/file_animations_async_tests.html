@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1086937</title>
+  <script>
+    var is = opener.is.bind(opener);
+    var ok = opener.ok.bind(opener);
+    var todo = opener.todo.bind(opener);
+    function finish() {
+      var o = opener;
+      self.close();
+      o.SimpleTest.finish();
+    }
+  </script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <style>
+  /* must use implicit value at one end */
+  @keyframes slide-left { from { margin-left: -1000px } }
+  </style>
+  <script type="application/javascript">
+
+  var gDisplay;
+
+  function run() {
+    gDisplay = document.getElementById("display");
+    opener.SimpleTest.executeSoon(test1);
+  }
+
+  /*
+   * Bug 1086937 - Animations continue correctly across load of
+   * downloadable font.
+   */
+  function test1() {
+    var animdiv = document.createElement("div");
+    // Take control of the refresh driver right from the start
+    advance_clock(0);
+    animdiv.style.animation = "slide-left 100s linear"; // 10px per second
+    gDisplay.appendChild(animdiv);
+    var cs = getComputedStyle(animdiv, "");
+    is(cs.marginLeft, "-1000px", "initial value of animation (force flush)");
+    advance_clock(1000);
+    is(cs.marginLeft, "-990px", "value of animation before font load");
+
+    var font = new FontFace("DownloadedAhem", "url(Ahem.ttf)");
+    document.fonts.add(font);
+
+    var fontdiv = document.createElement("div");
+    fontdiv.appendChild(document.createTextNode("A"));
+    fontdiv.style.fontFamily = "DownloadedAhem";
+    gDisplay.appendChild(fontdiv);
+
+    font.load().then(function(loadedFace) {
+      is(cs.marginLeft, "-990px", "value of animation after font load " +
+                                  "(clock only advances when we say so)");
+      advance_clock(1000);
+      is(cs.marginLeft, "-980px",
+         "animation should still be advancing after font load");
+
+      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+      document.fonts.delete(font);
+      animdiv.remove();
+      fontdiv.remove();
+
+      finish();
+    });
+  }
+
+  </script>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1086937">Mozilla Bug 1086937</a>
+<div id="display"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

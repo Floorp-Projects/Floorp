@@ -17,6 +17,7 @@ nsMacGujaratiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "macgujarati.ut"
    };
 
+   Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_MACGUJARATI, true);
    return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                                aOuter, aIID, aResult);
 }

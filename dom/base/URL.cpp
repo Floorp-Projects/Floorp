@@ -18,6 +18,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -42,7 +43,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URL)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-URL::URL(nsIURI* aURI)
+URL::URL(already_AddRefed<nsIURI> aURI)
   : mURI(aURI)
 {
 }
@@ -57,56 +58,55 @@ URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHa
 URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
                  URL& aBase, ErrorResult& aRv)
 {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  rv = ioService->NewURI(NS_ConvertUTF16toUTF8(aUrl), nullptr, aBase.GetURI(),
-                         getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    nsAutoString label(aUrl);
-    aRv.ThrowTypeError(MSG_INVALID_URL, &label);
-    return nullptr;
-  }
-
-  nsRefPtr<URL> url = new URL(uri);
-  return url.forget();
+  return Constructor(aUrl, aBase.GetURI(), aRv);
 }
 
 /* static */ already_AddRefed<URL>
 URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
-                  const nsAString& aBase, ErrorResult& aRv)
+                 const Optional<nsAString>& aBase, ErrorResult& aRv)
 {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
+  if (aBase.WasPassed()) {
+    return Constructor(aUrl, aBase.Value(), aRv);
   }
 
+  return Constructor(aUrl, nullptr, aRv);
+}
+
+/* static */ already_AddRefed<URL>
+URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
+                 const nsAString& aBase, ErrorResult& aRv)
+{
+  return Constructor(aUrl, aBase, aRv);
+}
+
+/* static */ already_AddRefed<URL>
+URL::Constructor(const nsAString& aUrl, const nsAString& aBase,
+                 ErrorResult& aRv)
+{
   nsCOMPtr<nsIURI> baseUri;
-  rv = ioService->NewURI(NS_ConvertUTF16toUTF8(aBase), nullptr, nullptr,
-                         getter_AddRefs(baseUri));
-  if (NS_FAILED(rv)) {
-    nsAutoString label(aBase);
-    aRv.ThrowTypeError(MSG_INVALID_URL, &label);
+  nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase, nullptr, nullptr,
+                          nsContentUtils::GetIOService());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aBase);
     return nullptr;
   }
 
+  return Constructor(aUrl, baseUri, aRv);
+}
+
+/* static */
+already_AddRefed<URL>
+URL::Constructor(const nsAString& aUrl, nsIURI* aBase, ErrorResult& aRv)
+{
   nsCOMPtr<nsIURI> uri;
-  rv = ioService->NewURI(NS_ConvertUTF16toUTF8(aUrl), nullptr, baseUri,
-                         getter_AddRefs(uri));
-  if (NS_FAILED(rv)) {
-    nsAutoString label(aUrl);
-    aRv.ThrowTypeError(MSG_INVALID_URL, &label);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl, nullptr, aBase,
+                          nsContentUtils::GetIOService());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aUrl);
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(uri);
+  nsRefPtr<URL> url = new URL(uri.forget());
   return url.forget();
 }
 

@@ -39,7 +39,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(URL)
 
-  explicit URL(nsIURI* aURI);
+  explicit URL(already_AddRefed<nsIURI> aURI);
 
   // WebIDL methods
   bool
@@ -50,7 +50,15 @@ public:
               URL& aBase, ErrorResult& aRv);
   static already_AddRefed<URL>
   Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
+              const Optional<nsAString>& aBase, ErrorResult& aRv);
+  // Versions of Constructor that we can share with workers and other code.
+  static already_AddRefed<URL>
+  Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
               const nsAString& aBase, ErrorResult& aRv);
+  static already_AddRefed<URL>
+  Constructor(const nsAString& aUrl, const nsAString& aBase, ErrorResult& aRv);
+  static already_AddRefed<URL>
+  Constructor(const nsAString& aUrl, nsIURI* aBase, ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal,
                               File& aBlob,
