@@ -727,8 +727,12 @@ let LoopRoomsInternal = {
       return;
     }
 
+    let oldDirty = gDirty;
     gDirty = true;
-    this.getAll(version, () => {});
+    // If we were already dirty, then get the full set of rooms. For example,
+    // we'd already be dirty if we had started up but not got the list of rooms
+    // yet.
+    this.getAll(oldDirty ? null : version, () => {});
   },
 
   /**
