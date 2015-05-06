@@ -1585,7 +1585,24 @@ void MediaDecoderStateMachine::Shutdown()
   if (mAudioSink) {
     mAudioSink->PrepareToShutdown();
   }
-  mDecoder->GetReentrantMonitor().NotifyAll();
+
+  mQueuedSeek.RejectIfExists(__func__);
+  mPendingSeek.RejectIfExists(__func__);
+  mCurrentSeek.RejectIfExists(__func__);
+
+  if (IsPlaying()) {
+    StopPlayback();
+  }
+
+  Reset();
+
+  // Put a task in the decode queue to shutdown the reader.
+  // the queue to spin down.
+  ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__, &MediaDecoderReader::Shutdown)
+    ->Then(TaskQueue(), __func__, this,
+           &MediaDecoderStateMachine::FinishShutdown,
+           &MediaDecoderStateMachine::FinishShutdown);
+  DECODER_LOG("Shutdown started");
 }
 
 void MediaDecoderStateMachine::StartDecoding()
@@ -2587,40 +2604,12 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
   NS_ENSURE_TRUE(resource, NS_ERROR_NULL_POINTER);
 
   switch (mState) {
-    case DECODER_STATE_ERROR: {
-      // Just wait for MediaDecoder::DecodeError to shut us down.
-      return NS_OK;
-    }
-
-    case DECODER_STATE_SHUTDOWN: {
-      mQueuedSeek.RejectIfExists(__func__);
-      mPendingSeek.RejectIfExists(__func__);
-      mCurrentSeek.RejectIfExists(__func__);
-
-      if (IsPlaying()) {
-        StopPlayback();
-      }
-
-      Reset();
-
-      // Put a task in the decode queue to shutdown the reader.
-      // the queue to spin down.
-      ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__, &MediaDecoderReader::Shutdown)
-        ->Then(TaskQueue(), __func__, this,
-               &MediaDecoderStateMachine::FinishShutdown,
-               &MediaDecoderStateMachine::FinishShutdown);
-      DECODER_LOG("Shutdown started");
-      return NS_OK;
-    }
-
-    case DECODER_STATE_DORMANT: {
-      return NS_OK;
-    }
-
+    case DECODER_STATE_ERROR:
+    case DECODER_STATE_SHUTDOWN:
+    case DECODER_STATE_DORMANT:
     case DECODER_STATE_WAIT_FOR_CDM:
-    case DECODER_STATE_WAIT_FOR_RESOURCES: {
+    case DECODER_STATE_WAIT_FOR_RESOURCES:
       return NS_OK;
-    }
 
     case DECODER_STATE_DECODING_NONE: {
       SetState(DECODER_STATE_DECODING_METADATA);
@@ -3320,11 +3309,6 @@ void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder()
 void
 MediaDecoderStateMachine::ScheduleStateMachine() {
   AssertCurrentThreadInMonitor();
-  if (mState == DECODER_STATE_SHUTDOWN) {
-    NS_WARNING("Refusing to schedule shutdown state machine");
-    return;
-  }
-
   if (mDispatchedStateMachine) {
     return;
   }
@@ -3343,11 +3327,6 @@ MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
                                       // the promise, which must happen on the state
                                       // machine task queue.
   MOZ_ASSERT(aMicroseconds > 0);
-  if (mState == DECODER_STATE_SHUTDOWN) {
-    NS_WARNING("Refusing to schedule shutdown state machine");
-    return;
-  }
-
   if (mDispatchedStateMachine) {
     return;
   }
