@@ -139,6 +139,7 @@ LOCAL_INCLUDES += [
     '/gfx/2d',
     '/hal/sandbox',
     '/layout/base',
+    '/media/webrtc',
     '/netwerk/base',
     '/toolkit/xre',
     '/uriloader/exthandler',

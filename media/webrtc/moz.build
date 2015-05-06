@@ -36,16 +36,6 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable and initguid.h
 ]
 
-IPDL_SOURCES += [
-    'signaling/src/peerconnection/PWebrtcGlobal.ipdl',
-]
-
-EXPORTS.mozilla.media.webrtc += [
-    'signaling/src/peerconnection/WebrtcGlobal.h',
-    'signaling/src/peerconnection/WebrtcGlobalChild.h',
-    'signaling/src/peerconnection/WebrtcGlobalParent.h'
-]
-
 GYP_DIRS += ['trunk']
 
 GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
