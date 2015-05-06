@@ -27,8 +27,8 @@
  * above 0xffff (e.g. LOAD_FLAGS_BYPASS_CLASSIFIER), since MAKE_LOAD_TYPE would
  * just shift them out anyway.
  */
-#define EXTRA_LOAD_FLAGS (LOAD_FLAGS_FIRST_LOAD              | \
-                          LOAD_FLAGS_ALLOW_POPUPS            | \
+#define EXTRA_LOAD_FLAGS (LOAD_FLAGS_FIRST_LOAD | \
+                          LOAD_FLAGS_ALLOW_POPUPS | \
                           0xffff0000)
 
 /* load types are legal combinations of load commands and flags
@@ -65,7 +65,8 @@ enum LoadType
    * Docshell. Instead, Docshell triggers the load itself when a
    * consumer-triggered load failed.
    */
-  LOAD_ERROR_PAGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, LOAD_FLAGS_ERROR_PAGE)
+  LOAD_ERROR_PAGE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL,
+                                   LOAD_FLAGS_ERROR_PAGE)
 
   // NOTE: Adding a new value? Remember to update IsValidLoadType!
 };

@@ -89,19 +89,12 @@ class nsIURILoader;
 class nsIWebBrowserFind;
 class nsIWidget;
 
-/* load commands were moved to nsIDocShell.h */
-/* load types were moved to nsDocShellLoadTypes.h */
-
 /* internally used ViewMode types */
 enum ViewMode
 {
   viewNormal = 0x0,
   viewSource = 0x1
 };
-
-//*****************************************************************************
-//***    nsRefreshTimer
-//*****************************************************************************
 
 class nsRefreshTimer : public nsITimerCallback
 {
@@ -130,10 +123,6 @@ enum eCharsetReloadState
   eCharsetReloadStopOrigional
 };
 
-//*****************************************************************************
-//***    nsDocShell
-//*****************************************************************************
-
 class nsDocShell final
   : public nsDocLoader
   , public nsIDocShell
@@ -159,7 +148,7 @@ class nsDocShell final
 
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsDocShell)
-  // Object Management
+
   nsDocShell();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -186,7 +175,8 @@ public:
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
-  NS_IMETHOD Stop() override {
+  NS_IMETHOD Stop() override
+  {
     // Need this here because otherwise nsIWebNavigation::Stop
     // overrides the docloader's Stop()
     return nsDocLoader::Stop();
@@ -219,7 +209,7 @@ public:
 
   nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType);
   uint32_t ConvertDocShellLoadInfoToLoadType(
-      nsDocShellInfoLoadType aDocShellLoadType);
+    nsDocShellInfoLoadType aDocShellLoadType);
 
   // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
   // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
@@ -237,10 +227,10 @@ public:
 
   // Restores a cached presentation from history (mLSHE).
   // This method swaps out the content viewer and simulates loads for
-  // subframes.  It then simulates the completion of the toplevel load.
+  // subframes. It then simulates the completion of the toplevel load.
   nsresult RestoreFromHistory();
 
-  // Perform a URI load from a refresh timer.  This is just like the
+  // Perform a URI load from a refresh timer. This is just like the
   // ForceRefreshURI method on nsIRefreshURI, but makes sure to take
   // the timer involved out of mRefreshURIList if it's there.
   // aTimer must not be null.
@@ -269,8 +259,7 @@ public:
   // Add new profile timeline markers to this docShell. This will only add
   // markers if the docShell is currently recording profile timeline markers.
   // See nsIDocShell::recordProfileTimelineMarkers
-  void AddProfileTimelineMarker(const char* aName,
-                                TracingMetadata aMetaData);
+  void AddProfileTimelineMarker(const char* aName, TracingMetadata aMetaData);
   void AddProfileTimelineMarker(mozilla::UniquePtr<TimelineMarker>&& aMarker);
 
   // Global counter for how many docShells are currently recording profile
@@ -283,13 +272,12 @@ public:
                           bool aInPrivateBrowsing);
 
 protected:
-  // Object Management
   virtual ~nsDocShell();
   virtual void DestroyChildren() override;
 
   // Content Viewer Management
   nsresult EnsureContentViewer();
-  // aPrincipal can be passed in if the caller wants.  If null is
+  // aPrincipal can be passed in if the caller wants. If null is
   // passed in, the about:blank principal will end up being used.
   nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
                                          nsIURI* aBaseURI,
@@ -307,16 +295,16 @@ protected:
 
   nsresult GetEldestPresContext(nsPresContext** aPresContext);
 
-  // Get the principal that we'll set on the channel if we're inheriting.  If
+  // Get the principal that we'll set on the channel if we're inheriting. If
   // aConsiderCurrentDocument is true, we try to use the current document if
-  // at all possible.  If that fails, we fall back on the parent document.
+  // at all possible. If that fails, we fall back on the parent document.
   // If that fails too, we force creation of a content viewer and use the
-  // resulting principal.  If aConsiderCurrentDocument is false, we just look
+  // resulting principal. If aConsiderCurrentDocument is false, we just look
   // at the parent.
   nsIPrincipal* GetInheritedPrincipal(bool aConsiderCurrentDocument);
 
-  // Actually open a channel and perform a URI load.  Note: whatever owner is
-  // passed to this function will be set on the channel.  Callers who wish to
+  // Actually open a channel and perform a URI load. Note: whatever owner is
+  // passed to this function will be set on the channel. Callers who wish to
   // not have an owner on the channel should just pass null.
   // If aSrcdoc is not void, the load will be considered as a srcdoc load,
   // and the contents of aSrcdoc will be loaded instead of aURI.
@@ -361,7 +349,7 @@ protected:
   // In this case it is the caller's responsibility to ensure
   // FireOnLocationChange is called.
   // In all other cases false is returned.
-  // Either aChannel or aOwner must be null.  If aChannel is
+  // Either aChannel or aOwner must be null. If aChannel is
   // present, the owner should be gotten from it.
   // If OnNewURI calls AddToSessionHistory, it will pass its
   // aCloneSHChildren argument as aCloneChildren.
@@ -376,10 +364,10 @@ protected:
 
   // Session History
   bool ShouldAddToSessionHistory(nsIURI* aURI);
-  // Either aChannel or aOwner must be null.  If aChannel is
+  // Either aChannel or aOwner must be null. If aChannel is
   // present, the owner should be gotten from it.
   // If aCloneChildren is true, then our current session history's
-  // children will be cloned onto the new entry.  This should be
+  // children will be cloned onto the new entry. This should be
   // used when we aren't actually changing the document while adding
   // the new session history entry.
   nsresult AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
@@ -399,7 +387,7 @@ protected:
   // Clone a session history tree for subframe navigation.
   // The tree rooted at |aSrcEntry| will be cloned into |aDestEntry|, except
   // for the entry with id |aCloneID|, which will be replaced with
-  // |aReplaceEntry|.  |aSrcShell| is a (possibly null) docshell which
+  // |aReplaceEntry|. |aSrcShell| is a (possibly null) docshell which
   // corresponds to |aSrcEntry| via its mLSHE or mOHE pointers, and will
   // have that pointer updated to point to the cloned history entry.
   // If aCloneChildren is true then the children of the entry with id
@@ -430,7 +418,7 @@ protected:
   void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry);
 
   // Call this method to swap in a new history entry to m[OL]SHE, rather than
-  // setting it directly.  This completes the navigation in all docshells
+  // setting it directly. This completes the navigation in all docshells
   // in the case of a subframe navigation.
   void SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr, nsISHEntry* aEntry);
 
@@ -448,7 +436,7 @@ protected:
                                             void* aData);
 
   // For each child of aRootEntry, find the corresponding docshell which is
-  // a child of aRootShell, and call aCallback.  The opaque pointer aData
+  // a child of aRootShell, and call aCallback. The opaque pointer aData
   // is passed to the callback.
   static nsresult WalkHistoryEntries(nsISHEntry* aRootEntry,
                                      nsDocShell* aRootShell,
@@ -477,7 +465,7 @@ protected:
    * channel.
    *
    * This method first checks the channel's property bag to see if previous
-   * info has been saved.  If not, it gives back the referrer of the channel.
+   * info has been saved. If not, it gives back the referrer of the channel.
    *
    * @param aChannel
    *        The channel we are transitioning to
@@ -506,7 +494,7 @@ protected:
                      uint32_t aChannelRedirectFlags);
 
   /**
-   * Helper function for adding a URI visit using IHistory.  If IHistory is
+   * Helper function for adding a URI visit using IHistory. If IHistory is
    * not available, the method tries nsIGlobalHistory2.
    *
    * The IHistory API maintains chains of visits, tracking both HTTP referrers
@@ -514,7 +502,7 @@ protected:
    * the previous URI in the chain.
    *
    * Visits can be saved either during a redirect or when the request has
-   * reached its final destination.  The previous URI in the visit may be
+   * reached its final destination. The previous URI in the visit may be
    * from another redirect or it may be the referrer.
    *
    * @pre aURI is not null.
@@ -583,13 +571,13 @@ protected:
                                nsresult aResult);
 
   // Sets the current document's current state object to the given SHEntry's
-  // state object.  The current state object is eventually given to the page
+  // state object. The current state object is eventually given to the page
   // in the PopState event.
   nsresult SetDocCurrentStateObj(nsISHEntry* aShEntry);
 
   nsresult CheckLoadingPermissions();
 
-  // Security checks to prevent frameset spoofing.  See comments at
+  // Security checks to prevent frameset spoofing. See comments at
   // implementation sites.
   static bool CanAccessItem(nsIDocShellTreeItem* aTargetItem,
                             nsIDocShellTreeItem* aAccessingItem,
@@ -610,33 +598,33 @@ protected:
   // in session history.
 
   // mContentViewer points to the current content viewer associated with
-  // this docshell.  When loading a new document, the content viewer is
-  // either destroyed or stored into a session history entry.  To make sure
+  // this docshell. When loading a new document, the content viewer is
+  // either destroyed or stored into a session history entry. To make sure
   // that destruction happens in a controlled fashion, a given content viewer
   // is always owned in exactly one of these ways:
   //   1) The content viewer is active and owned by a docshell's
   //      mContentViewer.
   //   2) The content viewer is still being displayed while we begin loading
-  //      a new document.  The content viewer is owned by the _new_
+  //      a new document. The content viewer is owned by the _new_
   //      content viewer's mPreviousViewer, and has a pointer to the
-  //      nsISHEntry where it will eventually be stored.  The content viewer
+  //      nsISHEntry where it will eventually be stored. The content viewer
   //      has been close()d by the docshell, which detaches the document from
   //      the window object.
-  //   3) The content viewer is cached in session history.  The nsISHEntry
-  //      has the only owning reference to the content viewer.  The viewer
+  //   3) The content viewer is cached in session history. The nsISHEntry
+  //      has the only owning reference to the content viewer. The viewer
   //      has released its nsISHEntry pointer to prevent circular ownership.
   //
   // When restoring a content viewer from session history, open() is called
-  // to reattach the document to the window object.  The content viewer is
+  // to reattach the document to the window object. The content viewer is
   // then placed into mContentViewer and removed from the history entry.
   // (mContentViewer is put into session history as described above, if
   // applicable).
 
   // Determines whether we can safely cache the current mContentViewer in
-  // session history.  This checks a number of factors such as cache policy,
+  // session history. This checks a number of factors such as cache policy,
   // pending requests, and unload handlers.
   // |aLoadType| should be the load type that will replace the current
-  // presentation.  |aNewRequest| should be the request for the document to
+  // presentation. |aNewRequest| should be the request for the document to
   // be loaded in place of the current document, or null if such a request
   // has not been created yet. |aNewDocument| should be the document that will
   // replace the current document.
@@ -662,7 +650,7 @@ protected:
                             int32_t* aHeight);
 
   // Call this when a URI load is handed to us (via OnLinkClick or
-  // InternalLoad).  This makes sure that we're not inside unload, or that if
+  // InternalLoad). This makes sure that we're not inside unload, or that if
   // we are it's still OK to load this URI.
   bool IsOKToLoadURI(nsIURI* aURI);
 
@@ -680,7 +668,7 @@ protected:
 
   bool ShouldBlockLoadingForBackButton();
 
-  // Convenience method for getting our parent docshell.  Can return null
+  // Convenience method for getting our parent docshell. Can return null
   already_AddRefed<nsDocShell> GetParentDocshell();
 
   // Check if we have an app redirect registered for the URI and redirect if
@@ -788,7 +776,7 @@ protected:
   nsCOMPtr<nsISHEntry> mLSHE;
 
   // Holds a weak pointer to a RestorePresentationEvent object if any that
-  // holds a weak pointer back to us.  We use this pointer to possibly revoke
+  // holds a weak pointer back to us. We use this pointer to possibly revoke
   // the event whenever necessary.
   nsRevocableEventPtr<RestorePresentationEvent> mRestorePresentationEvent;
 
@@ -801,9 +789,9 @@ protected:
   // Secure browser UI object
   nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
 
-  // The URI we're currently loading.  This is only relevant during the
-  // firing of a pagehide/unload.  The caller of FirePageHideNotification()
-  // is responsible for setting it and unsetting it.  It may be null if the
+  // The URI we're currently loading. This is only relevant during the
+  // firing of a pagehide/unload. The caller of FirePageHideNotification()
+  // is responsible for setting it and unsetting it. It may be null if the
   // pagehide/unload is happening for some reason other than just loading a
   // new URI.
   nsCOMPtr<nsIURI> mLoadingURI;
@@ -824,11 +812,11 @@ protected:
   nsCOMPtr<nsIChannel> mMixedContentChannel;
 
   // WEAK REFERENCES BELOW HERE.
-  // Note these are intentionally not addrefd.  Doing so will create a cycle.
+  // Note these are intentionally not addrefd. Doing so will create a cycle.
   // For that reasons don't use nsCOMPtr.
 
   nsIDocShellTreeOwner* mTreeOwner; // Weak Reference
-  mozilla::dom::EventTarget* mChromeEventHandler; //Weak Reference
+  mozilla::dom::EventTarget* mChromeEventHandler; // Weak Reference
 
   eCharsetReloadState mCharsetReloadState;
 
@@ -842,7 +830,7 @@ protected:
   int32_t mMarginWidth;
   int32_t mMarginHeight;
 
-  // This can either be a content docshell or a chrome docshell.  After
+  // This can either be a content docshell or a chrome docshell. After
   // Create() is called, the type is not expected to change.
   int32_t mItemType;
 
@@ -910,7 +898,7 @@ protected:
   void RecomputeCanExecuteScripts();
 
   // This boolean is set to true right before we fire pagehide and generally
-  // unset when we embed a new content viewer.  While it's true no navigation
+  // unset when we embed a new content viewer. While it's true no navigation
   // is allowed in this docshell.
   bool mFiredUnloadEvent;
 
@@ -957,7 +945,7 @@ protected:
   FrameType mFrameType;
 
   // We only expect mOwnOrContainingAppId to be something other than
-  // UNKNOWN_APP_ID if mFrameType != eFrameTypeRegular.  For vanilla iframes
+  // UNKNOWN_APP_ID if mFrameType != eFrameTypeRegular. For vanilla iframes
   // inside an app, we'll retrieve the containing app-id by walking up the
   // docshell hierarchy.
   //
