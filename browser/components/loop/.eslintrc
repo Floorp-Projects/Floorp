@@ -49,7 +49,6 @@
     "no-empty": 0,                // TODO: Remove (use default)
     "no-extra-bind": 0,           // Leave as 0
     "no-extra-boolean-cast": 0,   // TODO: Remove (use default)
-    "no-extra-semi": 0,           // TODO: Remove (use default)
     "no-multi-spaces": 0,         // TBD.
     "no-new": 0,                  // TODO: Remove (use default)
     "no-redeclare": 0,            // TODO: Remove (use default)
@@ -64,8 +63,6 @@
     "no-use-before-define": 0,    // TODO: Remove (use default)
     "no-wrap-func": 0,            // TODO: Remove (use default)
     "quotes": 0,                  // [2, "double", "avoid-escape"],
-    "semi": 0,                    // TODO: Remove (use default)
-    "semi-spacing": 0,            // TODO: Remove (use default)
     "space-infix-ops": 0,         // TODO: Remove (use default)
     "space-return-throw-case": 0, // TODO: Remove (use default)
     "strict": 0,                  // [2, "function"],

@@ -92,7 +92,7 @@ describe("loop.store.StandaloneMetricsStore", function() {
       sinon.assert.calledWithExactly(window.ga,
         "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.linkClick,
         "fake");
-    })
+    });
   });
 
   describe("Store Change Handlers", function() {

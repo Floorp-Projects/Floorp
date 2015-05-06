@@ -306,7 +306,7 @@ this.CardDavImporter.prototype = {
             // a supported field. We're saving it off here in case we
             // need to use it if the fullname is blank.
             nickname = value;
-          };
+          }
 
           if (name === "ADR") {
             value = value.replace(/\\;/g, "\r");
@@ -455,7 +455,7 @@ this.CardDavImporter.prototype = {
 
       req.onerror = function(error) {
         reject(error);
-      }
+      };
 
       req.send(body);
     });

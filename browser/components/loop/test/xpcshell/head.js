@@ -135,7 +135,7 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-function MockWebSocketChannel() {};
+function MockWebSocketChannel() {}
 
 MockWebSocketChannel.prototype = {
   QueryInterface: XPCOMUtils.generateQI(Ci.nsIWebSocketChannel),
