@@ -101,7 +101,7 @@ struct PrintData {
   /** TODO: Is there an "unsigned short" primitive? **/
   short pagesAcross;
   short pagesDown;
-  nsString printTime;
+  double printTime;
   bool detailedErrorReporting;
   nsString faxNumber;
   bool addHeaderAndFooter;
