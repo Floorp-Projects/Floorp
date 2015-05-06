@@ -124,7 +124,7 @@ loop.standaloneMedia = (function() {
         localStream: null,
         pending: false,
         errorCallbacks: [],
-        successCallbacks: [],
+        successCallbacks: []
       };
     }
   };
@@ -145,6 +145,6 @@ loop.standaloneMedia = (function() {
     _MultiplexGum: _MultiplexGum,
     setSingleton: function(singleton) {
       singletonMultiplexGum = singleton;
-    },
+    }
   };
 })();

@@ -32,7 +32,7 @@ describe("loop.contacts", function() {
     category: ["google"],
     published: 1406798311748,
     updated: 1406798311748
-  },{
+  }, {
     id: 2,
     _guid: 2,
     name: ["Bob Banana"],
@@ -118,7 +118,7 @@ describe("loop.contacts", function() {
     };
 
     fakeWindow = {
-      close: sandbox.stub(),
+      close: sandbox.stub()
     };
     loop.shared.mixins.setRootObject(fakeWindow);
 

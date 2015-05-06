@@ -88,7 +88,7 @@ loop.shared.views = (function(_, l10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       visible: React.PropTypes.bool.isRequired,
-      state: React.PropTypes.string.isRequired,
+      state: React.PropTypes.string.isRequired
     },
 
     getInitialState: function() {
@@ -199,7 +199,7 @@ loop.shared.views = (function(_, l10n) {
       hangup: React.PropTypes.func.isRequired,
       publishStream: React.PropTypes.func.isRequired,
       hangupButtonLabel: React.PropTypes.string,
-      enableHangup: React.PropTypes.bool,
+      enableHangup: React.PropTypes.bool
     },
 
     handleClickHangup: function() {
@@ -560,14 +560,14 @@ loop.shared.views = (function(_, l10n) {
       onClick: React.PropTypes.func.isRequired,
       disabled: React.PropTypes.bool,
       additionalClass: React.PropTypes.string,
-      htmlId: React.PropTypes.string,
+      htmlId: React.PropTypes.string
     },
 
     getDefaultProps: function() {
       return {
         disabled: false,
         additionalClass: "",
-        htmlId: "",
+        htmlId: ""
       };
     },
 
@@ -596,7 +596,7 @@ loop.shared.views = (function(_, l10n) {
 
     getDefaultProps: function() {
       return {
-        additionalClass: "",
+        additionalClass: ""
       };
     },
 

@@ -201,7 +201,7 @@ describe("loop.store.RoomStore", function () {
           rooms: [{
             decryptedContext: {
               roomName: "RoomWord 99"
-            },
+            }
           }, {
             decryptedContext: {
               roomName: "RoomWord 98"
@@ -269,7 +269,7 @@ describe("loop.store.RoomStore", function () {
               location: "http://invalid.com",
               description: "fakeSite",
               thumbnail: "fakeimage.png"
-            }],
+            }]
           },
           roomOwner: fakeOwner,
           maxSize: store.maxRoomCreationSize

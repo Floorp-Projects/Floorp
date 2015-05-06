@@ -162,7 +162,7 @@ describe("loop.conversation", function() {
       }});
 
       roomStore = new loop.store.RoomStore(dispatcher, {
-        mozLoop: navigator.mozLoop,
+        mozLoop: navigator.mozLoop
       });
       conversationAppStore = new loop.store.ConversationAppStore({
         dispatcher: dispatcher,

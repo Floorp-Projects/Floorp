@@ -186,7 +186,7 @@ loop.shared.mixins = (function() {
 
     toggleDropdownMenu: function() {
       this[this.state.showMenu ? "hideDropdownMenu" : "showDropdownMenu"]();
-    },
+    }
   };
 
   /**
@@ -517,7 +517,7 @@ loop.shared.mixins = (function() {
         width: "100%",
         height: "100%",
         publishVideo: options.publishVideo,
-        showControls: false,
+        showControls: false
       };
     },
 

@@ -188,7 +188,7 @@ describe("loop.shared.models", function() {
           model.set({
             windowId: "28",
             sessionId: "321456",
-            callId: "142536",
+            callId: "142536"
           });
           model.startSession();
 

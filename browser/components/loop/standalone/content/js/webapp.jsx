@@ -858,7 +858,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       this._websocket = new loop.CallConnectionWebSocket({
         url: this.props.conversation.get("progressURL"),
         websocketToken: this.props.conversation.get("websocketToken"),
-        callId: this.props.conversation.get("callId"),
+        callId: this.props.conversation.get("callId")
       });
       this._websocket.promiseConnect().then(function() {
       }.bind(this), function() {
@@ -930,7 +930,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       if (this.state.callStatus !== "failure") {
         this.setState({callStatus: "end"});
       }
-    },
+    }
   });
 
   /**
