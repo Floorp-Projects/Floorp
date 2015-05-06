@@ -1860,8 +1860,11 @@ def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
     cls.addstmt(StmtDecl(Decl(idenum, '')))
 
     # make the message constructor
-    if compress:
+    if compress == 'compress':
         compression = ExprVar('COMPRESSION_ENABLED')
+    elif compress:
+        assert compress == 'compressall'
+        compression = ExprVar('COMPRESSION_ALL')
     else:
         compression = ExprVar('COMPRESSION_NONE')
     if priority == ipdl.ast.NORMAL_PRIORITY:

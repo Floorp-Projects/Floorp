@@ -172,4 +172,10 @@ onfetch = function(ev) {
       ev.respondWith(fetch(ev.request.url));
     }
   }
+
+  else if (ev.request.url.includes("body-")) {
+    ev.respondWith(ev.request.text().then(function (body) {
+      return new Response(body + body);
+    }));
+  }
 }

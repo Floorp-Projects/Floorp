@@ -123,6 +123,7 @@ reserved = set((
         'child',
         'class',
         'compress',
+        'compressall',
         '__delete__',
         'delete',                       # reserve 'delete' to prevent its use
         'from',
@@ -546,12 +547,17 @@ def p_MessageOutParams(p):
         p[0] = p[3]
 
 def p_OptionalMessageCompress(p):
-    """OptionalMessageCompress : COMPRESS
+    """OptionalMessageCompress : MessageCompress
                                | """
     if 1 == len(p):
         p[0] = ''
     else:
-        p[0] = 'compress'
+        p[0] = p[1]
+
+def p_MessageCompress(p):
+    """MessageCompress : COMPRESS
+                       | COMPRESSALL"""
+    p[0] = p[1]
 
 ##--------------------
 ## State machine

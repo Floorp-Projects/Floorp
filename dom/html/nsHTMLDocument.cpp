@@ -1566,13 +1566,6 @@ nsHTMLDocument::Open(JSContext* cx,
     return nullptr;
   }
 
-  // We can't depend on channels implementing property bags, so do our
-  // base URI manually after reset.
-
-  if (rv.Failed()) {
-    return nullptr;
-  }
-
   if (callerChannel) {
     nsLoadFlags callerLoadFlags;
     rv = callerChannel->GetLoadFlags(&callerLoadFlags);

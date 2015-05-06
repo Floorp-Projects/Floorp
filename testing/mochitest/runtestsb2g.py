@@ -17,7 +17,7 @@ sys.path.insert(0, here)
 from automationutils import processLeakLog
 from runtests import Mochitest
 from runtests import MochitestUtilsMixin
-from mochitest_options import B2GOptions, MochitestOptions
+from mochitest_options import MochitestArgumentParser
 from marionette import Marionette
 from mozprofile import Profile, Preferences
 from mozlog import structured
@@ -417,7 +417,7 @@ class B2GDesktopMochitest(B2GMochitest, Mochitest):
         return self.build_profile(options)
 
 
-def run_remote_mochitests(parser, options):
+def run_remote_mochitests(options):
     # create our Marionette instance
     marionette_args = {
         'adb_path': options.adbPath,
@@ -434,7 +434,6 @@ def run_remote_mochitests(parser, options):
         marionette_args['host'] = host
         marionette_args['port'] = int(port)
 
-    options = parser.verifyRemoteOptions(options)
     if (options is None):
         print "ERROR: Invalid options specified, use --help for a list of valid options"
         sys.exit(1)
@@ -446,7 +445,6 @@ def run_remote_mochitests(parser, options):
         options.xrePath,
         remote_log_file=options.remoteLogFile)
 
-    options = parser.verifyOptions(options, mochitest)
     if (options is None):
         sys.exit(1)
 
@@ -469,7 +467,7 @@ def run_remote_mochitests(parser, options):
     sys.exit(retVal)
 
 
-def run_desktop_mochitests(parser, options):
+def run_desktop_mochitests(options):
     # create our Marionette instance
     marionette_args = {}
     if options.marionette:
@@ -486,7 +484,6 @@ def run_desktop_mochitests(parser, options):
         marionette_args,
         options,
         options.profile_data_dir)
-    options = MochitestOptions.verifyOptions(parser, options, mochitest)
     if options is None:
         sys.exit(1)
 
@@ -502,14 +499,13 @@ def run_desktop_mochitests(parser, options):
 
 
 def main():
-    parser = B2GOptions()
-    structured.commandline.add_logging_group(parser)
+    parser = MochitestArgumentParser(app='b2g')
     options = parser.parse_args()
 
     if options.desktop:
-        run_desktop_mochitests(parser, options)
+        run_desktop_mochitests(options)
     else:
-        run_remote_mochitests(parser, options)
+        run_remote_mochitests(options)
 
 if __name__ == "__main__":
     main()

@@ -180,3 +180,73 @@ fetch('http://example.com/cors-for-no-cors', { mode: "no-cors" })
   my_ok(false, "intercepted non-opaque response for no-cors request should resolve to opaque response. It should not fail.");
   finish();
 });
+
+function arrayBufferFromString(str) {
+  var arr = new Uint8Array(str.length);
+  for (var i = 0; i < str.length; ++i) {
+    arr[i] = str.charCodeAt(i);
+  }
+  return arr;
+}
+
+expectAsyncResult();
+fetch(new Request('body-simple', {method: 'POST', body: 'my body'}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == 'my bodymy body', "the body of the intercepted fetch should be visible in the SW");
+  finish();
+});
+
+expectAsyncResult();
+fetch(new Request('body-arraybufferview', {method: 'POST', body: arrayBufferFromString('my body')}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == 'my bodymy body', "the ArrayBufferView body of the intercepted fetch should be visible in the SW");
+  finish();
+});
+
+expectAsyncResult();
+fetch(new Request('body-arraybuffer', {method: 'POST', body: arrayBufferFromString('my body').buffer}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == 'my bodymy body', "the ArrayBuffer body of the intercepted fetch should be visible in the SW");
+  finish();
+});
+
+expectAsyncResult();
+var usp = new URLSearchParams();
+usp.set("foo", "bar");
+usp.set("baz", "qux");
+fetch(new Request('body-urlsearchparams', {method: 'POST', body: usp}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == 'foo=bar&baz=quxfoo=bar&baz=qux', "the URLSearchParams body of the intercepted fetch should be visible in the SW");
+  finish();
+});
+
+expectAsyncResult();
+var fd = new FormData();
+fd.set("foo", "bar");
+fd.set("baz", "qux");
+fetch(new Request('body-formdata', {method: 'POST', body: fd}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body.indexOf("Content-Disposition: form-data; name=\"foo\"\r\n\r\nbar") <
+        body.indexOf("Content-Disposition: form-data; name=\"baz\"\r\n\r\nqux"),
+        "the FormData body of the intercepted fetch should be visible in the SW");
+  finish();
+});
+
+expectAsyncResult();
+fetch(new Request('body-blob', {method: 'POST', body: new Blob(new String('my body'))}))
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == 'my bodymy body', "the Blob body of the intercepted fetch should be visible in the SW");
+  finish();
+});
