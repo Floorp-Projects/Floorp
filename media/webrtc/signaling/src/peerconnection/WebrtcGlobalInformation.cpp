@@ -404,7 +404,7 @@ RunStatsQuery(
   WebrtcGlobalChild* aThisChild,
   const int aRequestId)
 {
-  auto* queries = new RTCStatsQueries;
+  nsAutoPtr<RTCStatsQueries> queries(new RTCStatsQueries);
   nsresult rv = BuildStatsQueryList(aPeerConnections, aPcIdFilter, queries);
 
   if (NS_FAILED(rv)) {
@@ -424,7 +424,7 @@ RunStatsQuery(
                      WrapRunnableNM(&GetAllStats_s,
                                     aThisChild,
                                     aRequestId,
-                                    nsAutoPtr<RTCStatsQueries>(queries)),
+                                    queries),
                      NS_DISPATCH_NORMAL);
   return rv;
 }
