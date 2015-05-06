@@ -156,6 +156,14 @@ EXPORTS.mozilla += [
     'MediaManager.h',
 ]
 
+EXPORTS.mozilla.media.webrtc += [
+    'webrtc/WebrtcGlobal.h',
+]
+
+IPDL_SOURCES += [
+    'webrtc/PWebrtcGlobal.ipdl'
+]
+
 if CONFIG['MOZ_B2G']:
     EXPORTS.mozilla += [
         'MediaPermissionGonk.h',
