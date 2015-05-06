@@ -19,36 +19,42 @@ public:
   virtual void Output(MediaData* aData) override
   {
     if (mManager->mActiveCallback) {
+      AssertHaveActiveProxy();
       mManager->mActiveCallback->Output(aData);
     }
   }
   virtual void Error() override
   {
     if (mManager->mActiveCallback) {
+      AssertHaveActiveProxy();
       mManager->mActiveCallback->Error();
     }
   }
   virtual void InputExhausted() override
   {
     if (mManager->mActiveCallback) {
+      AssertHaveActiveProxy();
       mManager->mActiveCallback->InputExhausted();
     }
   }
   virtual void DrainComplete() override
   {
     if (mManager->mActiveCallback) {
+      AssertHaveActiveProxy();
       mManager->DrainComplete();
     }
   }
   virtual void NotifyResourcesStatusChanged() override
   {
     if (mManager->mActiveCallback) {
+      AssertHaveActiveProxy();
       mManager->mActiveCallback->NotifyResourcesStatusChanged();
     }
   }
   virtual void ReleaseMediaResources() override
   {
     if (mManager->mActiveCallback) {
+      AssertHaveActiveProxy();
       mManager->mActiveCallback->ReleaseMediaResources();
     }
   }
@@ -56,6 +62,15 @@ public:
   {
     MOZ_ASSERT(mManager->mActiveCallback);
     return mManager->mActiveCallback->OnReaderTaskQueue();
+  }
+
+private:
+  void AssertHaveActiveProxy() {
+#ifdef MOZ_FFMPEG // bug 1161895
+    NS_WARN_IF_FALSE(mManager->mActiveProxy, "callback not active proxy");
+#else
+    MOZ_DIAGNOSTIC_ASSERT(mManager->mActiveProxy);
+#endif
   }
 
   SharedDecoderManager* mManager;
