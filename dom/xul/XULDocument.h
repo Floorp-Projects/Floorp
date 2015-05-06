@@ -75,7 +75,7 @@ public:
   bool RemoveElement(mozilla::dom::Element* aElement);
 
 private:
-  nsSmallVoidArray mRefContentList;
+  nsTArray<mozilla::dom::Element*> mRefContentList;
 };
 
 /**
