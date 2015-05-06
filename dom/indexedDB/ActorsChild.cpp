@@ -40,6 +40,8 @@
 #include "PermissionRequestBase.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
+#include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 
 #ifdef DEBUG
 #include "IndexedDatabaseManager.h"
@@ -57,7 +59,13 @@
 #endif // DEBUG || GC_ON_IPC_MESSAGES
 
 namespace mozilla {
+
+using ipc::PrincipalInfo;
+
 namespace dom {
+
+using namespace workers;
+
 namespace indexedDB {
 
 /*******************************************************************************
@@ -777,6 +785,235 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
   }
 }
 
+class WorkerPermissionChallenge;
+
+// This class calles WorkerPermissionChallenge::OperationCompleted() in the
+// worker thread.
+class WorkerPermissionOperationCompleted final : public WorkerRunnable
+{
+  nsRefPtr<WorkerPermissionChallenge> mChallenge;
+
+public:
+  WorkerPermissionOperationCompleted(WorkerPrivate* aWorkerPrivate,
+                                     WorkerPermissionChallenge* aChallenge)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    , mChallenge(aChallenge)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  virtual bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
+};
+
+// This class used to do prompting in the main thread and main process.
+class WorkerPermissionRequest final : public PermissionRequestBase
+{
+  nsRefPtr<WorkerPermissionChallenge> mChallenge;
+
+public:
+  WorkerPermissionRequest(Element* aElement,
+                          nsIPrincipal* aPrincipal,
+                          WorkerPermissionChallenge* aChallenge)
+    : PermissionRequestBase(aElement, aPrincipal)
+    , mChallenge(aChallenge)
+  {
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aChallenge);
+  }
+
+private:
+  ~WorkerPermissionRequest()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  virtual void
+  OnPromptComplete(PermissionValue aPermissionValue) override;
+};
+
+// This class is used in the main thread of all child processes.
+class WorkerPermissionRequestChildProcessActor final
+  : public PIndexedDBPermissionRequestChild
+{
+  nsRefPtr<WorkerPermissionChallenge> mChallenge;
+
+public:
+  explicit WorkerPermissionRequestChildProcessActor(
+                                          WorkerPermissionChallenge* aChallenge)
+    : mChallenge(aChallenge)
+  {
+    MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aChallenge);
+  }
+
+protected:
+  ~WorkerPermissionRequestChildProcessActor()
+  {}
+
+  virtual bool
+  Recv__delete__(const uint32_t& aPermission) override;
+};
+
+class WorkerPermissionChallenge final : public nsRunnable
+                                      , public WorkerFeature
+{
+public:
+  WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
+                            BackgroundFactoryRequestChild* aActor,
+                            IDBFactory* aFactory,
+                            const PrincipalInfo& aPrincipalInfo)
+    : mWorkerPrivate(aWorkerPrivate)
+    , mActor(aActor)
+    , mFactory(aFactory)
+    , mPrincipalInfo(aPrincipalInfo)
+  {
+    MOZ_ASSERT(mWorkerPrivate);
+    MOZ_ASSERT(aActor);
+    MOZ_ASSERT(aFactory);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    bool completed = RunInternal();
+    if (completed) {
+      OperationCompleted();
+    }
+
+    return NS_OK;
+  }
+
+  virtual bool
+  Notify(JSContext* aCx, workers::Status aStatus) override
+  {
+    // We don't care about the notification. We just want to keep the
+    // mWorkerPrivate alive.
+    return true;
+  }
+
+  void
+  OperationCompleted()
+  {
+    if (NS_IsMainThread()) {
+      nsRefPtr<WorkerPermissionOperationCompleted> runnable =
+        new WorkerPermissionOperationCompleted(mWorkerPrivate, this);
+
+      if (!runnable->Dispatch(nullptr)) {
+        NS_WARNING("Failed to dispatch a runnable to the worker thread.");
+        return;
+      }
+
+      return;
+    }
+
+    MOZ_ASSERT(mActor);
+    mActor->AssertIsOnOwningThread();
+
+    MaybeCollectGarbageOnIPCMessage();
+
+    nsRefPtr<IDBFactory> factory;
+    mFactory.swap(factory);
+
+    mActor->SendPermissionRetry();
+    mActor = nullptr;
+
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    JSContext* cx = mWorkerPrivate->GetJSContext();
+    mWorkerPrivate->RemoveFeature(cx, this);
+  }
+
+private:
+  bool
+  RunInternal()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Walk up to our containing page
+    WorkerPrivate* wp = mWorkerPrivate;
+    while (wp->GetParent()) {
+      wp = wp->GetParent();
+    }
+
+    nsPIDOMWindow* window = wp->GetWindow();
+    if (!window) {
+      return true;
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal =
+      mozilla::ipc::PrincipalInfoToPrincipal(mPrincipalInfo, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return true;
+    }
+
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      nsCOMPtr<Element> ownerElement =
+        do_QueryInterface(window->GetChromeEventHandler());
+      if (NS_WARN_IF(!ownerElement)) {
+        return true;
+      }
+
+      nsRefPtr<WorkerPermissionRequest> helper =
+        new WorkerPermissionRequest(ownerElement, principal, this);
+
+      PermissionRequestBase::PermissionValue permission;
+      if (NS_WARN_IF(NS_FAILED(helper->PromptIfNeeded(&permission)))) {
+        return true;
+      }
+
+      MOZ_ASSERT(permission == PermissionRequestBase::kPermissionAllowed ||
+                 permission == PermissionRequestBase::kPermissionDenied ||
+                 permission == PermissionRequestBase::kPermissionPrompt);
+
+      return permission != PermissionRequestBase::kPermissionPrompt;
+    }
+
+    TabChild* tabChild = TabChild::GetFrom(window);
+    MOZ_ASSERT(tabChild);
+
+    IPC::Principal ipcPrincipal(principal);
+
+    auto* actor = new WorkerPermissionRequestChildProcessActor(this);
+    tabChild->SendPIndexedDBPermissionRequestConstructor(actor, ipcPrincipal);
+    return false;
+  }
+
+private:
+  WorkerPrivate* mWorkerPrivate;
+  BackgroundFactoryRequestChild* mActor;
+  nsRefPtr<IDBFactory> mFactory;
+  PrincipalInfo mPrincipalInfo;
+};
+
+void
+WorkerPermissionRequest::OnPromptComplete(PermissionValue aPermissionValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mChallenge->OperationCompleted();
+}
+
+bool
+WorkerPermissionOperationCompleted::WorkerRun(JSContext* aCx,
+                                              WorkerPrivate* aWorkerPrivate)
+{
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  mChallenge->OperationCompleted();
+  return true;
+}
+
+bool
+WorkerPermissionRequestChildProcessActor::Recv__delete__(
+                                              const uint32_t& /* aPermission */)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mChallenge->OperationCompleted();
+  return true;
+}
+
 } // anonymous namespace
 
 /*******************************************************************************
@@ -1124,7 +1361,23 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
   MaybeCollectGarbageOnIPCMessage();
 
   if (!NS_IsMainThread()) {
-    MOZ_CRASH("Implement me for workers!");
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    workerPrivate->AssertIsOnWorkerThread();
+
+    nsRefPtr<WorkerPermissionChallenge> challenge =
+      new WorkerPermissionChallenge(workerPrivate, this, mFactory,
+                                    aPrincipalInfo);
+
+    JSContext* cx = workerPrivate->GetJSContext();
+    MOZ_ASSERT(cx);
+
+    if (!workerPrivate->AddFeature(cx, challenge)) {
+      return false;
+    }
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(challenge)));
+    return true;
   }
 
   nsresult rv;
