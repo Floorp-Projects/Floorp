@@ -1863,8 +1863,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       !selectedItem.attachment.responseContent ||
       !selectedItem.attachment.responseContent.content.mimeType.includes("image/");
 
-    let separator = $("#request-menu-context-separator");
-    separator.hidden = !selectedItem;
+    let separators = $all(".request-menu-context-separator");
+    Array.forEach(separators, separator => separator.hidden = !selectedItem);
 
     let newTabElement = $("#request-menu-context-newtab");
     newTabElement.hidden = !selectedItem;
